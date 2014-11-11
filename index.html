@@ -29,14 +29,14 @@
       </header>
       <section>
         <h3>
-<a id="welcome-to-jbse" class="anchor" href="#welcome-to-jbse" aria-hidden="true"><span class="octicon octicon-link"></span></a>Welcome to JBSE.</h3>
+<a id="welcome-to-jbse" class="anchor" href="#welcome-to-jbse" aria-hidden="true"><span class="octicon octicon-link"></span></a>Welcome to JBSE</h3>
 
 <p>JBSE is the Java Bytecode Symbolic Executor. Basically, it is a special-purpose Java Virtual Machine written in Java.</p>
 
 <h3>
 <a id="whats-for" class="anchor" href="#whats-for" aria-hidden="true"><span class="octicon octicon-link"></span></a>What's for?</h3>
 
-<p>JBSE is meant to be used for analyzing your Java code and assess whether it is OK or not. This makes it similar in aim to tools like <a href="http://checkstyle.sourceforge.net">Checkstyle</a>, <a href="http://pmd.sourceforge.net">PMD</a> or <a href="http://findbugs.sourceforge.net">Findbugs</a>, but the analogy ends here. While the above mentioned tools work by scanning the source code in search for errors, JBSE works by simulating the execution of compiled classes (that's why it is a Java Virtual Machine) and analyzing all the conditions that may lead to the coverage of prescribed bytecode instructions. In practice, JBSE expect that you specify the verification properties of interest for your project, by means of <em>assumptions</em> and <em>assertions</em>. Assumptions specify the conditions that must be satisfied for an execution to be relevant, while assertions specify the conditions that must satisfied for an execution to be correct. JBSE then attempts to determine whether some program inputs satisfying all the assumptions make fail at least one assertion. In this regard JBSE is a hybrid, static/dynamic analysis tool more similar in spirit, implementation and mode of use to tools like <a href="http://babelfish.arc.nasa.gov/trac/jpf/wiki/projects/jpf-symbc">Symbolic PathFinder</a>, <a href="http://www.sireum.org">Sireum/Kiasan</a> and <a href="http://fmv.jku.at/jnuke/">JNuke</a>.</p>
+<p>JBSE is meant to be used for analyzing Java code and assessing whether it is OK or not. This makes it similar in aim to tools like <a href="http://checkstyle.sourceforge.net">Checkstyle</a>, <a href="http://pmd.sourceforge.net">PMD</a> or <a href="http://findbugs.sourceforge.net">Findbugs</a>, but the analogy ends here. While the above mentioned tools work by scanning the source code in search for errors, JBSE works by simulating the execution of compiled classes (that's why it is a Java Virtual Machine) and analyzing all the conditions that may lead to the coverage of prescribed bytecode instructions. In practice, JBSE expect that you specify the verification properties of interest for your project, by means of <em>assumptions</em> and <em>assertions</em>. Assumptions specify the conditions that must be satisfied for an execution to be relevant, while assertions specify the conditions that must satisfied for an execution to be correct. JBSE then attempts to determine whether some program inputs satisfying all the assumptions make fail at least one assertion. In this regard JBSE is a hybrid, static/dynamic analysis tool more similar in spirit, implementation and mode of use to tools like <a href="http://babelfish.arc.nasa.gov/trac/jpf/wiki/projects/jpf-symbc">Symbolic PathFinder</a>, <a href="http://www.sireum.org">Sireum/Kiasan</a> and <a href="http://fmv.jku.at/jnuke/">JNuke</a>.</p>
 
 <h3>
 <a id="what-are-its-distinctive-features" class="anchor" href="#what-are-its-distinctive-features" aria-hidden="true"><span class="octicon octicon-link"></span></a>What are its distinctive features?</h3>
@@ -54,6 +54,11 @@
 <a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
 
 <p>The contributions to JBSE extend over a very long period, and we lost track to the exact authors of all of them. The current maintainer of JBSE is Pietro Braione (<a href="https://github.com/pietrobraione" class="user-mention">@pietrobraione</a>), with contributions by Giovanni Denaro. Marco Gaboardi wrote the initial implementation of JBSE. Diego Piazza contributed to develop the Z3 interface.</p>
+
+<h3>
+<a id="disclaimer" class="anchor" href="#disclaimer" aria-hidden="true"><span class="octicon octicon-link"></span></a>Disclaimer</h3>
+
+<p>JBSE is a research prototype offered as-is, and we disclaim any expressed or implied warranty on its correctness, quality, or even fitness for a particular purpose. By using it you implicitly grant its authors and their organization as non liable for any direct or consequent damage that may derive from its use, for any definition of liability.</p>
 
 <h3>
 <a id="support-or-contact" class="anchor" href="#support-or-contact" aria-hidden="true"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
