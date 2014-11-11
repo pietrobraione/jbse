@@ -41,12 +41,12 @@
 <h3>
 <a id="what-are-its-distinctive-features" class="anchor" href="#what-are-its-distinctive-features" aria-hidden="true"><span class="octicon octicon-link"></span></a>What are its distinctive features?</h3>
 
-<p>Specifying good verification properties is not always an easy task, especially when your code is object-oriented. JBSE offers a quite comprehensive set of techniques that help you in the task, that none of the tools we are currently aware of offers. </p>
+<p>Specifying good verification properties is not always easy, especially when inputs are complex object configurations. To help you in this task JBSE offers a comprehensive set of techniques that none of the tools we are currently aware of offers. </p>
 
 <h3>
 <a id="what-are-its-limitations" class="anchor" href="#what-are-its-limitations" aria-hidden="true"><span class="octicon octicon-link"></span></a>What are its limitations?</h3>
 
-<p>Determining whether a control-flow path in the program can be covered by some inputs is much harder than scanning the code for error patterns. JBSE produces path condititions, that is, formulas on input variables whose solutions, if they exist, are the input values that cover a program path, and offloads the search of their solution to an external tool. Currently JBSE can interact with Sicstus, a Prolog system with CLP abilities, and with the SMT solvers Z3 and CVC3.</p>
+<p>Determining whether a path in a program can be covered by some inputs is much harder than scanning the code for error patterns. JBSE works by simulating the execution along a set of program paths. Simulation produces as a result a set of path condititions, that is, formulas on program inputs whose solutions, if they exist, are the input values that cover the program paths that produced them. Then, JBSE checks whether the path conditions have solutions by invoking an external tool. Currently JBSE can interact with Sicstus CLP and with the SMT solvers Z3 and CVC3.</p>
 
 <h3>
 <a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
