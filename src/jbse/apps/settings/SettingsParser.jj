@@ -1,0 +1,69 @@
+options{  JDK_VERSION = "1.5";  STATIC = false;  SUPPORT_CLASS_VISIBILITY_PUBLIC = false;}PARSER_BEGIN(SettingsParser)package jbse.apps.settings;
+
+import java.util.ArrayList;
+
+class SettingsParser {
+  ArrayList<String> notInitializedClasses;
+  ArrayList<String[]> resolveNotNull;  ArrayList<String[]> resolveNull;  ArrayList<String[]> expandTo;
+  ArrayList<String[]> resolveAliasOrigin;
+  ArrayList<String[]> resolveAliasInstanceof;
+  public void reset() {    this.notInitializedClasses = new ArrayList<String>();    this.resolveNotNull = new ArrayList<String[]>();    this.resolveNull = new ArrayList<String[]>();    this.expandTo = new ArrayList<String[]>();    this.resolveAliasOrigin = new ArrayList<String[]>();    this.resolveAliasInstanceof = new ArrayList<String[]>();  }}PARSER_END(SettingsParser)SKIP :{  " "| "\r"| "\t"| "\n"| "--" : COMMENT}< COMMENT > SKIP:{  "\n" : DEFAULT| "\r" : DEFAULT}< COMMENT > MORE :{  < ~[] >}TOKEN :{ < INIT : "i" "n" "i" "t" >| < RESOLVE : "r" "e" "s" "o" "l" "v" "e" >| < BEGIN : "b" "e" "g" "i" "n" >| < END : "e" "n" "d" >| < NONNULL : "n" "o" "t" " " "n" "u" "l" "l" >| < NULL : "n" "u" "l" "l" >| < WHENINSTANCEOF : "i" "n" "s" "t" "a" "n" "c" "e" "o" "f" >| < EXPANDSTO : "e" "x" "p" "a" "n" "d" "s" " " "t" "o" >| < NOTHING : "n" "o" "t" "h" "i" "n" "g" >| < ALIASES : "a" "l" "i" "a" "s" "e" "s" >| < TRIGGERS : "t" "r" "i" "g" "g" "e" "r" "s" >| < MAX : "m" "a" "x" >
+| < ROOT : "{" "R" "O" "O" "T" "}" >| < ANY : "{" "R" "_" "A" "N" "Y" "}" >| < REF : "{" "$" "R" "E" "F" "}" >| < REFANY : "{" "$" "R" "_" "A" "N" "Y" "}" >| < UP : "{" "U" "P" "}" >/*| < BYTE : "B" >| < CHAR : "C" >| < DOUBLE : "D" >| < FLOAT : "F" >| < INT : "I" >| < LONG : "J" >| < SHORT : "S" >| < VOID : "V" >| < BOOLEAN : "Z" >| < REFBEGIN : "L" >| < ARRAYOF : "[" >| < LEFTPAREN : "(" >| < RIGHTPAREN : ")" >| < IDENTIFIER : ( < LETTER > | < DIGIT > | < SEPARATOR > )+ >*/| < ITEM : ( < LETTER > | < DIGIT > | < SEPARATOR > | < DOLLAR > | < REGEX_SYMBOL > | ";" )+ >| < #LETTER : ["a"-"z","A"-"Z"] >| < #DIGIT : ["0"-"9"] >| < #SEPARATOR : "_" >| < #DOLLAR : "$" >| < #REGEX_SYMBOL : ["(",")","*","+","[","]","|","\\","."] >}void start() :{  this.reset();
+}{
+  ( secInit() )?
+  ( secResolve() )?  < EOF >
+}
+
+void secInit() :
+{}
+{  < INIT > < BEGIN > rowInit() ( "," rowInit() )* < END >}
+
+void rowInit() :
+{
+  String name;
+}
+{  name=cname()
+  {
+    notInitializedClasses.add(name);  }
+}
+
+void secResolve() :
+{}
+{
+  < RESOLVE > < BEGIN > rowResolve() ( "," rowResolve() )* < END >
+}
+void rowResolve() :{
+  String toResolve = null, toResolveClassName = null, resolved = null, resolvedClassName = null, triggerClassName = null, triggerArgsType = null, triggerMethodName = null, triggerMethodParams = null;
+}{
+  ( toResolve=pathAbsolute() )? < WHENINSTANCEOF > toResolveClassName=cname()
+  (
+    < NONNULL >
+    {      resolveNotNull.add(new String[] { toResolveClassName, toResolve });
+    }  | < NULL > ( < TRIGGERS > triggerClassName=cname() ":" triggerArgsType=cname() ":" triggerMethodName=cname() ( ":" triggerMethodParams=pathRelative() )? )?    {      resolveNull.add(new String[] { toResolveClassName, toResolve, triggerClassName, triggerArgsType, triggerMethodName, triggerMethodParams });    }  | ( < EXPANDSTO >
+      (
+        < NOTHING >
+        {
+          expandTo.add(new String[] { toResolveClassName, toResolve, null, null, null, null, null });        }
+      | < WHENINSTANCEOF > resolvedClassName=cname() ( < TRIGGERS > triggerClassName=cname() ":" triggerArgsType=cname() ":" triggerMethodName=cname() ( ":" triggerMethodParams=pathRelative() )? )?        {          expandTo.add(new String[] { toResolveClassName, toResolve, resolvedClassName, triggerClassName, triggerArgsType, triggerMethodName, triggerMethodParams });        }      )    )  | ( < ALIASES >      (        < NOTHING >        {          resolveAliasInstanceof.add(new String[] { toResolveClassName, toResolve, null, null, null, null, null });        }      | < WHENINSTANCEOF > resolvedClassName=cname() ( < TRIGGERS > triggerClassName=cname() ":" triggerArgsType=cname() ":" triggerMethodName=cname() ( ":" triggerMethodParams=pathRelative() )? )?          {            resolveAliasInstanceof.add(new String[] { toResolveClassName, toResolve, resolvedClassName, triggerClassName, triggerArgsType, triggerMethodName, triggerMethodParams });          }      | resolved=pathTarget() ( < TRIGGERS > triggerClassName=cname() ":" triggerArgsType=cname() ":" triggerMethodName=cname() ( ":" triggerMethodParams=pathRelative() )? )?        {          resolveAliasOrigin.add(new String[] { toResolveClassName, toResolve, resolved, triggerClassName, triggerArgsType, triggerMethodName, triggerMethodParams });        }      )
+    )
+  )
+}
+
+String cname() :
+{
+  StringBuffer buf = new StringBuffer();
+  Token i;
+}
+{
+  i=< ITEM >
+  {
+    buf.append(i.toString());  }
+  (
+    "/" i=< ITEM >
+    {
+      buf.append("/");
+      buf.append(i.toString());
+    }
+  )*
+  {    return buf.toString();
+  }}String pathAbsolute() :{  StringBuffer buf = new StringBuffer();  Token i;}{  (    (    < ROOT >    {      buf.append("{ROOT}");    }    	(      		":" i=< ITEM >      	{	  		buf.append(":");			buf.append(i.toString());      	}  		)?  	) | (    < ANY >    {      buf.append("{ANY}");    }  	)  )  (    "/" i=< ITEM >    {      buf.append("/");      buf.append(i.toString());    }  )*  {    return buf.toString();  }}String pathTarget() :{  StringBuffer buf = new StringBuffer();  String s;  Token i;}{  (    < MAX >    {      buf.append("{MAX}");    }  )?  ((    s=pathAbsolute()    {      buf.append(s);    }  ) | (    s=pathRelative()    {      buf.append(s);    }  ))  {    return buf.toString();  }}String pathRelative() :{  StringBuffer buf = new StringBuffer();  Token i;}{  (    < REF >    {  	  buf.append("{REF}");    }  | < REFANY >    {      buf.append("{ANY}");    }  )  (    "/"    (      < UP >      {        buf.append("/{UP}");      }    | i=< ITEM >      {        buf.append("/");        buf.append(i.toString());      }    )  )*  {    return buf.toString();  }}

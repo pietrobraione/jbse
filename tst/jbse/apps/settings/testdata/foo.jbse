@@ -1,0 +1,15 @@
+resolve begin
+
+{ROOT}/1/2 instanceof 1/1 not null,
+instanceof 2/1 expands to instanceof 2/2,
+{ROOT}/3/2 instanceof 3/1 expands to instanceof 3/3,
+{ROOT}/4/2 instanceof 4/1 expands to nothing,
+{ROOT}/5/2 instanceof 5/1 aliases instanceof 5/3,
+{ROOT}/6/2 instanceof 6/1 aliases nothing,
+{ROOT}/7/2 instanceof 7/1 aliases {ROOT}/7/3,
+{ROOT}/8/2 instanceof 8/1 aliases {$REF}/{UP}/{UP},
+{ROOT}/9/2 instanceof 9/1 aliases max {ROOT}/9/3,
+{ROOT}/10/2 instanceof 10/1 aliases nothing
+
+end
+	
