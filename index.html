@@ -36,17 +36,19 @@
 <h3>
 <a id="whats-for" class="anchor" href="#whats-for" aria-hidden="true"><span class="octicon octicon-link"></span></a>What's for?</h3>
 
-<p>JBSE is meant to be used for analyzing your Java code and assess whether it is OK or not. This makes it similar in aim to tools as Checkstyle, PMD or Findbugs, but the analogy ends here. While the above mentioned tools work by scanning the source code in search for errors, JBSE works by simulating the execution of compiled classes (that's why it is a Java Virtual Machine) and analyzing all the conditions that may lead to the coverage of bytecode instructions. In practice, JBSE allows you to specify your custom verification properties by means of assumptions and assertions, and determines whether some program inputs exists that, while satisfying all the assumptions, make fail at least one assertion. In this regard JBSE is a hybrid, static/dynamic analysis tool more similar in spirit, implementation and mode of use to tools like Java Pathfinder, Syreum/Kiasan and JNuke.</p>
+<p>JBSE is meant to be used for analyzing your Java code and assess whether it is OK or not. This makes it similar in aim to tools as Checkstyle, PMD or Findbugs, but the analogy ends here. While the above mentioned tools work by scanning the source code in search for errors, JBSE works by simulating the execution of compiled classes (that's why it is a Java Virtual Machine) and analyzing all the conditions that may lead to the coverage of prescribed bytecode instructions. In practice, JBSE expect that you specify the verification properties of interest for your project, by means of <em>assumptions</em> and <em>assertions</em>. Assumptions specify the conditions that must be satisfied for an execution to be relevant, while assertions specify the conditions that must satisfied for an execution to be correct. JBSE then attempts to determine whether some program inputs satisfying all the assumptions make fail at least one assertion. In this regard JBSE is a hybrid, static/dynamic analysis tool more similar in spirit, implementation and mode of use to tools like Java Pathfinder, Syreum/Kiasan and JNuke.</p>
 
 <h3>
 <a id="what-are-its-distinctive-features" class="anchor" href="#what-are-its-distinctive-features" aria-hidden="true"><span class="octicon octicon-link"></span></a>What are its distinctive features?</h3>
 
-<p>Specifying good verification properties is not always easy, especially when inputs are complex object configurations. To help you in this task JBSE offers a comprehensive set of techniques that none of the tools we are currently aware of offers. </p>
+<p>Specifying good verification properties is not always easy, especially when inputs are complex object configurations as customarily happen with object oriented and heap manipulating programs. JBSE helps you in this task by offering a comprehensive set of techniques and languages for expressing assumptions and assertions. None of the tools we are currently aware of offers all of them.</p>
 
 <h3>
 <a id="what-are-its-limitations" class="anchor" href="#what-are-its-limitations" aria-hidden="true"><span class="octicon octicon-link"></span></a>What are its limitations?</h3>
 
-<p>Determining whether a path in a program can be covered by some inputs is much harder than scanning the code for error patterns. JBSE works by simulating the execution along a set of program paths. Simulation produces as a result a set of path condititions, that is, formulas on program inputs whose solutions, if they exist, are the input values that cover the program paths that produced them. Then, JBSE checks whether the path conditions have solutions by invoking an external tool. Currently JBSE can interact with Sicstus CLP and with the SMT solvers Z3 and CVC3.</p>
+<p>Determining whether a control-flow path in the program can be covered by some inputs is an intrinsically hard problem, much harder than scanning the code for bug patterns. JBSE calculates <em>path conditions</em>, that is, formulas on the input variables whose solutions, if they exist, are the inputs that cover a program path. Then, JBSE checks whether the path conditions have solutions by invoking an external solver. Currently JBSE can interact with Sicstus CLP and with the SMT solvers Z3 and CVC3. The correctness, completeness and speed of JBSE strongly depend on those of the solver. </p>
+
+<p>Apart from solvers limitations, JBSE has limitations on its own. JBSE follows the Java Virtual Machine specification v.2, and does not implement successive extensions as, e.g., the invokedynamic bytecode. JBSE is not even completely compliant with the Java Virtual Machine specification v.2. Some features that JBSE does not implement, or implements only in part, are multithreading, locking (JBSE only analyzes single-threaded code), reflection and dynamic class loading. Moreover JBSE is not currently able to execute most of the Java standard library, although we plan to progressively improve it under this aspect.</p>
 
 <h3>
 <a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
@@ -56,7 +58,7 @@
 <h3>
 <a id="support-or-contact" class="anchor" href="#support-or-contact" aria-hidden="true"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
 
-<p>For any issue contact Pietro Braione.</p>
+<p>For any issue contact Pietro Braione at .@unimib.it.</p>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/pietrobraione">pietrobraione</a></p>
