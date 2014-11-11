@@ -1,0 +1,8 @@
+Not in priority order:
+
+1. Add interface to open-source ECLiPSe CLP(QR), and possibly support PTC-solver (https://github.com/echancrure/PTC-Solver.git).
+2. Produce a user manual.
+3. Produce a developer manual.
+4. Use logging for output.
+5. Add interface to generic SMTLIB solver.
+6. Untangle architecture by removing all circular dependencies.
