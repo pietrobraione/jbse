@@ -10,25 +10,32 @@ public class WideningConversion extends Primitive {
 	private final String toString;
 	private final int hashCode;
 
-	private WideningConversion(char type, Calculator calc, Primitive arg) throws InvalidTypeException {
+	private WideningConversion(char type, Calculator calc, Primitive arg) 
+	throws InvalidOperandException, InvalidTypeException {
 		super(type, calc);
+
+		//checks on parameters
+        if (arg == null) {
+    		throw new InvalidOperandException("null operand in widening construction");
+        }
+		if (!Type.widens(type, arg.getType())) {
+			throw new InvalidTypeException("cannot widen type " + arg.getType() + " to type " + type);
+		}
 		this.arg = arg;
-		this.toString = "WIDEN-"+ this.getType() + "(" + arg.toString() + ")";
+
+		//calculates hashCode
 		final int prime = 281;
 		int result = 1;
-		result = prime * result + ((arg == null) ? 0 : arg.hashCode());
+		result = prime * result + arg.hashCode();
 		result = prime * result + type;
 		this.hashCode = result;
+		
+		//calculates toString
+		this.toString = "WIDEN-"+ this.getType() + "(" + arg.toString() + ")";
 	}
 	
 	public static WideningConversion make(char type, Calculator calc, Primitive arg) 
 	throws InvalidOperandException, InvalidTypeException {
-		if (arg == null) {
-			throw new InvalidOperandException("arg of widening is null");
-		}
-		if (!Type.widens(type, arg.getType())) {
-			throw new InvalidTypeException("cannot widen type " + arg.getType() + " to type " + type);
-		}
 		return new WideningConversion(type, calc, arg);
 	}
 	

@@ -1,5 +1,7 @@
 package jbse.mem;
 
+import java.util.Arrays;
+
 /**
  * A {@link Reference} to a concrete array which may not yet 
  * have a corresponding {@link Array} instance in the 
@@ -82,23 +84,24 @@ public class ReferenceArrayImmaterial extends ReferenceConcrete {
 
 	@Override
 	public boolean equals(Object o) {
-		if (o instanceof ReferenceArrayImmaterial) {
-			ReferenceArrayImmaterial c = (ReferenceArrayImmaterial) o;
-			if (c.arrayLength.length == this.arrayLength.length) {
-				boolean equals = true;
-				for (int i = 0; i < this.arrayLength.length && equals; i++) {
-					if (this.arrayLength[i] == null && c.arrayLength[i] != null) {
-						equals = false;
-					} else if (this.arrayLength[i] != null && c.arrayLength[i] == null) {
-						equals = false;
-					} else if (this.arrayLength[i] != null && c.arrayLength[i] != null) {
-						equals = equals && this.arrayLength[i].equals(c.arrayLength[i]);
-					}
-				}
-				return equals;
-			}
+		if (this == o) {
+			return true;
 		}
-		return false;
+		if (o == null) {
+			return false;
+		}
+		if (this.getClass() != o.getClass()) {
+			return false;
+		}
+		final ReferenceArrayImmaterial c = (ReferenceArrayImmaterial) o;
+		if (c.arrayLength.length != this.arrayLength.length) {
+			return false;
+		}
+		//heap position is unknown
+		if (!this.arrayType.equals(c.arrayType)) {
+			return false;
+		}
+		return Arrays.equals(this.arrayLength, c.arrayLength);
 	}
 
 	@Override

@@ -1,6 +1,7 @@
 package jbse.mem;
 
 import jbse.Type;
+import jbse.exc.mem.InvalidOperandException;
 import jbse.exc.mem.InvalidTypeException;
 
 /**
@@ -17,16 +18,39 @@ public class Simplex extends Primitive implements Cloneable {
 	private final String toString;
     
     private Simplex(char type, Calculator calc, Object value) 
-    throws InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException {
     	super(type, calc);
+    	//checks on parameters
+        if (value == null || !(
+        		value instanceof Boolean || 
+        		value instanceof Byte || 
+        		value instanceof Character ||
+        		value instanceof Double ||
+        		value instanceof Float || 
+        		value instanceof Integer ||
+        		value instanceof Long ||
+        		value instanceof Short)) {
+    		throw new InvalidOperandException("no operand in simplex construction");
+        }
+        if ((type == Type.BOOLEAN && !(value instanceof Boolean)) ||
+        	(type == Type.BYTE && !(value instanceof Byte)) ||
+        	(type == Type.CHAR && !(value instanceof Character)) ||
+        	(type == Type.DOUBLE && !(value instanceof Double)) ||
+        	(type == Type.FLOAT && !(value instanceof Float)) ||
+        	(type == Type.INT && !(value instanceof Integer)) ||
+        	(type == Type.LONG && !(value instanceof Long)) ||
+        	(type == Type.SHORT && !(value instanceof Short))) {
+        	throw new InvalidTypeException("type does not agree with value in simplex construction");
+        }
         this.value = value;
 
         //calculates hashCode
         final int prime = 31;
 		int result = 1;
-		result = prime + result * ((this.value == null) ? 0 : this.value.hashCode());
+		result = prime + result * this.value.hashCode();
 		this.hashCode = result;
-
+		
+		//calculates toString
     	this.toString = this.value.toString();
     }
     
@@ -38,25 +62,24 @@ public class Simplex extends Primitive implements Cloneable {
      *         {@link Byte}, {@link Short}, {@link Integer}, {@link Long},
      *         {@link Float}, {@link Double}, or {@link Character}. 
 	 */
-    public static Simplex make(Calculator calc, Object n) throws InvalidTypeException {
+    public static Simplex make(Calculator calc, Object n) 
+    throws InvalidTypeException, InvalidOperandException {
         if (n instanceof Boolean) {
         	return new Simplex(Type.BOOLEAN, calc, n);
         } else if (n instanceof Byte) {
         	return new Simplex(Type.BYTE, calc, n);
-        } else if (n instanceof Integer) {
-        	return new Simplex(Type.INT, calc, n);
-        } else if (n instanceof Short) {
-        	return new Simplex(Type.SHORT, calc, n);
-        } else if (n instanceof Long) {
-        	return new Simplex(Type.LONG, calc, n);
-        } else if (n instanceof Float) {
-        	return new Simplex(Type.FLOAT, calc, n);
-        } else if (n instanceof Double) {
-        	return new Simplex(Type.DOUBLE, calc, n);
         } else if (n instanceof Character) {
         	return new Simplex(Type.CHAR, calc, n);
+        } else if (n instanceof Double) {
+        	return new Simplex(Type.DOUBLE, calc, n);
+        } else if (n instanceof Float) {
+        	return new Simplex(Type.FLOAT, calc, n);
+        } else if (n instanceof Integer) {
+        	return new Simplex(Type.INT, calc, n);
+        } else if (n instanceof Long) {
+        	return new Simplex(Type.LONG, calc, n);
         } else {
-        	throw new InvalidTypeException("wrong simplex value");
+        	return new Simplex(Type.SHORT, calc, n);
         }
     }
     

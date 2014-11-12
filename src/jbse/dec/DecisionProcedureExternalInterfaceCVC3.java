@@ -73,17 +73,22 @@ class DecisionProcedureExternalInterfaceCVC3 extends DecisionProcedureExternalIn
 		this.calc = calc;
 		this.m = new ExpressionMangler("X", "", calc);
 		this.working = true;
-		this.cvc3 = Runtime.getRuntime().exec(path + "cvc3 +interactive -stimeout 10"); 
-		this.cvc3In = new BufferedReader(new InputStreamReader(this.cvc3.getInputStream()));
-		this.cvc3Out = new BufferedWriter(new OutputStreamWriter(this.cvc3.getOutputStream()));
-		this.readPrompt();
-		this.cvc3Out.write(PROLOGUE);
-		this.cvc3Out.flush();
-		this.readPrompt();
-		this.clear();
+		try {
+			this.cvc3 = Runtime.getRuntime().exec(path + "cvc3 +interactive -stimeout 10"); 
+			this.cvc3In = new BufferedReader(new InputStreamReader(this.cvc3.getInputStream()));
+			this.cvc3Out = new BufferedWriter(new OutputStreamWriter(this.cvc3.getOutputStream()));
+			this.readPrompt();
+			this.cvc3Out.write(PROLOGUE);
+			this.cvc3Out.flush();
+			this.readPrompt();
+			this.clear();
+		} catch (IOException e) {
+			this.working = false;
+			throw e;
+		}
 	}
 
-	private void readPrompt() throws IOException, ExternalProtocolInterfaceException {
+	private void readPrompt() throws IOException {
 		final char[] promptArray = PROMPT.toCharArray();
 		final int promptSize = promptArray.length;
 		int i = 0;
@@ -106,7 +111,8 @@ class DecisionProcedureExternalInterfaceCVC3 extends DecisionProcedureExternalIn
 	}
 
 	@Override
-	public void sendClauseAssume(Primitive cond) throws ExternalProtocolInterfaceException {
+	public void sendClauseAssume(Primitive cond) 
+	throws ExternalProtocolInterfaceException {
 		if (this.hasCurrentClause) {
 			throw new ExternalProtocolInterfaceException("Attempted to send a clause when a current clause already exists.");
 		}
@@ -168,7 +174,8 @@ class DecisionProcedureExternalInterfaceCVC3 extends DecisionProcedureExternalIn
 	}
 
 	@Override
-	public void retractClause() throws ExternalProtocolInterfaceException {
+	public void retractClause() 
+	throws ExternalProtocolInterfaceException {
 		if (!this.hasCurrentClause) {
 			throw new ExternalProtocolInterfaceException("Attempted to retract clause with no current clause.");
 		}
@@ -264,77 +271,72 @@ class DecisionProcedureExternalInterfaceCVC3 extends DecisionProcedureExternalIn
 
 		@Override
 		public void visitFunctionApplication(FunctionApplication x) throws Exception {
-			if (working) {
-				String fun = x.getOperator();
+			final String fun = x.getOperator();
 
-				if (fun.equals(FunctionApplication.POW)) {
-					for (Primitive p : x.getArgs()) { //they are two! 
-						p.accept(new CVC3ExpressionVisitor(this, false));
-					}
-					this.clauseStack.push("( (" + this.clauseStack.pop() + ") ^ (" + this.clauseStack.pop() + ") )");
+			if (fun.equals(FunctionApplication.POW)) {
+				for (Primitive p : x.getArgs()) { //they are two! 
+					p.accept(new CVC3ExpressionVisitor(this, false));
+				}
+				this.clauseStack.push("( (" + this.clauseStack.pop() + ") ^ (" + this.clauseStack.pop() + ") )");
+			} else {
+				//the whole application is treated as an uninterpreted 
+				//symbolic value
+				char mytype = x.getType();
+				if (Type.isPrimitive(mytype)) {
+					m.mangle(x).accept(this);
 				} else {
-					//the whole application is treated as an uninterpreted 
-					//symbolic value
-					char mytype = x.getType();
-					if (Type.isPrimitive(mytype)) {
-						m.mangle(x).accept(this);
-					} else {
-						throw new ExternalProtocolInterfaceException("Wrong function return type");
-					}
-					return;
+					throw new ExternalProtocolInterfaceException("wrong function return type");
 				}
 			}
 		}	
 		
 		@Override
 		public void visitExpression(Expression e) throws Exception {
-			if (working) {
-				final Operator operator = e.getOperator();
-				final String operatorCVC3 = CVC3Op(operator);
-				final boolean isBooleanOperator = operator.acceptsBoolean();
+			final Operator operator = e.getOperator();
+			final String operatorCVC3 = CVC3Op(operator);
+			final boolean isBooleanOperator = operator.acceptsBoolean();
 
-				if (operator.returnsBoolean() == this.isBooleanExpression) {
-					//the expression is well-formed.
+			if (operator.returnsBoolean() == this.isBooleanExpression) {
+				//the expression is well-formed.
 
-					//1 - The operator does not correspond to a CVC3 operator, 
-					//    but it can be implemented in terms of these: builds a 
-					//    suitable expression and visits it
-					if (operator == Operator.REM) {
-						final Primitive firstOp = e.getFirstOperand();
-						final Primitive secondOp = e.getSecondOperand();
-						final Primitive val = firstOp.sub(firstOp.div(secondOp).mul(secondOp));
-						val.accept(this);
-					} else if (operator == Operator.SHL) {
-						final Primitive firstOp = e.getFirstOperand();
-						final Primitive secondOp = e.getSecondOperand();
-						final Primitive val = firstOp.mul(calc.applyFunction(firstOp.getType(), FunctionApplication.POW, calc.valInt(2), secondOp));
-						val.accept(this);
-					} else if (operator == Operator.SHR) {
-						Primitive firstOp = e.getFirstOperand();
-						Primitive secondOp = e.getSecondOperand();
-						Primitive val = firstOp.div(calc.applyFunction(firstOp.getType(), FunctionApplication.POW, calc.valInt(2), secondOp));
-						val.accept(new CVC3ExpressionVisitor(this, false));
-						//2 - the operator is not supported: mangles the subexpressions into 
-						//    a symbolic value and sends it (unsupported operators are:
-						//    Operator.USHR, Operator.ANDBW, Operator.ORBW, Operator.XOR)
-					} else if (operatorCVC3 == OTHER) {
-						m.mangle(e).accept(this);
-						//3 - The operator corresponds to a CVC3 operator:
-						//    builds the expression
-					} else { 
-						if (e.isUnary()) {
-							e.getOperand().accept(new CVC3ExpressionVisitor(this, isBooleanOperator));
-							this.clauseStack.push("( " + operatorCVC3 + this.clauseStack.pop() + " )");
-						} else {
-							e.getSecondOperand().accept(new CVC3ExpressionVisitor(this, isBooleanOperator));
-							e.getFirstOperand().accept(new CVC3ExpressionVisitor(this, isBooleanOperator));
-							this.clauseStack.push("( (" + this.clauseStack.pop() + ")" + operatorCVC3 + "(" + this.clauseStack.pop() + ") )");
-						}
+				//1 - The operator does not correspond to a CVC3 operator, 
+				//    but it can be implemented in terms of these: builds a 
+				//    suitable expression and visits it
+				if (operator == Operator.REM) {
+					final Primitive firstOp = e.getFirstOperand();
+					final Primitive secondOp = e.getSecondOperand();
+					final Primitive val = firstOp.sub(firstOp.div(secondOp).mul(secondOp));
+					val.accept(this);
+				} else if (operator == Operator.SHL) {
+					final Primitive firstOp = e.getFirstOperand();
+					final Primitive secondOp = e.getSecondOperand();
+					final Primitive val = firstOp.mul(calc.applyFunction(firstOp.getType(), FunctionApplication.POW, calc.valInt(2), secondOp));
+					val.accept(this);
+				} else if (operator == Operator.SHR) {
+					Primitive firstOp = e.getFirstOperand();
+					Primitive secondOp = e.getSecondOperand();
+					Primitive val = firstOp.div(calc.applyFunction(firstOp.getType(), FunctionApplication.POW, calc.valInt(2), secondOp));
+					val.accept(new CVC3ExpressionVisitor(this, false));
+					//2 - the operator is not supported: mangles the subexpressions into 
+					//    a symbolic value and sends it (unsupported operators are:
+					//    Operator.USHR, Operator.ANDBW, Operator.ORBW, Operator.XOR)
+				} else if (operatorCVC3.equals(OTHER)) {
+					m.mangle(e).accept(this);
+					//3 - The operator corresponds to a CVC3 operator:
+					//    builds the expression
+				} else { 
+					if (e.isUnary()) {
+						e.getOperand().accept(new CVC3ExpressionVisitor(this, isBooleanOperator));
+						this.clauseStack.push("( " + operatorCVC3 + this.clauseStack.pop() + " )");
+					} else {
+						e.getSecondOperand().accept(new CVC3ExpressionVisitor(this, isBooleanOperator));
+						e.getFirstOperand().accept(new CVC3ExpressionVisitor(this, isBooleanOperator));
+						this.clauseStack.push("( (" + this.clauseStack.pop() + ")" + operatorCVC3 + "(" + this.clauseStack.pop() + ") )");
 					}
-				} else {
-					//the expression is ill-formed
-					throw new UnexpectedInternalException();
 				}
+			} else {
+				//the expression is ill-formed
+				throw new UnexpectedInternalException("error while parsing an expression for CVC3: " + e.toString());
 			}
 		}
 
@@ -408,8 +410,9 @@ class DecisionProcedureExternalInterfaceCVC3 extends DecisionProcedureExternalIn
 		}
 
 		@Override
-		public void visitAny(Any x) throws ExternalProtocolInterfaceException {
-			throw new ExternalProtocolInterfaceException("Internal error: Values of type Any should not reach CVC3.");
+		public void visitAny(Any x) 
+		throws ExternalProtocolInterfaceException {
+			throw new ExternalProtocolInterfaceException("values of type Any should not reach CVC3");
 		}
 	}
 
@@ -441,20 +444,29 @@ class DecisionProcedureExternalInterfaceCVC3 extends DecisionProcedureExternalIn
 		final String query = decl + "ASSERT " + ctx + "; QUERY " + cnd + ";" + LINE_SEP;
 
 		//queries CVC3
-		this.cvc3Out.write(PUSH);
-		this.cvc3Out.flush();
-		System.err.println(PUSH);
-		this.readPrompt();
-		this.cvc3Out.write(query);
-		this.cvc3Out.flush();
-		System.err.println(query);
-		String ans = this.cvc3In.readLine();
-		System.err.println(ans);
-		this.readPrompt();
-		this.cvc3Out.write(POP);
-		this.cvc3Out.flush();
-		System.err.println(POP);
-		this.readPrompt();
+		final String ans;
+		try {
+			this.cvc3Out.write(PUSH);
+			this.cvc3Out.flush();
+			System.err.println(PUSH);
+			this.readPrompt();
+			this.cvc3Out.write(query);
+			this.cvc3Out.flush();
+			System.err.println(query);
+			ans = this.cvc3In.readLine();
+			if (ans == null) {
+				throw new IOException("failed read of CVC3 output");
+			}
+			System.err.println(ans);
+			this.readPrompt();
+			this.cvc3Out.write(POP);
+			this.cvc3Out.flush();
+			System.err.println(POP);
+			this.readPrompt();
+		} catch (IOException e) {
+			this.working = false;
+			throw e;
+		}
 
 		//returns the result
 		return ans.equals("Valid.");
@@ -488,18 +500,20 @@ class DecisionProcedureExternalInterfaceCVC3 extends DecisionProcedureExternalIn
 	@Override
 	public void quit() 
 	throws ExternalProtocolInterfaceException, IOException {
+		this.working = false;
 		this.cvc3Out.close();
 		try {
 			if (this.cvc3.waitFor() != 0) {
-				throw new ExternalProtocolInterfaceException();
+				throw new ExternalProtocolInterfaceException("the CVC3 process ended with an error code");
 			}
 		} catch (InterruptedException e) {
-			throw new ExternalProtocolInterfaceException();
+			throw new ExternalProtocolInterfaceException(e);
 		}
 	}
 
 	@Override
 	public void fail() {
+		this.working = false;
 		this.cvc3.destroy();
 	}
 }

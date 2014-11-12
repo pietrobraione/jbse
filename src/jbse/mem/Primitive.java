@@ -22,11 +22,10 @@ public abstract class Primitive extends Value implements Cloneable {
 	 */
 	Primitive(char type, Calculator calc) throws InvalidTypeException {
 		super(type);
-		if (Type.isPrimitive(type)) {
-			this.calc = calc;
-		} else {
+		if (!Type.isPrimitive(type)) {
 			throw new InvalidTypeException(type + " is not a primitive type");
 		}
+		this.calc = calc;
 	}
 	
 	/**

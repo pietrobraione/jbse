@@ -52,17 +52,17 @@ public class ReferenceConcrete extends Reference {
     
     @Override
     public boolean equals(Object o) {
-    	if (o == null) {
-    		return false;
-    	}
-        boolean retVal = false;
-        
-        if (o instanceof ReferenceConcrete) {
-            ReferenceConcrete r = (ReferenceConcrete) o;
-            
-          	retVal = (this.getHeapPosition() == r.getHeapPosition());
-        }
-        return retVal;
+		if (this == o) {
+			return true;
+		}
+		if (o == null) {
+			return false;
+		}
+		if (this.getClass() != o.getClass()) {
+			return false;
+		}
+        final ReferenceConcrete r = (ReferenceConcrete) o;            
+        return (this.getHeapPosition() == r.getHeapPosition());
     }
     
     @Override

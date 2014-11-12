@@ -10,3 +10,6 @@ Not in priority order:
 * Add Apache Ant + Ivy and Netbeans project support.
 * Multithreaded analysis.
 * Test generation by concolic execution.
+* Use full classpath scanning for reference resolution.
+* Fix all the TODOs in the source.
+* Run Checkstyle, PMD and Findbugs.

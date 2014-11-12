@@ -45,11 +45,11 @@ public abstract class Calculator {
     
     public Calculator() {
     	try {
-    		this.ANY = new Any(this);
+    		this.ANY = Any.make(this);
     		this.TRUE = Simplex.make(this, Boolean.valueOf(true));
     		this.FALSE = Simplex.make(this, Boolean.valueOf(false));
     		this.INT_ZERO = Simplex.make(this, Integer.valueOf(0));
-    	} catch (InvalidTypeException e) {
+    	} catch (InvalidOperandException | InvalidTypeException e) {
     		//this should never happen
     		throw new UnexpectedInternalException(e);
     	}
@@ -91,7 +91,7 @@ public abstract class Calculator {
     public Simplex valByte(byte value) {
 		try {
 			return Simplex.make(this, Byte.valueOf(value));
-		} catch (InvalidTypeException e) {
+		} catch (InvalidOperandException | InvalidTypeException e) {
     		//this should never happen
     		throw new UnexpectedInternalException(e);
 		}
@@ -106,7 +106,7 @@ public abstract class Calculator {
     public Simplex valShort(short value) {
 		try {
 			return Simplex.make(this, Short.valueOf(value));
-		} catch (InvalidTypeException e) {
+		} catch (InvalidOperandException | InvalidTypeException e) {
     		//this should never happen
     		throw new UnexpectedInternalException(e);
 		}
@@ -124,7 +124,7 @@ public abstract class Calculator {
     	}
 		try {
 			return Simplex.make(this, Integer.valueOf(value));
-		} catch (InvalidTypeException e) {
+		} catch (InvalidOperandException | InvalidTypeException e) {
     		//this should never happen
     		throw new UnexpectedInternalException(e);
 		}
@@ -139,7 +139,7 @@ public abstract class Calculator {
     public Simplex valLong(long value) {
 		try {
 			return Simplex.make(this, Long.valueOf(value));
-		} catch (InvalidTypeException e) {
+		} catch (InvalidOperandException | InvalidTypeException e) {
     		//this should never happen
     		throw new UnexpectedInternalException(e);
 		}
@@ -154,7 +154,7 @@ public abstract class Calculator {
     public Simplex valFloat(float value) {
 		try {
 			return Simplex.make(this, Float.valueOf(value));
-		} catch (InvalidTypeException e) {
+		} catch (InvalidOperandException | InvalidTypeException e) {
     		//this should never happen
     		throw new UnexpectedInternalException(e);
 		}
@@ -169,7 +169,7 @@ public abstract class Calculator {
     public Simplex valDouble(double value) {
 		try {
 			return Simplex.make(this, Double.valueOf(value));
-		} catch (InvalidTypeException e) {
+		} catch (InvalidOperandException | InvalidTypeException e) {
     		//this should never happen
     		throw new UnexpectedInternalException(e);
 		}
@@ -184,7 +184,7 @@ public abstract class Calculator {
     public Simplex valChar(char value) {
 		try {
 			return Simplex.make(this, Character.valueOf(value));
-		} catch (InvalidTypeException e) {
+		} catch (InvalidOperandException | InvalidTypeException e) {
     		//this should never happen
     		throw new UnexpectedInternalException(e);
 		}

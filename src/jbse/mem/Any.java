@@ -1,6 +1,7 @@
 package jbse.mem;
 
 import jbse.Type;
+import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.mem.InvalidTypeException;
 import jbse.exc.mem.ValueDoesNotSupportNativeException;
 
@@ -13,8 +14,17 @@ import jbse.exc.mem.ValueDoesNotSupportNativeException;
  * @author Pietro Braione
  */
 public class Any extends Primitive {
-	Any(Calculator calc) throws InvalidTypeException {
+	private Any(Calculator calc) throws InvalidTypeException {
 		super(Type.BOOLEAN, calc);
+	}
+	
+	public static Any make(Calculator calc) {
+		try {
+			return new Any(calc);
+		} catch (InvalidTypeException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
 	}
 
 	@Override
@@ -44,7 +54,7 @@ public class Any extends Primitive {
 
 	@Override
 	public boolean equals(Object o) {
-		return false;
+		return this == o;
 	}
 
 	@Override

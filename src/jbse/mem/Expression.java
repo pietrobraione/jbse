@@ -105,17 +105,15 @@ public class Expression extends Primitive {
     throws InvalidTypeException {
     	super(type, calc);
         this.firstOp = firstOperand;
-        this.secondOp = secondOperand;
         this.operator = operator;
+        this.secondOp = secondOperand;
         
         //calculates hashCode
     	final int prime = 271;
     	int tmpHashCode = 1;
     	tmpHashCode = prime * tmpHashCode + ((firstOp == null) ? 0 : firstOp.hashCode());
-    	tmpHashCode = prime * tmpHashCode
-    		+ ((operator == null) ? 0 : operator.hashCode());
-    	tmpHashCode = prime * tmpHashCode
-    		+ ((secondOp == null) ? 0 : secondOp.hashCode());
+    	tmpHashCode = prime * tmpHashCode + operator.hashCode();
+    	tmpHashCode = prime * tmpHashCode + secondOp.hashCode();
     	this.hashCode = tmpHashCode;
 
     	//calculates toString
@@ -124,7 +122,7 @@ public class Expression extends Primitive {
         if (firstOp != null) {
         	if (firstOp instanceof Expression) {
         		parentheses = true; //default
-    			Operator firstOpOperator = ((Expression) firstOp).operator;
+    			final Operator firstOpOperator = ((Expression) firstOp).operator;
         		if (firstOpOperator.precedence() >= operator.precedence()) {
         			parentheses = false;
         		} 
@@ -215,7 +213,7 @@ public class Expression extends Primitive {
 	public Primitive replace(Primitive from, Primitive to) 
 	throws InvalidOperandException, InvalidTypeException {
 		if (from == null || to == null) {
-			throw new InvalidOperandException(from.toString() + ", " + to.toString() + ": one parameter of replace is null");
+			throw new InvalidOperandException("one parameter of replace is null");
 		}
 		if (from.getType() != to.getType()) {
 			throw new InvalidTypeException("cannot replace a primitive with type " + from.getType() + " with one with type " + to.getType());

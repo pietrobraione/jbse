@@ -17,25 +17,32 @@ public class NarrowingConversion extends Primitive {
 	private final String toString;
 	private final int hashCode;
 
-	private NarrowingConversion(char type, Calculator calc, Primitive arg) throws InvalidTypeException {
-		super(type, calc);
-		this.arg = arg;
-		this.toString = "NARROW-"+ this.getType() + "(" + arg.toString() + ")";
-		final int prime = 311;
-		int result = 1;
-		result = prime * result + ((arg == null) ? 0 : arg.hashCode());
-		result = prime * result + type;
-		this.hashCode = result;
-	}
-	
-	public static NarrowingConversion make(char type, Calculator calc, Primitive arg) 
+	private NarrowingConversion(char type, Calculator calc, Primitive arg) 
 	throws InvalidOperandException, InvalidTypeException {
-		if (arg == null) {
-			throw new InvalidOperandException("arg of narrowing is null");
-		}
+		super(type, calc);
+
+		//checks on parameters
+        if (arg == null) {
+    		throw new InvalidOperandException("null operand in narrowing construction");
+        }
 		if (!Type.narrows(type, arg.getType())) {
 			throw new InvalidTypeException("cannot narrow type " + arg.getType() + " to type " + type);
 		}
+		this.arg = arg;
+		
+        //calculates hashCode
+		final int prime = 311;
+		int result = 1;
+		result = prime * result + arg.hashCode();
+		result = prime * result + type;
+		this.hashCode = result;
+
+		//calculates toString
+		this.toString = "NARROW-"+ this.getType() + "(" + arg.toString() + ")";
+}
+	
+	public static NarrowingConversion make(char type, Calculator calc, Primitive arg) 
+	throws InvalidOperandException, InvalidTypeException {
 		return new NarrowingConversion(type, calc, arg);
 	}
 	

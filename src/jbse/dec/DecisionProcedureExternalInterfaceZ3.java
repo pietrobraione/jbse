@@ -65,7 +65,6 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 		this.m = new ExpressionMangler("X", "", calc);
 		this.working = true;
 		this.Z3 = Runtime.getRuntime().exec(Z3path + "z3 -smt2 -in -t:10");
-		//this.Z3 = Runtime.getRuntime().exec(Z3path + "cvc3 +interactive -lang smt2 -stimeout 10");
 		this.Z3In = new BufferedReader (new InputStreamReader (this.Z3.getInputStream()));
 		this.Z3Out = new BufferedWriter (new OutputStreamWriter (this.Z3.getOutputStream()));
 		this.Z3Out.write(PROLOGUE);
@@ -77,7 +76,6 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 		clear();
 	}
 	
-
 	@Override
 	public boolean isWorking() {
 		return this.working;
@@ -102,12 +100,25 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 			throw e;
 		} catch (Exception e) {
 			//this should never happen
+			this.working = false;
 			throw new UnexpectedInternalException(e);
 		}
 	}
 
 	@Override
 	public void sendClauseAssumeAliases(ReferenceSymbolic r, long heapPos, Objekt o) 
+	throws ExternalProtocolInterfaceException {
+		if (this.hasCurrentClause) {
+			this.working = false;
+			throw new ExternalProtocolInterfaceException("Attempted to send a clause when a current clause already exists.");
+		}
+		//does nothing, this decision procedure works only for numbers
+		this.currentClausePositive = this.currentClauseNegative = null;
+		this.hasCurrentClause = true;
+	}
+
+	@Override
+	public void sendClauseAssumeExpands(ReferenceSymbolic r, String className) 
 	throws ExternalProtocolInterfaceException {
 		if (this.hasCurrentClause) {
 			throw new ExternalProtocolInterfaceException("Attempted to send a clause when a current clause already exists.");
@@ -118,17 +129,8 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 	}
 
 	@Override
-	public void sendClauseAssumeExpands(ReferenceSymbolic r, String className) throws ExternalProtocolInterfaceException {
-		if (this.hasCurrentClause) {
-			throw new ExternalProtocolInterfaceException("Attempted to send a clause when a current clause already exists.");
-		}
-		//does nothing, this decision procedure works only for numbers
-		this.currentClausePositive = this.currentClauseNegative = null;
-		this.hasCurrentClause = true;
-	}
-
-	@Override
-	public void sendClauseAssumeNull(ReferenceSymbolic r) throws ExternalProtocolInterfaceException {
+	public void sendClauseAssumeNull(ReferenceSymbolic r) 
+	throws ExternalProtocolInterfaceException {
 		if (this.hasCurrentClause) {
 			throw new ExternalProtocolInterfaceException("Attempted to send a clause when a current clause already exists.");
 		}
@@ -138,7 +140,8 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 	}
 
 	@Override
-	public void sendClauseAssumeClassInitialized(String className) throws ExternalProtocolInterfaceException {
+	public void sendClauseAssumeClassInitialized(String className) 
+	throws ExternalProtocolInterfaceException {
 		if (this.hasCurrentClause) {
 			throw new ExternalProtocolInterfaceException("Attempted to send a clause when a current clause already exists.");
 		}
@@ -148,7 +151,8 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 	}
 
 	@Override
-	public void sendClauseAssumeClassNotInitialized(String className) throws ExternalProtocolInterfaceException {
+	public void sendClauseAssumeClassNotInitialized(String className) 
+	throws ExternalProtocolInterfaceException {
 		if (this.hasCurrentClause) {
 			throw new ExternalProtocolInterfaceException("Attempted to send a clause when a current clause already exists.");
 		}
@@ -170,18 +174,28 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 	 * {@inheritDoc}
 	 */
 	@Override
-	public boolean checkSat(boolean value) throws ExternalProtocolInterfaceException, IOException {
+	public boolean checkSat(boolean value) 
+	throws ExternalProtocolInterfaceException, IOException {
 		if (!this.hasCurrentClause) {
 			throw new ExternalProtocolInterfaceException("Attempted to check entailment with no current predicate.");
 		}
 		final String query = (value ? this.currentClausePositive : this.currentClauseNegative) + " " + CHECKSAT;
-		this.Z3Out.write(query + '\n');
-		this.Z3Out.flush();
+		try {
+			this.Z3Out.write(query + '\n');
+			this.Z3Out.flush();
+		} catch (IOException e) {
+			this.working = false;
+			throw e;
+		}
 		//TODO log differently!
 		//System.err.println("--- CHECKSAT: ");
 		//System.err.println("--->Z3: " + query);
 
 		final String result = this.Z3In.readLine();
+		if (result == null) {
+			this.working = false;
+			throw new IOException("failed read of Z3 output");
+		}
 		//TODO log differently!
 		//System.err.println("<---Z3: " + result);
 
@@ -197,28 +211,38 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void pushAssumption(boolean value) throws ExternalProtocolInterfaceException, IOException {
+	public void pushAssumption(boolean value) 
+	throws ExternalProtocolInterfaceException, IOException {
 		if (!this.hasCurrentClause) {
-			throw new ExternalProtocolInterfaceException("Attempted to check entailment with no current predicate.");
+			throw new ExternalProtocolInterfaceException("attempted to check entailment with no current predicate");
 		}
 		this.hasCurrentClause = false;
 		if (this.currentClausePositive == null || this.currentClauseNegative == null) {
 			return;
 		}
 		final String query = (value ? this.currentClausePositive : this.currentClauseNegative);
-		this.Z3Out.write(query);
-		this.Z3Out.flush();
+		try {
+			this.Z3Out.write(query);
+			this.Z3Out.flush();
+		} catch (IOException e) {
+			this.working = false;
+			throw e;
+		}		
 		rememberPushedDeclarations();
 		//TODO log differently!
 		//System.err.println("--- PUSH_ASSUMPTION:");
 		//System.err.println("--->Z3: " + query);
-		
 	}
 
 	@Override
 	public void popAssumption() throws IOException {
-		this.Z3Out.write(POP);
-		this.Z3Out.flush();
+		try {
+			this.Z3Out.write(POP);
+			this.Z3Out.flush();
+		} catch (IOException e) {
+			this.working = false;
+			throw e;
+		}
 		forgetPoppedDeclarations();
 		//TODO log differently!
 		//System.err.println("--- POP_ASSUMPTION:");
@@ -229,16 +253,22 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void clear() throws ExternalProtocolInterfaceException, IOException {
+	public void clear() 
+	throws ExternalProtocolInterfaceException, IOException {
 		//TODO log differently!
 		//System.err.println("--- CLEAR:");
 		final int nToPop = (this.nSymPushed == null ? 0 : this.nSymPushed.size());
-		if (nToPop > 0) {
-			//TODO log differently!
-			//System.err.println("--->Z3: (pop " + nToPop + ")");
-			this.Z3Out.write("(pop " + nToPop + ")");
+		try {
+			if (nToPop > 0) {
+				//TODO log differently!
+				//System.err.println("--->Z3: (pop " + nToPop + ")");
+				this.Z3Out.write("(pop " + nToPop + ")");
+			}
+			this.Z3Out.flush();
+		} catch (IOException e) {
+			this.working = false;
+			throw e;
 		}
-		this.Z3Out.flush();
 		this.currentClausePositive = this.currentClauseNegative = null;
 		this.hasCurrentClause = false;
 		forgetAllDeclarations();
@@ -337,7 +367,7 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 			this.decl = new StringBuffer();                       
 		}
 		
-		protected void removeDeclaredSymbols(int nVars){
+		protected void removeDeclaredSymbols(int nVars) {
 			final ArrayList<String> symToDel = new ArrayList<String>();
 			int n = nTotalSym - nVars;
 			int c = 0;
@@ -380,7 +410,7 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 					final String secondOperand = this.clauseStack.pop();
 					final String firstOperand = this.clauseStack.pop();
 					this.clauseStack.push("(not (= " + firstOperand + " " + secondOperand + "))");
-				} else if (op == OTHER){
+				} else if (op.equals(OTHER)) {
 					//2-Operator does not correspond to a z3 operator
 					m.mangle(e).accept(this);
 				} else {
@@ -519,7 +549,9 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 	 * {@inheritDoc}
 	 */
 	@Override
-	public void quit() throws ExternalProtocolInterfaceException, IOException {
+	public void quit() 
+	throws ExternalProtocolInterfaceException, IOException {
+		this.working = false;
 		this.Z3Out.close();
 		try {
 			if (this.Z3.waitFor() != 0) {
@@ -535,6 +567,7 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 	 */
 	@Override
 	public void fail() {
+		this.working = false;
 		this.Z3.destroy();
 	}
 }
