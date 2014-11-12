@@ -493,7 +493,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 	}
 
 	@Override
-	protected void pushAssumptionLocal(ClauseAssume c) throws UnexpectedInternalException {
+	protected void pushAssumptionLocal(ClauseAssume c) {
 		final Primitive p = c.getCondition();
 		if (p instanceof Expression) {
 			final Expression exp = (Expression) p;
@@ -513,7 +513,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 	}
 	
 	@Override
-	protected boolean isSatImpl(Expression exp) throws DecisionException, UnexpectedInternalException {
+	protected boolean isSatImpl(Expression exp) throws DecisionException {
 		final Expression expSimpl = (Expression) simplifyLocal(exp);
 		if (isTrivial(expSimpl)) {
 			final SignPredicate predicateOperand = deduceSignPredicate(getOperand(expSimpl));
@@ -612,7 +612,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 		}
 	}
 	
-	private SignPredicate fetch(Primitive x) throws UnexpectedInternalException {
+	private SignPredicate fetch(Primitive x) {
 		SignPredicate retVal = this.preds.get(x);
 		if (retVal == null) {
 			if (x instanceof Expression) {
@@ -653,8 +653,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 		return v.result;
 	}
 	
-	private static SignPredicate bestApproxRange(Expression exp) 
-	throws UnexpectedInternalException {
+	private static SignPredicate bestApproxRange(Expression exp) {
 		final Operator operator = getOperator(exp);
 		final Simplex num = getNumber(exp);
 		final char type = getOperand(exp).getType();
@@ -879,7 +878,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 		}
 
 		@Override
-		public void visitFunctionApplication(FunctionApplication x) throws UnexpectedInternalException {
+		public void visitFunctionApplication(FunctionApplication x) {
 			final SignPredicate infoFromOperator;
 			final String operator = x.getOperator();
 			if (operator.equals(FunctionApplication.EXP)) {
@@ -961,8 +960,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 		}
 
 		@Override
-		public void visitPrimitiveSymbolic(PrimitiveSymbolic s) 
-		throws UnexpectedInternalException {
+		public void visitPrimitiveSymbolic(PrimitiveSymbolic s) {
 			this.result = fetch(s);
 		}
 
@@ -973,8 +971,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 		}
 
 		@Override
-		public void visitTerm(Term x) 
-		throws UnexpectedInternalException {
+		public void visitTerm(Term x) {
 			this.result = fetch(x);
 		}
 	}
@@ -991,7 +988,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 		public RewriterSimplifyTrivialExpressions() { }
 		
 		@Override
-		protected void rewriteExpression(Expression x) throws NoResultException, UnexpectedInternalException {
+		protected void rewriteExpression(Expression x) throws NoResultException {
 			final RewriterSimplifyTrivialExpressionsSubexpression r = 
 					new RewriterSimplifyTrivialExpressionsSubexpression();
 			if (isTrivial(x) && getNumber(x).isZeroOne(true)) {
@@ -1027,7 +1024,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 			public RewriterSimplifyTrivialExpressionsSubexpression() { }
 
 			private boolean setResultBasedOnSign(Primitive x) 
-			throws NoResultException, UnexpectedInternalException {
+			throws NoResultException {
 				final char type = x.getType();
 				final SignPredicate signPredicate = deduceSignPredicate(x);
 				try {
@@ -1051,7 +1048,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 			}
 
 			@Override
-			protected void rewriteExpression(Expression x) throws NoResultException, UnexpectedInternalException {
+			protected void rewriteExpression(Expression x) throws NoResultException {
 				final boolean done = setResultBasedOnSign(x);
 				if (done) {
 					return;
@@ -1098,7 +1095,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 
 			@Override
 			protected void rewriteFunctionApplication(FunctionApplication x)
-			throws NoResultException, UnexpectedInternalException {
+			throws NoResultException {
 				final boolean done = setResultBasedOnSign(x);
 				if (done) {
 					return;
@@ -1116,7 +1113,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 
 			@Override
 			protected void rewritePrimitiveSymbolic(PrimitiveSymbolic x)
-			throws NoResultException, UnexpectedInternalException {
+			throws NoResultException {
 				final boolean done = setResultBasedOnSign(x);
 				if (done) {
 					return;
@@ -1133,7 +1130,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 
 			@Override
 			protected void rewriteTerm(Term x) 
-			throws NoResultException, UnexpectedInternalException {
+			throws NoResultException {
 				final boolean done = setResultBasedOnSign(x);
 				if (done) {
 					return;

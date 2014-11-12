@@ -139,12 +139,10 @@ public class Engine implements AutoCloseable {
 	 *         observed variable names cannot be observed. This is the only exception
 	 *         that allows nevertheless to perform symbolic execution, in which case 
 	 *         only the observers to existing variables will be notified.
-	 * @throws UnexpectedInternalException whenever some internal unexpected error occurs.
 	 */
 	void init() 
 	throws DecisionException, InitializationException, 
-	InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, 
-	UnexpectedInternalException {
+	InvalidClassFileFactoryClassException, NonexistingObservedVariablesException {
 		//executes the initial state setup step
 		final SEInit algo = this.dispatcher.select();
 		algo.exec(ctx);
@@ -210,13 +208,11 @@ public class Engine implements AutoCloseable {
 	 * @throws FailureException iff the step causes a violation of some assertion; 
 	 *         in this case after the step it is 
 	 *         {@code this.}{@link #canStep()}{@code == false}.
-	 * @throws UnexpectedInternalException whenever some unexpected internal error
-	 *         occurs.
 	 */
 	public BranchPoint step() 
 	throws EngineStuckException, CannotManageStateException, ThreadStackEmptyException, 
     OperandStackEmptyException, ContradictionException, 
-    DecisionException, FailureException, UnexpectedInternalException {
+    DecisionException, FailureException {
 		//sanity check
 		if (!canStep()) {
 			throw new EngineStuckException();
@@ -309,9 +305,8 @@ public class Engine implements AutoCloseable {
 	 * Adds a branch point to the symbolic execution.
 	 * 
 	 * @return the created {@link BranchPoint}.
-	 * @throws UnexpectedInternalException 
 	 */
-	public BranchPoint addBranchPoint() throws UnexpectedInternalException {
+	public BranchPoint addBranchPoint() {
 		final State s = (State) this.currentState.clone();
 		this.ctx.stateTree.addBranchPoint(s, "MANUAL");
 		final BranchPoint retVal = this.ctx.stateTree.nextBranch();
@@ -358,11 +353,10 @@ public class Engine implements AutoCloseable {
 	 * @throws CannotBacktrackException iff {@code this.}{@link #canBacktrack}{@code () == false} 
 	 *         before the method is invoked.
 	 * @throws DecisionBacktrackException iff the decision procedure fails for 
-	 *         any reason.
-	 * @throws UnexpectedInternalException 
+	 *         any reason. 
 	 */
 	public BranchPoint backtrack() 
-	throws CannotBacktrackException, DecisionBacktrackException, UnexpectedInternalException {
+	throws CannotBacktrackException, DecisionBacktrackException {
 		//TODO dubious correctness of this implementation
 		if (!this.canBacktrack()) {
 			throw new CannotBacktrackException();
@@ -485,11 +479,9 @@ public class Engine implements AutoCloseable {
 	 * Cleans up the decision procedure after the usage of the engine.
 	 * 
 	 * @throws DecisionException when clean-up of decision procedure fails.
-	 * @throws UnexpectedInternalException 
 	 */
 	@Override
-	public void close() 
-	throws DecisionException, UnexpectedInternalException {
+	public void close() throws DecisionException {
 		this.ctx.decisionProcedure.close();
 	}
 }

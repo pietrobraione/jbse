@@ -3,6 +3,7 @@ package jbse.meta.algo;
 import static jbse.Util.VERIFY_ERROR;
 import static jbse.bc.Offsets.INVOKESTATIC_OFFSET;
 import static jbse.mem.Util.JAVA_STRING_VALUE;
+
 import jbse.algo.Algorithm;
 import jbse.bc.Signature;
 import jbse.exc.common.UnexpectedInternalException;
@@ -22,7 +23,7 @@ import jbse.meta.SymbolicValueNotAllowedException;
 public class SEInvokeIsResolved implements Algorithm {
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, UnexpectedInternalException {
+	throws ThreadStackEmptyException {
 		try {
 			final Reference fieldNameRef = (Reference) state.pop();
 			final Reference objRef = (Reference) state.pop();

@@ -85,7 +85,7 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 
 	@Override
 	public void sendClauseAssume(Primitive cond) 
-	throws ExternalProtocolInterfaceException, UnexpectedInternalException {
+	throws ExternalProtocolInterfaceException {
 		if (this.hasCurrentClause) {
 			throw new ExternalProtocolInterfaceException("Attempted to send a clause when a current clause already exists.");
 		}

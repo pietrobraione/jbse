@@ -4,7 +4,6 @@ import java.util.Collection;
 
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureDecorator;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.dec.DecisionException;
 import jbse.mem.Clause;
 import jbse.mem.Expression;
@@ -35,7 +34,7 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
 	
 	@Override
 	public void pushAssumption(Clause c) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.startTimer();
 		super.pushAssumption(c);
 		final long elapsed = this.elapsed();
@@ -44,7 +43,7 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
 	
 	@Override
 	public void clearAssumptions() 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.startTimer();
 		super.clearAssumptions();
 		final long elapsed = this.elapsed();
@@ -53,7 +52,7 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
 	
 	@Override
 	public void setAssumptions(Collection<Clause> newAssumptions) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.startTimer();
 		super.setAssumptions(newAssumptions);
 		final long elapsed = this.elapsed();
@@ -62,7 +61,7 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
 
 	@Override
 	public Collection<Clause> getAssumptions() 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.startTimer();
 		final Collection<Clause> result = super.getAssumptions();
 		final long elapsed = this.elapsed();
@@ -72,7 +71,7 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
 
 	@Override
 	public boolean isSat(Expression exp) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.startTimer();
 		final boolean result = super.isSat(exp);
 		final long elapsed = this.elapsed();
@@ -82,7 +81,7 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
 	
 	@Override
 	public boolean isSatAliases(ReferenceSymbolic r, long heapPos, Objekt o)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.startTimer();
 		final boolean result = super.isSatAliases(r, heapPos, o);
 		final long elapsed = this.elapsed();
@@ -92,7 +91,7 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
 	
 	@Override
 	public boolean isSatExpands(ReferenceSymbolic r, String className)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.startTimer();
 		final boolean result = super.isSatExpands(r, className);
 		final long elapsed = this.elapsed();
@@ -102,7 +101,7 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
 	
 	@Override
 	public boolean isSatNull(ReferenceSymbolic r) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.startTimer();
 		final boolean result = super.isSatNull(r);
 		final long elapsed = this.elapsed();
@@ -112,7 +111,7 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
 	
 	@Override
 	public boolean isSatInitialized(String className) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.startTimer();
 		final boolean result = super.isSatInitialized(className);
 		final long elapsed = this.elapsed();
@@ -122,7 +121,7 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
 	
 	@Override
 	public boolean isSatNotInitialized(String className)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.startTimer();
 		final boolean result = super.isSatInitialized(className);
 		final long elapsed = this.elapsed();

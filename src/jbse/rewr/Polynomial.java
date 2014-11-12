@@ -43,8 +43,7 @@ class Polynomial {
 		this.rep = rep;
 	}
 
-	public static Polynomial of(CalculatorRewriting calc, Primitive p) 
-	throws UnexpectedInternalException {
+	public static Polynomial of(CalculatorRewriting calc, Primitive p) {
 		return new PolynomialBuilder(calc, makeRep()).of(p).make();
 	}
 
@@ -87,7 +86,7 @@ class Polynomial {
 			return this;
 		}
 
-		public Polynomial make() throws UnexpectedInternalException {
+		public Polynomial make() {
 			if (this.type == Type.UNKNOWN || this.type == Type.ERROR) {
 				throw new UnexpectedInternalException();
 			}
@@ -95,7 +94,7 @@ class Polynomial {
 		}
 
 		public PolynomialBuilder addMonomial(Monomial m) 
-		throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+		throws InvalidOperandException, InvalidTypeException {
 			if (m == null) {
 				throw new InvalidOperandException("tried to add a null monomial to a polynomial");
 			}
@@ -109,7 +108,7 @@ class Polynomial {
 		}
 
 		private void addMonomial(Monomial base, Simplex multiplier) 
-		throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+		throws InvalidOperandException, InvalidTypeException {
 			if (this.rep.containsKey(base)) {
 				Simplex multiplierNew = (Simplex) this.rep.get(base).add(multiplier);
 				if (multiplierNew.isZeroOne(true)) {
@@ -125,7 +124,7 @@ class Polynomial {
 		}
 
 		public PolynomialBuilder mul(Polynomial first, Polynomial other) 
-		throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+		throws InvalidOperandException, InvalidTypeException {
 			if (first == null || other == null) {
 				throw new InvalidOperandException("one of the operands of polynomial multiplication is null");
 			}
@@ -148,7 +147,7 @@ class Polynomial {
 		}
 
 		public PolynomialBuilder neg(Polynomial p) 
-		throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+		throws InvalidOperandException, InvalidTypeException {
 			if (p == null) {
 				throw new InvalidOperandException("tried to negate a null polynomial");
 			}
@@ -168,7 +167,7 @@ class Polynomial {
 		}
 
 		public PolynomialBuilder add(Polynomial first, Polynomial other)
-		throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+		throws InvalidOperandException, InvalidTypeException {
 			if (first == null || other == null) {
 				throw new InvalidOperandException("one operand of a polynomial addition is null");
 			}
@@ -187,7 +186,7 @@ class Polynomial {
 		}
 
 		public PolynomialBuilder divNumer(Polynomial first, Polynomial other)
-		throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+		throws InvalidOperandException, InvalidTypeException {
 			if (first == null || other == null) {
 				throw new InvalidOperandException("one operand of a polynomial division is null");
 			}
@@ -215,7 +214,7 @@ class Polynomial {
 		}
 
 		public PolynomialBuilder divDenom(Polynomial first, Polynomial other)
-		throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+		throws InvalidOperandException, InvalidTypeException {
 			if (first == null || other == null) {
 				throw new InvalidOperandException("one operand of a polynomial division is null");
 			}
@@ -254,7 +253,7 @@ class Polynomial {
 		}
 		
 		private boolean allMultipliersDivisibleBy(Map<Monomial, Simplex> rep, Simplex otherPrimitive) 
-		throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+		throws InvalidOperandException, InvalidTypeException {
 			Simplex previous = null;
 			final Simplex zero = (Simplex) this.calc.valInt(0).to(otherPrimitive.getType()); 
 			for (Simplex s : rep.values()) {
@@ -271,7 +270,7 @@ class Polynomial {
 
 			@Override
 			public void visitAny(Any x) 
-			throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+			throws InvalidOperandException, InvalidTypeException {
 				final Monomial m = Monomial.of(calc, x);
 				addMonomial(m);
 			}
@@ -338,8 +337,7 @@ class Polynomial {
 		}
 	}
 
-	private Primitive makePrimitive(boolean normalized, Set<Monomial> bases) 
-	throws UnexpectedInternalException {
+	private Primitive makePrimitive(boolean normalized, Set<Monomial> bases) {
 		try {
 			final Primitive zero = this.calc.valInt(0).to(this.type);
 			Primitive retVal = zero;
@@ -361,7 +359,7 @@ class Polynomial {
 
 	private volatile Primitive toPrimitive;
 
-	public Primitive toPrimitive() throws UnexpectedInternalException {
+	public Primitive toPrimitive() {
 		Primitive retVal = this.toPrimitive;
 		if (retVal == null) {
 			this.toPrimitive = makePrimitive(false, this.rep.keySet());
@@ -372,7 +370,7 @@ class Polynomial {
 
 	private volatile Primitive toPrimitiveNormalized;
 
-	public Primitive toPrimitiveNormalized() throws UnexpectedInternalException {
+	public Primitive toPrimitiveNormalized() {
 		Primitive retVal = this.toPrimitiveNormalized;
 		if (retVal == null) {
 			final TreeSet<Monomial> keysSorted = new TreeSet<Monomial>();
@@ -383,7 +381,7 @@ class Polynomial {
 		return retVal;
 	}
 
-	public Simplex getMultiplier(Monomial m) throws UnexpectedInternalException {
+	public Simplex getMultiplier(Monomial m) {
 		if (this.rep.containsKey(m)) {
 			return this.rep.get(m);
 		} else {
@@ -396,7 +394,7 @@ class Polynomial {
 		}
 	}
 
-	public Simplex getConstantTerm() throws UnexpectedInternalException {
+	public Simplex getConstantTerm() {
 		try {
 			final Monomial one = Monomial.of(this.calc, this.calc.valInt(1).to(this.type)); 
 			return this.getMultiplier(one);
@@ -411,12 +409,12 @@ class Polynomial {
 	}	
 
 	public Polynomial mul(Polynomial other) 
-	throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	throws InvalidOperandException, InvalidTypeException {
 		return new PolynomialBuilder(this.calc, makeRep()).mul(this, other).make();
 	}
 
 	public Polynomial neg() 
-			throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+			throws InvalidOperandException, InvalidTypeException {
 		return new PolynomialBuilder(this.calc, makeRep()).neg(this).make();
 	}
 
@@ -444,11 +442,11 @@ class Polynomial {
 	}
 
 	public Polynomial add(Polynomial other) 
-			throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+			throws InvalidOperandException, InvalidTypeException {
 		return new PolynomialBuilder(this.calc, makeRep()).add(this, other).make();
 	}
 
-	public Monomial gcdMonomials() throws InvalidTypeException, UnexpectedInternalException {
+	public Monomial gcdMonomials() throws InvalidTypeException {
 		Monomial retVal = null;
 		for (Monomial m : this.rep.keySet()) {
 			if (retVal == null) {
@@ -461,7 +459,7 @@ class Polynomial {
 	}
 
 	public Polynomial[] div(Polynomial other) 
-	throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	throws InvalidOperandException, InvalidTypeException {
 		final Polynomial denom = new PolynomialBuilder(this.calc, makeRep()).divDenom(this, other).make();
 		final Polynomial numer = new PolynomialBuilder(this.calc, makeRep()).divNumer(this, other).make();
 		if (numer.isZeroOne(true) || denom.isZeroOne(false)) {
@@ -478,7 +476,7 @@ class Polynomial {
 		return new Polynomial[] { numer, denom };		
 	}
 
-	public Polynomial[] sqrt() throws InvalidTypeException, UnexpectedInternalException {
+	public Polynomial[] sqrt() throws InvalidTypeException {
 		if (this.type != Type.DOUBLE) {
 			throw new InvalidTypeException("can calculate square roots only of doubles");
 		}

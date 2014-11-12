@@ -39,7 +39,7 @@ class SEInvokeStatic implements Algorithm {
 	public void exec(State state, ExecutionContext ctx) 
 	throws CannotManageStateException, ThreadStackEmptyException, 
 	OperandStackEmptyException, ContradictionException, FailureException, 
-	DecisionException, UnexpectedInternalException {
+	DecisionException {
 		//gets index operand from instruction word and 
 		//calculates/stores the pointer to the next instruction
 		final int index;

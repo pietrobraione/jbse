@@ -20,7 +20,7 @@ public class RewriterSqrt extends Rewriter {
 	
 	@Override
 	protected void rewriteFunctionApplication(FunctionApplication x)
-	throws NoResultException, UnexpectedInternalException {
+	throws NoResultException {
 		if (x.getOperator().equals(FunctionApplication.SQRT)) {
 			if (x.getType() != Type.DOUBLE) {
 				//sqrt function yielding nondouble value; in doubt we give up

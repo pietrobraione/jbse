@@ -16,7 +16,7 @@ class SEConst implements Algorithm {
     
     @Override
     public void exec(State state, ExecutionContext ctx) 
-    throws ThreadStackEmptyException, UnexpectedInternalException {
+    throws ThreadStackEmptyException {
         if (type == Type.INT) {
         	state.push(state.getCalculator().valInt(val));
         } else if (type == Type.DOUBLE) {

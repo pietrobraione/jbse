@@ -8,7 +8,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import jbse.Type;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.dec.DecisionException;
 import jbse.exc.mem.InvalidOperandException;
 import jbse.exc.mem.InvalidTypeException;
@@ -25,7 +24,7 @@ public class DecisionProcedureEqualityTest {
 	final CalculatorRewriting calc;
 	DecisionProcedureEquality dec;
 	
-	public DecisionProcedureEqualityTest() throws UnexpectedInternalException {
+	public DecisionProcedureEqualityTest() {
 		this.calc = new CalculatorRewriting();
 		this.calc.addRewriter(new RewriterOperationOnSimplex());
 	}
@@ -79,7 +78,7 @@ public class DecisionProcedureEqualityTest {
 	}
 	
 	@Test
-	public void simpleTest1() throws DecisionException, InvalidTypeException, InvalidOperandException, UnexpectedInternalException {
+	public void simpleTest1() throws DecisionException, InvalidTypeException, InvalidOperandException {
 		//A == B |- B == A
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -88,7 +87,7 @@ public class DecisionProcedureEqualityTest {
 	}	
 	
 	@Test
-	public void simpleTest2() throws DecisionException, InvalidTypeException, InvalidOperandException, UnexpectedInternalException {
+	public void simpleTest2() throws DecisionException, InvalidTypeException, InvalidOperandException {
 		//A == B |- f(A) == f(B)
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -97,7 +96,7 @@ public class DecisionProcedureEqualityTest {
 	}
 	
 	@Test
-	public void simpleTest3() throws DecisionException, InvalidTypeException, InvalidOperandException, UnexpectedInternalException {
+	public void simpleTest3() throws DecisionException, InvalidTypeException, InvalidOperandException {
 		//A == E, B == F, C == G, D == H |- f((A - B) / (C - D)) == f((E - F) / (G - H))
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -115,7 +114,7 @@ public class DecisionProcedureEqualityTest {
 	}	
 	
 	@Test
-	public void simpleTest4() throws DecisionException, InvalidTypeException, InvalidOperandException, UnexpectedInternalException {
+	public void simpleTest4() throws DecisionException, InvalidTypeException, InvalidOperandException {
 		//A == E, B == F, C == G, D == H |-/- f((A - B) / (C - D)) != f((E - F) / (G - H))
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -133,7 +132,7 @@ public class DecisionProcedureEqualityTest {
 	}	
 	
 	@Test
-	public void simpleTest5() throws DecisionException, InvalidTypeException, InvalidOperandException, UnexpectedInternalException {
+	public void simpleTest5() throws DecisionException, InvalidTypeException, InvalidOperandException {
 		//A == E, B == F, C == G, D == H |- !(f((A - B) / (C - D)) != f((E - F) / (G - H)))
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -151,7 +150,7 @@ public class DecisionProcedureEqualityTest {
 	}	
 	
 	@Test
-	public void pushExpTest1() throws DecisionException, InvalidTypeException, InvalidOperandException, UnexpectedInternalException {
+	public void pushExpTest1() throws DecisionException, InvalidTypeException, InvalidOperandException {
 		//f(A) == g(B) |- A + g(f(A)) == A + g(g(B))
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -160,7 +159,7 @@ public class DecisionProcedureEqualityTest {
 	}	
 	
 	@Test
-	public void transitiveTest1() throws DecisionException, InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void transitiveTest1() throws DecisionException, InvalidOperandException, InvalidTypeException {
 		//A == B, B == C |- A == C
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -171,7 +170,7 @@ public class DecisionProcedureEqualityTest {
 	}	
 	
 	@Test
-	public void complexExpressionTest1() throws DecisionException, InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void complexExpressionTest1() throws DecisionException, InvalidOperandException, InvalidTypeException {
 		//A + -1 * B == 0 |-/- A + -1 * B != 0
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");

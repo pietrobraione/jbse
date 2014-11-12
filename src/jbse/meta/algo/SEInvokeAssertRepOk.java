@@ -2,9 +2,9 @@ package jbse.meta.algo;
 
 import static jbse.Util.VERIFY_ERROR;
 import static jbse.bc.Offsets.INVOKESTATIC_OFFSET;
+
 import jbse.algo.Algorithm;
 import jbse.bc.Signature;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.mem.InvalidProgramCounterException;
 import jbse.exc.mem.OperandStackEmptyException;
 import jbse.exc.mem.ThreadStackEmptyException;
@@ -18,7 +18,7 @@ public class SEInvokeAssertRepOk implements Algorithm {
 
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, OperandStackEmptyException, UnexpectedInternalException {
+	throws ThreadStackEmptyException, OperandStackEmptyException {
 		//pops the parameters and stores them in ctx
 		//TODO store them elsewhere and eliminate the dependence of Run from ExecutionContext
 		final Reference methodNameRef = (Reference) state.pop();

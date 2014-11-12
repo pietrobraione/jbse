@@ -6,6 +6,7 @@ import static jbse.bc.Opcodes.OP_IFGT;
 import static jbse.bc.Opcodes.OP_IFLE;
 import static jbse.bc.Opcodes.OP_IFLT;
 import static jbse.bc.Opcodes.OP_IFNE;
+
 import jbse.Util;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.exc.bc.ClassFileNotFoundException;
@@ -32,13 +33,14 @@ import jbse.tree.DecisionAlternativeComparison;
  * 
  * @author Pietro Braione
  */
-class SENcmp extends MultipleStateGenerator<DecisionAlternativeComparison> implements Algorithm {
+final class SENcmp extends MultipleStateGenerator<DecisionAlternativeComparison> implements Algorithm {
 	public SENcmp() {
 		super(DecisionAlternativeComparison.class);
 	}
 	
+	@Override
 	public void exec(State state, final ExecutionContext ctx) 
-	throws DecisionException, UnexpectedInternalException, ContradictionException, ThreadStackEmptyException, OperandStackEmptyException {
+	throws DecisionException, ContradictionException, ThreadStackEmptyException, OperandStackEmptyException {
 		//TODO NaN cases for distinguishing [d/l]cmpg from [d/l]cmpl
 
 		//takes operands from current frame's operand stack

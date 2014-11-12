@@ -4,7 +4,6 @@ import static jbse.Util.VERIFY_ERROR;
 import static jbse.Util.byteCatShort;
 import static jbse.algo.Util.aliases;
 
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.mem.InvalidProgramCounterException;
 import jbse.exc.mem.OperandStackEmptyException;
 import jbse.exc.mem.ThreadStackEmptyException;
@@ -24,7 +23,9 @@ class SEIfacmp implements Algorithm {
 	boolean compareWithNull;
     boolean eq;
 
-    public void exec(State state, ExecutionContext ctx) throws UnexpectedInternalException, ThreadStackEmptyException, OperandStackEmptyException {
+    @Override
+    public void exec(State state, ExecutionContext ctx) 
+    throws ThreadStackEmptyException, OperandStackEmptyException {
         //determines branch target
         int index;
         try {

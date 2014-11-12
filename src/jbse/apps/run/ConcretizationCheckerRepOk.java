@@ -54,12 +54,11 @@ public final class ConcretizationCheckerRepOk {
 	 * @return {@code true} iff executing the repOk 
 	 *         method on the initial state yields {@code true}
 	 *         on at least one path.
-	 * @throws UnexpectedInternalException 
 	 * @throws CannotRefineException 
 	 */
 	public static boolean check(State state, State sIni, RunParameters params, 
 	String repOkMethodName, Reference repOkTargetObjectReference, 
-	DecisionProcedureAlgorithms dec) throws UnexpectedInternalException, CannotRefineException {
+	DecisionProcedureAlgorithms dec) throws CannotRefineException {
 		if (repOkMethodName == null || repOkTargetObjectReference == null) {
 			return true; //does nothing
 		}

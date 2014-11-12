@@ -8,7 +8,6 @@ import jbse.Type;
 import jbse.Util;
 import jbse.bc.Signature;
 import jbse.exc.algo.CannotInvokeNativeException;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.mem.InvalidProgramCounterException;
 import jbse.exc.mem.ThreadStackEmptyException;
 import jbse.mem.Calculator;
@@ -30,7 +29,7 @@ import jbse.mem.Value;
 public class NativeInvokerReflect implements NativeInvoker {
 	@Override
 	public void doInvokeNative(State state, Signature methodSignatureResolved, Value[] args, int pcOffset)
-	throws CannotInvokeNativeException, ThreadStackEmptyException, UnexpectedInternalException {
+	throws CannotInvokeNativeException, ThreadStackEmptyException {
 		try {
 			//converts the arguments
 			final String[] argsType = Type.splitParametersDescriptors(methodSignatureResolved.getDescriptor());
@@ -106,7 +105,7 @@ public class NativeInvokerReflect implements NativeInvoker {
 	}
 	
 	private Value toValue(Calculator calc, Object retValRefl, String type) 
-	throws CannotInvokeNativeException, UnexpectedInternalException {
+	throws CannotInvokeNativeException {
 		if (type.equals("" + Type.BYTE)) {
 			return calc.valByte(((Byte) retValRefl).byteValue());
 		} else if (type.equals("" + Type.SHORT)) {

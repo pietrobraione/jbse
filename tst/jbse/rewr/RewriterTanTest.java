@@ -2,7 +2,6 @@ package jbse.rewr;
 
 import static org.junit.Assert.assertEquals;
 import jbse.Type;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.mem.InvalidOperandException;
 import jbse.exc.mem.InvalidTypeException;
 import jbse.mem.FunctionApplication;
@@ -16,13 +15,13 @@ public class RewriterTanTest {
 	CalculatorRewriting calc;
 	
 	@Before
-	public void before() throws UnexpectedInternalException {
+	public void before() {
 		calc = new CalculatorRewriting();
 		calc.addRewriter(new RewriterTan());
 	}
 	
 	@Test
-	public void testSimple1() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testSimple1() throws InvalidOperandException, InvalidTypeException {
 		//sin(A) / cos(A) -> tan(A)
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
 		final Primitive p_post = calc.applyFunction(Type.DOUBLE, FunctionApplication.SIN, A).div(calc.applyFunction(Type.DOUBLE, FunctionApplication.COS, A)); 

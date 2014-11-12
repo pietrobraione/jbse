@@ -211,10 +211,9 @@ public class Expression extends Primitive {
 	 *         is {@code null}.
 	 * @throws InvalidTypeException if {@code from} and {@code to}
 	 *         have different type. 
-	 * @throws UnexpectedInternalException 
 	 */
 	public Primitive replace(Primitive from, Primitive to) 
-	throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	throws InvalidOperandException, InvalidTypeException {
 		if (from == null || to == null) {
 			throw new InvalidOperandException(from.toString() + ", " + to.toString() + ": one parameter of replace is null");
 		}

@@ -37,7 +37,7 @@ final class SEGetstatic extends MultipleStateGeneratorLFLoad implements Algorith
 	@Override
     public void exec(State state, ExecutionContext ctx) 
     throws DecisionException, ContradictionException, 
-    ThreadStackEmptyException, UnexpectedInternalException {
+    ThreadStackEmptyException {
         //gets the index of the field signature in the current class 
     	//constant pool
         final int index;

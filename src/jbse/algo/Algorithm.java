@@ -1,7 +1,6 @@
 package jbse.algo;
 
 import jbse.exc.algo.CannotManageStateException;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.dec.DecisionException;
 import jbse.exc.jvm.FailureException;
 import jbse.exc.mem.ContradictionException;
@@ -20,7 +19,7 @@ public interface Algorithm {
     void exec(State state, ExecutionContext ctx) 
     throws CannotManageStateException, ThreadStackEmptyException, 
     OperandStackEmptyException, ContradictionException, 
-    DecisionException, FailureException, UnexpectedInternalException;
+    DecisionException, FailureException;
     default boolean someReferenceNotExpanded() { return false; }
     default String nonExpandedReferencesOrigins() { return null; }
     default String nonExpandedReferencesTypes() { return null; }

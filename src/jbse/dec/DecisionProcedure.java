@@ -2,7 +2,6 @@ package jbse.dec;
 
 import java.util.Collection;
 
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.dec.DecisionException;
 import jbse.mem.Clause;
 import jbse.mem.Expression;
@@ -50,19 +49,15 @@ public interface DecisionProcedure extends AutoCloseable {
      *         contradicts the current assumption (after a call to 
      *         {@link #goFastAndImprecise()} the latter check 
      *         <emph>might not</emph> be performed).
-     * @throws UnexpectedInternalException 
      */
-	void pushAssumption(Clause c) 
-	throws DecisionException, UnexpectedInternalException;
+	void pushAssumption(Clause c) throws DecisionException;
     
     /**
      * Drops the current assumptions.
      * 
      * @throws DecisionException upon failure.
-     * @throws UnexpectedInternalException 
      */
-	void clearAssumptions() 
-	throws DecisionException, UnexpectedInternalException;
+	void clearAssumptions() throws DecisionException;
 	
 	
     /**
@@ -72,10 +67,8 @@ public interface DecisionProcedure extends AutoCloseable {
      *        new assumptions that must be added to the current ones, iterable in FIFO order 
      *        w.r.t. pushes. It may not be {@code null}.
      * @throws DecisionException upon failure.
-     * @throws UnexpectedInternalException 
      */	
-	default void addAssumptions(Iterable<Clause> assumptionsToAdd) 
-	throws DecisionException, UnexpectedInternalException {
+	default void addAssumptions(Iterable<Clause> assumptionsToAdd) throws DecisionException {
 		for (Clause c : assumptionsToAdd) {
 			pushAssumption(c);
 		}
@@ -88,10 +81,8 @@ public interface DecisionProcedure extends AutoCloseable {
      *        new assumptions that must replace the current ones, iterable in FIFO order 
      *        w.r.t. pushes. It may not be {@code null}.
      * @throws DecisionException upon failure.
-     * @throws UnexpectedInternalException 
      */
-	default void setAssumptions(Collection<Clause> newAssumptions) 
-	throws DecisionException, UnexpectedInternalException {
+	default void setAssumptions(Collection<Clause> newAssumptions) throws DecisionException {
 		clearAssumptions();
 		addAssumptions(newAssumptions);
 	}
@@ -102,10 +93,8 @@ public interface DecisionProcedure extends AutoCloseable {
      * @return an immutable {@link Collection}{@code <}{@link Clause}{@code >}
      *         with all the pushed clauses, possibly simplified.
      * @throws DecisionException upon failure.
-     * @throws UnexpectedInternalException 
      */
-	Collection<Clause> getAssumptions() 
-	throws DecisionException, UnexpectedInternalException;
+	Collection<Clause> getAssumptions() throws DecisionException;
     
     /**
      * Determines the satisfiability of an {@link Expression} under the
@@ -115,10 +104,8 @@ public interface DecisionProcedure extends AutoCloseable {
      * @return {@code true} iff {@code exp} is satisfiable under
      *         the current assumptions.
      * @throws DecisionException upon failure.
-     * @throws UnexpectedInternalException 
      */
-    boolean isSat(Expression exp) 
-    throws DecisionException, UnexpectedInternalException;
+    boolean isSat(Expression exp) throws DecisionException;
     
     /**
      * Determines the satisfiability of a resolution by null under the
@@ -128,10 +115,8 @@ public interface DecisionProcedure extends AutoCloseable {
      * @return {@code true} iff {@code r} can be resolved by null under
      *         the current assumption.
      * @throws DecisionException upon failure.
-     * @throws UnexpectedInternalException 
      */
-    boolean isSatNull(ReferenceSymbolic r) 
-    throws DecisionException, UnexpectedInternalException;
+    boolean isSatNull(ReferenceSymbolic r) throws DecisionException;
 	
     /**
      * Determines the satisfiability of a resolution by aliasing under the
@@ -143,10 +128,8 @@ public interface DecisionProcedure extends AutoCloseable {
      * @return {@code true} iff {@code r} can be resolved by aliasing to {@code o}
      *         under the current assumption.
      * @throws DecisionException upon failure.
-     * @throws UnexpectedInternalException 
      */
-    boolean isSatAliases(ReferenceSymbolic r, long heapPos, Objekt o) 
-    throws DecisionException, UnexpectedInternalException;
+    boolean isSatAliases(ReferenceSymbolic r, long heapPos, Objekt o) throws DecisionException;
 	
     /**
      * Determines the satisfiability of a resolution by expansion under the
@@ -158,10 +141,8 @@ public interface DecisionProcedure extends AutoCloseable {
      *         a fresh object of class {@code className} under
      *         the current assumption.
      * @throws DecisionException upon failure.
-     * @throws UnexpectedInternalException 
      */
-    boolean isSatExpands(ReferenceSymbolic r, String className) 
-    throws DecisionException, UnexpectedInternalException;
+    boolean isSatExpands(ReferenceSymbolic r, String className) throws DecisionException;
 	
     /**
      * Determines the satisfiability of a class initialization under the
@@ -172,10 +153,8 @@ public interface DecisionProcedure extends AutoCloseable {
      *         initialized at the start of the symbolic execution is 
      *         satisfiable under the current assumption.
      * @throws DecisionException upon failure.
-     * @throws UnexpectedInternalException 
      */
-    boolean isSatInitialized(String className) 
-    throws DecisionException, UnexpectedInternalException;
+    boolean isSatInitialized(String className) throws DecisionException;
 	
     /**
      * Determines the satisfiability of a class (non)initialization under the
@@ -185,11 +164,9 @@ public interface DecisionProcedure extends AutoCloseable {
      * @return {@code true} iff the assumption that {@code className} is
      *         not initialized at the start of the symbolic execution is 
      *         satisfiable under the current assumption.
-     * @throws DecisionException upon failure.
-     * @throws UnexpectedInternalException 
+     * @throws DecisionException upon failure. 
      */
-    boolean isSatNotInitialized(String className) 
-    throws DecisionException, UnexpectedInternalException;
+    boolean isSatNotInitialized(String className) throws DecisionException;
     
     /**
      * Simplifies a {@link Primitive} under the current assumptions.
@@ -197,10 +174,8 @@ public interface DecisionProcedure extends AutoCloseable {
      * @param p a boolean {@link Primitive}.
      * @return a {@link Primitive} equivalent to {@code p}
      *         under the current assumption (possibly {@code p} itself).
-     * @throws UnexpectedInternalException 
      */
-    default Primitive simplify(Primitive p) 
-    throws UnexpectedInternalException {
+    default Primitive simplify(Primitive p) {
     	return p;
     }
     
@@ -210,10 +185,9 @@ public interface DecisionProcedure extends AutoCloseable {
      * used anymore.
      * 
      * @throws DecisionException upon failure.
-     * @throws UnexpectedInternalException 
      */
     @Override
-    default void close() throws DecisionException, UnexpectedInternalException {
+    default void close() throws DecisionException {
 		//does nothing
 	}
 }

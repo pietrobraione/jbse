@@ -44,7 +44,7 @@ abstract class MultipleStateGeneratorLoad<R extends DecisionAlternative> extends
 	}
 	
 	protected final void refineRefExpands(State s, DecisionAlternativeLoadRefExpands drc) 
-	throws ContradictionException, InvalidTypeException, UnexpectedInternalException {
+	throws ContradictionException, InvalidTypeException {
 		final ReferenceSymbolic referenceToExpand = drc.getValueToLoad();
 		final String classNameOfTargetObject = drc.getClassNameOfTargetObject();
 		s.assumeExpands(referenceToExpand, classNameOfTargetObject);
@@ -78,7 +78,7 @@ abstract class MultipleStateGeneratorLoad<R extends DecisionAlternative> extends
 	}
 	
 	protected final void update(State s, DecisionAlternativeLoad r) 
-	throws DecisionException, ThreadStackEmptyException, UnexpectedInternalException {
+	throws DecisionException, ThreadStackEmptyException {
 		final Value val = r.getValueToLoad();
 		final Value valToPush = possiblyMaterialize(s, val);
 		s.push(valToPush);
@@ -102,5 +102,5 @@ abstract class MultipleStateGeneratorLoad<R extends DecisionAlternative> extends
 	}
 	
 	protected abstract Value possiblyMaterialize(State s, Value val) 
-	throws DecisionException, UnexpectedInternalException;
+	throws DecisionException;
 }

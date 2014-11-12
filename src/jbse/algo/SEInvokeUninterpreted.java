@@ -38,7 +38,7 @@ class SEInvokeUninterpreted implements Algorithm {
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
 	throws CannotManageStateException, ThreadStackEmptyException, OperandStackEmptyException, 
-	DecisionException, ContradictionException, UnexpectedInternalException {		
+	DecisionException, ContradictionException {		
 		//gets index operand from instruction word and 
 		//calculates/stores the pointer to the next instruction
 		final int opcode = state.getInstruction();

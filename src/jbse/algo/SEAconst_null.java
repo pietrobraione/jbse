@@ -1,8 +1,8 @@
 package jbse.algo;
 
 import static jbse.bc.Offsets.XCONST_OFFSET;
+
 import jbse.Util;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.mem.InvalidProgramCounterException;
 import jbse.exc.mem.ThreadStackEmptyException;
 import jbse.jvm.ExecutionContext;
@@ -10,9 +10,11 @@ import jbse.mem.Null;
 import jbse.mem.State;
 
 
-class SEAconst_null implements Algorithm {
+final class SEAconst_null implements Algorithm {
+	
+	@Override
     public void exec(State state, ExecutionContext ctx) 
-    throws ThreadStackEmptyException, UnexpectedInternalException {
+    throws ThreadStackEmptyException {
         state.push(Null.getInstance());
         try {
 			state.incPC(XCONST_OFFSET);

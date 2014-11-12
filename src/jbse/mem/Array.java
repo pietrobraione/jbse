@@ -116,10 +116,9 @@ public class Array extends Objekt {
 		 *        the array index must be different from {@code val}.
 		 * @throws InvalidOperandException if {@code val} is {@code null}. 
 		 * @throws InvalidTypeException if {@code val} is not integer.
-		 * @throws UnexpectedInternalException 
 		 */
 		public void constrainExpression(Primitive val) 
-		throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+		throws InvalidOperandException, InvalidTypeException {
 			final Expression indexIsDifferentFromVal = (Expression) INDEX.eq(val).not();
 			if (val.getType() != Type.INT) {
 				throw new InvalidTypeException("attempted array access with index of type " + val.getType());
@@ -144,10 +143,9 @@ public class Array extends Objekt {
 		 * {@link Expression}).
 		 * @throws InvalidOperandException if {@code accessIndex} is {@code null}.
 		 * @throws InvalidTypeException if {@code accessIndex} is not integer.
-		 * @throws UnexpectedInternalException 
 		 */
 		public Primitive inRange(Primitive accessIndex) 
-		throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException { 
+		throws InvalidOperandException, InvalidTypeException { 
 			return this.accessCondition.replace(INDEX, accessIndex); 
 		}
 	}
@@ -283,11 +281,10 @@ public class Array extends Objekt {
 	 * @param type a {@link String}, the type of the array.
 	 * @param origin the origin of the array.
 	 * @param epoch the creation {@link Epoch} of the array.
-	 * @throws InvalidTypeException iff {@code type} is invalid.
-	 * @throws UnexpectedInternalException 
+	 * @throws InvalidTypeException iff {@code type} is invalid. 
 	 */
 	public Array(Calculator calc, boolean initSymbolic, Value initValue, Primitive length, String type, String origin, Epoch epoch) 
-	throws InvalidTypeException, UnexpectedInternalException {
+	throws InvalidTypeException {
 		super(calc, new Signature[]{ new Signature(type, "" + Type.INT, "length") }, type, origin, epoch);
 		this.lengthSignature = new Signature(type, "" + Type.INT, "length");
 		boolean illFormed = false;
@@ -329,8 +326,7 @@ public class Array extends Objekt {
 		this.setEntriesInit(initSymbolic, initValue);
 	}
 
-	private void setEntriesInit(boolean initSymbolic, Value initValue) 
-	throws UnexpectedInternalException {
+	private void setEntriesInit(boolean initSymbolic, Value initValue) {
 		Value entryValue;
 		if (initSymbolic) {
 			entryValue = null;
@@ -422,10 +418,9 @@ public class Array extends Objekt {
 	 *         {@code index} but are possibly not satisfiable.
 	 * @throws InvalidOperandException if {@code index} is {@code null}.
 	 * @throws InvalidTypeException if {@code index} is not an int.
-	 * @throws UnexpectedInternalException
 	 */
 	public Collection<AccessOutcome> get(Primitive index) 
-	throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	throws InvalidOperandException, InvalidTypeException {
 		final LinkedList<AccessOutcome> retVal = new LinkedList<AccessOutcome>();
 		final Primitive inRangeArray = inRange(index);
 
@@ -510,11 +505,10 @@ public class Array extends Objekt {
 	 *         modified by the update; the caller must decide whether 
 	 *         constrain and possibly delete them.
 	 * @throws InvalidOperandException if {@code index} is {@code null}.
-	 * @throws InvalidTypeException if {@code index} is not an int.
-	 * @throws UnexpectedInternalException 
+	 * @throws InvalidTypeException if {@code index} is not an int. 
 	 */
 	public Iterator<AccessOutcomeIn> set(final Primitive index, final Value valToSet)
-	throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	throws InvalidOperandException, InvalidTypeException {
 		if (this.simpleRep && index instanceof Simplex) {
 			try {
 				this.setFast((Simplex) index, valToSet);
@@ -544,7 +538,7 @@ public class Array extends Objekt {
 				private boolean emitted = true;
 				private boolean canRemove = false;
 				
-				private void findNext() throws UnexpectedInternalException {
+				private void findNext() {
 					this.next = null;
 					//looks for the next entry affected by the set operation
 					while (this.it.hasNext()) {
@@ -624,11 +618,10 @@ public class Array extends Objekt {
 	 * denoting a boolean value is returned, otherwise an
 	 * {@link Expression} is returned. 
 	 * @throws InvalidOperandException if {@code index} is {@code null}. 
-	 * @throws InvalidTypeException if {@code index} is not an int.
-	 * @throws UnexpectedInternalException 
+	 * @throws InvalidTypeException if {@code index} is not an int. 
 	 */
 	public Primitive inRange(Primitive index) 
-	throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	throws InvalidOperandException, InvalidTypeException {
 		return this.indexInRange.replace(INDEX, index);
 	}
 	
@@ -643,11 +636,10 @@ public class Array extends Objekt {
 	 * denoting {@code true} or {@code false} respectively 
 	 * is returned. 
 	 * @throws InvalidOperandException if {@code index} is {@code null}. 
-	 * @throws InvalidTypeException if {@code index} is not an int.
-	 * @throws UnexpectedInternalException 
+	 * @throws InvalidTypeException if {@code index} is not an int. 
 	 */
 	public Primitive outOfRange(Primitive index) 
-	throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	throws InvalidOperandException, InvalidTypeException {
 		final Primitive retVal = this.inRange(index).not();
 		return retVal;
 	}

@@ -774,8 +774,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 	}
 	
 	@Override
-	public FormatterStrategy select(Byte bytecode) 
-	throws UnexpectedInternalException {
+	public FormatterStrategy select(Byte bytecode) {
 		final FormatterStrategy retVal;
 		try {
 			retVal = super.select(bytecode);

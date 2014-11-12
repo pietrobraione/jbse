@@ -23,47 +23,47 @@ import jbse.tree.DecisionAlternativeAloadVisitor;
  */
 abstract class StateUpdateStrategyAload implements StateUpdateStrategy<DecisionAlternativeAload> {
 	abstract public void updateReference(State s, DecisionAlternativeAloadRef dar) 
-	throws DecisionException, ThreadStackEmptyException, UnexpectedInternalException;
+	throws DecisionException, ThreadStackEmptyException;
 
 	abstract public void updateResolved(State s, DecisionAlternativeAloadResolved dav) 
-	throws DecisionException, ThreadStackEmptyException, UnexpectedInternalException;
+	throws DecisionException, ThreadStackEmptyException;
 
 	abstract public void updateOut(State s, DecisionAlternativeAloadOut dao) 
-	throws ThreadStackEmptyException, UnexpectedInternalException;
+	throws ThreadStackEmptyException;
 
 	@Override
 	public final void update(final State s, DecisionAlternativeAload r)
-	throws DecisionException, ThreadStackEmptyException, UnexpectedInternalException {
+	throws DecisionException, ThreadStackEmptyException {
 		//a visitor redispatching to the methods which specialize this.update
 		DecisionAlternativeAloadVisitor visitorUpdate = 
 		new DecisionAlternativeAloadVisitor() {
 			@Override
 			public void visitDecisionAlternativeAloadRefExpands(DecisionAlternativeAloadRefExpands dac) 
-			throws DecisionException, ThreadStackEmptyException, UnexpectedInternalException {
+			throws DecisionException, ThreadStackEmptyException {
 				StateUpdateStrategyAload.this.updateReference(s, dac);
 			}
 
 			@Override
 			public void visitDecisionAlternativeAloadRefAliases(DecisionAlternativeAloadRefAliases dai) 
-			throws DecisionException, ThreadStackEmptyException, UnexpectedInternalException {
+			throws DecisionException, ThreadStackEmptyException {
 				StateUpdateStrategyAload.this.updateReference(s, dai);
 			}
 
 			@Override
 			public void visitDecisionAlternativeAloadRefNull(DecisionAlternativeAloadRefNull dan) 
-			throws DecisionException, ThreadStackEmptyException, UnexpectedInternalException {
+			throws DecisionException, ThreadStackEmptyException {
 				StateUpdateStrategyAload.this.updateReference(s, dan);
 			}
 
 			@Override
 			public void visitDecisionAlternativeAloadResolved(DecisionAlternativeAloadResolved dav) 
-			throws DecisionException, ThreadStackEmptyException, UnexpectedInternalException {
+			throws DecisionException, ThreadStackEmptyException {
 				StateUpdateStrategyAload.this.updateResolved(s, dav);
 			}
 
 			@Override
 			public void visitDecisionAlternativeAloadOut(DecisionAlternativeAloadOut dao) 
-			throws ThreadStackEmptyException, UnexpectedInternalException {
+			throws ThreadStackEmptyException {
 				StateUpdateStrategyAload.this.updateOut(s, dao);
 			}
 		};
@@ -71,7 +71,7 @@ abstract class StateUpdateStrategyAload implements StateUpdateStrategy<DecisionA
 		try {
 			r.accept(visitorUpdate);
 		} catch (DecisionException | ThreadStackEmptyException | 
-				UnexpectedInternalException | RuntimeException e) {
+				RuntimeException e) {
 			throw e;
 		} catch (Exception e) {
 			throw new UnexpectedInternalException(e);

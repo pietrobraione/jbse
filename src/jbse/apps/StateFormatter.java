@@ -1,6 +1,5 @@
 package jbse.apps;
 
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.mem.State;
 
 /**
@@ -13,9 +12,8 @@ public interface StateFormatter {
 	 * Formats a {@link State}.
 	 * 
 	 * @param s the {@link State} to be formatted.
-	 * @throws UnexpectedInternalException 
 	 */
-	void format(State s) throws UnexpectedInternalException;
+	void format(State s);
 	
 	/**
 	 * Emits the formatted {@link State}.

@@ -1,7 +1,6 @@
 package jbse.algo;
 
 import jbse.Util;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.mem.InvalidProgramCounterException;
 import jbse.exc.mem.ThreadStackEmptyException;
 import jbse.jvm.ExecutionContext;
@@ -13,7 +12,7 @@ class SEGoto implements Algorithm {
 
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, UnexpectedInternalException {
+	throws ThreadStackEmptyException {
 		try {
 			final byte tmp0 = state.getInstruction(1);
 			final byte tmp1 = state.getInstruction(2);

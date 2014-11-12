@@ -39,7 +39,7 @@ final class SEIfcond extends MultipleStateGenerator<DecisionAlternativeIf> imple
     @Override
     public void exec(State state, final ExecutionContext ctx) 
     throws DecisionException, ContradictionException, 
-    ThreadStackEmptyException, OperandStackEmptyException, UnexpectedInternalException {
+    ThreadStackEmptyException, OperandStackEmptyException {
         //gets operands and calculates branch target
         final int branchOffset;
         try {

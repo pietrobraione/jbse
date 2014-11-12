@@ -26,8 +26,7 @@ import jbse.mem.Primitive;
 public class RewriterSinCos extends Rewriter {
 	public RewriterSinCos() { }
 
-	private List<Monomial> getMonomialsWithSinCos(Polynomial poly) 
-	throws UnexpectedInternalException {
+	private List<Monomial> getMonomialsWithSinCos(Polynomial poly) {
 		final ArrayList<Monomial> retVal = new ArrayList<Monomial>();
 		for (Monomial m : poly.representation().keySet()) {
 			for (Primitive p : m.representation().keySet()) {
@@ -50,7 +49,7 @@ public class RewriterSinCos extends Rewriter {
 	}
 
 	private static Monomial checkSinCos(Monomial first, Monomial second) 
-	throws InvalidTypeException, UnexpectedInternalException {
+	throws InvalidTypeException {
 		try {
 			if (first.getMultiplier().eq(second.getMultiplier()).surelyTrue()) {
 				//divides the monomials
@@ -106,7 +105,7 @@ public class RewriterSinCos extends Rewriter {
 
 	@Override
 	protected void rewriteExpression(Expression x) 
-	throws NoResultException, UnexpectedInternalException {
+	throws NoResultException {
 		final Operator operator = x.getOperator();
 		if (operator == Operator.ADD || operator == Operator.MUL) {
 			final Polynomial poly = Polynomial.of(this.calc, x);

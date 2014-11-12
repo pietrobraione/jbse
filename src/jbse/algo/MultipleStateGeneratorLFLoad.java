@@ -42,8 +42,7 @@ abstract class MultipleStateGeneratorLFLoad extends MultipleStateGeneratorLoad<D
 	
 	@Override
 	protected void generateStates() 
-	throws DecisionException, ContradictionException, 
-	ThreadStackEmptyException, UnexpectedInternalException {
+	throws DecisionException, ContradictionException, ThreadStackEmptyException {
 		this.ds = (results) -> {
 			final Outcome o = ctx.decisionProcedure.resolveLFLoad(state, valToLoad, results);
 			MultipleStateGeneratorLFLoad.this.refNotExpanded = o.noReferenceExpansion();
@@ -58,7 +57,7 @@ abstract class MultipleStateGeneratorLFLoad extends MultipleStateGeneratorLoad<D
 		this.srs = new StateRefinementStrategyLoadLF() {
 			@Override
 			public void refineRefExpands(State s, DecisionAlternativeLFLoadRefExpands drc) 
-			throws DecisionException, ContradictionException, InvalidTypeException, UnexpectedInternalException {
+			throws DecisionException, ContradictionException, InvalidTypeException {
 				MultipleStateGeneratorLFLoad.this.refineRefExpands(s, drc); //implemented in MultipleStateGeneratorLoad
 			}
 

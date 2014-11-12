@@ -28,16 +28,17 @@ import jbse.tree.DecisionAlternativeSwitch;
  * @author Pietro Braione
  * @author unknown
  */
-class SESwitch extends MultipleStateGenerator<DecisionAlternativeSwitch> implements Algorithm {
+final class SESwitch extends MultipleStateGenerator<DecisionAlternativeSwitch> implements Algorithm {
 	boolean isTableSwitch;
 
 	public SESwitch() {
 		super(DecisionAlternativeSwitch.class);
 	}
 	
+	@Override
 	public void exec(State state, final ExecutionContext ctx) 
 	throws ThreadStackEmptyException, OperandStackEmptyException, 
-	DecisionException, ContradictionException, UnexpectedInternalException {
+	DecisionException, ContradictionException {
 		final Calculator calc = state.getCalculator();
 		
 		//gets the switch table

@@ -51,11 +51,9 @@ class ClassFileInterface {
      * @return the classFile structure of the correspondent class.
      * @throws ClassFileNotFoundException when the class file cannot be 
      * found in the classpath.
-     * @throws UnexpectedInternalException when the class file is ill-formed
-     *         (neither public nor package visibility).
      */
     public ClassFile getClassFile(String className) 
-    throws ClassFileNotFoundException, UnexpectedInternalException {
+    throws ClassFileNotFoundException {
     	ClassFile retVal = null;
         //lazily initializes jcrArray
         if (jcrArray == null) {

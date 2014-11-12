@@ -171,10 +171,9 @@ public class SwitchTable implements Iterable<Integer> {
 	 *         is not a key of the {@link SwitchTable}.
 	 * @throws InvalidOperandException if {@code selector} is {@code null}.
 	 * @throws InvalidTypeException if {@code selector} is not an int. 
-	 * @throws UnexpectedInternalException 
 	 */
 	public Expression getDefaultClause(Primitive selector) 
-	throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	throws InvalidOperandException, InvalidTypeException {
 		if (selector == null) {
 			throw new InvalidOperandException("attempted to get the default clause of a switch table with a null selector");
 		}

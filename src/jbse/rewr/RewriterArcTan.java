@@ -1,6 +1,5 @@
 package jbse.rewr;
 
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.rewr.NoResultException;
 import jbse.mem.FunctionApplication;
 import jbse.mem.Primitive;
@@ -17,7 +16,7 @@ public class RewriterArcTan extends Rewriter {
 	
 	@Override
 	protected void rewriteFunctionApplication(FunctionApplication x)
-	throws NoResultException, UnexpectedInternalException {
+	throws NoResultException {
 		final String operator = x.getOperator();
 		if (operator == FunctionApplication.TAN) {
 			final Primitive arg = x.getArgs()[0];

@@ -1,7 +1,6 @@
 package jbse.algo;
 
 import jbse.Util;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.mem.InvalidProgramCounterException;
 import jbse.exc.mem.InvalidTypeException;
 import jbse.exc.mem.OperandStackEmptyException;
@@ -11,11 +10,11 @@ import jbse.mem.Primitive;
 import jbse.mem.State;
 import jbse.mem.Value;
 
-class SENeg implements Algorithm {
+final class SENeg implements Algorithm {
 	
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, OperandStackEmptyException, UnexpectedInternalException {
+	throws ThreadStackEmptyException, OperandStackEmptyException {
 		final Value op = state.pop();
 		try {
 			state.push(((Primitive)op).neg());

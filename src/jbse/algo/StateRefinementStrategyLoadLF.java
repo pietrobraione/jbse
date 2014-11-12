@@ -22,7 +22,7 @@ import jbse.tree.DecisionAlternativeLFLoadVisitor;
  */
 abstract class StateRefinementStrategyLoadLF implements StateRefinementStrategy<DecisionAlternativeLFLoad> {
 	abstract public void refineRefExpands(State s, DecisionAlternativeLFLoadRefExpands drc)
-	throws DecisionException, ContradictionException, InvalidTypeException, UnexpectedInternalException;
+	throws DecisionException, ContradictionException, InvalidTypeException;
 
 	abstract public void refineRefAliases(State s, DecisionAlternativeLFLoadRefAliases dro) 
 	throws DecisionException, ContradictionException;
@@ -31,17 +31,17 @@ abstract class StateRefinementStrategyLoadLF implements StateRefinementStrategy<
 	throws DecisionException, ContradictionException;
 
 	abstract public void refineResolved(State s, DecisionAlternativeLFLoadResolved drr)
-	throws DecisionException, UnexpectedInternalException;
+	throws DecisionException;
 
 	@Override
 	public final void refine(final State s, DecisionAlternativeLFLoad r)
-	throws DecisionException, ContradictionException, InvalidTypeException, UnexpectedInternalException {
+	throws DecisionException, ContradictionException, InvalidTypeException {
 		//a visitor redispatching to the methods which specialize this.refine
 		final DecisionAlternativeLFLoadVisitor visitorRefine = 
 		new DecisionAlternativeLFLoadVisitor() {
 			@Override
 			public void visitDecisionAlternativeLFLoadRefExpands(DecisionAlternativeLFLoadRefExpands drc) 
-			throws DecisionException, ContradictionException, InvalidTypeException, UnexpectedInternalException {
+			throws DecisionException, ContradictionException, InvalidTypeException {
 				StateRefinementStrategyLoadLF.this.refineRefExpands(s, drc);
 			}
 
@@ -59,7 +59,7 @@ abstract class StateRefinementStrategyLoadLF implements StateRefinementStrategy<
 
 			@Override
 			public void visitDecisionAlternativeLFLoadResolved(DecisionAlternativeLFLoadResolved drr)
-			throws DecisionException, UnexpectedInternalException {
+			throws DecisionException {
 				StateRefinementStrategyLoadLF.this.refineResolved(s, drr);
 			}
 		};
@@ -68,7 +68,7 @@ abstract class StateRefinementStrategyLoadLF implements StateRefinementStrategy<
 		try {
 			r.accept(visitorRefine);
 		} catch (DecisionException | ContradictionException | 
-				InvalidTypeException | UnexpectedInternalException | RuntimeException e) {
+				InvalidTypeException | RuntimeException e) {
 			throw e;
 		} catch (Exception e) {
 			throw new UnexpectedInternalException(e);

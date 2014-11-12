@@ -32,7 +32,7 @@ public abstract class StateFormatterTrace implements StateFormatter {
 	
 	private BytecodeFormatter bcf = new BytecodeFormatter();
 
-	public void format(State s) throws UnexpectedInternalException {
+	public void format(State s) {
 		this.formatOutput = s.getIdentifier() + "[" + s.getSequenceNumber() + "]" + fieldSep + s.getDepth()+","+s.getCount() + fieldSep;
         if (s.isStuck()) {
         	this.formatOutput += leaf;
@@ -53,7 +53,7 @@ public abstract class StateFormatterTrace implements StateFormatter {
         }
 	}
 	
-	private String formatReturn(State s, Value v) throws UnexpectedInternalException {
+	private String formatReturn(State s, Value v) {
 		if (v instanceof Primitive) {
 			return formatPrimitive((Primitive) v);
 		} else if (v instanceof Reference) {

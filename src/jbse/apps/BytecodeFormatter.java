@@ -1,7 +1,6 @@
 package jbse.apps;
 
 import jbse.bc.ClassHierarchy;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.mem.Frame;
 import jbse.mem.State;
 
@@ -21,10 +20,8 @@ public class BytecodeFormatter {
 	 * @param cfi a {@link ClassHierarchy}.
 	 * @return a {@link String}, the disassembly of the current bytecode
 	 *         of {@code f}.
-	 * @throws UnexpectedInternalException 
 	 */
-	public String format(Frame f, ClassHierarchy cfi) 
-	throws UnexpectedInternalException {
+	public String format(Frame f, ClassHierarchy cfi) {
 		return bdf.select(f.getInstruction()).format(f, cfi);
 	}
 
@@ -34,10 +31,9 @@ public class BytecodeFormatter {
 	 * @param s a {@link State}.
 	 * @return a {@link String}, the disassembly of the current bytecode
 	 *         of {@code s}.
-	 * @throws UnexpectedInternalException 
+
 	 */
-	public String format(State s) 
-	throws UnexpectedInternalException {
+	public String format(State s) {
 		return format(s.getCurrentFrame(), s.getClassHierarchy());
 	}
 }

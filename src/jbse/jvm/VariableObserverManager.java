@@ -7,7 +7,6 @@ import java.util.Map;
 
 import jbse.Type;
 import jbse.bc.Signature;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.jvm.NonexistingObservedVariablesException;
 import jbse.exc.mem.ThreadStackEmptyException;
 import jbse.mem.Instance;
@@ -61,7 +60,7 @@ class VariableObserverManager {
 	}
 
 	void init(Engine engine) 
-	throws ThreadStackEmptyException, NonexistingObservedVariablesException, UnexpectedInternalException {
+	throws ThreadStackEmptyException, NonexistingObservedVariablesException {
 		this.engine = engine;
 		this.rootObjectReference = this.engine.getCurrentState().getRootObjectReference();
 		

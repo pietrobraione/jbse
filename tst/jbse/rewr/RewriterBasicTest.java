@@ -15,7 +15,7 @@ public class RewriterBasicTest {
 	private static class RewriterBasic extends Rewriter {
 		public RewriterBasic() { }
 		@Override
-		protected void rewriteTerm(Term x) throws NoResultException, UnexpectedInternalException {
+		protected void rewriteTerm(Term x) throws NoResultException {
 			try {
 				super.rewriteTerm(this.calc.valTerm(x.getType(), "FOO"));
 			} catch (InvalidTypeException e) {

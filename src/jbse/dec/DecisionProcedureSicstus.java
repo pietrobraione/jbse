@@ -2,7 +2,6 @@ package jbse.dec;
 
 import java.io.IOException;
 
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.dec.DecisionException;
 import jbse.exc.dec.ExternalProtocolInterfaceException;
 import jbse.mem.Objekt;
@@ -25,31 +24,31 @@ public class DecisionProcedureSicstus extends DecisionProcedureExternal {
 	
 	@Override
 	protected boolean isSatAliasesImpl(ReferenceSymbolic r, long heapPos, Objekt o) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		return delegateIsSatAliases(r, heapPos, o);
 	}
 	
 	@Override
 	protected boolean isSatExpandsImpl(ReferenceSymbolic r, String className) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		return delegateIsSatExpands(r, className);
 	}
 	
 	@Override
 	protected boolean isSatNullImpl(ReferenceSymbolic r)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		return delegateIsSatNull(r);
 	}
 	
 	@Override
 	protected boolean isSatInitializedImpl(String className)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		return delegateIsSatInitialized(className);
 	}
 	
 	@Override
 	protected boolean isSatNotInitializedImpl(String className)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		return delegateIsSatNotInitialized(className);
 	}
 }

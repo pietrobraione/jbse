@@ -8,13 +8,13 @@ import jbse.jvm.ExecutionContext;
 import jbse.mem.State;
 import jbse.mem.Value;
 
-class SEReturn implements Algorithm {
+final class SEReturn implements Algorithm {
 	/** {@code true} iff returning from a method with void return type. */
 	boolean def;
 	
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, OperandStackEmptyException, UnexpectedInternalException {
+	throws ThreadStackEmptyException, OperandStackEmptyException {
 		if (def) {
 			state.popCurrentFrame();
 			if (state.getStackSize() == 0) {

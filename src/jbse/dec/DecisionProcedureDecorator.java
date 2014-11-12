@@ -2,7 +2,6 @@ package jbse.dec;
 
 import java.util.Collection;
 
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.dec.DecisionException;
 import jbse.mem.Clause;
 import jbse.mem.Expression;
@@ -39,25 +38,25 @@ public class DecisionProcedureDecorator implements DecisionProcedure {
 	
 	@Override
 	public void pushAssumption(Clause c) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.component.pushAssumption(c);
 	}
 
 	@Override
 	public void clearAssumptions() 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.component.clearAssumptions();
 	}
 
 	@Override
 	public void addAssumptions(Iterable<Clause> assumptionsToAdd) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.component.addAssumptions(assumptionsToAdd);
 	}
 	
 	@Override
 	public void setAssumptions(Collection<Clause> newAssumptions) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.component.setAssumptions(newAssumptions);
 	}
 	
@@ -66,55 +65,54 @@ public class DecisionProcedureDecorator implements DecisionProcedure {
 	
 	@Override
 	public Collection<Clause> getAssumptions() 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		return this.component.getAssumptions();
 	}
 
 	@Override
 	public boolean isSat(Expression exp) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		return this.component.isSat(exp);
 	}
 
 	@Override
 	public boolean isSatNull(ReferenceSymbolic r) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		return this.component.isSatNull(r);
 	}
 
 	@Override
 	public boolean isSatAliases(ReferenceSymbolic r, long heapPos, Objekt o)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		return this.component.isSatAliases(r, heapPos, o);
 	}
 
 	@Override
 	public boolean isSatExpands(ReferenceSymbolic r, String className)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		return this.component.isSatExpands(r, className);
 	}
 
 	@Override
 	public boolean isSatInitialized(String className) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		return this.component.isSatInitialized(className);
 	}
 
 	@Override
 	public boolean isSatNotInitialized(String className) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		return this.component.isSatNotInitialized(className);
 	}
 
 	@Override
-	public Primitive simplify(Primitive c) 
-	throws UnexpectedInternalException {
+	public Primitive simplify(Primitive c) {
 		return this.component.simplify(c);
 	}
 	
 	@Override
 	public void close() 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.component.close();
 	}
 }

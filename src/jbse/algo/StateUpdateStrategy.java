@@ -1,6 +1,5 @@
 package jbse.algo;
 
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.dec.DecisionException;
 import jbse.exc.mem.ThreadStackEmptyException;
 import jbse.mem.State;
@@ -24,8 +23,7 @@ interface StateUpdateStrategy<R> {
 	 *          the criterion on which the state shall be updated.
 	 * @throws DecisionException
 	 * @throws ThreadStackEmptyException
-	 * @throws UnexpectedInternalException 
 	 */
 	public void update(State s, R r) 
-	throws DecisionException, ThreadStackEmptyException, UnexpectedInternalException;
+	throws DecisionException, ThreadStackEmptyException;
 }

@@ -4,7 +4,6 @@ import java.util.SortedSet;
 
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.dec.DecisionEmptyException;
 import jbse.exc.dec.DecisionException;
 import jbse.exc.dec.InvalidInputException;
@@ -78,13 +77,12 @@ public abstract class MultipleStateGenerator<R extends DecisionAlternative> {
 	 * @throws InvalidInputException
 	 * @throws InvalidTypeException
 	 * @throws ThreadStackEmptyException  
-	 * @throws UnexpectedInternalException 
 	 */
 	protected void generateStates() 
 	throws ClassFileNotFoundException, 
 	DecisionException, ContradictionException, 
 	InvalidInputException, InvalidTypeException,
-	ThreadStackEmptyException, UnexpectedInternalException {
+	ThreadStackEmptyException {
 		//decides the satisfiability of the different alternatives
 		final SortedSet<R> decisionResults = this.ctx.mkDecisionResultSet(this.superclassDecisionAlternatives);		
 		final Outcome outcome = this.ds.decide(decisionResults);

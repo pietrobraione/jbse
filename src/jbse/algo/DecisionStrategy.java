@@ -4,10 +4,8 @@ import java.util.SortedSet;
 
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.dec.DecisionException;
 import jbse.exc.dec.InvalidInputException;
-
 
 /**
  * Strategy for deciding the states following the current one.
@@ -34,9 +32,7 @@ interface DecisionStrategy<R> {
 	 * @throws InvalidInputException
 	 * @throws ClassFileNotFoundException
 	 * @throws DecisionException
-	 * @throws UnexpectedInternalException 
 	 */
 	public Outcome decide(SortedSet<R> results) 
-	throws InvalidInputException, ClassFileNotFoundException, 
-	DecisionException, UnexpectedInternalException;
+	throws InvalidInputException, ClassFileNotFoundException, DecisionException;
 }

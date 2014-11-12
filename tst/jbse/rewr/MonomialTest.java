@@ -1,7 +1,6 @@
 package jbse.rewr;
 
 import jbse.Type;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.mem.InvalidOperandException;
 import jbse.exc.mem.InvalidTypeException;
 import jbse.mem.Primitive;
@@ -14,7 +13,7 @@ public class MonomialTest {
 	CalculatorRewriting calc;
 	
 	@Before
-	public void before() throws UnexpectedInternalException {
+	public void before() {
 		calc = new CalculatorRewriting();
 		calc.addRewriter(new RewriterOperationOnSimplex());
 		calc.addRewriter(new RewriterPolynomials());
@@ -22,7 +21,7 @@ public class MonomialTest {
 	}
 	
 	@Test
-	public void test1() throws InvalidTypeException, InvalidOperandException, UnexpectedInternalException {
+	public void test1() throws InvalidTypeException, InvalidOperandException {
 		final Term A = calc.valTerm(Type.INT, "A");
 		final Term B = calc.valTerm(Type.INT, "B");
 		final Term C = calc.valTerm(Type.INT, "C");

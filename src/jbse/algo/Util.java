@@ -85,11 +85,9 @@ public class Util {
 	 *         not have a suitable classfile in the classpath.
 	 * @throws ThreadStackEmptyException if {@code state} has not a 
 	 *         current frame (is stuck).
-	 * @throws UnexpectedInternalException
 	 */
 	static boolean ensureKlass(State s, String className, DecisionProcedure dec) 
-	throws DecisionException, ClassFileNotFoundException, ThreadStackEmptyException, 
-	UnexpectedInternalException {
+	throws DecisionException, ClassFileNotFoundException, ThreadStackEmptyException {
 		if (s.initialized(className)) {
 			return false; //nothing to do
 		} else if (decideClassInitialized(s, className, dec)) {
@@ -117,10 +115,9 @@ public class Util {
 	 * @return {@code true} if the class has been initialized, 
 	 *         {@code false} otherwise.
 	 * @throws DecisionException
-     * @throws UnexpectedInternalException 
 	 */
 	private static boolean decideClassInitialized(State s, String className, DecisionProcedure dec) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		//We force the assumption that the enums are not initialized to
 		//trigger the execution of their <clinit> methods 
 		//TODO this is just for convenience, possibly consider to remove this assumption, or to move into DecisionProcedure or DecisionProcedureAlgorithms.
@@ -144,10 +141,9 @@ public class Util {
 	 * @throws DecisionException
 	 * @throws ClassFileNotFoundException 
 	 * @throws ThreadStackEmptyException 
-	 * @throws UnexpectedInternalException
 	 */
 	private static void initializeKlass(State s, String className, DecisionProcedure dec) 
-	throws DecisionException, ClassFileNotFoundException, ThreadStackEmptyException, UnexpectedInternalException {
+	throws DecisionException, ClassFileNotFoundException, ThreadStackEmptyException {
 		final ClassInitializer ci = new ClassInitializer();
 		ci.initialize(s, className, dec);
 	}
@@ -174,10 +170,9 @@ public class Util {
 		 * @throws DecisionException 
 		 * @throws ClassFileNotFoundException 
 		 * @throws ThreadStackEmptyException 
-		 * @throws UnexpectedInternalException 
 		 */
 		private boolean initialize(State s, String className, DecisionProcedure dec) 
-		throws DecisionException, ClassFileNotFoundException, ThreadStackEmptyException, UnexpectedInternalException {
+		throws DecisionException, ClassFileNotFoundException, ThreadStackEmptyException {
 			//if className is already initialized, then does nothing:
 			//the corresponding Klass object will be lazily created
 			//upon first access, if it does not exist yet
@@ -255,7 +250,7 @@ public class Util {
 	}
 	
 	static boolean checkCastInstanceof(State runningState) 
-	throws JavaReifyException, ThreadStackEmptyException, UnexpectedInternalException {
+	throws JavaReifyException, ThreadStackEmptyException {
 		final int index;
 		try {
 			final byte tmp1 = runningState.getInstruction(1);

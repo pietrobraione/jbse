@@ -415,7 +415,7 @@ class DecisionProcedureExternalInterfaceCVC3 extends DecisionProcedureExternalIn
 
 	@Override
 	public boolean checkSat(boolean value) 		
-	throws ExternalProtocolInterfaceException, IOException, UnexpectedInternalException {
+	throws ExternalProtocolInterfaceException, IOException {
 		if (!this.hasCurrentClause) {
 			throw new ExternalProtocolInterfaceException("Attempted to check entailment with no current clause.");
 		}
@@ -462,7 +462,7 @@ class DecisionProcedureExternalInterfaceCVC3 extends DecisionProcedureExternalIn
 
 	@Override
 	public void pushAssumption(boolean value) 
-	throws ExternalProtocolInterfaceException, IOException, UnexpectedInternalException {
+	throws ExternalProtocolInterfaceException, IOException {
 		if (!this.hasCurrentClause) {
 			throw new ExternalProtocolInterfaceException("Attempted to push assumption with no current clause.");
 		}

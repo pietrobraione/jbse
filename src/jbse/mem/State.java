@@ -260,9 +260,8 @@ public class State implements Cloneable {
 	 * @return A {@link Reference} to the root object in the heap 
 	 * of the current state, or {@code null} if the root method is static.
 	 * @throws ThreadStackEmptyException if the thread stack is empty.
-	 * @throws UnexpectedInternalException 
 	 */
-	public Reference getRootObjectReference() throws ThreadStackEmptyException, UnexpectedInternalException {
+	public Reference getRootObjectReference() throws ThreadStackEmptyException {
 		final Signature s = this.getRootMethodSignature();
 		try {
 			if (this.classHierarchy.getClassFile(s.getClassName()).isMethodStatic(s)) {
@@ -466,10 +465,9 @@ public class State implements Cloneable {
 	 *        a {@link String}, the type of the array.
 	 * @return a new  {@link ReferenceConcrete} to the newly created object.
 	 * @throws InvalidTypeException if {@code arraySignature} is invalid.
-	 * @throws UnexpectedInternalException 
 	 */
 	public ReferenceConcrete createArray(Value initValue, Primitive length, String arraySignature) 
-	throws InvalidTypeException, UnexpectedInternalException {
+	throws InvalidTypeException {
 		final Array a = new Array(this.calc, false, initValue, length, arraySignature, null, Epoch.EPOCH_AFTER_START);
 		return new ReferenceConcrete(this.heap.addNew(a));
 	}
@@ -498,11 +496,9 @@ public class State implements Cloneable {
      * @throws ClassFileNotFoundException when the class file cannot be 
      *         found in the classpath.
 	 * @throws ThreadStackEmptyException if the thread stack is empty.
-     * @throws UnexpectedInternalException when the class file is ill-formed
-     *         (neither public nor package visibility).
 	 */
 	public void createKlass(String className) 
-	throws ClassFileNotFoundException, InvalidIndexException, UnexpectedInternalException {
+	throws ClassFileNotFoundException, InvalidIndexException {
 		final ClassFile classFile = this.getClassHierarchy().getClassFile(className);
 		final Signature[] sgnFields = classFile.getFieldsStatic();
 		final Klass k = new Klass(State.this.calc, sgnFields, null, Objekt.Epoch.EPOCH_AFTER_START);
@@ -517,12 +513,11 @@ public class State implements Cloneable {
 	 * @param className the name of the class to be loaded.
      * @throws ClassFileNotFoundException if {@code className} does 
      *         not correspond to a valid class in the classpath.
-	 * @throws ThreadStackEmptyException if the thread stack is empty.
-     * @throws UnexpectedInternalException when the class file is ill-formed
-     *         (neither public nor package visibility).
+	 * @throws InvalidIndexException if the access to the class 
+	 *         constant pool fails.
 	 */
 	private void createKlassSymbolic(String className) 
-	throws ClassFileNotFoundException, InvalidIndexException, UnexpectedInternalException {
+	throws ClassFileNotFoundException, InvalidIndexException {
 		final ClassFile classFile = this.getClassHierarchy().getClassFile(className);
 		final Signature[] sgnFields = classFile.getFieldsStatic();
 		final Klass k = new Klass(this.calc, sgnFields, "[" + className + "]", Objekt.Epoch.EPOCH_BEFORE_START);
@@ -543,11 +538,10 @@ public class State implements Cloneable {
 	 * @param k the corresponding {@link Klass} object.
 	 * @throws ClassFileNotFoundException if {@code className} is not the name
 	 *         of a valid class in the classpath.
-	 * @throws InvalidIndexException if the access to the class' constant pool fails.
-	 * @throws UnexpectedInternalException when some unexpected internal error occurs.
+	 * @throws InvalidIndexException if the access to the class constant pool fails.
 	 */
 	private void initConstantFields(String className, Klass k) 
-	throws ClassFileNotFoundException, InvalidIndexException, UnexpectedInternalException {
+	throws ClassFileNotFoundException, InvalidIndexException {
 		final ClassFile cf = this.getClassHierarchy().getClassFile(className);
 		final Signature[] flds = cf.getFieldsStatic();
 		for (final Signature sig : flds) {
@@ -579,10 +573,9 @@ public class State implements Cloneable {
 	 *         created object.
 	 * @throws NullPointerException if {@code origin} is {@code null}.
 	 * @throws InvalidTypeException if {@code type} is invalid.
-	 * @throws UnexpectedInternalException when some unexpected internal error occurs.
 	 */
 	private long createObjectSymbolic(String type, String origin) 
-	throws InvalidTypeException, UnexpectedInternalException {
+	throws InvalidTypeException {
 		if (origin == null) {
 			throw new NullPointerException(); //TODO improve?
 		}
@@ -593,13 +586,13 @@ public class State implements Cloneable {
 	}
 
 	private Array newArraySymbolic(String arraySignature, String origin) 
-	throws InvalidTypeException, UnexpectedInternalException {
+	throws InvalidTypeException {
 		final Primitive length = (Primitive) createSymbol("" + Type.INT, origin + ".length");
 		final Array obj = new Array(this.calc, true, null, length, arraySignature, origin, Epoch.EPOCH_BEFORE_START);
 		return obj;
 	}
 
-	private Instance newInstanceSymbolic(String className, String origin) throws UnexpectedInternalException {
+	private Instance newInstanceSymbolic(String className, String origin) {
 		final Signature[] fieldsSignatures = this.classHierarchy.getAllFieldsInstance(className);
 		final Instance obj = new Instance(this.calc, fieldsSignatures, className, origin, Epoch.EPOCH_BEFORE_START);
 		initWithSymbolicValues(obj);
@@ -611,9 +604,8 @@ public class State implements Cloneable {
 	 * 
 	 * @param myObj an {@link Instance} which will be initialized with 
 	 *              symbolic values.
-	 * @throws UnexpectedInternalException 
 	 */
-	private void initWithSymbolicValues(Instance myObj) throws UnexpectedInternalException {
+	private void initWithSymbolicValues(Instance myObj) {
 		final Signature[] mySgnArray = myObj.getFieldSignatures();
 		for (final Signature myActualSignature : mySgnArray) {
 			//gets the field signature and name
@@ -637,9 +629,8 @@ public class State implements Cloneable {
 	 * @return a {@link ReferenceConcrete} to the {@link Instance} in 
 	 *         {@code state}'s {@link Heap} corresponding to 
 	 *         {@code value}. 
-	 * @throws UnexpectedInternalException when some unexpected internal error occurs.
 	 */
-	public ReferenceConcrete referenceToStringLiteral(String value) throws UnexpectedInternalException {
+	public ReferenceConcrete referenceToStringLiteral(String value) {
 		ReferenceConcrete retVal = this.getStringLiteral(value);
 		if (retVal == null) {
 			retVal = this.createStringLiteral(value);
@@ -649,7 +640,7 @@ public class State implements Cloneable {
 		return retVal;
 	}
 
-	private ReferenceConcrete createStringLiteral(String value) throws UnexpectedInternalException {
+	private ReferenceConcrete createStringLiteral(String value) {
 		final ReferenceConcrete valueAsArray = createArrayOfChars(value);
 		final Simplex hash = this.calc.valInt(value.hashCode());
 		final Simplex zero = this.calc.valInt(0);
@@ -665,7 +656,7 @@ public class State implements Cloneable {
 		return retVal;
 	}
 	
-	private ReferenceConcrete createArrayOfChars(String value) throws UnexpectedInternalException {
+	private ReferenceConcrete createArrayOfChars(String value) {
 		final Simplex stringLength = this.calc.valInt(value.length());
 		final ReferenceConcrete retVal;
 		try {
@@ -725,10 +716,9 @@ public class State implements Cloneable {
 	 *              the new object.
 	 * @param classNameThrowable the name of the class of the new instance.
 	 * @throws ThreadStackEmptyException if the thread stack is empty.
-	 * @throws UnexpectedInternalException when some unexpected internal error occurs.
 	 */
 	public void createThrowableAndThrowIt(String classNameThrowable) 
-	throws ThreadStackEmptyException, UnexpectedInternalException {
+	throws ThreadStackEmptyException {
 		//TODO check that classNameException is Throwable??
 		final ReferenceConcrete myExceRef = createInstance(classNameThrowable);
 		push(myExceRef);
@@ -742,10 +732,9 @@ public class State implements Cloneable {
 	 * @param exceptionToThrow a {@link Reference} to a throwable 
 	 *        {@link Objekt} in the state's {@link Heap}.
 	 * @throws ThreadStackEmptyException if the thread stack is empty.
-	 * @throws UnexpectedInternalException when some unexpected internal error occurs.
 	 */
 	public void throwIt(Reference exceptionToThrow) 
-	throws ThreadStackEmptyException, UnexpectedInternalException {
+	throws ThreadStackEmptyException {
 		//TODO check that exceptionToThrow is resolved/concrete
 		final Objekt myException = this.getObject(exceptionToThrow);
 		//TODO check that Objekt is Throwable
@@ -839,11 +828,10 @@ public class State implements Cloneable {
      * @throws InvalidSlotException when there are 
      *         too many {@code arg}s or some of their types are 
      *         incompatible with their respective slots types.
-	 * @throws UnexpectedInternalException when some unexpected internal error occurs.
 	 */
 	public void pushFrame(Signature methodSignature, boolean isRoot, boolean isStatic, boolean isSpecial, int returnPCOffset, Value... args) 
 	throws ClassFileNotFoundException, MethodNotFoundException, IncompatibleClassFileException, ThreadStackEmptyException, 
-	PleaseDoNativeException, InvalidProgramCounterException, NoMethodReceiverException, InvalidSlotException, UnexpectedInternalException {
+	PleaseDoNativeException, InvalidProgramCounterException, NoMethodReceiverException, InvalidSlotException {
 		//checks the "this" parameter (invocation receiver) if necessary
 		final Reference thisObject;
 		if (isStatic) {
@@ -888,10 +876,8 @@ public class State implements Cloneable {
 	 * @return a {@link Value}{@code []}, the array of the symbolic parameters
 	 *         for the method call. Note that the reference to the root object
 	 *         is a {@link ReferenceSymbolic}.
-	 * @throws UnexpectedInternalException 
 	 */
-	private Value[] makeArgsSymbolic(Frame f, Signature methodSignature, boolean isStatic) 
-	throws UnexpectedInternalException {
+	private Value[] makeArgsSymbolic(Frame f, Signature methodSignature, boolean isStatic) {
 		//gets the method's signature
 		final String[] paramsDescriptor = Type.splitParametersDescriptors(methodSignature.getDescriptor());
 		final int numArgs = paramsDescriptor.length + (isStatic ? 0 : 1);
@@ -944,11 +930,10 @@ public class State implements Cloneable {
 	 *         {@code methodSignature} exists but its features differ from
 	 *         {@code isStatic}.
 	 * @throws PleaseDoNativeException when the method is declared native.
-	 * @throws UnexpectedInternalException when some unexpected internal error occurs.
 	 */
 	public void pushFrameSymbolic(Signature methodSignatureResolved, boolean isStatic) 
 	throws ClassFileNotFoundException, MethodNotFoundException, IncompatibleClassFileException, 
-	PleaseDoNativeException, UnexpectedInternalException {
+	PleaseDoNativeException {
 		//creates and initializes the frame, and pushes on the state's 
 		//stack frame
 		try {
@@ -1017,11 +1002,10 @@ public class State implements Cloneable {
 	 *         {@code isStatic} and {@code isSpecial}.
 	 * @throws ThreadStackEmptyException when {@code isSpecial == true && isRoot == true}.
 	 * @throws PleaseDoNativeException when the method is declared native.
-	 * @throws UnexpectedInternalException
 	 */
 	private Frame newFrame(Signature methodSignatureResolved, boolean isRoot, boolean isStatic, boolean isSpecial, Reference thisObject) 
 	throws ClassFileNotFoundException, MethodNotFoundException, IncompatibleClassFileException, 
-	ThreadStackEmptyException, PleaseDoNativeException, UnexpectedInternalException {
+	ThreadStackEmptyException, PleaseDoNativeException  {
 		//performs method code lookup
 		final ClassFile classMethodImpl;
 		if (isStatic) {               //INVOKESTATIC
@@ -1352,10 +1336,9 @@ public class State implements Cloneable {
 	 * @throws InvalidTypeException if {@code className} is not the name of a
 	 *         valid type (class or array). 
 	 * @throws ContradictionException if {@code r} is already resolved.
-	 * @throws UnexpectedInternalException 
 	 */
 	public void assumeExpands(ReferenceSymbolic r, String className) 
-	throws InvalidTypeException, ContradictionException, UnexpectedInternalException {
+	throws InvalidTypeException, ContradictionException {
     	if (r == null || className == null) {
     		throw new NullPointerException(); //TODO find a better exception
     	}
@@ -1429,10 +1412,9 @@ public class State implements Cloneable {
      * @throws ClassFileNotFoundException if {@code className} does 
      *         not correspond to a valid class in the classpath.
 	 * @throws ThreadStackEmptyException if the thread stack is empty.
-	 * @throws UnexpectedInternalException 
 	 */
 	public void assumeClassInitialized(String className) 
-	throws ClassFileNotFoundException, InvalidIndexException, UnexpectedInternalException {
+	throws ClassFileNotFoundException, InvalidIndexException {
 		if (className == null) {
 			throw new NullPointerException();
 		}
@@ -1729,10 +1711,8 @@ public class State implements Cloneable {
 	 *        of {@code stateRefining}'s identifier and path condition.
 	 * @throws CannotRefineException when {@code stateRefining} does not refine 
 	 *         {@code this}.
-	 * @throws UnexpectedInternalException 
 	 */
-	public void refine(State stateRefining) 
-	throws CannotRefineException, UnexpectedInternalException {
+	public void refine(State stateRefining) throws CannotRefineException {
 		final String refiningIdentifier = stateRefining.identifier;
 		final PathCondition refiningPathCondition = stateRefining.pathCondition;
 		
@@ -1778,9 +1758,8 @@ public class State implements Cloneable {
 	 * @param descriptor the descriptor of the symbolic value's type.
 	 * @return a {@link PrimitiveSymbolic} or a {@link ReferenceSymbolic}
 	 *         according to {@code descriptor}.
-	 * @throws UnexpectedInternalException 
 	 */
-	public Value createSymbol(String descriptor, String origin) throws UnexpectedInternalException {
+	public Value createSymbol(String descriptor, String origin) {
 		return this.symbolFactory.createSymbol(descriptor, origin, this.calc);
 	}
 	

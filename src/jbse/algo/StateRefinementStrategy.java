@@ -1,6 +1,5 @@
 package jbse.algo;
 
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.dec.DecisionException;
 import jbse.exc.mem.ContradictionException;
 import jbse.exc.mem.InvalidTypeException;
@@ -26,9 +25,7 @@ interface StateRefinementStrategy<R> {
 	 * @throws DecisionException
 	 * @throws ContradictionException 
 	 * @throws InvalidTypeException
-	 * @throws UnexpectedInternalException 
 	 */
 	public void refine(State s, R r) 
-	throws DecisionException, ContradictionException, 
-	InvalidTypeException, UnexpectedInternalException;
+	throws DecisionException, ContradictionException, InvalidTypeException;
 }

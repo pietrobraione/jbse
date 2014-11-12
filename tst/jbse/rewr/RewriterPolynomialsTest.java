@@ -1,8 +1,8 @@
 package jbse.rewr;
 
 import static org.junit.Assert.assertEquals;
+
 import jbse.Type;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.mem.InvalidOperandException;
 import jbse.exc.mem.InvalidOperatorException;
 import jbse.exc.mem.InvalidTypeException;
@@ -19,7 +19,7 @@ public class RewriterPolynomialsTest {
 	CalculatorRewriting calc, calcRaw;
 	
 	@Before
-	public void before() throws UnexpectedInternalException {
+	public void before() {
 		calc = new CalculatorRewriting();
 		calc.addRewriter(new RewriterOperationOnSimplex());
 		calc.addRewriter(new RewriterPolynomials());
@@ -27,7 +27,7 @@ public class RewriterPolynomialsTest {
 	}
 	
 	@Test
-	public void testDivision1() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testDivision1() throws InvalidOperandException, InvalidTypeException {
 		//(A * B) / (B * C) -> A / C
 		final Term A = calc.valTerm(Type.INT, "A");
 		final Term B = calc.valTerm(Type.INT, "B");
@@ -37,7 +37,7 @@ public class RewriterPolynomialsTest {
 	}
 	
 	@Test
-	public void testDivision2() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testDivision2() throws InvalidOperandException, InvalidTypeException {
 		//(2 * A * A * B + 4 * A * B) / (A * B) -> 2 * A + 4
 		final Term A = calc.valTerm(Type.INT, "A");
 		final Term B = calc.valTerm(Type.INT, "B");
@@ -46,7 +46,7 @@ public class RewriterPolynomialsTest {
 	}
 	
 	@Test
-	public void testDivision3() throws InvalidOperandException, InvalidOperatorException, InvalidTypeException, UnexpectedInternalException {
+	public void testDivision3() throws InvalidOperandException, InvalidOperatorException, InvalidTypeException {
 		//(A - B) / (C - D) preserves division
 		final CalculatorRewriting calc = new CalculatorRewriting();
 		calc.addRewriter(new RewriterOperationOnSimplex());
@@ -62,7 +62,7 @@ public class RewriterPolynomialsTest {
 	}
 	
 	@Test
-	public void testDivision4() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testDivision4() throws InvalidOperandException, InvalidTypeException {
 		//(-2 * A * B) / (3 * B * C) -> (-2 * A) / (3 * C)
 		final Term A = calc.valTerm(Type.INT, "A");
 		final Term B = calc.valTerm(Type.INT, "B");
@@ -72,7 +72,7 @@ public class RewriterPolynomialsTest {
 	}
 	
 	@Test
-	public void testDivision5() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testDivision5() throws InvalidOperandException, InvalidTypeException {
 		//A / (-2) -> - (A / 2)
 		final Term A = calc.valTerm(Type.INT, "A");
 		final Simplex two = calc.valInt(2);
@@ -82,7 +82,7 @@ public class RewriterPolynomialsTest {
 	}
 	
 	@Test
-	public void testSum1() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testSum1() throws InvalidOperandException, InvalidTypeException {
 		//(A + B) - A  -> B
 		final Term A = calc.valTerm(Type.INT, "A");
 		final Term B = calc.valTerm(Type.INT, "B");
@@ -91,7 +91,7 @@ public class RewriterPolynomialsTest {
 	}
 	
 	@Test
-	public void testSum2() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testSum2() throws InvalidOperandException, InvalidTypeException {
 		//A / (A + B) + B / (A + B) -> 1
 		final Term A = calc.valTerm(Type.INT, "A");
 		final Term B = calc.valTerm(Type.INT, "B");
@@ -100,7 +100,7 @@ public class RewriterPolynomialsTest {
 	}
 	
 	@Test
-	public void testSum3() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testSum3() throws InvalidOperandException, InvalidTypeException {
 		//A / (A + B) - B / (A + B) -> (A * A - B * B) / (A * A + 2 * A * B + B * B)
 		final Term A = calc.valTerm(Type.INT, "A");
 		final Term B = calc.valTerm(Type.INT, "B");
@@ -109,7 +109,7 @@ public class RewriterPolynomialsTest {
 	}
 	
 	@Test
-	public void testMultiplication1() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testMultiplication1() throws InvalidOperandException, InvalidTypeException {
 		//-1 * (A / B) -> (-1 * A) / B
 		final Term A = calc.valTerm(Type.INT, "A");
 		final Term B = calc.valTerm(Type.INT, "B");
@@ -118,7 +118,7 @@ public class RewriterPolynomialsTest {
 	}
 	
 	@Test
-	public void testMultiplication2() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testMultiplication2() throws InvalidOperandException, InvalidTypeException {
 		//(A + B) * (A + B) -> A * A + 2 * A * B + B * B
 		final Term A = calc.valTerm(Type.INT, "A");
 		final Term B = calc.valTerm(Type.INT, "B");
@@ -127,7 +127,7 @@ public class RewriterPolynomialsTest {
 	}
 	
 	@Test
-	public void testMultiplication3() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testMultiplication3() throws InvalidOperandException, InvalidTypeException {
 		//(A + C) * D -> (A * D) + (C * D) with polynomial normalization
 		final CalculatorRewriting calc = new CalculatorRewriting();
 		calc.addRewriter(new RewriterOperationOnSimplex());
@@ -142,7 +142,7 @@ public class RewriterPolynomialsTest {
 	}   
 	
 	@Test
-	public void testMultiplication4() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testMultiplication4() throws InvalidOperandException, InvalidTypeException {
 		//-1 * (-1 * A) -> A
 		final Term A = calc.valTerm(Type.INT, "A");
 		final Primitive p_post = calc.valInt(-1).mul(calc.valInt(-1).mul(A));
@@ -150,7 +150,7 @@ public class RewriterPolynomialsTest {
 	}
 	
 	@Test
-	public void testNegation1() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testNegation1() throws InvalidOperandException, InvalidTypeException {
 		//- (- A) -> A
 		final Term A = calc.valTerm(Type.INT, "A");
 		final Primitive p_post = A.neg().neg();
@@ -158,7 +158,7 @@ public class RewriterPolynomialsTest {
 	}
 	
 	@Test
-	public void testNegation2() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testNegation2() throws InvalidOperandException, InvalidTypeException {
 		// A * (- B + C) -> -1 * A * B + A * C
 		final Term A = calc.valTerm(Type.INT, "A");
 		final Term B = calc.valTerm(Type.INT, "B");
@@ -168,7 +168,7 @@ public class RewriterPolynomialsTest {
 	}
 	
 	@Test
-	public void testNegation3() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testNegation3() throws InvalidOperandException, InvalidTypeException {
 		// - (- (A + B)) -> A + B
 		final Term A = calc.valTerm(Type.INT, "A");
 		final Term B = calc.valTerm(Type.INT, "B");
@@ -177,7 +177,7 @@ public class RewriterPolynomialsTest {
 	}
 	
 	@Test
-	public void testConstant1() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testConstant1() throws InvalidOperandException, InvalidTypeException {
 		// -A / -B -> A / B
 		final Term A = calc.valTerm(Type.INT, "A");
 		final Term B = calc.valTerm(Type.INT, "B");

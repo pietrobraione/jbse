@@ -4,7 +4,6 @@ import static jbse.algo.Util.checkCastInstanceof;
 
 import jbse.Util;
 import jbse.exc.algo.JavaReifyException;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.mem.InvalidProgramCounterException;
 import jbse.exc.mem.OperandStackEmptyException;
 import jbse.exc.mem.ThreadStackEmptyException;
@@ -16,7 +15,7 @@ class SEInstanceof implements Algorithm {
 	
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, OperandStackEmptyException, UnexpectedInternalException {
+	throws ThreadStackEmptyException, OperandStackEmptyException {
 		final boolean isSubclass;
 		try {
 			isSubclass = checkCastInstanceof(state);

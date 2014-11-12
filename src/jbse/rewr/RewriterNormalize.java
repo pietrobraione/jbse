@@ -1,6 +1,5 @@
 package jbse.rewr;
 
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.rewr.NoResultException;
 import jbse.mem.Expression;
 import jbse.mem.Operator;
@@ -16,7 +15,7 @@ public class RewriterNormalize extends Rewriter {
 
 	@Override
 	protected void rewriteExpression(Expression x) 
-	throws NoResultException, UnexpectedInternalException {
+	throws NoResultException {
 		final Operator operator = x.getOperator();
 		if (operator == Operator.MUL || operator == Operator.ADD) {
 			setResult(Polynomial.of(this.calc, x).toPrimitiveNormalized());

@@ -28,7 +28,7 @@ class SEPutfield implements Algorithm {
 	
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, OperandStackEmptyException, UnexpectedInternalException {
+	throws ThreadStackEmptyException, OperandStackEmptyException {
 		//gets the index of the field signature in the current class 
     	//constant pool
 		final int index;

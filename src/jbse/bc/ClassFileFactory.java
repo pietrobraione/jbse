@@ -4,7 +4,6 @@ import jbse.Type;
 import jbse.bc.ClassFileArray.Visibility;
 import jbse.exc.bc.ClassFileNotFoundException;
 import jbse.exc.bc.NoArrayVisibilitySpecifiedException;
-import jbse.exc.common.UnexpectedInternalException;
 
 /**
  * Factory for {@link ClassFile}s.
@@ -25,7 +24,7 @@ public abstract class ClassFileFactory {
 	protected abstract ClassFile newClassFileClass(String className) throws ClassFileNotFoundException;
 	
 	public ClassFile newClassFile(String className) 
-	throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, UnexpectedInternalException {
+	throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
 		if (Type.isArray(className)) {
         	//(recursively) gets the member class of an array
 			final String memberType = Type.getArrayMemberType(className);

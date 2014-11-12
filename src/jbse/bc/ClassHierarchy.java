@@ -77,11 +77,9 @@ public class ClassHierarchy {
      * @return the classFile structure of the correspondent class.
      * @throws ClassFileNotFoundException when the class file cannot be 
      * found in the classpath.
-     * @throws UnexpectedInternalException when the class file is ill-formed
-     *         (neither public nor package visibility).
      */
     public ClassFile getClassFile(String className) 
-    throws ClassFileNotFoundException, UnexpectedInternalException {
+    throws ClassFileNotFoundException {
     	return cfi.getClassFile(className);
     }
     
@@ -111,10 +109,9 @@ public class ClassHierarchy {
 	 *         names.
 	 * @throws ClassFileNotFoundException if {@code className} does
 	 *         not correspond to a valid class in the classpath.
-	 * @throws UnexpectedInternalException 
 	 */
 	public Set<String> getAllConcreteSubclasses(String className) 
-	throws ClassFileNotFoundException, UnexpectedInternalException {
+	throws ClassFileNotFoundException {
 		final HashSet<String> retVal = new HashSet<>();
 		final ClassFile cf = this.getClassFile(className);
 		if (!cf.isAbstract()) {
@@ -406,10 +403,9 @@ public class ClassHierarchy {
 	 *         consistency with {@link #resolveField} and {@link #resolveMethod}.
 	 * @throws ClassFileNotFoundException
 	 * @throws ClassFileNotAccessibleException 
-	 * @throws UnexpectedInternalException 
 	 */
 	public String resolveClass(String accessor, String classSignature) 
-	throws ClassFileNotFoundException, ClassFileNotAccessibleException, UnexpectedInternalException {
+	throws ClassFileNotFoundException, ClassFileNotAccessibleException {
 		//TODO implement complete class creation as in JVM Specification, sec. 5.3
 		cfi.getClassFile(classSignature);
 		
@@ -433,11 +429,9 @@ public class ClassHierarchy {
 	 *         stores the name of the Java exception that the virtual machine must raise.
 	 * @throws ClassFileNotFoundException if {@code fieldSignature}'s class does not
 	 *         exist in the classpath.
-	 * @throws UnexpectedInternalException 
 	 */
 	public Signature resolveField(String accessor, Signature fieldSignature) 
-	throws ClassFileNotFoundException, FieldNotAccessibleException, FieldNotFoundException, 
-	UnexpectedInternalException {
+	throws ClassFileNotFoundException, FieldNotAccessibleException, FieldNotFoundException {
 		//searches a declaration for the field in the field's
 		//signature class (lookup starts from there)
 		Signature fieldSignatureResolved = null;
@@ -502,11 +496,10 @@ public class ClassHierarchy {
 	 * @throws MethodAbstractException 
 	 * @throws MethodNotFoundException 
 	 * @throws MethodNotAccessibleException 
-	 * @throws UnexpectedInternalException 
 	 */
 	public Signature resolveMethod(String accessor, Signature methodSignature, boolean isInterface) 
 	throws ClassFileNotFoundException, IncompatibleClassFileException, MethodAbstractException, 
-	MethodNotFoundException, MethodNotAccessibleException, UnexpectedInternalException {
+	MethodNotFoundException, MethodNotAccessibleException {
 		//gets the classfile for class mentioned in the method's *invocation*
 		//TODO implement class resolution and loading!
 		final ClassFile classFile = cfi.getClassFile(methodSignature.getClassName());
@@ -604,10 +597,9 @@ public class ClassHierarchy {
 	 *         {@code accessor}.
 	 * @throws ClassFileNotFoundException iff either {@code accessor}
 	 *         or {@code accessed} are not found in this class hierarchy.
-	 * @throws UnexpectedInternalException iff some internal unexpected error occurs.
 	 */
 	private boolean isClassAccessible(String accessor, String accessed) 
-	throws ClassFileNotFoundException, UnexpectedInternalException {
+	throws ClassFileNotFoundException {
 		//TODO this implementation is incomplete: some kinds of nested (member) classes may have all the visibility accessors. Also, the treatment of arrays is wrong.
 		final ClassFile cfAccessed = cfi.getClassFile(accessed);
 		if (cfAccessed.isPublic()) {
@@ -630,10 +622,9 @@ public class ClassHierarchy {
 	 *         or the class of {@code accessed} are not found in the class hierarchy.
 	 * @throws FieldNotFoundException iff the {@code accessed} field is not 
 	 *         found in its classfile. 
-	 * @throws UnexpectedInternalException iff some internal unexpected error occurs.
 	 */
 	private boolean isFieldAccessible(String accessor, Signature accessed) 
-	throws ClassFileNotFoundException, FieldNotFoundException, UnexpectedInternalException {
+	throws ClassFileNotFoundException, FieldNotFoundException {
 		final ClassFile cfAccessed = cfi.getClassFile(accessed.getClassName());
 		final ClassFile cfAccessor = cfi.getClassFile(accessor);
 		boolean samePackage = cfAccessed.getPackageName().equals(cfAccessor.getPackageName());
@@ -665,10 +656,9 @@ public class ClassHierarchy {
 	 *         or the class of {@code accessed} are not found by {@code cfi}.
 	 * @throws MethodNotFoundException iff the {@code accessed} method is not 
 	 *         found in its classfile. 
-	 * @throws UnexpectedInternalException iff some internal unexpected error occurs.
 	 */
 	private boolean isMethodAccessible(String accessor, Signature accessed) 
-	throws ClassFileNotFoundException, MethodNotFoundException, UnexpectedInternalException {
+	throws ClassFileNotFoundException, MethodNotFoundException {
 		final ClassFile cfAccessed = cfi.getClassFile(accessed.getClassName());
 		final ClassFile cfAccessor = cfi.getClassFile(accessor);
 		boolean samePackage = cfAccessed.getPackageName().equals(cfAccessor.getPackageName());
@@ -702,11 +692,10 @@ public class ClassHierarchy {
 	 * @throws MethodNotFoundException when method lookup fails.
 	 * @throws IncompatibleClassFileException when a method with signature 
 	 *         {@code methodSignature} exists but it is not static.
-	 * @throws UnexpectedInternalException when some unexpected internal error occurs.
 	 */
 	public ClassFile lookupMethodImplStatic(Signature methodSignature) 
 	throws ClassFileNotFoundException, MethodNotFoundException, 
-	IncompatibleClassFileException, UnexpectedInternalException {
+	IncompatibleClassFileException {
 		//the method must be in the class of the method signature
 		final ClassFile retVal = getClassFile(methodSignature.getClassName());
 		if (!retVal.isMethodStatic(methodSignature)) {
@@ -760,11 +749,10 @@ public class ClassHierarchy {
 	 *         {@code methodSignature.}{@link Signature#getClassName() getClassName()}.
 	 * @throws IncompatibleClassFileException when method lookup succeeds, but the
 	 *         found method is static.
-	 * @throws UnexpectedInternalException when some unexpected internal error occurs.
 	 */
 	public ClassFile lookupMethodImplSpecial(ClassFile currentClass, Signature methodSignature) 
 	throws ClassFileNotFoundException, MethodNotFoundException, 
-	IncompatibleClassFileException, UnexpectedInternalException {
+	IncompatibleClassFileException {
 		ClassFile retVal = null;
 		boolean useNonVirtual = true;
 

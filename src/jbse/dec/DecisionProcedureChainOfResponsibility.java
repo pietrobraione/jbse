@@ -115,7 +115,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	}
 	
 	@Override
-	public final void pushAssumption(Clause c) throws DecisionException, UnexpectedInternalException {
+	public final void pushAssumption(Clause c) throws DecisionException {
 		pushAssumptionLocal(c);
 		if (hasNext()) {
 			final Clause cSimpl = simplifyLocal(c);
@@ -130,9 +130,8 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	 * 
 	 * @param c see {@link #pushAssumption(Clause)}.
 	 * @throws DecisionException see {@link #pushAssumption(Clause)}.
-	 * @throws UnexpectedInternalException see {@link #pushAssumption(Clause)} 
 	 */
-	protected void pushAssumptionLocal(Clause c) throws DecisionException, UnexpectedInternalException {
+	protected void pushAssumptionLocal(Clause c) throws DecisionException {
 		final Clause cSimpl = simplifyLocal(c);
 		try {
 			cSimpl.accept(redispatcher);
@@ -151,9 +150,8 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	 * @param c a {@link ClauseAssume}, see {@link #pushAssumption(Clause)} 
 	 *        (after local simplification).
 	 * @throws DecisionException see {@link #pushAssumption(Clause)}
-	 * @throws UnexpectedInternalException see {@link #pushAssumption(Clause)}
 	 */
-	protected void pushAssumptionLocal(ClauseAssume c) throws DecisionException, UnexpectedInternalException {
+	protected void pushAssumptionLocal(ClauseAssume c) throws DecisionException {
 		//default implementation
 	}
 
@@ -165,7 +163,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	 *        (after local simplification).
 	 * @throws DecisionException see {@link #pushAssumption(Clause)}
 	 */
-	protected void pushAssumptionLocal(ClauseAssumeAliases c) throws DecisionException, UnexpectedInternalException {
+	protected void pushAssumptionLocal(ClauseAssumeAliases c) throws DecisionException {
 		//default implementation
 	}
 
@@ -177,7 +175,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	 *        (after local simplification).
 	 * @throws DecisionException see {@link #pushAssumption(Clause)}
 	 */
-	protected void pushAssumptionLocal(ClauseAssumeExpands c) throws DecisionException, UnexpectedInternalException {
+	protected void pushAssumptionLocal(ClauseAssumeExpands c) throws DecisionException {
 		//default implementation
 	}
 
@@ -189,7 +187,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	 *        (after local simplification).
 	 * @throws DecisionException see {@link #pushAssumption(Clause)}
 	 */
-	protected void pushAssumptionLocal(ClauseAssumeNull c) throws DecisionException, UnexpectedInternalException {
+	protected void pushAssumptionLocal(ClauseAssumeNull c) throws DecisionException {
 		//default implementation
 	}
 
@@ -201,7 +199,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	 *        (after local simplification).
 	 * @throws DecisionException see {@link #pushAssumption(Clause)}
 	 */
-	protected void pushAssumptionLocal(ClauseAssumeClassInitialized c) throws DecisionException, UnexpectedInternalException {
+	protected void pushAssumptionLocal(ClauseAssumeClassInitialized c) throws DecisionException {
 		//default implementation
 	}
 
@@ -213,7 +211,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	 *        (after local simplification).
 	 * @throws DecisionException see {@link #pushAssumption(Clause)}
 	 */
-	protected void pushAssumptionLocal(ClauseAssumeClassNotInitialized c) throws DecisionException, UnexpectedInternalException {
+	protected void pushAssumptionLocal(ClauseAssumeClassNotInitialized c) throws DecisionException {
 		//default implementation
 	}
 
@@ -225,39 +223,39 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	 */
 	private final ClauseVisitor redispatcher = new ClauseVisitor() {
 		@Override
-		public void visitClauseAssume(ClauseAssume c) throws DecisionException, UnexpectedInternalException {
+		public void visitClauseAssume(ClauseAssume c) throws DecisionException {
 			pushAssumptionLocal(c);
 		}
 
 		@Override
-		public void visitClauseAssumeAliases(ClauseAssumeAliases c) throws DecisionException, UnexpectedInternalException { 
+		public void visitClauseAssumeAliases(ClauseAssumeAliases c) throws DecisionException { 
 			pushAssumptionLocal(c); 
 		}
 
 		@Override
-		public void visitClauseAssumeExpands(ClauseAssumeExpands c) throws DecisionException, UnexpectedInternalException { 
+		public void visitClauseAssumeExpands(ClauseAssumeExpands c) throws DecisionException { 
 			pushAssumptionLocal(c); 
 		}
 
 		@Override
-		public void visitClauseAssumeNull(ClauseAssumeNull c) throws DecisionException, UnexpectedInternalException { 
+		public void visitClauseAssumeNull(ClauseAssumeNull c) throws DecisionException { 
 			pushAssumptionLocal(c); 
 		}
 
 		@Override
-		public void visitClauseAssumeClassInitialized(ClauseAssumeClassInitialized c) throws DecisionException, UnexpectedInternalException { 
+		public void visitClauseAssumeClassInitialized(ClauseAssumeClassInitialized c) throws DecisionException { 
 			pushAssumptionLocal(c); 
 		}
 
 		@Override
-		public void visitClauseAssumeClassNotInitialized(ClauseAssumeClassNotInitialized c) throws DecisionException, UnexpectedInternalException { 
+		public void visitClauseAssumeClassNotInitialized(ClauseAssumeClassNotInitialized c) throws DecisionException { 
 			pushAssumptionLocal(c); 
 		}
 	};
 
 	@Override
 	public final void clearAssumptions() 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		clearAssumptionsLocal();
 		if (hasNext()) {
 			this.next.clearAssumptions();
@@ -270,16 +268,14 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	 * The default implementation does nothing.
 	 * 
 	 * @throws DecisionException upon failure.
-	 * @throws UnexpectedInternalException 
 	 */
-	protected void clearAssumptionsLocal() 
-	throws DecisionException, UnexpectedInternalException {
+	protected void clearAssumptionsLocal() throws DecisionException {
 		//default implementation
 	}
 
 	@Override
     public final void setAssumptions(Collection<Clause> newAssumptions) 
-    throws DecisionException, UnexpectedInternalException {
+    throws DecisionException {
 		final Collection<Clause> currentAssumptions = getAssumptions();
 		final int common = numCommonAssumptions(currentAssumptions, newAssumptions);
 		final int toPop = currentAssumptions.size() - common;
@@ -316,10 +312,9 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	 * @param toPop see {@link #setAssumptions}.
 	 * @param toPush see {@link #setAssumptions}.
 	 * @throws DecisionException upon failure.
-	 * @throws UnexpectedInternalException 
 	 */
     private void setAssumptionsLocalConservatively(Collection<Clause> newAssumptions, int toPop, int toPush)
-    throws DecisionException, UnexpectedInternalException {
+    throws DecisionException {
     	//pops
     	for (int i = 1; i <= toPop; ++i) {
     		popAssumptionLocal();
@@ -344,10 +339,9 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	 * 
 	 * @param newAssumptions see {@link #setAssumptions}.
 	 * @throws DecisionException upon failure.
-	 * @throws UnexpectedInternalException 
 	 */
     private void setAssumptionsLocalDestructively(Collection<Clause> newAssumptions) 
-    throws DecisionException, UnexpectedInternalException {
+    throws DecisionException {
     	this.clearAssumptionsLocal();
     	for (Clause c : newAssumptions) {
     		pushAssumptionLocal(c);
@@ -362,10 +356,9 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @param toPop see {@link #setAssumptions}.
      * @param toPush see {@link #setAssumptions}.
      * @throws DecisionException upon failure of {@code this.next}.
-     * @throws UnexpectedInternalException 
      */
     private void setAssumptionsNext(Collection<Clause> newAssumptions) 
-    throws DecisionException, UnexpectedInternalException {
+    throws DecisionException {
     	final ArrayList<Clause> newAssumptionsSimpl = new ArrayList<>();
     	for (Clause c : newAssumptions) {
     		final Clause cSimpl = simplifyLocal(c);
@@ -393,17 +386,14 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * 
      * @throws DecisionException if the subclass does not offer
      *         this feature.
-     * @throws UnexpectedInternalException 
      */
-    protected void popAssumptionLocal() 
-    throws DecisionException, UnexpectedInternalException {
+    protected void popAssumptionLocal() throws DecisionException {
     	//default implementation
     	throw new DecisionException();
     }
         
     @Override
-    public final Collection<Clause> getAssumptions() 
-    throws DecisionException, UnexpectedInternalException {
+    public final Collection<Clause> getAssumptions() throws DecisionException {
     	//the farthest element in the chain has
     	//the most simplified assumptions
     	if (hasNext()) {
@@ -426,7 +416,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
     }
 
     @Override
-    public final boolean isSat(Expression exp) throws DecisionException, UnexpectedInternalException {
+    public final boolean isSat(Expression exp) throws DecisionException {
     	if (exp.getType() != Type.BOOLEAN) {
     		throw new DecisionException("cannot decide satisfiability of " + exp + ", it is not boolean"); //TODO throw a better exception
     	}
@@ -450,13 +440,12 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      *        remain an {@link Expression}.
      * @return see {@link #isSat(Expression)}.
      * @throws DecisionException upon failure.
-     * @throws UnexpectedInternalException 
      */
-    protected boolean isSatImpl(Expression exp) throws DecisionException, UnexpectedInternalException {
+    protected boolean isSatImpl(Expression exp) throws DecisionException {
     	return delegateIsSat(exp);
     }
     
-    protected final boolean delegateIsSat(Expression exp) throws DecisionException, UnexpectedInternalException {
+    protected final boolean delegateIsSat(Expression exp) throws DecisionException {
     	if (hasNext()) {
     		return this.next.isSat(exp);
     	}
@@ -464,8 +453,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
     }
 
     @Override
-    public final boolean isSatNull(ReferenceSymbolic r) 
-    throws DecisionException, UnexpectedInternalException {
+    public final boolean isSatNull(ReferenceSymbolic r) throws DecisionException {
     	//TODO check input parameters; simplify?
 		return isSatNullImpl(r);
     }
@@ -479,15 +467,13 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @param r see {@link #isSatNull(ReferenceSymbolic)}.
      * @return see {@link #isSatNull(ReferenceSymbolic)}.
      * @throws DecisionException upon failure.
-     * @throws UnexpectedInternalException 
      */
-    protected boolean isSatNullImpl(ReferenceSymbolic r) 
-    throws DecisionException, UnexpectedInternalException {
+    protected boolean isSatNullImpl(ReferenceSymbolic r) throws DecisionException {
     	return delegateIsSatNull(r);
     }
     
     protected final boolean delegateIsSatNull(ReferenceSymbolic r) 
-    throws DecisionException, UnexpectedInternalException {
+    throws DecisionException {
     	if (hasNext()) {
     		return this.next.isSatNull(r);
     	}
@@ -496,7 +482,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 
     @Override
     public final boolean isSatAliases(ReferenceSymbolic r, long heapPos, Objekt o) 
-    throws DecisionException, UnexpectedInternalException {
+    throws DecisionException {
     	//TODO check input parameters; simplify?
 		return isSatAliasesImpl(r, heapPos, o);
     }
@@ -512,15 +498,14 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @param o see {@link #isSatAliases(ReferenceSymbolic, long, Objekt)}.
      * @return see {@link #isSatAliases(ReferenceSymbolic, long, Objekt)}.
      * @throws DecisionException upon failure.
-     * @throws UnexpectedInternalException 
      */
     protected boolean isSatAliasesImpl(ReferenceSymbolic r, long heapPos, Objekt o) 
-    throws DecisionException, UnexpectedInternalException {
+    throws DecisionException {
     	return delegateIsSatAliases(r, heapPos, o);
     }
     
     protected final boolean delegateIsSatAliases(ReferenceSymbolic r, long heapPos, Objekt o) 
-    throws DecisionException, UnexpectedInternalException {
+    throws DecisionException {
     	if (hasNext()) {
     		return this.next.isSatAliases(r, heapPos, o);
     	}
@@ -528,7 +513,8 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
     }
 
     @Override
-    public final boolean isSatExpands(ReferenceSymbolic r, String className) throws DecisionException, UnexpectedInternalException {
+    public final boolean isSatExpands(ReferenceSymbolic r, String className) 
+    throws DecisionException {
     	//TODO check input parameters; simplify?
 		return isSatExpandsImpl(r, className);
     }
@@ -541,17 +527,16 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      *  
      * @param r see {@link #isSatExpands(ReferenceSymbolic, String)}.
      * @param className see {@link #isSatExpands(ReferenceSymbolic, String)}.
-     * @return see {@link #isSatExpands(ReferenceSymbolic, String)}.
+     * @return see {@link #isSatExpands(ReferenceSymbolic, String) isSatExpands}.
      * @throws DecisionException upon failure.
-     * @throws UnexpectedInternalException 
      */
     protected boolean isSatExpandsImpl(ReferenceSymbolic r, String className) 
-    throws DecisionException, UnexpectedInternalException {
+    throws DecisionException {
     	return delegateIsSatExpands(r, className);
     }
     
     protected final boolean delegateIsSatExpands(ReferenceSymbolic r, String className) 
-    throws DecisionException, UnexpectedInternalException {
+    throws DecisionException {
     	if (hasNext()) {
     		return this.next.isSatExpands(r, className);
     	}
@@ -560,7 +545,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 
     @Override
     public final boolean isSatInitialized(String className) 
-    throws DecisionException, UnexpectedInternalException {
+    throws DecisionException {
     	//TODO check input parameters; simplify?
 		return isSatInitializedImpl(className);
     }
@@ -574,15 +559,14 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @param className see {@link #isSatInitialized(String)}.
      * @return see {@link #isSatInitialized(String)}.
      * @throws DecisionException upon failure.
-     * @throws UnexpectedInternalException 
      */
     protected boolean isSatInitializedImpl(String className) 
-    throws DecisionException, UnexpectedInternalException {
+    throws DecisionException {
     	return delegateIsSatInitialized(className);
     }
     
     protected final boolean delegateIsSatInitialized(String className) 
-    throws DecisionException, UnexpectedInternalException {
+    throws DecisionException {
     	if (hasNext()) {
     		return this.next.isSatInitialized(className);
     	}
@@ -591,7 +575,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 
     @Override
     public final boolean isSatNotInitialized(String className) 
-    throws DecisionException, UnexpectedInternalException {
+    throws DecisionException {
     	//TODO check input parameters; simplify?
 		return isSatNotInitializedImpl(className);
     }
@@ -605,15 +589,14 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @param className see {@link #isSatNotInitialized(String)}.
      * @return see {@link #isSatNotInitialized(String)}.
      * @throws DecisionException upon failure.
-     * @throws UnexpectedInternalException 
      */
     protected boolean isSatNotInitializedImpl(String className) 
-    throws DecisionException, UnexpectedInternalException {
+    throws DecisionException {
     	return delegateIsSatNotInitialized(className);
     }
     
     protected final boolean delegateIsSatNotInitialized(String className) 
-    throws DecisionException, UnexpectedInternalException {
+    throws DecisionException {
     	if (hasNext()) {
     		return this.next.isSatNotInitialized(className);
     	}
@@ -626,10 +609,9 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @param p a boolean-valued {@link Primitive}.
      * @return a {@link Primitive} equivalent to {@code p}
      *         under the current assumption (possibly {@code p} itself).
-     * @throws UnexpectedInternalException 
      */
     @Override
-	public final Primitive simplify(Primitive p) throws UnexpectedInternalException {
+	public final Primitive simplify(Primitive p) {
 		final Primitive pSimpl = simplifyLocal(p);
 		if (this.next == null) {
 			return pSimpl;
@@ -644,9 +626,8 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @param c a {@link Clause}.
      * @return a {@link Clause} equivalent to {@code c}
      *         under the current assumption (possibly {@code c} itself).
-     * @throws UnexpectedInternalException 
      */
-    private final Clause simplifyLocal(Clause c) throws UnexpectedInternalException {
+    private final Clause simplifyLocal(Clause c) {
 		if (c instanceof ClauseAssume) {
 			final Primitive p = ((ClauseAssume) c).getCondition();
 			final Primitive pSimpl = simplifyLocal(p);
@@ -663,15 +644,13 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @param p The {@link Primitive}.
      * @return Another {@link Primitive} equivalent to {@code p} 
      * (possibly {@code p} itself).
-     * @throws UnexpectedInternalException 
      */
-	protected final Primitive simplifyLocal(Primitive p) throws UnexpectedInternalException {
+	protected final Primitive simplifyLocal(Primitive p) {
 		return this.calc.applyRewriters(p, this.rewriters);
 	}
 	
 	@Override
-	public void close() 
-	throws DecisionException, UnexpectedInternalException {
+	public void close() throws DecisionException {
 		closeLocal();
 		if (hasNext()) {
 			this.next.close();

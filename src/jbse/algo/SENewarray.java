@@ -3,7 +3,6 @@ package jbse.algo;
 import static jbse.bc.Offsets.NEWARRAY_OFFSET;
 import jbse.Type;
 import jbse.Util;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.dec.DecisionException;
 import jbse.exc.mem.InvalidProgramCounterException;
 import jbse.exc.mem.OperandStackEmptyException;
@@ -16,7 +15,7 @@ import jbse.mem.State;
 final class SENewarray extends MultipleStateGeneratorNewarray implements Algorithm {
 	public void exec(State state, ExecutionContext ctx) 
 	throws DecisionException, ThreadStackEmptyException, 
-	OperandStackEmptyException, UnexpectedInternalException {
+	OperandStackEmptyException {
     	//determines the array's type
         {
         	int type;

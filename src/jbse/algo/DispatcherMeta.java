@@ -49,11 +49,9 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
 	 *         not associated to an {@link Algorithm}. Note that this method
 	 *         does <em>not</em> populate the dispatcher, so it must be 
 	 *         always preceded by a call to {@link #isMeta}.
-	 * @throws UnexpectedInternalException 
 	 */
 	@Override
-	public Algorithm select(Signature methodSignatureResolved) 
-	throws UnexpectedInternalException {
+	public Algorithm select(Signature methodSignatureResolved) {
 		final Algorithm retVal;
 		try {
 			retVal = super.select(methodSignatureResolved);
@@ -80,11 +78,10 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
 	 * @throws MetaUnsupportedException if it is unable to find the specified {@link Algorithm}, 
 	 *         to load it, or to instantiate it for any reason (misses from the meta-level classpath, 
 	 *         has insufficient visibility, does not implement {@link Algorithm}...).
-	 * @throws UnexpectedInternalException 
 	 */
 	public boolean isMeta(ClassHierarchy hier, Signature methodSignatureResolved) 
 	throws ClassFileNotFoundException, MethodNotFoundException, 
-	MetaUnsupportedException, UnexpectedInternalException {
+	MetaUnsupportedException {
 		//already loaded: returns true
 		if (this.select(methodSignatureResolved) != null) {
 			return true;

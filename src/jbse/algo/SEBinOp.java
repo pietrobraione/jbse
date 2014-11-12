@@ -20,7 +20,7 @@ public class SEBinOp implements Algorithm {
 	
 	@Override
     public void exec(State state, ExecutionContext ctx) 
-    throws ThreadStackEmptyException, OperandStackEmptyException, UnexpectedInternalException {
+    throws ThreadStackEmptyException, OperandStackEmptyException {
     	final Primitive val2 = (Primitive) state.pop();
     	final Primitive val1 = (Primitive) state.pop();
     	

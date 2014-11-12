@@ -42,7 +42,7 @@ abstract class MultipleStateGeneratorNewarray extends MultipleStateGenerator<Dec
 	
 	@Override
 	protected void generateStates() 
-	throws DecisionException, ThreadStackEmptyException, UnexpectedInternalException {
+	throws DecisionException, ThreadStackEmptyException {
 		//calculates the number of layers that can be created right now
 		//as the number of consecutive concrete dimensionsCounts members, 
 		//plus one.
@@ -136,7 +136,7 @@ abstract class MultipleStateGeneratorNewarray extends MultipleStateGenerator<Dec
 		
 		try {
 			super.generateStates();
-		} catch (DecisionException | UnexpectedInternalException | RuntimeException e) {
+		} catch (DecisionException | RuntimeException e) {
 			throw e;
 		} catch (Exception e) {
 			//this should never happen
@@ -145,7 +145,7 @@ abstract class MultipleStateGeneratorNewarray extends MultipleStateGenerator<Dec
 	}
 	
 	private ReferenceConcrete createArrayMultilayer(State s, Value initValue, int layersToCreateNow) 
-	throws DecisionException, InvalidTypeException, UnexpectedInternalException {
+	throws DecisionException, InvalidTypeException {
 		//the reference to be pushed on the operand stack at the end of the
 		//creation; note that it is initialized to null, but this is just 
 		//to make the compiler happy. It will be initialized during the loop, 

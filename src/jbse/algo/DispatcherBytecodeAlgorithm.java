@@ -564,8 +564,8 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm> {
 	}
 
 	private class DispatchStrategy_INTERNALERROR implements Dispatcher.DispatchStrategy<Algorithm> {
-		public Algorithm doIt() throws UnexpectedInternalException {
-        	throw new UnexpectedInternalException();
+		public Algorithm doIt() {
+        	throw new UnexpectedInternalException("this bytecode does not exist");
 		}
 	}
 
@@ -825,7 +825,7 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm> {
 		
 	@Override
 	public Algorithm select(Byte bytecode) 
-	throws UndefInstructionException, UnexpectedInternalException {
+	throws UndefInstructionException {
 		final Algorithm retVal = super.select(bytecode);
 		return retVal;
 	}

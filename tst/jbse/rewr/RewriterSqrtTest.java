@@ -1,8 +1,8 @@
 package jbse.rewr;
 
 import static org.junit.Assert.assertEquals;
+
 import jbse.Type;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.mem.InvalidOperandException;
 import jbse.exc.mem.InvalidTypeException;
 import jbse.mem.FunctionApplication;
@@ -16,7 +16,7 @@ public class RewriterSqrtTest {
 	CalculatorRewriting calc;
 	
 	@Before
-	public void before() throws UnexpectedInternalException {
+	public void before() {
 		calc = new CalculatorRewriting();
 		calc.addRewriter(new RewriterOperationOnSimplex());
 		calc.addRewriter(new RewriterPolynomials()); //necessary to normalize results, but it does not seem necessary to RewriterSqrt by itself
@@ -24,7 +24,7 @@ public class RewriterSqrtTest {
 	}
 	
 	@Test
-	public void testBasic() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testBasic() throws InvalidOperandException, InvalidTypeException {
 		//sqrt(A * A) -> abs(A)
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
 		final Primitive p_post = calc.applyFunction(Type.DOUBLE, FunctionApplication.SQRT, A.mul(A)); 
@@ -32,7 +32,7 @@ public class RewriterSqrtTest {
 	}
 	
 	@Test
-	public void testDoubleMult() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testDoubleMult() throws InvalidOperandException, InvalidTypeException {
 		//sqrt((A * B) * (B * A)) -> abs(A * B)
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
 		final Term B = calc.valTerm(Type.DOUBLE, "B");
@@ -42,7 +42,7 @@ public class RewriterSqrtTest {
 	}
 	
 	@Test
-	public void testNested() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testNested() throws InvalidOperandException, InvalidTypeException {
 		//sqrt(A * sqrt(A * A)) -> sqrt(A * abs(A))
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
 		final Primitive p_post = calc.applyFunction(Type.DOUBLE, FunctionApplication.SQRT, A.mul(calc.applyFunction(Type.DOUBLE, FunctionApplication.SQRT, A.mul(A)))); 
@@ -50,7 +50,7 @@ public class RewriterSqrtTest {
 	}	
 	
 	@Test
-	public void testMult() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testMult() throws InvalidOperandException, InvalidTypeException {
 		//sqrt(A * 2 * A) -> abs(A) * sqrt(2)
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
 		final Primitive p_post = calc.applyFunction(Type.DOUBLE, FunctionApplication.SQRT, A.mul(calc.valDouble(2.0d).mul(A))); 
@@ -59,7 +59,7 @@ public class RewriterSqrtTest {
 	}	
 	
 	@Test
-	public void testBinomial1() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testBinomial1() throws InvalidOperandException, InvalidTypeException {
 		//sqrt(A * A + 2 * A * B + B * B) -> abs(A + B)
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
 		final Term B = calc.valTerm(Type.DOUBLE, "B");
@@ -70,7 +70,7 @@ public class RewriterSqrtTest {
 	}	
 	
 	@Test
-	public void testBinomial2() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testBinomial2() throws InvalidOperandException, InvalidTypeException {
 		//sqrt(- 2 * A * B + B * B + A * A) -> abs(A - B) (OR abs(B - A))
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
 		final Term B = calc.valTerm(Type.DOUBLE, "B");
@@ -81,7 +81,7 @@ public class RewriterSqrtTest {
 	}	
 	
 	@Test
-	public void testBinomial3() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testBinomial3() throws InvalidOperandException, InvalidTypeException {
 		//sqrt(2 * f(A) * g(A) + f(A) * f(A) + g(A) * g(A)) -> abs(f(A) + g(A)) (OR abs(g(A) + f(A)))
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
 		final Primitive binomial = calc.valDouble(2.0d).mul(calc.applyFunction(Type.DOUBLE, "f", A)).mul(calc.applyFunction(Type.DOUBLE, "g", A)).add(calc.applyFunction(Type.DOUBLE, "f", A).mul(calc.applyFunction(Type.DOUBLE, "f", A))).add(calc.applyFunction(Type.DOUBLE, "g", A).mul(calc.applyFunction(Type.DOUBLE, "g", A)));

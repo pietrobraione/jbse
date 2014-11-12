@@ -61,7 +61,7 @@ final class SEAload extends MultipleStateGeneratorLoad<DecisionAlternativeAload>
 	@Override
 	public void exec(final State state, final ExecutionContext ctx) 
 	throws DecisionException, CannotManageStateException, ContradictionException, 
-	ThreadStackEmptyException, OperandStackEmptyException, UnexpectedInternalException {
+	ThreadStackEmptyException, OperandStackEmptyException {
 		this.index = (Primitive) state.pop();
 		this.myObjectRef = (Reference) state.pop();
 		if (state.isNull(this.myObjectRef)) {
@@ -140,7 +140,7 @@ final class SEAload extends MultipleStateGeneratorLoad<DecisionAlternativeAload>
 		this.srs = new StateRefinementStrategyAload() {
 			@Override
 			public void refineRefExpands(State s, DecisionAlternativeAloadRefExpands dac) 
-			throws DecisionException, ContradictionException, InvalidTypeException, UnexpectedInternalException {
+			throws DecisionException, ContradictionException, InvalidTypeException {
 				//handles all the assumptions for reference resolution by expansion
 				SEAload.this.refineRefExpands(s, dac); //implemented in MultipleStateGeneratorLoad
 				
@@ -156,7 +156,7 @@ final class SEAload extends MultipleStateGeneratorLoad<DecisionAlternativeAload>
 
 			@Override
 			public void refineRefAliases(State s, DecisionAlternativeAloadRefAliases dai)
-			throws DecisionException, ContradictionException, UnexpectedInternalException {
+			throws DecisionException, ContradictionException {
 				//handles all the assumptions for reference resolution by aliasing
 				SEAload.this.refineRefAliases(s, dai); //implemented in MultipleStateGeneratorLoad
 				
@@ -172,7 +172,7 @@ final class SEAload extends MultipleStateGeneratorLoad<DecisionAlternativeAload>
 
 			@Override
 			public void refineRefNull(State s, DecisionAlternativeAloadRefNull dan) 
-			throws DecisionException, ContradictionException, UnexpectedInternalException {
+			throws DecisionException, ContradictionException {
 				SEAload.this.refineRefNull(s, dan); //implemented in MultipleStateGeneratorLoad
 				
 				//further augments the path condition 
@@ -187,7 +187,7 @@ final class SEAload extends MultipleStateGeneratorLoad<DecisionAlternativeAload>
 
 			@Override
 			public void refineResolved(State s, DecisionAlternativeAloadResolved dav)
-			throws DecisionException, UnexpectedInternalException {
+			throws DecisionException {
 				//augments the path condition
 				s.assume(ctx.decisionProcedure.simplify(dav.getArrayAccessExpression()));
 				
@@ -198,8 +198,7 @@ final class SEAload extends MultipleStateGeneratorLoad<DecisionAlternativeAload>
 			}
 			
 			@Override
-			public void refineOut(State s, DecisionAlternativeAloadOut dao) 
-			throws UnexpectedInternalException {
+			public void refineOut(State s, DecisionAlternativeAloadOut dao) {
 				//augments the path condition
 				s.assume(ctx.decisionProcedure.simplify(dao.getArrayAccessExpression()));
 			}
@@ -208,19 +207,19 @@ final class SEAload extends MultipleStateGeneratorLoad<DecisionAlternativeAload>
 		this.sus = new StateUpdateStrategyAload() {
 			@Override
 			public void updateResolved(State s, DecisionAlternativeAloadResolved dav) 
-			throws DecisionException, ThreadStackEmptyException, UnexpectedInternalException {
+			throws DecisionException, ThreadStackEmptyException {
 				SEAload.this.update(s, dav); //implemented in MultipleStateGeneratorLoad
 			}
 
 			@Override
 			public void updateReference(State s, DecisionAlternativeAloadRef dar) 
-			throws DecisionException, ThreadStackEmptyException, UnexpectedInternalException {
+			throws DecisionException, ThreadStackEmptyException {
 				SEAload.this.update(s, dar); //implemented in MultipleStateGeneratorLoad
 			}
 
 			@Override
 			public void updateOut(State s, DecisionAlternativeAloadOut dao) 
-			throws ThreadStackEmptyException, UnexpectedInternalException {
+			throws ThreadStackEmptyException {
 				s.createThrowableAndThrowIt(ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
 			}
 		};
@@ -238,7 +237,7 @@ final class SEAload extends MultipleStateGeneratorLoad<DecisionAlternativeAload>
 	
 	@Override	
 	protected Value possiblyMaterialize(State s, Value val) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		//calculates the actual value to push by materializing 
 		//a member array, if it is the case, and then pushes it
 		//on the operand stack
@@ -260,7 +259,7 @@ final class SEAload extends MultipleStateGeneratorLoad<DecisionAlternativeAload>
 	}
 	
 	private void writeBackToSource(State s, Value val) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		final Array a = (Array) s.getObject(this.myObjectRef);
 		try {
 			final Iterator<Array.AccessOutcomeIn> entries = a.set(this.index, val);

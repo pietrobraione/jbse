@@ -27,7 +27,7 @@ public class RewriterOperationOnSimplex extends Rewriter {
 
 	@Override
 	protected void rewriteFunctionApplication(FunctionApplication x) 
-	throws NoResultException, UnexpectedInternalException {
+	throws NoResultException {
 		int nargs = x.getArgs().length;
 		Object[] args = new Object[nargs];
 		char[] argsType = new char[nargs];
@@ -54,7 +54,7 @@ public class RewriterOperationOnSimplex extends Rewriter {
 
 	@Override
 	protected void rewriteExpression(Expression x) 
-	throws NoResultException, UnexpectedInternalException {        
+	throws NoResultException {        
         final boolean unary = x.isUnary();
     	final Primitive firstOp, secondOp;
     	
@@ -196,7 +196,7 @@ public class RewriterOperationOnSimplex extends Rewriter {
 	
 	@Override
 	protected void rewriteWideningConversion(WideningConversion x) 
-	throws NoResultException, UnexpectedInternalException {
+	throws NoResultException {
 		final Primitive arg = x.getArg();
 		
 		//1- unitary widening
@@ -224,7 +224,7 @@ public class RewriterOperationOnSimplex extends Rewriter {
 	
 	@Override
 	protected void rewriteNarrowingConversion(NarrowingConversion x)
-	throws NoResultException, UnexpectedInternalException {
+	throws NoResultException {
 		final Primitive arg = x.getArg();
 		
 		//1- unitary narrowing
@@ -252,8 +252,7 @@ public class RewriterOperationOnSimplex extends Rewriter {
 	
 	//////////////////////////////////////////////
 	//private part: tons of manual dispatching
-	private Primitive tryFunctionApplication(String function, Object[] args, char[] argsType) 
-	throws UnexpectedInternalException {
+	private Primitive tryFunctionApplication(String function, Object[] args, char[] argsType) {
 		if (function.equals(ABS)) { //typing: T -> T
 			if(argsType[0] == Type.DOUBLE){return(this.calc.val_(Math.abs(((Double)args[0]).doubleValue())));}
 			if(argsType[0] == Type.FLOAT) {return(this.calc.val_(Math.abs(((Float)args[0]).floatValue()))); }
@@ -387,7 +386,7 @@ public class RewriterOperationOnSimplex extends Rewriter {
 	}
 	
 	private void applyOperator(Simplex firstOp, Operator operation, Simplex secondOp)
-	throws NoResultException, UnexpectedInternalException {
+	throws NoResultException {
 		boolean unary = (firstOp == null);
 		int sOpType = secondOp.getType();
 		Object sOp = ((Simplex) secondOp).getActualValue();
@@ -741,7 +740,7 @@ public class RewriterOperationOnSimplex extends Rewriter {
 	} 
 	
 	private void applyConversion(Simplex toConvert, char to) 
-	throws NoResultException, UnexpectedInternalException {
+	throws NoResultException {
 		final Number n = (Number) toConvert.getActualValue();
 		if (to == Type.BYTE) {
 			setResult(this.calc.val_(n.byteValue()));

@@ -99,9 +99,8 @@ public class Frame implements Cloneable {
      * @return a {@link Map}{@code <}{@link Integer}{@code ,}{@link Variable}{@code >} 
      *         which associates every slot number in the local variable area to its
      *         {@link Variable};
-     * @throws UnexpectedInternalException 
      */
-    public Map<Integer, Variable> localVariables() throws UnexpectedInternalException {
+    public Map<Integer, Variable> localVariables() {
     	final HashMap<Integer, Variable> retVal = new HashMap<>();
     	for (int slot : this.localVariables.slots()) {
     		try {
@@ -270,9 +269,8 @@ public class Frame implements Cloneable {
      *        current program count.
      * @return a {@link Value}, the one stored in the local variable, 
      *         or {@code null} if no variable with that name exists.
-     * @throws UnexpectedInternalException 
      */
-    public Value getLocalVariableValue(String name) throws UnexpectedInternalException {
+    public Value getLocalVariableValue(String name) {
     	for (Variable v : localVariables().values()) {
     		if (v.getName().equals(name)) {
     			return v.getValue();

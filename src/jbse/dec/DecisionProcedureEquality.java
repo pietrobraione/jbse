@@ -37,7 +37,7 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 	}
 
 	@Override
-	protected void pushAssumptionLocal(ClauseAssume c) throws UnexpectedInternalException {
+	protected void pushAssumptionLocal(ClauseAssume c) {
 		final Primitive p = c.getCondition();
 		final PrimitiveVisitorEquality vEq = new PrimitiveVisitorEquality();
 		try {
@@ -57,7 +57,7 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 	}
 
 	@Override
-	protected boolean isSatImpl(Expression exp) throws DecisionException, UnexpectedInternalException {
+	protected boolean isSatImpl(Expression exp) throws DecisionException {
 		final Expression p = (Expression) simplifyLocal(exp); //cast always successful
 		final PrimitiveVisitorEquality vEq = new PrimitiveVisitorEquality();
 		try {
@@ -243,7 +243,7 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 
 		@Override
 		protected void rewriteExpression(Expression x) 
-		throws NoResultException, UnexpectedInternalException {
+		throws NoResultException {
 			final Primitive xEq = equivalence.find(x);
 			if (x.equals(xEq)) {
 				super.rewriteExpression(x);
@@ -260,7 +260,7 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 
 		@Override
 		protected void rewriteFunctionApplication(FunctionApplication x)
-		throws NoResultException, UnexpectedInternalException {
+		throws NoResultException {
 			final Primitive xEq = equivalence.find(x);
 			if (x.equals(xEq)) {
 				super.rewriteFunctionApplication(x);
@@ -277,7 +277,7 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 		
 		@Override
 		protected void rewriteWideningConversion(WideningConversion x)
-		throws NoResultException, UnexpectedInternalException {
+		throws NoResultException {
 			final Primitive xEq = equivalence.find(x);
 			if (x.equals(xEq)) {
 				super.rewriteWideningConversion(x);
@@ -294,7 +294,7 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 		
 		@Override
 		protected void rewriteNarrowingConversion(NarrowingConversion x)
-		throws NoResultException, UnexpectedInternalException {
+		throws NoResultException {
 			final Primitive xEq = equivalence.find(x);
 			if (x.equals(xEq)) {
 				super.rewriteNarrowingConversion(x);
@@ -311,7 +311,7 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 
 		@Override
 		protected void rewritePrimitiveSymbolic(PrimitiveSymbolic x)
-		throws NoResultException, UnexpectedInternalException {
+		throws NoResultException {
 			final Primitive xEq = equivalence.find(x);
 			if (x.equals(xEq)) {
 				super.rewritePrimitiveSymbolic(x);
@@ -322,7 +322,7 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 
 		@Override
 		protected void rewriteTerm(Term x) 
-		throws NoResultException, UnexpectedInternalException {
+		throws NoResultException {
 			final Primitive xEq = equivalence.find(x);
 			if (x.equals(xEq)) {
 				super.rewriteTerm(x);

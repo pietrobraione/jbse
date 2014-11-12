@@ -44,7 +44,7 @@ class SEAstore extends MultipleStateGenerator<DecisionAlternativeAstore> impleme
     public void exec(final State state, final ExecutionContext ctx) 
     throws DecisionException, CannotManageStateException, 
     ThreadStackEmptyException, OperandStackEmptyException,  
-    ContradictionException, UnexpectedInternalException {
+    ContradictionException {
         final Value value = state.pop();
         final Primitive index = (Primitive) state.pop();
         final Reference myObjectRef = (Reference) state.pop();

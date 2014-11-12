@@ -16,9 +16,11 @@ import jbse.exc.mem.ThreadStackEmptyException;
 import jbse.jvm.ExecutionContext;
 import jbse.mem.State;
 
-class SENew implements Algorithm {
+final class SENew implements Algorithm {
+	
+	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, DecisionException, UnexpectedInternalException {
+	throws ThreadStackEmptyException, DecisionException {
 		final int index;
 		try {
 			final byte tmp1 = state.getInstruction(1);

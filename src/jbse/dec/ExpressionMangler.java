@@ -51,10 +51,9 @@ public class ExpressionMangler {
 	 * @return a {@link Term}; if another {@link Primitive}
 	 *         {@code q} was mangled before by this mangler, 
 	 *         and {@code p.toString().equals(q.toString())}, then
-	 *         {@code mangle(p).equals(mangle(q))}.
-	 * @throws UnexpectedInternalException 
+	 *         {@code mangle(p).equals(mangle(q))}. 
 	 */
-	public Term mangle(Primitive p) throws UnexpectedInternalException {
+	public Term mangle(Primitive p) {
     	Term retVal = this.mangling.get(p);
     	if (retVal == null) {
     		final int nextId = Integer.valueOf(this.symId);

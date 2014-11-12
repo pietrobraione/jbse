@@ -28,8 +28,7 @@ import jbse.mem.State;
  */
 final class SEAnewarray extends MultipleStateGeneratorNewarray implements Algorithm {
     public void exec(State state, ExecutionContext ctx) 
-    throws DecisionException, OperandStackEmptyException, 
-    ThreadStackEmptyException, UnexpectedInternalException {
+    throws DecisionException, OperandStackEmptyException, ThreadStackEmptyException {
     	//gets the constant pool index
     	final int index;
     	try {

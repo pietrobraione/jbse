@@ -82,7 +82,7 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 	
 	@Override
 	protected boolean isSatExpandsImpl(ReferenceSymbolic r, String className)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		final State sIni = makeInitialState();
 		try {
 			sIni.assumeExpands(r, className);
@@ -95,7 +95,7 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 	
 	@Override
 	protected boolean isSatAliasesImpl(ReferenceSymbolic r, long heapPosition, Objekt o) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		final State sIni = makeInitialState();
 		try {
 			sIni.assumeAliases(r, heapPosition, o);
@@ -108,7 +108,7 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 	
 	@Override
 	protected boolean isSatNullImpl(ReferenceSymbolic r)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		final State sIni = makeInitialState();
 		try {
 			sIni.assumeNull(r);
@@ -119,7 +119,7 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 		return runConservativeRepOks(sIni);
 	}
 	
-	private State makeInitialState() throws UnexpectedInternalException {
+	private State makeInitialState() {
 		//takes a copy of the initial state and refines it
 		final State sIni =  this.initialStateSupplier.get();
 		sIni.clearStack();
@@ -144,10 +144,9 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 	 *         annotated method, the execution of the method
 	 *         on the initial state returns {@code true} on 
 	 *         at least one trace.
-	 * @throws UnexpectedInternalException 
 	 * @throws ClassFileNotFoundException 
 	 */
-	private boolean runConservativeRepOks(State sIni) throws UnexpectedInternalException {
+	private boolean runConservativeRepOks(State sIni) {
 		//runs the conservative repOk methods on all the instances in the heap 
 		for (long heapPos : sIni.getHeap().keySet()) {
 			final Reference r = new ReferenceConcrete(heapPos);
@@ -188,7 +187,7 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 	}
 
 	private Signature findConservativeRepOk(String className, State s) 
-	throws ClassFileNotFoundException, UnexpectedInternalException {
+	throws ClassFileNotFoundException {
 		Signature sigConservativeRepOk = conservativeRepOk.get(className);
 		if (sigConservativeRepOk == null) {
 			final ClassFile cf = s.getClassHierarchy().getClassFile(className);

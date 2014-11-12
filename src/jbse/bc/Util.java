@@ -2,7 +2,6 @@ package jbse.bc;
 
 import jbse.exc.bc.ClassFileNotFoundException;
 import jbse.exc.bc.MethodNotFoundException;
-import jbse.exc.common.UnexpectedInternalException;
 
 /**
  * Some utility functions.
@@ -35,10 +34,9 @@ public final class Util {
 	 *         annotated with {@code annotation}.
 	 * @throws ClassFileNotFoundException 
 	 * @throws MethodNotFoundException 
-	 * @throws UnexpectedInternalException 
 	 */
 	public static Object findMethodAnnotation(ClassHierarchy hier, Signature methodSignatureResolved, Class<?> annotation) 
-	throws ClassFileNotFoundException, MethodNotFoundException, UnexpectedInternalException {
+	throws ClassFileNotFoundException, MethodNotFoundException {
 		final ClassFile cf = hier.getClassFile(methodSignatureResolved.getClassName());	
 		final Object[] annotations = cf.getMethodAvailableAnnotations(methodSignatureResolved);
 		for (Object o : annotations) {

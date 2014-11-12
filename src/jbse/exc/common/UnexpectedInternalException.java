@@ -8,7 +8,7 @@ package jbse.exc.common;
  * @author Pietro Braione
  *
  */
-public class UnexpectedInternalException extends Exception {
+public class UnexpectedInternalException extends RuntimeException {
     public UnexpectedInternalException() {
         super();
     }

@@ -74,8 +74,7 @@ class Monomial implements Comparable<Monomial> {
 		return new HashMap<Primitive, Integer>(512);
 	}
 
-	public static Monomial of(CalculatorRewriting calc, Primitive p) 
-	throws UnexpectedInternalException {
+	public static Monomial of(CalculatorRewriting calc, Primitive p) {
 		return new MonomialBuilder(calc, makeRep()).of(p).make();
 	}
 
@@ -85,14 +84,13 @@ class Monomial implements Comparable<Monomial> {
 		private Simplex scale;
 		private final Map<Primitive, Integer> rep;
 		
-		private MonomialBuilder(CalculatorRewriting calc, Map<Primitive, Integer> rep) 
-		throws UnexpectedInternalException {
+		private MonomialBuilder(CalculatorRewriting calc, Map<Primitive, Integer> rep) {
 			this.calc = calc;
 			this.scale = (Simplex) this.calc.valInt(1); //wrong type! to be patched when type will be available
 			this.rep = rep;
 		}
 		
-		public MonomialBuilder of(Primitive p) throws UnexpectedInternalException {
+		public MonomialBuilder of(Primitive p) {
 			this.type = p.getType();
 			try {
 				this.scale = (Simplex) this.scale.to(this.type);
@@ -103,7 +101,7 @@ class Monomial implements Comparable<Monomial> {
 			final RepBuilder repBuilder = new RepBuilder();
 			try {
 				p.accept(repBuilder);
-			} catch (UnexpectedInternalException | RuntimeException e) {
+			} catch (RuntimeException e) {
 				throw e;
 			} catch (Exception e) {
 				//this should never happen
@@ -133,7 +131,7 @@ class Monomial implements Comparable<Monomial> {
 			return this;
 		}
 
-		public MonomialBuilder base(Monomial m) throws UnexpectedInternalException {
+		public MonomialBuilder base(Monomial m) {
 			this.type = m.type;
 			try {
 				this.scale = (Simplex) this.scale.to(this.type);
@@ -146,7 +144,7 @@ class Monomial implements Comparable<Monomial> {
 		}
 		
 		public MonomialBuilder mul(Monomial first, Monomial other) 
-		throws InvalidTypeException, UnexpectedInternalException {
+		throws InvalidTypeException {
 			Operator.typeCheck(Operator.MUL, first.type, other.type);
 			base(first);
 			try {
@@ -162,7 +160,7 @@ class Monomial implements Comparable<Monomial> {
 		}
 
 		public MonomialBuilder gcd(Monomial first, Monomial other) 
-		throws InvalidTypeException, UnexpectedInternalException {
+		throws InvalidTypeException {
 			Operator.typeCheck(Operator.DIV, first.type, other.type);
 			this.type = first.type;
 			this.scale = (Simplex) this.scale.to(this.type);
@@ -176,7 +174,7 @@ class Monomial implements Comparable<Monomial> {
 		}
 
 		public MonomialBuilder divNumer(Monomial first, Monomial other) 
-		throws InvalidTypeException, UnexpectedInternalException {
+		throws InvalidTypeException {
 			Operator.typeCheck(Operator.DIV, first.type, other.type);
 			this.type = first.type;
 			if (first.scale.equals(other.scale)) {
@@ -203,7 +201,7 @@ class Monomial implements Comparable<Monomial> {
 		}
 
 		public MonomialBuilder divDenom(Monomial first, Monomial other) 
-		throws InvalidTypeException, UnexpectedInternalException {
+		throws InvalidTypeException {
 			Operator.typeCheck(Operator.DIV, first.type, other.type);
 			this.type = first.type;
 			if (first.scale.equals(other.scale)) {
@@ -231,7 +229,7 @@ class Monomial implements Comparable<Monomial> {
 		}
 
 		public MonomialBuilder sqrtRoot(Monomial m) 
-		throws InvalidTypeException, UnexpectedInternalException {
+		throws InvalidTypeException {
 			if (m.type != Type.DOUBLE) {
 				throw new InvalidTypeException("Square root only accepts a double parameter.");
 			}
@@ -273,12 +271,12 @@ class Monomial implements Comparable<Monomial> {
 			}
 
 			@Override
-			public void visitExpression(Expression e) throws UnexpectedInternalException {
+			public void visitExpression(Expression e) {
 				if (e.getOperator() == Operator.MUL) {
 					try {
 						e.getFirstOperand().accept(this);
 						e.getSecondOperand().accept(this);
-					} catch (UnexpectedInternalException | RuntimeException exc) {
+					} catch (RuntimeException exc) {
 						throw exc;
 					} catch (Exception exc) {
 						//this should never happen
@@ -288,7 +286,7 @@ class Monomial implements Comparable<Monomial> {
 					try {
 						scale = (Simplex) scale.neg();
 						e.getOperand().accept(this);
-					} catch (UnexpectedInternalException | RuntimeException exc) {
+					} catch (RuntimeException exc) {
 						throw exc;
 					} catch (Exception exc) {
 						//this should never happen
@@ -320,10 +318,10 @@ class Monomial implements Comparable<Monomial> {
 			}
 
 			@Override
-			public void visitSimplex(Simplex x) throws UnexpectedInternalException {
+			public void visitSimplex(Simplex x) {
 				try {
 					scale = (Simplex) scale.mul(x);
-				} catch (UnexpectedInternalException | RuntimeException exc) {
+				} catch (RuntimeException exc) {
 					throw exc;
 				} catch (Exception exc) {
 					//this should never happen
@@ -363,15 +361,13 @@ class Monomial implements Comparable<Monomial> {
 	 * 
 	 * @return a {@link Monomial}, identical to this
 	 *         except for the scale which is equal to 1.
-	 * @throws InvalidTypeException 
-	 * @throws UnexpectedInternalException 
+	 * @throws InvalidTypeException  
 	 */
-	public Monomial createBase() throws UnexpectedInternalException {
+	public Monomial createBase() {
 		return new MonomialBuilder(this.calc, makeRep()).base(this).make();
 	}
 
-	private Primitive makePrimitive(boolean normalize, Set<Primitive> bases) 
-	throws UnexpectedInternalException {
+	private Primitive makePrimitive(boolean normalize, Set<Primitive> bases) {
 		Primitive retVal = this.scale;
 		for (Primitive base : bases) {
 			final Primitive baseNew = (normalize ? this.calc.applyRewriters(base, new RewriterNormalize()) : base);
@@ -394,7 +390,7 @@ class Monomial implements Comparable<Monomial> {
 
 	private volatile Primitive toPrimitive;
 	
-	public Primitive toPrimitive() throws UnexpectedInternalException {
+	public Primitive toPrimitive() {
 		Primitive retVal = this.toPrimitive;
 		if (retVal == null) {
 			if (this.scale.isZeroOne(true)) {
@@ -409,7 +405,7 @@ class Monomial implements Comparable<Monomial> {
 	
 	private volatile Primitive toPrimitiveNormalized;
 
-	public Primitive toPrimitiveNormalized() throws UnexpectedInternalException {
+	public Primitive toPrimitiveNormalized() {
 		Primitive retVal = this.toPrimitiveNormalized;
 		if (retVal == null) {
 			if (this.scale.isZeroOne(true)) {
@@ -425,24 +421,24 @@ class Monomial implements Comparable<Monomial> {
 	}
 
 	public Monomial mul(Monomial other) 
-	throws InvalidTypeException, UnexpectedInternalException {
+	throws InvalidTypeException {
 		return new MonomialBuilder(this.calc, makeRep()).mul(this, other).make();
 	}
 
 	public Monomial gcd(Monomial other)
-	throws InvalidTypeException, UnexpectedInternalException {
+	throws InvalidTypeException {
 		return new MonomialBuilder(this.calc, makeRep()).gcd(this, other).make();
 	}
 
 	public Monomial[] div(Monomial other) 
-	throws InvalidTypeException, UnexpectedInternalException {
+	throws InvalidTypeException {
 		final Monomial numer = new MonomialBuilder(this.calc, makeRep()).divNumer(this, other).make();
 		final Monomial denom = new MonomialBuilder(this.calc, makeRep()).divDenom(this, other).make();
 		return new Monomial[] { numer, denom };
 	}
 
 	public Monomial[] sqrt()
-	throws InvalidTypeException, UnexpectedInternalException {
+	throws InvalidTypeException {
 		final Monomial sqrt = new MonomialBuilder(this.calc, makeRep()).sqrtRoot(this).make();
 		final Monomial etc = new MonomialBuilder(this.calc, makeRep()).sqrtNonRoot(this).make();
 		return new Monomial[] { sqrt, etc };

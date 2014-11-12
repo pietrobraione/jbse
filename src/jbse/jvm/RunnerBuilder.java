@@ -3,7 +3,6 @@ package jbse.jvm;
 import java.util.Map;
 
 import jbse.exc.bc.InvalidClassFileFactoryClassException;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.dec.DecisionException;
 import jbse.exc.jvm.CannotBuildEngineException;
 import jbse.exc.jvm.InitializationException;
@@ -41,12 +40,10 @@ public class RunnerBuilder {
 	 *         observed variable names cannot be observed. This is the only exception
 	 *         that allows nevertheless to perform symbolic execution, in which case 
 	 *         only the observers to existing variables will be notified.
-	 * @throws UnexpectedInternalException whenever some internal unexpected error occurs.
 	 */
 	public Runner build(RunnerParameters parameters) 
 	throws CannotBuildEngineException, DecisionException, InitializationException, 
-	InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, 
-	UnexpectedInternalException {
+	InvalidClassFileFactoryClassException, NonexistingObservedVariablesException {
 		this.engine = eb.build(parameters.getEngineParameters());
 		final Map<String, Integer> heapScope = parameters.getHeapScope();
 		return new Runner(engine, parameters.actions, parameters.identifierSubregion, 

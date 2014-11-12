@@ -16,7 +16,7 @@ class SymbolFactory implements Cloneable {
 		this.nextIdPrimSym = 0;
 	}
 	
-	Value createSymbol(String descriptor, String origin, Calculator calc) throws UnexpectedInternalException {
+	Value createSymbol(String descriptor, String origin, Calculator calc) {
 		final Value retVal;
 		if (Type.isPrimitive(descriptor)) {
 			try {

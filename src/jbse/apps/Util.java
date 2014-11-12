@@ -154,7 +154,7 @@ public class Util {
 	}
 	
 	
-	public static String formatClauses(Iterable<Clause> assumptions) throws UnexpectedInternalException {
+	public static String formatClauses(Iterable<Clause> assumptions) {
 		final StringBuffer buf = new StringBuffer();
         boolean firstDone = false;
         for (Clause c : assumptions) {
@@ -171,7 +171,7 @@ public class Util {
         return buf.toString();
 	}
 	
-	public static String formatClause(Clause c) throws UnexpectedInternalException {
+	public static String formatClause(Clause c) {
     	if (c instanceof ClauseAssume) {
     		return formatClauseAssume((ClauseAssume) c);
     	} else if (c instanceof ClauseAssumeAliases) {
@@ -185,7 +185,7 @@ public class Util {
     	}
 	}
 	
-	public static String formatClauseAssume(ClauseAssume ca) throws UnexpectedInternalException {
+	public static String formatClauseAssume(ClauseAssume ca) {
 		return formatPrimitive(ca.getCondition());
 	}
 	
@@ -204,11 +204,11 @@ public class Util {
 		return (r.getOrigin() + " == null");
 	}
 	
-	public static String formatPrimitive(Primitive p) throws UnexpectedInternalException {
+	public static String formatPrimitive(Primitive p) {
 		final FormatDispatcher dispatcher = new FormatDispatcher();
 		try {
 			p.accept(dispatcher);
-		} catch (UnexpectedInternalException | RuntimeException e) {
+		} catch (RuntimeException e) {
 			throw e;
 		} catch (Exception e) {
 			throw new UnexpectedInternalException(e);
@@ -220,20 +220,20 @@ public class Util {
 		String retVal;
 		
 		@Override public void visitAny(Any x) { this.retVal = formatAny(x); }
-		@Override public void visitExpression(Expression e) throws UnexpectedInternalException { this.retVal = formatExpression(e); }
-		@Override public void visitFunctionApplication(FunctionApplication x) throws UnexpectedInternalException { this.retVal = formatFunctionApplication(x); }
-		@Override public void visitNarrowingConversion(NarrowingConversion x) throws UnexpectedInternalException { this.retVal = formatNarrowingConversion(x); }
+		@Override public void visitExpression(Expression e) { this.retVal = formatExpression(e); }
+		@Override public void visitFunctionApplication(FunctionApplication x) { this.retVal = formatFunctionApplication(x); }
+		@Override public void visitNarrowingConversion(NarrowingConversion x) { this.retVal = formatNarrowingConversion(x); }
 		@Override public void visitPrimitiveSymbolic(PrimitiveSymbolic s) { this.retVal = formatPrimitiveSymbolic(s); }
 		@Override public void visitSimplex(Simplex x) { this.retVal = formatSimplex(x); }
 		@Override public void visitTerm(Term x) { this.retVal = formatTerm(x); }
-		@Override public void visitWideningConversion(WideningConversion x) throws UnexpectedInternalException { this.retVal = formatWideningConversion(x); }
+		@Override public void visitWideningConversion(WideningConversion x) { this.retVal = formatWideningConversion(x); }
 	};
 	
 	public static String formatAny(Any a) {
 		return a.toString();
 	}
 	
-	public static String formatExpression(Expression e) throws UnexpectedInternalException {
+	public static String formatExpression(Expression e) {
 		final String secondOp = formatPrimitive(e.getSecondOperand());
 		if (e.isUnary()) {
 			return e.getOperator().toString() + " " + secondOp;
@@ -243,7 +243,7 @@ public class Util {
 		}
 	}
 	
-	public static String formatFunctionApplication(FunctionApplication f) throws UnexpectedInternalException {
+	public static String formatFunctionApplication(FunctionApplication f) {
 		final StringBuffer buf = new StringBuffer();
 		buf.append(f.getOperator() + "(");
 		boolean first = true;
@@ -255,7 +255,7 @@ public class Util {
 		return buf.toString();
 	}
 	
-	public static String formatNarrowingConversion(NarrowingConversion c) throws UnexpectedInternalException {
+	public static String formatNarrowingConversion(NarrowingConversion c) {
 		return "NARROW-"+ c.getType() + "(" + formatPrimitive(c.getArg()) + ")";
 	}
 	
@@ -271,7 +271,7 @@ public class Util {
 		return t.toString();
 	}
 	
-	public static String formatWideningConversion(WideningConversion c) throws UnexpectedInternalException {
+	public static String formatWideningConversion(WideningConversion c) {
 		return "WIDEN-"+ c.getType() + "(" + formatPrimitive(c.getArg()) + ")";
 	}
 }

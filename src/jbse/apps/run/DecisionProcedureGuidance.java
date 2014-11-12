@@ -81,10 +81,9 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 	 * @param calc a {@link Calculator}.
 	 * @param runnerParameters the {@link RunnerParameters} of the symbolic execution.
 	 * @throws GuidanceException
-	 * @throws UnexpectedInternalException 
 	 */
 	public DecisionProcedureGuidance(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, final Signature stopSignature) 
-	throws GuidanceException, UnexpectedInternalException {
+	throws GuidanceException {
 		super(component, calc); 
 		this.seenObjects = new HashSet<>();
 		this.failedConcrete = false;
@@ -170,7 +169,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 		}
 	}
 	
-	public void step() throws CannotManageStateException, GuidanceException, UnexpectedInternalException {
+	public void step() throws CannotManageStateException, GuidanceException {
 		if (this.failedConcrete) {
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
 		}
@@ -201,10 +200,8 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 	
 	/**
 	 * Ends guidance decision, and falls back on the component decision procedure.
-	 * 
-	 * @throws UnexpectedInternalException 
 	 */
-	public void endGuidance() throws UnexpectedInternalException {
+	public void endGuidance() {
 		this.ended = true;
 		this.stopFastAndImprecise();
 		try {
@@ -216,7 +213,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 	
 	@Override
 	protected Outcome decideIfNonconcrete(Primitive condition, SortedSet<DecisionAlternativeIf> result) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		if (this.failedConcrete) {
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
 		}
@@ -243,7 +240,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 
 	@Override
 	protected Outcome decideComparisonNonconcrete(Primitive val1, Primitive val2, SortedSet<DecisionAlternativeComparison> result)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		if (this.failedConcrete) {
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
 		}
@@ -275,7 +272,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 	
 	@Override
 	protected Outcome decideSwitchNonconcrete(Primitive selector, SwitchTable tab, SortedSet<DecisionAlternativeSwitch> result)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		if (this.failedConcrete) {
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
 		}
@@ -302,7 +299,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 	
 	@Override
 	protected Outcome decideNewarrayNonconcrete(Primitive countsNonNegative, SortedSet<DecisionAlternativeNewarray> result)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		if (this.failedConcrete) {
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
 		}
@@ -328,7 +325,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 
 	@Override
 	protected Outcome decideAstoreNonconcrete(Primitive inRange, SortedSet<DecisionAlternativeAstore> result)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		if (this.failedConcrete) {
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
 		}
@@ -354,7 +351,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 	
 	@Override
 	protected Outcome resolveLFLoadUnresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternativeLFLoad> result)
-	throws DecisionException, ClassFileNotFoundException, UnexpectedInternalException {
+	throws DecisionException, ClassFileNotFoundException {
 		if (this.failedConcrete) {
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
 		}
@@ -371,7 +368,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 	
 	@Override
 	protected Outcome resolveAloadNonconcrete(Expression accessExpression, Value valueToLoad, boolean fresh, SortedSet<DecisionAlternativeAload> result)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		if (this.failedConcrete) {
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
 		}
@@ -392,7 +389,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 
 	@Override
 	protected Outcome resolveAloadUnresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, SortedSet<DecisionAlternativeAload> result)
-	throws DecisionException, ClassFileNotFoundException, UnexpectedInternalException {
+	throws DecisionException, ClassFileNotFoundException {
 		if (this.failedConcrete) {
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
 		}
@@ -413,8 +410,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 		return retVal;
 	}
 	
-	private void filter(State state, ReferenceSymbolic refToLoad, DecisionAlternativeLoadRef dar, Iterator<?> it) 
-	throws UnexpectedInternalException {
+	private void filter(State state, ReferenceSymbolic refToLoad, DecisionAlternativeLoadRef dar, Iterator<?> it) {
 		final Reference refInConcreteState = (Reference) getValue(this.initialStateConcrete, this.rootFrameConcrete, refToLoad.getOrigin());
 		if (dar instanceof DecisionAlternativeLoadRefNull && !Util.isNull(this.initialStateConcrete, refInConcreteState)) {
 			it.remove();
@@ -439,7 +435,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 		this.failedConcrete = this.engine.canBacktrack();
 	}
 	
-	private static Value getValue(State state, Frame rootFrame, String origin) throws UnexpectedInternalException {
+	private static Value getValue(State state, Frame rootFrame, String origin) {
 		final String[] originFields = origin.split("\\.");
 		final String rootVariableName = originFields[0].replaceAll("\\{ROOT\\}:", ""); //from {ROOT}:var extracts var
 		Value fieldValue = rootFrame.getLocalVariableValue(rootVariableName);
@@ -454,12 +450,11 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 		return fieldValue;
 	}
 	
-	private static Primitive eval(State state, Frame rootFrame, Primitive toEval) 
-	throws UnexpectedInternalException {
+	private static Primitive eval(State state, Frame rootFrame, Primitive toEval) {
 		final Evaluator evaluator = new Evaluator(state, rootFrame);
 		try {
 			toEval.accept(evaluator);
-		} catch (UnexpectedInternalException | RuntimeException e) {
+		} catch (RuntimeException e) {
 			throw e;
 		} catch (Exception e) {
 			//should not happen
@@ -528,7 +523,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 		}
 
 		@Override
-		public void visitPrimitiveSymbolic(PrimitiveSymbolic s) throws UnexpectedInternalException {
+		public void visitPrimitiveSymbolic(PrimitiveSymbolic s) {
 			final Value fieldValue = getValue(this.state, this.rootFrame, s.getOrigin());
 			if (fieldValue instanceof Primitive) {
 				this.value = (Primitive) fieldValue;

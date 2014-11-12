@@ -58,10 +58,10 @@ public class TriggerManager {
 	 * @return {@code true} ifF the method leaves unchanged the state.
 	 * @throws InvalidProgramCounterException when {@code pcOffset} is not a valid
 	 *         return offset.
-	 * @throws UnexpectedInternalException
+	 * @throws ThreadStackEmptyException
 	 */
 	public boolean runTriggers(State s, DecisionAlternativeLoad da, int pcOffset) 
-	throws InvalidProgramCounterException, ThreadStackEmptyException, UnexpectedInternalException {
+	throws InvalidProgramCounterException, ThreadStackEmptyException {
 		if (!(da instanceof DecisionAlternativeLoadRef)) {
 			return true;
 		}

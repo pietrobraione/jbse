@@ -24,7 +24,7 @@ public class RewriterTrigNormalize extends Rewriter {
 
 	@Override
 	protected void rewriteFunctionApplication(FunctionApplication x)
-	throws NoResultException, UnexpectedInternalException {
+	throws NoResultException {
 		final String operator = x.getOperator();
 		final double period;
 		if (operator.equals(FunctionApplication.TAN)) {

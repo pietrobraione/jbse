@@ -12,14 +12,15 @@ import jbse.jvm.ExecutionContext;
 import jbse.mem.State;
 import jbse.mem.Value;
 
-class SEStore implements Algorithm {
+final class SEStore implements Algorithm {
 	boolean def;
 	int index;
 
 	public SEStore() { }
 
 	@Override
-	public void exec(State state, ExecutionContext ctx) throws UnexpectedInternalException, ThreadStackEmptyException, OperandStackEmptyException {
+	public void exec(State state, ExecutionContext ctx) 
+	throws ThreadStackEmptyException, OperandStackEmptyException {
 		final boolean wide = state.nextWide();
 		
 		final Value valTemp = state.pop();

@@ -4,7 +4,6 @@ import java.util.Collection;
 
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureDecorator;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.dec.DecisionException;
 import jbse.mem.Clause;
 import jbse.mem.Expression;
@@ -41,7 +40,7 @@ public class DecisionProcedureDecoratorTimer extends DecisionProcedureDecorator 
 	
 	@Override
 	public void pushAssumption(Clause c) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.startTimer();
 		super.pushAssumption(c);
 		this.stopTimer();
@@ -49,7 +48,7 @@ public class DecisionProcedureDecoratorTimer extends DecisionProcedureDecorator 
 	
 	@Override
 	public void clearAssumptions() 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.startTimer();
 		super.clearAssumptions();
 		this.stopTimer();
@@ -57,7 +56,7 @@ public class DecisionProcedureDecoratorTimer extends DecisionProcedureDecorator 
 	
 	@Override
 	public void setAssumptions(Collection<Clause> newAssumptions) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.startTimer();
 		super.setAssumptions(newAssumptions);
 		this.stopTimer();
@@ -65,7 +64,7 @@ public class DecisionProcedureDecoratorTimer extends DecisionProcedureDecorator 
 	
 	@Override
 	public Collection<Clause> getAssumptions() 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.startTimer();
 		Collection<Clause> result = super.getAssumptions();
 		this.stopTimer();
@@ -74,7 +73,7 @@ public class DecisionProcedureDecoratorTimer extends DecisionProcedureDecorator 
 
 	@Override
 	public boolean isSat(Expression exp) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.startTimer();
 		boolean result = super.isSat(exp);
 		this.stopTimer();
@@ -83,7 +82,7 @@ public class DecisionProcedureDecoratorTimer extends DecisionProcedureDecorator 
 	
 	@Override
 	public boolean isSatAliases(ReferenceSymbolic r, long heapPos, Objekt o)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.startTimer();
 		boolean result = super.isSatAliases(r, heapPos, o);
 		this.stopTimer();
@@ -92,7 +91,7 @@ public class DecisionProcedureDecoratorTimer extends DecisionProcedureDecorator 
 	
 	@Override
 	public boolean isSatExpands(ReferenceSymbolic r, String className)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.startTimer();
 		boolean result = super.isSatExpands(r, className);
 		this.stopTimer();
@@ -101,7 +100,7 @@ public class DecisionProcedureDecoratorTimer extends DecisionProcedureDecorator 
 	
 	@Override
 	public boolean isSatNull(ReferenceSymbolic r) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.startTimer();
 		boolean result = super.isSatNull(r);
 		this.stopTimer();
@@ -110,7 +109,7 @@ public class DecisionProcedureDecoratorTimer extends DecisionProcedureDecorator 
 	
 	@Override
 	public boolean isSatInitialized(String className) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.startTimer();
 		boolean result = super.isSatInitialized(className);
 		this.stopTimer();
@@ -119,7 +118,7 @@ public class DecisionProcedureDecoratorTimer extends DecisionProcedureDecorator 
 	
 	@Override
 	public boolean isSatNotInitialized(String className)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.startTimer();
 		boolean result = super.isSatNotInitialized(className);
 		this.stopTimer();

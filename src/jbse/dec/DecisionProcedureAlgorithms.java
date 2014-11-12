@@ -190,9 +190,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		 *         badly specified constraints), or because the constraints forbid  
 		 *         the reference to be expanded (which might be the consequence of a 
 		 *         representation invariant of the data structure).
-		 * @throws UnexpectedInternalException for the outcomes without reference expansion.
 		 */
-		public boolean noReferenceExpansion() throws UnexpectedInternalException {
+		public boolean noReferenceExpansion() {
 			if (this == TT || this == TF || this == FT || this == FF) {
 				throw new UnexpectedInternalException(this.toString() + " does not refer to reference expansion."); //TODO throw a better exception
 			}
@@ -232,11 +231,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @return an {@link Outcome}.
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
-	 * @throws UnexpectedInternalException 
 	 */
 	//TODO should be final?
 	public Outcome decideIf(Primitive condition, SortedSet<DecisionAlternativeIf> result)
-	throws InvalidInputException, DecisionException, UnexpectedInternalException {
+	throws InvalidInputException, DecisionException {
 		if (condition == null || result == null) {
 			throw new InvalidInputException("decideIf invoked with a null parameter");
 		}
@@ -258,7 +256,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	}
 
 	protected Outcome decideIfNonconcrete(Primitive condition, SortedSet<DecisionAlternativeIf> result) 
-	throws DecisionException, UnexpectedInternalException {	
+	throws DecisionException {	
 		final boolean shouldRefine;
 		final DecisionAlternativeIf T = DecisionAlternativeIf.toNonconcrete(true);
 		final DecisionAlternativeIf F = DecisionAlternativeIf.toNonconcrete(false);
@@ -308,11 +306,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @return an {@link Outcome}.
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
-	 * @throws UnexpectedInternalException 
 	 */
 	//TODO should be final?
 	public Outcome decideComparison(Primitive val1, Primitive val2, SortedSet<DecisionAlternativeComparison> result)
-	throws InvalidInputException, DecisionException, UnexpectedInternalException {
+	throws InvalidInputException, DecisionException {
 		if (val1 == null || val2 == null || result == null) {
 			throw new InvalidInputException("decideComparison invoked with a null parameter");
 		}
@@ -330,8 +327,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		}
 	}
 	
-	private void decideComparisonConcrete(Simplex val1, Simplex val2, SortedSet<DecisionAlternativeComparison> result) 
-	throws UnexpectedInternalException {
+	private void decideComparisonConcrete(Simplex val1, Simplex val2, SortedSet<DecisionAlternativeComparison> result) {
 		try {
 			final Simplex conditionGt = (Simplex) val1.gt(val2);
 			final boolean conditionGtValue = (Boolean) conditionGt.getActualValue();
@@ -354,7 +350,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 
 	protected Outcome decideComparisonNonconcrete(Primitive val1, Primitive val2,
 	SortedSet<DecisionAlternativeComparison> result) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		final boolean shouldRefine;
 		final DecisionAlternativeComparison GT = DecisionAlternativeComparison.toNonconcrete(Values.GT);
 		final DecisionAlternativeComparison EQ = DecisionAlternativeComparison.toNonconcrete(Values.EQ);
@@ -416,11 +412,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @return an {@link Outcome}.
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
-	 * @throws UnexpectedInternalException 
 	 */
 	//TODO should be final?
 	public Outcome decideSwitch(Primitive selector, SwitchTable tab, SortedSet<DecisionAlternativeSwitch> result)
-	throws InvalidInputException, DecisionException, UnexpectedInternalException {
+	throws InvalidInputException, DecisionException {
 		if (selector == null || tab == null || result == null) {
 			throw new InvalidInputException("decideSwitch invoked with a null parameter");
 		}
@@ -454,12 +449,11 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * Implements the portion of {@link #decideSwitch} which
 	 * must query the component {@link DecisionProcedure}.
 	 * @throws DecisionException
-	 * @throws UnexpectedInternalException 
 	 * 
 	 * @see {@link #decideSwitch}.
 	 */
 	protected Outcome decideSwitchNonconcrete(Primitive selector, SwitchTable tab, SortedSet<DecisionAlternativeSwitch> result) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		final boolean shouldRefine;
 
 		final boolean isAny = (selector instanceof Any);
@@ -498,11 +492,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @return an {@link Outcome}.
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
-	 * @throws UnexpectedInternalException 
 	 */
 	//TODO should be final?
 	public Outcome decideNewarray(Primitive countsNonNegative, SortedSet<DecisionAlternativeNewarray> result) 
-	throws InvalidInputException, DecisionException, UnexpectedInternalException {
+	throws InvalidInputException, DecisionException {
 		if (countsNonNegative == null || result == null) {
 			throw new InvalidInputException("decideNewarray invoked with a null parameter");
 		}
@@ -524,7 +517,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	}
 	
 	protected Outcome decideNewarrayNonconcrete(Primitive countsNonNegative, SortedSet<DecisionAlternativeNewarray> result) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		final boolean shouldRefine;
 		final DecisionAlternativeNewarray OK = DecisionAlternativeNewarray.toNonconcrete(true);
 		final DecisionAlternativeNewarray WRONG = DecisionAlternativeNewarray.toNonconcrete(false);
@@ -572,10 +565,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @return an {@link Outcome}.
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
-	 * @throws UnexpectedInternalException 
 	 */
 	public Outcome decideAstore(Primitive inRange, SortedSet<DecisionAlternativeAstore> result)
-	throws InvalidInputException, DecisionException, UnexpectedInternalException {
+	throws InvalidInputException, DecisionException {
 		if (inRange == null || result == null) {
 			throw new InvalidInputException("decideAstore invoked with a null parameter");
 		}
@@ -597,7 +589,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	}
 	
 	protected Outcome decideAstoreNonconcrete(Primitive inRange, SortedSet<DecisionAlternativeAstore> result)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		final boolean shouldRefine;
 		final DecisionAlternativeAstore IN = DecisionAlternativeAstore.toNonconcrete(true);
 		final DecisionAlternativeAstore OUT = DecisionAlternativeAstore.toNonconcrete(false);
@@ -647,10 +639,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws DecisionException upon failure.
 	 * @throws ClassFileNotFoundException if {@code valToLoad} is a symbolic reference and
 	 *         its class name does not correspond to a valid class in the classpath.
-	 * @throws UnexpectedInternalException 
 	 */
 	public Outcome resolveLFLoad(State state, Value valToLoad, SortedSet<DecisionAlternativeLFLoad> result) 
-	throws InvalidInputException, DecisionException, ClassFileNotFoundException, UnexpectedInternalException {
+	throws InvalidInputException, DecisionException, ClassFileNotFoundException {
 		if (state == null || valToLoad == null || result == null) {
 			throw new InvalidInputException("resolveLFLoad invoked with a null parameter");
 		}
@@ -663,7 +654,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	}
 	
 	protected Outcome resolveLFLoadUnresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternativeLFLoad> result)
-	throws DecisionException, ClassFileNotFoundException, UnexpectedInternalException {
+	throws DecisionException, ClassFileNotFoundException {
 		final boolean partialReferenceResolution = 
 			doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFromLocalVariableFactory(), result);
 		return Outcome.val(true, partialReferenceResolution, true); //uninitialized symbolic references always require a refinement action
@@ -694,11 +685,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws DecisionException upon failure.
 	 * @throws ClassFileNotFoundException if {@code valToLoad} is a symbolic reference and
 	 *         its class name does not correspond to a valid class in the classpath.
-	 * @throws UnexpectedInternalException 
 	 */
 	//TODO should be final?
 	public Outcome resolveAload(State state, Expression accessExpression, Value valToLoad, boolean fresh, SortedSet<DecisionAlternativeAload> result)
-	throws InvalidInputException, DecisionException, ClassFileNotFoundException, UnexpectedInternalException {
+	throws InvalidInputException, DecisionException, ClassFileNotFoundException {
 		if (state == null || result == null) {
 			throw new InvalidInputException("resolveLFLoad invoked with a null parameter");
 		}
@@ -760,11 +750,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *        where the method will put all the 
 	 *        {@link DecisionAlternativeAload}s representing all the 
 	 *        satisfiable outcomes of the operation.
-	 * @throws UnexpectedInternalException 
-	 * @see {@link #resolveAload(State, Expression, Value, boolean, SortedSet)}.
+	 * @see {@link #resolveAload(State, Expression, Value, boolean, SortedSet) resolveAload}.
 	 */
 	protected Outcome resolveAloadNonconcrete(Expression accessExpression, Value valToLoad, boolean fresh, SortedSet<DecisionAlternativeAload> result)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		final boolean accessOutOfBounds = (valToLoad == null);
 		boolean shouldRefine;
 		if (this.isSat(accessExpression)) {
@@ -783,7 +772,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	}
 
 	protected Outcome resolveAloadUnresolved(State state, Expression accessCondition, ReferenceSymbolic refToLoad, boolean fresh, SortedSet<DecisionAlternativeAload> result)
-	throws DecisionException, ClassFileNotFoundException, UnexpectedInternalException {
+	throws DecisionException, ClassFileNotFoundException {
 		final boolean accessConcrete = (accessCondition == null);
 		final boolean shouldRefine;
 		final boolean noReferenceExpansion;
@@ -809,10 +798,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @param index a {@link Primitive}, the position in the {@link Array} which is set.
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
-	 * @throws UnexpectedInternalException 
 	 */
 	public void completeArraySet(Iterator<Array.AccessOutcomeIn> entries, Primitive index) 
-	throws InvalidInputException, DecisionException, UnexpectedInternalException {
+	throws InvalidInputException, DecisionException {
 		if (entries == null || index == null) {
 			throw new InvalidInputException("completeArraySet invoked with a null parameter");
 		}
@@ -868,7 +856,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	protected <D, DA extends D, DE extends D, DN extends D> 
 	boolean doResolveReference(State state, ReferenceSymbolic refToResolve, 
 	DecisionAlternativeReferenceFactory<DA, DE, DN> factory, SortedSet<D> result) 
-	throws DecisionException, ClassFileNotFoundException, UnexpectedInternalException {
+	throws DecisionException, ClassFileNotFoundException {
 		//gets the statically compatible possible aliases 
 		//and expansions of refToResolve
 		final TreeMap<Long, Objekt> possibleAliases = getPossibleAliases(state, refToResolve);
@@ -985,10 +973,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *         returns {@code null}.
 	 * @throws ClassFileNotFoundException if {@code ref}'s class name does not
 	 *         denote a valid class in the classpath.
-	 * @throws UnexpectedInternalException 
 	 */
 	private Set<String> getPossibleExpansions(State state, ReferenceSymbolic ref) 
-	throws ClassFileNotFoundException, UnexpectedInternalException {
+	throws ClassFileNotFoundException {
 		final String type = ref.getStaticType();
 		if (!Type.isReference(type) && !Type.isArray(type)) {
 			return null;

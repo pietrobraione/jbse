@@ -18,7 +18,8 @@ class SELdc implements Algorithm {
 	public SELdc() { }
 	
 	@Override
-	public void exec(State state, ExecutionContext ctx) throws ThreadStackEmptyException, UnexpectedInternalException  {
+	public void exec(State state, ExecutionContext ctx) 
+	throws ThreadStackEmptyException  {
 		int index;
 		try {
 			byte tmp1 = state.getInstruction(1);

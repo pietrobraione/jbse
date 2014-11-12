@@ -1,8 +1,8 @@
 package jbse.rewr;
 
 import static org.junit.Assert.assertEquals;
+
 import jbse.Type;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.mem.FunctionApplication;
 import jbse.mem.Primitive;
 import jbse.mem.Term;
@@ -14,7 +14,7 @@ public class RewriterSinCosTest {
 	CalculatorRewriting calc;
 	
 	@Before
-	public void before() throws UnexpectedInternalException {
+	public void before() {
 		calc = new CalculatorRewriting();
 		calc.addRewriter(new RewriterOperationOnSimplex());
 		calc.addRewriter(new RewriterPolynomials());

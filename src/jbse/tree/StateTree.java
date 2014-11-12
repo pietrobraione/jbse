@@ -173,7 +173,7 @@ public class StateTree {
      * 
      * @param s the {@link State} to be added.
      */
-    public void addInitialState(State s) throws UnexpectedInternalException {
+    public void addInitialState(State s) {
     	this.add(s);
     	if (this.nextIsInitialState) {
     		s.appendToIdentifier((this.stateIdMode == StateIdentificationMode.COMPACT) ? 
@@ -194,7 +194,7 @@ public class StateTree {
      * @param branchIdentifier a {@link String}, the identifier of the branch starting from {@code s}
      *        (used when the state identification mode is {@link StateIdentificationMode#LONG}).
      */
-    public void addState(State s, int branchNumber, String branchIdentifier) throws UnexpectedInternalException {
+    public void addState(State s, int branchNumber, String branchIdentifier) {
     	if (this.nextIsInitialState) {
         	throw new UnexpectedInternalException(); //TODO define a better exception
 	    } 
@@ -252,7 +252,7 @@ public class StateTree {
         return stateBuffer.removeFirst();
     }
     
-    public <R extends DecisionAlternative> boolean possiblyAddBranch(Collection<R> s) throws UnexpectedInternalException {
+    public <R extends DecisionAlternative> boolean possiblyAddBranch(Collection<R> s) {
 		final DecisionAlternative d = s.iterator().next();
 		boolean mustAddBranch = (s.size() > 1);
     	switch (this.breadthMode) {
@@ -283,10 +283,9 @@ public class StateTree {
      * increasing the level implies adding a {@code State}.
      * 
      * @param s a {@link State} to be added
-     * @param id the identifier of the {@link State}.
-     * @throws UnexpectedInternalException 
+     * @param id the identifier of the {@link State}. 
      */
-    public void addBranchPoint(State s, String id) throws UnexpectedInternalException {
+    public void addBranchPoint(State s, String id) {
     	addBranchPoint();
 		addState(s, 1, id); //exactly one state in the branch
     }
@@ -296,7 +295,7 @@ public class StateTree {
      * increasing the level without adding a {@code State}
      * will crash the engine.
      */
-    private void addBranchPoint() throws UnexpectedInternalException {
+    private void addBranchPoint() {
 		this.branchList.addFirst(new BranchInfo());
 		this.createdBranch = true;
     }

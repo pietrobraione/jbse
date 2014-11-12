@@ -8,7 +8,6 @@ import jbse.exc.bc.IncompatibleClassFileException;
 import jbse.exc.bc.InvalidClassFileFactoryClassException;
 import jbse.exc.bc.MethodNotFoundException;
 import jbse.exc.bc.NoMethodReceiverException;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.dec.DecisionException;
 import jbse.exc.jvm.CannotBacktrackException;
 import jbse.exc.jvm.CannotBuildEngineException;
@@ -62,16 +61,16 @@ public final class Util {
 	 * @throws MethodNotFoundException 
 	 * @throws ClassFileNotFoundException 
 	 * @throws OperandStackEmptyException 
-	 * @throws UnexpectedInternalException
 	 */
 	//TODO handle and convert all these exceptions and raise the abstraction level of the operation
 	public static boolean 
 	doRunRepOk(State s, Reference r, Signature sig, RunnerParameters p, boolean scopeExhaustionMeansSuccess) 
-	throws UnexpectedInternalException, PleaseDoNativeException, CannotBuildEngineException, 
-	DecisionException, InitializationException, InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, 
-	CannotBacktrackException, CannotManageStateException, ContradictionException, EngineStuckException, FailureException, 
-	ClassFileNotFoundException, MethodNotFoundException, IncompatibleClassFileException, ThreadStackEmptyException, 
-	InvalidProgramCounterException, NoMethodReceiverException, InvalidSlotException, OperandStackEmptyException {
+	throws PleaseDoNativeException, CannotBuildEngineException, InitializationException, InvalidClassFileFactoryClassException, 
+	InvalidProgramCounterException, NoMethodReceiverException, InvalidSlotException, 
+	NonexistingObservedVariablesException, DecisionException, CannotBacktrackException, 
+	CannotManageStateException, ContradictionException, EngineStuckException, FailureException, 
+	ClassFileNotFoundException, MethodNotFoundException, IncompatibleClassFileException, 
+	ThreadStackEmptyException, OperandStackEmptyException {
 		//TODO check that sig is the signature of a nonstatic, nonspecial method
 		s.pushFrame(sig, true, false, false, 0, r);
 		p.setInitialState(s);

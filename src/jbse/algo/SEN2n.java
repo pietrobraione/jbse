@@ -1,7 +1,6 @@
 package jbse.algo;
 
 import jbse.Util;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.mem.InvalidProgramCounterException;
 import jbse.exc.mem.InvalidTypeException;
 import jbse.exc.mem.OperandStackEmptyException;
@@ -17,13 +16,13 @@ import jbse.mem.Value;
  * @author Pietro Braione
  *
  */
-class SEN2n implements Algorithm {
+final class SEN2n implements Algorithm {
 	char type;
 	char castType;
 
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, OperandStackEmptyException, UnexpectedInternalException {
+	throws ThreadStackEmptyException, OperandStackEmptyException {
 		//pops the value on the operand stack
 		final Value value = state.pop();
 		

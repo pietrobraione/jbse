@@ -1,6 +1,5 @@
 package jbse.algo;
 
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.dec.DecisionException;
 import jbse.mem.State;
 import jbse.mem.Value;
@@ -14,6 +13,5 @@ import jbse.mem.Value;
  */
 @FunctionalInterface
 public interface WriteBackToSourceStrategy {
-	void writeBack(State s, Value toWriteBack) 
-	throws DecisionException, UnexpectedInternalException;
+	void writeBack(State s, Value toWriteBack) throws DecisionException;
 }

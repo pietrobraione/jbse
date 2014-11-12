@@ -1,7 +1,6 @@
 package jbse.algo;
 
 import jbse.Util;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.mem.InvalidProgramCounterException;
 import jbse.exc.mem.InvalidSlotException;
 import jbse.exc.mem.ThreadStackEmptyException;
@@ -9,11 +8,11 @@ import jbse.jvm.ExecutionContext;
 import jbse.mem.Simplex;
 import jbse.mem.State;
 
-class SERet implements Algorithm {
+final class SERet implements Algorithm {
 	
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws UnexpectedInternalException, ThreadStackEmptyException {
+	throws ThreadStackEmptyException {
 		boolean wide = state.nextWide();
 		
 		try {

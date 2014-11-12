@@ -22,7 +22,7 @@ public class RewriterTan extends Rewriter {
 	
 	@Override
 	protected void rewriteExpression(Expression x) 
-	throws NoResultException, UnexpectedInternalException {
+	throws NoResultException {
 		final Operator operator = x.getOperator();
 		if (operator == Operator.DIV) {
 			final Primitive first = x.getFirstOperand();

@@ -1,8 +1,8 @@
 package jbse.algo;
 
 import static jbse.algo.Util.NULL_POINTER_EXCEPTION;
+
 import jbse.Util;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.dec.DecisionException;
 import jbse.exc.mem.InvalidProgramCounterException;
 import jbse.exc.mem.OperandStackEmptyException;
@@ -17,7 +17,7 @@ class SEMonitor implements Algorithm {
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
 	throws OperandStackEmptyException, ThreadStackEmptyException, 
-	DecisionException, UnexpectedInternalException {
+	DecisionException {
 		//pops its operand and checks it
 		final Value v = state.pop();
 		if (!(v instanceof Reference)) {

@@ -23,7 +23,7 @@ import jbse.mem.State;
  */
 public class SEInit {
 	public void exec(ExecutionContext ctx) 
-	throws DecisionException, InitializationException, UnexpectedInternalException, InvalidClassFileFactoryClassException {
+	throws DecisionException, InitializationException, InvalidClassFileFactoryClassException {
 		//TODO do checks and possibly raise exceptions
 		State state = ctx.getInitialState();
 		if (state == null) {
@@ -37,7 +37,7 @@ public class SEInit {
 	
 	private State createInitialState(ExecutionContext ctx) 
 	throws InvalidClassFileFactoryClassException, InitializationException, 
-	DecisionException, UnexpectedInternalException {
+	DecisionException {
 		final State state = new State(ctx.getClasspath(), ctx.classFileFactoryClass, ctx.expansionBackdoor, ctx.calc);
 
 		//adds a method frame for the initial method invocation
@@ -68,7 +68,7 @@ public class SEInit {
 	}
 	
 	private static void align(State state, ExecutionContext ctx) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		//synchronizes the decision procedure with the state
 		ctx.decisionProcedure.setAssumptions(state.getPathCondition());
 		state.resetLastPathConditionClauses();

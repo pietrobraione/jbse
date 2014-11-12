@@ -2,7 +2,6 @@ package jbse.dec;
 
 import java.io.IOException;
 
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.dec.ExternalProtocolInterfaceException;
 import jbse.mem.Objekt;
 import jbse.mem.Primitive;
@@ -28,10 +27,9 @@ public abstract class DecisionProcedureExternalInterface {
 	 *         is invoked when a current predicate already exists.
 	 * @throws IOException if communication with the external 
 	 *         decision procedure fails.
-	 * @throws UnexpectedInternalException 
 	 */
 	public abstract void sendClauseAssume(Primitive predicate) 
-	throws ExternalProtocolInterfaceException, IOException, UnexpectedInternalException;
+	throws ExternalProtocolInterfaceException, IOException;
 	
 	/**
 	 * Sends a clause to the external decision procedure; 
@@ -46,11 +44,10 @@ public abstract class DecisionProcedureExternalInterface {
 	 * @throws ExternalProtocolInterfaceException if this method
 	 *         is invoked when a current predicate already exists.
 	 * @throws IOException if communication with the external 
-	 *         decision procedure fails.
-	 * @throws UnexpectedInternalException 
+	 *         decision procedure fails. 
 	 */
 	public abstract void sendClauseAssumeAliases(ReferenceSymbolic r, long heapPos, Objekt o) 
-	throws ExternalProtocolInterfaceException, IOException, UnexpectedInternalException;
+	throws ExternalProtocolInterfaceException, IOException;
 	
 	/**
 	 * Sends a clause to the external decision procedure; 
@@ -65,11 +62,10 @@ public abstract class DecisionProcedureExternalInterface {
 	 * @throws ExternalProtocolInterfaceException if this method
 	 *         is invoked when a current predicate already exists.
 	 * @throws IOException if communication with the external 
-	 *         decision procedure fails.
-	 * @throws UnexpectedInternalException 
+	 *         decision procedure fails. 
 	 */
 	public abstract void sendClauseAssumeExpands(ReferenceSymbolic r, String className) 
-	throws ExternalProtocolInterfaceException, IOException, UnexpectedInternalException;
+	throws ExternalProtocolInterfaceException, IOException;
 	
 	/**
 	 * Sends a clause to the external decision procedure; 
@@ -83,11 +79,10 @@ public abstract class DecisionProcedureExternalInterface {
 	 * @throws ExternalProtocolInterfaceException if this method
 	 *         is invoked when a current predicate already exists.
 	 * @throws IOException if communication with the external 
-	 *         decision procedure fails.
-	 * @throws UnexpectedInternalException 
+	 *         decision procedure fails. 
 	 */
 	public abstract void sendClauseAssumeNull(ReferenceSymbolic r) 
-	throws ExternalProtocolInterfaceException, IOException, UnexpectedInternalException;
+	throws ExternalProtocolInterfaceException, IOException;
 	
 	/**
 	 * Sends a clause to the external decision procedure; 
@@ -100,11 +95,10 @@ public abstract class DecisionProcedureExternalInterface {
 	 * @throws ExternalProtocolInterfaceException if this method
 	 *         is invoked when a current predicate already exists.
 	 * @throws IOException if communication with the external 
-	 *         decision procedure fails.
-	 * @throws UnexpectedInternalException 
+	 *         decision procedure fails. 
 	 */
 	public abstract void sendClauseAssumeClassInitialized(String className) 
-	throws ExternalProtocolInterfaceException, IOException, UnexpectedInternalException;
+	throws ExternalProtocolInterfaceException, IOException;
 	
 	/**
 	 * Sends a clause to the external decision procedure; 
@@ -117,11 +111,10 @@ public abstract class DecisionProcedureExternalInterface {
 	 * @throws ExternalProtocolInterfaceException if this method
 	 *         is invoked when a current predicate already exists.
 	 * @throws IOException if communication with the external 
-	 *         decision procedure fails.
-	 * @throws UnexpectedInternalException 
+	 *         decision procedure fails. 
 	 */
 	public abstract void sendClauseAssumeClassNotInitialized(String className) 
-	throws ExternalProtocolInterfaceException, IOException, UnexpectedInternalException;
+	throws ExternalProtocolInterfaceException, IOException;
 
 	/**
 	 * Retracts the current predicate, setting the decision procedure 
@@ -129,11 +122,11 @@ public abstract class DecisionProcedureExternalInterface {
 	 * 
 	 * @throws ExternalProtocolInterfaceException if this method
 	 *         is invoked when there is no current predicate.
-	 * @throws IOException
-	 * @throws UnexpectedInternalException 
+	 * @throws IOException if communication with the external 
+	 *         decision procedure fails. 
 	 */
 	public abstract void retractClause() 
-	throws ExternalProtocolInterfaceException, IOException, UnexpectedInternalException;
+	throws ExternalProtocolInterfaceException, IOException;
 
 	/**
 	 * Verifies whether the current assumption is satisfiable 
@@ -148,11 +141,10 @@ public abstract class DecisionProcedureExternalInterface {
 	 * @throws ExternalProtocolInterfaceException if this method is 
 	 *         invoked when there is no current predicate.
 	 * @throws IOException if communication with the external 
-	 *         decision procedure fails.
-	 * @throws UnexpectedInternalException 
+	 *         decision procedure fails. 
 	 */
 	public abstract boolean checkSat(boolean positive)
-	throws ExternalProtocolInterfaceException, IOException, UnexpectedInternalException;
+	throws ExternalProtocolInterfaceException, IOException;
 
 	/**
 	 * Pushes the (possibly negated) current clauses to the current
@@ -163,11 +155,10 @@ public abstract class DecisionProcedureExternalInterface {
 	 * @throws ExternalProtocolInterfaceException if this method
 	 *         is invoked when there is no current predicate.
 	 * @throws IOException if communication with the external 
-	 *         decision procedure fails.
-	 * @throws UnexpectedInternalException 
+	 *         decision procedure fails. 
 	 */
 	public abstract void pushAssumption(boolean positive)
-	throws ExternalProtocolInterfaceException, IOException, UnexpectedInternalException;
+	throws ExternalProtocolInterfaceException, IOException;
 	
 	/**
 	 * Pops the last clause added to the current assumption by 
@@ -178,10 +169,9 @@ public abstract class DecisionProcedureExternalInterface {
 	 *         or if the method is unimplemented.
 	 * @throws IOException if communication with the external 
 	 *         decision procedure fails.
-	 * @throws UnexpectedInternalException 
 	 */
 	public void popAssumption()
-	throws ExternalProtocolInterfaceException, IOException, UnexpectedInternalException {
+	throws ExternalProtocolInterfaceException, IOException {
 		throw new ExternalProtocolInterfaceException("popping assumptions is not implemented for external decision procedure interface of class " + this.getClass().getName());
 	}
 
@@ -190,21 +180,19 @@ public abstract class DecisionProcedureExternalInterface {
 	 * 
 	 * @throws ExternalProtocolInterfaceException if it is
 	 *         invoked after {@link #quit()}.
-	 * @throws IOException
-	 * @throws UnexpectedInternalException 
+	 * @throws IOException 
 	 */
 	public abstract void clear() 
-	throws ExternalProtocolInterfaceException, IOException, UnexpectedInternalException;
+	throws ExternalProtocolInterfaceException, IOException;
 
 	/**
 	 * Quits the decision procedure.
 	 * 
 	 * @throws ExternalProtocolInterfaceException
-	 * @throws IOException
-	 * @throws UnexpectedInternalException 
+	 * @throws IOException 
 	 */
 	public abstract void quit() 
-	throws ExternalProtocolInterfaceException, IOException, UnexpectedInternalException;
+	throws ExternalProtocolInterfaceException, IOException;
 
 	/**
 	 * To be invoked when the decision procedure fails.

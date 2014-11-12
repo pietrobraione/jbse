@@ -20,7 +20,7 @@ public class RewriterPolynomials extends Rewriter {
 	public RewriterPolynomials() { }
 
 	@Override
-	protected void rewriteExpression(Expression x) throws NoResultException, UnexpectedInternalException {
+	protected void rewriteExpression(Expression x) throws NoResultException {
 		try {
 			//detects trivial cases
 			final Operator operator = x.getOperator();

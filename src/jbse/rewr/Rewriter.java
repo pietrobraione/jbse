@@ -38,14 +38,14 @@ public class Rewriter implements Cloneable {
 		this.calc = calc;
 	}
 
-	protected final Primitive rewrite(Primitive p) throws NoResultException, UnexpectedInternalException {
+	protected final Primitive rewrite(Primitive p) throws NoResultException {
 		if (p == null || this.calc == null) {
 			throw new NoResultException();
 		} else {
 			clear();
 			try {
 				p.accept(this.visitor);
-			} catch (NoResultException | UnexpectedInternalException | RuntimeException e) {
+			} catch (NoResultException | RuntimeException e) {
 				throw e;
 			} catch (Exception e) {
 				//this should never happen
@@ -71,28 +71,25 @@ public class Rewriter implements Cloneable {
 		}
 	}
 		
-	protected void rewriteAny(Any x) 
-	throws NoResultException, UnexpectedInternalException {
+	protected void rewriteAny(Any x) throws NoResultException {
 		setResult(x);
 	}
 	
-	protected void rewriteTerm(Term x) 
-	throws NoResultException, UnexpectedInternalException {
+	protected void rewriteTerm(Term x) throws NoResultException {
 		setResult(x);
 	}
 	
-	protected void rewriteSimplex(Simplex x) 
-	throws NoResultException, UnexpectedInternalException {
+	protected void rewriteSimplex(Simplex x) throws NoResultException {
 		setResult(x);
 	}
 	
 	protected void rewritePrimitiveSymbolic(PrimitiveSymbolic x) 
-	throws NoResultException, UnexpectedInternalException {
+	throws NoResultException {
 		setResult(x);
 	}
 	
 	protected void rewriteFunctionApplication(FunctionApplication x) 
-	throws NoResultException, UnexpectedInternalException {
+	throws NoResultException {
 		final Primitive[] args = x.getArgs();
 		for (int i = 0; i < args.length; i++) {
 			args[i] = rewrite(args[i]);
@@ -107,7 +104,7 @@ public class Rewriter implements Cloneable {
 	}
 
 	protected void rewriteExpression(Expression x) 
-	throws NoResultException, UnexpectedInternalException {
+	throws NoResultException {
 		final Operator operator = x.getOperator();
 		final Expression result;
 		try {
@@ -130,7 +127,7 @@ public class Rewriter implements Cloneable {
 	}
 	
 	protected void rewriteWideningConversion(WideningConversion x) 
-	throws NoResultException, UnexpectedInternalException {
+	throws NoResultException {
 		final Primitive arg = rewrite(x.getArg());
 		final WideningConversion result;
 		try {
@@ -143,7 +140,7 @@ public class Rewriter implements Cloneable {
 	}
 
 	protected void rewriteNarrowingConversion(NarrowingConversion x) 
-	throws NoResultException, UnexpectedInternalException {
+	throws NoResultException {
 		final Primitive arg = rewrite(x.getArg());
 		final NarrowingConversion result;
 		try {
@@ -166,20 +163,20 @@ public class Rewriter implements Cloneable {
 	 *
 	 */
 	private class RewriteVisitor implements PrimitiveVisitor {
-		@Override public void visitAny(Any x) throws NoResultException, UnexpectedInternalException { Rewriter.this.rewriteAny(x); }
+		@Override public void visitAny(Any x) throws NoResultException { Rewriter.this.rewriteAny(x); }
 
-		@Override public void visitExpression(Expression e) throws NoResultException, UnexpectedInternalException { Rewriter.this.rewriteExpression(e); }
+		@Override public void visitExpression(Expression e) throws NoResultException { Rewriter.this.rewriteExpression(e); }
 
-		@Override public void visitFunctionApplication(FunctionApplication x) throws NoResultException, UnexpectedInternalException { Rewriter.this.rewriteFunctionApplication(x); }
+		@Override public void visitFunctionApplication(FunctionApplication x) throws NoResultException { Rewriter.this.rewriteFunctionApplication(x); }
 
-		@Override public void visitPrimitiveSymbolic(PrimitiveSymbolic s) throws NoResultException, UnexpectedInternalException { Rewriter.this.rewritePrimitiveSymbolic(s); }
+		@Override public void visitPrimitiveSymbolic(PrimitiveSymbolic s) throws NoResultException { Rewriter.this.rewritePrimitiveSymbolic(s); }
 
-		@Override public void visitSimplex(Simplex x) throws NoResultException, UnexpectedInternalException { Rewriter.this.rewriteSimplex(x); }
+		@Override public void visitSimplex(Simplex x) throws NoResultException { Rewriter.this.rewriteSimplex(x); }
 
-		@Override public void visitTerm(Term x) throws NoResultException, UnexpectedInternalException { Rewriter.this.rewriteTerm(x); }
+		@Override public void visitTerm(Term x) throws NoResultException { Rewriter.this.rewriteTerm(x); }
 
-		@Override public void visitWideningConversion(WideningConversion x) throws NoResultException, UnexpectedInternalException { Rewriter.this.rewriteWideningConversion(x); }
+		@Override public void visitWideningConversion(WideningConversion x) throws NoResultException { Rewriter.this.rewriteWideningConversion(x); }
 
-		@Override public void visitNarrowingConversion(NarrowingConversion x) throws NoResultException, UnexpectedInternalException { Rewriter.this.rewriteNarrowingConversion(x); }
+		@Override public void visitNarrowingConversion(NarrowingConversion x) throws NoResultException { Rewriter.this.rewriteNarrowingConversion(x); }
 	}
 }

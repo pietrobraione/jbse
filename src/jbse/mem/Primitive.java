@@ -64,10 +64,8 @@ public abstract class Primitive extends Value implements Cloneable {
      * @param type the destination type of the conversion.
      * @return this {@link Primitive} after widening to {@code type}.
      * @throws InvalidTypeException if {@code this} cannot be widened to {@code type}.
-     * @throws UnexpectedInternalException 
      */
-    public Primitive widen(char type) 
-    throws InvalidTypeException, UnexpectedInternalException {
+    public Primitive widen(char type) throws InvalidTypeException {
     	try {
 			return this.calc.widen(type, this);
 		} catch (InvalidOperandException e) {
@@ -83,10 +81,8 @@ public abstract class Primitive extends Value implements Cloneable {
      * @param type the destination type of the conversion.
      * @return this {@link Primitive} after narrowing to {@code type}.
      * @throws InvalidTypeException if {@code this} cannot be narrowed to {@code type}.
-     * @throws UnexpectedInternalException 
      */
-    public Primitive narrow(char type)
-    throws InvalidTypeException, UnexpectedInternalException {
+    public Primitive narrow(char type) throws InvalidTypeException {
     	try {
     		return this.calc.narrow(type, this);
 		} catch (InvalidOperandException e) {
@@ -104,10 +100,9 @@ public abstract class Primitive extends Value implements Cloneable {
      *         operation.
      * @throws InvalidTypeException 
      * @throws InvalidOperandException 
-     * @throws UnexpectedInternalException 
      */
     public Primitive add(Primitive param) 
-    throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+    throws InvalidOperandException, InvalidTypeException {
         return this.calc.add(this, param);
     }
     
@@ -120,10 +115,9 @@ public abstract class Primitive extends Value implements Cloneable {
      *         operation.
      * @throws InvalidTypeException 
      * @throws InvalidOperandException 
-     * @throws UnexpectedInternalException 
      */
     public Primitive mul(Primitive param)
-    throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+    throws InvalidOperandException, InvalidTypeException {
         return this.calc.mul(this, param);
     }
     
@@ -136,10 +130,9 @@ public abstract class Primitive extends Value implements Cloneable {
      *         operation.
      * @throws InvalidTypeException 
      * @throws InvalidOperandException 
-     * @throws UnexpectedInternalException 
      */
     public Primitive sub(Primitive param)
-    throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+    throws InvalidOperandException, InvalidTypeException {
         return this.calc.sub(this, param);
 
     }
@@ -154,10 +147,9 @@ public abstract class Primitive extends Value implements Cloneable {
      *         operation.
      * @throws InvalidTypeException 
      * @throws InvalidOperandException 
-     * @throws UnexpectedInternalException 
      */
     public Primitive div(Primitive param)
-    throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+    throws InvalidOperandException, InvalidTypeException {
         return this.calc.div(this, param);
     }
     
@@ -171,10 +163,9 @@ public abstract class Primitive extends Value implements Cloneable {
      *         division.
      * @throws InvalidTypeException 
      * @throws InvalidOperandException 
-     * @throws UnexpectedInternalException 
      */
     public Primitive rem(Primitive param)
-    throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+    throws InvalidOperandException, InvalidTypeException {
         return this.calc.rem(this, param);
     }
     
@@ -184,11 +175,8 @@ public abstract class Primitive extends Value implements Cloneable {
      * @return a {@link Primitive} representing the arithmetic negation
      *         of {@code this}.
      * @throws InvalidTypeException 
-     * @throws InvalidOperandException 
-     * @throws UnexpectedInternalException 
      */
-    public Primitive neg()
-    throws InvalidTypeException, UnexpectedInternalException {
+    public Primitive neg() throws InvalidTypeException {
         try {
 			return this.calc.neg(this);
 		} catch (InvalidOperandException e) {
@@ -207,10 +195,9 @@ public abstract class Primitive extends Value implements Cloneable {
      *         operation.
      * @throws InvalidTypeException 
      * @throws InvalidOperandException 
-     * @throws UnexpectedInternalException 
      */
     public Primitive shl(Primitive param)
-    throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+    throws InvalidOperandException, InvalidTypeException {
         return this.calc.shl(this, param);
     }
     
@@ -224,10 +211,9 @@ public abstract class Primitive extends Value implements Cloneable {
      *         operation.
      * @throws InvalidTypeException 
      * @throws InvalidOperandException 
-     * @throws UnexpectedInternalException 
      */
     public Primitive shr(Primitive param)
-    throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+    throws InvalidOperandException, InvalidTypeException {
         return this.calc.shr(this, param);
     }
     
@@ -241,10 +227,9 @@ public abstract class Primitive extends Value implements Cloneable {
      *         operation.
      * @throws InvalidTypeException 
      * @throws InvalidOperandException 
-     * @throws UnexpectedInternalException 
      */
     public Primitive ushr(Primitive param)
-    throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+    throws InvalidOperandException, InvalidTypeException {
         return this.calc.ushr(this, param);
     }
     
@@ -258,10 +243,9 @@ public abstract class Primitive extends Value implements Cloneable {
      *         operation.
      * @throws InvalidTypeException 
      * @throws InvalidOperandException 
-     * @throws UnexpectedInternalException 
      */
     public Primitive andBitwise(Primitive param)
-    throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+    throws InvalidOperandException, InvalidTypeException {
         return this.calc.andBitwise(this, param);
     }
     
@@ -275,10 +259,9 @@ public abstract class Primitive extends Value implements Cloneable {
      *         operation.
      * @throws InvalidTypeException 
      * @throws InvalidOperandException 
-     * @throws UnexpectedInternalException 
      */
     public Primitive orBitwise(Primitive param)
-    throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+    throws InvalidOperandException, InvalidTypeException {
         return this.calc.orBitwise(this, param);
     }
     
@@ -293,10 +276,9 @@ public abstract class Primitive extends Value implements Cloneable {
      *         operation.
      * @throws InvalidTypeException 
      * @throws InvalidOperandException 
-     * @throws UnexpectedInternalException 
      */
     public Primitive xorBitwise(Primitive param)
-    throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+    throws InvalidOperandException, InvalidTypeException {
         return this.calc.xorBitwise(this, param);
     }
     
@@ -310,10 +292,9 @@ public abstract class Primitive extends Value implements Cloneable {
      *         operation.
      * @throws InvalidTypeException 
      * @throws InvalidOperandException 
-     * @throws UnexpectedInternalException 
      */
     public Primitive and(Primitive param)
-    throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+    throws InvalidOperandException, InvalidTypeException {
         return this.calc.and(this, param);
     }
     
@@ -327,10 +308,9 @@ public abstract class Primitive extends Value implements Cloneable {
      *         operation.
      * @throws InvalidTypeException 
      * @throws InvalidOperandException 
-     * @throws UnexpectedInternalException 
      */
     public Primitive or(Primitive param)
-    throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+    throws InvalidOperandException, InvalidTypeException {
         return this.calc.or(this, param);
     }
     
@@ -340,11 +320,8 @@ public abstract class Primitive extends Value implements Cloneable {
      * @return a {@link Primitive} representing the result of the 
      *         operation.
      * @throws InvalidTypeException 
-     * @throws InvalidOperandException 
-     * @throws UnexpectedInternalException 
      */
-    public Primitive not()
-    throws InvalidTypeException, UnexpectedInternalException {
+    public Primitive not() throws InvalidTypeException {
         try {
 			return this.calc.not(this);
 		} catch (InvalidOperandException e) {
@@ -363,10 +340,9 @@ public abstract class Primitive extends Value implements Cloneable {
      *         operation.
      * @throws InvalidOperandException 
      * @throws InvalidTypeException 
-     * @throws UnexpectedInternalException 
      */
     public Primitive ne(Primitive param)
-    throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+    throws InvalidOperandException, InvalidTypeException {
         return this.calc.ne(this, param);
     }
     
@@ -380,10 +356,9 @@ public abstract class Primitive extends Value implements Cloneable {
      *         operation.
      * @throws InvalidOperandException 
      * @throws InvalidTypeException 
-     * @throws UnexpectedInternalException 
      */
     public Primitive eq(Primitive param)
-    throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+    throws InvalidOperandException, InvalidTypeException {
         return this.calc.eq(this, param);
     }
     
@@ -397,10 +372,9 @@ public abstract class Primitive extends Value implements Cloneable {
      *         operation.
      * @throws InvalidOperandException 
      * @throws InvalidTypeException 
-     * @throws UnexpectedInternalException 
      */
     public Primitive ge(Primitive param)
-    throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+    throws InvalidOperandException, InvalidTypeException {
         return this.calc.ge(this, param);
     }
     
@@ -414,10 +388,9 @@ public abstract class Primitive extends Value implements Cloneable {
      *         operation.
      * @throws InvalidTypeException 
      * @throws InvalidOperandException 
-     * @throws UnexpectedInternalException 
      */
     public Primitive le(Primitive param)
-    throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+    throws InvalidOperandException, InvalidTypeException {
         return this.calc.le(this, param);
     }
     
@@ -431,10 +404,9 @@ public abstract class Primitive extends Value implements Cloneable {
      *         operation.
      * @throws InvalidTypeException 
      * @throws InvalidOperandException 
-     * @throws UnexpectedInternalException 
      */
     public Primitive gt(Primitive param)
-    throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+    throws InvalidOperandException, InvalidTypeException {
         return this.calc.gt(this, param);
     }
     
@@ -448,10 +420,9 @@ public abstract class Primitive extends Value implements Cloneable {
      *         operation.
      * @throws InvalidTypeException 
      * @throws InvalidOperandException 
-     * @throws UnexpectedInternalException 
      */
     public Primitive lt(Primitive param)
-    throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+    throws InvalidOperandException, InvalidTypeException {
         return this.calc.lt(this, param);
     }
     
@@ -464,11 +435,12 @@ public abstract class Primitive extends Value implements Cloneable {
      * @return a {@link Primitive} representing the result of the 
      *         operation.
 	 * @throws InvalidOperatorException when {@code operator} is not unary.
-     * @throws UnexpectedInternalException 
+     * @throws InvalidTypeException 
+     * @throws InvalidOperandException 
      */
     public Primitive applyUnary(Operator op) 
     throws InvalidOperatorException, InvalidOperandException, 
-    InvalidTypeException, UnexpectedInternalException {
+    InvalidTypeException {
     	final Primitive retVal = this.calc.applyUnary(op, this);
     	return retVal;
     }
@@ -484,11 +456,12 @@ public abstract class Primitive extends Value implements Cloneable {
      * @return a {@link Primitive} representing the result of the 
      *         operation.
 	 * @throws InvalidOperatorException  when {@code operator} is not binary.
-     * @throws UnexpectedInternalException 
+     * @throws InvalidTypeException 
+     * @throws InvalidOperandException 
      */
     public Primitive applyBinary(Operator op, Primitive param) 
     throws InvalidOperatorException, InvalidOperandException, 
-    InvalidTypeException, UnexpectedInternalException {
+    InvalidTypeException {
     	final Primitive retVal = this.calc.applyBinary(this, op, param);    	
     	return retVal;
     }
@@ -503,10 +476,8 @@ public abstract class Primitive extends Value implements Cloneable {
 	 *         has type {@code type}.
 	 * @throws InvalidTypeException when {@code arg} cannot be converted 
 	 *         to {@code type}.
-	 * @throws UnexpectedInternalException 
 	 */
-    public Primitive to(char type) 
-    throws InvalidTypeException, UnexpectedInternalException {
+    public Primitive to(char type) throws InvalidTypeException {
     	try {
     		return this.calc.to(type, this);
     	} catch (InvalidOperandException e) {

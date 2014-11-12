@@ -21,7 +21,7 @@ public class RewriterDivisionEqualsZero extends Rewriter {
 
 	@Override
 	protected void rewriteExpression(Expression x) 
-	throws NoResultException, UnexpectedInternalException {
+	throws NoResultException {
 		final Operator op = x.getOperator();
 		if (op == Operator.EQ || op == Operator.NE) {
 			final Primitive first = x.getFirstOperand();

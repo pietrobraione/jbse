@@ -1,8 +1,8 @@
 package jbse.rewr;
 
 import static org.junit.Assert.*;
+
 import jbse.Type;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.mem.Primitive;
 import jbse.mem.Simplex;
 import jbse.mem.Term;
@@ -14,7 +14,7 @@ public class RewriterDivisionEquationTest {
 	CalculatorRewriting calcPoly, calcNoPoly;
 	
 	@Before
-	public void before() throws UnexpectedInternalException {
+	public void before() {
 		calcPoly = new CalculatorRewriting();
 		calcPoly.addRewriter(new RewriterOperationOnSimplex());
 		calcPoly.addRewriter(new RewriterPolynomials());

@@ -2,8 +2,8 @@ package jbse.algo;
 
 import static jbse.algo.Util.NULL_POINTER_EXCEPTION;
 import static jbse.bc.Offsets.ARRAYLENGTH_OFFSET;
+
 import jbse.Util;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.mem.InvalidProgramCounterException;
 import jbse.exc.mem.OperandStackEmptyException;
 import jbse.exc.mem.ThreadStackEmptyException;
@@ -16,7 +16,7 @@ class SEArrayLength implements Algorithm {
 	
 	@Override
     public void exec(State state, ExecutionContext ctx) 
-    throws ThreadStackEmptyException, OperandStackEmptyException, UnexpectedInternalException {
+    throws ThreadStackEmptyException, OperandStackEmptyException {
         final Reference tmpRef = (Reference) state.pop();
         if (state.isNull(tmpRef)) {
         	state.createThrowableAndThrowIt(NULL_POINTER_EXCEPTION);

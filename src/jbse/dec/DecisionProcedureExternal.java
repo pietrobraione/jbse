@@ -3,7 +3,6 @@ package jbse.dec;
 import java.io.IOException;
 import java.util.ArrayDeque;
 
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.dec.DecisionException;
 import jbse.exc.dec.ExternalProtocolInterfaceException;
 import jbse.mem.Clause;
@@ -57,10 +56,9 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	 * 
 	 * @throws ExternalProtocolInterfaceException
 	 * @throws IOException
-	 * @throws UnexpectedInternalException 
 	 */
 	private void resynch() 
-	throws ExternalProtocolInterfaceException, IOException, UnexpectedInternalException {
+	throws ExternalProtocolInterfaceException, IOException {
 		this.extIf.clear();
 		final Iterable<Clause> i = () -> clauses.descendingIterator();
 		for (Clause c : i) {
@@ -71,7 +69,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	}
 	
 	protected final void sendClause(Clause c) 
-	throws ExternalProtocolInterfaceException, IOException, UnexpectedInternalException {
+	throws ExternalProtocolInterfaceException, IOException {
 		//TODO use dispatcher
 		if (c instanceof ClauseAssume) {
 			this.extIf.sendClauseAssume(((ClauseAssume) c).getCondition());
@@ -105,7 +103,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	
 	@Override
 	protected final void pushAssumptionLocal(Clause c) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		this.clauses.push(c);
 		if (this.fast) {
 			this.notInSynch = true;
@@ -128,7 +126,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	
 	@Override
 	protected final void clearAssumptionsLocal() 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
     	this.clauses.clear();
 		if (this.fast) {
 			this.notInSynch = true;
@@ -149,7 +147,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	
 	@Override
 	protected void popAssumptionLocal() 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		final Clause c = this.clauses.pop();
 		if (this.fast) {
 			this.notInSynch = true;
@@ -170,7 +168,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 
 	@Override
 	protected boolean isSatImpl(Expression exp) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		final Primitive p = this.calc.applyRewriters(exp, this.rewriters);
 		boolean retVal;
 	    try {
@@ -192,7 +190,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	
 	@Override
 	protected boolean isSatAliasesImpl(ReferenceSymbolic r, long heapPos, Objekt o) 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		boolean retVal;
 	    try {
 	        if (this.extIf.isWorking()) {
@@ -213,7 +211,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	
 	@Override
 	protected boolean isSatExpandsImpl(ReferenceSymbolic r, String className)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		boolean retVal;
 	    try {
 	        if (this.extIf.isWorking()) {
@@ -234,7 +232,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	
 	@Override
 	protected boolean isSatNullImpl(ReferenceSymbolic r)
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		boolean retVal;
 	    try {
 	        if (this.extIf.isWorking()) {
@@ -255,7 +253,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	
 	@Override
 	public void close() 
-	throws DecisionException, UnexpectedInternalException {
+	throws DecisionException {
 		if (this.extIf.isWorking()) {
 			try {
 				this.extIf.quit();

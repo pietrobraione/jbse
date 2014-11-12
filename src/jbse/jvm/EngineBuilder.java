@@ -10,7 +10,6 @@ import jbse.bc.ClassFileFactoryJavassist;
 import jbse.bc.Signature;
 import jbse.exc.algo.MetaUnsupportedException;
 import jbse.exc.bc.InvalidClassFileFactoryClassException;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.dec.DecisionException;
 import jbse.exc.jvm.CannotBuildEngineException;
 import jbse.exc.jvm.InitializationException;
@@ -49,12 +48,10 @@ public class EngineBuilder {
 	 *         observed variable names cannot be observed. This is the only exception
 	 *         that allows nevertheless to perform symbolic execution, in which case 
 	 *         only the observers to existing variables will be notified.
-	 * @throws UnexpectedInternalException whenever some internal unexpected error occurs.
 	 */
 	public Engine build(EngineParameters parameters) 
 	throws CannotBuildEngineException, DecisionException, InitializationException, 
-	InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, 
-	UnexpectedInternalException {
+	InvalidClassFileFactoryClassException, NonexistingObservedVariablesException {
 		//checks whether parameters is complete
 		if (parameters.getMethodSignature() == null && parameters.getInitialState() == null) {
 			throw new CannotBuildEngineException(new NullPointerException());

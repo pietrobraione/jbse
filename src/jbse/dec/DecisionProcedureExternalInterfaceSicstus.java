@@ -254,7 +254,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 
 	@Override
 	public boolean checkSat(boolean value)
-	throws ExternalProtocolInterfaceException, IOException, UnexpectedInternalException {
+	throws ExternalProtocolInterfaceException, IOException {
 		if (!this.hasCurrentClause) {
 			throw new ExternalProtocolInterfaceException("Attempted to check entailment with no current clause.");
 		}
@@ -380,10 +380,9 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 	 *         i == model[k]}, and all the constraints in {@code atomicPredicatesPositive} at indices {@code -j - 1} for  && {@code j < 0 && 
 	 *         j == model[w]}, for some k and w, has a solution.
 	 * @throws IOException
-	 * @throws UnexpectedInternalException 
 	 */
 	private boolean hasSolution(int[] model, ArrayList<String> atomicPredicatesPositive, ArrayList<String> atomicPredicatesNegative, String integerVariables) 
-	throws IOException, UnexpectedInternalException {
+	throws IOException {
 		try {
 			final StringBuffer query = new StringBuffer("{");
 			boolean firstDone = false;
@@ -412,7 +411,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 
 	@Override
 	public void pushAssumption(boolean value)
-	throws ExternalProtocolInterfaceException, IOException, UnexpectedInternalException {
+	throws ExternalProtocolInterfaceException, IOException {
 		if (!this.hasCurrentClause) {
 			throw new ExternalProtocolInterfaceException("Attempted to push assumption with no current clause.");
 		}
@@ -471,10 +470,10 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 		final ArrayList<String> atomicPredicatesPositive = new ArrayList<String>();
 		final ArrayList<String> atomicPredicatesNegative = new ArrayList<String>();
 		
-		public SicstusParser(Primitive p) throws ExternalProtocolInterfaceException, UnexpectedInternalException { 
+		public SicstusParser(Primitive p) throws ExternalProtocolInterfaceException { 
 			try {
 				p.accept(this);
-			} catch (ExternalProtocolInterfaceException | UnexpectedInternalException | RuntimeException e) {
+			} catch (ExternalProtocolInterfaceException | RuntimeException e) {
 				throw e;
 			} catch (Exception e) {
 				//this should never happen
@@ -500,7 +499,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 						final Primitive constraintNeg = arg.lt(zero).and(tWidened.add(minusOne).lt(arg)).and(arg.lt(tWidened));
 						final Primitive constraint = constraintPos.or(constraintNeg);
 						constraint.accept(this);
-					} catch (ExternalProtocolInterfaceException | UnexpectedInternalException | RuntimeException e) {
+					} catch (ExternalProtocolInterfaceException | RuntimeException e) {
 						throw e;
 					} catch (Exception e) {
 						//this should never happen
@@ -559,10 +558,10 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 		}
 		
 		private void storeAtomicPredicate(Primitive p) 
-		throws ExternalProtocolInterfaceException, UnexpectedInternalException {
+		throws ExternalProtocolInterfaceException {
 			try {
 				p.accept(this.parserAtoms);
-			} catch (ExternalProtocolInterfaceException | UnexpectedInternalException | RuntimeException e) {
+			} catch (ExternalProtocolInterfaceException | RuntimeException e) {
 				throw e;
 			} catch (Exception e) {
 				//this should never happen
@@ -575,7 +574,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 
 		@Override
 		public void visitFunctionApplication(FunctionApplication x) 
-		throws ExternalProtocolInterfaceException, UnexpectedInternalException {
+		throws ExternalProtocolInterfaceException {
 			if (working) {
 				if (x.getType() == Type.BOOLEAN) {
 					storeAtomicPredicate(x);
@@ -587,7 +586,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 
 		@Override
 		public void visitWideningConversion(WideningConversion x) 
-		throws ExternalProtocolInterfaceException, UnexpectedInternalException {
+		throws ExternalProtocolInterfaceException {
 			if (working) {
 				if (x.getType() == Type.BOOLEAN) {
 					storeAtomicPredicate(x);
@@ -599,7 +598,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 
 		@Override
 		public void visitNarrowingConversion(NarrowingConversion x) 
-		throws ExternalProtocolInterfaceException, UnexpectedInternalException {
+		throws ExternalProtocolInterfaceException {
 			if (x.getType() == Type.BOOLEAN) {
 				storeAtomicPredicate(x);
 			} else {
@@ -609,7 +608,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 
 		@Override
 		public void visitPrimitiveSymbolic(PrimitiveSymbolic s)
-		throws ExternalProtocolInterfaceException, UnexpectedInternalException {
+		throws ExternalProtocolInterfaceException {
 	        if (working) {
 	            if (s.getType() == Type.BOOLEAN) {
 	            	storeAtomicPredicate(s);
@@ -632,7 +631,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 
 		@Override
 		public void visitTerm(Term x) 
-		throws ExternalProtocolInterfaceException, UnexpectedInternalException {
+		throws ExternalProtocolInterfaceException {
 	        if (working) {
 	            if (Type.isPrimitive(x.getType())) {
 	            	storeAtomicPredicate(x);
@@ -767,7 +766,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 		public SicstusParserAtomicPredicates() { }
 
 		@Override
-		public void visitAny(Any x) throws UnexpectedInternalException {
+		public void visitAny(Any x) {
 			throw new UnexpectedInternalException("the 'any' value should not arrive to Sicstus");
 		}
 

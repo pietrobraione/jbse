@@ -1,7 +1,6 @@
 package jbse.algo;
 
 import jbse.Util;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.mem.InvalidOperandException;
 import jbse.exc.mem.InvalidProgramCounterException;
 import jbse.exc.mem.InvalidSlotException;
@@ -14,7 +13,7 @@ import jbse.mem.State;
 
 class SEIinc implements Algorithm {
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, UnexpectedInternalException {
+	throws ThreadStackEmptyException {
 		final boolean wide = state.nextWide();
 		final int index;
 		final int constant;

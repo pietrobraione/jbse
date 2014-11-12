@@ -42,7 +42,7 @@ import jbse.mem.Value;
 public class NativeInvokerPure implements NativeInvoker {
 	@Override
 	public void doInvokeNative(State state, Signature methodSignatureResolved, Value[] args, int pcOffset) 
-	throws CannotInvokeNativeException, UnexpectedInternalException, ThreadStackEmptyException {
+	throws CannotInvokeNativeException, ThreadStackEmptyException {
 		//determines the return value
 		final String returnType = Type.splitReturnValueDescriptor(methodSignatureResolved.getDescriptor());
 		final Value returnValue;

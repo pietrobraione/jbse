@@ -2,9 +2,9 @@ package jbse.algo.nativ;
 
 import static jbse.Util.VERIFY_ERROR;
 import static jbse.bc.Offsets.INVOKEVIRTUAL_OFFSET;
+
 import jbse.algo.Algorithm;
 import jbse.bc.Signature;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.mem.InvalidProgramCounterException;
 import jbse.exc.mem.OperandStackEmptyException;
 import jbse.exc.mem.ThreadStackEmptyException;
@@ -20,7 +20,7 @@ public class SEFillInStackTrace implements Algorithm {
 	
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, OperandStackEmptyException, UnexpectedInternalException {
+	throws ThreadStackEmptyException, OperandStackEmptyException {
 		//TODO replace this dummy implementation
 		final Reference thisRef = (Reference) state.pop(); //pops "this"
 		final Instance exc = (Instance) state.getObject(thisRef);

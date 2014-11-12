@@ -36,7 +36,7 @@ public class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
 	}
 
 	@Override
-	public Collection<Clause> getAssumptions() throws UnexpectedInternalException {
+	public Collection<Clause> getAssumptions() {
 		try {
 			return super.getAssumptions();
 		} catch (DecisionException e) {
@@ -46,7 +46,7 @@ public class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
 	}
 
 	@Override
-	public boolean isSat(Expression exp) throws UnexpectedInternalException {
+	public boolean isSat(Expression exp) {
 		boolean retVal;
 		IO.println(this.ps, CLASS_NAME + ": Please solve the following clause:");
 		IO.print(this.ps, CLASS_NAME + ": "); 
@@ -64,8 +64,7 @@ public class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
 	}
 
 	@Override
-	protected Outcome decideIfNonconcrete(Primitive exp, SortedSet<DecisionAlternativeIf> result) 
-	throws UnexpectedInternalException {
+	protected Outcome decideIfNonconcrete(Primitive exp, SortedSet<DecisionAlternativeIf> result) {
 		final DecisionAlternativeIf T = DecisionAlternativeIf.toNonconcrete(true);
 		final DecisionAlternativeIf F = DecisionAlternativeIf.toNonconcrete(false);
 		if (exp instanceof Any) {
@@ -93,8 +92,7 @@ public class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
 	}
 
 	@Override
-	protected Outcome decideComparisonNonconcrete(Primitive val1, Primitive val2, SortedSet<DecisionAlternativeComparison> result) 
-	throws UnexpectedInternalException {
+	protected Outcome decideComparisonNonconcrete(Primitive val1, Primitive val2, SortedSet<DecisionAlternativeComparison> result) {
 		final DecisionAlternativeComparison GT = DecisionAlternativeComparison.toNonconcrete(Values.GT);
 		final DecisionAlternativeComparison EQ = DecisionAlternativeComparison.toNonconcrete(Values.EQ);
 		final DecisionAlternativeComparison LT = DecisionAlternativeComparison.toNonconcrete(Values.LT);
@@ -137,8 +135,7 @@ public class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
 	}
 
 	@Override
-	protected Outcome decideSwitchNonconcrete(Primitive val, SwitchTable tab, SortedSet<DecisionAlternativeSwitch> result) 
-	throws UnexpectedInternalException {
+	protected Outcome decideSwitchNonconcrete(Primitive val, SwitchTable tab, SortedSet<DecisionAlternativeSwitch> result) {
 		boolean shouldRefine;
 		if (val instanceof Any) {
 			int branchId = 1;

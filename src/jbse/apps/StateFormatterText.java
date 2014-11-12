@@ -10,7 +10,6 @@ import java.util.Map;
 
 import jbse.Type;
 import jbse.bc.ClassHierarchy;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.mem.ThreadStackEmptyException;
 import jbse.mem.Array;
 import jbse.mem.Clause;
@@ -47,7 +46,7 @@ public abstract class StateFormatterText implements StateFormatter {
 	}
 	
 	@Override
-	public void format(State s) throws UnexpectedInternalException {
+	public void format(State s) {
 		this.formatOutput = formatState(s, this.srcPath, true, "\t", "");
 	}
 
@@ -56,8 +55,7 @@ public abstract class StateFormatterText implements StateFormatter {
 		this.formatOutput = "";
 	}
 	
-	private static String formatState(State state, List<String> srcPath, boolean breakLines, String indentTxt, String indentCurrent) 
-	throws UnexpectedInternalException {
+	private static String formatState(State state, List<String> srcPath, boolean breakLines, String indentTxt, String indentCurrent) {
 		final String lineSep = (breakLines ? LINE_SEP : "");
 		String s = state.getIdentifier() + "[" + state.getSequenceNumber() + "] " + lineSep;
         if (state.isStuck()) {
@@ -365,8 +363,7 @@ public abstract class StateFormatterText implements StateFormatter {
     	return  "(type: " + val.getType() + ")";		
 	}
 	
-	private static String formatStack(State s, List<String> srcPath, boolean breakLines, String indentTxt, String indentCurrent) 
-	throws UnexpectedInternalException {
+	private static String formatStack(State s, List<String> srcPath, boolean breakLines, String indentTxt, String indentCurrent) {
 		final String lineSep = (breakLines ? LINE_SEP : "");
     	final Iterable<Frame> stack = s.getStack();
     	final int size = s.getStackSize();
@@ -382,8 +379,7 @@ public abstract class StateFormatterText implements StateFormatter {
         return tmpRet;
 	}
 
-	private static String formatFrame(State s, Frame f, List<String> srcPath, boolean breakLines, String indentTxt, String indentCurrent) 
-	throws UnexpectedInternalException {
+	private static String formatFrame(State s, Frame f, List<String> srcPath, boolean breakLines, String indentTxt, String indentCurrent) {
 		final String lineSep = (breakLines ? LINE_SEP : "");
 		String tmp = "";
         tmp += indentCurrent + "Method signature: " + f.getCurrentMethodSignature().toString() + lineSep;
@@ -413,8 +409,7 @@ public abstract class StateFormatterText implements StateFormatter {
         return(tmp);
 	}
 	
-	private static String formatLocalVariables(State s, Frame f, boolean breakLines, String indentTxt, String indentCurrent) 
-	throws UnexpectedInternalException {
+	private static String formatLocalVariables(State s, Frame f, boolean breakLines, String indentTxt, String indentCurrent) {
 		final String lineSep = (breakLines ? LINE_SEP : "");
         String tmp = indentCurrent;
         boolean isFirst = true;

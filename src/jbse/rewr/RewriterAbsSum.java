@@ -27,7 +27,7 @@ public class RewriterAbsSum extends Rewriter {
 
 	@Override
 	protected void rewriteExpression(Expression x) 
-	throws NoResultException, UnexpectedInternalException {
+	throws NoResultException {
 		//checks for a comparison expression
 		Operator operator = x.getOperator();
 		if (operator != Operator.EQ && operator != Operator.NE &&
@@ -148,7 +148,7 @@ public class RewriterAbsSum extends Rewriter {
 	}
 
 	private void processAbs(boolean absNegated, Primitive absArg, boolean otherNegated, Primitive subOther, Operator operator) 
-	throws NoResultException, UnexpectedInternalException {
+	throws NoResultException {
 		try {
 			final Primitive zero = calc.valInt(0).to(absArg.getType());
 			switch (operator) {

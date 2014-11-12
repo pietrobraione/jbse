@@ -1,8 +1,8 @@
 package jbse.rewr;
 
 import static org.junit.Assert.assertEquals;
+
 import jbse.Type;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.mem.InvalidOperandException;
 import jbse.exc.mem.InvalidTypeException;
 import jbse.mem.FunctionApplication;
@@ -16,7 +16,7 @@ public class RewriterArcTanTest {
 	CalculatorRewriting calc;
 	
 	@Before
-	public void before() throws UnexpectedInternalException {
+	public void before() {
 		calc = new CalculatorRewriting();
 		calc.addRewriter(new RewriterOperationOnSimplex());
 		calc.addRewriter(new RewriterPolynomials());
@@ -24,7 +24,7 @@ public class RewriterArcTanTest {
 	}
 	
 	@Test
-	public void testSimple1() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testSimple1() throws InvalidOperandException, InvalidTypeException {
 		//tan(atan(A)) -> A
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
 		final Primitive p_post = calc.applyFunction(Type.DOUBLE, FunctionApplication.TAN, calc.applyFunction(Type.DOUBLE, FunctionApplication.ATAN, A)); 
@@ -32,7 +32,7 @@ public class RewriterArcTanTest {
 	}
 	
 	@Test
-	public void testSimple2() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testSimple2() throws InvalidOperandException, InvalidTypeException {
 		//tan(tan(atan(A))) -> tan(A)
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
 		final Primitive p_post = calc.applyFunction(Type.DOUBLE, FunctionApplication.TAN, calc.applyFunction(Type.DOUBLE, FunctionApplication.TAN, calc.applyFunction(Type.DOUBLE, FunctionApplication.ATAN, A))); 
@@ -40,7 +40,7 @@ public class RewriterArcTanTest {
 	}
 	
 	@Test
-	public void testSimple3() throws InvalidOperandException, InvalidTypeException, UnexpectedInternalException {
+	public void testSimple3() throws InvalidOperandException, InvalidTypeException {
 		//atan(tan(atan(A))) -> atan(A)
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
 		final Primitive p_post = calc.applyFunction(Type.DOUBLE, FunctionApplication.ATAN, calc.applyFunction(Type.DOUBLE, FunctionApplication.TAN, calc.applyFunction(Type.DOUBLE, FunctionApplication.ATAN, A))); 

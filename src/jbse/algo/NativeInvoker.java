@@ -2,7 +2,6 @@ package jbse.algo;
 
 import jbse.bc.Signature;
 import jbse.exc.algo.CannotInvokeNativeException;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.mem.ThreadStackEmptyException;
 import jbse.mem.State;
 import jbse.mem.Value;
@@ -30,8 +29,7 @@ public interface NativeInvoker {
 	 * @throws CannotInvokeNativeException whenever the preconditions of
 	 *         {@code doInvokeNative} are violated.
 	 * @throws ThreadStackEmptyException 
-	 * @throws UnexpectedInternalException 
 	 */
 	void doInvokeNative(State state, Signature methodSignatureResolved, Value[] args, int pcOffset) 
-	throws CannotInvokeNativeException, ThreadStackEmptyException, UnexpectedInternalException;
+	throws CannotInvokeNativeException, ThreadStackEmptyException;
 }

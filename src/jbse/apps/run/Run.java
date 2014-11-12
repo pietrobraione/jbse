@@ -511,7 +511,7 @@ public class Run {
 			return super.atCannotBacktrackException(e);
 		}
 		
-		private void checkFinalStateIsConcretizable(CounterKind ctr) throws UnexpectedInternalException {
+		private void checkFinalStateIsConcretizable(CounterKind ctr) {
 			final long startTime = System.currentTimeMillis();
 			final boolean concretizable;
 			try {
@@ -731,7 +731,7 @@ public class Run {
 		if (this.parameters.stateFormatMode == StateFormatMode.FULLTEXT) {
 			this.formatterBranches = new StateFormatterText(this.parameters.srcPath) {
 				@Override
-				public void format(State s) throws UnexpectedInternalException {
+				public void format(State s) {
 					this.formatOutput += LINE_SEP; // gutter
 					this.formatOutput += banner(s.getIdentifier() + "["
 							+ s.getSequenceNumber() + "]", true) ;
@@ -745,7 +745,7 @@ public class Run {
 			};
 			this.formatterOthers = new StateFormatterText(this.parameters.srcPath) {
 				@Override
-				public void format(State s) throws UnexpectedInternalException {
+				public void format(State s) {
 					this.formatOutput += LINE_SEP; // gutter
 					this.formatOutput += banner(s.getIdentifier() + "["
 							+ s.getSequenceNumber() + "]", false);
@@ -970,9 +970,8 @@ public class Run {
 	 *            the {@link State} to be displayed.
 	 * @param isRootBranch
 	 *            {@code true} iff {@code s} is at a branch point.
-	 * @throws UnexpectedInternalException 
 	 */
-	private void printState(State s, boolean isRootBranch) throws UnexpectedInternalException {
+	private void printState(State s, boolean isRootBranch) {
 		final StateFormatter f = 
 			(isRootBranch ? this.formatterBranches : this.formatterOthers);
 		f.format(s);

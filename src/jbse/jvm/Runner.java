@@ -3,7 +3,6 @@ package jbse.jvm;
 import java.util.Map;
 
 import jbse.exc.algo.CannotManageStateException;
-import jbse.exc.common.UnexpectedInternalException;
 import jbse.exc.dec.DecisionBacktrackException;
 import jbse.exc.dec.DecisionException;
 import jbse.exc.jvm.CannotBacktrackException;
@@ -464,13 +463,12 @@ public class Runner {
 	 * @throws DecisionException as in {@link Engine#step()} 
 	 * @throws EngineStuckException as in {@link Engine#step()} 
 	 * @throws FailureException as in {@link Engine#step()} 
-	 * @throws UnexpectedInternalException as in {@link Engine#step()}
 	 */
 	public void run() 
 	throws CannotBacktrackException, CannotManageStateException, 
 	ThreadStackEmptyException, OperandStackEmptyException, 
 	ContradictionException, DecisionException, EngineStuckException, 
-	FailureException, UnexpectedInternalException  {
+	FailureException  {
 		this.startTime = System.currentTimeMillis();
 		
 		if (this.actions.atRoot()) { return; }

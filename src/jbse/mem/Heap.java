@@ -45,9 +45,8 @@ final class Heap implements Cloneable {
      * @param ref a {@code int}, the location where the object
      *        must be stored.
      * @param item the {@link Objekt} to stored at {@code pos}.
-     * @throws UnexpectedInternalException 
      */
-    void set(long pos, Objekt item) throws UnexpectedInternalException {
+    void set(long pos, Objekt item) {
     	this.objects.put(pos, item);
     	//next free position, without garbage collection
         while (objects.containsKey(this.nextIndex)) {
