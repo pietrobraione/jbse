@@ -1,7 +1,7 @@
 package jbse.rules;
 
 import jbse.mem.Objekt;
-import jbse.mem.ReferenceSymbolic;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * Superclass for the alias resolution LICS rules.

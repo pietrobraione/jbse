@@ -3,8 +3,8 @@ package jbse.dec;
 import java.io.IOException;
 import java.util.ArrayDeque;
 
-import jbse.exc.dec.DecisionException;
-import jbse.exc.dec.ExternalProtocolInterfaceException;
+import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.ExternalProtocolInterfaceException;
 import jbse.mem.Clause;
 import jbse.mem.ClauseAssume;
 import jbse.mem.ClauseAssumeAliases;
@@ -12,12 +12,12 @@ import jbse.mem.ClauseAssumeClassInitialized;
 import jbse.mem.ClauseAssumeClassNotInitialized;
 import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.ClauseAssumeNull;
-import jbse.mem.Expression;
 import jbse.mem.Objekt;
-import jbse.mem.Primitive;
-import jbse.mem.ReferenceSymbolic;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.Rewriter;
+import jbse.val.Expression;
+import jbse.val.Primitive;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * A {@link DecisionProcedureExternal} is a {@link DecisionProcedureChainOfResponsibility} 

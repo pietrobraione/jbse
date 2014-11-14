@@ -3,18 +3,18 @@ package jbse.rewr;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidOperatorException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.exc.rewr.NoResultException;
-import jbse.mem.Calculator;
-import jbse.mem.Expression;
-import jbse.mem.FunctionApplication;
-import jbse.mem.NarrowingConversion;
-import jbse.mem.Operator;
-import jbse.mem.Primitive;
-import jbse.mem.WideningConversion;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.rewr.exc.NoResultException;
+import jbse.val.Calculator;
+import jbse.val.Expression;
+import jbse.val.FunctionApplication;
+import jbse.val.NarrowingConversion;
+import jbse.val.Operator;
+import jbse.val.Primitive;
+import jbse.val.WideningConversion;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidOperatorException;
+import jbse.val.exc.InvalidTypeException;
 
 
 /**

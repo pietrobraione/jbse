@@ -1,20 +1,20 @@
 package jbse.rewr;
 
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.exc.rewr.NoResultException;
-import jbse.mem.Any;
-import jbse.mem.Expression;
-import jbse.mem.FunctionApplication;
-import jbse.mem.NarrowingConversion;
-import jbse.mem.Operator;
-import jbse.mem.Primitive;
-import jbse.mem.PrimitiveSymbolic;
-import jbse.mem.PrimitiveVisitor;
-import jbse.mem.Simplex;
-import jbse.mem.Term;
-import jbse.mem.WideningConversion;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.rewr.exc.NoResultException;
+import jbse.val.Any;
+import jbse.val.Expression;
+import jbse.val.FunctionApplication;
+import jbse.val.NarrowingConversion;
+import jbse.val.Operator;
+import jbse.val.Primitive;
+import jbse.val.PrimitiveSymbolic;
+import jbse.val.PrimitiveVisitor;
+import jbse.val.Simplex;
+import jbse.val.Term;
+import jbse.val.WideningConversion;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * Rewrites comparisons of {@code A +/- abs(A)} with {@code 0}.

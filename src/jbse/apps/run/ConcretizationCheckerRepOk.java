@@ -1,32 +1,33 @@
 package jbse.apps.run;
 
 import static jbse.jvm.Util.doRunRepOk;
+
+import jbse.algo.exc.CannotManageStateException;
+import jbse.algo.exc.PleaseDoNativeException;
 import jbse.bc.Signature;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
+import jbse.bc.exc.InvalidClassFileFactoryClassException;
+import jbse.bc.exc.MethodNotFoundException;
+import jbse.bc.exc.NoMethodReceiverException;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms;
-import jbse.exc.algo.CannotManageStateException;
-import jbse.exc.algo.PleaseDoNativeException;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.bc.IncompatibleClassFileException;
-import jbse.exc.bc.InvalidClassFileFactoryClassException;
-import jbse.exc.bc.MethodNotFoundException;
-import jbse.exc.bc.NoMethodReceiverException;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.jvm.CannotBacktrackException;
-import jbse.exc.jvm.CannotBuildEngineException;
-import jbse.exc.jvm.EngineStuckException;
-import jbse.exc.jvm.FailureException;
-import jbse.exc.jvm.InitializationException;
-import jbse.exc.jvm.NonexistingObservedVariablesException;
-import jbse.exc.mem.CannotRefineException;
-import jbse.exc.mem.ContradictionException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.InvalidSlotException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
+import jbse.dec.exc.DecisionException;
+import jbse.jvm.exc.CannotBacktrackException;
+import jbse.jvm.exc.CannotBuildEngineException;
+import jbse.jvm.exc.EngineStuckException;
+import jbse.jvm.exc.FailureException;
+import jbse.jvm.exc.InitializationException;
+import jbse.jvm.exc.NonexistingObservedVariablesException;
 import jbse.mem.Objekt;
-import jbse.mem.Reference;
 import jbse.mem.State;
+import jbse.mem.exc.CannotRefineException;
+import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.InvalidSlotException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Reference;
 
 //TODO extend the check method to all the instances in the State's heap, making this class identical to DecisionProcedureConservativeRepOk, and eliminate this class
 public final class ConcretizationCheckerRepOk {

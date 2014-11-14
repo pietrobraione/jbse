@@ -4,22 +4,10 @@ package jbse.bc;
  *Class that represent an entry of the exception table
  */
 public class ExceptionTableEntry {
-	/**
-	 *Constructor, initialize the structure with null value
-	 */
-	public ExceptionTableEntry()
-	{
-		exEntry=new int[3];
-		exType=null;
-	}
-	/**
-	 *Constructor, Initialize the structure for the Entry
-	 *@param startPC Program counter of the start of try
-	 *@param endPC Program counter of the end of try
-	 *@param PCHandle Program Counter of the start of catch
-	 *@param type Type of the Exception
-	 */
-	public ExceptionTableEntry(int startPC, int endPC, int PCHandle, String type)
+    private int[] exEntry;
+    private String exType;
+
+    public ExceptionTableEntry(int startPC, int endPC, int PCHandle, String type)
 	{
 		exEntry=new int[3];
 		exEntry[0]=startPC;
@@ -91,6 +79,4 @@ public class ExceptionTableEntry {
 	{
 		exType=type;
 	}
-	private int[] exEntry;
-	private String exType;
 }

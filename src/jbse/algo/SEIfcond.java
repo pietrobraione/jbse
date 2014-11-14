@@ -1,24 +1,25 @@
 package jbse.algo;
 
-import jbse.Type;
-import jbse.Util;
+import static jbse.algo.Util.throwVerifyError;
+
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.common.Type;
+import jbse.common.Util;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.dec.InvalidInputException;
-import jbse.exc.mem.ContradictionException;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidOperatorException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
-import jbse.mem.Operator;
-import jbse.mem.Primitive;
+import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.InvalidInputException;
 import jbse.mem.State;
+import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternativeIf;
+import jbse.val.Operator;
+import jbse.val.Primitive;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidOperatorException;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * Command managing all the "branch if integer comparison" bytecodes 
@@ -47,7 +48,7 @@ final class SEIfcond extends MultipleStateGenerator<DecisionAlternativeIf> imple
 	        final byte tmp2 = state.getInstruction(2);
 	        branchOffset = Util.byteCatShort(tmp1, tmp2);
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		} //note that now the program counter points to the next instruction
 
@@ -79,7 +80,7 @@ final class SEIfcond extends MultipleStateGenerator<DecisionAlternativeIf> imple
 		try {
 			condition = state.getCalculator().applyBinary(val1, operator, val2);
 		} catch (InvalidOperandException | InvalidTypeException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		} catch (InvalidOperatorException e) {
 			throw new UnexpectedInternalException(e);
@@ -103,7 +104,7 @@ final class SEIfcond extends MultipleStateGenerator<DecisionAlternativeIf> imple
 					s.incPC(3);
 				}
 			} catch (InvalidProgramCounterException e) {
-				s.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+	            throwVerifyError(s);
 			}
 		};
 		

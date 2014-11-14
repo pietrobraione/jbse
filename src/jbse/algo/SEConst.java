@@ -1,14 +1,13 @@
 package jbse.algo;
 
+import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.XCONST_OFFSET;
-import jbse.Type;
-import jbse.Util;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
-import jbse.mem.State;
 
+import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.mem.State;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.ThreadStackEmptyException;
 
 class SEConst implements Algorithm {
     char type;
@@ -32,7 +31,7 @@ class SEConst implements Algorithm {
         try {
 			state.incPC(XCONST_OFFSET);
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 		}
     } 
 }

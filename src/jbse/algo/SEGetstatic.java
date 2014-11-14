@@ -4,26 +4,27 @@ import static jbse.algo.Util.ILLEGAL_ACCESS_ERROR;
 import static jbse.algo.Util.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.algo.Util.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.algo.Util.NO_SUCH_FIELD_ERROR;
+import static jbse.algo.Util.createAndThrow;
 import static jbse.algo.Util.ensureKlass;
+import static jbse.algo.Util.throwVerifyError;
 
-import jbse.Util;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
-import jbse.exc.bc.AttributeNotFoundException;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.bc.FieldNotAccessibleException;
-import jbse.exc.bc.FieldNotFoundException;
-import jbse.exc.bc.InvalidIndexException;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.mem.ContradictionException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
-import jbse.mem.ConstantPoolString;
+import jbse.bc.exc.AttributeNotFoundException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.FieldNotAccessibleException;
+import jbse.bc.exc.FieldNotFoundException;
+import jbse.bc.exc.InvalidIndexException;
+import jbse.common.Util;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
-import jbse.mem.Value;
+import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.ConstantPoolString;
+import jbse.val.Value;
 
 /**
  * Command managing the getstatic bytecode. It decides over the value 
@@ -46,7 +47,7 @@ final class SEGetstatic extends MultipleStateGeneratorLFLoad implements Algorith
         	final byte tmp2 = state.getInstruction(2);
 	        index = Util.byteCat(tmp1, tmp2);
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 
@@ -57,7 +58,7 @@ final class SEGetstatic extends MultipleStateGeneratorLFLoad implements Algorith
         try {
 			fieldSignature = hier.getClassFile(currentClassName).getFieldSignature(index);
 		} catch (InvalidIndexException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		} catch (ClassFileNotFoundException e) {
 			//this should never happen
@@ -69,13 +70,13 @@ final class SEGetstatic extends MultipleStateGeneratorLFLoad implements Algorith
 		try {
 	        fieldSignatureResolved = hier.resolveField(currentClassName, fieldSignature);
 		} catch (ClassFileNotFoundException e) {
-			state.createThrowableAndThrowIt(NO_CLASS_DEFINITION_FOUND_ERROR);
+            createAndThrow(state, NO_CLASS_DEFINITION_FOUND_ERROR);
 			return;
 		} catch (FieldNotFoundException e) {
-			state.createThrowableAndThrowIt(NO_SUCH_FIELD_ERROR);
+            createAndThrow(state, NO_SUCH_FIELD_ERROR);
 			return;
 		} catch (FieldNotAccessibleException e) {
-			state.createThrowableAndThrowIt(ILLEGAL_ACCESS_ERROR);
+            createAndThrow(state, ILLEGAL_ACCESS_ERROR);
 			return;
 		}
 
@@ -94,7 +95,7 @@ final class SEGetstatic extends MultipleStateGeneratorLFLoad implements Algorith
 		//checks that the field is static or belongs to an interface
 		try {
 			if ((!fieldClassFile.isInterface()) && (!fieldClassFile.isFieldStatic(fieldSignatureResolved))) {
-				state.createThrowableAndThrowIt(INCOMPATIBLE_CLASS_CHANGE_ERROR);
+	            createAndThrow(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
 				return;
 			}
 		} catch (FieldNotFoundException e) {
@@ -114,7 +115,7 @@ final class SEGetstatic extends MultipleStateGeneratorLFLoad implements Algorith
 				}
 				//TODO check type!
 			} catch (InvalidIndexException e) {
-				state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+	            throwVerifyError(state);
 				return;
 			} catch (FieldNotFoundException | AttributeNotFoundException e) {
 				throw new UnexpectedInternalException(e);

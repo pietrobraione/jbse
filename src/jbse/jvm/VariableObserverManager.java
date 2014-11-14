@@ -5,15 +5,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import jbse.Type;
 import jbse.bc.Signature;
-import jbse.exc.jvm.NonexistingObservedVariablesException;
-import jbse.exc.mem.ThreadStackEmptyException;
+import jbse.common.Type;
+import jbse.jvm.exc.NonexistingObservedVariablesException;
 import jbse.mem.Instance;
 import jbse.mem.Klass;
-import jbse.mem.Reference;
-import jbse.mem.Value;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.StateTree.BranchPoint;
+import jbse.val.Reference;
+import jbse.val.Value;
 
 /**
  * A {@link VariableObserverManager} is the manager (see the classical GoF Observer pattern)
@@ -53,7 +53,8 @@ class VariableObserverManager {
 		if (varSignature == null || obs == null) {
 			throw new NullPointerException(); 
 		}
-		if (varSignature.getClassName().equals(rootClassName) && varSignature.getDescriptor() == "" + Type.BOOLEAN) {
+		if (varSignature.getClassName().equals(rootClassName) && 
+		    varSignature.getDescriptor().equals("" + Type.BOOLEAN)) {
 			this.varSigs.add(varSignature);
 			this.obs.add(obs);
 		} //TODO else? Maybe throw some exception
@@ -92,7 +93,7 @@ class VariableObserverManager {
 				final LinkedList<Value> toSave = new LinkedList<Value>();
 				for (Value v : this.values) { 
 					if (v != null) {
-						toSave.add(v.clone());
+						toSave.add(v);
 					}
 				}
 				this.savedValues.put(branch, toSave);
@@ -107,7 +108,7 @@ class VariableObserverManager {
 				if (o == null || vNew == null || vOld.equals(vNew)) {
 					; //does nothing
 				} else {
-					this.values.set(i, vNew.clone());
+					this.values.set(i, vNew);
 					o.update(this.engine);
 				}
 			}
@@ -118,7 +119,7 @@ class VariableObserverManager {
 		if (this.hasObservers()) {
 			final LinkedList<Value> toSave = new LinkedList<Value>();
 			for (int i = 0; i < this.values.size(); ++i) {
-				toSave.add(this.values.get(i).clone());
+				toSave.add(this.values.get(i));
 			}
 			this.savedValues.put(bp, toSave);
 		}

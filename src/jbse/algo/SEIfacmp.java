@@ -1,16 +1,15 @@
 package jbse.algo;
 
-import static jbse.Util.VERIFY_ERROR;
-import static jbse.Util.byteCatShort;
 import static jbse.algo.Util.aliases;
+import static jbse.algo.Util.throwVerifyError;
+import static jbse.common.Util.byteCatShort;
 
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
-import jbse.mem.Null;
-import jbse.mem.Reference;
 import jbse.mem.State;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Null;
+import jbse.val.Reference;
 
 /**
  * Command managing all the "branch if reference comparison" bytecodes, including 
@@ -19,7 +18,7 @@ import jbse.mem.State;
  * @author Pietro Braione
  *
  */
-class SEIfacmp implements Algorithm {
+final class SEIfacmp implements Algorithm {
 	boolean compareWithNull;
     boolean eq;
 
@@ -33,7 +32,7 @@ class SEIfacmp implements Algorithm {
 	        byte tmp2 = state.getInstruction(2);
 	        index = byteCatShort(tmp1, tmp2);
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
         
@@ -64,7 +63,7 @@ class SEIfacmp implements Algorithm {
         		state.incPC(3);
         	}
         } catch (InvalidProgramCounterException e) {
-        	state.createThrowableAndThrowIt(VERIFY_ERROR);
+            throwVerifyError(state);
         }
     }
 }

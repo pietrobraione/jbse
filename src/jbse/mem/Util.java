@@ -2,13 +2,20 @@ package jbse.mem;
 
 import java.util.ArrayList;
 
-import static jbse.Type.ARRAYOF;
-import static jbse.Type.CHAR;
-import static jbse.Type.INT;
-import static jbse.Type.isPrimitive;
-import static jbse.Type.isReference;
+import static jbse.common.Type.ARRAYOF;
+import static jbse.common.Type.CHAR;
+import static jbse.common.Type.INT;
+import static jbse.common.Type.isPrimitive;
+import static jbse.common.Type.isReference;
+
 import jbse.bc.Signature;
-import jbse.exc.mem.InvalidTypeException;
+import jbse.val.Null;
+import jbse.val.Primitive;
+import jbse.val.Reference;
+import jbse.val.ReferenceConcrete;
+import jbse.val.ReferenceSymbolic;
+import jbse.val.Value;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * Some utility functions and constants.

@@ -2,10 +2,10 @@ package jbse.rewr;
 
 import static org.junit.Assert.assertEquals;
 
-import jbse.Type;
-import jbse.mem.FunctionApplication;
-import jbse.mem.Primitive;
-import jbse.mem.Term;
+import jbse.common.Type;
+import jbse.val.FunctionApplication;
+import jbse.val.Primitive;
+import jbse.val.Term;
 
 import org.junit.Before;
 import org.junit.Test;

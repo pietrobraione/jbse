@@ -1,6 +1,6 @@
 package jbse.rules;
 
-import jbse.mem.ReferenceSymbolic;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * The class for a null expansion constraint, filtering pattern for

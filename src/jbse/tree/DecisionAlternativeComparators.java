@@ -116,7 +116,7 @@ public class DecisionAlternativeComparators {
 					if (o2 instanceof DecisionAlternativeLFLoadRefExpands) {
 						DecisionAlternativeLFLoadRefExpands darc1 = (DecisionAlternativeLFLoadRefExpands) o1;
 						DecisionAlternativeLFLoadRefExpands darc2 = (DecisionAlternativeLFLoadRefExpands) o2;
-						return -(darc1.getClassNameOfTargetObject().compareTo(darc2.getClassNameOfTargetObject()));
+						return darc2.getClassNameOfTargetObject().compareTo(darc1.getClassNameOfTargetObject());
 					} else {
 						return 1;
 					}
@@ -186,7 +186,7 @@ public class DecisionAlternativeComparators {
 					} else {
 						DecisionAlternativeAloadResolved daav1 = (DecisionAlternativeAloadResolved) o1;
 						DecisionAlternativeAloadResolved daav2 = (DecisionAlternativeAloadResolved) o2;
-						return -daav1.getValueToLoad().toString().compareTo(daav2.getValueToLoad().toString());
+						return daav2.getValueToLoad().toString().compareTo(daav1.getValueToLoad().toString());
 					}
 				} else if (o1 instanceof DecisionAlternativeAloadRefNull) {
 					if (o2 instanceof DecisionAlternativeAloadResolved) {

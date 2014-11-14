@@ -1,7 +1,7 @@
 package jbse.rules;
 
 import jbse.bc.Signature;
-import jbse.mem.ReferenceSymbolic;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * The class for an expansion trigger rule.

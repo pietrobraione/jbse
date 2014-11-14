@@ -1,16 +1,16 @@
 package jbse.algo;
 
 import static jbse.algo.Util.NULL_POINTER_EXCEPTION;
+import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.throwVerifyError;
 
-import jbse.Util;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
-import jbse.mem.Reference;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
-import jbse.mem.Value;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Reference;
+import jbse.val.Value;
 
 class SEMonitor implements Algorithm {
 	
@@ -21,12 +21,12 @@ class SEMonitor implements Algorithm {
 		//pops its operand and checks it
 		final Value v = state.pop();
 		if (!(v instanceof Reference)) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 		final Reference r = (Reference) v;
 		if (state.isNull(r)) {
-			state.createThrowableAndThrowIt(NULL_POINTER_EXCEPTION);
+            createAndThrow(state, NULL_POINTER_EXCEPTION);
 			return;
 		}
 		
@@ -35,7 +35,7 @@ class SEMonitor implements Algorithm {
 		try {
 			state.incPC();
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 		}
 	}
 }

@@ -4,12 +4,12 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import jbse.Type;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.exc.rewr.NoResultException;
-import jbse.mem.Primitive;
-import jbse.mem.Term;
+import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.rewr.exc.NoResultException;
+import jbse.val.Primitive;
+import jbse.val.Term;
+import jbse.val.exc.InvalidTypeException;
 
 public class RewriterBasicTest {
 	private static class RewriterBasic extends Rewriter {

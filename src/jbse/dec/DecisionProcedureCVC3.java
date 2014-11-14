@@ -2,8 +2,8 @@ package jbse.dec;
 
 import java.io.IOException;
 
-import jbse.exc.dec.DecisionException;
-import jbse.exc.dec.ExternalProtocolInterfaceException;
+import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.ExternalProtocolInterfaceException;
 import jbse.rewr.CalculatorRewriting;
 
 

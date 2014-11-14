@@ -1,20 +1,20 @@
 package jbse.meta.algo;
 
-import static jbse.Util.VERIFY_ERROR;
+import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKESTATIC_OFFSET;
 
 import jbse.algo.Algorithm;
+import jbse.algo.ExecutionContext;
 import jbse.bc.Signature;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
 import jbse.mem.Array;
 import jbse.mem.Instance;
-import jbse.mem.Reference;
 import jbse.mem.State;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Reference;
 
-public class SEInvokeAssertRepOk implements Algorithm {
+public final class SEInvokeAssertRepOk implements Algorithm {
 
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
@@ -28,7 +28,7 @@ public class SEInvokeAssertRepOk implements Algorithm {
         try {
 			state.incPC(INVOKESTATIC_OFFSET);
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(VERIFY_ERROR);
+            throwVerifyError(state);
 		}
 	}
 

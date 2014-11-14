@@ -2,7 +2,7 @@ package jbse.rules;
 
 import jbse.bc.Signature;
 import jbse.mem.Objekt;
-import jbse.mem.ReferenceSymbolic;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * Superclass for the alias resolution trigger rules.

@@ -2,12 +2,12 @@ package jbse.bc;
 
 import java.util.List;
 
-import jbse.Type;
-import jbse.exc.bc.AttributeNotFoundException;
-import jbse.exc.bc.FieldNotFoundException;
-import jbse.exc.bc.InvalidIndexException;
-import jbse.exc.bc.MethodCodeNotFoundException;
-import jbse.exc.bc.MethodNotFoundException;
+import jbse.bc.exc.AttributeNotFoundException;
+import jbse.bc.exc.FieldNotFoundException;
+import jbse.bc.exc.InvalidIndexException;
+import jbse.bc.exc.MethodCodeNotFoundException;
+import jbse.bc.exc.MethodNotFoundException;
+import jbse.common.Type;
 
 /**
  * Abstract class for managing the information on a single 
@@ -206,7 +206,8 @@ public abstract class ClassFile {
      * @return an {@link Object}{@code []} containing all the annotations of the method.
      * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
      */
-    public abstract Object[] getMethodAvailableAnnotations(Signature methodSignature) throws MethodNotFoundException;
+    public abstract Object[] getMethodAvailableAnnotations(Signature methodSignature) 
+    throws MethodNotFoundException;
     
     /**
      * Given the signature of a method, returns its exception table.
@@ -219,7 +220,8 @@ public abstract class ClassFile {
      * @throws InvalidIndexException iff the exception type field in a row of the exception table 
      *         does not contain the index of a valid CONSTANT_Class in the class constant pool.
      */
-    public abstract ExceptionTable getExceptionTable(Signature methodSignature) throws MethodNotFoundException, MethodCodeNotFoundException, InvalidIndexException;
+    public abstract ExceptionTable getExceptionTable(Signature methodSignature) 
+    throws MethodNotFoundException, MethodCodeNotFoundException, InvalidIndexException;
     
     /**
      * Given the signature of a method, returns a local variable table for that method.
@@ -521,24 +523,24 @@ public abstract class ClassFile {
         //if no LocalVariableTable attribute is found, tries to create the local 
         //variable table from information on the method's signature
     	boolean isStatic = isMethodStatic(methodSignature);
-    	String[] parDescList = Type.splitParametersDescriptors(methodSignature.getDescriptor());
-    	LocalVariableTable LVT = new LocalVariableTable((isStatic ? parDescList.length : (parDescList.length + 1)), this.getLocalVariableLength(methodSignature));
+    	final String[] parDescList = Type.splitParametersDescriptors(methodSignature.getDescriptor());
+    	final LocalVariableTable lvt = new LocalVariableTable(getLocalVariableLength(methodSignature));
     	int i = 0;
     	short slot = 0;
     	if (!isStatic) {
-        	LVT.setEntry(slot, Type.REFERENCE + this.getClassName() + Type.TYPEEND, 
+        	lvt.setEntry(slot, Type.REFERENCE + this.getClassName() + Type.TYPEEND, 
         			     "this", 0, this.getCodeLength(methodSignature));
-    		i++; slot++;
+    		++i; ++slot;
     	}
     	for (String descriptor : parDescList) {
-    		LVT.setEntry(slot, descriptor, 
+    		lvt.setEntry(slot, descriptor, 
     				     "__PARAM[" + i + "]", 0, this.getCodeLength(methodSignature));
-    		i++; slot++;
+    		++i; ++slot;
     		if (!Type.isCat_1(descriptor.charAt(0))) {
-    			slot++;
+    			++slot;
     		}
     	}
-    	return LVT;
+    	return lvt;
     }
     
     /**

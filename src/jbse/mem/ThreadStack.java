@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import jbse.exc.mem.ThreadStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
 
 /**
  * Class representing JVM thread stacks.

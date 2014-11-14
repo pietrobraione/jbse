@@ -1,9 +1,9 @@
 package jbse.bc;
 
-import jbse.Type;
 import jbse.bc.ClassFileArray.Visibility;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.bc.NoArrayVisibilitySpecifiedException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.NoArrayVisibilitySpecifiedException;
+import jbse.common.Type;
 
 /**
  * Factory for {@link ClassFile}s.
@@ -14,11 +14,9 @@ import jbse.exc.bc.NoArrayVisibilitySpecifiedException;
 public abstract class ClassFileFactory {
 	/** Backlink to owner {@link ClassFileInterface}. */
 	private ClassFileInterface cfi;
-	protected Classpath cp;
 	
-	public ClassFileFactory(ClassFileInterface cfi, Classpath cp) {
+	public ClassFileFactory(ClassFileInterface cfi) {
 		this.cfi = cfi;
-		this.cp = cp;
 	}
 	
 	protected abstract ClassFile newClassFileClass(String className) throws ClassFileNotFoundException;

@@ -1,23 +1,25 @@
 package jbse.algo;
 
 import static jbse.algo.Util.NULL_POINTER_EXCEPTION;
+import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.throwIt;
 
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
-import jbse.mem.Reference;
 import jbse.mem.State;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Reference;
 
 class SEAthrow implements Algorithm {
 	
 	@Override
     public void exec(State state, ExecutionContext ctx) 
     throws ThreadStackEmptyException, OperandStackEmptyException {
-        Reference myExcRef = (Reference) state.pop();
+        final Reference myExcRef = (Reference) state.pop();
         if (state.isNull(myExcRef)) {
-        	myExcRef = state.createInstance(NULL_POINTER_EXCEPTION);
+            createAndThrow(state, NULL_POINTER_EXCEPTION);
+        } else {
+            throwIt(state, myExcRef);
         }
-        state.throwIt(myExcRef);
     } 
 }
 

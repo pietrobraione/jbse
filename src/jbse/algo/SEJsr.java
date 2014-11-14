@@ -1,12 +1,13 @@
 package jbse.algo;
 
-import jbse.Util;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
-import jbse.mem.State;
+import static jbse.algo.Util.throwVerifyError;
 
-class SEJsr implements Algorithm {
+import jbse.common.Util;
+import jbse.mem.State;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.ThreadStackEmptyException;
+
+final class SEJsr implements Algorithm {
 	/** {@code true} for jsr, {@code false} for jsr_w. */
 	boolean def;
 
@@ -27,7 +28,7 @@ class SEJsr implements Algorithm {
 				state.incPC(Util.byteCat(tmp1, tmp2, tmp3, tmp4));
 			}
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 		}
 	}
 }

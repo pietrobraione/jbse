@@ -1,8 +1,8 @@
 package jbse.rewr;
 
-import jbse.exc.rewr.NoResultException;
-import jbse.mem.Expression;
-import jbse.mem.Operator;
+import jbse.rewr.exc.NoResultException;
+import jbse.val.Expression;
+import jbse.val.Operator;
 
 /**
  * A rewriter which normalizes an expression. It assumes that its input

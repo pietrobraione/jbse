@@ -1,9 +1,9 @@
 package jbse.algo;
 
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.mem.ThreadStackEmptyException;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternativeAload;
 import jbse.tree.DecisionAlternativeAloadOut;
 import jbse.tree.DecisionAlternativeAloadRef;

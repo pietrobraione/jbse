@@ -1,20 +1,21 @@
 package jbse.algo;
 
+import static jbse.algo.Util.createAndThrow;
 import static jbse.algo.Util.ensureKlass;
 import static jbse.algo.Util.ILLEGAL_ACCESS_ERROR;
 import static jbse.algo.Util.NO_CLASS_DEFINITION_FOUND_ERROR;
+import static jbse.algo.Util.throwVerifyError;
 
-import jbse.Util;
 import jbse.bc.ClassHierarchy;
-import jbse.exc.bc.ClassFileNotAccessibleException;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.bc.InvalidIndexException;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
+import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.InvalidIndexException;
+import jbse.common.Util;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.ThreadStackEmptyException;
 
 final class SENew implements Algorithm {
 	
@@ -27,7 +28,7 @@ final class SENew implements Algorithm {
 			final byte tmp2 = state.getInstruction(2);
 			index = Util.byteCat(tmp1,tmp2);
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 		final String currentClassName = state.getCurrentMethodSignature().getClassName();
@@ -38,7 +39,7 @@ final class SENew implements Algorithm {
 		try {
 			classSignature = hier.getClassFile(currentClassName).getClassSignature(index);
 		} catch (InvalidIndexException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		} catch (ClassFileNotFoundException e) {
 			//this should never happen
@@ -48,10 +49,10 @@ final class SENew implements Algorithm {
         try {
 			classSignatureResolved = hier.resolveClass(currentClassName, classSignature);
 		} catch (ClassFileNotFoundException e) {
-			state.createThrowableAndThrowIt(NO_CLASS_DEFINITION_FOUND_ERROR);
+            createAndThrow(state, NO_CLASS_DEFINITION_FOUND_ERROR);
 			return;
 		} catch (ClassFileNotAccessibleException e) {
-			state.createThrowableAndThrowIt(ILLEGAL_ACCESS_ERROR);
+            createAndThrow(state, ILLEGAL_ACCESS_ERROR);
 			return;
 		}
 
@@ -74,7 +75,7 @@ final class SENew implements Algorithm {
 		try {
 			state.incPC(3);
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 	} 

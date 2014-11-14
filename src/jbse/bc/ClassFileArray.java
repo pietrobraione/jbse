@@ -8,10 +8,10 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 
-import jbse.exc.bc.FieldNotFoundException;
-import jbse.exc.bc.InvalidIndexException;
-import jbse.exc.bc.MethodCodeNotFoundException;
-import jbse.exc.bc.MethodNotFoundException;
+import jbse.bc.exc.FieldNotFoundException;
+import jbse.bc.exc.InvalidIndexException;
+import jbse.bc.exc.MethodCodeNotFoundException;
+import jbse.bc.exc.MethodNotFoundException;
 
 
 public class ClassFileArray extends ClassFile {

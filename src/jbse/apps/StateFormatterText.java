@@ -8,28 +8,28 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import jbse.Type;
 import jbse.bc.ClassHierarchy;
-import jbse.exc.mem.ThreadStackEmptyException;
+import jbse.common.Type;
 import jbse.mem.Array;
 import jbse.mem.Clause;
 import jbse.mem.ClauseAssume;
 import jbse.mem.ClauseAssumeReferenceSymbolic;
-import jbse.mem.Expression;
 import jbse.mem.Frame;
-import jbse.mem.FunctionApplication;
 import jbse.mem.Instance;
 import jbse.mem.Klass;
-import jbse.mem.NarrowingConversion;
 import jbse.mem.Objekt;
-import jbse.mem.Primitive;
-import jbse.mem.PrimitiveSymbolic;
-import jbse.mem.ReferenceSymbolic;
-import jbse.mem.Simplex;
 import jbse.mem.State;
-import jbse.mem.Value;
 import jbse.mem.Variable;
-import jbse.mem.WideningConversion;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Expression;
+import jbse.val.FunctionApplication;
+import jbse.val.NarrowingConversion;
+import jbse.val.Primitive;
+import jbse.val.PrimitiveSymbolic;
+import jbse.val.ReferenceSymbolic;
+import jbse.val.Simplex;
+import jbse.val.Value;
+import jbse.val.WideningConversion;
 
 /**
  * A {@link StateFormatter} which produces a complex, fully 

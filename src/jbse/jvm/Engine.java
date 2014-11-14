@@ -4,23 +4,24 @@ import java.util.Collection;
 
 import jbse.algo.Algorithm;
 import jbse.algo.DispatcherBytecodeAlgorithm;
+import jbse.algo.ExecutionContext;
 import jbse.algo.SEInit;
+import jbse.algo.exc.CannotManageStateException;
 import jbse.bc.Opcodes;
-import jbse.exc.algo.CannotManageStateException;
-import jbse.exc.bc.InvalidClassFileFactoryClassException;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionBacktrackException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.jvm.CannotBacktrackException;
-import jbse.exc.jvm.EngineStuckException;
-import jbse.exc.jvm.FailureException;
-import jbse.exc.jvm.InitializationException;
-import jbse.exc.jvm.NonexistingObservedVariablesException;
-import jbse.exc.mem.ContradictionException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
+import jbse.bc.exc.InvalidClassFileFactoryClassException;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.dec.exc.DecisionBacktrackException;
+import jbse.dec.exc.DecisionException;
+import jbse.jvm.exc.CannotBacktrackException;
+import jbse.jvm.exc.EngineStuckException;
+import jbse.jvm.exc.FailureException;
+import jbse.jvm.exc.InitializationException;
+import jbse.jvm.exc.NonexistingObservedVariablesException;
 import jbse.mem.Clause;
 import jbse.mem.State;
+import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.StateTree.BranchPoint;
 
 /**
@@ -52,6 +53,9 @@ public class Engine implements AutoCloseable {
 
 	/** The {@link ExecutionContext}. */
 	private final ExecutionContext ctx; 
+	
+	/** The {@link VariableObserverManager}. */
+	private final VariableObserverManager vom;
 
 	//State of the execution
 	
@@ -104,8 +108,9 @@ public class Engine implements AutoCloseable {
 	 * 
 	 * @param ctx an {@link ExecutionContext}.
 	 */
-	Engine(ExecutionContext ctx) {
+	Engine(ExecutionContext ctx, VariableObserverManager vom) {
 		this.ctx = ctx;
+		this.vom = vom;
 	}
 	
 	
@@ -152,7 +157,7 @@ public class Engine implements AutoCloseable {
 		
 		//inits the variable observer manager
 		try {
-			this.ctx.vom.init(this);
+			this.vom.init(this);
 		} catch (ThreadStackEmptyException e) {
 			//should never happen
 			throw new UnexpectedInternalException(e);
@@ -260,7 +265,7 @@ public class Engine implements AutoCloseable {
 		this.currentState.resetLastPathConditionClauses();
 
 		//manages variable observation
-		this.ctx.vom.notifyObservers(retVal);
+		this.vom.notifyObservers(retVal);
 
 		//updates stats
 		if (this.analyzedStates < Long.MAX_VALUE) { 
@@ -310,7 +315,7 @@ public class Engine implements AutoCloseable {
 		final State s = (State) this.currentState.clone();
 		this.ctx.stateTree.addBranchPoint(s, "MANUAL");
 		final BranchPoint retVal = this.ctx.stateTree.nextBranch();
-		this.ctx.vom.saveObservedVariablesValues(retVal);
+		this.vom.saveObservedVariablesValues(retVal);
 		return retVal;
 	}
 	
@@ -382,7 +387,7 @@ public class Engine implements AutoCloseable {
         	this.currentState.incCount();
         }
 
-		this.ctx.vom.restoreObservedVariablesValues(bp, isLast);
+		this.vom.restoreObservedVariablesValues(bp, isLast);
 		
 		return bp;
 	}

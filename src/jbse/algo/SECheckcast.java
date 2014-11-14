@@ -1,14 +1,14 @@
 package jbse.algo;
 
-import static jbse.Util.VERIFY_ERROR;
 import static jbse.algo.Util.CLASS_CAST_EXCEPTION;
 import static jbse.algo.Util.checkCastInstanceof;
+import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.throwVerifyError;
 
-import jbse.exc.algo.JavaReifyException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
+import jbse.algo.exc.JavaReifyException;
 import jbse.mem.State;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.ThreadStackEmptyException;
 
 class SECheckcast implements Algorithm {
 
@@ -19,13 +19,13 @@ class SECheckcast implements Algorithm {
     	try {
     		isSubclass = checkCastInstanceof(state);
     	} catch (JavaReifyException e) {
-			state.createThrowableAndThrowIt(e.subject());
+            createAndThrow(state, e.subject());
 			return;
     	}
     		
     	//if the check fails throws a ClassCastException
     	if (!isSubclass) {
-    		state.createThrowableAndThrowIt(CLASS_CAST_EXCEPTION);
+            createAndThrow(state, CLASS_CAST_EXCEPTION);
     		return;
     	}
 
@@ -33,7 +33,7 @@ class SECheckcast implements Algorithm {
     		//increments the program counter
     		state.incPC(3);
     	} catch (InvalidProgramCounterException e) {
-    		state.createThrowableAndThrowIt(VERIFY_ERROR);
+            throwVerifyError(state);
     	}
     }
 }

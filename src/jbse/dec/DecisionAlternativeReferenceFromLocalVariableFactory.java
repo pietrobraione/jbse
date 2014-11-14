@@ -1,9 +1,9 @@
 package jbse.dec;
 
-import jbse.mem.ReferenceSymbolic;
 import jbse.tree.DecisionAlternativeLFLoadRefAliases;
 import jbse.tree.DecisionAlternativeLFLoadRefExpands;
 import jbse.tree.DecisionAlternativeLFLoadRefNull;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * A Concrete Factory for decision alternatives used when the reference

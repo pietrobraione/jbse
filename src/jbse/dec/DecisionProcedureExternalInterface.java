@@ -2,10 +2,10 @@ package jbse.dec;
 
 import java.io.IOException;
 
-import jbse.exc.dec.ExternalProtocolInterfaceException;
+import jbse.dec.exc.ExternalProtocolInterfaceException;
 import jbse.mem.Objekt;
-import jbse.mem.Primitive;
-import jbse.mem.ReferenceSymbolic;
+import jbse.val.Primitive;
+import jbse.val.ReferenceSymbolic;
 
 public abstract class DecisionProcedureExternalInterface {
     /**

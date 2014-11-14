@@ -1,10 +1,11 @@
 package jbse.algo;
 
-import jbse.Util;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
+import static jbse.algo.Util.throwVerifyError;
+
+import jbse.common.Util;
 import jbse.mem.State;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.ThreadStackEmptyException;
 
 /**
  * Command managing the "push short" (sipush) bytecode. 
@@ -22,14 +23,14 @@ final class SESipush implements Algorithm {
 			final byte tmp1 = state.getInstruction(2);
 			state.push(state.getCalculator().valInt((int) Util.byteCatShort(tmp0, tmp1)));
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 
 		try {
 			state.incPC(3);
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 		}
 	}
 }

@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 
+
 import javassist.ClassPool;
 import javassist.CtBehavior;
 import javassist.CtClass;
@@ -17,12 +18,13 @@ import javassist.bytecode.ConstPool;
 import javassist.bytecode.LineNumberAttribute;
 import javassist.bytecode.LocalVariableAttribute;
 //also uses javassist.bytecode.ExceptionTable, not imported to avoid name clash
-import jbse.exc.bc.AttributeNotFoundException;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.bc.FieldNotFoundException;
-import jbse.exc.bc.InvalidIndexException;
-import jbse.exc.bc.MethodCodeNotFoundException;
-import jbse.exc.bc.MethodNotFoundException;
+
+import jbse.bc.exc.AttributeNotFoundException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.FieldNotFoundException;
+import jbse.bc.exc.InvalidIndexException;
+import jbse.bc.exc.MethodCodeNotFoundException;
+import jbse.bc.exc.MethodNotFoundException;
 
 public class ClassFileJavassist extends ClassFile {
 	private CtClass cls;
@@ -191,17 +193,10 @@ public class ClassFileJavassist extends ClassFile {
 		javassist.bytecode.ExceptionTable et = getMethodCodeAttribute(methodSignature).getExceptionTable();
 
 		final ExceptionTable retVal = new ExceptionTable(et.size());
-		for (int i = 0; i < et.size(); i++) {
-	        final ExceptionTableEntry exEntry = new ExceptionTableEntry();
-            exEntry.setStartPC(et.startPc(i));
-            exEntry.setEndPC(et.endPc(i));
-            exEntry.setPCHandle(et.handlerPc(i));
-            int exType = et.catchType(i);
-            if (exType == 0) { //any exception
-            	exEntry.setType("java/lang/Throwable");
-            } else {
-            	exEntry.setType(this.getClassSignature(exType));
-            }
+		for (int i = 0; i < et.size(); ++i) {
+		    final int exType = et.catchType(i);
+		    final String catchType = (exType == 0 ? Util.JAVA_THROWABLE : getClassSignature(exType));
+	        final ExceptionTableEntry exEntry = new ExceptionTableEntry(et.startPc(i), et.endPc(i), et.handlerPc(i), catchType);
             retVal.addEntry(exEntry);
 		}
 		return retVal;
@@ -230,12 +225,12 @@ public class ClassFileJavassist extends ClassFile {
         	
         //builds the local variable table from the LocalVariableTable attribute 
     	//information; this has always success
-        LocalVariableTable LVT = new LocalVariableTable(lvtJA.tableLength(), ca.getMaxLocals());
+        final LocalVariableTable lvt = new LocalVariableTable(ca.getMaxLocals());
         for (int i = 0; i < lvtJA.tableLength(); ++i) {
-        	LVT.setEntry(lvtJA.index(i), lvtJA.descriptor(i), 
+        	lvt.setEntry(lvtJA.index(i), lvtJA.descriptor(i), 
         			     lvtJA.variableName(i), lvtJA.startPc(i),  lvtJA.codeLength(i));
         }
-        return LVT;
+        return lvt;
 	}
 
 	@Override

@@ -7,12 +7,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import jbse.val.Primitive;
+import jbse.val.ReferenceSymbolic;
+
 /**
  * A path condition. It retains all the clauses gathered at the 
  * different branch points traversed during execution as a 
  * suitable {@link Collection}{@code <}{@link Clause}{@code >}. 
  */
-class PathCondition implements Cloneable {
+final class PathCondition implements Cloneable {
 	/** {@link ArrayList} of all the {@link Clause}s forming the path condition. */
 	private ArrayList<Clause> clauses;
 	

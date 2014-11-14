@@ -2,32 +2,24 @@ package jbse.algo;
 
 import static jbse.algo.Util.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION;
 import static jbse.algo.Util.NULL_POINTER_EXCEPTION;
+import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.XALOADSTORE_OFFSET;
 
 import java.util.Collection;
 import java.util.Iterator;
 
-import jbse.Util;
+import jbse.algo.exc.CannotManageStateException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
-import jbse.exc.algo.CannotManageStateException;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.dec.InvalidInputException;
-import jbse.exc.mem.ContradictionException;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
+import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Array;
-import jbse.mem.Primitive;
-import jbse.mem.Reference;
-import jbse.mem.ReferenceArrayImmaterial;
-import jbse.mem.ReferenceConcrete;
-import jbse.mem.ReferenceSymbolic;
 import jbse.mem.State;
-import jbse.mem.Value;
+import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternativeAload;
 import jbse.tree.DecisionAlternativeAloadOut;
 import jbse.tree.DecisionAlternativeAloadRef;
@@ -35,6 +27,14 @@ import jbse.tree.DecisionAlternativeAloadRefAliases;
 import jbse.tree.DecisionAlternativeAloadRefNull;
 import jbse.tree.DecisionAlternativeAloadRefExpands;
 import jbse.tree.DecisionAlternativeAloadResolved;
+import jbse.val.Primitive;
+import jbse.val.Reference;
+import jbse.val.ReferenceArrayImmaterial;
+import jbse.val.ReferenceConcrete;
+import jbse.val.ReferenceSymbolic;
+import jbse.val.Value;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * Command managing all the *aload (load from array) bytecodes 
@@ -65,8 +65,8 @@ final class SEAload extends MultipleStateGeneratorLoad<DecisionAlternativeAload>
 		this.index = (Primitive) state.pop();
 		this.myObjectRef = (Reference) state.pop();
 		if (state.isNull(this.myObjectRef)) {
-			//null object 			
-			state.createThrowableAndThrowIt(NULL_POINTER_EXCEPTION);
+			//null object 
+		    createAndThrow(state, NULL_POINTER_EXCEPTION);
 			return;
 		}
 
@@ -77,7 +77,7 @@ final class SEAload extends MultipleStateGeneratorLoad<DecisionAlternativeAload>
 			entries = arrayObj.get(this.index);
 		} catch (InvalidOperandException | InvalidTypeException e) {
 			//bad index
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+		    throwVerifyError(state);
 			return;
 		}
 
@@ -220,7 +220,7 @@ final class SEAload extends MultipleStateGeneratorLoad<DecisionAlternativeAload>
 			@Override
 			public void updateOut(State s, DecisionAlternativeAloadOut dao) 
 			throws ThreadStackEmptyException {
-				s.createThrowableAndThrowIt(ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
+				createAndThrow(s, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
 			}
 		};
 		
@@ -228,7 +228,7 @@ final class SEAload extends MultipleStateGeneratorLoad<DecisionAlternativeAload>
 			generateStates();
 		} catch (ClassFileNotFoundException e) {
 			//the array element type is a reference to a nonexistent class
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR); //TODO should we rather throw NO_CLASS_DEFINITION_FOUND_ERROR?
+		    throwVerifyError(state); //TODO should we rather throw NO_CLASS_DEFINITION_FOUND_ERROR?
 		} catch (InvalidInputException | InvalidTypeException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);

@@ -3,7 +3,7 @@ package jbse.tree;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import jbse.exc.common.UnexpectedInternalException;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.State;
 
 

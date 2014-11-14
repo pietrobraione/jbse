@@ -1,5 +1,7 @@
 package jbse.mem;
 
+import jbse.val.ReferenceSymbolic;
+
 /**
  * A path condition {@link Clause}, an assumption 
  * that some {@link ReferenceSymbolic} is resolved to

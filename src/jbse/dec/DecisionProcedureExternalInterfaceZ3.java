@@ -9,23 +9,23 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Stack;
 
-import jbse.Type;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.ExternalProtocolInterfaceException;
-import jbse.mem.Any;
-import jbse.mem.Expression;
-import jbse.mem.FunctionApplication;
-import jbse.mem.NarrowingConversion;
+import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.dec.exc.ExternalProtocolInterfaceException;
 import jbse.mem.Objekt;
-import jbse.mem.Operator;
-import jbse.mem.Primitive;
-import jbse.mem.PrimitiveSymbolic;
-import jbse.mem.PrimitiveVisitor;
-import jbse.mem.ReferenceSymbolic;
-import jbse.mem.Simplex;
-import jbse.mem.Term;
-import jbse.mem.WideningConversion;
 import jbse.rewr.CalculatorRewriting;
+import jbse.val.Any;
+import jbse.val.Expression;
+import jbse.val.FunctionApplication;
+import jbse.val.NarrowingConversion;
+import jbse.val.Operator;
+import jbse.val.Primitive;
+import jbse.val.PrimitiveSymbolic;
+import jbse.val.PrimitiveVisitor;
+import jbse.val.ReferenceSymbolic;
+import jbse.val.Simplex;
+import jbse.val.Term;
+import jbse.val.WideningConversion;
 
 /**
  * {@link DecisionProcedureExternalInterface} to the Z3 SMT solver. 

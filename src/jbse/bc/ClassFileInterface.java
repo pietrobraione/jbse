@@ -5,11 +5,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.HashMap;
 
-import jbse.Type;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.bc.InvalidClassFileFactoryClassException;
-import jbse.exc.bc.NoArrayVisibilitySpecifiedException;
-import jbse.exc.common.UnexpectedInternalException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.InvalidClassFileFactoryClassException;
+import jbse.bc.exc.NoArrayVisibilitySpecifiedException;
+import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
 
 /**
  * Class that permits to retrieve information from a number of 

@@ -1,20 +1,21 @@
 package jbse.algo;
 
-import jbse.Type;
-import jbse.Util;
+import static jbse.algo.Util.throwVerifyError;
+
+import jbse.algo.exc.CannotInvokeNativeException;
 import jbse.bc.Signature;
-import jbse.exc.algo.CannotInvokeNativeException;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.exc.mem.ValueDoesNotSupportNativeException;
-import jbse.mem.FunctionApplication;
-import jbse.mem.Null;
-import jbse.mem.Primitive;
+import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.State;
-import jbse.mem.Value;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.FunctionApplication;
+import jbse.val.Null;
+import jbse.val.Primitive;
+import jbse.val.Value;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
+import jbse.val.exc.ValueDoesNotSupportNativeException;
 
 /**
  * Implements native method invocation by assuming that the invoked 
@@ -92,7 +93,7 @@ public class NativeInvokerPure implements NativeInvoker {
 		try {
 			state.incPC(pcOffset);
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+		    throwVerifyError(state);
 		}
 	}
 }

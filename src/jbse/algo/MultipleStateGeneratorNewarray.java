@@ -1,27 +1,29 @@
 package jbse.algo;
 
 import static jbse.algo.Util.NEGATIVE_ARRAY_SIZE_EXCEPTION;
+import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.throwVerifyError;
 
-import jbse.Type;
-import jbse.Util;
+import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.mem.FastArrayAccessNotAllowedException;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.exc.mem.ThreadStackEmptyException;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
-import jbse.mem.Expression;
-import jbse.mem.Primitive;
-import jbse.mem.Reference;
-import jbse.mem.ReferenceArrayImmaterial;
-import jbse.mem.ReferenceConcrete;
-import jbse.mem.Simplex;
 import jbse.mem.State;
-import jbse.mem.Value;
+import jbse.mem.exc.FastArrayAccessNotAllowedException;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternativeNewarray;
+import jbse.val.Calculator;
+import jbse.val.Expression;
+import jbse.val.Primitive;
+import jbse.val.Reference;
+import jbse.val.ReferenceArrayImmaterial;
+import jbse.val.ReferenceConcrete;
+import jbse.val.Simplex;
+import jbse.val.Value;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * Class for completing the semantics of the *newarray bytecodes
@@ -62,15 +64,16 @@ abstract class MultipleStateGeneratorNewarray extends MultipleStateGenerator<Dec
 		//builds the Primitive stating that all the dimension count values are nonnegative
 		final Primitive countsNonNegative, countsNegative;
 		try {
-			Primitive tmp = this.ctx.calc.valBoolean(true);
+		    final Calculator calc = this.state.getCalculator();
+			Primitive tmp = calc.valBoolean(true);
 			for (Primitive l : this.dimensionsCounts) {
-				tmp = tmp.and(l.ge(this.ctx.calc.valInt(0)));
+				tmp = tmp.and(l.ge(calc.valInt(0)));
 			}
 			countsNonNegative = tmp;
 			countsNegative = countsNonNegative.not();
 		} catch (InvalidTypeException | InvalidOperandException e) {
 			//TODO is it ok, or should we throw UnexpectedInternalException?
-			this.state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+	        throwVerifyError(this.state);
 			return;
 		}
 
@@ -91,7 +94,7 @@ abstract class MultipleStateGeneratorNewarray extends MultipleStateGenerator<Dec
 				//and checks that the length parameter does not exceed this number
 				int dimDecl = Type.getDeclaredNumberOfDimensions(MultipleStateGeneratorNewarray.this.arrayType);
 				if (dimDecl < MultipleStateGeneratorNewarray.this.dimensionsCounts.length) {
-					s.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+		            throwVerifyError(s);
 					return;
 				}
 
@@ -116,7 +119,7 @@ abstract class MultipleStateGeneratorNewarray extends MultipleStateGenerator<Dec
 				try {
 					toPush = createArrayMultilayer(s, initValue, layersToCreateNow);
 				} catch (InvalidTypeException e) {
-					s.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+		            throwVerifyError(s);
 					return;
 				}
 
@@ -127,10 +130,10 @@ abstract class MultipleStateGeneratorNewarray extends MultipleStateGenerator<Dec
 				try {
 					s.incPC(MultipleStateGeneratorNewarray.this.pcOffset);
 				} catch (InvalidProgramCounterException e) {
-					s.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+		            throwVerifyError(s);
 				}
 			} else {
-				s.createThrowableAndThrowIt(NEGATIVE_ARRAY_SIZE_EXCEPTION);
+				createAndThrow(s, NEGATIVE_ARRAY_SIZE_EXCEPTION);
 			}
 		};
 		
@@ -161,7 +164,8 @@ abstract class MultipleStateGeneratorNewarray extends MultipleStateGenerator<Dec
 		//creates all the layers of monodimensional arrays that it can create now, 
 		//initializes them, puts them in the heap, and sets toPush with a reference
 		//to the topmost array
-		for (int currentLayer = 0; currentLayer < layersToCreateNow; currentLayer++) {
+		final Calculator calc = s.getCalculator();
+		for (int currentLayer = 0; currentLayer < layersToCreateNow; ++currentLayer) {
 			//caches the length of the arrays in the current layer 
 			final Primitive currentLayerLength = MultipleStateGeneratorNewarray.this.dimensionsCounts[currentLayer];
 
@@ -176,7 +180,7 @@ abstract class MultipleStateGeneratorNewarray extends MultipleStateGenerator<Dec
 				currentLayerLengthInt = -1; //not meaningful, set to an arbitrary value
 				final Expression currentLayerLengthZero, currentLayerLengthNonzero;
 				try {
-					currentLayerLengthZero = (Expression) currentLayerLength.eq(this.ctx.calc.valInt(0));
+					currentLayerLengthZero = (Expression) currentLayerLength.eq(calc.valInt(0));
 					currentLayerLengthNonzero = (Expression) currentLayerLengthZero.not(); 
 				} catch (InvalidOperandException | InvalidTypeException e) {
 					//this should never happen
@@ -202,7 +206,7 @@ abstract class MultipleStateGeneratorNewarray extends MultipleStateGenerator<Dec
 					//last layer are not normalized, we may use the fast
 					//version of setting
 					final int prevArraySize = toCreateInCurrentLayer / prev.length; //size of arrays created at iteration i-1
-					final Simplex index = this.ctx.calc.valInt(k % prevArraySize);
+					final Simplex index = calc.valInt(k % prevArraySize);
 					try {
 						((Array) s.getObject(prev[k /prevArraySize])).setFast(index, ref);
 					} catch (FastArrayAccessNotAllowedException | InvalidOperandException e) {

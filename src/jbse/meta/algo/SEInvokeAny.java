@@ -1,13 +1,13 @@
 package jbse.meta.algo;
 
-import static jbse.Util.VERIFY_ERROR;
+import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKESTATIC_OFFSET;
 
 import jbse.algo.Algorithm;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
+import jbse.algo.ExecutionContext;
 import jbse.mem.State;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.ThreadStackEmptyException;
 
 /**
  * An {@link Algorithm} implementing the effect of a method call
@@ -16,7 +16,7 @@ import jbse.mem.State;
  * @author Pietro Braione
  *
  */
-public class SEInvokeAny implements Algorithm {
+public final class SEInvokeAny implements Algorithm {
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
 	throws ThreadStackEmptyException {
@@ -24,7 +24,7 @@ public class SEInvokeAny implements Algorithm {
         try {
 			state.incPC(INVOKESTATIC_OFFSET);
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(VERIFY_ERROR);
+            throwVerifyError(state);
 		}
 	}
 }

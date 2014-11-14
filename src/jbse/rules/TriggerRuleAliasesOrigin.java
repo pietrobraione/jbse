@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 import jbse.bc.Signature;
 import jbse.mem.Objekt;
-import jbse.mem.ReferenceSymbolic;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * An alias resolution rule mapping a pattern for

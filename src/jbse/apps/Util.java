@@ -2,7 +2,6 @@ package jbse.apps;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,26 +9,25 @@ import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.mem.Any;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Clause;
 import jbse.mem.ClauseAssume;
 import jbse.mem.ClauseAssumeAliases;
 import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.ClauseAssumeNull;
-import jbse.mem.Expression;
-import jbse.mem.FunctionApplication;
-import jbse.mem.NarrowingConversion;
-import jbse.mem.Primitive;
-import jbse.mem.PrimitiveSymbolic;
-import jbse.mem.PrimitiveVisitor;
-import jbse.mem.ReferenceSymbolic;
-import jbse.mem.Simplex;
-import jbse.mem.Term;
-import jbse.mem.WideningConversion;
+import jbse.val.Any;
+import jbse.val.Expression;
+import jbse.val.FunctionApplication;
+import jbse.val.NarrowingConversion;
+import jbse.val.Primitive;
+import jbse.val.PrimitiveSymbolic;
+import jbse.val.PrimitiveVisitor;
+import jbse.val.ReferenceSymbolic;
+import jbse.val.Simplex;
+import jbse.val.Term;
+import jbse.val.WideningConversion;
 
 public class Util {
 	/** Constant for line separator. */
@@ -107,23 +105,23 @@ public class Util {
 		}
 		final String sourceFileNameRelative = className.split("\\$")[0] + SOURCE_FILE_EXTENSION;
 		for (String s: srcPath) {
-			File f = new File(s);
-			ZipFile zf = null;
+			final File f = new File(s);
 			BufferedReader fr = null;
 			try {
+	            ZipFile zf = null;
 				if (f.isDirectory()) {
 					final String sourceFilePathName = (s.endsWith(pathSep) ? s : s.concat(pathSep)) + sourceFileNameRelative;
 					fr = new BufferedReader(new FileReader(sourceFilePathName));
 				} else if (f.isFile()) {
 					//let's try if it is a zipped file
-					zf = new ZipFile(f);
-					final ZipEntry e = zf.getEntry(sourceFileNameRelative);
-					if (e == null) {
-						zf.close();
-						continue; //no file
-					}
-					final InputStream zipInput = zf.getInputStream(e);
-					fr = new BufferedReader(new InputStreamReader(zipInput));
+				    zf = new ZipFile(f);
+				    final ZipEntry e = zf.getEntry(sourceFileNameRelative);
+				    if (e == null) {
+				        zf.close();
+				        continue; //no file
+				    }
+				    final InputStream zipInput = zf.getInputStream(e);
+				    fr = new BufferedReader(new InputStreamReader(zipInput));
 				} else {
 					continue; //does not exist
 				}
@@ -134,10 +132,6 @@ public class Util {
 						return l;
 					}
 				}
-			} catch (FileNotFoundException e) {
-				//does nothing
-			} catch (ZipException e) {
-				//does nothing
 			} catch (IOException e) {
 				//does nothing
 			} finally {
@@ -152,8 +146,7 @@ public class Util {
 		}
 		return null;
 	}
-	
-	
+		
 	public static String formatClauses(Iterable<Clause> assumptions) {
 		final StringBuffer buf = new StringBuffer();
         boolean firstDone = false;

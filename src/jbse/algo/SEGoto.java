@@ -1,12 +1,13 @@
 package jbse.algo;
 
-import jbse.Util;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
-import jbse.mem.State;
+import static jbse.algo.Util.throwVerifyError;
 
-class SEGoto implements Algorithm {
+import jbse.common.Util;
+import jbse.mem.State;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.ThreadStackEmptyException;
+
+final class SEGoto implements Algorithm {
 	/** {@code true} for goto, {@code false} for goto_w. */
 	boolean def;
 
@@ -24,7 +25,7 @@ class SEGoto implements Algorithm {
 				state.incPC(Util.byteCat(tmp0, tmp1, tmp2, tmp3));
 			}
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 		}
 	}
 }

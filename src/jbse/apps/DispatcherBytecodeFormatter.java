@@ -1,18 +1,19 @@
 package jbse.apps;
 
 import static jbse.bc.Opcodes.*;
-import jbse.Type;
-import jbse.Util;
+
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Dispatcher;
 import jbse.bc.Signature;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.bc.InvalidIndexException;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.mem.InvalidProgramCounterException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.InvalidIndexException;
+import jbse.common.Type;
+import jbse.common.Util;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Array;
 import jbse.mem.Frame;
 import jbse.mem.SwitchTable;
+import jbse.mem.exc.InvalidProgramCounterException;
 
 /**
  * A disassembler for the current bytecode of a frame.
@@ -367,11 +368,10 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 				public String format(Frame f, ClassHierarchy hier) { 
 					String retVal;
 					try {
-						int UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
-						Signature sig = null;
-						sig = hier.getClassFile(f.getCurrentMethodSignature().getClassName()).getFieldSignature(UW);
-						retVal = DispatchStrategyFormat1FI.this.text + " ";
-						retVal += sig.getClassName() + Signature.SIGNATURE_SEPARATOR + sig.getName() + " [" + UW + "]";
+						final int UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
+						final Signature sig = hier.getClassFile(f.getCurrentMethodSignature().getClassName()).getFieldSignature(UW);
+						retVal = DispatchStrategyFormat1FI.this.text + " " + 
+						         sig.getClassName() + Signature.SIGNATURE_SEPARATOR + sig.getName() + " [" + UW + "]";
 					} catch (InvalidProgramCounterException | InvalidIndexException |
 							ClassFileNotFoundException | UnexpectedInternalException e) {
 						//unrecognized bytecode
@@ -781,7 +781,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 		} catch (RuntimeException e) {
 			throw e;
 		} catch (Exception e) {
-			//This should never happen
+			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}
 		return retVal;

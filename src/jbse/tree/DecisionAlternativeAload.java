@@ -1,6 +1,6 @@
 package jbse.tree;
 
-import jbse.mem.Expression;
+import jbse.val.Expression;
 
 /**
  * {@link DecisionAlternative} for the load from array (*aload) bytecodes:

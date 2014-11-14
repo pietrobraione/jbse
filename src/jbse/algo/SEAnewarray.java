@@ -2,21 +2,23 @@ package jbse.algo;
 
 import static jbse.algo.Util.ILLEGAL_ACCESS_ERROR;
 import static jbse.algo.Util.NO_CLASS_DEFINITION_FOUND_ERROR;
+import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.ANEWARRAY_OFFSET;
-import jbse.Type;
-import jbse.Util;
+
 import jbse.bc.ClassHierarchy;
-import jbse.exc.bc.ClassFileNotAccessibleException;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.bc.InvalidIndexException;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
-import jbse.mem.Primitive;
+import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.InvalidIndexException;
+import jbse.common.Type;
+import jbse.common.Util;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Primitive;
 
 /**
  * Class for completing the semantics of the anewarray (new array
@@ -34,7 +36,7 @@ final class SEAnewarray extends MultipleStateGeneratorNewarray implements Algori
     	try {
 	        index = Util.byteCat(state.getInstruction(1), state.getInstruction(2));
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+		    throwVerifyError(state);
 			return;
 		}
         final ClassHierarchy hier = state.getClassHierarchy();
@@ -47,7 +49,7 @@ final class SEAnewarray extends MultipleStateGeneratorNewarray implements Algori
 						hier.getClassFile(currentClassName).getClassSignature(index) +
 						Type.TYPEEND;
 		} catch (InvalidIndexException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+			throwVerifyError(state);
 			return;
 		} catch (ClassFileNotFoundException e) {
 			//this must never happen
@@ -59,10 +61,10 @@ final class SEAnewarray extends MultipleStateGeneratorNewarray implements Algori
 		try {
 			arraySignatureResolved = hier.resolveClass(currentClassName, arraySignature);
 		} catch (ClassFileNotFoundException e) {
-			state.createThrowableAndThrowIt(NO_CLASS_DEFINITION_FOUND_ERROR);
+			createAndThrow(state, NO_CLASS_DEFINITION_FOUND_ERROR);
 			return;
 		} catch (ClassFileNotAccessibleException e) {
-			state.createThrowableAndThrowIt(ILLEGAL_ACCESS_ERROR);
+			createAndThrow(state, ILLEGAL_ACCESS_ERROR);
 			return;
 		}
 		

@@ -1,5 +1,8 @@
 package jbse.mem;
 
+import jbse.val.Expression;
+import jbse.val.Primitive;
+
 /**
  * A path condition {@link Clause}, an assumption 
  * on primitive values. 

@@ -2,17 +2,16 @@ package jbse.algo;
 
 import java.util.SortedSet;
 
+import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.dec.DecisionEmptyException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.dec.InvalidInputException;
-import jbse.exc.mem.ContradictionException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
+import jbse.dec.exc.DecisionEmptyException;
+import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.InvalidInputException;
 import jbse.mem.State;
+import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative;
+import jbse.val.exc.InvalidTypeException;
 
 
 /**

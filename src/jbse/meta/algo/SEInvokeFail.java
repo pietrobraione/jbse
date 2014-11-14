@@ -1,8 +1,8 @@
 package jbse.meta.algo;
 
 import jbse.algo.Algorithm;
-import jbse.exc.jvm.FailureException;
-import jbse.jvm.ExecutionContext;
+import jbse.algo.ExecutionContext;
+import jbse.jvm.exc.FailureException;
 import jbse.mem.State;
 
 public class SEInvokeFail implements Algorithm {

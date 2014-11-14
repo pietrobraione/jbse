@@ -1,28 +1,30 @@
 package jbse.mem;
 
+import jbse.val.Calculator;
+import jbse.val.Value;
+
 /**
  * Class representing a variable into the memory. It gathers the name, 
  * the declaration type and the runtime value of the variable. 
  */
 public class Variable implements Cloneable {
     /** Type of the variable. */
-    private String type;
+    private final String type;
 
     /** Name of the variable. */
-    private String name;
+    private final String name;
 
     /** {@link Value} stored in the variable. */
-    private Value lnkValue;
+    private Value value;
 
     @Override
-    public Object clone() {
+    public Variable clone() {
         final Variable o;
         try {
             o = (Variable) super.clone();
         } catch (CloneNotSupportedException e) {
 			throw new InternalError(e);
         }
-        o.lnkValue = o.lnkValue.clone();
         return o;
     }
 
@@ -45,7 +47,7 @@ public class Variable implements Cloneable {
      * @param value the initial {@link Value} of the variable.
      */
     Variable(String type, String name, Value value) {
-        this.lnkValue = value;
+        this.value = value;
         this.type = type;
         this.name = name;
     }
@@ -58,7 +60,7 @@ public class Variable implements Cloneable {
      * @param value value of variable
      */
     private Variable(Calculator calc, String type, String name, Value value) {
-        this.lnkValue = (value == null ? calc.createDefault(type) : value);
+        this.value = (value == null ? calc.createDefault(type) : value);
         this.type = type;
         this.name = name;
     }
@@ -67,14 +69,14 @@ public class Variable implements Cloneable {
      * Returns the value of variable
      */
     public Value getValue() {
-        return this.lnkValue;
+        return this.value;
     }
 
     /**
      * Set the value of variable
      */
     public void setValue(Value value) {
-    	this.lnkValue = value;
+    	this.value = value;
     }
 
     /**
@@ -93,10 +95,10 @@ public class Variable implements Cloneable {
 
     public String toString() {
         String tmp;
-        if (this.lnkValue == null)
+        if (this.value == null)
             tmp = "<UNASSIGNED>";
         else
-            tmp = lnkValue.toString();
+            tmp = value.toString();
         return "[Name:" + this.name + ", Type:" + this.type + ", Value:" + tmp + "]";
     }
 }

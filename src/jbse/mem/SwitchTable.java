@@ -1,13 +1,17 @@
 package jbse.mem;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
-import jbse.Type;
-import jbse.Util;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.InvalidTypeException;
+import jbse.common.Type;
+import jbse.common.Util;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.val.Calculator;
+import jbse.val.Expression;
+import jbse.val.Primitive;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * A switch table. It is a list of entries having the form (val, ofst), where
@@ -43,7 +47,7 @@ public class SwitchTable implements Iterable<Integer> {
 	throws InvalidProgramCounterException {
 		this.ts = isTableSwitch;
 		this.calc = calc;
-		this.code = f.getCode().clone();
+		this.code = f.getCode();
 
 		//skips the alignment bytes
 		byte[] ops = (this.ts ? new byte[12] : new byte[8]);
@@ -86,6 +90,9 @@ public class SwitchTable implements Iterable<Integer> {
 
 		@Override
 		public Integer next() {
+		    if (!hasNext()) {
+		        throw new NoSuchElementException();
+		    }
 			Integer retVal;
 			if (ts) {
 				retVal = i;

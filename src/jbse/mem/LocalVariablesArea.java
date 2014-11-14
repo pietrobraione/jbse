@@ -5,10 +5,12 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import jbse.Type;
 import jbse.bc.LocalVariableTable;
 import jbse.bc.LocalVariableTable.Row;
-import jbse.exc.mem.InvalidSlotException;
+import jbse.common.Type;
+import jbse.mem.exc.InvalidSlotException;
+import jbse.val.DefaultValue;
+import jbse.val.Value;
 
 /**
  * Class representing a local variable memory area.
@@ -206,13 +208,7 @@ class LocalVariablesArea implements Cloneable {
             throw new InternalError(e);
         }
         
-        SortedMap<Integer, Value> valuesCopy = new TreeMap<Integer, Value>();
-        for (Integer key : this.values.keySet()) {
-            Value val = this.values.get(key);
-            Value valCopy = val.clone();
-            valuesCopy.put(key, valCopy);
-        }
-        
+        final SortedMap<Integer, Value> valuesCopy = new TreeMap<>(this.values);        
         o.values = valuesCopy;
         return o;
     }

@@ -1,8 +1,8 @@
 package jbse.algo;
 
-import jbse.exc.dec.DecisionException;
-import jbse.exc.mem.ThreadStackEmptyException;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
+import jbse.mem.exc.ThreadStackEmptyException;
 
 /**
  * Strategy for updating a state, i.e., for completing its 

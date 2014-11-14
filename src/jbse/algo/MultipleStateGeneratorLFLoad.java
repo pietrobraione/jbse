@@ -1,22 +1,23 @@
 package jbse.algo;
 
+import static jbse.algo.Util.throwVerifyError;
+
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.dec.InvalidInputException;
-import jbse.exc.mem.ContradictionException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.mem.ReferenceSymbolic;
+import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.InvalidInputException;
 import jbse.mem.State;
-import jbse.mem.Value;
+import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternativeLFLoad;
 import jbse.tree.DecisionAlternativeLFLoadRefAliases;
 import jbse.tree.DecisionAlternativeLFLoadRefNull;
 import jbse.tree.DecisionAlternativeLFLoadRefExpands;
 import jbse.tree.DecisionAlternativeLFLoadResolved;
-import jbse.Util;
+import jbse.val.ReferenceSymbolic;
+import jbse.val.Value;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * Class for completing the semantics of the *load* and get* bytecodes 
@@ -87,7 +88,7 @@ abstract class MultipleStateGeneratorLFLoad extends MultipleStateGeneratorLoad<D
 			super.generateStates();
 		} catch (ClassFileNotFoundException | InvalidInputException e) {
 			//bad valToLoad (triggered by call to resolveLFLoad in this.ds)
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 		} catch (InvalidTypeException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);

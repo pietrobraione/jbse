@@ -11,9 +11,9 @@ import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.jvm.EngineParameters.BreadthMode;
 import jbse.jvm.EngineParameters.StateIdentificationMode;
 import jbse.jvm.Runner.Actions;
-import jbse.mem.ReferenceSymbolic;
 import jbse.mem.State;
-import jbse.rewr.CalculatorRewriting;
+import jbse.val.Calculator;
+import jbse.val.ReferenceSymbolic;
 
 public final class RunnerParameters implements Cloneable {
 	/** The engine parameters */
@@ -79,11 +79,11 @@ public final class RunnerParameters implements Cloneable {
 		return this.engineParameters.getDecisionProcedure();
 	}
 	
-	public void setCalculator(CalculatorRewriting calc) {
+	public void setCalculator(Calculator calc) {
 		this.engineParameters.setCalculator(calc);
 	}
 
-	public CalculatorRewriting getCalculator() {
+	public Calculator getCalculator() {
 		return this.engineParameters.getCalculator();
 	}
 

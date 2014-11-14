@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import jbse.bc.Signature;
+import jbse.val.Calculator;
+import jbse.val.Value;
 
 /**
  * Class that represent an instance of an object in memory.
@@ -15,14 +17,15 @@ public class Instance extends Objekt {
      * Constructor.
      * 
      * @param calc a {@link Calculator}.
-     * @param fieldSignatures an array of field {@link Signature}s.
      * @param className a {@code String}, the name of the class of 
      *        this {@link Instance} (e.g. {@code "java/lang/Object"}).
      * @param origin the origin of the {@code Instance}, if symbolic, 
      *        or {@code null}, if concrete.
+     * @param epoch the creation {@link Epoch} of this {@link Instance}.
+     * @param fieldSignatures varargs of field {@link Signature}s.
      */
-    protected Instance(Calculator calc, Signature[] fieldSignatures, String className, String origin, Epoch epoch) {
-    	super(calc, fieldSignatures, className, origin, epoch);
+    protected Instance(Calculator calc, String className, String origin, Epoch epoch, Signature... fieldSignatures) {
+    	super(calc, className, origin, epoch, fieldSignatures);
     }
 
     /**
@@ -57,11 +60,9 @@ public class Instance extends Objekt {
     
     @Override
     public Instance clone() {
-        Instance o = null;
-        o = (Instance) super.clone();
-        if (o == null) return null;
+        final Instance o = (Instance) super.clone();
         
-        HashMap<String, Variable> newPropertiesMap = new HashMap<String, Variable>();
+        final HashMap<String, Variable> newPropertiesMap = new HashMap<>();
         
         for (String key : fields.keySet()) {
             Variable value = fields.get(key);

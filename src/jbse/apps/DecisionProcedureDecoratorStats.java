@@ -4,11 +4,11 @@ import java.util.Collection;
 
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureDecorator;
-import jbse.exc.dec.DecisionException;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.Clause;
-import jbse.mem.Expression;
 import jbse.mem.Objekt;
-import jbse.mem.ReferenceSymbolic;
+import jbse.val.Expression;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * A {@link DecisionProcedureDecorator} that logs the time spent 

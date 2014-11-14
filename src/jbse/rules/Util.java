@@ -5,9 +5,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import jbse.mem.Objekt;
-import jbse.mem.ReferenceConcrete;
-import jbse.mem.ReferenceSymbolic;
 import jbse.mem.State;
+import jbse.val.ReferenceConcrete;
+import jbse.val.ReferenceSymbolic;
 
 public final class Util {
 	static final String NOTHING = "{NOTHING}";

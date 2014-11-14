@@ -1,10 +1,10 @@
 package jbse.algo;
 
-import jbse.Util;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
+import static jbse.algo.Util.throwVerifyError;
+
 import jbse.mem.State;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.ThreadStackEmptyException;
 
 /**
  * Command managing the "push byte" (bipush) bytecode. 
@@ -20,14 +20,14 @@ class SEBipush implements Algorithm {
         try {
         	state.push(state.getCalculator().valInt((int) state.getInstruction(1)));
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 		
 		try {
 			state.incPC(2);
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
     } 

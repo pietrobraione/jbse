@@ -1,25 +1,25 @@
 package jbse.algo;
 
 import static jbse.algo.Util.NULL_POINTER_EXCEPTION;
+import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.ARRAYLENGTH_OFFSET;
 
-import jbse.Util;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
 import jbse.mem.Array;
-import jbse.mem.Reference;
 import jbse.mem.State;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Reference;
 
-class SEArrayLength implements Algorithm {
+final class SEArrayLength implements Algorithm {
 	
 	@Override
     public void exec(State state, ExecutionContext ctx) 
     throws ThreadStackEmptyException, OperandStackEmptyException {
         final Reference tmpRef = (Reference) state.pop();
         if (state.isNull(tmpRef)) {
-        	state.createThrowableAndThrowIt(NULL_POINTER_EXCEPTION);
+        	createAndThrow(state, NULL_POINTER_EXCEPTION);
 			return;
         }
         
@@ -29,7 +29,7 @@ class SEArrayLength implements Algorithm {
         try {
 			state.incPC(ARRAYLENGTH_OFFSET);
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+		    throwVerifyError(state);
 		}
     } 
 }

@@ -3,7 +3,8 @@ package jbse.mem;
 import java.util.ArrayDeque;
 import java.util.Collection;
 
-import jbse.exc.mem.OperandStackEmptyException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.val.Value;
 
 /**
  * Class that represent the JVM's operand stack.
@@ -86,12 +87,8 @@ class OperandStack implements Cloneable {
             o = (OperandStack) super.clone();
         } catch (CloneNotSupportedException e) {
             throw new InternalError(e);
-        }
-        
-        o.valueStack = new ArrayDeque<Value>();
-        for (Value v : this.valueStack) {
-        	o.valueStack.addLast((Value) v.clone());
-        }
+        }        
+        o.valueStack = new ArrayDeque<Value>(this.valueStack);
         return o;
     }
 }

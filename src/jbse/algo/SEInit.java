@@ -1,19 +1,19 @@
 package jbse.algo;
 
 import static jbse.algo.Util.ensureKlass;
+
+import jbse.algo.exc.PleaseDoNativeException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
-import jbse.exc.algo.PleaseDoNativeException;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.bc.IncompatibleClassFileException;
-import jbse.exc.bc.InvalidClassFileFactoryClassException;
-import jbse.exc.bc.MethodNotFoundException;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.jvm.InitializationException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
+import jbse.bc.exc.InvalidClassFileFactoryClassException;
+import jbse.bc.exc.MethodNotFoundException;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.dec.exc.DecisionException;
+import jbse.jvm.exc.InitializationException;
 import jbse.mem.State;
+import jbse.mem.exc.ThreadStackEmptyException;
 
 /**
  * {@link Algorithm} for the first execution step.
@@ -21,7 +21,7 @@ import jbse.mem.State;
  * @author Pietro Braione
  *
  */
-public class SEInit {
+public final class SEInit {
 	public void exec(ExecutionContext ctx) 
 	throws DecisionException, InitializationException, InvalidClassFileFactoryClassException {
 		//TODO do checks and possibly raise exceptions

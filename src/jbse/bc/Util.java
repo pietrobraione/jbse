@@ -1,7 +1,7 @@
 package jbse.bc;
 
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.bc.MethodNotFoundException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.MethodNotFoundException;
 
 /**
  * Some utility functions.
@@ -13,6 +13,7 @@ public final class Util {
 	//classes
 	public static final String JAVA_CLONEABLE    = "java/lang/Cloneable";
 	public static final String JAVA_OBJECT       = "java/lang/Object";
+    public static final String JAVA_THROWABLE    = "java/lang/Throwable";
 	public static final String JAVA_SERIALIZABLE = "java/io/Serializable";
 	
 	//methods

@@ -1,6 +1,6 @@
 package jbse.tree;
 
-import jbse.mem.ReferenceSymbolic;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * {@link DecisionAlternativeLFLoad} for the case a read access to a field

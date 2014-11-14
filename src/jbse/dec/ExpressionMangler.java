@@ -3,12 +3,12 @@ package jbse.dec;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.mem.Expression;
-import jbse.mem.Primitive;
-import jbse.mem.Term;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.rewr.CalculatorRewriting;
+import jbse.val.Expression;
+import jbse.val.Primitive;
+import jbse.val.Term;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * A class for renaming {@link Expression}s into 

@@ -2,15 +2,15 @@ package jbse.apps;
 
 import java.util.Map;
 
-import jbse.Type;
 import jbse.bc.Signature;
+import jbse.common.Type;
 import jbse.mem.Instance;
 import jbse.mem.Klass;
 import jbse.mem.Objekt;
-import jbse.mem.Reference;
-import jbse.mem.ReferenceConcrete;
-import jbse.mem.ReferenceSymbolic;
 import jbse.mem.State;
+import jbse.val.Reference;
+import jbse.val.ReferenceConcrete;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * A {@link StateFormatter} which renders just the heap of a {@link State} as a 

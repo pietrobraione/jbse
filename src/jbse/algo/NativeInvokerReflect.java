@@ -1,20 +1,19 @@
 package jbse.algo;
 
+import static jbse.algo.Util.throwVerifyError;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-import jbse.Type;
-import jbse.Util;
+import jbse.algo.exc.CannotInvokeNativeException;
 import jbse.bc.Signature;
-import jbse.exc.algo.CannotInvokeNativeException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.mem.Calculator;
+import jbse.common.Type;
 import jbse.mem.State;
-import jbse.mem.Value;
-
-
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Calculator;
+import jbse.val.Value;
 
 /**
  * Implements native method invocation by invoking an 
@@ -78,7 +77,7 @@ public class NativeInvokerReflect implements NativeInvoker {
 		try {
 			state.incPC(pcOffset);
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+		    throwVerifyError(state);
 		}
 	}
 	

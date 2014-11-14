@@ -1,16 +1,16 @@
 package jbse.algo;
 
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.mem.ContradictionException;
-import jbse.exc.mem.InvalidTypeException;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
+import jbse.mem.exc.ContradictionException;
 import jbse.tree.DecisionAlternativeLFLoad;
 import jbse.tree.DecisionAlternativeLFLoadRefAliases;
 import jbse.tree.DecisionAlternativeLFLoadRefNull;
 import jbse.tree.DecisionAlternativeLFLoadRefExpands;
 import jbse.tree.DecisionAlternativeLFLoadResolved;
 import jbse.tree.DecisionAlternativeLFLoadVisitor;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * Strategy for refining a state for the *load* and get* bytecodes; reimplements {@link StateRefinementStrategy#refine} 

@@ -2,8 +2,6 @@ package jbse.bc;
 
 import java.util.HashMap;
 
-import jbse.exc.algo.UndefInstructionException;
-
 /**
  * A {@code Dispatcher}{@code <Q,R>} associates keys (objects with
  * class {@code Q}) to {@code DispatchStrategy} objects that return 
@@ -24,7 +22,7 @@ public abstract class Dispatcher<Q,R> {
 	 */
 	@FunctionalInterface
 	public interface DispatchStrategy<S> { 
-		S doIt() throws UndefInstructionException; 
+		S doIt() throws Exception; 
 	}
 
 	private DispatchStrategy<? extends R> dispatchNonexistent = () -> null;
@@ -79,7 +77,7 @@ public abstract class Dispatcher<Q,R> {
 	 *         if neither a registered {@link DispatchStrategy} for the key nor a 
 	 *         default one has been previously set.
 	 */
-	public R select(Q key) throws UndefInstructionException {
+	public R select(Q key) throws Exception {
 		final DispatchStrategy<? extends R> d;
 		if (this.dispatchTable.containsKey(key)) {
 			d = this.dispatchTable.get(key);

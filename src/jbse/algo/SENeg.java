@@ -1,14 +1,14 @@
 package jbse.algo;
 
-import jbse.Util;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
-import jbse.mem.Primitive;
+import static jbse.algo.Util.throwVerifyError;
+
 import jbse.mem.State;
-import jbse.mem.Value;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Primitive;
+import jbse.val.Value;
+import jbse.val.exc.InvalidTypeException;
 
 final class SENeg implements Algorithm {
 	
@@ -19,14 +19,14 @@ final class SENeg implements Algorithm {
 		try {
 			state.push(((Primitive)op).neg());
 		} catch (InvalidTypeException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 		
 		try {
 			state.incPC();
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 	}

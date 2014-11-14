@@ -1,12 +1,13 @@
 package jbse.apps;
 
 import static jbse.apps.Util.formatPrimitive;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.mem.Primitive;
-import jbse.mem.Reference;
+
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.State;
-import jbse.mem.Value;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Primitive;
+import jbse.val.Reference;
+import jbse.val.Value;
 
 /**
  * A {@link StateFormatter} which yields a one-line text rendition of 

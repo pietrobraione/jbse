@@ -6,10 +6,11 @@ import java.util.Map;
 
 import jbse.bc.LineNumberTable;
 import jbse.bc.Signature;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.InvalidSlotException;
-import jbse.exc.mem.OperandStackEmptyException;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.InvalidSlotException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.val.Value;
 
 
 /**
@@ -51,10 +52,10 @@ public class Frame implements Cloneable {
      * @param bytecode the method's bytecode as a {@code byte[]}.
      * @param lva the method's {@link LocalVariablesArea}.
      */
-    public Frame(Signature methodSignature, LineNumberTable lnt, byte[] bytecode, LocalVariablesArea lva){
+    public Frame(Signature methodSignature, LineNumberTable lnt, byte[] bytecode, LocalVariablesArea lva) {
         this.mySignature = methodSignature;
     	this.lnt = lnt;
-        this.bytecode = bytecode;
+        this.bytecode = bytecode.clone();
         this.localVariables = lva;
         this.operandStack = new OperandStack();
         this.programCounter = 0;
@@ -191,7 +192,7 @@ public class Frame implements Cloneable {
      * @return code[] the bytecode array
      */
     public byte[] getCode() {
-        return this.bytecode;
+        return this.bytecode.clone();
     }
     
     /**

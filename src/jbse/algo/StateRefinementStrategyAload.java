@@ -1,10 +1,9 @@
 package jbse.algo;
 
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.mem.ContradictionException;
-import jbse.exc.mem.InvalidTypeException;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
+import jbse.mem.exc.ContradictionException;
 import jbse.tree.DecisionAlternativeAload;
 import jbse.tree.DecisionAlternativeAloadOut;
 import jbse.tree.DecisionAlternativeAloadRefAliases;
@@ -12,6 +11,7 @@ import jbse.tree.DecisionAlternativeAloadRefNull;
 import jbse.tree.DecisionAlternativeAloadRefExpands;
 import jbse.tree.DecisionAlternativeAloadResolved;
 import jbse.tree.DecisionAlternativeAloadVisitor;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * Strategy for refining a state for the *aload bytecodes; reimplements {@link StateRefinementStrategy#refine} 

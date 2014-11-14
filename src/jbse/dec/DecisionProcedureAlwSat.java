@@ -9,9 +9,9 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import jbse.mem.Clause;
-import jbse.mem.Expression;
 import jbse.mem.Objekt;
-import jbse.mem.ReferenceSymbolic;
+import jbse.val.Expression;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * Class implementing a "no assumption" {@link DecisionProcedure} 

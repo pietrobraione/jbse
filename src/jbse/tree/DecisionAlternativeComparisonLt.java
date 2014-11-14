@@ -1,6 +1,6 @@
 package jbse.tree;
 
-import jbse.mem.Operator;
+import jbse.val.Operator;
 
 public final class DecisionAlternativeComparisonLt extends DecisionAlternativeComparison {
     private static final String LT_ID = "LT";

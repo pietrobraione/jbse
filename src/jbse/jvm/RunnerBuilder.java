@@ -2,11 +2,11 @@ package jbse.jvm;
 
 import java.util.Map;
 
-import jbse.exc.bc.InvalidClassFileFactoryClassException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.jvm.CannotBuildEngineException;
-import jbse.exc.jvm.InitializationException;
-import jbse.exc.jvm.NonexistingObservedVariablesException;
+import jbse.bc.exc.InvalidClassFileFactoryClassException;
+import jbse.dec.exc.DecisionException;
+import jbse.jvm.exc.CannotBuildEngineException;
+import jbse.jvm.exc.InitializationException;
+import jbse.jvm.exc.NonexistingObservedVariablesException;
 
 public class RunnerBuilder {
 	/**

@@ -9,26 +9,27 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 
-import jbse.Type;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.ExternalProtocolInterfaceException;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.mem.Any;
+import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.dec.exc.ExternalProtocolInterfaceException;
 import jbse.mem.Array;
-import jbse.mem.Expression;
-import jbse.mem.FunctionApplication;
-import jbse.mem.NarrowingConversion;
 import jbse.mem.Objekt;
-import jbse.mem.Operator;
-import jbse.mem.Primitive;
-import jbse.mem.PrimitiveSymbolic;
-import jbse.mem.PrimitiveVisitor;
-import jbse.mem.ReferenceSymbolic;
-import jbse.mem.Simplex;
-import jbse.mem.Term;
-import jbse.mem.WideningConversion;
 import jbse.rewr.CalculatorRewriting;
+import jbse.val.Any;
+import jbse.val.Expression;
+import jbse.val.FunctionApplication;
+import jbse.val.NarrowingConversion;
+import jbse.val.Operator;
+import jbse.val.Primitive;
+import jbse.val.PrimitiveSymbolic;
+import jbse.val.PrimitiveVisitor;
+import jbse.val.ReferenceSymbolic;
+import jbse.val.Simplex;
+import jbse.val.Term;
+import jbse.val.WideningConversion;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
+
 import jdd.bdd.BDD;
 import se.sics.prologbeans.Bindings;
 import se.sics.prologbeans.IllegalCharacterSetException;
@@ -98,13 +99,17 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 				String line;
 				while ((line = err.readLine()) != null) {
 					if (line.length() > 0 && line.startsWith("port:")) {
-						port = Integer.parseInt(line.substring(5)); // e.g, port:4711
+					    synchronized(this) {
+					        port = Integer.parseInt(line.substring(5)); // e.g, port:4711
+					    }
 						break;
 					}
 				}
 			} catch (Exception e) {
-				this.e = e;
-				this.port = -2;
+                synchronized(this) {
+                    this.e = e;
+                    this.port = -2;
+                }
 			} finally {
 				synchronized(this) {
 					this.ready = true;

@@ -1,13 +1,12 @@
 package jbse.algo;
 
+import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.XCONST_OFFSET;
 
-import jbse.Util;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
-import jbse.mem.Null;
 import jbse.mem.State;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Null;
 
 
 final class SEAconst_null implements Algorithm {
@@ -19,7 +18,7 @@ final class SEAconst_null implements Algorithm {
         try {
 			state.incPC(XCONST_OFFSET);
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+		    throwVerifyError(state);
 	    	return;
 		}
     } 

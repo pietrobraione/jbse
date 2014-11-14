@@ -1,6 +1,6 @@
 package jbse.rules;
 
-import jbse.mem.ReferenceSymbolic;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * The class for an expansion constraint rule, mapping a pattern for
@@ -41,7 +41,7 @@ public class LICSRuleExpandsTo extends LICSRule {
 	 *         "expands to nothing" rule.
 	 */
 	private boolean isNothingRule() {
-		return this.className == Util.NOTHING;
+		return this.className.equals(Util.NOTHING);
 	}
 	
 	@Override

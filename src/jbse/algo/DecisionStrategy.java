@@ -2,10 +2,10 @@ package jbse.algo;
 
 import java.util.SortedSet;
 
+import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.dec.InvalidInputException;
+import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.InvalidInputException;
 
 /**
  * Strategy for deciding the states following the current one.

@@ -11,18 +11,17 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import jbse.Type;
-import jbse.exc.algo.JavaReifyException;
-import jbse.exc.bc.ClassFileNotAccessibleException;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.bc.FieldNotAccessibleException;
-import jbse.exc.bc.FieldNotFoundException;
-import jbse.exc.bc.IncompatibleClassFileException;
-import jbse.exc.bc.InvalidClassFileFactoryClassException;
-import jbse.exc.bc.MethodAbstractException;
-import jbse.exc.bc.MethodNotAccessibleException;
-import jbse.exc.bc.MethodNotFoundException;
-import jbse.exc.common.UnexpectedInternalException;
+import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.FieldNotAccessibleException;
+import jbse.bc.exc.FieldNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
+import jbse.bc.exc.InvalidClassFileFactoryClassException;
+import jbse.bc.exc.MethodAbstractException;
+import jbse.bc.exc.MethodNotAccessibleException;
+import jbse.bc.exc.MethodNotFoundException;
+import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
 
 /**
  * Class handling a hierarchy of Java classes as specified 
@@ -232,9 +231,7 @@ public class ClassHierarchy {
 				try {
 					cf = ClassHierarchy.this.cfi.getClassFile(startClassName);
 				} catch (ClassFileNotFoundException e) {
-					return;
-				} catch (UnexpectedInternalException e) {
-					throw new RuntimeException("Unexpected error while creating class hierarchy iterator", e);
+				    throw new UnexpectedInternalException(e);  //TODO this is not satisfactory; however, if we throw this exception the container class cannot be an Iterable any longer. 
 				}
 				this.nextClassName = cf.getClassName();
 			}
@@ -253,8 +250,8 @@ public class ClassHierarchy {
 				final ClassFile retval;
 				try {
 					retval = ClassHierarchy.this.cfi.getClassFile(this.nextClassName);
-				} catch (ClassFileNotFoundException | UnexpectedInternalException e) {
-					throw new RuntimeException("Unexpected error while iterating class hierarchy", e);
+				} catch (ClassFileNotFoundException e) {
+					throw new UnexpectedInternalException("Unexpected error while iterating class hierarchy", e);
 				} 
 
 				//prepares for the next invocation
@@ -319,9 +316,7 @@ public class ClassHierarchy {
 				try {
 					cf = ClassHierarchy.this.cfi.getClassFile(startClassName);
 				} catch (ClassFileNotFoundException e) {
-					return;
-				} catch (UnexpectedInternalException e) {
-					throw new RuntimeException("Unexpected error while iterating class hierarchy", e);
+					throw new UnexpectedInternalException(e);   //TODO this is not satisfactory; however, if we throw this exception the container class cannot be an Iterable any longer.
 				}
 				if (cf.isInterface()) {
 					this.nextClassNames.add(cf.getClassName());
@@ -425,10 +420,10 @@ public class ClassHierarchy {
 	 * @param accessor a {@link String}, the signature of the accessor's class.
 	 * @param fieldSignature the {@link Signature} of the field to be resolved.
 	 * @return the {@link Signature} of the declaration of the resolved field.
-	 * @throws JavaReifyException when method resolution does not succeed; the exception 
-	 *         stores the name of the Java exception that the virtual machine must raise.
 	 * @throws ClassFileNotFoundException if {@code fieldSignature}'s class does not
 	 *         exist in the classpath.
+	 * @throws FieldNotAccessibleException
+	 * @throws FieldNotFoundException
 	 */
 	public Signature resolveField(String accessor, Signature fieldSignature) 
 	throws ClassFileNotFoundException, FieldNotAccessibleException, FieldNotFoundException {

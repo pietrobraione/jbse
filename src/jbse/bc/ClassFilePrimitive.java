@@ -3,9 +3,9 @@ package jbse.bc;
 import java.util.Collections;
 import java.util.List;
 
-import jbse.exc.bc.FieldNotFoundException;
-import jbse.exc.bc.InvalidIndexException;
-import jbse.exc.bc.MethodNotFoundException;
+import jbse.bc.exc.FieldNotFoundException;
+import jbse.bc.exc.InvalidIndexException;
+import jbse.bc.exc.MethodNotFoundException;
 
 class ClassFileBoolean extends ClassFilePrimitive {	
 	ClassFileBoolean() { super("boolean"); }	

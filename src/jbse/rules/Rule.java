@@ -5,7 +5,7 @@ import static jbse.rules.Util.makeOriginPattern;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import jbse.mem.ReferenceSymbolic;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * A rule predicating on the origin of a symbolic reference

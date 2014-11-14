@@ -1,8 +1,8 @@
 package jbse.algo;
 
-import jbse.exc.dec.DecisionException;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
-import jbse.mem.Value;
+import jbse.val.Value;
 
 /**
  * Strategy for writing back a value to the source 

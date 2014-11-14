@@ -1,12 +1,13 @@
 package jbse.algo;
 
-import jbse.Util;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.InvalidSlotException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
-import jbse.mem.Simplex;
+import static jbse.algo.Util.throwVerifyError;
+
+import jbse.common.Util;
 import jbse.mem.State;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.InvalidSlotException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Simplex;
 
 final class SERet implements Algorithm {
 	
@@ -28,12 +29,12 @@ final class SERet implements Algorithm {
 			try {
 				ret = (Simplex) state.getLocalVariableValue(index);
 			} catch (InvalidSlotException e) {
-				state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+	            throwVerifyError(state);
 				return;
 			}
 			state.setPC(((Integer) ret.getActualValue()).intValue());
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 	} 

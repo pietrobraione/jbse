@@ -8,25 +8,25 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayDeque;
 import java.util.HashSet;
 
-import jbse.Type;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.ExternalProtocolInterfaceException;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.mem.Any;
-import jbse.mem.Expression;
-import jbse.mem.FunctionApplication;
-import jbse.mem.NarrowingConversion;
+import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.dec.exc.ExternalProtocolInterfaceException;
 import jbse.mem.Objekt;
-import jbse.mem.Operator;
-import jbse.mem.Primitive;
-import jbse.mem.PrimitiveSymbolic;
-import jbse.mem.PrimitiveVisitor;
-import jbse.mem.ReferenceSymbolic;
-import jbse.mem.Simplex;
-import jbse.mem.Term;
-import jbse.mem.WideningConversion;
 import jbse.rewr.CalculatorRewriting;
+import jbse.val.Any;
+import jbse.val.Expression;
+import jbse.val.FunctionApplication;
+import jbse.val.NarrowingConversion;
+import jbse.val.Operator;
+import jbse.val.Primitive;
+import jbse.val.PrimitiveSymbolic;
+import jbse.val.PrimitiveVisitor;
+import jbse.val.ReferenceSymbolic;
+import jbse.val.Simplex;
+import jbse.val.Term;
+import jbse.val.WideningConversion;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * {@link DecisionProcedureExternalInterface} to the CVC3 SMT solver.
@@ -443,9 +443,8 @@ class DecisionProcedureExternalInterfaceCVC3 extends DecisionProcedureExternalIn
 		final String ctx = v.popClause();
 		final String query = decl + "ASSERT " + ctx + "; QUERY " + cnd + ";" + LINE_SEP;
 
-		//queries CVC3
-		final String ans;
 		try {
+	        //queries CVC3
 			this.cvc3Out.write(PUSH);
 			this.cvc3Out.flush();
 			System.err.println(PUSH);
@@ -453,7 +452,7 @@ class DecisionProcedureExternalInterfaceCVC3 extends DecisionProcedureExternalIn
 			this.cvc3Out.write(query);
 			this.cvc3Out.flush();
 			System.err.println(query);
-			ans = this.cvc3In.readLine();
+	        final String ans = this.cvc3In.readLine();
 			if (ans == null) {
 				throw new IOException("failed read of CVC3 output");
 			}
@@ -463,13 +462,13 @@ class DecisionProcedureExternalInterfaceCVC3 extends DecisionProcedureExternalIn
 			this.cvc3Out.flush();
 			System.err.println(POP);
 			this.readPrompt();
-		} catch (IOException e) {
-			this.working = false;
-			throw e;
-		}
 
-		//returns the result
-		return ans.equals("Valid.");
+			//returns the result
+			return ans.equals("Valid.");
+        } catch (IOException e) {
+            this.working = false;
+            throw e;
+        }
 	}
 
 	@Override

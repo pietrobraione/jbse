@@ -5,15 +5,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import jbse.algo.ExecutionContext;
 import jbse.algo.NativeInvokerPure;
+import jbse.algo.exc.MetaUnsupportedException;
 import jbse.bc.ClassFileFactoryJavassist;
 import jbse.bc.Signature;
-import jbse.exc.algo.MetaUnsupportedException;
-import jbse.exc.bc.InvalidClassFileFactoryClassException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.jvm.CannotBuildEngineException;
-import jbse.exc.jvm.InitializationException;
-import jbse.exc.jvm.NonexistingObservedVariablesException;
+import jbse.bc.exc.InvalidClassFileFactoryClassException;
+import jbse.dec.exc.DecisionException;
+import jbse.jvm.exc.CannotBuildEngineException;
+import jbse.jvm.exc.InitializationException;
+import jbse.jvm.exc.NonexistingObservedVariablesException;
 import jbse.rules.TriggerRulesRepo;
 import jbse.tree.DecisionAlternativeComparators;
 
@@ -82,11 +83,13 @@ public class EngineBuilder {
 		
 		//sets the meta-level directives
 		setMeta(ctx, parameters);
+		
+		final VariableObserverManager vom = new VariableObserverManager(parameters.getMethodSignature().getClassName());
 
-		//sets the observers
-		setObservers(ctx, parameters);
+        //sets the observers
+        setObservers(vom, parameters);
 
-		return new Engine(ctx);
+		return new Engine(ctx, vom);
 	}
 	
 	private static Map<String, Set<String>> getExpansionBackdoor(EngineParameters parameters) {
@@ -146,9 +149,9 @@ public class EngineBuilder {
 		}
 	}
 	
-	private static void setObservers(ExecutionContext ctx, EngineParameters parameters) {
+	private static void setObservers(VariableObserverManager vom, EngineParameters parameters) {
 		for (int i = 0; i < parameters.observedVars.size(); ++i) {
-			ctx.addObserver(parameters.observedVars.get(i), parameters.observers.get(i));
+			vom.addObserver(parameters.observedVars.get(i), parameters.observers.get(i));
 		}
 	}
 }

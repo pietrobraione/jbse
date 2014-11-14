@@ -1,10 +1,10 @@
 package jbse.algo;
 
-import jbse.Util;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
+import static jbse.algo.Util.throwVerifyError;
+
 import jbse.mem.State;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.ThreadStackEmptyException;
 
 final class SENop implements Algorithm {
 	public SENop() { }
@@ -15,7 +15,7 @@ final class SENop implements Algorithm {
 		try {
 			state.incPC();
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 		}
 	} 
 }

@@ -2,12 +2,12 @@ package jbse.dec;
 
 import java.util.Collection;
 
-import jbse.exc.dec.DecisionException;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.Clause;
-import jbse.mem.Expression;
 import jbse.mem.Objekt;
-import jbse.mem.Primitive;
-import jbse.mem.ReferenceSymbolic;
+import jbse.val.Expression;
+import jbse.val.Primitive;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * A {@code DecisionProcedure} accumulates a satisfiable assumption as a 

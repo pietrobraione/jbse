@@ -1,6 +1,6 @@
 package jbse.mem;
 
-import static jbse.Util.ROOT_FRAME_MONIKER;
+import static jbse.common.Util.ROOT_FRAME_MONIKER;
 import static jbse.mem.Util.JAVA_STRING;
 import static jbse.mem.Util.JAVA_STRING_HASH;
 import static jbse.mem.Util.JAVA_STRING_OFFSET;
@@ -18,8 +18,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import jbse.Type;
-import jbse.Util;
+import jbse.algo.exc.PleaseDoNativeException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassFileFactory;
 import jbse.bc.ClassHierarchy;
@@ -29,28 +28,39 @@ import jbse.bc.ExceptionTableEntry;
 import jbse.bc.LineNumberTable;
 import jbse.bc.LocalVariableTable;
 import jbse.bc.Signature;
-import jbse.exc.algo.PleaseDoNativeException;
-import jbse.exc.bc.AttributeNotFoundException;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.bc.FieldNotFoundException;
-import jbse.exc.bc.IncompatibleClassFileException;
-import jbse.exc.bc.InvalidClassFileFactoryClassException;
-import jbse.exc.bc.InvalidIndexException;
-import jbse.exc.bc.MethodCodeNotFoundException;
-import jbse.exc.bc.MethodNotFoundException;
-import jbse.exc.bc.NoMethodReceiverException;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.mem.CannotRefineException;
-import jbse.exc.mem.ContradictionException;
-import jbse.exc.mem.FastArrayAccessNotAllowedException;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.InvalidSlotException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
+import jbse.bc.exc.AttributeNotFoundException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.FieldNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
+import jbse.bc.exc.InvalidClassFileFactoryClassException;
+import jbse.bc.exc.InvalidIndexException;
+import jbse.bc.exc.MethodCodeNotFoundException;
+import jbse.bc.exc.MethodNotFoundException;
+import jbse.bc.exc.NoMethodReceiverException;
+import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Objekt.Epoch;
-import jbse.rewr.CalculatorRewriting;
+import jbse.mem.exc.CannotRefineException;
+import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.FastArrayAccessNotAllowedException;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.InvalidSlotException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Calculator;
+import jbse.val.ConstantPoolString;
+import jbse.val.Expression;
+import jbse.val.Null;
+import jbse.val.Primitive;
+import jbse.val.PrimitiveSymbolic;
+import jbse.val.Reference;
+import jbse.val.ReferenceConcrete;
+import jbse.val.ReferenceSymbolic;
+import jbse.val.Simplex;
+import jbse.val.SymbolFactory;
+import jbse.val.Value;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * Class that represents the state of execution.
@@ -112,24 +122,28 @@ public class State implements Cloneable {
 	 */ 
 	private Value val = null;
 
-	/** The generator for unambiguous symbol identifiers. */
-	private SymbolFactory symbolFactory = new SymbolFactory();
-	
 	/** May symbolic execution from this state violate an assumption? */
 	private boolean mayViolateAssumption = true;
 
 	/** {@code true} iff the next bytecode must be executed in its WIDE variant. */
 	private boolean wide = false;
 	
-	/** 
-	 * The object that fetches classfiles from the classpath, stores them, 
-	 * and allows visiting the whole class/interface hierarchy. 
-	 */
-	private final ClassHierarchy classHierarchy;
-	
-	/** The {@link CalculatorRewriting}. */
-	private final CalculatorRewriting calc;
+	/** The {@link Calculator}. */
+	private final Calculator calc;
+    
+    /** 
+     * The object that fetches classfiles from the classpath, stores them, 
+     * and allows visiting the whole class/interface hierarchy. 
+     */
+    private final ClassHierarchy classHierarchy;
 
+    /** 
+     * The generator for unambiguous symbol identifiers; mutable
+     * because different states at different branch may have different
+     * generators, possibly starting from the same numbers. 
+     */
+    private SymbolFactory symbolFactory;
+    
 	/**
 	 * Constructor of an empty State.
 	 * 
@@ -147,10 +161,14 @@ public class State implements Cloneable {
 	 *         has not the expected features (missing constructor, unaccessible 
 	 *         constructor...).
 	 */
-	public State(Classpath cp, Class<? extends ClassFileFactory> fClass, Map<String, Set<String>> expansionBackdoor, CalculatorRewriting calc) 
+	public State(Classpath cp, 
+	             Class<? extends ClassFileFactory> fClass, 
+	             Map<String, Set<String>> expansionBackdoor, 
+	             Calculator calc) 
 	throws InvalidClassFileFactoryClassException {
+        this.calc = calc;
 		this.classHierarchy = new ClassHierarchy(cp, fClass, expansionBackdoor);
-		this.calc = calc;
+		this.symbolFactory = new SymbolFactory(this.calc);
 	}
 
 	
@@ -166,9 +184,9 @@ public class State implements Cloneable {
 	/**
 	 * Getter for this state's calculator.
 	 * 
-	 * @return a {@link CalculatorRewriting}.
+	 * @return a {@link Calculator}.
 	 */
-	public CalculatorRewriting getCalculator() {
+	public Calculator getCalculator() {
 		return this.calc;
 	}
 
@@ -376,8 +394,8 @@ public class State implements Cloneable {
 		final Objekt retVal;
     	if (ref.isSymbolic()) {
     		final ReferenceSymbolic refSymbolic = (ReferenceSymbolic) ref;
-    		if (this.resolved(refSymbolic)) {
-    			final long pos = this.getResolution(refSymbolic);
+    		if (resolved(refSymbolic)) {
+    			final long pos = getResolution(refSymbolic);
     			retVal = this.heap.getObject(pos);
     		} else {
     			retVal = null;
@@ -407,8 +425,8 @@ public class State implements Cloneable {
 		final long pos;
     	if (ref.isSymbolic()) {
     		final ReferenceSymbolic refSymbolic = (ReferenceSymbolic) ref;
-    		if (this.resolved(refSymbolic)) {
-    			pos = this.getResolution(refSymbolic);
+    		if (resolved(refSymbolic)) {
+    			pos = getResolution(refSymbolic);
     		} else {
     			return null;
     		}
@@ -481,8 +499,8 @@ public class State implements Cloneable {
 	 * @return a {@link ReferenceConcrete} to the newly created object.
 	 */
 	public ReferenceConcrete createInstance(String className) {    	
-		final Signature[] mySgnArray = this.classHierarchy.getAllFieldsInstance(className);
-		final Instance myObj = new Instance(this.calc, mySgnArray, className, null, Epoch.EPOCH_AFTER_START);
+		final Signature[] fieldsSignatures = this.classHierarchy.getAllFieldsInstance(className);
+		final Instance myObj = new Instance(this.calc, className, null, Epoch.EPOCH_AFTER_START, fieldsSignatures);
 		return new ReferenceConcrete(this.heap.addNew(myObj));
 	}
 	
@@ -500,8 +518,8 @@ public class State implements Cloneable {
 	public void createKlass(String className) 
 	throws ClassFileNotFoundException, InvalidIndexException {
 		final ClassFile classFile = this.getClassHierarchy().getClassFile(className);
-		final Signature[] sgnFields = classFile.getFieldsStatic();
-		final Klass k = new Klass(State.this.calc, sgnFields, null, Objekt.Epoch.EPOCH_AFTER_START);
+		final Signature[] fieldsSignatures = classFile.getFieldsStatic();
+		final Klass k = new Klass(State.this.calc, null, Objekt.Epoch.EPOCH_AFTER_START, fieldsSignatures);
 		this.staticMethodArea.set(className, k);
 		initConstantFields(className, k);
 	}
@@ -519,8 +537,8 @@ public class State implements Cloneable {
 	private void createKlassSymbolic(String className) 
 	throws ClassFileNotFoundException, InvalidIndexException {
 		final ClassFile classFile = this.getClassHierarchy().getClassFile(className);
-		final Signature[] sgnFields = classFile.getFieldsStatic();
-		final Klass k = new Klass(this.calc, sgnFields, "[" + className + "]", Objekt.Epoch.EPOCH_BEFORE_START);
+		final Signature[] fieldsSignatures = classFile.getFieldsStatic();
+		final Klass k = new Klass(this.calc, "[" + className + "]", Objekt.Epoch.EPOCH_BEFORE_START, fieldsSignatures);
 		initWithSymbolicValues(k);
 		initConstantFields(className, k);
 		this.staticMethodArea.set(className, k);
@@ -594,7 +612,7 @@ public class State implements Cloneable {
 
 	private Instance newInstanceSymbolic(String className, String origin) {
 		final Signature[] fieldsSignatures = this.classHierarchy.getAllFieldsInstance(className);
-		final Instance obj = new Instance(this.calc, fieldsSignatures, className, origin, Epoch.EPOCH_BEFORE_START);
+		final Instance obj = new Instance(this.calc, className, origin, Epoch.EPOCH_BEFORE_START, fieldsSignatures);
 		initWithSymbolicValues(obj);
 		return obj;
 	}
@@ -606,8 +624,7 @@ public class State implements Cloneable {
 	 *              symbolic values.
 	 */
 	private void initWithSymbolicValues(Instance myObj) {
-		final Signature[] mySgnArray = myObj.getFieldSignatures();
-		for (final Signature myActualSignature : mySgnArray) {
+		for (final Signature myActualSignature : myObj.getFieldSignatures()) {
 			//gets the field signature and name
 			final String tmpDescriptor = myActualSignature.getDescriptor();
 			final String tmpName = myActualSignature.getName();
@@ -707,34 +724,19 @@ public class State implements Cloneable {
 	}
 
 	/**
-	 * Creates a new {@link Instance} of a given throwable class in the 
-	 * heap of this state. The created instance's fields are initialized 
-	 * with the default values for each field's type. Then, unwinds the 
-	 * stack of this state a handler for the created instance is found.
-	 * 
-	 * @param state the {@link State} whose {@link Heap} will receive 
-	 *              the new object.
-	 * @param classNameThrowable the name of the class of the new instance.
-	 * @throws ThreadStackEmptyException if the thread stack is empty.
-	 */
-	public void createThrowableAndThrowIt(String classNameThrowable) 
-	throws ThreadStackEmptyException {
-		//TODO check that classNameException is Throwable??
-		final ReferenceConcrete myExceRef = createInstance(classNameThrowable);
-		push(myExceRef);
-		throwIt(myExceRef);
-	}
-
-	/**
-	 * Unwinds the stack of this state until a handler for a suitable 
-	 * throwable {@link Objekt} is found.
+	 * Unwinds the stack of this state until it finds an exception 
+     * handler for an object.
 	 * 
 	 * @param exceptionToThrow a {@link Reference} to a throwable 
 	 *        {@link Objekt} in the state's {@link Heap}.
 	 * @throws ThreadStackEmptyException if the thread stack is empty.
+	 * @throws InvalidIndexException if the exception type field in a row of the exception table 
+     *         does not contain the index of a valid CONSTANT_Class in the class constant pool.
+     * @throws InvalidProgramCounterException if the program counter handle in a row 
+     *         of the exception table does not contain a valid program counter.
 	 */
 	public void throwIt(Reference exceptionToThrow) 
-	throws ThreadStackEmptyException {
+	throws ThreadStackEmptyException, InvalidIndexException, InvalidProgramCounterException {
 		//TODO check that exceptionToThrow is resolved/concrete
 		final Objekt myException = this.getObject(exceptionToThrow);
 		//TODO check that Objekt is Throwable
@@ -755,32 +757,19 @@ public class State implements Cloneable {
 			} catch (ClassFileNotFoundException | MethodNotFoundException | MethodCodeNotFoundException e) {
 				//this should never happen
 				throw new UnexpectedInternalException(e);
-			} catch (InvalidIndexException e) {
-				//TODO check whether this recursive call is ok!
-				final Reference myExceRef = createInstance(Util.VERIFY_ERROR);
-				push(myExceRef);
-				throwIt(myExceRef);
-				return;
 			}
-			final ExceptionTableEntry tmpEntry = myExTable.getEntry(excTypes, this.getPC());
+			final ExceptionTableEntry tmpEntry = myExTable.getEntry(excTypes, getPC());
 			if (tmpEntry == null) {
 				this.stack.pop();
 				if (this.stack.isEmpty()) {
-					this.setStuckException(exceptionToThrow);
+					setStuckException(exceptionToThrow);
 					return;
 				}
 			} else {
-				try {
-					this.setPC(tmpEntry.getPCHandle());
-					this.stack.currentFrame().clear();
-					push(exceptionToThrow);
-				} catch (InvalidProgramCounterException e) {
-					//TODO check whether this recursive call is ok!
-					final Reference myExceRef = createInstance(Util.VERIFY_ERROR);
-					push(myExceRef);
-					throwIt(myExceRef);
-				}
-				return;				
+			    this.stack.currentFrame().clear();
+                setPC(tmpEntry.getPCHandle());
+			    push(exceptionToThrow);
+			    return;				
 			}
 		}
 	}
@@ -1760,7 +1749,7 @@ public class State implements Cloneable {
 	 *         according to {@code descriptor}.
 	 */
 	public Value createSymbol(String descriptor, String origin) {
-		return this.symbolFactory.createSymbol(descriptor, origin, this.calc);
+		return this.symbolFactory.createSymbol(descriptor, origin);
 	}
 	
 	/**
@@ -1818,10 +1807,7 @@ public class State implements Cloneable {
 		}
 
 		//stringLiterals
-		o.stringLiterals = new HashMap<String, ReferenceConcrete>();
-		for (Map.Entry<String, ReferenceConcrete> e : stringLiterals.entrySet()) {
-			o.stringLiterals.put(e.getKey(), (ReferenceConcrete) e.getValue().clone());
-		}
+		o.stringLiterals = new HashMap<>(o.stringLiterals);
 
 		//stack
 		o.stack = o.stack.clone();
@@ -1835,18 +1821,10 @@ public class State implements Cloneable {
 		//pathCondition
 		o.pathCondition = o.pathCondition.clone();
 
-		//exc
-		if (o.exc != null) {
-			o.exc = o.exc.clone();
-		}
-
-		//val
-		if (o.val != null) {
-			o.val = o.val.clone();
-		}
+		//exc and val are values, so they are immutable
 
 		//symbolFactory
-		o.symbolFactory = this.symbolFactory.clone();
+		o.symbolFactory = o.symbolFactory.clone();
 
 		return o;
 	}

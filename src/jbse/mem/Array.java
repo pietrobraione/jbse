@@ -6,12 +6,19 @@ import java.util.List;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 
-import jbse.Type;
 import jbse.bc.Signature;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.mem.FastArrayAccessNotAllowedException;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidTypeException;
+import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.mem.exc.FastArrayAccessNotAllowedException;
+import jbse.val.Calculator;
+import jbse.val.Expression;
+import jbse.val.Primitive;
+import jbse.val.ReferenceArrayImmaterial;
+import jbse.val.Simplex;
+import jbse.val.Term;
+import jbse.val.Value;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * Class implementing an array. Upon access it returns a 
@@ -285,7 +292,7 @@ public class Array extends Objekt {
 	 */
 	public Array(Calculator calc, boolean initSymbolic, Value initValue, Primitive length, String type, String origin, Epoch epoch) 
 	throws InvalidTypeException {
-		super(calc, new Signature[]{ new Signature(type, "" + Type.INT, "length") }, type, origin, epoch);
+		super(calc, type, origin, epoch, new Signature(type, "" + Type.INT, "length"));
 		this.lengthSignature = new Signature(type, "" + Type.INT, "length");
 		boolean illFormed = false;
 		if (type == null || type.charAt(0) != Type.ARRAYOF || type.length() < 2) {
@@ -694,10 +701,7 @@ public class Array extends Objekt {
 
 	@Override
 	public Array clone() {
-		Array o = (Array) super.clone();
-		if (o == null) {
-			return o;
-		}
+		final Array o = (Array) super.clone();
 
 		//TODO being Values immutable it should not be necessary to clone this.length and this.indexInRange, refinement shouldn't change the situation as both are primitive. However, should investigate correctness.
 

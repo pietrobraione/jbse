@@ -1,7 +1,7 @@
 package jbse.tree;
 
-import jbse.mem.Expression;
-import jbse.mem.Value;
+import jbse.val.Expression;
+import jbse.val.Value;
 
 public abstract class DecisionAlternativeAloadNoResolution extends DecisionAlternativeAload {
 	protected DecisionAlternativeAloadNoResolution(String branchId, Expression arrayAccessExpression, int branchNumber) {

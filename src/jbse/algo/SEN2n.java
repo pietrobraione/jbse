@@ -1,14 +1,14 @@
 package jbse.algo;
 
-import jbse.Util;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
-import jbse.mem.Primitive;
+import static jbse.algo.Util.throwVerifyError;
+
 import jbse.mem.State;
-import jbse.mem.Value;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Primitive;
+import jbse.val.Value;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * Command implementing all the *2* bytecodes (i2[b/s/l/f/d/c], l2[i/f/d], f2[i/l/d], d2[i/l/f]).
@@ -32,11 +32,11 @@ final class SEN2n implements Algorithm {
 			try {
 				castValue = ((Primitive) value).to(castType);
 			} catch (InvalidTypeException e) {
-				state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+	            throwVerifyError(state);
 				return;
 			}
 		} else {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 		
@@ -47,7 +47,7 @@ final class SEN2n implements Algorithm {
 		try {
 			state.incPC();
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 		}
 	} 
 }

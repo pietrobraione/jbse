@@ -7,11 +7,11 @@ import org.junit.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.bc.InvalidIndexException;
-import jbse.exc.bc.MethodCodeNotFoundException;
-import jbse.exc.bc.MethodNotFoundException;
-import jbse.exc.bc.NoArrayVisibilitySpecifiedException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.InvalidIndexException;
+import jbse.bc.exc.MethodCodeNotFoundException;
+import jbse.bc.exc.MethodNotFoundException;
+import jbse.bc.exc.NoArrayVisibilitySpecifiedException;
 
 public class ClassFileFactoryTest {
 	ClassFileFactory f;

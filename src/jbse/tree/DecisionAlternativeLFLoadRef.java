@@ -1,6 +1,6 @@
 package jbse.tree;
 
-import jbse.mem.ReferenceSymbolic;
+import jbse.val.ReferenceSymbolic;
 
 public abstract class DecisionAlternativeLFLoadRef extends DecisionAlternativeLFLoad implements DecisionAlternativeLoadRef {
 	private final ReferenceSymbolic valueToLoad;

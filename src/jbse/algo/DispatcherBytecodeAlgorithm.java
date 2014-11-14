@@ -1,11 +1,12 @@
 package jbse.algo;
 
 import static jbse.bc.Opcodes.*;
-import jbse.Type;
+
+import jbse.algo.exc.UndefInstructionException;
 import jbse.bc.Dispatcher;
-import jbse.exc.algo.UndefInstructionException;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.mem.Operator;
+import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.val.Operator;
 
 
 /**
@@ -826,7 +827,15 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm> {
 	@Override
 	public Algorithm select(Byte bytecode) 
 	throws UndefInstructionException {
-		final Algorithm retVal = super.select(bytecode);
+		final Algorithm retVal;
+        try {
+            retVal = super.select(bytecode);
+        } catch (UndefInstructionException | RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
 		return retVal;
 	}
 }

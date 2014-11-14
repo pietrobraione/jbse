@@ -1,19 +1,20 @@
 package jbse.algo;
 
 import static jbse.algo.Util.ARITHMETIC_EXCEPTION;
-import jbse.Type;
-import jbse.Util;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
-import jbse.mem.Operator;
-import jbse.mem.Primitive;
-import jbse.mem.Simplex;
+import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.throwVerifyError;
+
+import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.State;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Operator;
+import jbse.val.Primitive;
+import jbse.val.Simplex;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
 public class SEBinOp implements Algorithm {
 	Operator op;
@@ -42,7 +43,7 @@ public class SEBinOp implements Algorithm {
         			if (val2 instanceof Simplex) {
         				Simplex op0_S = (Simplex) val2;
         				if (op0_S.isZeroOne(true)) {
-        					state.createThrowableAndThrowIt(ARITHMETIC_EXCEPTION);
+        				    createAndThrow(state, ARITHMETIC_EXCEPTION);
         					return;
         				}
         			}
@@ -71,14 +72,14 @@ public class SEBinOp implements Algorithm {
         		throw new UnexpectedInternalException();
         	}
 		} catch (InvalidOperandException | InvalidTypeException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 
     	try {
 			state.incPC();
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 		}
     }
 }

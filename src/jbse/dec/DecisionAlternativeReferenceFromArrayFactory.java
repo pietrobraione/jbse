@@ -1,10 +1,10 @@
 package jbse.dec;
 
-import jbse.mem.Expression;
-import jbse.mem.ReferenceSymbolic;
 import jbse.tree.DecisionAlternativeAloadRefAliases;
 import jbse.tree.DecisionAlternativeAloadRefExpands;
 import jbse.tree.DecisionAlternativeAloadRefNull;
+import jbse.val.Expression;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * A Concrete Factory for decision alternatives used when the reference

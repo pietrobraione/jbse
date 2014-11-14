@@ -14,16 +14,16 @@ import jbse.bc.Signature;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.DecisionProcedureAlwSat;
-import jbse.exc.jvm.CannotBuildDecisionProcedureException;
 import jbse.jvm.ExecutionObserver;
 import jbse.jvm.RunnerParameters;
 import jbse.jvm.EngineParameters.BreadthMode;
 import jbse.jvm.EngineParameters.StateIdentificationMode;
-import jbse.mem.ReferenceSymbolic;
+import jbse.jvm.exc.CannotBuildDecisionProcedureException;
 import jbse.mem.State;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.Rewriter;
 import jbse.rules.LICSRulesRepo;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * Class encapsulating the protocol of a {@link Run}'s 

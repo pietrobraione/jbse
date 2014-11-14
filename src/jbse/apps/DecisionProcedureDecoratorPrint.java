@@ -9,11 +9,11 @@ import java.util.Collection;
 
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureDecorator;
-import jbse.exc.dec.DecisionException;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.Clause;
-import jbse.mem.Expression;
 import jbse.mem.Objekt;
-import jbse.mem.ReferenceSymbolic;
+import jbse.val.Expression;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * A {@link DecisionProcedureDecorator} which prettyprints on a number of {@link PrintStream}s 
@@ -35,7 +35,7 @@ public class DecisionProcedureDecoratorPrint extends DecisionProcedureDecorator 
 	 */
 	public DecisionProcedureDecoratorPrint(DecisionProcedure component, PrintStream[] out) {
 		super(component);
-		this.out = out;
+		this.out = out.clone();
 	}
 
 	@Override

@@ -1,7 +1,7 @@
 package jbse.meta.algo;
 
 import jbse.algo.Algorithm;
-import jbse.jvm.ExecutionContext;
+import jbse.algo.ExecutionContext;
 import jbse.mem.State;
 
 public class SEInvokeSucceed implements Algorithm {

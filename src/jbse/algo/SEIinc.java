@@ -1,17 +1,20 @@
 package jbse.algo;
 
-import jbse.Util;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.InvalidSlotException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
-import jbse.mem.Primitive;
-import jbse.mem.Simplex;
-import jbse.mem.State;
+import static jbse.algo.Util.throwVerifyError;
 
-class SEIinc implements Algorithm {
+import jbse.common.Util;
+import jbse.mem.State;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.InvalidSlotException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Primitive;
+import jbse.val.Simplex;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
+
+final class SEIinc implements Algorithm {
+    
+    @Override
 	public void exec(State state, ExecutionContext ctx) 
 	throws ThreadStackEmptyException {
 		final boolean wide = state.nextWide();
@@ -34,7 +37,7 @@ class SEIinc implements Algorithm {
 				offset = 3;
 			}
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 		
@@ -44,14 +47,14 @@ class SEIinc implements Algorithm {
 			state.setLocalVariable(index, tmpVal.add(constantSimplex));
 		} catch (InvalidSlotException | InvalidOperandException | InvalidTypeException e) {
 			//TODO InvalidOperandException and InvalidTypeException can also be caused by internal errors. Distinguish!
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 		
 		try {
 			state.incPC(offset);
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 		}
 	}
 }

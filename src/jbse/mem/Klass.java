@@ -1,6 +1,7 @@
 package jbse.mem;
 
 import jbse.bc.Signature;
+import jbse.val.Calculator;
 
 /**
  * Class that represents a Java class in memory, i.e., its 
@@ -11,13 +12,14 @@ public class Klass extends Instance {
      * Constructor.
      * 
      * @param calc a {@link Calculator}.
-     * @param fieldSignatures an array of field {@link Signature}s.
      * @param origin the origin of this {@code Klass}, or {@code null}
      *        iff the {@code Klass} has not been created by lazy
      *        initialization.
+     * @param epoch the creation {@link Epoch} of this {@link Klass}.
+     * @param fieldSignatures varargs of field {@link Signature}s.
      */
-    Klass(Calculator calc, Signature[] fieldSignatures, String origin, Epoch epoch) {
-    	super(calc, fieldSignatures, "KLASS", origin, epoch);
+    Klass(Calculator calc, String origin, Epoch epoch, Signature... fieldSignatures) {
+    	super(calc, "KLASS", origin, epoch, fieldSignatures);
     }
     
     @Override

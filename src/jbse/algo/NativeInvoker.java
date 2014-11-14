@@ -1,10 +1,10 @@
 package jbse.algo;
 
+import jbse.algo.exc.CannotInvokeNativeException;
 import jbse.bc.Signature;
-import jbse.exc.algo.CannotInvokeNativeException;
-import jbse.exc.mem.ThreadStackEmptyException;
 import jbse.mem.State;
-import jbse.mem.Value;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Value;
 
 /**
  * A strategy whose responsibility is to produce the effects of a 

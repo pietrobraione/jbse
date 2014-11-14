@@ -5,11 +5,11 @@ import java.util.Iterator;
 
 import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.Objekt;
-import jbse.mem.ReferenceSymbolic;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rules.LICSRuleExpandsTo;
 import jbse.rules.LICSRuleAliases;
 import jbse.rules.LICSRulesRepo;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * A decision procedure based on LICS reference resolution rules.

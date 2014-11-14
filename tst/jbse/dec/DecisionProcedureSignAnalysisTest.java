@@ -7,22 +7,22 @@ import java.util.Collection;
 import org.junit.Before;
 import org.junit.Test;
 
-import jbse.Type;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidTypeException;
+import jbse.common.Type;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.Clause;
 import jbse.mem.ClauseAssume;
-import jbse.mem.Expression;
-import jbse.mem.FunctionApplication;
 import jbse.mem.Objekt;
-import jbse.mem.Primitive;
-import jbse.mem.ReferenceSymbolic;
-import jbse.mem.Term;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.RewriterOperationOnSimplex;
 import jbse.rewr.RewriterPolynomials;
 import jbse.rewr.RewriterTrigNormalize;
+import jbse.val.Expression;
+import jbse.val.FunctionApplication;
+import jbse.val.Primitive;
+import jbse.val.ReferenceSymbolic;
+import jbse.val.Term;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
 public class DecisionProcedureSignAnalysisTest {
 	CalculatorRewriting calc;

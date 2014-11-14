@@ -1,12 +1,11 @@
 package jbse.algo;
 
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.State;
-import jbse.mem.Value;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Value;
 
 final class SEReturn implements Algorithm {
 	/** {@code true} iff returning from a method with void return type. */

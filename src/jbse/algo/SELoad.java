@@ -1,18 +1,19 @@
 package jbse.algo;
 
+import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.XLOADSTORE_WIDE_OFFSET;
 import static jbse.bc.Offsets.XLOADSTORE_IMMEDIATE_OFFSET;
 import static jbse.bc.Offsets.XLOADSTORE_OPCODE_OFFSET;
-import jbse.Util;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.mem.ContradictionException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.InvalidSlotException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
+
+import jbse.common.Util;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
-import jbse.mem.Value;
+import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.InvalidSlotException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Value;
 
 /**
  * Command managing all the *load* (load from local variable) bytecodes 
@@ -54,7 +55,7 @@ final class SELoad extends MultipleStateGeneratorLFLoad implements Algorithm {
             	ofst = XLOADSTORE_IMMEDIATE_OFFSET;
             }
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 
@@ -63,7 +64,7 @@ final class SELoad extends MultipleStateGeneratorLFLoad implements Algorithm {
 		try {
 			tmpValue = state.getLocalVariableValue(this.index);
 		} catch (InvalidSlotException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 

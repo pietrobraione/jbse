@@ -1,6 +1,6 @@
 package jbse.apps.run;
 
-import jbse.exc.dec.DecisionException;
+import jbse.dec.exc.DecisionException;
 
 /**
  * Exception thrown whenever a guided execution fails.

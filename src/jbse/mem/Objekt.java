@@ -1,9 +1,14 @@
 package jbse.mem;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 import jbse.bc.Signature;
+import jbse.val.Calculator;
+import jbse.val.Value;
 
 /**
  * A Java object which may reside in the heap or in the static store, 
@@ -28,13 +33,13 @@ public abstract class Objekt implements Cloneable {
 	 * The origin of the object in the case it is created by 
 	 * lazy initialization. Immutable.
 	 */
-	protected final String origin;
+	private final String origin;
 
     /** The creation epoch of this {@link Objekt}. Immutable. */
-    protected final Epoch epoch;
+    private final Epoch epoch;
 
     /** All the signatures of all the fields. Immutable. */
-    protected final Signature[] fieldSignatures;
+    private final List<Signature> fieldSignatures;
     
     /** 
      * The fields as a map of signatures (as strings) to variables.
@@ -53,9 +58,9 @@ public abstract class Objekt implements Cloneable {
      * the object in first instance.
      * @param epoch the creation {@link Epoch} of this object.
      */
-    protected Objekt(Calculator calc, Signature[] fieldSignatures, String type, String origin, Epoch epoch) {
-        this.fields = new HashMap<String, Variable>();
-        this.fieldSignatures = Arrays.copyOf(fieldSignatures, fieldSignatures.length); //safety copy
+    protected Objekt(Calculator calc, String type, String origin, Epoch epoch, Signature... fieldSignatures) {
+        this.fields = new HashMap<>();
+        this.fieldSignatures = Arrays.asList(fieldSignatures.clone()); //safety copy
         for (Signature s : this.fieldSignatures) {
             this.fields.put(s.toString(), new Variable(calc, s.getDescriptor(), s.getName()));
         }
@@ -98,11 +103,11 @@ public abstract class Objekt implements Cloneable {
      * Returns the {@link Signature}s of all the fields
      * declared in this {@link Instance}.
      * 
-     * @return the {@link Signature}{@code []} used for the
-     *         construction of this object.
+     * @return an immutable 
+     *         {@link Collection}{@code <}{@link Signature}{@code >}.
      */
-    public final Signature[] getFieldSignatures() {
-    	return this.fieldSignatures;
+    public final Collection<Signature> getFieldSignatures() {
+    	return Collections.unmodifiableCollection(this.fieldSignatures);
     }
     
     /**
@@ -134,16 +139,12 @@ public abstract class Objekt implements Cloneable {
      */
     public final Value getFieldValue(String fieldName) {
     	//TODO does it work with visibility modifiers???
-        try {
-        	for (Signature sig: this.fieldSignatures) {
-        		if (sig.getName().equals(fieldName)) {
-        			return getFieldValue(sig);
-        		}
-        	}
-        	return null;
-        } catch (Exception e) {
-            return null;
+        for (Signature sig: this.fieldSignatures) {
+            if (sig.getName().equals(fieldName)) {
+                return getFieldValue(sig);
+            }
         }
+        return null;
     }
     
 	@Override

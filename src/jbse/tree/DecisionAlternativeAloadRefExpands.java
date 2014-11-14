@@ -1,7 +1,7 @@
 package jbse.tree;
 
-import jbse.mem.Expression;
-import jbse.mem.ReferenceSymbolic;
+import jbse.val.Expression;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * {@link DecisionAlternativeAload} for the case a read access to an array

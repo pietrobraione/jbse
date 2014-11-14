@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import jbse.Type;
-import jbse.mem.ReferenceSymbolic;
+import jbse.common.Type;
+import jbse.val.ReferenceSymbolic;
 
 public class LICSRulesRepo {
 	private HashMap<String, Set<LICSRuleExpandsTo>> rulesExpandsTo = new HashMap<>();

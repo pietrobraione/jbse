@@ -1,5 +1,6 @@
 package jbse.mem;
 
+
 /**
  * A path condition {@link Clause}, an assumption 
  * that some class is already initialized when the symbolic 

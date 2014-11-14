@@ -1,10 +1,10 @@
 package jbse.dec;
 
-import jbse.exc.dec.DecisionException;
-import jbse.exc.dec.ExternalProtocolInterfaceException;
+import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.ExternalProtocolInterfaceException;
 import jbse.mem.Objekt;
-import jbse.mem.ReferenceSymbolic;
 import jbse.rewr.CalculatorRewriting;
+import jbse.val.ReferenceSymbolic;
 
 import java.io.IOException;
 

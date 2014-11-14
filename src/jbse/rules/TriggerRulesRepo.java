@@ -5,9 +5,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import jbse.Type;
 import jbse.bc.Signature;
-import jbse.mem.ReferenceSymbolic;
+import jbse.common.Type;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * A repository of rules for triggering method execution upon 

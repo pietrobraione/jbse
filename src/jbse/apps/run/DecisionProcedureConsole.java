@@ -9,20 +9,20 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import jbse.apps.IO;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.DecisionProcedureAlwSat;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionException;
-import jbse.mem.Any;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.Clause;
-import jbse.mem.Expression;
-import jbse.mem.Primitive;
 import jbse.mem.SwitchTable;
 import jbse.rewr.CalculatorRewriting;
 import jbse.tree.DecisionAlternativeComparison;
 import jbse.tree.DecisionAlternativeComparison.Values;
 import jbse.tree.DecisionAlternativeIf;
 import jbse.tree.DecisionAlternativeSwitch;
+import jbse.val.Any;
+import jbse.val.Expression;
+import jbse.val.Primitive;
 
 public class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
 	private static final String CLASS_NAME = DecisionProcedureConsole.class.getName().substring(DecisionProcedureConsole.class.getName().lastIndexOf('.') + 1);
@@ -32,7 +32,7 @@ public class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
 
 	public DecisionProcedureConsole(CalculatorRewriting calc, PrintStream[] ps) {
 		super(new DecisionProcedureAlwSat(), calc); //component is used for storing assumptions, not for deciding
-		this.ps = ps;
+		this.ps = ps.clone();
 	}
 
 	@Override

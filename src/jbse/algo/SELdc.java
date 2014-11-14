@@ -1,18 +1,19 @@
 package jbse.algo;
 
-import jbse.Util;
-import jbse.bc.ClassFile;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.bc.InvalidIndexException;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
-import jbse.mem.ConstantPoolString;
-import jbse.mem.State;
-import jbse.mem.Value;
+import static jbse.algo.Util.throwVerifyError;
 
-class SELdc implements Algorithm {
+import jbse.bc.ClassFile;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.InvalidIndexException;
+import jbse.common.Util;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.mem.State;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.ConstantPoolString;
+import jbse.val.Value;
+
+final class SELdc implements Algorithm {
 	boolean def;
 
 	public SELdc() { }
@@ -30,7 +31,7 @@ class SELdc implements Algorithm {
 				index = Util.byteCat(tmp1, tmp2);
 			}
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 
@@ -49,7 +50,7 @@ class SELdc implements Algorithm {
 		try {
 			val = state.getCalculator().val_(cf.getValueFromConstantPool(index));
 		} catch (InvalidIndexException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 		if (val instanceof ConstantPoolString) {
@@ -66,7 +67,7 @@ class SELdc implements Algorithm {
 				state.incPC(3);
 			}
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 		}
 	} 
 }

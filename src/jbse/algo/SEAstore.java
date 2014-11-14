@@ -2,30 +2,30 @@ package jbse.algo;
 
 import static jbse.algo.Util.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION;
 import static jbse.algo.Util.NULL_POINTER_EXCEPTION;
+import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.XALOADSTORE_OFFSET;
 
 import java.util.Iterator;
 
-import jbse.Util;
+import jbse.algo.exc.CannotManageStateException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
-import jbse.exc.algo.CannotManageStateException;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.dec.InvalidInputException;
-import jbse.exc.mem.ContradictionException;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
+import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Array;
-import jbse.mem.Primitive;
-import jbse.mem.Reference;
 import jbse.mem.State;
-import jbse.mem.Value;
+import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternativeAstore;
+import jbse.val.Primitive;
+import jbse.val.Reference;
+import jbse.val.Value;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * Command managing all the *astore (store into array) bytecodes 
@@ -41,6 +41,7 @@ class SEAstore extends MultipleStateGenerator<DecisionAlternativeAstore> impleme
 		super(DecisionAlternativeAstore.class);
 	}
 	
+	@Override
     public void exec(final State state, final ExecutionContext ctx) 
     throws DecisionException, CannotManageStateException, 
     ThreadStackEmptyException, OperandStackEmptyException,  
@@ -50,7 +51,7 @@ class SEAstore extends MultipleStateGenerator<DecisionAlternativeAstore> impleme
         final Reference myObjectRef = (Reference) state.pop();
         if (state.isNull(myObjectRef)) {
         	//base-level throws NullPointerException 
-	    	state.createThrowableAndThrowIt(NULL_POINTER_EXCEPTION);
+            createAndThrow(state, NULL_POINTER_EXCEPTION);
 	    	return;
         }
 
@@ -64,7 +65,7 @@ class SEAstore extends MultipleStateGenerator<DecisionAlternativeAstore> impleme
     		outOfRange = o.outOfRange(index);
     	} catch (InvalidOperandException | InvalidTypeException e) {
     		//index is bad
-    		state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+    	    throwVerifyError(state);
     		return;
     	}
         
@@ -95,10 +96,10 @@ class SEAstore extends MultipleStateGenerator<DecisionAlternativeAstore> impleme
 				try {
 					s.incPC(XALOADSTORE_OFFSET);
 				} catch (InvalidProgramCounterException e) {
-					s.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+				    throwVerifyError(s);
 				}
 			} else {
-				s.createThrowableAndThrowIt(ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
+			    createAndThrow(s, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
 			}
 		};
 

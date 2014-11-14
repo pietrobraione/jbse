@@ -4,22 +4,19 @@ import static jbse.rules.Util.getTriggerMethodParameterObject;
 
 import java.util.ArrayList;
 
-import jbse.Type;
+import jbse.algo.exc.PleaseDoNativeException;
 import jbse.bc.Signature;
-import jbse.exc.algo.PleaseDoNativeException;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.bc.IncompatibleClassFileException;
-import jbse.exc.bc.MethodNotFoundException;
-import jbse.exc.bc.NoMethodReceiverException;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.InvalidSlotException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
+import jbse.bc.exc.MethodNotFoundException;
+import jbse.bc.exc.NoMethodReceiverException;
+import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Objekt;
-import jbse.mem.ReferenceConcrete;
-import jbse.mem.ReferenceSymbolic;
 import jbse.mem.State;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.InvalidSlotException;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.rules.TriggerRule;
 import jbse.rules.TriggerRuleAliases;
 import jbse.rules.TriggerRuleExpandsTo;
@@ -30,6 +27,8 @@ import jbse.tree.DecisionAlternativeLoad;
 import jbse.tree.DecisionAlternativeLoadRefAliases;
 import jbse.tree.DecisionAlternativeLoadRefExpands;
 import jbse.tree.DecisionAlternativeLoadRefNull;
+import jbse.val.ReferenceConcrete;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * A {@link TriggerManager} detects whether a reference resolution

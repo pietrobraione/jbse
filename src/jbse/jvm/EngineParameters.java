@@ -6,11 +6,11 @@ import java.util.Collections;
 import jbse.bc.Classpath;
 import jbse.bc.Signature;
 import jbse.dec.DecisionProcedureAlgorithms;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.mem.ReferenceSymbolic;
 import jbse.mem.State;
-import jbse.rewr.CalculatorRewriting;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.StateTree;
+import jbse.val.Calculator;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * Class encapsulating the protocol of an {@link Engine}'s 
@@ -158,10 +158,10 @@ public final class EngineParameters implements Cloneable {
 	private ArrayList<String> paths = new ArrayList<>();
 
 	/** 
-	 * The {@link CalculatorRewriting}; overridden by {@code initialState}'s 
+	 * The {@link Calculator}; overridden by {@code initialState}'s 
 	 * calculator when {@code initialState != null}. 
 	 */
-	private CalculatorRewriting calc = null;
+	private Calculator calc = null;
 	
 	/** The decision procedure. */
 	private DecisionProcedureAlgorithms decisionProcedure = null;
@@ -338,12 +338,12 @@ public final class EngineParameters implements Cloneable {
 		}
 	}
 	
-	public void setCalculator(CalculatorRewriting calc) {
+	public void setCalculator(Calculator calc) {
 		this.calc = calc;
 		this.initialState = null;
 	}
 
-	public CalculatorRewriting getCalculator() {
+	public Calculator getCalculator() {
 		if (this.initialState == null) {
 			return this.calc;
 		} else {

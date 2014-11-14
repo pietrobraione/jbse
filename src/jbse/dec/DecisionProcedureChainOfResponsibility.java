@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
-import jbse.Type;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionException;
+import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.Clause;
 import jbse.mem.ClauseAssume;
 import jbse.mem.ClauseAssumeAliases;
@@ -15,13 +15,13 @@ import jbse.mem.ClauseAssumeClassNotInitialized;
 import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.ClauseAssumeNull;
 import jbse.mem.ClauseVisitor;
-import jbse.mem.Expression;
 import jbse.mem.Objekt;
-import jbse.mem.Primitive;
-import jbse.mem.ReferenceSymbolic;
-import jbse.mem.Simplex;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.Rewriter;
+import jbse.val.Expression;
+import jbse.val.Primitive;
+import jbse.val.ReferenceSymbolic;
+import jbse.val.Simplex;
 
 /**
  * A {@link DecisionProcedure} that delegates the operations it 

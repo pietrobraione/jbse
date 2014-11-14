@@ -1,5 +1,6 @@
 package jbse.algo;
 
+import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKEINTERFACE_OFFSET;
 import static jbse.bc.Offsets.INVOKESPECIAL_OFFSET;
 import static jbse.bc.Offsets.INVOKESTATIC_OFFSET;
@@ -10,26 +11,23 @@ import static jbse.bc.Opcodes.OP_INVOKESTATIC;
 
 import java.util.Arrays;
 
-import jbse.Type;
-import jbse.Util;
+import jbse.algo.exc.CannotManageStateException;
+import jbse.algo.exc.UninterpretedUnsupportedException;
 import jbse.bc.Signature;
-import jbse.exc.algo.CannotManageStateException;
-import jbse.exc.algo.UninterpretedUnsupportedException;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.mem.ContradictionException;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
-import jbse.mem.Primitive;
+import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
-import jbse.mem.Value;
+import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Primitive;
+import jbse.val.Value;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
-
-class SEInvokeUninterpreted implements Algorithm {
+final class SEInvokeUninterpreted implements Algorithm {
 	Signature methodSignatureResolved;
 	String functionName;
 	
@@ -70,7 +68,7 @@ class SEInvokeUninterpreted implements Algorithm {
 		try {
 			state.incPC(offset);
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 		}
 	}
 }

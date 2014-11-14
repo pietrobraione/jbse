@@ -2,11 +2,11 @@ package jbse.rewr;
 
 import static org.junit.Assert.assertEquals;
 
-import jbse.Type;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.mem.Primitive;
-import jbse.mem.Term;
+import jbse.common.Type;
+import jbse.val.Primitive;
+import jbse.val.Term;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
 import org.junit.Before;
 import org.junit.Test;

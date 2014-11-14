@@ -1,13 +1,13 @@
 package jbse.algo;
 
-import jbse.Type;
-import jbse.Util;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
+import static jbse.algo.Util.throwVerifyError;
+
+import jbse.common.Type;
 import jbse.mem.State;
-import jbse.mem.Value;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Value;
 
 final class SEPop implements Algorithm {
 	/** {@code true} for pop, {@code false} for pop2 */ 
@@ -18,14 +18,14 @@ final class SEPop implements Algorithm {
 	throws ThreadStackEmptyException, OperandStackEmptyException {
 		Value tmp = state.pop();
 		if (def && !Type.isCat_1(tmp.getType())) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 		
 		if (!def && Type.isCat_1(tmp.getType())) {
 			tmp = state.pop();
 			if (!Type.isCat_1(tmp.getType())) {
-				state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+	            throwVerifyError(state);
 				return;
 			}
 		}
@@ -33,7 +33,7 @@ final class SEPop implements Algorithm {
 		try {
 			state.incPC();
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 		}
 	}
 }

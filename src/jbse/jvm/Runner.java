@@ -2,16 +2,16 @@ package jbse.jvm;
 
 import java.util.Map;
 
-import jbse.exc.algo.CannotManageStateException;
-import jbse.exc.dec.DecisionBacktrackException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.jvm.CannotBacktrackException;
-import jbse.exc.jvm.EngineStuckException;
-import jbse.exc.jvm.FailureException;
-import jbse.exc.mem.ContradictionException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
+import jbse.algo.exc.CannotManageStateException;
+import jbse.dec.exc.DecisionBacktrackException;
+import jbse.dec.exc.DecisionException;
+import jbse.jvm.exc.CannotBacktrackException;
+import jbse.jvm.exc.EngineStuckException;
+import jbse.jvm.exc.FailureException;
 import jbse.mem.State;
+import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.StateTree.BranchPoint;
 
 /**

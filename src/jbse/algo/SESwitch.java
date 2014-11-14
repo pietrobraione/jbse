@@ -1,25 +1,25 @@
 package jbse.algo;
 
-import jbse.Util;
+import static jbse.algo.Util.throwVerifyError;
+
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.dec.InvalidInputException;
-import jbse.exc.mem.ContradictionException;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
-import jbse.mem.Calculator;
-import jbse.mem.Expression;
+import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Frame;
-import jbse.mem.Primitive;
 import jbse.mem.State;
 import jbse.mem.SwitchTable;
+import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternativeSwitch;
+import jbse.val.Calculator;
+import jbse.val.Expression;
+import jbse.val.Primitive;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * Command for managing the *switch (tableswitch, lookupswitch). 
@@ -47,7 +47,7 @@ final class SESwitch extends MultipleStateGenerator<DecisionAlternativeSwitch> i
 			final Frame f = state.getCurrentFrame();
 			tab = new SwitchTable(f, calc, isTableSwitch);
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 		
@@ -87,7 +87,7 @@ final class SESwitch extends MultipleStateGenerator<DecisionAlternativeSwitch> i
 			try {
 				s.incPC(jumpOffset);
 			} catch (InvalidProgramCounterException e) {
-				s.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+	            throwVerifyError(state);
 			}
 		};
 		
@@ -98,7 +98,7 @@ final class SESwitch extends MultipleStateGenerator<DecisionAlternativeSwitch> i
 			generateStates();
 		} catch (InvalidInputException e) {
 			//bad selector
-			this.state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 		} catch (ClassFileNotFoundException | InvalidTypeException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);

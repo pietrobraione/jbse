@@ -1,6 +1,6 @@
 package jbse.tree;
 
-import jbse.mem.Operator;
+import jbse.val.Operator;
 
 public abstract class DecisionAlternativeComparison implements DecisionAlternative {
     private final int value;

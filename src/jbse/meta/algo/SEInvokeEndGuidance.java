@@ -1,16 +1,16 @@
 package jbse.meta.algo;
 
-import static jbse.Util.VERIFY_ERROR;
+import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKESTATIC_OFFSET;
 
 import jbse.algo.Algorithm;
+import jbse.algo.ExecutionContext;
+import jbse.algo.exc.CannotManageStateException;
 import jbse.apps.run.DecisionProcedureGuidance;
-import jbse.exc.algo.CannotManageStateException;
-import jbse.exc.mem.ContradictionException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
 import jbse.mem.State;
+import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.ThreadStackEmptyException;
 
 public class SEInvokeEndGuidance implements Algorithm {
 	@Override
@@ -25,7 +25,7 @@ public class SEInvokeEndGuidance implements Algorithm {
 		try {
 			state.incPC(INVOKESTATIC_OFFSET);
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(VERIFY_ERROR);
+            throwVerifyError(state);
 		}
 	}
 }

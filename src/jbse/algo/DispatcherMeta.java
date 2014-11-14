@@ -1,17 +1,13 @@
 package jbse.algo;
 
-import jbse.algo.nativ.SEFillInStackTrace;
-import jbse.algo.nativ.SEGetStackTraceDepth;
-import jbse.algo.nativ.SEGetStackTraceElement;
+import jbse.algo.exc.MetaUnsupportedException;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Dispatcher;
 import jbse.bc.Signature;
 import jbse.bc.Util;
-import jbse.exc.algo.MetaUnsupportedException;
-import jbse.exc.algo.UndefInstructionException;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.bc.MethodNotFoundException;
-import jbse.exc.common.UnexpectedInternalException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.MethodNotFoundException;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.meta.annotations.MetaOverridden;
 import jbse.meta.annotations.Uninterpreted;
 
@@ -53,12 +49,14 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
 	@Override
 	public Algorithm select(Signature methodSignatureResolved) {
 		final Algorithm retVal;
-		try {
-			retVal = super.select(methodSignatureResolved);
-		} catch (UndefInstructionException e) {
-			//this should never happen
-			throw new UnexpectedInternalException(e);
-		}
+        try {
+            retVal = super.select(methodSignatureResolved);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
 		return retVal;
 	}
 	

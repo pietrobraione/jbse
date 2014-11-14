@@ -1,6 +1,6 @@
 package jbse.dec;
 
-import jbse.mem.ReferenceSymbolic;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * Abstract Factory for decision alternatives. 

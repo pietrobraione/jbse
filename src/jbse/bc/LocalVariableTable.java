@@ -7,9 +7,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import jbse.Type;
-
-
+import jbse.common.Type;
 
 /**
  * Class of objects representing a method local variable table.
@@ -45,9 +43,9 @@ public class LocalVariableTable implements Iterable<LocalVariableTable.Row> {
 	/**
 	 * Constructor returning an empty local variable table.
 	 * 
-	 * @param length The length for the local table.
+	 * @param slots the number of slots of the local table.
 	 */
-	public LocalVariableTable(int length, int slots) {
+	public LocalVariableTable(int slots) {
 		this.slots = slots;
 		this.entries = new HashMap<Integer, Set<Row>>();
 	}

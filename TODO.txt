@@ -5,8 +5,7 @@ Not in priority order:
 * Produce a developer manual.
 * Use logging for output.
 * Add interface to generic SMTLIB solver.
-* Untangle architecture by removing all circular dependencies.
-* Change configuration files format.
+* Change configuration files format and make all parameters configurable through file.
 * Add Apache Ant + Ivy and Netbeans project support.
 * Multithreaded analysis.
 * Test generation by concolic execution.

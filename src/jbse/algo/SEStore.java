@@ -1,16 +1,17 @@
 package jbse.algo;
 
+import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.XLOADSTORE_WIDE_OFFSET;
 import static jbse.bc.Offsets.XLOADSTORE_IMMEDIATE_OFFSET;
-import jbse.Util;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.InvalidSlotException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
+
+import jbse.common.Util;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.State;
-import jbse.mem.Value;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.InvalidSlotException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Value;
 
 final class SEStore implements Algorithm {
 	boolean def;
@@ -40,12 +41,12 @@ final class SEStore implements Algorithm {
 				if (def) {
 					throw new UnexpectedInternalException(e);
 				} else {
-					state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+		            throwVerifyError(state);
 					return;
 				}
 			}
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 
@@ -58,7 +59,7 @@ final class SEStore implements Algorithm {
 				state.incPC(XLOADSTORE_IMMEDIATE_OFFSET);
 			}
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 		}
 	} 
 }

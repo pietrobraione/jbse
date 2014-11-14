@@ -1,15 +1,15 @@
 package jbse.algo;
 
-import jbse.Type;
-import jbse.Util;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
-import jbse.mem.State;
-import jbse.mem.Value;
+import static jbse.algo.Util.throwVerifyError;
 
-class SEDup_n implements Algorithm {
+import jbse.common.Type;
+import jbse.mem.State;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Value;
+
+final class SEDup_n implements Algorithm {
 	/** {@code true} for dup, {@code false} for dup2. */
 	boolean cat_1;
 
@@ -148,7 +148,7 @@ class SEDup_n implements Algorithm {
 
 		//common updates
 		if (error) {
-	    	state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 		}
 	}
 }

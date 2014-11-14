@@ -6,37 +6,39 @@ import static jbse.algo.Util.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.algo.Util.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.algo.Util.NO_SUCH_METHOD_ERROR;
 import static jbse.algo.Util.NULL_POINTER_EXCEPTION;
+import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKEINTERFACE_OFFSET;
 import static jbse.bc.Offsets.INVOKEVIRTUAL_OFFSET;
-import jbse.Util;
+
+import jbse.algo.exc.CannotManageStateException;
+import jbse.algo.exc.PleaseDoNativeException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
-import jbse.exc.algo.CannotManageStateException;
-import jbse.exc.algo.PleaseDoNativeException;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.bc.IncompatibleClassFileException;
-import jbse.exc.bc.InvalidIndexException;
-import jbse.exc.bc.MethodAbstractException;
-import jbse.exc.bc.MethodNotAccessibleException;
-import jbse.exc.bc.MethodNotFoundException;
-import jbse.exc.bc.NoMethodReceiverException;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.jvm.FailureException;
-import jbse.exc.mem.ContradictionException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.InvalidSlotException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
+import jbse.bc.exc.InvalidIndexException;
+import jbse.bc.exc.MethodAbstractException;
+import jbse.bc.exc.MethodNotAccessibleException;
+import jbse.bc.exc.MethodNotFoundException;
+import jbse.bc.exc.NoMethodReceiverException;
+import jbse.common.Util;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.dec.exc.DecisionException;
+import jbse.jvm.exc.FailureException;
 import jbse.mem.State;
-import jbse.mem.Value;
+import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.InvalidSlotException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Value;
 
-
-class SEInvokeVirtualInterface implements Algorithm {
+final class SEInvokeVirtualInterface implements Algorithm {
 	boolean isInterface;
 	
+	@Override
 	public void exec(State state, ExecutionContext ctx) 
 	throws CannotManageStateException, DecisionException, 
 	ThreadStackEmptyException, OperandStackEmptyException, 
@@ -49,7 +51,7 @@ class SEInvokeVirtualInterface implements Algorithm {
 			final byte tmp2 = state.getInstruction(2);
 			index = Util.byteCat(tmp1, tmp2);
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 		
@@ -68,7 +70,7 @@ class SEInvokeVirtualInterface implements Algorithm {
 				pcOffset = INVOKEVIRTUAL_OFFSET;
 			}
 		} catch (InvalidIndexException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		} catch (ClassFileNotFoundException e) {
 			//this should never happen
@@ -80,19 +82,19 @@ class SEInvokeVirtualInterface implements Algorithm {
 		try {
 			methodSignatureResolved = hier.resolveMethod(currentClassName, methodSignature, isInterface);
 		} catch (ClassFileNotFoundException e) {
-			state.createThrowableAndThrowIt(NO_CLASS_DEFINITION_FOUND_ERROR);
+            createAndThrow(state, NO_CLASS_DEFINITION_FOUND_ERROR);
 			return;
 		} catch (IncompatibleClassFileException e) {
-			state.createThrowableAndThrowIt(INCOMPATIBLE_CLASS_CHANGE_ERROR);
+            createAndThrow(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
 			return;
 		} catch (MethodAbstractException e) {
-			state.createThrowableAndThrowIt(ABSTRACT_METHOD_ERROR);
+            createAndThrow(state, ABSTRACT_METHOD_ERROR);
 			return;
 		} catch (MethodNotFoundException e) {
-			state.createThrowableAndThrowIt(NO_SUCH_METHOD_ERROR);
+            createAndThrow(state, NO_SUCH_METHOD_ERROR);
 			return;
 		} catch (MethodNotAccessibleException e) {
-			state.createThrowableAndThrowIt(ILLEGAL_ACCESS_ERROR);
+            createAndThrow(state, ILLEGAL_ACCESS_ERROR);
 			return;
 		}
 
@@ -100,7 +102,7 @@ class SEInvokeVirtualInterface implements Algorithm {
 		try {
 			final ClassFile classFileResolved = hier.getClassFile(methodSignatureResolved.getClassName());
 			if (classFileResolved.isMethodStatic(methodSignatureResolved)) {
-				state.createThrowableAndThrowIt(Util.INCOMPATIBLE_CLASS_CHANGE_ERROR);
+	            createAndThrow(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
 				return;
 			}
 		} catch (ClassFileNotFoundException | MethodNotFoundException e) {
@@ -130,9 +132,9 @@ class SEInvokeVirtualInterface implements Algorithm {
 		} catch (PleaseDoNativeException e) {
 			ctx.nativeInvoker.doInvokeNative(state, methodSignature, args, pcOffset);
 		} catch (NoMethodReceiverException e) {
-			state.createThrowableAndThrowIt(NULL_POINTER_EXCEPTION);
+            createAndThrow(state, NULL_POINTER_EXCEPTION);
 		} catch (InvalidSlotException | InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 		} catch (ClassFileNotFoundException | IncompatibleClassFileException | 
 				MethodNotFoundException e) {
 			//this should never happen

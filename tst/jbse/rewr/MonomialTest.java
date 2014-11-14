@@ -1,10 +1,12 @@
 package jbse.rewr;
 
-import jbse.Type;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.mem.Primitive;
-import jbse.mem.Term;
+import static org.junit.Assert.assertTrue;
+
+import jbse.common.Type;
+import jbse.val.Primitive;
+import jbse.val.Term;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -26,12 +28,10 @@ public class MonomialTest {
 		final Term B = calc.valTerm(Type.INT, "B");
 		final Term C = calc.valTerm(Type.INT, "C");
 		final Term D = calc.valTerm(Type.INT, "D");
-		final Primitive p1 = calc.applyFunction(Type.INT, "f", A.sub(B).div(C.sub(D)));
-		final Primitive p2 = calc.applyFunction(Type.INT, "f", B.sub(A).div(D.sub(C)));
-		for (int i = 1 ; i <= 10000 ; ++i) {
-			Monomial m1 = Monomial.of(calc, p1);
-			Monomial m2 = Monomial.of(calc, p2);
-			m1.equals(m2);
-		}
+		final Primitive p1 = calc.applyFunction(Type.INT, "f", A.div(B).div(C.div(D)));
+		final Primitive p2 = calc.applyFunction(Type.INT, "f", A.mul(D).div(B.mul(C)));
+		Monomial m1 = Monomial.of(calc, p1);
+		Monomial m2 = Monomial.of(calc, p2);
+		assertTrue(m1.equals(m2));
 	}
 }

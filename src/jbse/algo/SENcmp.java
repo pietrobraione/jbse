@@ -1,5 +1,6 @@
 package jbse.algo;
 
+import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Opcodes.OP_IFEQ;
 import static jbse.bc.Opcodes.OP_IFGE;
 import static jbse.bc.Opcodes.OP_IFGT;
@@ -7,24 +8,22 @@ import static jbse.bc.Opcodes.OP_IFLE;
 import static jbse.bc.Opcodes.OP_IFLT;
 import static jbse.bc.Opcodes.OP_IFNE;
 
-import jbse.Util;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
-import jbse.exc.bc.ClassFileNotFoundException;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.dec.InvalidInputException;
-import jbse.exc.mem.ContradictionException;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidOperatorException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.exc.mem.OperandStackEmptyException;
-import jbse.exc.mem.ThreadStackEmptyException;
-import jbse.jvm.ExecutionContext;
-import jbse.mem.Calculator;
-import jbse.mem.Primitive;
+import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.InvalidInputException;
 import jbse.mem.State;
+import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternativeComparison;
+import jbse.val.Calculator;
+import jbse.val.Primitive;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidOperatorException;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * Command managing all the *cmp* commands ([d/f/l]cmp_[g/l]). 
@@ -55,7 +54,7 @@ final class SENcmp extends MultipleStateGenerator<DecisionAlternativeComparison>
 		try {
 			nextBytecode = state.getInstruction(1);
 		} catch (InvalidProgramCounterException e) {
-			state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+            throwVerifyError(state);
 			return;
 		}
 		
@@ -71,13 +70,13 @@ final class SENcmp extends MultipleStateGenerator<DecisionAlternativeComparison>
 			try {
 				state.push(val1.sub(val2));
 			} catch (InvalidOperandException | InvalidTypeException e) {
-				state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+	            throwVerifyError(state);
 				return;
 			}
 			try {
 				state.incPC();
 			} catch (InvalidProgramCounterException e) {
-				state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+	            throwVerifyError(state);
 			}
 		} else {
 			final Calculator calc = state.getCalculator();
@@ -102,7 +101,7 @@ final class SENcmp extends MultipleStateGenerator<DecisionAlternativeComparison>
 				try {
 					s.incPC();
 				} catch (InvalidProgramCounterException e) {
-					s.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+		            throwVerifyError(state);
 				}
 			};
 
@@ -113,7 +112,7 @@ final class SENcmp extends MultipleStateGenerator<DecisionAlternativeComparison>
 				generateStates();
 			} catch (InvalidInputException e) {
 				//bad val1 / val2
-				this.state.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+	            throwVerifyError(state);
 			} catch (ClassFileNotFoundException | InvalidTypeException e) {
 				//this should never happen
 				throw new UnexpectedInternalException(e);

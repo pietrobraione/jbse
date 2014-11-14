@@ -1,6 +1,7 @@
 package jbse.bc;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 public class LineNumberTable implements Iterable<LineNumberTable.Row> {
 	public static class Row {
@@ -42,7 +43,10 @@ public class LineNumberTable implements Iterable<LineNumberTable.Row> {
 		}
 
 		public Row next() {
-			i++;
+		    if (!hasNext()) {
+		        throw new NoSuchElementException();
+		    }
+			++i;
 			return LineNumberTable.this.rows[i - 1];
 		}
 

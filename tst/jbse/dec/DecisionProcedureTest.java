@@ -5,16 +5,10 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 
 import java.util.TreeSet;
 
-import jbse.Type;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.dec.InvalidInputException;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidTypeException;
+import jbse.common.Type;
+import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.InvalidInputException;
 import jbse.mem.ClauseAssume;
-import jbse.mem.Expression;
-import jbse.mem.Primitive;
-import jbse.mem.Simplex;
-import jbse.mem.Term;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.RewriterOperationOnSimplex;
 import jbse.tree.DecisionAlternativeComparisonEq;
@@ -25,6 +19,12 @@ import jbse.tree.DecisionAlternativeComparison;
 import jbse.tree.DecisionAlternativeComparators;
 import jbse.tree.DecisionAlternativeIfFalse;
 import jbse.tree.DecisionAlternativeIfTrue;
+import jbse.val.Expression;
+import jbse.val.Primitive;
+import jbse.val.Simplex;
+import jbse.val.Term;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
 import org.junit.After;
 import org.junit.AfterClass;

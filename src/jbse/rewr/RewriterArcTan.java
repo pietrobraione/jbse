@@ -1,8 +1,8 @@
 package jbse.rewr;
 
-import jbse.exc.rewr.NoResultException;
-import jbse.mem.FunctionApplication;
-import jbse.mem.Primitive;
+import jbse.rewr.exc.NoResultException;
+import jbse.val.FunctionApplication;
+import jbse.val.Primitive;
 
 /**
  * A {@link Rewriter} which rewrites tan(atan(x)) to x.

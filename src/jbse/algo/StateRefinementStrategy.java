@@ -1,9 +1,9 @@
 package jbse.algo;
 
-import jbse.exc.dec.DecisionException;
-import jbse.exc.mem.ContradictionException;
-import jbse.exc.mem.InvalidTypeException;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
+import jbse.mem.exc.ContradictionException;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * Strategy for refining a {@link State}.

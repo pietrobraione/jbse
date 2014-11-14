@@ -1,26 +1,27 @@
 package jbse.algo;
 
-import jbse.Type;
-import jbse.Util;
-import jbse.exc.common.UnexpectedInternalException;
-import jbse.exc.dec.DecisionException;
-import jbse.exc.mem.ContradictionException;
-import jbse.exc.mem.InvalidOperandException;
-import jbse.exc.mem.InvalidProgramCounterException;
-import jbse.exc.mem.InvalidTypeException;
-import jbse.exc.mem.ThreadStackEmptyException;
+import static jbse.algo.Util.throwVerifyError;
+
+import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
-import jbse.mem.Primitive;
-import jbse.mem.ReferenceConcrete;
-import jbse.mem.ReferenceSymbolic;
 import jbse.mem.State;
-import jbse.mem.Value;
+import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative;
 import jbse.tree.DecisionAlternativeLoadRefAliases;
 import jbse.tree.DecisionAlternativeLoadRefNull;
 import jbse.tree.DecisionAlternativeLoadRefExpands;
 import jbse.tree.DecisionAlternativeLoad;
+import jbse.val.Primitive;
+import jbse.val.ReferenceConcrete;
+import jbse.val.ReferenceSymbolic;
+import jbse.val.Value;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * A {@link MultipleStateGenerator} for bytecodes which load a {@link Value} to the operand stack.
@@ -88,7 +89,7 @@ abstract class MultipleStateGeneratorLoad<R extends DecisionAlternative> extends
 		try {
 			goOn = this.ctx.triggerManager.runTriggers(s, r, this.pcOffset);
 		} catch (InvalidProgramCounterException e) {
-			s.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+		    throwVerifyError(s);
 			return;
 		}
 		if (goOn) {
@@ -96,7 +97,7 @@ abstract class MultipleStateGeneratorLoad<R extends DecisionAlternative> extends
 			try {
 				s.incPC(this.pcOffset);
 			} catch (InvalidProgramCounterException e) {
-				s.createThrowableAndThrowIt(Util.VERIFY_ERROR);
+			    throwVerifyError(s);
 			}
 		}
 	}

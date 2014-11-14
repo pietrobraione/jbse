@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import jbse.exc.common.UnexpectedInternalException;
+import jbse.common.exc.UnexpectedInternalException;
 
 /**
  * Class that offers the same services of the heap in the JVM's memory.
