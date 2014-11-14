@@ -41,7 +41,9 @@
 <h3>
 <a id="what-are-its-distinctive-features" class="anchor" href="#what-are-its-distinctive-features" aria-hidden="true"><span class="octicon octicon-link"></span></a>What are its distinctive features?</h3>
 
-<p>Specifying good verification properties is not always easy, especially when inputs are complex object configurations as customarily happen with object oriented and heap manipulating programs. JBSE helps you in this task by offering a comprehensive set of techniques and languages for expressing assumptions and assertions. None of the tools we are currently aware of offers all of them.</p>
+<p>Specifying good verification properties is not always easy, especially when inputs are complex object configurations as customarily happen with object oriented and heap manipulating programs. JBSE helps you in this task by offering a comprehensive set of techniques and languages for expressing assumptions and assertions. None of the tools we are currently aware of offers all of them. This allows JBSE to execute and analyze a wide spectrum of Java programs, including programs that manipulate arrays.</p>
+
+<p>Another feature of JBSE is its speed. According to our microbenchmarks it is among the fastest symbolic executors for Java bytecode. Of course you must consider all the standard caveats about the (scarce) generality of microbenchmarks, but we have not yet encountered a case study where JBSE is meaningfully slower than other approaches.</p>
 
 <h3>
 <a id="what-are-its-limitations" class="anchor" href="#what-are-its-limitations" aria-hidden="true"><span class="octicon octicon-link"></span></a>What are its limitations?</h3>
@@ -53,12 +55,17 @@
 <h3>
 <a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
 
-<p>The contributions to JBSE extend over a very long period, and we lost track to the exact authors of all of them. The current maintainer of JBSE is Pietro Braione (<a href="https://github.com/pietrobraione" class="user-mention">@pietrobraione</a>), with contributions by Giovanni Denaro. Marco Gaboardi wrote the initial implementation of JBSE. Diego Piazza contributed to develop the Z3 interface.</p>
+<p>The contributions to JBSE extend over a very long period. The current maintainer of JBSE is Pietro Braione (<a href="https://github.com/pietrobraione" class="user-mention">@pietrobraione</a>), with contributions by Giovanni Denaro especially on the rewriting engine. Marco Gaboardi wrote the initial implementation of JBSE. Diego Piazza contributed to develop the Z3 interface.</p>
 
 <h3>
 <a id="disclaimer" class="anchor" href="#disclaimer" aria-hidden="true"><span class="octicon octicon-link"></span></a>Disclaimer</h3>
 
-<p>JBSE is a research prototype offered as-is, and we disclaim any expressed or implied warranty on its correctness, quality, or even fitness for a particular purpose. By using it you implicitly grant its authors and their organization as non liable for any direct or consequent damage that may derive from its use, for any definition of liability.</p>
+<p>JBSE is a research prototype offered as-is, and we disclaim any expressed or implied warranty on its correctness, quality, or even fitness for a particular purpose. By using JBSE you implicitly acknowledge its authors and the organization they belong to as non liable for any direct or consequent damage that may derive from its use, for any definition of liability. See the <a href="https://github.com/pietrobraione/jbse/blob/master/LICENSE.txt">license</a> for more information.</p>
+
+<h3>
+<a id="more-information" class="anchor" href="#more-information" aria-hidden="true"><span class="octicon octicon-link"></span></a>More information</h3>
+
+<p>A user manual is still not available. In the meantime you can refer to the publications section at the <a href="https://sites.google.com/site/pietrobraione/home">homepage of Pietro Braione</a>.</p>
 
 <h3>
 <a id="support-or-contact" class="anchor" href="#support-or-contact" aria-hidden="true"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
