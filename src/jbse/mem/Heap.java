@@ -92,17 +92,21 @@ final class Heap implements Cloneable {
     
     @Override
     public String toString() {
-        String tmpRet = "[";
-        int j = 0;
+        final StringBuilder buf = new StringBuilder();
+        buf.append("[");
+        boolean isFirst = true;
         for (Map.Entry<Long, Objekt> e : this.objects.entrySet()) {
-            tmpRet += e.getKey() + ":";
-            tmpRet += e.getValue().toString();
-            if (j < this.objects.size() - 1) 
-            	tmpRet += ", ";
-            j++;
+            if (isFirst) {
+                isFirst = false;
+            } else {
+                buf.append(", ");
+            }
+            buf.append(e.getKey());
+            buf.append(":");
+            buf.append(e.getValue().toString());
         }
-        tmpRet += "]";
-        return(tmpRet);
+        buf.append("]");
+        return buf.toString();
     }
     
     @Override

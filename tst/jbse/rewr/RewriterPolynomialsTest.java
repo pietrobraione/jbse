@@ -16,14 +16,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class RewriterPolynomialsTest {
-	CalculatorRewriting calc, calcRaw;
+	CalculatorRewriting calc;
 	
 	@Before
 	public void before() {
 		calc = new CalculatorRewriting();
 		calc.addRewriter(new RewriterOperationOnSimplex());
 		calc.addRewriter(new RewriterPolynomials());
-		calcRaw = new CalculatorRewriting();
 	}
 	
 	@Test

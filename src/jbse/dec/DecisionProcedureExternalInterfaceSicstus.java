@@ -73,6 +73,8 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 		private int port = -1;
 		private Process process = null;
 		private Exception e = null;
+		private BufferedWriter in;
+		private BufferedReader err;
 
 		public InitThread(String sicstusPath) {
 			this.sicstusPath = sicstusPath;
@@ -81,30 +83,28 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 		@Override
 		public void run() {
 			try {
-				//launches sicstus
-				final String command = this.sicstusPath + "sicstus -f";
-				this.process = Runtime.getRuntime().exec(command);
+			    synchronized(this) {
+			        //launches sicstus
+			        final String command = this.sicstusPath + "sicstus -f";
+			        this.process = Runtime.getRuntime().exec(command);
 
-				//takes its stdin and stderr
-				final BufferedWriter in =
-						new BufferedWriter(new OutputStreamWriter(this.process.getOutputStream()));
-				final BufferedReader err =
-						new BufferedReader(new InputStreamReader(this.process.getErrorStream()));
+			        //takes its stdin and stderr
+			        this.in = new BufferedWriter(new OutputStreamWriter(this.process.getOutputStream()));
+			        this.err = new BufferedReader(new InputStreamReader(this.process.getErrorStream()));
 
-				//sends the server code to sicstus
-				in.write(SERVER_PL); 
-				in.flush();
-				
-				//scans stderr until it finds the port number and stores it 
-				String line;
-				while ((line = err.readLine()) != null) {
-					if (line.length() > 0 && line.startsWith("port:")) {
-					    synchronized(this) {
-					        port = Integer.parseInt(line.substring(5)); // e.g, port:4711
-					    }
-						break;
-					}
-				}
+			        //sends the server code to sicstus
+			        in.write(SERVER_PL); 
+			        in.flush();
+
+			        //scans stderr until it finds the port number and stores it 
+			        String line;
+			        while ((line = err.readLine()) != null) {
+			            if (line.length() > 0 && line.startsWith("port:")) {
+			                port = Integer.parseInt(line.substring(5)); // e.g, port:4711
+			                break;
+			            }
+			        }
+                }
 			} catch (Exception e) {
                 synchronized(this) {
                     this.e = e;
@@ -133,6 +133,20 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 		}
 
 		public synchronized void shutdown(int timeout) throws InterruptedException {
+		    try {
+		        if (this.in != null) {
+		            this.in.close();
+		        }
+		    } catch (IOException e) {
+		        //does nothing
+		    }
+            try {
+                if (this.err != null) {
+                    this.err.close();
+                }
+            } catch (IOException e) {
+                //does nothing
+            }
 			if (!this.ready) {
 				wait(timeout);
 			}

@@ -198,20 +198,23 @@ final class PathCondition implements Cloneable {
     
     @Override
     public String toString() {
-    	String retVal = "";
-    	boolean doneFirst = false;
+    	final StringBuilder buf = new StringBuilder();
+    	boolean isFirst = true;
     	for (Clause c : this.clauses) {
-    		if (doneFirst) {
-    			retVal += " && ";
+    		if (isFirst) {
+    		    isFirst = false;
+    		} else {
+    		    buf.append(" && ");
     		}
-    		doneFirst = true;
-    		retVal += c.toString();
+    		buf.append(c.toString());
     	}
     	
-    	if (retVal.equals("")) {
-    		retVal = "true";
+    	final String bufString = buf.toString();
+    	if (bufString.isEmpty()) {
+    		return "true";
+    	} else {
+    	    return bufString;
     	}
-    	return retVal;
     }
     
     @Override

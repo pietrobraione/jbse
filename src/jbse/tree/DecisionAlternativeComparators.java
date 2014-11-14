@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 
+import jbse.common.exc.UnexpectedInternalException;
+
 /**
  * Maps {@code DecisionAlternative} subclasses to the {@code Comparator}s 
  * that impose a canonical order on how the different 
@@ -112,7 +114,7 @@ public class DecisionAlternativeComparators {
 					} else {
 						return -1;
 					}
-				} else {
+				} else if (o1 instanceof DecisionAlternativeLFLoadRefExpands) {
 					if (o2 instanceof DecisionAlternativeLFLoadRefExpands) {
 						DecisionAlternativeLFLoadRefExpands darc1 = (DecisionAlternativeLFLoadRefExpands) o1;
 						DecisionAlternativeLFLoadRefExpands darc2 = (DecisionAlternativeLFLoadRefExpands) o2;
@@ -120,6 +122,8 @@ public class DecisionAlternativeComparators {
 					} else {
 						return 1;
 					}
+				} else {
+				    throw new UnexpectedInternalException("Undetected subclass of DecisionAlternativeLFLoad: " + o1.getClass());
 				}
 			}
 		};
@@ -214,7 +218,7 @@ public class DecisionAlternativeComparators {
 					} else if (o2 instanceof DecisionAlternativeAloadRefExpands) {
 						final DecisionAlternativeAloadRefExpands daarc1 = (DecisionAlternativeAloadRefExpands) o1;
 						final DecisionAlternativeAloadRefExpands daarc2 = (DecisionAlternativeAloadRefExpands) o2;
-						return -(daarc1.getClassNameOfTargetObject().compareTo(daarc2.getClassNameOfTargetObject()));
+						return daarc2.getClassNameOfTargetObject().compareTo(daarc1.getClassNameOfTargetObject());
 					} else {
 						return 1;
 					}

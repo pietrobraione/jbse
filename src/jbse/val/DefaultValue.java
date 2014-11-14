@@ -32,11 +32,6 @@ public final class DefaultValue extends Value {
 	}
 	
 	@Override
-	public DefaultValue clone() {
-		return this;
-	}
-	
-	@Override
 	public String toString() {
 		return "<DEFAULT>";
 	}

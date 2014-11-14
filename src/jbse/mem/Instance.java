@@ -46,16 +46,21 @@ public class Instance extends Objekt {
     
     @Override
     public String toString() {
-        String tmp = "[Class:" + this.type + ", Fields:{";
-        int i = 0;
+        final StringBuffer buf = new StringBuffer();
+        buf.append("[Class:");
+        buf.append(this.type);
+        buf.append(", Fields:{");
+        boolean isFirst = true;
         for (Map.Entry<String, Variable> e : this.fields.entrySet()) {
-            tmp += e.getValue().toString();
-            if (i < this.fields.entrySet().size() - 1)
-            	tmp += ", ";
-            i++;
+            if (isFirst) {
+                isFirst = false;
+            } else {
+                buf.append(", ");
+            }
+            buf.append(e.getValue().toString());
         }
-        tmp += "}]";
-        return tmp;
+        buf.append("}]");
+        return buf.toString();
     }
     
     @Override

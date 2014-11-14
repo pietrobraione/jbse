@@ -38,7 +38,7 @@ public final class SEInit {
 	private State createInitialState(ExecutionContext ctx) 
 	throws InvalidClassFileFactoryClassException, InitializationException, 
 	DecisionException {
-		final State state = new State(ctx.getClasspath(), ctx.classFileFactoryClass, ctx.expansionBackdoor, ctx.calc);
+		final State state = new State(ctx.classpath, ctx.classFileFactoryClass, ctx.expansionBackdoor, ctx.calc);
 
 		//adds a method frame for the initial method invocation
 		try {

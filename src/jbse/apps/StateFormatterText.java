@@ -276,9 +276,11 @@ public abstract class StateFormatterText implements StateFormatter {
 		}
 		boolean skipComma = true;
 		boolean hasUnknownValues = false;
+		final StringBuilder buf = new StringBuilder();
 		for (Array.AccessOutcomeIn e : a.values()) {
 			if (a.hasSimpleRep()) {
-				str += (skipComma ? "" : ", ") + formatArrayEntry(s, e, false);
+			    buf.append(skipComma ? "" : ", ");
+			    buf.append(formatArrayEntry(s, e, false));
 				if (!printAsString) {
 					skipComma = false;
 				}
@@ -287,10 +289,13 @@ public abstract class StateFormatterText implements StateFormatter {
 				if (entryFormatted == null) {
 					hasUnknownValues = true;
 				} else {
-					str += lineSep + indentCurrent + entryFormatted;
+				    buf.append(lineSep);
+				    buf.append(indentCurrent);
+				    buf.append(entryFormatted);
 				}
 			}
 		}
+		str += buf.toString();
 		if (printAsString) {
 			str += "\"";
 		}
@@ -321,15 +326,22 @@ public abstract class StateFormatterText implements StateFormatter {
 	}
 	
 	private static String formatInstance(State s, Instance i, boolean breakLines, String indentTxt, String indentCurrent) {
-		String str = "";
-        str += indentCurrent + "Class: " + i.getType();
+		final StringBuilder buf = new StringBuilder();
+		buf.append(indentCurrent);
+		buf.append("Class: ");
+		buf.append(i.getType());
         int z = 0;
 		final String lineSep = (breakLines ? LINE_SEP : "");
         for (Map.Entry<String, Variable> e : i.fields().entrySet()) {
-        	str +=  lineSep + indentCurrent + "Field[" + z + "]: " + formatVariable(s, e.getValue());
-            z++;
+            buf.append(lineSep);
+            buf.append(indentCurrent);
+            buf.append("Field[");
+            buf.append(z);
+            buf.append("]: ");
+            buf.append(formatVariable(s, e.getValue()));
+            ++z;
         }
-        return str;
+        return buf.toString();
 	}
 	
 	
@@ -396,32 +408,46 @@ public abstract class StateFormatterText implements StateFormatter {
 	}
 	
 	private static String formatOperandStack(State s, Frame f, boolean breakLines, String indentTxt, String indentCurrent) {
-		final String lineSep = (breakLines ? LINE_SEP : "");
-        String tmp = indentCurrent;
+        final StringBuilder buf = new StringBuilder();
+        buf.append(indentCurrent);
+        final String lineSep = (breakLines ? LINE_SEP : "");
         int i = 0;
+        final int last = f.values().size() - 1;
         for (Value v : f.values()) {
-            tmp += "Operand[" + i +"]: " + formatValue(s, v) + " " + formatType(v);
-            if (i < f.values().size() - 1)  {
-            	tmp += lineSep + indentCurrent;
+            buf.append("Operand[");
+            buf.append(i);
+            buf.append("]: ");
+            buf.append(formatValue(s, v));
+            buf.append(" ");
+            buf.append(formatType(v));
+            if (i < last)  {
+                buf.append(lineSep);
+                buf.append(indentCurrent);
             }
-            i++;
+            ++i;
         }
-        return(tmp);
+        return buf.toString();
 	}
 	
 	private static String formatLocalVariables(State s, Frame f, boolean breakLines, String indentTxt, String indentCurrent) {
-		final String lineSep = (breakLines ? LINE_SEP : "");
-        String tmp = indentCurrent;
+        final StringBuilder buf = new StringBuilder();
+        buf.append(indentCurrent);
         boolean isFirst = true;
         final Map<Integer, Variable> lva = f.localVariables();
+        final String lineSep = (breakLines ? LINE_SEP : "");
        	for (int i : lva.keySet()) {
-            if (!isFirst) {
-            	tmp += lineSep + indentCurrent;
+            if (isFirst) {
+                isFirst = false;
+            } else {
+                buf.append(lineSep);
+                buf.append(indentCurrent);
             }
-            tmp += "Variable[" + i + "]: "+ formatVariable(s, lva.get(i));
-            isFirst = false;
+            buf.append("Variable[");
+            buf.append(i);
+            buf.append("]: ");
+            buf.append(formatVariable(s, lva.get(i)));
         }
-        return tmp;
+        return buf.toString();
 	}
 	
 	private static String sourceLine(Frame f, List<String> srcPath) {

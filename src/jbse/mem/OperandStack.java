@@ -68,16 +68,19 @@ class OperandStack implements Cloneable {
      * Returns a string representation for the operand stack
      */
     public String toString() {
-        String tmp = "{";
-        int i = 0;
+        final StringBuilder buf = new StringBuilder();
+        buf.append("{");
+        boolean isFirst = true;
         for (Value v : this.valueStack) {
-            tmp += v.toString();
-            if (i < this.valueStack.size() - 1) 
-            	tmp += ", ";
-            i++;
+            if (isFirst) {
+                isFirst = false;
+            } else {
+                buf.append(", ");
+            }
+            buf.append(v.toString());
         }
-        tmp += "}";
-        return(tmp);
+        buf.append("}");
+        return buf.toString();
     }
     
     @Override

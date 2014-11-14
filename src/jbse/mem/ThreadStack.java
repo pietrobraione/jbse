@@ -104,16 +104,21 @@ class ThreadStack implements Cloneable {
     
     @Override
     public String toString() {
-    	String tmpRet = "[";
+    	final StringBuilder buf = new StringBuilder();
+    	buf.append("[");
         int j = 0;
+        final int last = this.frameStack.size() - 1;
         for (Frame f : this.frameStack) {
-            tmpRet +=  j + ":" + f.toString(); 
-            if (j < this.frameStack.size() - 1) 
-            	tmpRet += ", ";
-            j++;
+            buf.append(j);
+            buf.append(":");
+            buf.append(f.toString()); 
+            if (j < last) {
+                buf.append(", ");
+            }
+            ++j;
         }
-        tmpRet += "]";
-        return(tmpRet);
+        buf.append("]");
+        return buf.toString();
     }
     
     @Override

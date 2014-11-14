@@ -178,7 +178,7 @@ public class State implements Cloneable {
 	 * @return a {@link Classpath}.
 	 */
 	public Classpath getClasspath() {
-		return this.classHierarchy.getClassPath();
+		return this.classHierarchy.getClasspath();
 	}
 	
 	/**

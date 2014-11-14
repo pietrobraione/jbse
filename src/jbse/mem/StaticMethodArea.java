@@ -36,19 +36,26 @@ public class StaticMethodArea implements Cloneable {
     
 	@Override
 	public String toString() {
-        String tmpRet = "[";
-        int j = 0;
-        Set<Map.Entry<String, Klass>> entries = this.objTable.entrySet();
-        for (Map.Entry<String, Klass> ee : entries) {
-        	Klass k = ee.getValue();
-        	String c = ee.getKey();
-            tmpRet +=  c + ":" + "{" + k.toString() + "}";
-            if (j < entries.size() - 1) 
-            	tmpRet += ", ";
-            j++;
+        final StringBuilder buf = new StringBuilder(); 
+        buf.append("[");
+        boolean isFirst = true;
+        final Set<Map.Entry<String, Klass>> entries = this.objTable.entrySet();
+        for (Map.Entry<String, Klass> e : entries) {
+            if (isFirst) {
+                isFirst = false;
+            } else {
+                buf.append(", ");
+            }
+        	final Klass k = e.getValue();
+        	final String name = e.getKey();
+        	buf.append(name);
+        	buf.append(":");
+        	buf.append("{");
+        	buf.append(k.toString());
+        	buf.append("}");
         }
-        tmpRet +="]";
-        return(tmpRet);
+        buf.append("]");
+        return buf.toString();
 	}
     
 	@Override

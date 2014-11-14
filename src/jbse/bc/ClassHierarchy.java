@@ -64,7 +64,7 @@ public class ClassHierarchy {
 	 * @return a {@link Classpath} (clone of that used
 	 *         to create this hierarchy).
 	 */
-	public Classpath getClassPath() {
+	public Classpath getClasspath() {
 		return this.cp.clone();
 	}
 

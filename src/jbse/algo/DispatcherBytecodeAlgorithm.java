@@ -556,7 +556,7 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm> {
 		}
 	}
 
-	private class DispatchStrategy_UNDEFINED implements Dispatcher.DispatchStrategy<Algorithm> {
+	private static class DispatchStrategy_UNDEFINED implements Dispatcher.DispatchStrategy<Algorithm> {
 		private String bcName;
 		public DispatchStrategy_UNDEFINED(String bcName) { this.bcName = bcName; }
 		public Algorithm doIt() throws UndefInstructionException {
@@ -564,7 +564,7 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm> {
 		}
 	}
 
-	private class DispatchStrategy_INTERNALERROR implements Dispatcher.DispatchStrategy<Algorithm> {
+	private static class DispatchStrategy_INTERNALERROR implements Dispatcher.DispatchStrategy<Algorithm> {
 		public Algorithm doIt() {
         	throw new UnexpectedInternalException("this bytecode does not exist");
 		}

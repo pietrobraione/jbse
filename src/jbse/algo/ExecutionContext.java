@@ -29,7 +29,7 @@ import jbse.val.Reference;
  */
 public final class ExecutionContext {
 	/** The {@link Classpath}.*/
-	private final Classpath classpath;
+	final Classpath classpath;
 	
 	/** 
 	 * The {@link DispatcherMeta} for handling methods with 
@@ -140,16 +140,6 @@ public final class ExecutionContext {
 		this.nativeInvoker = nativeInvoker;
     }
     
-    /**
-     * Returns the classpath.
-     * 
-     * @return a {@link Classpath} object, a clone of that
-     *         used for initialization.
-     */
-	public Classpath getClasspath() {
-		return this.classpath;
-	}
-
     /**
      * Sets the initial state. To be invoked whenever 
      * the engine parameters object provided through the 

@@ -123,15 +123,22 @@ public final class ReferenceArrayImmaterial extends Reference {
 
     @Override
     public String toString() {
-        String retVal = "{R<";
+        final StringBuilder buf = new StringBuilder();
+        buf.append("{R<");
+        boolean isFirst = true;
         for (Primitive p : this.arrayLength) {
-            if (p == null) {
-                retVal += "*";
+            if (isFirst) {
+                isFirst = false;
             } else {
-                retVal += p.toString();
+                buf.append(", ");
+            }
+            if (p == null) {
+                buf.append("*");
+            } else {
+                buf.append(p.toString());
             }
         }
-        retVal += ">}";
-        return retVal;
+        buf.append(">}");
+        return buf.toString();
     }
 }

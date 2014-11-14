@@ -91,7 +91,7 @@ public class RewriterSinCos extends Rewriter {
 		return null;
 	}
 
-	private class SinCosPair {
+	private static class SinCosPair {
 		public SinCosPair(Monomial mFirst, Monomial mSecond, Monomial mFirstDiv) {
 			this.mFirst = mFirst;
 			this.mSecond = mSecond;

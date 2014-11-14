@@ -218,16 +218,19 @@ class LocalVariablesArea implements Cloneable {
      */
     @Override
     public String toString() {
-        String tmp = "[";
+        final StringBuffer buf = new StringBuffer();
+        buf.append("[");
         int j = 0;
-       	for (Map.Entry<Integer, Value> e : values.entrySet()) {
-            tmp += e.getKey() + ":"+ e.getValue();
+        for (Map.Entry<Integer, Value> e : values.entrySet()) {
+            buf.append(e.getKey());
+            buf.append(":");
+            buf.append(e.getValue());
             if (j < values.size() - 1) {
-            	tmp += ", ";
+                buf.append(", ");
             }
-            j++;
+            ++j;
         }
-       	tmp += "]";
-        return tmp;
+        buf.append("]");
+        return buf.toString();
     }
 }

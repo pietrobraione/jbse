@@ -47,14 +47,14 @@ final class SEInvokeUninterpreted implements Algorithm {
 				INVOKEVIRTUAL_OFFSET); //opcode == OP_INVOKEVIRTUAL
 
 		//pops the args and pushes the uninterpreted function symbol 
-		final Value[] args = state.popMethodCallArgs(methodSignatureResolved, false);
-		final char returnType = Type.splitReturnValueDescriptor(methodSignatureResolved.getDescriptor()).charAt(0);
+		final Value[] args = state.popMethodCallArgs(this.methodSignatureResolved, false);
+		final char returnType = Type.splitReturnValueDescriptor(this.methodSignatureResolved.getDescriptor()).charAt(0);
 		if (Type.isPrimitive(returnType)) {
 			final Primitive[] argsPrimitive;
 			try {
 				argsPrimitive = jbse.mem.Util.toPrimitive(opcode == OP_INVOKESTATIC ? args : Arrays.copyOfRange(args, 1, args.length));
 			} catch (InvalidTypeException e) {
-				throw new UninterpretedUnsupportedException("The method " + methodSignatureResolved + " has a nonprimitive argument other than 'this'."); 
+				throw new UninterpretedUnsupportedException("The method " + this.methodSignatureResolved + " has a nonprimitive argument other than 'this'."); 
 			}
 			try {
 				state.push(state.getCalculator().applyFunction(returnType, this.functionName, argsPrimitive));
@@ -63,7 +63,7 @@ final class SEInvokeUninterpreted implements Algorithm {
 				throw new UnexpectedInternalException(e);
 			}
 		} else {
-			throw new UninterpretedUnsupportedException("The method " + methodSignatureResolved + " does not return a primitive value."); 
+			throw new UninterpretedUnsupportedException("The method " + this.methodSignatureResolved + " does not return a primitive value."); 
 		}
 		try {
 			state.incPC(offset);

@@ -30,7 +30,12 @@ final class SEN2n implements Algorithm {
 		final Value castValue;
 		if (value instanceof Primitive) {
 			try {
-				castValue = ((Primitive) value).to(castType);
+			    final Primitive fromValue = (Primitive) value;
+			    if (fromValue.getType() != this.type) {
+	                throwVerifyError(state);
+	                return;
+			    }
+				castValue = fromValue.to(this.castType);
 			} catch (InvalidTypeException e) {
 	            throwVerifyError(state);
 				return;
