@@ -11,4 +11,5 @@ Not in priority order:
 * Test generation by concolic execution.
 * Use full classpath scanning for reference resolution.
 * Fix all the TODOs in the source.
-* Run Checkstyle, PMD and Findbugs.
+* Run Findbugs, Checkstyle, PMD and improve the quality of code.
+* Add license and copyright at the beginning of each source file.

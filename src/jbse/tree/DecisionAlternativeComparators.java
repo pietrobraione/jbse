@@ -56,9 +56,9 @@ public class DecisionAlternativeComparators {
 	}
 
     /**
-     * Default comparator for <code>DecisionAlternativeSwitch</code>s.
+     * Default comparator for {@link DecisionAlternativeSwitch}s.
      * 
-     * @return A {@link Comparator}{@code <}{@link DecisionAlternativeSwitch}<code>&gt;</code> where
+     * @return A {@link Comparator}{@code <}{@link DecisionAlternativeSwitch}{@code >} where
      *         {@code default_alt < nondefault_alt} and {@code nondefault1 < nondefault2}
      *         iff {@code nondefault1.value > nondefault2.value}.
      */
@@ -97,14 +97,25 @@ public class DecisionAlternativeComparators {
 	private static Comparator<DecisionAlternativeLFLoad> defaultComparatorDecisionAlternativeLFLoad() { 	
 		return new Comparator<DecisionAlternativeLFLoad>() {
 			public int compare(DecisionAlternativeLFLoad o1, DecisionAlternativeLFLoad o2) {
-				if (o1 instanceof DecisionAlternativeLFLoadRefNull) {
-					if (o2 instanceof DecisionAlternativeLFLoadRefNull) {
+                if (o1 instanceof DecisionAlternativeLFLoadResolved) {
+                    if (o2 instanceof DecisionAlternativeLFLoadResolved) {
+                        final DecisionAlternativeLFLoadResolved darr1 = (DecisionAlternativeLFLoadResolved) o1;
+                        final DecisionAlternativeLFLoadResolved darr2 = (DecisionAlternativeLFLoadResolved) o2;
+                        return darr2.getValueToLoad().toString().compareTo(darr1.getValueToLoad().toString());
+                    } else {
+                        return -1;
+                    }
+                } else if (o1 instanceof DecisionAlternativeLFLoadRefNull) {
+                    if (o2 instanceof DecisionAlternativeLFLoadResolved) {
+                        return 1;
+                    } else if (o2 instanceof DecisionAlternativeLFLoadRefNull) {
 						return 0;
 					} else {
 						return -1;
 					}
 				} else if (o1 instanceof DecisionAlternativeLFLoadRefAliases) {
-					if (o2 instanceof DecisionAlternativeLFLoadRefNull) {
+					if (o2 instanceof DecisionAlternativeLFLoadResolved || 
+					    o2 instanceof DecisionAlternativeLFLoadRefNull) {
 						return 1;
 					} else if (o2 instanceof DecisionAlternativeLFLoadRefAliases) {
 						final DecisionAlternativeLFLoadRefAliases daro1 = (DecisionAlternativeLFLoadRefAliases) o1;
@@ -116,8 +127,8 @@ public class DecisionAlternativeComparators {
 					}
 				} else if (o1 instanceof DecisionAlternativeLFLoadRefExpands) {
 					if (o2 instanceof DecisionAlternativeLFLoadRefExpands) {
-						DecisionAlternativeLFLoadRefExpands darc1 = (DecisionAlternativeLFLoadRefExpands) o1;
-						DecisionAlternativeLFLoadRefExpands darc2 = (DecisionAlternativeLFLoadRefExpands) o2;
+					    final DecisionAlternativeLFLoadRefExpands darc1 = (DecisionAlternativeLFLoadRefExpands) o1;
+					    final DecisionAlternativeLFLoadRefExpands darc2 = (DecisionAlternativeLFLoadRefExpands) o2;
 						return darc2.getClassNameOfTargetObject().compareTo(darc1.getClassNameOfTargetObject());
 					} else {
 						return 1;
@@ -185,12 +196,12 @@ public class DecisionAlternativeComparators {
 		return new Comparator<DecisionAlternativeAload>() {
 			public int compare(DecisionAlternativeAload o1, DecisionAlternativeAload o2) {
 				if (o1 instanceof DecisionAlternativeAloadResolved) {
-					if (!(o2 instanceof DecisionAlternativeAloadResolved)) {
-						return -1;
+					if (o2 instanceof DecisionAlternativeAloadResolved) {
+                        final DecisionAlternativeAloadResolved daav1 = (DecisionAlternativeAloadResolved) o1;
+                        final DecisionAlternativeAloadResolved daav2 = (DecisionAlternativeAloadResolved) o2;
+                        return daav2.getValueToLoad().toString().compareTo(daav1.getValueToLoad().toString());
 					} else {
-						DecisionAlternativeAloadResolved daav1 = (DecisionAlternativeAloadResolved) o1;
-						DecisionAlternativeAloadResolved daav2 = (DecisionAlternativeAloadResolved) o2;
-						return daav2.getValueToLoad().toString().compareTo(daav1.getValueToLoad().toString());
+                        return -1;
 					}
 				} else if (o1 instanceof DecisionAlternativeAloadRefNull) {
 					if (o2 instanceof DecisionAlternativeAloadResolved) {
@@ -202,7 +213,7 @@ public class DecisionAlternativeComparators {
 					}
 				} else if (o1 instanceof DecisionAlternativeAloadRefAliases) {
 					if (o2 instanceof DecisionAlternativeAloadResolved ||
-							o2 instanceof DecisionAlternativeAloadRefNull) {
+					    o2 instanceof DecisionAlternativeAloadRefNull) {
 						return 1;
 					} else if (o2 instanceof DecisionAlternativeAloadRefAliases) {
 						final DecisionAlternativeAloadRefAliases daari1 = (DecisionAlternativeAloadRefAliases) o1;
@@ -222,12 +233,14 @@ public class DecisionAlternativeComparators {
 					} else {
 						return 1;
 					}
-				} else {
+				} else if (o1 instanceof DecisionAlternativeAloadOut) {
 					if (o2 instanceof DecisionAlternativeAloadOut) {
 						return 0;
 					} else {
 						return 1;
 					}
+                } else {
+                    throw new UnexpectedInternalException("Undetected subclass of DecisionAlternativeAload: " + o1.getClass());
 				}
 			}
 		};

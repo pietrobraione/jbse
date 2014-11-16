@@ -1,14 +1,10 @@
 package jbse.algo;
 
-import static jbse.common.Util.byteCat;
 import static jbse.mem.Util.isResolvedSymbolicReference;
 
-import jbse.algo.exc.JavaReifyException;
 import jbse.algo.exc.PleaseDoNativeException;
 import jbse.bc.ClassFile;
-import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
-import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidIndexException;
@@ -18,11 +14,9 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Klass;
-import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
-import jbse.mem.exc.OperandStackEmptyException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
@@ -316,61 +310,6 @@ public class Util {
 				return false;
 			}
 		}
-	}
-	
-	static boolean checkCastInstanceof(State runningState) 
-	throws JavaReifyException, ThreadStackEmptyException {
-		final int index;
-		try {
-			final byte tmp1 = runningState.getInstruction(1);
-	        final byte tmp2 = runningState.getInstruction(2);
-	        index = byteCat(tmp1,tmp2);
-		} catch (InvalidProgramCounterException e) {
-			throw new JavaReifyException(VERIFY_ERROR);
-		}
-
-        //gets in the current class constant pool the name 
-        //of the class
-        final ClassHierarchy hier = runningState.getClassHierarchy();
-        final String currentClassName = runningState.getCurrentMethodSignature().getClassName();	
-        final String classSignature;
-		try {
-			classSignature = hier.getClassFile(currentClassName).getClassSignature(index);
-		} catch (ClassFileNotFoundException | InvalidIndexException e) {
-			throw new JavaReifyException(VERIFY_ERROR);
-		}
-
-        //performs resolution
-        final String classSignatureResolved;
-		try {
-			classSignatureResolved = hier.resolveClass(currentClassName, classSignature);
-		} catch (ClassFileNotFoundException e) {
-			throw new JavaReifyException(NO_CLASS_DEFINITION_FOUND_ERROR);
-		} catch (ClassFileNotAccessibleException e) {
-			throw new JavaReifyException(ILLEGAL_ACCESS_ERROR);
-		}
-
-        //gets from the operand stack the reference to the 
-        //object to be checked
-        final Reference tmpValue;
-		try {
-			tmpValue = (Reference) runningState.top();
-		} catch (OperandStackEmptyException e) {
-			throw new JavaReifyException(VERIFY_ERROR);
-		}
-        
-        //checks whether the object's class is a subclass 
-        //of the class name from the constant pool
-        final boolean isSubclass;
-        if (runningState.isNull(tmpValue)) {
-        	isSubclass = true;  //the null value belongs to all classes
-        } else {
-	        final Objekt objS = runningState.getObject(tmpValue);
-	        String classS = objS.getType();
-	        isSubclass = hier.isSubclass(classS, classSignatureResolved);
-        }
-        
-        return isSubclass;
 	}
 
 	/** 
