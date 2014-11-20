@@ -670,7 +670,7 @@ public class Array extends Objekt {
 	 */
 	public String valueString() {
 		if (this.type.equals("" + Type.ARRAYOF + Type.CHAR) && isConcrete()) {
-			StringBuffer buf = new StringBuffer();
+		    final StringBuilder buf = new StringBuilder();
 			for (AccessOutcomeIn e : this.values) {
 				buf.append(e.returnedValue.toString());
 			}
@@ -684,7 +684,7 @@ public class Array extends Objekt {
 	public String toString() {
 		String str = "[Type:" + this.type + ", Length:" + this.getLength().toString() + ", Elements: {";
 		boolean firstEntryPassed = false;
-		StringBuffer buf = new StringBuffer();
+		final StringBuilder buf = new StringBuilder();
 		for (AccessOutcomeIn e : this.values) {
 			if (firstEntryPassed) {
 				buf.append(", ");

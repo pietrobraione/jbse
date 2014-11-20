@@ -614,7 +614,7 @@ class Polynomial {
 		if (this.rep.isEmpty()) {
 			return (Type.isPrimitiveIntegral(this.type) ? "0" : "0.0");
 		}
-		StringBuffer sb = new StringBuffer();
+		final StringBuilder sb = new StringBuilder();
 		boolean firstDone = false;
 		for (Entry<Monomial, Simplex> e : this.rep.entrySet()) {
 			if (firstDone) {

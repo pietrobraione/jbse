@@ -988,7 +988,7 @@ public class Run {
 	 */
 	private static String banner(String s, boolean branch) {
 		String retVal = (branch ? (".:: " + s + " ::. ") : (s + " "));
-		StringBuffer buf = new StringBuffer();
+		final StringBuilder buf = new StringBuilder();
 		for (int i = retVal.length() + 1; i <= BANNER_LENGTH; i++) {
 			buf.append(BANNER_CHAR);
 		}

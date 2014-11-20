@@ -97,7 +97,7 @@ public final class FunctionApplication extends Primitive {
 		this.hashCode = tmpHashCode;
 		
 		//calculates toString
-		final StringBuffer buf = new StringBuffer();
+		final StringBuilder buf = new StringBuilder();
 		buf.append(this.operator + "(");
 		boolean first = true;
 		for (Primitive p : this.args) {

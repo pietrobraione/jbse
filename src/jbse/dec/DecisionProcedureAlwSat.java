@@ -126,7 +126,7 @@ public class DecisionProcedureAlwSat implements DecisionProcedure {
 	        
 	        @Override
 	        public String toString() {
-	        	final StringBuffer buf = new StringBuffer();
+	        	final StringBuilder buf = new StringBuilder();
 				boolean firstDone = false;
 				for (Iterator<Clause> it = cstack.descendingIterator(); it.hasNext(); ) {
 					if (firstDone) {

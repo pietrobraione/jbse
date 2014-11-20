@@ -403,7 +403,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 	private boolean hasSolution(int[] model, ArrayList<String> atomicPredicatesPositive, ArrayList<String> atomicPredicatesNegative, String integerVariables) 
 	throws IOException {
 		try {
-			final StringBuffer query = new StringBuffer("{");
+			final StringBuilder query = new StringBuilder("{");
 			boolean firstDone = false;
 			for (int v : model) {
 				if (firstDone) {
@@ -776,11 +776,11 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 	 *
 	 */
 	private class SicstusParserAtomicPredicates implements PrimitiveVisitor {
-		String termPositive = "";
-		String termNegative = "";
-		StringBuffer integerVariables = new StringBuffer();
-		HashSet<Primitive> integerVariablesDone = new HashSet<Primitive>();
+		final StringBuilder integerVariables = new StringBuilder();
+		final HashSet<Primitive> integerVariablesDone = new HashSet<Primitive>();
 		ArrayList<Term> narrowedValues = new ArrayList<Term>();
+        String termPositive = "";
+        String termNegative = "";
 		
 		public SicstusParserAtomicPredicates() { }
 
@@ -856,7 +856,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
                     throw new ExternalProtocolInterfaceException("Wrong function return type");
                 }
 			} else {
-				final StringBuffer resultBuffer = new StringBuffer();
+				final StringBuilder resultBuffer = new StringBuilder();
 				boolean firstDone = false;
 				for (Primitive p : x.getArgs()) {
 					p.accept(this);

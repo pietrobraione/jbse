@@ -275,7 +275,7 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 	}
 	
 	private void rememberPushedDeclarations() {
-		this.v.clearDecl(); //reinitialize stringBuffer decl
+		this.v.clearDecl(); //reinitialize decl
 		this.nSymPushed.add(this.nSymCurrent);
 		this.nSymCurrent = 0;
 	}
@@ -356,7 +356,7 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 	private class Z3ExpressionVisitor implements PrimitiveVisitor {
 		private boolean isBooleanExpression = true;
 		private LinkedHashSet<String> declaredSymbols = new LinkedHashSet<String>();
-		private StringBuffer decl = new StringBuffer();
+		private StringBuilder decl = new StringBuilder();
 		private Stack<String> clauseStack = new Stack<String>();
 		
 		public String popClause() { return this.clauseStack.pop(); }
@@ -364,7 +364,7 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 		public String getDecl() { return this.decl.toString(); }
 		
 		public void clearDecl() {
-			this.decl = new StringBuffer();                       
+			this.decl = new StringBuilder();                       
 		}
 		
 		protected void removeDeclaredSymbols(int nVars) {
@@ -437,8 +437,8 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 		public void visitFunctionApplication(FunctionApplication x) throws Exception {
 			final String operator = x.getOperator();
 			final char type = x.getType();
-			final StringBuffer clause = new StringBuffer();
-			final StringBuffer z3Signature = new StringBuffer();
+			final StringBuilder clause = new StringBuilder();
+			final StringBuilder z3Signature = new StringBuilder();
 			boolean builtIn = false;
 			if (operator.equals(FunctionApplication.ABS)) {
 				if (Type.isPrimitiveIntegral(x.getType())) {

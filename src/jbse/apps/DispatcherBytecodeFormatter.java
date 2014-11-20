@@ -511,7 +511,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 					SwitchTable tab;
 					try {
 						tab = new SwitchTable(f, null, DispatchStrategyFormatSWITCH.this.isTableSwitch);
-						StringBuffer buf = new StringBuffer();
+						final StringBuilder buf = new StringBuilder();
 						for (int val : tab) {
 							int target = f.getPC() + tab.jumpOffset(val);
 							buf.append(val);

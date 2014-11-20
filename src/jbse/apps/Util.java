@@ -148,7 +148,7 @@ public class Util {
 	}
 		
 	public static String formatClauses(Iterable<Clause> assumptions) {
-		final StringBuffer buf = new StringBuffer();
+		final StringBuilder buf = new StringBuilder();
         boolean firstDone = false;
         for (Clause c : assumptions) {
         	if (firstDone) {
@@ -237,7 +237,7 @@ public class Util {
 	}
 	
 	public static String formatFunctionApplication(FunctionApplication f) {
-		final StringBuffer buf = new StringBuffer();
+		final StringBuilder buf = new StringBuilder();
 		buf.append(f.getOperator() + "(");
 		boolean first = true;
 		for (Primitive p : f.getArgs()) {

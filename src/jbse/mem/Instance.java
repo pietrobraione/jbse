@@ -46,7 +46,7 @@ public class Instance extends Objekt {
     
     @Override
     public String toString() {
-        final StringBuffer buf = new StringBuffer();
+        final StringBuilder buf = new StringBuilder();
         buf.append("[Class:");
         buf.append(this.type);
         buf.append(", Fields:{");

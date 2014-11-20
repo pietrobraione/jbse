@@ -255,7 +255,7 @@ class DecisionProcedureExternalInterfaceCVC3 extends DecisionProcedureExternalIn
 	private class CVC3ExpressionVisitor implements PrimitiveVisitor {
 		private boolean isBooleanExpression = true;
 		private HashSet<String> declaredVars = new HashSet<String>();
-		private StringBuffer decl = new StringBuffer();
+		private StringBuilder decl = new StringBuilder();
 		private ArrayDeque<String> clauseStack = new ArrayDeque<String>();
 
 		public String popClause() { return this.clauseStack.pop(); }

@@ -127,7 +127,7 @@ nextRule:
 
 	@Override
 	protected boolean isSatNullImpl(ReferenceSymbolic ref) {
-		final boolean notNull = rulesRepo.someMatchingLICSRulesNotNull(ref);
+		final boolean notNull = this.rulesRepo.someMatchingLICSRulesNotNull(ref);
 		return !notNull;
 	}
 
@@ -140,6 +140,6 @@ nextRule:
 
 	@Override
 	protected boolean isSatNotInitializedImpl(String c) {
-		return rulesRepo.notInitializedClassesContains(c);
+		return this.rulesRepo.notInitializedClassesContains(c);
 	}
 }

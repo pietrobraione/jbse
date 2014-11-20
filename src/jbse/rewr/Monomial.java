@@ -497,7 +497,7 @@ class Monomial implements Comparable<Monomial> {
 
 	@Override
 	public String toString() {
-		StringBuffer sb = new StringBuffer();
+	    final StringBuilder sb = new StringBuilder();
 		sb.append(this.scale.toString());
 		for (Entry<Primitive, Integer> e : this.rep.entrySet()) {
 			sb.append("*");
