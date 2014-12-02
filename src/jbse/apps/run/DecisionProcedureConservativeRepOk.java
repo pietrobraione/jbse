@@ -90,7 +90,11 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 			//this should not happen
 			throw new UnexpectedInternalException(e);
 		}
-		return runConservativeRepOks(sIni);
+		final boolean croTrue = runConservativeRepOks(sIni);
+		if (croTrue) {
+		    return delegateIsSatExpands(r, className);
+		}
+		return false;
 	}
 	
 	@Override
@@ -103,7 +107,11 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 			//this should not happen
 			throw new UnexpectedInternalException(e);
 		}
-		return runConservativeRepOks(sIni);
+        final boolean croTrue = runConservativeRepOks(sIni);
+        if (croTrue) {
+            return delegateIsSatAliases(r, heapPosition, o);
+        }
+        return false;
 	}
 	
 	@Override
@@ -116,7 +124,11 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 			//this should not happen
 			throw new UnexpectedInternalException(e);
 		}
-		return runConservativeRepOks(sIni);
+        final boolean croTrue = runConservativeRepOks(sIni);
+        if (croTrue) {
+            return delegateIsSatNull(r);
+        }
+        return false;
 	}
 	
 	private State makeInitialState() {
