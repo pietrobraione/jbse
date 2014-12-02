@@ -581,6 +581,17 @@ public class Runner {
 	}
 	
 	/**
+	 * Returns the start time, i.e., the time when
+	 * the method {@link #run()} was invoked.
+	 * 
+	 * @return a {@code long}, {@code 0L} if this 
+	 * method is invoked before {@link #run()}.
+	 */
+	public long getStartTime() {
+	    return this.startTime;
+	}
+	
+	/**
 	 * Returns the total number of traces explored until 
 	 * its invocation.
 	 * 

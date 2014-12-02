@@ -289,7 +289,7 @@ public class Run {
 		
 		@Override
 		public void atTimeout() {
-			IO.print(Run.this.log, WARNING_TIMEOUT);
+			IO.println(Run.this.log, WARNING_TIMEOUT);
 		}
 		
 		@Override
@@ -567,7 +567,6 @@ public class Run {
 			IO.printException(Run.this.err, e);
 			return 2;
 		}
-		final long startTime = System.currentTimeMillis();
 		try {
 			this.runner.run();
 		} catch (DecisionException | CannotManageStateException | 
@@ -582,15 +581,17 @@ public class Run {
 			IO.printException(Run.this.err, e);
 			retVal = 2;
 		}
-		final long elapsedTime = System.currentTimeMillis() - startTime;
-		IO.println(this.log, MSG_END + new Date() + ".");
 		
 		// prints statistics
+        final long stopTime = System.currentTimeMillis();
+        final long startTime = this.runner.getStartTime();
+        final long elapsedTime = stopTime - startTime;
 		final long tracesContradictory = 
 				this.runner.getTracesTotal() 
 				- this.tracesSafe 
 				- this.tracesUnsafe
 				- this.runner.getTracesOutOfScope();
+        IO.println(this.log, MSG_END + new Date() + ".");
 		IO.println(this.log, 
 				MSG_END_STATES + this.engine.getAnalyzedStates() + ", "
 				+ MSG_END_TRACES_TOT + this.runner.getTracesTotal() + ", "
@@ -1087,8 +1088,8 @@ public class Run {
 	private static final String WARNING_NO_DECISION_ALTERNATIVES = " contradictory path condition under any alternative. Will handle " 
 		+ "the situation as an undetected assumption violation occurred earlier, but it may be a hint of too strong user-defined constraints.";
 
-	/** Warning: exhausted heap scope. */
-	private static final String WARNING_TIMEOUT = "Timeout: ";
+	/** Warning: timeout. */
+	private static final String WARNING_TIMEOUT = "Timeout.";
 
 	/** Warning: exhausted heap scope. */
 	private static final String WARNING_SCOPE_EXHAUSTED_HEAP = " trace exhausted heap scope.";
