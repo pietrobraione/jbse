@@ -90,7 +90,7 @@ public class RunIf {
 
 Well, that's not *exactly* all. Which parameters should we set, and how?
 
-First, JBSE is a Java Virtual Machine. As with any Java Virtual Machine, be it symbolic or not, we must specify where the binaries to be executed are, in other words, we need to specify the classpath. In this case the classpath will contain two paths, one for the target `smalldemos.ifx.IfExample` class, and one for the `jbse.meta.Analysis` class that contains the `ass3rt` method invoked by `m`. 
+First, JBSE is a Java Virtual Machine. As with any Java Virtual Machine, be it symbolic or not, we must specify where the binaries to be executed are, in other words, we need to specify the classpath. In this case the classpath will contain two paths, one for the target `smalldemos.ifx.IfExample` class, and one for the `jbse.meta.Analysis` class that contains the `ass3rt` method invoked by `m`. Under Eclipse all the binaries are emitted to a hidden `bin` project directory and the implicit execution directory is the root directory of the project. By assuming that you checked out the projects as subdirectories of the workspace directory, you can specify the required paths relative to the root directory of the demo project as follows:
 
 ```Java
 ...
@@ -103,7 +103,7 @@ public class RunIf {
 }
 ``` 
 
-(under Eclipse all the binaries are emitted to a hidden `bin` directory in the project). The `addClasspath` method is varargs, you can specify as many path as you want. Next, we must specify which method JBSE must run (remember, it can run any method). We do it by setting the method's *signature*:
+Note that `addClasspath` is a varargs method, so you can list as many path strings as you want. Next, we must specify which method JBSE must run (remember, it can run any method). We do it by setting the method's *signature*:
 
 ```Java
 ...
@@ -156,7 +156,7 @@ public class RunIf {
 }
 ``` 
 
-Then, we specify which execution steps `Run` must show on the output. By default `Run` prints the whole JVM state (program counter, stack, heap, static memory) after the execution of every bytecode. We can change this behaviour by specifying, e.g., to print the current state after the execution of a *source* statement, or to print only the last state of an execution trace. We will stick with the latter option to minimize the produced output.   
+Then, we specify which execution steps `Run` must show on the output. By default `Run` dumps the whole JVM state (program counter, stack, heap, static memory) after the execution of every bytecode. We can change this behaviour and, e.g., print the current state after the execution of a *source code* statement, or to print only the last state of all the execution traces. We will stick to the latter option to minimize the produced output.   
 
 ```Java
 ...
@@ -175,7 +175,7 @@ public class RunIf {
 }
 ``` 
 
-If you now run the `RunIf.main` method you will obtain an output of this kind:
+By running the `RunIf.main` method you will obtain approximately this kind of output:
 
 ```
 This is the Java Bytecode Symbolic Executor's Run Tool (JBSE v.0.5).
