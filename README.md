@@ -293,7 +293,7 @@ JBSE implements a number of techniques that empower its users by allowing the sp
 
 * Conservative repOk methods: By annotating with the `jbse.meta.annotations.ConservativeRepOk` a parameterless method with boolean return type, JBSE will recognize it as a conservative repOk method for all the objects of that class. JBSE will execute it every time it assumes a new path condition clause. JBSE will pass as `this` parameter it a copy of the (symbolic) initial state specialized on the current path condition plus the new clause. The method must inspect the state and check whether it does not satisfy the assumption (in this case the method must return `false`) or it still might (in this case the method must *conservatively* return true).
 * LICS rules: A LICS rule has a head and a tail. The head is a regular expression describing a set of symbolic references, the tail specifies a constraint on them. For instance, the rule `{ROOT}:list.header(.next)*.value not null` specifies that all the values stored in `list` are not null, and the rule `{ROOT}:list.header(.next)* aliases nothing` forbids the reference to the nodes in `list` to point to the nodes JBSE assumed to be present in `list` earlier, thus excluding the presence of loops in the chain of nodes.
-* Triggers: A trigger is a user-defined instrumentation method that JBSE executes whenever makes some kind of assumptions on some sets of symbolic references, also expressed by means of a regular expression. The main use case for triggers is for updating ghost variables and enforcing further assumptions that cannot be expressed by plain LICS rules. For example, if the linked list has a `size` field we can establish a relationship between the initial value of this fields and the number of the nodes that JBSE assumes to be present in the list during the symbolic execution. This can be done by injecting instrumentation code in the `List` class as follows:
+* Triggers: Triggers are user-defined instrumentation method that JBSE is instructed to execute right after making some assumption on a symbolic reference in a prescribed set, expressed as a regular expression. Triggers are essentially meant to be used for updating ghost variables and enforcing assumptions that cannot be expressed by LICS rules. For example, if the linked list has a `size` field we can establish a relationship between the initial value of this fields and the number of the nodes that JBSE assumes to be present in the list during the symbolic execution. It is sufficient to inject the following instrumentation code in the `List` class:
 
 ```Java
 import static jbse.meta.Analysis.assume;
@@ -324,7 +324,7 @@ public class List {
 }
 ```
 
-and introducing the following trigger rules (the syntax is simplified for the sake of clarity):
+and to fed JBSE by the following trigger rules (the syntax is simplified for the sake of clarity):
 
 ```
 {ROOT}:list expands to instanceof List triggers List:(LList;):_triggerAssumeList
