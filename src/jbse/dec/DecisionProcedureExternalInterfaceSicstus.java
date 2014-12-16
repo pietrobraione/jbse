@@ -501,15 +501,16 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 			
 			//now it is the turn of mangled terms; we exploit the fact that
 			//arraylists can be grown while scanned
+			
+			//first narrowing...
 			while (!this.parserAtoms.narrowedValues.isEmpty()) {
 				final ArrayList<Term> narrowedValues = this.parserAtoms.narrowedValues;
-				this.parserAtoms.narrowedValues = new ArrayList<Term>();
+				this.parserAtoms.narrowedValues = new ArrayList<Term>(); //TODO put this reset in parserAtoms!
 				for (Term t : narrowedValues) {
-					final NarrowingConversion q = (NarrowingConversion) m.demangle(t);
-					int predicatePrev = this.predicate;
-					final Primitive arg = q.getArg();
-					final char argType = arg.getType();
 					try {
+	                    final NarrowingConversion q = (NarrowingConversion) m.demangle(t);
+	                    final Primitive arg = q.getArg();
+	                    final char argType = arg.getType();
 						final Primitive minusOne = calc.valInt(-1).to(argType);
 						final Primitive zero = calc.valInt(0).to(argType);
 						final Primitive one = calc.valInt(1).to(argType);
@@ -524,10 +525,40 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 						//this should never happen
 						throw new UnexpectedInternalException(e);
 					}
+                    final int predicatePrev = this.predicate;
 					this.predicate = this.bdd.and(predicatePrev, this.predicate);
 					this.bdd.ref(this.predicate);
 				}
 			}
+			
+			//...then integer divisions
+            while (!this.parserAtoms.divValues.isEmpty()) {
+                final ArrayList<Term> divValues = this.parserAtoms.divValues;
+                this.parserAtoms.divValues = new ArrayList<Term>(); //TODO put this reset in parserAtoms!
+                for (Term t : divValues) {
+                    try {
+                        final Expression q = (Expression) m.demangle(t);
+                        final char expType = q.getType();
+                        final Primitive firstOperand = q.getFirstOperand();
+                        final Primitive secondOperand = q.getSecondOperand();
+                        final Primitive zero = calc.valInt(0).to(expType);
+                        final Primitive one = calc.valInt(1).to(Type.DOUBLE);
+                        final Primitive qWidened = firstOperand.widen(Type.DOUBLE).div(secondOperand.widen(Type.DOUBLE));
+                        final Primitive constraintPos = firstOperand.mul(secondOperand).ge(zero).and(qWidened.sub(one).lt(t)).and(t.le(qWidened));
+                        final Primitive constraintNeg = firstOperand.mul(secondOperand).lt(zero).and(qWidened.le(t)).and(t.lt(qWidened.add(one)));
+                        final Primitive constraint = constraintPos.or(constraintNeg);
+                        constraint.accept(this);
+                    } catch (ExternalProtocolInterfaceException | RuntimeException e) {
+                        throw e;
+                    } catch (Exception e) {
+                        //this should never happen
+                        throw new UnexpectedInternalException(e);
+                    }
+                    final int predicatePrev = this.predicate;
+                    this.predicate = this.bdd.and(predicatePrev, this.predicate);
+                    this.bdd.ref(this.predicate);
+                }
+            }
 		}
 		
 		public String getIntegerVariables() {
@@ -779,6 +810,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 		final StringBuilder integerVariables = new StringBuilder();
 		final HashSet<Primitive> integerVariablesDone = new HashSet<Primitive>();
 		ArrayList<Term> narrowedValues = new ArrayList<Term>();
+        ArrayList<Term> divValues = new ArrayList<Term>();
         String termPositive = "";
         String termNegative = "";
 		
@@ -791,27 +823,23 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 
 		@Override
 		public void visitExpression(Expression e) throws Exception {
+            final Primitive firstOp = e.getFirstOperand();
+            final Primitive secondOp = e.getSecondOperand();
 			final Operator operator = e.getOperator();
 			final String operatorString = sicstusOperator(operator);
 			if (operatorString == null) { 
 				//operator unsupported by sicstus: some of them can 
 				//be translated into combinations of supported operators
 	            if (operator == Operator.REM) {
-	            	final Primitive firstOp = e.getFirstOperand();
-	            	final Primitive secondOp = e.getSecondOperand();
 	            	final Primitive val = firstOp.sub(firstOp.div(secondOp).mul(secondOp));
 	            	val.accept(this);
 	            } else if (operator == Operator.SHL) {
-	            	final Primitive firstOp = e.getFirstOperand();
-	            	final Primitive secondOp = e.getSecondOperand();
 	                final Primitive[] args = new Primitive[2];
 	                args[0] = calc.valInt(2);
 	                args[1] = secondOp;
 	                Primitive val = firstOp.mul(calc.applyFunction(firstOp.getType(), FunctionApplication.POW, args));
 	                val.accept(this);
 	            } else if (operator == Operator.SHR) {
-	            	final Primitive firstOp = e.getFirstOperand();
-	            	final Primitive secondOp = e.getSecondOperand();
 	                final Primitive[] args = new Primitive[2];
 	                args[0] = calc.valInt(2);
 	                args[1] = secondOp;
@@ -823,6 +851,13 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 		           	//Operator.USHR, Operator.ANDBW, Operator.ORBW, Operator.XOR)
 	            	m.mangle(e).accept(this);
 	            }
+			} else if (operator == Operator.DIV && 
+			           Type.isPrimitiveIntegral(firstOp.getType()) && 
+			           Type.isPrimitiveIntegral(secondOp.getType())) {
+			    //need some equations for the integer division
+                final Term t = m.mangle(e);
+                this.divValues.add(t); //we will demangle/translate it later
+                t.accept(this);
 			} else if (e.isUnary()) {
 				e.getOperand().accept(this);
 				final String operandString = this.termPositive;

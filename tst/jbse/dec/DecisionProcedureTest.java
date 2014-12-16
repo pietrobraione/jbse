@@ -269,6 +269,16 @@ public class DecisionProcedureTest {
 		Expression e = (Expression) calc.valTerm(Type.INT, "A").gt(calc.valInt(0)).and(calc.valTerm(Type.FLOAT, "A").lt(calc.valInt(1)));
 		assertFalse(dec.isSat(e));
 	}
+    
+    //Test integer division (Sicstus bug)
+    @Test
+    public void testIDiv() throws DecisionException, InvalidOperandException, InvalidTypeException {
+        // 0 <= A < B && A >= B / 2 && B = 1 (for integer division A == 0 is a solution, no solution for real division).
+        final Term A = calc.valTerm(Type.INT, "A");
+        final Term B = calc.valTerm(Type.INT, "B");
+        final Expression e = (Expression) A.ge(calc.valInt(0)).and(A.lt(B)).and(A.ge(B.div(calc.valInt(2)))).and(B.eq(calc.valInt(1)));
+        assertTrue(dec.isSat(e));
+    }
 	
 	//Old Sicstus bug
 	@Test
