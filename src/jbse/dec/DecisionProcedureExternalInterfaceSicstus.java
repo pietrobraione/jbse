@@ -507,6 +507,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 				final ArrayList<Term> narrowedValues = this.parserAtoms.narrowedValues;
 				this.parserAtoms.narrowedValues = new ArrayList<Term>(); //TODO put this reset in parserAtoms!
 				for (Term t : narrowedValues) {
+                    final int predicatePrev = this.predicate;
 					try {
 	                    final NarrowingConversion q = (NarrowingConversion) m.demangle(t);
 	                    final Primitive arg = q.getArg();
@@ -525,7 +526,6 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 						//this should never happen
 						throw new UnexpectedInternalException(e);
 					}
-                    final int predicatePrev = this.predicate;
 					this.predicate = this.bdd.and(predicatePrev, this.predicate);
 					this.bdd.ref(this.predicate);
 				}
@@ -536,6 +536,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
                 final ArrayList<Term> divValues = this.parserAtoms.divValues;
                 this.parserAtoms.divValues = new ArrayList<Term>(); //TODO put this reset in parserAtoms!
                 for (Term t : divValues) {
+                    final int predicatePrev = this.predicate;
                     try {
                         final Expression q = (Expression) m.demangle(t);
                         final char expType = q.getType();
@@ -554,7 +555,6 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
                         //this should never happen
                         throw new UnexpectedInternalException(e);
                     }
-                    final int predicatePrev = this.predicate;
                     this.predicate = this.bdd.and(predicatePrev, this.predicate);
                     this.bdd.ref(this.predicate);
                 }
