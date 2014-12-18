@@ -224,6 +224,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 		}
 		//does nothing, this decision procedure works only for numbers
 		this.hasCurrentClause = true;
+        this.currentClause = null;
 	}
 
 	@Override
@@ -233,6 +234,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 		}
 		//does nothing, this decision procedure works only for numbers
 		this.hasCurrentClause = true;
+		this.currentClause = null;
 	}
 
 	@Override
@@ -242,6 +244,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 		}
 		//does nothing, this decision procedure works only for numbers		
 		this.hasCurrentClause = true;
+        this.currentClause = null;
 	}
 
 	@Override
@@ -251,6 +254,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 		}
 		//does nothing, this decision procedure works only for numbers
 		this.hasCurrentClause = true;
+        this.currentClause = null;
 	}
 
 	@Override
@@ -260,6 +264,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 		}
 		//does nothing, this decision procedure works only for numbers
 		this.hasCurrentClause = true;
+        this.currentClause = null;
 	}
 
 	@Override
@@ -267,8 +272,8 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 		if (!this.hasCurrentClause) {
 			throw new ExternalProtocolInterfaceException("Attempted to retract clause with no current clause.");
 		}
+        this.hasCurrentClause = false;
 		this.currentClause = null;
-		this.hasCurrentClause = false;
 	}
 
 	@Override
@@ -453,8 +458,8 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 	@Override
 	public void clear() {
 		this.assumptions = this.calc.valBoolean(true);
+        this.hasCurrentClause = false;
 		this.currentClause = null;
-		this.hasCurrentClause = false;
 	}
 
 	@Override
