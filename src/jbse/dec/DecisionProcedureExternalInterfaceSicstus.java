@@ -36,7 +36,6 @@ import se.sics.prologbeans.IllegalCharacterSetException;
 import se.sics.prologbeans.PrologSession;
 import se.sics.prologbeans.QueryAnswer;
 
-
 class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExternalInterface {
 	private final static String SERVER_PL = 
 			"[user].\n" +
@@ -305,14 +304,19 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 		//are no more
 		int predicate = parser.predicate;
 		int sol = parser.bdd.oneSat(predicate);
+		parser.bdd.ref(sol);  //TODO is it necessary?
 		while (sol != bddFalse && sol != bddTrue) {
-			int[] ssol = toDIMACS(oneSatWithDontCare(parser.bdd, predicate));
-			if (hasSolution(ssol, parser.atomicPredicatesPositive, parser.atomicPredicatesNegative, parser.getIntegerVariables())) {
+			int[] solDIMACS = toDIMACS(oneSatWithDontCare(parser.bdd, predicate));
+			if (hasSolution(solDIMACS, parser.atomicPredicatesPositive, parser.atomicPredicatesNegative, parser.getIntegerVariables())) {
 				return true;
 			}
-			predicate = parser.bdd.and(predicate, parser.bdd.not(sol));
-			parser.bdd.ref(predicate);
+			final int predicateNew = parser.bdd.and(predicate, parser.bdd.not(sol));
+			parser.bdd.ref(predicateNew);
+			parser.bdd.deref(predicate);
+            parser.bdd.deref(sol);
+			predicate = predicateNew;
 			sol = parser.bdd.oneSat(predicate);
+	        parser.bdd.ref(sol);
 		}
 		if (sol == bddFalse) {
 			return false;
@@ -365,6 +369,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 	 *         the k-th variable has, respectively, true or 
 	 *         false value. Variables whose truth value 
 	 *         is don't care are not added to the solution.
+	 *         Variable count starts from 1.
 	 */
 	private int[] toDIMACS(int[] solJDD) {
 		int size = solJDD.length;
@@ -531,8 +536,11 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 						//this should never happen
 						throw new UnexpectedInternalException(e);
 					}
-					this.predicate = this.bdd.and(predicatePrev, this.predicate);
-					this.bdd.ref(this.predicate);
+					final int predicateNew = this.bdd.and(predicatePrev, this.predicate);
+					this.bdd.ref(predicateNew);
+                    this.bdd.deref(predicatePrev);
+                    this.bdd.deref(this.predicate);
+					this.predicate = predicateNew;
 				}
 			}
 			
@@ -560,8 +568,11 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
                         //this should never happen
                         throw new UnexpectedInternalException(e);
                     }
-                    this.predicate = this.bdd.and(predicatePrev, this.predicate);
-                    this.bdd.ref(this.predicate);
+                    final int predicateNew = this.bdd.and(predicatePrev, this.predicate);
+                    this.bdd.ref(predicateNew);
+                    this.bdd.deref(predicatePrev);
+                    this.bdd.deref(this.predicate);
+                    this.predicate = predicateNew;
                 }
             }
 		}
@@ -586,21 +597,24 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 					case AND:
 					case OR:
 						e.getFirstOperand().accept(this);
-						int first = this.predicate;
+						final int first = this.predicate;
 						e.getSecondOperand().accept(this);
-						int second = this.predicate;
+						final int second = this.predicate;
 						if (op == Operator.AND) {
 							this.predicate = this.bdd.and(first, second);
 						} else {
 							this.predicate = this.bdd.or(first, second);
 						}
 						this.bdd.ref(this.predicate);
+						this.bdd.deref(first);
+                        this.bdd.deref(second);
 						break;
 					case NOT:
 						e.getOperand().accept(this);
-						int operand = this.predicate;
+						final int operand = this.predicate;
 						this.predicate = this.bdd.not(operand);
 						this.bdd.ref(this.predicate);
+						this.bdd.deref(operand);
 						break;
 					default:
 						storeAtomicPredicate(e);
@@ -625,6 +639,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 			this.atomicPredicatesPositive.add(parserAtoms.termPositive);
 			this.atomicPredicatesNegative.add(parserAtoms.termNegative);
 			this.predicate = this.bdd.createVar();
+            this.bdd.ref(this.predicate);
 		}
 
 		@Override

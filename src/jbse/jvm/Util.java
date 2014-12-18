@@ -93,8 +93,8 @@ public final class Util {
 		}
 		
 		//TODO log differently!
-
-/*		@Override
+/*
+		@Override
 		public boolean atStepPost() {
 			//final StateFormatterTrace f = new StateFormatterTrace(new ArrayList<String>()) {
 			final StateFormatterTrace f = new StateFormatterTrace() {
@@ -106,6 +106,20 @@ public final class Util {
 			f.format(engine.getCurrentState());
 			f.emit();
 			return super.atStepPost();
+		}
+		
+		@Override
+		public boolean atBacktrackPost(BranchPoint bp) {
+            //final StateFormatterTrace f = new StateFormatterTrace(new ArrayList<String>()) {
+            final StateFormatterTrace f = new StateFormatterTrace() {
+                @Override
+                public void emit() {
+                    System.out.println("==> " + this.formatOutput);
+                }
+            };
+            f.format(engine.getCurrentState());
+            f.emit();
+		    return super.atBacktrackPost(bp);
 		}
 */
 		@Override
