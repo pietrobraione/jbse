@@ -111,10 +111,10 @@ final class SEInvokeSpecial implements Algorithm {
 			ctx.nativeInvoker.doInvokeNative(state, methodSignature, args, INVOKESPECIAL_OFFSET);
 		} catch (NoMethodReceiverException e) {
             createAndThrow(state, NULL_POINTER_EXCEPTION);
-		} catch (InvalidProgramCounterException | InvalidSlotException e) {
+		} catch (InvalidProgramCounterException | InvalidSlotException | IncompatibleClassFileException e) {
+            //TODO IncompatibleClassFileException thrown if the method is static or it is not special; is verify error ok?
             throwVerifyError(state);
-		} catch (ClassFileNotFoundException | IncompatibleClassFileException | 
-				MethodNotFoundException e) {
+		} catch (ClassFileNotFoundException | MethodNotFoundException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}		

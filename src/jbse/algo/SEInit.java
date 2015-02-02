@@ -46,10 +46,11 @@ public final class SEInit {
 			//TODO instead of assuming that {ROOT}:this exists and create the frame, use lazy initialization also on {ROOT}:this, for homogeneity and to explore a wider range of alternatives  
 			final ClassHierarchy hier = state.getClassHierarchy();
 			final ClassFile rootMethodClassFile = hier.getClassFile(ctx.rootMethodSignature.getClassName());
-			state.pushFrameSymbolic(ctx.rootMethodSignature, rootMethodClassFile.isStatic());
-		} catch (ClassFileNotFoundException | MethodNotFoundException | 
-				IncompatibleClassFileException | PleaseDoNativeException e) {
+			state.pushFrameSymbolic(ctx.rootMethodSignature, rootMethodClassFile.isMethodStatic(ctx.rootMethodSignature));
+		} catch (ClassFileNotFoundException | MethodNotFoundException | PleaseDoNativeException e) {
 			throw new InitializationException(e);
+		} catch (IncompatibleClassFileException e) {
+		    throw new UnexpectedInternalException(e); //this should not happen
 		}
 
 		//adds the root klass, and if this is not initialized

@@ -135,11 +135,11 @@ final class SEInvokeStatic implements Algorithm {
 			state.pushFrame(methodSignature, false, true, false, INVOKESTATIC_OFFSET, args);
 		} catch (PleaseDoNativeException e) {
 			ctx.nativeInvoker.doInvokeNative(state, methodSignature, args, INVOKESTATIC_OFFSET);
-		} catch (InvalidProgramCounterException e) {
+		} catch (InvalidProgramCounterException | IncompatibleClassFileException e) {
+		    //TODO IncompatibleClassFileException thrown if the method is not static or it is special; is verify error ok?
             throwVerifyError(state);
-		} catch (ClassFileNotFoundException | IncompatibleClassFileException | 
-				MethodNotFoundException | InvalidSlotException | 
-				NoMethodReceiverException e) {
+		} catch (ClassFileNotFoundException | MethodNotFoundException | 
+		        InvalidSlotException | NoMethodReceiverException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}

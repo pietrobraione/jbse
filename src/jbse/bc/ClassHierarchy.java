@@ -634,8 +634,8 @@ public class ClassHierarchy {
 		} else if (cfAccessed.isFieldPackage(accessed)) {
 			return samePackage; 
 		} else { //cfAccessed.isFieldPrivate(fld)
-			return accessed.getClassName().equals(accessor) || 
-					cfAccessor.isInner(cfAccessed);
+			return accessed.getClassName().equals(accessor); 
+			//TODO there was a || cfAccessor.isInner(cfAccessed) clause but it is *wrong*!
 		}
 	}
 	
@@ -668,8 +668,8 @@ public class ClassHierarchy {
 		} else if (cfAccessed.isMethodPackage(accessed)) {
 			return samePackage;
 		} else { //cfAccessed.isMethodPrivate(accessed)
-			return (accessed.getClassName().equals(accessor) ||
-					cfAccessor.isInner(cfAccessed));
+			return accessed.getClassName().equals(accessor);
+            //TODO there was a || cfAccessor.isInner(cfAccessed) clause but it is *wrong*!
 		}
 	}
 	

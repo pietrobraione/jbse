@@ -133,10 +133,10 @@ final class SEInvokeVirtualInterface implements Algorithm {
 			ctx.nativeInvoker.doInvokeNative(state, methodSignature, args, pcOffset);
 		} catch (NoMethodReceiverException e) {
             createAndThrow(state, NULL_POINTER_EXCEPTION);
-		} catch (InvalidSlotException | InvalidProgramCounterException e) {
+		} catch (InvalidSlotException | InvalidProgramCounterException | IncompatibleClassFileException e) {
+            //TODO IncompatibleClassFileException thrown if the method is static or is special; is verify error ok?
             throwVerifyError(state);
-		} catch (ClassFileNotFoundException | IncompatibleClassFileException | 
-				MethodNotFoundException e) {
+		} catch (ClassFileNotFoundException | MethodNotFoundException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}		

@@ -89,7 +89,7 @@ public abstract class ClassFile {
 		 * inside another one, nested class may also be anonymous, ...).
 		 */
 		return (this.isNested() && 
-				this.isStatic() && 
+				!this.isStatic() && 
 				this.classContainer().equals(external.getClassName()));
 	}
 	
