@@ -11,7 +11,6 @@ import static jbse.algo.Util.throwVerifyError;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
-import jbse.bc.exc.AttributeNotFoundException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotAccessibleException;
 import jbse.bc.exc.FieldNotFoundException;
@@ -23,7 +22,6 @@ import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
-import jbse.val.ConstantPoolString;
 import jbse.val.Value;
 
 /**
@@ -34,7 +32,6 @@ import jbse.val.Value;
  * @author Pietro Braione
  */
 final class SEGetstatic extends MultipleStateGeneratorLFLoad implements Algorithm {
-	
 	@Override
     public void exec(State state, ExecutionContext ctx) 
     throws DecisionException, ContradictionException, 
@@ -80,61 +77,38 @@ final class SEGetstatic extends MultipleStateGeneratorLFLoad implements Algorith
 			return;
 		}
 
-		//gets resolved field's data
-		final String fieldClassName = fieldSignatureResolved.getClassName();        
-		final ClassFile fieldClassFile;
-		final boolean isFieldConstant;
+		//gets resolved field's class
+		final String fieldClassName = fieldSignatureResolved.getClassName();    
+		
+		//checks the field
 		try {
-			fieldClassFile = hier.getClassFile(fieldClassName);
-			isFieldConstant = fieldClassFile.isFieldConstant(fieldSignatureResolved);
-		} catch (ClassFileNotFoundException | FieldNotFoundException e) {
-			//this should never happen after field resolution
-			throw new UnexpectedInternalException(e);
-		}
-
-		//checks that the field is static or belongs to an interface
-		try {
+		    final ClassFile fieldClassFile = hier.getClassFile(fieldClassName);
+			//checks that the field is static or belongs to an interface
 			if ((!fieldClassFile.isInterface()) && (!fieldClassFile.isFieldStatic(fieldSignatureResolved))) {
 	            createAndThrow(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
 				return;
 			}
-		} catch (FieldNotFoundException e) {
+		} catch (ClassFileNotFoundException | FieldNotFoundException e) {
 			//this should never happen after field resolution
 			throw new UnexpectedInternalException(e);
 		}
 		
-		//gets the field's value, possibly performing class initialization
-        Value tmpValue;
-    	if (isFieldConstant) {
-    		//when the field is constant, no class initialization is performed
-    		//TODO where is specified this behavior in the JVM specification???
-    		try {
-				tmpValue = state.getCalculator().val_(fieldClassFile.fieldConstantValue(fieldSignatureResolved));
-				if (tmpValue instanceof ConstantPoolString) {
-					tmpValue = state.referenceToStringLiteral(tmpValue.toString());
-				}
-				//TODO check type!
-			} catch (InvalidIndexException e) {
-	            throwVerifyError(state);
-				return;
-			} catch (FieldNotFoundException | AttributeNotFoundException e) {
-				throw new UnexpectedInternalException(e);
-			}
-    	} else {
-    		final boolean mustExit;
-			try {
-				mustExit = ensureKlass(state, fieldClassName, ctx.decisionProcedure);
-			} catch (ClassFileNotFoundException e) {
-				throw new UnexpectedInternalException(e);
-			}
-    		if (mustExit) {
-    			return;
-            	//now the execution continues with the class 
-            	//initialization code; the current bytecode will 
-            	//be reexecuted after that
-    		}
-    		tmpValue = state.getKlass(fieldClassName).getFieldValue(fieldSignatureResolved);
-    	}
+		//performs class initialization
+		final boolean mustExit;
+		try {
+		    mustExit = ensureKlass(state, fieldClassName, ctx.decisionProcedure);
+		} catch (ClassFileNotFoundException e) {
+		    throw new UnexpectedInternalException(e);
+		}
+		if (mustExit) {
+		    return;
+		    //now the execution continues with the class 
+		    //initialization code; the current bytecode will 
+		    //be reexecuted after that
+		}
+		
+		//gets the field's value 
+        final Value tmpValue = state.getKlass(fieldClassName).getFieldValue(fieldSignatureResolved);
         
         //generates all the next states
     	this.state = state;
