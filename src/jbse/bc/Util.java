@@ -10,20 +10,6 @@ import jbse.bc.exc.MethodNotFoundException;
  *
  */
 public final class Util {
-	//classes
-	public static final String JAVA_CLONEABLE    = "java/lang/Cloneable";
-	public static final String JAVA_OBJECT       = "java/lang/Object";
-    public static final String JAVA_THROWABLE    = "java/lang/Throwable";
-	public static final String JAVA_SERIALIZABLE = "java/io/Serializable";
-	
-	//methods
-	public static final Signature JAVA_LANG_THROWABLE_FILLINSTACKTRACE = 
-			new Signature("java/lang/Throwable", "()Ljava/lang/Throwable;", "fillInStackTrace");
-	public static final Signature JAVA_LANG_THROWABLE_GETSTACKTRACEDEPTH = 
-			new Signature("java/lang/Throwable", "()I", "getStackTraceDepth");
-	public static final Signature JAVA_LANG_THROWABLE_GETSTACKTRACEELEMENT = 
-			new Signature("java/lang/Throwable", "(I)Ljava/lang/StackTraceElement;", "getStackTraceElement");
-
 	/**
 	 * Finds an annotation on a method.
 	 * 

@@ -1,15 +1,25 @@
 package jbse.algo;
 
+import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
+import static jbse.bc.Signatures.JAVA_CLASS;
+import static jbse.bc.Signatures.JAVA_ENUM;
+import static jbse.bc.Signatures.JAVA_LINKEDLIST;
+import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
+import static jbse.bc.Signatures.JAVA_STRING;
+import static jbse.bc.Signatures.JAVA_STRING_CASEINSCOMP;
+import static jbse.bc.Signatures.VERIFY_ERROR;
 import static jbse.mem.Util.isResolvedSymbolicReference;
 
 import jbse.algo.exc.PleaseDoNativeException;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
+import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NoMethodReceiverException;
+import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.exc.DecisionException;
@@ -23,26 +33,6 @@ import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 
 public class Util {	
-	//exceptions
-	public static final String ARITHMETIC_EXCEPTION 				= "java/lang/ArithmeticException";
-	public static final String ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION 	= "java/lang/ArrayIndexOutOfBoundsException";
-	public static final String CLASS_CAST_EXCEPTION 				= "java/lang/ClassCastException";
-	public static final String INDEX_OUT_OF_BOUNDS_EXCEPTION 		= "java/lang/IndexOutOfBoundsException";
-	public static final String NEGATIVE_ARRAY_SIZE_EXCEPTION 		= "java/lang/NegativeArraySizeException";
-	public static final String NULL_POINTER_EXCEPTION				= "java/lang/NullPointerException";
-	
-	//errors
-	public static final String ABSTRACT_METHOD_ERROR                = "java/lang/AbstractMethodError";
-	public static final String ILLEGAL_ACCESS_ERROR                 = "java/lang/IllegalAccessError";
-	public static final String INCOMPATIBLE_CLASS_CHANGE_ERROR		= "java/lang/IncompatibleClassChangeError";
-	public static final String NO_CLASS_DEFINITION_FOUND_ERROR      = "java/lang/NoClassDefFoundError";
-	public static final String NO_SUCH_FIELD_ERROR                  = "java/lang/NoSuchFieldError";
-	public static final String NO_SUCH_METHOD_ERROR                 = "java/lang/NoSuchMethodError";
-    public static final String VERIFY_ERROR                         = "java/lang/VerifyError";
-
-	//classes
-    public static final String JAVA_LANG_ENUM = "java/lang/Enum";
-
 	public static boolean aliases(State s, Reference r1, Reference r2) {
 		final long pos1;
 		if (r1 instanceof ReferenceConcrete) {
@@ -76,7 +66,7 @@ public class Util {
 	    try {
 	        final ReferenceConcrete excReference = state.createInstance(VERIFY_ERROR);
 	        state.push(excReference);
-            state.throwIt(excReference);
+            state.throwObject(excReference);
         } catch (ThreadStackEmptyException | InvalidIndexException |
                  InvalidProgramCounterException e) {
             //there is not much we can do if this happens
@@ -97,7 +87,7 @@ public class Util {
      * @param exceptionClassName the name of the class of the new instance.
      * @throws ThreadStackEmptyException if the thread stack is empty.
      */
-    public static void createAndThrow(State state, String exceptionClassName) 
+    public static void createAndThrowObject(State state, String exceptionClassName) 
     throws ThreadStackEmptyException {
         if (exceptionClassName.equals(VERIFY_ERROR)) {
             throwVerifyError(state);
@@ -105,24 +95,24 @@ public class Util {
         }
         final ReferenceConcrete excReference = state.createInstance(exceptionClassName);
         state.push(excReference);
-        throwIt(state, excReference);
+        throwObject(state, excReference);
     }
 
     /**
      * Unwinds the stack of a state until it finds an exception 
      * handler for an object. This procedure aims to wrap 
-     * {@link State#throwIt(Reference)} with a fail-safe  
+     * {@link State#throwObject(Reference)} with a fail-safe  
      * interface to errors in the classfile.
      * 
      * @param state the {@link State} where the new object will be 
      *        created and whose stack will be unwound.
-     * @param toThrow see {@link State#throwIt(Reference)}.
+     * @param toThrow see {@link State#throwObject(Reference)}.
      * @throws ThreadStackEmptyException if the thread stack is empty.
      */
-    public static void throwIt(State state, Reference toThrow) 
+    public static void throwObject(State state, Reference toThrow) 
     throws ThreadStackEmptyException {
         try {
-            state.throwIt(toThrow);
+            state.throwObject(toThrow);
         } catch (InvalidIndexException | InvalidProgramCounterException e) {
             throwVerifyError(state);
         }
@@ -151,7 +141,8 @@ public class Util {
 	throws DecisionException, ClassFileNotFoundException, ThreadStackEmptyException {
 		if (state.initialized(className)) {
 			return false; //nothing to do
-		} else if (decideClassInitialized(state, className, dec)) {
+		}    
+		if (decideClassInitialized(state, className, dec)) {
 			//TODO here we assume mutual exclusion of the initialized/not initialized assumptions. Possibly withdraw it.
 			try {
 				state.assumeClassInitialized(className);
@@ -161,8 +152,7 @@ public class Util {
 			return false;
 		} else {
 			state.assumeClassNotInitialized(className);
-			initializeKlass(state, className, dec);
-			return true;
+			return initializeKlass(state, className, dec);
 		}	
 	}
     
@@ -179,10 +169,14 @@ public class Util {
 	 */
 	private static boolean decideClassInitialized(State state, String className, DecisionProcedure dec) 
 	throws DecisionException {
-		//We force the assumption that the enums are not initialized to
+		//Assume that some classes are not initialized to
 		//trigger the execution of their <clinit> methods 
-		//TODO this is just for convenience, possibly consider to remove this assumption, or to move into DecisionProcedure or DecisionProcedureAlgorithms.
-		if (state.getClassHierarchy().isSubclass(className, JAVA_LANG_ENUM)) {
+		//TODO move these assumptions into DecisionProcedure or DecisionProcedureAlgorithms.
+		if (state.getClassHierarchy().isSubclass(className, JAVA_ENUM) ||
+            className.equals(JAVA_CLASS)  ||
+            className.equals(JAVA_LINKEDLIST) || className.equals(JAVA_LINKEDLIST_ENTRY) ||
+            className.equals(JAVA_STRING)     || className.equals(JAVA_STRING_CASEINSCOMP)
+		    ) {
 			return false;
 		}
 
@@ -199,14 +193,21 @@ public class Util {
 	 * @param state a {@link State}.
 	 * @param className the class to be initialized.
 	 * @param dec a {@link DecisionProcedure}.
+     * @return {@code true} iff it is necessary to run the 
+     *         {@code <clinit>} methods for the initialized 
+     *         class(es).
 	 * @throws DecisionException
 	 * @throws ClassFileNotFoundException 
 	 * @throws ThreadStackEmptyException 
 	 */
-	private static void initializeKlass(State state, String className, DecisionProcedure dec) 
+	private static boolean initializeKlass(State state, String className, DecisionProcedure dec) 
 	throws DecisionException, ClassFileNotFoundException, ThreadStackEmptyException {
 		final ClassInitializer ci = new ClassInitializer();
-		ci.initialize(state, className, dec);
+		final boolean failed = ci.initialize(state, className, dec);
+		if (failed) {
+		    return false;  //upon failure all frames are discarded
+		}
+		return ci.createdFrames > 0;
 	}
 
 	private static class ClassInitializer {
@@ -303,7 +304,7 @@ public class Util {
                 //TODO delete all the Klass objects from the static store?
                 
 				//throws and exits
-				createAndThrow(s, myExce);
+				createAndThrowObject(s, myExce);
 				return true; //returns failure
 			} else {
 				//returns success
@@ -311,6 +312,31 @@ public class Util {
 			}
 		}
 	}
+	
+	public static boolean ensureStringLiteral(State state, String stringLit, DecisionProcedure dec) 
+	throws DecisionException, ClasspathException, ThreadStackEmptyException {
+	    final boolean mustExit;
+	    try {
+	        mustExit = ensureKlass(state, JAVA_STRING, dec);
+	    } catch (ClassFileNotFoundException e) {
+	        throw new ClasspathException(e);
+	    }
+	    state.ensureStringLiteral(stringLit);
+	    return mustExit;
+	}
+    
+    public static boolean ensureClass(State state, String className, DecisionProcedure dec) 
+    throws DecisionException, ClasspathException, ClassFileNotFoundException, 
+    ClassFileNotAccessibleException, ThreadStackEmptyException {
+        final boolean mustExit;
+        try {
+            mustExit = ensureKlass(state, JAVA_STRING, dec) || ensureKlass(state, JAVA_CLASS, dec);
+        } catch (ClassFileNotFoundException e) {
+            throw new ClasspathException(e);
+        }
+        state.ensureClass(className);
+        return mustExit;
+    }
 
 	/** 
 	 * Do not instantiate it!

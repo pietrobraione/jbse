@@ -15,6 +15,7 @@ import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NoMethodReceiverException;
 import jbse.common.Type;
+import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureAlgorithms;
@@ -181,7 +182,7 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 						if (!repOk) {
 							return false; 
 						}
-					} catch (CannotBacktrackException |
+					} catch (CannotBacktrackException | ClasspathException |
 							DecisionException | EngineStuckException | CannotManageStateException | 
 							ContradictionException | FailureException | PleaseDoNativeException |
 							InitializationException | NonexistingObservedVariablesException | 
@@ -190,7 +191,7 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 							IncompatibleClassFileException | ThreadStackEmptyException | 
 							InvalidProgramCounterException | NoMethodReceiverException | 
 							InvalidSlotException | OperandStackEmptyException exc) {
-						throw new UnexpectedInternalException(exc);
+						throw new UnexpectedInternalException(exc);  //TODO blame caller when necessary
 					}
 				}
 			}

@@ -1,6 +1,7 @@
 package jbse.algo;
 
 import jbse.algo.exc.CannotManageStateException;
+import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.exc.FailureException;
 import jbse.mem.State;
@@ -16,9 +17,9 @@ import jbse.mem.exc.ThreadStackEmptyException;
  */
 public interface Algorithm {
     void exec(State state, ExecutionContext ctx) 
-    throws CannotManageStateException, ThreadStackEmptyException, 
+    throws CannotManageStateException, ClasspathException,  
     OperandStackEmptyException, ContradictionException, 
-    DecisionException, FailureException;
+    DecisionException, FailureException, ThreadStackEmptyException;
     default boolean someReferenceNotExpanded() { return false; }
     default String nonExpandedReferencesOrigins() { return null; }
     default String nonExpandedReferencesTypes() { return null; }

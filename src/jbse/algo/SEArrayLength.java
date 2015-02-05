@@ -1,9 +1,9 @@
 package jbse.algo;
 
-import static jbse.algo.Util.NULL_POINTER_EXCEPTION;
-import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.createAndThrowObject;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.ARRAYLENGTH_OFFSET;
+import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 
 import jbse.mem.Array;
 import jbse.mem.State;
@@ -19,7 +19,7 @@ final class SEArrayLength implements Algorithm {
     throws ThreadStackEmptyException, OperandStackEmptyException {
         final Reference tmpRef = (Reference) state.pop();
         if (state.isNull(tmpRef)) {
-        	createAndThrow(state, NULL_POINTER_EXCEPTION);
+        	createAndThrowObject(state, NULL_POINTER_EXCEPTION);
 			return;
         }
         

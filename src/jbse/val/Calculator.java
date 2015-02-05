@@ -256,8 +256,6 @@ public abstract class Calculator {
 			return valBoolean(((Boolean) v).booleanValue());
 		} else if (v instanceof Character) {
 			return valChar(((Character) v).charValue());
-		} else if (v instanceof String) {
-			return new ConstantPoolString((String) v);
 		} else {
 			return null; //TODO raise InvalidTypeException?
 		}

@@ -10,6 +10,7 @@ import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NoMethodReceiverException;
+import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.exc.DecisionException;
@@ -87,12 +88,12 @@ public final class ConcretizationCheckerRepOk {
 				InitializationException | InvalidClassFileFactoryClassException | 
 				NonexistingObservedVariablesException |  
 				CannotBacktrackException | EngineStuckException | CannotManageStateException | 
-				ContradictionException | FailureException | 
+				ClasspathException | ContradictionException | FailureException | 
 				UnexpectedInternalException | CannotBuildEngineException | 
 				ClassFileNotFoundException | MethodNotFoundException | 
 				IncompatibleClassFileException | ThreadStackEmptyException | InvalidProgramCounterException | 
 				NoMethodReceiverException | InvalidSlotException | OperandStackEmptyException exc) {
-			throw new UnexpectedInternalException(exc);
+			throw new UnexpectedInternalException(exc); //TODO blame caller when necessary
 		}
 		return repOk;
 	}

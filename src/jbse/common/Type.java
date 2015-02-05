@@ -2,6 +2,8 @@ package jbse.common;
 
 import java.util.ArrayList;
 
+import jbse.common.exc.UnexpectedInternalException;
+
 /**
  * Class that contain public constants and static functions concerning 
  * JVM types.
@@ -18,6 +20,9 @@ public final class Type {
     
     /** The type of string literals in the constant pool. */
     public static final char STRING_LITERAL = '$';
+    
+    /** The type of symbolic references to a class in the constant pool. */
+    public static final char CLASS_SYMREF   = '£';
     
     /** The primitive type {@code byte}. */
     public static final char BYTE     		= 'B';
@@ -59,75 +64,100 @@ public final class Type {
     public static final char TYPEEND        = ';';
     
     public static boolean isVoid(String s) {
-    	if (s == null || s.length() == 0) {
+    	if (s == null || s.length() != 1) {
     		return false;
     	}
-    	char c = s.charAt(0);
+    	final char c = s.charAt(0);
     	return (c == Type.VOID);
     }
     
-    public static boolean isPrimitive(String s) {
-    	if (s == null || s.length() != 1) {
-    		return false;
-    	} else {
-	    	char c = s.charAt(0);
-	    	return isPrimitive(c);
-    	}
+    /**
+     * Checks whether a type is a primitive floating point type.
+     * 
+     * @param type a {@code char}.
+     * @return {@code true} iff {@code 
+     *           type == Type.FLOAT || type == Type.DOUBLE}.
+     */
+    public static boolean isPrimitiveFloating(char type) {
+    	return (type == Type.FLOAT ||
+                type == Type.DOUBLE);
     }
     
-    public static boolean isPrimitiveFloating(char c) {
-    	return (c == Type.FLOAT ||
-                c == Type.DOUBLE);
-    }
-    
-    public static boolean isPrimitiveIntegralOpStack(char c) {
-    	return (c == Type.INT ||
-                c == Type.LONG);
+    /**
+     * Checks whether a type is a primitive integral type
+     * of the kind that is actually stored in the operand stack.
+     * 
+     * @param type a {@code char}.
+     * @return {@code true} iff {@code 
+     *           type == Type.INT || type == Type.LONG}.
+     */
+    public static boolean isPrimitiveIntegralOpStack(char type) {
+    	return (type == Type.INT ||
+                type == Type.LONG);
     }
     
     /**
      * Checks whether a type is a primitive type
      * of the kind that is actually stored in the operand stack.
      * 
-     * @param c a {@char}.
+     * @param type a {@code char}.
      * @return {@code true} iff {@code 
-	 *           c == Type.INT || c == Type.LONG ||      
-	 *           c == Type.FLOAT || c == Type.DOUBLE}.
+	 *           type == Type.INT || type == Type.LONG ||      
+	 *           type == Type.FLOAT || type == Type.DOUBLE}.
      */
-    public static boolean isPrimitiveOpStack(char c) {
-    	return (isPrimitiveFloating(c) || isPrimitiveIntegralOpStack(c));
+    public static boolean isPrimitiveOpStack(char type) {
+    	return (isPrimitiveFloating(type) || isPrimitiveIntegralOpStack(type));
     }
     
     /**
      * Checks whether a type is a primitive integral type.
      * 
-     * @param c a {@char}.
-     * @return {@code true} iff {@code c == Type.BYTE ||
-	 *           c == Type.INT || c == Type.LONG ||      
-	 *           c == Type.SHORT || c == Type.CHAR ||
-     *           c == Type.BOOLEAN}.
+     * @param type a {@code char}.
+     * @return {@code true} iff {@code type == Type.BYTE ||
+	 *           type == Type.INT || type == Type.LONG ||      
+	 *           type == Type.SHORT || type == Type.CHAR ||
+     *           type == Type.BOOLEAN}.
      */
-    public static boolean isPrimitiveIntegral(char c) {
-    	return (isPrimitiveIntegralOpStack(c) ||
-    			c == Type.BYTE ||
-                c == Type.SHORT ||
-                c == Type.CHAR ||
-                c == Type.BOOLEAN);
+    public static boolean isPrimitiveIntegral(char type) {
+    	return (isPrimitiveIntegralOpStack(type) ||
+    			type == Type.BYTE ||
+                type == Type.SHORT ||
+                type == Type.CHAR ||
+                type == Type.BOOLEAN);
+    }
+        
+    /**
+     * Checks whether a type is a primitive type.
+     * 
+     * @param type a {@code char}.
+     * @return {@code true} iff {@code type == Type.BYTE ||
+     *           type == Type.INT || type == Type.LONG ||      
+     *           type == Type.SHORT || type == Type.CHAR ||
+     *           type == Type.BOOLEAN || type == Type.FLOAT || 
+     *           type == Type.DOUBLE}.
+     */
+    public static boolean isPrimitive(char type) {
+    	return (isPrimitiveFloating(type) || isPrimitiveIntegral(type));
     }
     
-    public static boolean isPrimitive(char c) {
-    	return (isPrimitiveFloating(c) || isPrimitiveIntegral(c));
+    public static boolean isPrimitive(String type) {
+        if (type == null || type.length() != 1) {
+            return false;
+        } else {
+            final char c = type.charAt(0);
+            return isPrimitive(c);
+        }
     }
     
-    public static boolean isArray(char c) {
-    	return (c == Type.ARRAYOF);
+    public static boolean isArray(char type) {
+    	return (type == Type.ARRAYOF);
     }
     
-    public static boolean isArray(String s) {
-    	if (s == null || s.length() == 0) {
+    public static boolean isArray(String type) {
+    	if (type == null || type.length() < 2) { //at least [ + single char
     		return false;
     	} else {
-	    	char c = s.charAt(0);
+	    	final char c = type.charAt(0);
 	    	return isArray(c);
     	}
     }
@@ -136,25 +166,54 @@ public final class Type {
     	return (c == Type.REFERENCE);
     }
     
-    public static boolean isReference(String s) {
-    	if (s == null || s.length() == 0) {
+    public static boolean isReference(String type) {
+    	if (type == null || type.length() < 3) { //at least L + single char + ;
     		return false;
     	}
-    	char c = s.charAt(0);
-    	char cc = s.charAt(s.length() - 1);
+    	final char c = type.charAt(0);
+    	final char cc = type.charAt(type.length() - 1);
     	return (isReference(c) && cc == Type.TYPEEND);
     }
     
-    public static String className(String s) {
-    	//if reference, remove the L...; 
-    	//otherwise is an array, so just return it
-    	return (Type.isReference(s) ? Type.getClassFromReferenceType(s) : s);
+    public static String className(String type) {
+    	//if reference, remove REFERENCE and TYPEEND; 
+    	//if array, just return it
+    	return (Type.isReference(type) ? Type.getReferenceClassName(type) : 
+    	        Type.isArray(type) ? type : null);
+    }
+    
+    public static String primitiveToBinaryClassName(String primitiveType) {
+        if (primitiveType == null || !isPrimitive(primitiveType)) {
+            return null;
+        } else if (primitiveType.equals("" +  Type.BYTE)) {
+            return "byte";
+        } else if (primitiveType.equals("" +  Type.SHORT)) {
+            return "short";
+        } else if (primitiveType.equals("" +  Type.INT)) {
+            return "int";
+        } else if (primitiveType.equals("" +  Type.LONG)) {
+            return "long";
+        } else if (primitiveType.equals("" +  Type.BOOLEAN)) {
+            return "boolean";
+        } else if (primitiveType.equals("" +  Type.CHAR)) {
+            return "char";
+        } else if (primitiveType.equals("" +  Type.FLOAT)) {
+            return "float";
+        } else if (primitiveType.equals("" +  Type.DOUBLE)) {
+            return "double";
+        } else {
+            throw new UnexpectedInternalException("type " + primitiveType + " unexpectedly classified as primitive");
+        }
+    }
+    
+    public static String binaryClassName(String className) {
+        return className.replace('/', '.');
     }
     
     public static boolean isCat_1(char c) {
     	return (c != Type.LONG && c != Type.DOUBLE);
-    	//note that UNKNOWN ha category 1 because DefaultValues must
-    	//fill every slot
+    	//note that UNKNOWN ha category 1 because DefaultValues 
+    	//must be able to fill single slots
     }
 	
     /**
@@ -245,9 +304,9 @@ public final class Type {
 		}
 	}
 	
-	public static String getClassFromReferenceType(String refType) {
-		if (isReference(refType)) {
-			return refType.substring(1, refType.length() - 1);
+	public static String getReferenceClassName(String type) {
+		if (isReference(type)) {
+			return type.substring(1, type.length() - 1);
 		} else {
 			return null;
 		}
@@ -258,10 +317,16 @@ public final class Type {
 	 * 
 	 * @param type A {@code String}, an array type.
 	 * @return The substring from the character 1 
-	 *         henceforth (i.e., skipping the initial '[').
+	 *         henceforth (i.e., skipping the initial '['), 
+	 *         or {@code null} if {@code type} is not
+	 *         an array type.
 	 */
 	public static String getArrayMemberType(String type) {
-		return type.substring(1);
+	    if (isArray(type)) {
+	        return type.substring(1);
+	    } else {
+	        return null;
+	    }
 	}
 	
 	/**

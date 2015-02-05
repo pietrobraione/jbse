@@ -191,7 +191,7 @@ abstract class ClassFilePrimitive extends ClassFile {
 	}
 
 	@Override
-	public Object getValueFromConstantPool(int index)
+	public ConstantPoolValue getValueFromConstantPool(int index)
 	throws InvalidIndexException {
 		throw new InvalidIndexException(NO_CONSTANT_POOL);
 	}

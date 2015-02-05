@@ -1,10 +1,10 @@
 package jbse.algo;
 
-import static jbse.algo.Util.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION;
-import static jbse.algo.Util.NULL_POINTER_EXCEPTION;
-import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.createAndThrowObject;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.XALOADSTORE_OFFSET;
+import static jbse.bc.Signatures.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION;
+import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -66,7 +66,7 @@ final class SEAload extends MultipleStateGeneratorLoad<DecisionAlternativeAload>
 		this.myObjectRef = (Reference) state.pop();
 		if (state.isNull(this.myObjectRef)) {
 			//null object 
-		    createAndThrow(state, NULL_POINTER_EXCEPTION);
+		    createAndThrowObject(state, NULL_POINTER_EXCEPTION);
 			return;
 		}
 
@@ -220,7 +220,7 @@ final class SEAload extends MultipleStateGeneratorLoad<DecisionAlternativeAload>
 			@Override
 			public void updateOut(State s, DecisionAlternativeAloadOut dao) 
 			throws ThreadStackEmptyException {
-				createAndThrow(s, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
+				createAndThrowObject(s, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
 			}
 		};
 		

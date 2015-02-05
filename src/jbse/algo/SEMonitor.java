@@ -1,8 +1,8 @@
 package jbse.algo;
 
-import static jbse.algo.Util.NULL_POINTER_EXCEPTION;
-import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.createAndThrowObject;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
@@ -26,7 +26,7 @@ class SEMonitor implements Algorithm {
 		}
 		final Reference r = (Reference) v;
 		if (state.isNull(r)) {
-            createAndThrow(state, NULL_POINTER_EXCEPTION);
+            createAndThrowObject(state, NULL_POINTER_EXCEPTION);
 			return;
 		}
 		

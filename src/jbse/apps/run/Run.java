@@ -27,6 +27,7 @@ import jbse.apps.run.RunParameters.StepShowMode;
 import jbse.apps.run.RunParameters.TextMode;
 import jbse.apps.run.RunParameters.TraceTypes;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
+import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureAlgorithms;
@@ -495,6 +496,14 @@ public class Run {
 			return super.atCannotManageStateException(e);
 		}
 
+        @Override
+        public boolean atClasspathException(ClasspathException e)
+        throws ClasspathException {
+            IO.println(Run.this.err, ERROR_BAD_CLASSPATH);
+            IO.printException(Run.this.err, e);
+            return super.atClasspathException(e);
+        }
+
 		@Override
 		public boolean atDecisionBacktrackException(DecisionBacktrackException e)
 		throws DecisionBacktrackException {
@@ -569,7 +578,7 @@ public class Run {
 		}
 		try {
 			this.runner.run();
-		} catch (DecisionException | CannotManageStateException | 
+		} catch (ClasspathException | DecisionException | CannotManageStateException | 
 				EngineStuckException | CannotBacktrackException e) {
 			//already reported
 			retVal = 1;
@@ -1141,6 +1150,9 @@ public class Run {
 
 	/** Error: cannot manage a bytecode. */
 	private static final String ERROR_UNDEF_BYTECODE = "Met an unmanageable bytecode.";
+
+    /** Error: no or bad JRE in the classpath. */
+    private static final String ERROR_BAD_CLASSPATH = "No JRE or incompatible JRE in the classpath.";
 
 	/** Error: cannot manage a native method invocation. */
 	private static final String ERROR_CANNOT_INVOKE_NATIVE = "Met an unmanageable native method invocation.";

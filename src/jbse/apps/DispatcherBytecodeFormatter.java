@@ -3,6 +3,9 @@ package jbse.apps;
 import static jbse.bc.Opcodes.*;
 
 import jbse.bc.ClassHierarchy;
+import jbse.bc.ConstantPoolClass;
+import jbse.bc.ConstantPoolString;
+import jbse.bc.ConstantPoolValue;
 import jbse.bc.Dispatcher;
 import jbse.bc.Signature;
 import jbse.bc.exc.ClassFileNotFoundException;
@@ -22,7 +25,9 @@ import jbse.mem.exc.InvalidProgramCounterException;
  *
  */
 class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeFormatter.FormatterStrategy> {
-	private final static String UNRECOGNIZED_BYTECODE = "???";
+	private final static String UNRECOGNIZED_BYTECODE = "<???>";
+	private final static String INCORRECT_BYTECODE    = "<INCORRECT>";
+    private final static String RESERVED_BYTECODE     = "<RESERVED>";
 	
 	interface FormatterStrategy {
 		String format(Frame f, ClassHierarchy hier);
@@ -79,10 +84,10 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 		public FormatterStrategy doIt() {
 			return new FormatterStrategy() {
 				public String format(Frame f, ClassHierarchy hier) { 
-					String retVal;
+					String retVal = DispatchStrategyFormat1AT.this.text + " ";
 					try {
-						short UB = f.getInstruction(1);
-						String type = null;
+						final short UB = f.getInstruction(1);
+						final String type;
 						switch (Array.checkAndReturnArrayPrimitive(UB)) {
 						case Type.BOOLEAN:
 							type = "bool";
@@ -109,12 +114,13 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 							type = "long";
 							break;
 						default:
+						    type = null;
 							break;
 						}
 						if (type == null) {
-							retVal = UNRECOGNIZED_BYTECODE;
+							retVal += UNRECOGNIZED_BYTECODE;
 						} else {
-							retVal = DispatchStrategyFormat1AT.this.text + " " + type + " [" + UB + "]";
+							retVal += type + " [" + UB + "]";
 						}
 					} catch (InvalidProgramCounterException e) {
 						//unrecognized bytecode
@@ -138,13 +144,13 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 		public FormatterStrategy doIt() {
 			return new FormatterStrategy() {
 				public String format(Frame f, ClassHierarchy hier) { 
-					String retVal;
+					String retVal = DispatchStrategyFormat1SB.this.text + " ";
 					try {
-						byte SB = f.getInstruction(1);
-						retVal = DispatchStrategyFormat1SB.this.text + " " + SB;
+						final byte SB = f.getInstruction(1);
+						retVal += SB;
 					} catch (InvalidProgramCounterException e) {
 						//unrecognized bytecode
-						retVal = UNRECOGNIZED_BYTECODE;
+						retVal += UNRECOGNIZED_BYTECODE;
 					}
 					return retVal;
 					
@@ -164,13 +170,13 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 		public FormatterStrategy doIt() {
 			return new FormatterStrategy() {
 				public String format(Frame f, ClassHierarchy hier) { 
-					String retVal;
+					String retVal = DispatchStrategyFormat1SW.this.text + " ";
 					try {
-						short SW = Util.byteCatShort(f.getInstruction(1), f.getInstruction(2));
-						retVal = DispatchStrategyFormat1SW.this.text + " " + SW;
+						final short SW = Util.byteCatShort(f.getInstruction(1), f.getInstruction(2));
+						retVal += SW;
 					} catch (InvalidProgramCounterException e) {
 						//unrecognized bytecode
-						retVal = UNRECOGNIZED_BYTECODE;
+						retVal += UNRECOGNIZED_BYTECODE;
 					}
 					return retVal;
 					
@@ -191,27 +197,27 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 		public FormatterStrategy doIt() {
 			return new FormatterStrategy() {
 				public String format(Frame f, ClassHierarchy hier) { 
-					String retVal;
+					String retVal = DispatchStrategyFormat1LV.this.text + " ";
 					try {
 						//determines whether the operand is wide
 						boolean wide = false;
 						try {
-							byte prev = f.getInstruction(-1);
+							final byte prev = f.getInstruction(-1);
 							wide = (prev == OP_WIDE);
 						} catch (InvalidProgramCounterException e) {
 							//do nothing (not a wide && first bytecode in function)
 						}
-						int UW;
+						final int UW;
 						if (wide) {
 							UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
 						} else {
 							UW = f.getInstruction(1);
 						}
-						String varName = f.getLocalVariableName(UW);
-						retVal = DispatchStrategyFormat1LV.this.text + " " + (varName == null ? UW : varName + " [" + UW + "]");
+						final String varName = f.getLocalVariableName(UW);
+						retVal += (varName == null ? UW : varName + " [" + UW + "]");
 					} catch (InvalidProgramCounterException e) {
 						//unrecognized bytecode
-						retVal = UNRECOGNIZED_BYTECODE;
+						retVal += UNRECOGNIZED_BYTECODE;
 					}
 					return retVal;
 					
@@ -224,7 +230,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 	 * A formatter for bytecodes with 1 operand with type signed word (16 bits) whose meaning 
 	 * is a (near) jump offset.
 	 * 
-	 * @author pietro
+	 * @author Pietro Braione
 	 */
 	private static class DispatchStrategyFormat1ON implements Dispatcher.DispatchStrategy<FormatterStrategy> {
 		private final String text;
@@ -232,14 +238,14 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 		public FormatterStrategy doIt() {
 			return new FormatterStrategy() {
 				public String format(Frame f, ClassHierarchy hier) { 
-					String retVal;
+					String retVal = DispatchStrategyFormat1ON.this.text + " ";
 					try {
-						short SW = Util.byteCatShort(f.getInstruction(1), f.getInstruction(2));
-						int target = f.getPC() + SW;
-						retVal = DispatchStrategyFormat1ON.this.text + " " + target;
+						final short SW = Util.byteCatShort(f.getInstruction(1), f.getInstruction(2));
+						final int target = f.getPC() + SW;
+						retVal += target;
 					} catch (InvalidProgramCounterException e) {
 						//unrecognized bytecode
-						retVal = UNRECOGNIZED_BYTECODE;
+						retVal += UNRECOGNIZED_BYTECODE;
 					}
 					return retVal;
 					
@@ -260,14 +266,14 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 		public FormatterStrategy doIt() {
 			return new FormatterStrategy() {
 				public String format(Frame f, ClassHierarchy hier) { 
-					String retVal;
+					String retVal = DispatchStrategyFormat1OF.this.text + " ";
 					try {
-						int SD = Util.byteCat(f.getInstruction(1), f.getInstruction(2), f.getInstruction(3), f.getInstruction(4));
-						int target = f.getPC() + SD;
-						retVal = DispatchStrategyFormat1OF.this.text + " " + target;
+						final int SD = Util.byteCat(f.getInstruction(1), f.getInstruction(2), f.getInstruction(3), f.getInstruction(4));
+						final int target = f.getPC() + SD;
+						retVal += target;
 					} catch (InvalidProgramCounterException e) {
 						//unrecognized bytecode
-						retVal = UNRECOGNIZED_BYTECODE;
+						retVal += UNRECOGNIZED_BYTECODE;
 					}
 					return retVal;
 					
@@ -289,33 +295,37 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 		public FormatterStrategy doIt() {
 			return new FormatterStrategy() {
 				public String format(Frame f, ClassHierarchy hier) { 
-					String retVal;
+					String retVal = DispatchStrategyFormat1CO.this.text + " ";
 					try {
-						int UW;
+						final int UW;
 						if (wide) {
 							UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
 						} else {
 							UW = f.getInstruction(1);
 						}
-						Object val = hier.getClassFile(f.getCurrentMethodSignature().getClassName()).getValueFromConstantPool(UW);
-						retVal = DispatchStrategyFormat1CO.this.text + " " ;
+						final ConstantPoolValue cpVal = 
+						    hier.getClassFile(f.getCurrentMethodSignature().getClassName()).getValueFromConstantPool(UW);
+						final Object val = cpVal.getValue();
+						
 						if (val instanceof Integer) {
-							retVal += "<int " + val + ">";
+							retVal += "<int " + cpVal + ">";
 						} else if (val instanceof Long) {
-							retVal += "<long " + val + ">";
+							retVal += "<long " + cpVal + ">";
 						} else if (val instanceof Float) {
-							retVal += "<float " + val + ">";
+							retVal += "<float " + cpVal + ">";
 						} else if (val instanceof Double) {
-							retVal += "<double " + val + ">";
-						} else if (val instanceof String) {
-							retVal += "<String \"" + val + "\">";
+							retVal += "<double " + cpVal + ">";
+						} else if (val instanceof String && cpVal instanceof ConstantPoolString) {
+							retVal += "<String \"" + cpVal + "\">";
+                        } else if (val instanceof String && cpVal instanceof ConstantPoolClass) {
+                            retVal += "<Class " + cpVal + ">";
 						} else {
-							retVal = UNRECOGNIZED_BYTECODE;
+							retVal += UNRECOGNIZED_BYTECODE;
 						}
 					} catch (InvalidProgramCounterException | InvalidIndexException |
 							ClassFileNotFoundException | UnexpectedInternalException e) {
 						//unrecognized bytecode
-						retVal = UNRECOGNIZED_BYTECODE;
+						retVal += UNRECOGNIZED_BYTECODE;
 					}
 
 					return retVal;
@@ -337,15 +347,15 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 		public FormatterStrategy doIt() {
 			return new FormatterStrategy() {
 				public String format(Frame f, ClassHierarchy hier) { 
-					String retVal;
+					String retVal = DispatchStrategyFormat1CL.this.text + " ";
 					try {
-						int UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
-						String sig = hier.getClassFile(f.getCurrentMethodSignature().getClassName()).getClassSignature(UW);
-						retVal = DispatchStrategyFormat1CL.this.text + " " + sig;
+						final int UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
+						final String sig = hier.getClassFile(f.getCurrentMethodSignature().getClassName()).getClassSignature(UW);
+						retVal += sig;
 					} catch (InvalidProgramCounterException | InvalidIndexException |
 							ClassFileNotFoundException | UnexpectedInternalException e) {
 						//unrecognized bytecode
-						retVal = UNRECOGNIZED_BYTECODE;
+						retVal += UNRECOGNIZED_BYTECODE;
 					}
 					return retVal;
 					
@@ -366,16 +376,15 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 		public FormatterStrategy doIt() {
 			return new FormatterStrategy() {
 				public String format(Frame f, ClassHierarchy hier) { 
-					String retVal;
+					String retVal = DispatchStrategyFormat1FI.this.text + " ";
 					try {
 						final int UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
 						final Signature sig = hier.getClassFile(f.getCurrentMethodSignature().getClassName()).getFieldSignature(UW);
-						retVal = DispatchStrategyFormat1FI.this.text + " " + 
-						         sig.getClassName() + Signature.SIGNATURE_SEPARATOR + sig.getName() + " [" + UW + "]";
+						retVal += sig.getClassName() + Signature.SIGNATURE_SEPARATOR + sig.getName() + " [" + UW + "]";
 					} catch (InvalidProgramCounterException | InvalidIndexException |
 							ClassFileNotFoundException | UnexpectedInternalException e) {
 						//unrecognized bytecode
-						retVal = UNRECOGNIZED_BYTECODE;
+						retVal += UNRECOGNIZED_BYTECODE;
 					}
 					return retVal;
 					
@@ -397,20 +406,20 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 		public FormatterStrategy doIt() {
 			return new FormatterStrategy() {
 				public String format(Frame f, ClassHierarchy hier) { 
-					String retVal;
+					String retVal = DispatchStrategyFormat1ME.this.text + " ";
 					try {
-						int UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
-						Signature sig;
+					    final int UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
+						final Signature sig;
 						if (isInterface) {
 							sig = hier.getClassFile(f.getCurrentMethodSignature().getClassName()).getInterfaceMethodSignature(UW);
 						} else {
 							sig = hier.getClassFile(f.getCurrentMethodSignature().getClassName()).getMethodSignature(UW);
 						}
-						retVal = DispatchStrategyFormat1ME.this.text + " " + sig + " [" + UW + "]";
+						retVal += sig + " [" + UW + "]";
 					} catch (InvalidProgramCounterException | InvalidIndexException |
 							ClassFileNotFoundException | UnexpectedInternalException e) {
 						//unrecognized bytecode
-						retVal = UNRECOGNIZED_BYTECODE;
+						retVal += UNRECOGNIZED_BYTECODE;
 					}
 					return retVal;
 					
@@ -432,16 +441,16 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 		public FormatterStrategy doIt() {
 			return new FormatterStrategy() {
 				public String format(Frame f, ClassHierarchy hier) { 
-					String retVal;
+					String retVal = DispatchStrategyFormat2CLUB.this.text + " ";
 					try {
-						int UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
-						short UB = f.getInstruction(3);
-						String sig = hier.getClassFile(f.getCurrentMethodSignature().getClassName()).getClassSignature(UW);
-						retVal = DispatchStrategyFormat2CLUB.this.text + " " + sig + " " + UB + " [" + UW + "]";
+						final int UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
+						final short UB = f.getInstruction(3);
+						final String sig = hier.getClassFile(f.getCurrentMethodSignature().getClassName()).getClassSignature(UW);
+						retVal += sig + " " + UB + " [" + UW + "]";
 					} catch (InvalidProgramCounterException | InvalidIndexException |
 							ClassFileNotFoundException | UnexpectedInternalException e) {
 						//unrecognized bytecode
-						retVal = UNRECOGNIZED_BYTECODE;
+						retVal += UNRECOGNIZED_BYTECODE;
 					}
 					return retVal;
 					
@@ -464,12 +473,12 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 		public FormatterStrategy doIt() {
 			return new FormatterStrategy() {
 				public String format(Frame f, ClassHierarchy hier) { 
-					String retVal;
+					String retVal = DispatchStrategyFormat2LVIM.this.text + " ";
 					try {
 						//determines whether the operand is wide
 						boolean wide = false;
 						try {
-							byte prev = f.getInstruction(-1);
+							final byte prev = f.getInstruction(-1);
 							wide = (prev == OP_WIDE);
 						} catch (InvalidProgramCounterException e) {
 							//do nothing (not a wide && first bytecode in function)
@@ -482,11 +491,11 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 							UW0 = f.getInstruction(1);
 							UW1 = f.getInstruction(2);
 						}
-						String varName = f.getLocalVariableName(UW0);
-						retVal = DispatchStrategyFormat2LVIM.this.text + " " + UW0 + " " + UW1 + (varName == null ? "" : " [" + varName + "]");
+						final String varName = f.getLocalVariableName(UW0);
+						retVal += UW0 + " " + UW1 + (varName == null ? "" : " [" + varName + "]");
 					} catch (InvalidProgramCounterException e) {
 						//unrecognized bytecode
-						retVal = UNRECOGNIZED_BYTECODE;
+						retVal += UNRECOGNIZED_BYTECODE;
 					}
 					return retVal;
 					
@@ -524,7 +533,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 						int target = f.getPC() + tab.jumpOffsetDefault();
 						retVal += "dflt:" + target;
 					} catch (InvalidProgramCounterException e) {
-						retVal = UNRECOGNIZED_BYTECODE;
+						retVal += UNRECOGNIZED_BYTECODE;
 					}
 					return retVal;
 					
@@ -535,7 +544,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 
 	DispatcherBytecodeFormatter() {
 		this
-			.setDispatchNonexistentStrategy(new DispatchStrategyFormat0("<INCORRECT>"))
+			.setDispatchNonexistentStrategy(new DispatchStrategyFormat0(INCORRECT_BYTECODE))
 			.setDispatchStrategy(OP_NOP,             new DispatchStrategyFormat0("NOP"))
 			.setDispatchStrategy(OP_ALOAD,           new DispatchStrategyFormat1LV("ALOAD"))
 			.setDispatchStrategy(OP_DLOAD,           new DispatchStrategyFormat1LV("DLOAD"))
@@ -742,9 +751,9 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 			.setDispatchStrategy(OP_IMPDEP2,         new DispatchStrategyFormat0("IMPDEP2"))
 		;
 		
-		DispatchStrategyFormat0 s = new DispatchStrategyFormat0("<RESERVED>");
+		DispatchStrategyFormat0 s = new DispatchStrategyFormat0(RESERVED_BYTECODE);
 		this
-			.setDispatchStrategy(OP_INVOKEDYNAMIC,                     s)
+			.setDispatchStrategy(OP_INVOKEDYNAMIC,             s)
 			.setDispatchStrategy(OP_ANEWARRAY_QUICK,           s)
 			.setDispatchStrategy(OP_CHECKCAST_QUICK,           s)
 			.setDispatchStrategy(OP_GETSTATIC_QUICK,           s)

@@ -2,7 +2,7 @@ package jbse.meta.algo;
 
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKESTATIC_OFFSET;
-import static jbse.mem.Util.JAVA_STRING_VALUE;
+import static jbse.bc.Signatures.JAVA_STRING_VALUE;
 
 import jbse.algo.Algorithm;
 import jbse.algo.ExecutionContext;

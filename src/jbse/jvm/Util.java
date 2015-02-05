@@ -8,6 +8,7 @@ import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NoMethodReceiverException;
+import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.exc.CannotBacktrackException;
 import jbse.jvm.exc.CannotBuildEngineException;
@@ -50,6 +51,7 @@ public final class Util {
 	 * @throws NonexistingObservedVariablesException
 	 * @throws CannotBacktrackException
 	 * @throws CannotManageStateException
+     * @throws ClasspathException
 	 * @throws ContradictionException
 	 * @throws EngineStuckException
 	 * @throws FailureException
@@ -65,10 +67,11 @@ public final class Util {
 	//TODO handle and convert all these exceptions and raise the abstraction level of the operation
 	public static boolean 
 	doRunRepOk(State s, Reference r, Signature sig, RunnerParameters p, boolean scopeExhaustionMeansSuccess) 
-	throws PleaseDoNativeException, CannotBuildEngineException, InitializationException, InvalidClassFileFactoryClassException, 
-	InvalidProgramCounterException, NoMethodReceiverException, InvalidSlotException, 
-	NonexistingObservedVariablesException, DecisionException, CannotBacktrackException, 
-	CannotManageStateException, ContradictionException, EngineStuckException, FailureException, 
+	throws PleaseDoNativeException, CannotBuildEngineException, InitializationException, 
+	InvalidClassFileFactoryClassException, InvalidProgramCounterException, 
+	NoMethodReceiverException, InvalidSlotException, NonexistingObservedVariablesException, 
+	DecisionException, CannotBacktrackException, CannotManageStateException, 
+	ClasspathException, ContradictionException, EngineStuckException, FailureException, 
 	ClassFileNotFoundException, MethodNotFoundException, IncompatibleClassFileException, 
 	ThreadStackEmptyException, OperandStackEmptyException {
 		//TODO check that sig is the signature of a nonstatic, nonspecial method

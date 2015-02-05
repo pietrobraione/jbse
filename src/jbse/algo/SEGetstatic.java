@@ -1,12 +1,12 @@
 package jbse.algo;
 
-import static jbse.algo.Util.ILLEGAL_ACCESS_ERROR;
-import static jbse.algo.Util.INCOMPATIBLE_CLASS_CHANGE_ERROR;
-import static jbse.algo.Util.NO_CLASS_DEFINITION_FOUND_ERROR;
-import static jbse.algo.Util.NO_SUCH_FIELD_ERROR;
-import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.createAndThrowObject;
 import static jbse.algo.Util.ensureKlass;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
+import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
+import static jbse.bc.Signatures.NO_SUCH_FIELD_ERROR;
 
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
@@ -67,13 +67,13 @@ final class SEGetstatic extends MultipleStateGeneratorLFLoad implements Algorith
 		try {
 	        fieldSignatureResolved = hier.resolveField(currentClassName, fieldSignature);
 		} catch (ClassFileNotFoundException e) {
-            createAndThrow(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+            createAndThrowObject(state, NO_CLASS_DEFINITION_FOUND_ERROR);
 			return;
 		} catch (FieldNotFoundException e) {
-            createAndThrow(state, NO_SUCH_FIELD_ERROR);
+            createAndThrowObject(state, NO_SUCH_FIELD_ERROR);
 			return;
 		} catch (FieldNotAccessibleException e) {
-            createAndThrow(state, ILLEGAL_ACCESS_ERROR);
+            createAndThrowObject(state, ILLEGAL_ACCESS_ERROR);
 			return;
 		}
 
@@ -85,7 +85,7 @@ final class SEGetstatic extends MultipleStateGeneratorLFLoad implements Algorith
 		    final ClassFile fieldClassFile = hier.getClassFile(fieldClassName);
 			//checks that the field is static or belongs to an interface
 			if ((!fieldClassFile.isInterface()) && (!fieldClassFile.isFieldStatic(fieldSignatureResolved))) {
-	            createAndThrow(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+	            createAndThrowObject(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
 				return;
 			}
 		} catch (ClassFileNotFoundException | FieldNotFoundException e) {

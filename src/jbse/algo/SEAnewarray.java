@@ -1,10 +1,10 @@
 package jbse.algo;
 
-import static jbse.algo.Util.ILLEGAL_ACCESS_ERROR;
-import static jbse.algo.Util.NO_CLASS_DEFINITION_FOUND_ERROR;
-import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.createAndThrowObject;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.ANEWARRAY_OFFSET;
+import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 
 import jbse.bc.ClassHierarchy;
 import jbse.bc.exc.ClassFileNotAccessibleException;
@@ -61,10 +61,10 @@ final class SEAnewarray extends MultipleStateGeneratorNewarray implements Algori
 		try {
 			arraySignatureResolved = hier.resolveClass(currentClassName, arraySignature);
 		} catch (ClassFileNotFoundException e) {
-			createAndThrow(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+			createAndThrowObject(state, NO_CLASS_DEFINITION_FOUND_ERROR);
 			return;
 		} catch (ClassFileNotAccessibleException e) {
-			createAndThrow(state, ILLEGAL_ACCESS_ERROR);
+			createAndThrowObject(state, ILLEGAL_ACCESS_ERROR);
 			return;
 		}
 		

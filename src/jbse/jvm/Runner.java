@@ -3,6 +3,7 @@ package jbse.jvm;
 import java.util.Map;
 
 import jbse.algo.exc.CannotManageStateException;
+import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionBacktrackException;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.exc.CannotBacktrackException;
@@ -306,6 +307,19 @@ public class Runner {
 		 */
 		public boolean atCannotManageStateException(CannotManageStateException e) 
 		throws CannotManageStateException { throw e; }
+        
+        /**
+         * Invoked by a {@link Runner}'s {@link Runner#run run}  method whenever a 
+         * {@link ClasspathException} is thrown by the {@link Engine}. 
+         * By default rethrows the exception.
+         * 
+         * @param e the {@link ClasspathException} thrown by the {@link Engine}.
+         * @return {@code true} iff the {@link Runner} must stop
+         *         {@link Runner#run run}ning.
+         * @throws CannotManageStateException by default.
+         */
+        public boolean atClasspathException(ClasspathException e) 
+        throws ClasspathException { throw e; }
 		
 		/**
 		 * Invoked by a {@link Runner}'s {@link Runner#run run} method whenever a 
@@ -457,6 +471,7 @@ public class Runner {
 	 * 
 	 * @throws CannotBacktrackException as in {@link Engine#backtrack()} 
 	 * @throws CannotManageStateException as in {@link Engine#step()} 
+     * @throws ClasspathException as in {@link Engine#step()} 
 	 * @throws ThreadStackEmptyException as in {@link Engine#step()}
 	 * @throws OperandStackEmptyException as in {@link Engine#step()}
 	 * @throws ContradictionException as in {@link Engine#step()} 
@@ -466,7 +481,7 @@ public class Runner {
 	 */
 	public void run() 
 	throws CannotBacktrackException, CannotManageStateException, 
-	ThreadStackEmptyException, OperandStackEmptyException, 
+	ClasspathException, ThreadStackEmptyException, OperandStackEmptyException, 
 	ContradictionException, DecisionException, EngineStuckException, 
 	FailureException  {
 		this.startTime = System.currentTimeMillis();
@@ -494,6 +509,8 @@ public class Runner {
 					}
 				} catch (CannotManageStateException e) {
 					if (this.actions.atCannotManageStateException(e)) { return; }
+                } catch (ClasspathException e) {
+                    if (this.actions.atClasspathException(e)) { return; }
 				} catch (ContradictionException e) {
 					if (this.actions.atContradictionException(e)) { return; }
 				} catch (DecisionException e) {

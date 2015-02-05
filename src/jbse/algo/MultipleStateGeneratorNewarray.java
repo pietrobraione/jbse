@@ -1,8 +1,8 @@
 package jbse.algo;
 
-import static jbse.algo.Util.NEGATIVE_ARRAY_SIZE_EXCEPTION;
-import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.createAndThrowObject;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Signatures.NEGATIVE_ARRAY_SIZE_EXCEPTION;
 
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
@@ -133,7 +133,7 @@ abstract class MultipleStateGeneratorNewarray extends MultipleStateGenerator<Dec
 		            throwVerifyError(s);
 				}
 			} else {
-				createAndThrow(s, NEGATIVE_ARRAY_SIZE_EXCEPTION);
+				createAndThrowObject(s, NEGATIVE_ARRAY_SIZE_EXCEPTION);
 			}
 		};
 		

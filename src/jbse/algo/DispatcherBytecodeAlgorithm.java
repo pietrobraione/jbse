@@ -121,15 +121,18 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm> {
 	}
 
 	private class DispatchStrategy_LDCX_Y implements Dispatcher.DispatchStrategy<SELdc> {
-		private boolean def;
-		public DispatchStrategy_LDCX_Y(boolean def) {
-			this.def = def;
+		private boolean wide;
+        private boolean cat1;
+		public DispatchStrategy_LDCX_Y(boolean wide, boolean cat1) {
+			this.wide = wide;
+			this.cat1 = cat1;
 		}
 		public SELdc doIt() {
 			if (DispatcherBytecodeAlgorithm.this.seLdc == null) {
 				DispatcherBytecodeAlgorithm.this.seLdc = new SELdc();
 			}
-			DispatcherBytecodeAlgorithm.this.seLdc.def = this.def;
+			DispatcherBytecodeAlgorithm.this.seLdc.wide = this.wide;
+            DispatcherBytecodeAlgorithm.this.seLdc.cat1 = this.cat1;
 			return DispatcherBytecodeAlgorithm.this.seLdc;
 		}
 	}
@@ -626,9 +629,9 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm> {
 		.setDispatchStrategy(OP_LSTORE_3,        new DispatchStrategy_XSTORE(3))
 		.setDispatchStrategy(OP_BIPUSH,          new DispatchStrategy_BIPUSH())
 		.setDispatchStrategy(OP_SIPUSH,          new DispatchStrategy_SIPUSH())
-		.setDispatchStrategy(OP_LDC,             new DispatchStrategy_LDCX_Y(true))
-		.setDispatchStrategy(OP_LDC_W,           new DispatchStrategy_LDCX_Y(false))
-		.setDispatchStrategy(OP_LDC2_W,          new DispatchStrategy_LDCX_Y(false))
+		.setDispatchStrategy(OP_LDC,             new DispatchStrategy_LDCX_Y(false, true))
+		.setDispatchStrategy(OP_LDC_W,           new DispatchStrategy_LDCX_Y(true, true))
+		.setDispatchStrategy(OP_LDC2_W,          new DispatchStrategy_LDCX_Y(true, false))
 		.setDispatchStrategy(OP_ACONST_NULL,     new DispatchStrategy_ACONST_NULL())
 		.setDispatchStrategy(OP_DCONST_0,        new DispatchStrategy_XCONST_Y(Type.DOUBLE, 0))
 		.setDispatchStrategy(OP_DCONST_1,        new DispatchStrategy_XCONST_Y(Type.DOUBLE, 1))

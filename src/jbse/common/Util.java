@@ -47,5 +47,6 @@ public final class Util {
      * Do not instantiate it!
      */
     private Util() {
+        //intentionally empty
     }
 }

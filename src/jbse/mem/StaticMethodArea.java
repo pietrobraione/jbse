@@ -11,7 +11,7 @@ import java.util.Set;
  * @author Pietro Braione
  *
  */
-public class StaticMethodArea implements Cloneable {
+public final class StaticMethodArea implements Cloneable {
 	private HashMap<String, Klass> objTable;
 	
 	public StaticMethodArea() {

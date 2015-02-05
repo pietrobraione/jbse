@@ -1,6 +1,6 @@
 package jbse.bc;
 
-import static jbse.bc.Util.JAVA_OBJECT;
+import static jbse.bc.Signatures.JAVA_OBJECT;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -164,8 +164,8 @@ public class ClassHierarchy {
 			if (Type.isPrimitive(subMember) && Type.isPrimitive(supMember)) {
 				return subMember.equals(supMember);
 			} else if (Type.isReference(subMember) && Type.isReference(supMember)) {
-				final String subMemberClass = Type.getClassFromReferenceType(subMember);
-				final String supMemberClass = Type.getClassFromReferenceType(supMember);
+				final String subMemberClass = Type.getReferenceClassName(subMember);
+				final String supMemberClass = Type.getReferenceClassName(supMember);
 				return this.isSubclass(subMemberClass, supMemberClass);
 			} else if (Type.isArray(subMember) && Type.isArray(supMember)) {
 				return this.isSubclass(subMember, supMember);

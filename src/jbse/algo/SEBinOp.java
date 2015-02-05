@@ -1,8 +1,8 @@
 package jbse.algo;
 
-import static jbse.algo.Util.ARITHMETIC_EXCEPTION;
-import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.createAndThrowObject;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Signatures.ARITHMETIC_EXCEPTION;
 
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
@@ -43,7 +43,7 @@ public class SEBinOp implements Algorithm {
         			if (val2 instanceof Simplex) {
         				Simplex op0_S = (Simplex) val2;
         				if (op0_S.isZeroOne(true)) {
-        				    createAndThrow(state, ARITHMETIC_EXCEPTION);
+        				    createAndThrowObject(state, ARITHMETIC_EXCEPTION);
         					return;
         				}
         			}

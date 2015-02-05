@@ -1,12 +1,12 @@
 package jbse.algo;
 
-import static jbse.algo.Util.ILLEGAL_ACCESS_ERROR;
-import static jbse.algo.Util.INCOMPATIBLE_CLASS_CHANGE_ERROR;
-import static jbse.algo.Util.NO_CLASS_DEFINITION_FOUND_ERROR;
-import static jbse.algo.Util.NO_SUCH_FIELD_ERROR;
-import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.createAndThrowObject;
 import static jbse.algo.Util.ensureKlass;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
+import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
+import static jbse.bc.Signatures.NO_SUCH_FIELD_ERROR;
 
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
@@ -61,13 +61,13 @@ class SEPutstatic implements Algorithm {
         try {
 			fieldSignatureResolved = hier.resolveField(currentClassName, fieldSignature);
 		} catch (ClassFileNotFoundException e) {
-            createAndThrow(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+            createAndThrowObject(state, NO_CLASS_DEFINITION_FOUND_ERROR);
 			return;
 		} catch (FieldNotFoundException e) {
-            createAndThrow(state, NO_SUCH_FIELD_ERROR);
+            createAndThrowObject(state, NO_SUCH_FIELD_ERROR);
 			return;
 		} catch (FieldNotAccessibleException e) {
-            createAndThrow(state, ILLEGAL_ACCESS_ERROR);
+            createAndThrowObject(state, ILLEGAL_ACCESS_ERROR);
 			return;
 		}
         
@@ -84,7 +84,7 @@ class SEPutstatic implements Algorithm {
 		//check that the field is static or belongs to an interface
 		try {
 			if ((!fieldClassFile.isInterface()) && (!fieldClassFile.isFieldStatic(fieldSignatureResolved))) {
-	            createAndThrow(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+	            createAndThrowObject(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
 				return;
 			}
 		} catch (FieldNotFoundException e) {
@@ -96,7 +96,7 @@ class SEPutstatic implements Algorithm {
         try {
 			if (fieldClassFile.isFieldFinal(fieldSignatureResolved) &&
 				!fieldClassName.equals(currentClassName)) {
-	            createAndThrow(state, ILLEGAL_ACCESS_ERROR);
+	            createAndThrowObject(state, ILLEGAL_ACCESS_ERROR);
 				return;
 			}
 		} catch (FieldNotFoundException e) {

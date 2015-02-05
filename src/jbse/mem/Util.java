@@ -2,13 +2,9 @@ package jbse.mem;
 
 import java.util.ArrayList;
 
-import static jbse.common.Type.ARRAYOF;
-import static jbse.common.Type.CHAR;
-import static jbse.common.Type.INT;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isReference;
 
-import jbse.bc.Signature;
 import jbse.val.Null;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -23,12 +19,6 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  */
 public class Util {
-	public static final String JAVA_STRING = "java/lang/String";
-	public static final Signature JAVA_STRING_HASH = new Signature(JAVA_STRING, "" + INT, "hash");
-	public static final Signature JAVA_STRING_OFFSET = new Signature(JAVA_STRING, "" + INT, "offset");
-	public static final Signature JAVA_STRING_COUNT = new Signature(JAVA_STRING, "" + INT, "count");
-	public static final Signature JAVA_STRING_VALUE = new Signature(JAVA_STRING, "" + ARRAYOF + CHAR, "value");
-	
 	/** The conventional heap position for the root object. */
 	public static final long POS_ROOT = 0; //TODO give it package visibility (by raising abstraction level of Tracker).
 

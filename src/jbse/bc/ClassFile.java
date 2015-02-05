@@ -250,7 +250,7 @@ public abstract class ClassFile {
      * 
      * @throws InvalidIndexException iff the constant pool has less entries than {@code index}.
      */
-    public abstract Object getValueFromConstantPool(int index) throws InvalidIndexException;
+    public abstract ConstantPoolValue getValueFromConstantPool(int index) throws InvalidIndexException;
 
     /**
      * Given a CONSTANT_Methodref index in the constant pool, returns the array 
@@ -375,8 +375,14 @@ public abstract class ClassFile {
      * @throws AttributeNotFoundException iff {@link #hasFieldConstantValue}{@code (fieldSignature) == false}.
      * @throws InvalidIndexException iff the access to the constant pool fails.
      */
-	public final Object fieldConstantValue(Signature fieldSignature) throws FieldNotFoundException, AttributeNotFoundException, InvalidIndexException {
-		return getValueFromConstantPool(fieldConstantValueIndex(fieldSignature));
+	public final ConstantPoolValue fieldConstantValue(Signature fieldSignature) 
+	throws FieldNotFoundException, AttributeNotFoundException, InvalidIndexException {
+	    final int index = fieldConstantValueIndex(fieldSignature);
+		final ConstantPoolValue retVal = getValueFromConstantPool(index);
+		if (retVal instanceof ConstantPoolClass) {
+		    throw new InvalidIndexException(entryInvalidMessage(index));
+		}
+		return retVal;
 	}
 
 
@@ -388,7 +394,8 @@ public abstract class ClassFile {
      * @throws FieldNotFoundException iff {@link #hasFieldDeclaration}{@code (fieldSignature) == false}.
      * @throws AttributeNotFoundException iff {@link #hasFieldConstantValue}{@code (fieldSignature) == false}.
      */
-	public abstract int fieldConstantValueIndex(Signature fieldSignature) throws FieldNotFoundException, AttributeNotFoundException;
+	public abstract int fieldConstantValueIndex(Signature fieldSignature) 
+	throws FieldNotFoundException, AttributeNotFoundException;
 
 	/**
      * Gets all the nonstatic (instance) fields declared by this class 
@@ -551,6 +558,14 @@ public abstract class ClassFile {
      */
     protected final LineNumberTable defaultLineNumberTable() {
     	return new LineNumberTable(0);
+    }
+    
+    protected final String indexOutOfRangeMessage(int index) {
+        return "index " + index + " not in constant pool of class " + getClassName();
+    }
+    
+    protected final String entryInvalidMessage(int index) {
+        return "index " + index + " did not correspond to a valid CONST_value entry in the constant pool of class " + getClassName();
     }
 
     @Override

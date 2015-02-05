@@ -1,7 +1,7 @@
 package jbse.algo;
 
-import static jbse.algo.Util.CLASS_CAST_EXCEPTION;
-import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.createAndThrowObject;
+import static jbse.bc.Signatures.CLASS_CAST_EXCEPTION;
 
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -12,7 +12,7 @@ final class SECheckcast extends SECastInstanceof {
     throws ThreadStackEmptyException {
         //if the check fails throws a ClassCastException
         if (!isSubclass) {
-            createAndThrow(state, CLASS_CAST_EXCEPTION);
+            createAndThrowObject(state, CLASS_CAST_EXCEPTION);
             return true;
         }
         return false;

@@ -8,6 +8,7 @@ import jbse.algo.exc.CannotManageStateException;
 import jbse.bc.Signature;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
+import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureAlgorithms;
@@ -80,7 +81,8 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 	 * @param component the component {@link DecisionProcedure} it decorates.
 	 * @param calc a {@link Calculator}.
 	 * @param runnerParameters the {@link RunnerParameters} of the symbolic execution.
-	 * @throws GuidanceException
+	 * @throws GuidanceException if something fails during creation (and the caller
+	 *         is blamed).
 	 */
 	public DecisionProcedureGuidance(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, final Signature stopSignature) 
 	throws GuidanceException {
@@ -141,12 +143,14 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 		//runs the private engine until it arrives at methodToRun
 		try {
 			runner.run();
+        } catch (ClasspathException e) {
+            throw new GuidanceException(e);
 		} catch (CannotBacktrackException | EngineStuckException | CannotManageStateException | 
 				ContradictionException | FailureException | DecisionException | 
 				ThreadStackEmptyException | OperandStackEmptyException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
-		}
+        }
 		
 		//fails catastrophically if the case
 		if (this.catastrophicFailure != null) {
@@ -187,7 +191,9 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 				//failed an assumption or an assertion; this ends both the guided 
 				//and the guiding execution
 				return;
-			}
+			} catch (ClasspathException e) {
+			    throw new GuidanceException(e);
+            }
 			updateFailedConcrete();
 			if (this.failedConcrete) {
 				throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);

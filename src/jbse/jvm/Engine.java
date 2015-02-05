@@ -9,6 +9,7 @@ import jbse.algo.SEInit;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.bc.Opcodes;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
+import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionBacktrackException;
 import jbse.dec.exc.DecisionException;
@@ -203,6 +204,8 @@ public class Engine implements AutoCloseable {
 	 *         does not produce more than one possible next state.
 	 * @throws CannotManageStateException iff the engine is unable to calculate 
 	 *         the next state because of some engine limitations.
+     * @throws ClasspathException iff the JRE standard libraries are missing from
+     *         the classpath or incompatible with the current JBSE.
 	 * @throws ContradictionException iff the step causes a violation of some assumption; 
 	 *         in this case after the step it is 
 	 *         {@code this.}{@link #canStep()}{@code == false}.
@@ -215,8 +218,8 @@ public class Engine implements AutoCloseable {
 	 *         {@code this.}{@link #canStep()}{@code == false}.
 	 */
 	public BranchPoint step() 
-	throws EngineStuckException, CannotManageStateException, ThreadStackEmptyException, 
-    OperandStackEmptyException, ContradictionException, 
+	throws EngineStuckException, CannotManageStateException, ClasspathException, 
+	ThreadStackEmptyException, OperandStackEmptyException, ContradictionException, 
     DecisionException, FailureException {
 		//sanity check
 		if (!canStep()) {
@@ -231,7 +234,7 @@ public class Engine implements AutoCloseable {
 		final Algorithm algo = this.dispatcher.select(this.currentState.getInstruction());
 		try {
 			algo.exec(this.currentState, this.ctx);
-		} catch (CannotManageStateException | ThreadStackEmptyException | 
+		} catch (ClasspathException | CannotManageStateException | ThreadStackEmptyException | 
 			    OperandStackEmptyException | ContradictionException | 
 			    DecisionException | FailureException | UnexpectedInternalException e) {
 			this.stopCurrentTrace();

@@ -1,9 +1,9 @@
 package jbse.algo;
 
-import static jbse.algo.Util.ILLEGAL_ACCESS_ERROR;
-import static jbse.algo.Util.NO_CLASS_DEFINITION_FOUND_ERROR;
-import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.createAndThrowObject;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.common.Util.byteCat;
 
 import jbse.bc.ClassHierarchy;
@@ -50,10 +50,10 @@ abstract class SECastInstanceof implements Algorithm {
         try {
             classSignatureResolved = hier.resolveClass(currentClassName, classSignature);
         } catch (ClassFileNotFoundException e) {
-            createAndThrow(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+            createAndThrowObject(state, NO_CLASS_DEFINITION_FOUND_ERROR);
             return;
         } catch (ClassFileNotAccessibleException e) {
-            createAndThrow(state, ILLEGAL_ACCESS_ERROR);
+            createAndThrowObject(state, ILLEGAL_ACCESS_ERROR);
             return;
         }
 

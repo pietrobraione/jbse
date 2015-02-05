@@ -1,14 +1,14 @@
 package jbse.algo;
 
-import static jbse.algo.Util.ABSTRACT_METHOD_ERROR;
-import static jbse.algo.Util.ILLEGAL_ACCESS_ERROR;
-import static jbse.algo.Util.INCOMPATIBLE_CLASS_CHANGE_ERROR;
-import static jbse.algo.Util.NO_CLASS_DEFINITION_FOUND_ERROR;
-import static jbse.algo.Util.NO_SUCH_METHOD_ERROR;
-import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.createAndThrowObject;
 import static jbse.algo.Util.ensureKlass;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKESTATIC_OFFSET;
+import static jbse.bc.Signatures.ABSTRACT_METHOD_ERROR;
+import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
+import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
+import static jbse.bc.Signatures.NO_SUCH_METHOD_ERROR;
 
 import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.PleaseDoNativeException;
@@ -23,6 +23,7 @@ import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NoMethodReceiverException;
 import jbse.common.Util;
+import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.exc.FailureException;
@@ -41,7 +42,7 @@ final class SEInvokeStatic implements Algorithm {
 	public void exec(State state, ExecutionContext ctx) 
 	throws CannotManageStateException, ThreadStackEmptyException, 
 	OperandStackEmptyException, ContradictionException, FailureException, 
-	DecisionException {
+	DecisionException, ClasspathException {
 		//gets index operand from instruction word and 
 		//calculates/stores the pointer to the next instruction
 		final int index;
@@ -73,19 +74,19 @@ final class SEInvokeStatic implements Algorithm {
 		try {
 			methodSignatureResolved = hier.resolveMethod(currentClassName, methodSignature, false);
 		} catch (ClassFileNotFoundException e) {
-            createAndThrow(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+            createAndThrowObject(state, NO_CLASS_DEFINITION_FOUND_ERROR);
 			return;
 		} catch (IncompatibleClassFileException e) {
-            createAndThrow(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+            createAndThrowObject(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
 			return;
 		} catch (MethodAbstractException e) {
-            createAndThrow(state, ABSTRACT_METHOD_ERROR);
+            createAndThrowObject(state, ABSTRACT_METHOD_ERROR);
 			return;
 		} catch (MethodNotFoundException e) {
-            createAndThrow(state, NO_SUCH_METHOD_ERROR);
+            createAndThrowObject(state, NO_SUCH_METHOD_ERROR);
 			return;
 		} catch (MethodNotAccessibleException e) {
-            createAndThrow(state, ILLEGAL_ACCESS_ERROR);
+            createAndThrowObject(state, ILLEGAL_ACCESS_ERROR);
 			return;
 		}
 
@@ -93,7 +94,7 @@ final class SEInvokeStatic implements Algorithm {
 		try {
 			final ClassFile classFileResolved = hier.getClassFile(methodSignatureResolved.getClassName());
 			if (!classFileResolved.isMethodStatic(methodSignatureResolved)) {
-	            createAndThrow(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+	            createAndThrowObject(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
 		    	return;
 			}
 		} catch (ClassFileNotFoundException | MethodNotFoundException e) {

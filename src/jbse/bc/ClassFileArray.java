@@ -1,8 +1,8 @@
 package jbse.bc;
 
-import static jbse.bc.Util.JAVA_CLONEABLE;
-import static jbse.bc.Util.JAVA_OBJECT;
-import static jbse.bc.Util.JAVA_SERIALIZABLE;
+import static jbse.bc.Signatures.JAVA_CLONEABLE;
+import static jbse.bc.Signatures.JAVA_OBJECT;
+import static jbse.bc.Signatures.JAVA_SERIALIZABLE;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -12,7 +12,6 @@ import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
-
 
 public class ClassFileArray extends ClassFile {
 	//TODO by now clone is treated as a native method; implement it.
@@ -145,7 +144,7 @@ public class ClassFileArray extends ClassFile {
 	}
 
 	@Override
-	public Object getValueFromConstantPool(int index)
+	public ConstantPoolValue getValueFromConstantPool(int index)
 	throws InvalidIndexException {
 		throw new InvalidIndexException(NO_CONSTANT_POOL);
 	}

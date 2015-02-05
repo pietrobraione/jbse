@@ -1,7 +1,7 @@
 package jbse.algo;
 
-import static jbse.algo.Util.INDEX_OUT_OF_BOUNDS_EXCEPTION;
-import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.createAndThrowObject;
+import static jbse.bc.Signatures.INDEX_OUT_OF_BOUNDS_EXCEPTION;
 
 import jbse.mem.State;
 import jbse.mem.exc.OperandStackEmptyException;
@@ -14,6 +14,6 @@ public class SEGetStackTraceElement implements Algorithm {
 		//TODO replace this dummy implementation
 		state.pop();
 		state.pop();
-        createAndThrow(state, INDEX_OUT_OF_BOUNDS_EXCEPTION);
+        createAndThrowObject(state, INDEX_OUT_OF_BOUNDS_EXCEPTION);
 	}
 }

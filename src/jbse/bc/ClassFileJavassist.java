@@ -5,6 +5,8 @@ import java.util.List;
 
 
 
+
+
 import javassist.ClassPool;
 import javassist.CtBehavior;
 import javassist.CtClass;
@@ -18,6 +20,8 @@ import javassist.bytecode.ConstPool;
 import javassist.bytecode.LineNumberAttribute;
 import javassist.bytecode.LocalVariableAttribute;
 //also uses javassist.bytecode.ExceptionTable, not imported to avoid name clash
+
+
 
 import jbse.bc.exc.AttributeNotFoundException;
 import jbse.bc.exc.ClassFileNotFoundException;
@@ -195,7 +199,7 @@ public class ClassFileJavassist extends ClassFile {
 		final ExceptionTable retVal = new ExceptionTable(et.size());
 		for (int i = 0; i < et.size(); ++i) {
 		    final int exType = et.catchType(i);
-		    final String catchType = (exType == 0 ? Util.JAVA_THROWABLE : getClassSignature(exType));
+		    final String catchType = (exType == 0 ? Signatures.JAVA_THROWABLE : getClassSignature(exType));
 	        final ExceptionTableEntry exEntry = new ExceptionTableEntry(et.startPc(i), et.endPc(i), et.handlerPc(i), catchType);
             retVal.addEntry(exEntry);
 		}
@@ -274,22 +278,24 @@ public class ClassFileJavassist extends ClassFile {
 	}
 
 	@Override
-	public Object getValueFromConstantPool(int index) throws InvalidIndexException {
+	public ConstantPoolValue getValueFromConstantPool(int index) throws InvalidIndexException {
 		if (index < 1 || index > this.cp.getSize()) {
 	        throw new InvalidIndexException(indexOutOfRangeMessage(index));
 		}
-		int tag = this.cp.getTag(index);
+		final int tag = this.cp.getTag(index);
 		switch (tag) {
         case ConstPool.CONST_Integer:
-            return Integer.valueOf(this.cp.getIntegerInfo(index));
+            return new ConstantPoolPrimitive(this.cp.getIntegerInfo(index));
         case ConstPool.CONST_Float:
-            return Float.valueOf(this.cp.getFloatInfo(index));
+            return new ConstantPoolPrimitive(this.cp.getFloatInfo(index));
         case ConstPool.CONST_Long:
-            return Long.valueOf(this.cp.getLongInfo(index));
+            return new ConstantPoolPrimitive(this.cp.getLongInfo(index));
         case ConstPool.CONST_Double:
-            return Double.valueOf(this.cp.getDoubleInfo(index));
+            return new ConstantPoolPrimitive(this.cp.getDoubleInfo(index));
         case ConstPool.CONST_String:
-            return this.cp.getStringInfo(index);
+            return new ConstantPoolString(this.cp.getStringInfo(index));
+        case ConstPool.CONST_Class:
+            return new ConstantPoolClass(this.cp.getClassInfo(index).replace(".", "/"));
 		}
         throw new InvalidIndexException(entryInvalidMessage(index));
 	}
@@ -516,13 +522,5 @@ public class ClassFileJavassist extends ClassFile {
 	@Override
 	public boolean isStatic() {
 		return Modifier.isStatic(cls.getModifiers());
-	}
-	
-	private String indexOutOfRangeMessage(int index) {
-		return "index " + index + " not in constant pool of class " + getClassName();
-	}
-	
-	private String entryInvalidMessage(int index) {
-		return "index " + index + " did not correspond to a valid CONST_value entry in the constant pool of class " + getClassName();
 	}
 }

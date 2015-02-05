@@ -1,12 +1,12 @@
 package jbse.algo;
 
-import static jbse.algo.Util.ILLEGAL_ACCESS_ERROR;
-import static jbse.algo.Util.INCOMPATIBLE_CLASS_CHANGE_ERROR;
-import static jbse.algo.Util.NO_CLASS_DEFINITION_FOUND_ERROR;
-import static jbse.algo.Util.NO_SUCH_FIELD_ERROR;
-import static jbse.algo.Util.NULL_POINTER_EXCEPTION;
-import static jbse.algo.Util.createAndThrow;
+import static jbse.algo.Util.createAndThrowObject;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
+import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
+import static jbse.bc.Signatures.NO_SUCH_FIELD_ERROR;
+import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
@@ -72,13 +72,13 @@ final class SEGetfield extends MultipleStateGeneratorLFLoad implements Algorithm
 		try {
 			fieldSignatureResolved = hier.resolveField(currentClassName, fieldSignature);
 		} catch (ClassFileNotFoundException e) {
-            createAndThrow(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+            createAndThrowObject(state, NO_CLASS_DEFINITION_FOUND_ERROR);
 			return;
 		} catch (FieldNotFoundException e) {
-            createAndThrow(state, NO_SUCH_FIELD_ERROR);
+            createAndThrowObject(state, NO_SUCH_FIELD_ERROR);
 			return;
 		} catch (FieldNotAccessibleException e) {
-            createAndThrow(state, ILLEGAL_ACCESS_ERROR);
+            createAndThrowObject(state, ILLEGAL_ACCESS_ERROR);
 			return;
 		}
 
@@ -95,7 +95,7 @@ final class SEGetfield extends MultipleStateGeneratorLFLoad implements Algorithm
 		//checks that the field is not static
 		try {
 			if (fieldClassFile.isFieldStatic(fieldSignatureResolved)) {
-	            createAndThrow(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+	            createAndThrowObject(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
 				return;
 			}
 		} catch (FieldNotFoundException e) {
@@ -106,7 +106,7 @@ final class SEGetfield extends MultipleStateGeneratorLFLoad implements Algorithm
 		//gets the field's value
         final Reference myObjectRef = (Reference) state.pop();
         if (state.isNull(myObjectRef)) {
-            createAndThrow(state, NULL_POINTER_EXCEPTION);
+            createAndThrowObject(state, NULL_POINTER_EXCEPTION);
 	    	return;
         }
         final Instance myObject = (Instance) state.getObject(myObjectRef); 
