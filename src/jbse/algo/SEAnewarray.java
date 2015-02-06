@@ -57,9 +57,8 @@ final class SEAnewarray extends MultipleStateGeneratorNewarray implements Algori
 		}
 
 		//resolves the array signature
-        final String arraySignatureResolved;
 		try {
-			arraySignatureResolved = hier.resolveClass(currentClassName, arraySignature);
+			hier.resolveClass(currentClassName, arraySignature);
 		} catch (ClassFileNotFoundException e) {
 			createAndThrowObject(state, NO_CLASS_DEFINITION_FOUND_ERROR);
 			return;
@@ -77,7 +76,7 @@ final class SEAnewarray extends MultipleStateGeneratorNewarray implements Algori
     	this.ctx = ctx;
     	this.pcOffset = ANEWARRAY_OFFSET;
     	this.dimensionsCounts = new Primitive[] { length };
-        this.arrayType = arraySignatureResolved;
+        this.arrayType = arraySignature;
     	this.generateStates();
     } 
 }

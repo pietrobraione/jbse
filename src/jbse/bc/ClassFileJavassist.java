@@ -34,7 +34,7 @@ public class ClassFileJavassist extends ClassFile {
 	private CtClass cls;
 	private ConstPool cp;
 	
-	public ClassFileJavassist(String className, ClassPool cpool) throws ClassFileNotFoundException {
+	ClassFileJavassist(String className, ClassPool cpool) throws ClassFileNotFoundException {
 		//TODO understand how in Javassist "file not found" is differentiated from "file found and invalid"
 		try {
 			this.cls = cpool.get(className.replace("/", "."));
@@ -42,17 +42,6 @@ public class ClassFileJavassist extends ClassFile {
 		} catch (NotFoundException e) {
 			throw new ClassFileNotFoundException(className);
 		}
-	}
-
-	@Override
-	public String getPackageName() {
-		String className = this.getClassName();
-    	int lastSlash = className.lastIndexOf('/');
-    	if (lastSlash == -1) {
-    		return "";
-    	} else {
-    		return className.substring(0, lastSlash);
-    	}
 	}
 
 	@Override

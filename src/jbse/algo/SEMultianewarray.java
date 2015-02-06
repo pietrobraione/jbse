@@ -67,12 +67,9 @@ final class SEMultianewarray extends MultipleStateGeneratorNewarray implements A
 		}
 
 		//(possibly) resolves the array signature
-		final String arraySignatureResolved;
-    	if (Type.isPrimitive(memberType)) {
-    		arraySignatureResolved = arraySignature;
-    	} else {
+    	if (Type.isReference(memberType)) {
     		try {
-				arraySignatureResolved = hier.resolveClass(currentClassName, arraySignature);
+				hier.resolveClass(currentClassName, arraySignature);
     		} catch (ClassFileNotFoundException e) {
                 createAndThrowObject(state, NO_CLASS_DEFINITION_FOUND_ERROR);
     			return;
@@ -97,7 +94,7 @@ final class SEMultianewarray extends MultipleStateGeneratorNewarray implements A
 			this.dimensionsCounts[i] = (Primitive) state.pop();
 			//TODO length type check
 		}
-    	this.arrayType = arraySignatureResolved;
+    	this.arrayType = arraySignature;
     	this.generateStates();
 	}
 }

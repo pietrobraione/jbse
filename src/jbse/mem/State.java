@@ -1,13 +1,11 @@
 package jbse.mem;
 
 import static jbse.bc.Signatures.JAVA_CLASS;
-import static jbse.bc.Signatures.JAVA_CLASS_NAME;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_STRING_COUNT;
 import static jbse.bc.Signatures.JAVA_STRING_HASH;
 import static jbse.bc.Signatures.JAVA_STRING_OFFSET;
 import static jbse.bc.Signatures.JAVA_STRING_VALUE;
-import static jbse.common.Type.binaryClassName;
 import static jbse.common.Util.ROOT_FRAME_MONIKER;
 
 import java.util.ArrayList;
@@ -26,18 +24,13 @@ import jbse.bc.ClassFile;
 import jbse.bc.ClassFileFactory;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Classpath;
-import jbse.bc.ConstantPoolPrimitive;
-import jbse.bc.ConstantPoolString;
-import jbse.bc.ConstantPoolValue;
 import jbse.bc.ExceptionTable;
 import jbse.bc.ExceptionTableEntry;
 import jbse.bc.LineNumberTable;
 import jbse.bc.LocalVariableTable;
 import jbse.bc.Signature;
-import jbse.bc.exc.AttributeNotFoundException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
-import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.InvalidIndexException;
@@ -515,7 +508,11 @@ public class State implements Cloneable {
 	
 	/**
 	 * Creates a concrete {@link Klass} object and loads it in the 
-	 * static area of this state. If the {@link Klass} exists does nothing.
+	 * static area of this state. It does not initialize the constant 
+     * fields nor loads on the stack of the state the frames for the
+     * {@code <clinit>} methods. It does not create {@link Klass} objects
+     * for superclasses}.
+	 * If the {@link Klass} exists it does nothing.
 	 * 
 	 * @param className the name of the class to be loaded. The method 
 	 *        creates and loads a {@link Klass} object only for {@code className}, 
@@ -524,7 +521,7 @@ public class State implements Cloneable {
      *         found in the classpath.
 	 * @throws InvalidIndexException if the access to the class constant pool fails.
 	 */
-	public void createKlass(String className) 
+	private void ensureKlass(String className) 
 	throws ClassFileNotFoundException, InvalidIndexException {
 	    if (initialized(className)) {
 	        return;
@@ -533,13 +530,14 @@ public class State implements Cloneable {
 		final Signature[] fieldsSignatures = classFile.getFieldsStatic();
 		final Klass k = new Klass(State.this.calc, null, Objekt.Epoch.EPOCH_AFTER_START, fieldsSignatures);
 		this.staticMethodArea.set(className, k);
-		initConstantFields(classFile, k);
 	}
 
 	/**
 	 * Creates a symbolic {@link Klass} object and loads it in the 
-	 * static area of this state. If the {@link Klass} already exists 
-	 * does nothing.
+	 * static area of this state. It does not initialize the constant 
+	 * fields. It does not create {@link Klass} objects
+     * for superclasses}.
+	 * If the {@link Klass} already exists it does nothing.
 	 * 
 	 * @param className the name of the class to be loaded.
      * @throws ClassFileNotFoundException if {@code className} does 
@@ -547,7 +545,7 @@ public class State implements Cloneable {
 	 * @throws InvalidIndexException if the access to the class 
 	 *         constant pool fails.
 	 */
-	private void createKlassSymbolic(String className) 
+	public void ensureKlassSymbolic(String className) 
 	throws ClassFileNotFoundException, InvalidIndexException {
         if (initialized(className)) {
             return;
@@ -556,45 +554,7 @@ public class State implements Cloneable {
 		final Signature[] fieldsSignatures = classFile.getFieldsStatic();
 		final Klass k = new Klass(this.calc, "[" + className + "]", Objekt.Epoch.EPOCH_BEFORE_START, fieldsSignatures);
 		initWithSymbolicValues(k);
-		initConstantFields(classFile, k);
-		this.staticMethodArea.set(className, k);
-	}
-	
-	/**
-	 * Initializes the constant fields of a {@link Klass} with the 
-	 * constant values specified in the classfile, if present.
-	 * Currently, these constant fields are only used to keep the 
-	 * {@link Klass} coherent with its definition (and prettyprint 
-	 * it correctly), because all bytecodes fetch constant field values
-	 * directly since {@link Klass}es can be not initialized.
-	 * 
-	 * @param classFile the classfile of the class to be initialized.
-	 * @param k the corresponding {@link Klass} object.
-	 * @throws InvalidIndexException if the access to the class constant pool fails.
-	 */
-	private void initConstantFields(ClassFile classFile, Klass k) throws InvalidIndexException {
-		final Signature[] flds = classFile.getFieldsStatic();
-		for (final Signature sig : flds) {
-			try {
-				if (classFile.isFieldConstant(sig)) {
-					//sig is directly extracted from the classfile, 
-					//so no resolution is necessary
-                    final Value v;
-                    final ConstantPoolValue cpv = classFile.fieldConstantValue(sig);
-                    if (cpv instanceof ConstantPoolPrimitive) {
-                        v = this.calc.val_(cpv.getValue());
-                    } else if (cpv instanceof ConstantPoolString) {
-						v = referenceToStringLiteral(((ConstantPoolString) cpv).getValue());
-					} else { //cpv instanceof ConstantPoolClass - should never happen
-					    throw new UnexpectedInternalException("Unexpected constant from constant pool (neither primitive nor java.lang.String)"); //TODO put string in constant or throw better exception
-					}
-					k.setFieldValue(sig, v);
-				}
-			} catch (FieldNotFoundException | AttributeNotFoundException e) {
-				//this should never happen
-				throw new UnexpectedInternalException(e);
-			}
-		}
+        this.staticMethodArea.set(className, k);
 	}
 
 	/**
@@ -680,9 +640,11 @@ public class State implements Cloneable {
 
     /**
      * Creates an {@link Instance} of class {@code java.lang.String} 
-     * in this state's heap corresponding to a string literal. Does not
+     * in this state's heap corresponding to a string literal sidestepping 
+     * the constructors of {@code java.lang.String} to avoid incredible 
+     * circularity issues with string constant fields. Does not
      * manage the creation of the {@link Klass} for {@code java.lang.String}
-     * and its members. If it already exists, does nothing.
+     * and its members. If the literal already exists, does nothing.
      * 
      * @param stringLit a {@link String} representing a string literal.
      */
@@ -714,16 +676,16 @@ public class State implements Cloneable {
 			//this should never happen 
 			throw new UnexpectedInternalException(e);
 		}
-		final Array a = (Array) this.getObject(retVal);
-		for (int k = 0; k < value.length(); k++) {
-			char c = value.charAt(k);
-			try {
-				a.setFast(this.calc.valInt(k), this.calc.valChar(c));
-			} catch (InvalidOperandException | InvalidTypeException
-					| FastArrayAccessNotAllowedException e) {
-				//this should never happen 
-				throw new UnexpectedInternalException(e);
-			}
+		try {
+		    final Array a = (Array) this.getObject(retVal);
+		    for (int k = 0; k < value.length(); ++k) {
+		        final char c = value.charAt(k);
+		        a.setFast(this.calc.valInt(k), this.calc.valChar(c));
+		    }
+		} catch (ClassCastException | InvalidOperandException | 
+		         InvalidTypeException | FastArrayAccessNotAllowedException e) {
+		    //this should never happen 
+		    throw new UnexpectedInternalException(e);
 		}
 
 		return retVal;
@@ -744,15 +706,15 @@ public class State implements Cloneable {
     /**
      * Returns an {@link Instance} of class {@code java.lang.Class} 
      * from a {@link State}'s {@link Heap} corresponding to a class name. 
-     * In the case such {@link Instance} does not exist, it creates it and
-     * puts it in the {@link State}'s {@link Heap}.
+     * 
      * 
      * @param className a {@link String} representing the name of a class.
      *        Classes of primitive types must be provided as their binary
      *        names (see Java Language Specification 
      * @return a {@link ReferenceConcrete} to the {@link Instance} in 
-     *         {@code state}'s {@link Heap} corresponding to 
-     *         {@code value}. 
+     *         {@code state}'s {@link Heap} of the class with name
+     *         {@code className}, or {@code null} if such instance does not
+     *         exist. 
      */
     public ReferenceConcrete referenceToClass(String className) {
         final ReferenceConcrete retVal = this.classes.get(className);
@@ -765,17 +727,8 @@ public class State implements Cloneable {
             return;
         }
         final String currentClassName = getCurrentMethodSignature().getClassName();
-        final String classSignatureResolved = 
-            this.classHierarchy.resolveClass(currentClassName, className);
-
-        final String classNameBinary = binaryClassName(classSignatureResolved);
+        this.classHierarchy.resolveClass(currentClassName, className);
         final ReferenceConcrete retVal = createInstance(JAVA_CLASS);
-        final Instance i = (Instance) this.getObject(retVal);
-        if (!this.stringLiterals.containsKey(classNameBinary)) { //TODO is it ok to treat the class name String as a string literal?
-            ensureStringLiteral(classNameBinary);
-        }
-        final ReferenceConcrete classNameString = referenceToStringLiteral(classNameBinary);
-        i.setFieldValue(JAVA_CLASS_NAME, classNameString);
         this.classes.put(className, retVal);
     }
 
@@ -794,7 +747,7 @@ public class State implements Cloneable {
 	public void throwObject(Reference exceptionToThrow) 
 	throws ThreadStackEmptyException, InvalidIndexException, InvalidProgramCounterException {
 		//TODO check that exceptionToThrow is resolved/concrete
-		final Objekt myException = this.getObject(exceptionToThrow);
+		final Objekt myException = getObject(exceptionToThrow);
 		//TODO check that Objekt is Throwable
 
 		//fills a vector with all the superclass names of the exception
@@ -1447,7 +1400,9 @@ public class State implements Cloneable {
 
 	/**
 	 * Assumes that a class is initialized before the 
-	 * start of symbolic execution.
+	 * start of symbolic execution. Additionally, it
+	 * creates a symbolic {@link Klass} and adds it 
+	 * to the static store.
 	 * 
 	 * @param className the corresponding concrete class 
 	 *        name as a {@link String}. It must be 
@@ -1456,14 +1411,15 @@ public class State implements Cloneable {
 	 *         is {@code null}.
      * @throws ClassFileNotFoundException if {@code className} does 
      *         not correspond to a valid class in the classpath.
-	 * @throws ThreadStackEmptyException if the thread stack is empty.
+	 * @throws InvalidIndexException if the access to the class 
+     *         constant pool fails.
 	 */
 	public void assumeClassInitialized(String className) 
 	throws ClassFileNotFoundException, InvalidIndexException {
 		if (className == null) {
 			throw new NullPointerException();
 		}
-		createKlassSymbolic(className);
+		ensureKlassSymbolic(className);
 		final Klass k = this.getKlass(className);
 		this.pathCondition.addClauseAssumeClassInitialized(className, k);
 		++this.nPushedClauses;
@@ -1471,18 +1427,26 @@ public class State implements Cloneable {
 
 	/**
 	 * Assumes that a class is not initialized before the 
-	 * start of symbolic execution.
+	 * start of symbolic execution. Additionally, it
+     * creates a concrete {@link Klass} and adds it to the 
+     * static store.
 	 * 
 	 * @param className the corresponding concrete class 
 	 *        name as a {@link String}. It must be 
 	 *        {@link className != null}.
-	 * @throws NullPointerException if {@code className} 
-	 *         violates preconditions.
+     * @throws NullPointerException if {@code className} 
+     *         is {@code null}.
+     * @throws ClassFileNotFoundException if {@code className} does 
+     *         not correspond to a valid class in the classpath.
+     * @throws InvalidIndexException if the access to the class 
+     *         constant pool fails.
 	 */
-	public void assumeClassNotInitialized(String className) {
+	public void assumeClassNotInitialized(String className) 
+	throws ClassFileNotFoundException, InvalidIndexException {
 		if (className == null) {
 			throw new NullPointerException();
 		}
+		ensureKlass(className);
 		this.pathCondition.addClauseAssumeClassNotInitialized(className);
 		++this.nPushedClauses;
 	}

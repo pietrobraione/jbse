@@ -9,6 +9,7 @@ import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodNotFoundException;
+import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.exc.InitializationException;
@@ -23,7 +24,8 @@ import jbse.mem.exc.ThreadStackEmptyException;
  */
 public final class SEInit {
 	public void exec(ExecutionContext ctx) 
-	throws DecisionException, InitializationException, InvalidClassFileFactoryClassException {
+	throws DecisionException, InitializationException, 
+	InvalidClassFileFactoryClassException, ClasspathException {
 		//TODO do checks and possibly raise exceptions
 		State state = ctx.getInitialState();
 		if (state == null) {
@@ -31,13 +33,13 @@ public final class SEInit {
 			state = createInitialState(ctx);
 		}
 		
-		//aligns the initial state with the context
-		align(state, ctx);
+        //adds the initial state to the state tree
+        ctx.stateTree.addInitialState(state);
 	}
 	
 	private State createInitialState(ExecutionContext ctx) 
 	throws InvalidClassFileFactoryClassException, InitializationException, 
-	DecisionException {
+	DecisionException, ClasspathException {
 		final State state = new State(ctx.classpath, ctx.classFileFactoryClass, ctx.expansionBackdoor, ctx.calc);
 
 		//adds a method frame for the initial method invocation
@@ -62,19 +64,9 @@ public final class SEInit {
 			throw new UnexpectedInternalException(e);
 		}
 		
-		//sets the created state as the initial one (a safety copy)
-		ctx.setInitialState(state.clone());
+		//saves a copy of the created state
+		ctx.setInitialState(state);
 		
 		return state;
-	}
-	
-	private static void align(State state, ExecutionContext ctx) 
-	throws DecisionException {
-		//synchronizes the decision procedure with the state
-		ctx.decisionProcedure.setAssumptions(state.getPathCondition());
-		state.resetLastPathConditionClauses();
-		
-		//adds the initial state to the state tree
-		ctx.stateTree.addInitialState(state);
 	}
 }

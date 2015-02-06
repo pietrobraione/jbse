@@ -45,6 +45,8 @@ public final class Signatures {
     public static final String VERIFY_ERROR                         = "java/lang/VerifyError";
     
     //methods
+    public static final Signature JAVA_STRING_INTERN =
+        new Signature(JAVA_STRING, "()" + REFERENCE + JAVA_STRING + TYPEEND, "intern");
     public static final Signature JAVA_THROWABLE_FILLINSTACKTRACE =
         new Signature(JAVA_THROWABLE, "()" + REFERENCE + JAVA_THROWABLE + TYPEEND, "fillInStackTrace");
     public static final Signature JAVA_THROWABLE_GETSTACKTRACEDEPTH = 

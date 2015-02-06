@@ -11,6 +11,7 @@ import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.common.Util;
+import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
@@ -21,7 +22,7 @@ final class SENew implements Algorithm {
 	
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, DecisionException {
+	throws ThreadStackEmptyException, DecisionException, ClasspathException {
 		final int index;
 		try {
 			final byte tmp1 = state.getInstruction(1);
@@ -33,11 +34,10 @@ final class SENew implements Algorithm {
 		}
         
         //performs resolution
-        final String classSignatureResolved;
+        final String classSignature;
         {
             final ClassHierarchy hier = state.getClassHierarchy();
             final String currentClassName = state.getCurrentMethodSignature().getClassName();
-            final String classSignature;
             try {
                 classSignature = hier.getClassFile(currentClassName).getClassSignature(index);
             } catch (InvalidIndexException e) {
@@ -48,7 +48,7 @@ final class SENew implements Algorithm {
                 throw new UnexpectedInternalException(e);
             }
             try {
-                classSignatureResolved = hier.resolveClass(currentClassName, classSignature);
+                hier.resolveClass(currentClassName, classSignature);
             } catch (ClassFileNotFoundException e) {
                 createAndThrowObject(state, NO_CLASS_DEFINITION_FOUND_ERROR);
                 return;
@@ -61,7 +61,7 @@ final class SENew implements Algorithm {
 		//initializes the class in case it is not
 		final boolean mustExit;
 		try {
-			mustExit = ensureKlass(state, classSignatureResolved, ctx.decisionProcedure);
+			mustExit = ensureKlass(state, classSignature, ctx.decisionProcedure);
 		} catch (ClassFileNotFoundException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
@@ -71,7 +71,7 @@ final class SENew implements Algorithm {
 		}
 
         //creates the new object in the heap
-        state.push(state.createInstance(classSignatureResolved));
+        state.push(state.createInstance(classSignature));
         
 		try {
 			state.incPC(3);

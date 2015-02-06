@@ -126,9 +126,10 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 			final RunnerBuilder b = new RunnerBuilder();
 			runner = b.build(runnerParameters);
 			this.engine = b.getEngine();
-		} catch (CannotBuildEngineException | InitializationException e) {
+		} catch (CannotBuildEngineException | InitializationException | ClasspathException e) {
 			//CannotBuildEngineException may happen if something goes wrong in the construction of the decision procedure
 			//InitializationException happens when the method does not exist or is native
+		    //ClasspathException happens when the classpath does not point to a valid JRE
 			throw new GuidanceException(e);
 		} catch (NonexistingObservedVariablesException | DecisionException | InvalidClassFileFactoryClassException e) {
 			//NonexistingObservedVariablesException should not happen since this decision procedure does not register any variable observer

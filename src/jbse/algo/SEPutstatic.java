@@ -16,6 +16,7 @@ import jbse.bc.exc.FieldNotAccessibleException;
 import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.common.Util;
+import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
@@ -29,7 +30,7 @@ class SEPutstatic implements Algorithm {
 	@Override
     public void exec(State state, ExecutionContext ctx) 
     throws ThreadStackEmptyException, OperandStackEmptyException, 
-    DecisionException {
+    DecisionException, ClasspathException {
 		//gets the index of the field signature in the current class 
     	//constant pool
 		final int index;

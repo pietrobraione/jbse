@@ -9,7 +9,6 @@ import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.NoArrayVisibilitySpecifiedException;
 import jbse.common.Type;
-import jbse.common.exc.UnexpectedInternalException;
 
 /**
  * Class that permits to retrieve information from a number of 
@@ -62,11 +61,11 @@ class ClassFileInterface {
         
         if (!jcrArray.containsKey(className)) {        
 	        //if the class file is not already in jcrArray, adds it
-	        final ClassFile tempCF;
+	        ClassFile tempCF;
 	        try {
 				tempCF = this.f.newClassFile(className);
 			} catch (NoArrayVisibilitySpecifiedException e) {
-				throw new UnexpectedInternalException(e);
+				tempCF = new ClassFileBad(className);
 			}
 	        jcrArray.put(className, tempCF);
         }

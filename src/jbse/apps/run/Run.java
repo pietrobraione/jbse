@@ -860,6 +860,10 @@ public class Run {
 			IO.println(this.err, ERROR_ENGINE_CONFIGURATION);
 			IO.printException(Run.this.err, e);
 			return 1;
+        } catch (ClasspathException e) {
+            IO.println(this.err, ERROR_BAD_CLASSPATH);
+            IO.printException(Run.this.err, e);
+            return 1;
 		} catch (UnexpectedInternalException e) {
 			IO.println(this.err, ERROR_ENGINE_UNEXPECTED);
 			IO.printException(Run.this.err, e);

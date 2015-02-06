@@ -145,10 +145,12 @@ public class Engine implements AutoCloseable {
 	 *         observed variable names cannot be observed. This is the only exception
 	 *         that allows nevertheless to perform symbolic execution, in which case 
 	 *         only the observers to existing variables will be notified.
+	 * @throws ClasspathException 
 	 */
 	void init() 
 	throws DecisionException, InitializationException, 
-	InvalidClassFileFactoryClassException, NonexistingObservedVariablesException {
+	InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, 
+	ClasspathException {
 		//executes the initial state setup step
 		final SEInit algo = this.dispatcher.select();
 		algo.exec(ctx);
@@ -156,7 +158,11 @@ public class Engine implements AutoCloseable {
 		//extracts the initial state from the tree
 		this.currentState = this.ctx.stateTree.nextState();
 		
-		//inits the variable observer manager
+        //synchronizes the decision procedure with the path condition
+		this.ctx.decisionProcedure.setAssumptions(this.currentState.getPathCondition());
+		this.currentState.resetLastPathConditionClauses();
+
+        //inits the variable observer manager
 		try {
 			this.vom.init(this);
 		} catch (ThreadStackEmptyException e) {
@@ -263,7 +269,7 @@ public class Engine implements AutoCloseable {
         	this.currentState.incCount();
         }
 
-		//updates the decision procedure
+		//synchronizes the decision procedure with the path condition
 		this.ctx.decisionProcedure.addAssumptions(this.currentState.getLastPathConditionPushedClauses());
 		this.currentState.resetLastPathConditionClauses();
 
@@ -301,12 +307,12 @@ public class Engine implements AutoCloseable {
     /**
      * Returns the number of assumed object of a given class.
      * 
-     * @param clazz a {@link String}.
-     * @return the number of objects with class {@code clazz}
+     * @param className a {@link String}.
+     * @return the number of objects with class {@code className}
      * assumed in the current state.
      */
-	public int getNumAssumed(String clazz) {
-		return this.currentState.getNumAssumed(clazz);
+	public int getNumAssumed(String className) {
+		return this.currentState.getNumAssumed(className);
 	}
 
 	/** 

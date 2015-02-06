@@ -6,6 +6,10 @@ public class CannotInvokeNativeException extends CannotManageStateException {
 		super(); 
 	}
 
+    public CannotInvokeNativeException(String s) { 
+        super(s); 
+    }
+
 	public CannotInvokeNativeException(Throwable e) { 
 		super(e); 
 	}

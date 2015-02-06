@@ -21,7 +21,15 @@ public abstract class ClassFile {
      * 
      * @return the package name of this class as a {@link String}.
      */
-	public abstract String getPackageName();
+	public String getPackageName() {
+        final String className = getClassName();
+        int lastSlash = className.lastIndexOf('/');
+        if (lastSlash == -1) {
+            return "";
+        } else {
+            return className.substring(0, lastSlash);
+        }
+	}
 
 	/**
      * Test whether the class is an interface.

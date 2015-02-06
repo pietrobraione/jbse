@@ -2,27 +2,43 @@ package jbse.algo;
 
 import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.JAVA_CLASS;
+import static jbse.bc.Signatures.JAVA_CLASS_NAME;
 import static jbse.bc.Signatures.JAVA_ENUM;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
+import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_STRING_CASEINSCOMP;
 import static jbse.bc.Signatures.VERIFY_ERROR;
+import static jbse.common.Type.binaryClassName;
 import static jbse.mem.Util.isResolvedSymbolicReference;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 
 import jbse.algo.exc.PleaseDoNativeException;
 import jbse.bc.ClassFile;
+import jbse.bc.ClassHierarchy;
+import jbse.bc.ConstantPoolPrimitive;
+import jbse.bc.ConstantPoolString;
+import jbse.bc.ConstantPoolValue;
 import jbse.bc.Signature;
+import jbse.bc.exc.AttributeNotFoundException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NoMethodReceiverException;
+import jbse.common.Type;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.exc.DecisionException;
+import jbse.mem.Instance;
 import jbse.mem.Klass;
 import jbse.mem.State;
 import jbse.mem.exc.InvalidProgramCounterException;
@@ -31,8 +47,19 @@ import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
+import jbse.val.Value;
 
 public class Util {	
+    /**
+     * Determines whether two {@link Reference}s are alias.
+     * 
+     * @param s a {@link State}.
+     * @param r1 a {@link Reference}.
+     * @param r2 a {@link Reference}.
+     * @return {@code true} iff {@code r1} and {@code r2} are 
+     *         concrete or resolved, and {@code r1} refers to the same 
+     *         object as {@code r2}.
+     */
 	public static boolean aliases(State s, Reference r1, Reference r2) {
 		final long pos1;
 		if (r1 instanceof ReferenceConcrete) {
@@ -52,11 +79,10 @@ public class Util {
 		}
 		return (pos1 == pos2);
 	}
-	
     
 	/**
 	 * Equivalent to 
-	 * {@link #createAndThrow}{@code (s, VERIFY_ERROR)}.
+	 * {@link #createAndThrowObject}{@code (s, VERIFY_ERROR)}.
 	 * 
 	 * @param state the {@link State} whose {@link Heap} will receive 
 	 *              the new object.
@@ -136,36 +162,32 @@ public class Util {
 	 *         not have a suitable classfile in the classpath.
 	 * @throws ThreadStackEmptyException if {@code state} has not a 
 	 *         current frame (is stuck).
+	 * @throws ClasspathException if some standard JRE class is missing
+	 *         from {@code state}'s classpath or is incompatible with the
+	 *         current version of JBSE. 
+	 * @throws InvalidIndexException 
 	 */
 	public static boolean ensureKlass(State state, String className, DecisionProcedure dec) 
-	throws DecisionException, ClassFileNotFoundException, ThreadStackEmptyException {
-		if (state.initialized(className)) {
-			return false; //nothing to do
-		}    
-		if (decideClassInitialized(state, className, dec)) {
-			//TODO here we assume mutual exclusion of the initialized/not initialized assumptions. Possibly withdraw it.
-			try {
-				state.assumeClassInitialized(className);
-			} catch (InvalidIndexException e) {
-				throwVerifyError(state);
-			}
-			return false;
-		} else {
-			state.assumeClassNotInitialized(className);
-			return initializeKlass(state, className, dec);
-		}	
+	throws DecisionException, ClassFileNotFoundException, ThreadStackEmptyException, ClasspathException {
+        final ClassInitializer ci = new ClassInitializer(state, dec);
+        final boolean failed = ci.initialize(className);
+        if (failed) {
+            return false;  //upon failure all frames are discarded
+        }
+        return ci.createdFrames > 0;
 	}
     
     /**
 	 * Determines the satisfiability of a class initialization under
 	 * the current assumption. Wraps {@link DecisionProcedure#isSatInitialized(String)} 
-	 * to 
+	 * to inject some assumptions on the initialization over some JRE standard classes.
 	 * 
 	 * @param state a {@link State}.
 	 * @param className the name of the class.
+	 * @param dec a {@link DecisionProcedure}.
 	 * @return {@code true} if the class has been initialized, 
 	 *         {@code false} otherwise.
-	 * @throws DecisionException
+	 * @throws DecisionException if the decision procedure fails.
 	 */
 	private static boolean decideClassInitialized(State state, String className, DecisionProcedure dec) 
 	throws DecisionException {
@@ -174,6 +196,7 @@ public class Util {
 		//TODO move these assumptions into DecisionProcedure or DecisionProcedureAlgorithms.
 		if (state.getClassHierarchy().isSubclass(className, JAVA_ENUM) ||
             className.equals(JAVA_CLASS)  ||
+            className.equals(JAVA_OBJECT)  ||
             className.equals(JAVA_LINKEDLIST) || className.equals(JAVA_LINKEDLIST_ENTRY) ||
             className.equals(JAVA_STRING)     || className.equals(JAVA_STRING_CASEINSCOMP)
 		    ) {
@@ -183,34 +206,17 @@ public class Util {
 		return dec.isSatInitialized(className);
 	}
 	
-	/**
-	 * Loads and initializes a (concrete) class by creating 
-	 * for the class and all its uninitialized super{@link Klass} objects 
-	 * in a {@link State}'s static store and loading on the 
-	 * {@link State}'s {@link ThreadStack} frames for their 
-	 * {@code <clinit>} methods.  
-	 * 
-	 * @param state a {@link State}.
-	 * @param className the class to be initialized.
-	 * @param dec a {@link DecisionProcedure}.
-     * @return {@code true} iff it is necessary to run the 
-     *         {@code <clinit>} methods for the initialized 
-     *         class(es).
-	 * @throws DecisionException
-	 * @throws ClassFileNotFoundException 
-	 * @throws ThreadStackEmptyException 
-	 */
-	private static boolean initializeKlass(State state, String className, DecisionProcedure dec) 
-	throws DecisionException, ClassFileNotFoundException, ThreadStackEmptyException {
-		final ClassInitializer ci = new ClassInitializer();
-		final boolean failed = ci.initialize(state, className, dec);
-		if (failed) {
-		    return false;  //upon failure all frames are discarded
-		}
-		return ci.createdFrames > 0;
-	}
-
 	private static class ClassInitializer {
+	    /**
+	     * The current state.
+	     */
+	    private final State s;
+	    
+	    /**
+	     * The decision procedure.
+	     */
+	    private final DecisionProcedure dec;
+	    
 		/**
 		 * Counts the number of frames created during class initialization. 
 		 * Used in case {@link #initializeClass} fails to restore the stack.
@@ -218,101 +224,262 @@ public class Util {
 		 * and is not reused across multiple calls.
 		 */
 		private int createdFrames = 0;
-
+		
 		/**
-		 * Implements {@link Util#initializeKlass(State, String, DecisionProcedure)} 
-		 * by recursion.
-		 * 
-		 * @param s a {@link State}.
-		 * @param className the class to be initialized.
-		 * @return {@code true} iff the initialization of 
-		 *         {@code className} or of one of its superclasses 
-		 *         fails for some reason.
-		 * @param dec a {@link DecisionProcedure}.
-		 * @throws DecisionException 
-		 * @throws ClassFileNotFoundException 
-		 * @throws ThreadStackEmptyException 
+		 * Stores the names of the classes that are being initialized.
 		 */
-		private boolean initialize(State s, String className, DecisionProcedure dec) 
-		throws DecisionException, ClassFileNotFoundException, ThreadStackEmptyException {
-			//if className is already initialized, then does nothing:
-			//the corresponding Klass object will be lazily created
-			//upon first access, if it does not exist yet
-			if (decideClassInitialized(s, className, dec)) { 
-				return false;
-			}
+		private final ArrayList<String> classesToInitialize = new ArrayList<>();
+		
+		/**
+		 * Set to true iff must load a frame for java.lang.Object <clinit>.
+		 */
+		private boolean pushFrameForJavaLangObject = false;
+		
+		/**
+		 * Is the initialization process failed?
+		 */
+		private boolean failed = false;
+		
+		/**
+		 * What is the cause of the failure? (meaningless if failed == false)
+		 */
+		private String failure = null;
+		
+		/**
+		 * Constructor.
+		 */
+		private ClassInitializer(State s, DecisionProcedure dec) {
+		    this.s = s;
+		    this.dec = dec;
+		}
+		
+        /**
+         * Implements {@link Util#initializeKlass(State, String, DecisionProcedure)}.
+         * 
+         * @param s a {@link State}.
+         * @param className the class to be initialized.
+         * @param dec a {@link DecisionProcedure}.
+         * @return {@code true} iff the initialization of 
+         *         {@code className} or of one of its superclasses 
+         *         fails for some reason.
+         */
+		private boolean initialize(String className)
+		throws DecisionException, ClassFileNotFoundException, ThreadStackEmptyException, ClasspathException {
+		    phase1(className);
+            if (this.failed) {
+                handleFailure();
+                return true;
+            }
+            phase2();
+            if (this.failed) {
+                handleFailure();
+                return true;
+            }
+            phase3();
+            if (this.failed) {
+                handleFailure();
+                return true;
+            }
+            return false;
+		}
+		
+		/**
+		 * Phase 1 creates all the {@link Klass} objects for a class and its
+		 * superclasses that can be assumed to be not initialized. It also 
+		 * refines the path condition by adding all the initialization assumption
+		 * and loads all the <clinit> frames for these classes, with the exclusion
+		 * of the <clinit> of java.lang.Object.
+		 * 
+		 * @param className a {@code String}, the name of the class.
+		 * @throws DecisionException if the decision procedure fails.
+		 * @throws ClassFileNotFoundException if the classfile for the class or
+		 *         for one of its superclasses is missing from the classpath
+		 */
+        private void phase1(String className)
+        throws DecisionException, ClassFileNotFoundException {
+            //if there is a Klass object for className, then 
+            //there is nothing to do
+            if (this.s.initialized(className)) {
+                return;
+            }    
 
-			//creates the Klass and puts it in the method area
-			try {
-				s.createKlass(className);
-			} catch (InvalidIndexException e) {
-			    throwVerifyError(s);
-				return true; //failure
-			}
+            //TODO here we assume mutual exclusion of the initialized/not initialized assumptions. We could withdraw this assumption at the expense of a considerable blow in the number of cases.
+            try {
+                //invokes the decision procedure, adds the returned 
+                //assumption to the state's path condition and creates 
+                //a Klass
+                if (decideClassInitialized(this.s, className, this.dec)) { 
+                    this.s.assumeClassInitialized(className); 
+                } else {
+                    this.s.assumeClassNotInitialized(className);
+                    //schedules the Klass object for phase 2
+                    if (className.equals(JAVA_OBJECT)) {
+                        this.pushFrameForJavaLangObject = true;
+                    } else {
+                        this.classesToInitialize.add(className);
+                    }
+                }
+            } catch (InvalidIndexException e) {
+                this.failed = true;
+                this.failure = VERIFY_ERROR;
+                return;
+            }
 			
-			//if className denotes a class rather than an interface, then 
-			//recursively initializes its superclass if necessary
-			final ClassFile classFile = s.getClassHierarchy().getClassFile(className);
-			boolean failed = false;
+			//if className denotes a class rather than an interface
+            //and has a superclass, then recursively performs phase1 
+            //on its superclass(es)
+            final ClassFile classFile = this.s.getClassHierarchy().getClassFile(className);
 			if (!classFile.isInterface()) {
 				final String superName = classFile.getSuperClassName();
-				failed = initialize(s, superName, dec);
-			}
-
-			//if the initialization of the superclass(es) didn't succeed, 
-			//aborts
-			if (failed) {
-				return true;
-			}
-
-			//in the case a <clinit> method exists, loads a Frame for it
-			String myExce = null;
-			try {
-				final Signature sigClinit = new Signature(className, "()V", "<clinit>");
-				if (classFile.hasMethodDeclaration(sigClinit)) {
-					s.pushFrame(sigClinit, false, true, false, 0);
-					++createdFrames;
+				if (superName != null) {
+	                phase1(superName);
 				}
-			/* TODO Here I am in doubt about how I should manage exceptional
-			 * situations. The JVM spec v2 (4.6, access_flags field discussion)
-			 * states that the access flags of <clinit> should be ignored except for 
-			 * strictfp. But it also says that if a method is either native 
-			 * or abstract (from its access_flags field) it must have no code.
-			 * What if a <clinit> is marked to be abstract or native? In such 
-			 * case it should have no code. However, this shall not happen for 
-			 * <clinit> methods. I will assume that in this case a verification 
-			 * error should be raised.
-			 */
-			} catch (IncompatibleClassFileException e) {
-				failed = true;
-				myExce = INCOMPATIBLE_CLASS_CHANGE_ERROR;
-			} catch (MethodNotFoundException | PleaseDoNativeException e) {
-				failed = true;
-				myExce = VERIFY_ERROR;
-			} catch (InvalidProgramCounterException | NoMethodReceiverException | 
-					ThreadStackEmptyException | InvalidSlotException e) {
-				//this should never happen
-				throw new UnexpectedInternalException(e);
-			} 
-			
-			if (failed) {
-				//pops all the frames created by the recursive calls
-				for (int i = 1; i <= createdFrames; ++i) {
-					s.popCurrentFrame();
-				}
-				
-                //TODO delete all the Klass objects from the static store?
-                
-				//throws and exits
-				createAndThrowObject(s, myExce);
-				return true; //returns failure
-			} else {
-				//returns success
-				return false;
 			}
 		}
+        
+        /**
+         * Phase 2 inits the constant fields for all the {@code Klass} objects
+         * created during phase 1; in the case one of these fields is a 
+         * {@code String} constant launches phase 1 on {@code java.lang.String}.
+         * 
+         * @throws ClassFileNotFoundException if the classfile for the class or
+         *         for one of its superclasses is missing from the classpath
+         */
+        private void phase2() throws DecisionException, ClassFileNotFoundException, ClasspathException {
+            for (String className : this.classesToInitialize) {
+                final Klass k = this.s.getKlass(className);
+                final ClassFile classFile = this.s.getClassHierarchy().getClassFile(className);
+                final Signature[] flds = classFile.getFieldsStatic();
+                for (final Signature sig : flds) {
+                    try {
+                        if (classFile.isFieldConstant(sig)) {
+                            //sig is directly extracted from the classfile, 
+                            //so no resolution is necessary
+                            final Value v;
+                            final ConstantPoolValue cpv = classFile.fieldConstantValue(sig);
+                            if (cpv instanceof ConstantPoolPrimitive) {
+                                v = s.getCalculator().val_(cpv.getValue());
+                            } else if (cpv instanceof ConstantPoolString) {
+                                final String stringLit = ((ConstantPoolString) cpv).getValue();
+                                try {
+                                    phase1(JAVA_STRING);
+                                } catch (ClassFileNotFoundException e) {
+                                    throw new ClasspathException(e);
+                                }
+                                s.ensureStringLiteral(stringLit);
+                                v = s.referenceToStringLiteral(stringLit);
+                            } else { //cpv instanceof ConstantPoolClass - should never happen
+                                throw new UnexpectedInternalException("Unexpected constant from constant pool (neither primitive nor java.lang.String)"); 
+                                //TODO put string in constant or throw better exception
+                            }
+                            k.setFieldValue(sig, v);
+                        }
+                    } catch (FieldNotFoundException | AttributeNotFoundException | InvalidIndexException e) {
+                        //this should never happen
+                        throw new UnexpectedInternalException(e);
+                    }
+                }
+            }
+        }
+        
+        /**
+         * Pushes the {@code <clinit>} frames for all the initialized classes
+         * that have it.
+         * 
+         * @throws ClasspathException whenever the classfile for
+         *         {@code java.lang.Object} is not in the classpath
+         *         or is incompatible with the current JBSE.
+         * @throws ClassFileNotFoundException  whenever the classfile for
+         *         one of the classes is not in the classpath.
+         */
+        private void phase3() throws ClasspathException, ClassFileNotFoundException {
+            try {
+                final ClassHierarchy classHierarchy = this.s.getClassHierarchy();
+                for (String className : reverse(this.classesToInitialize)) {
+                    final Signature sigClinit = new Signature(className, "()" + Type.VOID, "<clinit>");
+                    final ClassFile classFile = classHierarchy.getClassFile(className);
+                    if (classFile.hasMethodDeclaration(sigClinit)) {
+                        s.pushFrame(sigClinit, false, true, false, 0);
+                        ++createdFrames;
+                    }
+                }
+                if (this.pushFrameForJavaLangObject) {
+                    final Signature sigClinit = new Signature(JAVA_OBJECT, "()" + Type.VOID, "<clinit>");
+                    try {
+                        s.pushFrame(sigClinit, false, true, false, 0);
+                    } catch (ClassFileNotFoundException e) {
+                        throw new ClasspathException(e);
+                    }
+                    ++createdFrames;
+                }
+            } catch (IncompatibleClassFileException e) {
+                this.failed = true;
+                this.failure = INCOMPATIBLE_CLASS_CHANGE_ERROR;
+            } catch (MethodNotFoundException | PleaseDoNativeException e) {
+                /* TODO Here I am in doubt about how I should manage exceptional
+                 * situations. The JVM spec v2 (4.6, access_flags field discussion)
+                 * states that the access flags of <clinit> should be ignored except for 
+                 * strictfp. But it also says that if a method is either native 
+                 * or abstract (from its access_flags field) it must have no code.
+                 * What if a <clinit> is marked to be abstract or native? In such 
+                 * case it should have no code. However, this shall not happen for 
+                 * <clinit> methods. I will assume that in this case a verification 
+                 * error should be raised.
+                 */
+                this.failed = true;
+                this.failure = VERIFY_ERROR;
+            } catch (InvalidProgramCounterException | NoMethodReceiverException | 
+                    ThreadStackEmptyException | InvalidSlotException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            } 
+        }
+        
+        private void handleFailure() throws ThreadStackEmptyException {
+            //pops all the frames created by the recursive calls
+            for (int i = 1; i <= this.createdFrames; ++i) {
+                try {
+                    this.s.popCurrentFrame();
+                } catch (ThreadStackEmptyException e) {
+                    //this should never happen
+                    throw new UnexpectedInternalException(e);
+                }
+            }
+            
+            //TODO delete all the Klass objects from the static store?
+            //TODO delete all the created String object from static field initialization?
+            
+            //throws and exits
+            createAndThrowObject(this.s, this.failure);
+        }
 	}
-	
+
+	private static <T> Iterable<T> reverse(final List<T> list) {
+	    return new Iterable<T>() {
+            @Override
+            public Iterator<T> iterator() {
+                return new Iterator<T>() {
+                    private ListIterator<T> delegate = list.listIterator(list.size());
+                    
+                    @Override
+                    public boolean hasNext() {
+                        return this.delegate.hasPrevious();
+                    }
+
+                    @Override
+                    public T next() {
+                        return this.delegate.previous();
+                    }
+                    
+                    @Override
+                    public void remove() {
+                        this.delegate.remove();
+                    }
+                };
+            }
+        };
+	}
+	   
 	public static boolean ensureStringLiteral(State state, String stringLit, DecisionProcedure dec) 
 	throws DecisionException, ClasspathException, ThreadStackEmptyException {
 	    final boolean mustExit;
@@ -328,13 +495,19 @@ public class Util {
     public static boolean ensureClass(State state, String className, DecisionProcedure dec) 
     throws DecisionException, ClasspathException, ClassFileNotFoundException, 
     ClassFileNotAccessibleException, ThreadStackEmptyException {
-        final boolean mustExit;
+        boolean mustExit;
         try {
-            mustExit = ensureKlass(state, JAVA_STRING, dec) || ensureKlass(state, JAVA_CLASS, dec);
+            mustExit = ensureKlass(state, JAVA_CLASS, dec);
         } catch (ClassFileNotFoundException e) {
             throw new ClasspathException(e);
         }
         state.ensureClass(className);
+        final Reference r = state.referenceToClass(className);
+        final Instance i = (Instance) state.getObject(r);
+        final String classNameBinary = binaryClassName(className);
+        mustExit = mustExit || ensureStringLiteral(state, classNameBinary, dec);  //TODO is it ok to treat the class name String as a string literal?
+        final ReferenceConcrete classNameString = state.referenceToStringLiteral(classNameBinary);
+        i.setFieldValue(JAVA_CLASS_NAME, classNameString);
         return mustExit;
     }
 

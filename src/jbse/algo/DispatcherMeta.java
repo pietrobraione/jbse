@@ -1,10 +1,15 @@
 package jbse.algo;
 
+import static jbse.bc.Signatures.JAVA_STRING_INTERN;
 import static jbse.bc.Signatures.JAVA_THROWABLE_FILLINSTACKTRACE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEDEPTH;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEELEMENT;
 
 import jbse.algo.exc.MetaUnsupportedException;
+import jbse.algo.nativ.SEFillInStackTrace;
+import jbse.algo.nativ.SEGetStackTraceDepth;
+import jbse.algo.nativ.SEGetStackTraceElement;
+import jbse.algo.nativ.SEIntern;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Dispatcher;
 import jbse.bc.Signature;
@@ -36,6 +41,7 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
 		});
 		
 		//meta delegates for some native methods
+        loadMetaDelegate(JAVA_STRING_INTERN,                  new SEIntern());
 		loadMetaDelegate(JAVA_THROWABLE_FILLINSTACKTRACE,     new SEFillInStackTrace());
 		loadMetaDelegate(JAVA_THROWABLE_GETSTACKTRACEDEPTH,   new SEGetStackTraceDepth());
 		loadMetaDelegate(JAVA_THROWABLE_GETSTACKTRACEELEMENT, new SEGetStackTraceElement());

@@ -27,7 +27,7 @@ public class ClassFileArray extends ClassFile {
 	private final Visibility visibility;
 	private final Signature signatureCloneMethod;
 	
-	public ClassFileArray(String className, String packageName, Visibility visibility) { 
+	ClassFileArray(String className, String packageName, Visibility visibility) { 
 		this.className = className; 
 		this.packageName = packageName;
 		this.visibility = visibility;

@@ -79,7 +79,7 @@ public class ClassHierarchy {
      */
     public ClassFile getClassFile(String className) 
     throws ClassFileNotFoundException {
-    	return cfi.getClassFile(className);
+    	return this.cfi.getClassFile(className);
     }
     
     /**
@@ -231,7 +231,8 @@ public class ClassHierarchy {
 				try {
 					cf = ClassHierarchy.this.cfi.getClassFile(startClassName);
 				} catch (ClassFileNotFoundException e) {
-				    throw new UnexpectedInternalException(e);  //TODO this is not satisfactory; however, if we throw this exception the container class cannot be an Iterable any longer. 
+				    this.nextClassName = null;
+				    return;
 				}
 				this.nextClassName = cf.getClassName();
 			}
@@ -246,12 +247,13 @@ public class ClassHierarchy {
 					throw new NoSuchElementException();
 				}
 
-				//gets the next class' class file (should always be successful)
+				//gets the classfile of the next class
 				final ClassFile retval;
 				try {
 					retval = ClassHierarchy.this.cfi.getClassFile(this.nextClassName);
 				} catch (ClassFileNotFoundException e) {
-					throw new UnexpectedInternalException("Unexpected error while iterating class hierarchy", e);
+					this.nextClassName = null;
+					return null;
 				} 
 
 				//prepares for the next invocation
@@ -305,8 +307,8 @@ public class ClassHierarchy {
 		 * @author Pietro Braione
 		 */
 		private class MyIterator implements Iterator<ClassFile> {
-			private LinkedList<String> nextClassNames;
-			private HashSet<String> visited;
+			private final LinkedList<String> nextClassNames;
+			private final HashSet<String> visited;
 
 			public MyIterator(String startClassName) {
 				this.nextClassNames = new LinkedList<String>();
@@ -316,7 +318,8 @@ public class ClassHierarchy {
 				try {
 					cf = ClassHierarchy.this.cfi.getClassFile(startClassName);
 				} catch (ClassFileNotFoundException e) {
-					throw new UnexpectedInternalException(e);   //TODO this is not satisfactory; however, if we throw this exception the container class cannot be an Iterable any longer.
+					this.nextClassNames.clear();
+					return;
 				}
 				if (cf.isInterface()) {
 					this.nextClassNames.add(cf.getClassName());
@@ -339,12 +342,13 @@ public class ClassHierarchy {
 				String nextClassName = this.nextClassNames.getFirst(); 
 				this.visited.add(nextClassName);
 
-				//gets its class file (should always be successful)
+				//gets its class file
 				final ClassFile retval;
 				try {
 					retval = ClassHierarchy.this.cfi.getClassFile(nextClassName);
-				} catch (ClassFileNotFoundException | UnexpectedInternalException e) {
-					throw new RuntimeException("Unexpected error while iterating class hierarchy", e);
+				} catch (ClassFileNotFoundException e) {
+					this.nextClassNames.clear();
+					return null;
 				} 
 
 				//prepares for the next invocation:
@@ -392,23 +396,20 @@ public class ClassHierarchy {
 	 * 
 	 * @param accessor a {@link String}, the signature of the accessor's class.
 	 * @param classSignature a {@link String}, the signature of the class to be resolved.
-	 * @return a {@link String}, the signature of the declaration of the resolved field.
-	 *         It is {@code resolveClass(accessor, classSignature) == 
-	 *         classSignature}, the return value is kept only to keep 
-	 *         consistency with {@link #resolveField} and {@link #resolveMethod}.
 	 * @throws ClassFileNotFoundException
 	 * @throws ClassFileNotAccessibleException 
 	 */
-	public String resolveClass(String accessor, String classSignature) 
+	public void resolveClass(String accessor, String classSignature) 
 	throws ClassFileNotFoundException, ClassFileNotAccessibleException {
-		//TODO implement complete class creation as in JVM Specification, sec. 5.3
 		cfi.getClassFile(classSignature);
-		
+
+	    //TODO implement complete class creation as in JVM Specification, sec. 5.3
+
 		//if a declaration has found, then it checks accessibility and, in case, 
 		//raises IllegalAccessError; otherwise, returns the resolved field signature
 		if (isClassAccessible(accessor, classSignature)) {
 			//everything went ok
-			return classSignature;
+			return;
 		} else {
 			throw new ClassFileNotAccessibleException(classSignature);
 		}

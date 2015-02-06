@@ -11,6 +11,7 @@ import jbse.algo.exc.MetaUnsupportedException;
 import jbse.bc.ClassFileFactoryJavassist;
 import jbse.bc.Signature;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
+import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.exc.CannotBuildEngineException;
 import jbse.jvm.exc.InitializationException;
@@ -49,10 +50,13 @@ public class EngineBuilder {
 	 *         observed variable names cannot be observed. This is the only exception
 	 *         that allows nevertheless to perform symbolic execution, in which case 
 	 *         only the observers to existing variables will be notified.
+	 * @throws ClasspathException in case some essential standard JRE class is missing
+	 *         from the classpath or is incompatible with the current JBSE version.
 	 */
 	public Engine build(EngineParameters parameters) 
 	throws CannotBuildEngineException, DecisionException, InitializationException, 
-	InvalidClassFileFactoryClassException, NonexistingObservedVariablesException {
+	InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, 
+	ClasspathException {
 		//checks whether parameters is complete
 		if (parameters.getMethodSignature() == null && parameters.getInitialState() == null) {
 			throw new CannotBuildEngineException(new NullPointerException());

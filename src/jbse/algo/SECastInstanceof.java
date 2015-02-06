@@ -46,9 +46,8 @@ abstract class SECastInstanceof implements Algorithm {
         }
 
         //performs resolution
-        final String classSignatureResolved;
         try {
-            classSignatureResolved = hier.resolveClass(currentClassName, classSignature);
+            hier.resolveClass(currentClassName, classSignature);
         } catch (ClassFileNotFoundException e) {
             createAndThrowObject(state, NO_CLASS_DEFINITION_FOUND_ERROR);
             return;
@@ -75,7 +74,7 @@ abstract class SECastInstanceof implements Algorithm {
         } else {
             final Objekt objS = state.getObject(tmpValue);
             String classS = objS.getType();
-            isSubclass = hier.isSubclass(classS, classSignatureResolved);
+            isSubclass = hier.isSubclass(classS, classSignature);
         }
         
         //completes the bytecode semantics

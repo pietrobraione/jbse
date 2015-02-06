@@ -3,6 +3,7 @@ package jbse.jvm;
 import java.util.Map;
 
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
+import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.exc.CannotBuildEngineException;
 import jbse.jvm.exc.InitializationException;
@@ -40,10 +41,12 @@ public class RunnerBuilder {
 	 *         observed variable names cannot be observed. This is the only exception
 	 *         that allows nevertheless to perform symbolic execution, in which case 
 	 *         only the observers to existing variables will be notified.
+	 * @throws ClasspathException in case some standard JRE class is missing from the
+	 *         classpath or is incompatible with the current JBSE version.
 	 */
 	public Runner build(RunnerParameters parameters) 
 	throws CannotBuildEngineException, DecisionException, InitializationException, 
-	InvalidClassFileFactoryClassException, NonexistingObservedVariablesException {
+	InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, ClasspathException {
 		this.engine = eb.build(parameters.getEngineParameters());
 		final Map<String, Integer> heapScope = parameters.getHeapScope();
 		return new Runner(engine, parameters.actions, parameters.identifierSubregion, 
