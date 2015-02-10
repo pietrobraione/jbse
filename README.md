@@ -61,7 +61,7 @@ public class IfExample {
 }
 ```
 
-This is classic "double-if" example illustrates a case where symbolic execution needs to detect and prune infeasible paths. The assertion at the last line of `m` always holds, because if the initial value of `x` is positive, then the execution takes the two "then" branches, otherwise it takes the two "else" branches. In no cases the execution can take the "then" branch on one if statement and the "else" branch on the other, therefore `a` and `b` will be always equal, either both `true` or both `false`, and the method is correct with respect to the assertion. Note that there is no `main` function: Indeed, JBSE can execute *any* method!
+This is the classic "double-if" example, and it illustrates a simple situation where symbolic execution needs to detect and prune infeasible paths. The assertion at the last line of `m` always holds, because if the initial value of `x` is positive, then the execution takes the two "then" branches, otherwise it takes the two "else" branches. In no cases the execution can take the "then" branch on one if statement and the "else" branch on the other, therefore `a` and `b` will be always equal, either both `true` or both `false`, and the method is correct with respect to the assertion. Note that there is no `main` function: Indeed, JBSE can execute *any* method!
 
 The most direct way to run a symbolic execution and obtain some output about it is to use the `jbse.apps.run.Run` class. A `Run` object takes as input the specification of a Java method and runs it by assigning symbolic values to all the method parameters, including `this` and its fields. The result of the symbolic execution is printed to the console, and you may configure a `Run` object and decide what you want to see.
 
