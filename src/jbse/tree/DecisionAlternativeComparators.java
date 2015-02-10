@@ -15,17 +15,17 @@ import jbse.common.exc.UnexpectedInternalException;
  */
 public class DecisionAlternativeComparators {
     /**
-     * Default comparator for {@link DecisionAlternativeIf}s.
+     * Default comparator for {@link DecisionAlternative_IFX}s.
      * 
-     * @return A {@link Comparator}{@code <}{@link DecisionAlternativeIf}{@code >}
-     *         yielding {@link DecisionAlternativeIfTrue} {@code <} {@link DecisionAlternativeIfFalse}.
+     * @return A {@link Comparator}{@code <}{@link DecisionAlternative_IFX}{@code >}
+     *         yielding {@link DecisionAlternative_IFX_True} {@code <} {@link DecisionAlternative_IFX_False}.
      */
-	private static Comparator<DecisionAlternativeIf> defaultComparatorDecisionAlternativeIf() {
-		return new Comparator<DecisionAlternativeIf>() {
+	private static Comparator<DecisionAlternative_IFX> defaultComparatorDecisionAlternativeIf() {
+		return new Comparator<DecisionAlternative_IFX>() {
 			@Override
-			public int compare(DecisionAlternativeIf o1, DecisionAlternativeIf o2) {
-				final boolean o1True = (o1 instanceof DecisionAlternativeIfTrue);
-				final boolean o2True = (o2 instanceof DecisionAlternativeIfTrue);
+			public int compare(DecisionAlternative_IFX o1, DecisionAlternative_IFX o2) {
+				final boolean o1True = (o1 instanceof DecisionAlternative_IFX_True);
+				final boolean o2True = (o2 instanceof DecisionAlternative_IFX_True);
 				final int o1Pos = o1True ? 0 : 1;
 				final int o2Pos = o2True ? 0 : 1;
 				return o1Pos - o2Pos;
@@ -34,20 +34,20 @@ public class DecisionAlternativeComparators {
 	}
 
     /**
-     * Default comparator for {@link DecisionAlternativeComparison}s.
+     * Default comparator for {@link DecisionAlternative_XCMPY}s.
      * 
-     * @return A {@link Comparator}{@code <}{@link DecisionAlternativeComparison}{@code >} yielding
-     *         {@link DecisionAlternativeComparisonGt} {@code <} {@link DecisionAlternativeComparisonEq} 
-     *         {@code <} {@link DecisionAlternativeComparisonLt}.
+     * @return A {@link Comparator}{@code <}{@link DecisionAlternative_XCMPY}{@code >} yielding
+     *         {@link DecisionAlternative_XCMPY_Gt} {@code <} {@link DecisionAlternative_XCMPY_Eq} 
+     *         {@code <} {@link DecisionAlternative_XCMPY_Lt}.
      */
-	private static Comparator<DecisionAlternativeComparison> defaultComparatorDecisionAlternativeComparison() {
-		return new Comparator<DecisionAlternativeComparison>() {
+	private static Comparator<DecisionAlternative_XCMPY> defaultComparatorDecisionAlternativeComparison() {
+		return new Comparator<DecisionAlternative_XCMPY>() {
 			@Override
-			public int compare(DecisionAlternativeComparison o1, DecisionAlternativeComparison o2) {
-				final boolean o1Gt = (o1 instanceof DecisionAlternativeComparisonGt);
-				final boolean o1Eq = (o1 instanceof DecisionAlternativeComparisonEq);
-				final boolean o2Gt = (o2 instanceof DecisionAlternativeComparisonGt);
-				final boolean o2Eq = (o2 instanceof DecisionAlternativeComparisonEq);
+			public int compare(DecisionAlternative_XCMPY o1, DecisionAlternative_XCMPY o2) {
+				final boolean o1Gt = (o1 instanceof DecisionAlternative_XCMPY_Gt);
+				final boolean o1Eq = (o1 instanceof DecisionAlternative_XCMPY_Eq);
+				final boolean o2Gt = (o2 instanceof DecisionAlternative_XCMPY_Gt);
+				final boolean o2Eq = (o2 instanceof DecisionAlternative_XCMPY_Eq);
 				final int o1Pos = o1Gt ? 0 : o1Eq ? 1 : 2;
 				final int o2Pos = o2Gt ? 0 : o2Eq ? 1 : 2;
 				return o1Pos - o2Pos;
@@ -56,15 +56,15 @@ public class DecisionAlternativeComparators {
 	}
 
     /**
-     * Default comparator for {@link DecisionAlternativeSwitch}s.
+     * Default comparator for {@link DecisionAlternative_XSWITCH}s.
      * 
-     * @return A {@link Comparator}{@code <}{@link DecisionAlternativeSwitch}{@code >} where
+     * @return A {@link Comparator}{@code <}{@link DecisionAlternative_XSWITCH}{@code >} where
      *         {@code default_alt < nondefault_alt} and {@code nondefault1 < nondefault2}
      *         iff {@code nondefault1.value > nondefault2.value}.
      */
-	private static Comparator<DecisionAlternativeSwitch> defaultComparatorDecisionAlternativeSwitch() {
-	    return new Comparator<DecisionAlternativeSwitch>() {
-	        public int compare(DecisionAlternativeSwitch o1, DecisionAlternativeSwitch o2) {
+	private static Comparator<DecisionAlternative_XSWITCH> defaultComparatorDecisionAlternativeSwitch() {
+	    return new Comparator<DecisionAlternative_XSWITCH>() {
+	        public int compare(DecisionAlternative_XSWITCH o1, DecisionAlternative_XSWITCH o2) {
 	        	boolean o1def = (o1.isDefault());
 	        	boolean o2def = (o2.isDefault());
 
@@ -87,48 +87,48 @@ public class DecisionAlternativeComparators {
 	}
 
     /**
-     * Default comparator for {@link DecisionAlternativeLFLoad}s.
+     * Default comparator for {@link DecisionAlternative_XLOAD_GETX}s.
      * 
-     * @return A {@link Comparator}{@code <}{@link DecisionAlternativeLFLoad}{@code >} where
+     * @return A {@link Comparator}{@code <}{@link DecisionAlternative_XLOAD_GETX}{@code >} where
      *         {@code null_alt < object_alt < class_alt}, object alternatives are 
      *         ordered decreasingly by heap position, and class alternatives are 
      *         ordered on inverse lexicographic order on the class name.
      */
-	private static Comparator<DecisionAlternativeLFLoad> defaultComparatorDecisionAlternativeLFLoad() { 	
-		return new Comparator<DecisionAlternativeLFLoad>() {
-			public int compare(DecisionAlternativeLFLoad o1, DecisionAlternativeLFLoad o2) {
-                if (o1 instanceof DecisionAlternativeLFLoadResolved) {
-                    if (o2 instanceof DecisionAlternativeLFLoadResolved) {
-                        final DecisionAlternativeLFLoadResolved darr1 = (DecisionAlternativeLFLoadResolved) o1;
-                        final DecisionAlternativeLFLoadResolved darr2 = (DecisionAlternativeLFLoadResolved) o2;
+	private static Comparator<DecisionAlternative_XLOAD_GETX> defaultComparatorDecisionAlternativeLFLoad() { 	
+		return new Comparator<DecisionAlternative_XLOAD_GETX>() {
+			public int compare(DecisionAlternative_XLOAD_GETX o1, DecisionAlternative_XLOAD_GETX o2) {
+                if (o1 instanceof DecisionAlternative_XLOAD_GETX_Resolved) {
+                    if (o2 instanceof DecisionAlternative_XLOAD_GETX_Resolved) {
+                        final DecisionAlternative_XLOAD_GETX_Resolved darr1 = (DecisionAlternative_XLOAD_GETX_Resolved) o1;
+                        final DecisionAlternative_XLOAD_GETX_Resolved darr2 = (DecisionAlternative_XLOAD_GETX_Resolved) o2;
                         return darr2.getValueToLoad().toString().compareTo(darr1.getValueToLoad().toString());
                     } else {
                         return -1;
                     }
-                } else if (o1 instanceof DecisionAlternativeLFLoadRefNull) {
-                    if (o2 instanceof DecisionAlternativeLFLoadResolved) {
+                } else if (o1 instanceof DecisionAlternative_XLOAD_GETX_RefNull) {
+                    if (o2 instanceof DecisionAlternative_XLOAD_GETX_Resolved) {
                         return 1;
-                    } else if (o2 instanceof DecisionAlternativeLFLoadRefNull) {
+                    } else if (o2 instanceof DecisionAlternative_XLOAD_GETX_RefNull) {
 						return 0;
 					} else {
 						return -1;
 					}
-				} else if (o1 instanceof DecisionAlternativeLFLoadRefAliases) {
-					if (o2 instanceof DecisionAlternativeLFLoadResolved || 
-					    o2 instanceof DecisionAlternativeLFLoadRefNull) {
+				} else if (o1 instanceof DecisionAlternative_XLOAD_GETX_RefAliases) {
+					if (o2 instanceof DecisionAlternative_XLOAD_GETX_Resolved || 
+					    o2 instanceof DecisionAlternative_XLOAD_GETX_RefNull) {
 						return 1;
-					} else if (o2 instanceof DecisionAlternativeLFLoadRefAliases) {
-						final DecisionAlternativeLFLoadRefAliases daro1 = (DecisionAlternativeLFLoadRefAliases) o1;
-						final DecisionAlternativeLFLoadRefAliases daro2 = (DecisionAlternativeLFLoadRefAliases) o2;
+					} else if (o2 instanceof DecisionAlternative_XLOAD_GETX_RefAliases) {
+						final DecisionAlternative_XLOAD_GETX_RefAliases daro1 = (DecisionAlternative_XLOAD_GETX_RefAliases) o1;
+						final DecisionAlternative_XLOAD_GETX_RefAliases daro2 = (DecisionAlternative_XLOAD_GETX_RefAliases) o2;
 						final long d = daro2.getAliasPosition() - daro1.getAliasPosition();
 						return (d < 0 ? -1 : (d == 0 ? 0 : 1));
 					} else {
 						return -1;
 					}
-				} else if (o1 instanceof DecisionAlternativeLFLoadRefExpands) {
-					if (o2 instanceof DecisionAlternativeLFLoadRefExpands) {
-					    final DecisionAlternativeLFLoadRefExpands darc1 = (DecisionAlternativeLFLoadRefExpands) o1;
-					    final DecisionAlternativeLFLoadRefExpands darc2 = (DecisionAlternativeLFLoadRefExpands) o2;
+				} else if (o1 instanceof DecisionAlternative_XLOAD_GETX_RefExpands) {
+					if (o2 instanceof DecisionAlternative_XLOAD_GETX_RefExpands) {
+					    final DecisionAlternative_XLOAD_GETX_RefExpands darc1 = (DecisionAlternative_XLOAD_GETX_RefExpands) o1;
+					    final DecisionAlternative_XLOAD_GETX_RefExpands darc2 = (DecisionAlternative_XLOAD_GETX_RefExpands) o2;
 						return darc2.getClassNameOfTargetObject().compareTo(darc1.getClassNameOfTargetObject());
 					} else {
 						return 1;
@@ -141,22 +141,22 @@ public class DecisionAlternativeComparators {
 	}
 
     /**
-     * Default comparator for {@link DecisionAlternativeNewarray}s.
+     * Default comparator for {@link DecisionAlternative_XNEWARRAY}s.
      * 
-     * @return A {@link Comparator}{@code <}{@link DecisionAlternativeNewarray}{@code >} yielding
+     * @return A {@link Comparator}{@code <}{@link DecisionAlternative_XNEWARRAY}{@code >} yielding
      *         {@code outbound_alt < inbound_alt}.
      */
-	private static Comparator<DecisionAlternativeNewarray> defaultComparatorDecisionAlternativeNewarray() {
-		return new Comparator<DecisionAlternativeNewarray>() {
-			public int compare(DecisionAlternativeNewarray o1, DecisionAlternativeNewarray o2) {
-				if (o1 instanceof DecisionAlternativeNewarrayWrong) {
-					if (o2 instanceof DecisionAlternativeNewarrayOK) {
+	private static Comparator<DecisionAlternative_XNEWARRAY> defaultComparatorDecisionAlternativeNewarray() {
+		return new Comparator<DecisionAlternative_XNEWARRAY>() {
+			public int compare(DecisionAlternative_XNEWARRAY o1, DecisionAlternative_XNEWARRAY o2) {
+				if (o1 instanceof DecisionAlternative_XNEWARRAY_Wrong) {
+					if (o2 instanceof DecisionAlternative_XNEWARRAY_Ok) {
 						return -1;
 					} else {
 						return 0;
 					}
 				} else {
-					if (o2 instanceof DecisionAlternativeNewarrayOK) {
+					if (o2 instanceof DecisionAlternative_XNEWARRAY_Ok) {
 						return 0;
 					} else {
 						return 1;
@@ -167,17 +167,17 @@ public class DecisionAlternativeComparators {
 	}
 	
     /**
-     * Default comparator for {@link DecisionAlternativeAstore}s.
+     * Default comparator for {@link DecisionAlternative_XASTORE}s.
      * 
-     * @return A {@link Comparator}{@code <}{@link DecisionAlternativeAstore}{@code >} 
-     *         yielding {@link DecisionAlternativeAstoreIn} {@code <} {@link DecisionAlternativeAstoreOut}.
+     * @return A {@link Comparator}{@code <}{@link DecisionAlternative_XASTORE}{@code >} 
+     *         yielding {@link DecisionAlternative_XASTORE_In} {@code <} {@link DecisionAlternative_XASTORE_Out}.
      */
-	private static Comparator<DecisionAlternativeAstore> defaultComparatorDecisionAlternativeAstore() {
-		return new Comparator<DecisionAlternativeAstore>() {
+	private static Comparator<DecisionAlternative_XASTORE> defaultComparatorDecisionAlternativeAstore() {
+		return new Comparator<DecisionAlternative_XASTORE>() {
 			@Override
-			public int compare(DecisionAlternativeAstore o1, DecisionAlternativeAstore o2) {
-				final boolean o1In = (o1 instanceof DecisionAlternativeAstoreIn);
-				final boolean o2In = (o2 instanceof DecisionAlternativeAstoreIn);
+			public int compare(DecisionAlternative_XASTORE o1, DecisionAlternative_XASTORE o2) {
+				final boolean o1In = (o1 instanceof DecisionAlternative_XASTORE_In);
+				final boolean o2In = (o2 instanceof DecisionAlternative_XASTORE_In);
 				final int o1Pos = o1In ? 0 : 1;
 				final int o2Pos = o2In ? 0 : 1;
 				return o1Pos - o2Pos;
@@ -187,54 +187,54 @@ public class DecisionAlternativeComparators {
 	
 
     /**
-     * Default comparator for {@link DecisionAlternativeAload}s.
+     * Default comparator for {@link DecisionAlternative_XALOAD}s.
      * 
-     * @return A {@link Comparator}{@code <}{@link DecisionAlternativeAload}{@code >} 
+     * @return A {@link Comparator}{@code <}{@link DecisionAlternative_XALOAD}{@code >} 
      *         yielding {@code value_alt < null_alt < instance_alt < class_alt < outbound_alt}.
      */
-	private static Comparator<DecisionAlternativeAload> defaultComparatorDecisionAlternativeAload() {
-		return new Comparator<DecisionAlternativeAload>() {
-			public int compare(DecisionAlternativeAload o1, DecisionAlternativeAload o2) {
-				if (o1 instanceof DecisionAlternativeAloadResolved) {
-					if (o2 instanceof DecisionAlternativeAloadResolved) {
-                        final DecisionAlternativeAloadResolved daav1 = (DecisionAlternativeAloadResolved) o1;
-                        final DecisionAlternativeAloadResolved daav2 = (DecisionAlternativeAloadResolved) o2;
+	private static Comparator<DecisionAlternative_XALOAD> defaultComparatorDecisionAlternativeAload() {
+		return new Comparator<DecisionAlternative_XALOAD>() {
+			public int compare(DecisionAlternative_XALOAD o1, DecisionAlternative_XALOAD o2) {
+				if (o1 instanceof DecisionAlternative_XALOAD_Resolved) {
+					if (o2 instanceof DecisionAlternative_XALOAD_Resolved) {
+                        final DecisionAlternative_XALOAD_Resolved daav1 = (DecisionAlternative_XALOAD_Resolved) o1;
+                        final DecisionAlternative_XALOAD_Resolved daav2 = (DecisionAlternative_XALOAD_Resolved) o2;
                         return daav2.getValueToLoad().toString().compareTo(daav1.getValueToLoad().toString());
 					} else {
                         return -1;
 					}
-				} else if (o1 instanceof DecisionAlternativeAloadRefNull) {
-					if (o2 instanceof DecisionAlternativeAloadResolved) {
+				} else if (o1 instanceof DecisionAlternative_XALOAD_RefNull) {
+					if (o2 instanceof DecisionAlternative_XALOAD_Resolved) {
 						return 1;
-					} else if (o2 instanceof DecisionAlternativeAloadRefNull) {
+					} else if (o2 instanceof DecisionAlternative_XALOAD_RefNull) {
 						return 0;
 					} else {
 						return -1;
 					}
-				} else if (o1 instanceof DecisionAlternativeAloadRefAliases) {
-					if (o2 instanceof DecisionAlternativeAloadResolved ||
-					    o2 instanceof DecisionAlternativeAloadRefNull) {
+				} else if (o1 instanceof DecisionAlternative_XALOAD_RefAliases) {
+					if (o2 instanceof DecisionAlternative_XALOAD_Resolved ||
+					    o2 instanceof DecisionAlternative_XALOAD_RefNull) {
 						return 1;
-					} else if (o2 instanceof DecisionAlternativeAloadRefAliases) {
-						final DecisionAlternativeAloadRefAliases daari1 = (DecisionAlternativeAloadRefAliases) o1;
-						final DecisionAlternativeAloadRefAliases daari2 = (DecisionAlternativeAloadRefAliases) o2;
+					} else if (o2 instanceof DecisionAlternative_XALOAD_RefAliases) {
+						final DecisionAlternative_XALOAD_RefAliases daari1 = (DecisionAlternative_XALOAD_RefAliases) o1;
+						final DecisionAlternative_XALOAD_RefAliases daari2 = (DecisionAlternative_XALOAD_RefAliases) o2;
 						final long d = daari2.getAliasPosition() - daari1.getAliasPosition();
 						return (d < 0 ? -1 : (d == 0 ? 0 : 1));
 					} else {
 						return -1;
 					}
-				} else if (o1 instanceof DecisionAlternativeAloadRefExpands) {
-					if (o2 instanceof DecisionAlternativeAloadOut) {
+				} else if (o1 instanceof DecisionAlternative_XALOAD_RefExpands) {
+					if (o2 instanceof DecisionAlternative_XALOAD_Out) {
 						return -1;
-					} else if (o2 instanceof DecisionAlternativeAloadRefExpands) {
-						final DecisionAlternativeAloadRefExpands daarc1 = (DecisionAlternativeAloadRefExpands) o1;
-						final DecisionAlternativeAloadRefExpands daarc2 = (DecisionAlternativeAloadRefExpands) o2;
+					} else if (o2 instanceof DecisionAlternative_XALOAD_RefExpands) {
+						final DecisionAlternative_XALOAD_RefExpands daarc1 = (DecisionAlternative_XALOAD_RefExpands) o1;
+						final DecisionAlternative_XALOAD_RefExpands daarc2 = (DecisionAlternative_XALOAD_RefExpands) o2;
 						return daarc2.getClassNameOfTargetObject().compareTo(daarc1.getClassNameOfTargetObject());
 					} else {
 						return 1;
 					}
-				} else if (o1 instanceof DecisionAlternativeAloadOut) {
-					if (o2 instanceof DecisionAlternativeAloadOut) {
+				} else if (o1 instanceof DecisionAlternative_XALOAD_Out) {
+					if (o2 instanceof DecisionAlternative_XALOAD_Out) {
 						return 0;
 					} else {
 						return 1;
@@ -252,13 +252,13 @@ public class DecisionAlternativeComparators {
 	 * Default constructor.
 	 */
     public DecisionAlternativeComparators() {
-    	this.comparators.put(DecisionAlternativeIf.class,         defaultComparatorDecisionAlternativeIf());
-    	this.comparators.put(DecisionAlternativeComparison.class, defaultComparatorDecisionAlternativeComparison());
-    	this.comparators.put(DecisionAlternativeSwitch.class,     defaultComparatorDecisionAlternativeSwitch());
-    	this.comparators.put(DecisionAlternativeLFLoad.class,     defaultComparatorDecisionAlternativeLFLoad());
-    	this.comparators.put(DecisionAlternativeNewarray.class,   defaultComparatorDecisionAlternativeNewarray());
-    	this.comparators.put(DecisionAlternativeAstore.class,     defaultComparatorDecisionAlternativeAstore());
-    	this.comparators.put(DecisionAlternativeAload.class,      defaultComparatorDecisionAlternativeAload());
+    	this.comparators.put(DecisionAlternative_IFX.class,         defaultComparatorDecisionAlternativeIf());
+    	this.comparators.put(DecisionAlternative_XCMPY.class, defaultComparatorDecisionAlternativeComparison());
+    	this.comparators.put(DecisionAlternative_XSWITCH.class,     defaultComparatorDecisionAlternativeSwitch());
+    	this.comparators.put(DecisionAlternative_XLOAD_GETX.class,     defaultComparatorDecisionAlternativeLFLoad());
+    	this.comparators.put(DecisionAlternative_XNEWARRAY.class,   defaultComparatorDecisionAlternativeNewarray());
+    	this.comparators.put(DecisionAlternative_XASTORE.class,     defaultComparatorDecisionAlternativeAstore());
+    	this.comparators.put(DecisionAlternative_XALOAD.class,      defaultComparatorDecisionAlternativeAload());
     }
 
     /**
@@ -266,19 +266,19 @@ public class DecisionAlternativeComparators {
      * by the <code>DecisionAlternativeComparators</code> getters. 
      * 
      * @param cb 
-     *        a {@link Comparator}{@code <}{@link DecisionAlternativeIf}{@code >} to 
+     *        a {@link Comparator}{@code <}{@link DecisionAlternative_IFX}{@code >} to 
      *        be returned by calls to {@link #createEmptyDecisionAlternativeBoolean()} 
-     *        or {@code null} iff the default {@link Comparator}{@code <}{@link DecisionAlternativeIf}<code>&gt;</code>
+     *        or {@code null} iff the default {@link Comparator}{@code <}{@link DecisionAlternative_IFX}<code>&gt;</code>
      *        must be returned.
      * @param cc
-     *        a {@link Comparator}{@code <}{@link DecisionAlternativeComparison}{@code >} to 
+     *        a {@link Comparator}{@code <}{@link DecisionAlternative_XCMPY}{@code >} to 
      *        be returned by calls to {@link #createEmptyDecisionAlternativeComparison()}
-     *        or {@code null} iff the default {@link Comparator}{@code <}{@link DecisionAlternativeComparison}<code>&gt;</code>
+     *        or {@code null} iff the default {@link Comparator}{@code <}{@link DecisionAlternative_XCMPY}<code>&gt;</code>
      *        must be returned.
      * @param ci
-     *        a {@link Comparator}{@code <}{@link DecisionAlternativeSwitch}{@code >} to 
+     *        a {@link Comparator}{@code <}{@link DecisionAlternative_XSWITCH}{@code >} to 
      *        be returned by calls to {@link #createEmptyDecisionAlternativeSwitch()}
-     *        or {@code null} iff the default {@link Comparator}{@code <}{@link DecisionAlternativeSwitch}{@code >}
+     *        or {@code null} iff the default {@link Comparator}{@code <}{@link DecisionAlternative_XSWITCH}{@code >}
      *        must be returned.
      * @param cr
      *        a {@link Comparator}{@code <}{@link DecisionAlternativeReference}{@code >} to 
@@ -291,32 +291,32 @@ public class DecisionAlternativeComparators {
      *        or {@code null} iff the default {@link Comparator}{@code <}{@link DecisionAlternativeAnew}{@code >}
      *        must be returned.
      * @param cs
-     *        a {@link Comparator}{@code <}{@link DecisionAlternativeAstore}{@code >} to 
+     *        a {@link Comparator}{@code <}{@link DecisionAlternative_XASTORE}{@code >} to 
      *        be returned by calls to {@link #createEmptyDecisionAlternativeAstore()}
-     *        or {@code null} iff the default {@link Comparator}{@code <}{@link DecisionAlternativeAstore}{@code >}
+     *        or {@code null} iff the default {@link Comparator}{@code <}{@link DecisionAlternative_XASTORE}{@code >}
      *        must be returned.
      * @param cl
-     *        a {@link Comparator}{@code <}{@link DecisionAlternativeAload}{@code >} to 
+     *        a {@link Comparator}{@code <}{@link DecisionAlternative_XALOAD}{@code >} to 
      *        be returned by calls to {@link #createEmptyDecisionAlternativeAload()}
-     *        or {@code null} iff the default <{@link Comparator}{@code <}{@link DecisionAlternativeAload}{@code >}
+     *        or {@code null} iff the default <{@link Comparator}{@code <}{@link DecisionAlternative_XALOAD}{@code >}
      *        must be returned.
      */
     public DecisionAlternativeComparators(
-    		final Comparator<DecisionAlternativeIf> cb, 
-			final Comparator<DecisionAlternativeComparison> cc, 
-			final Comparator<DecisionAlternativeSwitch> ci,
-    		final Comparator<DecisionAlternativeLFLoad> cr,
-    		final Comparator<DecisionAlternativeNewarray> cn,
-    		final Comparator<DecisionAlternativeAstore> cs,
-    		final Comparator<DecisionAlternativeAload> cl) {
+    		final Comparator<DecisionAlternative_IFX> cb, 
+			final Comparator<DecisionAlternative_XCMPY> cc, 
+			final Comparator<DecisionAlternative_XSWITCH> ci,
+    		final Comparator<DecisionAlternative_XLOAD_GETX> cr,
+    		final Comparator<DecisionAlternative_XNEWARRAY> cn,
+    		final Comparator<DecisionAlternative_XASTORE> cs,
+    		final Comparator<DecisionAlternative_XALOAD> cl) {
     	this(); //sets defaults
-		if (cb != null) { this.comparators.put(DecisionAlternativeIf.class,         Collections.reverseOrder(cb)); } 
-		if (cc != null) { this.comparators.put(DecisionAlternativeComparison.class, Collections.reverseOrder(cc)); }
-		if (ci != null) { this.comparators.put(DecisionAlternativeSwitch.class,     Collections.reverseOrder(ci)); }
-		if (cr != null) { this.comparators.put(DecisionAlternativeLFLoad.class,     Collections.reverseOrder(cr)); }
-		if (cn != null) { this.comparators.put(DecisionAlternativeNewarray.class,   Collections.reverseOrder(cn)); }
-		if (cs != null) { this.comparators.put(DecisionAlternativeAstore.class,     Collections.reverseOrder(cs)); }
-		if (cl != null) { this.comparators.put(DecisionAlternativeAload.class,      Collections.reverseOrder(cl)); }
+		if (cb != null) { this.comparators.put(DecisionAlternative_IFX.class,         Collections.reverseOrder(cb)); } 
+		if (cc != null) { this.comparators.put(DecisionAlternative_XCMPY.class, Collections.reverseOrder(cc)); }
+		if (ci != null) { this.comparators.put(DecisionAlternative_XSWITCH.class,     Collections.reverseOrder(ci)); }
+		if (cr != null) { this.comparators.put(DecisionAlternative_XLOAD_GETX.class,     Collections.reverseOrder(cr)); }
+		if (cn != null) { this.comparators.put(DecisionAlternative_XNEWARRAY.class,   Collections.reverseOrder(cn)); }
+		if (cs != null) { this.comparators.put(DecisionAlternative_XASTORE.class,     Collections.reverseOrder(cs)); }
+		if (cl != null) { this.comparators.put(DecisionAlternative_XALOAD.class,      Collections.reverseOrder(cl)); }
 	}
     
     /**

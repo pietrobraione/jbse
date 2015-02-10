@@ -7,6 +7,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import jbse.algo.exc.MetaUnsupportedException;
+import jbse.algo.meta.DispatcherMeta;
 import jbse.bc.ClassFileFactory;
 import jbse.bc.Classpath;
 import jbse.bc.Signature;
@@ -183,8 +184,15 @@ public final class ExecutionContext {
 	 */
 	public void addMetaOverridden(String className, String paramsSig, String methodName, String metaDelegateClassName) 
 	throws MetaUnsupportedException {
-		final Signature sig = new Signature(className, paramsSig, methodName);
-		this.dispatcherMeta.loadAlgoMetaOverridden(sig, metaDelegateClassName);
+	    final Signature sig = new Signature(className, paramsSig, methodName);
+	    try {
+	        final Class<? extends Algorithm> metaDelegateClass = ClassLoader.getSystemClassLoader().loadClass(metaDelegateClassName).asSubclass(Algorithm.class);
+	        this.dispatcherMeta.loadAlgoMetaOverridden(sig, metaDelegateClass);
+	    } catch (ClassNotFoundException e) {
+	        throw new MetaUnsupportedException("meta-level implementation class " + metaDelegateClassName + " not found.");
+	    } catch (ClassCastException e) {
+	        throw new MetaUnsupportedException("meta-level implementation class " + metaDelegateClassName + " does not implement " + Algorithm.class);
+	    }
 	}
 	
 	/**

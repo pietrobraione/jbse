@@ -665,7 +665,7 @@ public class Array extends Objekt {
 	 * Returns a string version of an array of chars.
 	 * 
 	 * @return {@code null} iff this array is not a concrete
-	 * array of chars; otherwise, a {@code String} whose value
+	 * array of {@code char}s; otherwise, a {@code String} whose value
 	 * is the content of this array.
 	 */
 	public String valueString() {

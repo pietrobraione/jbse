@@ -17,545 +17,545 @@ import jbse.val.Operator;
  *
  */
 public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm> {
-    private SEInit seInit = null;
-    private SEUnexpected seUnexpected = null;
-    private SEAconst_null seAconst_null = null;
-    private SEAload seAload = null;
-    private SEAnewarray seAnewarray = null;
-    private SEArrayLength seArrayLength = null;
-    private SEAstore seAstore = null;
-    private SEAthrow seAthrow = null;
-	private SEBinOp seBinOp = null;
-    private SEBipush seBipush = null;
-    private SECheckcast seCheckcast = null;
-    private SEConst seConst = null;
-    private SEDup_n seDup_n = null;
-    private SEDup seDup = null;
-    private SEGetfield seGetfield = null;
-    private SEGetstatic seGetstatic = null;
-    private SEGoto seGoto = null;
-    private SEIfacmp seIfacmp = null;
-    private SEIfcond seIfcond = null;
-    private SEIinc seIinc = null;
-    private SEInstanceof seInstanceof = null;
-    private SEInvokeSpecial seInvokeSpecial = null;
-    private SEInvokeStatic seInvokeStatic = null;
-    private SEInvokeVirtualInterface seInvokeVirtualInterface = null;
-    private SEJsr seJsr = null;
-    private SELdc seLdc = null;
-    private SELoad seLoad = null;
-    private SEMonitor seMonitor = null;
-    private SEMultianewarray seMultianewarray = null;
-    private SEN2n seN2n = null;
-    private SENcmp seNcmp = null;
-    private SENeg seNeg = null;
-    private SENew seNew = null;
-    private SENewarray seNewarray = null;
-    private SENop seNop = null;
-    private SEPop sePop = null;
-    private SEPutfield sePutfield = null;
-    private SEPutstatic sePutstatic = null;
-    private SERet seRet = null;
-    private SEReturn seReturn = null;
-    private SESipush seSipush = null;
-    private SEStore seStore = null;
-    private SESwap seSwap = null;
-    private SESwitch seSwitch = null;
-    private SEWide seWide = null;
+    private Algo_INIT seInit = null;
+    private Algo_UNEXPECTED algo_UNEXPECTED = null;
+    private Algo_ACONST_NULL algo_ACONST_NULL = null;
+    private Algo_XALOAD algo_XALOAD = null;
+    private Algo_ANEWARRAY algo_ANEWARRAY = null;
+    private Algo_ARRAYLENGTH algo_ARRAYLENGTH = null;
+    private Algo_XASTORE algo_XASTORE = null;
+    private Algo_ATHROW algo_ATHROW = null;
+	private Algo_XBINOP algo_XBINOP = null;
+    private Algo_BIPUSH algo_BIPUSH = null;
+    private Algo_CHECKCAST algo_CHECKCAST = null;
+    private Algo_XCONST_Y algo_XCONST_Y = null;
+    private Algo_DUPX_Y algo_DUPX_Y = null;
+    private Algo_DUPX algo_DUPX = null;
+    private Algo_GETFIELD algo_GETFIELD = null;
+    private Algo_GETSTATIC algo_GETSTATIC = null;
+    private Algo_GOTOX algo_GOTOX = null;
+    private Algo_IF_ACMPX_XNULL algo_IF_ACMPX_XNULL = null;
+    private Algo_IFX algo_IFX = null;
+    private Algo_IINC algo_IINC = null;
+    private Algo_INSTANCEOF algo_INSTANCEOF = null;
+    private Algo_INVOKESPECIAL algo_INVOKESPECIAL = null;
+    private Algo_INVOKESTATIC algo_INVOKESTATIC = null;
+    private Algo_INVOKEVIRTUALINTERFACE algo_INVOKEVIRTUALINTERFACE = null;
+    private Algo_JSRX algo_JSRX = null;
+    private Algo_LDCX_Y algo_LDC = null;
+    private Algo_XLOAD algo_XLOAD = null;
+    private Algo_MONITORX algo_MONITORX = null;
+    private Algo_MULTIANEWARRAY algo_MULTIANEWARRAY = null;
+    private Algo_X2Y algo_X2Y = null;
+    private Algo_XCMPY algo_XCMPY = null;
+    private Algo_XNEG algo_XNEG = null;
+    private Algo_NEW algo_NEW = null;
+    private Algo_NEWARRAY algo_NEWARRAY = null;
+    private Algo_NOP algo_NOP = null;
+    private Algo_POPX algo_POPX = null;
+    private Algo_PUTFIELD algo_PUTFIELD = null;
+    private Algo_PUTSTATIC algo_PUTSTATIC = null;
+    private Algo_RET algo_RET = null;
+    private Algo_XRETURN algo_XRETURN = null;
+    private Algo_SIPUSH algo_SIPUSH = null;
+    private Algo_XSTORE algo_XSTORE = null;
+    private Algo_SWAP algo_SWAP = null;
+    private Algo_XSWITCH algo_XSWITCH = null;
+    private Algo_WIDE algo_WIDE = null;
 
-	private class DispatchStrategy_NOP implements Dispatcher.DispatchStrategy<SENop> {
-		public SENop doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seNop == null) {
-				DispatcherBytecodeAlgorithm.this.seNop = new SENop();
+	private class DispatchStrategy_NOP implements Dispatcher.DispatchStrategy<Algo_NOP> {
+		public Algo_NOP doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_NOP == null) {
+				DispatcherBytecodeAlgorithm.this.algo_NOP = new Algo_NOP();
 			}
-			return DispatcherBytecodeAlgorithm.this.seNop;
+			return DispatcherBytecodeAlgorithm.this.algo_NOP;
 		}
 	}
 	
-	private class DispatchStrategy_XLOAD implements Dispatcher.DispatchStrategy<SELoad> {
-		private boolean def;
+	private class DispatchStrategy_XLOAD implements Dispatcher.DispatchStrategy<Algo_XLOAD> {
+		private boolean hasIndex;
 		private int index;
-		public DispatchStrategy_XLOAD() { this.def = false; }
-		public DispatchStrategy_XLOAD(int index) { this.def = true; this.index = index; }
-		public SELoad doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seLoad == null) {
-				DispatcherBytecodeAlgorithm.this.seLoad = new SELoad();
+		public DispatchStrategy_XLOAD() { this.hasIndex = false; }
+		public DispatchStrategy_XLOAD(int index) { this.hasIndex = true; this.index = index; }
+		public Algo_XLOAD doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_XLOAD == null) {
+				DispatcherBytecodeAlgorithm.this.algo_XLOAD = new Algo_XLOAD();
 			}
-			DispatcherBytecodeAlgorithm.this.seLoad.def = this.def;
-			DispatcherBytecodeAlgorithm.this.seLoad.index = this.index;
-			return DispatcherBytecodeAlgorithm.this.seLoad;
+			DispatcherBytecodeAlgorithm.this.algo_XLOAD.hasIndex = this.hasIndex;
+			DispatcherBytecodeAlgorithm.this.algo_XLOAD.index = this.index;
+			return DispatcherBytecodeAlgorithm.this.algo_XLOAD;
 		}
 	}
 	
-	private class DispatchStrategy_XSTORE implements Dispatcher.DispatchStrategy<SEStore> {
-		private boolean def;
+	private class DispatchStrategy_XSTORE implements Dispatcher.DispatchStrategy<Algo_XSTORE> {
+		private boolean hasIndex;
 		private int index;
-		public DispatchStrategy_XSTORE() { this.def = false; }
-		public DispatchStrategy_XSTORE(int index) { this.def = true; this.index = index; }
-		public SEStore doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seStore == null) {
-				DispatcherBytecodeAlgorithm.this.seStore = new SEStore();
+		public DispatchStrategy_XSTORE() { this.hasIndex = false; }
+		public DispatchStrategy_XSTORE(int index) { this.hasIndex = true; this.index = index; }
+		public Algo_XSTORE doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_XSTORE == null) {
+				DispatcherBytecodeAlgorithm.this.algo_XSTORE = new Algo_XSTORE();
 			}
-			DispatcherBytecodeAlgorithm.this.seStore.def = this.def;
-			DispatcherBytecodeAlgorithm.this.seStore.index = this.index;
-			return DispatcherBytecodeAlgorithm.this.seStore;
+			DispatcherBytecodeAlgorithm.this.algo_XSTORE.hasIndex = this.hasIndex;
+			DispatcherBytecodeAlgorithm.this.algo_XSTORE.index = this.index;
+			return DispatcherBytecodeAlgorithm.this.algo_XSTORE;
 		}
 	}
 	
-	private class DispatchStrategy_BIPUSH implements Dispatcher.DispatchStrategy<SEBipush> {
-		public SEBipush doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seBipush == null) {
-				DispatcherBytecodeAlgorithm.this.seBipush = new SEBipush();
+	private class DispatchStrategy_BIPUSH implements Dispatcher.DispatchStrategy<Algo_BIPUSH> {
+		public Algo_BIPUSH doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_BIPUSH == null) {
+				DispatcherBytecodeAlgorithm.this.algo_BIPUSH = new Algo_BIPUSH();
 			}
-			return DispatcherBytecodeAlgorithm.this.seBipush;
+			return DispatcherBytecodeAlgorithm.this.algo_BIPUSH;
 		}
 	}
 
-	private class DispatchStrategy_SIPUSH implements Dispatcher.DispatchStrategy<SESipush> {
-		public SESipush doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seSipush == null) {
-				DispatcherBytecodeAlgorithm.this.seSipush = new SESipush();
+	private class DispatchStrategy_SIPUSH implements Dispatcher.DispatchStrategy<Algo_SIPUSH> {
+		public Algo_SIPUSH doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_SIPUSH == null) {
+				DispatcherBytecodeAlgorithm.this.algo_SIPUSH = new Algo_SIPUSH();
 			}
-			return DispatcherBytecodeAlgorithm.this.seSipush;
+			return DispatcherBytecodeAlgorithm.this.algo_SIPUSH;
 		}
 	}
 
-	private class DispatchStrategy_LDCX_Y implements Dispatcher.DispatchStrategy<SELdc> {
+	private class DispatchStrategy_LDCX_Y implements Dispatcher.DispatchStrategy<Algo_LDCX_Y> {
 		private boolean wide;
         private boolean cat1;
 		public DispatchStrategy_LDCX_Y(boolean wide, boolean cat1) {
 			this.wide = wide;
 			this.cat1 = cat1;
 		}
-		public SELdc doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seLdc == null) {
-				DispatcherBytecodeAlgorithm.this.seLdc = new SELdc();
+		public Algo_LDCX_Y doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_LDC == null) {
+				DispatcherBytecodeAlgorithm.this.algo_LDC = new Algo_LDCX_Y();
 			}
-			DispatcherBytecodeAlgorithm.this.seLdc.wide = this.wide;
-            DispatcherBytecodeAlgorithm.this.seLdc.cat1 = this.cat1;
-			return DispatcherBytecodeAlgorithm.this.seLdc;
+			DispatcherBytecodeAlgorithm.this.algo_LDC.wide = this.wide;
+            DispatcherBytecodeAlgorithm.this.algo_LDC.cat1 = this.cat1;
+			return DispatcherBytecodeAlgorithm.this.algo_LDC;
 		}
 	}
 
-	private class DispatchStrategy_ACONST_NULL implements Dispatcher.DispatchStrategy<SEAconst_null> {
-		public SEAconst_null doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seAconst_null == null) {
-				DispatcherBytecodeAlgorithm.this.seAconst_null = new SEAconst_null();
+	private class DispatchStrategy_ACONST_NULL implements Dispatcher.DispatchStrategy<Algo_ACONST_NULL> {
+		public Algo_ACONST_NULL doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_ACONST_NULL == null) {
+				DispatcherBytecodeAlgorithm.this.algo_ACONST_NULL = new Algo_ACONST_NULL();
 			}
-			return DispatcherBytecodeAlgorithm.this.seAconst_null;
+			return DispatcherBytecodeAlgorithm.this.algo_ACONST_NULL;
 		}
 	}
 
-	private class DispatchStrategy_XCONST_Y implements Dispatcher.DispatchStrategy<SEConst> {
+	private class DispatchStrategy_XCONST_Y implements Dispatcher.DispatchStrategy<Algo_XCONST_Y> {
 		private char type;
-		private int val;
-		public DispatchStrategy_XCONST_Y(char type, int val) {
+		private int value;
+		public DispatchStrategy_XCONST_Y(char type, int value) {
 			this.type = type;
-			this.val = val;
+			this.value = value;
 		}
-		public SEConst doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seConst == null) {
-				DispatcherBytecodeAlgorithm.this.seConst = new SEConst();
+		public Algo_XCONST_Y doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_XCONST_Y == null) {
+				DispatcherBytecodeAlgorithm.this.algo_XCONST_Y = new Algo_XCONST_Y();
 			}
-			DispatcherBytecodeAlgorithm.this.seConst.type = this.type;
-			DispatcherBytecodeAlgorithm.this.seConst.val = this.val;
-			return DispatcherBytecodeAlgorithm.this.seConst;
+			DispatcherBytecodeAlgorithm.this.algo_XCONST_Y.type = this.type;
+			DispatcherBytecodeAlgorithm.this.algo_XCONST_Y.value = this.value;
+			return DispatcherBytecodeAlgorithm.this.algo_XCONST_Y;
 		}
 	}
 
-	private class DispatchStrategy_XBINOP implements Dispatcher.DispatchStrategy<SEBinOp> {
+	private class DispatchStrategy_XBINOP implements Dispatcher.DispatchStrategy<Algo_XBINOP> {
 		private Operator op;
 		public DispatchStrategy_XBINOP(Operator op) {
 			this.op = op;
 		}
-		public SEBinOp doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seBinOp  == null) {
-				DispatcherBytecodeAlgorithm.this.seBinOp = new SEBinOp();
+		public Algo_XBINOP doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_XBINOP  == null) {
+				DispatcherBytecodeAlgorithm.this.algo_XBINOP = new Algo_XBINOP();
 			}
-			DispatcherBytecodeAlgorithm.this.seBinOp.op = op;
-			return DispatcherBytecodeAlgorithm.this.seBinOp;
+			DispatcherBytecodeAlgorithm.this.algo_XBINOP.op = op;
+			return DispatcherBytecodeAlgorithm.this.algo_XBINOP;
 		}
 	}
 
-	private class DispatchStrategy_XNEG implements Dispatcher.DispatchStrategy<SENeg> {
-		public SENeg doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seNeg == null) {
-				DispatcherBytecodeAlgorithm.this.seNeg = new SENeg();
+	private class DispatchStrategy_XNEG implements Dispatcher.DispatchStrategy<Algo_XNEG> {
+		public Algo_XNEG doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_XNEG == null) {
+				DispatcherBytecodeAlgorithm.this.algo_XNEG = new Algo_XNEG();
 			}
-			return DispatcherBytecodeAlgorithm.this.seNeg;
+			return DispatcherBytecodeAlgorithm.this.algo_XNEG;
 		}
 	}
 
-	private class DispatchStrategy_IINC implements Dispatcher.DispatchStrategy<SEIinc> {
-		public SEIinc doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seIinc == null) {
-				DispatcherBytecodeAlgorithm.this.seIinc = new SEIinc();
+	private class DispatchStrategy_IINC implements Dispatcher.DispatchStrategy<Algo_IINC> {
+		public Algo_IINC doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_IINC == null) {
+				DispatcherBytecodeAlgorithm.this.algo_IINC = new Algo_IINC();
 			}
-			return DispatcherBytecodeAlgorithm.this.seIinc;
+			return DispatcherBytecodeAlgorithm.this.algo_IINC;
 		}
 	}
 
-	private class DispatchStrategy_XCMPY implements Dispatcher.DispatchStrategy<SENcmp> {
-		public SENcmp doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seNcmp == null) {
-				DispatcherBytecodeAlgorithm.this.seNcmp = new SENcmp();
+	private class DispatchStrategy_XCMPY implements Dispatcher.DispatchStrategy<Algo_XCMPY> {
+		public Algo_XCMPY doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_XCMPY == null) {
+				DispatcherBytecodeAlgorithm.this.algo_XCMPY = new Algo_XCMPY();
 			}
-			return DispatcherBytecodeAlgorithm.this.seNcmp;
+			return DispatcherBytecodeAlgorithm.this.algo_XCMPY;
 		}
 	}
 
-	private class DispatchStrategy_X2Y implements Dispatcher.DispatchStrategy<SEN2n> {
-		private char type;
-		private char castType;
-		public DispatchStrategy_X2Y(char type, char castType) {
-			this.type = type;
-			this.castType = castType;
+	private class DispatchStrategy_X2Y implements Dispatcher.DispatchStrategy<Algo_X2Y> {
+		private char fromType;
+		private char toType;
+		public DispatchStrategy_X2Y(char fromType, char toType) {
+			this.fromType = fromType;
+			this.toType = toType;
 		}
-		public SEN2n doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seN2n == null) {
-				DispatcherBytecodeAlgorithm.this.seN2n = new SEN2n();
+		public Algo_X2Y doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_X2Y == null) {
+				DispatcherBytecodeAlgorithm.this.algo_X2Y = new Algo_X2Y();
 			}
-			DispatcherBytecodeAlgorithm.this.seN2n.type = this.type;
-			DispatcherBytecodeAlgorithm.this.seN2n.castType = this.castType;
-			return DispatcherBytecodeAlgorithm.this.seN2n;
+			DispatcherBytecodeAlgorithm.this.algo_X2Y.fromType = this.fromType;
+			DispatcherBytecodeAlgorithm.this.algo_X2Y.toType = this.toType;
+			return DispatcherBytecodeAlgorithm.this.algo_X2Y;
 		}
 	}
 
-	private class DispatchStrategy_NEW implements Dispatcher.DispatchStrategy<SENew> {
-		public SENew doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seNew == null) {
-				DispatcherBytecodeAlgorithm.this.seNew = new SENew();
+	private class DispatchStrategy_NEW implements Dispatcher.DispatchStrategy<Algo_NEW> {
+		public Algo_NEW doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_NEW == null) {
+				DispatcherBytecodeAlgorithm.this.algo_NEW = new Algo_NEW();
 			}
-			return DispatcherBytecodeAlgorithm.this.seNew;
+			return DispatcherBytecodeAlgorithm.this.algo_NEW;
 		}
 	}
 
-	private class DispatchStrategy_NEWARRAY implements Dispatcher.DispatchStrategy<SENewarray> {
-		public SENewarray doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seNewarray == null) {
-				DispatcherBytecodeAlgorithm.this.seNewarray = new SENewarray();
+	private class DispatchStrategy_NEWARRAY implements Dispatcher.DispatchStrategy<Algo_NEWARRAY> {
+		public Algo_NEWARRAY doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_NEWARRAY == null) {
+				DispatcherBytecodeAlgorithm.this.algo_NEWARRAY = new Algo_NEWARRAY();
 			}
-			return DispatcherBytecodeAlgorithm.this.seNewarray;
+			return DispatcherBytecodeAlgorithm.this.algo_NEWARRAY;
 		}
 	}
 
-	private class DispatchStrategy_ANEWARRAY implements Dispatcher.DispatchStrategy<SEAnewarray> {
-		public SEAnewarray doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seAnewarray == null) {
-				DispatcherBytecodeAlgorithm.this.seAnewarray = new SEAnewarray();
+	private class DispatchStrategy_ANEWARRAY implements Dispatcher.DispatchStrategy<Algo_ANEWARRAY> {
+		public Algo_ANEWARRAY doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_ANEWARRAY == null) {
+				DispatcherBytecodeAlgorithm.this.algo_ANEWARRAY = new Algo_ANEWARRAY();
 			}
-			return DispatcherBytecodeAlgorithm.this.seAnewarray;
+			return DispatcherBytecodeAlgorithm.this.algo_ANEWARRAY;
 		}
 	}
 
-	private class DispatchStrategy_MULTIANEWARRAY implements Dispatcher.DispatchStrategy<SEMultianewarray> {
-		public SEMultianewarray doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seMultianewarray == null) {
-				DispatcherBytecodeAlgorithm.this.seMultianewarray = new SEMultianewarray();
+	private class DispatchStrategy_MULTIANEWARRAY implements Dispatcher.DispatchStrategy<Algo_MULTIANEWARRAY> {
+		public Algo_MULTIANEWARRAY doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_MULTIANEWARRAY == null) {
+				DispatcherBytecodeAlgorithm.this.algo_MULTIANEWARRAY = new Algo_MULTIANEWARRAY();
 			}
-			return DispatcherBytecodeAlgorithm.this.seMultianewarray;
+			return DispatcherBytecodeAlgorithm.this.algo_MULTIANEWARRAY;
 		}
 	}
 
-	private class DispatchStrategy_GETFIELD implements Dispatcher.DispatchStrategy<SEGetfield> {
-		public SEGetfield doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seGetfield == null) {
-				DispatcherBytecodeAlgorithm.this.seGetfield = new SEGetfield();
+	private class DispatchStrategy_GETFIELD implements Dispatcher.DispatchStrategy<Algo_GETFIELD> {
+		public Algo_GETFIELD doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_GETFIELD == null) {
+				DispatcherBytecodeAlgorithm.this.algo_GETFIELD = new Algo_GETFIELD();
 			}
-			return DispatcherBytecodeAlgorithm.this.seGetfield;
+			return DispatcherBytecodeAlgorithm.this.algo_GETFIELD;
 		}
 	}
 
-	private class DispatchStrategy_PUTFIELD implements Dispatcher.DispatchStrategy<SEPutfield> {
-		public SEPutfield doIt() {
-			if (DispatcherBytecodeAlgorithm.this.sePutfield == null) {
-				DispatcherBytecodeAlgorithm.this.sePutfield = new SEPutfield();
+	private class DispatchStrategy_PUTFIELD implements Dispatcher.DispatchStrategy<Algo_PUTFIELD> {
+		public Algo_PUTFIELD doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_PUTFIELD == null) {
+				DispatcherBytecodeAlgorithm.this.algo_PUTFIELD = new Algo_PUTFIELD();
 			}
-			return DispatcherBytecodeAlgorithm.this.sePutfield;
+			return DispatcherBytecodeAlgorithm.this.algo_PUTFIELD;
 		}
 	}
 
-	private class DispatchStrategy_GETSTATIC implements Dispatcher.DispatchStrategy<SEGetstatic> {
-		public SEGetstatic doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seGetstatic == null) {
-				DispatcherBytecodeAlgorithm.this.seGetstatic = new SEGetstatic();
+	private class DispatchStrategy_GETSTATIC implements Dispatcher.DispatchStrategy<Algo_GETSTATIC> {
+		public Algo_GETSTATIC doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_GETSTATIC == null) {
+				DispatcherBytecodeAlgorithm.this.algo_GETSTATIC = new Algo_GETSTATIC();
 			}
-			return DispatcherBytecodeAlgorithm.this.seGetstatic;
+			return DispatcherBytecodeAlgorithm.this.algo_GETSTATIC;
 		}
 	}
 
-	private class DispatchStrategy_PUTSTATIC implements Dispatcher.DispatchStrategy<SEPutstatic> {
-		public SEPutstatic doIt() {
-			if (DispatcherBytecodeAlgorithm.this.sePutstatic == null) {
-				DispatcherBytecodeAlgorithm.this.sePutstatic = new SEPutstatic();
+	private class DispatchStrategy_PUTSTATIC implements Dispatcher.DispatchStrategy<Algo_PUTSTATIC> {
+		public Algo_PUTSTATIC doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_PUTSTATIC == null) {
+				DispatcherBytecodeAlgorithm.this.algo_PUTSTATIC = new Algo_PUTSTATIC();
 			}
-			return DispatcherBytecodeAlgorithm.this.sePutstatic;
+			return DispatcherBytecodeAlgorithm.this.algo_PUTSTATIC;
 		}
 	}
 
-	private class DispatchStrategy_XALOAD implements Dispatcher.DispatchStrategy<SEAload> {
-		public SEAload doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seAload == null) {
-				DispatcherBytecodeAlgorithm.this.seAload = new SEAload();
+	private class DispatchStrategy_XALOAD implements Dispatcher.DispatchStrategy<Algo_XALOAD> {
+		public Algo_XALOAD doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_XALOAD == null) {
+				DispatcherBytecodeAlgorithm.this.algo_XALOAD = new Algo_XALOAD();
 			}
-			return DispatcherBytecodeAlgorithm.this.seAload;
+			return DispatcherBytecodeAlgorithm.this.algo_XALOAD;
 		}
 	}
 
-	private class DispatchStrategy_XASTORE implements Dispatcher.DispatchStrategy<SEAstore> {
-		public SEAstore doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seAstore == null) {
-				DispatcherBytecodeAlgorithm.this.seAstore = new SEAstore();
+	private class DispatchStrategy_XASTORE implements Dispatcher.DispatchStrategy<Algo_XASTORE> {
+		public Algo_XASTORE doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_XASTORE == null) {
+				DispatcherBytecodeAlgorithm.this.algo_XASTORE = new Algo_XASTORE();
 			}
-			return DispatcherBytecodeAlgorithm.this.seAstore;
+			return DispatcherBytecodeAlgorithm.this.algo_XASTORE;
 		}
 	}
 
-	private class DispatchStrategy_ARRAYLENGTH implements Dispatcher.DispatchStrategy<SEArrayLength> {
-		public SEArrayLength doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seArrayLength == null) {
-				DispatcherBytecodeAlgorithm.this.seArrayLength = new SEArrayLength();
+	private class DispatchStrategy_ARRAYLENGTH implements Dispatcher.DispatchStrategy<Algo_ARRAYLENGTH> {
+		public Algo_ARRAYLENGTH doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_ARRAYLENGTH == null) {
+				DispatcherBytecodeAlgorithm.this.algo_ARRAYLENGTH = new Algo_ARRAYLENGTH();
 			}
-			return DispatcherBytecodeAlgorithm.this.seArrayLength;
+			return DispatcherBytecodeAlgorithm.this.algo_ARRAYLENGTH;
 		}
 	}
 
-	private class DispatchStrategy_INSTANCEOF implements Dispatcher.DispatchStrategy<SEInstanceof> {
-		public SEInstanceof doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seInstanceof == null) {
-				DispatcherBytecodeAlgorithm.this.seInstanceof = new SEInstanceof();
+	private class DispatchStrategy_INSTANCEOF implements Dispatcher.DispatchStrategy<Algo_INSTANCEOF> {
+		public Algo_INSTANCEOF doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_INSTANCEOF == null) {
+				DispatcherBytecodeAlgorithm.this.algo_INSTANCEOF = new Algo_INSTANCEOF();
 			}
-			return DispatcherBytecodeAlgorithm.this.seInstanceof;
+			return DispatcherBytecodeAlgorithm.this.algo_INSTANCEOF;
 		}
 	}
 
-	private class DispatchStrategy_CHECKCAST implements Dispatcher.DispatchStrategy<SECheckcast> {
-		public SECheckcast doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seCheckcast == null) {
-				DispatcherBytecodeAlgorithm.this.seCheckcast = new SECheckcast();
+	private class DispatchStrategy_CHECKCAST implements Dispatcher.DispatchStrategy<Algo_CHECKCAST> {
+		public Algo_CHECKCAST doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_CHECKCAST == null) {
+				DispatcherBytecodeAlgorithm.this.algo_CHECKCAST = new Algo_CHECKCAST();
 			}
-			return DispatcherBytecodeAlgorithm.this.seCheckcast;
+			return DispatcherBytecodeAlgorithm.this.algo_CHECKCAST;
 		}
 	}
 
-	private class DispatchStrategy_POPX implements Dispatcher.DispatchStrategy<SEPop> {
-		private boolean def;
-		public DispatchStrategy_POPX(boolean def) {
-			this.def = def;
+	private class DispatchStrategy_POPX implements Dispatcher.DispatchStrategy<Algo_POPX> {
+		private boolean cat1;
+		public DispatchStrategy_POPX(boolean cat1) {
+			this.cat1 = cat1;
 		}
-		public SEPop doIt() {
-			if (DispatcherBytecodeAlgorithm.this.sePop == null) {
-				DispatcherBytecodeAlgorithm.this.sePop = new SEPop();
+		public Algo_POPX doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_POPX == null) {
+				DispatcherBytecodeAlgorithm.this.algo_POPX = new Algo_POPX();
 			}
-			DispatcherBytecodeAlgorithm.this.sePop.def = this.def;
-			return DispatcherBytecodeAlgorithm.this.sePop;
+			DispatcherBytecodeAlgorithm.this.algo_POPX.cat1 = this.cat1;
+			return DispatcherBytecodeAlgorithm.this.algo_POPX;
 		}
 	}
 
-	private class DispatchStrategy_DUPX implements Dispatcher.DispatchStrategy<SEDup> {
-		private boolean cat_1;
-		public DispatchStrategy_DUPX(boolean cat_1) {
-			this.cat_1 = cat_1;
+	private class DispatchStrategy_DUPX implements Dispatcher.DispatchStrategy<Algo_DUPX> {
+		private boolean cat1;
+		public DispatchStrategy_DUPX(boolean cat1) {
+			this.cat1 = cat1;
 		}
-		public SEDup doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seDup == null) {
-				DispatcherBytecodeAlgorithm.this.seDup = new SEDup();
+		public Algo_DUPX doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_DUPX == null) {
+				DispatcherBytecodeAlgorithm.this.algo_DUPX = new Algo_DUPX();
 			}
-			DispatcherBytecodeAlgorithm.this.seDup.cat_1 = this.cat_1;
-			return DispatcherBytecodeAlgorithm.this.seDup;
+			DispatcherBytecodeAlgorithm.this.algo_DUPX.cat1 = this.cat1;
+			return DispatcherBytecodeAlgorithm.this.algo_DUPX;
 		}
 	}
 
-	private class DispatchStrategy_DUPX_Y implements Dispatcher.DispatchStrategy<SEDup_n> {
-		private boolean cat_1;
-		private boolean x_1;
-		public DispatchStrategy_DUPX_Y(boolean cat_1, boolean x_1) {
-			this.cat_1 = cat_1;
-			this.x_1 = x_1;
+	private class DispatchStrategy_DUPX_Y implements Dispatcher.DispatchStrategy<Algo_DUPX_Y> {
+		private boolean cat1;
+		private boolean x1;
+		public DispatchStrategy_DUPX_Y(boolean cat1, boolean x1) {
+			this.cat1 = cat1;
+			this.x1 = x1;
 		}
-		public SEDup_n doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seDup_n == null) {
-				DispatcherBytecodeAlgorithm.this.seDup_n = new SEDup_n();
+		public Algo_DUPX_Y doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_DUPX_Y == null) {
+				DispatcherBytecodeAlgorithm.this.algo_DUPX_Y = new Algo_DUPX_Y();
 			}
-			DispatcherBytecodeAlgorithm.this.seDup_n.cat_1 = this.cat_1;
-			DispatcherBytecodeAlgorithm.this.seDup_n.x_1 = this.x_1;
-			return DispatcherBytecodeAlgorithm.this.seDup_n;
+			DispatcherBytecodeAlgorithm.this.algo_DUPX_Y.cat1 = this.cat1;
+			DispatcherBytecodeAlgorithm.this.algo_DUPX_Y.x1 = this.x1;
+			return DispatcherBytecodeAlgorithm.this.algo_DUPX_Y;
 		}
 	}
 
-	private class DispatchStrategy_SWAP implements Dispatcher.DispatchStrategy<SESwap> {
-		public SESwap doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seSwap == null) {
-				DispatcherBytecodeAlgorithm.this.seSwap = new SESwap();
+	private class DispatchStrategy_SWAP implements Dispatcher.DispatchStrategy<Algo_SWAP> {
+		public Algo_SWAP doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_SWAP == null) {
+				DispatcherBytecodeAlgorithm.this.algo_SWAP = new Algo_SWAP();
 			}
-			return DispatcherBytecodeAlgorithm.this.seSwap;
+			return DispatcherBytecodeAlgorithm.this.algo_SWAP;
 		}
 	}
 
-	private class DispatchStrategy_IFX implements Dispatcher.DispatchStrategy<SEIfcond> {
-		private boolean def;
-		private Operator type;
-		public DispatchStrategy_IFX(boolean def, Operator type) {
-			this.def = def;
-			this.type = type;
+	private class DispatchStrategy_IFX implements Dispatcher.DispatchStrategy<Algo_IFX> {
+		private boolean compareWithZero;
+		private Operator operator;
+		public DispatchStrategy_IFX(boolean compareWithZero, Operator operator) {
+			this.compareWithZero = compareWithZero;
+			this.operator = operator;
 		}
-		public SEIfcond doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seIfcond == null) {
-				DispatcherBytecodeAlgorithm.this.seIfcond = new SEIfcond();
+		public Algo_IFX doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_IFX == null) {
+				DispatcherBytecodeAlgorithm.this.algo_IFX = new Algo_IFX();
 			}
-			DispatcherBytecodeAlgorithm.this.seIfcond.def = this.def;
-			DispatcherBytecodeAlgorithm.this.seIfcond.operator = this.type;
-			return DispatcherBytecodeAlgorithm.this.seIfcond;
+			DispatcherBytecodeAlgorithm.this.algo_IFX.compareWithZero = this.compareWithZero;
+			DispatcherBytecodeAlgorithm.this.algo_IFX.operator = this.operator;
+			return DispatcherBytecodeAlgorithm.this.algo_IFX;
 		}
 	}
 
-	private class DispatchStrategy_IF_ACMPX_XNULL implements Dispatcher.DispatchStrategy<SEIfacmp> {
+	private class DispatchStrategy_IF_ACMPX_XNULL implements Dispatcher.DispatchStrategy<Algo_IF_ACMPX_XNULL> {
 		private boolean compareWithNull;
 		private boolean eq;
 		public DispatchStrategy_IF_ACMPX_XNULL(boolean compareWithNull, boolean eq) {
 			this.compareWithNull = compareWithNull;
 			this.eq = eq;
 		}
-		public SEIfacmp doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seIfacmp == null) {
-				DispatcherBytecodeAlgorithm.this.seIfacmp = new SEIfacmp();
+		public Algo_IF_ACMPX_XNULL doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_IF_ACMPX_XNULL == null) {
+				DispatcherBytecodeAlgorithm.this.algo_IF_ACMPX_XNULL = new Algo_IF_ACMPX_XNULL();
 			}
-			DispatcherBytecodeAlgorithm.this.seIfacmp.compareWithNull = this.compareWithNull;
-			DispatcherBytecodeAlgorithm.this.seIfacmp.eq = this.eq;
-			return DispatcherBytecodeAlgorithm.this.seIfacmp;
+			DispatcherBytecodeAlgorithm.this.algo_IF_ACMPX_XNULL.compareWithNull = this.compareWithNull;
+			DispatcherBytecodeAlgorithm.this.algo_IF_ACMPX_XNULL.eq = this.eq;
+			return DispatcherBytecodeAlgorithm.this.algo_IF_ACMPX_XNULL;
 		}
 	}
 
-	private class DispatchStrategy_XSWITCH implements Dispatcher.DispatchStrategy<SESwitch> {
+	private class DispatchStrategy_XSWITCH implements Dispatcher.DispatchStrategy<Algo_XSWITCH> {
 		private boolean isTableSwitch;
 		public DispatchStrategy_XSWITCH(boolean isTableSwitch) {
 			this.isTableSwitch = isTableSwitch;
 		}
-		public SESwitch doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seSwitch == null) {
-				DispatcherBytecodeAlgorithm.this.seSwitch = new SESwitch();
+		public Algo_XSWITCH doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_XSWITCH == null) {
+				DispatcherBytecodeAlgorithm.this.algo_XSWITCH = new Algo_XSWITCH();
 			}
-			DispatcherBytecodeAlgorithm.this.seSwitch.isTableSwitch = this.isTableSwitch;
-			return DispatcherBytecodeAlgorithm.this.seSwitch;
+			DispatcherBytecodeAlgorithm.this.algo_XSWITCH.isTableSwitch = this.isTableSwitch;
+			return DispatcherBytecodeAlgorithm.this.algo_XSWITCH;
 		}
 	}
 
-	private class DispatchStrategy_GOTOX implements Dispatcher.DispatchStrategy<SEGoto> {
-		private boolean def;
-		public DispatchStrategy_GOTOX(boolean def) {
-			this.def = def;
+	private class DispatchStrategy_GOTOX implements Dispatcher.DispatchStrategy<Algo_GOTOX> {
+		private boolean wide;
+		public DispatchStrategy_GOTOX(boolean wide) {
+			this.wide = wide;
 		}
-		public SEGoto doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seGoto == null) {
-				DispatcherBytecodeAlgorithm.this.seGoto = new SEGoto();
+		public Algo_GOTOX doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_GOTOX == null) {
+				DispatcherBytecodeAlgorithm.this.algo_GOTOX = new Algo_GOTOX();
 			}
-			DispatcherBytecodeAlgorithm.this.seGoto.def = this.def;
-			return DispatcherBytecodeAlgorithm.this.seGoto;
+			DispatcherBytecodeAlgorithm.this.algo_GOTOX.wide = this.wide;
+			return DispatcherBytecodeAlgorithm.this.algo_GOTOX;
 		}
 	}
 
-	private class DispatchStrategy_JSRX implements Dispatcher.DispatchStrategy<SEJsr> {
-		private boolean def;
-		public DispatchStrategy_JSRX(boolean def) {
-			this.def = def;
+	private class DispatchStrategy_JSRX implements Dispatcher.DispatchStrategy<Algo_JSRX> {
+		private boolean wide;
+		public DispatchStrategy_JSRX(boolean wide) {
+			this.wide = wide;
 		}
-		public SEJsr doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seJsr == null) {
-				DispatcherBytecodeAlgorithm.this.seJsr = new SEJsr();
+		public Algo_JSRX doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_JSRX == null) {
+				DispatcherBytecodeAlgorithm.this.algo_JSRX = new Algo_JSRX();
 			}
-			DispatcherBytecodeAlgorithm.this.seJsr.def = this.def;
-			return DispatcherBytecodeAlgorithm.this.seJsr;
+			DispatcherBytecodeAlgorithm.this.algo_JSRX.wide = this.wide;
+			return DispatcherBytecodeAlgorithm.this.algo_JSRX;
 		}
 	}
 
-	private class DispatchStrategy_RET implements Dispatcher.DispatchStrategy<SERet> {
-		public SERet doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seRet == null) {
-				DispatcherBytecodeAlgorithm.this.seRet = new SERet();
+	private class DispatchStrategy_RET implements Dispatcher.DispatchStrategy<Algo_RET> {
+		public Algo_RET doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_RET == null) {
+				DispatcherBytecodeAlgorithm.this.algo_RET = new Algo_RET();
 			}
-			return DispatcherBytecodeAlgorithm.this.seRet;
+			return DispatcherBytecodeAlgorithm.this.algo_RET;
 		}
 	}
 
-	private class DispatchStrategy_INVOKEVIRTUALINTERFACE implements Dispatcher.DispatchStrategy<SEInvokeVirtualInterface> {
+	private class DispatchStrategy_INVOKEVIRTUALINTERFACE implements Dispatcher.DispatchStrategy<Algo_INVOKEVIRTUALINTERFACE> {
 		private boolean isInterface;
 		public DispatchStrategy_INVOKEVIRTUALINTERFACE(boolean isInterface) {
 			this.isInterface = isInterface;
 		}
-		public SEInvokeVirtualInterface doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seInvokeVirtualInterface == null) {
-				DispatcherBytecodeAlgorithm.this.seInvokeVirtualInterface = new SEInvokeVirtualInterface();
+		public Algo_INVOKEVIRTUALINTERFACE doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_INVOKEVIRTUALINTERFACE == null) {
+				DispatcherBytecodeAlgorithm.this.algo_INVOKEVIRTUALINTERFACE = new Algo_INVOKEVIRTUALINTERFACE();
 			}
-			DispatcherBytecodeAlgorithm.this.seInvokeVirtualInterface.isInterface = this.isInterface;
-			return DispatcherBytecodeAlgorithm.this.seInvokeVirtualInterface;
+			DispatcherBytecodeAlgorithm.this.algo_INVOKEVIRTUALINTERFACE.isInterface = this.isInterface;
+			return DispatcherBytecodeAlgorithm.this.algo_INVOKEVIRTUALINTERFACE;
 		}
 	}
 
-	private class DispatchStrategy_INVOKESPECIAL implements Dispatcher.DispatchStrategy<SEInvokeSpecial> {
-		public SEInvokeSpecial doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seInvokeSpecial == null) {
-				DispatcherBytecodeAlgorithm.this.seInvokeSpecial = new SEInvokeSpecial();
+	private class DispatchStrategy_INVOKESPECIAL implements Dispatcher.DispatchStrategy<Algo_INVOKESPECIAL> {
+		public Algo_INVOKESPECIAL doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_INVOKESPECIAL == null) {
+				DispatcherBytecodeAlgorithm.this.algo_INVOKESPECIAL = new Algo_INVOKESPECIAL();
 			}
-			return DispatcherBytecodeAlgorithm.this.seInvokeSpecial;
+			return DispatcherBytecodeAlgorithm.this.algo_INVOKESPECIAL;
 		}
 	}
 
-	private class DispatchStrategy_INVOKESTATIC implements Dispatcher.DispatchStrategy<SEInvokeStatic> {
-		public SEInvokeStatic doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seInvokeStatic == null) {
-				DispatcherBytecodeAlgorithm.this.seInvokeStatic = new SEInvokeStatic();
+	private class DispatchStrategy_INVOKESTATIC implements Dispatcher.DispatchStrategy<Algo_INVOKESTATIC> {
+		public Algo_INVOKESTATIC doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_INVOKESTATIC == null) {
+				DispatcherBytecodeAlgorithm.this.algo_INVOKESTATIC = new Algo_INVOKESTATIC();
 			}
-			return DispatcherBytecodeAlgorithm.this.seInvokeStatic;
+			return DispatcherBytecodeAlgorithm.this.algo_INVOKESTATIC;
 		}
 	}
 
-	private class DispatchStrategy_XRETURN implements Dispatcher.DispatchStrategy<SEReturn> {
-		private boolean def;
-		public DispatchStrategy_XRETURN(boolean def) {
-			this.def = def;
+	private class DispatchStrategy_XRETURN implements Dispatcher.DispatchStrategy<Algo_XRETURN> {
+		private boolean returnVoid;
+		public DispatchStrategy_XRETURN(boolean returnVoid) {
+			this.returnVoid = returnVoid;
 		}
-		public SEReturn doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seReturn == null) {
-				DispatcherBytecodeAlgorithm.this.seReturn = new SEReturn();
+		public Algo_XRETURN doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_XRETURN == null) {
+				DispatcherBytecodeAlgorithm.this.algo_XRETURN = new Algo_XRETURN();
 			}
-			DispatcherBytecodeAlgorithm.this.seReturn.def = this.def;
-			return DispatcherBytecodeAlgorithm.this.seReturn;
-		}
-	}
-
-	private class DispatchStrategy_ATHROW implements Dispatcher.DispatchStrategy<SEAthrow> {
-		public SEAthrow doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seAthrow == null) {
-				DispatcherBytecodeAlgorithm.this.seAthrow = new SEAthrow();
-			}
-			return DispatcherBytecodeAlgorithm.this.seAthrow;
+			DispatcherBytecodeAlgorithm.this.algo_XRETURN.returnVoid = this.returnVoid;
+			return DispatcherBytecodeAlgorithm.this.algo_XRETURN;
 		}
 	}
 
-	private class DispatchStrategy_WIDE implements Dispatcher.DispatchStrategy<SEWide> {
-		public SEWide doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seWide == null) {
-				DispatcherBytecodeAlgorithm.this.seWide = new SEWide();
+	private class DispatchStrategy_ATHROW implements Dispatcher.DispatchStrategy<Algo_ATHROW> {
+		public Algo_ATHROW doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_ATHROW == null) {
+				DispatcherBytecodeAlgorithm.this.algo_ATHROW = new Algo_ATHROW();
 			}
-			return DispatcherBytecodeAlgorithm.this.seWide;
+			return DispatcherBytecodeAlgorithm.this.algo_ATHROW;
 		}
 	}
 
-	private class DispatchStrategy_MONITORX implements Dispatcher.DispatchStrategy<SEMonitor> {
-		public SEMonitor doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seMonitor == null) {
-				DispatcherBytecodeAlgorithm.this.seMonitor = new SEMonitor();
+	private class DispatchStrategy_WIDE implements Dispatcher.DispatchStrategy<Algo_WIDE> {
+		public Algo_WIDE doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_WIDE == null) {
+				DispatcherBytecodeAlgorithm.this.algo_WIDE = new Algo_WIDE();
 			}
-			return DispatcherBytecodeAlgorithm.this.seMonitor;
+			return DispatcherBytecodeAlgorithm.this.algo_WIDE;
 		}
 	}
 
-	private class DispatchStrategy_UNEXPECTED implements Dispatcher.DispatchStrategy<SEUnexpected> {
-		public SEUnexpected doIt() {
-			if (DispatcherBytecodeAlgorithm.this.seUnexpected == null) {
-				DispatcherBytecodeAlgorithm.this.seUnexpected = new SEUnexpected();
+	private class DispatchStrategy_MONITORX implements Dispatcher.DispatchStrategy<Algo_MONITORX> {
+		public Algo_MONITORX doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_MONITORX == null) {
+				DispatcherBytecodeAlgorithm.this.algo_MONITORX = new Algo_MONITORX();
 			}
-			return DispatcherBytecodeAlgorithm.this.seUnexpected;
+			return DispatcherBytecodeAlgorithm.this.algo_MONITORX;
+		}
+	}
+
+	private class DispatchStrategy_UNEXPECTED implements Dispatcher.DispatchStrategy<Algo_UNEXPECTED> {
+		public Algo_UNEXPECTED doIt() {
+			if (DispatcherBytecodeAlgorithm.this.algo_UNEXPECTED == null) {
+				DispatcherBytecodeAlgorithm.this.algo_UNEXPECTED = new Algo_UNEXPECTED();
+			}
+			return DispatcherBytecodeAlgorithm.this.algo_UNEXPECTED;
 		}
 	}
 
@@ -758,10 +758,10 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm> {
 		.setDispatchStrategy(OP_IF_ACMPNE,       new DispatchStrategy_IF_ACMPX_XNULL(false, false))
 		.setDispatchStrategy(OP_TABLESWITCH,     new DispatchStrategy_XSWITCH(true))
 		.setDispatchStrategy(OP_LOOKUPSWITCH,    new DispatchStrategy_XSWITCH(false))
-		.setDispatchStrategy(OP_GOTO,            new DispatchStrategy_GOTOX(true))
-		.setDispatchStrategy(OP_GOTO_W,          new DispatchStrategy_GOTOX(false))
-		.setDispatchStrategy(OP_JSR,             new DispatchStrategy_JSRX(true))
-		.setDispatchStrategy(OP_JSR_W,           new DispatchStrategy_JSRX(false))
+		.setDispatchStrategy(OP_GOTO,            new DispatchStrategy_GOTOX(false))
+		.setDispatchStrategy(OP_GOTO_W,          new DispatchStrategy_GOTOX(true))
+		.setDispatchStrategy(OP_JSR,             new DispatchStrategy_JSRX(false))
+		.setDispatchStrategy(OP_JSR_W,           new DispatchStrategy_JSRX(true))
 		.setDispatchStrategy(OP_RET,             new DispatchStrategy_RET())
 		.setDispatchStrategy(OP_INVOKEINTERFACE, new DispatchStrategy_INVOKEVIRTUALINTERFACE(true))
 		.setDispatchStrategy(OP_INVOKEVIRTUAL,   new DispatchStrategy_INVOKEVIRTUALINTERFACE(false))
@@ -820,9 +820,9 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm> {
         this.setDispatchNonexistentStrategy(new DispatchStrategy_INTERNALERROR());
     }
 	
-    public SEInit select() {
+    public Algo_INIT select() {
 		if (this.seInit == null) {
-			this.seInit = new SEInit();
+			this.seInit = new Algo_INIT();
 		}
 		return this.seInit;
     }

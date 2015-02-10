@@ -15,9 +15,8 @@ import jbse.val.exc.InvalidTypeException;
 
 
 /**
- * Class for completing the semantics of all the bytecodes that require 
- * decision over symbolic values, thus the possible generation of many 
- * successor symbolic states.
+ * Class for completing the semantics of all the bytecodes that may have
+ * more than one successor state.
  * 
  * @author Pietro Braione
  *
@@ -31,8 +30,8 @@ public abstract class MultipleStateGenerator<R extends DecisionAlternative> {
 	/** 
 	 * Constructor.
 	 * 
-	 * @param superclassDecisionAlternatives the {@link Class}{@code <R>}
-	 *        that reifies {@code R}.
+	 * @param superclassDecisionAlternatives it <em>must</em> be 
+	 *        the {@link Class}{@code <R>} that reifies {@code R}.
 	 */
 	protected MultipleStateGenerator(Class<R> superclassDecisionAlternatives) {
 		this.superclassDecisionAlternatives = superclassDecisionAlternatives;
@@ -40,17 +39,17 @@ public abstract class MultipleStateGenerator<R extends DecisionAlternative> {
 	
 	//Must be set by subclasses (inputs to generateStates())
 	
-	/** The {@link DecisionStrategy} used to decide which states must be generated. */ 
-	protected DecisionStrategy<R> ds; 
+	/** The {@link StrategyDecide} used to decide which states must be generated. */ 
+	protected StrategyDecide<R> ds; 
 	
-	/** The {@link StateRefinementStrategy} used to refine each generated state. */
-	protected StateRefinementStrategy<R> srs;
+	/** The {@link StrategyRefine} used to refine each generated state. */
+	protected StrategyRefine<R> srs;
 	
 	/** 
-	 * The {@link StateUpdateStrategy} used to complete the bytecode semantics 
+	 * The {@link StrategyUpdate} used to complete the bytecode semantics 
 	 * of the generated states.
 	 */
-	protected StateUpdateStrategy<R> sus;
+	protected StrategyUpdate<R> sus;
 	
 	/** Must be set by subclasses to the current {@link State}. */
 	protected State state;
@@ -78,10 +77,9 @@ public abstract class MultipleStateGenerator<R extends DecisionAlternative> {
 	 * @throws ThreadStackEmptyException  
 	 */
 	protected void generateStates() 
-	throws ClassFileNotFoundException, 
-	DecisionException, ContradictionException, 
-	InvalidInputException, InvalidTypeException,
-	ThreadStackEmptyException {
+	throws ClassFileNotFoundException, DecisionException, 
+	ContradictionException, InvalidInputException, 
+	InvalidTypeException, ThreadStackEmptyException {
 		//decides the satisfiability of the different alternatives
 		final SortedSet<R> decisionResults = this.ctx.mkDecisionResultSet(this.superclassDecisionAlternatives);		
 		final Outcome outcome = this.ds.decide(decisionResults);

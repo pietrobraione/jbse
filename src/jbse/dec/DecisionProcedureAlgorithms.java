@@ -20,21 +20,21 @@ import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.SwitchTable;
 import jbse.mem.Util;
-import jbse.tree.DecisionAlternativeAload;
-import jbse.tree.DecisionAlternativeAloadOut;
-import jbse.tree.DecisionAlternativeAloadResolved;
-import jbse.tree.DecisionAlternativeAstore;
-import jbse.tree.DecisionAlternativeComparison;
-import jbse.tree.DecisionAlternativeComparison.Values;
-import jbse.tree.DecisionAlternativeIf;
-import jbse.tree.DecisionAlternativeIfFalse;
-import jbse.tree.DecisionAlternativeIfTrue;
-import jbse.tree.DecisionAlternativeLFLoad;
-import jbse.tree.DecisionAlternativeLFLoadResolved;
-import jbse.tree.DecisionAlternativeNewarray;
-import jbse.tree.DecisionAlternativeNewarrayOK;
-import jbse.tree.DecisionAlternativeNewarrayWrong;
-import jbse.tree.DecisionAlternativeSwitch;
+import jbse.tree.DecisionAlternative_XALOAD;
+import jbse.tree.DecisionAlternative_XALOAD_Out;
+import jbse.tree.DecisionAlternative_XALOAD_Resolved;
+import jbse.tree.DecisionAlternative_XASTORE;
+import jbse.tree.DecisionAlternative_XCMPY;
+import jbse.tree.DecisionAlternative_XCMPY.Values;
+import jbse.tree.DecisionAlternative_IFX;
+import jbse.tree.DecisionAlternative_IFX_False;
+import jbse.tree.DecisionAlternative_IFX_True;
+import jbse.tree.DecisionAlternative_XLOAD_GETX;
+import jbse.tree.DecisionAlternative_XLOAD_GETX_Resolved;
+import jbse.tree.DecisionAlternative_XNEWARRAY;
+import jbse.tree.DecisionAlternative_XNEWARRAY_Ok;
+import jbse.tree.DecisionAlternative_XNEWARRAY_Wrong;
+import jbse.tree.DecisionAlternative_XSWITCH;
 import jbse.val.Any;
 import jbse.val.Calculator;
 import jbse.val.Expression;
@@ -221,10 +221,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * Decides a condition for "branch if integer comparison" bytecodes.
 	 * 
 	 * @param condition a {@link Primitive} representing a logical value or clause.
-	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternativeIf}{@code >}, 
-	 *            where the method will put a {@link DecisionAlternativeIfTrue} object
+	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_IFX}{@code >}, 
+	 *            where the method will put a {@link DecisionAlternative_IFX_True} object
 	 *            iff {@code condition} does not contradict the current assumptions, and 
-	 *            a {@link DecisionAlternativeIfFalse} object iff
+	 *            a {@link DecisionAlternative_IFX_False} object iff
 	 *            {@code condition.}{@link Primitive#not() not()} is an {@link Expression} that
 	 *            does not contradict the current assumptions. Note that the two situations
 	 *            are not mutually exclusive (they are if {@code condition} is concrete).
@@ -233,7 +233,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws DecisionException upon failure.
 	 */
 	//TODO should be final?
-	public Outcome decideIf(Primitive condition, SortedSet<DecisionAlternativeIf> result)
+	public Outcome decideIf(Primitive condition, SortedSet<DecisionAlternative_IFX> result)
 	throws InvalidInputException, DecisionException {
 		if (condition == null || result == null) {
 			throw new InvalidInputException("decideIf invoked with a null parameter");
@@ -250,16 +250,16 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		}
 	}
 	
-	private void decideIfConcrete(Simplex condition, SortedSet<DecisionAlternativeIf> result) {
+	private void decideIfConcrete(Simplex condition, SortedSet<DecisionAlternative_IFX> result) {
 		final boolean conditionBoolean = (Boolean) condition.getActualValue();
-		result.add(DecisionAlternativeIf.toConcrete(conditionBoolean));
+		result.add(DecisionAlternative_IFX.toConcrete(conditionBoolean));
 	}
 
-	protected Outcome decideIfNonconcrete(Primitive condition, SortedSet<DecisionAlternativeIf> result) 
+	protected Outcome decideIfNonconcrete(Primitive condition, SortedSet<DecisionAlternative_IFX> result) 
 	throws DecisionException {	
 		final boolean shouldRefine;
-		final DecisionAlternativeIf T = DecisionAlternativeIf.toNonconcrete(true);
-		final DecisionAlternativeIf F = DecisionAlternativeIf.toNonconcrete(false);
+		final DecisionAlternative_IFX T = DecisionAlternative_IFX.toNonconcrete(true);
+		final DecisionAlternative_IFX F = DecisionAlternative_IFX.toNonconcrete(false);
 
 		if (condition instanceof Any) {
 			result.add(T);
@@ -296,9 +296,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * 
 	 * @param val1 a {@link Primitive}.
 	 * @param val2 another {@link Primitive}.
-	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternativeComparison}{@code >}, 
-	 *            which the method will update by adding to it a {@link DecisionAlternativeComparisonGt} object 
-	 *            (respectively, {@link DecisionAlternativeComparisonEq}, {@link DecisionAlternativeComparisonLt})
+	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XCMPY}{@code >}, 
+	 *            which the method will update by adding to it a {@link DecisionAlternative_XCMPY_Gt} object 
+	 *            (respectively, {@link DecisionAlternative_XCMPY_Eq}, {@link DecisionAlternative_XCMPY_Lt})
 	 *            iff {@code val1.gt(val2)} (respectively, {@code val1.eq(val2)}, 
 	 *            {@code val1.lt(val2)}) does not contradict the current assumptions. 
 	 *            Note that the three conditions are not mutually exclusive (they are when {@code val1} and 
@@ -308,7 +308,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws DecisionException upon failure.
 	 */
 	//TODO should be final?
-	public Outcome decideComparison(Primitive val1, Primitive val2, SortedSet<DecisionAlternativeComparison> result)
+	public Outcome decideComparison(Primitive val1, Primitive val2, SortedSet<DecisionAlternative_XCMPY> result)
 	throws InvalidInputException, DecisionException {
 		if (val1 == null || val2 == null || result == null) {
 			throw new InvalidInputException("decideComparison invoked with a null parameter");
@@ -327,19 +327,19 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		}
 	}
 	
-	private void decideComparisonConcrete(Simplex val1, Simplex val2, SortedSet<DecisionAlternativeComparison> result) {
+	private void decideComparisonConcrete(Simplex val1, Simplex val2, SortedSet<DecisionAlternative_XCMPY> result) {
 		try {
 			final Simplex conditionGt = (Simplex) val1.gt(val2);
 			final boolean conditionGtValue = (Boolean) conditionGt.getActualValue();
 			if (conditionGtValue) {
-				result.add(DecisionAlternativeComparison.toConcrete(Values.GT));
+				result.add(DecisionAlternative_XCMPY.toConcrete(Values.GT));
 			} else {
 				final Simplex conditionEq = (Simplex) val1.eq(val2);
 				final boolean conditionEqValue = (Boolean) conditionEq.getActualValue();
 				if (conditionEqValue) {
-					result.add(DecisionAlternativeComparison.toConcrete(Values.EQ));
+					result.add(DecisionAlternative_XCMPY.toConcrete(Values.EQ));
 				} else {
-					result.add(DecisionAlternativeComparison.toConcrete(Values.LT));
+					result.add(DecisionAlternative_XCMPY.toConcrete(Values.LT));
 				}
 			}
 		} catch (InvalidTypeException | InvalidOperandException e) {
@@ -349,12 +349,12 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	}
 
 	protected Outcome decideComparisonNonconcrete(Primitive val1, Primitive val2,
-	SortedSet<DecisionAlternativeComparison> result) 
+	SortedSet<DecisionAlternative_XCMPY> result) 
 	throws DecisionException {
 		final boolean shouldRefine;
-		final DecisionAlternativeComparison GT = DecisionAlternativeComparison.toNonconcrete(Values.GT);
-		final DecisionAlternativeComparison EQ = DecisionAlternativeComparison.toNonconcrete(Values.EQ);
-		final DecisionAlternativeComparison LT = DecisionAlternativeComparison.toNonconcrete(Values.LT);
+		final DecisionAlternative_XCMPY GT = DecisionAlternative_XCMPY.toNonconcrete(Values.GT);
+		final DecisionAlternative_XCMPY EQ = DecisionAlternative_XCMPY.toNonconcrete(Values.EQ);
+		final DecisionAlternative_XCMPY LT = DecisionAlternative_XCMPY.toNonconcrete(Values.LT);
 		
 		if ((val1 instanceof Any) || (val2 instanceof Any)) {
 			//1 - condition involving "don't care" values
@@ -405,16 +405,16 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * 
 	 * @param selector a {@link Primitive} with type int. 
 	 * @param tab a {@link SwitchTable}.
-	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternativeSwitch}{@code >} 
-	 *            where the method will put the {@link DecisionAlternativeSwitch} objects {@code s} 
-	 *            such that the equality of {@code selector.}{@link Primitive#eq(Primitive) eq}{@code (s.}{@link DecisionAlternativeSwitch#value() value()}{@code )}
+	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XSWITCH}{@code >} 
+	 *            where the method will put the {@link DecisionAlternative_XSWITCH} objects {@code s} 
+	 *            such that the equality of {@code selector.}{@link Primitive#eq(Primitive) eq}{@code (s.}{@link DecisionAlternative_XSWITCH#value() value()}{@code )}
 	 *            does not contradict the current assumptions.
 	 * @return an {@link Outcome}.
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
 	 */
 	//TODO should be final?
-	public Outcome decideSwitch(Primitive selector, SwitchTable tab, SortedSet<DecisionAlternativeSwitch> result)
+	public Outcome decideSwitch(Primitive selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result)
 	throws InvalidInputException, DecisionException {
 		if (selector == null || tab == null || result == null) {
 			throw new InvalidInputException("decideSwitch invoked with a null parameter");
@@ -431,18 +431,18 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		}
 	}
 	
-	private void decideSwitchConcrete(Simplex selector, SwitchTable tab, SortedSet<DecisionAlternativeSwitch> result) {
+	private void decideSwitchConcrete(Simplex selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result) {
 		final int opValue = (Integer) selector.getActualValue();
 		int branchId = 1;
 		for (int i : tab) {
 			if (i == opValue) { 
-				result.add(DecisionAlternativeSwitch.toConcrete(i, branchId));
+				result.add(DecisionAlternative_XSWITCH.toConcrete(i, branchId));
 				return;
 			}
 			++branchId;
 		}
 		//not found
-		result.add(DecisionAlternativeSwitch.toConcreteDefault(branchId));
+		result.add(DecisionAlternative_XSWITCH.toConcreteDefault(branchId));
 	}
 
 	/**
@@ -452,7 +452,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * 
 	 * @see {@link #decideSwitch}.
 	 */
-	protected Outcome decideSwitchNonconcrete(Primitive selector, SwitchTable tab, SortedSet<DecisionAlternativeSwitch> result) 
+	protected Outcome decideSwitchNonconcrete(Primitive selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result) 
 	throws DecisionException {
 		final boolean shouldRefine;
 
@@ -462,12 +462,12 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 			for (int i : tab) {
 				final Expression exp = (isAny ? null : (Expression) selector.eq(this.calc.valInt(i)));
 				if (isAny || isSat(exp)) { 
-					result.add(DecisionAlternativeSwitch.toNonconcrete(i, branchId));
+					result.add(DecisionAlternative_XSWITCH.toNonconcrete(i, branchId));
 				}
 				++branchId;
 			}
 			if (isAny || isSat(tab.getDefaultClause(selector))) { 
-				result.add(DecisionAlternativeSwitch.toNonconcreteDefault(branchId));
+				result.add(DecisionAlternative_XSWITCH.toNonconcreteDefault(branchId));
 			}
 			shouldRefine = (!isAny && (result.size() > 1));
 			return Outcome.val(shouldRefine, true);
@@ -483,9 +483,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * 
 	 * @param countsNonNegative a {@link Primitive} expressing the fact that the count 
 	 *        values popped from the operand stack are nonnegative.
-	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternativeNewarray}{@code >}, which the method 
-	 *            will update by adding to it a {@link DecisionAlternativeNewarrayOK} 
-	 *            (respectively, a {@link DecisionAlternativeNewarrayWrong}) in the case
+	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XNEWARRAY}{@code >}, which the method 
+	 *            will update by adding to it a {@link DecisionAlternative_XNEWARRAY_Ok} 
+	 *            (respectively, a {@link DecisionAlternative_XNEWARRAY_Wrong}) in the case
 	 *            a successful (respectively, unsuccessful) creation of the array with
 	 *            the provided count values does not contradict the current assumptions.
 	 *            Note that the two situations are not mutually exclusive.
@@ -494,7 +494,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws DecisionException upon failure.
 	 */
 	//TODO should be final?
-	public Outcome decideNewarray(Primitive countsNonNegative, SortedSet<DecisionAlternativeNewarray> result) 
+	public Outcome decideNewarray(Primitive countsNonNegative, SortedSet<DecisionAlternative_XNEWARRAY> result) 
 	throws InvalidInputException, DecisionException {
 		if (countsNonNegative == null || result == null) {
 			throw new InvalidInputException("decideNewarray invoked with a null parameter");
@@ -511,16 +511,16 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		}
 	}
 	
-	private void decideNewarrayConcrete(Simplex countsNonNegative, SortedSet<DecisionAlternativeNewarray> result) {
+	private void decideNewarrayConcrete(Simplex countsNonNegative, SortedSet<DecisionAlternative_XNEWARRAY> result) {
 		final boolean countsNonNegativeBoolean = (Boolean) countsNonNegative.getActualValue();
-		result.add(DecisionAlternativeNewarray.toConcrete(countsNonNegativeBoolean));
+		result.add(DecisionAlternative_XNEWARRAY.toConcrete(countsNonNegativeBoolean));
 	}
 	
-	protected Outcome decideNewarrayNonconcrete(Primitive countsNonNegative, SortedSet<DecisionAlternativeNewarray> result) 
+	protected Outcome decideNewarrayNonconcrete(Primitive countsNonNegative, SortedSet<DecisionAlternative_XNEWARRAY> result) 
 	throws DecisionException {
 		final boolean shouldRefine;
-		final DecisionAlternativeNewarray OK = DecisionAlternativeNewarray.toNonconcrete(true);
-		final DecisionAlternativeNewarray WRONG = DecisionAlternativeNewarray.toNonconcrete(false);
+		final DecisionAlternative_XNEWARRAY OK = DecisionAlternative_XNEWARRAY.toNonconcrete(true);
+		final DecisionAlternative_XNEWARRAY WRONG = DecisionAlternative_XNEWARRAY.toNonconcrete(false);
 
 		if (countsNonNegative instanceof Any) {
 			//TODO can it really happen? should we throw an exception in the case?
@@ -557,16 +557,16 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * 
 	 * @param inRange a {@link Primitive} expressing the fact that the access
 	 *        index is in the interval 0..array.length. 
-	 * @param result a {@link SortedSet}&lt;{@link DecisionAlternativeAstore}&gt;, which the method 
-	 *            will update by adding to it {@link DecisionAlternativeAstore#IN} 
-	 *            or {@link DecisionAlternativeAstore#OUT} in the case the access may be 
+	 * @param result a {@link SortedSet}&lt;{@link DecisionAlternative_XASTORE}&gt;, which the method 
+	 *            will update by adding to it {@link DecisionAlternative_XASTORE#IN} 
+	 *            or {@link DecisionAlternative_XASTORE#OUT} in the case the access may be 
 	 *            in range or out of range. Note that the two situations are not
 	 *            mutually exclusive.
 	 * @return an {@link Outcome}.
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
 	 */
-	public Outcome decideAstore(Primitive inRange, SortedSet<DecisionAlternativeAstore> result)
+	public Outcome decideAstore(Primitive inRange, SortedSet<DecisionAlternative_XASTORE> result)
 	throws InvalidInputException, DecisionException {
 		if (inRange == null || result == null) {
 			throw new InvalidInputException("decideAstore invoked with a null parameter");
@@ -583,16 +583,16 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		}
 	}
 
-	private void decideAstoreConcrete(Simplex inRange, SortedSet<DecisionAlternativeAstore> result) {
+	private void decideAstoreConcrete(Simplex inRange, SortedSet<DecisionAlternative_XASTORE> result) {
 		final boolean inRangeBoolean = (Boolean) inRange.getActualValue();
-		result.add(DecisionAlternativeAstore.toConcrete(inRangeBoolean));
+		result.add(DecisionAlternative_XASTORE.toConcrete(inRangeBoolean));
 	}
 	
-	protected Outcome decideAstoreNonconcrete(Primitive inRange, SortedSet<DecisionAlternativeAstore> result)
+	protected Outcome decideAstoreNonconcrete(Primitive inRange, SortedSet<DecisionAlternative_XASTORE> result)
 	throws DecisionException {
 		final boolean shouldRefine;
-		final DecisionAlternativeAstore IN = DecisionAlternativeAstore.toNonconcrete(true);
-		final DecisionAlternativeAstore OUT = DecisionAlternativeAstore.toNonconcrete(false);
+		final DecisionAlternative_XASTORE IN = DecisionAlternative_XASTORE.toNonconcrete(true);
+		final DecisionAlternative_XASTORE OUT = DecisionAlternative_XASTORE.toNonconcrete(false);
 
 		if (inRange instanceof Any) {
 			//TODO can it really happen? should we throw an exception in the case?
@@ -631,8 +631,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @param state a {@link State}. 
 	 * @param valToLoad the {@link Value} returned by the local variable access, 
 	 *        that must be loaded on {@code state}'s operand stack. It must not be {@code null}.
-	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternativeLFLoad}{@code >}, 
-	 *        where the method will put all the {@link DecisionAlternativeLFLoad}s 
+	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XLOAD_GETX}{@code >}, 
+	 *        where the method will put all the {@link DecisionAlternative_XLOAD_GETX}s 
 	 *        representing all the satisfiable outcomes of the operation.
 	 * @return an {@link Outcome}.
 	 * @throws InvalidInputException when one of the parameters is incorrect.
@@ -640,20 +640,20 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws ClassFileNotFoundException if {@code valToLoad} is a symbolic reference and
 	 *         its class name does not correspond to a valid class in the classpath.
 	 */
-	public Outcome resolveLFLoad(State state, Value valToLoad, SortedSet<DecisionAlternativeLFLoad> result) 
+	public Outcome resolveLFLoad(State state, Value valToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result) 
 	throws InvalidInputException, DecisionException, ClassFileNotFoundException {
 		if (state == null || valToLoad == null || result == null) {
 			throw new InvalidInputException("resolveLFLoad invoked with a null parameter");
 		}
 		if (Util.isResolved(state, valToLoad)) {
-        	result.add(new DecisionAlternativeLFLoadResolved(valToLoad));
+        	result.add(new DecisionAlternative_XLOAD_GETX_Resolved(valToLoad));
         	return Outcome.val(false, false, false);
 		} else { 
 			return resolveLFLoadUnresolved(state, (ReferenceSymbolic) valToLoad, result);
 		}
 	}
 	
-	protected Outcome resolveLFLoadUnresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternativeLFLoad> result)
+	protected Outcome resolveLFLoadUnresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)
 	throws DecisionException, ClassFileNotFoundException {
 		final boolean partialReferenceResolution = 
 			doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFromLocalVariableFactory(), result);
@@ -676,9 +676,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
 	 *        it had to be assumed by the access and thus it is not yet stored in the 
 	 *        {@link Array} object it originates.
-	 * @param result a {@link SortedSet}}{@code <}{@link DecisionAlternativeAload}{@code >}, 
+	 * @param result a {@link SortedSet}}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
 	 *        where the method will put all the 
-	 *        {@link DecisionAlternativeAload}s representing all the 
+	 *        {@link DecisionAlternative_XALOAD}s representing all the 
 	 *        satisfiable outcomes of the operation.
 	 * @return an {@link Outcome}.
 	 * @throws InvalidInputException when one of the parameters is incorrect.
@@ -687,7 +687,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *         its class name does not correspond to a valid class in the classpath.
 	 */
 	//TODO should be final?
-	public Outcome resolveAload(State state, Expression accessExpression, Value valToLoad, boolean fresh, SortedSet<DecisionAlternativeAload> result)
+	public Outcome resolveAload(State state, Expression accessExpression, Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
 	throws InvalidInputException, DecisionException, ClassFileNotFoundException {
 		if (state == null || result == null) {
 			throw new InvalidInputException("resolveLFLoad invoked with a null parameter");
@@ -718,18 +718,18 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
 	 *        it had to be assumed by the access and thus it is not yet stored in the 
 	 *        {@link Array} object it originates.
-	 * @param result a {@link SortedSet}}{@code <}{@link DecisionAlternativeAload}{@code >}, 
+	 * @param result a {@link SortedSet}}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
 	 *        where the method will put all the 
-	 *        {@link DecisionAlternativeAload}s representing all the 
+	 *        {@link DecisionAlternative_XALOAD}s representing all the 
 	 *        satisfiable outcomes of the operation.
 	 * @see {@link #resolveAload(State, Expression, Value, boolean, SortedSet)}.
 	 */
-	private void resolveAloadConcrete(Value valToLoad, boolean fresh, SortedSet<DecisionAlternativeAload> result) {
+	private void resolveAloadConcrete(Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result) {
 		final boolean accessOutOfBounds = (valToLoad == null);
 		if (accessOutOfBounds) {
-			result.add(new DecisionAlternativeAloadOut());
+			result.add(new DecisionAlternative_XALOAD_Out());
 		} else {
-			result.add(new DecisionAlternativeAloadResolved(valToLoad, fresh));
+			result.add(new DecisionAlternative_XALOAD_Resolved(valToLoad, fresh));
 		}
 	}
 
@@ -746,22 +746,22 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
 	 *        it had to be assumed by the access and thus it is not yet stored in the 
 	 *        {@link Array} object it originates.
-	 * @param result a {@link SortedSet}}{@code <}{@link DecisionAlternativeAload}{@code >}, 
+	 * @param result a {@link SortedSet}}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
 	 *        where the method will put all the 
-	 *        {@link DecisionAlternativeAload}s representing all the 
+	 *        {@link DecisionAlternative_XALOAD}s representing all the 
 	 *        satisfiable outcomes of the operation.
 	 * @see {@link #resolveAload(State, Expression, Value, boolean, SortedSet) resolveAload}.
 	 */
-	protected Outcome resolveAloadNonconcrete(Expression accessExpression, Value valToLoad, boolean fresh, SortedSet<DecisionAlternativeAload> result)
+	protected Outcome resolveAloadNonconcrete(Expression accessExpression, Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
 	throws DecisionException {
 		final boolean accessOutOfBounds = (valToLoad == null);
 		boolean shouldRefine;
 		if (this.isSat(accessExpression)) {
 			shouldRefine = fresh; //a fresh value to load always requires a refinement action
 			if (accessOutOfBounds) {
-				result.add(new DecisionAlternativeAloadOut(accessExpression));
+				result.add(new DecisionAlternative_XALOAD_Out(accessExpression));
 			} else { //Util.isResolved(state, valToLoad))
-				result.add(new DecisionAlternativeAloadResolved(accessExpression, valToLoad, fresh));
+				result.add(new DecisionAlternative_XALOAD_Resolved(accessExpression, valToLoad, fresh));
 			}
 		} else {
 			shouldRefine = false;
@@ -771,7 +771,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		return Outcome.val(shouldRefine, false, true);
 	}
 
-	protected Outcome resolveAloadUnresolved(State state, Expression accessCondition, ReferenceSymbolic refToLoad, boolean fresh, SortedSet<DecisionAlternativeAload> result)
+	protected Outcome resolveAloadUnresolved(State state, Expression accessCondition, ReferenceSymbolic refToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
 	throws DecisionException, ClassFileNotFoundException {
 		final boolean accessConcrete = (accessCondition == null);
 		final boolean shouldRefine;

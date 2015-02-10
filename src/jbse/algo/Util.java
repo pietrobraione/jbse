@@ -9,6 +9,7 @@ import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
 import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_STRING_CASEINSCOMP;
+import static jbse.bc.Signatures.JAVA_STRING_VALUE;
 import static jbse.bc.Signatures.VERIFY_ERROR;
 import static jbse.common.Type.binaryClassName;
 import static jbse.mem.Util.isResolvedSymbolicReference;
@@ -38,6 +39,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.exc.DecisionException;
+import jbse.mem.Array;
 import jbse.mem.Instance;
 import jbse.mem.Klass;
 import jbse.mem.State;
@@ -79,8 +81,38 @@ public class Util {
 		}
 		return (pos1 == pos2);
 	}
-    
-	/**
+        
+    /**
+     * Converts a {@code java.lang.String} {@link Instance}
+     * into a (meta-level) string.
+     * 
+     * @param s a {@link State}.
+     * @param ref {@code a Reference}.
+     * @return a {@link String} corresponding to the {@code value} of 
+     *         the {@link Instance} referred by {@code ref}, 
+     *         or {@code null} if such {@link Instance}'s 
+     *         {@link Instance#getType() type} is not 
+     *         {@code "java/lang/String"}, or its {@code value}
+     *         is not a concrete array of {@code char}s.
+     *         
+     */
+    public static String valueString(State s, Reference ref) {
+        final Instance i;
+        try {
+            i = (Instance) s.getObject(ref);
+        } catch (ClassCastException e) {
+            return null;
+        }
+        if (i.getType().equals(JAVA_STRING)) {
+            final Reference valueRef = (Reference) i.getFieldValue(JAVA_STRING_VALUE);
+            final Array value = (Array) s.getObject(valueRef);
+            return value.valueString();
+        } else {
+            return null;
+        }
+    }
+
+    /**
 	 * Equivalent to 
 	 * {@link #createAndThrowObject}{@code (s, VERIFY_ERROR)}.
 	 * 

@@ -5,6 +5,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import jbse.algo.Algorithm;
+
 /**
  * This annotation applies to methods. It indicates that the annotated 
  * has an implementation at the meta level that overrides its implementation
@@ -22,5 +24,5 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.CLASS)
 public @interface MetaOverridden {
-	String value();
+	java.lang.Class<? extends Algorithm> value();
 }

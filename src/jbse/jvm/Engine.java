@@ -5,7 +5,7 @@ import java.util.Collection;
 import jbse.algo.Algorithm;
 import jbse.algo.DispatcherBytecodeAlgorithm;
 import jbse.algo.ExecutionContext;
-import jbse.algo.SEInit;
+import jbse.algo.Algo_INIT;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.bc.Opcodes;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
@@ -152,7 +152,7 @@ public class Engine implements AutoCloseable {
 	InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, 
 	ClasspathException {
 		//executes the initial state setup step
-		final SEInit algo = this.dispatcher.select();
+		final Algo_INIT algo = this.dispatcher.select();
 		algo.exec(ctx);
 
 		//extracts the initial state from the tree

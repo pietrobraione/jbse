@@ -16,10 +16,10 @@ import jbse.dec.exc.DecisionException;
 import jbse.mem.Clause;
 import jbse.mem.SwitchTable;
 import jbse.rewr.CalculatorRewriting;
-import jbse.tree.DecisionAlternativeComparison;
-import jbse.tree.DecisionAlternativeComparison.Values;
-import jbse.tree.DecisionAlternativeIf;
-import jbse.tree.DecisionAlternativeSwitch;
+import jbse.tree.DecisionAlternative_XCMPY;
+import jbse.tree.DecisionAlternative_XCMPY.Values;
+import jbse.tree.DecisionAlternative_IFX;
+import jbse.tree.DecisionAlternative_XSWITCH;
 import jbse.val.Any;
 import jbse.val.Expression;
 import jbse.val.Primitive;
@@ -64,9 +64,9 @@ public class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
 	}
 
 	@Override
-	protected Outcome decideIfNonconcrete(Primitive exp, SortedSet<DecisionAlternativeIf> result) {
-		final DecisionAlternativeIf T = DecisionAlternativeIf.toNonconcrete(true);
-		final DecisionAlternativeIf F = DecisionAlternativeIf.toNonconcrete(false);
+	protected Outcome decideIfNonconcrete(Primitive exp, SortedSet<DecisionAlternative_IFX> result) {
+		final DecisionAlternative_IFX T = DecisionAlternative_IFX.toNonconcrete(true);
+		final DecisionAlternative_IFX F = DecisionAlternative_IFX.toNonconcrete(false);
 		if (exp instanceof Any) {
 			result.add(T);
 			result.add(F);
@@ -92,10 +92,10 @@ public class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
 	}
 
 	@Override
-	protected Outcome decideComparisonNonconcrete(Primitive val1, Primitive val2, SortedSet<DecisionAlternativeComparison> result) {
-		final DecisionAlternativeComparison GT = DecisionAlternativeComparison.toNonconcrete(Values.GT);
-		final DecisionAlternativeComparison EQ = DecisionAlternativeComparison.toNonconcrete(Values.EQ);
-		final DecisionAlternativeComparison LT = DecisionAlternativeComparison.toNonconcrete(Values.LT);
+	protected Outcome decideComparisonNonconcrete(Primitive val1, Primitive val2, SortedSet<DecisionAlternative_XCMPY> result) {
+		final DecisionAlternative_XCMPY GT = DecisionAlternative_XCMPY.toNonconcrete(Values.GT);
+		final DecisionAlternative_XCMPY EQ = DecisionAlternative_XCMPY.toNonconcrete(Values.EQ);
+		final DecisionAlternative_XCMPY LT = DecisionAlternative_XCMPY.toNonconcrete(Values.LT);
 		if (val1 instanceof Any || val2 instanceof Any) {
 			result.add(GT);
 			result.add(EQ);
@@ -135,15 +135,15 @@ public class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
 	}
 
 	@Override
-	protected Outcome decideSwitchNonconcrete(Primitive val, SwitchTable tab, SortedSet<DecisionAlternativeSwitch> result) {
+	protected Outcome decideSwitchNonconcrete(Primitive val, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result) {
 		boolean shouldRefine;
 		if (val instanceof Any) {
 			int branchId = 1;
 			for (int i : tab) {
-				result.add(DecisionAlternativeSwitch.toNonconcrete(i, branchId));
+				result.add(DecisionAlternative_XSWITCH.toNonconcrete(i, branchId));
 				++branchId;
 			}
-			result.add(DecisionAlternativeSwitch.toNonconcreteDefault(branchId));
+			result.add(DecisionAlternative_XSWITCH.toNonconcreteDefault(branchId));
 			shouldRefine = false;
 		} else {
 			boolean none = true;
@@ -188,13 +188,13 @@ public class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
 						int branchId = 1;
 						for (int k : tab) {
 							if (i == k) {
-								result.add(DecisionAlternativeSwitch.toNonconcrete(i, branchId));
+								result.add(DecisionAlternative_XSWITCH.toNonconcrete(i, branchId));
 								none = false;
 							}
 							++branchId;
 						}
 						if (none) {
-							result.add(DecisionAlternativeSwitch.toNonconcreteDefault(branchId));
+							result.add(DecisionAlternative_XSWITCH.toNonconcreteDefault(branchId));
 							none = false;
 						}
 					} catch (NumberFormatException e) {

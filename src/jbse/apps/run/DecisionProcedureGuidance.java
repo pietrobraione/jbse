@@ -31,18 +31,18 @@ import jbse.mem.Util;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.OperandStackEmptyException;
 import jbse.mem.exc.ThreadStackEmptyException;
-import jbse.tree.DecisionAlternativeAload;
-import jbse.tree.DecisionAlternativeAloadRef;
-import jbse.tree.DecisionAlternativeAstore;
-import jbse.tree.DecisionAlternativeComparison;
-import jbse.tree.DecisionAlternativeIf;
-import jbse.tree.DecisionAlternativeLFLoad;
-import jbse.tree.DecisionAlternativeLoadRef;
-import jbse.tree.DecisionAlternativeLoadRefAliases;
-import jbse.tree.DecisionAlternativeLoadRefExpands;
-import jbse.tree.DecisionAlternativeLoadRefNull;
-import jbse.tree.DecisionAlternativeNewarray;
-import jbse.tree.DecisionAlternativeSwitch;
+import jbse.tree.DecisionAlternative_XALOAD;
+import jbse.tree.DecisionAlternative_XALOAD_Ref;
+import jbse.tree.DecisionAlternative_XASTORE;
+import jbse.tree.DecisionAlternative_XCMPY;
+import jbse.tree.DecisionAlternative_IFX;
+import jbse.tree.DecisionAlternative_XLOAD_GETX;
+import jbse.tree.DecisionAlternative_XYLOAD_GETX_Ref;
+import jbse.tree.DecisionAlternative_XYLOAD_GETX_RefAliases;
+import jbse.tree.DecisionAlternative_XYLOAD_GETX_RefExpands;
+import jbse.tree.DecisionAlternative_XYLOAD_GETX_RefNull;
+import jbse.tree.DecisionAlternative_XNEWARRAY;
+import jbse.tree.DecisionAlternative_XSWITCH;
 import jbse.val.Any;
 import jbse.val.Calculator;
 import jbse.val.Expression;
@@ -219,7 +219,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 	}
 	
 	@Override
-	protected Outcome decideIfNonconcrete(Primitive condition, SortedSet<DecisionAlternativeIf> result) 
+	protected Outcome decideIfNonconcrete(Primitive condition, SortedSet<DecisionAlternative_IFX> result) 
 	throws DecisionException {
 		if (this.failedConcrete) {
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
@@ -227,10 +227,10 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 		final Outcome retVal = super.decideIfNonconcrete(condition, result);
 		if (!this.ended) {
 			try {
-				final Iterator<DecisionAlternativeIf> it = result.iterator();
+				final Iterator<DecisionAlternative_IFX> it = result.iterator();
 				final Primitive conditionNot = condition.not();
 				while (it.hasNext()) {
-					final DecisionAlternativeIf da = it.next();
+					final DecisionAlternative_IFX da = it.next();
 					final Primitive conditionToCheck  = (da.value() ? condition : conditionNot);
 					final Primitive valueInConcreteState = eval(this.initialStateConcrete, this.rootFrameConcrete, conditionToCheck);
 					if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
@@ -246,7 +246,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 	}
 
 	@Override
-	protected Outcome decideComparisonNonconcrete(Primitive val1, Primitive val2, SortedSet<DecisionAlternativeComparison> result)
+	protected Outcome decideComparisonNonconcrete(Primitive val1, Primitive val2, SortedSet<DecisionAlternative_XCMPY> result)
 	throws DecisionException {
 		if (this.failedConcrete) {
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
@@ -257,9 +257,9 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 				final Primitive comparisonGT = val1.gt(val2);
 				final Primitive comparisonEQ = val1.eq(val2);
 				final Primitive comparisonLT = val1.lt(val2);
-				final Iterator<DecisionAlternativeComparison> it = result.iterator();
+				final Iterator<DecisionAlternative_XCMPY> it = result.iterator();
 				while (it.hasNext()) {
-					final DecisionAlternativeComparison da = it.next();
+					final DecisionAlternative_XCMPY da = it.next();
 					final Primitive conditionToCheck  = 
 							(da.toOperator() == Operator.GT ? comparisonGT :
 								da.toOperator() == Operator.EQ ? comparisonEQ :
@@ -278,7 +278,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 	}
 	
 	@Override
-	protected Outcome decideSwitchNonconcrete(Primitive selector, SwitchTable tab, SortedSet<DecisionAlternativeSwitch> result)
+	protected Outcome decideSwitchNonconcrete(Primitive selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result)
 	throws DecisionException {
 		if (this.failedConcrete) {
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
@@ -286,9 +286,9 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 		final Outcome retVal = super.decideSwitchNonconcrete(selector, tab, result);
 		if (!this.ended) {
 			try {
-				final Iterator<DecisionAlternativeSwitch> it = result.iterator();
+				final Iterator<DecisionAlternative_XSWITCH> it = result.iterator();
 				while (it.hasNext()) {
-					final DecisionAlternativeSwitch da = it.next();
+					final DecisionAlternative_XSWITCH da = it.next();
 					final Primitive conditionToCheck;
 					conditionToCheck = selector.eq(this.initialStateConcrete.getCalculator().valInt(da.value()));
 					final Primitive valueInConcreteState = eval(this.initialStateConcrete, this.rootFrameConcrete, conditionToCheck);
@@ -305,7 +305,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 	}
 	
 	@Override
-	protected Outcome decideNewarrayNonconcrete(Primitive countsNonNegative, SortedSet<DecisionAlternativeNewarray> result)
+	protected Outcome decideNewarrayNonconcrete(Primitive countsNonNegative, SortedSet<DecisionAlternative_XNEWARRAY> result)
 	throws DecisionException {
 		if (this.failedConcrete) {
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
@@ -313,9 +313,9 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 		final Outcome retVal = super.decideNewarrayNonconcrete(countsNonNegative, result);
 		if (!this.ended) {
 			try {
-				final Iterator<DecisionAlternativeNewarray> it = result.iterator();
+				final Iterator<DecisionAlternative_XNEWARRAY> it = result.iterator();
 				while (it.hasNext()) {
-					final DecisionAlternativeNewarray da = it.next();
+					final DecisionAlternative_XNEWARRAY da = it.next();
 					final Primitive conditionToCheck = (da.ok() ? countsNonNegative : countsNonNegative.not());
 					final Primitive valueInConcreteState = eval(this.initialStateConcrete, this.rootFrameConcrete, conditionToCheck);
 					if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
@@ -331,7 +331,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 	}
 
 	@Override
-	protected Outcome decideAstoreNonconcrete(Primitive inRange, SortedSet<DecisionAlternativeAstore> result)
+	protected Outcome decideAstoreNonconcrete(Primitive inRange, SortedSet<DecisionAlternative_XASTORE> result)
 	throws DecisionException {
 		if (this.failedConcrete) {
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
@@ -339,9 +339,9 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 		final Outcome retVal = super.decideAstoreNonconcrete(inRange, result);
 		if (!this.ended) {
 			try {
-				final Iterator<DecisionAlternativeAstore> it = result.iterator();
+				final Iterator<DecisionAlternative_XASTORE> it = result.iterator();
 				while (it.hasNext()) {
-					final DecisionAlternativeAstore da = it.next();
+					final DecisionAlternative_XASTORE da = it.next();
 					final Primitive conditionToCheck = (da.isInRange() ? inRange : inRange.not());
 					final Primitive valueInConcreteState = eval(this.initialStateConcrete, this.rootFrameConcrete, conditionToCheck);
 					if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
@@ -357,16 +357,16 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 	}
 	
 	@Override
-	protected Outcome resolveLFLoadUnresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternativeLFLoad> result)
+	protected Outcome resolveLFLoadUnresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)
 	throws DecisionException, ClassFileNotFoundException {
 		if (this.failedConcrete) {
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
 		}
 		final Outcome retVal = super.resolveLFLoadUnresolved(state, refToLoad, result);
 		if (!this.ended) {
-			final Iterator<DecisionAlternativeLFLoad> it = result.iterator();
+			final Iterator<DecisionAlternative_XLOAD_GETX> it = result.iterator();
 			while (it.hasNext()) {
-				final DecisionAlternativeLoadRef dar = (DecisionAlternativeLoadRef) it.next();
+				final DecisionAlternative_XYLOAD_GETX_Ref dar = (DecisionAlternative_XYLOAD_GETX_Ref) it.next();
 				filter(state, refToLoad, dar, it);
 			}
 		}
@@ -374,16 +374,16 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 	}
 	
 	@Override
-	protected Outcome resolveAloadNonconcrete(Expression accessExpression, Value valueToLoad, boolean fresh, SortedSet<DecisionAlternativeAload> result)
+	protected Outcome resolveAloadNonconcrete(Expression accessExpression, Value valueToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
 	throws DecisionException {
 		if (this.failedConcrete) {
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
 		}
 		final Outcome retVal = super.resolveAloadNonconcrete(accessExpression, valueToLoad, fresh, result);
 		if (!this.ended) {
-			final Iterator<DecisionAlternativeAload> it = result.iterator();
+			final Iterator<DecisionAlternative_XALOAD> it = result.iterator();
 			while (it.hasNext()) {
-				final DecisionAlternativeAload da = it.next();
+				final DecisionAlternative_XALOAD da = it.next();
 				final Primitive conditionToCheck = da.getArrayAccessExpression();
 				final Primitive valueInConcreteState = eval(this.initialStateConcrete, this.rootFrameConcrete, conditionToCheck);
 				if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
@@ -395,16 +395,16 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 	}
 
 	@Override
-	protected Outcome resolveAloadUnresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, SortedSet<DecisionAlternativeAload> result)
+	protected Outcome resolveAloadUnresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
 	throws DecisionException, ClassFileNotFoundException {
 		if (this.failedConcrete) {
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
 		}
 		final Outcome retVal = super.resolveAloadUnresolved(state, accessExpression, refToLoad, fresh, result);
 		if (!this.ended) {
-			final Iterator<DecisionAlternativeAload> it = result.iterator();
+			final Iterator<DecisionAlternative_XALOAD> it = result.iterator();
 			while (it.hasNext()) {
-				final DecisionAlternativeAloadRef dar = (DecisionAlternativeAloadRef) it.next();
+				final DecisionAlternative_XALOAD_Ref dar = (DecisionAlternative_XALOAD_Ref) it.next();
 				final Primitive conditionToCheck = dar.getArrayAccessExpression();
 				final Primitive valueInConcreteState = eval(this.initialStateConcrete, this.rootFrameConcrete, conditionToCheck);
 				if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
@@ -417,18 +417,18 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 		return retVal;
 	}
 	
-	private void filter(State state, ReferenceSymbolic refToLoad, DecisionAlternativeLoadRef dar, Iterator<?> it) {
+	private void filter(State state, ReferenceSymbolic refToLoad, DecisionAlternative_XYLOAD_GETX_Ref dar, Iterator<?> it) {
 		final Reference refInConcreteState = (Reference) getValue(this.initialStateConcrete, this.rootFrameConcrete, refToLoad.getOrigin());
-		if (dar instanceof DecisionAlternativeLoadRefNull && !Util.isNull(this.initialStateConcrete, refInConcreteState)) {
+		if (dar instanceof DecisionAlternative_XYLOAD_GETX_RefNull && !Util.isNull(this.initialStateConcrete, refInConcreteState)) {
 			it.remove();
-		} else if (dar instanceof DecisionAlternativeLoadRefAliases) {
-			final DecisionAlternativeLoadRefAliases dara = (DecisionAlternativeLoadRefAliases) dar;
+		} else if (dar instanceof DecisionAlternative_XYLOAD_GETX_RefAliases) {
+			final DecisionAlternative_XYLOAD_GETX_RefAliases dara = (DecisionAlternative_XYLOAD_GETX_RefAliases) dar;
 			final String aliasOrigin = state.getObject(new ReferenceConcrete(dara.getAliasPosition())).getOrigin();
 			final Reference aliasInConcreteState = (Reference) getValue(this.initialStateConcrete, this.rootFrameConcrete, aliasOrigin);
 			if (!Util.areAlias(this.initialStateConcrete, refInConcreteState, aliasInConcreteState)) {
 				it.remove();
 			}
-		} else if (dar instanceof DecisionAlternativeLoadRefExpands) {
+		} else if (dar instanceof DecisionAlternative_XYLOAD_GETX_RefExpands) {
 			final long refHeapPosInConcreteState = Util.heapPosition(this.initialStateConcrete, refInConcreteState);
 			if (this.seenObjects.contains(refHeapPosInConcreteState)) {
 				it.remove();

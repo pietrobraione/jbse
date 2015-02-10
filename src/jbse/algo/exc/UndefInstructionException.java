@@ -1,7 +1,7 @@
 package jbse.algo.exc;
 
 /**
- * Exception for undefined instruction algorithm.
+ * Exception for an undefined bytecode.
  * 
  * @author Pietro Braione
  */

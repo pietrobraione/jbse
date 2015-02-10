@@ -11,14 +11,14 @@ import jbse.dec.exc.InvalidInputException;
 import jbse.mem.ClauseAssume;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.RewriterOperationOnSimplex;
-import jbse.tree.DecisionAlternativeComparisonEq;
-import jbse.tree.DecisionAlternativeComparisonGt;
-import jbse.tree.DecisionAlternativeComparisonLt;
-import jbse.tree.DecisionAlternativeIf;
-import jbse.tree.DecisionAlternativeComparison;
+import jbse.tree.DecisionAlternative_XCMPY_Eq;
+import jbse.tree.DecisionAlternative_XCMPY_Gt;
+import jbse.tree.DecisionAlternative_XCMPY_Lt;
+import jbse.tree.DecisionAlternative_IFX;
+import jbse.tree.DecisionAlternative_XCMPY;
 import jbse.tree.DecisionAlternativeComparators;
-import jbse.tree.DecisionAlternativeIfFalse;
-import jbse.tree.DecisionAlternativeIfTrue;
+import jbse.tree.DecisionAlternative_IFX_False;
+import jbse.tree.DecisionAlternative_IFX_True;
 import jbse.val.Expression;
 import jbse.val.Primitive;
 import jbse.val.Simplex;
@@ -63,12 +63,12 @@ public class DecisionProcedureTest {
 		Primitive p = calc.valInt(2).gt(calc.valInt(4));
 
 		//expected: {F_concrete}
-		TreeSet<DecisionAlternativeIf> d = new TreeSet<>(cmp.get(DecisionAlternativeIf.class));
+		TreeSet<DecisionAlternative_IFX> d = new TreeSet<>(cmp.get(DecisionAlternative_IFX.class));
 		dec.decideIf(p, d);
 		assertEquals(1, d.size());
-		DecisionAlternativeIf dai = d.first();
+		DecisionAlternative_IFX dai = d.first();
 		assertTrue(dai.concrete());
-		assertThat(dai, instanceOf(DecisionAlternativeIfFalse.class));
+		assertThat(dai, instanceOf(DecisionAlternative_IFX_False.class));
 	}
 
 	@Test
@@ -79,16 +79,16 @@ public class DecisionProcedureTest {
 		e = (Expression) e.and(A.le(calc.valInt(1)));
 
 		//expected: {T_nonconcrete, F_nonconcrete}
-		TreeSet<DecisionAlternativeIf> d = new TreeSet<>(cmp.get(DecisionAlternativeIf.class));
+		TreeSet<DecisionAlternative_IFX> d = new TreeSet<>(cmp.get(DecisionAlternative_IFX.class));
 		dec.decideIf(e, d);
 		assertEquals(2, d.size());
-		DecisionAlternativeIf dai1 = d.first();
+		DecisionAlternative_IFX dai1 = d.first();
 		d.remove(dai1);
-		DecisionAlternativeIf dai2 = d.first();
+		DecisionAlternative_IFX dai2 = d.first();
 		assertFalse(dai1.concrete());
 		assertFalse(dai2.concrete());
-		assertThat(dai1, instanceOf(DecisionAlternativeIfTrue.class));
-		assertThat(dai2, instanceOf(DecisionAlternativeIfFalse.class));
+		assertThat(dai1, instanceOf(DecisionAlternative_IFX_True.class));
+		assertThat(dai2, instanceOf(DecisionAlternative_IFX_False.class));
 	}
 
 	@Test
@@ -98,12 +98,12 @@ public class DecisionProcedureTest {
 		Simplex five = calc.valInt(5);
 
 		//expected {LT_concrete}
-		TreeSet<DecisionAlternativeComparison> d = new TreeSet<>(cmp.get(DecisionAlternativeComparison.class));
+		TreeSet<DecisionAlternative_XCMPY> d = new TreeSet<>(cmp.get(DecisionAlternative_XCMPY.class));
 		dec.decideComparison(two, five, d);
 		assertEquals(1, d.size());
-		DecisionAlternativeComparison dac = d.first();
+		DecisionAlternative_XCMPY dac = d.first();
 		assertTrue(dac.concrete());
-		assertThat(dac, instanceOf(DecisionAlternativeComparisonLt.class));
+		assertThat(dac, instanceOf(DecisionAlternative_XCMPY_Lt.class));
 	}
 
 	@Test
@@ -114,17 +114,17 @@ public class DecisionProcedureTest {
 		Expression Atwice = (Expression) A.mul(calc.valInt(2));
 
 		//expected {GT_nonconcrete, EQ_nonconcrete}
-		TreeSet<DecisionAlternativeComparison> d = new TreeSet<>(cmp.get(DecisionAlternativeComparison.class));
+		TreeSet<DecisionAlternative_XCMPY> d = new TreeSet<>(cmp.get(DecisionAlternative_XCMPY.class));
 		dec.pushAssumption(new ClauseAssume(Agezero));
 		dec.decideComparison(Atwice, A, d);
 		assertEquals(2, d.size());
-		DecisionAlternativeComparison dac1 = d.first();
+		DecisionAlternative_XCMPY dac1 = d.first();
 		d.remove(dac1);
-		DecisionAlternativeComparison dac2 = d.first();
+		DecisionAlternative_XCMPY dac2 = d.first();
 		assertFalse(dac1.concrete());
 		assertFalse(dac2.concrete());
-		assertThat(dac1, instanceOf(DecisionAlternativeComparisonGt.class));
-		assertThat(dac2, instanceOf(DecisionAlternativeComparisonEq.class));
+		assertThat(dac1, instanceOf(DecisionAlternative_XCMPY_Gt.class));
+		assertThat(dac2, instanceOf(DecisionAlternative_XCMPY_Eq.class));
 	}
 
 	@Test
