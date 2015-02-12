@@ -1,6 +1,8 @@
 JBSE
 ====
 
+[![Project Stats](https://www.openhub.net/p/JBSE/widgets/project_thin_badge.gif)](https://www.openhub.net/p/JBSE)
+
 Introduction
 ------------
 
