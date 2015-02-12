@@ -6,6 +6,7 @@ import static jbse.bc.Signatures.JAVA_SERIALIZABLE;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import jbse.bc.exc.FieldNotFoundException;
@@ -137,10 +138,10 @@ public class ClassFileArray extends ClassFile {
 
 	@Override
 	public List<String> getSuperInterfaceNames() {
-		final List<String> retVal = new ArrayList<String>(2);
-		retVal.add(JAVA_CLONEABLE);
-		retVal.add(JAVA_SERIALIZABLE);
-		return retVal;
+		final List<String> superinterfaces = new ArrayList<String>(2);
+		superinterfaces.add(JAVA_CLONEABLE);
+		superinterfaces.add(JAVA_SERIALIZABLE);
+		return Collections.unmodifiableList(superinterfaces);
 	}
 
 	@Override

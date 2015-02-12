@@ -8,7 +8,8 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 
 import jbse.bc.ClassHierarchy;
-import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.Signature;
+import jbse.bc.exc.BadClassFileException;
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
@@ -233,7 +234,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws DecisionException upon failure.
 	 */
 	//TODO should be final?
-	public Outcome decideIf(Primitive condition, SortedSet<DecisionAlternative_IFX> result)
+	public Outcome decide_IFX(Primitive condition, SortedSet<DecisionAlternative_IFX> result)
 	throws InvalidInputException, DecisionException {
 		if (condition == null || result == null) {
 			throw new InvalidInputException("decideIf invoked with a null parameter");
@@ -242,20 +243,20 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 			throw new InvalidInputException("condition has type " + condition.getType());
 		}
 		if (condition instanceof Simplex) {
-			decideIfConcrete((Simplex) condition, result);
+			decide_IFX_Concrete((Simplex) condition, result);
 			return Outcome.val(false, false);
 		} else {		
-			final Outcome o = decideIfNonconcrete(condition, result);
+			final Outcome o = decide_IFX_Nonconcrete(condition, result);
 			return o;
 		}
 	}
 	
-	private void decideIfConcrete(Simplex condition, SortedSet<DecisionAlternative_IFX> result) {
+	private void decide_IFX_Concrete(Simplex condition, SortedSet<DecisionAlternative_IFX> result) {
 		final boolean conditionBoolean = (Boolean) condition.getActualValue();
 		result.add(DecisionAlternative_IFX.toConcrete(conditionBoolean));
 	}
 
-	protected Outcome decideIfNonconcrete(Primitive condition, SortedSet<DecisionAlternative_IFX> result) 
+	protected Outcome decide_IFX_Nonconcrete(Primitive condition, SortedSet<DecisionAlternative_IFX> result) 
 	throws DecisionException {	
 		final boolean shouldRefine;
 		final DecisionAlternative_IFX T = DecisionAlternative_IFX.toNonconcrete(true);
@@ -308,7 +309,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws DecisionException upon failure.
 	 */
 	//TODO should be final?
-	public Outcome decideComparison(Primitive val1, Primitive val2, SortedSet<DecisionAlternative_XCMPY> result)
+	public Outcome decide_XCMPY(Primitive val1, Primitive val2, SortedSet<DecisionAlternative_XCMPY> result)
 	throws InvalidInputException, DecisionException {
 		if (val1 == null || val2 == null || result == null) {
 			throw new InvalidInputException("decideComparison invoked with a null parameter");
@@ -319,15 +320,15 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 			throw new InvalidInputException("decideComparison invoked with noncomparable parameters");
 		}
 		if ((val1 instanceof Simplex) && (val2 instanceof Simplex)) {
-			decideComparisonConcrete((Simplex) val1, (Simplex) val2, result);
+			decide_XCMPY_Concrete((Simplex) val1, (Simplex) val2, result);
 			return Outcome.val(false, false);
 		} else {
-			final Outcome o = decideComparisonNonconcrete(val1, val2, result);
+			final Outcome o = decide_XCMPY_Nonconcrete(val1, val2, result);
 			return o;
 		}
 	}
 	
-	private void decideComparisonConcrete(Simplex val1, Simplex val2, SortedSet<DecisionAlternative_XCMPY> result) {
+	private void decide_XCMPY_Concrete(Simplex val1, Simplex val2, SortedSet<DecisionAlternative_XCMPY> result) {
 		try {
 			final Simplex conditionGt = (Simplex) val1.gt(val2);
 			final boolean conditionGtValue = (Boolean) conditionGt.getActualValue();
@@ -348,7 +349,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		}
 	}
 
-	protected Outcome decideComparisonNonconcrete(Primitive val1, Primitive val2,
+	protected Outcome decide_XCMPY_Nonconcrete(Primitive val1, Primitive val2,
 	SortedSet<DecisionAlternative_XCMPY> result) 
 	throws DecisionException {
 		final boolean shouldRefine;
@@ -414,7 +415,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws DecisionException upon failure.
 	 */
 	//TODO should be final?
-	public Outcome decideSwitch(Primitive selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result)
+	public Outcome decide_XSWITCH(Primitive selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result)
 	throws InvalidInputException, DecisionException {
 		if (selector == null || tab == null || result == null) {
 			throw new InvalidInputException("decideSwitch invoked with a null parameter");
@@ -423,15 +424,15 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 			throw new InvalidInputException("switch selector has type " + selector.getType());
 		}
 		if (selector instanceof Simplex) {
-			decideSwitchConcrete((Simplex) selector, tab, result);
+			decide_XSWITCH_Concrete((Simplex) selector, tab, result);
 			return Outcome.val(false, false);
 		} else {
-			final Outcome o = decideSwitchNonconcrete(selector, tab, result);
+			final Outcome o = decide_XSWITCH_Nonconcrete(selector, tab, result);
 			return o;
 		}
 	}
 	
-	private void decideSwitchConcrete(Simplex selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result) {
+	private void decide_XSWITCH_Concrete(Simplex selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result) {
 		final int opValue = (Integer) selector.getActualValue();
 		int branchId = 1;
 		for (int i : tab) {
@@ -448,11 +449,11 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	/**
 	 * Implements the portion of {@link #decideSwitch} which
 	 * must query the component {@link DecisionProcedure}.
-	 * @throws DecisionException
+	 * @throws DecisionException upon failure.
 	 * 
 	 * @see {@link #decideSwitch}.
 	 */
-	protected Outcome decideSwitchNonconcrete(Primitive selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result) 
+	protected Outcome decide_XSWITCH_Nonconcrete(Primitive selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result) 
 	throws DecisionException {
 		final boolean shouldRefine;
 
@@ -494,7 +495,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws DecisionException upon failure.
 	 */
 	//TODO should be final?
-	public Outcome decideNewarray(Primitive countsNonNegative, SortedSet<DecisionAlternative_XNEWARRAY> result) 
+	public Outcome decide_XNEWARRAY(Primitive countsNonNegative, SortedSet<DecisionAlternative_XNEWARRAY> result) 
 	throws InvalidInputException, DecisionException {
 		if (countsNonNegative == null || result == null) {
 			throw new InvalidInputException("decideNewarray invoked with a null parameter");
@@ -503,20 +504,20 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 			throw new InvalidInputException("countsNonNegative type is " + countsNonNegative.getType());
 		}
 		if (countsNonNegative instanceof Simplex) {
-			decideNewarrayConcrete((Simplex) countsNonNegative, result);
+			decide_XNEWARRAY_Concrete((Simplex) countsNonNegative, result);
 			return Outcome.val(false, false);
 		} else {
-			final Outcome o = decideNewarrayNonconcrete(countsNonNegative, result);
+			final Outcome o = decide_XNEWARRAY_Nonconcrete(countsNonNegative, result);
 			return o;
 		}
 	}
 	
-	private void decideNewarrayConcrete(Simplex countsNonNegative, SortedSet<DecisionAlternative_XNEWARRAY> result) {
+	private void decide_XNEWARRAY_Concrete(Simplex countsNonNegative, SortedSet<DecisionAlternative_XNEWARRAY> result) {
 		final boolean countsNonNegativeBoolean = (Boolean) countsNonNegative.getActualValue();
 		result.add(DecisionAlternative_XNEWARRAY.toConcrete(countsNonNegativeBoolean));
 	}
 	
-	protected Outcome decideNewarrayNonconcrete(Primitive countsNonNegative, SortedSet<DecisionAlternative_XNEWARRAY> result) 
+	protected Outcome decide_XNEWARRAY_Nonconcrete(Primitive countsNonNegative, SortedSet<DecisionAlternative_XNEWARRAY> result) 
 	throws DecisionException {
 		final boolean shouldRefine;
 		final DecisionAlternative_XNEWARRAY OK = DecisionAlternative_XNEWARRAY.toNonconcrete(true);
@@ -566,7 +567,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
 	 */
-	public Outcome decideAstore(Primitive inRange, SortedSet<DecisionAlternative_XASTORE> result)
+	public Outcome decide_XASTORE(Primitive inRange, SortedSet<DecisionAlternative_XASTORE> result)
 	throws InvalidInputException, DecisionException {
 		if (inRange == null || result == null) {
 			throw new InvalidInputException("decideAstore invoked with a null parameter");
@@ -575,20 +576,20 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 			throw new InvalidInputException("inRange type is " + inRange.getType());
 		}
 		if (inRange instanceof Simplex) {
-			decideAstoreConcrete((Simplex) inRange, result);
+			decide_XASTORE_Concrete((Simplex) inRange, result);
 			return Outcome.val(false, false);
 		} else {
-			final Outcome o = decideAstoreNonconcrete(inRange, result);
+			final Outcome o = decide_XASTORE_Nonconcrete(inRange, result);
 			return o;
 		}
 	}
 
-	private void decideAstoreConcrete(Simplex inRange, SortedSet<DecisionAlternative_XASTORE> result) {
+	private void decide_XASTORE_Concrete(Simplex inRange, SortedSet<DecisionAlternative_XASTORE> result) {
 		final boolean inRangeBoolean = (Boolean) inRange.getActualValue();
 		result.add(DecisionAlternative_XASTORE.toConcrete(inRangeBoolean));
 	}
 	
-	protected Outcome decideAstoreNonconcrete(Primitive inRange, SortedSet<DecisionAlternative_XASTORE> result)
+	protected Outcome decide_XASTORE_Nonconcrete(Primitive inRange, SortedSet<DecisionAlternative_XASTORE> result)
 	throws DecisionException {
 		final boolean shouldRefine;
 		final DecisionAlternative_XASTORE IN = DecisionAlternative_XASTORE.toNonconcrete(true);
@@ -637,11 +638,13 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @return an {@link Outcome}.
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
-	 * @throws ClassFileNotFoundException if {@code valToLoad} is a symbolic reference and
-	 *         its class name does not correspond to a valid class in the classpath.
+	 * @throws BadClassFileException if {@code valToLoad} is a symbolic reference and
+	 *         its class name, or the class names of one of its possible expansions, 
+	 *         does not detect a classfile in the classpath, or if the classfile is
+	 *         ill-formed for JBSE.
 	 */
-	public Outcome resolveLFLoad(State state, Value valToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result) 
-	throws InvalidInputException, DecisionException, ClassFileNotFoundException {
+	public Outcome resolve_XLOAD_GETX(State state, Value valToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result) 
+	throws InvalidInputException, DecisionException, BadClassFileException {
 		if (state == null || valToLoad == null || result == null) {
 			throw new InvalidInputException("resolveLFLoad invoked with a null parameter");
 		}
@@ -649,12 +652,12 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
         	result.add(new DecisionAlternative_XLOAD_GETX_Resolved(valToLoad));
         	return Outcome.val(false, false, false);
 		} else { 
-			return resolveLFLoadUnresolved(state, (ReferenceSymbolic) valToLoad, result);
+			return resolve_XLOAD_GETX_Unresolved(state, (ReferenceSymbolic) valToLoad, result);
 		}
 	}
 	
-	protected Outcome resolveLFLoadUnresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)
-	throws DecisionException, ClassFileNotFoundException {
+	protected Outcome resolve_XLOAD_GETX_Unresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)
+	throws DecisionException, BadClassFileException {
 		final boolean partialReferenceResolution = 
 			doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFromLocalVariableFactory(), result);
 		return Outcome.val(true, partialReferenceResolution, true); //uninitialized symbolic references always require a refinement action
@@ -683,25 +686,29 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @return an {@link Outcome}.
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
-	 * @throws ClassFileNotFoundException if {@code valToLoad} is a symbolic reference and
-	 *         its class name does not correspond to a valid class in the classpath.
+     * @throws BadClassFileException if {@code valToLoad} is a symbolic reference and
+     *         its class name, or the class names of one of its possible expansions, 
+     *         does not detect a classfile in the classpath, or if the classfile is
+     *         ill-formed for JBSE.
 	 */
 	//TODO should be final?
-	public Outcome resolveAload(State state, Expression accessExpression, Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
-	throws InvalidInputException, DecisionException, ClassFileNotFoundException {
+	public Outcome resolve_XALOAD(State state, Expression accessExpression, Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
+	throws InvalidInputException, DecisionException, BadClassFileException {
 		if (state == null || result == null) {
 			throw new InvalidInputException("resolveLFLoad invoked with a null parameter");
 		}
 		final boolean accessConcrete = (accessExpression == null);
 		final boolean accessOutOfBounds = (valToLoad == null);
 		final boolean valToLoadResolved = accessOutOfBounds || Util.isResolved(state, valToLoad);
-		if (accessConcrete && valToLoadResolved) {
-			resolveAloadConcrete(valToLoad, fresh, result);
-			return Outcome.val(fresh, false, false); //a fresh value to load always requires a refinement action
-		} else if (!accessConcrete && valToLoadResolved) {
-			return resolveAloadNonconcrete(accessExpression, valToLoad, fresh, result);
-		} else { //!accessOutOfBounds && !Util.isResolved(state, valToLoad)
-			return resolveAloadUnresolved(state, accessExpression, (ReferenceSymbolic) valToLoad, fresh, result);
+		if (valToLoadResolved) {
+		    if (accessConcrete) {
+	            resolve_XALOAD_ResolvedConcrete(valToLoad, fresh, result);
+	            return Outcome.val(fresh, false, false); //a fresh value to load always requires a refinement action
+		    } else {
+	            return resolve_XALOAD_ResolvedNonconcrete(accessExpression, valToLoad, fresh, result);
+		    }
+		} else {
+			return resolve_XALOAD_Unresolved(state, accessExpression, (ReferenceSymbolic) valToLoad, fresh, result);
 		}
 	}
 	
@@ -722,9 +729,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *        where the method will put all the 
 	 *        {@link DecisionAlternative_XALOAD}s representing all the 
 	 *        satisfiable outcomes of the operation.
-	 * @see {@link #resolveAload(State, Expression, Value, boolean, SortedSet)}.
+	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet)}.
 	 */
-	private void resolveAloadConcrete(Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result) {
+	private void resolve_XALOAD_ResolvedConcrete(Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result) {
 		final boolean accessOutOfBounds = (valToLoad == null);
 		if (accessOutOfBounds) {
 			result.add(new DecisionAlternative_XALOAD_Out());
@@ -750,9 +757,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *        where the method will put all the 
 	 *        {@link DecisionAlternative_XALOAD}s representing all the 
 	 *        satisfiable outcomes of the operation.
-	 * @see {@link #resolveAload(State, Expression, Value, boolean, SortedSet) resolveAload}.
+	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet) resolveAload}.
 	 */
-	protected Outcome resolveAloadNonconcrete(Expression accessExpression, Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
+	protected Outcome resolve_XALOAD_ResolvedNonconcrete(Expression accessExpression, Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
 	throws DecisionException {
 		final boolean accessOutOfBounds = (valToLoad == null);
 		boolean shouldRefine;
@@ -771,8 +778,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		return Outcome.val(shouldRefine, false, true);
 	}
 
-	protected Outcome resolveAloadUnresolved(State state, Expression accessCondition, ReferenceSymbolic refToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
-	throws DecisionException, ClassFileNotFoundException {
+	protected Outcome resolve_XALOAD_Unresolved(State state, Expression accessCondition, ReferenceSymbolic refToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
+	throws DecisionException, BadClassFileException {
 		final boolean accessConcrete = (accessCondition == null);
 		final boolean shouldRefine;
 		final boolean noReferenceExpansion;
@@ -850,16 +857,20 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *            representing all the valid expansions of {@code notInitializedRef}.
 	 * @return {@code true} iff the resolution of the reference is 
 	 *         partial (see {@link Outcome#noReferenceExpansion()}).
-	 * @throws DecisionException
-	 * @throws ClassFileNotFoundException 
+	 * @throws DecisionException upon failure.
+	 * @throws BadClassFileException when 
+	 *         {@code refToResolve.}{@link Signature#getClassName() getClassName()}
+	 *         or the class name of one of its possibile expansions does 
+	 *         not have a classfile in the classpath, or if the classpath is
+	 *         ill-formed for JBSE.
 	 */
 	protected <D, DA extends D, DE extends D, DN extends D> 
 	boolean doResolveReference(State state, ReferenceSymbolic refToResolve, 
 	DecisionAlternativeReferenceFactory<DA, DE, DN> factory, SortedSet<D> result) 
-	throws DecisionException, ClassFileNotFoundException {
+	throws DecisionException, BadClassFileException {
 		//gets the statically compatible possible aliases 
 		//and expansions of refToResolve
-		final TreeMap<Long, Objekt> possibleAliases = getPossibleAliases(state, refToResolve);
+		final Map<Long, Objekt> possibleAliases = getPossibleAliases(state, refToResolve);
 		final Set<String> possibleExpansions = getPossibleExpansions(state, refToResolve);
 		if (possibleAliases == null || possibleExpansions == null) {
 			throw new UnexpectedInternalException("Symbolic reference " + refToResolve + 
@@ -906,13 +917,13 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *
 	 * @param state a {@link State}.
 	 * @param ref a {@link ReferenceSymbolic} to be resolved.
-	 * @return a {@link TreeMap}{@code <}{@link Long}{@code, }{@link Objekt}{@code >}, 
+	 * @return a {@link Map}{@code <}{@link Long}{@code, }{@link Objekt}{@code >}, 
 	 *         representing the subview of {@code state}'s heap that contains
 	 *         all the objects that are compatible, in their type and epoch, with {@code ref}.
 	 *         If {@code ref} does not denote a reference or array type, the method 
 	 *         returns {@code null}.
 	 */
-	private TreeMap<Long, Objekt> getPossibleAliases(State state, ReferenceSymbolic ref) {
+	private Map<Long, Objekt> getPossibleAliases(State state, ReferenceSymbolic ref) {
 		//checks preconditions
 		final String type = ref.getStaticType();
 		if (!Type.isReference(type) && !Type.isArray(type)) {
@@ -971,11 +982,12 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *         initialization, with {@code ref}.
 	 *         If {@code ref} does not denote a reference or array type, the method 
 	 *         returns {@code null}.
-	 * @throws ClassFileNotFoundException if {@code ref}'s class name does not
-	 *         denote a valid class in the classpath.
+	 * @throws BadClassFileException if any of {@code ref}'s class name or its subclasses'
+	 *         names does not denote a classfile in the classpath, or if the 
+	 *         classfile is ill-formed for the current JBSE.
 	 */
 	private Set<String> getPossibleExpansions(State state, ReferenceSymbolic ref) 
-	throws ClassFileNotFoundException {
+	throws BadClassFileException {
 		final String type = ref.getStaticType();
 		if (!Type.isReference(type) && !Type.isArray(type)) {
 			return null;

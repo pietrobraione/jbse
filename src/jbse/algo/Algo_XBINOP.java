@@ -1,6 +1,6 @@
 package jbse.algo;
 
-import static jbse.algo.Util.createAndThrowObject;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.ARITHMETIC_EXCEPTION;
 
@@ -43,7 +43,7 @@ public class Algo_XBINOP implements Algorithm {
         			if (val2 instanceof Simplex) {
         				Simplex op0_S = (Simplex) val2;
         				if (op0_S.isZeroOne(true)) {
-        				    createAndThrowObject(state, ARITHMETIC_EXCEPTION);
+        				    throwNew(state, ARITHMETIC_EXCEPTION);
         					return;
         				}
         			}

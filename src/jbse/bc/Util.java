@@ -1,6 +1,6 @@
 package jbse.bc;
 
-import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.MethodNotFoundException;
 
 /**
@@ -19,11 +19,14 @@ public final class Util {
 	 * @param annotation the {@link Class} of the annotation to look for
 	 * @return an {@link Object}, the annotation, or {@code null} if the method is not
 	 *         annotated with {@code annotation}.
-	 * @throws ClassFileNotFoundException 
-	 * @throws MethodNotFoundException 
+	 * @throws BadClassFileException if the classfile with name 
+	 *         {@code methodSignatureResolved.}{@link Signature#getClassName() getClassName()}
+	 *         does not exist in the classpath or is incompatible with the current 
+	 *         version of JBSE.
+	 * @throws MethodNotFoundException if the method {@code methodSignatureResolved} does not exist.
 	 */
 	public static Object findMethodAnnotation(ClassHierarchy hier, Signature methodSignatureResolved, Class<?> annotation) 
-	throws ClassFileNotFoundException, MethodNotFoundException {
+	throws BadClassFileException, MethodNotFoundException {
 		final ClassFile cf = hier.getClassFile(methodSignatureResolved.getClassName());	
 		final Object[] annotations = cf.getMethodAvailableAnnotations(methodSignatureResolved);
 		for (Object o : annotations) {

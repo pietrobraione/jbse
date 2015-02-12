@@ -7,11 +7,10 @@ import org.junit.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
-import jbse.bc.exc.NoArrayVisibilitySpecifiedException;
 
 public class ClassFileFactoryTest {
 	ClassFileFactory f;
@@ -27,27 +26,27 @@ public class ClassFileFactoryTest {
 	}
 
 	@Test
-	public void testNewClassFile1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testNewClassFile1() throws BadClassFileException {
 		ClassFile c = f.newClassFile("java/util/LinkedList$ListItr");
 		assertNotNull(c);
 	}
 
 	@Test
-	public void testGetClassName1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testGetClassName1() throws BadClassFileException {
 		String className = "java/lang/Object";
 		ClassFile c = f.newClassFile(className);		
 		assertEquals(className, c.getClassName());
 	}
 
 	@Test
-	public void testGetClassName2() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testGetClassName2() throws BadClassFileException {
 		String className = "tsafe/main/SimpleCalculator";
 		ClassFile c = f.newClassFile(className);
 		assertEquals(className, c.getClassName());
 	}
 
 	@Test
-	public void testGetClassSignature1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, InvalidIndexException {
+	public void testGetClassSignature1() throws BadClassFileException, InvalidIndexException {
 		String className = "tsafe/main/SimpleCalculator";
 		ClassFile c = f.newClassFile(className);
 		int i = 1; //entry 1 in constant pool should be tsafe/main/SimpleCalculator
@@ -55,35 +54,35 @@ public class ClassFileFactoryTest {
 	}		
 
 	@Test(expected=InvalidIndexException.class)
-	public void testGetClassSignature2() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, InvalidIndexException {
+	public void testGetClassSignature2() throws BadClassFileException, InvalidIndexException {
 		String className = "tsafe/engine/TsafeEngine";
 		ClassFile c = f.newClassFile(className);
 		c.getClassSignature(10);
 	}		
 
 	@Test
-	public void testGetSuperClassName1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testGetSuperClassName1() throws BadClassFileException {
 		String className = "tsafe/main/SimpleCalculator";
 		ClassFile c = f.newClassFile(className);
 		assertEquals("tsafe/engine/EngineCalculator", c.getSuperClassName());
 	}
 
 	@Test
-	public void testGetSuperClassName2() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testGetSuperClassName2() throws BadClassFileException {
 		String className = "jsymba/jvm/Engine";
 		ClassFile c = f.newClassFile(className);
 		assertEquals("java/lang/Object", c.getSuperClassName());
 	}
 
 	@Test
-	public void testGetSuperClassName3() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testGetSuperClassName3() throws BadClassFileException {
 		String className = "java/lang/Object";
 		ClassFile c = f.newClassFile(className);
 		assertNull(c.getSuperClassName());
 	}
 
 	@Test
-	public void testGetSuperInterfaceNames1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testGetSuperInterfaceNames1() throws BadClassFileException {
 		String className = "java/util/LinkedList";
 		ClassFile c = f.newClassFile(className);
 
@@ -99,7 +98,7 @@ public class ClassFileFactoryTest {
 	}
 
 	@Test
-	public void testGetSuperInterfaceNames2() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testGetSuperInterfaceNames2() throws BadClassFileException {
 		String className = "java/io/Serializable";
 		ClassFile c = f.newClassFile(className);
 
@@ -109,7 +108,7 @@ public class ClassFileFactoryTest {
 	}
 
 	@Test
-	public void testGetSuperInterfaceNames3() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testGetSuperInterfaceNames3() throws BadClassFileException {
 		String className = "java/lang/Object";
 		ClassFile c = f.newClassFile(className);
 
@@ -122,7 +121,7 @@ public class ClassFileFactoryTest {
 	 * Method not declared in the class, but declared in some superclass
 	 */
 	@Test(expected=MethodNotFoundException.class)
-	public void testGetExceptionTable1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, InvalidIndexException, MethodNotFoundException, MethodCodeNotFoundException {
+	public void testGetExceptionTable1() throws BadClassFileException, InvalidIndexException, MethodNotFoundException, MethodCodeNotFoundException {
 		ClassFile c = f.newClassFile("jsymba/jvm/Engine");
 		Signature sig = new Signature("jsymba/jvm/Engine", "()Ljava/lang/String;", "toString");
 		c.getExceptionTable(sig);
@@ -132,7 +131,7 @@ public class ClassFileFactoryTest {
 	 * Method declared, but without code
 	 */
 	@Test(expected=MethodCodeNotFoundException.class)
-	public void testGetExceptionTable2() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, InvalidIndexException, MethodNotFoundException, MethodCodeNotFoundException {
+	public void testGetExceptionTable2() throws BadClassFileException, InvalidIndexException, MethodNotFoundException, MethodCodeNotFoundException {
 		ClassFile c = f.newClassFile("java/lang/Runnable");
 		Signature sig = new Signature("java/lang/Runnable", "()V", "run");
 		c.getExceptionTable(sig);
@@ -142,7 +141,7 @@ public class ClassFileFactoryTest {
 	 * Method with bytecode.
 	 */
 	@Test
-	public void testGetExceptionTable3() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, InvalidIndexException, MethodNotFoundException, MethodCodeNotFoundException {
+	public void testGetExceptionTable3() throws BadClassFileException, InvalidIndexException, MethodNotFoundException, MethodCodeNotFoundException {
 		ClassFile c = f.newClassFile("jsymba/jvm/Engine");
 		Signature sig = new Signature("jsymba/jvm/Engine", "()Ljsymba/tree/StateTree$BranchPoint;", "step");
 
@@ -166,41 +165,41 @@ public class ClassFileFactoryTest {
 	 * Native method.
 	 */
 	@Test(expected=MethodCodeNotFoundException.class)
-	public void testGetExceptionTable4() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, InvalidIndexException, MethodNotFoundException, MethodCodeNotFoundException {
+	public void testGetExceptionTable4() throws BadClassFileException, InvalidIndexException, MethodNotFoundException, MethodCodeNotFoundException {
 		ClassFile c = f.newClassFile("java/lang/Object");
 		Signature sig = new Signature("java/lang/Object", "()V", "notifyAll");
 		c.getExceptionTable(sig);
 	}
 
 	@Test
-	public void testGetValueFromConstantPool1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, InvalidIndexException {
+	public void testGetValueFromConstantPool1() throws BadClassFileException, InvalidIndexException {
 		ClassFile c = f.newClassFile("java/lang/Object");
-		assertEquals(Integer.valueOf(500000), c.getValueFromConstantPool(1));
+		assertEquals(new ConstantPoolPrimitive(500000), c.getValueFromConstantPool(1));
 	}
 
 	@Test
-	public void testGetValueFromConstantPool2() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, InvalidIndexException {
+	public void testGetValueFromConstantPool2() throws BadClassFileException, InvalidIndexException {
 		ClassFile c = f.newClassFile("java/lang/Math");
-		assertEquals(Float.valueOf(0.5f), c.getValueFromConstantPool(2));
+		assertEquals(new ConstantPoolPrimitive(0.5f), c.getValueFromConstantPool(2));
 	}
 
 	@Test
-	public void testGetValueFromConstantPool3() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, InvalidIndexException {
+	public void testGetValueFromConstantPool3() throws BadClassFileException, InvalidIndexException {
 		ClassFile c = f.newClassFile("java/lang/Math");
-		assertEquals(Double.valueOf(Math.E), c.getValueFromConstantPool(73));
+		assertEquals(new ConstantPoolPrimitive(Math.E), c.getValueFromConstantPool(73));
 	}
 
 	@Test
-	public void testGetValueFromConstantPool4() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, InvalidIndexException {
+	public void testGetValueFromConstantPool4() throws BadClassFileException, InvalidIndexException {
 		ClassFile c = f.newClassFile("java/lang/Long");
-		assertEquals(Long.valueOf(Long.MAX_VALUE), c.getValueFromConstantPool(150));
+		assertEquals(new ConstantPoolPrimitive(Long.MAX_VALUE), c.getValueFromConstantPool(150));
 	}
 
 	/**
 	 * Constant pool index out of bounds.
 	 */
 	@Test(expected=InvalidIndexException.class)
-	public void testGetValueFromConstantPool5() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, InvalidIndexException {
+	public void testGetValueFromConstantPool5() throws BadClassFileException, InvalidIndexException {
 		ClassFile c = f.newClassFile("java/lang/Long");
 		c.getValueFromConstantPool(300);
 	}
@@ -209,7 +208,7 @@ public class ClassFileFactoryTest {
 	 * Method not declared in the class, but declared in some superclass.
 	 */
 	@Test
-	public void testHasMethodDeclaration1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testHasMethodDeclaration1() throws BadClassFileException {
 		ClassFile c = f.newClassFile("jsymba/jvm/Engine");
 		Signature sig = new Signature("jsymba/jvm/Engine", "()Ljava/lang/String;", "toString");
 		assertFalse(c.hasMethodDeclaration(sig));
@@ -219,7 +218,7 @@ public class ClassFileFactoryTest {
 	 * Method not declared in the class neither in some superclass.
 	 */
 	@Test
-	public void testHasMethodDeclaration2() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testHasMethodDeclaration2() throws BadClassFileException {
 		ClassFile c = f.newClassFile("jsymba/jvm/Engine");
 		Signature sig = new Signature("jsymba/jvm/Engine", "()Z", "foo");
 		assertFalse(c.hasMethodDeclaration(sig));
@@ -229,7 +228,7 @@ public class ClassFileFactoryTest {
 	 * Method declared in abstract class, but not implemented in it.
 	 */
 	@Test
-	public void testHasMethodDeclaration3() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testHasMethodDeclaration3() throws BadClassFileException {
 		ClassFile c = f.newClassFile("jsymba/bc/ClassFile");
 		Signature sig = new Signature("jsymba/bc/ClassFile", "()Z", "isInterface");
 		assertTrue(c.hasMethodDeclaration(sig));
@@ -239,7 +238,7 @@ public class ClassFileFactoryTest {
 	 * Method declared and implemented in abstract class.
 	 */
 	@Test
-	public void testHasMethodDeclaration4() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testHasMethodDeclaration4() throws BadClassFileException {
 		ClassFile c = f.newClassFile("jsymba/bc/ClassFile");
 		Signature sig = new Signature("jsymba/bc/ClassFile", "(Ljava/lang/Object;)Z", "equals");
 		assertTrue(c.hasMethodDeclaration(sig));
@@ -249,7 +248,7 @@ public class ClassFileFactoryTest {
 	 * Method declared and implemented in concrete class.
 	 */
 	@Test
-	public void testHasMethodDeclaration5() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testHasMethodDeclaration5() throws BadClassFileException {
 		ClassFile c = f.newClassFile("java/lang/Object");
 		Signature sig = new Signature("java/lang/Object", "(Ljava/lang/Object;)Z", "equals");
 		assertTrue(c.hasMethodDeclaration(sig));
@@ -259,7 +258,7 @@ public class ClassFileFactoryTest {
 	 * Method declared in interface.
 	 */
 	@Test
-	public void testHasMethodDeclaration6() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testHasMethodDeclaration6() throws BadClassFileException {
 		ClassFile c = f.newClassFile("java/lang/Runnable");
 		Signature sig = new Signature("java/lang/Runnable", "()V", "run");
 		assertTrue(c.hasMethodDeclaration(sig));
@@ -269,7 +268,7 @@ public class ClassFileFactoryTest {
 	 * Native method.
 	 */
 	@Test
-	public void testHasMethodDeclaration7() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testHasMethodDeclaration7() throws BadClassFileException {
 		ClassFile c = f.newClassFile("java/lang/Object");
 		Signature sig = new Signature("java/lang/Object", "()V", "notifyAll");
 		assertTrue(c.hasMethodDeclaration(sig));
@@ -279,7 +278,7 @@ public class ClassFileFactoryTest {
 	 * Method not declared in the class, but declared in some superclass.
 	 */
 	@Test
-	public void testHasMethodImplementation1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testHasMethodImplementation1() throws BadClassFileException {
 		Signature sig = new Signature("jsymba/jvm/Engine", "()Ljava/lang/String;", "toString");
 		ClassFile c = f.newClassFile("jsymba/jvm/Engine");
 
@@ -290,7 +289,7 @@ public class ClassFileFactoryTest {
 	 * Method not declared in the class neither in some superclass.
 	 */
 	@Test
-	public void testHasMethodImplementation2() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testHasMethodImplementation2() throws BadClassFileException {
 		Signature sig = new Signature("jsymba/jvm/Engine", "()Z", "foo");
 		ClassFile c = f.newClassFile("jsymba/jvm/Engine");
 
@@ -301,7 +300,7 @@ public class ClassFileFactoryTest {
 	 * Method declared in abstract class, but not implemented in it.
 	 */
 	@Test
-	public void testHasMethodImplementation3() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testHasMethodImplementation3() throws BadClassFileException {
 		Signature sig = new Signature("jsymba/bc/ClassFile", "()Z", "isInterface");
 		ClassFile c = f.newClassFile("jsymba/bc/ClassFile");
 
@@ -312,7 +311,7 @@ public class ClassFileFactoryTest {
 	 * Method declared and implemented in abstract class.
 	 */
 	@Test
-	public void testHasMethodImplementation4() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testHasMethodImplementation4() throws BadClassFileException {
 		Signature sig = new Signature("jsymba/bc/ClassFile", "(Ljava/lang/Object;)Z", "equals");
 		ClassFile c = f.newClassFile("jsymba/bc/ClassFile");
 
@@ -323,7 +322,7 @@ public class ClassFileFactoryTest {
 	 * Method declared and implemented in concrete class.
 	 */
 	@Test
-	public void testHasMethodImplementation5() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testHasMethodImplementation5() throws BadClassFileException {
 		Signature sig = new Signature("java/lang/Object", "(Ljava/lang/Object;)Z", "equals");
 		ClassFile c = f.newClassFile("java/lang/Object");
 
@@ -334,7 +333,7 @@ public class ClassFileFactoryTest {
 	 * Method declared in interface.
 	 */
 	@Test
-	public void testHasMethodImplementation6() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testHasMethodImplementation6() throws BadClassFileException {
 		Signature sig = new Signature("java/lang/Runnable", "()V", "run");
 		ClassFile c = f.newClassFile("java/lang/Runnable");
 
@@ -345,7 +344,7 @@ public class ClassFileFactoryTest {
 	 * Native method.
 	 */
 	@Test
-	public void testHasMethodImplementation7() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testHasMethodImplementation7() throws BadClassFileException {
 		Signature sig = new Signature("java/lang/Object", "()V", "notifyAll");
 		ClassFile c = f.newClassFile("java/lang/Object");
 
@@ -353,31 +352,31 @@ public class ClassFileFactoryTest {
 	}
 
 	@Test
-	public void testIsInterface1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testIsInterface1() throws BadClassFileException {
 		ClassFile c = f.newClassFile("java/lang/Object");
 		assertFalse(c.isInterface());
 	}
 
 	@Test
-	public void testIsInterface2() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testIsInterface2() throws BadClassFileException {
 		ClassFile c = f.newClassFile("java/lang/Runnable");
 		assertTrue(c.isInterface());
 	}
 
 	@Test
-	public void testIsAbstract1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testIsAbstract1() throws BadClassFileException {
 		ClassFile c = f.newClassFile("java/lang/Object");
 		assertFalse(c.isAbstract());
 	}
 
 	@Test
-	public void testIsAbstract2() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testIsAbstract2() throws BadClassFileException {
 		ClassFile c = f.newClassFile("java/lang/Runnable");
 		assertTrue(c.isAbstract());
 	}
 
 	@Test
-	public void testIsAbstract3() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testIsAbstract3() throws BadClassFileException {
 		ClassFile c = f.newClassFile("jsymba/bc/ClassFile");
 		assertTrue(c.isAbstract());
 	}
@@ -386,7 +385,7 @@ public class ClassFileFactoryTest {
 	 * public class
 	 */
 	@Test
-	public void testIsPublic1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testIsPublic1() throws BadClassFileException {
 		ClassFile c = f.newClassFile("jsymba/bc/ClassFile");
 		assertTrue(c.isPublic());
 	}
@@ -395,7 +394,7 @@ public class ClassFileFactoryTest {
 	 * private nested class
 	 */
 	@Test
-	public void testIsPublic2() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testIsPublic2() throws BadClassFileException {
 		ClassFile c = f.newClassFile("java/util/LinkedList$ListItr");
 		assertFalse(c.isPublic());
 	}
@@ -404,7 +403,7 @@ public class ClassFileFactoryTest {
 	 * public nested class
 	 */
 	@Test
-	public void testIsPublic3() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testIsPublic3() throws BadClassFileException {
 		ClassFile c = f.newClassFile("java/util/concurrent/ThreadPoolExecutor$AbortPolicy");
 		assertTrue(c.isPublic());
 	}
@@ -413,13 +412,13 @@ public class ClassFileFactoryTest {
 	 * (package) class
 	 */
 	@Test
-	public void testIsPublic4() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testIsPublic4() throws BadClassFileException {
 		ClassFile c = f.newClassFile("java/util/regex/ASCII");
 		assertFalse(c.isPublic());
 	}
 	
 	@Test
-	public void testIsSuperInvoke1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testIsSuperInvoke1() throws BadClassFileException {
 		ClassFile c = f.newClassFile("java/lang/Class");
 		assertTrue(c.isSuperInvoke());
 	}
@@ -428,7 +427,7 @@ public class ClassFileFactoryTest {
 	 * Method not declared in the class, but declared in some superclass.
 	 */
 	@Test(expected=MethodNotFoundException.class)
-	public void testIsMethodAbstract1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException {
+	public void testIsMethodAbstract1() throws BadClassFileException, MethodNotFoundException {
 		Signature sig = new Signature("jsymba/jvm/Engine", "()Ljava/lang/String;", "toString");
 		ClassFile c = f.newClassFile("jsymba/jvm/Engine");
 
@@ -439,7 +438,7 @@ public class ClassFileFactoryTest {
 	 * Method not declared in the class neither in some superclass.
 	 */
 	@Test(expected=MethodNotFoundException.class)
-	public void testIsMethodAbstract2() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException {
+	public void testIsMethodAbstract2() throws BadClassFileException, MethodNotFoundException {
 		Signature sig = new Signature("jsymba/jvm/Engine", "()Z", "foo");
 		ClassFile c = f.newClassFile("jsymba/jvm/Engine");
 
@@ -450,7 +449,7 @@ public class ClassFileFactoryTest {
 	 * Method declared in abstract class, but not implemented in it.
 	 */
 	@Test
-	public void testIsMethodAbstract3() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException {
+	public void testIsMethodAbstract3() throws BadClassFileException, MethodNotFoundException {
 		Signature sig = new Signature("jsymba/bc/ClassFile", "()Z", "isInterface");
 		ClassFile c = f.newClassFile("jsymba/bc/ClassFile");
 
@@ -461,7 +460,7 @@ public class ClassFileFactoryTest {
 	 * Method declared and implemented in abstract class.
 	 */
 	@Test
-	public void testIsMethodAbstract4() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException {
+	public void testIsMethodAbstract4() throws BadClassFileException, MethodNotFoundException {
 		Signature sig = new Signature("jsymba/bc/ClassFile", "(Ljava/lang/Object;)Z", "equals");
 		ClassFile c = f.newClassFile("jsymba/bc/ClassFile");
 
@@ -472,7 +471,7 @@ public class ClassFileFactoryTest {
 	 * Method declared and implemented in concrete class.
 	 */
 	@Test
-	public void testIsMethodAbstract5() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException {
+	public void testIsMethodAbstract5() throws BadClassFileException, MethodNotFoundException {
 		Signature sig = new Signature("java/lang/Object", "(Ljava/lang/Object;)Z", "equals");
 		ClassFile c = f.newClassFile("java/lang/Object");
 
@@ -483,7 +482,7 @@ public class ClassFileFactoryTest {
 	 * Method declared in interface.
 	 */
 	@Test
-	public void testIsMethodAbstract6() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException {
+	public void testIsMethodAbstract6() throws BadClassFileException, MethodNotFoundException {
 		Signature sig = new Signature("java/lang/Runnable", "()V", "run");
 		ClassFile c = f.newClassFile("java/lang/Runnable");
 
@@ -495,7 +494,7 @@ public class ClassFileFactoryTest {
 	 * (not native in the superclass).
 	 */
 	@Test(expected=MethodNotFoundException.class)
-	public void testIsMethodNative1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException {
+	public void testIsMethodNative1() throws BadClassFileException, MethodNotFoundException {
 		Signature sig = new Signature("jsymba/jvm/Engine", "()Ljava/lang/String;", "toString");
 		ClassFile c = f.newClassFile("jsymba/jvm/Engine");
 
@@ -507,7 +506,7 @@ public class ClassFileFactoryTest {
 	 * (native in the superclass).
 	 */
 	@Test(expected=MethodNotFoundException.class)
-	public void testIsMethodNative2() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException {
+	public void testIsMethodNative2() throws BadClassFileException, MethodNotFoundException {
 		Signature sig = new Signature("jsymba/jvm/Engine", "()Ljava/lang/Class;", "getClass");
 		ClassFile c = f.newClassFile("jsymba/jvm/Engine");
 
@@ -518,7 +517,7 @@ public class ClassFileFactoryTest {
 	 * Method not declared in the class neither in some superclass.
 	 */
 	@Test(expected=MethodNotFoundException.class)
-	public void testIsMethodNative3() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException {
+	public void testIsMethodNative3() throws BadClassFileException, MethodNotFoundException {
 		Signature sig = new Signature("jsymba/jvm/Engine", "()Z", "baz");
 		ClassFile c = f.newClassFile("jsymba/jvm/Engine");
 
@@ -529,7 +528,7 @@ public class ClassFileFactoryTest {
 	 * Method declared in abstract class, but not implemented in it.
 	 */
 	@Test
-	public void testIsMethodNative4() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException {
+	public void testIsMethodNative4() throws BadClassFileException, MethodNotFoundException {
 		Signature sig = new Signature("jsymba/bc/ClassFile", "()Z", "isInterface");
 		ClassFile c = f.newClassFile("jsymba/bc/ClassFile");
 
@@ -540,7 +539,7 @@ public class ClassFileFactoryTest {
 	 * Method declared and implemented in abstract class, non native.
 	 */
 	@Test
-	public void testIsMethodNative5() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException {
+	public void testIsMethodNative5() throws BadClassFileException, MethodNotFoundException {
 		Signature sig = new Signature("jsymba/bc/ClassFile", "(Ljava/lang/Object;)Z", "equals");
 		ClassFile c = f.newClassFile("jsymba/bc/ClassFile");
 
@@ -551,7 +550,7 @@ public class ClassFileFactoryTest {
 	 * Method declared and implemented in concrete class, native.
 	 */
 	@Test
-	public void testIsMethodNative6() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException {
+	public void testIsMethodNative6() throws BadClassFileException, MethodNotFoundException {
 		Signature sig = new Signature("java/lang/Shutdown", "()V", "runAllFinalizers");
 		ClassFile c = f.newClassFile("java/lang/Shutdown");
 
@@ -562,7 +561,7 @@ public class ClassFileFactoryTest {
 	 * Method declared and implemented in concrete class, non native.
 	 */
 	@Test
-	public void testIsMethodNative7() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException {
+	public void testIsMethodNative7() throws BadClassFileException, MethodNotFoundException {
 		Signature sig = new Signature("java/lang/Class", "([Ljava/lang/Class;)Ljava/lang/String;", "argumentTypesToString");
 		ClassFile c = f.newClassFile("java/lang/Class");
 
@@ -573,7 +572,7 @@ public class ClassFileFactoryTest {
 	 * Method declared in interface.
 	 */
 	@Test
-	public void testIsMethodNative8() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException {
+	public void testIsMethodNative8() throws BadClassFileException, MethodNotFoundException {
 		ClassFile c = f.newClassFile("java/lang/Runnable");
 		Signature sig = new Signature("java/lang/Runnable", "()V", "run");
 		assertFalse(c.isMethodNative(sig));
@@ -583,7 +582,7 @@ public class ClassFileFactoryTest {
 	 * Static method declared in class.
 	 */
 	@Test
-	public void testIsMethodNative9() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException {
+	public void testIsMethodNative9() throws BadClassFileException, MethodNotFoundException {
 		ClassFile c = f.newClassFile("java/lang/Object");
 		Signature sig = new Signature("java/lang/Object", "()V", "registerNatives");
 		assertTrue(c.isMethodNative(sig));
@@ -594,7 +593,7 @@ public class ClassFileFactoryTest {
 	 * (not static in the superclass).
 	 */
 	@Test(expected=MethodNotFoundException.class)
-	public void testIsMethodStatic1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException {
+	public void testIsMethodStatic1() throws BadClassFileException, MethodNotFoundException {
 		ClassFile c = f.newClassFile("jsymba/jvm/Engine");
 		Signature sig = new Signature("jsymba/jvm/Engine", "()Ljava/lang/Class;", "getClass");
 		c.isMethodStatic(sig);
@@ -605,7 +604,7 @@ public class ClassFileFactoryTest {
 	 * (static in the superclass).
 	 */
 	@Test(expected=MethodNotFoundException.class)
-	public void testIsMethodStatic2() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException {
+	public void testIsMethodStatic2() throws BadClassFileException, MethodNotFoundException {
 		ClassFile c = f.newClassFile("jsymba/jvm/Engine");
 		Signature sig = new Signature("jsymba/jvm/Engine", "()V", "registerNatives");
 		c.isMethodStatic(sig);
@@ -615,7 +614,7 @@ public class ClassFileFactoryTest {
 	 * Method not declared in the class neither in some superclass.
 	 */
 	@Test(expected=MethodNotFoundException.class)
-	public void testIsMethodStatic3() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException {
+	public void testIsMethodStatic3() throws BadClassFileException, MethodNotFoundException {
 		ClassFile c = f.newClassFile("jsymba/jvm/Engine");
 		Signature sig = new Signature("jsymba/jvm/Engine", "()Z", "baz");
 		c.isMethodStatic(sig);
@@ -625,7 +624,7 @@ public class ClassFileFactoryTest {
 	 * Method declared in the class, not static.
 	 */
 	@Test
-	public void testIsMethodStatic4() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException {
+	public void testIsMethodStatic4() throws BadClassFileException, MethodNotFoundException {
 		ClassFile c = f.newClassFile("java/lang/Object");
 		Signature sig = new Signature("java/lang/Object", "()Ljava/lang/Class;", "getClass");
 		assertFalse(c.isMethodStatic(sig));
@@ -635,59 +634,59 @@ public class ClassFileFactoryTest {
 	 * Method declared in the class, static.
 	 */
 	@Test
-	public void testIsMethodStatic5() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException {
+	public void testIsMethodStatic5() throws BadClassFileException, MethodNotFoundException {
 		ClassFile c = f.newClassFile("java/lang/Class");
 		Signature sig = new Signature("java/lang/Class", "()V", "registerNatives");
 		assertTrue(c.isMethodStatic(sig));
 	}
 	
 	@Test
-	public void testGetFieldSignature1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, InvalidIndexException {
+	public void testGetFieldSignature1() throws BadClassFileException, InvalidIndexException {
 		ClassFile c = f.newClassFile("java/lang/Byte");
 		Signature sig = new Signature("java/lang/Byte", "B", "value");
 		assertEquals(sig, c.getFieldSignature(130));
 	}
 	
 	@Test(expected=InvalidIndexException.class)
-	public void testGetFieldSignature2() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, InvalidIndexException {
+	public void testGetFieldSignature2() throws BadClassFileException, InvalidIndexException {
 		ClassFile c = f.newClassFile("java/lang/Byte");
 		c.getFieldSignature(1);
 	}
 	
 	@Test(expected=InvalidIndexException.class)
-	public void testGetFieldSignature3() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, InvalidIndexException {
+	public void testGetFieldSignature3() throws BadClassFileException, InvalidIndexException {
 		ClassFile c = f.newClassFile("java/lang/Byte");
 		c.getFieldSignature(200);
 	}
 
 	@Test
-	public void testGetMethodSignature1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, InvalidIndexException {
+	public void testGetMethodSignature1() throws BadClassFileException, InvalidIndexException {
 		ClassFile c = f.newClassFile("java/util/LinkedList");
 		Signature sig = new Signature("java/io/ObjectOutputStream", "()V", "defaultWriteObject");
 		assertEquals(sig, c.getMethodSignature(200));
 	}
 	
 	@Test(expected=InvalidIndexException.class)
-	public void testGetMethodSignature2() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, InvalidIndexException {
+	public void testGetMethodSignature2() throws BadClassFileException, InvalidIndexException {
 		ClassFile c = f.newClassFile("java/util/LinkedList");
 		c.getMethodSignature(0);
 	}
 	
 	@Test
-	public void testGetInterfaceMethodSignature1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, InvalidIndexException {
+	public void testGetInterfaceMethodSignature1() throws BadClassFileException, InvalidIndexException {
 		ClassFile c = f.newClassFile("java/util/LinkedList");
 		Signature sig = new Signature("java/util/Collection", "()[Ljava/lang/Object;", "toArray");
 		assertEquals(sig, c.getInterfaceMethodSignature(228));
 	}
 	
 	@Test(expected=InvalidIndexException.class)
-	public void testGetInterfaceMethodSignature2() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, InvalidIndexException  {
+	public void testGetInterfaceMethodSignature2() throws BadClassFileException, InvalidIndexException  {
 		ClassFile c = f.newClassFile("java/util/LinkedList");
 		c.getInterfaceMethodSignature(227);
 	}
 	
 	@Test
-	public void testGetFieldsNonStatic1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testGetFieldsNonStatic1() throws BadClassFileException {
 		ClassFile c = f.newClassFile("java/lang/Boolean");
 
 		//oddly, with HashSet<Signature> it does not work even with 
@@ -704,7 +703,7 @@ public class ClassFileFactoryTest {
 	}
 	
 	@Test
-	public void testGetFieldsStatic1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
+	public void testGetFieldsStatic1() throws BadClassFileException {
 		ClassFile c = f.newClassFile("java/lang/Boolean");
 
 		//oddly, with HashSet<Signature> it does not work even with 
@@ -724,35 +723,35 @@ public class ClassFileFactoryTest {
 	}
 	
 	@Test
-	public void testGetLocalVariableLength1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException, MethodCodeNotFoundException {
+	public void testGetLocalVariableLength1() throws BadClassFileException, MethodNotFoundException, MethodCodeNotFoundException {
 		ClassFile c = f.newClassFile("java/util/LinkedList");
 		Signature sig = new Signature("java/util/LinkedList", "(Ljava/lang/Object;)V", "addFirst");
 		assertEquals(2, c.getLocalVariableLength(sig));
 	}
 	
 	@Test(expected=MethodNotFoundException.class)
-	public void testGetLocalVariableLength2() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException, MethodCodeNotFoundException {
+	public void testGetLocalVariableLength2() throws BadClassFileException, MethodNotFoundException, MethodCodeNotFoundException {
 		ClassFile c = f.newClassFile("java/lang/Object");
 		Signature sig = new Signature("java/lang/Object", "()V", "foo");
 		c.getLocalVariableLength(sig);
 	}
 	
 	@Test(expected=MethodCodeNotFoundException.class)
-	public void testGetLocalVariableLength3() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException, MethodCodeNotFoundException {
+	public void testGetLocalVariableLength3() throws BadClassFileException, MethodNotFoundException, MethodCodeNotFoundException {
 		ClassFile c = f.newClassFile("java/util/Collection");
 		Signature sig = new Signature("java/util/Collection", "(Ljava/lang/Object;)Z", "remove");
 		c.getLocalVariableLength(sig);
 	}
 	
 	@Test
-	public void testGetCodeLength1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException, MethodCodeNotFoundException {
+	public void testGetCodeLength1() throws BadClassFileException, MethodNotFoundException, MethodCodeNotFoundException {
 		ClassFile c = f.newClassFile("java/util/LinkedList");
 		Signature sig = new Signature("java/util/LinkedList", "()V", "<init>");
 		assertEquals(43, c.getCodeLength(sig));
 	}
 	
 	@Test
-	public void testGetCodeLength2() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException, MethodCodeNotFoundException {
+	public void testGetCodeLength2() throws BadClassFileException, MethodNotFoundException, MethodCodeNotFoundException {
 		ClassFile c = f.newClassFile("java/lang/Object");
 		Signature sig = new Signature("java/lang/Object", "()V", "<clinit>");
 		assertEquals(4, c.getCodeLength(sig));
@@ -764,7 +763,7 @@ public class ClassFileFactoryTest {
 	 * @throws MethodNotFoundException 
 	 */
 	@Test(expected=MethodCodeNotFoundException.class)
-	public void testGetCodeLength3() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException, MethodCodeNotFoundException {
+	public void testGetCodeLength3() throws BadClassFileException, MethodNotFoundException, MethodCodeNotFoundException {
 		ClassFile c = f.newClassFile("java/lang/Object");
 		Signature sig = new Signature("java/lang/Object", "()V", "notifyAll");
 		c.getCodeLength(sig);
@@ -774,7 +773,7 @@ public class ClassFileFactoryTest {
 	 * Method not declared in the class neither in some superclass.
 	 */
 	@Test(expected=MethodNotFoundException.class)
-	public void testGetMethodCodeBySignature1() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException, MethodCodeNotFoundException {
+	public void testGetMethodCodeBySignature1() throws BadClassFileException, MethodNotFoundException, MethodCodeNotFoundException {
 		Signature sig = new Signature("java/lang/Object", "(I)Z", "foo");
 		ClassFile c = f.newClassFile("java/lang/Object");
 		c.getMethodCodeBySignature(sig);
@@ -784,7 +783,7 @@ public class ClassFileFactoryTest {
 	 * Native method.
 	 */
 	@Test(expected=MethodCodeNotFoundException.class)
-	public void testGetMethodCodeBySignature2() throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException, MethodNotFoundException, MethodCodeNotFoundException {
+	public void testGetMethodCodeBySignature2() throws BadClassFileException, MethodNotFoundException, MethodCodeNotFoundException {
 		Signature sig = new Signature("java/lang/Object", "()V", "notifyAll");
 		ClassFile c = f.newClassFile("java/lang/Object");
 		c.getMethodCodeBySignature(sig);

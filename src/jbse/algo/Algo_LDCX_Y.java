@@ -1,17 +1,19 @@
 package jbse.algo;
 
-import static jbse.algo.Util.createAndThrowObject;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.ensureClass;
 import static jbse.algo.Util.ensureStringLiteral;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 
+import jbse.algo.exc.InterruptException;
 import jbse.bc.ClassFile;
 import jbse.bc.ConstantPoolClass;
 import jbse.bc.ConstantPoolPrimitive;
 import jbse.bc.ConstantPoolString;
 import jbse.bc.ConstantPoolValue;
+import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
@@ -33,7 +35,8 @@ final class Algo_LDCX_Y implements Algorithm {
 	
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ClasspathException, DecisionException, ThreadStackEmptyException {
+	throws ClasspathException, DecisionException, 
+	ThreadStackEmptyException, InterruptException {
 		final int index;
 		try {
 			final byte tmp1 = state.getInstruction(1);
@@ -54,7 +57,7 @@ final class Algo_LDCX_Y implements Algorithm {
 		final ClassFile cf;
 		try {
 			cf = state.getClassHierarchy().getClassFile(currentClassName);
-		} catch (ClassFileNotFoundException e) {
+		} catch (BadClassFileException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}
@@ -70,33 +73,31 @@ final class Algo_LDCX_Y implements Algorithm {
                 }
             } else if (cpv instanceof ConstantPoolString) {
                 final String stringLit = ((ConstantPoolString) cpv).getValue();
-                final boolean mustExit = ensureStringLiteral(state, stringLit, ctx.decisionProcedure);
-                if (mustExit) {
-                    return;
-                }
+                ensureStringLiteral(state, stringLit, ctx.decisionProcedure);
                 val = state.referenceToStringLiteral(stringLit);
             } else { // cpv instanceof ConstantPoolClass
                 final String classSignature = ((ConstantPoolClass) cpv).getValue();
-                final boolean mustExit = ensureClass(state, classSignature, ctx.decisionProcedure);
-                if (mustExit) {
-                    return;
-                }
+                ensureClass(state, classSignature, ctx.decisionProcedure);
                 val = state.referenceToClass(classSignature);
             }
         } catch (InvalidIndexException e) {
             throwVerifyError(state);
             return;
         } catch (ClassFileNotFoundException e) {
-            createAndThrowObject(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+            throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
             return;
         } catch (ClassFileNotAccessibleException e) {
-            createAndThrowObject(state, ILLEGAL_ACCESS_ERROR);
+            throwNew(state, ILLEGAL_ACCESS_ERROR);
+            return;
+        } catch (BadClassFileException e) {
+            throwVerifyError(state);
             return;
         }
 
 		//pushes the value on the operand stack
 		state.push(val);
 		
+		//increments the program counter
 		try {
 			if (this.wide) {
                 state.incPC(3);

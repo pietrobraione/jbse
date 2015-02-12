@@ -1,6 +1,6 @@
 package jbse.algo;
 
-import static jbse.algo.Util.createAndThrowObject;
+import static jbse.algo.Util.throwNew;
 import static jbse.bc.Signatures.CLASS_CAST_EXCEPTION;
 
 import jbse.mem.State;
@@ -12,7 +12,7 @@ final class Algo_CHECKCAST extends Algo_CASTINSTANCEOF {
     throws ThreadStackEmptyException {
         //if the check fails throws a ClassCastException
         if (!isSubclass) {
-            createAndThrowObject(state, CLASS_CAST_EXCEPTION);
+            throwNew(state, CLASS_CAST_EXCEPTION);
             return true;
         }
         return false;

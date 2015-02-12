@@ -3,12 +3,12 @@ package jbse.bc;
 import javassist.ClassPool;
 import javassist.NotFoundException;
 
-import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.BadClassFileException;
 
 public class ClassFileFactoryJavassist extends ClassFileFactory {
 	private ClassPool cpool;
 
-	public ClassFileFactoryJavassist(ClassFileInterface cfi, Classpath cp) { 
+	public ClassFileFactoryJavassist(ClassFileStore cfi, Classpath cp) { 
 		super(cfi);
 		this.cpool = new ClassPool();
 		for (String s : cp.classPath()) {
@@ -22,7 +22,7 @@ public class ClassFileFactoryJavassist extends ClassFileFactory {
 
 	@Override
 	protected ClassFile newClassFileClass(String className) 
-	throws ClassFileNotFoundException {
+	throws BadClassFileException {
 		return new ClassFileJavassist(className, this.cpool);
 	}
 }

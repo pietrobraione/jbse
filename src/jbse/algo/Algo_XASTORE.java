@@ -1,6 +1,6 @@
 package jbse.algo;
 
-import static jbse.algo.Util.createAndThrowObject;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.XALOADSTORE_OFFSET;
 import static jbse.bc.Signatures.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION;
@@ -9,7 +9,7 @@ import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import java.util.Iterator;
 
 import jbse.algo.exc.CannotManageStateException;
-import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.BadClassFileException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
@@ -51,7 +51,7 @@ class Algo_XASTORE extends MultipleStateGenerator<DecisionAlternative_XASTORE> i
         final Reference myObjectRef = (Reference) state.pop();
         if (state.isNull(myObjectRef)) {
         	//base-level throws NullPointerException 
-            createAndThrowObject(state, NULL_POINTER_EXCEPTION);
+            throwNew(state, NULL_POINTER_EXCEPTION);
 	    	return;
         }
 
@@ -71,7 +71,7 @@ class Algo_XASTORE extends MultipleStateGenerator<DecisionAlternative_XASTORE> i
         
 		//generates the next states    	
     	this.ds = (results) -> {
-    		final Outcome o = ctx.decisionProcedure.decideAstore(inRange, results);
+    		final Outcome o = ctx.decisionProcedure.decide_XASTORE(inRange, results);
     		return o;
 		};
 		
@@ -99,7 +99,7 @@ class Algo_XASTORE extends MultipleStateGenerator<DecisionAlternative_XASTORE> i
 				    throwVerifyError(s);
 				}
 			} else {
-			    createAndThrowObject(s, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
+			    throwNew(s, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
 			}
 		};
 
@@ -107,7 +107,7 @@ class Algo_XASTORE extends MultipleStateGenerator<DecisionAlternative_XASTORE> i
     	this.ctx = ctx;
 		try {
 			generateStates();
-		} catch (ClassFileNotFoundException | InvalidInputException | 
+		} catch (BadClassFileException | InvalidInputException | 
 				InvalidTypeException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);

@@ -2,7 +2,7 @@ package jbse.algo;
 
 import static jbse.algo.Util.throwVerifyError;
 
-import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.BadClassFileException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
@@ -44,7 +44,7 @@ abstract class MultipleStateGenerator_XLOAD_GETX extends MultipleStateGenerator_
 	protected void generateStates() 
 	throws DecisionException, ContradictionException, ThreadStackEmptyException {
 		this.ds = (results) -> {
-			final Outcome o = ctx.decisionProcedure.resolveLFLoad(state, valToLoad, results);
+			final Outcome o = ctx.decisionProcedure.resolve_XLOAD_GETX(state, valToLoad, results);
 			MultipleStateGenerator_XLOAD_GETX.this.refNotExpanded = o.noReferenceExpansion();
 			if (MultipleStateGenerator_XLOAD_GETX.this.refNotExpanded) {
 				final ReferenceSymbolic refToLoad = (ReferenceSymbolic) valToLoad;
@@ -85,7 +85,7 @@ abstract class MultipleStateGenerator_XLOAD_GETX extends MultipleStateGenerator_
 		
 		try {
 			super.generateStates();
-		} catch (ClassFileNotFoundException | InvalidInputException e) {
+		} catch (BadClassFileException | InvalidInputException e) {
 			//bad valToLoad (triggered by call to resolveLFLoad in this.ds)
             throwVerifyError(state);
 		} catch (InvalidTypeException e) {

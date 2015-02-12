@@ -1,6 +1,6 @@
 package jbse.algo;
 
-import static jbse.algo.Util.createAndThrowObject;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.ARRAYLENGTH_OFFSET;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
@@ -19,7 +19,7 @@ final class Algo_ARRAYLENGTH implements Algorithm {
     throws ThreadStackEmptyException, OperandStackEmptyException {
         final Reference tmpRef = (Reference) state.pop();
         if (state.isNull(tmpRef)) {
-        	createAndThrowObject(state, NULL_POINTER_EXCEPTION);
+        	throwNew(state, NULL_POINTER_EXCEPTION);
 			return;
         }
         

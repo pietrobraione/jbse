@@ -2,7 +2,7 @@ package jbse.algo;
 
 import java.util.SortedSet;
 
-import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.BadClassFileException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.InvalidInputException;
@@ -30,9 +30,9 @@ interface StrategyDecide<R> {
 	 *         (e.g., for any values no refinement is necessary), and
 	 *         it may not even be necessary.
 	 * @throws InvalidInputException
-	 * @throws ClassFileNotFoundException
+	 * @throws BadClassFileException
 	 * @throws DecisionException
 	 */
 	public Outcome decide(SortedSet<R> results) 
-	throws InvalidInputException, ClassFileNotFoundException, DecisionException;
+	throws InvalidInputException, BadClassFileException, DecisionException;
 }

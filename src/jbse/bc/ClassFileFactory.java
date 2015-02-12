@@ -1,8 +1,8 @@
 package jbse.bc;
 
 import jbse.bc.ClassFileArray.Visibility;
-import jbse.bc.exc.ClassFileNotFoundException;
-import jbse.bc.exc.NoArrayVisibilitySpecifiedException;
+import jbse.bc.exc.BadClassFileException;
+import jbse.bc.exc.ArrayMemberVisibilityException;
 import jbse.common.Type;
 
 /**
@@ -12,18 +12,21 @@ import jbse.common.Type;
  *
  */
 public abstract class ClassFileFactory {
-	/** Backlink to owner {@link ClassFileInterface}. */
-	private ClassFileInterface cfi;
+	/** Backlink to owner {@link ClassFileStore}. */
+	private ClassFileStore cfi;
 	
-	public ClassFileFactory(ClassFileInterface cfi) {
+	public ClassFileFactory(ClassFileStore cfi) {
 		this.cfi = cfi;
 	}
 	
-	protected abstract ClassFile newClassFileClass(String className) throws ClassFileNotFoundException;
+	protected abstract ClassFile newClassFileClass(String className) 
+	throws BadClassFileException;
 	
-	public ClassFile newClassFile(String className) 
-	throws NoArrayVisibilitySpecifiedException, ClassFileNotFoundException {
-		if (Type.isArray(className)) {
+	final ClassFile newClassFile(String className) 
+	throws BadClassFileException {
+	    if (className == null) {
+	        throw new NullPointerException("the name of a classfile was null");
+	    } else if (Type.isArray(className)) {
         	//(recursively) gets the member class of an array
 			final String memberType = Type.getArrayMemberType(className);
 			final ClassFile classFileMember;
@@ -33,6 +36,9 @@ public abstract class ClassFileFactory {
 				final String memberClass = Type.className(memberType);
 				classFileMember = this.cfi.getClassFile(memberClass);
 			}
+            if (classFileMember instanceof ClassFileBad) {
+                throw ((ClassFileBad) classFileMember).getException();
+            }
 
 			//calculates package name
 			//TODO couldn't find any specification for calculating this! Does it work for nested classes?
@@ -47,7 +53,7 @@ public abstract class ClassFileFactory {
 				visibility = ClassFileArray.Visibility.PACKAGE;
 			} else {
 				//TODO is this branch reachable for nested classes?
-				throw new NoArrayVisibilitySpecifiedException();
+				throw new ArrayMemberVisibilityException();
 			}
 			return new ClassFileArray(className, packageName, visibility);
 		} else {

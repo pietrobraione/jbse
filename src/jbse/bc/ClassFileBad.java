@@ -1,19 +1,26 @@
 package jbse.bc;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import jbse.bc.exc.AttributeNotFoundException;
+import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 
-public class ClassFileBad extends ClassFile {
+public final class ClassFileBad extends ClassFile {
     private final String className;
+    private final BadClassFileException e;
 
-    ClassFileBad(String className) {
+    ClassFileBad(String className, BadClassFileException e) {
         this.className = className;
+        this.e = e;
+    }
+    
+    BadClassFileException getException() {
+        return this.e;
     }
 
     @Override
@@ -265,6 +272,6 @@ public class ClassFileBad extends ClassFile {
 
     @Override
     public List<String> getSuperInterfaceNames() {
-        return new ArrayList<>(0);
+        return Collections.emptyList();
     }
 }

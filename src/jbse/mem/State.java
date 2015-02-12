@@ -26,11 +26,9 @@ import jbse.bc.ClassHierarchy;
 import jbse.bc.Classpath;
 import jbse.bc.ExceptionTable;
 import jbse.bc.ExceptionTableEntry;
-import jbse.bc.LineNumberTable;
-import jbse.bc.LocalVariableTable;
 import jbse.bc.Signature;
+import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
-import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.InvalidIndexException;
@@ -64,7 +62,7 @@ import jbse.val.exc.InvalidTypeException;
 /**
  * Class that represents the state of execution.
  */
-public class State implements Cloneable {
+public final class State implements Cloneable {
 	/** The slot number of the "this" (method receiver) object. */
 	private static final int ROOT_THIS_SLOT = 0;
 
@@ -89,10 +87,10 @@ public class State implements Cloneable {
 	private int count = 0;
 
 	/** The string literals. */
-	private HashMap<String, ReferenceConcrete> stringLiterals = new HashMap<String, ReferenceConcrete>();
+	private HashMap<String, ReferenceConcrete> stringLiterals = new HashMap<>();
 
     /** The class objects. */
-    private HashMap<String, ReferenceConcrete> classes = new HashMap<String, ReferenceConcrete>();
+    private HashMap<String, ReferenceConcrete> classes = new HashMap<>();
 
 	/** The JVM stack of the current execution thread. */
 	private ThreadStack stack = new ThreadStack();
@@ -152,7 +150,7 @@ public class State implements Cloneable {
 	 * @param cp a {@link Classpath}.
 	 * @param fClass the {@link Class} of some subclass of {@link ClassFileFactory}.
 	 *        The class must have an accessible constructor with two parameters, the first a 
-	 *        {@link ClassFileInterface}, the second a {@link Classpath}.
+	 *        {@link ClassFileStore}, the second a {@link Classpath}.
 	 * @param expansionBackdoor a 
 	 *        {@link Map}{@code <}{@link String}{@code , }{@link Set}{@code <}{@link String}{@code >>}
 	 *        associating class names to sets of names of their subclasses. It 
@@ -294,7 +292,7 @@ public class State implements Cloneable {
 					throw new UnexpectedInternalException(e);
 				}
 			}
-		} catch (MethodNotFoundException | ClassFileNotFoundException e) {
+		} catch (MethodNotFoundException | BadClassFileException e) {
 			throw new UnexpectedInternalException(e);
 		}
 	}
@@ -517,12 +515,11 @@ public class State implements Cloneable {
 	 * @param className the name of the class to be loaded. The method 
 	 *        creates and loads a {@link Klass} object only for {@code className}, 
 	 *        not for its superclasses in the hierarchy.
-     * @throws ClassFileNotFoundException when the class file cannot be 
-     *         found in the classpath.
+     * @throws BadClassFileException when the classfile for {@code className} 
+     *         cannot be found in the classpath or is ill-formed.
 	 * @throws InvalidIndexException if the access to the class constant pool fails.
 	 */
-	private void ensureKlass(String className) 
-	throws ClassFileNotFoundException, InvalidIndexException {
+	private void ensureKlass(String className) throws BadClassFileException, InvalidIndexException {
 	    if (initialized(className)) {
 	        return;
 	    }
@@ -536,17 +533,16 @@ public class State implements Cloneable {
 	 * Creates a symbolic {@link Klass} object and loads it in the 
 	 * static area of this state. It does not initialize the constant 
 	 * fields. It does not create {@link Klass} objects
-     * for superclasses}.
+     * for superclasses.
 	 * If the {@link Klass} already exists it does nothing.
 	 * 
 	 * @param className the name of the class to be loaded.
-     * @throws ClassFileNotFoundException if {@code className} does 
-     *         not correspond to a valid class in the classpath.
+     * @throws BadClassFileException when the classfile for {@code className} 
+     *         cannot be found in the classpath or is ill-formed.
 	 * @throws InvalidIndexException if the access to the class 
 	 *         constant pool fails.
 	 */
-	public void ensureKlassSymbolic(String className) 
-	throws ClassFileNotFoundException, InvalidIndexException {
+	public void ensureKlassSymbolic(String className) throws BadClassFileException, InvalidIndexException {
         if (initialized(className)) {
             return;
         }
@@ -652,17 +648,17 @@ public class State implements Cloneable {
 	    if (hasStringLiteral(stringLit)) {
 	        return;
 	    }
-		final ReferenceConcrete valueAsArray = createArrayOfChars(stringLit);
+		final ReferenceConcrete value = createArrayOfChars(stringLit);
 		final Simplex hash = this.calc.valInt(stringLit.hashCode());
 		final Simplex zero = this.calc.valInt(0);
 		final Simplex length = this.calc.valInt(stringLit.length());
 		
 		final ReferenceConcrete retVal = createInstance(JAVA_STRING);
 		final Instance i = (Instance) this.getObject(retVal);
-		i.setFieldValue(JAVA_STRING_VALUE, valueAsArray);
-		i.setFieldValue(JAVA_STRING_HASH, hash);
+		i.setFieldValue(JAVA_STRING_VALUE,  value);
+		i.setFieldValue(JAVA_STRING_HASH,   hash);
 		i.setFieldValue(JAVA_STRING_OFFSET, zero);
-		i.setFieldValue(JAVA_STRING_COUNT, length);
+		i.setFieldValue(JAVA_STRING_COUNT,  length);
 		
         this.stringLiterals.put(stringLit, retVal);
 	}
@@ -722,7 +718,7 @@ public class State implements Cloneable {
     }
 
     public void ensureClass(String className) 
-    throws ThreadStackEmptyException, ClassFileNotFoundException, ClassFileNotAccessibleException {
+    throws ThreadStackEmptyException, BadClassFileException, ClassFileNotAccessibleException {
         if (hasClass(className)) {
             return;
         }
@@ -759,11 +755,11 @@ public class State implements Cloneable {
 		//unwinds the stack
 		while (true) {
 			final Signature currentMethodSignature = getCurrentMethodSignature();
-			final String classToOpen = currentMethodSignature.getClassName();
+			final String currentClassName = currentMethodSignature.getClassName();
 			final ExceptionTable myExTable;
 			try {
-				myExTable = this.classHierarchy.getClassFile(classToOpen).getExceptionTable(currentMethodSignature);
-			} catch (ClassFileNotFoundException | MethodNotFoundException | MethodCodeNotFoundException e) {
+				myExTable = this.classHierarchy.getClassFile(currentClassName).getExceptionTable(currentMethodSignature);
+			} catch (BadClassFileException | MethodNotFoundException | MethodCodeNotFoundException e) {
 				//this should never happen
 				throw new UnexpectedInternalException(e);
 			}
@@ -811,9 +807,9 @@ public class State implements Cloneable {
 	 * @param args
 	 *        varargs of method call arguments. It must match 
 	 *        {@code methodSignature} and {@code isStatic}.
-	 * @throws ClassFileNotFoundException when the class with name 
+	 * @throws BadClassFileException when the classfile with name 
 	 *         {@code methodSignatureResolved.}{@link Signature#getClassName() getClassName()}
-	 *         does not exist.
+	 *         does not exist in the classpath or is ill-formed.
 	 * @throws MethodNotFoundException when method lookup fails.
 	 * @throws IncompatibleClassFileException when a method with signature 
 	 *         {@code methodSignature} exists but its features differ from
@@ -828,7 +824,7 @@ public class State implements Cloneable {
      *         incompatible with their respective slots types.
 	 */
 	public void pushFrame(Signature methodSignature, boolean isRoot, boolean isStatic, boolean isSpecial, int returnPCOffset, Value... args) 
-	throws ClassFileNotFoundException, MethodNotFoundException, IncompatibleClassFileException, ThreadStackEmptyException, 
+	throws BadClassFileException, MethodNotFoundException, IncompatibleClassFileException, ThreadStackEmptyException, 
 	PleaseDoNativeException, InvalidProgramCounterException, NoMethodReceiverException, InvalidSlotException {
 		//checks the "this" parameter (invocation receiver) if necessary
 		final Reference thisObject;
@@ -920,9 +916,9 @@ public class State implements Cloneable {
 	 * @param isStatic
 	 *        {@code true} iff INVOKESTATIC method invocation rules 
 	 *        must be applied.
-	 * @throws ClassFileNotFoundException when the class with name 
+	 * @throws BadClassFileException when the classfile with name 
 	 *         {@code methodSignatureResolved.}{@link Signature#getClassName() getClassName()}
-	 *         does not exist.
+	 *         does not exist in the classpath or is ill-formed.
 	 * @throws MethodNotFoundException when method lookup fails.
 	 * @throws IncompatibleClassFileException when a method with signature 
 	 *         {@code methodSignature} exists but its features differ from
@@ -930,8 +926,8 @@ public class State implements Cloneable {
 	 * @throws PleaseDoNativeException when the method is declared native.
 	 */
 	public void pushFrameSymbolic(Signature methodSignatureResolved, boolean isStatic) 
-	throws ClassFileNotFoundException, MethodNotFoundException, IncompatibleClassFileException, 
-	PleaseDoNativeException {
+	throws BadClassFileException, MethodNotFoundException, 
+	IncompatibleClassFileException, PleaseDoNativeException {
 		//creates and initializes the frame, and pushes on the state's 
 		//stack frame
 		try {
@@ -991,9 +987,8 @@ public class State implements Cloneable {
 	 *        It can be {@code null} unless when {@code isStatic == false &&
 	 *        isSpecial == false && isRoot == false}.
 	 * @return the created {@link Frame}.
-	 * @throws ClassFileNotFoundException when the class with name 
-	 *         {@code methodSignatureResolved.}{@link Signature#getClassName() getClassName()}
-	 *         does not exist.
+	 * @throws BadClassFileException when the classfile for any class 
+	 *         involved in the lookup of the method code does not exist or is ill-formed.
 	 * @throws MethodNotFoundException when method lookup fails.
 	 * @throws IncompatibleClassFileException when a method with signature 
 	 *         {@code methodSignature} exists but its features differ from
@@ -1002,21 +997,19 @@ public class State implements Cloneable {
 	 * @throws PleaseDoNativeException when the method is declared native.
 	 */
 	private Frame newFrame(Signature methodSignatureResolved, boolean isRoot, boolean isStatic, boolean isSpecial, Reference thisObject) 
-	throws ClassFileNotFoundException, MethodNotFoundException, IncompatibleClassFileException, 
+	throws BadClassFileException, MethodNotFoundException, IncompatibleClassFileException, 
 	ThreadStackEmptyException, PleaseDoNativeException  {
 		//performs method code lookup
 		final ClassFile classMethodImpl;
-		if (isStatic) {               //INVOKESTATIC
+		if (isStatic) {         //INVOKESTATIC
 			classMethodImpl = this.classHierarchy.lookupMethodImplStatic(methodSignatureResolved);
-		} else if (isSpecial) {       //INVOKESPECIAL
+		} else if (isSpecial) { //INVOKESPECIAL
 			final String luStartClassName = this.getCurrentMethodSignature().getClassName();
-			final ClassFile luStartClass = this.getClassHierarchy().getClassFile(luStartClassName); //current class
-			classMethodImpl = this.classHierarchy.lookupMethodImplSpecial(luStartClass, methodSignatureResolved);
-		} else {                      //INVOKEVIRTUAL, INVOKEINTERFACE 
+			classMethodImpl = this.classHierarchy.lookupMethodImplSpecial(luStartClassName, methodSignatureResolved);
+		} else {                //INVOKEVIRTUAL, INVOKEINTERFACE 
 			final String luStartClassName = (isRoot ? methodSignatureResolved.getClassName() : getObject(thisObject).getType());
 			//TODO can we do better with root frames than taking the static type of the method signature? should we search through the class substitutions?
-			final ClassFile luStartClass = this.getClassHierarchy().getClassFile(luStartClassName);
-			classMethodImpl = this.classHierarchy.lookupMethodImplVirtualInterface(luStartClass, methodSignatureResolved);
+			classMethodImpl = this.classHierarchy.lookupMethodImplVirtualInterface(luStartClassName, methodSignatureResolved);
 		}
 
 		try {
@@ -1028,18 +1021,8 @@ public class State implements Cloneable {
 			//creates the signature of the method that is actually invoked
 			final Signature methodSignatureImpl = new Signature(classMethodImpl.getClassName(), methodSignatureResolved.getDescriptor(), methodSignatureResolved.getName());
 
-			//gets the line number table
-			final LineNumberTable lnt = classMethodImpl.getLineNumberTable(methodSignatureImpl);
-
-			//gets the method bytecode
-			final byte[] bytecode = classMethodImpl.getMethodCodeBySignature(methodSignatureImpl);
-
-			//creates the frame's local variable area from the local variable table
-			final LocalVariableTable lvt = classMethodImpl.getLocalVariableTable(methodSignatureImpl);
-			final LocalVariablesArea lva = new LocalVariablesArea(lvt);
-
 			//creates the frame
-			final Frame f = new Frame(methodSignatureImpl, lnt, bytecode, lva);
+			final Frame f = new Frame(methodSignatureImpl, classMethodImpl);
 
 			return f;
 		} catch (MethodNotFoundException | MethodCodeNotFoundException e) {
@@ -1409,13 +1392,14 @@ public class State implements Cloneable {
 	 *        {@link className != null}.
 	 * @throws NullPointerException if {@code className} 
 	 *         is {@code null}.
-     * @throws ClassFileNotFoundException if {@code className} does 
-     *         not correspond to a valid class in the classpath.
+     * @throws BadClassFileException if the classfile with name 
+     *         {@code className} does not exist in the classpath
+     *         or is ill-formed.
 	 * @throws InvalidIndexException if the access to the class 
      *         constant pool fails.
 	 */
 	public void assumeClassInitialized(String className) 
-	throws ClassFileNotFoundException, InvalidIndexException {
+	throws BadClassFileException, InvalidIndexException {
 		if (className == null) {
 			throw new NullPointerException();
 		}
@@ -1436,13 +1420,14 @@ public class State implements Cloneable {
 	 *        {@link className != null}.
      * @throws NullPointerException if {@code className} 
      *         is {@code null}.
-     * @throws ClassFileNotFoundException if {@code className} does 
-     *         not correspond to a valid class in the classpath.
+     * @throws BadClassFileException if the classfile with name 
+     *         {@code className} does not exist in the classpath
+     *         or is ill-formed.
      * @throws InvalidIndexException if the access to the class 
      *         constant pool fails.
 	 */
 	public void assumeClassNotInitialized(String className) 
-	throws ClassFileNotFoundException, InvalidIndexException {
+	throws BadClassFileException, InvalidIndexException {
 		if (className == null) {
 			throw new NullPointerException();
 		}

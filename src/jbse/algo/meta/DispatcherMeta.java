@@ -11,7 +11,7 @@ import jbse.bc.ClassHierarchy;
 import jbse.bc.Dispatcher;
 import jbse.bc.Signature;
 import jbse.bc.Util;
-import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.meta.annotations.MetaOverridden;
@@ -76,8 +76,9 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
 	 * @param methodSignatureResolved the {@link Signature} of a  <em>resolved</em> method.
 	 * @return {@code true} iff the method has a {@link MetaOverridden} 
 	 *         or {@link Uninterpreted} annotation.
-	 * @throws ClassFileNotFoundException if it is unable to find the class file for 
-	 *         {@code methodSignatureResolved} in the classpath.
+	 * @throws BadClassFileException if there is no classfile for 
+	 *         {@code methodSignatureResolved.}{@link Signature#getClassName() getClassName()} 
+	 *         in the classpath, or if it is ill-formed.
 	 * @throws MethodNotFoundException  if it is unable to find {@code methodSignatureResolved} in 
 	 *         the class file.
 	 * @throws MetaUnsupportedException if it is unable to find the specified {@link Algorithm}, 
@@ -85,7 +86,7 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
 	 *         has insufficient visibility, does not implement {@link Algorithm}...).
 	 */
 	public boolean isMeta(ClassHierarchy hier, Signature methodSignatureResolved) 
-	throws ClassFileNotFoundException, MethodNotFoundException, 
+	throws BadClassFileException, MethodNotFoundException, 
 	MetaUnsupportedException {
 		//already loaded: returns true
 		if (this.select(methodSignatureResolved) != null) {

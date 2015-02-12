@@ -1,6 +1,6 @@
 package jbse.bc.exc;
 
-public class ClassFileNotFoundException extends Exception {
+public class ClassFileNotFoundException extends BadClassFileException {
     /**
 	 * 
 	 */

@@ -568,14 +568,7 @@ public class Run {
 		}
 		
 		// runs the method
-		try {
-			IO.println(this.log, MSG_START + this.engine.getCurrentState().getCurrentMethodSignature() + " at " + new Date() + ".");
-		} catch (ThreadStackEmptyException e) {
-			// TODO Auto-generated catch block
-			IO.println(this.err, ERROR_ENGINE_UNEXPECTED);
-			IO.printException(Run.this.err, e);
-			return 2;
-		}
+		IO.println(this.log, MSG_START + this.parameters.getMethodSignature() + " at " + new Date() + ".");
 		try {
 			this.runner.run();
 		} catch (ClasspathException | DecisionException | CannotManageStateException | 

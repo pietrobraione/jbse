@@ -1,7 +1,11 @@
 package jbse.bc;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+
+
+
 
 
 
@@ -23,7 +27,12 @@ import javassist.bytecode.LocalVariableAttribute;
 
 
 
+
+
+
 import jbse.bc.exc.AttributeNotFoundException;
+import jbse.bc.exc.BadClassFileException;
+import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
@@ -34,13 +43,19 @@ public class ClassFileJavassist extends ClassFile {
 	private CtClass cls;
 	private ConstPool cp;
 	
-	ClassFileJavassist(String className, ClassPool cpool) throws ClassFileNotFoundException {
+	ClassFileJavassist(String className, ClassPool cpool) throws BadClassFileException {
 		//TODO understand how in Javassist "file not found" is differentiated from "file found and invalid"
 		try {
 			this.cls = cpool.get(className.replace("/", "."));
 			this.cp = this.cls.getClassFile().getConstPool();
 		} catch (NotFoundException e) {
 			throw new ClassFileNotFoundException(className);
+		} catch (RuntimeException e) {
+		    if (e.getMessage().equals("java.io.IOException: non class file")) {
+		        throw new ClassFileIllFormedException(className);
+		    } else {
+		        throw e;
+		    }
 		}
 	}
 
@@ -257,13 +272,13 @@ public class ClassFileJavassist extends ClassFile {
 
 	@Override
 	public List<String> getSuperInterfaceNames() {
-		LinkedList<String> retVal = new LinkedList<String>();
-		String[] ifs = this.cls.getClassFile().getInterfaces();
+		final LinkedList<String> superinterfaces = new LinkedList<>();
+		final String[] ifs = this.cls.getClassFile().getInterfaces();
 		
 		for (String s : ifs) {
-			retVal.add(s.replace(".", "/"));
+			superinterfaces.add(s.replace(".", "/"));
 		}
-		return retVal;
+		return Collections.unmodifiableList(superinterfaces);
 	}
 
 	@Override

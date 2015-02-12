@@ -1,6 +1,6 @@
 package jbse.algo;
 
-import static jbse.algo.Util.createAndThrowObject;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.ensureKlass;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
@@ -8,9 +8,11 @@ import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.NO_SUCH_FIELD_ERROR;
 
+import jbse.algo.exc.InterruptException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
+import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotAccessibleException;
 import jbse.bc.exc.FieldNotFoundException;
@@ -30,7 +32,7 @@ class Algo_PUTSTATIC implements Algorithm {
 	@Override
     public void exec(State state, ExecutionContext ctx) 
     throws ThreadStackEmptyException, OperandStackEmptyException, 
-    DecisionException, ClasspathException {
+    DecisionException, ClasspathException, InterruptException {
 		//gets the index of the field signature in the current class 
     	//constant pool
 		final int index;
@@ -52,7 +54,7 @@ class Algo_PUTSTATIC implements Algorithm {
 		} catch (InvalidIndexException e) {
             throwVerifyError(state);
 			return;
-		} catch (ClassFileNotFoundException e) {
+		} catch (BadClassFileException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}
@@ -62,14 +64,17 @@ class Algo_PUTSTATIC implements Algorithm {
         try {
 			fieldSignatureResolved = hier.resolveField(currentClassName, fieldSignature);
 		} catch (ClassFileNotFoundException e) {
-            createAndThrowObject(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+            throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
 			return;
 		} catch (FieldNotFoundException e) {
-            createAndThrowObject(state, NO_SUCH_FIELD_ERROR);
+            throwNew(state, NO_SUCH_FIELD_ERROR);
 			return;
 		} catch (FieldNotAccessibleException e) {
-            createAndThrowObject(state, ILLEGAL_ACCESS_ERROR);
+            throwNew(state, ILLEGAL_ACCESS_ERROR);
 			return;
+        } catch (BadClassFileException e) {
+            throwVerifyError(state);
+            return;
 		}
         
 		//gets resolved field's data
@@ -77,7 +82,7 @@ class Algo_PUTSTATIC implements Algorithm {
 		final ClassFile fieldClassFile;
 		try {
 			fieldClassFile = hier.getClassFile(fieldClassName);
-		} catch (ClassFileNotFoundException e) {
+		} catch (BadClassFileException e) {
 			//this should never happen after field resolution
 			throw new UnexpectedInternalException(e);
 		}
@@ -85,7 +90,7 @@ class Algo_PUTSTATIC implements Algorithm {
 		//check that the field is static or belongs to an interface
 		try {
 			if ((!fieldClassFile.isInterface()) && (!fieldClassFile.isFieldStatic(fieldSignatureResolved))) {
-	            createAndThrowObject(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+	            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
 				return;
 			}
 		} catch (FieldNotFoundException e) {
@@ -97,7 +102,7 @@ class Algo_PUTSTATIC implements Algorithm {
         try {
 			if (fieldClassFile.isFieldFinal(fieldSignatureResolved) &&
 				!fieldClassName.equals(currentClassName)) {
-	            createAndThrowObject(state, ILLEGAL_ACCESS_ERROR);
+	            throwNew(state, ILLEGAL_ACCESS_ERROR);
 				return;
 			}
 		} catch (FieldNotFoundException e) {
@@ -110,19 +115,12 @@ class Algo_PUTSTATIC implements Algorithm {
         
         //obtains the Klass object containing the field from the state's 
 		//static store
-        final boolean mustExit;
 		try {
-			mustExit = ensureKlass(state, fieldClassName, ctx.decisionProcedure);
-		} catch (ClassFileNotFoundException e) {
+			ensureKlass(state, fieldClassName, ctx.decisionProcedure);
+		} catch (BadClassFileException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}
-        if (mustExit) {
-        	return;
-        	//now the execution continues with the class 
-        	//initialization code; the current bytecode will 
-        	//be reexecuted after that
-        }
         
         //sets the field's value
         state.getKlass(fieldClassName).setFieldValue(fieldSignatureResolved, tmpValue);

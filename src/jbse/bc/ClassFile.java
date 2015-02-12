@@ -474,16 +474,17 @@ public abstract class ClassFile {
      * Returns the name of the superclass.
      * 
      * @return the name of the superclass as a {@link String}, or {@code null}
-     * in the case the class has no superclass (e.g., java.lang.Object or 
-     * primitive classes).
+     * in the case the class has no superclass (e.g., {@code java.lang.Object}, 
+     * primitive classes, bad classfiles).
      */
     public abstract String getSuperClassName();
     
     /**
      * Returns the list of the names of the superinterfaces.
      * 
-     * @return a {@link List}{@code <}{@link String}{@code >} containing all the 
-     *         names of the superinterfaces of this class.
+     * @return an immutable {@link List}{@code <}{@link String}{@code >} 
+     *         containing all the names of the superinterfaces of this 
+     *         class (empty if none).
      */
     public abstract List<String> getSuperInterfaceNames();
     
@@ -578,10 +579,12 @@ public abstract class ClassFile {
 
     @Override
     public boolean equals(Object o) {
-		if (this == o)
+		if (this == o) {
 			return true;
-		if (o == null)
+		}
+		if (o == null) {
 			return false;
+		}
     	if (this.getClass() != o.getClass()) {
     		return false; 
     	}

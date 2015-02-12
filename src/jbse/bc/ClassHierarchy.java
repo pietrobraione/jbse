@@ -7,10 +7,13 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotAccessibleException;
@@ -25,7 +28,7 @@ import jbse.common.exc.UnexpectedInternalException;
 
 /**
  * Class handling a hierarchy of Java classes as specified 
- * by some {@link ClassFileInterface}. Wraps a {@link ClassFileInterface} 
+ * by some {@link ClassFileStore}. Wraps a {@link ClassFileStore} 
  * and offers its methods.
  *  
  * @author Pietro Braione
@@ -33,7 +36,7 @@ import jbse.common.exc.UnexpectedInternalException;
  */
 public class ClassHierarchy {
 	private final Classpath cp;
-	private final ClassFileInterface cfi;
+	private final ClassFileStore cfs;
 	private final Map<String, Set<String>> expansionBackdoor;
 
 	/**
@@ -42,7 +45,7 @@ public class ClassHierarchy {
 	 * @param cp a {@link Classpath}.
 	 * @param fClass the {@link Class} of some subclass of {@link ClassFileFactory}.
 	 *        The class must have an accessible constructor with two parameters, the first a 
-	 *        {@link ClassFileInterface}, the second a {@link Classpath}.
+	 *        {@link ClassFileStore}, the second a {@link Classpath}.
 	 * @param expansionBackdoor a 
 	 *        {@link Map}{@code <}{@link String}{@code , }{@link Set}{@code <}{@link String}{@code >>}
 	 *        associating class names to sets of names of their subclasses. It 
@@ -54,7 +57,7 @@ public class ClassHierarchy {
 	public ClassHierarchy(Classpath cp, Class<? extends ClassFileFactory> fClass, Map<String, Set<String>> expansionBackdoor)
 	throws InvalidClassFileFactoryClassException {
 		this.cp = cp.clone(); //safety copy
-		this.cfi = new ClassFileInterface(cp, fClass);
+		this.cfs = new ClassFileStore(cp, fClass);
 		this.expansionBackdoor = expansionBackdoor;
 	}
 	
@@ -73,13 +76,17 @@ public class ClassHierarchy {
      * To avoid name clashes it does not manage primitive classes.
      * 
      * @param className the searched class.
-     * @return the classFile structure of the correspondent class.
-     * @throws ClassFileNotFoundException when the class file cannot be 
-     * found in the classpath.
+     * @return the {@link ClassFile} of the correspondent class.
+     * @throws BadClassFileException when the class file does not 
+     *         exist or is ill-formed.
      */
     public ClassFile getClassFile(String className) 
-    throws ClassFileNotFoundException {
-    	return this.cfi.getClassFile(className);
+    throws BadClassFileException {
+    	final ClassFile retval = this.cfs.getClassFile(className);
+    	if (retval instanceof ClassFileBad) {
+    	    throw ((ClassFileBad) retval).getException();
+    	}
+    	return retval;
     }
     
     /**
@@ -87,10 +94,18 @@ public class ClassHierarchy {
      * {@link ClassFile}.
      * 
      * @param typeName the name of a primitive type (see the class {@link Type}).
-     * @return the classFile structure of the correspondent class.
+     * @return the {@link ClassFile} of the correspondent class.
+     * @throws BadClassFileException when the class file does not 
+     *         exist or is ill-formed (happens when {@code typeName}
+     *         is not the name of a primitive type).
      */
-    public ClassFile getClassFilePrimitive(String typeName) {
-    	return cfi.getClassFilePrimitive(typeName);
+    public ClassFile getClassFilePrimitive(String typeName)
+    throws BadClassFileException {
+        final ClassFile retval = this.cfs.getClassFilePrimitive(typeName);
+        if (retval instanceof ClassFileBad) {
+            throw ((ClassFileBad) retval).getException();
+        }
+        return retval;
     }
 
 	/**
@@ -101,16 +116,16 @@ public class ClassHierarchy {
 	 * implementation returns {@code className}, if it is not 
 	 * an interface or an abstract class, and all the classes 
 	 * associated to {@code className} in the 
-	 * {@code expansionBackdoor} provided at construction time..
+	 * {@code expansionBackdoor} provided at construction time.
 	 * 
 	 * @param className a {@link String}, the name of a class.
 	 * @return A {@link Set}{@code <}{@link String}{@code >} of class
 	 *         names.
-	 * @throws ClassFileNotFoundException if {@code className} does
-	 *         not correspond to a valid class in the classpath.
+     * @throws BadClassFileException when the class file does not 
+     *         exist or is ill-formed.
 	 */
 	public Set<String> getAllConcreteSubclasses(String className) 
-	throws ClassFileNotFoundException {
+	throws BadClassFileException {
 		final HashSet<String> retVal = new HashSet<>();
 		final ClassFile cf = this.getClassFile(className);
 		if (!cf.isAbstract()) {
@@ -133,7 +148,7 @@ public class ClassHierarchy {
 	 *         all the superclasses of {@code startClassName} (included).
 	 */
 	public Iterable<ClassFile> superclasses(String startClassName) {
-		return new ListSuperclasses(startClassName);
+		return new IterableSuperclasses(startClassName);
 	}
 
 	/**
@@ -145,7 +160,7 @@ public class ClassHierarchy {
 	 *         all the superinterfaces of {@code startClassName} (included).
 	 */
 	public Iterable<ClassFile> superinterfaces(String startClassName) {
-		return new ListSuperinterfaces(startClassName);
+		return new IterableSuperinterfaces(startClassName);
 	}
 
 	/**
@@ -166,16 +181,15 @@ public class ClassHierarchy {
 			} else if (Type.isReference(subMember) && Type.isReference(supMember)) {
 				final String subMemberClass = Type.getReferenceClassName(subMember);
 				final String supMemberClass = Type.getReferenceClassName(supMember);
-				return this.isSubclass(subMemberClass, supMemberClass);
+				return isSubclass(subMemberClass, supMemberClass);
 			} else if (Type.isArray(subMember) && Type.isArray(supMember)) {
-				return this.isSubclass(subMember, supMember);
+				return isSubclass(subMember, supMember);
 			} else {
 				return false;
 			}
-		} else {
+		} else if (!Type.isArray(sub) && !Type.isArray(sup)) {
 			for (ClassFile f : superclasses(sub)) { 
-				final String s = f.getClassName();
-				if (s.equals(sup)) {
+				if (f.getClassName().equals(sup)) {
 					return true;
 				} 
 			}
@@ -185,6 +199,8 @@ public class ClassHierarchy {
 				}
 			}
 			return false;
+		} else {
+		    return false;
 		}
 	}
 
@@ -194,7 +210,7 @@ public class ClassHierarchy {
 	 *  
 	 * @author Pietro Braione
 	 */
-	private class ListSuperclasses implements Iterable<ClassFile> {
+	private class IterableSuperclasses implements Iterable<ClassFile> {
 		private String startClassName;
 
 		/**
@@ -202,12 +218,8 @@ public class ClassHierarchy {
 		 * 
 		 * @param startClassName 
 		 *        The name of the class from where the iteration is started. 
-		 *        Note that the iterator firstly visits this class: thus, 
-		 *        the first call to {@code hasNext()} will return true 
-		 *        iff {@code startClassName != null} and such class 
-		 *        exists in this class hierarchy.
 		 */
-		public ListSuperclasses(String startClassName) {
+		public IterableSuperclasses(String startClassName) {
 			this.startClassName = startClassName;
 		}
 
@@ -222,23 +234,14 @@ public class ClassHierarchy {
 		 * @author Pietro Braione
 		 */
 		private class MyIterator implements Iterator<ClassFile> {
-			private String nextClassName;
+			private ClassFile nextClassFile;
 
 			public MyIterator(String startClassName) {
-				this.nextClassName = null;
-
-				final ClassFile cf;
-				try {
-					cf = ClassHierarchy.this.cfi.getClassFile(startClassName);
-				} catch (ClassFileNotFoundException e) {
-				    this.nextClassName = null;
-				    return;
-				}
-				this.nextClassName = cf.getClassName();
+				this.nextClassFile = ClassHierarchy.this.cfs.getClassFile(startClassName);
 			}
 
 			public boolean hasNext() {
-				return (this.nextClassName != null);
+				return (this.nextClassFile != null);
 			}
 
 			public ClassFile next() {
@@ -247,19 +250,19 @@ public class ClassHierarchy {
 					throw new NoSuchElementException();
 				}
 
-				//gets the classfile of the next class
-				final ClassFile retval;
-				try {
-					retval = ClassHierarchy.this.cfi.getClassFile(this.nextClassName);
-				} catch (ClassFileNotFoundException e) {
-					this.nextClassName = null;
-					return null;
+				//stores the return value
+				final ClassFile retval = this.nextClassFile;
+
+				//gets the classfile of the superclass
+				final String superClassName = retval.getSuperClassName();
+				if (superClassName == null) {
+				    //no superclass
+				    this.nextClassFile = null;
+				} else {
+				    this.nextClassFile = ClassHierarchy.this.cfs.getClassFile(superClassName);
 				} 
 
-				//prepares for the next invocation
-				this.nextClassName = retval.getSuperClassName();
-
-				//returns the result
+				//returns
 				return retval;
 			}
 
@@ -275,7 +278,7 @@ public class ClassHierarchy {
 	 *  
 	 * @author Pietro Braione
 	 */
-	private class ListSuperinterfaces implements Iterable<ClassFile> {
+	private class IterableSuperinterfaces implements Iterable<ClassFile> {
 		private String startClassName;
 
 		/**
@@ -283,14 +286,13 @@ public class ClassHierarchy {
 		 * 
 		 * @param startClassName 
 		 *        The name of the class from where the iteration is started. 
-		 *        Note that the iterator firstly visits this class iff it is 
-		 *        an interface: thus, the first call to {@code hasNext()} 
-		 *        will return true iff {@code startClassName != null} and 
+		 *        Note that the first call to {@code hasNext()} 
+		 *        will return {@code true} iff {@code startClassName != null} and 
 		 *        {@code startClassName} exists in the environment 
 		 *        defined by {@link Classpath}{@code .this.env}, and it is an 
 		 *        interface.
 		 */
-		public ListSuperinterfaces(String startClassName) {
+		public IterableSuperinterfaces(String startClassName) {
 			this.startClassName = startClassName;
 		}
 
@@ -307,29 +309,27 @@ public class ClassHierarchy {
 		 * @author Pietro Braione
 		 */
 		private class MyIterator implements Iterator<ClassFile> {
-			private final LinkedList<String> nextClassNames;
-			private final HashSet<String> visited;
+			private final LinkedList<ClassFile> nextClassFiles;
+			private final HashSet<ClassFile> visitedClassFiles;
 
 			public MyIterator(String startClassName) {
-				this.nextClassNames = new LinkedList<String>();
-				this.visited = new HashSet<String>();
+				this.nextClassFiles = new LinkedList<>();
+				this.visitedClassFiles = new HashSet<>();
 
-				final ClassFile cf;
-				try {
-					cf = ClassHierarchy.this.cfi.getClassFile(startClassName);
-				} catch (ClassFileNotFoundException e) {
-					this.nextClassNames.clear();
-					return;
-				}
-				if (cf.isInterface()) {
-					this.nextClassNames.add(cf.getClassName());
+				final ClassFile cf = ClassHierarchy.this.cfs.getClassFile(startClassName);
+
+				if (cf instanceof ClassFileBad || cf.isInterface()) {
+					this.nextClassFiles.add(cf);
 				} else {
-					this.nextClassNames.addAll(cf.getSuperInterfaceNames());
+				    final List<ClassFile> superinterfaces = cf.getSuperInterfaceNames().stream()
+				        .map((s) -> ClassHierarchy.this.cfs.getClassFile(s))
+				        .collect(Collectors.toList());
+					this.nextClassFiles.addAll(superinterfaces);
 				}
 			}
 
 			public boolean hasNext() {
-				return !(this.nextClassNames.isEmpty());
+				return !(this.nextClassFiles.isEmpty());
 			}
 
 			public ClassFile next() {
@@ -338,26 +338,16 @@ public class ClassHierarchy {
 					throw new NoSuchElementException();
 				}
 
-				//gets the next unvisited interface names
-				String nextClassName = this.nextClassNames.getFirst(); 
-				this.visited.add(nextClassName);
+				//gets the next interface into the return value
+				final ClassFile retval = this.nextClassFiles.removeFirst(); 
+				this.visitedClassFiles.add(retval);
 
-				//gets its class file
-				final ClassFile retval;
-				try {
-					retval = ClassHierarchy.this.cfi.getClassFile(nextClassName);
-				} catch (ClassFileNotFoundException e) {
-					this.nextClassNames.clear();
-					return null;
-				} 
-
-				//prepares for the next invocation:
-				//1 - adds all the superinterfaces of the visited one to the 
-				//    yet-to-visit interfaces
-				this.nextClassNames.addAll(retval.getSuperInterfaceNames());
-				//2 - removes all the already-visited superinterfaces from 
-				//    the yet-to-visit ones
-				this.nextClassNames.removeAll(this.visited);
+				//prepares for the next invocation
+                final List<ClassFile> superinterfaces = retval.getSuperInterfaceNames().stream()
+                    .map((s) -> ClassHierarchy.this.cfs.getClassFile(s))
+                    .filter((cf) -> !this.visitedClassFiles.contains(cf))
+                    .collect(Collectors.toList());
+                this.nextClassFiles.addAll(superinterfaces);
 
 				//returns the result
 				return retval;
@@ -396,19 +386,23 @@ public class ClassHierarchy {
 	 * 
 	 * @param accessor a {@link String}, the signature of the accessor's class.
 	 * @param classSignature a {@link String}, the signature of the class to be resolved.
-	 * @throws ClassFileNotFoundException
-	 * @throws ClassFileNotAccessibleException 
+     * @throws BadClassFileException if the classfile for the class 
+     *         to be resolved does not exist in the classpath or
+     *         is ill-formed.
+	 * @throws ClassFileNotAccessibleException if the resolved class is not
+	 *  
 	 */
 	public void resolveClass(String accessor, String classSignature) 
-	throws ClassFileNotFoundException, ClassFileNotAccessibleException {
-		cfi.getClassFile(classSignature);
+	throws BadClassFileException, ClassFileNotAccessibleException {
+        //TODO implement complete class creation as in JVM Specification, sec. 5.3
+	    
+		final ClassFile cf = getClassFile(classSignature);
+		if (cf instanceof ClassFileBad) {
+		    throw ((ClassFileBad) cf).getException();
+		}
 
-	    //TODO implement complete class creation as in JVM Specification, sec. 5.3
-
-		//if a declaration has found, then it checks accessibility and, in case, 
-		//raises IllegalAccessError; otherwise, returns the resolved field signature
+        //checks accessibility and either returns or raises an exception 
 		if (isClassAccessible(accessor, classSignature)) {
-			//everything went ok
 			return;
 		} else {
 			throw new ClassFileNotAccessibleException(classSignature);
@@ -421,17 +415,18 @@ public class ClassHierarchy {
 	 * @param accessor a {@link String}, the signature of the accessor's class.
 	 * @param fieldSignature the {@link Signature} of the field to be resolved.
 	 * @return the {@link Signature} of the declaration of the resolved field.
-	 * @throws ClassFileNotFoundException if {@code fieldSignature}'s class does not
-	 *         exist in the classpath.
-	 * @throws FieldNotAccessibleException
-	 * @throws FieldNotFoundException
+	 * @throws BadClassFileException if the classfile for {@code fieldSignature}'s 
+	 *         class and its superclasses does not exist in the classpath.
+	 * @throws FieldNotAccessibleException if the resolved field cannot 
+	 *         be accessed by {@code accessor}.
+	 * @throws FieldNotFoundException if resolution of the field fails.
 	 */
 	public Signature resolveField(String accessor, Signature fieldSignature) 
-	throws ClassFileNotFoundException, FieldNotAccessibleException, FieldNotFoundException {
+	throws BadClassFileException, FieldNotAccessibleException, FieldNotFoundException {
 		//searches a declaration for the field in the field's
 		//signature class (lookup starts from there)
 		Signature fieldSignatureResolved = null;
-		final ClassFile classFile = cfi.getClassFile(fieldSignature.getClassName());
+		final ClassFile classFile = getClassFile(fieldSignature.getClassName());
 		if (classFile.hasFieldDeclaration(fieldSignature)) {
 			fieldSignatureResolved = fieldSignature;
 		}
@@ -450,7 +445,9 @@ public class ClassHierarchy {
 		//if still nothing has been found, searches in the superclasses
 		if (fieldSignatureResolved == null) {
 	       	for (ClassFile cf : superclasses(fieldSignature.getClassName())) {
-	       		if (cf.hasFieldDeclaration(fieldSignature)) {
+	       	    if (cf instanceof ClassFileBad) {
+	       	        throw ((ClassFileBad) cf).getException();
+	       	    } else if (cf.hasFieldDeclaration(fieldSignature)) {
 	       			fieldSignatureResolved = 
 	       				new Signature(cf.getClassName(), fieldSignature.getDescriptor(), fieldSignature.getName());
 	       			break;
@@ -458,13 +455,13 @@ public class ClassHierarchy {
 	       	}
 		}
 		
-        //if still nothing has been found, raises a NoSuchFieldError
+        //if still nothing has been found, raises an exception
 		if (fieldSignatureResolved == null) {
 			throw new FieldNotFoundException(fieldSignature.toString());
 		}
 
-		//if a declaration has been found, then it checks accessibility and, in case, 
-		//raises IllegalAccessError; otherwise, returns the resolved field signature
+		//if a declaration has been found, then it checks accessibility 
+		//and either returns its signature or raises an exception 
 		try {
 			if (isFieldAccessible(accessor, fieldSignatureResolved)) {
 				//everything went ok
@@ -487,18 +484,22 @@ public class ClassHierarchy {
 	 *        an interface method (i.e., if the bytecode which triggered the resolution
 	 *        is invokeinterface).
 	 * @return the {@link Signature} of the declaration of the resolved method.
-	 * @throws ClassFileNotFoundException if 
-	 * @throws IncompatibleClassFileException 
-	 * @throws MethodAbstractException 
-	 * @throws MethodNotFoundException 
-	 * @throws MethodNotAccessibleException 
+	 * @throws BadClassFileException if the classfile for any class involved in the
+	 *         resolution does not exist on the classpath or is ill-formed.
+	 * @throws IncompatibleClassFileException if the symbolic reference in 
+	 *         {@code methodSignature.}{@link Signature#getClassName() getClassName()}
+	 *         to the method disagrees with {@code isInterface}.
+     * @throws MethodNotFoundException if resolution fails.
+	 * @throws MethodAbstractException if resolution yields an abstract method.
+	 * @throws MethodNotAccessibleException if the resolved method is not accessible 
+	 *         by {@code accessor}.
 	 */
 	public Signature resolveMethod(String accessor, Signature methodSignature, boolean isInterface) 
-	throws ClassFileNotFoundException, IncompatibleClassFileException, MethodAbstractException, 
+	throws BadClassFileException, IncompatibleClassFileException, MethodAbstractException, 
 	MethodNotFoundException, MethodNotAccessibleException {
 		//gets the classfile for class mentioned in the method's *invocation*
 		//TODO implement class resolution and loading!
-		final ClassFile classFile = cfi.getClassFile(methodSignature.getClassName());
+		final ClassFile classFile = getClassFile(methodSignature.getClassName());
 
 		//checks if the symbolic reference to the method class 
 		//is an interface (JVM spec 5.4.3.3(1) and 5.4.3.4(1))
@@ -515,7 +516,9 @@ public class ClassHierarchy {
 		//(only method resolution, JVM spec 2, 5.4.3.3(2))
         if (!isInterface) {
         	for (ClassFile cf : superclasses(methodSignature.getClassName())) {
-        		if (cf.hasMethodDeclaration(methodSignature)) {
+        	    if (cf instanceof ClassFileBad) {
+        	        throw ((ClassFileBad) cf).getException();
+        	    } else if (cf.hasMethodDeclaration(methodSignature)) {
         			classFileResolve = cf;
         			methodSignatureResolved = 
         				new Signature(cf.getClassName(), methodSignature.getDescriptor(), methodSignature.getName());
@@ -528,7 +531,9 @@ public class ClassHierarchy {
 		//(JVM spec 2, 5.4.3.3(3) and 5.4.3.4(2))
 		if (methodSignatureResolved == null) {
 			for (ClassFile cf : superinterfaces(methodSignature.getClassName())) {
-        		if (cf.hasMethodDeclaration(methodSignature)) {
+                if (cf instanceof ClassFileBad) {
+                    throw ((ClassFileBad) cf).getException();
+                } else if (cf.hasMethodDeclaration(methodSignature)) {
         			classFileResolve = cf;
         			methodSignatureResolved = 
         				new Signature(cf.getClassName(), methodSignature.getDescriptor(), methodSignature.getName());
@@ -540,7 +545,7 @@ public class ClassHierarchy {
         //searches in the java.lang.Object class 
         //(only interface method resolution, JVM spec 2, 5.4.3.4(2))
 		if (methodSignatureResolved == null && isInterface) {
-			final ClassFile cf = cfi.getClassFile(JAVA_OBJECT);
+			final ClassFile cf = getClassFile(JAVA_OBJECT);
     		if (cf.hasMethodDeclaration(methodSignature)) {
     			classFileResolve = cf;
     			methodSignatureResolved = 
@@ -591,17 +596,18 @@ public class ClassHierarchy {
 	 * @param accessed a {@link String}, the signature of a class or interface.
 	 * @return {@code true} iff {@code accessed} is accessible to 
 	 *         {@code accessor}.
-	 * @throws ClassFileNotFoundException iff either {@code accessor}
-	 *         or {@code accessed} are not found in this class hierarchy.
+	 * @throws BadClassFileException if the classfiles for {@code accessor}
+	 *         or {@code accessed} are not found in the classpath or are
+	 *         ill-formed.
 	 */
 	private boolean isClassAccessible(String accessor, String accessed) 
-	throws ClassFileNotFoundException {
+	throws BadClassFileException {
 		//TODO this implementation is incomplete: some kinds of nested (member) classes may have all the visibility accessors. Also, the treatment of arrays is wrong.
-		final ClassFile cfAccessed = cfi.getClassFile(accessed);
+		final ClassFile cfAccessed = getClassFile(accessed);
 		if (cfAccessed.isPublic()) {
 			return true;
 		} else { //cfAccessed.isPackage()
-			final ClassFile cfAccessor = cfi.getClassFile(accessor);
+			final ClassFile cfAccessor = getClassFile(accessor);
 			return cfAccessed.getPackageName().equals(cfAccessor.getPackageName());
 		}
 	}
@@ -614,15 +620,16 @@ public class ClassHierarchy {
 	 * @param accessed a {@link Signature}, the signature of a field.
 	 * @return {@code true} iff {@code accessed} is accessible to 
 	 *         {@code accessor}.
-	 * @throws ClassFileNotFoundException iff either {@code accessor}
-	 *         or the class of {@code accessed} are not found in the class hierarchy.
-	 * @throws FieldNotFoundException iff the {@code accessed} field is not 
+	 * @throws BadClassFileException if the classfiles for {@code accessor}
+	 *         or {@code accessed.}{@link Signature#getClassName() getClassName()} 
+	 *         are not found in the classpath or are ill-formed.
+	 * @throws FieldNotFoundException if the {@code accessed} field is not 
 	 *         found in its classfile. 
 	 */
 	private boolean isFieldAccessible(String accessor, Signature accessed) 
-	throws ClassFileNotFoundException, FieldNotFoundException {
-		final ClassFile cfAccessed = cfi.getClassFile(accessed.getClassName());
-		final ClassFile cfAccessor = cfi.getClassFile(accessor);
+	throws BadClassFileException, FieldNotFoundException {
+		final ClassFile cfAccessed = getClassFile(accessed.getClassName());
+		final ClassFile cfAccessor = getClassFile(accessor);
 		boolean samePackage = cfAccessed.getPackageName().equals(cfAccessor.getPackageName());
 		if (cfAccessed.isFieldPublic(accessed)) {
 			return true;
@@ -648,15 +655,16 @@ public class ClassHierarchy {
 	 * @param accessed a {@link Signature}, the signature of a method.
 	 * @return {@code true} iff {@code accessed} is accessible to 
 	 *         {@code accessor}.
-	 * @throws ClassFileNotFoundException iff either {@code accessor}
-	 *         or the class of {@code accessed} are not found by {@code cfi}.
-	 * @throws MethodNotFoundException iff the {@code accessed} method is not 
+     * @throws BadClassFileException if the classfiles for {@code accessor}
+     *         or {@code accessed.}{@link Signature#getClassName() getClassName()} 
+     *         are not found in the classpath or are ill-formed.
+	 * @throws MethodNotFoundException if the {@code accessed} method is not 
 	 *         found in its classfile. 
 	 */
 	private boolean isMethodAccessible(String accessor, Signature accessed) 
-	throws ClassFileNotFoundException, MethodNotFoundException {
-		final ClassFile cfAccessed = cfi.getClassFile(accessed.getClassName());
-		final ClassFile cfAccessor = cfi.getClassFile(accessor);
+	throws BadClassFileException, MethodNotFoundException {
+		final ClassFile cfAccessed = getClassFile(accessed.getClassName());
+		final ClassFile cfAccessor = getClassFile(accessor);
 		boolean samePackage = cfAccessed.getPackageName().equals(cfAccessor.getPackageName());
 		if (cfAccessed.isMethodPublic(accessed)) {
 			return true;
@@ -682,15 +690,15 @@ public class ClassHierarchy {
 	 *        which must be looked up.
 	 * @return the {@link ClassFile} of the class which 
 	 *         contains the method implementation.
-	 * @throws ClassFileNotFoundException when the class with name 
-	 *         {@code methodSignature.}{@link Signature#getClassName() getClassName()}
-	 *         does not exist.
+     * @throws BadClassFileException when the class file 
+     *         with name {@code methodSignature.}{@link Signature#getClassName() getClassName()} 
+     *         does not exist or is ill-formed.
 	 * @throws MethodNotFoundException when method lookup fails.
 	 * @throws IncompatibleClassFileException when a method with signature 
 	 *         {@code methodSignature} exists but it is not static.
 	 */
 	public ClassFile lookupMethodImplStatic(Signature methodSignature) 
-	throws ClassFileNotFoundException, MethodNotFoundException, 
+	throws BadClassFileException, MethodNotFoundException, 
 	IncompatibleClassFileException {
 		//the method must be in the class of the method signature
 		final ClassFile retVal = getClassFile(methodSignature.getClassName());
@@ -704,21 +712,26 @@ public class ClassHierarchy {
 	 * Performs method lookup according to the semantics of the 
 	 * INVOKEVIRTUAL bytecode.
 	 * 
-	 * @param receiverClass the {@link ClassFile} of the 
+	 * @param receiverClassName the name of the class of the 
 	 *        method invocation's receiver.
 	 * @param methodSignature the {@link Signature} of the resolved method 
 	 *        which must be looked up.
 	 * @return the {@link ClassFile} of the superclass of
 	 *         {@code methodSignature.getClassName()} which 
 	 *         contains the method implementation.
+     * @throws BadClassFileException when the class file 
+     *         with name {@code methodSignature.}{@link Signature#getClassName() getClassName()} 
+     *         or that of one of its superclasses does not exist or is ill-formed.
 	 * @throws MethodNotFoundException when method lookup fails.
 	 * @throws IncompatibleClassFileException when method lookup succeeds, but the
 	 *         found method is static.
 	 */
-	public ClassFile lookupMethodImplVirtualInterface(ClassFile receiverClass, Signature methodSignature) 
-	throws MethodNotFoundException, IncompatibleClassFileException {
-		for (ClassFile f : superclasses(receiverClass.getClassName())) {
-			if (f.hasMethodImplementation(methodSignature)) {
+	public ClassFile lookupMethodImplVirtualInterface(String receiverClassName, Signature methodSignature) 
+	throws BadClassFileException, MethodNotFoundException, IncompatibleClassFileException {
+		for (ClassFile f : superclasses(receiverClassName)) {
+		    if (f instanceof ClassFileBad) {
+		        throw ((ClassFileBad) f).getException();
+		    } else if (f.hasMethodImplementation(methodSignature)) {
 				if (f.isMethodStatic(methodSignature)) {
 					throw new IncompatibleClassFileException(f.getClassName());
 				}
@@ -732,36 +745,39 @@ public class ClassHierarchy {
 	 * Performs method lookup according to the semantics of the 
 	 * INVOKESPECIAL bytecode.
 	 * 
-	 * @param currentClass the {@link ClassFile} for the class of the invoker.
+	 * @param currentClassName the name of the class of the invoker.
 	 * @param methodSignature the signature of the resolved method 
 	 *        which must be looked up.
 	 * @return the {@link ClassFile} of the class which 
 	 *         contains the method implementation.
-	 * @throws ClassFileNotFoundException when the class with name 
-	 *         {@code methodSignature.}{@link Signature#getClassName() getClassName()}
-	 *         does not exist.
-	 * @throws MethodNotFoundException when method lookup fails, or it is a <init>
+     * @throws BadClassFileException when the class file 
+     *         with name {@code methodSignature.}{@link Signature#getClassName() getClassName()} 
+     *         does not exist or is ill-formed.
+	 * @throws MethodNotFoundException when method lookup fails, or it is a {@code <init>}
 	 *         method but it is not declared in 
 	 *         {@code methodSignature.}{@link Signature#getClassName() getClassName()}.
 	 * @throws IncompatibleClassFileException when method lookup succeeds, but the
 	 *         found method is static.
 	 */
-	public ClassFile lookupMethodImplSpecial(ClassFile currentClass, Signature methodSignature) 
-	throws ClassFileNotFoundException, MethodNotFoundException, 
-	IncompatibleClassFileException {
+	public ClassFile lookupMethodImplSpecial(String currentClassName, Signature methodSignature) 
+	throws BadClassFileException, MethodNotFoundException, IncompatibleClassFileException {
 		ClassFile retVal = null;
 		boolean useNonVirtual = true;
 
 		//determines whether should look for the implementation in 
-		//the current class superclasses (virtual semantics) or in 
+		//the current class superclasses (super() virtual semantics) or in 
 		//the method's signature class (nonvirtual semantics) and 
 		//at the same time calculates the superclass for virtual semantics
-		if (!methodSignature.getName().equals("<init>") && 
-			currentClass.isSuperInvoke()) {
+        final ClassFile currentClass = getClassFile(currentClassName);
+		if (currentClass.isSuperInvoke() &&
+		    isSubclass(currentClass.getClassName(), methodSignature.getClassName()) &&
+		    !methodSignature.getName().equals("<init>")) {
 			boolean skippedFirst = false;
 			
-			for (ClassFile f : superclasses(currentClass.getClassName())) {
-				if (skippedFirst) { 
+			for (ClassFile f : superclasses(currentClassName)) {
+			    if (f instanceof ClassFileBad) {
+			        throw ((ClassFileBad) f).getException();
+			    } else if (skippedFirst) { 
 					if (f.hasMethodImplementation(methodSignature))
 						retVal = f;
 					if (f.getClassName().equals(methodSignature.getClassName())) {

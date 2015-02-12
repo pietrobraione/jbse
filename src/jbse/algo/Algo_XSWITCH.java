@@ -2,7 +2,7 @@ package jbse.algo;
 
 import static jbse.algo.Util.throwVerifyError;
 
-import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.BadClassFileException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
@@ -55,7 +55,7 @@ final class Algo_XSWITCH extends MultipleStateGenerator<DecisionAlternative_XSWI
 		final Primitive selector = (Primitive) state.pop();
 		
 		this.ds = (result) -> {
-			final Outcome o = ctx.decisionProcedure.decideSwitch(selector, tab, result);
+			final Outcome o = ctx.decisionProcedure.decide_XSWITCH(selector, tab, result);
 			return o;
 		};
 		
@@ -99,7 +99,7 @@ final class Algo_XSWITCH extends MultipleStateGenerator<DecisionAlternative_XSWI
 		} catch (InvalidInputException e) {
 			//bad selector
             throwVerifyError(state);
-		} catch (ClassFileNotFoundException | InvalidTypeException e) {
+		} catch (BadClassFileException | InvalidTypeException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}

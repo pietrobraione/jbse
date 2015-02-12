@@ -9,7 +9,7 @@ import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.PleaseDoNativeException;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
-import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodNotFoundException;
@@ -168,7 +168,7 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 				final Signature sigConservativeRepOk;
 				try {
 					sigConservativeRepOk = findConservativeRepOk(obj.getType(), sIni);
-				} catch (ClassFileNotFoundException e) {
+				} catch (BadClassFileException e) {
 					//this should not happen
 					throw new UnexpectedInternalException(e);
 				}
@@ -187,7 +187,7 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 							ContradictionException | FailureException | PleaseDoNativeException |
 							InitializationException | NonexistingObservedVariablesException | 
 							CannotBuildEngineException | InvalidClassFileFactoryClassException | 
-							ClassFileNotFoundException | MethodNotFoundException | 
+							BadClassFileException | MethodNotFoundException | 
 							IncompatibleClassFileException | ThreadStackEmptyException | 
 							InvalidProgramCounterException | NoMethodReceiverException | 
 							InvalidSlotException | OperandStackEmptyException exc) {
@@ -200,7 +200,7 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 	}
 
 	private Signature findConservativeRepOk(String className, State s) 
-	throws ClassFileNotFoundException {
+	throws BadClassFileException {
 		Signature sigConservativeRepOk = conservativeRepOk.get(className);
 		if (sigConservativeRepOk == null) {
 			final ClassFile cf = s.getClassHierarchy().getClassFile(className);

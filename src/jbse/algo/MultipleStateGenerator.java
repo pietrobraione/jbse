@@ -2,7 +2,7 @@ package jbse.algo;
 
 import java.util.SortedSet;
 
-import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.BadClassFileException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionEmptyException;
 import jbse.dec.exc.DecisionException;
@@ -12,7 +12,6 @@ import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative;
 import jbse.val.exc.InvalidTypeException;
-
 
 /**
  * Class for completing the semantics of all the bytecodes that may have
@@ -69,7 +68,7 @@ public abstract class MultipleStateGenerator<R extends DecisionAlternative> {
 	 * <li>Finally, adds all the obtained states to the state tree, creating 
 	 * a backtrack point if it is the case.</li>
 	 * </ul>
-	 * @throws ClassFileNotFoundException
+	 * @throws BadClassFileException
 	 * @throws DecisionException
 	 * @throws ContradictionException 
 	 * @throws InvalidInputException
@@ -77,7 +76,7 @@ public abstract class MultipleStateGenerator<R extends DecisionAlternative> {
 	 * @throws ThreadStackEmptyException  
 	 */
 	protected void generateStates() 
-	throws ClassFileNotFoundException, DecisionException, 
+	throws BadClassFileException, DecisionException, 
 	ContradictionException, InvalidInputException, 
 	InvalidTypeException, ThreadStackEmptyException {
 		//decides the satisfiability of the different alternatives

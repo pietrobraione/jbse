@@ -1,6 +1,6 @@
 package jbse.algo;
 
-import static jbse.algo.Util.createAndThrowObject;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 
@@ -26,7 +26,7 @@ class Algo_MONITORX implements Algorithm {
 		}
 		final Reference r = (Reference) v;
 		if (state.isNull(r)) {
-            createAndThrowObject(state, NULL_POINTER_EXCEPTION);
+            throwNew(state, NULL_POINTER_EXCEPTION);
 			return;
 		}
 		

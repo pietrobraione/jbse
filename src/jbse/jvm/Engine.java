@@ -7,6 +7,7 @@ import jbse.algo.DispatcherBytecodeAlgorithm;
 import jbse.algo.ExecutionContext;
 import jbse.algo.Algo_INIT;
 import jbse.algo.exc.CannotManageStateException;
+import jbse.algo.exc.InterruptException;
 import jbse.bc.Opcodes;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.ClasspathException;
@@ -240,6 +241,8 @@ public class Engine implements AutoCloseable {
 		final Algorithm algo = this.dispatcher.select(this.currentState.getInstruction());
 		try {
 			algo.exec(this.currentState, this.ctx);
+		} catch (InterruptException e) {
+		    //nothing to do
 		} catch (ClasspathException | CannotManageStateException | ThreadStackEmptyException | 
 			    OperandStackEmptyException | ContradictionException | 
 			    DecisionException | FailureException | UnexpectedInternalException e) {

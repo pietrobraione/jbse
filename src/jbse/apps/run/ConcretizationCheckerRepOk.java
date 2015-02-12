@@ -5,7 +5,7 @@ import static jbse.jvm.Util.doRunRepOk;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.PleaseDoNativeException;
 import jbse.bc.Signature;
-import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodNotFoundException;
@@ -90,7 +90,7 @@ public final class ConcretizationCheckerRepOk {
 				CannotBacktrackException | EngineStuckException | CannotManageStateException | 
 				ClasspathException | ContradictionException | FailureException | 
 				UnexpectedInternalException | CannotBuildEngineException | 
-				ClassFileNotFoundException | MethodNotFoundException | 
+				BadClassFileException | MethodNotFoundException | 
 				IncompatibleClassFileException | ThreadStackEmptyException | InvalidProgramCounterException | 
 				NoMethodReceiverException | InvalidSlotException | OperandStackEmptyException exc) {
 			throw new UnexpectedInternalException(exc); //TODO blame caller when necessary

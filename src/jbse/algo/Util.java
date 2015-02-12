@@ -19,6 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import jbse.algo.exc.InterruptException;
 import jbse.algo.exc.PleaseDoNativeException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
@@ -27,6 +28,7 @@ import jbse.bc.ConstantPoolString;
 import jbse.bc.ConstantPoolValue;
 import jbse.bc.Signature;
 import jbse.bc.exc.AttributeNotFoundException;
+import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotFoundException;
@@ -145,7 +147,7 @@ public class Util {
      * @param exceptionClassName the name of the class of the new instance.
      * @throws ThreadStackEmptyException if the thread stack is empty.
      */
-    public static void createAndThrowObject(State state, String exceptionClassName) 
+    public static void throwNew(State state, String exceptionClassName) 
     throws ThreadStackEmptyException {
         if (exceptionClassName.equals(VERIFY_ERROR)) {
             throwVerifyError(state);
@@ -197,16 +199,22 @@ public class Util {
 	 * @throws ClasspathException if some standard JRE class is missing
 	 *         from {@code state}'s classpath or is incompatible with the
 	 *         current version of JBSE. 
-	 * @throws InvalidIndexException 
+	 * @throws InterruptException iff it is necessary to interrupt the
+	 *         execution of the bytecode and run the 
+     *         {@code <clinit>} method(s) for the initialized 
+     *         class(es).
 	 */
-	public static boolean ensureKlass(State state, String className, DecisionProcedure dec) 
-	throws DecisionException, ClassFileNotFoundException, ThreadStackEmptyException, ClasspathException {
+	public static void ensureKlass(State state, String className, DecisionProcedure dec) 
+	throws DecisionException, BadClassFileException, 
+	ThreadStackEmptyException, ClasspathException, InterruptException {
         final ClassInitializer ci = new ClassInitializer(state, dec);
         final boolean failed = ci.initialize(className);
         if (failed) {
-            return false;  //upon failure all frames are discarded
+            return;
         }
-        return ci.createdFrames > 0;
+        if (ci.createdFrames > 0) {
+            throw new InterruptException();
+        }
 	}
     
     /**
@@ -288,15 +296,23 @@ public class Util {
         /**
          * Implements {@link Util#initializeKlass(State, String, DecisionProcedure)}.
          * 
-         * @param s a {@link State}.
          * @param className the class to be initialized.
-         * @param dec a {@link DecisionProcedure}.
          * @return {@code true} iff the initialization of 
          *         {@code className} or of one of its superclasses 
          *         fails for some reason.
+         * @throws DecisionException if the decision procedure fails.
+         * @throws BadClassFileException if the classfile for {@code className} or
+         *         for one of its superclasses is not in the classpath or
+         *         is ill-formed.
+         * @throws ClasspathException if the classfile for some JRE class
+         *         is not in the classpath or is incompatible with the
+         *         current version of JBSE.
+         * @throws ThreadStackEmptyException if {@code this.s} has an empty
+         *         thread stack.
          */
 		private boolean initialize(String className)
-		throws DecisionException, ClassFileNotFoundException, ThreadStackEmptyException, ClasspathException {
+		throws DecisionException, BadClassFileException, 
+		ThreadStackEmptyException, ClasspathException {
 		    phase1(className);
             if (this.failed) {
                 handleFailure();
@@ -324,11 +340,12 @@ public class Util {
 		 * 
 		 * @param className a {@code String}, the name of the class.
 		 * @throws DecisionException if the decision procedure fails.
-		 * @throws ClassFileNotFoundException if the classfile for the class or
-		 *         for one of its superclasses is missing from the classpath
+		 * @throws BadClassFileException if the classfile for {@code className} or
+		 *         for one of its superclasses is not in the classpath or
+		 *         is ill-formed.
 		 */
         private void phase1(String className)
-        throws DecisionException, ClassFileNotFoundException {
+        throws DecisionException, BadClassFileException {
             //if there is a Klass object for className, then 
             //there is nothing to do
             if (this.s.initialized(className)) {
@@ -374,10 +391,16 @@ public class Util {
          * created during phase 1; in the case one of these fields is a 
          * {@code String} constant launches phase 1 on {@code java.lang.String}.
          * 
-         * @throws ClassFileNotFoundException if the classfile for the class or
-         *         for one of its superclasses is missing from the classpath
+         * @throws DecisionException if the decision procedure fails.
+         * @throws BadClassFileException if the classfile for any of the 
+         *         classes to initialize is not in the classpath or
+         *         is ill-formed.
+         * @throws ClasspathException if the classfile for some JRE class
+         *         is not in the classpath or is incompatible with the
+         *         current version of JBSE.
          */
-        private void phase2() throws DecisionException, ClassFileNotFoundException, ClasspathException {
+        private void phase2() 
+        throws DecisionException, BadClassFileException, ClasspathException {
             for (String className : this.classesToInitialize) {
                 final Klass k = this.s.getKlass(className);
                 final ClassFile classFile = this.s.getClassHierarchy().getClassFile(className);
@@ -421,10 +444,11 @@ public class Util {
          * @throws ClasspathException whenever the classfile for
          *         {@code java.lang.Object} is not in the classpath
          *         or is incompatible with the current JBSE.
-         * @throws ClassFileNotFoundException  whenever the classfile for
-         *         one of the classes is not in the classpath.
+         * @throws BadClassFileException  whenever the classfile for
+         *         one of the classes to initialize is not in the classpath
+         *         or is ill-formed.
          */
-        private void phase3() throws ClasspathException, ClassFileNotFoundException {
+        private void phase3() throws ClasspathException, BadClassFileException {
             try {
                 final ClassHierarchy classHierarchy = this.s.getClassHierarchy();
                 for (String className : reverse(this.classesToInitialize)) {
@@ -482,7 +506,7 @@ public class Util {
             //TODO delete all the created String object from static field initialization?
             
             //throws and exits
-            createAndThrowObject(this.s, this.failure);
+            throwNew(this.s, this.failure);
         }
 	}
 
@@ -512,35 +536,57 @@ public class Util {
         };
 	}
 	   
-	public static boolean ensureStringLiteral(State state, String stringLit, DecisionProcedure dec) 
-	throws DecisionException, ClasspathException, ThreadStackEmptyException {
-	    final boolean mustExit;
+	public static void ensureStringLiteral(State state, String stringLit, DecisionProcedure dec) 
+	throws DecisionException, ClasspathException, ThreadStackEmptyException, InterruptException {
+	    InterruptException exc = null;
 	    try {
-	        mustExit = ensureKlass(state, JAVA_STRING, dec);
-	    } catch (ClassFileNotFoundException e) {
+	        ensureKlass(state, JAVA_STRING, dec);
+	    } catch (BadClassFileException e) {
 	        throw new ClasspathException(e);
+	    } catch (InterruptException e) {
+	        exc = e;
 	    }
 	    state.ensureStringLiteral(stringLit);
-	    return mustExit;
+	    if (exc != null) {
+	        throw exc;
+	    }
 	}
     
-    public static boolean ensureClass(State state, String className, DecisionProcedure dec) 
-    throws DecisionException, ClasspathException, ClassFileNotFoundException, 
-    ClassFileNotAccessibleException, ThreadStackEmptyException {
-        boolean mustExit;
+    public static void ensureClass(State state, String className, DecisionProcedure dec) 
+    throws DecisionException, ClasspathException, BadClassFileException, 
+    ClassFileNotAccessibleException, ThreadStackEmptyException, InterruptException {
+        //possibly creates and initializes the java.lang.Class Klass
+        InterruptException exc = null;
         try {
-            mustExit = ensureKlass(state, JAVA_CLASS, dec);
-        } catch (ClassFileNotFoundException e) {
+            ensureKlass(state, JAVA_CLASS, dec);
+        } catch (BadClassFileException e) {
             throw new ClasspathException(e);
+        } catch (InterruptException e) {
+            exc = e;
         }
+        
+        //possibly creates and initializes the java.lang.Class Instance
+        final boolean mustInitClass = (!state.hasClass(className));
         state.ensureClass(className);
-        final Reference r = state.referenceToClass(className);
-        final Instance i = (Instance) state.getObject(r);
-        final String classNameBinary = binaryClassName(className);
-        mustExit = mustExit || ensureStringLiteral(state, classNameBinary, dec);  //TODO is it ok to treat the class name String as a string literal?
-        final ReferenceConcrete classNameString = state.referenceToStringLiteral(classNameBinary);
-        i.setFieldValue(JAVA_CLASS_NAME, classNameString);
-        return mustExit;
+        if (mustInitClass) {
+            final Reference r = state.referenceToClass(className);
+            final Instance i = (Instance) state.getObject(r);
+            final String classNameBinary = binaryClassName(className);
+            try {
+                //TODO is it ok to treat the class name String as a string literal?
+                ensureStringLiteral(state, classNameBinary, dec);
+            } catch (InterruptException e) {
+                exc = e;
+            }
+            final ReferenceConcrete classNameString = state.referenceToStringLiteral(classNameBinary);
+            i.setFieldValue(JAVA_CLASS_NAME, classNameString);
+        }
+        
+        //throws InterruptException if there is some <clinit>
+        //frame on the stack
+        if (exc != null) {
+            throw exc;
+        }
     }
 
 	/** 

@@ -2,7 +2,7 @@ package jbse.algo;
 
 import static jbse.algo.Util.throwVerifyError;
 
-import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.BadClassFileException;
 import jbse.common.Type;
 import jbse.common.Util;
 import jbse.common.exc.UnexpectedInternalException;
@@ -87,7 +87,7 @@ final class Algo_IFX extends MultipleStateGenerator<DecisionAlternative_IFX> imp
 		}
 
     	this.ds = (result) -> {
-    		final Outcome o = ctx.decisionProcedure.decideIf(condition, result);
+    		final Outcome o = ctx.decisionProcedure.decide_IFX(condition, result);
     		return o;
 		};
 		
@@ -114,7 +114,7 @@ final class Algo_IFX extends MultipleStateGenerator<DecisionAlternative_IFX> imp
 		try {
 			generateStates();
 		} catch (InvalidInputException | InvalidTypeException | 
-				ClassFileNotFoundException e) {
+				BadClassFileException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}

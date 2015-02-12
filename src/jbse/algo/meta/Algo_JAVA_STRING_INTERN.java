@@ -8,6 +8,7 @@ import static jbse.bc.Offsets.INVOKEVIRTUAL_OFFSET;
 import jbse.algo.Algorithm;
 import jbse.algo.ExecutionContext;
 import jbse.algo.exc.CannotInvokeNativeException;
+import jbse.algo.exc.InterruptException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
@@ -23,7 +24,8 @@ public class Algo_JAVA_STRING_INTERN implements Algorithm {
 
     @Override
     public void exec(State state, ExecutionContext ctx) 
-    throws ThreadStackEmptyException, CannotInvokeNativeException, DecisionException, ClasspathException {
+    throws ThreadStackEmptyException, CannotInvokeNativeException, 
+    DecisionException, ClasspathException, InterruptException {
         try {
             final String valueString = valueString(state, (Reference) state.pop());
             if (valueString == null) {

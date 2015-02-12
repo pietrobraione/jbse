@@ -64,7 +64,7 @@ public class DecisionProcedureTest {
 
 		//expected: {F_concrete}
 		TreeSet<DecisionAlternative_IFX> d = new TreeSet<>(cmp.get(DecisionAlternative_IFX.class));
-		dec.decideIf(p, d);
+		dec.decide_IFX(p, d);
 		assertEquals(1, d.size());
 		DecisionAlternative_IFX dai = d.first();
 		assertTrue(dai.concrete());
@@ -80,7 +80,7 @@ public class DecisionProcedureTest {
 
 		//expected: {T_nonconcrete, F_nonconcrete}
 		TreeSet<DecisionAlternative_IFX> d = new TreeSet<>(cmp.get(DecisionAlternative_IFX.class));
-		dec.decideIf(e, d);
+		dec.decide_IFX(e, d);
 		assertEquals(2, d.size());
 		DecisionAlternative_IFX dai1 = d.first();
 		d.remove(dai1);
@@ -99,7 +99,7 @@ public class DecisionProcedureTest {
 
 		//expected {LT_concrete}
 		TreeSet<DecisionAlternative_XCMPY> d = new TreeSet<>(cmp.get(DecisionAlternative_XCMPY.class));
-		dec.decideComparison(two, five, d);
+		dec.decide_XCMPY(two, five, d);
 		assertEquals(1, d.size());
 		DecisionAlternative_XCMPY dac = d.first();
 		assertTrue(dac.concrete());
@@ -116,7 +116,7 @@ public class DecisionProcedureTest {
 		//expected {GT_nonconcrete, EQ_nonconcrete}
 		TreeSet<DecisionAlternative_XCMPY> d = new TreeSet<>(cmp.get(DecisionAlternative_XCMPY.class));
 		dec.pushAssumption(new ClauseAssume(Agezero));
-		dec.decideComparison(Atwice, A, d);
+		dec.decide_XCMPY(Atwice, A, d);
 		assertEquals(2, d.size());
 		DecisionAlternative_XCMPY dac1 = d.first();
 		d.remove(dac1);

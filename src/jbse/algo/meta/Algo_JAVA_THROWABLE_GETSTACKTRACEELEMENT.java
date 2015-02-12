@@ -1,6 +1,6 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.createAndThrowObject;
+import static jbse.algo.Util.throwNew;
 import static jbse.bc.Signatures.INDEX_OUT_OF_BOUNDS_EXCEPTION;
 
 import jbse.algo.Algorithm;
@@ -16,6 +16,6 @@ public final class Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT implements Algorithm
 		//TODO replace this dummy implementation
 		state.pop();
 		state.pop();
-        createAndThrowObject(state, INDEX_OUT_OF_BOUNDS_EXCEPTION);
+        throwNew(state, INDEX_OUT_OF_BOUNDS_EXCEPTION);
 	}
 }

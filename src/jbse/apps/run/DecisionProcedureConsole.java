@@ -64,7 +64,7 @@ public class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
 	}
 
 	@Override
-	protected Outcome decideIfNonconcrete(Primitive exp, SortedSet<DecisionAlternative_IFX> result) {
+	protected Outcome decide_IFX_Nonconcrete(Primitive exp, SortedSet<DecisionAlternative_IFX> result) {
 		final DecisionAlternative_IFX T = DecisionAlternative_IFX.toNonconcrete(true);
 		final DecisionAlternative_IFX F = DecisionAlternative_IFX.toNonconcrete(false);
 		if (exp instanceof Any) {
@@ -92,7 +92,7 @@ public class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
 	}
 
 	@Override
-	protected Outcome decideComparisonNonconcrete(Primitive val1, Primitive val2, SortedSet<DecisionAlternative_XCMPY> result) {
+	protected Outcome decide_XCMPY_Nonconcrete(Primitive val1, Primitive val2, SortedSet<DecisionAlternative_XCMPY> result) {
 		final DecisionAlternative_XCMPY GT = DecisionAlternative_XCMPY.toNonconcrete(Values.GT);
 		final DecisionAlternative_XCMPY EQ = DecisionAlternative_XCMPY.toNonconcrete(Values.EQ);
 		final DecisionAlternative_XCMPY LT = DecisionAlternative_XCMPY.toNonconcrete(Values.LT);
@@ -135,7 +135,7 @@ public class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
 	}
 
 	@Override
-	protected Outcome decideSwitchNonconcrete(Primitive val, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result) {
+	protected Outcome decide_XSWITCH_Nonconcrete(Primitive val, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result) {
 		boolean shouldRefine;
 		if (val instanceof Any) {
 			int branchId = 1;

@@ -2,10 +2,11 @@ package jbse.algo;
 
 import static jbse.algo.Util.ensureKlass;
 
+import jbse.algo.exc.InterruptException;
 import jbse.algo.exc.PleaseDoNativeException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
-import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodNotFoundException;
@@ -49,7 +50,7 @@ public final class Algo_INIT {
 			final ClassHierarchy hier = state.getClassHierarchy();
 			final ClassFile rootMethodClassFile = hier.getClassFile(ctx.rootMethodSignature.getClassName());
 			state.pushFrameSymbolic(ctx.rootMethodSignature, rootMethodClassFile.isMethodStatic(ctx.rootMethodSignature));
-		} catch (ClassFileNotFoundException | MethodNotFoundException | PleaseDoNativeException e) {
+		} catch (BadClassFileException | MethodNotFoundException | PleaseDoNativeException e) {
 			throw new InitializationException(e);
 		} catch (IncompatibleClassFileException e) {
 		    throw new UnexpectedInternalException(e); //this should not happen
@@ -59,10 +60,12 @@ public final class Algo_INIT {
 		//pushes all the <clinit> frames in its hierarchy
 		try {
 			ensureKlass(state, ctx.rootMethodSignature.getClassName(), ctx.decisionProcedure);
-		} catch (ClassFileNotFoundException | ThreadStackEmptyException e) {
+        } catch (InterruptException e) {
+            //nothing to do: fall through
+		} catch (BadClassFileException | ThreadStackEmptyException e) {
 			//this should not happen after push frame
 			throw new UnexpectedInternalException(e);
-		}
+        }
 		
 		//saves a copy of the created state
 		ctx.setInitialState(state);

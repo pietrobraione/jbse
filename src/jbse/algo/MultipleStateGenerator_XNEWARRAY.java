@@ -1,6 +1,6 @@
 package jbse.algo;
 
-import static jbse.algo.Util.createAndThrowObject;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.NEGATIVE_ARRAY_SIZE_EXCEPTION;
 
@@ -79,7 +79,7 @@ abstract class MultipleStateGenerator_XNEWARRAY extends MultipleStateGenerator<D
 
 		this.ds = (result) -> {
 			//invokes the decision procedure
-			final Outcome o = ctx.decisionProcedure.decideNewarray(countsNonNegative, result);
+			final Outcome o = ctx.decisionProcedure.decide_XNEWARRAY(countsNonNegative, result);
 			return o;
 		};
 		
@@ -133,7 +133,7 @@ abstract class MultipleStateGenerator_XNEWARRAY extends MultipleStateGenerator<D
 		            throwVerifyError(s);
 				}
 			} else {
-				createAndThrowObject(s, NEGATIVE_ARRAY_SIZE_EXCEPTION);
+				throwNew(s, NEGATIVE_ARRAY_SIZE_EXCEPTION);
 			}
 		};
 		

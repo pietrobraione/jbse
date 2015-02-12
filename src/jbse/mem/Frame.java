@@ -4,14 +4,16 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import jbse.bc.ClassFile;
 import jbse.bc.LineNumberTable;
 import jbse.bc.Signature;
+import jbse.bc.exc.MethodCodeNotFoundException;
+import jbse.bc.exc.MethodNotFoundException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.mem.exc.OperandStackEmptyException;
 import jbse.val.Value;
-
 
 /**
  * Class representing the activation record of a method.
@@ -48,15 +50,20 @@ public class Frame implements Cloneable {
      * Constructor.
      * 
      * @param methodSignature the {@link Signature} of the frame's method.
-     * @param lnt the method's {@link LineNumberTable}.
-     * @param bytecode the method's bytecode as a {@code byte[]}.
-     * @param lva the method's {@link LocalVariablesArea}.
+     * @param classMethodImpl the {@link ClassFile} where the frame's 
+     *        method implementation resides.
+     * @throws MethodNotFoundException when {@code classMethodImpl} does
+     *         not contain the method {@code methodSignature}.
+     * @throws MethodCodeNotFoundException when {@code classMethodImpl}
+     *         contains the method {@code methodSignature} but it is
+     *         abstract.
      */
-    public Frame(Signature methodSignature, LineNumberTable lnt, byte[] bytecode, LocalVariablesArea lva) {
+    public Frame(Signature methodSignature, ClassFile classMethodImpl) 
+    throws MethodNotFoundException, MethodCodeNotFoundException {
         this.mySignature = methodSignature;
-    	this.lnt = lnt;
-        this.bytecode = bytecode.clone();
-        this.localVariables = lva;
+        this.lnt = classMethodImpl.getLineNumberTable(methodSignature);
+        this.bytecode = classMethodImpl.getMethodCodeBySignature(methodSignature).clone();
+        this.localVariables = new LocalVariablesArea(classMethodImpl.getLocalVariableTable(methodSignature));
         this.operandStack = new OperandStack();
         this.programCounter = 0;
         this.returnProgramCounter = UNKNOWN_PC;

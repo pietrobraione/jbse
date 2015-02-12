@@ -1,6 +1,6 @@
 package jbse.algo;
 
-import static jbse.algo.Util.createAndThrowObject;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwObject;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 
@@ -16,7 +16,7 @@ class Algo_ATHROW implements Algorithm {
     throws ThreadStackEmptyException, OperandStackEmptyException {
         final Reference myExcRef = (Reference) state.pop();
         if (state.isNull(myExcRef)) {
-            createAndThrowObject(state, NULL_POINTER_EXCEPTION);
+            throwNew(state, NULL_POINTER_EXCEPTION);
         } else {
             throwObject(state, myExcRef);
         }

@@ -1,6 +1,6 @@
 package jbse.algo;
 
-import static jbse.algo.Util.createAndThrowObject;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.XALOADSTORE_OFFSET;
 import static jbse.bc.Signatures.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION;
@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import jbse.algo.exc.CannotManageStateException;
-import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.BadClassFileException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
@@ -66,7 +66,7 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 		this.myObjectRef = (Reference) state.pop();
 		if (state.isNull(this.myObjectRef)) {
 			//null object 
-		    createAndThrowObject(state, NULL_POINTER_EXCEPTION);
+		    throwNew(state, NULL_POINTER_EXCEPTION);
 			return;
 		}
 
@@ -105,7 +105,7 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 					val = null;
 				}
 
-				final Outcome o = ctx.decisionProcedure.resolveAload(state, e.getAccessCondition(), val, fresh, result);
+				final Outcome o = ctx.decisionProcedure.resolve_XALOAD(state, e.getAccessCondition(), val, fresh, result);
 
 				//if at least one reference has not been expanded, 
 				//sets someRefNotExpanded to true and stores data
@@ -220,14 +220,14 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 			@Override
 			public void updateOut(State s, DecisionAlternative_XALOAD_Out dao) 
 			throws ThreadStackEmptyException {
-				createAndThrowObject(s, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
+				throwNew(s, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
 			}
 		};
 		
 		try {
 			generateStates();
-		} catch (ClassFileNotFoundException e) {
-			//the array element type is a reference to a nonexistent class
+		} catch (BadClassFileException e) {
+			//the array element type is a reference to a nonexistent or ill-formed class
 		    throwVerifyError(state); //TODO should we rather throw NO_CLASS_DEFINITION_FOUND_ERROR?
 		} catch (InvalidInputException | InvalidTypeException e) {
 			//this should never happen

@@ -1,6 +1,6 @@
 package jbse.algo;
 
-import static jbse.algo.Util.createAndThrowObject;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKEINTERFACE_OFFSET;
 import static jbse.bc.Offsets.INVOKEVIRTUAL_OFFSET;
@@ -12,10 +12,12 @@ import static jbse.bc.Signatures.NO_SUCH_METHOD_ERROR;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 
 import jbse.algo.exc.CannotManageStateException;
+import jbse.algo.exc.InterruptException;
 import jbse.algo.exc.PleaseDoNativeException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
+import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidIndexException;
@@ -43,7 +45,8 @@ final class Algo_INVOKEVIRTUALINTERFACE implements Algorithm {
 	public void exec(State state, ExecutionContext ctx) 
 	throws CannotManageStateException, DecisionException, 
 	ThreadStackEmptyException, OperandStackEmptyException, 
-	ContradictionException, FailureException, ClasspathException {
+	ContradictionException, FailureException, 
+	ClasspathException, InterruptException {
 		//gets index operand from instruction word and 
 		//calculates/stores the pointer to the next instruction
 		final int index;
@@ -73,7 +76,7 @@ final class Algo_INVOKEVIRTUALINTERFACE implements Algorithm {
 		} catch (InvalidIndexException e) {
             throwVerifyError(state);
 			return;
-		} catch (ClassFileNotFoundException e) {
+		} catch (BadClassFileException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}
@@ -83,30 +86,33 @@ final class Algo_INVOKEVIRTUALINTERFACE implements Algorithm {
 		try {
 			methodSignatureResolved = hier.resolveMethod(currentClassName, methodSignature, isInterface);
 		} catch (ClassFileNotFoundException e) {
-            createAndThrowObject(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+            throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
 			return;
 		} catch (IncompatibleClassFileException e) {
-            createAndThrowObject(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
 			return;
 		} catch (MethodAbstractException e) {
-            createAndThrowObject(state, ABSTRACT_METHOD_ERROR);
+            throwNew(state, ABSTRACT_METHOD_ERROR);
 			return;
 		} catch (MethodNotFoundException e) {
-            createAndThrowObject(state, NO_SUCH_METHOD_ERROR);
+            throwNew(state, NO_SUCH_METHOD_ERROR);
 			return;
 		} catch (MethodNotAccessibleException e) {
-            createAndThrowObject(state, ILLEGAL_ACCESS_ERROR);
+            throwNew(state, ILLEGAL_ACCESS_ERROR);
 			return;
+		} catch (BadClassFileException e) {
+		    throwVerifyError(state);
+		    return;
 		}
 
 		//checks whether the method is not static
 		try {
 			final ClassFile classFileResolved = hier.getClassFile(methodSignatureResolved.getClassName());
 			if (classFileResolved.isMethodStatic(methodSignatureResolved)) {
-	            createAndThrowObject(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+	            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
 				return;
 			}
-		} catch (ClassFileNotFoundException | MethodNotFoundException e) {
+		} catch (BadClassFileException | MethodNotFoundException e) {
 			//this should never happen after resolution
 			throw new UnexpectedInternalException(e);
 		}
@@ -119,7 +125,7 @@ final class Algo_INVOKEVIRTUALINTERFACE implements Algorithm {
 				algo.exec(state, ctx);
 				return;
 			}
-		} catch (ClassFileNotFoundException | MethodNotFoundException e) {
+		} catch (BadClassFileException | MethodNotFoundException e) {
 			//this should never happen after resolution
 			throw new UnexpectedInternalException();
 		}
@@ -133,11 +139,11 @@ final class Algo_INVOKEVIRTUALINTERFACE implements Algorithm {
 		} catch (PleaseDoNativeException e) {
 			ctx.nativeInvoker.doInvokeNative(state, methodSignature, args, pcOffset);
 		} catch (NoMethodReceiverException e) {
-            createAndThrowObject(state, NULL_POINTER_EXCEPTION);
+            throwNew(state, NULL_POINTER_EXCEPTION);
 		} catch (InvalidSlotException | InvalidProgramCounterException | IncompatibleClassFileException e) {
             //TODO IncompatibleClassFileException thrown if the method is static or is special; is verify error ok?
             throwVerifyError(state);
-		} catch (ClassFileNotFoundException | MethodNotFoundException e) {
+		} catch (BadClassFileException | MethodNotFoundException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}		

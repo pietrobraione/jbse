@@ -1,12 +1,13 @@
 package jbse.algo;
 
-import static jbse.algo.Util.createAndThrowObject;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.MULTIANEWARRAY_OFFSET;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 
 import jbse.bc.ClassHierarchy;
+import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
@@ -55,7 +56,7 @@ final class Algo_MULTIANEWARRAY extends MultipleStateGenerator_XNEWARRAY impleme
 		} catch (InvalidIndexException e) {
             throwVerifyError(state);
 			return;
-		} catch (ClassFileNotFoundException e) {
+		} catch (BadClassFileException e) {
 			//this must never happen
 			throw new UnexpectedInternalException(e);
 		}
@@ -71,12 +72,15 @@ final class Algo_MULTIANEWARRAY extends MultipleStateGenerator_XNEWARRAY impleme
     		try {
 				hier.resolveClass(currentClassName, arraySignature);
     		} catch (ClassFileNotFoundException e) {
-                createAndThrowObject(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
     			return;
     		} catch (ClassFileNotAccessibleException e) {
-                createAndThrowObject(state, ILLEGAL_ACCESS_ERROR);
+                throwNew(state, ILLEGAL_ACCESS_ERROR);
     			return;
-    		}
+    		} catch (BadClassFileException e) {
+    		    throwVerifyError(state);
+    		    return;
+            }
     	}
 
 		//checks the number of instantiation dimensions
@@ -95,6 +99,6 @@ final class Algo_MULTIANEWARRAY extends MultipleStateGenerator_XNEWARRAY impleme
 			//TODO length type check
 		}
     	this.arrayType = arraySignature;
-    	this.generateStates();
+    	generateStates();
 	}
 }

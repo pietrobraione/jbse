@@ -20,7 +20,7 @@ class LocalVariablesArea implements Cloneable {
 	private final LocalVariableTable lvt;
 	
 	/** Values in the memory area, accessible by slot. */
-	private SortedMap<Integer, Value> values;
+	private SortedMap<Integer, Value> values = new TreeMap<Integer, Value>();
 
     /**
      * Constructor.
@@ -28,7 +28,6 @@ class LocalVariablesArea implements Cloneable {
      * @param lvt a {@link LocalVariableTable}.
      */
     LocalVariablesArea(LocalVariableTable lvt) {
-    	this.values = new TreeMap<Integer, Value>();
     	this.lvt = lvt;
 		//initializes all the local variables by using args
         //until exhaustion, then DefaultValue

@@ -1,15 +1,17 @@
 package jbse.algo;
 
-import static jbse.algo.Util.createAndThrowObject;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.common.Util.byteCat;
 
 import jbse.bc.ClassHierarchy;
+import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.InvalidProgramCounterException;
@@ -40,19 +42,25 @@ abstract class Algo_CASTINSTANCEOF implements Algorithm {
         final String classSignature;
         try {
             classSignature = hier.getClassFile(currentClassName).getClassSignature(index);
-        } catch (ClassFileNotFoundException | InvalidIndexException e) {
+        } catch (InvalidIndexException e) {
             throwVerifyError(state);
             return;
+        } catch (BadClassFileException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
         }
 
         //performs resolution
         try {
             hier.resolveClass(currentClassName, classSignature);
         } catch (ClassFileNotFoundException e) {
-            createAndThrowObject(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+            throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
             return;
         } catch (ClassFileNotAccessibleException e) {
-            createAndThrowObject(state, ILLEGAL_ACCESS_ERROR);
+            throwNew(state, ILLEGAL_ACCESS_ERROR);
+            return;
+        } catch (BadClassFileException e) {
+            throwVerifyError(state);
             return;
         }
 

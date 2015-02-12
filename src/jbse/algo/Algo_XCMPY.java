@@ -8,7 +8,7 @@ import static jbse.bc.Opcodes.OP_IFLE;
 import static jbse.bc.Opcodes.OP_IFLT;
 import static jbse.bc.Opcodes.OP_IFNE;
 
-import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.BadClassFileException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
@@ -82,7 +82,7 @@ final class Algo_XCMPY extends MultipleStateGenerator<DecisionAlternative_XCMPY>
 			final Calculator calc = state.getCalculator();
 			//slow (and uncommon) case: pushes the true value
 			this.ds = (result) -> {
-				final Outcome o = ctx.decisionProcedure.decideComparison(val1, val2, result);
+				final Outcome o = ctx.decisionProcedure.decide_XCMPY(val1, val2, result);
 				return o;
 			};
 
@@ -113,7 +113,7 @@ final class Algo_XCMPY extends MultipleStateGenerator<DecisionAlternative_XCMPY>
 			} catch (InvalidInputException e) {
 				//bad val1 / val2
 	            throwVerifyError(state);
-			} catch (ClassFileNotFoundException | InvalidTypeException e) {
+			} catch (BadClassFileException | InvalidTypeException e) {
 				//this should never happen
 				throw new UnexpectedInternalException(e);
 			}

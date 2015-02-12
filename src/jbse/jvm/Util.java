@@ -3,6 +3,7 @@ package jbse.jvm;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.PleaseDoNativeException;
 import jbse.bc.Signature;
+import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
@@ -72,7 +73,7 @@ public final class Util {
 	NoMethodReceiverException, InvalidSlotException, NonexistingObservedVariablesException, 
 	DecisionException, CannotBacktrackException, CannotManageStateException, 
 	ClasspathException, ContradictionException, EngineStuckException, FailureException, 
-	ClassFileNotFoundException, MethodNotFoundException, IncompatibleClassFileException, 
+	BadClassFileException, MethodNotFoundException, IncompatibleClassFileException, 
 	ThreadStackEmptyException, OperandStackEmptyException {
 		//TODO check that sig is the signature of a nonstatic, nonspecial method
 		s.pushFrame(sig, true, false, false, 0, r);
