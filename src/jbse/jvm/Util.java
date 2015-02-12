@@ -8,7 +8,7 @@ import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodNotFoundException;
-import jbse.bc.exc.NoMethodReceiverException;
+import jbse.bc.exc.NullMethodReceiverException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.exc.CannotBacktrackException;
@@ -57,7 +57,7 @@ public final class Util {
 	 * @throws EngineStuckException
 	 * @throws FailureException
 	 * @throws InvalidSlotException 
-	 * @throws NoMethodReceiverException 
+	 * @throws NullMethodReceiverException 
 	 * @throws InvalidProgramCounterException 
 	 * @throws ThreadStackEmptyException 
 	 * @throws IncompatibleClassFileException 
@@ -70,7 +70,7 @@ public final class Util {
 	doRunRepOk(State s, Reference r, Signature sig, RunnerParameters p, boolean scopeExhaustionMeansSuccess) 
 	throws PleaseDoNativeException, CannotBuildEngineException, InitializationException, 
 	InvalidClassFileFactoryClassException, InvalidProgramCounterException, 
-	NoMethodReceiverException, InvalidSlotException, NonexistingObservedVariablesException, 
+	NullMethodReceiverException, InvalidSlotException, NonexistingObservedVariablesException, 
 	DecisionException, CannotBacktrackException, CannotManageStateException, 
 	ClasspathException, ContradictionException, EngineStuckException, FailureException, 
 	BadClassFileException, MethodNotFoundException, IncompatibleClassFileException, 

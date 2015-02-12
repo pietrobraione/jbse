@@ -13,7 +13,7 @@ import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodNotFoundException;
-import jbse.bc.exc.NoMethodReceiverException;
+import jbse.bc.exc.NullMethodReceiverException;
 import jbse.common.Type;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
@@ -189,7 +189,7 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 							CannotBuildEngineException | InvalidClassFileFactoryClassException | 
 							BadClassFileException | MethodNotFoundException | 
 							IncompatibleClassFileException | ThreadStackEmptyException | 
-							InvalidProgramCounterException | NoMethodReceiverException | 
+							InvalidProgramCounterException | NullMethodReceiverException | 
 							InvalidSlotException | OperandStackEmptyException exc) {
 						throw new UnexpectedInternalException(exc);  //TODO blame caller when necessary
 					}

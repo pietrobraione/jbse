@@ -1,6 +1,6 @@
 package jbse.algo;
 
-import static jbse.algo.Util.ensureKlass;
+import static jbse.algo.Util.ensureClassCreatedAndInitialized;
 
 import jbse.algo.exc.InterruptException;
 import jbse.algo.exc.PleaseDoNativeException;
@@ -56,10 +56,9 @@ public final class Algo_INIT {
 		    throw new UnexpectedInternalException(e); //this should not happen
 		}
 
-		//adds the root klass, and if this is not initialized
-		//pushes all the <clinit> frames in its hierarchy
+		//creates and initializes the root class
 		try {
-			ensureKlass(state, ctx.rootMethodSignature.getClassName(), ctx.decisionProcedure);
+			ensureClassCreatedAndInitialized(state, ctx.rootMethodSignature.getClassName(), ctx.decisionProcedure);
         } catch (InterruptException e) {
             //nothing to do: fall through
 		} catch (BadClassFileException | ThreadStackEmptyException e) {

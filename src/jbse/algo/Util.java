@@ -35,7 +35,7 @@ import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodNotFoundException;
-import jbse.bc.exc.NoMethodReceiverException;
+import jbse.bc.exc.NullMethodReceiverException;
 import jbse.common.Type;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
@@ -204,7 +204,7 @@ public class Util {
      *         {@code <clinit>} method(s) for the initialized 
      *         class(es).
 	 */
-	public static void ensureKlass(State state, String className, DecisionProcedure dec) 
+	public static void ensureClassCreatedAndInitialized(State state, String className, DecisionProcedure dec) 
 	throws DecisionException, BadClassFileException, 
 	ThreadStackEmptyException, ClasspathException, InterruptException {
         final ClassInitializer ci = new ClassInitializer(state, dec);
@@ -484,7 +484,7 @@ public class Util {
                  */
                 this.failed = true;
                 this.failure = VERIFY_ERROR;
-            } catch (InvalidProgramCounterException | NoMethodReceiverException | 
+            } catch (InvalidProgramCounterException | NullMethodReceiverException | 
                     ThreadStackEmptyException | InvalidSlotException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
@@ -540,7 +540,7 @@ public class Util {
 	throws DecisionException, ClasspathException, ThreadStackEmptyException, InterruptException {
 	    InterruptException exc = null;
 	    try {
-	        ensureKlass(state, JAVA_STRING, dec);
+	        ensureClassCreatedAndInitialized(state, JAVA_STRING, dec);
 	    } catch (BadClassFileException e) {
 	        throw new ClasspathException(e);
 	    } catch (InterruptException e) {
@@ -552,13 +552,13 @@ public class Util {
 	    }
 	}
     
-    public static void ensureClass(State state, String className, DecisionProcedure dec) 
+    public static void ensureClassInstance(State state, String className, DecisionProcedure dec) 
     throws DecisionException, ClasspathException, BadClassFileException, 
     ClassFileNotAccessibleException, ThreadStackEmptyException, InterruptException {
-        //possibly creates and initializes the java.lang.Class Klass
+        //possibly creates and initializes java.lang.Class
         InterruptException exc = null;
         try {
-            ensureKlass(state, JAVA_CLASS, dec);
+            ensureClassCreatedAndInitialized(state, JAVA_CLASS, dec);
         } catch (BadClassFileException e) {
             throw new ClasspathException(e);
         } catch (InterruptException e) {
@@ -566,8 +566,8 @@ public class Util {
         }
         
         //possibly creates and initializes the java.lang.Class Instance
-        final boolean mustInitClass = (!state.hasClass(className));
-        state.ensureClass(className);
+        final boolean mustInitClass = (!state.hasClassInstance(className));
+        state.ensureClassInstance(className);
         if (mustInitClass) {
             final Reference r = state.referenceToClass(className);
             final Instance i = (Instance) state.getObject(r);

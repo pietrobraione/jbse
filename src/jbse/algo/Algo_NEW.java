@@ -1,7 +1,7 @@
 package jbse.algo;
 
 import static jbse.algo.Util.throwNew;
-import static jbse.algo.Util.ensureKlass;
+import static jbse.algo.Util.ensureClassCreatedAndInitialized;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
@@ -64,9 +64,9 @@ final class Algo_NEW implements Algorithm {
             }
         }
 
-		//initializes the class in case it is not
+		//possibly creates and initializes the class
 		try {
-			ensureKlass(state, classSignature, ctx.decisionProcedure);
+			ensureClassCreatedAndInitialized(state, classSignature, ctx.decisionProcedure);
 		} catch (BadClassFileException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);

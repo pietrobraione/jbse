@@ -1,7 +1,7 @@
 package jbse.algo;
 
 import static jbse.algo.Util.throwNew;
-import static jbse.algo.Util.ensureClass;
+import static jbse.algo.Util.ensureClassInstance;
 import static jbse.algo.Util.ensureStringLiteral;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
@@ -77,7 +77,7 @@ final class Algo_LDCX_Y implements Algorithm {
                 val = state.referenceToStringLiteral(stringLit);
             } else { // cpv instanceof ConstantPoolClass
                 final String classSignature = ((ConstantPoolClass) cpv).getValue();
-                ensureClass(state, classSignature, ctx.decisionProcedure);
+                ensureClassInstance(state, classSignature, ctx.decisionProcedure);
                 val = state.referenceToClass(classSignature);
             }
         } catch (InvalidIndexException e) {

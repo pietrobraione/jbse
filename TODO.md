@@ -5,7 +5,6 @@ Not in priority order.
 
 * Add interface to open-source [ECLiPSe CLP(QR)](http://eclipseclp.org), and possibly [PTC-solver](https://github.com/echancrure/PTC-Solver.git).
 * Add interface to generic SMTLIB solver.
-* Refactor `invoke*` bytecodes and put common code in superclass.
 * Use logging for output.
 * Change configuration files format and make all parameters configurable through file.
 * Add Apache Ant + Ivy and Netbeans project support.

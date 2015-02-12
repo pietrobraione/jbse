@@ -1,7 +1,7 @@
 package jbse.algo;
 
 import static jbse.algo.Util.throwNew;
-import static jbse.algo.Util.ensureKlass;
+import static jbse.algo.Util.ensureClassCreatedAndInitialized;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
@@ -113,10 +113,9 @@ class Algo_PUTSTATIC implements Algorithm {
         //pops the Value from the operand stack
         final Value tmpValue = state.pop();
         
-        //obtains the Klass object containing the field from the state's 
-		//static store
+        //possibly creates and initializes the class 
 		try {
-			ensureKlass(state, fieldClassName, ctx.decisionProcedure);
+			ensureClassCreatedAndInitialized(state, fieldClassName, ctx.decisionProcedure);
 		} catch (BadClassFileException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);

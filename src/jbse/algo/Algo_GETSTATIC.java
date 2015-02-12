@@ -1,6 +1,6 @@
 package jbse.algo;
 
-import static jbse.algo.Util.ensureKlass;
+import static jbse.algo.Util.ensureClassCreatedAndInitialized;
 
 import jbse.algo.exc.InterruptException;
 import jbse.bc.ClassFile;
@@ -33,9 +33,9 @@ final class Algo_GETSTATIC extends Algo_GETX {
     ClasspathException, InterruptException {
         final String fieldClassName = fieldSignatureResolved.getClassName();
         
-        //performs class initialization
+        //possibly creates and initializes the class of the field
         try {
-            ensureKlass(state, fieldClassName, ctx.decisionProcedure);
+            ensureClassCreatedAndInitialized(state, fieldClassName, ctx.decisionProcedure);
         } catch (BadClassFileException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);

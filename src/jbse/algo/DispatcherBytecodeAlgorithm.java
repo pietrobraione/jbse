@@ -38,9 +38,7 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm> {
     private Algo_IFX algo_IFX = null;
     private Algo_IINC algo_IINC = null;
     private Algo_INSTANCEOF algo_INSTANCEOF = null;
-    private Algo_INVOKESPECIAL algo_INVOKESPECIAL = null;
-    private Algo_INVOKESTATIC algo_INVOKESTATIC = null;
-    private Algo_INVOKEVIRTUALINTERFACE algo_INVOKEVIRTUALINTERFACE = null;
+    private Algo_INVOKEX algo_INVOKEX = null;
     private Algo_JSRX algo_JSRX = null;
     private Algo_LDCX_Y algo_LDC = null;
     private Algo_XLOAD algo_XLOAD = null;
@@ -477,37 +475,25 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm> {
 		}
 	}
 
-	private class DispatchStrategy_INVOKEVIRTUALINTERFACE implements Dispatcher.DispatchStrategy<Algo_INVOKEVIRTUALINTERFACE> {
-		private boolean isInterface;
-		public DispatchStrategy_INVOKEVIRTUALINTERFACE(boolean isInterface) {
-			this.isInterface = isInterface;
-		}
-		public Algo_INVOKEVIRTUALINTERFACE doIt() {
-			if (DispatcherBytecodeAlgorithm.this.algo_INVOKEVIRTUALINTERFACE == null) {
-				DispatcherBytecodeAlgorithm.this.algo_INVOKEVIRTUALINTERFACE = new Algo_INVOKEVIRTUALINTERFACE();
-			}
-			DispatcherBytecodeAlgorithm.this.algo_INVOKEVIRTUALINTERFACE.isInterface = this.isInterface;
-			return DispatcherBytecodeAlgorithm.this.algo_INVOKEVIRTUALINTERFACE;
-		}
-	}
-
-	private class DispatchStrategy_INVOKESPECIAL implements Dispatcher.DispatchStrategy<Algo_INVOKESPECIAL> {
-		public Algo_INVOKESPECIAL doIt() {
-			if (DispatcherBytecodeAlgorithm.this.algo_INVOKESPECIAL == null) {
-				DispatcherBytecodeAlgorithm.this.algo_INVOKESPECIAL = new Algo_INVOKESPECIAL();
-			}
-			return DispatcherBytecodeAlgorithm.this.algo_INVOKESPECIAL;
-		}
-	}
-
-	private class DispatchStrategy_INVOKESTATIC implements Dispatcher.DispatchStrategy<Algo_INVOKESTATIC> {
-		public Algo_INVOKESTATIC doIt() {
-			if (DispatcherBytecodeAlgorithm.this.algo_INVOKESTATIC == null) {
-				DispatcherBytecodeAlgorithm.this.algo_INVOKESTATIC = new Algo_INVOKESTATIC();
-			}
-			return DispatcherBytecodeAlgorithm.this.algo_INVOKESTATIC;
-		}
-	}
+    private class DispatchStrategy_INVOKEX implements Dispatcher.DispatchStrategy<Algo_INVOKEX> {
+        private boolean isInterface;
+        private boolean isSpecial;
+        private boolean isStatic;
+        public DispatchStrategy_INVOKEX(boolean isInterface, boolean isSpecial, boolean isStatic) {
+            this.isInterface = isInterface;
+            this.isSpecial = isSpecial;
+            this.isStatic = isStatic;
+        }
+        public Algo_INVOKEX doIt() {
+            if (DispatcherBytecodeAlgorithm.this.algo_INVOKEX == null) {
+                DispatcherBytecodeAlgorithm.this.algo_INVOKEX = new Algo_INVOKEX();
+            }
+            DispatcherBytecodeAlgorithm.this.algo_INVOKEX.isInterface = this.isInterface;
+            DispatcherBytecodeAlgorithm.this.algo_INVOKEX.isSpecial = this.isSpecial;
+            DispatcherBytecodeAlgorithm.this.algo_INVOKEX.isStatic = this.isStatic;
+            return DispatcherBytecodeAlgorithm.this.algo_INVOKEX;
+        }
+    }
 
 	private class DispatchStrategy_XRETURN implements Dispatcher.DispatchStrategy<Algo_XRETURN> {
 		private boolean returnVoid;
@@ -763,10 +749,10 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm> {
 		.setDispatchStrategy(OP_JSR,             new DispatchStrategy_JSRX(false))
 		.setDispatchStrategy(OP_JSR_W,           new DispatchStrategy_JSRX(true))
 		.setDispatchStrategy(OP_RET,             new DispatchStrategy_RET())
-		.setDispatchStrategy(OP_INVOKEINTERFACE, new DispatchStrategy_INVOKEVIRTUALINTERFACE(true))
-		.setDispatchStrategy(OP_INVOKEVIRTUAL,   new DispatchStrategy_INVOKEVIRTUALINTERFACE(false))
-		.setDispatchStrategy(OP_INVOKESPECIAL,   new DispatchStrategy_INVOKESPECIAL())
-		.setDispatchStrategy(OP_INVOKESTATIC,    new DispatchStrategy_INVOKESTATIC())
+        .setDispatchStrategy(OP_INVOKEINTERFACE, new DispatchStrategy_INVOKEX(true, false, false))
+        .setDispatchStrategy(OP_INVOKESPECIAL,   new DispatchStrategy_INVOKEX(false, true, false))
+        .setDispatchStrategy(OP_INVOKESTATIC,    new DispatchStrategy_INVOKEX(false, false, true))
+        .setDispatchStrategy(OP_INVOKEVIRTUAL,   new DispatchStrategy_INVOKEX(false, false, false))
 		.setDispatchStrategy(OP_RETURN,          new DispatchStrategy_XRETURN(true))
 		.setDispatchStrategy(OP_ARETURN,         new DispatchStrategy_XRETURN(false))
 		.setDispatchStrategy(OP_DRETURN,         new DispatchStrategy_XRETURN(false))

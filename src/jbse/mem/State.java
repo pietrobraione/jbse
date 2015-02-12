@@ -34,7 +34,7 @@ import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
-import jbse.bc.exc.NoMethodReceiverException;
+import jbse.bc.exc.NullMethodReceiverException;
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Objekt.Epoch;
@@ -695,7 +695,7 @@ public final class State implements Cloneable {
      * @return {@code true} iff there is a {@link Instance} of {@code java.lang.Class} in 
      *         this state's {@link Heap} corresponding to {@code className}.
      */
-    public boolean hasClass(String className) {
+    public boolean hasClassInstance(String className) {
         return this.classes.containsKey(className);
     }
 	
@@ -717,9 +717,9 @@ public final class State implements Cloneable {
         return retVal;
     }
 
-    public void ensureClass(String className) 
+    public void ensureClassInstance(String className) 
     throws ThreadStackEmptyException, BadClassFileException, ClassFileNotAccessibleException {
-        if (hasClass(className)) {
+        if (hasClassInstance(className)) {
             return;
         }
         final String currentClassName = getCurrentMethodSignature().getClassName();
@@ -817,7 +817,7 @@ public final class State implements Cloneable {
 	 * @throws ThreadStackEmptyException when {@code isSpecial == true && isRoot == true}.
 	 * @throws PleaseDoNativeException when the method is native.
 	 * @throws InvalidProgramCounterException when {@code returnPCOffset} is invalid
-	 * @throws NoMethodReceiverException when {@code isStatic == false && isSpecial == false}
+	 * @throws NullMethodReceiverException when {@code isStatic == false && isSpecial == false}
 	 *         and the first argument in {@code args} is a reference to null.
      * @throws InvalidSlotException when there are 
      *         too many {@code arg}s or some of their types are 
@@ -825,7 +825,7 @@ public final class State implements Cloneable {
 	 */
 	public void pushFrame(Signature methodSignature, boolean isRoot, boolean isStatic, boolean isSpecial, int returnPCOffset, Value... args) 
 	throws BadClassFileException, MethodNotFoundException, IncompatibleClassFileException, ThreadStackEmptyException, 
-	PleaseDoNativeException, InvalidProgramCounterException, NoMethodReceiverException, InvalidSlotException {
+	PleaseDoNativeException, InvalidProgramCounterException, NullMethodReceiverException, InvalidSlotException {
 		//checks the "this" parameter (invocation receiver) if necessary
 		final Reference thisObject;
 		if (isStatic) {
@@ -836,7 +836,7 @@ public final class State implements Cloneable {
 			}
 			thisObject = (Reference) args[0];
 			if (isNull(thisObject)) {
-				throw new NoMethodReceiverException();
+				throw new NullMethodReceiverException();
 			}
 		}
 

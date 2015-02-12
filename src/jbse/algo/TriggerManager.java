@@ -9,7 +9,7 @@ import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.MethodNotFoundException;
-import jbse.bc.exc.NoMethodReceiverException;
+import jbse.bc.exc.NullMethodReceiverException;
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Objekt;
@@ -105,7 +105,7 @@ public class TriggerManager {
 					//does nothing, falls through to skip 
 					//the nonexistent/nonstatic/native method
 					//TODO should we throw an exception? are we sure that they are all not internal exceptions?
-				} catch (BadClassFileException | NoMethodReceiverException e) {
+				} catch (BadClassFileException | NullMethodReceiverException e) {
 					//this should never happen
 					throw new UnexpectedInternalException(e);
 				}
