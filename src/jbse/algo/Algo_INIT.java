@@ -3,12 +3,9 @@ package jbse.algo;
 import static jbse.algo.Util.ensureClassCreatedAndInitialized;
 
 import jbse.algo.exc.InterruptException;
-import jbse.algo.exc.PleaseDoNativeException;
-import jbse.bc.ClassFile;
-import jbse.bc.ClassHierarchy;
 import jbse.bc.exc.BadClassFileException;
-import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
+import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
@@ -45,16 +42,12 @@ public final class Algo_INIT {
 
 		//adds a method frame for the initial method invocation
 		try {
-			//TODO resolve rootMethodSignature
+			//TODO resolve rootMethodSignature and lookup implementation
 			//TODO instead of assuming that {ROOT}:this exists and create the frame, use lazy initialization also on {ROOT}:this, for homogeneity and to explore a wider range of alternatives  
-			final ClassHierarchy hier = state.getClassHierarchy();
-			final ClassFile rootMethodClassFile = hier.getClassFile(ctx.rootMethodSignature.getClassName());
-			state.pushFrameSymbolic(ctx.rootMethodSignature, rootMethodClassFile.isMethodStatic(ctx.rootMethodSignature));
-		} catch (BadClassFileException | MethodNotFoundException | PleaseDoNativeException e) {
+			state.pushFrameSymbolic(ctx.rootMethodSignature);
+		} catch (BadClassFileException | MethodNotFoundException | MethodCodeNotFoundException e) {
 			throw new InitializationException(e);
-		} catch (IncompatibleClassFileException e) {
-		    throw new UnexpectedInternalException(e); //this should not happen
-		}
+        }
 
 		//creates and initializes the root class
 		try {

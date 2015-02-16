@@ -11,7 +11,6 @@ import jbse.jvm.exc.EngineStuckException;
 import jbse.jvm.exc.FailureException;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
-import jbse.mem.exc.OperandStackEmptyException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.StateTree.BranchPoint;
 
@@ -466,7 +465,6 @@ public class Runner {
 	 * @throws CannotManageStateException as in {@link Engine#step()} 
      * @throws ClasspathException as in {@link Engine#step()} 
 	 * @throws ThreadStackEmptyException as in {@link Engine#step()}
-	 * @throws OperandStackEmptyException as in {@link Engine#step()}
 	 * @throws ContradictionException as in {@link Engine#step()} 
 	 * @throws DecisionException as in {@link Engine#step()} 
 	 * @throws EngineStuckException as in {@link Engine#step()} 
@@ -474,7 +472,7 @@ public class Runner {
 	 */
 	public void run() 
 	throws CannotBacktrackException, CannotManageStateException, 
-	ClasspathException, ThreadStackEmptyException, OperandStackEmptyException, 
+	ClasspathException, ThreadStackEmptyException, 
 	ContradictionException, DecisionException, EngineStuckException, 
 	FailureException  {
 		this.startTime = System.currentTimeMillis();

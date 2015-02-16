@@ -22,6 +22,7 @@ public class Algo_JBSE_ANALYSIS_ENDGUIDANCE implements Algorithm {
 			dec.endGuidance();
 			//System.out.println("***** END GUIDANCE *****"); //TODO log differently!
 		}
+		
 		try {
 			state.incPC(INVOKESPECIALSTATICVIRTUAL_OFFSET);
 		} catch (InvalidProgramCounterException e) {

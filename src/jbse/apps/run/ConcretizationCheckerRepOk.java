@@ -3,11 +3,10 @@ package jbse.apps.run;
 import static jbse.jvm.Util.doRunRepOk;
 
 import jbse.algo.exc.CannotManageStateException;
-import jbse.algo.exc.PleaseDoNativeException;
 import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileException;
-import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
+import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
 import jbse.common.exc.ClasspathException;
@@ -26,7 +25,6 @@ import jbse.mem.exc.CannotRefineException;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
-import jbse.mem.exc.OperandStackEmptyException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 
@@ -84,15 +82,15 @@ public final class ConcretizationCheckerRepOk {
 		boolean repOk = true;
 		try {
 			repOk = doRunRepOk(sIni, repOkTargetObjectReference, sigRepOk, params.getConcretizationDriverParameters(dec), false);
-		} catch (PleaseDoNativeException | DecisionException | 
+		} catch (DecisionException | 
 				InitializationException | InvalidClassFileFactoryClassException | 
 				NonexistingObservedVariablesException |  
 				CannotBacktrackException | EngineStuckException | CannotManageStateException | 
 				ClasspathException | ContradictionException | FailureException | 
 				UnexpectedInternalException | CannotBuildEngineException | 
-				BadClassFileException | MethodNotFoundException | 
-				IncompatibleClassFileException | ThreadStackEmptyException | InvalidProgramCounterException | 
-				NullMethodReceiverException | InvalidSlotException | OperandStackEmptyException exc) {
+				BadClassFileException | MethodNotFoundException | MethodCodeNotFoundException |
+				ThreadStackEmptyException | InvalidProgramCounterException | 
+				NullMethodReceiverException | InvalidSlotException exc) {
 			throw new UnexpectedInternalException(exc); //TODO blame caller when necessary
 		}
 		return repOk;

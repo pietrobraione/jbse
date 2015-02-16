@@ -74,7 +74,7 @@ class ThreadStack implements Cloneable {
         if (this.isEmpty()) {
             throw new ThreadStackEmptyException();
         }
-        return frameStack.get(frameStack.size() - 1);
+        return this.frameStack.get(this.frameStack.size() - 1);
     }
     
     /**

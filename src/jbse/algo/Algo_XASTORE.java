@@ -10,6 +10,7 @@ import java.util.Iterator;
 
 import jbse.algo.exc.CannotManageStateException;
 import jbse.bc.exc.BadClassFileException;
+import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
@@ -45,11 +46,11 @@ class Algo_XASTORE extends MultipleStateGenerator<DecisionAlternative_XASTORE> i
     public void exec(final State state, final ExecutionContext ctx) 
     throws DecisionException, CannotManageStateException, 
     ThreadStackEmptyException, ContradictionException {
-        final Value valueToStore;
+        final Value value;
         final Primitive index;
         final Reference arrayRef;
         try {
-            valueToStore = state.pop();
+            value = state.pop();
             index = (Primitive) state.pop();
             arrayRef = (Reference) state.pop();
         } catch (OperandStackEmptyException | ClassCastException e) {
@@ -64,20 +65,34 @@ class Algo_XASTORE extends MultipleStateGenerator<DecisionAlternative_XASTORE> i
         }
 
         //creates the Values that check whether the index
-        //is in range or out of range w.r.t. the array
+        //is in range or out of range w.r.t. the array;
+        //moreover, converts the value in case of [b/c/s]astore
     	final Primitive inRange;
     	final Primitive outOfRange;
+        final Value valueToStore;
     	try {
-    		final Array array = (Array) state.getObject(arrayRef);
-    		inRange = array.inRange(index);
+    	    final Array array = (Array) state.getObject(arrayRef);
+    	    inRange = array.inRange(index);
     		outOfRange = array.outOfRange(index);
+            final String arrayElemType = Type.getArrayMemberType(array.getType());
+            if (Type.isPrimitive(arrayElemType) && !Type.isPrimitiveOpStack(arrayElemType.charAt(0))) {
+                try {
+                    valueToStore = ((Primitive) value).to(arrayElemType.charAt(0));
+                } catch (InvalidTypeException e) {
+                    //this should not happen
+                    throw new UnexpectedInternalException(e);
+                }
+            } else {
+                valueToStore = value;
+            }
     	} catch (InvalidOperandException | InvalidTypeException | ClassCastException e) {
     		//index is bad or the reference does not point to an array
     	    throwVerifyError(state);
     		return;
     	}
         
-		//generates the next states    	
+
+        //generates the next states    	
     	this.ds = (results) -> {
     		final Outcome o = ctx.decisionProcedure.decide_XASTORE(inRange, results);
     		return o;

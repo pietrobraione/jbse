@@ -2,8 +2,6 @@ package jbse.common;
 
 import java.util.ArrayList;
 
-import jbse.common.exc.UnexpectedInternalException;
-
 /**
  * Class that contain public constants and static functions concerning 
  * JVM types.
@@ -182,28 +180,15 @@ public final class Type {
     	        Type.isArray(type) ? type : null);
     }
     
-    public static String primitiveToBinaryClassName(String primitiveType) {
-        if (primitiveType == null || !isPrimitive(primitiveType)) {
-            return null;
-        } else if (primitiveType.equals("" +  Type.BYTE)) {
-            return "byte";
-        } else if (primitiveType.equals("" +  Type.SHORT)) {
-            return "short";
-        } else if (primitiveType.equals("" +  Type.INT)) {
-            return "int";
-        } else if (primitiveType.equals("" +  Type.LONG)) {
-            return "long";
-        } else if (primitiveType.equals("" +  Type.BOOLEAN)) {
-            return "boolean";
-        } else if (primitiveType.equals("" +  Type.CHAR)) {
-            return "char";
-        } else if (primitiveType.equals("" +  Type.FLOAT)) {
-            return "float";
-        } else if (primitiveType.equals("" +  Type.DOUBLE)) {
-            return "double";
-        } else {
-            throw new UnexpectedInternalException("type " + primitiveType + " unexpectedly classified as primitive");
-        }
+    public static boolean isPrimitiveBinaryClassName(String primitiveType) {
+        return ("byte".equals(primitiveType) ||
+            "short".equals(primitiveType) ||
+            "int".equals(primitiveType) ||
+            "long".equals(primitiveType) ||
+            "boolean".equals(primitiveType) ||
+            "char".equals(primitiveType) ||
+            "float".equals(primitiveType) ||
+            "double".equals(primitiveType));
     }
     
     public static String binaryClassName(String className) {
@@ -224,10 +209,11 @@ public final class Type {
 	 * @return {@code true} iff {@code to} narrows {@code from}.
      */
 	public static boolean narrows(char to, char from) {
-		return  (from == INT && (to == BYTE || to == SHORT || to == CHAR)) ||
-				(from == LONG && to == INT) ||
-				(from == FLOAT && (to == INT || to == LONG)) ||
-				(from == DOUBLE && (to == INT || to == LONG || to == FLOAT));
+		return (from == DOUBLE && (to == INT || to == LONG || to == FLOAT)) ||
+               (from == FLOAT && (to == INT || to == LONG)) ||
+               (from == LONG && to == INT) ||
+               //this is for bastore, castore and sastore
+               (from == INT && (to == BOOLEAN || to == BYTE || to == SHORT || to == CHAR));
 	}
 	
 	/**
@@ -238,12 +224,14 @@ public final class Type {
 	 * @return {@code true} iff {@code to} widens {@code from}.
 	 */
 	public static boolean widens(char to, char from) {
-        return  (from == BOOLEAN && to == INT) || //this just because symbolic 
-		                                          //booleans must be converted 
-		                                          //to ints 
-				(from == INT && (to == LONG || to == FLOAT || to == DOUBLE)) ||
+        return  (from == INT && (to == LONG || to == FLOAT || to == DOUBLE)) ||
 				(from == LONG && (to == FLOAT || to == DOUBLE)) ||
-				(from == FLOAT && to == DOUBLE);
+				(from == FLOAT && to == DOUBLE) ||
+				//this is for baload, caload and saload
+				(from == BOOLEAN && to == INT) || //also for Algo_XCMPY opstack trick 
+				(from == BYTE && to == INT) ||
+                (from == CHAR && to == INT) ||
+                (from == SHORT && to == INT);
 	}
     
 	/**

@@ -24,4 +24,13 @@ public abstract class CannotManageStateException extends Exception {
 	public CannotManageStateException(Throwable e) {
 		super(e);
 	}
+
+    public CannotManageStateException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public CannotManageStateException(String message, Throwable cause,
+            boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
 }

@@ -742,7 +742,14 @@ public class RewriterOperationOnSimplex extends Rewriter {
 	
 	private void applyConversion(Simplex toConvert, char to) 
 	throws NoResultException {
-		final Number n = (Number) toConvert.getActualValue();
+	    final char from = toConvert.getType();
+		final Number n;
+		if (from == Type.CHAR) {
+		    final char c = ((Character) toConvert.getActualValue()).charValue();
+		    n = Integer.valueOf((int) c);
+		} else {
+		    n = (Number) toConvert.getActualValue();
+		}
 		if (to == Type.BYTE) {
 			setResult(this.calc.val_(n.byteValue()));
 		} else if (to == Type.SHORT) {

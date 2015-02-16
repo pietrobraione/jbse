@@ -78,7 +78,7 @@ final class Algo_LDCX_Y implements Algorithm {
             } else { // cpv instanceof ConstantPoolClass
                 final String classSignature = ((ConstantPoolClass) cpv).getValue();
                 ensureClassInstance(state, classSignature, ctx.decisionProcedure);
-                val = state.referenceToClass(classSignature);
+                val = state.referenceToClassInstance(classSignature);
             }
         } catch (InvalidIndexException e) {
             throwVerifyError(state);

@@ -57,7 +57,6 @@ import jbse.jvm.exc.NonexistingObservedVariablesException;
 import jbse.mem.State;
 import jbse.mem.exc.CannotRefineException;
 import jbse.mem.exc.ContradictionException;
-import jbse.mem.exc.OperandStackEmptyException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.Rewriter;
@@ -571,13 +570,14 @@ public class Run {
 		IO.println(this.log, MSG_START + this.parameters.getMethodSignature() + " at " + new Date() + ".");
 		try {
 			this.runner.run();
-		} catch (ClasspathException | DecisionException | CannotManageStateException | 
-				EngineStuckException | CannotBacktrackException e) {
+		} catch (ClasspathException | 
+		         DecisionException | CannotManageStateException | 
+				 EngineStuckException | CannotBacktrackException e) {
 			//already reported
 			retVal = 1;
-		} catch (OperandStackEmptyException | ThreadStackEmptyException | 
-				ContradictionException | FailureException | 
-				UnexpectedInternalException e) {
+		} catch (ThreadStackEmptyException | 
+				 ContradictionException | FailureException | 
+				 UnexpectedInternalException e) {
 			//this should never happen because Actions does not rethrow these exceptions
 			IO.println(this.err, ERROR_ENGINE_UNEXPECTED);
 			IO.printException(Run.this.err, e);

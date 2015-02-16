@@ -29,7 +29,6 @@ import jbse.mem.State;
 import jbse.mem.SwitchTable;
 import jbse.mem.Util;
 import jbse.mem.exc.ContradictionException;
-import jbse.mem.exc.OperandStackEmptyException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XALOAD;
 import jbse.tree.DecisionAlternative_XALOAD_Ref;
@@ -148,7 +147,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
             throw new GuidanceException(e);
 		} catch (CannotBacktrackException | EngineStuckException | CannotManageStateException | 
 				ContradictionException | FailureException | DecisionException | 
-				ThreadStackEmptyException | OperandStackEmptyException e) {
+				ThreadStackEmptyException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
         }

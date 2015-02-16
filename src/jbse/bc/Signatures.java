@@ -17,23 +17,28 @@ import static jbse.common.Type.VOID;
  */
 public final class Signatures {
     //classes and interfaces
-    public static final String JAVA_CLASS               = "java/lang/Class";
-    public static final String JAVA_CLONEABLE           = "java/lang/Cloneable";
-    public static final String JAVA_ENUM                = "java/lang/Enum";
-    public static final String JAVA_LINKEDLIST          = "java/util/LinkedList";
-    public static final String JAVA_LINKEDLIST_ENTRY    = "java/util/LinkedList$Entry";
-    public static final String JAVA_OBJECT              = "java/lang/Object";
-    public static final String JAVA_THROWABLE           = "java/lang/Throwable";
-    public static final String JAVA_SERIALIZABLE        = "java/io/Serializable";
-    public static final String JAVA_STACK_TRACE_ELEMENT = "java/lang/StackTraceElement";
-    public static final String JAVA_STRING              = "java/lang/String";
-    public static final String JAVA_STRING_CASEINSCOMP  = "java/lang/String$CaseInsensitiveComparator";
-    public static final String JBSE_ANALYSIS            = "jbse/meta/Analysis";
+    public static final String JAVA_CLASS                = "java/lang/Class";
+    public static final String JAVA_CLONEABLE            = "java/lang/Cloneable";
+    public static final String JAVA_ENUM                 = "java/lang/Enum";
+    public static final String JAVA_HASHMAP              = "java/util/HashMap";
+    public static final String JAVA_INTEGER              = "java/lang/Integer";
+    public static final String JAVA_INTEGER_INTEGERCACHE = "java/lang/Integer$IntegerCache";
+    public static final String JAVA_LINKEDLIST           = "java/util/LinkedList";
+    public static final String JAVA_LINKEDLIST_ENTRY     = "java/util/LinkedList$Entry";
+    public static final String JAVA_NUMBER               = "java/lang/Number";
+    public static final String JAVA_OBJECT               = "java/lang/Object";
+    public static final String JAVA_THROWABLE            = "java/lang/Throwable";
+    public static final String JAVA_SERIALIZABLE         = "java/io/Serializable";
+    public static final String JAVA_STACK_TRACE_ELEMENT  = "java/lang/StackTraceElement";
+    public static final String JAVA_STRING               = "java/lang/String";
+    public static final String JAVA_STRING_CASEINSCOMP   = "java/lang/String$CaseInsensitiveComparator";
+    public static final String JBSE_ANALYSIS             = "jbse/meta/Analysis";
 
     //exceptions
     public static final String ARITHMETIC_EXCEPTION 				= "java/lang/ArithmeticException";
     public static final String ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION 	= "java/lang/ArrayIndexOutOfBoundsException";
     public static final String CLASS_CAST_EXCEPTION 				= "java/lang/ClassCastException";
+    public static final String CLASS_NOT_FOUND_EXCEPTION            = "java/lang/ClassNotFoundException";
     public static final String INDEX_OUT_OF_BOUNDS_EXCEPTION 		= "java/lang/IndexOutOfBoundsException";
     public static final String NEGATIVE_ARRAY_SIZE_EXCEPTION 		= "java/lang/NegativeArraySizeException";
     public static final String NULL_POINTER_EXCEPTION				= "java/lang/NullPointerException";
@@ -47,9 +52,12 @@ public final class Signatures {
     public static final String NO_SUCH_METHOD_ERROR                 = "java/lang/NoSuchMethodError";
     public static final String VERIFY_ERROR                         = "java/lang/VerifyError";
     
-    //methods
+    //methodsjava/lang/Class:(Ljava/lang/String;)Ljava/lang/Class;:getPrimitiveClass
+    public static final Signature JAVA_CLASS_GETPRIMITIVECLASS =
+        new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + 
+                      REFERENCE + JAVA_CLASS + TYPEEND, "getPrimitiveClass");
     public static final Signature JAVA_OBJECT_HASHCODE =
-    new Signature(JAVA_OBJECT, "()" + INT, "hashCode");
+        new Signature(JAVA_OBJECT, "()" + INT, "hashCode");
     public static final Signature JAVA_STRING_INTERN =
         new Signature(JAVA_STRING, "()" + REFERENCE + JAVA_STRING + TYPEEND, "intern");
     public static final Signature JAVA_THROWABLE_FILLINSTACKTRACE =
@@ -57,7 +65,8 @@ public final class Signatures {
     public static final Signature JAVA_THROWABLE_GETSTACKTRACEDEPTH = 
         new Signature(JAVA_THROWABLE, "()" + INT, "getStackTraceDepth");
     public static final Signature JAVA_THROWABLE_GETSTACKTRACEELEMENT = 
-        new Signature(JAVA_THROWABLE, "(" + INT + ")" + REFERENCE + JAVA_STACK_TRACE_ELEMENT + TYPEEND, "getStackTraceElement");
+        new Signature(JAVA_THROWABLE, "(" + INT + ")" + REFERENCE + JAVA_STACK_TRACE_ELEMENT + TYPEEND, 
+                      "getStackTraceElement");
     public static final Signature JBSE_ANALYSIS_ANY = 
         new Signature(JBSE_ANALYSIS, "()" + BOOLEAN, "any");
     public static final Signature JBSE_ANALYSIS_ASSERTREPOK = 

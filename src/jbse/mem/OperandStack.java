@@ -2,6 +2,7 @@ package jbse.mem;
 
 import java.util.ArrayDeque;
 import java.util.Collection;
+import java.util.Collections;
 
 import jbse.mem.exc.OperandStackEmptyException;
 import jbse.val.Value;
@@ -61,7 +62,7 @@ class OperandStack implements Cloneable {
     }
     
     Collection<Value> values() {
-    	return this.valueStack;
+    	return Collections.unmodifiableCollection(this.valueStack);
     }
     
     /**

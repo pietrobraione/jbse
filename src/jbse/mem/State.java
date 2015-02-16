@@ -6,6 +6,7 @@ import static jbse.bc.Signatures.JAVA_STRING_COUNT;
 import static jbse.bc.Signatures.JAVA_STRING_HASH;
 import static jbse.bc.Signatures.JAVA_STRING_OFFSET;
 import static jbse.bc.Signatures.JAVA_STRING_VALUE;
+import static jbse.common.Type.isPrimitiveBinaryClassName;
 import static jbse.common.Util.ROOT_FRAME_MONIKER;
 
 import java.util.ArrayList;
@@ -19,7 +20,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import jbse.algo.exc.PleaseDoNativeException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassFileFactory;
 import jbse.bc.ClassHierarchy;
@@ -29,7 +29,7 @@ import jbse.bc.ExceptionTableEntry;
 import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
-import jbse.bc.exc.IncompatibleClassFileException;
+import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
@@ -89,8 +89,11 @@ public final class State implements Cloneable {
 	/** The string literals. */
 	private HashMap<String, ReferenceConcrete> stringLiterals = new HashMap<>();
 
-    /** The class objects. */
+    /** The class objects for nonprimitive types. */
     private HashMap<String, ReferenceConcrete> classes = new HashMap<>();
+
+    /** The class objects for primitive types. */
+    private HashMap<String, ReferenceConcrete> classesPrimitive = new HashMap<>();
 
 	/** The JVM stack of the current execution thread. */
 	private ThreadStack stack = new ThreadStack();
@@ -698,34 +701,101 @@ public final class State implements Cloneable {
     public boolean hasClassInstance(String className) {
         return this.classes.containsKey(className);
     }
+    
+    /**
+     * Checks if there is an {@link Instance} of {@code java.lang.Class} 
+     * in this state's heap for some primitive type.
+     * 
+     * @param typeName a {@link String} representing a primitive type
+     *        binary name (see Java Language Specification 13.1).
+     * @return {@code true} iff there is a {@link Instance} of {@code java.lang.Class} in 
+     *         this state's {@link Heap} corresponding to {@code typeName}.
+     */
+    public boolean hasPrimitiveClassInstance(String typeName) {
+        return this.classesPrimitive.containsKey(typeName);
+    }
 	
     /**
      * Returns an {@link Instance} of class {@code java.lang.Class} 
-     * from a {@link State}'s {@link Heap} corresponding to a class name. 
-     * 
+     * from the heap corresponding to a class name. 
      * 
      * @param className a {@link String} representing the name of a class.
      *        Classes of primitive types must be provided as their binary
-     *        names (see Java Language Specification 
+     *        names (see Java Language Specification 13.1)
      * @return a {@link ReferenceConcrete} to the {@link Instance} in 
      *         {@code state}'s {@link Heap} of the class with name
      *         {@code className}, or {@code null} if such instance does not
      *         exist. 
      */
-    public ReferenceConcrete referenceToClass(String className) {
+    public ReferenceConcrete referenceToClassInstance(String className) {
         final ReferenceConcrete retVal = this.classes.get(className);
         return retVal;
     }
-
+   
+    /**
+     * Returns an {@link Instance} of class {@code java.lang.Class} 
+     * from the heap corresponding to a primitive type. 
+     * 
+     * @param typeName a {@link String} representing a primitive type
+     *        binary name (see Java Language Specification 13.1).
+     * @return a {@link ReferenceConcrete} to the {@link Instance} in 
+     *         {@code state}'s {@link Heap} of the class for primitive type
+     *         {@code typeName}, or {@code null} if such instance does not
+     *         exist. 
+     */
+    public ReferenceConcrete referenceToPrimitiveClassInstance(String typeName) {
+        final ReferenceConcrete retVal = this.classesPrimitive.get(typeName);
+        return retVal;
+    }
+   
+    /**
+     * Ensures an {@link Instance} of class {@code java.lang.Class} 
+     * corresponding to a class name exists in the {@link Heap}. If
+     * the instance does not exist, it resolves the class and creates 
+     * it, otherwise it does nothing.
+     * 
+     * @param className a {@link String} representing the name of a class.
+     * @throws ThreadStackEmptyException if this state has an empty thread stack.
+     * @throws BadClassFileException if the classfile for {@code className}
+     *         does not exist in the classpath or is ill-formed.
+     * @throws ClassFileNotAccessibleException if the class {@code className} 
+     *         is not accessible from {@code accessor}.
+     */
     public void ensureClassInstance(String className) 
-    throws ThreadStackEmptyException, BadClassFileException, ClassFileNotAccessibleException {
+    throws ThreadStackEmptyException, BadClassFileException, 
+    ClassFileNotAccessibleException {
         if (hasClassInstance(className)) {
             return;
         }
         final String currentClassName = getCurrentMethodSignature().getClassName();
         this.classHierarchy.resolveClass(currentClassName, className);
+        //TODO resolve JAVA_CLASS
         final ReferenceConcrete retVal = createInstance(JAVA_CLASS);
         this.classes.put(className, retVal);
+    }
+    
+    /**
+     * Ensures an {@link Instance} of class {@code java.lang.Class} 
+     * corresponding to a class name exists in the {@link Heap}. If
+     * the instance does not exist, it resolves the class and creates 
+     * it, otherwise it does nothing.
+     * 
+     * @param typeName a {@link String} representing a primitive type
+     *        binary name (see Java Language Specification 13.1).
+     * @throws ClassFileNotFoundException if {@code typeName} is not
+     *         the binary name of a primitive type.
+     */
+    public void ensurePrimitiveClassInstance(String typeName) 
+    throws ClassFileNotFoundException {
+        if (hasPrimitiveClassInstance(typeName)) {
+            return;
+        }
+        if (isPrimitiveBinaryClassName(typeName)) {
+            final ReferenceConcrete retVal = createInstance(JAVA_CLASS);
+            this.classesPrimitive.put(typeName, retVal);
+        } else {
+            throw new ClassFileNotFoundException(typeName + " is not the binary name of a primitive type");
+        }
     }
 
 	/**
@@ -784,65 +854,64 @@ public final class State implements Cloneable {
 	 * on this state's stack. The actual parameters of the invocation are 
 	 * initialized with values from the invoking frame's operand stack.
 	 * 
-	 * @param methodSignature
+	 * @param methodSignatureImpl
 	 *        the {@link Signature} of the method for which the 
-	 *        frame is built. If {@code isSpecial == true} it must 
-	 *        be the {@link Signature} of the resolved method, 
-	 *        otherwise the class indicated in {@code methodSignature}
-	 *        is ignored.
+	 *        frame is built. The bytecode for the method will be
+	 *        looked for in 
+	 *        {@code methodSignatureImpl.}{@link Signature#getClassName() getClassName()}.
 	 * @param isRoot
 	 *        {@code true} iff the frame is the root frame of symbolic
 	 *        execution (i.e., on the top of the thread stack).
-	 * @param isStatic
-	 *        {@code true} iff INVOKESTATIC method invocation rules 
-	 *        must be applied.
-	 * @param isSpecial
-	 *        {@code true} if INVOKESPECIAL method code lookup rules 
-	 *        must be applied, {@code false} if INVOKEVIRTUAL/INVOKEINTERFACE 
-	 *        code lookup rules must be applied. 
 	 * @param returnPCOffset 
 	 *        the offset from the current program counter of 
 	 *        the return program counter. It is ignored if 
 	 *        {@code isRoot == true}.
 	 * @param args
-	 *        varargs of method call arguments. It must match 
-	 *        {@code methodSignature} and {@code isStatic}.
+	 *        varargs of method call arguments.
+     * @throws NullMethodReceiverException when the method is not static
+     *         and the first argument in {@code args} is the null reference.
 	 * @throws BadClassFileException when the classfile with name 
-	 *         {@code methodSignatureResolved.}{@link Signature#getClassName() getClassName()}
+	 *         {@code methodSignatureImpl.}{@link Signature#getClassName() getClassName()}
 	 *         does not exist in the classpath or is ill-formed.
-	 * @throws MethodNotFoundException when method lookup fails.
-	 * @throws IncompatibleClassFileException when a method with signature 
-	 *         {@code methodSignature} exists but its features differ from
-	 *         {@code isStatic} and {@code isSpecial}.
-	 * @throws ThreadStackEmptyException when {@code isSpecial == true && isRoot == true}.
-	 * @throws PleaseDoNativeException when the method is native.
-	 * @throws InvalidProgramCounterException when {@code returnPCOffset} is invalid
-	 * @throws NullMethodReceiverException when {@code isStatic == false && isSpecial == false}
-	 *         and the first argument in {@code args} is a reference to null.
+     * @throws MethodNotFoundException when the classfile with name.
+     *         {@code methodSignatureImpl.}{@link Signature#getClassName() getClassName()}
+     *         does not contain the method (i.e., the method is abstract
+     *         or native).
+	 * @throws MethodCodeNotFoundException when the classfile with name.
+     *         {@code methodSignatureImpl.}{@link Signature#getClassName() getClassName()}
+     *         does not contain bytecode for the method.
      * @throws InvalidSlotException when there are 
      *         too many {@code arg}s or some of their types are 
      *         incompatible with their respective slots types.
+     * @throws ThreadStackEmptyException when {@code isRoot == false} and the 
+     *         state's thread stack is empty.
+     * @throws InvalidProgramCounterException when {@code isRoot == false} and
+     *         {@code returnPCOffset} is not a valid program count offset for the
+     *         state's current frame.
 	 */
-	public void pushFrame(Signature methodSignature, boolean isRoot, boolean isStatic, boolean isSpecial, int returnPCOffset, Value... args) 
-	throws BadClassFileException, MethodNotFoundException, IncompatibleClassFileException, ThreadStackEmptyException, 
-	PleaseDoNativeException, InvalidProgramCounterException, NullMethodReceiverException, InvalidSlotException {
+	public void pushFrame(Signature methodSignatureImpl, boolean isRoot, int returnPCOffset, Value... args) 
+	throws NullMethodReceiverException, BadClassFileException, 
+	MethodNotFoundException, MethodCodeNotFoundException, 
+	InvalidSlotException, InvalidProgramCounterException, 
+	ThreadStackEmptyException {
+        final ClassFile classMethodImpl = this.classHierarchy.getClassFile(methodSignatureImpl.getClassName());
+        final boolean isStatic = classMethodImpl.isMethodStatic(methodSignatureImpl);
 		//checks the "this" parameter (invocation receiver) if necessary
-		final Reference thisObject;
+		final Reference thisObjectRef;
 		if (isStatic) {
-			thisObject = null;
+			thisObjectRef = null;
 		} else {
 			if (args.length == 0 || !(args[0] instanceof Reference)) {
 				throw new UnexpectedInternalException("args for method invocation do not correspond to method signature"); //TODO better exception
 			}
-			thisObject = (Reference) args[0];
-			if (isNull(thisObject)) {
+			thisObjectRef = (Reference) args[0];
+			if (isNull(thisObjectRef)) {
 				throw new NullMethodReceiverException();
 			}
 		}
 
-		//creates and initializes the frame, and pushes it on the state's 
-		//frame stack
-		final Frame f = newFrame(methodSignature, isRoot, isStatic, isSpecial, thisObject);
+        //creates the frame and sets its args
+        final Frame f = new Frame(methodSignatureImpl, classMethodImpl);
 		f.setArgs(args);
 
 		//sets the frame's return program counter
@@ -852,6 +921,7 @@ public final class State implements Cloneable {
 			this.setReturnProgramCounter(returnPCOffset);
 		}
 
+		//pushes the frame on the thread stack
 		this.stack.push(f);
 	}
 
@@ -910,34 +980,67 @@ public final class State implements Cloneable {
 	 * on a state's stack. The actual parameters of the invocation are 
 	 * initialized with symbolic values.
 	 *  
-	 * @param methodSignatureResolved 
-	 *        the {@link Signature} of the method for which the 
-	 *        frame is built.
-	 * @param isStatic
-	 *        {@code true} iff INVOKESTATIC method invocation rules 
-	 *        must be applied.
-	 * @throws BadClassFileException when the classfile with name 
-	 *         {@code methodSignatureResolved.}{@link Signature#getClassName() getClassName()}
-	 *         does not exist in the classpath or is ill-formed.
-	 * @throws MethodNotFoundException when method lookup fails.
-	 * @throws IncompatibleClassFileException when a method with signature 
-	 *         {@code methodSignature} exists but its features differ from
-	 *         {@code isStatic}.
-	 * @throws PleaseDoNativeException when the method is declared native.
+	 * @param methodSignatureImpl 
+     *        the {@link Signature} of the method for which the 
+     *        frame is built. The bytecode for the method will be
+     *        looked for in 
+     *        {@code methodSignatureImpl.}{@link Signature#getClassName() getClassName()}.
+     * @throws BadClassFileException when the classfile with name 
+     *         {@code methodSignatureImpl.}{@link Signature#getClassName() getClassName()}
+     *         does not exist in the classpath or is ill-formed.
+     * @throws MethodNotFoundException when the classfile with name.
+     *         {@code methodSignatureImpl.}{@link Signature#getClassName() getClassName()}
+     *         does not contain the method.
+     * @throws MethodCodeNotFoundException when the classfile with name.
+     *         {@code methodSignatureImpl.}{@link Signature#getClassName() getClassName()}
+     *         does not contain bytecode for the method (i.e., the method is abstract
+     *         or native).
 	 */
-	public void pushFrameSymbolic(Signature methodSignatureResolved, boolean isStatic) 
-	throws BadClassFileException, MethodNotFoundException, 
-	IncompatibleClassFileException, PleaseDoNativeException {
-		//creates and initializes the frame, and pushes on the state's 
-		//stack frame
-		try {
-			final Frame f = newFrame(methodSignatureResolved, true, isStatic, false, null);
-			final Value[] args = makeArgsSymbolic(f, methodSignatureResolved, isStatic);
-			f.setArgs(args);
-			this.stack.push(f);
-		} catch (InvalidSlotException | ThreadStackEmptyException e) {
-			throw new UnexpectedInternalException(e);
-		}
+	public void pushFrameSymbolic(Signature methodSignatureImpl) 
+	throws BadClassFileException, MethodNotFoundException, MethodCodeNotFoundException {
+	    final ClassFile classMethodImpl = this.classHierarchy.getClassFile(methodSignatureImpl.getClassName());
+        final boolean isStatic = classMethodImpl.isMethodStatic(methodSignatureImpl);
+	    final Frame f = new Frame(methodSignatureImpl, classMethodImpl);
+	    final Value[] args = makeArgsSymbolic(f, methodSignatureImpl, isStatic);
+	    try {
+            f.setArgs(args);
+        } catch (InvalidSlotException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
+	    this.stack.push(f);
+	}
+	
+	/**
+	 * Parses the signature of a method, and returns the
+	 * "this" parameter as found on the operand stack. 
+	 * 
+	 * @param methodSignature
+	 *        the {@link Signature} of a method. It is <em>not</em>
+	 *        checked.
+	 * @return the {@link Objekt} that is the receiver of
+	 *         the method according to {@link methodSignature}'s 
+	 *         declared list of parameters, or {@link null} if the 
+	 *         operand stack has not enough items, or the
+	 *         item in the position of the "this" parameter is
+	 *         not a resolved reference or is {@link Null}. 
+	 */
+	public Objekt peekReceiverArg(Signature methodSignature) {
+	    final String[] paramsDescriptors = Type.splitParametersDescriptors(methodSignature.getDescriptor());
+	    final int nParams = paramsDescriptors.length + 1;
+	    final Collection<Value> opStackVals = getCurrentFrame().values();
+	    int i = 1;
+	    for (Value val : opStackVals) { 
+	        if (i == nParams) {
+	            if (! (val instanceof Reference)) {
+	                return null;
+	            }
+	            final Reference r = (Reference) val;
+	            return getObject(r);
+	        }
+	        ++i;
+	    }
+	    return null;
 	}
 
 	/**
@@ -956,79 +1059,13 @@ public final class State implements Cloneable {
 	 */
 	public Value[] popMethodCallArgs(Signature methodSignature, boolean isStatic) 
 	throws ThreadStackEmptyException, OperandStackEmptyException {
-		String[] arrayDescriptor = Type.splitParametersDescriptors(methodSignature.getDescriptor());
-		int count = (isStatic ? arrayDescriptor.length : arrayDescriptor.length + 1);
-		Value[] argArray = new Value[count];
-		for (int i = 1; i <= count; i++) { 
-			argArray[count - i] = this.pop();
+		final String[] paramsDescriptors = Type.splitParametersDescriptors(methodSignature.getDescriptor());
+		final int nParams = (isStatic ? paramsDescriptors.length : paramsDescriptors.length + 1);
+		final Value[] argArray = new Value[nParams];
+		for (int i = 1; i <= nParams; ++i) { 
+			argArray[nParams - i] = pop();
 		}
 		return argArray;
-	}
-
-	/**
-	 * Creates a new frame for a method invocation.
-	 * 
-	 * @param methodSignatureResolved
-	 *        the {@link Signature} of the resolved method for 
-	 *        which the frame must be built.
-	 * @param isRoot
-	 *        {@code true} iff this is a root frame (i.e., on top 
-	 *        of the thread stack).
-	 * @param isStatic
-	 *        {@code true} iff INVOKESTATIC method invocation rules 
-	 *        must be applied.
-	 * @param isSpecial
-	 *        {@code true} if INVOKESPECIAL method invocation rules 
-	 *        must be applied, {@code false} if INVOKEVIRTUAL/INVOKEINTERFACE 
-	 *        method invocation rules must be applied. It is ignored if 
-	 *        {@code isStatic == true}.
-	 * @param thisObject
-	 *        a {@link Reference} to the target ("this") of the method invocation.
-	 *        It can be {@code null} unless when {@code isStatic == false &&
-	 *        isSpecial == false && isRoot == false}.
-	 * @return the created {@link Frame}.
-	 * @throws BadClassFileException when the classfile for any class 
-	 *         involved in the lookup of the method code does not exist or is ill-formed.
-	 * @throws MethodNotFoundException when method lookup fails.
-	 * @throws IncompatibleClassFileException when a method with signature 
-	 *         {@code methodSignature} exists but its features differ from
-	 *         {@code isStatic} and {@code isSpecial}.
-	 * @throws ThreadStackEmptyException when {@code isSpecial == true && isRoot == true}.
-	 * @throws PleaseDoNativeException when the method is declared native.
-	 */
-	private Frame newFrame(Signature methodSignatureResolved, boolean isRoot, boolean isStatic, boolean isSpecial, Reference thisObject) 
-	throws BadClassFileException, MethodNotFoundException, IncompatibleClassFileException, 
-	ThreadStackEmptyException, PleaseDoNativeException  {
-		//performs method code lookup
-		final ClassFile classMethodImpl;
-		if (isStatic) {         //INVOKESTATIC
-			classMethodImpl = this.classHierarchy.lookupMethodImplStatic(methodSignatureResolved);
-		} else if (isSpecial) { //INVOKESPECIAL
-			final String luStartClassName = this.getCurrentMethodSignature().getClassName();
-			classMethodImpl = this.classHierarchy.lookupMethodImplSpecial(luStartClassName, methodSignatureResolved);
-		} else {                //INVOKEVIRTUAL, INVOKEINTERFACE 
-			final String luStartClassName = (isRoot ? methodSignatureResolved.getClassName() : getObject(thisObject).getType());
-			//TODO can we do better with root frames than taking the static type of the method signature? should we search through the class substitutions?
-			classMethodImpl = this.classHierarchy.lookupMethodImplVirtualInterface(luStartClassName, methodSignatureResolved);
-		}
-
-		try {
-			//throws if the method is native
-			if (classMethodImpl.isMethodNative(methodSignatureResolved)) {
-				throw new PleaseDoNativeException();
-			}
-
-			//creates the signature of the method that is actually invoked
-			final Signature methodSignatureImpl = new Signature(classMethodImpl.getClassName(), methodSignatureResolved.getDescriptor(), methodSignatureResolved.getName());
-
-			//creates the frame
-			final Frame f = new Frame(methodSignatureImpl, classMethodImpl);
-
-			return f;
-		} catch (MethodNotFoundException | MethodCodeNotFoundException e) {
-			//this should not happen
-			throw new UnexpectedInternalException(e);
-		}
 	}
 
 	/**

@@ -81,7 +81,8 @@ public class Frame implements Cloneable {
     /**
      * Returns the values on the operand stack.
      * 
-     * @return 
+     * @return an unmodifiable collection of the
+     *         operand stack values.
      */
     public Collection<Value> values() {
     	return this.operandStack.values();

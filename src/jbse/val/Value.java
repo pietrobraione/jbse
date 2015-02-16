@@ -3,8 +3,7 @@ package jbse.val;
 import jbse.val.exc.ValueDoesNotSupportNativeException;
 
 /**
- * Class for representing Java values in memory, either primitive 
- * or not, either concrete or symbolic.
+ * Class for representing all Java values.
  * 
  * @author unknown
  * @author Pietro Braione

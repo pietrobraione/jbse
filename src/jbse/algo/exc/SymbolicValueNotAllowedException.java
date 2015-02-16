@@ -1,6 +1,6 @@
 package jbse.algo.exc;
 
-public class SymbolicValueNotAllowedException extends Exception {
+public class SymbolicValueNotAllowedException extends CannotInvokeNativeException {
 
 	/**
 	 * 
@@ -26,5 +26,4 @@ public class SymbolicValueNotAllowedException extends Exception {
 			boolean enableSuppression, boolean writableStackTrace) {
 		super(message, cause, enableSuppression, writableStackTrace);
 	}
-
 }

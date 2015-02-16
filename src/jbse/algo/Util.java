@@ -1,11 +1,13 @@
 package jbse.algo;
 
-import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_CLASS_NAME;
 import static jbse.bc.Signatures.JAVA_ENUM;
+import static jbse.bc.Signatures.JAVA_INTEGER;
+import static jbse.bc.Signatures.JAVA_INTEGER_INTEGERCACHE;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
+import static jbse.bc.Signatures.JAVA_NUMBER;
 import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_STRING_CASEINSCOMP;
@@ -20,7 +22,6 @@ import java.util.List;
 import java.util.ListIterator;
 
 import jbse.algo.exc.InterruptException;
-import jbse.algo.exc.PleaseDoNativeException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.ConstantPoolPrimitive;
@@ -34,6 +35,7 @@ import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidIndexException;
+import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
 import jbse.common.Type;
@@ -82,6 +84,22 @@ public class Util {
 			return false;
 		}
 		return (pos1 == pos2);
+	}
+	
+	public static ClassFile lookupMethodImpl(State state, Signature methodSignatureResolved, boolean isStatic, boolean isSpecial, String receiverClassName) 
+	throws BadClassFileException, MethodNotFoundException, IncompatibleClassFileException, ThreadStackEmptyException {
+        final ClassFile retVal;
+        final ClassHierarchy hier = state.getClassHierarchy();
+        if (isStatic) {
+            retVal = hier.lookupMethodImplStatic(methodSignatureResolved);
+        } else if (isSpecial) {
+            final String currentClassName = state.getCurrentMethodSignature().getClassName();
+            retVal = hier.lookupMethodImplSpecial(currentClassName, methodSignatureResolved);
+        } else { //invokevirtual and invokeinterface 
+            retVal = hier.lookupMethodImplVirtualInterface(receiverClassName, methodSignatureResolved);
+        }
+        //TODO invokedynamic
+        return retVal;
 	}
         
     /**
@@ -234,12 +252,14 @@ public class Util {
 		//Assume that some classes are not initialized to
 		//trigger the execution of their <clinit> methods 
 		//TODO move these assumptions into DecisionProcedure or DecisionProcedureAlgorithms.
-		if (state.getClassHierarchy().isSubclass(className, JAVA_ENUM) ||
-            className.equals(JAVA_CLASS)  ||
-            className.equals(JAVA_OBJECT)  ||
-            className.equals(JAVA_LINKEDLIST) || className.equals(JAVA_LINKEDLIST_ENTRY) ||
-            className.equals(JAVA_STRING)     || className.equals(JAVA_STRING_CASEINSCOMP)
-		    ) {
+		if (className.equals(JAVA_CLASS)      ||
+            className.equals(JAVA_INTEGER)    || className.equals(JAVA_INTEGER_INTEGERCACHE) || 
+            className.equals(JAVA_LINKEDLIST) || className.equals(JAVA_LINKEDLIST_ENTRY)     ||
+            className.equals(JAVA_NUMBER)     ||
+            className.equals(JAVA_OBJECT)     ||
+            className.equals(JAVA_STRING)     || className.equals(JAVA_STRING_CASEINSCOMP)   ||
+            state.getClassHierarchy().isSubclass(className, JAVA_ENUM)
+           ) {
 			return false;
 		}
 
@@ -264,14 +284,21 @@ public class Util {
 		 * and is not reused across multiple calls.
 		 */
 		private int createdFrames = 0;
+        
+        /**
+         * Stores the names of the {@link Klass}es that are created by this initializer.
+         */
+        private final ArrayList<String> classesCreated = new ArrayList<>();
 		
 		/**
-		 * Stores the names of the classes that are being initialized.
+		 * Stores the names of the {@link Klass}es for which the {@code <clinit>} 
+		 * method must be run.
 		 */
 		private final ArrayList<String> classesToInitialize = new ArrayList<>();
 		
 		/**
-		 * Set to true iff must load a frame for java.lang.Object <clinit>.
+		 * Set to true iff must load a frame for {@code java.lang.Object}'s 
+		 * {@code <clinit>}.
 		 */
 		private boolean pushFrameForJavaLangObject = false;
 		
@@ -352,6 +379,7 @@ public class Util {
                 return;
             }    
 
+            this.classesCreated.add(className);
             //TODO here we assume mutual exclusion of the initialized/not initialized assumptions. We could withdraw this assumption at the expense of a considerable blow in the number of cases.
             try {
                 //invokes the decision procedure, adds the returned 
@@ -401,7 +429,7 @@ public class Util {
          */
         private void phase2() 
         throws DecisionException, BadClassFileException, ClasspathException {
-            for (String className : this.classesToInitialize) {
+            for (String className : this.classesCreated) {
                 final Klass k = this.s.getKlass(className);
                 final ClassFile classFile = this.s.getClassHierarchy().getClassFile(className);
                 final Signature[] flds = classFile.getFieldsStatic();
@@ -454,24 +482,21 @@ public class Util {
                 for (String className : reverse(this.classesToInitialize)) {
                     final Signature sigClinit = new Signature(className, "()" + Type.VOID, "<clinit>");
                     final ClassFile classFile = classHierarchy.getClassFile(className);
-                    if (classFile.hasMethodDeclaration(sigClinit)) {
-                        s.pushFrame(sigClinit, false, true, false, 0);
+                    if (classFile.hasMethodImplementation(sigClinit)) {
+                        s.pushFrame(sigClinit, false, 0);
                         ++createdFrames;
                     }
                 }
                 if (this.pushFrameForJavaLangObject) {
                     final Signature sigClinit = new Signature(JAVA_OBJECT, "()" + Type.VOID, "<clinit>");
                     try {
-                        s.pushFrame(sigClinit, false, true, false, 0);
+                        s.pushFrame(sigClinit, false, 0);
                     } catch (ClassFileNotFoundException e) {
                         throw new ClasspathException(e);
                     }
                     ++createdFrames;
                 }
-            } catch (IncompatibleClassFileException e) {
-                this.failed = true;
-                this.failure = INCOMPATIBLE_CLASS_CHANGE_ERROR;
-            } catch (MethodNotFoundException | PleaseDoNativeException e) {
+            } catch (MethodNotFoundException | MethodCodeNotFoundException e) {
                 /* TODO Here I am in doubt about how I should manage exceptional
                  * situations. The JVM spec v2 (4.6, access_flags field discussion)
                  * states that the access flags of <clinit> should be ignored except for 
@@ -479,8 +504,9 @@ public class Util {
                  * or abstract (from its access_flags field) it must have no code.
                  * What if a <clinit> is marked to be abstract or native? In such 
                  * case it should have no code. However, this shall not happen for 
-                 * <clinit> methods. I will assume that in this case a verification 
-                 * error should be raised.
+                 * <clinit> methods - all <clinit>s I have seen are not by themselves
+                 * native, rather they invoke a static native method. I will assume 
+                 * that in this case a verification error should be raised.
                  */
                 this.failed = true;
                 this.failure = VERIFY_ERROR;
@@ -569,7 +595,7 @@ public class Util {
         final boolean mustInitClass = (!state.hasClassInstance(className));
         state.ensureClassInstance(className);
         if (mustInitClass) {
-            final Reference r = state.referenceToClass(className);
+            final Reference r = state.referenceToClassInstance(className);
             final Instance i = (Instance) state.getObject(r);
             final String classNameBinary = binaryClassName(className);
             try {

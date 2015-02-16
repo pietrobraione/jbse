@@ -83,7 +83,20 @@ abstract class MultipleStateGenerator_XYLOAD_GETX<R extends DecisionAlternative>
 	protected final void update(State s, DecisionAlternative_XYLOAD_GETX_Loads r) 
 	throws DecisionException, ThreadStackEmptyException {
 		final Value val = r.getValueToLoad();
-		final Value valToPush = possiblyMaterialize(s, val);
+		final Value valMaterialized = possiblyMaterialize(s, val);
+		final char valType = valMaterialized.getType();
+		final Value valToPush;
+		if (Type.isPrimitive(valType) && !Type.isPrimitiveOpStack(valType)) {
+		    try {
+                valToPush = ((Primitive) valMaterialized).to(Type.INT);
+            } catch (InvalidTypeException e) {
+                //this should not happen
+                throw new UnexpectedInternalException(e);
+            }
+		} else {
+		    valToPush = valMaterialized;
+		}
+		
 		s.push(valToPush);
 		
 		//manages triggers and increments the program counter

@@ -4,10 +4,9 @@ import static jbse.rules.Util.getTriggerMethodParameterObject;
 
 import java.util.ArrayList;
 
-import jbse.algo.exc.PleaseDoNativeException;
 import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileException;
-import jbse.bc.exc.IncompatibleClassFileException;
+import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
 import jbse.common.Type;
@@ -97,11 +96,12 @@ public class TriggerManager {
 				Type.splitParametersDescriptors(triggerSig.getDescriptor()).length <= 1) {
 				final ReferenceConcrete triggerArg = getTriggerMethodParameterObject(rule, ref, s);
 				try {
-					s.pushFrame(triggerSig, false, true, false, pcOffset, triggerArg);
+				    //TODO resolution? lookup of implementation?
+					s.pushFrame(triggerSig, false, pcOffset, triggerArg);
 					retVal = false;
 					pcOffset = 0; //the offset of the second, third... frames
-				} catch (MethodNotFoundException | IncompatibleClassFileException | 
-						InvalidSlotException | PleaseDoNativeException e) {
+				} catch (MethodNotFoundException | MethodCodeNotFoundException | 
+				         InvalidSlotException e) {
 					//does nothing, falls through to skip 
 					//the nonexistent/nonstatic/native method
 					//TODO should we throw an exception? are we sure that they are all not internal exceptions?

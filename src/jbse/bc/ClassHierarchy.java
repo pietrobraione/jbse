@@ -389,8 +389,8 @@ public class ClassHierarchy {
      * @throws BadClassFileException if the classfile for the class 
      *         to be resolved does not exist in the classpath or
      *         is ill-formed.
-	 * @throws ClassFileNotAccessibleException if the resolved class is not
-	 *  
+	 * @throws ClassFileNotAccessibleException if the resolved class is not accessible
+	 *         from {@code accessor}.
 	 */
 	public void resolveClass(String accessor, String classSignature) 
 	throws BadClassFileException, ClassFileNotAccessibleException {

@@ -65,7 +65,7 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 	    try {
 	        this.index = (Primitive) state.pop();
 	        this.myObjectRef = (Reference) state.pop();
-	    } catch (OperandStackEmptyException e) {
+	    } catch (OperandStackEmptyException | ClassCastException e) {
 	        throwVerifyError(state);
 	        return;
 	    }
@@ -77,12 +77,14 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 		}
 
 		//takes the value from the array
-		final Array arrayObj = (Array) state.getObject(myObjectRef);
+		final Array arrayObj;
 		final Collection<Array.AccessOutcome> entries;
 		try {
+		    arrayObj = (Array) state.getObject(this.myObjectRef);
 			entries = arrayObj.get(this.index);
-		} catch (InvalidOperandException | InvalidTypeException e) {
-			//bad index
+		} catch (InvalidOperandException | InvalidTypeException | 
+		         ClassCastException e) {
+			//bad index or object
 		    throwVerifyError(state);
 			return;
 		}
@@ -214,13 +216,13 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 			@Override
 			public void updateResolved(State s, DecisionAlternative_XALOAD_Resolved dav) 
 			throws DecisionException, ThreadStackEmptyException {
-				Algo_XALOAD.this.update(s, dav); //implemented in MultipleStateGeneratorLoad
+				Algo_XALOAD.this.update(s, dav); //implemented in MultipleStateGenerator_XYLOAD_GETX
 			}
 
 			@Override
 			public void updateReference(State s, DecisionAlternative_XALOAD_Ref dar) 
 			throws DecisionException, ThreadStackEmptyException {
-				Algo_XALOAD.this.update(s, dar); //implemented in MultipleStateGeneratorLoad
+				Algo_XALOAD.this.update(s, dar); //implemented in MultipleStateGenerator_XYLOAD_GETX
 			}
 
 			@Override
@@ -251,7 +253,7 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 			try {
 				final ReferenceArrayImmaterial valRef = (ReferenceArrayImmaterial) val;
 				final ReferenceConcrete valMaterialized = 
-						s.createArray(valRef.next(), valRef.getLength(), valRef.getArrayType().substring(1));
+				    s.createArray(valRef.next(), valRef.getLength(), valRef.getArrayType().substring(1));
 				writeBackToSource(s, valMaterialized);
 				s.push(valMaterialized);
 				return valMaterialized;
@@ -266,12 +268,12 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 	
 	private void writeBackToSource(State s, Value val) 
 	throws DecisionException {
-		final Array a = (Array) s.getObject(this.myObjectRef);
 		try {
+	        final Array a = (Array) s.getObject(this.myObjectRef);
 			final Iterator<Array.AccessOutcomeIn> entries = a.set(this.index, val);
 			this.ctx.decisionProcedure.completeArraySet(entries, this.index);
 		} catch (InvalidInputException | InvalidOperandException | 
-				InvalidTypeException e) {
+				InvalidTypeException | ClassCastException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}

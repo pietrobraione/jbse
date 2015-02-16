@@ -1,6 +1,7 @@
 package jbse.algo;
 
 import static jbse.algo.Util.ensureClassCreatedAndInitialized;
+import static jbse.algo.Util.lookupMethodImpl;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKEDYNAMICINTERFACE_OFFSET;
@@ -14,7 +15,6 @@ import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 
 import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.InterruptException;
-import jbse.algo.exc.PleaseDoNativeException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
@@ -23,6 +23,7 @@ import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodAbstractException;
+import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
@@ -107,10 +108,9 @@ final class Algo_INVOKEX implements Algorithm {
             return;
         }
         
-        //checks the features of the resolved method; 
-        //more checks are done by the last call to state.pushFrame
-        //(they possibly throw IncompatibleClassFileException)
-        //TODO this is ok for invoke[interface/static/virtual], which checks should we do for invokespecial, if any?
+        //checks the resolved method; note that more checks 
+        //are done later, by the last call to state.pushFrame
+        //TODO this check is ok for invoke[interface/static/virtual], which checks should we do for invokespecial, if any?
         try {
             final ClassFile classFileResolved = hier.getClassFile(methodSignatureResolved.getClassName());
             if (classFileResolved.isMethodStatic(methodSignatureResolved) != this.isStatic) {
@@ -119,19 +119,6 @@ final class Algo_INVOKEX implements Algorithm {
             }
         } catch (BadClassFileException | MethodNotFoundException e) {
             //this should never happen after resolution
-            throw new UnexpectedInternalException(e);
-        }
-        
-        //determines whether a meta invocation is required, 
-        //and in the case delegates the responsibility to invoke it
-        try {
-            if (ctx.dispatcherMeta.isMeta(hier, methodSignatureResolved)) {
-                final Algorithm algo = ctx.dispatcherMeta.select(methodSignatureResolved);
-                algo.exec(state, ctx);
-                return;
-            }
-        } catch (BadClassFileException | MethodNotFoundException e) {
-            //this should never happen after resolution 
             throw new UnexpectedInternalException(e);
         }
         
@@ -144,22 +131,79 @@ final class Algo_INVOKEX implements Algorithm {
                 throw new UnexpectedInternalException(e);
             }
         }
-
-        //pops the args from the operand stack and pushes the method frame        
+        
+        //looks for the method implementation
+        ClassFile classMethodImpl;
+        boolean isNative;
+        final boolean isVirtualInterface = !this.isStatic && !this.isSpecial;
+        try {
+            final String receiverClassName = (isVirtualInterface ? state.peekReceiverArg(methodSignatureResolved).getType() : null); 
+            classMethodImpl = lookupMethodImpl(state, methodSignatureResolved, this.isStatic, this.isSpecial, receiverClassName);
+            isNative = classMethodImpl.isMethodNative(methodSignatureResolved);
+        } catch (IncompatibleClassFileException e) {
+            //TODO is it ok?
+            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+            return;
+        } catch (BadClassFileException | ArrayIndexOutOfBoundsException | ClassCastException e) {
+            throwVerifyError(state);
+            return;
+        } catch (MethodNotFoundException e) {
+            //it is still possible that the method
+            //is meta-overridden
+            classMethodImpl = null;
+            isNative = false;
+        }
+        
+        //builds a signature for the method implementation;
+        //falls back to the signature of the resolved method
+        //if there is no implementation (just for the case of
+        //a meta-level implementation)
+        final Signature methodSignatureImpl = (classMethodImpl == null ? methodSignatureResolved : 
+            new Signature(classMethodImpl.getClassName(), methodSignatureResolved.getDescriptor(), methodSignatureResolved.getName()));
+        
+        //looks for a meta-level implementation, and in case 
+        //delegates the responsibility to the dispatcherMeta
+        try {
+            if (ctx.dispatcherMeta.isMeta(hier, methodSignatureImpl)) {
+                final Algorithm algo = ctx.dispatcherMeta.select(methodSignatureImpl);
+                algo.exec(state, ctx);
+                return;
+            }
+        } catch (BadClassFileException | MethodNotFoundException e) {
+            //this should never happen after resolution 
+            throw new UnexpectedInternalException(e);
+        }
+        
+        //if the method has no implementation, raises AbstractMethodError
+        try {
+            if (classMethodImpl == null || classMethodImpl.isMethodAbstract(methodSignatureResolved)) {
+                throwNew(state, ABSTRACT_METHOD_ERROR);
+                return;
+            }
+        } catch (MethodNotFoundException e) {
+            //this should never happen after resolution 
+            throw new UnexpectedInternalException(e);
+        }     
+        
+        //pops the args from the operand stack        
         final Value[] args;
         try {
-            args = state.popMethodCallArgs(methodSignature, this.isStatic);
+            args = state.popMethodCallArgs(methodSignatureResolved, this.isStatic);
         } catch (OperandStackEmptyException e) {
             throwVerifyError(state);
             return;
         }
+        
+        //if the method is native, delegates the responsibility 
+        //to the native invoker
+        if (isNative) {
+            ctx.nativeInvoker.doInvokeNative(state, methodSignatureResolved, args, pcOffset);
+            return;
+        }
+          
+        //pushes the frame
         try {
-            state.pushFrame(methodSignatureResolved, false, this.isStatic, this.isSpecial, pcOffset, args);
-        } catch (PleaseDoNativeException e) {
-            ctx.nativeInvoker.doInvokeNative(state, methodSignature, args, pcOffset);
-        } catch (IncompatibleClassFileException e) {
-            //TODO is it ok?
-            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+            state.pushFrame(methodSignatureImpl, false, pcOffset, args);
         } catch (NullMethodReceiverException e) {
             if (this.isStatic) {
                 //this should never happen
@@ -170,7 +214,8 @@ final class Algo_INVOKEX implements Algorithm {
         } catch (InvalidProgramCounterException | InvalidSlotException e) {
             //TODO is it ok?
             throwVerifyError(state);
-        } catch (BadClassFileException | MethodNotFoundException e) {
+        } catch (BadClassFileException | MethodNotFoundException | 
+                 MethodCodeNotFoundException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
