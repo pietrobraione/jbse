@@ -2,18 +2,6 @@ package jbse.meta;
 
 import java.util.Random;
 
-import jbse.algo.meta.Algo_JBSE_ANALYSIS_ANY;
-import jbse.algo.meta.Algo_JBSE_ANALYSIS_ASSERTREPOK;
-import jbse.algo.meta.Algo_JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION;
-import jbse.algo.meta.Algo_JBSE_ANALYSIS_ENDGUIDANCE;
-import jbse.algo.meta.Algo_JBSE_ANALYSIS_FAIL;
-import jbse.algo.meta.Algo_JBSE_ANALYSIS_IGNORE;
-import jbse.algo.meta.Algo_JBSE_ANALYSIS_ISRESOLVED;
-import jbse.algo.meta.Algo_JBSE_ANALYSIS_ISRUNBYJBSE;
-import jbse.algo.meta.Algo_JBSE_ANALYSIS_SUCCEED;
-import jbse.meta.annotations.MetaOverridden;
-
-
 /**
  * The methods in this class can be invoked by the analyzed code to 
  * inform the symbolic executor about things that happen or to ask
@@ -32,7 +20,6 @@ final public class Analysis {
 	 * @return {@code true} iff the JVM running this method
 	 *         is JBSE.
 	 */
-	@MetaOverridden(Algo_JBSE_ANALYSIS_ISRUNBYJBSE.class)
 	public static boolean isRunByJBSE() {
 		return false; //if this statement is executed, then it is not run by JBSE
 	}
@@ -50,7 +37,6 @@ final public class Analysis {
 	 * has been invoked before, in which case it does nothing.
 	 * 
 	 */
-	@MetaOverridden(Algo_JBSE_ANALYSIS_IGNORE.class)
 	public static void ignore() { 
 		if (mayViolateAssumptions) {
 			System.exit(99);
@@ -85,7 +71,6 @@ final public class Analysis {
 	 * should have no effect. When executed on a JVM different
 	 * from JBSE the effect is identical (see also {@link #ignore()}).
 	 */
-	@MetaOverridden(Algo_JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION.class)
 	public static void disableAssumptionViolation() { 
 		Analysis.mayViolateAssumptions = false;
 	}
@@ -120,7 +105,6 @@ final public class Analysis {
 	 * When executed on a JVM different from JBSE it prints 
 	 * a message and exits with code 100.
 	 */
-	@MetaOverridden(Algo_JBSE_ANALYSIS_SUCCEED.class)
 	public static void succeed() {
 		System.out.print("Execution finished with no errors at " + getInvoker());
 		System.exit(100);
@@ -134,7 +118,6 @@ final public class Analysis {
 	 * When executed on a JVM different from JBSE it prints a message and 
 	 * exits with error code 98.
 	 */
-	@MetaOverridden(Algo_JBSE_ANALYSIS_FAIL.class)
 	public static void fail() {
 		System.out.println("Assertion violated by " + getInvoker());
 		System.exit(98);
@@ -151,7 +134,6 @@ final public class Analysis {
 		}
 	}
 	
-	@MetaOverridden(Algo_JBSE_ANALYSIS_ASSERTREPOK.class)
 	public static void assertFinallyEFInitialState(Object target, String methodName) {
 		//TODO ???
 	}
@@ -172,7 +154,6 @@ final public class Analysis {
 	 * 
 	 * @return a {@code boolean}. 
 	 */
-	@MetaOverridden(Algo_JBSE_ANALYSIS_ANY.class)
 	public static boolean any() {
 		return r.nextBoolean();
 	}
@@ -202,7 +183,6 @@ final public class Analysis {
 	 * ends guidance and starts an unguided exploration.
 	 * When executed on a JVM different from JBSE it does nothing.
 	 */
-	@MetaOverridden(Algo_JBSE_ANALYSIS_ENDGUIDANCE.class)
 	public static void endGuidance() { }
 	
 	
@@ -218,7 +198,6 @@ final public class Analysis {
 	 *         field, or it is a reference type field and its 
 	 *         value is initialized.
 	 */
-	@MetaOverridden(Algo_JBSE_ANALYSIS_ISRESOLVED.class)
 	public static boolean isResolved(Object obj, String fieldName) {
 		return true;
 	}

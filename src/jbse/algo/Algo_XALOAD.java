@@ -60,10 +60,16 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 
 	@Override
 	public void exec(final State state, final ExecutionContext ctx) 
-	throws DecisionException, CannotManageStateException, ContradictionException, 
-	ThreadStackEmptyException, OperandStackEmptyException {
-		this.index = (Primitive) state.pop();
-		this.myObjectRef = (Reference) state.pop();
+	throws DecisionException, CannotManageStateException, 
+	ContradictionException, ThreadStackEmptyException {
+	    try {
+	        this.index = (Primitive) state.pop();
+	        this.myObjectRef = (Reference) state.pop();
+	    } catch (OperandStackEmptyException e) {
+	        throwVerifyError(state);
+	        return;
+	    }
+	    
 		if (state.isNull(this.myObjectRef)) {
 			//null object 
 		    throwNew(state, NULL_POINTER_EXCEPTION);

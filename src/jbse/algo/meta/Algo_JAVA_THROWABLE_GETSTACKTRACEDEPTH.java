@@ -1,7 +1,7 @@
 package jbse.algo.meta;
 
 import static jbse.algo.Util.throwVerifyError;
-import static jbse.bc.Offsets.INVOKEVIRTUAL_OFFSET;
+import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 
 import jbse.algo.Algorithm;
 import jbse.algo.ExecutionContext;
@@ -13,13 +13,18 @@ import jbse.mem.exc.ThreadStackEmptyException;
 public final class Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH implements Algorithm {
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, OperandStackEmptyException {
+	throws ThreadStackEmptyException {
 		//TODO replace this dummy implementation
-		state.pop(); //pops "this"
+		try {
+            state.pop();  //pops "this"
+        } catch (OperandStackEmptyException e) {
+            throwVerifyError(state);
+            return;
+        }
 		state.push(state.getCalculator().valInt(0));
 		
         try {
-			state.incPC(INVOKEVIRTUAL_OFFSET);
+			state.incPC(INVOKESPECIALSTATICVIRTUAL_OFFSET);
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 		}

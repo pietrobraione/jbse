@@ -37,7 +37,7 @@ final class Algo_XSWITCH extends MultipleStateGenerator<DecisionAlternative_XSWI
 	
 	@Override
 	public void exec(State state, final ExecutionContext ctx) 
-	throws ThreadStackEmptyException, OperandStackEmptyException, 
+	throws ThreadStackEmptyException, 
 	DecisionException, ContradictionException {
 		final Calculator calc = state.getCalculator();
 		
@@ -45,14 +45,20 @@ final class Algo_XSWITCH extends MultipleStateGenerator<DecisionAlternative_XSWI
 		final SwitchTable tab;
 		try {
 			final Frame f = state.getCurrentFrame();
-			tab = new SwitchTable(f, calc, isTableSwitch);
+			tab = new SwitchTable(f, calc, this.isTableSwitch);
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 			return;
 		}
 		
 		//pops the selector
-		final Primitive selector = (Primitive) state.pop();
+		final Primitive selector;
+		try {
+		    selector = (Primitive) state.pop();
+		} catch (OperandStackEmptyException | ClassCastException e) {
+		    throwVerifyError(state);
+		    return;
+		}
 		
 		this.ds = (result) -> {
 			final Outcome o = ctx.decisionProcedure.decide_XSWITCH(selector, tab, result);

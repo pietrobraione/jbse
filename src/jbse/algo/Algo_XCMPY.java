@@ -39,12 +39,18 @@ final class Algo_XCMPY extends MultipleStateGenerator<DecisionAlternative_XCMPY>
 	
 	@Override
 	public void exec(State state, final ExecutionContext ctx) 
-	throws DecisionException, ContradictionException, ThreadStackEmptyException, OperandStackEmptyException {
+	throws DecisionException, ContradictionException, ThreadStackEmptyException {
 		//TODO NaN cases for distinguishing [d/l]cmpg from [d/l]cmpl
 
 		//takes operands from current frame's operand stack
-		final Primitive val2 = (Primitive) state.pop();
-		final Primitive val1 = (Primitive) state.pop();
+        final Primitive val1, val2;
+        try {
+            val2 = (Primitive) state.pop();
+            val1 = (Primitive) state.pop();
+        } catch (OperandStackEmptyException | ClassCastException e) {
+            throwVerifyError(state);
+            return;
+        }
 
 		//since typically *cmp* is followed by an if[eq/ge/gt/le/lt/ne], 
 		//which exploits only TWO of the THREE cases, we check whether

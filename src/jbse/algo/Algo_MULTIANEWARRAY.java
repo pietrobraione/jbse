@@ -32,8 +32,7 @@ final class Algo_MULTIANEWARRAY extends MultipleStateGenerator_XNEWARRAY impleme
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
 	throws DecisionException, ContradictionException, 
-	ThreadStackEmptyException, OperandStackEmptyException, 
-	UnexpectedInternalException  {
+	ThreadStackEmptyException {
 		//gets the number of dimensions and the constant pool index
 		final int ndims;
 		final int index;
@@ -94,9 +93,14 @@ final class Algo_MULTIANEWARRAY extends MultipleStateGenerator_XNEWARRAY impleme
     	this.ctx = ctx;
     	this.pcOffset = MULTIANEWARRAY_OFFSET;
 		this.dimensionsCounts = new Primitive[ndims];
-		for (int i = ndims - 1; i >= 0; --i) {
-			this.dimensionsCounts[i] = (Primitive) state.pop();
-			//TODO length type check
+		try {
+		    for (int i = ndims - 1; i >= 0; --i) {
+		        this.dimensionsCounts[i] = (Primitive) state.pop();
+		        //TODO length check?
+		    }
+		} catch (OperandStackEmptyException | ClassCastException e) {
+            throwVerifyError(state);
+            return;
 		}
     	this.arrayType = arraySignature;
     	generateStates();

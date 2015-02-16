@@ -1,9 +1,8 @@
 package jbse.algo.exc;
 
-import jbse.meta.annotations.MetaOverridden;
-
 /**
- * Exception raised whenever processing a {@link MetaOverridden} directive fails. 
+ * Exception raised whenever the meta-overriding of 
+ * a method fails. 
  *  
  * @author Pietro Braione
  *

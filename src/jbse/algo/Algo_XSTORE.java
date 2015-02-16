@@ -21,12 +21,12 @@ final class Algo_XSTORE implements Algorithm {
 
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, OperandStackEmptyException {
+	throws ThreadStackEmptyException {
 		final boolean wide = state.nextWide();
 		
-		final Value valTemp = state.pop();
 		try {
-			if (!hasIndex) {
+	        final Value valTemp = state.pop();
+			if (!this.hasIndex) {
 				if (wide) {
 					final byte tmp1 = state.getInstruction(1);
 					final byte tmp2 = state.getInstruction(2);
@@ -35,23 +35,21 @@ final class Algo_XSTORE implements Algorithm {
 					this.index = state.getInstruction(1);
 				}
 			}
-			try {
-				state.setLocalVariable(this.index, valTemp);
-			} catch (InvalidSlotException e) {
-				if (hasIndex) {
-					throw new UnexpectedInternalException(e);
-				} else {
-		            throwVerifyError(state);
-					return;
-				}
-			}
-		} catch (InvalidProgramCounterException e) {
+            state.setLocalVariable(this.index, valTemp);
+		} catch (OperandStackEmptyException | InvalidProgramCounterException e) {
             throwVerifyError(state);
 			return;
+        } catch (InvalidSlotException e) {
+            if (this.hasIndex) {
+                throw new UnexpectedInternalException(e);
+            } else {
+                throwVerifyError(state);
+                return;
+            }
 		}
 
 		try {
-			if (hasIndex) {
+			if (this.hasIndex) {
 				state.incPC();
 			} else if (wide) {
 				state.incPC(XLOADSTORE_WIDE_OFFSET);

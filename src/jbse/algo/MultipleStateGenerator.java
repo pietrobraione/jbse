@@ -59,14 +59,13 @@ public abstract class MultipleStateGenerator<R extends DecisionAlternative> {
 	/**
 	 * Completes the bytecode semantics of a state by performing the following 
 	 * actions:
-	 * 
 	 * <ul>
 	 * <li>Invokes a decision procedures and gathers its satisfiable results;</li>
 	 * <li>Creates one state for each result;</li>
 	 * <li>Performs on each state a refinement action, if it is the case;</li>
 	 * <li>Completes the bytecode semantics on each state;</li>
 	 * <li>Finally, adds all the obtained states to the state tree, creating 
-	 * a backtrack point if it is the case.</li>
+	 * a branch if it is the case.</li>
 	 * </ul>
 	 * @throws BadClassFileException
 	 * @throws DecisionException
@@ -92,7 +91,7 @@ public abstract class MultipleStateGenerator<R extends DecisionAlternative> {
 		}
 
 		//generates the next states
-		final boolean mustAddBranch = this.ctx.stateTree.possiblyAddBranch(decisionResults);
+		final boolean branchAdded = this.ctx.stateTree.possiblyAddBranch(decisionResults);
 		int cur = 1;
 		for (R r : decisionResults) {
 			final State s = (cur < tot ? this.state.clone() : this.state);
@@ -109,7 +108,7 @@ public abstract class MultipleStateGenerator<R extends DecisionAlternative> {
 			s.setBranchingDecision(branchingDecision);
 			
 	        //adds the created state to the tree, if on a new branch
-			if (mustAddBranch) {
+			if (branchAdded) {
 				this.ctx.stateTree.addState(s, r.getBranchNumber(), r.getIdentifier());
 			}
 				

@@ -86,7 +86,7 @@ abstract class MultipleStateGenerator_XLOAD_GETX extends MultipleStateGenerator_
 		try {
 			super.generateStates();
 		} catch (BadClassFileException | InvalidInputException e) {
-			//bad valToLoad (triggered by call to resolveLFLoad in this.ds)
+			//bad valToLoad (triggered by call to resolve_XLOAD_GETX in this.ds)
             throwVerifyError(state);
 		} catch (InvalidTypeException e) {
 			//this should never happen

@@ -67,15 +67,14 @@ public class Instance extends Objekt {
     public Instance clone() {
         final Instance o = (Instance) super.clone();
         
-        final HashMap<String, Variable> newPropertiesMap = new HashMap<>();
-        
-        for (String key : fields.keySet()) {
-            Variable value = fields.get(key);
-            Variable valueCopy = (Variable) value.clone();
-            newPropertiesMap.put(key, valueCopy);
+        //deep copy of fields
+        final HashMap<String, Variable> fieldsClone = new HashMap<>();
+        for (String key : this.fields.keySet()) {
+            final Variable variableClone = this.fields.get(key).clone();
+            fieldsClone.put(key, variableClone);
         }
+        o.fields = fieldsClone;
         
-        o.fields = newPropertiesMap;
         return o;
     }
 }

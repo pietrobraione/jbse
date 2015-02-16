@@ -7,18 +7,18 @@ import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.OperandStackEmptyException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Primitive;
-import jbse.val.Value;
 import jbse.val.exc.InvalidTypeException;
 
 final class Algo_XNEG implements Algorithm {
 	
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, OperandStackEmptyException {
-		final Value op = state.pop();
+	throws ThreadStackEmptyException {
 		try {
-			state.push(((Primitive)op).neg());
-		} catch (InvalidTypeException e) {
+	        final Primitive value = (Primitive) state.pop();
+			state.push(value.neg());
+		} catch (OperandStackEmptyException | ClassCastException | 
+		         InvalidTypeException e) {
             throwVerifyError(state);
 			return;
 		}

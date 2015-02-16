@@ -1,5 +1,7 @@
 package jbse.algo;
 
+import static jbse.algo.Util.throwVerifyError;
+
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.State;
 import jbse.mem.exc.InvalidProgramCounterException;
@@ -13,7 +15,7 @@ final class Algo_XRETURN implements Algorithm {
 	
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, OperandStackEmptyException {
+	throws ThreadStackEmptyException {
 		if (returnVoid) {
 			state.popCurrentFrame();
 			if (state.getStackSize() == 0) {
@@ -21,7 +23,13 @@ final class Algo_XRETURN implements Algorithm {
 				return;
 			}
 		} else {
-			final Value retValue = state.pop();
+			final Value retValue;
+			try {
+			    retValue = state.pop();
+			} catch (OperandStackEmptyException e) {
+			    throwVerifyError(state);
+			    return;
+			}
 			state.popCurrentFrame();
 			if (state.getStackSize() == 0) {
 				state.setStuckReturn(retValue);

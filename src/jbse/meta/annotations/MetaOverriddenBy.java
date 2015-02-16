@@ -23,6 +23,6 @@ import jbse.algo.Algorithm;
  */
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.CLASS)
-public @interface MetaOverridden {
+public @interface MetaOverriddenBy {
 	java.lang.Class<? extends Algorithm> value();
 }

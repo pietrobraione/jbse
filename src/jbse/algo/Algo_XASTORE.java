@@ -44,13 +44,21 @@ class Algo_XASTORE extends MultipleStateGenerator<DecisionAlternative_XASTORE> i
 	@Override
     public void exec(final State state, final ExecutionContext ctx) 
     throws DecisionException, CannotManageStateException, 
-    ThreadStackEmptyException, OperandStackEmptyException,  
-    ContradictionException {
-        final Value value = state.pop();
-        final Primitive index = (Primitive) state.pop();
-        final Reference myObjectRef = (Reference) state.pop();
-        if (state.isNull(myObjectRef)) {
-        	//base-level throws NullPointerException 
+    ThreadStackEmptyException, ContradictionException {
+        final Value valueToStore;
+        final Primitive index;
+        final Reference arrayRef;
+        try {
+            valueToStore = state.pop();
+            index = (Primitive) state.pop();
+            arrayRef = (Reference) state.pop();
+        } catch (OperandStackEmptyException | ClassCastException e) {
+            throwVerifyError(state);
+            return;
+        }
+        
+        //null check
+        if (state.isNull(arrayRef)) {
             throwNew(state, NULL_POINTER_EXCEPTION);
 	    	return;
         }
@@ -60,11 +68,11 @@ class Algo_XASTORE extends MultipleStateGenerator<DecisionAlternative_XASTORE> i
     	final Primitive inRange;
     	final Primitive outOfRange;
     	try {
-    		final Array o = (Array) state.getObject(myObjectRef);
-    		inRange = o.inRange(index);
-    		outOfRange = o.outOfRange(index);
-    	} catch (InvalidOperandException | InvalidTypeException e) {
-    		//index is bad
+    		final Array array = (Array) state.getObject(arrayRef);
+    		inRange = array.inRange(index);
+    		outOfRange = array.outOfRange(index);
+    	} catch (InvalidOperandException | InvalidTypeException | ClassCastException e) {
+    		//index is bad or the reference does not point to an array
     	    throwVerifyError(state);
     		return;
     	}
@@ -86,10 +94,11 @@ class Algo_XASTORE extends MultipleStateGenerator<DecisionAlternative_XASTORE> i
 		this.sus = (State s, DecisionAlternative_XASTORE r) -> {
 			if (r.isInRange()) {
 				try {
-					final Array arrayObj = (Array) s.getObject(myObjectRef);
-					final Iterator<Array.AccessOutcomeIn> entries = arrayObj.set(index, value);
+					final Array array = (Array) s.getObject(arrayRef);
+					final Iterator<Array.AccessOutcomeIn> entries = array.set(index, valueToStore);
 					ctx.decisionProcedure.completeArraySet(entries, index);
-				} catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
+				} catch (InvalidOperandException | InvalidTypeException | 
+				         InvalidInputException | ClassCastException e) {
 					//this should never happen
 					throw new UnexpectedInternalException(e);
 				}

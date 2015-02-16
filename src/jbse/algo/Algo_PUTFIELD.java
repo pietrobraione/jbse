@@ -27,10 +27,9 @@ import jbse.val.Reference;
 import jbse.val.Value;
 
 class Algo_PUTFIELD implements Algorithm {
-	
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, OperandStackEmptyException {
+	throws ThreadStackEmptyException {
 		//gets the index of the field signature in the current class 
     	//constant pool
 		final int index;
@@ -109,20 +108,24 @@ class Algo_PUTFIELD implements Algorithm {
 		}
 
         //sets the field's value
-		final Value valueToPut = state.pop();
-		final Reference ref = (Reference) state.pop();
-        if (state.isNull(ref)) {
-            throwNew(state, NULL_POINTER_EXCEPTION);
-	    	return;
+        try {
+            final Value valueToPut = state.pop();
+            final Reference ref = (Reference) state.pop();
+            if (state.isNull(ref)) {
+                throwNew(state, NULL_POINTER_EXCEPTION);
+                return;
+            }
+            final Instance myObject = (Instance) state.getObject(ref);
+            myObject.setFieldValue(fieldSignatureResolved, valueToPut);
+        } catch (OperandStackEmptyException | ClassCastException e) {
+            throwVerifyError(state);
+            return;
         }
-		final Instance myObject = (Instance) state.getObject(ref);
-		myObject.setFieldValue(fieldSignatureResolved, valueToPut);
 
 		try {
 			state.incPC(3);
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
-			return;
 		}
 	} 
 }

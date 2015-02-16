@@ -24,7 +24,7 @@ final class Algo_IF_ACMPX_XNULL implements Algorithm {
 
     @Override
     public void exec(State state, ExecutionContext ctx) 
-    throws ThreadStackEmptyException, OperandStackEmptyException {
+    throws ThreadStackEmptyException {
         //determines branch target
         int index;
         try {
@@ -37,12 +37,17 @@ final class Algo_IF_ACMPX_XNULL implements Algorithm {
 		}
         
         //takes operands from current frame's operand stack;        
-        final Reference val2 = (Reference) state.pop();
-        final Reference val1;
-        if (this.compareWithNull) {
-        	val1 = Null.getInstance();
-        } else {
-        	val1 = (Reference) state.pop();
+        final Reference val1, val2;
+        try {
+            val2 = (Reference) state.pop();
+            if (this.compareWithNull) {
+                val1 = Null.getInstance();
+            } else {
+                val1 = (Reference) state.pop();
+            }
+        } catch (OperandStackEmptyException | ClassCastException e) {
+            throwVerifyError(state);
+            return;
         }
         
         //computes branch condition by comparing val1 and

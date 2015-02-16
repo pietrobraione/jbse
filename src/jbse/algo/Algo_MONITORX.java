@@ -10,27 +10,27 @@ import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.OperandStackEmptyException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
-import jbse.val.Value;
 
 class Algo_MONITORX implements Algorithm {
 	
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws OperandStackEmptyException, ThreadStackEmptyException, 
-	DecisionException {
+	throws ThreadStackEmptyException, DecisionException {
 		//pops its operand and checks it
-		final Value v = state.pop();
-		if (!(v instanceof Reference)) {
+		final Reference v;
+		try {
+		    v = (Reference) state.pop();
+		} catch (OperandStackEmptyException | ClassCastException e) {
             throwVerifyError(state);
-			return;
+            return;
 		}
-		final Reference r = (Reference) v;
-		if (state.isNull(r)) {
+		if (state.isNull(v)) {
             throwNew(state, NULL_POINTER_EXCEPTION);
 			return;
 		}
 		
-		//TODO jbse is single-threading, extend it to multithreading?
+		//nothing to do, JBSE is single-threading
+		//TODO when a multithreading JBSE?
 
 		try {
 			state.incPC();

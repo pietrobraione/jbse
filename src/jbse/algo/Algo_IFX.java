@@ -40,7 +40,7 @@ final class Algo_IFX extends MultipleStateGenerator<DecisionAlternative_IFX> imp
     @Override
     public void exec(State state, final ExecutionContext ctx) 
     throws DecisionException, ContradictionException, 
-    ThreadStackEmptyException, OperandStackEmptyException {
+    ThreadStackEmptyException {
         //gets operands and calculates branch target
         final int branchOffset;
         try {
@@ -53,28 +53,32 @@ final class Algo_IFX extends MultipleStateGenerator<DecisionAlternative_IFX> imp
 		} //note that now the program counter points to the next instruction
 
         //takes operands from current frame's operand stack
-        Primitive val1 = (Primitive) state.pop();
-        Primitive val2;
-        if (this.compareWithZero) {
-    		val2 = state.getCalculator().valInt(0);
-    		//cast necessary because the Algo_XCMPY state space reduction  
-    		//trick spills nonint values to the operand stack.
-    		try {
-    			if (Type.widens(val1.getType(), Type.INT)) {
-    				val2 = val2.to(val1.getType());
-    			} else {
-    				val1 = val1.to(val2.getType());
-    			}
-			} catch (InvalidTypeException e) {
-				//this should never happen
-				throw new UnexpectedInternalException(e);
-			}
-        } else {
-            //swaps the operands for comparison
-            val2 = val1;
+        Primitive val1, val2;
+        try {
             val1 = (Primitive) state.pop();
+            if (this.compareWithZero) {
+                val2 = state.getCalculator().valInt(0);
+                //cast necessary because the Algo_XCMPY state space reduction  
+                //trick spills nonint values to the operand stack.
+                try {
+                    if (Type.widens(val1.getType(), Type.INT)) {
+                        val2 = val2.to(val1.getType());
+                    } else {
+                        val1 = val1.to(val2.getType());
+                    }
+                } catch (InvalidTypeException e) {
+                    //this should never happen
+                    throw new UnexpectedInternalException(e);
+                }
+            } else {
+                //swaps the operands for comparison
+                val2 = val1;
+                val1 = (Primitive) state.pop();
+            }
+        } catch (OperandStackEmptyException | ClassCastException e) {
+            throwVerifyError(state);
+            return;
         }
-        
     	
 		final Primitive condition;
 		try {

@@ -22,7 +22,6 @@ import jbse.jvm.exc.NonexistingObservedVariablesException;
 import jbse.mem.Clause;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
-import jbse.mem.exc.OperandStackEmptyException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.StateTree.BranchPoint;
 
@@ -219,15 +218,16 @@ public class Engine implements AutoCloseable {
 	 * @throws DecisionException iff the decision procedure fails for any reason.
 	 * @throws EngineStuckException when the method is invoked from a state where 
 	 *         {@code this.}{@link #canStep()}{@code == false}.
-	 * @throws ThreadStackEmptyException 
+	 * @throws ThreadStackEmptyException when the execution of a step is attempted
+	 *         on a current state with an empty thread stack.
 	 * @throws FailureException iff the step causes a violation of some assertion; 
 	 *         in this case after the step it is 
 	 *         {@code this.}{@link #canStep()}{@code == false}.
 	 */
 	public BranchPoint step() 
 	throws EngineStuckException, CannotManageStateException, ClasspathException, 
-	ThreadStackEmptyException, OperandStackEmptyException, ContradictionException, 
-    DecisionException, FailureException {
+	ThreadStackEmptyException, ContradictionException, DecisionException, 
+	FailureException {
 		//sanity check
 		if (!canStep()) {
 			throw new EngineStuckException();
@@ -244,8 +244,8 @@ public class Engine implements AutoCloseable {
 		} catch (InterruptException e) {
 		    //nothing to do
 		} catch (ClasspathException | CannotManageStateException | ThreadStackEmptyException | 
-			    OperandStackEmptyException | ContradictionException | 
-			    DecisionException | FailureException | UnexpectedInternalException e) {
+			    ContradictionException | DecisionException | FailureException | 
+			    UnexpectedInternalException e) {
 			this.stopCurrentTrace();
 			throw e;
 		} 

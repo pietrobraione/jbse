@@ -121,7 +121,7 @@ final class Heap implements Cloneable {
         final SortedMap<Long, Objekt> objListClone = new TreeMap<>();
         
         for (Map.Entry<Long, Objekt> e : this.objects.entrySet()) {
-        	Objekt val = e.getValue();
+        	final Objekt val = e.getValue();
             objListClone.put(e.getKey(), val.clone());
         }
         h.objects = objListClone;

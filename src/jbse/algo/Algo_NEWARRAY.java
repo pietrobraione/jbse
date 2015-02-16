@@ -16,8 +16,7 @@ final class Algo_NEWARRAY extends MultipleStateGenerator_XNEWARRAY implements Al
     
     @Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws DecisionException, ThreadStackEmptyException, 
-	OperandStackEmptyException {
+	throws DecisionException, ThreadStackEmptyException {
     	//determines the array's type
         try {
         	final int memberTypeEncoded = state.getInstruction(1);
@@ -33,8 +32,14 @@ final class Algo_NEWARRAY extends MultipleStateGenerator_XNEWARRAY implements Al
         }
 		
         //pops the array's length from the operand stack
-		final Primitive length = (Primitive) state.pop();
-		//TODO length type check
+		final Primitive length;
+		try {
+		    length = (Primitive) state.pop();
+	        //TODO length check
+		} catch (OperandStackEmptyException | ClassCastException e) {
+            throwVerifyError(state);
+            return;
+		}
 		
 		//generates the next states
     	this.state = state;

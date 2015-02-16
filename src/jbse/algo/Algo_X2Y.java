@@ -22,9 +22,15 @@ final class Algo_X2Y implements Algorithm {
 
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, OperandStackEmptyException {
+	throws ThreadStackEmptyException {
 		//pops the value on the operand stack
-		final Value value = state.pop();
+	    final Value value;
+	    try {
+	        value = state.pop();
+	    } catch (OperandStackEmptyException e) {
+	        throwVerifyError(state);
+	        return;
+	    }
 		
 		//casts the value
 		final Value castValue;

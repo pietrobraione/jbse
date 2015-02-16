@@ -1,7 +1,7 @@
 package jbse.algo.meta;
 
 import static jbse.algo.Util.throwVerifyError;
-import static jbse.bc.Offsets.INVOKESTATIC_OFFSET;
+import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 
 import jbse.algo.Algorithm;
 import jbse.algo.ExecutionContext;
@@ -23,7 +23,7 @@ public class Algo_JBSE_ANALYSIS_ENDGUIDANCE implements Algorithm {
 			//System.out.println("***** END GUIDANCE *****"); //TODO log differently!
 		}
 		try {
-			state.incPC(INVOKESTATIC_OFFSET);
+			state.incPC(INVOKESPECIALSTATICVIRTUAL_OFFSET);
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 		}

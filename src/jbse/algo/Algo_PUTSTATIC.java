@@ -31,8 +31,8 @@ class Algo_PUTSTATIC implements Algorithm {
 	
 	@Override
     public void exec(State state, ExecutionContext ctx) 
-    throws ThreadStackEmptyException, OperandStackEmptyException, 
-    DecisionException, ClasspathException, InterruptException {
+    throws ThreadStackEmptyException, DecisionException, 
+    ClasspathException, InterruptException {
 		//gets the index of the field signature in the current class 
     	//constant pool
 		final int index;
@@ -45,7 +45,8 @@ class Algo_PUTSTATIC implements Algorithm {
 			return;
 		}
 
-		//gets the field signature from the current class constant pool
+		//gets the field signature from the current class 
+		//constant pool
 		final String currentClassName = state.getCurrentMethodSignature().getClassName();        
 		final ClassHierarchy hier = state.getClassHierarchy();
 		final Signature fieldSignature;
@@ -109,20 +110,26 @@ class Algo_PUTSTATIC implements Algorithm {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}
-                
-        //pops the Value from the operand stack
-        final Value tmpValue = state.pop();
-        
+                        
         //possibly creates and initializes the class 
 		try {
 			ensureClassCreatedAndInitialized(state, fieldClassName, ctx.decisionProcedure);
 		} catch (BadClassFileException e) {
 			//this should never happen
+		    //TODO really?
 			throw new UnexpectedInternalException(e);
 		}
         
-        //sets the field's value
-        state.getKlass(fieldClassName).setFieldValue(fieldSignatureResolved, tmpValue);
+        //pops the value from the operand stack
+        //and sets the field
+		try {
+		    final Value tmpValue = state.pop();
+		    //TODO check the type of tmpValue, possibly in setFieldValue??
+		    state.getKlass(fieldClassName).setFieldValue(fieldSignatureResolved, tmpValue);
+		} catch (OperandStackEmptyException e) {
+		    throwVerifyError(state);
+		    return;
+		}
 		
 		try {
 			state.incPC(3);

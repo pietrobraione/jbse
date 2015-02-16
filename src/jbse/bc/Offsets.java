@@ -15,10 +15,8 @@ public final class Offsets {
 	public static final int ANEWARRAY_OFFSET = 3;
 	public static final int MULTIANEWARRAY_OFFSET = 4;
 	public static final int ARRAYLENGTH_OFFSET = 1;
-	public static final int INVOKESTATIC_OFFSET = 3;
-	public static final int INVOKESPECIAL_OFFSET = 3;
-	public static final int INVOKEVIRTUAL_OFFSET = 3;
-	public static final int INVOKEINTERFACE_OFFSET = 5;
+	public static final int INVOKESPECIALSTATICVIRTUAL_OFFSET = 3;
+	public static final int INVOKEDYNAMICINTERFACE_OFFSET = 5;
 	
 	/**
 	 * Do not instantiate it!

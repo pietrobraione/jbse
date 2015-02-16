@@ -1,9 +1,19 @@
 package jbse.algo.meta;
 
+import static jbse.bc.Signatures.JAVA_OBJECT_HASHCODE;
 import static jbse.bc.Signatures.JAVA_STRING_INTERN;
 import static jbse.bc.Signatures.JAVA_THROWABLE_FILLINSTACKTRACE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEDEPTH;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEELEMENT;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_ANY;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_ASSERTREPOK;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_ENDGUIDANCE;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_FAIL;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_IGNORE;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRESOLVED;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRUNBYJBSE;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_SUCCEED;
 
 import jbse.algo.Algorithm;
 import jbse.algo.exc.MetaUnsupportedException;
@@ -14,7 +24,7 @@ import jbse.bc.Util;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.common.exc.UnexpectedInternalException;
-import jbse.meta.annotations.MetaOverridden;
+import jbse.meta.annotations.MetaOverriddenBy;
 import jbse.meta.annotations.Uninterpreted;
 
 /**
@@ -37,11 +47,25 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
 			}
 		});
 		
-		//meta delegates for some native methods
-        loadMetaDelegate(JAVA_STRING_INTERN,                  new Algo_JAVA_STRING_INTERN());
-		loadMetaDelegate(JAVA_THROWABLE_FILLINSTACKTRACE,     new Algo_JAVA_THROWABLE_FILLINSTACKTRACE());
-		loadMetaDelegate(JAVA_THROWABLE_GETSTACKTRACEDEPTH,   new Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH());
-		loadMetaDelegate(JAVA_THROWABLE_GETSTACKTRACEELEMENT, new Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT());
+		//meta delegates for some JRE methods
+        loadMetaDelegate(JAVA_OBJECT_HASHCODE,                     new Algo_JAVA_OBJECT_HASHCODE());
+        loadMetaDelegate(JAVA_STRING_INTERN,                       new Algo_JAVA_STRING_INTERN());
+		loadMetaDelegate(JAVA_THROWABLE_FILLINSTACKTRACE,          new Algo_JAVA_THROWABLE_FILLINSTACKTRACE());
+		loadMetaDelegate(JAVA_THROWABLE_GETSTACKTRACEDEPTH,        new Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH());
+		loadMetaDelegate(JAVA_THROWABLE_GETSTACKTRACEELEMENT,      new Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT());
+
+		//meta delegates for some JBSE methods
+        loadMetaDelegate(JBSE_ANALYSIS_ANY,                        new Algo_JBSE_ANALYSIS_ANY());
+        loadMetaDelegate(JBSE_ANALYSIS_ASSERTREPOK,                new Algo_JBSE_ANALYSIS_ASSERTREPOK());
+        loadMetaDelegate(JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION, new Algo_JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION());
+        loadMetaDelegate(JBSE_ANALYSIS_ENDGUIDANCE,                new Algo_JBSE_ANALYSIS_ENDGUIDANCE());
+        loadMetaDelegate(JBSE_ANALYSIS_FAIL,                       new Algo_JBSE_ANALYSIS_FAIL());
+        loadMetaDelegate(JBSE_ANALYSIS_IGNORE,                     new Algo_JBSE_ANALYSIS_IGNORE());
+        loadMetaDelegate(JBSE_ANALYSIS_ISRESOLVED,                 new Algo_JBSE_ANALYSIS_ISRESOLVED());
+        loadMetaDelegate(JBSE_ANALYSIS_ISRUNBYJBSE,                new Algo_JBSE_ANALYSIS_ISRUNBYJBSE());
+        loadMetaDelegate(JBSE_ANALYSIS_SUCCEED,                    new Algo_JBSE_ANALYSIS_SUCCEED());
+		
+		//meta delegates for some jbse.meta.Analysis methods
 	}
 
 	/**
@@ -68,13 +92,13 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
 	}
 	
 	/**
-	 * Checks whether a method has a {@link MetaOverridden} or {@link Uninterpreted} 
+	 * Checks whether a method has a {@link MetaOverriddenBy} or {@link Uninterpreted} 
 	 * annotation, and as a side effect populates this {@link DispatcherMeta} with the 
 	 * {@link Algorithm} to manage it.
 	 *  
 	 * @param hier a {@link ClassHierarchy}.
 	 * @param methodSignatureResolved the {@link Signature} of a  <em>resolved</em> method.
-	 * @return {@code true} iff the method has a {@link MetaOverridden} 
+	 * @return {@code true} iff the method has a {@link MetaOverriddenBy} 
 	 *         or {@link Uninterpreted} annotation.
 	 * @throws BadClassFileException if there is no classfile for 
 	 *         {@code methodSignatureResolved.}{@link Signature#getClassName() getClassName()} 
@@ -94,12 +118,12 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
 		}
 		
 		//looks for annotations, and in case returns false
-		final MetaOverridden metaAnnotation = (MetaOverridden) Util.findMethodAnnotation(hier, methodSignatureResolved, MetaOverridden.class);
+		final MetaOverriddenBy overridAnnotation = (MetaOverriddenBy) Util.findMethodAnnotation(hier, methodSignatureResolved, MetaOverriddenBy.class);
 		final Uninterpreted unintAnnotation = (Uninterpreted) Util.findMethodAnnotation(hier, methodSignatureResolved, Uninterpreted.class);
-		if (metaAnnotation == null && unintAnnotation == null) {
+		if (overridAnnotation == null && unintAnnotation == null) {
 			return false;
-		} else if (metaAnnotation != null) { //MetaOverridden has highest priority
-			loadAlgoMetaOverridden(methodSignatureResolved, metaAnnotation.value());
+		} else if (overridAnnotation != null) { //MetaOverridden has highest priority
+			loadAlgoMetaOverridden(methodSignatureResolved, overridAnnotation.value());
 		} else { //unintAnnotation != null
 			loadAlgoUninterpreted(methodSignatureResolved, unintAnnotation.value());
 		}
@@ -135,13 +159,13 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
 	 * 
 	 * @param methodSignatureResolved the {@link Signature} of a <em>resolved</em> method.
 	 * @param functionName the name chosen for the uninterpreted function. If {@code null}, 
-	 *        then the (unqualified) name of the method will be used.
+	 *        then the (unqualified, to uppercase) name of the method will be used.
 	 */
 	public void loadAlgoUninterpreted(Signature methodSignatureResolved, String functionName) {
 		final Algo_INVOKEUNINTERPRETED metaDelegate = new Algo_INVOKEUNINTERPRETED();
 		metaDelegate.methodSignatureResolved = methodSignatureResolved;
 		if (functionName == null) {
-			metaDelegate.functionName = methodSignatureResolved.getName();
+			metaDelegate.functionName = methodSignatureResolved.getName().toUpperCase();
 		} else {
 			metaDelegate.functionName = functionName;
 		}

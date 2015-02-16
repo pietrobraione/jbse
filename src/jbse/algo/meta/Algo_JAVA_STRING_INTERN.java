@@ -3,7 +3,7 @@ package jbse.algo.meta;
 import static jbse.algo.Util.ensureStringLiteral;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
-import static jbse.bc.Offsets.INVOKEVIRTUAL_OFFSET;
+import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 
 import jbse.algo.Algorithm;
 import jbse.algo.ExecutionContext;
@@ -43,7 +43,7 @@ public class Algo_JAVA_STRING_INTERN implements Algorithm {
         }
         
         try {
-            state.incPC(INVOKEVIRTUAL_OFFSET);
+            state.incPC(INVOKESPECIALSTATICVIRTUAL_OFFSET);
         } catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
         }

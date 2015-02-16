@@ -15,20 +15,25 @@ final class Algo_POPX implements Algorithm {
 
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, OperandStackEmptyException {
-		Value tmp = state.pop();
-		if (this.cat1 && !Type.isCat_1(tmp.getType())) {
-            throwVerifyError(state);
-			return;
-		}
-		
-		if (!this.cat1 && Type.isCat_1(tmp.getType())) {
-			tmp = state.pop();
-			if (!Type.isCat_1(tmp.getType())) {
+	throws ThreadStackEmptyException {
+	    try {
+	        Value tmp = state.pop();
+	        if (this.cat1 && !Type.isCat_1(tmp.getType())) {
 	            throwVerifyError(state);
-				return;
-			}
-		}
+	            return;
+	        }
+
+	        if (!this.cat1 && Type.isCat_1(tmp.getType())) {
+	            tmp = state.pop();
+	            if (!Type.isCat_1(tmp.getType())) {
+	                throwVerifyError(state);
+	                return;
+	            }
+	        }
+	    } catch (OperandStackEmptyException e) {
+	        throwVerifyError(state);
+	        return;
+	    }
 		
 		try {
 			state.incPC();

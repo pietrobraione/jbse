@@ -16,8 +16,15 @@ final class Algo_ARRAYLENGTH implements Algorithm {
 	
 	@Override
     public void exec(State state, ExecutionContext ctx) 
-    throws ThreadStackEmptyException, OperandStackEmptyException {
-        final Reference tmpRef = (Reference) state.pop();
+    throws ThreadStackEmptyException {
+	    final Reference tmpRef;
+	    try {
+	        tmpRef = (Reference) state.pop();
+        } catch (OperandStackEmptyException | ClassCastException e) {
+            throwVerifyError(state);
+            return;
+        }
+	    
         if (state.isNull(tmpRef)) {
         	throwNew(state, NULL_POINTER_EXCEPTION);
 			return;

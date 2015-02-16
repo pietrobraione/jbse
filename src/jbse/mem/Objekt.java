@@ -15,7 +15,6 @@ import jbse.val.Value;
  * i.e., either a class, or an instance of a class, or an array.
  */
 public abstract class Objekt implements Cloneable {
-    
 	/** 
 	 * The creation epoch of an {@link Objekt}.
 	 * 
@@ -37,6 +36,9 @@ public abstract class Objekt implements Cloneable {
 
     /** The creation epoch of this {@link Objekt}. Immutable. */
     private final Epoch epoch;
+    
+    /** The (base-level) hash code of this {@link Objekt}. Immutable. */
+    private final int hashCode;
 
     /** All the signatures of all the fields. Immutable. */
     private final List<Signature> fieldSignatures;
@@ -67,6 +69,7 @@ public abstract class Objekt implements Cloneable {
     	this.type = type;
     	this.origin = origin;
     	this.epoch = epoch;
+    	this.hashCode = hashCode(); //we piggyback the underlying JVM for hash codes
     }
     
 	/**
@@ -97,6 +100,18 @@ public abstract class Objekt implements Cloneable {
      */
     public final boolean isSymbolic() {
     	return (this.epoch == Epoch.EPOCH_BEFORE_START); 
+    }
+    
+    /**
+     * Returns the hash code of this {@code Objekt}.
+     * Do not be confused! This is the base-level 
+     * hash code, i.e., the hash code JBSE will 
+     * expose during symbolic execution.
+     * 
+     * @return an {@code int}.
+     */
+    public final int getObjektHashCode() {
+        return this.hashCode;
     }
     
     /**
@@ -154,5 +169,9 @@ public abstract class Objekt implements Cloneable {
     	} catch (CloneNotSupportedException e) {
     		throw new InternalError(e);
     	}
+    	//note that we do not clone this.fields because
+    	//it is immutable for arrays and mutable for instances;
+    	//note also that the clone will have same base-level
+    	//hash code as the original.
     }
 }

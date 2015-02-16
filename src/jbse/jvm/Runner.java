@@ -271,19 +271,6 @@ public class Runner {
 
 		/**
 		 * Invoked by a {@link Runner}'s {@link Runner#run run} method whenever a 
-		 * {@link OperandStackEmptyException} is thrown by the {@link Engine}. 
-		 * In this (default) implementation returns {@code false}.
-		 * 
-		 * @param e the {@link OperandStackEmptyException} thrown by the {@link Engine}.
-		 * @return {@code true} iff the {@link Runner} must stop
-		 *         {@link Runner#run run}ning.
-		 * @throws OperandStackEmptyException by default.
-		 */
-		public boolean atOperandStackEmptyException(OperandStackEmptyException e) 
-		throws OperandStackEmptyException { return false; }
-
-		/**
-		 * Invoked by a {@link Runner}'s {@link Runner#run run} method whenever a 
 		 * {@link ThreadStackEmptyException} is thrown by the {@link Engine}. 
 		 * In this (default) implementation returns {@code false}.
 		 * 
@@ -292,7 +279,7 @@ public class Runner {
 		 *         {@link Runner#run run}ning.
 		 * @throws ThreadStackEmptyException by default.
 		 */
-		public boolean atStackLastFrameException(ThreadStackEmptyException e) 
+		public boolean atThreadStackEmptyException(ThreadStackEmptyException e) 
 		throws ThreadStackEmptyException { return false; }
 		
 		/**
@@ -413,12 +400,18 @@ public class Runner {
 	 * @param timeout a timeout for the execution, in milliseconds (zero
 	 *        means unlimited time).
 	 * @param heapScope the heap scope, a 
-	 *        {@link Map}{@code <}{@link String}{@code , }{@link Integer}{@code > }
+	 *        {@link Map}{@code <}{@link String}{@code , }{@link Integer}{@code >}
 	 *        mapping class names with their respective scopes ({@code <= 0} means unlimited).
 	 * @param depthScope the depth scope, an {@code int} ({@code <= 0} means unlimited).
 	 * @param countScope the count scope, an  {@code int}({@code <= 0} means unlimited).
 	 */
-	Runner(Engine engine, Actions actions, String identifierSubregion, long timeout, Map<String, Integer> heapScope, int depthScope, int countScope) {
+	Runner(Engine engine, 
+	       Actions actions, 
+	       String identifierSubregion, 
+	       long timeout, 
+	       Map<String, Integer> heapScope, 
+	       int depthScope, 
+	       int countScope) {
 		this.engine = engine;
 		this.actions = actions;
 		this.actions.engine = engine;
@@ -519,10 +512,8 @@ public class Runner {
 					if (this.actions.atEngineStuckException(e)) { return; }
 				} catch (FailureException e) {
 					if (this.actions.atFailureException(e)) { return; }
-				} catch (OperandStackEmptyException e) {
-					if (this.actions.atOperandStackEmptyException(e)) { return; }
 				} catch (ThreadStackEmptyException e) {
-					if (this.actions.atStackLastFrameException(e)) { return; }
+					if (this.actions.atThreadStackEmptyException(e)) { return; }
 				} finally {
 					if (this.actions.atStepFinally()) { return; }
 				}

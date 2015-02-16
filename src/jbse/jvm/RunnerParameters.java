@@ -489,6 +489,7 @@ public final class RunnerParameters implements Cloneable {
 	 *        with the calls to  {@link #setHeapScopeComputed(String, Function)}
 	 *        or {@link #setHeapScopeComputed(Map)}.
 	 *        If a class is not present in the map, its scope is unlimited.
+	 *        Each time this method is invoked it creates and returns a new {@link Map}.
 	 */
 	@SuppressWarnings("unchecked")
 	public Map<String, Integer> getHeapScope() {

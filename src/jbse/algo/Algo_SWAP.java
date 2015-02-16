@@ -9,14 +9,18 @@ import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Value;
 
 final class Algo_SWAP implements Algorithm {
-	
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, OperandStackEmptyException {
-		final Value tmp2 = state.pop();
-		final Value tmp1 = state.pop();
-		state.push(tmp2);
-		state.push(tmp1);
+	throws ThreadStackEmptyException {
+	    try {
+	        final Value tmp2 = state.pop();
+	        final Value tmp1 = state.pop();
+	        state.push(tmp2);
+	        state.push(tmp1);
+	    } catch (OperandStackEmptyException e) {
+	        throwVerifyError(state);
+	        return;
+	    }
 
 		try {
 			state.incPC();

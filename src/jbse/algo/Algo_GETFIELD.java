@@ -1,6 +1,7 @@
 package jbse.algo;
 
 import static jbse.algo.Util.throwNew;
+import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 
 import jbse.algo.exc.InterruptException;
@@ -29,14 +30,18 @@ final class Algo_GETFIELD extends Algo_GETX {
 
     @Override
     protected Value fieldValue(Signature fieldSignatureResolved) 
-    throws OperandStackEmptyException, ThreadStackEmptyException, 
-    InterruptException {
-        final Reference myObjectRef = (Reference) this.state.pop();
-        if (this.state.isNull(myObjectRef)) {
-            throwNew(this.state, NULL_POINTER_EXCEPTION);
+    throws ThreadStackEmptyException, InterruptException {
+        try {
+            final Reference myObjectRef = (Reference) this.state.pop();
+            if (this.state.isNull(myObjectRef)) {
+                throwNew(this.state, NULL_POINTER_EXCEPTION);
+                throw new InterruptException();
+            }
+            final Instance myObject = (Instance) this.state.getObject(myObjectRef); 
+            return myObject.getFieldValue(fieldSignatureResolved);
+        } catch (OperandStackEmptyException | ClassCastException e) {
+            throwVerifyError(state);
             throw new InterruptException();
         }
-        final Instance myObject = (Instance) this.state.getObject(myObjectRef); 
-        return myObject.getFieldValue(fieldSignatureResolved);
     }    
 }

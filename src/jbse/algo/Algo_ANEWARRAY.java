@@ -31,7 +31,7 @@ import jbse.val.Primitive;
  */
 final class Algo_ANEWARRAY extends MultipleStateGenerator_XNEWARRAY implements Algorithm {
     public void exec(State state, ExecutionContext ctx) 
-    throws DecisionException, OperandStackEmptyException, ThreadStackEmptyException {
+    throws DecisionException, ThreadStackEmptyException {
     	//gets the constant pool index
     	final int index;
     	try {
@@ -72,7 +72,13 @@ final class Algo_ANEWARRAY extends MultipleStateGenerator_XNEWARRAY implements A
         }
 		
         //pops the array's length from the operand stack
-        final Primitive length = (Primitive) state.pop();
+		final Primitive length;
+		try {
+		    length = (Primitive) state.pop();
+		} catch (OperandStackEmptyException | ClassCastException e) {
+		    throwVerifyError(state);
+		    return;
+		}
 		//TODO length type check
 
 		//generates the next states

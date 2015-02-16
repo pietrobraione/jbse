@@ -3,8 +3,8 @@ package jbse.algo;
 import static jbse.algo.Util.ensureClassCreatedAndInitialized;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
-import static jbse.bc.Offsets.INVOKEINTERFACE_OFFSET;
-import static jbse.bc.Offsets.INVOKEVIRTUAL_OFFSET;
+import static jbse.bc.Offsets.INVOKEDYNAMICINTERFACE_OFFSET;
+import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import static jbse.bc.Signatures.ABSTRACT_METHOD_ERROR;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
@@ -47,9 +47,8 @@ final class Algo_INVOKEX implements Algorithm {
     @Override
     public void exec(State state, ExecutionContext ctx)
     throws CannotManageStateException, ThreadStackEmptyException, 
-    OperandStackEmptyException, DecisionException, 
-    ContradictionException, FailureException, 
-    ClasspathException, InterruptException {
+    DecisionException, ContradictionException, 
+    FailureException, ClasspathException, InterruptException {
         //gets index  
         final int index;
         try {
@@ -71,10 +70,10 @@ final class Algo_INVOKEX implements Algorithm {
         try {
             if (this.isInterface) {
                 methodSignature = hier.getClassFile(currentClassName).getInterfaceMethodSignature(index);
-                pcOffset = INVOKEINTERFACE_OFFSET;
+                pcOffset = INVOKEDYNAMICINTERFACE_OFFSET;
             } else {
                 methodSignature = hier.getClassFile(currentClassName).getMethodSignature(index);
-                pcOffset = INVOKEVIRTUAL_OFFSET;
+                pcOffset = INVOKESPECIALSTATICVIRTUAL_OFFSET;
             }
         } catch (InvalidIndexException e) {
             throwVerifyError(state);
@@ -146,8 +145,14 @@ final class Algo_INVOKEX implements Algorithm {
             }
         }
 
-        //creates the method frame and sets the parameters on the operand stack
-        final Value[] args = state.popMethodCallArgs(methodSignature, this.isStatic);
+        //pops the args from the operand stack and pushes the method frame        
+        final Value[] args;
+        try {
+            args = state.popMethodCallArgs(methodSignature, this.isStatic);
+        } catch (OperandStackEmptyException e) {
+            throwVerifyError(state);
+            return;
+        }
         try {
             state.pushFrame(methodSignatureResolved, false, this.isStatic, this.isSpecial, pcOffset, args);
         } catch (PleaseDoNativeException e) {

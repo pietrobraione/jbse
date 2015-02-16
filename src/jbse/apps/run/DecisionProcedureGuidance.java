@@ -185,7 +185,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 			try {
 				this.engine.step();
 			} catch (DecisionException | EngineStuckException | 
-					ThreadStackEmptyException | OperandStackEmptyException e) {
+					ThreadStackEmptyException e) {
 				//should never happen if guidance is correctly implemented
 				throw new UnexpectedInternalException(e);
 			} catch (ContradictionException | FailureException e) {

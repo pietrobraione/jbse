@@ -21,11 +21,11 @@ public class Algo_XBINOP implements Algorithm {
 	
 	@Override
     public void exec(State state, ExecutionContext ctx) 
-    throws ThreadStackEmptyException, OperandStackEmptyException {
-    	final Primitive val2 = (Primitive) state.pop();
-    	final Primitive val1 = (Primitive) state.pop();
-    	
+    throws ThreadStackEmptyException {
         try {
+            final Primitive val2 = (Primitive) state.pop();
+            final Primitive val1 = (Primitive) state.pop();
+
         	switch (op) {
         	case ADD:
         		state.push(val1.add(val2));
@@ -71,7 +71,8 @@ public class Algo_XBINOP implements Algorithm {
         	default:
         		throw new UnexpectedInternalException();
         	}
-		} catch (InvalidOperandException | InvalidTypeException e) {
+		} catch (OperandStackEmptyException | ClassCastException |
+		         InvalidOperandException | InvalidTypeException e) {
             throwVerifyError(state);
 			return;
 		}

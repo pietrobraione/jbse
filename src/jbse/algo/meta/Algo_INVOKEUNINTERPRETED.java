@@ -1,13 +1,11 @@
 package jbse.algo.meta;
 
 import static jbse.algo.Util.throwVerifyError;
-import static jbse.bc.Offsets.INVOKEINTERFACE_OFFSET;
-import static jbse.bc.Offsets.INVOKESPECIAL_OFFSET;
-import static jbse.bc.Offsets.INVOKESTATIC_OFFSET;
-import static jbse.bc.Offsets.INVOKEVIRTUAL_OFFSET;
+import static jbse.bc.Offsets.INVOKEDYNAMICINTERFACE_OFFSET;
+import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import static jbse.bc.Opcodes.OP_INVOKEINTERFACE;
-import static jbse.bc.Opcodes.OP_INVOKESPECIAL;
 import static jbse.bc.Opcodes.OP_INVOKESTATIC;
+import static jbse.mem.Util.toPrimitive;
 
 import java.util.Arrays;
 
@@ -33,31 +31,32 @@ final class Algo_INVOKEUNINTERPRETED implements Algorithm {
 	Signature methodSignatureResolved;
 	String functionName;
 	
-	public Algo_INVOKEUNINTERPRETED() { }
-	
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws CannotManageStateException, ThreadStackEmptyException, OperandStackEmptyException, 
+	throws CannotManageStateException, ThreadStackEmptyException, 
 	DecisionException, ContradictionException {		
 		//gets index operand from instruction word and 
 		//calculates/stores the pointer to the next instruction
 		final int opcode = state.getInstruction();
 		final int offset = (
-				opcode == OP_INVOKEINTERFACE ? INVOKEINTERFACE_OFFSET :
-				opcode == OP_INVOKESPECIAL ? INVOKESPECIAL_OFFSET :
-				opcode == OP_INVOKESTATIC ? INVOKESTATIC_OFFSET :
-				INVOKEVIRTUAL_OFFSET); //opcode == OP_INVOKEVIRTUAL
+				opcode == OP_INVOKEINTERFACE ? INVOKEDYNAMICINTERFACE_OFFSET : 
+				INVOKESPECIALSTATICVIRTUAL_OFFSET); //TODO invokedynamic
 
-		//pops the args and pushes the uninterpreted function symbol 
-		final Value[] args = state.popMethodCallArgs(this.methodSignatureResolved, false);
 		final char returnType = Type.splitReturnValueDescriptor(this.methodSignatureResolved.getDescriptor()).charAt(0);
 		if (Type.isPrimitive(returnType)) {
+	        //pops the args and checks that they are all primitive
 			final Primitive[] argsPrimitive;
 			try {
-				argsPrimitive = jbse.mem.Util.toPrimitive(opcode == OP_INVOKESTATIC ? args : Arrays.copyOfRange(args, 1, args.length));
+	            final Value[] args = state.popMethodCallArgs(this.methodSignatureResolved, false);
+				argsPrimitive = toPrimitive(opcode == OP_INVOKESTATIC ? args : Arrays.copyOfRange(args, 1, args.length));
+            } catch (OperandStackEmptyException e) {
+                throwVerifyError(state);
+                return;
 			} catch (InvalidTypeException e) {
 				throw new UninterpretedUnsupportedException("The method " + this.methodSignatureResolved + " has a nonprimitive argument other than 'this'."); 
 			}
+
+			//pushes the uninterpreted function term
 			try {
 				state.push(state.getCalculator().applyFunction(returnType, this.functionName, argsPrimitive));
 			} catch (InvalidOperandException | InvalidTypeException e) {
@@ -67,6 +66,7 @@ final class Algo_INVOKEUNINTERPRETED implements Algorithm {
 		} else {
 			throw new UninterpretedUnsupportedException("The method " + this.methodSignatureResolved + " does not return a primitive value."); 
 		}
+		
 		try {
 			state.incPC(offset);
 		} catch (InvalidProgramCounterException e) {

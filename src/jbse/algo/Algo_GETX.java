@@ -23,16 +23,15 @@ import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.InvalidProgramCounterException;
-import jbse.mem.exc.OperandStackEmptyException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Value;
 
-public abstract class Algo_GETX extends MultipleStateGenerator_XLOAD_GETX implements Algorithm {
+abstract class Algo_GETX extends MultipleStateGenerator_XLOAD_GETX implements Algorithm {
     @Override
     public final void exec(State state, ExecutionContext ctx)
     throws DecisionException, ContradictionException, 
-    ClasspathException, ThreadStackEmptyException, 
-    OperandStackEmptyException {
+    ClasspathException, ThreadStackEmptyException,
+    InterruptException {
         //gets the index of the field signature in the current class 
         //constant pool
         final int index;
@@ -93,21 +92,17 @@ public abstract class Algo_GETX extends MultipleStateGenerator_XLOAD_GETX implem
         }
         
         //generates all the next states
-        try {
-            this.state = state;
-            this.ctx = ctx;
-            this.pcOffset = 3;
-            this.valToLoad = fieldValue(fieldSignatureResolved);
-            generateStates();
-        } catch (InterruptException e) {
-            //nothing to do
-        }
+        this.state = state;
+        this.ctx = ctx;
+        this.pcOffset = 3;
+        this.valToLoad = fieldValue(fieldSignatureResolved);
+        generateStates();
     }
     
     protected abstract boolean fieldOk(Signature fieldSignatureResolved, ClassFile fieldClassFile)
     throws FieldNotFoundException;
     
     protected abstract Value fieldValue(Signature fieldSignatureResolved)
-    throws DecisionException, OperandStackEmptyException, 
-    ThreadStackEmptyException, ClasspathException, InterruptException;
+    throws DecisionException, ThreadStackEmptyException, 
+    ClasspathException, InterruptException;
 }

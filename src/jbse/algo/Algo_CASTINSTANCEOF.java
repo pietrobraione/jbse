@@ -6,6 +6,7 @@ import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.common.Util.byteCat;
 
+import jbse.algo.exc.InterruptException;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
@@ -24,7 +25,7 @@ abstract class Algo_CASTINSTANCEOF implements Algorithm {
 
     @Override
     public final void exec(State state, ExecutionContext ctx)
-    throws ThreadStackEmptyException, OperandStackEmptyException {
+    throws ThreadStackEmptyException, InterruptException {
         final int index;
         try {
             final byte tmp1 = state.getInstruction(1);
@@ -86,10 +87,7 @@ abstract class Algo_CASTINSTANCEOF implements Algorithm {
         }
         
         //completes the bytecode semantics
-        final boolean exit = complete(state, isSubclass);
-        if (exit) {
-            return;
-        }
+        complete(state, isSubclass);
 
         //increments the program counter
         try {
@@ -99,6 +97,6 @@ abstract class Algo_CASTINSTANCEOF implements Algorithm {
         } 
     }
     
-    protected abstract boolean complete(State state, boolean isSubclass) 
-    throws ThreadStackEmptyException, OperandStackEmptyException;
+    protected abstract void complete(State state, boolean isSubclass) 
+    throws ThreadStackEmptyException, InterruptException;
 }
