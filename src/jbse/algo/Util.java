@@ -359,13 +359,10 @@ public class Util {
 		}
 		
 		/**
-		 * Phase 1 creates all the {@link Klass} objects for a class and its
-		 * superclasses that can be assumed to be not initialized. It also 
-		 * refines the path condition by adding all the initialization assumption
-		 * and loads all the <clinit> frames for these classes, with the exclusion
-		 * of the <clinit> of java.lang.Object.
-		 * 
+         * Equivalent to {@link #phase1(String, ListIterator) phase1}{@code (className, null)}.
+   		 * 
 		 * @param className a {@code String}, the name of the class.
+         * @param it a {@code ListIterator}, the name of the class.
 		 * @throws DecisionException if the decision procedure fails.
 		 * @throws BadClassFileException if the classfile for {@code className} or
 		 *         for one of its superclasses is not in the classpath or
@@ -373,13 +370,36 @@ public class Util {
 		 */
         private void phase1(String className)
         throws DecisionException, BadClassFileException {
+            phase1(className, null);
+        }
+        
+        /**
+         * Phase 1 creates all the {@link Klass} objects for a class and its
+         * superclasses that can be assumed to be not initialized. It also 
+         * refines the path condition by adding all the initialization assumption
+         * and loads all the <clinit> frames for these classes, with the exclusion
+         * of the <clinit> of java.lang.Object.
+         * 
+         * @param className a {@code String}, the name of the class.
+         * @param it a {@code ListIterator} to {@code this.classesCreated}.
+         * @throws DecisionException if the decision procedure fails.
+         * @throws BadClassFileException if the classfile for {@code className} or
+         *         for one of its superclasses is not in the classpath or
+         *         is ill-formed.
+         */
+        private void phase1(String className, ListIterator<String> it)
+        throws DecisionException, BadClassFileException {
             //if there is a Klass object for className, then 
             //there is nothing to do
             if (this.s.initialized(className)) {
                 return;
             }    
 
-            this.classesCreated.add(className);
+            if (it == null) {
+                this.classesCreated.add(className);
+            } else {
+                it.add(className);
+            }
             //TODO here we assume mutual exclusion of the initialized/not initialized assumptions. We could withdraw this assumption at the expense of a considerable blow in the number of cases.
             try {
                 //invokes the decision procedure, adds the returned 
@@ -409,7 +429,7 @@ public class Util {
 			if (!classFile.isInterface()) {
 				final String superName = classFile.getSuperClassName();
 				if (superName != null) {
-	                phase1(superName);
+	                phase1(superName, it);
 				}
 			}
 		}
@@ -429,7 +449,9 @@ public class Util {
          */
         private void phase2() 
         throws DecisionException, BadClassFileException, ClasspathException {
-            for (String className : this.classesCreated) {
+            ListIterator<String> it = this.classesCreated.listIterator();
+            while (it.hasNext()) {
+                final String className = it.next();
                 final Klass k = this.s.getKlass(className);
                 final ClassFile classFile = this.s.getClassHierarchy().getClassFile(className);
                 final Signature[] flds = classFile.getFieldsStatic();
@@ -445,7 +467,7 @@ public class Util {
                             } else if (cpv instanceof ConstantPoolString) {
                                 final String stringLit = ((ConstantPoolString) cpv).getValue();
                                 try {
-                                    phase1(JAVA_STRING);
+                                    phase1(JAVA_STRING, it);
                                 } catch (ClassFileNotFoundException e) {
                                     throw new ClasspathException(e);
                                 }

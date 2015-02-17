@@ -1,6 +1,7 @@
 package jbse.algo.meta;
 
 import static jbse.bc.Signatures.JAVA_CLASS_GETPRIMITIVECLASS;
+import static jbse.bc.Signatures.JAVA_OBJECT_GETCLASS;
 import static jbse.bc.Signatures.JAVA_OBJECT_HASHCODE;
 import static jbse.bc.Signatures.JAVA_STRING_INTERN;
 import static jbse.bc.Signatures.JAVA_THROWABLE_FILLINSTACKTRACE;
@@ -50,6 +51,7 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
 		
 		//meta delegates for some JRE methods
         loadMetaDelegate(JAVA_CLASS_GETPRIMITIVECLASS,             new Algo_JAVA_CLASS_GETPRIMITIVECLASS());
+        loadMetaDelegate(JAVA_OBJECT_GETCLASS,                     new Algo_JAVA_OBJECT_GETCLASS());
         loadMetaDelegate(JAVA_OBJECT_HASHCODE,                     new Algo_JAVA_OBJECT_HASHCODE());
         loadMetaDelegate(JAVA_STRING_INTERN,                       new Algo_JAVA_STRING_INTERN());
 		loadMetaDelegate(JAVA_THROWABLE_FILLINSTACKTRACE,          new Algo_JAVA_THROWABLE_FILLINSTACKTRACE());
