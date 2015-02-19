@@ -7,13 +7,12 @@ import java.util.Arrays;
  * A {@link Reference} to a concrete array which may not yet 
  * have a corresponding {@link Array} instance in the 
  * {@link Heap}. A {@link ReferenceArrayImmaterial} is always stored 
- * in an {@link Array} created by a (multi)anewarray with symbolic 
+ * in an {@link Array} created by a [multi]anewarray with symbolic 
  * length values. When the container {@link Array} is accessed, it returns 
  * a {@link ReferenceArrayImmaterial}, which is in turns used to lazily 
  * create concrete arrays in a layer. A {@link ReferenceArrayImmaterial} always
  * refers to objects created after the start of the symbolic execution. 
- * A {@link ReferenceArrayImmaterial} shall not escape to the operand stack, 
- * it must be materialized whenever extracted from an array.
+ * A {@link ReferenceArrayImmaterial} shall not escape to the operand stack!!!
  * 
  * @author Pietro Braione
  */

@@ -543,11 +543,13 @@ public final class RunParameters implements Cloneable {
 
 	/**
 	 * Specifies that a method must be treated as an uninterpreted pure
-	 * function, rather than executed. 
+	 * function, rather than executed.
 	 * 
 	 * @param className the name of the class containing the method not to be
 	 *        interpreted.
-	 * @param parametersSignature the types of the method parameters.
+	 * @param parametersSignature the types of the method parameters and of
+	 *        the return value. They all must be primitive, with the exception
+	 *        of the first ("this") parameter if the method is not static.
 	 * @param methodName the name of the method.
 	 * @param functionName a {@link String}, the name that will be given to 
 	 *        the uninterpreted function.

@@ -38,6 +38,7 @@ import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.mem.exc.OperandStackEmptyException;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Reference;
 import jbse.val.Value;
 
 final class Algo_INVOKEX implements Algorithm {
@@ -135,9 +136,19 @@ final class Algo_INVOKEX implements Algorithm {
         //looks for the method implementation
         ClassFile classMethodImpl;
         boolean isNative;
-        final boolean isVirtualInterface = !this.isStatic && !this.isSpecial;
         try {
-            final String receiverClassName = (isVirtualInterface ? state.peekReceiverArg(methodSignatureResolved).getType() : null); 
+            final boolean isVirtualInterface = !this.isStatic && !this.isSpecial;
+            final String receiverClassName;
+            if (isVirtualInterface) {
+                final Reference thisRef = state.peekReceiverArg(methodSignatureResolved);
+                if (state.isNull(thisRef)) {
+                    throwNew(state, NULL_POINTER_EXCEPTION);
+                    return;
+                }
+                receiverClassName = state.getObject(thisRef).getType();
+            } else {
+                receiverClassName = null;
+            }
             classMethodImpl = lookupMethodImpl(state, methodSignatureResolved, this.isStatic, this.isSpecial, receiverClassName);
             isNative = classMethodImpl.isMethodNative(methodSignatureResolved);
         } catch (IncompatibleClassFileException e) {
@@ -205,12 +216,8 @@ final class Algo_INVOKEX implements Algorithm {
         try {
             state.pushFrame(methodSignatureImpl, false, pcOffset, args);
         } catch (NullMethodReceiverException e) {
-            if (this.isStatic) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
-            } else {
-                throwNew(state, NULL_POINTER_EXCEPTION);
-            }
+            //this should never happen after method implementation lookup
+            throw new UnexpectedInternalException(e);
         } catch (InvalidProgramCounterException | InvalidSlotException e) {
             //TODO is it ok?
             throwVerifyError(state);

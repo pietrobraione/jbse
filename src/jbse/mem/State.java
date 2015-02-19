@@ -387,11 +387,15 @@ public final class State implements Cloneable {
     /**
      * Gets an object from the heap.
      * 
-     * @param ref a {@link Reference}.
+     * @param ref a {@link Reference}. It must not be null.
      * @return the {@link Objekt} referred to by {@code ref}, or 
      *         {@code null} if {@code ref} does not refer to 
-     *         anything (e.g., is {@link Null}, or is an unresolved 
-     *         symbolic reference, or is resolved to null).
+     *         an object in the heap, i.e.
+     *         <ul>
+     *         <li>{@code ref} is {@link Null}, or</li> 
+     *         <li>{@code ref} is symbolic and resolved to null, or</li> 
+     *         <li>{@code ref} is symbolic and unresolved.</li>
+     *         </ul>
      */
     public Objekt getObject(Reference ref) {
 		final Objekt retVal;
@@ -1018,14 +1022,14 @@ public final class State implements Cloneable {
 	 * @param methodSignature
 	 *        the {@link Signature} of a method. It is <em>not</em>
 	 *        checked.
-	 * @return the {@link Objekt} that is the receiver of
+	 * @return the {@link Reference} to the receiver of
 	 *         the method according to {@link methodSignature}'s 
 	 *         declared list of parameters, or {@link null} if the 
 	 *         operand stack has not enough items, or the
 	 *         item in the position of the "this" parameter is
-	 *         not a resolved reference or is {@link Null}. 
+	 *         not a reference. 
 	 */
-	public Objekt peekReceiverArg(Signature methodSignature) {
+	public Reference peekReceiverArg(Signature methodSignature) {
 	    final String[] paramsDescriptors = Type.splitParametersDescriptors(methodSignature.getDescriptor());
 	    final int nParams = paramsDescriptors.length + 1;
 	    final Collection<Value> opStackVals = getCurrentFrame().values();
@@ -1035,8 +1039,7 @@ public final class State implements Cloneable {
 	            if (! (val instanceof Reference)) {
 	                return null;
 	            }
-	            final Reference r = (Reference) val;
-	            return getObject(r);
+	            return (Reference) val;
 	        }
 	        ++i;
 	    }
