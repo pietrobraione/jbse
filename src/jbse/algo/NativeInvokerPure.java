@@ -10,7 +10,6 @@ import jbse.mem.State;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.FunctionApplication;
-import jbse.val.Null;
 import jbse.val.Primitive;
 import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
@@ -32,15 +31,13 @@ import jbse.val.exc.ValueDoesNotSupportNativeException;
  * <li>If the method's return type is primitive, and all its parameters 
  *     have primitive type and some is symbolic, then a {@link FunctionApplication}  
  *     mirroring the method's invocation is pushed on the operand stack;</li>
- * <li>If the method's return type is reference (instance or array), 
- *     then {@link Null} is pushed on the operand stack;</li>
- * <li>In all the other cases a {@link ValueDoesNotSupportNativeException} 
- *     exception is raised.</li>
+ * <li>In all the other cases, throws a {@link ValueDoesNotSupportNativeException}. 
  * </ul>
  * 
  * @author Pietro Braione
  */
 public class NativeInvokerPure implements NativeInvoker {
+    final NativeInvokerReflect delegate = new NativeInvokerReflect();
 	@Override
 	public void doInvokeNative(State state, Signature methodSignatureResolved, Value[] args, int pcOffset) 
 	throws CannotInvokeNativeException, ThreadStackEmptyException {
@@ -69,12 +66,11 @@ public class NativeInvokerPure implements NativeInvoker {
 					throw new UnexpectedInternalException(e);
 				}
 			} else {
-				final NativeInvokerReflect delegate = new NativeInvokerReflect();
-				delegate.doInvokeNative(state, methodSignatureResolved, argsPrim, pcOffset);
+				this.delegate.doInvokeNative(state, methodSignatureResolved, argsPrim, pcOffset);
 				return;
 			}
 		} else {
-			returnValue = Null.getInstance();
+            throw new ValueDoesNotSupportNativeException();
 			//TODO put reference resolution here or in the invoke* bytecodes and assign returnValue = state.createSymbol(returnType, "__NATIVE[" + state.getIdentifier() + "[" + state.getSequenceNumber() + "]");
 		}
 		
