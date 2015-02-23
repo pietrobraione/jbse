@@ -4,9 +4,9 @@ import java.util.function.Supplier;
 
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
-import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.DecisionProcedureChainOfResponsibility;
 import jbse.dec.exc.DecisionException;
+import jbse.jvm.RunnerParameters;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
@@ -29,9 +29,9 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
     private final InitialHeapChecker checker;
     
     public DecisionProcedureConservativeRepOk(DecisionProcedure next, CalculatorRewriting calc, 
-    RunParameters runParameters, DecisionProcedureAlgorithms dec) {
+    RunnerParameters checkerParameters) {
         super(next, calc);
-        this.checker = new InitialHeapChecker(runParameters, dec, ConservativeRepOk.class);
+        this.checker = new InitialHeapChecker(checkerParameters, ConservativeRepOk.class);
     }
     
     public void setInitialStateSupplier(Supplier<State> initialStateSupplier) {

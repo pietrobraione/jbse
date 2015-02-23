@@ -1359,13 +1359,12 @@ public final class RunParameters implements Cloneable {
 
 	/**
 	 * Returns a new {@link RunnerParameters} that can be used
-	 * to run a concretization method.
+	 * to run a concretization method (sets only scopes).
 	 * 
 	 * @return a new instance of {@link RunnerParameters}.
 	 */
-	public RunnerParameters getConcretizationDriverParameters(DecisionProcedureAlgorithms dec) {
+	public RunnerParameters getConcretizationDriverParameters() {
 		final RunnerParameters retVal = this.runnerParameters.clone();
-		retVal.setDecisionProcedure(dec);
 		retVal.setStateIdentificationMode(StateIdentificationMode.COMPACT);
 		retVal.setBreadthMode(BreadthMode.MORE_THAN_ONE);
 		retVal.setHeapScopeComputed(this.concretizationHeapScopeComputed);

@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.function.Supplier;
 
 import jbse.algo.exc.CannotManageStateException;
-import jbse.apps.StateFormatterTrace;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileException;
@@ -20,7 +19,6 @@ import jbse.bc.exc.NullMethodReceiverException;
 import jbse.common.Type;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
-import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.Engine;
 import jbse.jvm.Runner;
@@ -39,22 +37,19 @@ import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.mem.exc.ThreadStackEmptyException;
-import jbse.tree.StateTree.BranchPoint;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.Simplex;
 import jbse.val.Value;
 
 public final class InitialHeapChecker {
-    private final RunParameters runParameters;
-    private final DecisionProcedureAlgorithms dec;
+    private final RunnerParameters runnerParameters;
     private final CheckMethodTable tab;
     private Supplier<State> initialStateSupplier = null;
     private Supplier<State> currentStateSupplier = null;
     
-    public InitialHeapChecker(RunParameters runParameters, DecisionProcedureAlgorithms dec, Class<? extends Annotation> methodAnnotationClass) {
-        this.runParameters = runParameters;
-        this.dec = dec;
+    public InitialHeapChecker(RunnerParameters runnerParameters, Class<? extends Annotation> methodAnnotationClass) {
+        this.runnerParameters = runnerParameters;
         this.tab = new CheckMethodTable(methodAnnotationClass);
     }
     
@@ -84,9 +79,7 @@ public final class InitialHeapChecker {
                     } else {
                         final State sRun = sIni.clone();
                         final boolean repOk = 
-                        doRunRepOk(sRun, objectRef, methodSignature, 
-                                   this.runParameters.getConcretizationDriverParameters(this.dec), 
-                                   scopeExhaustionMeansSuccess);
+                        doRunRepOk(sRun, objectRef, methodSignature, this.runnerParameters, scopeExhaustionMeansSuccess);
                         if (!repOk) {
                             return false; 
                         }
@@ -267,13 +260,13 @@ public final class InitialHeapChecker {
     private static class RepOkRunnerActions extends Runner.Actions {
         final boolean scopeExhaustionMeansSuccess;
         boolean repOk = false;
-        
+
         public RepOkRunnerActions(boolean scopeExhaustionMeansSuccess) { 
             this.scopeExhaustionMeansSuccess = scopeExhaustionMeansSuccess;
         }
-        
-        //TODO log differently!
 
+        //TODO log differently!
+/*
         @Override
         public boolean atStepPost() {
             //final StateFormatterTrace f = new StateFormatterTrace(new ArrayList<String>()) {
@@ -287,7 +280,7 @@ public final class InitialHeapChecker {
             f.emit();
             return super.atStepPost();
         }
-        
+
         @Override
         public boolean atBacktrackPost(BranchPoint bp) {
             //final StateFormatterTrace f = new StateFormatterTrace(new ArrayList<String>()) {
@@ -301,7 +294,7 @@ public final class InitialHeapChecker {
             f.emit();
             return super.atBacktrackPost(bp);
         }
-
+*/
         @Override
         public boolean atTraceEnd() {
             final Value retVal = this.getEngine().getCurrentState().getStuckReturn();
@@ -311,13 +304,13 @@ public final class InitialHeapChecker {
             }
             return repOk; //interrupts symbolic execution if exists a successful trace that returns true
         }
-        
+
         @Override
         public boolean atContradictionException(ContradictionException e)
         throws ContradictionException {
             return false; //assumption violated: move to next trace
         }
-        
+
         @Override
         public boolean atScopeExhaustionHeap() {
             if (scopeExhaustionMeansSuccess) {
@@ -327,7 +320,7 @@ public final class InitialHeapChecker {
             return super.atScopeExhaustionHeap();
             //was: throw new ...whateverException("A conservative repOk must not expand the heap");
         }
-        
+
         @Override
         public boolean atScopeExhaustionCount() {
             if (scopeExhaustionMeansSuccess) {
@@ -336,7 +329,7 @@ public final class InitialHeapChecker {
             }
             return super.atScopeExhaustionCount();
         }
-        
+
         @Override
         public boolean atScopeExhaustionDepth() {
             if (scopeExhaustionMeansSuccess) {

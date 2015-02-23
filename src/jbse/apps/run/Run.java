@@ -121,7 +121,10 @@ public class Run {
 	private DecisionProcedureGuidance guidance = null;
 	
 	/** A purely numeric decision procedure for concretization checks. */
-	private DecisionProcedureAlgorithms decisionProcedureConcretization;
+	private DecisionProcedureAlgorithms decisionProcedureConcretization = null;
+	
+	/** The concretization checker. */
+	private InitialHeapChecker checker = null;
 
 	/** Counter for the number of analyzed traces that are safe (do not violate assertions). */
 	private long tracesSafe = 0;
@@ -181,7 +184,6 @@ public class Run {
 	}
 	
 	private class ActionsRun extends Runner.Actions {
-		private State currentState;
 		private String scopeExhaustionMessage;
 		private TraceKind traceKind;
 		private boolean isBranch;
@@ -193,8 +195,9 @@ public class Run {
 		 * @return {@code true} iff it is below the treshold.
 		 */
 		private boolean stackSizeAcceptable() {
+		    final State currentState = Run.this.engine.getCurrentState();
 			return (Run.this.parameters.stackDepthShow == 0 || 
-					 Run.this.parameters.stackDepthShow > this.currentState.getStackSize());
+					 Run.this.parameters.stackDepthShow > currentState.getStackSize());
 		}
 
 		/**
@@ -206,7 +209,8 @@ public class Run {
 		private boolean printAndAsk() {
 			if (this.scopeExhaustionMessage == null && this.traceKind != TraceKind.CONTRADICTORY && this.stackSizeAcceptable()) {
 				try {
-					Run.this.printState(this.currentState, this.isBranch);
+		            final State currentState = Run.this.engine.getCurrentState();
+					Run.this.printState(currentState, this.isBranch);
 				} catch (UnexpectedInternalException e) {
 					IO.println(Run.this.err, ERROR_ENGINE_UNEXPECTED);
 					IO.printException(Run.this.err, e);
@@ -228,9 +232,6 @@ public class Run {
 		
 		@Override
 		public boolean atTraceStart() {
-			//updates the current state
-			this.currentState = Run.this.engine.getCurrentState();
-
 			//scope not yet exhausted
 			this.scopeExhaustionMessage = null;
 
@@ -316,25 +317,23 @@ public class Run {
 
 		@Override
 		public boolean atStepPost() {
-			//if a resolved reference has not been expanded, prints a warning
-			if (Run.this.parameters.showWarnings && 
-					this.getEngine().someReferenceNotExpanded()) {
-					IO.println(Run.this.log, this.currentState.getIdentifier() + " "
-						+ this.getEngine().getNonExpandedReferencesOrigins()
-						+ WARNING_PARTIAL_REFERENCE_RESOLUTION);
-			}
-			
-			//updates the current state
-			this.currentState = Run.this.engine.getCurrentState();
+		    //if a resolved reference has not been expanded, prints a warning
+		    if (Run.this.parameters.showWarnings && 
+		        this.getEngine().someReferenceNotExpanded()) {
+		        final State currentState = Run.this.engine.getCurrentState();
+		        IO.println(Run.this.log, currentState.getIdentifier() + " "
+		            + this.getEngine().getNonExpandedReferencesOrigins()
+		            + WARNING_PARTIAL_REFERENCE_RESOLUTION);
+		    }
 
-			//prints the state (all+bytecode and branches)
-			boolean stop = false;
-			if (Run.this.parameters.stepShowMode == StepShowMode.ALL || 
-				(Run.this.parameters.stepShowMode == StepShowMode.ROOT_BRANCHES_LEAVES &&
-					this.isBranch)) {
-				stop = this.printAndAsk();
-			} 
-			return stop;
+		    //prints the state (all+bytecode and branches)
+		    boolean stop = false;
+		    if (Run.this.parameters.stepShowMode == StepShowMode.ALL || 
+		        (Run.this.parameters.stepShowMode == StepShowMode.ROOT_BRANCHES_LEAVES &&
+		        this.isBranch)) {
+		        stop = printAndAsk();
+		    } 
+		    return stop;
 		}
 
 		
@@ -343,7 +342,7 @@ public class Run {
 			//prints/asks for the all+source case
 			boolean stop = false;
 			if (Run.this.parameters.stepShowMode == StepShowMode.SOURCE) {
-				stop = this.printAndAsk();
+				stop = printAndAsk();
 			} 
 			return stop;
 		}
@@ -361,6 +360,7 @@ public class Run {
 		@Override
 		public boolean atTraceEnd() {
 			try {
+                final State currentState = Run.this.engine.getCurrentState();
 				//prints the leaf state if the case
 				if (Run.this.parameters.stepShowMode == StepShowMode.ALL       //already shown
 						|| Run.this.parameters.stepShowMode == StepShowMode.SOURCE //already shown
@@ -380,21 +380,12 @@ public class Run {
 					//prints the refined root state for the summaries case
 					if (Run.this.parameters.stepShowMode == StepShowMode.SUMMARIES) {
 						State initialRefined = Run.this.engine.getInitialState();
-						try {
-							initialRefined.refine(this.currentState);
-						} catch (CannotRefineException e) {
-							IO.println(Run.this.err, ERROR_CANNOT_REFINE);
-							initialRefined = Run.this.engine.getInitialState(); //for safety
-						} catch (UnexpectedInternalException e) {
-							IO.println(Run.this.err, ERROR_ENGINE_UNEXPECTED);
-							IO.printException(Run.this.err, e);
-							return true;
-						}
+						initialRefined.refine(currentState);
 						Run.this.printState(initialRefined, true);
 						IO.print(out, "\n===\n");
 					}
 					//prints the leaf (stuck) state
-					Run.this.printState(this.currentState,
+					Run.this.printState(currentState,
 							(Run.this.parameters.stepShowMode == StepShowMode.LEAVES || 
 							Run.this.parameters.stepShowMode == StepShowMode.SUMMARIES));
 				} 
@@ -403,7 +394,7 @@ public class Run {
 				switch (this.traceKind) {
 				case SAFE:
 					if (Run.this.parameters.showWarnings) {
-						IO.println(Run.this.log, this.currentState.getIdentifier() + MSG_SAFE_TRACE);
+						IO.println(Run.this.log, currentState.getIdentifier() + MSG_SAFE_TRACE);
 					}
 					++Run.this.tracesSafe;
 					if (Run.this.parameters.doConcretization) {
@@ -412,7 +403,7 @@ public class Run {
 					break;
 				case UNSAFE:
 					if (Run.this.parameters.showWarnings) {
-						IO.println(Run.this.log, this.currentState.getIdentifier() + MSG_UNSAFE_TRACE);
+						IO.println(Run.this.log, currentState.getIdentifier() + MSG_UNSAFE_TRACE);
 					}
 					++Run.this.tracesUnsafe;
 					if (Run.this.parameters.doConcretization) {
@@ -421,7 +412,7 @@ public class Run {
 					break;
 				case OUT_OF_SCOPE:
 					if (Run.this.parameters.showWarnings) {
-						IO.println(Run.this.log, this.currentState.getIdentifier() + this.scopeExhaustionMessage);
+						IO.println(Run.this.log, currentState.getIdentifier() + this.scopeExhaustionMessage);
 					}
 					if (Run.this.parameters.doConcretization) {
 						checkFinalStateIsConcretizable(CounterKind.INC_OUT_OF_SCOPE);
@@ -429,15 +420,15 @@ public class Run {
 					break;
 				case CONTRADICTORY:
 					if (Run.this.parameters.showWarnings) {
-						IO.println(Run.this.log, this.currentState.getIdentifier() + MSG_CONTRADICTORY_TRACE);
+						IO.println(Run.this.log, currentState.getIdentifier() + MSG_CONTRADICTORY_TRACE);
 					}
 					//no counter
 					break;
 				}
-			} catch (UnexpectedInternalException e) {
-				IO.println(Run.this.err, ERROR_ENGINE_UNEXPECTED);
-				IO.printException(Run.this.err, e);
-				return true;
+            } catch (CannotRefineException | UnexpectedInternalException e) { //unexpected
+                IO.println(Run.this.err, ERROR_ENGINE_UNEXPECTED);
+                IO.printException(Run.this.err, e);
+                return true;
 			}
 			return false;
 		}
@@ -462,7 +453,8 @@ public class Run {
 		throws DecisionException {
 			if (e instanceof DecisionEmptyException) { //TODO ugly! Modify the visitor (or remove DecisionEmptyException and use only ContradictionException)
 				if (Run.this.parameters.showWarnings) { 
-					IO.println(Run.this.err, this.currentState.getIdentifier() + WARNING_NO_DECISION_ALTERNATIVES);
+	                final State currentState = Run.this.engine.getCurrentState();
+					IO.println(Run.this.err, currentState.getIdentifier() + WARNING_NO_DECISION_ALTERNATIVES);
 				}
 				this.traceKind = TraceKind.CONTRADICTORY;
 				return false;
@@ -522,17 +514,10 @@ public class Run {
 		
 		private void checkFinalStateIsConcretizable(CounterKind ctr) {
 			final long startTime = System.currentTimeMillis();
-			final InitialHeapChecker checker = 
-			    new InitialHeapChecker(Run.this.parameters.clone(), Run.this.decisionProcedureConcretization, ConcretizationCheck.class);
-			checker.setCurrentStateSupplier(() -> this.currentState); 
-			checker.setInitialStateSupplier(() -> Run.this.engine.getInitialState()); 
-			final boolean concretizable = checker.checkHeap(false);
+			final boolean concretizable = Run.this.checker.checkHeap(false);
 			final long elapsedTime = System.currentTimeMillis() - startTime;
-			elapsedTimeConcretization += elapsedTime;
+			Run.this.elapsedTimeConcretization += elapsedTime;
 			if (concretizable) {
-				if (Run.this.parameters.showWarnings) {
-					IO.println(Run.this.log, this.currentState.getIdentifier() + MSG_CONCRETIZABLE_TRACE);
-				}
 				if (ctr == CounterKind.INC_OUT_OF_SCOPE) {
 					++Run.this.tracesConcretizableOutOfScope;
 				} else if (ctr == CounterKind.INC_SAFE) {
@@ -540,9 +525,12 @@ public class Run {
 				} else { //ctr == CounterKind.INC_UNSAFE
 					++Run.this.tracesConcretizableUnsafe;
 				}
-			} else if (Run.this.parameters.showWarnings) {
-				IO.println(Run.this.log, this.currentState.getIdentifier() + MSG_NOT_CONCRETIZABLE_TRACE);
 			}
+            if (Run.this.parameters.showWarnings) {
+                final State currentState = Run.this.engine.getCurrentState();
+                IO.println(Run.this.log, currentState.getIdentifier() 
+                           + (concretizable ? MSG_CONCRETIZABLE_TRACE : MSG_NOT_CONCRETIZABLE_TRACE));
+            }
 		}
 	}
 
@@ -744,10 +732,10 @@ public class Run {
 			this.formatterOthers = new StateFormatterText(this.parameters.srcPath) {
 				@Override
 				public void format(State s) {
-					this.formatOutput += LINE_SEP; // gutter
+					this.formatOutput += LINE_SEP; //gutter
 					this.formatOutput += banner(s.getIdentifier() + "["
 							+ s.getSequenceNumber() + "]", false);
-					this.formatOutput += LINE_SEP; // gutter
+					this.formatOutput += LINE_SEP; //gutter
 					super.format(s);
 				}
 
@@ -802,7 +790,7 @@ public class Run {
 
 		// builds the runner
 		try {
-			final CalculatorRewriting calc = createCalculator(parameters);
+			final CalculatorRewriting calc = createCalculator();
 			final DecisionProcedureAlgorithms dec = createDecisionProcedure(calc);
 			engineParameters.setCalculator(calc);
 			engineParameters.setDecisionProcedure(dec);
@@ -815,6 +803,14 @@ public class Run {
 			if (this.consRepOk != null) {
 				this.consRepOk.setInitialStateSupplier(() -> this.engine.getInitialState()); 
 				this.consRepOk.setCurrentStateSupplier(() -> this.engine.getCurrentState()); 
+			}
+			if (this.parameters.doConcretization) {
+			    final RunnerParameters checkerParameters = this.parameters.getConcretizationDriverParameters();
+			    checkerParameters.setDecisionProcedure(this.decisionProcedureConcretization);
+	            this.checker = 
+                    new InitialHeapChecker(checkerParameters, ConcretizationCheck.class);
+	            this.checker.setInitialStateSupplier(() -> this.engine.getInitialState()); 
+                this.checker.setCurrentStateSupplier(() -> this.engine.getCurrentState()); 
 			}
 		} catch (CannotBuildEngineException e) {
 			if (e instanceof CannotBuildDecisionProcedureException) {
@@ -861,13 +857,16 @@ public class Run {
 		return 0;
 	}
 	
-	private static CalculatorRewriting createCalculator(RunParameters parameters) throws CannotBuildEngineException {
+	private CalculatorRewriting createCalculator() throws CannotBuildEngineException {
 		final CalculatorRewriting calc;
 		try {
 			calc = new CalculatorRewriting();
 			calc.addRewriter(new RewriterOperationOnSimplex()); //indispensable
-			for (final Class<? extends Rewriter> rewriterClass : parameters.rewriterClasses) {
-				if (rewriterClass == null) { continue; } //no rewriter
+			for (final Class<? extends Rewriter> rewriterClass : this.parameters.rewriterClasses) {
+				if (rewriterClass == null) { 
+				    //no rewriter
+				    continue; 
+				}
 				final Rewriter rewriter = (Rewriter) rewriterClass.newInstance();
 				calc.addRewriter(rewriter);
 			}
@@ -879,9 +878,11 @@ public class Run {
 	
 	private DecisionProcedureAlgorithms createDecisionProcedure(CalculatorRewriting calc)
 	throws CannotBuildEngineException {
+	    final boolean needHeapCheck = (this.parameters.useConservativeRepOks || this.parameters.doConcretization);
+	    
 		//initializes cores
 		DecisionProcedure core = new DecisionProcedureAlwSat();
-		DecisionProcedure coreNumeric = new DecisionProcedureAlwSat();
+		DecisionProcedure coreNumeric = (needHeapCheck ? new DecisionProcedureAlwSat() : null);
 		
 		//wraps cores with external numeric decision procedure
 		final DecisionProcedureType type = this.parameters.getDecisionProcedureType();
@@ -889,13 +890,13 @@ public class Run {
 		try {
 			if (type == DecisionProcedureType.SICSTUS) {
 				core = new DecisionProcedureSicstus(core, calc, path);
-				coreNumeric = new DecisionProcedureSicstus(coreNumeric, calc, path);
+				coreNumeric = (needHeapCheck ? new DecisionProcedureSicstus(coreNumeric, calc, path) : null);
 			} else if (type == DecisionProcedureType.CVC3) {
 				core = new DecisionProcedureCVC3(core, calc, path);
-				coreNumeric = new DecisionProcedureCVC3(coreNumeric, calc, path);
+				coreNumeric = (needHeapCheck ? new DecisionProcedureCVC3(coreNumeric, calc, path) : null);
 			} else if (type == DecisionProcedureType.Z3) {
 				core = new DecisionProcedureZ3(core, calc, path);
-				coreNumeric = new DecisionProcedureZ3(coreNumeric, calc, path);
+				coreNumeric = (needHeapCheck ? new DecisionProcedureZ3(coreNumeric, calc, path) : null);
 			} else { //DecisionProcedureType.ALL_SAT
 				//do nothing
 			}				
@@ -906,17 +907,19 @@ public class Run {
 		//further wraps cores with sign analysis, if required
 		if (this.parameters.doSignAnalysis) {
 			core = new DecisionProcedureSignAnalysis(core, calc);
-			coreNumeric = new DecisionProcedureSignAnalysis(coreNumeric, calc);
+			coreNumeric = (needHeapCheck ? new DecisionProcedureSignAnalysis(coreNumeric, calc) : null);
 		}
 		
 		//further wraps cores with equality analysis, if required
 		if (this.parameters.doEqualityAnalysis) {
 			core = new DecisionProcedureEquality(core, calc);
-			coreNumeric = new DecisionProcedureEquality(coreNumeric, calc);
+			coreNumeric = (needHeapCheck ? new DecisionProcedureEquality(coreNumeric, calc) : null);
 		}
 		
-		//sets the decision procedure for concretization
-		this.decisionProcedureConcretization = new DecisionProcedureAlgorithms(coreNumeric, calc);
+		//sets the decision procedure for checkers
+		if (needHeapCheck) {
+		    this.decisionProcedureConcretization = new DecisionProcedureAlgorithms(coreNumeric, calc);
+		}
 		
 		//further wraps core with LICS decision procedure
 		if (this.parameters.useLICS) {
@@ -926,7 +929,10 @@ public class Run {
 		
 		//further wraps core with conservative repOk decision procedure
 		if (this.parameters.useConservativeRepOks) {
-			this.consRepOk = new DecisionProcedureConservativeRepOk(core, calc, this.parameters.clone(), this.decisionProcedureConcretization); 
+		    final RunnerParameters checkerParameters = this.parameters.getConcretizationDriverParameters();
+		    checkerParameters.setDecisionProcedure(this.decisionProcedureConcretization);
+			this.consRepOk = 
+			    new DecisionProcedureConservativeRepOk(core, calc, checkerParameters);
 			core = this.consRepOk;
 		}
 
@@ -1152,14 +1158,11 @@ public class Run {
 	/** Error: unexpected failure (stepping while engine stuck). */
 	private static final String ERROR_ENGINE_STUCK = "Unexpected failure while running (attempted step while in a stuck state).";
 
-	/** Error: cannot refine state. */
-	private static final String ERROR_CANNOT_REFINE = "Unexpected failure while refining initial state with final state path condition. The nonrefined initial state will be printed.";
-
 	/** Error: failed configuration. */
 	private static final String ERROR_ENGINE_CONFIGURATION = "One of the engine's components cannot fit the software architecture.";
 
 	/** Error: unexpected failure. */
-	private static final String ERROR_ENGINE_UNEXPECTED = "Unexpected failure of unidentifiable source.";
+	private static final String ERROR_ENGINE_UNEXPECTED = "Unexpected failure.";
 
 	/** Prompt: ask user whether should continue execution by stepping. */
 	private static final String PROMPT_SHOULD_STEP = "Proceed with next step? (x: abort, any other: step): ";
