@@ -71,8 +71,6 @@ public final class Signatures {
                       "getStackTraceElement");
     public static final Signature JBSE_ANALYSIS_ANY = 
         new Signature(JBSE_ANALYSIS, "()" + BOOLEAN, "any");
-    public static final Signature JBSE_ANALYSIS_ASSERTREPOK = 
-        new Signature(JBSE_ANALYSIS, "()" + VOID, "assertFinallyEFInitialState");
     public static final Signature JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION = 
         new Signature(JBSE_ANALYSIS, "()" + VOID, "disableAssumptionViolation");
     public static final Signature JBSE_ANALYSIS_ENDGUIDANCE = 

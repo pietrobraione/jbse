@@ -8,7 +8,6 @@ import static jbse.bc.Signatures.JAVA_THROWABLE_FILLINSTACKTRACE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEDEPTH;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEELEMENT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ANY;
-import static jbse.bc.Signatures.JBSE_ANALYSIS_ASSERTREPOK;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ENDGUIDANCE;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_FAIL;
@@ -60,7 +59,6 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
 
 		//meta delegates for some JBSE methods
         loadMetaDelegate(JBSE_ANALYSIS_ANY,                        new Algo_JBSE_ANALYSIS_ANY());
-        loadMetaDelegate(JBSE_ANALYSIS_ASSERTREPOK,                new Algo_JBSE_ANALYSIS_ASSERTREPOK());
         loadMetaDelegate(JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION, new Algo_JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION());
         loadMetaDelegate(JBSE_ANALYSIS_ENDGUIDANCE,                new Algo_JBSE_ANALYSIS_ENDGUIDANCE());
         loadMetaDelegate(JBSE_ANALYSIS_FAIL,                       new Algo_JBSE_ANALYSIS_FAIL());

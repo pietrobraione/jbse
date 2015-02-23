@@ -19,7 +19,6 @@ import jbse.tree.StateTree;
 import jbse.tree.StateTree.BreadthMode;
 import jbse.tree.StateTree.StateIdentificationMode;
 import jbse.val.Calculator;
-import jbse.val.Reference;
 
 /**
  * Class containing an execution context, i.e., everything 
@@ -78,11 +77,6 @@ public final class ExecutionContext {
 
 	/** The symbolic execution's {@link DecisionAlternativeComparators}. */
 	final DecisionAlternativeComparators comparators;
-	
-	//FOR THE CONCRETIZATION REPOK
-	//TODO move them, they are not part of the (static) execution context as things are implemented now
-	public String repOkMethodName;
-	public Reference repOkTargetObjectReference;
 	
 	/**
 	 * Constructor.

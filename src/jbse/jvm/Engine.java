@@ -289,7 +289,8 @@ public class Engine implements AutoCloseable {
 	}
 	
 	/**
-	 * Returns the engine's current JVM state.
+	 * Returns the engine's current JVM state 
+	 * (<em>not</em> a copy).
 	 * 
 	 * @return a {@link State}.
 	 */

@@ -329,7 +329,7 @@ public final class RunParameters implements Cloneable {
 	 * Set to true by default because the LICS decision procedure
 	 * also resolves class initialization. 
 	 */
-	boolean doLICS = true;
+	boolean useLICS = true;
 	
 	/** The names of the not initialized classes. */
 	private ArrayList<String> notInizializedClasses = new ArrayList<>();
@@ -359,7 +359,7 @@ public final class RunParameters implements Cloneable {
 	 * Whether the engine should use the conservative 
 	 * repOK decision procedure.
 	 */
-	boolean doConservativeRepOks = false;
+	boolean useConservativeRepOks = false;
 
 	/** The heap scope for conservative repOK execution. */
 	private HashMap<String, Function<State, Integer>> concretizationHeapScopeComputed = new HashMap<>();
@@ -789,11 +789,11 @@ public final class RunParameters implements Cloneable {
 	 * Sets whether the engine should decide references
 	 * by means of LICS rules. 
 	 * 
-	 * @param doLICS {@code true} iff the engine must 
+	 * @param useLICS {@code true} iff the engine must 
 	 * use LICS rules.
 	 */
-	public void setDoLICS(boolean doLICS) {
-		this.doLICS = doLICS;
+	public void setUseLICS(boolean useLICS) {
+		this.useLICS = useLICS;
 	}
 
 	/**
@@ -803,8 +803,8 @@ public final class RunParameters implements Cloneable {
 	 * @param useConservativeRepOks {@code true} iff conservative
 	 * repOk methods are used.
 	 */
-	public void setUseConservativeRepOks(boolean doConservativeRepOks) {
-		this.doConservativeRepOks = doConservativeRepOks;
+	public void setUseConservativeRepOks(boolean useConservativeRepOks) {
+		this.useConservativeRepOks = useConservativeRepOks;
 	}
 	
 	//TODO static (noncomputed) concretization heap scope
@@ -907,7 +907,7 @@ public final class RunParameters implements Cloneable {
 	}
 
     /**
-     * Specifies a LICS rule for symbolic reference expansion. Typically, a 
+     * Specifies a LICS rule for symbolic reference expansion. By default a 
      * symbolic reference is expanded to a fresh symbolic object with class
      * of its static type, or is not expanded if the static type of the reference
      * is an abstract class or an interface.

@@ -1,42 +1,17 @@
 package jbse.apps.run;
 
-import static jbse.jvm.Util.doRunRepOk;
-
-import java.util.HashMap;
 import java.util.function.Supplier;
 
-import jbse.algo.exc.CannotManageStateException;
-import jbse.bc.ClassFile;
-import jbse.bc.Signature;
-import jbse.bc.exc.BadClassFileException;
-import jbse.bc.exc.InvalidClassFileFactoryClassException;
-import jbse.bc.exc.MethodCodeNotFoundException;
-import jbse.bc.exc.MethodNotFoundException;
-import jbse.bc.exc.NullMethodReceiverException;
-import jbse.common.Type;
-import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.DecisionProcedureChainOfResponsibility;
 import jbse.dec.exc.DecisionException;
-import jbse.jvm.exc.CannotBacktrackException;
-import jbse.jvm.exc.CannotBuildEngineException;
-import jbse.jvm.exc.EngineStuckException;
-import jbse.jvm.exc.FailureException;
-import jbse.jvm.exc.InitializationException;
-import jbse.jvm.exc.NonexistingObservedVariablesException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
-import jbse.mem.exc.CannotRefineException;
 import jbse.mem.exc.ContradictionException;
-import jbse.mem.exc.InvalidProgramCounterException;
-import jbse.mem.exc.InvalidSlotException;
-import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.meta.annotations.ConservativeRepOk;
 import jbse.rewr.CalculatorRewriting;
-import jbse.val.Reference;
-import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.exc.InvalidTypeException;
 
@@ -51,45 +26,33 @@ import jbse.val.exc.InvalidTypeException;
  *
  */
 public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOfResponsibility {
-	private final RunParameters runParameters;
-	private final DecisionProcedureAlgorithms dec;
-	private Supplier<State> initialStateSupplier = null;
-	private Supplier<State> currentStateSupplier = null;
-
-	/** 
-	 * A cache map associating class names with the method that must
-	 * be triggered when the heap is expanded by an object of
-	 * that class. It's just redundand information extrapolated 
-	 * from the class hierarchy.
-	 */
-	private final HashMap<String, Signature> conservativeRepOk = new HashMap<String, Signature>();
-	
-	public DecisionProcedureConservativeRepOk(DecisionProcedure next, CalculatorRewriting calc, 
-	RunParameters runParameters, DecisionProcedureAlgorithms dec) {
-		super(next, calc);
-		this.runParameters = runParameters;
-		this.dec = dec;
-	}
-	
-	public void setInitialStateSupplier(Supplier<State> initialState) {
-		this.initialStateSupplier = initialState;
-	}
-	
-	public void setCurrentStateSupplier(Supplier<State> currentState) {
-		this.currentStateSupplier = currentState;
-	}
-	
-	@Override
+    private final InitialHeapChecker checker;
+    
+    public DecisionProcedureConservativeRepOk(DecisionProcedure next, CalculatorRewriting calc, 
+    RunParameters runParameters, DecisionProcedureAlgorithms dec) {
+        super(next, calc);
+        this.checker = new InitialHeapChecker(runParameters, dec, ConservativeRepOk.class);
+    }
+    
+    public void setInitialStateSupplier(Supplier<State> initialStateSupplier) {
+        this.checker.setInitialStateSupplier(initialStateSupplier);
+    }
+    
+    public void setCurrentStateSupplier(Supplier<State> currentStateSupplier) {
+        this.checker.setCurrentStateSupplier(currentStateSupplier);
+    }
+    
+    @Override
 	protected boolean isSatExpandsImpl(ReferenceSymbolic r, String className)
 	throws DecisionException {
-		final State sIni = makeInitialState();
+		final State sIni = this.checker.makeInitialState();
 		try {
 			sIni.assumeExpands(r, className);
 		} catch (InvalidTypeException | ContradictionException e) {
 			//this should not happen
 			throw new UnexpectedInternalException(e);
 		}
-		final boolean croTrue = runConservativeRepOks(sIni);
+		final boolean croTrue = this.checker.checkHeap(sIni, true);
 		if (croTrue) {
 		    return delegateIsSatExpands(r, className);
 		}
@@ -99,14 +62,14 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 	@Override
 	protected boolean isSatAliasesImpl(ReferenceSymbolic r, long heapPosition, Objekt o) 
 	throws DecisionException {
-		final State sIni = makeInitialState();
+		final State sIni = this.checker.makeInitialState();
 		try {
 			sIni.assumeAliases(r, heapPosition, o);
 		} catch (ContradictionException e) {
 			//this should not happen
 			throw new UnexpectedInternalException(e);
 		}
-        final boolean croTrue = runConservativeRepOks(sIni);
+        final boolean croTrue = this.checker.checkHeap(sIni, true);
         if (croTrue) {
             return delegateIsSatAliases(r, heapPosition, o);
         }
@@ -116,117 +79,17 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 	@Override
 	protected boolean isSatNullImpl(ReferenceSymbolic r)
 	throws DecisionException {
-		final State sIni = makeInitialState();
+		final State sIni = this.checker.makeInitialState();
 		try {
 			sIni.assumeNull(r);
 		} catch (ContradictionException e) {
 			//this should not happen
 			throw new UnexpectedInternalException(e);
 		}
-        final boolean croTrue = runConservativeRepOks(sIni);
+        final boolean croTrue = this.checker.checkHeap(sIni, true);
         if (croTrue) {
             return delegateIsSatNull(r);
         }
         return false;
-	}
-	
-	private State makeInitialState() {
-		//takes a copy of the initial state and refines it
-		final State sIni =  this.initialStateSupplier.get();
-		sIni.clearStack();
-		final State s = this.currentStateSupplier.get();
-		try {
-			sIni.refine(s);
-		} catch (CannotRefineException e) {
-			//this should not happen
-			throw new UnexpectedInternalException(e);
-		}
-		return sIni;
-	}
-
-	/**
-	 * Runs {@link ConservativeRepOk} annotated methods 
-	 * on the initial symbolic state refined based on the
-	 * path condition of the current {@link State}, 
-	 * and decides whether all of them are satisfied.
-	 * 
-	 * @return {@code true} iff for all the object in the 
-	 *         heap with a {@link ConservativeRepOk} 
-	 *         annotated method, the execution of the method
-	 *         on the initial state returns {@code true} on 
-	 *         at least one trace.
-	 * @throws ClassFileNotFoundException 
-	 */
-	private boolean runConservativeRepOks(State sIni) {
-		//runs the conservative repOk methods on all the instances in the heap 
-		for (long heapPos : sIni.getHeap().keySet()) {
-			final Reference r = new ReferenceConcrete(heapPos);
-			final Objekt obj = sIni.getObject(r);
-			if (obj.isSymbolic()) {
-				final Signature sigConservativeRepOk;
-				try {
-					sigConservativeRepOk = findConservativeRepOk(obj.getType(), sIni);
-				} catch (BadClassFileException e) {
-					//this should not happen
-					throw new UnexpectedInternalException(e);
-				}
-				if (sigConservativeRepOk == null) {
-					; //wrong annotation; do nothing
-					//TODO raise some exception?
-				} else {
-					final State sRun = sIni.clone();
-					try {
-						final boolean repOk = doRunRepOk(sRun, r, sigConservativeRepOk, runParameters.getConservativeRepOkDriverParameters(this.dec), true);
-						if (!repOk) {
-							return false; 
-						}
-					} catch (CannotBacktrackException | ClasspathException |
-							DecisionException | EngineStuckException | CannotManageStateException | 
-							ContradictionException | FailureException |
-							InitializationException | NonexistingObservedVariablesException | 
-							CannotBuildEngineException | InvalidClassFileFactoryClassException | 
-							BadClassFileException | MethodNotFoundException | 
-							MethodCodeNotFoundException | ThreadStackEmptyException | 
-							InvalidProgramCounterException | NullMethodReceiverException | 
-							InvalidSlotException exc) {
-					    //TODO check and filter exception based on blame
-						throw new UnexpectedInternalException(exc);
-					}
-				}
-			}
-		}
-		return true;
-	}
-
-	private Signature findConservativeRepOk(String className, State s) 
-	throws BadClassFileException {
-		Signature sigConservativeRepOk = conservativeRepOk.get(className);
-		if (sigConservativeRepOk == null) {
-			final ClassFile cf = s.getClassHierarchy().getClassFile(className);
-			for (Signature sig : cf.getMethodSignatures()) {
-				final Object[] annotations;
-				try {
-					annotations = cf.getMethodAvailableAnnotations(sig);
-				} catch (MethodNotFoundException e) {
-					//this cannot happen
-					throw new UnexpectedInternalException(e);
-				}
-				for (Object o : annotations) {
-					if (o instanceof ConservativeRepOk) {
-						sigConservativeRepOk = sig;
-						conservativeRepOk.put(className, sigConservativeRepOk);
-						break;
-					}
-				}
-			}
-		}
-		if (sigConservativeRepOk == null) {
-			return null;
-		} else if (Type.splitReturnValueDescriptor(sigConservativeRepOk.getDescriptor()).equals("" + Type.BOOLEAN) &&
-				Type.splitParametersDescriptors(sigConservativeRepOk.getDescriptor()).length == 0) {
-			return sigConservativeRepOk;
-		} else {
-			return null;
-		}
 	}
 }

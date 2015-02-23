@@ -58,6 +58,7 @@ import jbse.mem.State;
 import jbse.mem.exc.CannotRefineException;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.meta.annotations.ConcretizationCheck;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.Rewriter;
 import jbse.rewr.RewriterOperationOnSimplex;
@@ -521,17 +522,11 @@ public class Run {
 		
 		private void checkFinalStateIsConcretizable(CounterKind ctr) {
 			final long startTime = System.currentTimeMillis();
-			final boolean concretizable;
-			try {
-				concretizable = ConcretizationCheckerRepOk.check(this.currentState, Run.this.engine.getInitialState(), 
-						Run.this.parameters.clone(), //safety copy 
-						//TODO eliminate the dependence on ExecutionContext
-						Run.this.engine.getContext().repOkMethodName, Run.this.engine.getContext().repOkTargetObjectReference, 
-						Run.this.decisionProcedureConcretization);
-			} catch (CannotRefineException e) {
-				//this should never happen
-				throw new UnexpectedInternalException(e);
-			}
+			final InitialHeapChecker checker = 
+			    new InitialHeapChecker(Run.this.parameters.clone(), Run.this.decisionProcedureConcretization, ConcretizationCheck.class);
+			checker.setCurrentStateSupplier(() -> this.currentState); 
+			checker.setInitialStateSupplier(() -> Run.this.engine.getInitialState()); 
+			final boolean concretizable = checker.checkHeap(false);
 			final long elapsedTime = System.currentTimeMillis() - startTime;
 			elapsedTimeConcretization += elapsedTime;
 			if (concretizable) {
@@ -924,13 +919,13 @@ public class Run {
 		this.decisionProcedureConcretization = new DecisionProcedureAlgorithms(coreNumeric, calc);
 		
 		//further wraps core with LICS decision procedure
-		if (this.parameters.doLICS) {
+		if (this.parameters.useLICS) {
 			final LICSRulesRepo rulesLICS = this.parameters.getRulesLICS();
 			core = new DecisionProcedureLICS(core, calc, rulesLICS);
 		}
 		
 		//further wraps core with conservative repOk decision procedure
-		if (this.parameters.doConservativeRepOks) {
+		if (this.parameters.useConservativeRepOks) {
 			this.consRepOk = new DecisionProcedureConservativeRepOk(core, calc, this.parameters.clone(), this.decisionProcedureConcretization); 
 			core = this.consRepOk;
 		}

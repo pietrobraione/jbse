@@ -30,7 +30,7 @@ public class Runner {
 	 *
 	 */
 	public static class Actions {
-		Engine engine;
+		private Engine engine;
 		
 		protected Engine getEngine() { return this.engine; }
 

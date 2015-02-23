@@ -450,7 +450,8 @@ public final class RunnerParameters implements Cloneable {
 	 * @param className a {@link String}, the name of a class.
 	 * @param heapScope a {@link Map}{@code <}{@link String}{@code , }{@link Function}{@code <}{@link State}{@code , }{@link Integer}{@code >>}, 
 	 *        associating class names with a function that calculates the 
-	 *        heap scope for the class from the initial state.
+	 *        heap scope for the class from the initial state. All the
+	 *        mappings in {@code heapScope} are copied for safety.
 	 * @see {@link #setHeapScope(String, int)} for a precise definition of heap scope.
 	 */
 	public void setHeapScopeComputed(Map<String, Function<State, Integer>> heapScope) {

@@ -134,10 +134,6 @@ final public class Analysis {
 		}
 	}
 	
-	public static void assertFinallyEFInitialState(Object target, String methodName) {
-		//TODO ???
-	}
-	
 	private static Random r = new Random();
 
 	/**
