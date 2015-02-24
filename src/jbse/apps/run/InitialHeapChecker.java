@@ -6,6 +6,7 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.Target;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import jbse.algo.exc.CannotManageStateException;
@@ -44,13 +45,15 @@ import jbse.val.Value;
 
 public final class InitialHeapChecker {
     private final RunnerParameters runnerParameters;
-    private final CheckMethodTable tab;
+    private final CheckMethodTable checkMethodTable;
     private Supplier<State> initialStateSupplier = null;
     private Supplier<State> currentStateSupplier = null;
     
-    public InitialHeapChecker(RunnerParameters runnerParameters, Class<? extends Annotation> methodAnnotationClass) {
+    public InitialHeapChecker(RunnerParameters runnerParameters, 
+                              Class<? extends Annotation> methodAnnotationClass,
+                              Map<String, String> checkMethods) {
         this.runnerParameters = runnerParameters;
-        this.tab = new CheckMethodTable(methodAnnotationClass);
+        this.checkMethodTable = new CheckMethodTable(methodAnnotationClass, checkMethods);
     }
     
     public void setInitialStateSupplier(Supplier<State> initialStateSupplier) {
@@ -73,13 +76,13 @@ public final class InitialHeapChecker {
             final Objekt obj = sIni.getObject(objectRef);
             if (obj.isSymbolic()) {
                 try {
-                    final Signature methodSignature = this.tab.findCheckMethod(obj.getType(), sIni);
+                    final Signature methodSignature = this.checkMethodTable.findCheckMethod(obj.getType(), sIni);
                     if (methodSignature == null) {
                         //nothing to check
                     } else {
                         final State sRun = sIni.clone();
                         final boolean repOk = 
-                        doRunRepOk(sRun, objectRef, methodSignature, this.runnerParameters, scopeExhaustionMeansSuccess);
+                        runCheckMethod(sRun, objectRef, methodSignature, this.runnerParameters, scopeExhaustionMeansSuccess);
                         if (!repOk) {
                             return false; 
                         }
@@ -127,11 +130,22 @@ public final class InitialHeapChecker {
          * A map associating class names with the method in it that must
          * be invoked to check the objects of that class.
          */
-        private final HashMap<String, Signature> methodCache = new HashMap<String, Signature>();
+        private final HashMap<String, Signature> checkMethods = new HashMap<String, Signature>();
+        
+        /**
+         * The annotation that is attached to the check methods, 
+         * possibly {@code null}.
+         */
         private final Class<? extends Annotation> methodAnnotationClass;
         
-        CheckMethodTable(Class<? extends Annotation> methodAnnotationClass) {
+        CheckMethodTable(Class<? extends Annotation> methodAnnotationClass, 
+                         Map<String, String> checkMethods) {
             this.methodAnnotationClass = isMethodAnnotationClass(methodAnnotationClass) ? methodAnnotationClass : null;
+            for (Map.Entry<String, String> e : checkMethods.entrySet()) {
+                final String methodClass = e.getKey();
+                final Signature methodSignature =  new Signature(methodClass, "()" + Type.BOOLEAN, e.getValue());
+                this.checkMethods.put(methodClass, methodSignature);
+            }
         }
         
         private static final boolean isMethodAnnotationClass(Class<? extends Annotation> annotationClass) {
@@ -140,27 +154,28 @@ public final class InitialHeapChecker {
         }
 
         /**
-         * Finds a check method in a classfile.
+         * Finds a check method.
          * 
          * @param className The name of a class.
          * @param s a {@link State}.
-         * @return the {@link Signature} of an instance (nonstatic), 
-         *         concrete (nonabstract) and nonnative method in {
-         *         @code className} that is annotated with 
+         * @return the {@link Signature} associated to {@code className} 
+         *         at construction time, or that of an instance (nonstatic), 
+         *         concrete (nonabstract) and nonnative method in 
+         *         {@code className} that is annotated with 
          *         an instance of {@code methodAnnotationClass}, 
          *         has no parameters and returns a boolean, or 
-         *         {@code null} if no such method exists.
+         *         {@code null} if no such signatures exist.
          * @throws BadClassFileException if {@code className} does not
          *         refer to a valid classfile in the classpath of {@link s}.
          */
         Signature findCheckMethod(String className, State s) 
         throws BadClassFileException {
-            Signature methodSignature = this.methodCache.get(className);
+            Signature methodSignature = this.checkMethods.get(className);
             if (methodSignature == null && this.methodAnnotationClass != null) {
                 final ClassFile cf = s.getClassHierarchy().getClassFile(className);
                 for (Signature sig : cf.getMethodSignatures()) {
                     try {
-                        if (isMethodCheck(cf, sig)) {
+                        if (isMethodCheck(cf, sig) && isMethodAnnotated(cf, sig)) {
                             methodSignature = sig;
                             break;
                         }
@@ -169,12 +184,12 @@ public final class InitialHeapChecker {
                         throw new UnexpectedInternalException(e);
                     }
                 }
-                this.methodCache.put(className, methodSignature);
+                this.checkMethods.put(className, methodSignature);
             }
             return methodSignature;
         }
         
-        private boolean isMethodCheck(ClassFile cf, Signature sig)
+        private static boolean isMethodCheck(ClassFile cf, Signature sig)
         throws MethodNotFoundException {
             final String methodDescriptor = sig.getDescriptor();
             if (!Type.splitReturnValueDescriptor(methodDescriptor).equals("" + Type.BOOLEAN) ||
@@ -184,7 +199,7 @@ public final class InitialHeapChecker {
             if (cf.isMethodAbstract(sig) || cf.isMethodNative(sig) || cf.isMethodStatic(sig)) {
                 return false;
             }
-            return isMethodAnnotated(cf, sig);
+            return true;
         }
 
         private boolean isMethodAnnotated(ClassFile cf, Signature sig)
@@ -202,13 +217,16 @@ public final class InitialHeapChecker {
     }
 
     /**
-     * Runs a repOk method in a new {@link Engine}.
+     * Runs a check method in a new {@link Engine}.
      * 
      * @param s the initial {@link State} to run the
-     *        repOk method. It will be modified.
+     *        method. It will be modified.
      * @param r a {@link Reference} to the target
      *        of the method invocation ("this").
      * @param methodSignatureImpl the {@link Signature} of the method to run.
+     *        It must be the signature of the looked up method (i.e., it must
+     *        have its implementation in the declared class) and it must be
+     *        nonnative.
      * @param p the {@link RunnerParameters} object that will be used to build 
      *        the runner; It must be coherent with the parameters of the engine
      *        that created {@code s}. It will be modified.
@@ -238,14 +256,18 @@ public final class InitialHeapChecker {
      */
     //TODO handle and convert all these exceptions and raise the abstraction level of the operation
     private static boolean 
-    doRunRepOk(State s, Reference r, Signature methodSignatureImpl, RunnerParameters p, boolean scopeExhaustionMeansSuccess) 
+    runCheckMethod(State s, Reference r, Signature methodSignatureImpl, RunnerParameters p, boolean scopeExhaustionMeansSuccess) 
     throws CannotBuildEngineException, InitializationException, 
     InvalidClassFileFactoryClassException, InvalidProgramCounterException, 
     NullMethodReceiverException, InvalidSlotException, NonexistingObservedVariablesException, 
     DecisionException, CannotBacktrackException, CannotManageStateException, 
     ClasspathException, ContradictionException, EngineStuckException, FailureException, 
     BadClassFileException, MethodNotFoundException, MethodCodeNotFoundException, ThreadStackEmptyException {
-        s.pushFrame(methodSignatureImpl, true, 0, r);
+        try {
+            s.pushFrame(methodSignatureImpl, true, 0, r);
+        } catch (MethodNotFoundException | MethodCodeNotFoundException e) {
+            return true; //TODO ugly way to cope with nonexistent methods; possibly handle the situation in the constructor of CheckMethodTable
+        }
         p.setInitialState(s);
         final RepOkRunnerActions actions = new RepOkRunnerActions(scopeExhaustionMeansSuccess);
         p.setActions(actions);

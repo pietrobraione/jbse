@@ -808,7 +808,7 @@ public class Run {
 			    final RunnerParameters checkerParameters = this.parameters.getConcretizationDriverParameters();
 			    checkerParameters.setDecisionProcedure(this.decisionProcedureConcretization);
 	            this.checker = 
-                    new InitialHeapChecker(checkerParameters, ConcretizationCheck.class);
+                    new InitialHeapChecker(checkerParameters, ConcretizationCheck.class, this.parameters.concretizationMethods);
 	            this.checker.setInitialStateSupplier(() -> this.engine.getInitialState()); 
                 this.checker.setCurrentStateSupplier(() -> this.engine.getCurrentState()); 
 			}
@@ -877,7 +877,7 @@ public class Run {
 	}
 	
 	private DecisionProcedureAlgorithms createDecisionProcedure(CalculatorRewriting calc)
-	throws CannotBuildEngineException {
+	throws CannotBuildDecisionProcedureException {
 	    final boolean needHeapCheck = (this.parameters.useConservativeRepOks || this.parameters.doConcretization);
 	    
 		//initializes cores
@@ -932,7 +932,7 @@ public class Run {
 		    final RunnerParameters checkerParameters = this.parameters.getConcretizationDriverParameters();
 		    checkerParameters.setDecisionProcedure(this.decisionProcedureConcretization);
 			this.consRepOk = 
-			    new DecisionProcedureConservativeRepOk(core, calc, checkerParameters);
+			    new DecisionProcedureConservativeRepOk(core, calc, checkerParameters, this.parameters.conservativeRepOks);
 			core = this.consRepOk;
 		}
 

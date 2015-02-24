@@ -1,5 +1,6 @@
 package jbse.apps.run;
 
+import java.util.Map;
 import java.util.function.Supplier;
 
 import jbse.common.exc.UnexpectedInternalException;
@@ -29,9 +30,9 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
     private final InitialHeapChecker checker;
     
     public DecisionProcedureConservativeRepOk(DecisionProcedure next, CalculatorRewriting calc, 
-    RunnerParameters checkerParameters) {
+    RunnerParameters checkerParameters, Map<String, String> checkMethods) {
         super(next, calc);
-        this.checker = new InitialHeapChecker(checkerParameters, ConservativeRepOk.class);
+        this.checker = new InitialHeapChecker(checkerParameters, ConservativeRepOk.class, checkMethods);
     }
     
     public void setInitialStateSupplier(Supplier<State> initialStateSupplier) {

@@ -360,14 +360,20 @@ public final class RunParameters implements Cloneable {
 	 * repOK decision procedure.
 	 */
 	boolean useConservativeRepOks = false;
+	
+	/**
+	 *  Associates classes with the name of their respective
+	 *  conservative repOK methods. 
+	 */
+	HashMap<String, String> conservativeRepOks = new HashMap<>();
 
-	/** The heap scope for conservative repOK execution. */
+	/** The heap scope for conservative repOK and concretization execution. */
 	private HashMap<String, Function<State, Integer>> concretizationHeapScopeComputed = new HashMap<>();
 
-	/** The depth scope for conservative repOK execution. */
+	/** The depth scope for conservative repOK and concretization execution. */
 	int concretizationDepthScope = 0;
 
-	/** The count scope for conservative repOK execution. */
+	/** The count scope for conservative repOK and concretization execution. */
 	int concretizationCountScope = 0;
 	
 	/** The {@link DecisionProcedureCreationStrategy} list. */
@@ -402,6 +408,12 @@ public final class RunParameters implements Cloneable {
 	 * must check if the trace can be concretized.
 	 */
 	boolean doConcretization = false;
+    
+    /**
+     *  Associates classes with the name of their respective
+     *  concretization methods. 
+     */
+    HashMap<String, String> concretizationMethods = new HashMap<>();
 
 	/** 
 	 * {@code true} iff the warnings must be logged to 
@@ -762,6 +774,29 @@ public final class RunParameters implements Cloneable {
 	public String getExternalDecisionProcedurePath() {
 		return this.externalDecisionProcedurePath;
 	}
+    
+    /**
+     * Adds another creation strategy to the strategies 
+     * for creating the {@link DecisionProcedure}.
+     * 
+     * @param creationStrategy a {@link DecisionProcedureCreationStrategy}.
+     * @throws NullPointerException if {@code creationStrategy == null}.
+     */
+    public void addDecisionProcedureCreationStrategy(DecisionProcedureCreationStrategy creationStrategy) {
+        if (creationStrategy == null) {
+            throw new NullPointerException();
+        }
+        this.creationStrategies.add(creationStrategy);
+    }
+    
+    /**
+     * Sets the creation strategy for the {@link DecisionProcedure} 
+     * to plain decoration with
+     * {@link DecisionProcedureAlgorithms}. This is the default.
+     */
+    public void clearDecisionProedureCreationStrategies() {
+        this.creationStrategies.clear();
+    }
 	
 	/**
 	 * Sets whether the engine should do a simple sign analysis
@@ -784,17 +819,6 @@ public final class RunParameters implements Cloneable {
 	public void setDoEqualityAnalysis(boolean doEqualityAnalysis) {
 		this.doEqualityAnalysis = doEqualityAnalysis;
 	}
-	
-	/**
-	 * Sets whether the engine should decide references
-	 * by means of LICS rules. 
-	 * 
-	 * @param useLICS {@code true} iff the engine must 
-	 * use LICS rules.
-	 */
-	public void setUseLICS(boolean useLICS) {
-		this.useLICS = useLICS;
-	}
 
 	/**
 	 * Sets whether the engine shall invoke or not the conservative
@@ -805,6 +829,20 @@ public final class RunParameters implements Cloneable {
 	 */
 	public void setUseConservativeRepOks(boolean useConservativeRepOks) {
 		this.useConservativeRepOks = useConservativeRepOks;
+	}
+
+	/**
+	 * Specifies the conservative repOK method of a class
+	 * 
+     * @param className the name of a class.
+     * @param methodName the name of the conservative repOK method 
+     *        contained in the class. It must be a parameterless
+     *        nonnative instance method returning a boolean and it 
+     *        must be defined in the class (i.e., it may not be
+     *        inherited).
+	 */
+	public void addConservativeRepOk(String className, String methodName) {
+	    this.conservativeRepOks.put(className, methodName);
 	}
 	
 	//TODO static (noncomputed) concretization heap scope
@@ -905,6 +943,17 @@ public final class RunParameters implements Cloneable {
 	public void addNotInitializedClasses(String... notInitializedClasses) {
 		Collections.addAll(this.notInizializedClasses, notInitializedClasses);
 	}
+    
+    /**
+     * Sets whether the engine should decide references
+     * by means of LICS rules. 
+     * 
+     * @param useLICS {@code true} iff the engine must 
+     * use LICS rules.
+     */
+    public void setUseLICS(boolean useLICS) {
+        this.useLICS = useLICS;
+    }
 
     /**
      * Specifies a LICS rule for symbolic reference expansion. By default a 
@@ -1051,28 +1100,6 @@ public final class RunParameters implements Cloneable {
 				triggerParametersSignature, triggerMethodName, triggerParameter});
 		this.runnerParameters.addResolveNullTrigger(toResolve, originExp, triggerClassName, 
 				triggerParametersSignature, triggerMethodName, triggerParameter);
-	}
-	
-	/**
-	 * Adds another creation strategy to the strategies 
-	 * for creating the {@link DecisionProcedure}.
-	 * 
-	 * @param creationStrategy a {@link DecisionProcedureCreationStrategy}.
-	 * @throws NullPointerException if {@code creationStrategy == null}.
-	 */
-	public void addCreationStrategy(DecisionProcedureCreationStrategy creationStrategy) {
-		if (creationStrategy == null) {
-			throw new NullPointerException();
-		}
-		this.creationStrategies.add(creationStrategy);
-	}
-	
-	/**
-	 * Sets the creation strategy to plain decoration with
-	 * {@link DecisionProcedureAlgorithms}. This is the default.
-	 */
-	public void clearCreationStrategies() {
-		this.creationStrategies.clear();
 	}
 	
 	/**
@@ -1241,6 +1268,20 @@ public final class RunParameters implements Cloneable {
 	public void setDoConcretization(boolean doConcretization) {
 		this.doConcretization = doConcretization;		
 	}
+
+    /**
+     * Specifies the concretization method of a class
+     * 
+     * @param className the name of a class.
+     * @param methodName the name of the concretization method 
+     *        contained in the class. It must be a parameterless
+     *        nonnative instance method returning a boolean and it 
+     *        must be defined in the class (i.e., it may not be
+     *        inherited).
+     */
+    public void addConcretizationMethod(String className, String methodName) {
+        this.concretizationMethods.put(className, methodName);
+    }
 
 	/**
 	 * Sets the state output format mode. 
@@ -1437,9 +1478,11 @@ public final class RunParameters implements Cloneable {
 		o.resolveAliasInstanceof =  (ArrayList<String[]>) this.resolveAliasInstanceof.clone();
 		o.resolveNotNull =  (ArrayList<String[]>) this.resolveNotNull.clone();
 		o.resolveNull =  (ArrayList<String[]>) this.resolveNull.clone();
+		o.conservativeRepOks = (HashMap<String, String>) this.conservativeRepOks.clone();
 		o.concretizationHeapScopeComputed = (HashMap<String, Function<State, Integer>>) this.concretizationHeapScopeComputed.clone();
 		o.creationStrategies = (ArrayList<DecisionProcedureCreationStrategy>) this.creationStrategies.clone();
 		o.tracesToShow = this.tracesToShow.clone();
+		o.concretizationMethods = (HashMap<String, String>) this.concretizationMethods.clone();
 		o.srcPath = (ArrayList<String>) this.srcPath.clone();
 		return o;
 	}
