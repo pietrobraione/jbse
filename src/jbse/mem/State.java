@@ -854,7 +854,7 @@ public final class State implements Cloneable {
 	}
 
 	/**
-	 * Creates a new frame for a method invocation and pushes it 
+	 * Creates a new frame for a (nonnative) method and pushes it 
 	 * on this state's stack. The actual parameters of the invocation are 
 	 * initialized with values from the invoking frame's operand stack.
 	 * 

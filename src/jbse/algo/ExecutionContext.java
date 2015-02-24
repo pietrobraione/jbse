@@ -28,43 +28,46 @@ import jbse.val.Calculator;
  * @author Pietro Braione
  */
 public final class ExecutionContext {
-	/** The {@link Classpath}.*/
-	final Classpath classpath;
-	
-	/** 
-	 * The {@link DispatcherMeta} for handling methods with 
-	 * meta-level implementation. 
-	 */
-	public final DispatcherMeta dispatcherMeta = new DispatcherMeta();
-	
-	/** 
-	 * The initial {@link State} of symbolic execution. It is a prototype 
-	 * that will be cloned by its getter. 
-	 */
-	private State initialState;
-
-	/** The {@link Signature} of the root (initial) method. Used during initialization (and more). */
+    /** The {@link Classpath}. Used during initialization. */
+    public final Classpath classpath;
+    
+	/** The {@link Signature} of the root (initial) method. Used during initialization. */
 	public final Signature rootMethodSignature;
 	
 	/** The {@link Calculator}. Used during initialization. */
-	final Calculator calc;
+	public final Calculator calc;
+    
+    /** The class for the symbolic execution's {@link ClassFileFactory} 
+     * (injected dependency). Used during initialization.
+     */
+    public final Class<? extends ClassFileFactory> classFileFactoryClass;
+
+    /** 
+     * Maps class names to the names of the subclasses that may be 
+     * used to expand references. Used during initialization.
+     */
+    public final Map<String, Set<String>> expansionBackdoor;
+    
+    /** 
+     * The initial {@link State} of symbolic execution. It is a prototype 
+     * that will be cloned by its getter. 
+     */
+    private State initialState;
+
+    /** The symbolic execution's {@link DecisionAlternativeComparators}. */
+    private final DecisionAlternativeComparators comparators;
+    
+    /** 
+     * The {@link DispatcherMeta} for handling methods with 
+     * meta-level implementation. 
+     */
+    public final DispatcherMeta dispatcherMeta = new DispatcherMeta();
 	
 	/** The symbolic execution's {@link DecisionProcedureAlgorithms}. */
 	public final DecisionProcedureAlgorithms decisionProcedure;
 	
 	/** The symbolic execution's {@link StateTree}. */
 	public final StateTree stateTree;
-	
-	/** The class for the symbolic execution's {@link ClassFileFactory} 
-	 * (injected dependency). Used during initialization.
-	 */
-	public final Class<? extends ClassFileFactory> classFileFactoryClass;
-
-	/** 
-	 * Maps class names to the names of the subclasses that may be 
-	 * used to expand references. Used during initialization.
-	 */
-	public final Map<String, Set<String>> expansionBackdoor;
 	
 	/** The symbolic execution's {@link NativeInvoker}. */
 	public final NativeInvoker nativeInvoker;
@@ -74,9 +77,6 @@ public final class ExecutionContext {
 	 * and executes triggers. 
 	 */
 	public final TriggerManager triggerManager;
-
-	/** The symbolic execution's {@link DecisionAlternativeComparators}. */
-	final DecisionAlternativeComparators comparators;
 	
 	/**
 	 * Constructor.
