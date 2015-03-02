@@ -266,7 +266,7 @@ public final class State implements Cloneable {
 	 * current method.
 	 * 
 	 * @return a {@link Signature}.
-	 * @throws ThreadStackEmptyException if the thread stack is empty.
+	 * @throws ThreadStackEmptyException if the stack is empty.
 	 */
 	public Signature getCurrentMethodSignature() throws ThreadStackEmptyException {
 		return this.stack.currentFrame().getCurrentMethodSignature();
@@ -277,7 +277,7 @@ public final class State implements Cloneable {
 	 * root method.
 	 * 
 	 * @return a {@link Signature}.
-	 * @throws ThreadStackEmptyException  if the stack is empty.
+	 * @throws ThreadStackEmptyException if the stack is empty.
 	 */
 	public Signature getRootMethodSignature() throws ThreadStackEmptyException {
 		return this.stack.rootFrame().getCurrentMethodSignature();
@@ -292,7 +292,7 @@ public final class State implements Cloneable {
 	 * @throws ThreadStackEmptyException if the thread stack is empty.
 	 */
 	public Reference getRootObjectReference() throws ThreadStackEmptyException {
-		final Signature s = this.getRootMethodSignature();
+		final Signature s = getRootMethodSignature();
 		try {
 			if (this.classHierarchy.getClassFile(s.getClassName()).isMethodStatic(s)) {
 				return null;
@@ -358,6 +358,7 @@ public final class State implements Cloneable {
 	 *         {@link State}'s heap contains an {@link Objekt}
 	 *         at the position indicated by {@code ref}, 
 	 *         or {@code ref} is resolved by null.
+     * @throws NullPointerException if {@code ref == null}.
 	 */
 	public boolean resolved(ReferenceSymbolic ref) {
 		return this.pathCondition.resolved(ref);
@@ -369,9 +370,9 @@ public final class State implements Cloneable {
 	 * 
 	 * @param ref a {@link ReferenceSymbolic}.
 	 * @return a {@code long}, the heap position to which
-	 * {@code ref has been resolved.
-	 * @throws NullPointerException if 
-	 * {@link #resolved}{@code (ref) == false}.
+	 * {@code ref} has been resolved, or {@code null} if
+     * {@link #resolved}{@code (ref) == false}.
+     * @throws NullPointerException if {@code ref == null}.
 	 */
     public long getResolution(ReferenceSymbolic ref) {
     	return this.pathCondition.getResolution(ref);
@@ -383,11 +384,12 @@ public final class State implements Cloneable {
      * @param ref a {@link Reference}.
      * @return {@code true} iff {@code ref} is {@link Null}, 
      * or if is a symbolic reference resolved to null.
+     * @throws NullPointerException if {@code ref == null}.
      */
     public boolean isNull(Reference ref) {
     	if (ref instanceof ReferenceSymbolic) {
     		final ReferenceSymbolic refS = (ReferenceSymbolic) ref;
-    		return (this.resolved(refS) && this.getResolution(refS) == jbse.mem.Util.POS_NULL);
+    		return (resolved(refS) && getResolution(refS) == jbse.mem.Util.POS_NULL);
     	} else {
     		return (ref == Null.getInstance());
     	}
@@ -396,7 +398,7 @@ public final class State implements Cloneable {
     /**
      * Gets an object from the heap.
      * 
-     * @param ref a {@link Reference}. It must not be null.
+     * @param ref a {@link Reference}.
      * @return the {@link Objekt} referred to by {@code ref}, or 
      *         {@code null} if {@code ref} does not refer to 
      *         an object in the heap, i.e.
@@ -405,6 +407,7 @@ public final class State implements Cloneable {
      *         <li>{@code ref} is symbolic and resolved to null, or</li> 
      *         <li>{@code ref} is symbolic and unresolved.</li>
      *         </ul>
+     * @throws NullPointerException if {@code ref == null}.
      */
     public Objekt getObject(Reference ref) {
 		final Objekt retVal;
@@ -1393,6 +1396,8 @@ public final class State implements Cloneable {
 	 * @param heapPosition the heap position of the {@link Objekt} to which 
 	 *        {@code r} is resolved. It must correspond to a heap position
 	 *        where an object is effectively present.
+	 * @param o the {@link Objekt} to which {@code r} is resolved. It will not
+	 *        be modified nor stored.
 	 * @throws ContradictionException if {@code r} is already resolved.
 	 * @throws NullPointerException if either {@code r} or {@code heapPosition} 
 	 *         violates preconditions.

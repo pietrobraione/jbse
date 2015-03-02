@@ -4,12 +4,15 @@ import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.NEGATIVE_ARRAY_SIZE_EXCEPTION;
 
+import jbse.bc.exc.BadClassFileException;
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.mem.State;
+import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -83,12 +86,12 @@ abstract class MultipleStateGenerator_XNEWARRAY extends MultipleStateGenerator<D
 			return o;
 		};
 		
-		this.srs = (State s, DecisionAlternative_XNEWARRAY r) -> {
+		this.rs = (State s, DecisionAlternative_XNEWARRAY r) -> {
 			final Primitive condTrue = (r.ok() ? countsNonNegative : countsNegative);
 			s.assume(ctx.decisionProcedure.simplify(condTrue));
 		};
 		
-		this.sus = (State s, DecisionAlternative_XNEWARRAY r) -> {
+		this.us = (State s, DecisionAlternative_XNEWARRAY r) -> {
 			if (r.ok()) {
 				//calculates the number of dimensions as declared in arrayType
 				//and checks that the length parameter does not exceed this number
@@ -139,9 +142,8 @@ abstract class MultipleStateGenerator_XNEWARRAY extends MultipleStateGenerator<D
 		
 		try {
 			super.generateStates();
-		} catch (DecisionException | RuntimeException e) {
-			throw e;
-		} catch (Exception e) {
+		} catch (BadClassFileException | InvalidTypeException | 
+		         ContradictionException | InvalidInputException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}

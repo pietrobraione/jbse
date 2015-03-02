@@ -8,7 +8,6 @@ import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 
 import java.util.Iterator;
 
-import jbse.algo.exc.CannotManageStateException;
 import jbse.bc.exc.BadClassFileException;
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
@@ -44,8 +43,7 @@ class Algo_XASTORE extends MultipleStateGenerator<DecisionAlternative_XASTORE> i
 	
 	@Override
     public void exec(final State state, final ExecutionContext ctx) 
-    throws DecisionException, CannotManageStateException, 
-    ThreadStackEmptyException, ContradictionException {
+    throws DecisionException, ThreadStackEmptyException, ContradictionException {
         final Value value;
         final Primitive index;
         final Reference arrayRef;
@@ -98,7 +96,7 @@ class Algo_XASTORE extends MultipleStateGenerator<DecisionAlternative_XASTORE> i
     		return o;
 		};
 		
-		this.srs = (State s, DecisionAlternative_XASTORE r) -> {
+		this.rs = (State s, DecisionAlternative_XASTORE r) -> {
 			if (r.isInRange()) {
 				s.assume(ctx.decisionProcedure.simplify(inRange));
 			} else {
@@ -106,7 +104,7 @@ class Algo_XASTORE extends MultipleStateGenerator<DecisionAlternative_XASTORE> i
 			}
 		};
 		
-		this.sus = (State s, DecisionAlternative_XASTORE r) -> {
+		this.us = (State s, DecisionAlternative_XASTORE r) -> {
 			if (r.isInRange()) {
 				try {
 					final Array array = (Array) s.getObject(arrayRef);

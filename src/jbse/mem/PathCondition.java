@@ -126,6 +126,7 @@ final class PathCondition implements Cloneable {
 	 * 
 	 * @param ref a {@link ReferenceSymbolic}.
 	 * @return {@code true} iff {@code ref} is resolved.
+     * @throws NullPointerException if {@code ref == null}.
 	 */
     boolean resolved(ReferenceSymbolic ref) {
     	return this.referenceResolutionMap.containsKey(ref.getId());
@@ -138,9 +139,9 @@ final class PathCondition implements Cloneable {
 	 * @param ref a {@link ReferenceSymbolic}. It must be 
 	 * {@link #resolved}{@code (ref) == true}.
 	 * @return a {@code long}, the heap position to which
-	 * {@code ref has been resolved.
-	 * @throws NullPointerException if 
-	 * {@link #resolved}{@code (ref) == false}.
+	 * {@code ref} has been resolved or {@code null} if
+     * {@link #resolved}{@code (ref) == false}.
+	 * @throws NullPointerException if {@code ref == null}.
 	 */
     long getResolution(ReferenceSymbolic ref) {
     	return this.referenceResolutionMap.get(ref.getId());

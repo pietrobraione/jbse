@@ -36,7 +36,7 @@ public class Algo_JAVA_OBJECT_GETCLASS implements Algorithm {
             }
 			final Objekt thisObj = state.getObject(thisRef);
 			if (thisObj == null) {
-				throw new UnexpectedInternalException("symbolic reference on operand stack");
+				throw new UnexpectedInternalException("the 'this' parameter to java.lang.Object.getClass method is symbolic");
 			}
 			final String className = thisObj.getType();
 

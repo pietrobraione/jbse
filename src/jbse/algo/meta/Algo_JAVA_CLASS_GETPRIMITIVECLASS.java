@@ -8,11 +8,8 @@ import static jbse.bc.Signatures.CLASS_NOT_FOUND_EXCEPTION;
 
 import jbse.algo.Algorithm;
 import jbse.algo.ExecutionContext;
-import jbse.algo.exc.InterruptException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.exc.ClassFileNotFoundException;
-import jbse.common.exc.ClasspathException;
-import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.OperandStackEmptyException;
@@ -22,8 +19,7 @@ import jbse.val.Reference;
 public class Algo_JAVA_CLASS_GETPRIMITIVECLASS implements Algorithm {
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, SymbolicValueNotAllowedException, 
-	ClasspathException, DecisionException, InterruptException {
+	throws ThreadStackEmptyException, SymbolicValueNotAllowedException {
 		try {			
 			//gets the binary name of the primitive type and converts it to a string
             final Reference typeNameRef = (Reference) state.popOperand();

@@ -601,10 +601,12 @@ public abstract class Calculator {
 	 * 
 	 * @param operator an {@link Operator}. It must be unary.
 	 * @param operand a {@link Primitive}.
-	 * @return a {@link Primitive} representing the application of {@code operator} to {@code operand}.
+	 * @return a {@link Primitive} representing the application of {@code operator} 
+	 *         to {@code operand}.
 	 * @throws InvalidOperatorException when {@code operator} is not unary.
-	 * @throws InvalidOperandException 
-	 * @throws InvalidTypeException  
+	 * @throws InvalidOperandException when {@code operand} is {@code null}.
+	 * @throws InvalidTypeException when {@code operand} is not type compatible with
+	 *         the application of {@code operator}.
 	 */
 	public Primitive applyUnary(Operator operator, Primitive operand) 
 	throws InvalidOperatorException, InvalidOperandException, InvalidTypeException {
@@ -632,8 +634,10 @@ public abstract class Calculator {
 	 * @return a {@link Primitive} representing the application of {@code operator} to {@code firstOperand}
 	 *          and {@code secondOperand}.
 	 * @throws InvalidOperatorException  when {@code operator} is not binary.
-	 * @throws InvalidOperandException 
-	 * @throws InvalidTypeException  
+	 * @throws InvalidOperandException when wither {@code firstOperand} or {@code secondOperand}  
+	 *         is {@code null}. 
+	 * @throws InvalidTypeException when {@code firstOperand} and {@code secondOperand} 
+	 *         are not type compatible with the application of {@code operator}. 
 	 */
 	public Primitive applyBinary(Primitive firstOperand, Operator operator, Primitive secondOperand) 
 	throws InvalidOperatorException, InvalidOperandException, InvalidTypeException {
@@ -712,7 +716,7 @@ public abstract class Calculator {
 	 * @return a {@link Primitive} representing the result of converting 
 	 *         {@code arg} to {@code type}, or {@code arg} if it already
 	 *         has type {@code type}.
-	 * @throws InvalidOperandException when {@code arg} is invalid. 
+	 * @throws InvalidOperandException when {@code arg} is {@code null}. 
 	 * @throws InvalidTypeException when {@code arg} cannot be converted 
 	 *         to {@code type}. 
 	 */

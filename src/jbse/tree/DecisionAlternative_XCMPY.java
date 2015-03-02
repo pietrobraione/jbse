@@ -20,7 +20,7 @@ public abstract class DecisionAlternative_XCMPY implements DecisionAlternative {
     	return this.value; 
     }
     
-    public final Operator toOperator() { 
+    public final Operator operator() { 
     	return this.op; 
     }
     

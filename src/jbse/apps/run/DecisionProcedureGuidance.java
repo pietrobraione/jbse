@@ -260,8 +260,8 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 				while (it.hasNext()) {
 					final DecisionAlternative_XCMPY da = it.next();
 					final Primitive conditionToCheck  = 
-							(da.toOperator() == Operator.GT ? comparisonGT :
-								da.toOperator() == Operator.EQ ? comparisonEQ :
+							(da.operator() == Operator.GT ? comparisonGT :
+								da.operator() == Operator.EQ ? comparisonEQ :
 									comparisonLT);
 					final Primitive valueInConcreteState = eval(this.initialStateConcrete, this.rootFrameConcrete, conditionToCheck);
 					if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {

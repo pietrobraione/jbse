@@ -9,8 +9,8 @@ import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import java.util.Collection;
 import java.util.Iterator;
 
-import jbse.algo.exc.CannotManageStateException;
 import jbse.bc.exc.BadClassFileException;
+import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
@@ -60,8 +60,7 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 
 	@Override
 	public void exec(final State state, final ExecutionContext ctx) 
-	throws DecisionException, CannotManageStateException, 
-	ContradictionException, ThreadStackEmptyException {
+	throws DecisionException, ContradictionException, ThreadStackEmptyException {
 	    try {
 	        this.index = (Primitive) state.popOperand();
 	        this.myObjectRef = (Reference) state.popOperand();
@@ -145,19 +144,18 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 			return Outcome.val(shouldRefine, someRefNotExpanded, branchingDecision);
 		};
 		
-		this.srs = new StrategyRefine_XALOAD() {
+		this.rs = new StrategyRefine_XALOAD() {
 			@Override
 			public void refineRefExpands(State s, DecisionAlternative_XALOAD_RefExpands dac) 
 			throws DecisionException, ContradictionException, InvalidTypeException {
 				//handles all the assumptions for reference resolution by expansion
-				Algo_XALOAD.this.refineRefExpands(s, dac); //implemented in MultipleStateGeneratorLoad
+				Algo_XALOAD.this.refineRefExpands(s, dac); //implemented in MultipleStateGenerator_XYLOAD_GETX
 				
 				//assumes the array access expression (index in range)
 				final Primitive accessExpression = dac.getArrayAccessExpression();
 				s.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
 				
 				//updates the array with the resolved reference
-				//TODO is it still necessary? Is it necessary to do it always?
 				final ReferenceSymbolic referenceToExpand = dac.getValueToLoad();
 				writeBackToSource(s, referenceToExpand);					
 			}
@@ -166,14 +164,13 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 			public void refineRefAliases(State s, DecisionAlternative_XALOAD_RefAliases dai)
 			throws DecisionException, ContradictionException {
 				//handles all the assumptions for reference resolution by aliasing
-				Algo_XALOAD.this.refineRefAliases(s, dai); //implemented in MultipleStateGeneratorLoad
+				Algo_XALOAD.this.refineRefAliases(s, dai); //implemented in MultipleStateGenerator_XYLOAD_GETX
 				
 				//assumes the array access expression (index in range)
 				final Primitive accessExpression = dai.getArrayAccessExpression();
 				s.assume(ctx.decisionProcedure.simplify(accessExpression));				
 
 				//updates the array with the resolved reference
-				//TODO is it still necessary? Is it necessary to do it always?
 				final ReferenceSymbolic referenceToResolve = dai.getValueToLoad();
 				writeBackToSource(s, referenceToResolve);
 			}
@@ -181,14 +178,13 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 			@Override
 			public void refineRefNull(State s, DecisionAlternative_XALOAD_RefNull dan) 
 			throws DecisionException, ContradictionException {
-				Algo_XALOAD.this.refineRefNull(s, dan); //implemented in MultipleStateGeneratorLoad
+				Algo_XALOAD.this.refineRefNull(s, dan); //implemented in MultipleStateGenerator_XYLOAD_GETX
 				
 				//further augments the path condition 
 				final Primitive accessExpression = dan.getArrayAccessExpression();
 				s.assume(ctx.decisionProcedure.simplify(accessExpression));
 				
 				//updates the array with the resolved reference
-				//TODO is it still necessary? Is it necessary to do it always?
 				final ReferenceSymbolic referenceToResolve = dan.getValueToLoad();
 				writeBackToSource(s, referenceToResolve);
 			}
@@ -212,7 +208,7 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 			}
 		};
 		
-		this.sus = new StrategyUpdate_XALOAD() {
+		this.us = new StrategyUpdate_XALOAD() {
 			@Override
 			public void updateResolved(State s, DecisionAlternative_XALOAD_Resolved dav) 
 			throws DecisionException, ThreadStackEmptyException {
@@ -249,11 +245,11 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 		//calculates the actual value to push by materializing 
 		//a member array, if it is the case, and then pushes it
 		//on the operand stack
-		if (val instanceof ReferenceArrayImmaterial) { //TODO eliminate manual dispatch and WriteBackStrategy
+		if (val instanceof ReferenceArrayImmaterial) { //TODO eliminate manual dispatch
 			try {
 				final ReferenceArrayImmaterial valRef = (ReferenceArrayImmaterial) val;
 				final ReferenceConcrete valMaterialized = 
-				    s.createArray(valRef.next(), valRef.getLength(), valRef.getArrayType().substring(1));
+				    s.createArray(valRef.next(), valRef.getLength(), Type.getArrayMemberType(valRef.getArrayType()));
 				writeBackToSource(s, valMaterialized);
 				s.pushOperand(valMaterialized);
 				return valMaterialized;

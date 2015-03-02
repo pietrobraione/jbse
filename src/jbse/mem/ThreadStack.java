@@ -68,27 +68,29 @@ class ThreadStack implements Cloneable {
      * 
      * @return the current {@link Frame}, i.e., the 
      *         {@link Frame} on the top of the stack.
-     * @throws ThreadStackEmptyException 
+     * @throws ThreadStackEmptyException if the stack
+     *         is empty.
      */
     Frame currentFrame() throws ThreadStackEmptyException {
-        if (this.isEmpty()) {
+        if (isEmpty()) {
             throw new ThreadStackEmptyException();
         }
         return this.frameStack.get(this.frameStack.size() - 1);
     }
     
     /**
-     * Returns the current frame.
+     * Returns the root frame.
      * 
      * @return the current {@link Frame}, i.e., the 
-     *         {@link Frame} on the top of the stack.
-     * @throws ThreadStackEmptyException 
+     *         {@link Frame} on the bottom of the stack.
+     * @throws ThreadStackEmptyException if the stack
+     *         is empty.
      */
     Frame rootFrame() throws ThreadStackEmptyException {
-        if (this.isEmpty()) {
+        if (isEmpty()) {
             throw new ThreadStackEmptyException();
         }
-        return frameStack.get(ROOT_FRAME);
+        return this.frameStack.get(ROOT_FRAME);
     }
     
     /**

@@ -16,7 +16,6 @@ import jbse.common.Util;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
-import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.OperandStackEmptyException;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -31,8 +30,7 @@ final class Algo_MULTIANEWARRAY extends MultipleStateGenerator_XNEWARRAY impleme
 	
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws DecisionException, ContradictionException, 
-	ThreadStackEmptyException {
+	throws DecisionException, ThreadStackEmptyException {
 		//gets the number of dimensions and the constant pool index
 		final int ndims;
 		final int index;

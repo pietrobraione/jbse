@@ -10,7 +10,6 @@ import jbse.bc.exc.FieldNotFoundException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
-import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Value;
 
 /**
@@ -29,8 +28,7 @@ final class Algo_GETSTATIC extends Algo_GETX {
     
     @Override
     protected Value fieldValue(Signature fieldSignatureResolved)
-    throws DecisionException, ThreadStackEmptyException, 
-    ClasspathException, InterruptException {
+    throws DecisionException, ClasspathException, InterruptException {
         final String fieldClassName = fieldSignatureResolved.getClassName();
         
         //possibly creates and initializes the class of the field

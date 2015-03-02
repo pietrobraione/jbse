@@ -80,16 +80,13 @@ final class Algo_LDCX_Y implements Algorithm {
                 ensureClassInstance(state, classSignature, ctx.decisionProcedure);
                 val = state.referenceToClassInstance(classSignature);
             }
-        } catch (InvalidIndexException e) {
-            throwVerifyError(state);
-            return;
         } catch (ClassFileNotFoundException e) {
             throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
             return;
         } catch (ClassFileNotAccessibleException e) {
             throwNew(state, ILLEGAL_ACCESS_ERROR);
             return;
-        } catch (BadClassFileException e) {
+        } catch (InvalidIndexException | BadClassFileException e) {
             throwVerifyError(state);
             return;
         }

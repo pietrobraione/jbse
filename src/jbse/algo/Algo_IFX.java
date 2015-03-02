@@ -95,12 +95,12 @@ final class Algo_IFX extends MultipleStateGenerator<DecisionAlternative_IFX> imp
     		return o;
 		};
 		
-		this.srs = (State s, DecisionAlternative_IFX r) -> {
+		this.rs = (State s, DecisionAlternative_IFX r) -> {
 			final Primitive condTrue = (r.value() ? condition : condition.not());
 			s.assume(ctx.decisionProcedure.simplify(condTrue));
 		};
 		
-		this.sus = (State s, DecisionAlternative_IFX r) -> {
+		this.us = (State s, DecisionAlternative_IFX r) -> {
 			try {
 				if (r.value()) {
 					s.incPC(branchOffset);

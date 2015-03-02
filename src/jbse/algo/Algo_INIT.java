@@ -12,7 +12,6 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.exc.InitializationException;
 import jbse.mem.State;
-import jbse.mem.exc.ThreadStackEmptyException;
 
 /**
  * {@link Algorithm} for the first execution step.
@@ -54,7 +53,7 @@ public final class Algo_INIT {
 			ensureClassCreatedAndInitialized(state, ctx.rootMethodSignature.getClassName(), ctx.decisionProcedure);
         } catch (InterruptException e) {
             //nothing to do: fall through
-		} catch (BadClassFileException | ThreadStackEmptyException e) {
+		} catch (BadClassFileException e) {
 			//this should not happen after push frame
 			throw new UnexpectedInternalException(e);
         }

@@ -155,7 +155,7 @@ final class Algo_INVOKEX implements Algorithm {
             //TODO is it ok?
             throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
             return;
-        } catch (BadClassFileException | ArrayIndexOutOfBoundsException | ClassCastException e) {
+        } catch (NullPointerException | BadClassFileException e) {
             throwVerifyError(state);
             return;
         } catch (MethodNotFoundException e) {
@@ -187,7 +187,7 @@ final class Algo_INVOKEX implements Algorithm {
         
         //if the method has no implementation, raises AbstractMethodError
         try {
-            if (classMethodImpl == null || classMethodImpl.isMethodAbstract(methodSignatureResolved)) {
+            if (classMethodImpl == null || classMethodImpl.isMethodAbstract(methodSignatureImpl)) {
                 throwNew(state, ABSTRACT_METHOD_ERROR);
                 return;
             }
@@ -199,7 +199,7 @@ final class Algo_INVOKEX implements Algorithm {
         //pops the args from the operand stack        
         final Value[] args;
         try {
-            args = state.popMethodCallArgs(methodSignatureResolved, this.isStatic);
+            args = state.popMethodCallArgs(methodSignatureImpl, this.isStatic);
         } catch (OperandStackEmptyException e) {
             throwVerifyError(state);
             return;

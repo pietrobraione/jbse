@@ -65,7 +65,7 @@ final class Algo_XSWITCH extends MultipleStateGenerator<DecisionAlternative_XSWI
 			return o;
 		};
 		
-		this.srs = (State s, DecisionAlternative_XSWITCH r) -> {
+		this.rs = (State s, DecisionAlternative_XSWITCH r) -> {
 			//augments the path condition
 			final Expression branchCondition;
 			try {
@@ -82,7 +82,7 @@ final class Algo_XSWITCH extends MultipleStateGenerator<DecisionAlternative_XSWI
 			s.assume(ctx.decisionProcedure.simplify(branchCondition));
 		};
 		
-		this.sus = (State s, DecisionAlternative_XSWITCH r) -> {
+		this.us = (State s, DecisionAlternative_XSWITCH r) -> {
 			final int jumpOffset;
 			if (r.isDefault()) {
 				jumpOffset = tab.jumpOffsetDefault();

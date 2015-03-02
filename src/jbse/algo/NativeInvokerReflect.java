@@ -105,24 +105,10 @@ public class NativeInvokerReflect implements NativeInvoker {
 	
 	private Value toValue(Calculator calc, Object retValRefl, String type) 
 	throws CannotInvokeNativeException {
-		if (type.equals("" + Type.BYTE)) {
-			return calc.valByte(((Byte) retValRefl).byteValue());
-		} else if (type.equals("" + Type.SHORT)) {
-			return calc.valShort(((Short) retValRefl).shortValue());
-		} else if (type.equals("" + Type.INT)) {
-			return calc.valInt(((Integer) retValRefl).intValue());
-		} else if (type.equals("" + Type.LONG)) {
-			return calc.valLong(((Long) retValRefl).longValue());
-		} else if (type.equals("" + Type.FLOAT)) {
-			return calc.valFloat(((Float) retValRefl).floatValue());
-		} else if (type.equals("" + Type.DOUBLE)) {
-			return calc.valDouble(((Double) retValRefl).doubleValue());
-		} else if (type.equals("" + Type.CHAR)) {
-			return calc.valChar(((Character) retValRefl).charValue());
-		} else if (type.equals("" + Type.BOOLEAN)) {
-			return calc.valBoolean(((Boolean) retValRefl).booleanValue());
-		} else if (type.equals("" + Type.VOID)) {
-			return null;
+	    if (type.equals("" + Type.VOID)) {
+            return null;
+        } else if (Type.isPrimitive(type)) {
+            return calc.val_(retValRefl);
 		} else {
 			//TODO implement reification of objects
 			throw new CannotInvokeNativeException();

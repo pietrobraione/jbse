@@ -54,22 +54,22 @@ abstract class MultipleStateGenerator_XLOAD_GETX extends MultipleStateGenerator_
 			return o;
 		};
 		
-		this.srs = new StrategyRefine_XLOAD_GETX() {
+		this.rs = new StrategyRefine_XLOAD_GETX() {
 			@Override
 			public void refineRefExpands(State s, DecisionAlternative_XLOAD_GETX_RefExpands drc) 
-			throws DecisionException, ContradictionException, InvalidTypeException {
+			throws ContradictionException, InvalidTypeException {
 				MultipleStateGenerator_XLOAD_GETX.this.refineRefExpands(s, drc); //implemented in MultipleStateGeneratorLoad
 			}
 
 			@Override
 			public void refineRefAliases(State s, DecisionAlternative_XLOAD_GETX_RefAliases dro)
-			throws DecisionException, ContradictionException {
+			throws ContradictionException {
 				MultipleStateGenerator_XLOAD_GETX.this.refineRefAliases(s, dro); //implemented in MultipleStateGeneratorLoad
 			}
 
 			@Override
 			public void refineRefNull(State s, DecisionAlternative_XLOAD_GETX_RefNull drn)
-			throws DecisionException, ContradictionException {
+			throws ContradictionException {
 				MultipleStateGenerator_XLOAD_GETX.this.refineRefNull(s, drn); //implemented in MultipleStateGeneratorLoad
 			}
 
@@ -79,7 +79,7 @@ abstract class MultipleStateGenerator_XLOAD_GETX extends MultipleStateGenerator_
 			}
 		};
 		
-		this.sus = (State s, DecisionAlternative_XLOAD_GETX r) -> {
+		this.us = (State s, DecisionAlternative_XLOAD_GETX r) -> {
 			MultipleStateGenerator_XLOAD_GETX.this.update(s, r);
 		};
 		

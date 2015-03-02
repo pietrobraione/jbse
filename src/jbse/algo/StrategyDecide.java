@@ -29,9 +29,13 @@ interface StrategyDecide<R> {
 	 *         for the return value to be {@code true}, but it may not
 	 *         (e.g., for any values no refinement is necessary), and
 	 *         it may not even be necessary.
-	 * @throws InvalidInputException
-	 * @throws BadClassFileException
-	 * @throws DecisionException
+	 * @throws InvalidInputException possibly thrown by the decision procedure
+	 *         when invoked with invalid parameters.
+     * @throws DecisionException possibly thrown by the decision procedure
+     *         upon failure.
+	 * @throws BadClassFileException possibly thrown by the decision procedure
+     *         when performing reference resolution, if some classfile is
+     *         missing or is incompatible with the current JBSE.
 	 */
 	public Outcome decide(SortedSet<R> results) 
 	throws InvalidInputException, BadClassFileException, DecisionException;

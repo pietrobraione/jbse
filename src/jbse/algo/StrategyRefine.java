@@ -22,9 +22,12 @@ interface StrategyRefine<R> {
 	 * @param s the {@link State} to be refined.
 	 * @param r the outcome of a previous decision, which establishes 
 	 *          the criterion on which the state shall be refined.
-	 * @throws DecisionException
-	 * @throws ContradictionException 
-	 * @throws InvalidTypeException
+	 * @throws DecisionException possibly raised when the refinement 
+	 *         action must simplify some symbolic array entries.
+	 * @throws ContradictionException possibly raised when the refinement
+	 *         action leads to a contradiction in the path condition.
+	 * @throws InvalidTypeException possibly raised when using a value 
+	 *         with the wrong type in the refinement action.
 	 */
 	public void refine(State s, R r) 
 	throws DecisionException, ContradictionException, InvalidTypeException;

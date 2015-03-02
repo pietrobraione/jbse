@@ -4,7 +4,6 @@ import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 
-import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.OperandStackEmptyException;
@@ -15,7 +14,7 @@ class Algo_MONITORX implements Algorithm {
 	
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, DecisionException {
+	throws ThreadStackEmptyException {
 		//pops its operand and checks it
 		final Reference v;
 		try {

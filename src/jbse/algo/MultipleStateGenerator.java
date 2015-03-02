@@ -42,13 +42,13 @@ public abstract class MultipleStateGenerator<R extends DecisionAlternative> {
 	protected StrategyDecide<R> ds; 
 	
 	/** The {@link StrategyRefine} used to refine each generated state. */
-	protected StrategyRefine<R> srs;
+	protected StrategyRefine<R> rs;
 	
 	/** 
 	 * The {@link StrategyUpdate} used to complete the bytecode semantics 
 	 * of the generated states.
 	 */
-	protected StrategyUpdate<R> sus;
+	protected StrategyUpdate<R> us;
 	
 	/** Must be set by subclasses to the current {@link State}. */
 	protected State state;
@@ -67,17 +67,24 @@ public abstract class MultipleStateGenerator<R extends DecisionAlternative> {
 	 * <li>Finally, adds all the obtained states to the state tree, creating 
 	 * a branch if it is the case.</li>
 	 * </ul>
-	 * @throws BadClassFileException
-	 * @throws DecisionException
-	 * @throws ContradictionException 
-	 * @throws InvalidInputException
-	 * @throws InvalidTypeException
-	 * @throws ThreadStackEmptyException  
+     * @throws InvalidInputException possibly raised when this method invokes
+     *         {@link StrategyDecide#decide(SortedSet) ds.decide(...)}.
+     * @throws BadClassFileException possibly raised when this method invokes 
+     *         {@link StrategyDecide#decide(SortedSet) ds.decide(...)}
+     * @throws DecisionException possibly raised when this method invokes
+     *         {@link StrategyDecide#decide(SortedSet) ds.decide(...)}, 
+     *         {@link StrategyRefine#refine(State, R) rs.refine(...)} or
+     *         {@link StrategyUpdate#update(State, R) us.update(...)}.
+	 * @throws ContradictionException possibly raised when this method invokes 
+     *         {@link StrategyRefine#refine(State, R) rs.refine(...)}.
+	 * @throws InvalidTypeException possibly raised when this method invokes 
+     *         {@link StrategyRefine#refine(State, R) rs.refine(...)}.
+	 * @throws ThreadStackEmptyException possibly raised when this method invokes 
+     *         {@link StrategyUpdate#update(State, R) us.update(...)}.
 	 */
 	protected void generateStates() 
-	throws BadClassFileException, DecisionException, 
-	ContradictionException, InvalidInputException, 
-	InvalidTypeException, ThreadStackEmptyException {
+	throws InvalidInputException, BadClassFileException, DecisionException, 
+	ContradictionException, InvalidTypeException, ThreadStackEmptyException {
 		//decides the satisfiability of the different alternatives
 		final SortedSet<R> decisionResults = this.ctx.mkDecisionResultSet(this.superclassDecisionAlternatives);		
 		final Outcome outcome = this.ds.decide(decisionResults);
@@ -98,11 +105,11 @@ public abstract class MultipleStateGenerator<R extends DecisionAlternative> {
 
 			//possibly refines the state
 			if (shouldRefine) {
-				this.srs.refine(s, r);
+				this.rs.refine(s, r);
 			}
 			
 			//completes the bytecode semantics
-			this.sus.update(s, r);
+			this.us.update(s, r);
 
 			//has the state been produced by a branching decision?
 			s.setBranchingDecision(branchingDecision);

@@ -172,8 +172,6 @@ public class Util {
 	 *         whether {@code className} is or is not initialized.
 	 * @throws ClassFileNotFoundException if {@code className} does 
 	 *         not have a suitable classfile in the classpath.
-	 * @throws ThreadStackEmptyException if {@code state} has not a 
-	 *         current frame (is stuck).
 	 * @throws ClasspathException if some standard JRE class is missing
 	 *         from {@code state}'s classpath or is incompatible with the
 	 *         current version of JBSE. 
@@ -184,7 +182,7 @@ public class Util {
 	 */
 	public static void ensureClassCreatedAndInitialized(State state, String className, DecisionProcedure dec) 
 	throws DecisionException, BadClassFileException, 
-	ThreadStackEmptyException, ClasspathException, InterruptException {
+	ClasspathException, InterruptException {
         final ClassInitializer ci = new ClassInitializer(state, dec);
         final boolean failed = ci.initialize(className);
         if (failed) {
@@ -294,12 +292,9 @@ public class Util {
          * @throws ClasspathException if the classfile for some JRE class
          *         is not in the classpath or is incompatible with the
          *         current version of JBSE.
-         * @throws ThreadStackEmptyException if {@code this.s} has an empty
-         *         thread stack.
          */
 		private boolean initialize(String className)
-		throws DecisionException, BadClassFileException, 
-		ThreadStackEmptyException, ClasspathException {
+		throws DecisionException, BadClassFileException, ClasspathException {
 		    phase1(className);
             if (this.failed) {
                 handleFailure();
@@ -499,7 +494,7 @@ public class Util {
             } 
         }
         
-        private void handleFailure() throws ThreadStackEmptyException {
+        private void handleFailure() {
             //pops all the frames created by the recursive calls
             for (int i = 1; i <= this.createdFrames; ++i) {
                 try {

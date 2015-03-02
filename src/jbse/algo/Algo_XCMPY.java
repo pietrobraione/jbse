@@ -92,17 +92,17 @@ final class Algo_XCMPY extends MultipleStateGenerator<DecisionAlternative_XCMPY>
 				return o;
 			};
 
-			this.srs = (State s, DecisionAlternative_XCMPY r) -> {
+			this.rs = (State s, DecisionAlternative_XCMPY r) -> {
 				try {
-					s.assume(ctx.decisionProcedure.simplify(calc.applyBinary(val1, r.toOperator(), val2)));
+					s.assume(ctx.decisionProcedure.simplify(calc.applyBinary(val1, r.operator(), val2)));
 				} catch (InvalidOperatorException | InvalidOperandException
 						| InvalidTypeException e) {
-					//this should never happen after decideComparison call
+					//this should never happen if decide_XCMPY has not raised InvalidInputException
 					throw new UnexpectedInternalException(e);
 				}
 			};
 
-			this.sus = (State s, DecisionAlternative_XCMPY r) -> {
+			this.us = (State s, DecisionAlternative_XCMPY r) -> {
 				s.pushOperand(calc.valInt(r.value()));
 				try {
 					s.incPC();

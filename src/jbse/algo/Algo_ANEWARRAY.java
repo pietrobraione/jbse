@@ -87,6 +87,6 @@ final class Algo_ANEWARRAY extends MultipleStateGenerator_XNEWARRAY implements A
     	this.pcOffset = ANEWARRAY_OFFSET;
     	this.dimensionsCounts = new Primitive[] { length };
         this.arrayType = arraySignature;
-    	this.generateStates();
+    	generateStates();
     } 
 }
