@@ -90,10 +90,10 @@ public class Util {
 	}
 	
 	public static long heapPosition(State s, Reference r) {
-		if (r.isSymbolic() && !isResolved(s, r)) {
-			return POS_UNKNOWN;
+		if (isResolved(s, r)) {
+	        return (r.isSymbolic() ? s.getResolution((ReferenceSymbolic) r) : ((ReferenceConcrete) r).getHeapPosition());
 		}
-		return (r.isSymbolic() ? s.getResolution((ReferenceSymbolic) r) : ((ReferenceConcrete) r).getHeapPosition());
+        return POS_UNKNOWN;
 	}
 	
 	/**
@@ -102,7 +102,8 @@ public class Util {
 	 * @param s a {@link State}. It must not be {@code null}.
 	 * @param v a {@link Value}. It must not be {@code null}.
 	 * @return {@code true} iff {@code v} is resolved, i.e., 
-	 * either is a {@link Primitive} (symbolic or not), or a symbolic 
+	 * either is a {@link Primitive} (symbolic or not), or a 
+	 * concrete {@link Reference}, or a symbolic 
 	 * {@link Reference} resolved in {@code s}.
 	 */
 	public static boolean isResolved(State s, Value v) {

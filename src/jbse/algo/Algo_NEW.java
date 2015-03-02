@@ -73,7 +73,7 @@ final class Algo_NEW implements Algorithm {
 		}
 
         //creates the new object in the heap
-        state.push(state.createInstance(classSignature));
+        state.pushOperand(state.createInstance(classSignature));
         
 		try {
 			state.incPC(3);

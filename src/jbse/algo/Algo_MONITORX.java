@@ -19,7 +19,7 @@ class Algo_MONITORX implements Algorithm {
 		//pops its operand and checks it
 		final Reference v;
 		try {
-		    v = (Reference) state.pop();
+		    v = (Reference) state.popOperand();
 		} catch (OperandStackEmptyException | ClassCastException e) {
             throwVerifyError(state);
             return;

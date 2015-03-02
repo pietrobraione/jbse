@@ -30,7 +30,7 @@ public class Algo_JAVA_OBJECT_GETCLASS implements Algorithm {
 	ClasspathException, DecisionException, InterruptException {
 		try {			
 			//gets the "this" object and the name of its class
-            final Reference thisRef = (Reference) state.top();
+            final Reference thisRef = (Reference) state.topOperand();
             if (state.isNull(thisRef)) {
                 throwNew(state, NULL_POINTER_EXCEPTION);
             }
@@ -43,8 +43,8 @@ public class Algo_JAVA_OBJECT_GETCLASS implements Algorithm {
 			//gets the instance of the class of the "this" object
 			ensureClassInstance(state, className, ctx.decisionProcedure);
 			final Reference classRef = state.referenceToClassInstance(className);
-			state.pop();
-			state.push(classRef);
+			state.popOperand();
+			state.pushOperand(classRef);
         } catch (ClassFileNotAccessibleException e) {
             throwNew(state, ILLEGAL_ACCESS_ERROR);
             return;

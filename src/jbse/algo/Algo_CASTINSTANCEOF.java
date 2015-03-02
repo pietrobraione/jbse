@@ -69,7 +69,7 @@ abstract class Algo_CASTINSTANCEOF implements Algorithm {
         //object to be checked
         final Reference tmpValue;
         try {
-            tmpValue = (Reference) state.top();
+            tmpValue = (Reference) state.topOperand();
         } catch (OperandStackEmptyException e) {
             throwVerifyError(state);
             return;

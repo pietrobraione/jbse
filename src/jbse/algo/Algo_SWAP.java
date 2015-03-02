@@ -13,10 +13,10 @@ final class Algo_SWAP implements Algorithm {
 	public void exec(State state, ExecutionContext ctx) 
 	throws ThreadStackEmptyException {
 	    try {
-	        final Value tmp2 = state.pop();
-	        final Value tmp1 = state.pop();
-	        state.push(tmp2);
-	        state.push(tmp1);
+	        final Value tmp2 = state.popOperand();
+	        final Value tmp1 = state.popOperand();
+	        state.pushOperand(tmp2);
+	        state.pushOperand(tmp1);
 	    } catch (OperandStackEmptyException e) {
 	        throwVerifyError(state);
 	        return;

@@ -45,8 +45,8 @@ final class Algo_XCMPY extends MultipleStateGenerator<DecisionAlternative_XCMPY>
 		//takes operands from current frame's operand stack
         final Primitive val1, val2;
         try {
-            val2 = (Primitive) state.pop();
-            val1 = (Primitive) state.pop();
+            val2 = (Primitive) state.popOperand();
+            val1 = (Primitive) state.popOperand();
         } catch (OperandStackEmptyException | ClassCastException e) {
             throwVerifyError(state);
             return;
@@ -74,7 +74,7 @@ final class Algo_XCMPY extends MultipleStateGenerator<DecisionAlternative_XCMPY>
 			//fast (and common) case: pushes the difference between val1 and val2
 			//since checking it is equivalent to checking the true outcome of the bytecode 
 			try {
-				state.push(val1.sub(val2));
+				state.pushOperand(val1.sub(val2));
 			} catch (InvalidOperandException | InvalidTypeException e) {
 	            throwVerifyError(state);
 				return;
@@ -103,7 +103,7 @@ final class Algo_XCMPY extends MultipleStateGenerator<DecisionAlternative_XCMPY>
 			};
 
 			this.sus = (State s, DecisionAlternative_XCMPY r) -> {
-				s.push(calc.valInt(r.value()));
+				s.pushOperand(calc.valInt(r.value()));
 				try {
 					s.incPC();
 				} catch (InvalidProgramCounterException e) {

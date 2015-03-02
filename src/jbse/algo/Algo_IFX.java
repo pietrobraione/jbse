@@ -55,7 +55,7 @@ final class Algo_IFX extends MultipleStateGenerator<DecisionAlternative_IFX> imp
         //takes operands from current frame's operand stack
         Primitive val1, val2;
         try {
-            val1 = (Primitive) state.pop();
+            val1 = (Primitive) state.popOperand();
             if (this.compareWithZero) {
                 val2 = state.getCalculator().valInt(0);
                 //cast necessary because the Algo_XCMPY state space reduction  
@@ -73,7 +73,7 @@ final class Algo_IFX extends MultipleStateGenerator<DecisionAlternative_IFX> imp
             } else {
                 //swaps the operands for comparison
                 val2 = val1;
-                val1 = (Primitive) state.pop();
+                val1 = (Primitive) state.popOperand();
             }
         } catch (OperandStackEmptyException | ClassCastException e) {
             throwVerifyError(state);

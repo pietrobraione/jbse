@@ -20,7 +20,7 @@ public class Algo_JBSE_ANALYSIS_ISRUNBYJBSE implements Algorithm {
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
 	throws ThreadStackEmptyException {
-		state.push(state.getCalculator().valInt(1)); //boolean is *not* an operand stack type, int is!
+		state.pushOperand(state.getCalculator().valInt(1)); //boolean is *not* an operand stack type, int is!
         try {
 			state.incPC(INVOKESPECIALSTATICVIRTUAL_OFFSET);
 		} catch (InvalidProgramCounterException e) {

@@ -63,8 +63,8 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 	throws DecisionException, CannotManageStateException, 
 	ContradictionException, ThreadStackEmptyException {
 	    try {
-	        this.index = (Primitive) state.pop();
-	        this.myObjectRef = (Reference) state.pop();
+	        this.index = (Primitive) state.popOperand();
+	        this.myObjectRef = (Reference) state.popOperand();
 	    } catch (OperandStackEmptyException | ClassCastException e) {
 	        throwVerifyError(state);
 	        return;
@@ -255,7 +255,7 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 				final ReferenceConcrete valMaterialized = 
 				    s.createArray(valRef.next(), valRef.getLength(), valRef.getArrayType().substring(1));
 				writeBackToSource(s, valMaterialized);
-				s.push(valMaterialized);
+				s.pushOperand(valMaterialized);
 				return valMaterialized;
 			} catch (InvalidTypeException | ThreadStackEmptyException e) {
 				//this should never happen

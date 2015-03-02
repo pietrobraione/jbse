@@ -20,13 +20,13 @@ final class Algo_DUPX implements Algorithm {
         boolean error = false;
 
         try {
-            final Value tmp1 = state.pop();
+            final Value tmp1 = state.popOperand();
             if (this.cat1) {
                 //dup
                 if (Type.isCat_1(tmp1.getType())) {
                     //dup semantics
-                    state.push(tmp1);
-                    state.push(tmp1);
+                    state.pushOperand(tmp1);
+                    state.pushOperand(tmp1);
                 } else {
                     //dup: incorrect operand
                     error = true;
@@ -35,21 +35,21 @@ final class Algo_DUPX implements Algorithm {
                 //dup2
                 if (Type.isCat_1(tmp1.getType())) {
                     //dup2: we need a second operand 
-                    final Value tmp2 = state.pop();
+                    final Value tmp2 = state.popOperand();
                     if (Type.isCat_1(tmp2.getType())) {
                         //dup2 form 1 semantics
-                        state.push(tmp2);
-                        state.push(tmp1);
-                        state.push(tmp2);
-                        state.push(tmp1);
+                        state.pushOperand(tmp2);
+                        state.pushOperand(tmp1);
+                        state.pushOperand(tmp2);
+                        state.pushOperand(tmp1);
                     } else {
                         //dup2: incorrect operand 2
                         error = true;
                     }
                 } else {
                     //dup2 form 2 semantics 
-                    state.push(tmp1);
-                    state.push(tmp1);
+                    state.pushOperand(tmp1);
+                    state.pushOperand(tmp1);
                 }
             }
 		} catch (OperandStackEmptyException e) {

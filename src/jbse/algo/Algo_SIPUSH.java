@@ -21,7 +21,7 @@ final class Algo_SIPUSH implements Algorithm {
 		try {
 			final byte tmp0 = state.getInstruction(1);
 			final byte tmp1 = state.getInstruction(2);
-			state.push(state.getCalculator().valInt((int) Util.byteCatShort(tmp0, tmp1)));
+			state.pushOperand(state.getCalculator().valInt((int) Util.byteCatShort(tmp0, tmp1)));
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 			return;

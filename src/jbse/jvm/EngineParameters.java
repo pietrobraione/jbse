@@ -56,13 +56,20 @@ public final class EngineParameters implements Cloneable {
 		 */
 		COMPACT(StateTree.StateIdentificationMode.COMPACT), 
 		
-		REPLICABLE(StateTree.StateIdentificationMode.REPRODUCIBLE),
+        /** 
+         * Each branch is identified by a number
+         * statically assigned accordint to the type of the branch. 
+         * This identification is still compact but not exec-faithful, 
+         * and is fragile on the number of siblings, that might
+         * depend on the decision procedure and on the preconditions.
+         */
+		REPLICABLE(StateTree.StateIdentificationMode.REPLICABLE),
 
 		/**
 		 * Each branch is identified by a complex string 
 		 * identifier reflecting the decision which generated it.
 		 * This identification may be complex and not exec-faithful, 
-		 * but univocally identifies symbolic execution
+		 * but gives an unique identifier to symbolic execution
 		 * traces up to target code recompilation.
 		 */
 		LONG(StateTree.StateIdentificationMode.LONG);

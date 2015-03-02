@@ -1,8 +1,8 @@
 package jbse.algo;
 
-import static jbse.algo.Util.aliases;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.common.Util.byteCatShort;
+import static jbse.mem.Util.areAlias;
 
 import jbse.mem.State;
 import jbse.mem.exc.InvalidProgramCounterException;
@@ -39,11 +39,11 @@ final class Algo_IF_ACMPX_XNULL implements Algorithm {
         //takes operands from current frame's operand stack;        
         final Reference val1, val2;
         try {
-            val2 = (Reference) state.pop();
+            val2 = (Reference) state.popOperand();
             if (this.compareWithNull) {
                 val1 = Null.getInstance();
             } else {
-                val1 = (Reference) state.pop();
+                val1 = (Reference) state.popOperand();
             }
         } catch (OperandStackEmptyException | ClassCastException e) {
             throwVerifyError(state);
@@ -53,7 +53,7 @@ final class Algo_IF_ACMPX_XNULL implements Algorithm {
         //computes branch condition by comparing val1 and
         //val2 (note that both are resolved as they come
 		//from the operand stack)
-        boolean doJump = aliases(state, val1, val2); //also true when both are null
+        boolean doJump = areAlias(state, val1, val2); //also true when both are null
         if (this.eq) {
             ; //do nothing
         } else {

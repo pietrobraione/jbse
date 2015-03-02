@@ -16,12 +16,12 @@ public final class Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH implements Algorithm {
 	throws ThreadStackEmptyException {
 		//TODO replace this dummy implementation
 		try {
-            state.pop();  //pops "this"
+            state.popOperand();  //pops "this"
         } catch (OperandStackEmptyException e) {
             throwVerifyError(state);
             return;
         }
-		state.push(state.getCalculator().valInt(0));
+		state.pushOperand(state.getCalculator().valInt(0));
 		
         try {
 			state.incPC(INVOKESPECIALSTATICVIRTUAL_OFFSET);

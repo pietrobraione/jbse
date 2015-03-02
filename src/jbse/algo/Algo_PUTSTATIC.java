@@ -123,7 +123,7 @@ class Algo_PUTSTATIC implements Algorithm {
         //pops the value from the operand stack
         //and sets the field
 		try {
-		    final Value tmpValue = state.pop();
+		    final Value tmpValue = state.popOperand();
 		    //TODO check the type of tmpValue, possibly in setFieldValue??
 		    state.getKlass(fieldClassName).setFieldValue(fieldSignatureResolved, tmpValue);
 		} catch (OperandStackEmptyException e) {

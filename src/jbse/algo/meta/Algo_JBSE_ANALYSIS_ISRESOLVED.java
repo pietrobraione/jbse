@@ -25,8 +25,8 @@ public class Algo_JBSE_ANALYSIS_ISRESOLVED implements Algorithm {
 	throws ThreadStackEmptyException, SymbolicValueNotAllowedException {
 	    final Reference fieldNameRef, objRef;
 		try {
-		    fieldNameRef = (Reference) state.pop();
-		    objRef = (Reference) state.pop();
+		    fieldNameRef = (Reference) state.popOperand();
+		    objRef = (Reference) state.popOperand();
         } catch (OperandStackEmptyException e) {
             throwVerifyError(state);
             return;
@@ -57,7 +57,7 @@ public class Algo_JBSE_ANALYSIS_ISRESOLVED implements Algorithm {
 		} else {
 		    retVal = state.getCalculator().valInt(1);
 		}
-		state.push(retVal);
+		state.pushOperand(retVal);
 
 		try {
 			state.incPC(INVOKESPECIALSTATICVIRTUAL_OFFSET);

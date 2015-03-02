@@ -14,7 +14,7 @@ final class Algo_ACONST_NULL implements Algorithm {
 	@Override
     public void exec(State state, ExecutionContext ctx) 
     throws ThreadStackEmptyException {
-        state.push(Null.getInstance());
+        state.pushOperand(Null.getInstance());
         try {
 			state.incPC(XCONST_OFFSET);
 		} catch (InvalidProgramCounterException e) {

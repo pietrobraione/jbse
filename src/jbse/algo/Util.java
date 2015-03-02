@@ -14,7 +14,6 @@ import static jbse.bc.Signatures.JAVA_STRING_CASEINSCOMP;
 import static jbse.bc.Signatures.JAVA_STRING_VALUE;
 import static jbse.bc.Signatures.VERIFY_ERROR;
 import static jbse.common.Type.binaryClassName;
-import static jbse.mem.Util.isResolvedSymbolicReference;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -52,40 +51,9 @@ import jbse.mem.exc.InvalidSlotException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
-import jbse.val.ReferenceSymbolic;
 import jbse.val.Value;
 
 public class Util {	
-    /**
-     * Determines whether two {@link Reference}s are alias.
-     * 
-     * @param s a {@link State}.
-     * @param r1 a {@link Reference}.
-     * @param r2 a {@link Reference}.
-     * @return {@code true} iff {@code r1} and {@code r2} are 
-     *         concrete or resolved, and {@code r1} refers to the same 
-     *         object as {@code r2}.
-     */
-	public static boolean aliases(State s, Reference r1, Reference r2) {
-		final long pos1;
-		if (r1 instanceof ReferenceConcrete) {
-			pos1 = ((ReferenceConcrete) r1).getHeapPosition();
-		} else if (isResolvedSymbolicReference(s, r1)) {
-			pos1 = s.getResolution((ReferenceSymbolic) r1);
-		} else {
-			return false;
-		}
-		final long pos2;
-		if (r2 instanceof ReferenceConcrete) {
-			pos2 = ((ReferenceConcrete) r2).getHeapPosition();
-		} else if (isResolvedSymbolicReference(s, r2)) {
-			pos2 = s.getResolution((ReferenceSymbolic) r2);
-		} else {
-			return false;
-		}
-		return (pos1 == pos2);
-	}
-	
 	public static ClassFile lookupMethodImpl(State state, Signature methodSignatureResolved, boolean isStatic, boolean isSpecial, String receiverClassName) 
 	throws BadClassFileException, MethodNotFoundException, IncompatibleClassFileException, ThreadStackEmptyException {
         final ClassFile retVal;
@@ -134,19 +102,16 @@ public class Util {
 
     /**
 	 * Equivalent to 
-	 * {@link #createAndThrowObject}{@code (s, VERIFY_ERROR)}.
+	 * {@link #throwNew}{@code (state, "java/lang/VerifyError")}.
 	 * 
 	 * @param state the {@link State} whose {@link Heap} will receive 
 	 *              the new object.
-	 * @throws ThreadStackEmptyException if the thread stack is empty.
 	 */
 	public static void throwVerifyError(State state) {
 	    try {
 	        final ReferenceConcrete excReference = state.createInstance(VERIFY_ERROR);
-	        state.push(excReference);
             state.throwObject(excReference);
-        } catch (ThreadStackEmptyException | InvalidIndexException |
-                 InvalidProgramCounterException e) {
+        } catch (InvalidIndexException | InvalidProgramCounterException e) {
             //there is not much we can do if this happens
             throw new UnexpectedInternalException(e);
         }
@@ -163,16 +128,13 @@ public class Util {
      * @param state the {@link State} where the new object will be 
      *        created and whose stack will be unwound.
      * @param exceptionClassName the name of the class of the new instance.
-     * @throws ThreadStackEmptyException if the thread stack is empty.
      */
-    public static void throwNew(State state, String exceptionClassName) 
-    throws ThreadStackEmptyException {
+    public static void throwNew(State state, String exceptionClassName) {
         if (exceptionClassName.equals(VERIFY_ERROR)) {
             throwVerifyError(state);
             return;
         }
         final ReferenceConcrete excReference = state.createInstance(exceptionClassName);
-        state.push(excReference);
         throwObject(state, excReference);
     }
 
@@ -185,14 +147,12 @@ public class Util {
      * @param state the {@link State} where the new object will be 
      *        created and whose stack will be unwound.
      * @param toThrow see {@link State#throwObject(Reference)}.
-     * @throws ThreadStackEmptyException if the thread stack is empty.
      */
-    public static void throwObject(State state, Reference toThrow) 
-    throws ThreadStackEmptyException {
+    public static void throwObject(State state, Reference toThrow) {
         try {
             state.throwObject(toThrow);
         } catch (InvalidIndexException | InvalidProgramCounterException e) {
-            throwVerifyError(state);
+            throwVerifyError(state); //TODO that's desperate
         }
     }
 	

@@ -203,7 +203,7 @@ public final class State implements Cloneable {
 	 * @throws OperandStackEmptyException if the current operand 
 	 * stack is empty
 	 */
-	public Value pop() throws ThreadStackEmptyException, OperandStackEmptyException {
+	public Value popOperand() throws ThreadStackEmptyException, OperandStackEmptyException {
 		return this.stack.currentFrame().pop();
 	}
 
@@ -216,7 +216,7 @@ public final class State implements Cloneable {
 	 * @throws OperandStackEmptyException if the current operand
 	 *         stack is empty. 
 	 */
-	public Value top() throws ThreadStackEmptyException, OperandStackEmptyException {
+	public Value topOperand() throws ThreadStackEmptyException, OperandStackEmptyException {
 		return this.stack.currentFrame().top();
 	}
 
@@ -229,9 +229,18 @@ public final class State implements Cloneable {
 	 * operand stack.
 	 * @throws ThreadStackEmptyException if the thread stack is empty. 
 	 */
-	public void push(Value val) throws ThreadStackEmptyException {
+	public void pushOperand(Value val) throws ThreadStackEmptyException {
 		this.stack.currentFrame().push(val);		
 	}
+
+    /**
+     * Clears the current operand stack.
+     * 
+     * @throws ThreadStackEmptyException if the thread stack is empty.
+     */
+    public void clearOperands() throws ThreadStackEmptyException {
+        this.stack.currentFrame().clear();
+    }
 
 	/**
 	 * Checks whether this state may violate some
@@ -804,18 +813,19 @@ public final class State implements Cloneable {
 
 	/**
 	 * Unwinds the stack of this state until it finds an exception 
-     * handler for an object.
+     * handler for an object. If the thread stack is empty after 
+     * unwinding, sets the state to stuck with the unhandled exception
+     * throw as a cause.
 	 * 
 	 * @param exceptionToThrow a {@link Reference} to a throwable 
 	 *        {@link Objekt} in the state's {@link Heap}.
-	 * @throws ThreadStackEmptyException if the thread stack is empty.
 	 * @throws InvalidIndexException if the exception type field in a row of the exception table 
      *         does not contain the index of a valid CONSTANT_Class in the class constant pool.
      * @throws InvalidProgramCounterException if the program counter handle in a row 
      *         of the exception table does not contain a valid program counter.
 	 */
 	public void throwObject(Reference exceptionToThrow) 
-	throws ThreadStackEmptyException, InvalidIndexException, InvalidProgramCounterException {
+	throws InvalidIndexException, InvalidProgramCounterException {
 		//TODO check that exceptionToThrow is resolved/concrete
 		final Objekt myException = getObject(exceptionToThrow);
 		//TODO check that Objekt is Throwable
@@ -827,29 +837,29 @@ public final class State implements Cloneable {
 		}
 
 		//unwinds the stack
-		while (true) {
-			final Signature currentMethodSignature = getCurrentMethodSignature();
-			final String currentClassName = currentMethodSignature.getClassName();
-			final ExceptionTable myExTable;
-			try {
-				myExTable = this.classHierarchy.getClassFile(currentClassName).getExceptionTable(currentMethodSignature);
-			} catch (BadClassFileException | MethodNotFoundException | MethodCodeNotFoundException e) {
-				//this should never happen
-				throw new UnexpectedInternalException(e);
-			}
-			final ExceptionTableEntry tmpEntry = myExTable.getEntry(excTypes, getPC());
-			if (tmpEntry == null) {
-				this.stack.pop();
-				if (this.stack.isEmpty()) {
-					setStuckException(exceptionToThrow);
-					return;
-				}
-			} else {
-			    this.stack.currentFrame().clear();
-                setPC(tmpEntry.getPCHandle());
-			    push(exceptionToThrow);
-			    return;				
-			}
+		try {
+		    while (true) {
+		        if (this.stack.isEmpty()) {
+		            setStuckException(exceptionToThrow);
+		            return;
+		        }
+		        final Signature currentMethodSignature = getCurrentMethodSignature();
+		        final String currentClassName = currentMethodSignature.getClassName();
+		        final ExceptionTable myExTable = this.classHierarchy.getClassFile(currentClassName).getExceptionTable(currentMethodSignature);
+		        final ExceptionTableEntry tmpEntry = myExTable.getEntry(excTypes, getPC());
+		        if (tmpEntry == null) {
+		            this.stack.pop();
+		        } else {
+		            clearOperands();
+		            setPC(tmpEntry.getPCHandle());
+		            pushOperand(exceptionToThrow);
+		            return;				
+		        }
+		    }
+		} catch (ThreadStackEmptyException | BadClassFileException | 
+		         MethodNotFoundException | MethodCodeNotFoundException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
 		}
 	}
 
@@ -1066,7 +1076,7 @@ public final class State implements Cloneable {
 		final int nParams = (isStatic ? paramsDescriptors.length : paramsDescriptors.length + 1);
 		final Value[] argArray = new Value[nParams];
 		for (int i = 1; i <= nParams; ++i) { 
-			argArray[nParams - i] = pop();
+			argArray[nParams - i] = popOperand();
 		}
 		return argArray;
 	}

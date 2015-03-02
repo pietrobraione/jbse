@@ -25,7 +25,7 @@ final class Algo_XSTORE implements Algorithm {
 		final boolean wide = state.nextWide();
 		
 		try {
-	        final Value valTemp = state.pop();
+	        final Value valTemp = state.popOperand();
 			if (!this.hasIndex) {
 				if (wide) {
 					final byte tmp1 = state.getInstruction(1);

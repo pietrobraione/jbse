@@ -32,7 +32,7 @@ final class Algo_GETFIELD extends Algo_GETX {
     protected Value fieldValue(Signature fieldSignatureResolved) 
     throws ThreadStackEmptyException, InterruptException {
         try {
-            final Reference myObjectRef = (Reference) this.state.pop();
+            final Reference myObjectRef = (Reference) this.state.popOperand();
             if (this.state.isNull(myObjectRef)) {
                 throwNew(this.state, NULL_POINTER_EXCEPTION);
                 throw new InterruptException();

@@ -38,7 +38,7 @@ public class StateTree {
 		 */
 		COMPACT, 
 		
-		REPRODUCIBLE,
+		REPLICABLE,
 		
 		/**
 		 * Each branch is identified by a complex string 
@@ -190,7 +190,7 @@ public class StateTree {
      * 
      * @param s the {@link State} to be added.
      * @param branchNumber a {@link int}, the number of the branch starting from {@code s}
-     *        (used when the state identification mode is {@link StateIdentificationMode#REPRODUCIBLE}).
+     *        (used when the state identification mode is {@link StateIdentificationMode#REPLICABLE}).
      * @param branchIdentifier a {@link String}, the identifier of the branch starting from {@code s}
      *        (used when the state identification mode is {@link StateIdentificationMode#LONG}).
      */
@@ -200,7 +200,7 @@ public class StateTree {
 	    } 
 	    	
     	//updates the state identifier
-	    if (this.stateIdMode == StateIdentificationMode.REPRODUCIBLE) {
+	    if (this.stateIdMode == StateIdentificationMode.REPLICABLE) {
 	   		s.appendToIdentifier(IDENTIFIER_SEPARATOR_LONG + branchNumber);
 	    } else if (this.stateIdMode == StateIdentificationMode.LONG) {
 	   		s.appendToIdentifier(IDENTIFIER_SEPARATOR_LONG + branchIdentifier);

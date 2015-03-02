@@ -97,7 +97,7 @@ abstract class MultipleStateGenerator_XYLOAD_GETX<R extends DecisionAlternative>
 		    valToPush = valMaterialized;
 		}
 		
-		s.push(valToPush);
+		s.pushOperand(valToPush);
 		
 		//manages triggers and increments the program counter
 		final boolean goOn;

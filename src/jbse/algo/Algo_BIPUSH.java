@@ -18,7 +18,7 @@ class Algo_BIPUSH implements Algorithm {
     public void exec(State state, ExecutionContext ctx) 
     throws ThreadStackEmptyException {
         try {
-        	state.push(state.getCalculator().valInt((int) state.getInstruction(1)));
+        	state.pushOperand(state.getCalculator().valInt((int) state.getInstruction(1)));
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 			return;

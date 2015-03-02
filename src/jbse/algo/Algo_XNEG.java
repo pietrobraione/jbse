@@ -15,8 +15,8 @@ final class Algo_XNEG implements Algorithm {
 	public void exec(State state, ExecutionContext ctx) 
 	throws ThreadStackEmptyException {
 		try {
-	        final Primitive value = (Primitive) state.pop();
-			state.push(value.neg());
+	        final Primitive value = (Primitive) state.popOperand();
+			state.pushOperand(value.neg());
 		} catch (OperandStackEmptyException | ClassCastException | 
 		         InvalidTypeException e) {
             throwVerifyError(state);

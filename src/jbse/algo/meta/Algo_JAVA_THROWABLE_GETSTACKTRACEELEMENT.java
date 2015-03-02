@@ -16,8 +16,8 @@ public final class Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT implements Algorithm
 	throws ThreadStackEmptyException {
 		//TODO replace this dummy implementation
 	    try {
-	        state.pop();
-	        state.pop();
+	        state.popOperand();
+	        state.popOperand();
 	    } catch (OperandStackEmptyException e) {
 	        throwVerifyError(state);
 	        return;

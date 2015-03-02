@@ -23,7 +23,7 @@ public class Algo_JAVA_STRING_INTERN implements Algorithm {
     throws ThreadStackEmptyException, SymbolicValueNotAllowedException, 
     DecisionException, ClasspathException, InterruptException {
         try {
-            final String valueString = valueString(state, (Reference) state.pop());
+            final String valueString = valueString(state, (Reference) state.popOperand());
             if (valueString == null) {
                 throw new SymbolicValueNotAllowedException("cannot intern a String with symbolic value");
             }
@@ -32,7 +32,7 @@ public class Algo_JAVA_STRING_INTERN implements Algorithm {
             } else {
                 ensureStringLiteral(state, valueString, ctx.decisionProcedure);
             }
-            state.push(state.referenceToStringLiteral(valueString));
+            state.pushOperand(state.referenceToStringLiteral(valueString));
         } catch (OperandStackEmptyException | ClassCastException e) {
             throwVerifyError(state);
             return;

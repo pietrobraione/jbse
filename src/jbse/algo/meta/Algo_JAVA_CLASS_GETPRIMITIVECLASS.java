@@ -26,7 +26,7 @@ public class Algo_JAVA_CLASS_GETPRIMITIVECLASS implements Algorithm {
 	ClasspathException, DecisionException, InterruptException {
 		try {			
 			//gets the binary name of the primitive type and converts it to a string
-            final Reference typeNameRef = (Reference) state.pop();
+            final Reference typeNameRef = (Reference) state.popOperand();
 			final String typeName = valueString(state, typeNameRef);
 			if (typeName == null) {
 				throw new SymbolicValueNotAllowedException("the String parameter to java.lang.Class.getPrimitiveClass method cannot be a symbolic String");
@@ -35,7 +35,7 @@ public class Algo_JAVA_CLASS_GETPRIMITIVECLASS implements Algorithm {
 			//gets the instance of the class
 			state.ensurePrimitiveClassInstance(typeName);
 			final Reference classRef = state.referenceToPrimitiveClassInstance(typeName);
-			state.push(classRef);
+			state.pushOperand(classRef);
         } catch (ClassFileNotFoundException e) {
             throwNew(state, CLASS_NOT_FOUND_EXCEPTION);  //this is how Hotspot behaves
             return;

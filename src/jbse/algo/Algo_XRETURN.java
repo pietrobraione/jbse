@@ -25,7 +25,7 @@ final class Algo_XRETURN implements Algorithm {
 		} else {
 			final Value retValue;
 			try {
-			    retValue = state.pop();
+			    retValue = state.popOperand();
 			} catch (OperandStackEmptyException e) {
 			    throwVerifyError(state);
 			    return;
@@ -35,7 +35,7 @@ final class Algo_XRETURN implements Algorithm {
 				state.setStuckReturn(retValue);
 				return;
 			}
-			state.push(retValue);
+			state.pushOperand(retValue);
 		}
 		
 		try {

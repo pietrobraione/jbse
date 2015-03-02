@@ -95,7 +95,7 @@ final class Algo_LDCX_Y implements Algorithm {
         }
 
 		//pushes the value on the operand stack
-		state.push(val);
+		state.pushOperand(val);
 		
 		//increments the program counter
 		try {

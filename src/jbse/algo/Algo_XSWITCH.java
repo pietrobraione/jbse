@@ -54,7 +54,7 @@ final class Algo_XSWITCH extends MultipleStateGenerator<DecisionAlternative_XSWI
 		//pops the selector
 		final Primitive selector;
 		try {
-		    selector = (Primitive) state.pop();
+		    selector = (Primitive) state.popOperand();
 		} catch (OperandStackEmptyException | ClassCastException e) {
 		    throwVerifyError(state);
 		    return;

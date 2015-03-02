@@ -23,18 +23,18 @@ public class Algo_XBINOP implements Algorithm {
     public void exec(State state, ExecutionContext ctx) 
     throws ThreadStackEmptyException {
         try {
-            final Primitive val2 = (Primitive) state.pop();
-            final Primitive val1 = (Primitive) state.pop();
+            final Primitive val2 = (Primitive) state.popOperand();
+            final Primitive val1 = (Primitive) state.popOperand();
 
         	switch (op) {
         	case ADD:
-        		state.push(val1.add(val2));
+        		state.pushOperand(val1.add(val2));
         		break;
         	case SUB:
-        		state.push(val1.sub(val2));
+        		state.pushOperand(val1.sub(val2));
         		break;
         	case MUL:
-        		state.push(val1.mul(val2));
+        		state.pushOperand(val1.mul(val2));
         		break;
         	case DIV:
         	case REM:
@@ -48,25 +48,25 @@ public class Algo_XBINOP implements Algorithm {
         				}
         			}
         		}
-        		state.push(op == Operator.DIV ? val1.div(val2) : val1.rem(val2));
+        		state.pushOperand(op == Operator.DIV ? val1.div(val2) : val1.rem(val2));
         		break;
         	case SHL:
-        		state.push(val1.shl(val2));
+        		state.pushOperand(val1.shl(val2));
         		break;
         	case SHR:
-        		state.push(val1.shr(val2));
+        		state.pushOperand(val1.shr(val2));
         		break;
         	case USHR:
-        		state.push(val1.ushr(val2));
+        		state.pushOperand(val1.ushr(val2));
         		break;
         	case ORBW:
-        		state.push(val1.orBitwise(val2));
+        		state.pushOperand(val1.orBitwise(val2));
         		break;
         	case ANDBW:
-        		state.push(val1.andBitwise(val2));
+        		state.pushOperand(val1.andBitwise(val2));
         		break;
         	case XORBW:
-        		state.push(val1.xorBitwise(val2));
+        		state.pushOperand(val1.xorBitwise(val2));
         		break;
         	default:
         		throw new UnexpectedInternalException();

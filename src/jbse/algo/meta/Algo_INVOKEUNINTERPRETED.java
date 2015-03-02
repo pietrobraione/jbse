@@ -58,7 +58,7 @@ final class Algo_INVOKEUNINTERPRETED implements Algorithm {
 
 			//pushes the uninterpreted function term
 			try {
-				state.push(state.getCalculator().applyFunction(returnType, this.functionName, argsPrimitive));
+				state.pushOperand(state.getCalculator().applyFunction(returnType, this.functionName, argsPrimitive));
 			} catch (InvalidOperandException | InvalidTypeException e) {
 				//this should never happen
 				throw new UnexpectedInternalException(e);

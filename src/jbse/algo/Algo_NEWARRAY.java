@@ -34,7 +34,7 @@ final class Algo_NEWARRAY extends MultipleStateGenerator_XNEWARRAY implements Al
         //pops the array's length from the operand stack
 		final Primitive length;
 		try {
-		    length = (Primitive) state.pop();
+		    length = (Primitive) state.popOperand();
 	        //TODO length check
 		} catch (OperandStackEmptyException | ClassCastException e) {
             throwVerifyError(state);

@@ -19,7 +19,7 @@ final class Algo_ARRAYLENGTH implements Algorithm {
     throws ThreadStackEmptyException {
 	    final Reference tmpRef;
 	    try {
-	        tmpRef = (Reference) state.pop();
+	        tmpRef = (Reference) state.popOperand();
         } catch (OperandStackEmptyException | ClassCastException e) {
             throwVerifyError(state);
             return;
@@ -31,7 +31,7 @@ final class Algo_ARRAYLENGTH implements Algorithm {
         }
         
         final Array tmpArray = (Array) state.getObject(tmpRef);
-        state.push(tmpArray.getLength());
+        state.pushOperand(tmpArray.getLength());
 
         try {
 			state.incPC(ARRAYLENGTH_OFFSET);

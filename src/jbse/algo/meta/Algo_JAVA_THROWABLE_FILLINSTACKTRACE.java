@@ -18,13 +18,13 @@ public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE implements Algorithm {
 	@Override
 	public void exec(State state, ExecutionContext ctx) throws ThreadStackEmptyException {
 	    try {
-	        final Reference thisRef = (Reference) state.pop(); //pops "this"
+	        final Reference thisRef = (Reference) state.popOperand(); //pops "this"
 	        final Instance exc = (Instance) state.getObject(thisRef);
 	        
 	        //TODO replace this dummy implementation
 	        exc.setFieldValue(JAVA_THROWABLE_STACKTRACE, Null.getInstance());
 	        
-	        state.push(thisRef); //returns "this"
+	        state.pushOperand(thisRef); //returns "this"
 	    } catch (OperandStackEmptyException | ClassCastException e) {
 	        throwVerifyError(state);
 	    }

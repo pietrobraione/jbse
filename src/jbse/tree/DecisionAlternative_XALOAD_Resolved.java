@@ -17,8 +17,8 @@ public final class DecisionAlternative_XALOAD_Resolved extends DecisionAlternati
 	
 	private final Value valueToLoad;
 	private final boolean fresh;
+    private final boolean isTrivial;
 	private final boolean isConcrete;
-	private final boolean isTrivial;
 
 	/**
 	 * Constructor, nonconcrete.
@@ -33,8 +33,8 @@ public final class DecisionAlternative_XALOAD_Resolved extends DecisionAlternati
 		super(ALT_CODE + "R", arrayAccessExpression, RESOLVED_BN);
 		this.valueToLoad = valueToLoad;
 		this.fresh = fresh;
-		this.isConcrete = (arrayAccessExpression == null) && !Util.isSymbolicReference(valueToLoad);
-		this.isTrivial = (arrayAccessExpression == null);
+        this.isTrivial = (arrayAccessExpression == null);
+		this.isConcrete = this.isTrivial && !Util.isSymbolicReference(valueToLoad);
 	}
 
 	/**

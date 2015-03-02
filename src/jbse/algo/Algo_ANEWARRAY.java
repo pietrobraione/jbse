@@ -74,7 +74,7 @@ final class Algo_ANEWARRAY extends MultipleStateGenerator_XNEWARRAY implements A
         //pops the array's length from the operand stack
 		final Primitive length;
 		try {
-		    length = (Primitive) state.pop();
+		    length = (Primitive) state.popOperand();
 		} catch (OperandStackEmptyException | ClassCastException e) {
 		    throwVerifyError(state);
 		    return;

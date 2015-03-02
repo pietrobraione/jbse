@@ -20,7 +20,7 @@ public final class Algo_JBSE_ANALYSIS_ANY implements Algorithm {
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
 	throws ThreadStackEmptyException {
-		state.push(state.getCalculator().valAny());
+		state.pushOperand(state.getCalculator().valAny());
         try {
 			state.incPC(INVOKESPECIALSTATICVIRTUAL_OFFSET);
 		} catch (InvalidProgramCounterException e) {

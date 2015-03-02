@@ -124,7 +124,7 @@ abstract class MultipleStateGenerator_XNEWARRAY extends MultipleStateGenerator<D
 				}
 
 				//pushes the reference
-				s.push(toPush);
+				s.pushOperand(toPush);
 
 				//increments the program counter
 				try {

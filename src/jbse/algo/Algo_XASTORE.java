@@ -50,9 +50,9 @@ class Algo_XASTORE extends MultipleStateGenerator<DecisionAlternative_XASTORE> i
         final Primitive index;
         final Reference arrayRef;
         try {
-            value = state.pop();
-            index = (Primitive) state.pop();
-            arrayRef = (Reference) state.pop();
+            value = state.popOperand();
+            index = (Primitive) state.popOperand();
+            arrayRef = (Reference) state.popOperand();
         } catch (OperandStackEmptyException | ClassCastException e) {
             throwVerifyError(state);
             return;

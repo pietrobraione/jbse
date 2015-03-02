@@ -21,10 +21,10 @@ final class Algo_JSRX implements Algorithm {
 			if (this.wide) {
                 final byte tmp3 = state.getInstruction(3);
                 final byte tmp4 = state.getInstruction(4);
-                state.push(state.getCalculator().valInt(programCounter + 5));
+                state.pushOperand(state.getCalculator().valInt(programCounter + 5));
                 state.incPC(Util.byteCat(tmp1, tmp2, tmp3, tmp4));
 			} else {
-                state.push(state.getCalculator().valInt(programCounter + 3));
+                state.pushOperand(state.getCalculator().valInt(programCounter + 3));
                 state.incPC(Util.byteCatShort(tmp1, tmp2));
 			}
 		} catch (InvalidProgramCounterException e) {

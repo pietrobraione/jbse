@@ -17,14 +17,14 @@ final class Algo_POPX implements Algorithm {
 	public void exec(State state, ExecutionContext ctx) 
 	throws ThreadStackEmptyException {
 	    try {
-	        Value tmp = state.pop();
+	        Value tmp = state.popOperand();
 	        if (this.cat1 && !Type.isCat_1(tmp.getType())) {
 	            throwVerifyError(state);
 	            return;
 	        }
 
 	        if (!this.cat1 && Type.isCat_1(tmp.getType())) {
-	            tmp = state.pop();
+	            tmp = state.popOperand();
 	            if (!Type.isCat_1(tmp.getType())) {
 	                throwVerifyError(state);
 	                return;

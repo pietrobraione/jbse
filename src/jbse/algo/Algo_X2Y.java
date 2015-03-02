@@ -26,7 +26,7 @@ final class Algo_X2Y implements Algorithm {
 		//pops the value on the operand stack
 	    final Value value;
 	    try {
-	        value = state.pop();
+	        value = state.popOperand();
 	    } catch (OperandStackEmptyException e) {
 	        throwVerifyError(state);
 	        return;
@@ -52,7 +52,7 @@ final class Algo_X2Y implements Algorithm {
 		}
 		
 		//pushes the obtained value
-		state.push(castValue);
+		state.pushOperand(castValue);
 
 		//increments the program counter
 		try {

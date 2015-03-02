@@ -78,7 +78,7 @@ public class NativeInvokerPure implements NativeInvoker {
 		//or sets the state to stuck if no current frame exists
 		try {
 			if (returnValue != null) {
-				state.push(returnValue);
+				state.pushOperand(returnValue);
 			}
 		} catch (ThreadStackEmptyException e) {
 			state.setStuckReturn(returnValue);

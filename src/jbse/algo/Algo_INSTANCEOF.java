@@ -14,11 +14,11 @@ final class Algo_INSTANCEOF extends Algo_CASTINSTANCEOF {
     throws ThreadStackEmptyException, InterruptException {
         try {
         //pops the checked reference and calculates the result
-        final Reference tmpValue = (Reference) state.pop();
+        final Reference tmpValue = (Reference) state.popOperand();
         if (!state.isNull(tmpValue) && isSubclass) { 
-            state.push(state.getCalculator().valInt(1));
+            state.pushOperand(state.getCalculator().valInt(1));
         } else { 
-            state.push(state.getCalculator().valInt(0));
+            state.pushOperand(state.getCalculator().valInt(0));
         }
         } catch (OperandStackEmptyException | ClassCastException e) {
             throwVerifyError(state);

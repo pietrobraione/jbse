@@ -109,8 +109,8 @@ class Algo_PUTFIELD implements Algorithm {
 
         //sets the field's value
         try {
-            final Value valueToPut = state.pop();
-            final Reference ref = (Reference) state.pop();
+            final Value valueToPut = state.popOperand();
+            final Reference ref = (Reference) state.popOperand();
             if (state.isNull(ref)) {
                 throwNew(state, NULL_POINTER_EXCEPTION);
                 return;

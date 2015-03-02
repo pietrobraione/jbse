@@ -17,13 +17,13 @@ class Algo_XCONST_Y implements Algorithm {
     public void exec(State state, ExecutionContext ctx) 
     throws ThreadStackEmptyException {
         if (this.type == Type.INT) {
-        	state.push(state.getCalculator().valInt(value));
+        	state.pushOperand(state.getCalculator().valInt(value));
         } else if (this.type == Type.DOUBLE) {
-        	state.push(state.getCalculator().valDouble((double) value));
+        	state.pushOperand(state.getCalculator().valDouble((double) value));
         } else if (this.type == Type.FLOAT) {
-        	state.push(state.getCalculator().valFloat((float) value));
+        	state.pushOperand(state.getCalculator().valFloat((float) value));
         } else if (this.type == Type.LONG) {
-        	state.push(state.getCalculator().valLong((long) value));
+        	state.pushOperand(state.getCalculator().valLong((long) value));
         } else {
             throw new UnexpectedInternalException("const bytecodes with type " + type + " do not exist");
         }

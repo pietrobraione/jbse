@@ -15,7 +15,7 @@ class Algo_ATHROW implements Algorithm {
 	@Override
     public void exec(State state, ExecutionContext ctx) throws ThreadStackEmptyException {
 	    try {
-	        final Reference myExcRef = (Reference) state.pop();
+	        final Reference myExcRef = (Reference) state.popOperand();
 	        if (state.isNull(myExcRef)) {
 	            throwNew(state, NULL_POINTER_EXCEPTION);
 	        } else {

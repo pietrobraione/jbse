@@ -95,7 +95,7 @@ final class Algo_MULTIANEWARRAY extends MultipleStateGenerator_XNEWARRAY impleme
 		this.dimensionsCounts = new Primitive[ndims];
 		try {
 		    for (int i = ndims - 1; i >= 0; --i) {
-		        this.dimensionsCounts[i] = (Primitive) state.pop();
+		        this.dimensionsCounts[i] = (Primitive) state.popOperand();
 		        //TODO length check?
 		    }
 		} catch (OperandStackEmptyException | ClassCastException e) {

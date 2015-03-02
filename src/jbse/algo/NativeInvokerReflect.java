@@ -61,7 +61,7 @@ public class NativeInvokerReflect implements NativeInvoker {
 			//pushes the return value on the operand stack
 			if (retVal != null) {
 				try {
-					state.push(retVal);
+					state.pushOperand(retVal);
 				} catch (ThreadStackEmptyException e) {
 					state.setStuckReturn(retVal);
 				}
