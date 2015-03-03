@@ -253,6 +253,7 @@ public class RewriterOperationOnSimplex extends Rewriter {
 	
 	//////////////////////////////////////////////
 	//private part: tons of manual dispatching
+	//TODO simplify this huge mess
 	private Primitive tryFunctionApplication(String function, Object[] args, char[] argsType) {
 		if (function.equals(ABS)) { //typing: T -> T
 			if(argsType[0] == Type.DOUBLE){return(this.calc.val_(Math.abs(((Double)args[0]).doubleValue())));}
