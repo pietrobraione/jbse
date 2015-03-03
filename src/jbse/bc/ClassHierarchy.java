@@ -1,6 +1,8 @@
 package jbse.bc;
 
+import static jbse.bc.Signatures.JAVA_CLONEABLE;
 import static jbse.bc.Signatures.JAVA_OBJECT;
+import static jbse.bc.Signatures.JAVA_SERIALIZABLE;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -809,5 +811,56 @@ public class ClassHierarchy {
 		}
 
 		return retVal;
+	}
+	
+	/**
+	 * Checks assignment compatibility for references 
+	 * (see JVM spec v2 2.6.7 and chapter 6, aaload bytecode).
+	 * 
+	 * @param source the name of the class of the source of the 
+	 *        assignment.
+	 * @param target the name of the class of the target of the 
+     *        assignment.
+	 * @return {@code true} iff {@code source} is assignment
+	 *         compatible with {@code target}.
+	 * @throws BadClassFileException
+	 */
+	public boolean isAssignmentCompatible(String source, String target) 
+	throws BadClassFileException {        
+	    final ClassFile sourceCF = getClassFile(source);
+        final ClassFile targetCF = getClassFile(target);
+        
+        if (sourceCF.isInterface()) {
+            if (targetCF.isInterface()) {
+                return isSubclass(source, target);
+            } else if (targetCF.isArray()) {
+                return false; //should not happen (verify error)
+            } else {
+                return target.equals(JAVA_OBJECT);
+            }
+        } else if (sourceCF.isArray()) {
+            if (targetCF.isInterface()) {
+                return (target.equals(JAVA_CLONEABLE) || target.equals(JAVA_SERIALIZABLE));
+            } else if (targetCF.isArray()) {
+                final String sourceComponent = Type.getArrayMemberType(source);
+                final String targetComponent = Type.getArrayMemberType(target);
+                if (Type.isPrimitive(sourceComponent) && Type.isPrimitive(targetComponent)) {
+                    return sourceComponent.equals(targetComponent);
+                } else if ((Type.isReference(sourceComponent) && Type.isReference(targetComponent)) ||
+                           (Type.isArray(sourceComponent) && Type.isArray(targetComponent))) {
+                    return isAssignmentCompatible(sourceComponent, targetComponent);
+                } else {
+                    return false;
+                }
+            } else {
+                return target.equals(JAVA_OBJECT);
+            }
+        } else {
+            if (targetCF.isArray()) {
+                return false; //should not happen (verify error)
+            } else {
+                return isSubclass(source, target);
+            }
+        }
 	}
 }

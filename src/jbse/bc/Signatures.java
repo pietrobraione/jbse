@@ -27,16 +27,18 @@ public final class Signatures {
     public static final String JAVA_LINKEDLIST_ENTRY     = "java/util/LinkedList$Entry";
     public static final String JAVA_NUMBER               = "java/lang/Number";
     public static final String JAVA_OBJECT               = "java/lang/Object";
-    public static final String JAVA_THROWABLE            = "java/lang/Throwable";
     public static final String JAVA_SERIALIZABLE         = "java/io/Serializable";
     public static final String JAVA_STACK_TRACE_ELEMENT  = "java/lang/StackTraceElement";
     public static final String JAVA_STRING               = "java/lang/String";
     public static final String JAVA_STRING_CASEINSCOMP   = "java/lang/String$CaseInsensitiveComparator";
+    public static final String JAVA_SYSTEM               = "java/lang/System";
+    public static final String JAVA_THROWABLE            = "java/lang/Throwable";
     public static final String JBSE_ANALYSIS             = "jbse/meta/Analysis";
 
     //exceptions
     public static final String ARITHMETIC_EXCEPTION 				= "java/lang/ArithmeticException";
     public static final String ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION 	= "java/lang/ArrayIndexOutOfBoundsException";
+    public static final String ARRAY_STORE_EXCEPTION                = "java/lang/ArrayIndexOutOfBoundsException";
     public static final String CLASS_CAST_EXCEPTION 				= "java/lang/ClassCastException";
     public static final String CLASS_NOT_FOUND_EXCEPTION            = "java/lang/ClassNotFoundException";
     public static final String INDEX_OUT_OF_BOUNDS_EXCEPTION 		= "java/lang/IndexOutOfBoundsException";
@@ -52,7 +54,7 @@ public final class Signatures {
     public static final String NO_SUCH_METHOD_ERROR                 = "java/lang/NoSuchMethodError";
     public static final String VERIFY_ERROR                         = "java/lang/VerifyError";
     
-    //methodsjava/lang/Class:(Ljava/lang/String;)Ljava/lang/Class;:getPrimitiveClass
+    //methods
     public static final Signature JAVA_CLASS_GETPRIMITIVECLASS =
         new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + 
                       REFERENCE + JAVA_CLASS + TYPEEND, "getPrimitiveClass");
@@ -62,6 +64,10 @@ public final class Signatures {
         new Signature(JAVA_OBJECT, "()" + INT, "hashCode");
     public static final Signature JAVA_STRING_INTERN =
         new Signature(JAVA_STRING, "()" + REFERENCE + JAVA_STRING + TYPEEND, "intern");
+    public static final Signature JAVA_SYSTEM_ARRAYCOPY =
+        new Signature(JAVA_SYSTEM, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + INT + 
+                                         REFERENCE + JAVA_OBJECT + TYPEEND + INT + INT + ")" + VOID, 
+                      "arraycopy");
     public static final Signature JAVA_THROWABLE_FILLINSTACKTRACE =
         new Signature(JAVA_THROWABLE, "()" + REFERENCE + JAVA_THROWABLE + TYPEEND, "fillInStackTrace");
     public static final Signature JAVA_THROWABLE_GETSTACKTRACEDEPTH = 

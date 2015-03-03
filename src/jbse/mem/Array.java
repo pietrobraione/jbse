@@ -315,7 +315,7 @@ public class Array extends Objekt {
 			}
 		}
 		if (illFormed) {
-			throw new InvalidTypeException(type);
+			throw new InvalidTypeException("attempted creation of an array with type " + type);
 		}
 		this.calc = calc;
 		this.INDEX = this.calc.valTerm(Type.INT, INDEX_ID);
@@ -403,18 +403,6 @@ public class Array extends Objekt {
 		return false;
 	}
 	
-	/**
-	 * Sets all the entries with a value. It is ok to invoke 
-	 * this method only after TODO
-	 * 
-	 * @param v a {@link Value}.
-	 */
-	public void replaceEntries(Value v) {
-		for (AccessOutcomeIn e : this.values) {
-			e.returnedValue = v;
-		}
-	}
-
 	/**
 	 * Returns the outcomes of an access to the array.
 	 * 
@@ -692,7 +680,7 @@ public class Array extends Objekt {
 				firstEntryPassed = true;
 			}
 			buf.append(e.accessCondition == null ? "true" : e.accessCondition.toString()); 
-			buf.append("->"); 
+			buf.append(" -> "); 
 			buf.append(e.returnedValue == null ? "unknown" : e.returnedValue.toString()); 
 		}
 		str += buf.toString() + "}]";

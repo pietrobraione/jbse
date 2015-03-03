@@ -1800,12 +1800,15 @@ public final class State implements Cloneable {
 	 * A Factory Method for creating both reference and primitive 
 	 * symbolic values.
 	 * 
-	 * @param descriptor the descriptor of the symbolic value's type.
+     * @param staticType a {@link String}, the static type of the
+     *        variable from which this reference originates (as 
+     *        from {@code origin}).
+     * @param origin a {@link String}, the origin of this reference.
 	 * @return a {@link PrimitiveSymbolic} or a {@link ReferenceSymbolic}
 	 *         according to {@code descriptor}.
 	 */
-	public Value createSymbol(String descriptor, String origin) {
-		return this.symbolFactory.createSymbol(descriptor, origin);
+	public Value createSymbol(String staticType, String origin) {
+		return this.symbolFactory.createSymbol(staticType, origin);
 	}
 	
 	/**

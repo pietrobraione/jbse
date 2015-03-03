@@ -113,7 +113,12 @@ abstract class MultipleStateGenerator_XNEWARRAY extends MultipleStateGenerator<D
 					//which will allow to lazily build layers upon access to them
 					final Primitive[] lConstr = new Primitive[dimensionsCounts.length - layersToCreateNow];
 					System.arraycopy(dimensionsCounts, layersToCreateNow, lConstr, 0, lConstr.length);
-					initValue = new ReferenceArrayImmaterial(arrayType, lConstr);
+					try {
+                        initValue = new ReferenceArrayImmaterial(arrayType.substring(layersToCreateNow), lConstr);
+                    } catch (InvalidTypeException e) {
+                        //this should never happen
+                        throw new UnexpectedInternalException(e);
+                    }
 				} else {
 					initValue = null; //means default value
 				}

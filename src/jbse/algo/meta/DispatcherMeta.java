@@ -4,6 +4,7 @@ import static jbse.bc.Signatures.JAVA_CLASS_GETPRIMITIVECLASS;
 import static jbse.bc.Signatures.JAVA_OBJECT_GETCLASS;
 import static jbse.bc.Signatures.JAVA_OBJECT_HASHCODE;
 import static jbse.bc.Signatures.JAVA_STRING_INTERN;
+import static jbse.bc.Signatures.JAVA_SYSTEM_ARRAYCOPY;
 import static jbse.bc.Signatures.JAVA_THROWABLE_FILLINSTACKTRACE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEDEPTH;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEELEMENT;
@@ -53,6 +54,7 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
         loadMetaDelegate(JAVA_OBJECT_GETCLASS,                     new Algo_JAVA_OBJECT_GETCLASS());
         loadMetaDelegate(JAVA_OBJECT_HASHCODE,                     new Algo_JAVA_OBJECT_HASHCODE());
         loadMetaDelegate(JAVA_STRING_INTERN,                       new Algo_JAVA_STRING_INTERN());
+        loadMetaDelegate(JAVA_SYSTEM_ARRAYCOPY,                    new Algo_JAVA_SYSTEM_ARRAYCOPY());
 		loadMetaDelegate(JAVA_THROWABLE_FILLINSTACKTRACE,          new Algo_JAVA_THROWABLE_FILLINSTACKTRACE());
 		loadMetaDelegate(JAVA_THROWABLE_GETSTACKTRACEDEPTH,        new Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH());
 		loadMetaDelegate(JAVA_THROWABLE_GETSTACKTRACEELEMENT,      new Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT());

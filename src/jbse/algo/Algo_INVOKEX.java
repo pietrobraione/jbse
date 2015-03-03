@@ -62,13 +62,12 @@ final class Algo_INVOKEX implements Algorithm {
             return;
         }
 
-        final String currentClassName = state.getCurrentMethodSignature().getClassName();
-        final ClassHierarchy hier = state.getClassHierarchy();
-
         //gets the signature of the method to be invoked
         //and calculates the program counter offset
         final Signature methodSignature;
         final int pcOffset;
+        final String currentClassName = state.getCurrentMethodSignature().getClassName();
+        final ClassHierarchy hier = state.getClassHierarchy();
         try {
             if (this.isInterface) {
                 methodSignature = hier.getClassFile(currentClassName).getInterfaceMethodSignature(index);

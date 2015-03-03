@@ -338,17 +338,16 @@ public final class Type {
 	/**
 	 * Returns the lower upper bound of two types.
 	 * 
-	 * @param firstType a type.
-	 * @param secondType another type.
+	 * @param firstType a primitive type.
+	 * @param secondType another primitive type.
 	 * @return the smallest type that may contain the values of both 
-	 *         {@code first} and {@code second}. Does behave well
-	 *         only when the two types are both integral or both 
-	 *         floating or both reference. If it cannot decide it returns
-	 *         {@link Type#ERROR}.
+	 *         {@code first} and {@code second}. If {@code firstType} 
+	 *         or {@code secondType} does not denote a primitive type, 
+	 *         it returns {@link Type#ERROR}.
 	 */
 	public static char lub(char firstType, char secondType) {
-		if (isReference(firstType) && isReference(secondType)) {
-			return REFERENCE;
+		if (!isPrimitive(firstType) || !isPrimitive(secondType)) {
+			return ERROR;
 		}
 	    if (firstType == DOUBLE || secondType == DOUBLE) {
 	        return DOUBLE;
@@ -371,10 +370,7 @@ public final class Type {
 	    if (firstType == BYTE || secondType == BYTE) {
 	        return BYTE;
 	    } 
-	    if (firstType == BOOLEAN || secondType == BOOLEAN) {
-	        return BOOLEAN;
-	    } 
-	    return ERROR;
+	    return BOOLEAN; //firstType == BOOLEAN && secondType == BOOLEAN
 	}
 	
 	/**

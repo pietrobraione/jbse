@@ -5,12 +5,12 @@ import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.XALOADSTORE_OFFSET;
 import static jbse.bc.Signatures.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
+import static jbse.common.Type.getArrayMemberType;
 
 import java.util.Collection;
 import java.util.Iterator;
 
 import jbse.bc.exc.BadClassFileException;
-import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
@@ -39,10 +39,12 @@ import jbse.val.exc.InvalidTypeException;
 /**
  * Algorithm managing all the *aload (load from array) bytecodes 
  * ([a/b/c/d/f/i/l/s]aload). 
- * It decides over access index membership (inbound vs. outbound), 
+ * It decides over access index membership (inbound vs. outbound) 
  * which is a sheer numeric decision, and in the case of 
  * the aaload bytecode, also over the value loaded from the array 
  * when this is a symbolic reference ("lazy initialization").
+ * Note that the inbound cases can be many, in principle one for 
+ * each entry in the symbolic array.
  *  
  * @author Pietro Braione
  * @author unknown
@@ -105,7 +107,7 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 				if (e instanceof Array.AccessOutcomeIn) {
 					val = ((Array.AccessOutcomeIn) e).getValue();
 					if (val == null) {
-						val = state.createSymbol(arrayObj.getType().substring(1), arrayObj.getOrigin() + "[" + this.index + "]");
+						val = state.createSymbol(getArrayMemberType(arrayObj.getType()), arrayObj.getOrigin() + "[" + this.index + "]");
 						fresh = true;
 					}
 				} else { //e instanceof AccessOutcomeOut
@@ -249,11 +251,10 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 			try {
 				final ReferenceArrayImmaterial valRef = (ReferenceArrayImmaterial) val;
 				final ReferenceConcrete valMaterialized = 
-				    s.createArray(valRef.next(), valRef.getLength(), Type.getArrayMemberType(valRef.getArrayType()));
+				    s.createArray(valRef.getMember(), valRef.getLength(), valRef.getArrayType());
 				writeBackToSource(s, valMaterialized);
-				s.pushOperand(valMaterialized);
 				return valMaterialized;
-			} catch (InvalidTypeException | ThreadStackEmptyException e) {
+			} catch (InvalidTypeException e) {
 				//this should never happen
 				throw new UnexpectedInternalException(e);
 			}

@@ -103,7 +103,7 @@ public final class ExecutionContext {
 	 *        associating class names to sets of names of their subclasses. It 
 	 *        is used in place of the class hierarchy to perform reference expansion.
 	 * @param rulesTrigger a {@link TriggerRulesRepo}.
-	 * @param altFactory a {@link DecisionAlternativeComparators} which
+	 * @param comparators a {@link DecisionAlternativeComparators} which
 	 *        will be used to establish the order of exploration
 	 *        for sibling branches.
 	 * @param nativeInvoker a {@link NativeInvoker} which will be used
@@ -120,7 +120,7 @@ public final class ExecutionContext {
     		Class<? extends ClassFileFactory> classFileFactoryClass, 
     		Map<String, Set<String>> expansionBackdoor,
     		TriggerRulesRepo rulesTrigger,
-    		DecisionAlternativeComparators altFactory, 
+    		DecisionAlternativeComparators comparators, 
     		NativeInvoker nativeInvoker) {
     	this.initialState = initialState;
     	this.classpath = classpath;
@@ -131,7 +131,7 @@ public final class ExecutionContext {
 		this.classFileFactoryClass = classFileFactoryClass;
 		this.expansionBackdoor = expansionBackdoor;
 		this.triggerManager = new TriggerManager(rulesTrigger);
-		this.comparators = altFactory;
+		this.comparators = comparators;
 		this.nativeInvoker = nativeInvoker;
     }
     

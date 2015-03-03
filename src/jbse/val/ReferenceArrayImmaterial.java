@@ -2,6 +2,9 @@ package jbse.val;
 
 import java.util.Arrays;
 
+import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * A {@link Reference} to a concrete array which may not yet 
@@ -23,12 +26,22 @@ public final class ReferenceArrayImmaterial extends Reference {
 	/** The lengths of the array's dimensions. */
 	private final Primitive[] arrayLength;
 	
-	public ReferenceArrayImmaterial(String arrayType, Primitive[] arrayLength) {
+	public ReferenceArrayImmaterial(String arrayType, Primitive[] arrayLength) 
+	throws InvalidTypeException {
 		super();
+		if (Type.getDeclaredNumberOfDimensions(arrayType) != arrayLength.length) {
+		    throw new InvalidTypeException("the number of declared dimensions of the array disagrees with the number of length values");
+		}
 		this.arrayType = arrayType;
 		this.arrayLength = arrayLength.clone(); //safety copy
 	}
 	
+	/**
+	 * Returns the type of the array this 
+	 * object models.
+	 * 
+	 * @return a {@code String}, an array type.
+	 */
 	public String getArrayType() {
 		return this.arrayType;
 	}
@@ -49,21 +62,23 @@ public final class ReferenceArrayImmaterial extends Reference {
 	}
 	
 	/**
-	 * Gets the next {@link ReferenceArrayImmaterial}.
+	 * Gets a {@link ReferenceArrayImmaterial} for the members
+	 * of the array this object refers to.
 	 *  
 	 * @return an {@link ReferenceArrayImmaterial} for all the 
-	 *         members of the array satisfying {@code this}.
+	 *         members of the array whose shape is modeled by
+	 *         {@code this} object.
 	 *         As an example, if {@code this} is an
 	 *         {@link ReferenceArrayImmaterial} satisfied by
 	 *         an array with dimensions {@code [foo][bar]},
 	 *         {@code this.next()} returns {@code [bar]}.
-	 *         If {@code this} is a constraint satisfied by 
-	 *         a monodimensional array, the method returns 
+	 *         If {@code this} describes a monodimensional 
+	 *         array, the method returns 
 	 *         {@code null} (e.g., for the above example
-	 *         {@code this.next().next() == null}).
+	 *         {@code this.getMember().getMember() == null}).
 	 *          
 	 */
-	public ReferenceArrayImmaterial next() {
+	public ReferenceArrayImmaterial getMember() {
 		if (this.arrayLength.length > 1) {
 			Primitive[] newLength = new Primitive[this.arrayLength.length - 1];
 			boolean first = true;
@@ -76,7 +91,12 @@ public final class ReferenceArrayImmaterial extends Reference {
 				}
 				i++;
 			}
-			return new ReferenceArrayImmaterial(this.arrayType, newLength);
+			try {
+			    return new ReferenceArrayImmaterial(Type.getArrayMemberType(this.arrayType), newLength);
+			} catch (InvalidTypeException e) {
+			    //this should never happen
+			    throw new UnexpectedInternalException(e);
+			}
 		} else {
 			return null;
 		}
@@ -84,7 +104,7 @@ public final class ReferenceArrayImmaterial extends Reference {
 
     @Override
     public boolean isSymbolic() {
-        return true; 
+        return false; 
     }
 
 	@Override
@@ -123,13 +143,13 @@ public final class ReferenceArrayImmaterial extends Reference {
     @Override
     public String toString() {
         final StringBuilder buf = new StringBuilder();
-        buf.append("{R<");
+        buf.append("{R[");
         boolean isFirst = true;
         for (Primitive p : this.arrayLength) {
             if (isFirst) {
                 isFirst = false;
             } else {
-                buf.append(", ");
+                buf.append("][");
             }
             if (p == null) {
                 buf.append("*");
@@ -137,7 +157,7 @@ public final class ReferenceArrayImmaterial extends Reference {
                 buf.append(p.toString());
             }
         }
-        buf.append(">}");
+        buf.append("]}");
         return buf.toString();
     }
 }

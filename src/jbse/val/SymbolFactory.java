@@ -20,19 +20,19 @@ public final class SymbolFactory implements Cloneable {
 		this.nextIdPrimSym = 0;
 	}
 	
-	public Value createSymbol(String descriptor, String origin) {
-		final Value retVal;
-		if (Type.isPrimitive(descriptor)) {
-			try {
-				retVal = new PrimitiveSymbolic(this.getNextIdPrimitiveSymbolic(), descriptor.charAt(0), origin, calc);
-			} catch (InvalidTypeException e) {
-				//this should never happen
-				throw new UnexpectedInternalException(e);
-			}
-		} else {
-			retVal = new ReferenceSymbolic(this.getNextIdReferenceSymbolic(), descriptor, origin);
-		}
-		return retVal;
+	public Value createSymbol(String staticType, String origin) {
+        try {
+            final Value retVal;
+            if (Type.isPrimitive(staticType)) {
+                retVal = new PrimitiveSymbolic(this.getNextIdPrimitiveSymbolic(), staticType.charAt(0), origin, calc);
+            } else {
+                retVal = new ReferenceSymbolic(this.getNextIdReferenceSymbolic(), staticType, origin);
+            }
+            return retVal;
+        } catch (InvalidTypeException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
 	}
 	
 	private int getNextIdPrimitiveSymbolic() {

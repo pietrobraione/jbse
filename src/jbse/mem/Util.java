@@ -8,6 +8,7 @@ import static jbse.common.Type.isReference;
 import jbse.val.Null;
 import jbse.val.Primitive;
 import jbse.val.Reference;
+import jbse.val.ReferenceArrayImmaterial;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Value;
@@ -20,13 +21,13 @@ import jbse.val.exc.InvalidTypeException;
  */
 public class Util {
 	/** The conventional heap position for the root object. */
-	public static final long POS_ROOT = 0; //TODO give it package visibility (by raising abstraction level of Tracker).
+	public static final long POS_ROOT = 0;
 
 	/** The conventional heap position for null. */
-	public static final long POS_NULL = -99; //TODO give it package visibility (by raising abstraction level of Tracker).
+	public static final long POS_NULL = -99;
 
 	/** The conventional heap position for an unknown position. */
-	public static final long POS_UNKNOWN = -999; //TODO give it package visibility as POS_NULL
+	public static final long POS_UNKNOWN = -999;
 	
 	/**
 	 * Checks whether a {@link Value} is a symbolic {@link Reference}.
@@ -110,6 +111,7 @@ public class Util {
 		return
 		isPrimitive(v.getType()) ||
 		v instanceof ReferenceConcrete ||
+        v instanceof ReferenceArrayImmaterial ||
 		isResolvedSymbolicReference(s, v);
 	}
 	
