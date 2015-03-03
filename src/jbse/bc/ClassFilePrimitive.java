@@ -68,6 +68,11 @@ abstract class ClassFilePrimitive extends ClassFile {
 	public String getClassName() {
 		return this.className;
 	}
+    
+    @Override
+    public boolean isArray() {
+        return false;
+    }
 
 	@Override
 	public boolean isInterface() {

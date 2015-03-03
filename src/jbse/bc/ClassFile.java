@@ -30,6 +30,20 @@ public abstract class ClassFile {
             return className.substring(0, lastSlash);
         }
 	}
+	
+    /**
+     * Test whether the class is an array.
+     * 
+     * @return {@code true} iff the class is an interface.
+     */
+    public abstract boolean isArray();
+    
+    /**
+     * Tests whether the class is primitive.
+     * 
+     * @return {@code true} iff the class is primitive.
+     */
+    public abstract boolean isPrimitive();
 
 	/**
      * Test whether the class is an interface.
@@ -58,13 +72,6 @@ public abstract class ClassFile {
      * @return {@code true} iff the class has package visibility.
      */
     public abstract boolean isPackage();
-    
-    /**
-     * Tests whether the class is primitive.
-     * 
-     * @return {@code true} iff the class is primitive.
-     */
-    public abstract boolean isPrimitive();
     
     /**
      * Tests the {@code invokespecial} bytecode semantics required

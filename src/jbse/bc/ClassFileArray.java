@@ -39,6 +39,11 @@ public class ClassFileArray extends ClassFile {
 	public String getPackageName() {
 		return this.packageName;
 	}
+	
+	@Override
+	public boolean isArray() {
+	    return true;
+	}
 
 	@Override
 	public boolean isPrimitive() {

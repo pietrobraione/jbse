@@ -4,13 +4,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
-
-
-
-
-
-
 import javassist.ClassPool;
 import javassist.CtBehavior;
 import javassist.CtClass;
@@ -24,11 +17,6 @@ import javassist.bytecode.ConstPool;
 import javassist.bytecode.LineNumberAttribute;
 import javassist.bytecode.LocalVariableAttribute;
 //also uses javassist.bytecode.ExceptionTable, not imported to avoid name clash
-
-
-
-
-
 
 import jbse.bc.exc.AttributeNotFoundException;
 import jbse.bc.exc.BadClassFileException;
@@ -84,6 +72,11 @@ public class ClassFileJavassist extends ClassFile {
 	public boolean isPackage() {
 		return Modifier.isPackage(this.cls.getModifiers());
 	}
+    
+    @Override
+    public boolean isArray() {
+        return false;
+    }
 
 	@Override
 	public boolean isPrimitive() {
