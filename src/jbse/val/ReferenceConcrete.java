@@ -37,8 +37,13 @@ public class ReferenceConcrete extends Reference {
     	return (this.pos == Util.POS_NULL);
     }
 
+    /**
+     * Returns the heap position that this reference denotes.
+     * 
+     * @return a {@code long}, the heap position.
+     */
     public long getHeapPosition() {
-    	return pos;
+    	return this.pos;
     }
 
     @Override
@@ -63,7 +68,7 @@ public class ReferenceConcrete extends Reference {
 			return false;
 		}
         final ReferenceConcrete r = (ReferenceConcrete) o;            
-        return (this.getHeapPosition() == r.getHeapPosition());
+        return (this.pos == r.pos);
     }
     
     @Override

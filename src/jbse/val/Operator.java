@@ -151,8 +151,8 @@ public enum Operator {
 	 * 
 	 * @return the operator such that 
 	 *         {@code x op y == y op.twist() x},
-	 *         or {@code null} if such operator does not
-	 *         exists or this operator is not binary.
+	 *         or {@code null} if no such operator
+	 *         exists or this operator is unary.
 	 */
 	public abstract Operator twist(); //must be defined by methods 
 

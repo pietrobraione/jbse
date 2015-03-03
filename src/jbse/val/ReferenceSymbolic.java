@@ -12,8 +12,7 @@ public final class ReferenceSymbolic extends Reference implements Symbolic {
 	private final int id;
 	
     /** 
-     * The static type of the symbolic reference, or {@code null} 
-     * iff it is a concrete reference. 
+     * The static type of the reference. 
      */
     private final String staticType;
 
@@ -22,6 +21,12 @@ public final class ReferenceSymbolic extends Reference implements Symbolic {
 
     /**
      * Constructor returning an uninitialized symbolic reference.
+     * 
+     * @param id an {@code int} identifying the reference univocally.
+     * @param staticType a {@link String}, the static type of the
+     *        variable from which this reference originates (as 
+     *        from {@code origin}).
+     * @param origin a {@link String}, the origin of this reference.
      */
     ReferenceSymbolic(int id, String staticType, String origin) {
     	super(Type.REFERENCE);
@@ -46,6 +51,11 @@ public final class ReferenceSymbolic extends Reference implements Symbolic {
     	return this.origin;
     }
 
+    /**
+     * Returns the static type of this reference.
+     * 
+     * @return a {@code String}.
+     */
     public String getStaticType() {
     	return this.staticType;
     }

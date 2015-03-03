@@ -4,8 +4,7 @@ import jbse.common.Type;
 import jbse.val.exc.ValueDoesNotSupportNativeException;
 
 /**
- * Class for references to the {@link Heap}, both concrete and 
- * symbolic.
+ * Class for references to heap objects (instances and arrays).
  */
 public abstract class Reference extends Value {
 	protected Reference(char type) {
