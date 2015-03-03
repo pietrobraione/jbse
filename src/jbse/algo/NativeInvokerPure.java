@@ -50,7 +50,7 @@ public class NativeInvokerPure implements NativeInvoker {
 			//requires all arguments are primitive
 			final Primitive[] argsPrim = new Primitive[args.length];
 			boolean someSymbolic = false;
-			for (int i = 0; i < args.length; i++) {
+			for (int i = 0; i < args.length; ++i) {
 				if (args[i] instanceof Primitive) {
 					argsPrim[i] = (Primitive) args[i];
 					someSymbolic = someSymbolic || (argsPrim[i].isSymbolic());

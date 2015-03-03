@@ -170,8 +170,9 @@ public class Util {
 	 *         class(es).
 	 * @throws DecisionException if {@code dec} fails in determining
 	 *         whether {@code className} is or is not initialized.
-	 * @throws ClassFileNotFoundException if {@code className} does 
-	 *         not have a suitable classfile in the classpath.
+	 * @throws BadClassFileException if {@code className} or
+	 *         one of its superclasses is not in the classpath or
+	 *         is ill-formed.
 	 * @throws ClasspathException if some standard JRE class is missing
 	 *         from {@code state}'s classpath or is incompatible with the
 	 *         current version of JBSE. 
