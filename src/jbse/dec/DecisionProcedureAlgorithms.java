@@ -667,22 +667,22 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * Resolves loading a value to the operand stack, when the value
 	 * comes from an array.
 	 * 
-	 * @param state a {@link State}. 
+	 * @param state a {@link State}. It must not be {@code null}.
 	 * @param accessExpression an {@link Expression}, the condition under which the 
 	 *        array access yields {@code valToLoad} as result. It can be {@code null}, 
-	 *        that is equivalent to true but additionally denotes the fact that the 
+	 *        that is equivalent to {@code true} but additionally denotes the fact that the 
 	 *        array was accessed by a concrete index.
 	 * @param valToLoad the {@link Value} returned by the array access 
 	 *        when {@code accessExpression} is true,
 	 *        or {@code null} to denote an access out of the 
 	 *        array bounds.
-	 * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
-	 *        it had to be assumed by the access and thus it is not yet stored in the 
-	 *        {@link Array} object it originates.
-	 * @param result a {@link SortedSet}}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
+     * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
+     *        its existence was assumed during the array access and thus it 
+     *        is not yet stored in the {@link Array} it originates from.
+	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
 	 *        where the method will put all the 
 	 *        {@link DecisionAlternative_XALOAD}s representing all the 
-	 *        satisfiable outcomes of the operation.
+	 *        satisfiable outcomes of the operation. It must not be {@code null}.
 	 * @return an {@link Outcome}.
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
@@ -700,32 +700,30 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		final boolean accessConcrete = (accessExpression == null);
 		final boolean accessOutOfBounds = (valToLoad == null);
 		final boolean valToLoadResolved = accessOutOfBounds || Util.isResolved(state, valToLoad);
-		if (valToLoadResolved) {
-		    if (accessConcrete) {
-	            resolve_XALOAD_ResolvedConcrete(valToLoad, fresh, result);
-	            return Outcome.val(fresh, false, false); //a fresh value to load always requires a refinement action
-		    } else {
-	            return resolve_XALOAD_ResolvedNonconcrete(accessExpression, valToLoad, fresh, result);
-		    }
+		if (valToLoadResolved && accessConcrete) {
+		    resolve_XALOAD_ResolvedConcrete(valToLoad, fresh, result);
+		    return Outcome.val(fresh, false, false); //a fresh value to load always requires a refinement action
+		} else if (valToLoadResolved && !accessConcrete) {
+		    return resolve_XALOAD_ResolvedNonconcrete(accessExpression, valToLoad, fresh, result);
 		} else {
-			return resolve_XALOAD_Unresolved(state, accessExpression, (ReferenceSymbolic) valToLoad, fresh, result);
+		    return resolve_XALOAD_Unresolved(state, accessExpression, (ReferenceSymbolic) valToLoad, fresh, result);
 		}
 	}
 	
 	/**
-	 * Resolves loading to the operand stack a value from an array, 
-	 * in the case the index used for the access is concrete and
-	 * the value to load is resolved (i.e., either concrete, or 
-	 * a symbolic primitive, or a resolved symbolic reference).
+	 * Resolves loading a value from an array to the operand stack, 
+     * in the case the value to load is resolved (i.e., either 
+     * concrete, or a symbolic primitive, or a resolved symbolic
+     * reference) and the index used for the access is concrete.
 	 * 
 	 * @param valToLoad the {@link Value} returned by the array access 
 	 *        when {@code accessCondition} is true,
 	 *        or {@code null} to denote an access out of the 
 	 *        array bounds.
-	 * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
-	 *        it had to be assumed by the access and thus it is not yet stored in the 
-	 *        {@link Array} object it originates.
-	 * @param result a {@link SortedSet}}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
+     * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
+     *        its existence was assumed during the array access and thus it 
+     *        is not yet stored in the {@link Array} it originates from.
+	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
 	 *        where the method will put all the 
 	 *        {@link DecisionAlternative_XALOAD}s representing all the 
 	 *        satisfiable outcomes of the operation.
@@ -741,56 +739,80 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	}
 
 	/**
-	 * Resolves loading to the operand stack a value from an array, 
-	 * in the case the index used for the access is symbolic and
-	 * the value to load is resolved (i.e., either concrete, or 
-	 * a symbolic primitive, or a resolved symbolic reference).
+     * Resolves loading a value from an array to the operand stack, 
+     * in the case the value to load is resolved (i.e., either 
+     * concrete, or a symbolic primitive, or a resolved symbolic
+     * reference) and the index used for the access is symbolic.
 	 * 
+	 * @param accessExpression an {@link Expression}, the condition under
+	 *        which the array access yields {@code valToLoad} as result. 
+	 *        It must not be {@code null}.
 	 * @param valToLoad the {@link Value} returned by the array access 
-	 *        when {@code accessCondition} is true,
+	 *        when {@code accessExpression} is true,
 	 *        or {@code null} to denote an access out of the 
 	 *        array bounds.
 	 * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
-	 *        it had to be assumed by the access and thus it is not yet stored in the 
-	 *        {@link Array} object it originates.
-	 * @param result a {@link SortedSet}}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
+	 *        its existence was assumed during the array access and thus it 
+	 *        is not yet stored in the {@link Array} it originates from.
+	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
 	 *        where the method will put all the 
 	 *        {@link DecisionAlternative_XALOAD}s representing all the 
 	 *        satisfiable outcomes of the operation.
-	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet) resolveAload}.
+	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet) resolve_XALOAD}.
 	 */
 	protected Outcome resolve_XALOAD_ResolvedNonconcrete(Expression accessExpression, Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
 	throws DecisionException {
 		final boolean accessOutOfBounds = (valToLoad == null);
 		boolean shouldRefine;
-		if (this.isSat(accessExpression)) {
+		if (isSat(accessExpression)) {
 			shouldRefine = fresh; //a fresh value to load always requires a refinement action
 			if (accessOutOfBounds) {
 				result.add(new DecisionAlternative_XALOAD_Out(accessExpression));
-			} else { //Util.isResolved(state, valToLoad))
+			} else {
 				result.add(new DecisionAlternative_XALOAD_Resolved(accessExpression, valToLoad, fresh));
 			}
 		} else {
+            //accessExpression is unsatisfiable: nothing to do
 			shouldRefine = false;
-			//nothing to add to result
 		}
 
 		return Outcome.val(shouldRefine, false, true);
 	}
 
-	protected Outcome resolve_XALOAD_Unresolved(State state, Expression accessCondition, ReferenceSymbolic refToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
+    /**
+     * Resolves loading a value from an array to the operand stack, 
+     * in the case the value to load is an unresolved symbolic
+     * reference.
+     * 
+     * @param accessExpression an {@link Expression}, the condition under
+     *        which the array access yields {@code valToLoad} as result. 
+     *        It must not be {@code null}.
+     * @param valToLoad the {@link Value} returned by the array access 
+     *        when {@code accessExpression} is true,
+     *        or {@code null} to denote an access out of the 
+     *        array bounds.
+     * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
+     *        its existence was assumed during the array access and thus it 
+     *        is not yet stored in the {@link Array} it originates from.
+     * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
+     *        where the method will put all the 
+     *        {@link DecisionAlternative_XALOAD}s representing all the 
+     *        satisfiable outcomes of the operation.
+     * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet) resolve_XALOAD}.
+     */
+	protected Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
 	throws DecisionException, BadClassFileException {
-		final boolean accessConcrete = (accessCondition == null);
+		final boolean accessConcrete = (accessExpression == null);
 		final boolean shouldRefine;
 		final boolean noReferenceExpansion;
-		if (accessConcrete || this.isSat(accessCondition)) {
+		if (accessConcrete || isSat(accessExpression)) {
 			shouldRefine = true; //unresolved symbolic references always require a refinement action
 			noReferenceExpansion =
-				doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFromArrayFactory(accessCondition), result);
+				doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFromArrayFactory(accessExpression), result);
 		} else {
+            //accessExpression is unsatisfiable: nothing to do
 			shouldRefine = false;
 			noReferenceExpansion = true;
-			//accessCondition is unsatisfiable: nothing to add to result
 		}
 		return Outcome.val(shouldRefine, noReferenceExpansion, true);
 	}
@@ -818,13 +840,13 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 			while (entries.hasNext()) {
 				final Array.AccessOutcomeIn e = entries.next();
 				final Primitive indexInRange = e.inRange(index);
-				final boolean entryAffected = this.isSat((Expression) indexInRange);
+				final boolean entryAffected = isSat((Expression) indexInRange);
 
 				//if the entry is affected, it is constrained and possibly removed
 				if (entryAffected) {
 					e.constrainExpression(index); //TODO possibly move this back to Array?
 					final Expression rangeConstrained = e.getAccessCondition();
-					if (this.isSat(rangeConstrained)) {
+					if (isSat(rangeConstrained)) {
 						//do nothing
 					} else {
 						entries.remove();
