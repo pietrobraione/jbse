@@ -1,8 +1,8 @@
 package jbse.dec;
 
-import jbse.tree.DecisionAlternative_XLOAD_GETX_RefAliases;
-import jbse.tree.DecisionAlternative_XLOAD_GETX_RefExpands;
-import jbse.tree.DecisionAlternative_XLOAD_GETX_RefNull;
+import jbse.tree.DecisionAlternative_XLOAD_GETX_Aliases;
+import jbse.tree.DecisionAlternative_XLOAD_GETX_Expands;
+import jbse.tree.DecisionAlternative_XLOAD_GETX_Null;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -13,23 +13,23 @@ import jbse.val.ReferenceSymbolic;
  *
  */
 class DecisionAlternativeReferenceFromLocalVariableFactory 
-implements DecisionAlternativeReferenceFactory<DecisionAlternative_XLOAD_GETX_RefAliases, 
-DecisionAlternative_XLOAD_GETX_RefExpands, DecisionAlternative_XLOAD_GETX_RefNull> {
+implements DecisionAlternativeReferenceFactory<DecisionAlternative_XLOAD_GETX_Aliases, 
+DecisionAlternative_XLOAD_GETX_Expands, DecisionAlternative_XLOAD_GETX_Null> {
 	@Override
-	public DecisionAlternative_XLOAD_GETX_RefAliases 
+	public DecisionAlternative_XLOAD_GETX_Aliases 
 	createAlternativeRefAliases(ReferenceSymbolic refToResolve, long objectPosition, String objectOrigin, int branchNumber) {
-		return new DecisionAlternative_XLOAD_GETX_RefAliases(refToResolve, objectPosition, objectOrigin, branchNumber);
+		return new DecisionAlternative_XLOAD_GETX_Aliases(refToResolve, objectPosition, objectOrigin, branchNumber);
 	}
 
 	@Override
-	public DecisionAlternative_XLOAD_GETX_RefExpands 
+	public DecisionAlternative_XLOAD_GETX_Expands 
 	createAlternativeRefExpands(ReferenceSymbolic refToResolve, String className, int branchNumber) {
-		return new DecisionAlternative_XLOAD_GETX_RefExpands(refToResolve, className, branchNumber);
+		return new DecisionAlternative_XLOAD_GETX_Expands(refToResolve, className, branchNumber);
 	}
 
 	@Override
-	public DecisionAlternative_XLOAD_GETX_RefNull 
+	public DecisionAlternative_XLOAD_GETX_Null 
 	createAlternativeRefNull(ReferenceSymbolic refToResolve, int branchNumber) {
-		return new DecisionAlternative_XLOAD_GETX_RefNull(refToResolve, branchNumber);
+		return new DecisionAlternative_XLOAD_GETX_Null(refToResolve, branchNumber);
 	}
 }

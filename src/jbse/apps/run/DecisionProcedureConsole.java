@@ -138,12 +138,12 @@ public class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
 	protected Outcome decide_XSWITCH_Nonconcrete(Primitive val, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result) {
 		boolean shouldRefine;
 		if (val instanceof Any) {
-			int branchId = 1;
+			int branchCounter = 1;
 			for (int i : tab) {
-				result.add(DecisionAlternative_XSWITCH.toNonconcrete(i, branchId));
-				++branchId;
+				result.add(DecisionAlternative_XSWITCH.toNonconcrete(i, branchCounter));
+				++branchCounter;
 			}
-			result.add(DecisionAlternative_XSWITCH.toNonconcreteDefault(branchId));
+			result.add(DecisionAlternative_XSWITCH.toNonconcreteDefault(branchCounter));
 			shouldRefine = false;
 		} else {
 			boolean none = true;
@@ -185,16 +185,16 @@ public class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
 					final String s = m.group();
 					try {
 						final int i = Integer.parseInt(s);
-						int branchId = 1;
+						int branchCounter = 1;
 						for (int k : tab) {
 							if (i == k) {
-								result.add(DecisionAlternative_XSWITCH.toNonconcrete(i, branchId));
+								result.add(DecisionAlternative_XSWITCH.toNonconcrete(i, branchCounter));
 								none = false;
 							}
-							++branchId;
+							++branchCounter;
 						}
 						if (none) {
-							result.add(DecisionAlternative_XSWITCH.toNonconcreteDefault(branchId));
+							result.add(DecisionAlternative_XSWITCH.toNonconcreteDefault(branchCounter));
 							none = false;
 						}
 					} catch (NumberFormatException e) {

@@ -11,9 +11,9 @@ import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XLOAD_GETX;
-import jbse.tree.DecisionAlternative_XLOAD_GETX_RefAliases;
-import jbse.tree.DecisionAlternative_XLOAD_GETX_RefNull;
-import jbse.tree.DecisionAlternative_XLOAD_GETX_RefExpands;
+import jbse.tree.DecisionAlternative_XLOAD_GETX_Aliases;
+import jbse.tree.DecisionAlternative_XLOAD_GETX_Null;
+import jbse.tree.DecisionAlternative_XLOAD_GETX_Expands;
 import jbse.tree.DecisionAlternative_XLOAD_GETX_Resolved;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Value;
@@ -56,19 +56,19 @@ abstract class MultipleStateGenerator_XLOAD_GETX extends MultipleStateGenerator_
 		
 		this.rs = new StrategyRefine_XLOAD_GETX() {
 			@Override
-			public void refineRefExpands(State s, DecisionAlternative_XLOAD_GETX_RefExpands drc) 
+			public void refineRefExpands(State s, DecisionAlternative_XLOAD_GETX_Expands drc) 
 			throws ContradictionException, InvalidTypeException {
 				MultipleStateGenerator_XLOAD_GETX.this.refineRefExpands(s, drc); //implemented in MultipleStateGeneratorLoad
 			}
 
 			@Override
-			public void refineRefAliases(State s, DecisionAlternative_XLOAD_GETX_RefAliases dro)
+			public void refineRefAliases(State s, DecisionAlternative_XLOAD_GETX_Aliases dro)
 			throws ContradictionException {
 				MultipleStateGenerator_XLOAD_GETX.this.refineRefAliases(s, dro); //implemented in MultipleStateGeneratorLoad
 			}
 
 			@Override
-			public void refineRefNull(State s, DecisionAlternative_XLOAD_GETX_RefNull drn)
+			public void refineRefNull(State s, DecisionAlternative_XLOAD_GETX_Null drn)
 			throws ContradictionException {
 				MultipleStateGenerator_XLOAD_GETX.this.refineRefNull(s, drn); //implemented in MultipleStateGeneratorLoad
 			}

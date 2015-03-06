@@ -1,15 +1,15 @@
 package jbse.tree;
 
 /**
- * False, from check of nonconcrete values.
+ * {@link DecisionAlternative_IFX} for the case where
+ * the comparison yields false.
  */
 public final class DecisionAlternative_IFX_False extends DecisionAlternative_IFX {
-	private static final String F_ID = "F";
-	private static final int F_BN = 2;
-	private static final int HASH_CODE = 838041647;
+	private static final String F_ID = "IFX_False";
+	private static final int HASH_CODE = 2;
 	
 	DecisionAlternative_IFX_False(boolean isConcrete) {
-		super(false, isConcrete, (isConcrete ? 1 : F_BN));
+		super(false, isConcrete, (isConcrete ? 1 : HASH_CODE));
 	}
 	
 	@Override

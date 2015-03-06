@@ -104,7 +104,7 @@ public final class Signatures {
     public static final Signature JAVA_STRING_VALUE = 
         new Signature(JAVA_STRING, "" + ARRAYOF + CHAR, "value");
     public static final Signature JAVA_THROWABLE_STACKTRACE = 
-        new Signature(JAVA_THROWABLE, ARRAYOF + REFERENCE + JAVA_STACK_TRACE_ELEMENT + TYPEEND, "stackTrace");
+        new Signature(JAVA_THROWABLE, "" + ARRAYOF + REFERENCE + JAVA_STACK_TRACE_ELEMENT + TYPEEND, "stackTrace");
 
     /**
      * Do not instantiate it! 

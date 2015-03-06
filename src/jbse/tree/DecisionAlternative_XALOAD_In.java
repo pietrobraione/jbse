@@ -8,9 +8,9 @@ import jbse.val.Expression;
  * 
  * @author Pietro Braione
  */
-public abstract class DecisionAlternative_XALOAD_In extends DecisionAlternative_XALOAD implements DecisionAlternative_XYLOAD_GETX_Loads {
+public abstract class DecisionAlternative_XALOAD_In 
+extends DecisionAlternative_XALOAD implements DecisionAlternative_XYLOAD_GETX_Loads {
 	protected DecisionAlternative_XALOAD_In(String branchId, Expression arrayAccessExpression, int branchNumber) {
 		super(branchId, arrayAccessExpression, branchNumber);
 	}
-	//TODO equals, hashCode, toString
 }

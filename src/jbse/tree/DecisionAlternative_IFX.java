@@ -36,17 +36,17 @@ public abstract class DecisionAlternative_IFX implements DecisionAlternative {
 	}
 	
 	@Override
-	public final boolean concrete() {
-		return this.isConcrete;
-	}
-	
-	@Override
 	public final int getBranchNumber() {
 		return this.branchNumber;
 	}
 
 	@Override
 	public final boolean trivial() {
-		return this.concrete();
+		return this.isConcrete;
 	}
+    
+    @Override
+    public final boolean concrete() {
+        return this.isConcrete;
+    }
 }

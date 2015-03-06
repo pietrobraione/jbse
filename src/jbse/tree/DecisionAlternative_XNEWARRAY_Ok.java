@@ -1,12 +1,11 @@
 package jbse.tree;
 
 public final class DecisionAlternative_XNEWARRAY_Ok extends DecisionAlternative_XNEWARRAY {
-	private static final String OK_ID = "T";
-	private static final int OK_BN = 1;
-	private static final int HASH_CODE = 447453271;
+	private static final String OK_ID = "XNEWARRAY_Ok";
+	private static final int HASH_CODE = 1;
 	
 	DecisionAlternative_XNEWARRAY_Ok(boolean isConcrete) {
-		super(isConcrete, OK_BN);
+		super(isConcrete, HASH_CODE);
 	}
 	
 	@Override

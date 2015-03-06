@@ -2,39 +2,45 @@ package jbse.tree;
 
 import jbse.mem.Util;
 import jbse.val.Expression;
-import jbse.val.ReferenceSymbolic;
 import jbse.val.Value;
 
 /**
- * {@link DecisionAlternative_XALOAD} for the case a read access to an array
- * returned a resolved {@link ReferenceSymbolic} or a numeric value,  
- * either concrete or symbolic.
+ * {@link DecisionAlternative_XALOAD} for the case where 
+ * the value loaded on the operand stack is a previously resolved 
+ * symbolic reference or a primitive (either symbolic or concrete) 
+ * value.
  * 
  * @author Pietro Braione
  */
-public final class DecisionAlternative_XALOAD_Resolved extends DecisionAlternative_XALOAD implements DecisionAlternative_XYLOAD_GETX_Resolved {
-	private static final int RESOLVED_BN = 1;
-	
+public final class DecisionAlternative_XALOAD_Resolved 
+extends DecisionAlternative_XALOAD_In implements DecisionAlternative_XYLOAD_GETX_Resolved {
 	private final Value valueToLoad;
 	private final boolean fresh;
     private final boolean isTrivial;
 	private final boolean isConcrete;
+	private final int hashCode;
 
 	/**
 	 * Constructor, nonconcrete.
 	 * 
-	 * @param arrayAccessExpression The array access {@link Expression}.
-	 * @param valueToLoad The {@link Value} loaded from the array.
+	 * @param arrayAccessExpression the array access {@link Expression}.
+	 * @param valueToLoad the {@link Value} loaded from the array.
 	 * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
 	 *        is not stored in the array and, therefore, must be written
 	 *        back to the array.
+	 * @param branchNumber an {@code int}, the branch number.
 	 */
-	public DecisionAlternative_XALOAD_Resolved(Expression arrayAccessExpression, Value valueToLoad, boolean fresh) {
-		super(ALT_CODE + "R", arrayAccessExpression, RESOLVED_BN);
+	public DecisionAlternative_XALOAD_Resolved(Expression arrayAccessExpression, Value valueToLoad, boolean fresh, int branchNumber) {
+		super(ALT_CODE + "_Resolved:" + arrayAccessExpression, arrayAccessExpression, branchNumber);
 		this.valueToLoad = valueToLoad;
 		this.fresh = fresh;
         this.isTrivial = (arrayAccessExpression == null);
 		this.isConcrete = this.isTrivial && !Util.isSymbolicReference(valueToLoad);
+        final int prime = 131;
+        int result = super.hashCode();
+        result = prime * result +
+            ((this.valueToLoad == null) ? 0 : this.valueToLoad.hashCode());
+        this.hashCode = result;
 	}
 
 	/**
@@ -44,9 +50,10 @@ public final class DecisionAlternative_XALOAD_Resolved extends DecisionAlternati
 	 * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
 	 *        is not stored in the array and, therefore, must be written
 	 *        back to the array.
+     * @param branchNumber an {@code int}, the branch number.
 	 */
-	public DecisionAlternative_XALOAD_Resolved(Value valueToLoad, boolean fresh) {
-		this(null, valueToLoad, fresh);
+	public DecisionAlternative_XALOAD_Resolved(Value valueToLoad, boolean fresh, int branchNumber) {
+		this(null, valueToLoad, fresh, branchNumber);
 	}
 	
 	public boolean isValueFresh() {
@@ -58,19 +65,43 @@ public final class DecisionAlternative_XALOAD_Resolved extends DecisionAlternati
 		v.visitDecisionAlternative_XALOAD_Resolved(this);
 	}
 
+    @Override
+    public boolean trivial() {
+        return this.isTrivial;
+    }
+
 	@Override
 	public boolean concrete() {
 		return this.isConcrete;
 	}
 
 	@Override
-	public boolean trivial() {
-		return this.isTrivial;
-	}
-
-	@Override
 	public Value getValueToLoad() {
 		return this.valueToLoad;
 	}
-	//TODO equals, hashCode, toString
+
+    @Override
+    public int hashCode() {
+        return this.hashCode;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        final DecisionAlternative_XALOAD_Resolved other =
+            (DecisionAlternative_XALOAD_Resolved) obj;
+        if (this.valueToLoad == null) {
+            if (other.valueToLoad != null) {
+                return false;
+            }
+        } else if (!this.valueToLoad.equals(other.valueToLoad)) {
+            return false;
+        }
+        return true;
+    }
 }

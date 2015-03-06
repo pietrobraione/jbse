@@ -14,6 +14,7 @@ import jbse.bc.Signature;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.mem.State;
 import jbse.rules.TriggerRulesRepo;
+import jbse.tree.DecisionAlternative;
 import jbse.tree.DecisionAlternativeComparators;
 import jbse.tree.StateTree;
 import jbse.tree.StateTree.BreadthMode;
@@ -208,7 +209,8 @@ public final class ExecutionContext {
 		this.dispatcherMeta.loadAlgoUninterpreted(sig, functionName);
 	}
 	
-	public <R> SortedSet<R> mkDecisionResultSet(Class<R> superclassDecisionAlternatives) {
+	public <R extends DecisionAlternative> 
+	SortedSet<R> mkDecisionResultSet(Class<R> superclassDecisionAlternatives) {
 		final Comparator<R> comparator = this.comparators.get(superclassDecisionAlternatives);
 		final TreeSet<R> retVal = new TreeSet<>(comparator);
 		return retVal;

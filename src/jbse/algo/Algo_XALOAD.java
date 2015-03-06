@@ -22,10 +22,10 @@ import jbse.mem.exc.OperandStackEmptyException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XALOAD;
 import jbse.tree.DecisionAlternative_XALOAD_Out;
-import jbse.tree.DecisionAlternative_XALOAD_Ref;
-import jbse.tree.DecisionAlternative_XALOAD_RefAliases;
-import jbse.tree.DecisionAlternative_XALOAD_RefNull;
-import jbse.tree.DecisionAlternative_XALOAD_RefExpands;
+import jbse.tree.DecisionAlternative_XALOAD_Unresolved;
+import jbse.tree.DecisionAlternative_XALOAD_Aliases;
+import jbse.tree.DecisionAlternative_XALOAD_Null;
+import jbse.tree.DecisionAlternative_XALOAD_Expands;
 import jbse.tree.DecisionAlternative_XALOAD_Resolved;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -148,7 +148,7 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 		
 		this.rs = new StrategyRefine_XALOAD() {
 			@Override
-			public void refineRefExpands(State s, DecisionAlternative_XALOAD_RefExpands dac) 
+			public void refineRefExpands(State s, DecisionAlternative_XALOAD_Expands dac) 
 			throws DecisionException, ContradictionException, InvalidTypeException {
 				//handles all the assumptions for reference resolution by expansion
 				Algo_XALOAD.this.refineRefExpands(s, dac); //implemented in MultipleStateGenerator_XYLOAD_GETX
@@ -163,7 +163,7 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 			}
 
 			@Override
-			public void refineRefAliases(State s, DecisionAlternative_XALOAD_RefAliases dai)
+			public void refineRefAliases(State s, DecisionAlternative_XALOAD_Aliases dai)
 			throws DecisionException, ContradictionException {
 				//handles all the assumptions for reference resolution by aliasing
 				Algo_XALOAD.this.refineRefAliases(s, dai); //implemented in MultipleStateGenerator_XYLOAD_GETX
@@ -178,7 +178,7 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 			}
 
 			@Override
-			public void refineRefNull(State s, DecisionAlternative_XALOAD_RefNull dan) 
+			public void refineRefNull(State s, DecisionAlternative_XALOAD_Null dan) 
 			throws DecisionException, ContradictionException {
 				Algo_XALOAD.this.refineRefNull(s, dan); //implemented in MultipleStateGenerator_XYLOAD_GETX
 				
@@ -218,7 +218,7 @@ final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlter
 			}
 
 			@Override
-			public void updateReference(State s, DecisionAlternative_XALOAD_Ref dar) 
+			public void updateReference(State s, DecisionAlternative_XALOAD_Unresolved dar) 
 			throws DecisionException, ThreadStackEmptyException {
 				Algo_XALOAD.this.update(s, dar); //implemented in MultipleStateGenerator_XYLOAD_GETX
 			}

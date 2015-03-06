@@ -21,11 +21,11 @@ import jbse.rules.TriggerRuleAliases;
 import jbse.rules.TriggerRuleExpandsTo;
 import jbse.rules.TriggerRuleNull;
 import jbse.rules.TriggerRulesRepo;
-import jbse.tree.DecisionAlternative_XYLOAD_GETX_Ref;
+import jbse.tree.DecisionAlternative_XYLOAD_GETX_Unresolved;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Loads;
-import jbse.tree.DecisionAlternative_XYLOAD_GETX_RefAliases;
-import jbse.tree.DecisionAlternative_XYLOAD_GETX_RefExpands;
-import jbse.tree.DecisionAlternative_XYLOAD_GETX_RefNull;
+import jbse.tree.DecisionAlternative_XYLOAD_GETX_Aliases;
+import jbse.tree.DecisionAlternative_XYLOAD_GETX_Expands;
+import jbse.tree.DecisionAlternative_XYLOAD_GETX_Null;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 
@@ -49,7 +49,7 @@ public class TriggerManager {
 	 * 
 	 * @param s a {@link State}.
 	 * @param da a {@link DecisionAlternative_XYLOAD_GETX_Loads}. If it is a 
-	 *        {@link DecisionAlternative_XYLOAD_GETX_Ref}
+	 *        {@link DecisionAlternative_XYLOAD_GETX_Unresolved}
 	 *        and has a trigger method, a frame for it will be pushed on {@code s}. 
 	 *        Otherwise, {@code s} remains unchanged.
 	 * @param pcOffset an {@code int}, an offset for the program counter of {@code s}. Used
@@ -61,7 +61,7 @@ public class TriggerManager {
 	 */
 	public boolean runTriggers(State s, DecisionAlternative_XYLOAD_GETX_Loads da, int pcOffset) 
 	throws InvalidProgramCounterException, ThreadStackEmptyException {
-		if (!(da instanceof DecisionAlternative_XYLOAD_GETX_Ref)) {
+		if (!(da instanceof DecisionAlternative_XYLOAD_GETX_Unresolved)) {
 			return true;
 		}
 /* TODO handle guidance; the following code tries to manage the case of guided 
@@ -85,7 +85,7 @@ public class TriggerManager {
 */		
 		//handles triggers by creating a frame for the fresh object;
 		//first, gets data
-		final ReferenceSymbolic ref = ((DecisionAlternative_XYLOAD_GETX_Ref) da).getValueToLoad();
+		final ReferenceSymbolic ref = ((DecisionAlternative_XYLOAD_GETX_Unresolved) da).getValueToLoad();
 		final ArrayList<TriggerRule> rules = satisfiedTriggerRules(s, da, this.triggerRulesRepo);
 
 		//then, pushes all the frames
@@ -117,8 +117,8 @@ public class TriggerManager {
 	private ArrayList<TriggerRule> 
 	satisfiedTriggerRules(State s, DecisionAlternative_XYLOAD_GETX_Loads da, TriggerRulesRepo rulesRepo) {
 		//TODO replace with double dispatching
-		if (da instanceof DecisionAlternative_XYLOAD_GETX_RefAliases) {
-			final DecisionAlternative_XYLOAD_GETX_RefAliases daa = (DecisionAlternative_XYLOAD_GETX_RefAliases) da;
+		if (da instanceof DecisionAlternative_XYLOAD_GETX_Aliases) {
+			final DecisionAlternative_XYLOAD_GETX_Aliases daa = (DecisionAlternative_XYLOAD_GETX_Aliases) da;
 			final ReferenceSymbolic ref = daa.getValueToLoad();
 			final Objekt o = s.getObject(new ReferenceConcrete(daa.getAliasPosition()));
 			final ArrayList<TriggerRuleAliases> rulesNonMax = rulesRepo.matchingTriggerRulesAliasesNonMax(ref);
@@ -142,8 +142,8 @@ nextRule:
 				}
 			}
 			return retVal;
-		} else if (da instanceof DecisionAlternative_XYLOAD_GETX_RefExpands) {
-			final DecisionAlternative_XYLOAD_GETX_RefExpands dae = (DecisionAlternative_XYLOAD_GETX_RefExpands) da;
+		} else if (da instanceof DecisionAlternative_XYLOAD_GETX_Expands) {
+			final DecisionAlternative_XYLOAD_GETX_Expands dae = (DecisionAlternative_XYLOAD_GETX_Expands) da;
 			final ReferenceSymbolic ref = dae.getValueToLoad();
 			final String className = dae.getClassNameOfTargetObject();
 			final ArrayList<TriggerRuleExpandsTo> rules = rulesRepo.matchingTriggerRulesExpandsTo(ref);
@@ -154,8 +154,8 @@ nextRule:
 				}
 			}
 			return retVal;
-		} else if (da instanceof DecisionAlternative_XYLOAD_GETX_RefNull) {
-			final DecisionAlternative_XYLOAD_GETX_RefNull dan = (DecisionAlternative_XYLOAD_GETX_RefNull) da;
+		} else if (da instanceof DecisionAlternative_XYLOAD_GETX_Null) {
+			final DecisionAlternative_XYLOAD_GETX_Null dan = (DecisionAlternative_XYLOAD_GETX_Null) da;
 			final ReferenceSymbolic ref = dan.getValueToLoad();
 			final ArrayList<TriggerRuleNull> rules = rulesRepo.matchingTriggerRulesNull(ref);
 			final ArrayList<TriggerRule> retVal = new ArrayList<>();

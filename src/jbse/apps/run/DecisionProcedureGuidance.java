@@ -31,15 +31,15 @@ import jbse.mem.Util;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XALOAD;
-import jbse.tree.DecisionAlternative_XALOAD_Ref;
+import jbse.tree.DecisionAlternative_XALOAD_Unresolved;
 import jbse.tree.DecisionAlternative_XASTORE;
 import jbse.tree.DecisionAlternative_XCMPY;
 import jbse.tree.DecisionAlternative_IFX;
 import jbse.tree.DecisionAlternative_XLOAD_GETX;
-import jbse.tree.DecisionAlternative_XYLOAD_GETX_Ref;
-import jbse.tree.DecisionAlternative_XYLOAD_GETX_RefAliases;
-import jbse.tree.DecisionAlternative_XYLOAD_GETX_RefExpands;
-import jbse.tree.DecisionAlternative_XYLOAD_GETX_RefNull;
+import jbse.tree.DecisionAlternative_XYLOAD_GETX_Unresolved;
+import jbse.tree.DecisionAlternative_XYLOAD_GETX_Aliases;
+import jbse.tree.DecisionAlternative_XYLOAD_GETX_Expands;
+import jbse.tree.DecisionAlternative_XYLOAD_GETX_Null;
 import jbse.tree.DecisionAlternative_XNEWARRAY;
 import jbse.tree.DecisionAlternative_XSWITCH;
 import jbse.val.Any;
@@ -365,7 +365,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 		if (!this.ended) {
 			final Iterator<DecisionAlternative_XLOAD_GETX> it = result.iterator();
 			while (it.hasNext()) {
-				final DecisionAlternative_XYLOAD_GETX_Ref dar = (DecisionAlternative_XYLOAD_GETX_Ref) it.next();
+				final DecisionAlternative_XYLOAD_GETX_Unresolved dar = (DecisionAlternative_XYLOAD_GETX_Unresolved) it.next();
 				filter(state, refToLoad, dar, it);
 			}
 		}
@@ -403,7 +403,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 		if (!this.ended) {
 			final Iterator<DecisionAlternative_XALOAD> it = result.iterator();
 			while (it.hasNext()) {
-				final DecisionAlternative_XALOAD_Ref dar = (DecisionAlternative_XALOAD_Ref) it.next();
+				final DecisionAlternative_XALOAD_Unresolved dar = (DecisionAlternative_XALOAD_Unresolved) it.next();
 				final Primitive conditionToCheck = dar.getArrayAccessExpression();
 				final Primitive valueInConcreteState = eval(this.initialStateConcrete, this.rootFrameConcrete, conditionToCheck);
 				if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
@@ -416,18 +416,18 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 		return retVal;
 	}
 	
-	private void filter(State state, ReferenceSymbolic refToLoad, DecisionAlternative_XYLOAD_GETX_Ref dar, Iterator<?> it) {
+	private void filter(State state, ReferenceSymbolic refToLoad, DecisionAlternative_XYLOAD_GETX_Unresolved dar, Iterator<?> it) {
 		final Reference refInConcreteState = (Reference) getValue(this.initialStateConcrete, this.rootFrameConcrete, refToLoad.getOrigin());
-		if (dar instanceof DecisionAlternative_XYLOAD_GETX_RefNull && !Util.isNull(this.initialStateConcrete, refInConcreteState)) {
+		if (dar instanceof DecisionAlternative_XYLOAD_GETX_Null && !Util.isNull(this.initialStateConcrete, refInConcreteState)) {
 			it.remove();
-		} else if (dar instanceof DecisionAlternative_XYLOAD_GETX_RefAliases) {
-			final DecisionAlternative_XYLOAD_GETX_RefAliases dara = (DecisionAlternative_XYLOAD_GETX_RefAliases) dar;
+		} else if (dar instanceof DecisionAlternative_XYLOAD_GETX_Aliases) {
+			final DecisionAlternative_XYLOAD_GETX_Aliases dara = (DecisionAlternative_XYLOAD_GETX_Aliases) dar;
 			final String aliasOrigin = state.getObject(new ReferenceConcrete(dara.getAliasPosition())).getOrigin();
 			final Reference aliasInConcreteState = (Reference) getValue(this.initialStateConcrete, this.rootFrameConcrete, aliasOrigin);
 			if (!Util.areAlias(this.initialStateConcrete, refInConcreteState, aliasInConcreteState)) {
 				it.remove();
 			}
-		} else if (dar instanceof DecisionAlternative_XYLOAD_GETX_RefExpands) {
+		} else if (dar instanceof DecisionAlternative_XYLOAD_GETX_Expands) {
 			final long refHeapPosInConcreteState = Util.heapPosition(this.initialStateConcrete, refInConcreteState);
 			if (this.seenObjects.contains(refHeapPosInConcreteState)) {
 				it.remove();

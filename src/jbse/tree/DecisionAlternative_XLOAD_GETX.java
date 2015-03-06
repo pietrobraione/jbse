@@ -6,8 +6,9 @@ package jbse.tree;
  * 
  * @author Pietro Braione
  */
-public abstract class DecisionAlternative_XLOAD_GETX implements DecisionAlternative_XYLOAD_GETX_Loads {
-	protected static final String ALT_CODE = "L";
+public abstract class DecisionAlternative_XLOAD_GETX 
+implements DecisionAlternative_XYLOAD_GETX_Loads {
+	protected static final String ALT_CODE = "XLOAD_GETX";
 	
 	private final String branchId;
 	private final int branchNumber;

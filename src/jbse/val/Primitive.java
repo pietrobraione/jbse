@@ -7,7 +7,7 @@ import jbse.val.exc.InvalidOperatorException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Class that represent a primitive type value.
+ * Class that represent a primitive type value of any kind.
  */
 public abstract class Primitive extends Value implements Cloneable {
 	/** {@link Calculator} to perform operation on primitives. */

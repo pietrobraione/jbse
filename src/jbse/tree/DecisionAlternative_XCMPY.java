@@ -52,17 +52,17 @@ public abstract class DecisionAlternative_XCMPY implements DecisionAlternative {
 	}
 	
 	@Override
-	public boolean concrete() {
-		return this.isConcrete;
-	}
-	
-	@Override
 	public final int getBranchNumber() {
 		return this.branchNumber;
 	}
 
 	@Override
 	public boolean trivial() {
-		return this.concrete();
+		return this.isConcrete;
 	}
+    
+    @Override
+    public boolean concrete() {
+        return this.isConcrete;
+    }
 }

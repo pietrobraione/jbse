@@ -9,11 +9,11 @@ import jbse.val.ReferenceSymbolic;
  * 
  * @author Pietro Braione
  */
-public final class DecisionAlternative_XLOAD_GETX_RefAliases extends DecisionAlternative_XLOAD_GETX_Ref implements DecisionAlternative_XYLOAD_GETX_RefAliases {
+public final class DecisionAlternative_XLOAD_GETX_Aliases extends DecisionAlternative_XLOAD_GETX_Unresolved implements DecisionAlternative_XYLOAD_GETX_Aliases {
 	private final long aliasPosition;
 
-	public DecisionAlternative_XLOAD_GETX_RefAliases(ReferenceSymbolic referenceToResolve, long aliasPosition, String objectOrigin, int branchNumber) {
-		super(ALT_CODE + "A" + objectOrigin, referenceToResolve, branchNumber);
+	public DecisionAlternative_XLOAD_GETX_Aliases(ReferenceSymbolic referenceToResolve, long aliasPosition, String objectOrigin, int branchNumber) {
+		super(ALT_CODE + "_Aliases:" + objectOrigin, referenceToResolve, branchNumber);
 		this.aliasPosition = aliasPosition;
 	}
 
@@ -24,6 +24,8 @@ public final class DecisionAlternative_XLOAD_GETX_RefAliases extends DecisionAlt
 
 	@Override
 	public void accept(VisitorDecisionAlternative_XLOAD_GETX v) throws Exception {
-		v.visitDecisionAlternative_XLOAD_GETX_RefAliases(this);
+		v.visitDecisionAlternative_XLOAD_GETX_Aliases(this);
 	}
+    
+    //TODO toString, hashCode, equals
 }

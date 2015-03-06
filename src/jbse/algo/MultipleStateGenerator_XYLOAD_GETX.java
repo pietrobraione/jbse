@@ -12,9 +12,9 @@ import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative;
-import jbse.tree.DecisionAlternative_XYLOAD_GETX_RefAliases;
-import jbse.tree.DecisionAlternative_XYLOAD_GETX_RefNull;
-import jbse.tree.DecisionAlternative_XYLOAD_GETX_RefExpands;
+import jbse.tree.DecisionAlternative_XYLOAD_GETX_Aliases;
+import jbse.tree.DecisionAlternative_XYLOAD_GETX_Null;
+import jbse.tree.DecisionAlternative_XYLOAD_GETX_Expands;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Loads;
 import jbse.val.Primitive;
 import jbse.val.ReferenceConcrete;
@@ -46,12 +46,12 @@ abstract class MultipleStateGenerator_XYLOAD_GETX<R extends DecisionAlternative>
 		super(superclassDecisionAlternatives);
 	}
 	
-	protected final void refineRefExpands(State s, DecisionAlternative_XYLOAD_GETX_RefExpands drc) 
+	protected final void refineRefExpands(State s, DecisionAlternative_XYLOAD_GETX_Expands drc) 
 	throws ContradictionException, InvalidTypeException {
 		final ReferenceSymbolic referenceToExpand = drc.getValueToLoad();
 		final String classNameOfTargetObject = drc.getClassNameOfTargetObject();
 		s.assumeExpands(referenceToExpand, classNameOfTargetObject);
-		//in the case the fresh object is an array, we assume it 
+		//in the case the expansion object is an array, we assume it 
 		//to have nonnegative length
 		if (Type.isArray(classNameOfTargetObject)) {
 			final Primitive lengthPositive;
@@ -66,7 +66,7 @@ abstract class MultipleStateGenerator_XYLOAD_GETX<R extends DecisionAlternative>
 		}
 	}
 
-	protected final void refineRefAliases(State s, DecisionAlternative_XYLOAD_GETX_RefAliases dro)
+	protected final void refineRefAliases(State s, DecisionAlternative_XYLOAD_GETX_Aliases dro)
 	throws ContradictionException {
 		final ReferenceSymbolic referenceToResolve = dro.getValueToLoad();
 		final long aliasPosition = dro.getAliasPosition();
@@ -74,7 +74,7 @@ abstract class MultipleStateGenerator_XYLOAD_GETX<R extends DecisionAlternative>
 		s.assumeAliases(referenceToResolve, aliasPosition, object);
 	}
 	
-	protected final void refineRefNull(State s, DecisionAlternative_XYLOAD_GETX_RefNull drn)
+	protected final void refineRefNull(State s, DecisionAlternative_XYLOAD_GETX_Null drn)
 	throws ContradictionException {
 		final ReferenceSymbolic referenceToResolve = drn.getValueToLoad();
 		s.assumeNull(referenceToResolve);

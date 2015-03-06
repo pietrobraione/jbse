@@ -6,9 +6,9 @@ import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
 import jbse.tree.DecisionAlternative_XALOAD;
 import jbse.tree.DecisionAlternative_XALOAD_Out;
-import jbse.tree.DecisionAlternative_XALOAD_RefAliases;
-import jbse.tree.DecisionAlternative_XALOAD_RefNull;
-import jbse.tree.DecisionAlternative_XALOAD_RefExpands;
+import jbse.tree.DecisionAlternative_XALOAD_Aliases;
+import jbse.tree.DecisionAlternative_XALOAD_Null;
+import jbse.tree.DecisionAlternative_XALOAD_Expands;
 import jbse.tree.DecisionAlternative_XALOAD_Resolved;
 import jbse.tree.VisitorDecisionAlternative_XALOAD;
 import jbse.val.exc.InvalidTypeException;
@@ -25,13 +25,13 @@ import jbse.val.exc.InvalidTypeException;
  *
  */
 abstract class StrategyRefine_XALOAD implements StrategyRefine<DecisionAlternative_XALOAD> {
-	abstract public void refineRefExpands(State s, DecisionAlternative_XALOAD_RefExpands dac) 
+	abstract public void refineRefExpands(State s, DecisionAlternative_XALOAD_Expands dac) 
 	throws DecisionException, ContradictionException, InvalidTypeException;
 
-	abstract public void refineRefAliases(State s, DecisionAlternative_XALOAD_RefAliases dai) 
+	abstract public void refineRefAliases(State s, DecisionAlternative_XALOAD_Aliases dai) 
 	throws DecisionException, ContradictionException;
 
-	abstract public void refineRefNull(State s, DecisionAlternative_XALOAD_RefNull dan) 
+	abstract public void refineRefNull(State s, DecisionAlternative_XALOAD_Null dan) 
 	throws DecisionException, ContradictionException;
 
 	abstract public void refineResolved(State s, DecisionAlternative_XALOAD_Resolved dav) 
@@ -46,19 +46,19 @@ abstract class StrategyRefine_XALOAD implements StrategyRefine<DecisionAlternati
 		final VisitorDecisionAlternative_XALOAD visitorRefine = 
 		new VisitorDecisionAlternative_XALOAD() {
 			@Override
-			public void visitDecisionAlternative_XALOAD_RefExpands(DecisionAlternative_XALOAD_RefExpands dac)
+			public void visitDecisionAlternative_XALOAD_Expands(DecisionAlternative_XALOAD_Expands dac)
 			throws DecisionException, ContradictionException, InvalidTypeException {
 				StrategyRefine_XALOAD.this.refineRefExpands(s, dac);
 			}
 
 			@Override
-			public void visitDecisionAlternative_XALOAD_RefAliases(DecisionAlternative_XALOAD_RefAliases dai)
+			public void visitDecisionAlternative_XALOAD_Aliases(DecisionAlternative_XALOAD_Aliases dai)
 			throws DecisionException, ContradictionException {
 				StrategyRefine_XALOAD.this.refineRefAliases(s, dai);
 			}
 
 			@Override
-			public void visitDecisionAlternative_XALOAD_RefNull(DecisionAlternative_XALOAD_RefNull dan)
+			public void visitDecisionAlternative_XALOAD_Null(DecisionAlternative_XALOAD_Null dan)
 			throws DecisionException, ContradictionException {
 				StrategyRefine_XALOAD.this.refineRefNull(s, dan);
 			}

@@ -45,6 +45,7 @@ public class Algo_JAVA_SYSTEM_ARRAYCOPY implements Algorithm {
 	        destArray = (Array) state.getObject(dest);
 	    } catch (ClassCastException e) {
             throwNew(state, ARRAY_STORE_EXCEPTION);
+            throw new InterruptException();
 	    }
 	    
 	    //TODO

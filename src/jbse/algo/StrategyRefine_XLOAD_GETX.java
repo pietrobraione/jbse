@@ -4,9 +4,9 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
 import jbse.tree.DecisionAlternative_XLOAD_GETX;
-import jbse.tree.DecisionAlternative_XLOAD_GETX_RefAliases;
-import jbse.tree.DecisionAlternative_XLOAD_GETX_RefNull;
-import jbse.tree.DecisionAlternative_XLOAD_GETX_RefExpands;
+import jbse.tree.DecisionAlternative_XLOAD_GETX_Aliases;
+import jbse.tree.DecisionAlternative_XLOAD_GETX_Null;
+import jbse.tree.DecisionAlternative_XLOAD_GETX_Expands;
 import jbse.tree.DecisionAlternative_XLOAD_GETX_Resolved;
 import jbse.tree.VisitorDecisionAlternative_XLOAD_GETX;
 import jbse.val.exc.InvalidTypeException;
@@ -23,13 +23,13 @@ import jbse.val.exc.InvalidTypeException;
  *
  */
 abstract class StrategyRefine_XLOAD_GETX implements StrategyRefine<DecisionAlternative_XLOAD_GETX> {
-	abstract public void refineRefExpands(State s, DecisionAlternative_XLOAD_GETX_RefExpands drc)
+	abstract public void refineRefExpands(State s, DecisionAlternative_XLOAD_GETX_Expands drc)
 	throws ContradictionException, InvalidTypeException;
 
-	abstract public void refineRefAliases(State s, DecisionAlternative_XLOAD_GETX_RefAliases dro) 
+	abstract public void refineRefAliases(State s, DecisionAlternative_XLOAD_GETX_Aliases dro) 
 	throws ContradictionException;
 
-	abstract public void refineRefNull(State s, DecisionAlternative_XLOAD_GETX_RefNull drn)
+	abstract public void refineRefNull(State s, DecisionAlternative_XLOAD_GETX_Null drn)
 	throws ContradictionException;
 
 	abstract public void refineResolved(State s, DecisionAlternative_XLOAD_GETX_Resolved drr);
@@ -41,19 +41,19 @@ abstract class StrategyRefine_XLOAD_GETX implements StrategyRefine<DecisionAlter
 		final VisitorDecisionAlternative_XLOAD_GETX visitorRefine = 
 		new VisitorDecisionAlternative_XLOAD_GETX() {
 			@Override
-			public void visitDecisionAlternative_XLOAD_GETX_RefExpands(DecisionAlternative_XLOAD_GETX_RefExpands drc) 
+			public void visitDecisionAlternative_XLOAD_GETX_Expands(DecisionAlternative_XLOAD_GETX_Expands drc) 
 			throws ContradictionException, InvalidTypeException {
 				StrategyRefine_XLOAD_GETX.this.refineRefExpands(s, drc);
 			}
 
 			@Override
-			public void visitDecisionAlternative_XLOAD_GETX_RefAliases(DecisionAlternative_XLOAD_GETX_RefAliases dro) 
+			public void visitDecisionAlternative_XLOAD_GETX_Aliases(DecisionAlternative_XLOAD_GETX_Aliases dro) 
 			throws ContradictionException {
 				StrategyRefine_XLOAD_GETX.this.refineRefAliases(s, dro);
 			}
 
 			@Override
-			public void visitDecisionAlternative_XLOAD_GETX_RefNull(DecisionAlternative_XLOAD_GETX_RefNull drn) 
+			public void visitDecisionAlternative_XLOAD_GETX_Null(DecisionAlternative_XLOAD_GETX_Null drn) 
 			throws ContradictionException {
 				StrategyRefine_XLOAD_GETX.this.refineRefNull(s, drn);
 			}

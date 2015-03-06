@@ -1,12 +1,11 @@
 package jbse.tree;
 
 final class DecisionAlternative_XASTORE_In extends DecisionAlternative_XASTORE {
-	private static final String IN_ID = "IN";
-	private static final int IN_BN = 1;
-	private static final int HASH_CODE = 122960861;
+	private static final String IN_ID = "XASTORE_In";
+	private static final int HASH_CODE = 2;
 	
 	public DecisionAlternative_XASTORE_In(boolean isConcrete) {
-		super(true, isConcrete, IN_BN);
+		super(true, isConcrete, (isConcrete ? 1 : HASH_CODE));
 	}
 	
 	@Override

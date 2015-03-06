@@ -62,13 +62,14 @@ public class Array extends Objekt {
 	/** An {@link Expression} stating that {@code INDEX} is in range. */
 	private final Expression indexInRange;
 
-	/** The values stored in the array. */
-	private LinkedList<AccessOutcomeIn> values; //TODO do not use AccessOutcome..., but define a suitable private Entry class
+	/** Describes the values stored in the array. */
+	private LinkedList<AccessOutcomeIn> entries; //TODO do not use AccessOutcome..., but define a suitable private Entry class
 	
 	/** 
-	 * Indicates whether the array has a simple representation, i.e., whether it has as many 
-	 * entries as its length, each corresponding to all the possible values of the 
-	 * index, and ordered by index. This is possible only if this.length is a Simplex.
+	 * Indicates whether the array has a simple representation, i.e., 
+	 * whether it has as many entries as its length, each corresponding 
+	 * to all the possible values of the index, and ordered by index. 
+	 * This is possible only if {@code this.length} is a {@link Simplex}.
 	 */ 
 	private boolean simpleRep;
 
@@ -217,6 +218,12 @@ public class Array extends Objekt {
 			    throw new InternalError(e);
 			}
 		}
+		
+		@Override
+		public String toString() {
+		    return (this.accessCondition == null ? "true" : this.accessCondition.toString()) + 
+		    " -> " + (this.returnedValue == null ? "*" : this.returnedValue.toString());
+		}
 	}
 
 	/**
@@ -229,9 +236,16 @@ public class Array extends Objekt {
 		private AccessOutcomeOut() {
 			super();
 		}
+		
 		private AccessOutcomeOut(Expression exp) { 
 			super(exp); 
 		}
+        
+        @Override
+        public String toString() {
+            return (this.accessCondition == null ? "true" : this.accessCondition.toString()) + 
+            " -> OUT_OF_RANGE";
+        }
 	}
 
 	/**
@@ -328,7 +342,7 @@ public class Array extends Objekt {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}
-		this.values = new LinkedList<AccessOutcomeIn>();
+		this.entries = new LinkedList<AccessOutcomeIn>();
 		this.simpleRep = (length instanceof Simplex);
 		this.setEntriesInit(initSymbolic, initValue);
 	}
@@ -353,7 +367,7 @@ public class Array extends Objekt {
 			int ln = (Integer) ((Simplex) this.getLength()).getActualValue();
 			for (int i = 0; i < ln; i++) {
 				try {
-					this.values.add(new AccessOutcomeIn((Expression) INDEX.eq(this.calc.valInt(i)),
+					this.entries.add(new AccessOutcomeIn((Expression) INDEX.eq(this.calc.valInt(i)),
 														entryValue));
 				} catch (InvalidOperandException | InvalidTypeException e) {
 					//this should never happen
@@ -361,7 +375,7 @@ public class Array extends Objekt {
 				}
 			}			
 		} else {
-			this.values.add(new AccessOutcomeIn(this.indexInRange, entryValue));
+			this.entries.add(new AccessOutcomeIn(this.indexInRange, entryValue));
 		}
 	}
 	
@@ -393,7 +407,7 @@ public class Array extends Objekt {
 	 */
 	public boolean isConcrete() {
 		if (hasSimpleRep()) {
-			for (AccessOutcomeIn e : this.values) {
+			for (AccessOutcomeIn e : this.entries) {
 				if (e.returnedValue.isSymbolic()) {
 					return false;
 				}
@@ -417,39 +431,39 @@ public class Array extends Objekt {
 	public Collection<AccessOutcome> get(Primitive index) 
 	throws InvalidOperandException, InvalidTypeException {
 		final LinkedList<AccessOutcome> retVal = new LinkedList<AccessOutcome>();
-		final Primitive inRangeArray = inRange(index);
+		final Primitive inRange = inRange(index);
 
 		//builds the answer
 		if (this.simpleRep && index instanceof Simplex) { //the fast case, access this.values directly by index			
-			if (inRangeArray.surelyTrue()) {
+			if (inRange.surelyTrue()) {
 				final int indexInt = (Integer) ((Simplex) index).getActualValue();
-				final AccessOutcomeIn e = this.values.get(indexInt);
+				final AccessOutcomeIn e = this.entries.get(indexInt);
 				retVal.add(new AccessOutcomeIn(e.returnedValue));
 			} else {
 				retVal.add(new AccessOutcomeOut()); 
 			}
 		} else {
-			//scans this.values and adds all the possibly compatible outcomes
-			for (AccessOutcomeIn e : this.values) {
+			//scans the entries and adds all the (possibly) satisfiable 
+		    //inbound cases
+			for (AccessOutcomeIn e : this.entries) {
 				final Primitive inRangeEntry = e.inRange(index);
 				if (inRangeEntry.surelyTrue()) { //this happens when index is Simplex
 					retVal.add(new AccessOutcomeIn(e.returnedValue));
 				} else if (inRangeEntry.surelyFalse()) {
-					//does nothing - the entry is not added
-				} else { //we must accept the entry, the caller will decide whether to keep it
+					//do nothing
+				} else { //inRangeEntry is possibly satisfiable
 					retVal.add(new AccessOutcomeIn((Expression) inRangeEntry, e.returnedValue));
 				}
 			}
 
 			//manages the out-of-bounds case
-			final Primitive outOfRangeArray = inRangeArray.not();
-			if (outOfRangeArray.surelyTrue()) {
+			final Primitive outOfRange = inRange.not();
+			if (outOfRange.surelyTrue()) {
 				retVal.add(new AccessOutcomeOut());
-			} else if (outOfRangeArray.surelyFalse()) {
+			} else if (outOfRange.surelyFalse()) {
 				//do nothing
-			} else {
-				//here is surely outOfRangeArray instanceof Expression
-				retVal.add(new AccessOutcomeOut((Expression) outOfRangeArray));
+			} else { //outOfRange is possibly satisfiable
+				retVal.add(new AccessOutcomeOut((Expression) outOfRange));
 			}
 		}
 				
@@ -506,7 +520,7 @@ public class Array extends Objekt {
 	throws InvalidOperandException, InvalidTypeException {
 		if (this.simpleRep && index instanceof Simplex) {
 			try {
-				this.setFast((Simplex) index, valToSet);
+				setFast((Simplex) index, valToSet);
 			} catch (FastArrayAccessNotAllowedException e) {
 				//this should never happen
 				throw new UnexpectedInternalException(e);
@@ -522,13 +536,14 @@ public class Array extends Objekt {
 
 			//adds a new entry for the set index value
 			final Expression formalIndexIsSetIndex = (Expression) INDEX.eq(index);
-			this.values.add(new AccessOutcomeIn(formalIndexIsSetIndex, valToSet));
+			final Expression accessExpression = (Expression) this.indexInRange.and(formalIndexIsSetIndex);
+			this.entries.add(new AccessOutcomeIn(accessExpression, valToSet));
 			
 			//returns the iterator
 			return new Iterator<Array.AccessOutcomeIn>() {
 				//this iterator filters the relevant members in Array.this.values
 				//by wrapping the default iterator to it
-				private final Iterator<Array.AccessOutcomeIn> it = Array.this.values.iterator();
+				private final Iterator<Array.AccessOutcomeIn> it = Array.this.entries.iterator();
 				private Array.AccessOutcomeIn next = null;
 				private boolean emitted = true;
 				private boolean canRemove = false;
@@ -646,7 +661,7 @@ public class Array extends Objekt {
 	 * @return a {@link List}{@code <}{@link AccessOutcomeIn}{@code >}.
 	 */
 	public List<AccessOutcomeIn> values() {
-		return this.values;
+		return this.entries;
 	}
 	
 	/**
@@ -659,7 +674,7 @@ public class Array extends Objekt {
 	public String valueString() {
 		if (this.type.equals("" + Type.ARRAYOF + Type.CHAR) && isConcrete()) {
 		    final StringBuilder buf = new StringBuilder();
-			for (AccessOutcomeIn e : this.values) {
+			for (AccessOutcomeIn e : this.entries) {
 				buf.append(e.returnedValue.toString());
 			}
 			return buf.toString();
@@ -673,7 +688,7 @@ public class Array extends Objekt {
 		String str = "[Type:" + this.type + ", Length:" + this.getLength().toString() + ", Elements: {";
 		boolean firstEntryPassed = false;
 		final StringBuilder buf = new StringBuilder();
-		for (AccessOutcomeIn e : this.values) {
+		for (AccessOutcomeIn e : this.entries) {
 			if (firstEntryPassed) {
 				buf.append(", ");
 			} else {
@@ -693,9 +708,9 @@ public class Array extends Objekt {
 
 		//TODO being Values immutable it should not be necessary to clone this.length and this.indexInRange, refinement shouldn't change the situation as both are primitive. However, should investigate correctness.
 
-		o.values = new LinkedList<AccessOutcomeIn>();
-		for (AccessOutcomeIn e : this.values) {
-			o.values.add(e.clone());
+		o.entries = new LinkedList<AccessOutcomeIn>();
+		for (AccessOutcomeIn e : this.entries) {
+			o.entries.add(e.clone());
 		}
 
 		return o;

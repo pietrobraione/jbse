@@ -9,17 +9,17 @@ import jbse.val.ReferenceSymbolic;
  * 
  * @author Pietro Braione
  */
-public final class DecisionAlternative_XLOAD_GETX_RefExpands extends DecisionAlternative_XLOAD_GETX_Ref implements DecisionAlternative_XYLOAD_GETX_RefExpands {
-	private String classNameOfTargetObject;
+public final class DecisionAlternative_XLOAD_GETX_Expands extends DecisionAlternative_XLOAD_GETX_Unresolved implements DecisionAlternative_XYLOAD_GETX_Expands {
+	private final String classNameOfTargetObject;
 
-	public DecisionAlternative_XLOAD_GETX_RefExpands(ReferenceSymbolic referenceToResolve, String classNameOfTargetObject, int branchNumber) {
-		super(ALT_CODE + "X" + classNameOfTargetObject, referenceToResolve, branchNumber);
+	public DecisionAlternative_XLOAD_GETX_Expands(ReferenceSymbolic referenceToResolve, String classNameOfTargetObject, int branchNumber) {
+		super(ALT_CODE + "_Expands:" + classNameOfTargetObject, referenceToResolve, branchNumber);
 		this.classNameOfTargetObject = classNameOfTargetObject;
 	}
 
 	@Override
 	public void accept(VisitorDecisionAlternative_XLOAD_GETX v) throws Exception {
-		v.visitDecisionAlternative_XLOAD_GETX_RefExpands(this);
+		v.visitDecisionAlternative_XLOAD_GETX_Expands(this);
 	}
 
 	@Override

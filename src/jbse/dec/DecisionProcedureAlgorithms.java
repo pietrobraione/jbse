@@ -434,16 +434,16 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	
 	private void decide_XSWITCH_Concrete(Simplex selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result) {
 		final int opValue = (Integer) selector.getActualValue();
-		int branchId = 1;
+		int branchCounter = 1;
 		for (int i : tab) {
 			if (i == opValue) { 
-				result.add(DecisionAlternative_XSWITCH.toConcrete(i, branchId));
+				result.add(DecisionAlternative_XSWITCH.toConcrete(i, branchCounter));
 				return;
 			}
-			++branchId;
+			++branchCounter;
 		}
 		//not found
-		result.add(DecisionAlternative_XSWITCH.toConcreteDefault(branchId));
+		result.add(DecisionAlternative_XSWITCH.toConcreteDefault(branchCounter));
 	}
 
 	/**
@@ -458,17 +458,17 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		final boolean shouldRefine;
 
 		final boolean isAny = (selector instanceof Any);
-		int branchId = 1;
+		int branchCounter = 1;
 		try {
 			for (int i : tab) {
 				final Expression exp = (isAny ? null : (Expression) selector.eq(this.calc.valInt(i)));
 				if (isAny || isSat(exp)) { 
-					result.add(DecisionAlternative_XSWITCH.toNonconcrete(i, branchId));
+					result.add(DecisionAlternative_XSWITCH.toNonconcrete(i, branchCounter));
 				}
-				++branchId;
+				++branchCounter;
 			}
 			if (isAny || isSat(tab.getDefaultClause(selector))) { 
-				result.add(DecisionAlternative_XSWITCH.toNonconcreteDefault(branchId));
+				result.add(DecisionAlternative_XSWITCH.toNonconcreteDefault(branchCounter));
 			}
 			shouldRefine = (!isAny && (result.size() > 1));
 			return Outcome.val(shouldRefine, true);
@@ -701,8 +701,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		final boolean accessOutOfBounds = (valToLoad == null);
 		final boolean valToLoadResolved = accessOutOfBounds || Util.isResolved(state, valToLoad);
 		if (valToLoadResolved && accessConcrete) {
-		    resolve_XALOAD_ResolvedConcrete(valToLoad, fresh, result);
-		    return Outcome.val(fresh, false, false); //a fresh value to load always requires a refinement action
+		    return resolve_XALOAD_ResolvedConcrete(valToLoad, fresh, result);
 		} else if (valToLoadResolved && !accessConcrete) {
 		    return resolve_XALOAD_ResolvedNonconcrete(accessExpression, valToLoad, fresh, result);
 		} else {
@@ -727,15 +726,18 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *        where the method will put all the 
 	 *        {@link DecisionAlternative_XALOAD}s representing all the 
 	 *        satisfiable outcomes of the operation.
+     * @return an {@link Outcome}.
 	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet)}.
 	 */
-	private void resolve_XALOAD_ResolvedConcrete(Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result) {
+	private Outcome resolve_XALOAD_ResolvedConcrete(Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result) {
 		final boolean accessOutOfBounds = (valToLoad == null);
+		final int branchNumber = result.size() + 1;
 		if (accessOutOfBounds) {
-			result.add(new DecisionAlternative_XALOAD_Out());
+			result.add(new DecisionAlternative_XALOAD_Out(branchNumber));
 		} else {
-			result.add(new DecisionAlternative_XALOAD_Resolved(valToLoad, fresh));
+			result.add(new DecisionAlternative_XALOAD_Resolved(valToLoad, fresh, branchNumber));
 		}
+        return Outcome.val(fresh, false, false); //a fresh value to load always requires a refinement action
 	}
 
 	/**
@@ -758,24 +760,25 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *        where the method will put all the 
 	 *        {@link DecisionAlternative_XALOAD}s representing all the 
 	 *        satisfiable outcomes of the operation.
+     * @return an {@link Outcome}.
 	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet) resolve_XALOAD}.
 	 */
 	protected Outcome resolve_XALOAD_ResolvedNonconcrete(Expression accessExpression, Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
 	throws DecisionException {
-		final boolean accessOutOfBounds = (valToLoad == null);
-		boolean shouldRefine;
+		final boolean shouldRefine;
 		if (isSat(accessExpression)) {
 			shouldRefine = fresh; //a fresh value to load always requires a refinement action
+	        final boolean accessOutOfBounds = (valToLoad == null);
+	        final int branchNumber = result.size() + 1;
 			if (accessOutOfBounds) {
-				result.add(new DecisionAlternative_XALOAD_Out(accessExpression));
+				result.add(new DecisionAlternative_XALOAD_Out(accessExpression, branchNumber));
 			} else {
-				result.add(new DecisionAlternative_XALOAD_Resolved(accessExpression, valToLoad, fresh));
+				result.add(new DecisionAlternative_XALOAD_Resolved(accessExpression, valToLoad, fresh, branchNumber));
 			}
 		} else {
             //accessExpression is unsatisfiable: nothing to do
 			shouldRefine = false;
 		}
-
 		return Outcome.val(shouldRefine, false, true);
 	}
 
@@ -798,6 +801,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *        where the method will put all the 
      *        {@link DecisionAlternative_XALOAD}s representing all the 
      *        satisfiable outcomes of the operation.
+     * @return an {@link Outcome}.
      * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet) resolve_XALOAD}.
      */
 	protected Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
@@ -815,50 +819,6 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 			noReferenceExpansion = true;
 		}
 		return Outcome.val(shouldRefine, noReferenceExpansion, true);
-	}
-	
-	/**
-	 * Completes the set operation of an {@link Array} by constraining the affected entries
-	 * and removing the unsatisfiable ones.
-	 * 
-	 * @param entries an {@link Iterator}{@code <}{@link AccessOutcomeIn}{@code >}. The method
-	 *        will determine the items affected by the set operation, constrain them, and 
-	 *        delete all the entries which after constraining become unsatisfiable.
-	 * @param index a {@link Primitive}, the position in the {@link Array} which is set.
-	 * @throws InvalidInputException when one of the parameters is incorrect.
-	 * @throws DecisionException upon failure.
-	 */
-	public void completeArraySet(Iterator<Array.AccessOutcomeIn> entries, Primitive index) 
-	throws InvalidInputException, DecisionException {
-		if (entries == null || index == null) {
-			throw new InvalidInputException("completeArraySet invoked with a null parameter");
-		}
-		if (index.getType() != Type.INT) {
-			throw new InvalidInputException("index of array access has type " + index.getType());
-		}
-		try {
-			while (entries.hasNext()) {
-				final Array.AccessOutcomeIn e = entries.next();
-				final Primitive indexInRange = e.inRange(index);
-				final boolean entryAffected = isSat((Expression) indexInRange);
-
-				//if the entry is affected, it is constrained and possibly removed
-				if (entryAffected) {
-					e.constrainExpression(index); //TODO possibly move this back to Array?
-					final Expression rangeConstrained = e.getAccessCondition();
-					if (isSat(rangeConstrained)) {
-						//do nothing
-					} else {
-						entries.remove();
-					}
-				}
-
-			}
-		} catch (InvalidOperandException | InvalidTypeException exc) {
-			//this should never happen after argument check
-			throw new UnexpectedInternalException(exc);
-		}
-		//TODO coalesce entries that have same value (after investigating the impact on guided execution)
 	}
 	
 	/**
@@ -899,32 +859,32 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 					" (" + refToResolve.getOrigin() + ") has a bad type.");
 		}
 		
-		int branchNumber = 1;
+		int branchCounter = result.size() + 1;
 		//filters static aliases based on their satisfiability
 		for (Map.Entry<Long, Objekt> ae : possibleAliases.entrySet()) {
 			final long i = ae.getKey();
 			final Objekt o = ae.getValue();
 			if (isSatAliases(refToResolve, i, o)) {
-				final DA a = factory.createAlternativeRefAliases(refToResolve, i, o.getOrigin(), branchNumber);
+				final DA a = factory.createAlternativeRefAliases(refToResolve, i, o.getOrigin(), branchCounter);
 				result.add(a);
 			}
-			++branchNumber;
+			++branchCounter;
 		}
 		
 		//same for static expansions
 		boolean partialReferenceResolution = true;
 		for (String className : possibleExpansions) {
 			if (isSatInitialized(className) && isSatExpands(refToResolve, className)) {
-				final DE e = factory.createAlternativeRefExpands(refToResolve, className, branchNumber);
+				final DE e = factory.createAlternativeRefExpands(refToResolve, className, branchCounter);
 				result.add(e);
 				partialReferenceResolution = false;
 			}
-			++branchNumber;
+			++branchCounter;
 		}
 		
 		//same for null
 		if (isSatNull(refToResolve)) {
-			final DN n = factory.createAlternativeRefNull(refToResolve, branchNumber);
+			final DN n = factory.createAlternativeRefNull(refToResolve, branchCounter);
 			result.add(n);
 			//no need to increment branchNumber
 		}
@@ -990,7 +950,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	private static boolean isTypeAndEpochCompatible(Objekt o, ReferenceSymbolic ref, ClassHierarchy classHierarchy) {
 		final String type = ref.getStaticType();
 		final String className = Type.className(type);
-		return (o.isSymbolic() && classHierarchy.isSubclass(o.getType(), className));
+		return (o.isSymbolic() && //TODO this works only with the two-epoch approach 
+		        classHierarchy.isSubclass(o.getType(), className));
 	}
 
 	/**
@@ -1030,4 +991,48 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		
 		return retVal;
 	}
+    
+    /**
+     * Completes the set operation of an {@link Array} by constraining the affected entries
+     * and removing the unsatisfiable ones.
+     * 
+     * @param entries an {@link Iterator}{@code <}{@link AccessOutcomeIn}{@code >}. The method
+     *        will determine the items affected by the set operation, constrain them, and 
+     *        delete all the entries which after constraining become unsatisfiable.
+     * @param index a {@link Primitive}, the position in the {@link Array} which is set.
+     * @throws InvalidInputException when one of the parameters is incorrect.
+     * @throws DecisionException upon failure.
+     */
+    public void completeArraySet(Iterator<Array.AccessOutcomeIn> entries, Primitive index) 
+    throws InvalidInputException, DecisionException {
+        if (entries == null || index == null) {
+            throw new InvalidInputException("completeArraySet invoked with a null parameter");
+        }
+        if (index.getType() != Type.INT) {
+            throw new InvalidInputException("index of array access has type " + index.getType());
+        }
+        try {
+            while (entries.hasNext()) {
+                final Array.AccessOutcomeIn e = entries.next();
+                final Primitive indexInRange = e.inRange(index);
+                final boolean entryAffected = isSat((Expression) indexInRange);
+
+                //if the entry is affected, it is constrained and possibly removed
+                if (entryAffected) {
+                    e.constrainExpression(index); //TODO possibly move this back to Array?
+                    final Expression rangeConstrained = e.getAccessCondition();
+                    if (isSat(rangeConstrained)) {
+                        //do nothing
+                    } else {
+                        entries.remove();
+                    }
+                }
+
+            }
+        } catch (InvalidOperandException | InvalidTypeException exc) {
+            //this should never happen after argument check
+            throw new UnexpectedInternalException(exc);
+        }
+        //TODO coalesce entries that have same value (after investigating the impact on guided execution)
+    }
 }

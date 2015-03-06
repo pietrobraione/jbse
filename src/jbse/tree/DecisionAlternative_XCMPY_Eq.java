@@ -3,12 +3,11 @@ package jbse.tree;
 import jbse.val.Operator;
 
 public final class DecisionAlternative_XCMPY_Eq extends DecisionAlternative_XCMPY {
-	private static final String EQ_ID = "EQ";
-	private static final int EQ_BN = 2;
-	private static final int HASH_CODE = 633912551;
+	private static final String EQ_ID = "XCMPY_Eq";
+	private static final int HASH_CODE = 2;
 	
 	public DecisionAlternative_XCMPY_Eq(boolean isConcrete) {
-		super(0, Operator.EQ, isConcrete, (isConcrete ? 1 : EQ_BN));
+		super(0, Operator.EQ, isConcrete, (isConcrete ? 1 : HASH_CODE));
 	}
 	
 	@Override

@@ -6,10 +6,10 @@ import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XALOAD;
 import jbse.tree.DecisionAlternative_XALOAD_Out;
-import jbse.tree.DecisionAlternative_XALOAD_Ref;
-import jbse.tree.DecisionAlternative_XALOAD_RefAliases;
-import jbse.tree.DecisionAlternative_XALOAD_RefNull;
-import jbse.tree.DecisionAlternative_XALOAD_RefExpands;
+import jbse.tree.DecisionAlternative_XALOAD_Unresolved;
+import jbse.tree.DecisionAlternative_XALOAD_Aliases;
+import jbse.tree.DecisionAlternative_XALOAD_Null;
+import jbse.tree.DecisionAlternative_XALOAD_Expands;
 import jbse.tree.DecisionAlternative_XALOAD_Resolved;
 import jbse.tree.VisitorDecisionAlternative_XALOAD;
 
@@ -24,7 +24,7 @@ import jbse.tree.VisitorDecisionAlternative_XALOAD;
  *
  */
 abstract class StrategyUpdate_XALOAD implements StrategyUpdate<DecisionAlternative_XALOAD> {
-	abstract public void updateReference(State s, DecisionAlternative_XALOAD_Ref dar) 
+	abstract public void updateReference(State s, DecisionAlternative_XALOAD_Unresolved dar) 
 	throws DecisionException, ThreadStackEmptyException;
 
 	abstract public void updateResolved(State s, DecisionAlternative_XALOAD_Resolved dav) 
@@ -40,19 +40,19 @@ abstract class StrategyUpdate_XALOAD implements StrategyUpdate<DecisionAlternati
 		VisitorDecisionAlternative_XALOAD visitorUpdate = 
 		new VisitorDecisionAlternative_XALOAD() {
 			@Override
-			public void visitDecisionAlternative_XALOAD_RefExpands(DecisionAlternative_XALOAD_RefExpands dac) 
+			public void visitDecisionAlternative_XALOAD_Expands(DecisionAlternative_XALOAD_Expands dac) 
 			throws DecisionException, ThreadStackEmptyException {
 				StrategyUpdate_XALOAD.this.updateReference(s, dac);
 			}
 
 			@Override
-			public void visitDecisionAlternative_XALOAD_RefAliases(DecisionAlternative_XALOAD_RefAliases dai) 
+			public void visitDecisionAlternative_XALOAD_Aliases(DecisionAlternative_XALOAD_Aliases dai) 
 			throws DecisionException, ThreadStackEmptyException {
 				StrategyUpdate_XALOAD.this.updateReference(s, dai);
 			}
 
 			@Override
-			public void visitDecisionAlternative_XALOAD_RefNull(DecisionAlternative_XALOAD_RefNull dan) 
+			public void visitDecisionAlternative_XALOAD_Null(DecisionAlternative_XALOAD_Null dan) 
 			throws DecisionException, ThreadStackEmptyException {
 				StrategyUpdate_XALOAD.this.updateReference(s, dan);
 			}

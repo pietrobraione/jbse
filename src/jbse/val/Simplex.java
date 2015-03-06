@@ -5,7 +5,7 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Class for primitive type values, either concrete or symbolic.
+ * Class for concrete primitive values.
  */
 public final class Simplex extends Primitive implements Cloneable {	
 	/** The primitive value this object represents. */
