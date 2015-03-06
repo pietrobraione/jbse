@@ -23,7 +23,11 @@ JBSE has several build dependencies, some of which are included in the `lib` sub
 * [JDD](http://javaddlib.sourceforge.net/jdd/): JBSE uses JDD for storing and manipulating boolean formulas. The version included in this project is version 1.03.
 * [JavaCC](https://java.net/projects/javacc/): Necessary for compiling the settings parser. Under Eclipse you can install the [Eclipse JavaCC plugin](http://eclipse-javacc.sourceforge.net), but notice that there is a bug, at least up to version 1.5.27, that prevents JavaCC files to be compiled if the "Build automatically" option is active.
 
-JBSE interacts with an external numeric solver for pruning infeasible program paths. Currently JBSE may interact with either [Sicstus](https://sicstus.sics.se), [Z3](http://z3.codeplex.com), or [CVC3](http://www.cs.nyu.edu/acsys/cvc3/). JBSE connects to Sicstus via the Java PrologBeans library that is included with the Sicstus distribution, so you need to configure the Eclipse project classpath to point to that library. No build dependencies are necessary for Z3 and CVC3 support.
+Currently we are developing JBSE under Eclipse, and only Eclipse project settings are available right now. For this reason we advice to work under Eclipse, and install the Eclipse Git plugin (you will find it in the Eclipse Marketplace) and the Eclipse JavaCC plugin. Then import the JBSE project in Eclipse (File > Import...). To build the JavaCC files first disable automatic build (Project > Build Automatically), then open the package explorer and navigate to src/jbse.apps.settings, right-click the file SettingParser.jj and select "Compile with JavaCC". Finally, re-enable automatic build.
+
+### Fixing the external dependencies ###
+
+JBSE interacts with an external numeric solver for pruning infeasible program paths. Currently JBSE may interact with either [Sicstus](https://sicstus.sics.se), [Z3](http://z3.codeplex.com), or [CVC3](http://www.cs.nyu.edu/acsys/cvc3/). JBSE connects to Sicstus via the Java PrologBeans library that is included with the Sicstus distribution, so you need to configure the Eclipse JBSE project build path to point to that library (open the package explorer and right-click the jbse project, select Build Path > Configure Build Path... and under Libraries fix the link to prologbeans.jar). No build dependencies are necessary for Z3 and CVC3 support, so if you are not using Sicstus (and you do not want to buy a license for it) you can just remove the link to prologbeans.jar in the project build path and ignore the compile errors. 
 
 ### Testing JBSE ###
 
