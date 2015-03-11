@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
 	<name>jbse</name>
-	<comment>JavaCC Nature</comment>
 	<projects>
 	</projects>
 	<buildSpec>
@@ -10,15 +9,9 @@
 			<arguments>
 			</arguments>
 		</buildCommand>
-		<buildCommand>
-			<name>InCode.inCodeBuilder</name>
-			<arguments>
-			</arguments>
-		</buildCommand>
 	</buildSpec>
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 		<nature>sf.eclipse.javacc.javaccnature</nature>
-		<nature>InCode.inCodeNature</nature>
 	</natures>
 </projectDescription>
