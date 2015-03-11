@@ -1,6 +1,7 @@
 package jbse.algo.meta;
 
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Signatures.JAVA_STRING_HASH;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 
 import jbse.algo.Algorithm;
@@ -14,7 +15,7 @@ import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 
-public class Algo_JAVA_OBJECT_HASHCODE implements Algorithm {
+public class Algo_JAVA_STRING_HASHCODE implements Algorithm {
     @Override
     public void exec(State state, ExecutionContext ctx) 
     throws ThreadStackEmptyException, InterruptException {
@@ -22,9 +23,14 @@ public class Algo_JAVA_OBJECT_HASHCODE implements Algorithm {
             final Reference thisReference = (Reference) state.popOperand();
             final Objekt thisObjekt = state.getObject(thisReference);
 
-            //gets the hash code stored in the objekt and returns it
-            final Primitive hashCode = state.getCalculator().valInt(thisObjekt.getObjektHashCode());
-            state.pushOperand(hashCode);
+            if (thisObjekt.isSymbolic()) {
+                //gets the hashCode field in the string and returns it
+                final Primitive hashCode = (Primitive) thisObjekt.getFieldValue(JAVA_STRING_HASH);
+                //TODO assume hashCode != 0 and ensure that strings that may not be equal have different hash codes
+                state.pushOperand(hashCode);
+            } else {
+                return; //executes the original String.hashCode implementation
+            }
         } catch (OperandStackEmptyException e) {
             throwVerifyError(state);
             throw new InterruptException();

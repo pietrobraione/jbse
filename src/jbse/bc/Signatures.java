@@ -58,16 +58,22 @@ public final class Signatures {
     public static final Signature JAVA_CLASS_GETPRIMITIVECLASS =
         new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + 
                       REFERENCE + JAVA_CLASS + TYPEEND, "getPrimitiveClass");
+    public static final Signature JAVA_CLASS_ISINSTANCE =
+        new Signature(JAVA_CLASS, "()" + BOOLEAN, "isInstance");
     public static final Signature JAVA_OBJECT_GETCLASS =
         new Signature(JAVA_OBJECT, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getClass");
     public static final Signature JAVA_OBJECT_HASHCODE =
         new Signature(JAVA_OBJECT, "()" + INT, "hashCode");
+    public static final Signature JAVA_STRING_HASHCODE =
+        new Signature(JAVA_STRING, "()" + INT, "hashCode");
     public static final Signature JAVA_STRING_INTERN =
         new Signature(JAVA_STRING, "()" + REFERENCE + JAVA_STRING + TYPEEND, "intern");
     public static final Signature JAVA_SYSTEM_ARRAYCOPY =
         new Signature(JAVA_SYSTEM, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + INT + 
                                          REFERENCE + JAVA_OBJECT + TYPEEND + INT + INT + ")" + VOID, 
                       "arraycopy");
+    public static final Signature JAVA_SYSTEM_IDENTITYHASHCODE =
+        new Signature(JAVA_SYSTEM, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + INT, "identityHashCode");
     public static final Signature JAVA_THROWABLE_FILLINSTACKTRACE =
         new Signature(JAVA_THROWABLE, "()" + REFERENCE + JAVA_THROWABLE + TYPEEND, "fillInStackTrace");
     public static final Signature JAVA_THROWABLE_GETSTACKTRACEDEPTH = 

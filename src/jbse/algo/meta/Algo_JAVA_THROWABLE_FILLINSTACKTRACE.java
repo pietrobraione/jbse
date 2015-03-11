@@ -6,6 +6,7 @@ import static jbse.bc.Signatures.JAVA_THROWABLE_STACKTRACE;
 
 import jbse.algo.Algorithm;
 import jbse.algo.ExecutionContext;
+import jbse.algo.exc.InterruptException;
 import jbse.mem.Instance;
 import jbse.mem.State;
 import jbse.mem.exc.InvalidProgramCounterException;
@@ -16,7 +17,8 @@ import jbse.val.Reference;
 
 public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE implements Algorithm {
 	@Override
-	public void exec(State state, ExecutionContext ctx) throws ThreadStackEmptyException {
+	public void exec(State state, ExecutionContext ctx) 
+	throws ThreadStackEmptyException, InterruptException {
 	    try {
 	        final Reference thisRef = (Reference) state.popOperand(); //pops "this"
 	        final Instance exc = (Instance) state.getObject(thisRef);
@@ -27,6 +29,7 @@ public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE implements Algorithm {
 	        state.pushOperand(thisRef); //returns "this"
 	    } catch (OperandStackEmptyException | ClassCastException e) {
 	        throwVerifyError(state);
+            throw new InterruptException();
 	    }
 		
         try {
@@ -34,5 +37,6 @@ public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE implements Algorithm {
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 		}
+        throw new InterruptException();
 	}
 }

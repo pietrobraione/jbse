@@ -55,5 +55,6 @@ public class Algo_JAVA_SYSTEM_ARRAYCOPY implements Algorithm {
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 		}
+        throw new InterruptException();
 	}
 }

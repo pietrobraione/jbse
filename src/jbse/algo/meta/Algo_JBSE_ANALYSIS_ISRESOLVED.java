@@ -6,6 +6,7 @@ import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 
 import jbse.algo.Algorithm;
 import jbse.algo.ExecutionContext;
+import jbse.algo.exc.InterruptException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.Signature;
 import jbse.mem.Instance;
@@ -22,14 +23,15 @@ import jbse.val.Value;
 public class Algo_JBSE_ANALYSIS_ISRESOLVED implements Algorithm {
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, SymbolicValueNotAllowedException {
+	throws ThreadStackEmptyException, SymbolicValueNotAllowedException, 
+	InterruptException {
 	    final Reference fieldNameRef, objRef;
 		try {
 		    fieldNameRef = (Reference) state.popOperand();
 		    objRef = (Reference) state.popOperand();
         } catch (OperandStackEmptyException e) {
             throwVerifyError(state);
-            return;
+            throw new InterruptException();
         }
 			
 		//gets the name of the field and converts it to a string
@@ -37,6 +39,8 @@ public class Algo_JBSE_ANALYSIS_ISRESOLVED implements Algorithm {
 		if (fieldName == null) {
 		    throw new SymbolicValueNotAllowedException("The name of the field to check must be a concrete String");
 		}
+		
+		//TODO improve error detection
 
 		//gets, if not null, the instance
 		final Instance objectInstance = (Instance) (state.getObject(objRef)); 
@@ -64,5 +68,6 @@ public class Algo_JBSE_ANALYSIS_ISRESOLVED implements Algorithm {
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 		}
+        throw new InterruptException();
 	}
 }

@@ -25,6 +25,7 @@ public class Algo_JAVA_STRING_INTERN implements Algorithm {
         try {
             final String valueString = valueString(state, (Reference) state.popOperand());
             if (valueString == null) {
+                //TODO remove this limitation
                 throw new SymbolicValueNotAllowedException("cannot intern a String with symbolic value");
             }
             if (state.hasStringLiteral(valueString)) {
@@ -35,7 +36,7 @@ public class Algo_JAVA_STRING_INTERN implements Algorithm {
             state.pushOperand(state.referenceToStringLiteral(valueString));
         } catch (OperandStackEmptyException | ClassCastException e) {
             throwVerifyError(state);
-            return;
+            throw new InterruptException();
         }
         
         try {
@@ -43,5 +44,6 @@ public class Algo_JAVA_STRING_INTERN implements Algorithm {
         } catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
         }
+        throw new InterruptException();
     }
 }

@@ -12,6 +12,7 @@ import java.util.Arrays;
 import jbse.algo.Algorithm;
 import jbse.algo.ExecutionContext;
 import jbse.algo.exc.CannotManageStateException;
+import jbse.algo.exc.InterruptException;
 import jbse.algo.exc.UninterpretedUnsupportedException;
 import jbse.bc.Signature;
 import jbse.common.Type;
@@ -34,7 +35,7 @@ final class Algo_INVOKEUNINTERPRETED implements Algorithm {
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
 	throws CannotManageStateException, ThreadStackEmptyException, 
-	DecisionException, ContradictionException {		
+	DecisionException, ContradictionException, InterruptException {		
 		//gets index operand from instruction word and 
 		//calculates/stores the pointer to the next instruction
 		final int opcode = state.getInstruction();
@@ -51,7 +52,7 @@ final class Algo_INVOKEUNINTERPRETED implements Algorithm {
 				argsPrimitive = toPrimitive(opcode == OP_INVOKESTATIC ? args : Arrays.copyOfRange(args, 1, args.length));
             } catch (OperandStackEmptyException e) {
                 throwVerifyError(state);
-                return;
+                throw new InterruptException();
 			} catch (InvalidTypeException e) {
 				throw new UninterpretedUnsupportedException("The method " + this.methodSignatureResolved + " has a nonprimitive argument other than 'this'."); 
 			}
@@ -72,5 +73,6 @@ final class Algo_INVOKEUNINTERPRETED implements Algorithm {
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 		}
+        throw new InterruptException();
 	}
 }

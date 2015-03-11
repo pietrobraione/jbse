@@ -4,8 +4,8 @@ import jbse.bc.Signature;
 import jbse.val.Calculator;
 
 /**
- * Class that represents a Java class in memory, i.e., its 
- * static fields.
+ * Class that represents a Java class in the static
+ * method area, i.e., its static fields.
  */
 public class Klass extends Instance {
     /**

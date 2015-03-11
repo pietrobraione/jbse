@@ -6,6 +6,7 @@ import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import jbse.algo.Algorithm;
 import jbse.algo.ExecutionContext;
 import jbse.algo.exc.CannotManageStateException;
+import jbse.algo.exc.InterruptException;
 import jbse.apps.run.DecisionProcedureGuidance;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
@@ -16,7 +17,7 @@ public class Algo_JBSE_ANALYSIS_ENDGUIDANCE implements Algorithm {
 	@Override
 	public void exec(State state, ExecutionContext ctx)
 	throws CannotManageStateException, ThreadStackEmptyException, 
-	ContradictionException {
+	ContradictionException, InterruptException {
 		if (ctx.decisionProcedure instanceof DecisionProcedureGuidance) {
 			final DecisionProcedureGuidance dec = (DecisionProcedureGuidance) ctx.decisionProcedure;
 			dec.endGuidance();
@@ -28,5 +29,6 @@ public class Algo_JBSE_ANALYSIS_ENDGUIDANCE implements Algorithm {
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 		}
+        throw new InterruptException();
 	}
 }

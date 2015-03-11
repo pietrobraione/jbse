@@ -33,6 +33,7 @@ public class Algo_JAVA_OBJECT_GETCLASS implements Algorithm {
             final Reference thisRef = (Reference) state.topOperand();
             if (state.isNull(thisRef)) {
                 throwNew(state, NULL_POINTER_EXCEPTION);
+                throw new InterruptException();
             }
 			final Objekt thisObj = state.getObject(thisRef);
 			if (thisObj == null) {
@@ -47,10 +48,10 @@ public class Algo_JAVA_OBJECT_GETCLASS implements Algorithm {
 			state.pushOperand(classRef);
         } catch (ClassFileNotAccessibleException e) {
             throwNew(state, ILLEGAL_ACCESS_ERROR);
-            return;
+            throw new InterruptException();
 		} catch (OperandStackEmptyException | ClassCastException e) {
 		    throwVerifyError(state);
-		    return;
+            throw new InterruptException();
 		} catch (BadClassFileException e) {
 		    //this should never happen
 		    throw new UnexpectedInternalException(e);
@@ -61,5 +62,6 @@ public class Algo_JAVA_OBJECT_GETCLASS implements Algorithm {
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 		}
+        throw new InterruptException();
 	}
 }

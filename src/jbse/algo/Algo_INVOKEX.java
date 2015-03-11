@@ -177,7 +177,7 @@ final class Algo_INVOKEX implements Algorithm {
             if (ctx.dispatcherMeta.isMeta(hier, methodSignatureImpl)) {
                 final Algorithm algo = ctx.dispatcherMeta.select(methodSignatureImpl);
                 algo.exec(state, ctx);
-                return;
+                //fall through to the base-level implementation
             }
         } catch (BadClassFileException | MethodNotFoundException e) {
             //this should never happen after resolution 
@@ -210,7 +210,7 @@ final class Algo_INVOKEX implements Algorithm {
             ctx.nativeInvoker.doInvokeNative(state, methodSignatureResolved, args, pcOffset);
             return;
         }
-          
+
         //pushes the frame
         try {
             state.pushFrame(methodSignatureImpl, false, pcOffset, args);

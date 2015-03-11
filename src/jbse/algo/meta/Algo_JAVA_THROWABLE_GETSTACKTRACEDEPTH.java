@@ -5,6 +5,7 @@ import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 
 import jbse.algo.Algorithm;
 import jbse.algo.ExecutionContext;
+import jbse.algo.exc.InterruptException;
 import jbse.mem.State;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.OperandStackEmptyException;
@@ -13,13 +14,13 @@ import jbse.mem.exc.ThreadStackEmptyException;
 public final class Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH implements Algorithm {
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException {
+	throws ThreadStackEmptyException, InterruptException {
 		//TODO replace this dummy implementation
 		try {
             state.popOperand();  //pops "this"
         } catch (OperandStackEmptyException e) {
             throwVerifyError(state);
-            return;
+            throw new InterruptException();
         }
 		state.pushOperand(state.getCalculator().valInt(0));
 		
@@ -28,5 +29,6 @@ public final class Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH implements Algorithm {
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 		}
+        throw new InterruptException();
 	}
 }

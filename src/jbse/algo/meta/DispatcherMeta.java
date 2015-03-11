@@ -3,8 +3,10 @@ package jbse.algo.meta;
 import static jbse.bc.Signatures.JAVA_CLASS_GETPRIMITIVECLASS;
 import static jbse.bc.Signatures.JAVA_OBJECT_GETCLASS;
 import static jbse.bc.Signatures.JAVA_OBJECT_HASHCODE;
+import static jbse.bc.Signatures.JAVA_STRING_HASHCODE;
 import static jbse.bc.Signatures.JAVA_STRING_INTERN;
 import static jbse.bc.Signatures.JAVA_SYSTEM_ARRAYCOPY;
+import static jbse.bc.Signatures.JAVA_SYSTEM_IDENTITYHASHCODE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_FILLINSTACKTRACE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEDEPTH;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEELEMENT;
@@ -53,8 +55,10 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
         loadMetaDelegate(JAVA_CLASS_GETPRIMITIVECLASS,             new Algo_JAVA_CLASS_GETPRIMITIVECLASS());
         loadMetaDelegate(JAVA_OBJECT_GETCLASS,                     new Algo_JAVA_OBJECT_GETCLASS());
         loadMetaDelegate(JAVA_OBJECT_HASHCODE,                     new Algo_JAVA_OBJECT_HASHCODE());
+        loadMetaDelegate(JAVA_STRING_HASHCODE,                     new Algo_JAVA_STRING_HASHCODE());
         loadMetaDelegate(JAVA_STRING_INTERN,                       new Algo_JAVA_STRING_INTERN());
         loadMetaDelegate(JAVA_SYSTEM_ARRAYCOPY,                    new Algo_JAVA_SYSTEM_ARRAYCOPY());
+        loadMetaDelegate(JAVA_SYSTEM_IDENTITYHASHCODE,             new Algo_JAVA_SYSTEM_IDENTITYHASHCODE());
 		loadMetaDelegate(JAVA_THROWABLE_FILLINSTACKTRACE,          new Algo_JAVA_THROWABLE_FILLINSTACKTRACE());
 		loadMetaDelegate(JAVA_THROWABLE_GETSTACKTRACEDEPTH,        new Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH());
 		loadMetaDelegate(JAVA_THROWABLE_GETSTACKTRACEELEMENT,      new Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT());
@@ -136,7 +140,7 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
 	
 	/**
 	 * Loads an {@link Algorithm} to manage the invocation of a method with the
-	 * MetaOverridden directive.
+	 * {@link MetaOverriddenBy} annotation.
 	 * 
 	 * @param methodSignatureResolved the {@link Signature} of a <em>resolved</em> method.
 	 * @param metaDelegateClass the class name of the {@link Algorithm} that
@@ -159,7 +163,7 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
 	
 	/**
 	 * Loads an {@link Algorithm} to manage the invocation of a method with the
-	 * Uninterpreted directive.
+	 * {@link Uninterpreted} annotation.
 	 * 
 	 * @param methodSignatureResolved the {@link Signature} of a <em>resolved</em> method.
 	 * @param functionName the name chosen for the uninterpreted function. If {@code null}, 

@@ -14,7 +14,7 @@ import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 
-public class Algo_JAVA_OBJECT_HASHCODE implements Algorithm {
+public class Algo_JAVA_SYSTEM_IDENTITYHASHCODE implements Algorithm {
     @Override
     public void exec(State state, ExecutionContext ctx) 
     throws ThreadStackEmptyException, InterruptException {

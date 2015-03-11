@@ -11,32 +11,23 @@ import jbse.algo.ExecutionContext;
 import jbse.algo.exc.InterruptException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.OperandStackEmptyException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 
-public class Algo_JAVA_CLASS_GETPRIMITIVECLASS implements Algorithm {
+public class Algo_JAVA_CLASS_ISINSTANCE implements Algorithm {
 	@Override
 	public void exec(State state, ExecutionContext ctx) 
 	throws ThreadStackEmptyException, SymbolicValueNotAllowedException, 
 	InterruptException {
 		try {			
 			//gets the binary name of the primitive type and converts it to a string
-            final Reference typeNameRef = (Reference) state.popOperand();
-			final String typeName = valueString(state, typeNameRef);
-			if (typeName == null) {
-				throw new SymbolicValueNotAllowedException("the String parameter to java.lang.Class.getPrimitiveClass method cannot be a symbolic String");
-			}
-
-			//gets the instance of the class
-			state.ensurePrimitiveClassInstance(typeName);
-			final Reference classRef = state.referenceToPrimitiveClassInstance(typeName);
-			state.pushOperand(classRef);
-        } catch (ClassFileNotFoundException e) {
-            throwNew(state, CLASS_NOT_FOUND_EXCEPTION);  //this is how Hotspot behaves
-            throw new InterruptException();
+            final Reference javaClassRef = (Reference) state.popOperand();
+            final Objekt javaClassObject = (Objekt) state.getObject(javaClassRef);
+            //TODO
 		} catch (OperandStackEmptyException | ClassCastException e) {
 		    throwVerifyError(state);
             throw new InterruptException();
