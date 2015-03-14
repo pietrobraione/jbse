@@ -3,6 +3,8 @@ package jbse.algo;
 import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_CLASS_NAME;
 import static jbse.bc.Signatures.JAVA_ENUM;
+import static jbse.bc.Signatures.JAVA_HASHSET;
+import static jbse.bc.Signatures.JAVA_IDENTITYHASHMAP;
 import static jbse.bc.Signatures.JAVA_INTEGER;
 import static jbse.bc.Signatures.JAVA_INTEGER_INTEGERCACHE;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST;
@@ -212,10 +214,10 @@ public class Util {
 		//trigger the execution of their <clinit> methods 
 		//TODO move these assumptions into DecisionProcedure or DecisionProcedureAlgorithms.
 		if (className.equals(JAVA_CLASS)      ||
+            className.equals(JAVA_HASHSET)    || className.equals(JAVA_IDENTITYHASHMAP)      || 
             className.equals(JAVA_INTEGER)    || className.equals(JAVA_INTEGER_INTEGERCACHE) || 
             className.equals(JAVA_LINKEDLIST) || className.equals(JAVA_LINKEDLIST_ENTRY)     ||
-            className.equals(JAVA_NUMBER)     ||
-            className.equals(JAVA_OBJECT)     ||
+            className.equals(JAVA_NUMBER)     || className.equals(JAVA_OBJECT)               ||
             className.equals(JAVA_STRING)     || className.equals(JAVA_STRING_CASEINSCOMP)   ||
             state.getClassHierarchy().isSubclass(className, JAVA_ENUM)
            ) {

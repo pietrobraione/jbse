@@ -192,7 +192,7 @@ final public class Analysis {
 	 * @return {@code true} if {@code obj.fieldName} does not 
 	 *         indicate the name of a field, is a primitive type
 	 *         field, or it is a reference type field and its 
-	 *         value is initialized.
+	 *         value is resolved.
 	 */
 	public static boolean isResolved(Object obj, String fieldName) {
 		return true;

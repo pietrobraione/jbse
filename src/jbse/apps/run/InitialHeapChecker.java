@@ -82,7 +82,7 @@ public final class InitialHeapChecker {
                     } else {
                         final State sRun = sIni.clone();
                         final boolean repOk = 
-                        runCheckMethod(sRun, objectRef, methodSignature, this.runnerParameters, scopeExhaustionMeansSuccess);
+                            runCheckMethod(sRun, objectRef, methodSignature, this.runnerParameters, scopeExhaustionMeansSuccess);
                         if (!repOk) {
                             return false; 
                         }

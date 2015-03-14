@@ -407,22 +407,6 @@ public final class RunnerParameters implements Cloneable {
 	}
 	
 	/**
-	 * Sets a limited heap scope for the objects of a given list of classes. 
-	 * It behaves as a reset of the effects of all the previous calls to 
-	 * {@link #setHeapScope(String, int)}, followed by a sequence of calls to 
-	 * {@link #setHeapScope(String, int)} for all the entries in the map.
-	 * 
-	 * @param className a {@link String}, the name of a class.
-	 * @param heapScope a {@link Map}{@code <}{@link String}{@code , }{@link Integer}{@code >}, 
-	 *        associating class names with their respective heap scopes.
-	 * @see {@link #setHeapScope(String, int)} for a precise definition of heap scope.
-	 */
-	public void setHeapScope(Map<String, Integer> heapScope) {
-		this.heapScopeStatic.clear();
-		this.heapScopeStatic.putAll(heapScope);
-	}
-	
-	/**
 	 * Sets a limited heap scope for the objects of a given class. 
 	 * The scope is computed from the initial state: If there is no initial
 	 * state this method has no effect, otherwise the heap scope specified

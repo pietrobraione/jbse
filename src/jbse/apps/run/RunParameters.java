@@ -368,7 +368,7 @@ public final class RunParameters implements Cloneable {
 	HashMap<String, String> conservativeRepOks = new HashMap<>();
 
 	/** The heap scope for conservative repOK and concretization execution. */
-	private HashMap<String, Function<State, Integer>> concretizationHeapScopeComputed = new HashMap<>();
+	private HashMap<String, Function<State, Integer>> concretizationHeapScope = new HashMap<>();
 
 	/** The depth scope for conservative repOK and concretization execution. */
 	int concretizationDepthScope = 0;
@@ -625,18 +625,6 @@ public final class RunParameters implements Cloneable {
 	}
 	
 	/**
-	 * Sets a limited heap scope for the objects of a given class. 
-	 * 
-	 * @param className a {@link String}, the name of a class.
-	 * @param heapScope a {@link Map}{@code <}{@link String}{@code , }{@link Integer}{@code >}, 
-	 *        associating class names with their respective heap scopes.
-	 * @see {@link #setHeapScope(String, int)} 
-	 */
-	public void setHeapScope(Map<String, Integer> heapScope) {
-		this.runnerParameters.setHeapScope(heapScope); 
-	}
-
-	/**
 	 * Gets the heap scope for the objects of a given class. 
 	 * 
 	 * @return heapScope a {@link Map}{@code <}{@link String}{@code , }{@link Integer}{@code >}, 
@@ -822,10 +810,11 @@ public final class RunParameters implements Cloneable {
 
 	/**
 	 * Sets whether the engine shall invoke or not the conservative
-	 * repOk methods at every heap expansion.
+	 * repOk methods at every heap expansion. By default they are
+	 * not invoked.
 	 * 
 	 * @param useConservativeRepOks {@code true} iff conservative
-	 * repOk methods are used.
+	 * repOk methods are invoked.
 	 */
 	public void setUseConservativeRepOks(boolean useConservativeRepOks) {
 		this.useConservativeRepOks = useConservativeRepOks;
@@ -860,8 +849,8 @@ public final class RunParameters implements Cloneable {
 	 *        that calculates the heap scope associated to {@link className} from the initial
 	 *        state.
 	 */
-	public void setConcretizationHeapScopeComputed(String className, Function<State, Integer> heapScopeCalculator) { 
-		this.concretizationHeapScopeComputed.put(className, heapScopeCalculator); 
+	public void setConcretizationHeapScope(String className, Function<State, Integer> heapScopeCalculator) { 
+		this.concretizationHeapScope.put(className, heapScopeCalculator); 
 	}
 
 	/**
@@ -873,7 +862,7 @@ public final class RunParameters implements Cloneable {
 	 * heap scope, the exploration of the branch is interrupted.
 	 */
 	public void setConcretizationHeapScopeUnlimited(String className) { 
-		this.concretizationHeapScopeComputed.remove(className); 
+		this.concretizationHeapScope.remove(className); 
 	}
 
 	/**
@@ -886,7 +875,7 @@ public final class RunParameters implements Cloneable {
 	 * heap scope, the exploration of the branch is interrupted.
 	 */
 	public void setConcretizationHeapScopeUnlimited() { 
-		this.concretizationHeapScopeComputed.clear(); 
+		this.concretizationHeapScope.clear(); 
 	}
 
 	/**
@@ -945,8 +934,9 @@ public final class RunParameters implements Cloneable {
 	}
     
     /**
-     * Sets whether the engine should decide references
-     * by means of LICS rules. 
+     * Sets whether the engine should use LICS rules
+     * to decide on references resolution. By default
+     * LICS rules are used.
      * 
      * @param useLICS {@code true} iff the engine must 
      * use LICS rules.
@@ -1389,7 +1379,7 @@ public final class RunParameters implements Cloneable {
 		 * retVal.setDepthScopeUnlimited();
 		 * retVal.setCountScopeUnlimited();
 		 */
-		retVal.setHeapScopeComputed(this.concretizationHeapScopeComputed);
+		retVal.setHeapScopeComputed(this.concretizationHeapScope);
 		retVal.setDepthScope(this.concretizationDepthScope);
 		retVal.setCountScope(this.concretizationCountScope);
 		retVal.setIdentifierSubregionRoot();
@@ -1408,7 +1398,7 @@ public final class RunParameters implements Cloneable {
 		final RunnerParameters retVal = this.runnerParameters.clone();
 		retVal.setStateIdentificationMode(StateIdentificationMode.COMPACT);
 		retVal.setBreadthMode(BreadthMode.MORE_THAN_ONE);
-		retVal.setHeapScopeComputed(this.concretizationHeapScopeComputed);
+		retVal.setHeapScopeComputed(this.concretizationHeapScope);
 		retVal.setDepthScope(this.concretizationDepthScope);
 		retVal.setCountScope(this.concretizationCountScope);
 		retVal.setIdentifierSubregionRoot();
@@ -1479,7 +1469,7 @@ public final class RunParameters implements Cloneable {
 		o.resolveNotNull =  (ArrayList<String[]>) this.resolveNotNull.clone();
 		o.resolveNull =  (ArrayList<String[]>) this.resolveNull.clone();
 		o.conservativeRepOks = (HashMap<String, String>) this.conservativeRepOks.clone();
-		o.concretizationHeapScopeComputed = (HashMap<String, Function<State, Integer>>) this.concretizationHeapScopeComputed.clone();
+		o.concretizationHeapScope = (HashMap<String, Function<State, Integer>>) this.concretizationHeapScope.clone();
 		o.creationStrategies = (ArrayList<DecisionProcedureCreationStrategy>) this.creationStrategies.clone();
 		o.tracesToShow = this.tracesToShow.clone();
 		o.concretizationMethods = (HashMap<String, String>) this.concretizationMethods.clone();

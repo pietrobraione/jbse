@@ -20,7 +20,9 @@ public final class Signatures {
     public static final String JAVA_CLASS                = "java/lang/Class";
     public static final String JAVA_CLONEABLE            = "java/lang/Cloneable";
     public static final String JAVA_ENUM                 = "java/lang/Enum";
+    public static final String JAVA_IDENTITYHASHMAP      = "java/util/IdentityHashMap";
     public static final String JAVA_HASHMAP              = "java/util/HashMap";
+    public static final String JAVA_HASHSET              = "java/util/HashSet";
     public static final String JAVA_INTEGER              = "java/lang/Integer";
     public static final String JAVA_INTEGER_INTEGERCACHE = "java/lang/Integer$IntegerCache";
     public static final String JAVA_LINKEDLIST           = "java/util/LinkedList";
