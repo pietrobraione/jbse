@@ -23,9 +23,13 @@ import jbse.val.ReferenceSymbolic;
  * implemented as a Mediator to a {@link DecisionProcedureExternalInterface} which effectively 
  * does the work. Concrete subclasses must inject the dependency to a 
  * {@link DecisionProcedureExternalInterface}, usually by implementing a constructor which sets it.
- * It assumes that the external decision procedure may err on the safe side, i.e., that
- * when it answer that a predicate is unsat it is unsat, but when it answer that it is sat
- * it may be wrong. In this case it delegates to the next decision procedure in the chain.
+ * It assumes that the external decision procedure is <emph>partial</emph> but <emph>safe</emph>, 
+ * i.e., that when it answer that a predicate is unsat it is surely unsat, but when it answer that 
+ * a predicate is sat it may mean that it actually is sat, but it might as well mean that the 
+ * decision procedure was unable to draw a conclusion. Correspondingly, whenever the external 
+ * interface returns unsat as an answer, this decision procedure returns unsat, but when the
+ * external interface returns sat, this decision procedures delegates the query to the next 
+ * in the chain.
  * 
  * @author Pietro Braione
  */
