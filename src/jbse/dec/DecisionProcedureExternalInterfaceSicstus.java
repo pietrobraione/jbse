@@ -509,7 +509,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 				throw new UnexpectedInternalException(e);
 			}
 			
-			//now it is the turn of mangled terms; we exploit the fact that
+			//now translates mangled terms; we exploit the fact that
 			//arraylists can be grown while scanned
 			
 			//first narrowing...
@@ -718,7 +718,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 	 * 
 	 * @param operator a {@link Operator}.
 	 * @return a {@link String} identifying the corresponding 
-	 *         Sicstus clp(q,r) expression for {@code operator},
+	 *         Sicstus clp(q) expression for {@code operator},
 	 *         or {@code null} if the latter has no correspondance.
 	 */
 	private static String sicstusOperator(Operator operator) {
@@ -785,7 +785,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 	 * @param function a {@link String}, the name of a Java mathematical 
 	 *        function.
 	 * @return a {@link String}, the corresponding Sicstus 
-	 *         clp(q,r) function, or {@code null} if none exists.
+	 *         clp(q) function, or {@code null} if none exists.
 	 */
 	private static String sicstusFunction(String function) {
 		if (function.equals(FunctionApplication.ABS)) {
@@ -857,13 +857,13 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 	                final Primitive[] args = new Primitive[2];
 	                args[0] = calc.valInt(2);
 	                args[1] = secondOp;
-	                Primitive val = firstOp.mul(calc.applyFunction(firstOp.getType(), FunctionApplication.POW, args));
+	                final Primitive val = firstOp.mul(calc.applyFunction(firstOp.getType(), FunctionApplication.POW, args));
 	                val.accept(this);
 	            } else if (operator == Operator.SHR) {
 	                final Primitive[] args = new Primitive[2];
 	                args[0] = calc.valInt(2);
 	                args[1] = secondOp;
-	                Primitive val = firstOp.div(calc.applyFunction(firstOp.getType(), FunctionApplication.POW, args).to(firstOp.getType()));
+	                final Primitive val = firstOp.div(calc.applyFunction(firstOp.getType(), FunctionApplication.POW, args).to(firstOp.getType()));
 	                val.accept(this);
 	            } else {
 		            //completely unsupported operator: mangles e
@@ -876,7 +876,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 			           Type.isPrimitiveIntegral(secondOp.getType())) {
 			    //need some equations for the integer division
                 final Term t = m.mangle(e);
-                this.divValues.add(t); //we will demangle/translate it later
+                this.divValues.add(t); //will be demangled/translated later
                 t.accept(this);
 			} else if (e.isUnary()) {
 				e.getOperand().accept(this);

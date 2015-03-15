@@ -16,7 +16,6 @@ import jbse.mem.Objekt;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.Rewriter;
 import jbse.val.Expression;
-import jbse.val.Primitive;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -24,10 +23,12 @@ import jbse.val.ReferenceSymbolic;
  * implemented as a Mediator to a {@link DecisionProcedureExternalInterface} which effectively 
  * does the work. Concrete subclasses must inject the dependency to a 
  * {@link DecisionProcedureExternalInterface}, usually by implementing a constructor which sets it.
+ * It assumes that the external decision procedure may err on the safe side, i.e., that
+ * when it answer that a predicate is unsat it is unsat, but when it answer that it is sat
+ * it may be wrong. In this case it delegates to the next decision procedure in the chain.
  * 
  * @author Pietro Braione
  */
-//TODO now this class only manages numeric clauses; extend to all kinds of clauses
 public abstract class DecisionProcedureExternal extends DecisionProcedureChainOfResponsibility {
 	private final String NOT_WORKING = "Method invoked after the failure of the external decision procedure " + this.getClass().getName() + ".";
 	
@@ -102,9 +103,9 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	}
 	
 	@Override
-	protected final void pushAssumptionLocal(Clause c) 
+	protected final void pushAssumptionLocal(Clause cSimpl) 
 	throws DecisionException {
-		this.clauses.push(c);
+		this.clauses.push(cSimpl);
 		if (this.fast) {
 			this.notInSynch = true;
 		} else {
@@ -113,7 +114,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 					if (this.notInSynch) {
 						resynch();
 					}
-					sendClause(c);
+					sendClause(cSimpl);
 					this.extIf.pushAssumption(true);
 				} else {
 					throw new DecisionException(NOT_WORKING);
@@ -167,19 +168,18 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	}
 
 	@Override
-	protected boolean isSatImpl(Expression exp) 
+	protected boolean isSatImpl(Expression exp, Expression expSimpl) 
 	throws DecisionException {
-		final Primitive p = this.calc.applyRewriters(exp, this.rewriters);
 		boolean retVal;
 	    try {
 	        if (this.extIf.isWorking()) {
 	        	if (this.notInSynch) {
 	        		resynch();
 	        	}
-	        	this.extIf.sendClauseAssume(p);
+	        	this.extIf.sendClauseAssume(expSimpl);
 	        	retVal = this.extIf.checkSat(true); 
 	        	this.extIf.retractClause();
-	            return retVal;
+	            return (!retVal ? false : super.isSatImpl(exp, expSimpl));
 	        } else {
 	        	throw new DecisionException(NOT_WORKING);
 	        }

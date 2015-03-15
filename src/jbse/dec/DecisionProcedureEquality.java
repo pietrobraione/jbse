@@ -57,11 +57,10 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 	}
 
 	@Override
-	protected boolean isSatImpl(Expression exp) throws DecisionException {
-		final Expression p = (Expression) simplifyLocal(exp); //cast always successful
+	protected boolean isSatImpl(Expression exp, Expression expSimpl) throws DecisionException {
 		final PrimitiveVisitorEquality vEq = new PrimitiveVisitorEquality();
 		try {
-			p.accept(vEq);
+			expSimpl.accept(vEq);
 		} catch (Exception e) {
 			throw new UnexpectedInternalException(e);
 		}
@@ -78,7 +77,7 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 			if (vEq.isEquality && vEq.first.equals(vEq.second)) {
 				return !vEq.negated;
 			} else {
-				return super.isSatImpl(p); //delegates to next in chain, or falls back to true
+				return super.isSatImpl(exp, expSimpl); //delegates to next in chain, or falls back to true
 			}
 		}
 	}

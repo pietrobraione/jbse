@@ -116,25 +116,25 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	
 	@Override
 	public final void pushAssumption(Clause c) throws DecisionException {
-		pushAssumptionLocal(c);
+        final Clause cSimpl = simplifyLocal(c);
+		pushAssumptionLocal(cSimpl);
 		if (hasNext()) {
-			final Clause cSimpl = simplifyLocal(c);
 			this.next.pushAssumption(cSimpl);
 		}
 	}
 
 	/**
 	 * Must be invoked by subclasses if they need to locally add an 
-	 * assumption (note that the actual operation must be implemented in
-	 * the overridable methods with same name).
+	 * assumption. The default implementation redispatches on the
+	 * overloaded methods for the specific subclasses of {@link Clause}. 
 	 * 
-	 * @param c see {@link #pushAssumption(Clause)}.
+	 * @param cSimpl the {@link Clause} to be added after local simplification, 
+	 *        see also {@link #pushAssumption(Clause)}. 
 	 * @throws DecisionException see {@link #pushAssumption(Clause)}.
 	 */
-	protected void pushAssumptionLocal(Clause c) throws DecisionException {
-		final Clause cSimpl = simplifyLocal(c);
+	protected void pushAssumptionLocal(Clause cSimpl) throws DecisionException {
 		try {
-			cSimpl.accept(redispatcher);
+			cSimpl.accept(this.redispatcher);
 		} catch (DecisionException e) {
 			throw e;
 		} catch (Exception e) {
@@ -280,13 +280,14 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 		final int common = numCommonAssumptions(currentAssumptions, newAssumptions);
 		final int toPop = currentAssumptions.size() - common;
 		final int toPush = newAssumptions.size() - common;
+		final Collection<Clause> newAssumptionsSimpl;
     	if (canPopAssumptions() && toPop < common) { //toPop < common is heuristic!
-    		setAssumptionsLocalConservatively(newAssumptions, toPop, toPush);
+    	    newAssumptionsSimpl = setAssumptionsLocalConservatively(newAssumptions, toPop, toPush);
     	} else {
-    		setAssumptionsLocalDestructively(newAssumptions);
+    	    newAssumptionsSimpl = setAssumptionsLocalDestructively(newAssumptions);
     	}
     	if (hasNext()) {
-    		setAssumptionsNext(newAssumptions);
+            this.next.setAssumptions(newAssumptionsSimpl);
     	}
     }
 
@@ -311,9 +312,14 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	 * @param newAssumptions see {@link #setAssumptions}.
 	 * @param toPop see {@link #setAssumptions}.
 	 * @param toPush see {@link #setAssumptions}.
+	 * @return a {@link Collection}{@code <}{@link Clause}{@code >}
+	 *         whose members are obtained by locally 
+	 *         simplifying the members of {@code newAssumptions}, 
+	 *         in the same order.
 	 * @throws DecisionException upon failure.
 	 */
-    private void setAssumptionsLocalConservatively(Collection<Clause> newAssumptions, int toPop, int toPush)
+    private Collection<Clause> 
+    setAssumptionsLocalConservatively(Collection<Clause> newAssumptions, int toPop, int toPush)
     throws DecisionException {
     	//pops
     	for (int i = 1; i <= toPop; ++i) {
@@ -321,16 +327,19 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
     	}
 
     	//pushes
+    	final ArrayList<Clause> retVal = new ArrayList<>();
     	final int common = newAssumptions.size() - toPush;
-		final Iterator<Clause> iterNew = newAssumptions.iterator();
 		int i = 1;
-    	while (iterNew.hasNext()) {
-    		final Clause newAssumption = iterNew.next();
+    	for (Clause c : newAssumptions) {
     		if (i > common) {
-    			pushAssumptionLocal(newAssumption);
+    		    final Clause cSimpl = simplifyLocal(c);
+    			pushAssumptionLocal(cSimpl);
+    			retVal.add(cSimpl);
     		}
     		++i;
-    	}			
+    	}
+    	
+    	return retVal;
     }
     
 	/**
@@ -338,34 +347,25 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	 * the whole new assumption.
 	 * 
 	 * @param newAssumptions see {@link #setAssumptions}.
+     * @return a {@link Collection}{@code <}{@link Clause}{@code >}
+     *         whose members are obtained by locally 
+     *         simplifying the members of {@code newAssumptions}, 
+     *         in the same order.
 	 * @throws DecisionException upon failure.
 	 */
-    private void setAssumptionsLocalDestructively(Collection<Clause> newAssumptions) 
+    private Collection<Clause> 
+    setAssumptionsLocalDestructively(Collection<Clause> newAssumptions) 
     throws DecisionException {
-    	this.clearAssumptionsLocal();
+        final ArrayList<Clause> retVal = new ArrayList<>();
+    	clearAssumptionsLocal();
     	for (Clause c : newAssumptions) {
-    		pushAssumptionLocal(c);
+            final Clause cSimpl = simplifyLocal(c);
+    		pushAssumptionLocal(cSimpl);
+    		retVal.add(cSimpl);
     	}
+    	return retVal;
     }
     
-    /**
-     * Replaces the current assumptions with others in {@code this.next}.
-     * It take cares of simplifications.
-     * 
-     * @param newAssumptions see {@link #setAssumptions}.
-     * @param toPop see {@link #setAssumptions}.
-     * @param toPush see {@link #setAssumptions}.
-     * @throws DecisionException upon failure of {@code this.next}.
-     */
-    private void setAssumptionsNext(Collection<Clause> newAssumptions) 
-    throws DecisionException {
-    	final ArrayList<Clause> newAssumptionsSimpl = new ArrayList<>();
-    	for (Clause c : newAssumptions) {
-    		final Clause cSimpl = simplifyLocal(c);
-    		newAssumptionsSimpl.add(cSimpl);
-    	}
-    	this.next.setAssumptions(newAssumptionsSimpl);
-    }
     /**
      * Must be overridden by subclasses that implement {@link #popAssumptionLocal()}
      * to return {@code true}.
@@ -424,7 +424,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 		if (expSimpl instanceof Simplex) {
 			return ((Simplex) expSimpl).surelyTrue();
 		} else if (expSimpl instanceof Expression) {
-			return isSatImpl(exp);
+			return isSatImpl(exp, (Expression) expSimpl);
 		}
 		throw new DecisionException("simplified " + expSimpl + " is neither Simplex nor Expression"); //TODO throw a better exception
     }
@@ -432,19 +432,31 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
     /**
      * Must be overridden by subclasses to implement 
      * {@link #isSat(Expression)}. The default implementation 
-     * queries the next decision procedure, if there is one, 
-     * otherwise throws a {@link DecisionException}.
+     * invokes {@link #delegateIsSat}{@code (exp)}.
      *  
      * @param exp see {@link #isSat(Expression)}. It is <em>not</em> 
      *        locally simplified, but after local simplification it must 
      *        remain an {@link Expression}.
+     * @param expSimpl {@code exp} after local simplification.
      * @return see {@link #isSat(Expression)}.
      * @throws DecisionException upon failure.
      */
-    protected boolean isSatImpl(Expression exp) throws DecisionException {
+    protected boolean isSatImpl(Expression exp, Expression expSimpl) throws DecisionException {
     	return delegateIsSat(exp);
     }
     
+
+    /**
+     * Queries the next decision procedure in the chain for 
+     * satisfiability of an {@link Expression}.
+     *  
+     * @param exp the {@link Expression}.
+     * @return the result of invoking 
+     *         {@link DecisionProcedure#isSat(Expression) isSat}{@code (exp)}
+     *         on the next decision procedure in the chain.
+     * @throws DecisionException if this decision procedure has
+     *         not a successor in the chain.
+     */
     protected final boolean delegateIsSat(Expression exp) throws DecisionException {
     	if (hasNext()) {
     		return this.next.isSat(exp);
@@ -461,8 +473,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
     /**
      * Must be overridden by subclasses to implement 
      * {@link #isSatNull(ReferenceSymbolic)}. The default implementation 
-     * queries the next decision procedure, if there is one, 
-     * otherwise throws a {@link DecisionException}.
+     * invokes {@link #delegateIsSatNull}{@code (r)}.
      *  
      * @param r see {@link #isSatNull(ReferenceSymbolic)}.
      * @return see {@link #isSatNull(ReferenceSymbolic)}.
@@ -472,7 +483,18 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
     	return delegateIsSatNull(r);
     }
     
-    protected final boolean delegateIsSatNull(ReferenceSymbolic r) 
+    /**
+     * Queries the next decision procedure in the chain for 
+     * satisfiability of a resolution by null.
+     *  
+     * @param r a {@link ReferenceSymbolic}.
+     * @return the result of invoking 
+     *         {@link DecisionProcedure#isSatNull(ReferenceSymbolic) isSatNull}{@code (r)}
+     *         on the next decision procedure in the chain.
+     * @throws DecisionException if this decision procedure has
+     *         not a successor in the chain.
+     */
+   protected final boolean delegateIsSatNull(ReferenceSymbolic r) 
     throws DecisionException {
     	if (hasNext()) {
     		return this.next.isSatNull(r);
@@ -490,8 +512,8 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
     /**
      * Must be overridden by subclasses to implement 
      * {@link #isSatAliases(ReferenceSymbolic, long, Objekt)}. 
-     * The default implementation queries the next decision procedure, 
-     * if there is one, otherwise throws a {@link DecisionException}.
+     * The default implementation invokes 
+     * {@link #delegateIsSatAliases}{@code (r, heapPos, o)}.
      *  
      * @param r see {@link #isSatAliases(ReferenceSymbolic, long, Objekt)}.
      * @param heapPos see {@link #isSatAliases(ReferenceSymbolic, long, Objekt)}.
@@ -504,6 +526,19 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
     	return delegateIsSatAliases(r, heapPos, o);
     }
     
+    /**
+     * Queries the next decision procedure in the chain for 
+     * satisfiability of a resolution by aliasing.
+     *  
+     * @param r see {@link #isSatAliases(ReferenceSymbolic, long, Objekt)}.
+     * @param heapPos see {@link #isSatAliases(ReferenceSymbolic, long, Objekt)}.
+     * @param o see {@link #isSatAliases(ReferenceSymbolic, long, Objekt)}.
+     * @return the result of invoking 
+     *         {@link DecisionProcedure#isSatAliases isSatAliases}{@code (r, heapPos, o)}
+     *         on the next decision procedure in the chain.
+     * @throws DecisionException if this decision procedure has
+     *         not a successor in the chain.
+     */
     protected final boolean delegateIsSatAliases(ReferenceSymbolic r, long heapPos, Objekt o) 
     throws DecisionException {
     	if (hasNext()) {
@@ -522,8 +557,8 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
     /**
      * Must be overridden by subclasses to implement 
      * {@link #isSatExpands(ReferenceSymbolic, String)}. 
-     * The default implementation queries the next decision procedure, 
-     * if there is one, otherwise throws a {@link DecisionException}.
+     * The default implementation invokes 
+     * {@link #delegateIsSatExpands}{@code (r, className)}.
      *  
      * @param r see {@link #isSatExpands(ReferenceSymbolic, String)}.
      * @param className see {@link #isSatExpands(ReferenceSymbolic, String)}.
@@ -535,6 +570,18 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
     	return delegateIsSatExpands(r, className);
     }
     
+    /**
+     * Queries the next decision procedure in the chain for 
+     * satisfiability of a resolution by expansion.
+     *  
+     * @param r see {@link #isSatExpands(ReferenceSymbolic, String)}.
+     * @param className see {@link #isSatExpands(ReferenceSymbolic, String)}.
+     * @return the result of invoking 
+     *         {@link DecisionProcedure#isSatExpands isSatExpands}{@code (r, className)}
+     *         on the next decision procedure in the chain.
+     * @throws DecisionException if this decision procedure has
+     *         not a successor in the chain.
+     */
     protected final boolean delegateIsSatExpands(ReferenceSymbolic r, String className) 
     throws DecisionException {
     	if (hasNext()) {
