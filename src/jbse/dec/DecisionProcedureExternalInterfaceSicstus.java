@@ -616,6 +616,19 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 						this.bdd.ref(this.predicate);
 						this.bdd.deref(operand);
 						break;
+                    case NE:
+                        final Primitive firstOp = e.getFirstOperand();
+                        final Primitive secondOp = e.getSecondOperand();
+                        if (Type.isPrimitiveIntegral(firstOp.getType()) && 
+                            Type.isPrimitiveIntegral(secondOp.getType())) {
+                            //sicstus clp(q) handles < and > better than =\=
+                            //so we translate A != B as (A < B) || (A > B);
+                            //since it is unclear the advantage in the 
+                            //noninteger case, we only do it for integers
+                            final Primitive val = firstOp.lt(secondOp).or(firstOp.gt(secondOp));
+                            val.accept(this);
+                            break;
+                        } //else fall through
 					default:
 						storeAtomicPredicate(e);
 						break;
