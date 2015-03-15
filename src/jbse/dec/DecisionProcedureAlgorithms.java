@@ -47,7 +47,6 @@ import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
-
 /**
  * A {@link DecisionProcedureAlgorithms} decorates a {@link DecisionProcedure} 
  * by adding to it a number of higher-level methods which ease the calculations 
@@ -273,10 +272,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 				//this implementation saves one sat check in 50% cases
 				//(it exploits the fact that if exp is unsat 
 				//exp.not() is valid)
-				if (this.isSat(exp)) {
+				if (isSat(exp)) {
 					result.add(T);
 					final Expression expNot = (Expression) condition.not(); 
-					if (this.isSat(expNot)) {
+					if (isSat(expNot)) {
 						result.add(F);
 					}
 				} else {
@@ -379,17 +378,17 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 			//this implementation saves one sat check in 33% cases
 			//(it exploits the fact that if both val1 > val2 and 
 			//val1 = val2 are unsat, then val1 < val2 is valid)
-			if (this.isSat(expGT)) {
+			if (isSat(expGT)) {
 				result.add(GT);
-				if (this.isSat(expEQ)) {
+				if (isSat(expEQ)) {
 					result.add(EQ);
 				}
-				if (this.isSat(expLT)) {
+				if (isSat(expLT)) {
 					result.add(LT); 
 				}
-			} else if (this.isSat(expEQ)) { //expGT is unsat, so either expEQ or expLT, or both, are SAT 
+			} else if (isSat(expEQ)) { //expGT is unsat, so either expEQ or expLT, or both, are SAT 
 				result.add(EQ);
-				if (this.isSat(expLT)) {
+				if (isSat(expLT)) {
 					result.add(LT); 
 				}
 			} else {
@@ -606,10 +605,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 				//(it exploits the fact that if exp is unsat 
 				//exp.not() is valid)
 				final Expression outOfRangeExp = (Expression) inRange.not();
-				if (this.isSat(outOfRangeExp)) {
+				if (isSat(outOfRangeExp)) {
 					result.add(OUT);
 					final Expression inRangeExp = (Expression) inRange;
-					if (this.isSat(inRangeExp)) {
+					if (isSat(inRangeExp)) {
 						result.add(IN);
 					}
 				} else {
