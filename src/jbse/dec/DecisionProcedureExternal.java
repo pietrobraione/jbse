@@ -170,16 +170,15 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	@Override
 	protected boolean isSatImpl(Expression exp, Expression expSimpl) 
 	throws DecisionException {
-		boolean retVal;
 	    try {
 	        if (this.extIf.isWorking()) {
 	        	if (this.notInSynch) {
 	        		resynch();
 	        	}
 	        	this.extIf.sendClauseAssume(expSimpl);
-	        	retVal = this.extIf.checkSat(true); 
+	        	final boolean extAnswersUnsat = !this.extIf.checkSat(true); 
 	        	this.extIf.retractClause();
-	            return (!retVal ? false : super.isSatImpl(exp, expSimpl));
+	            return (extAnswersUnsat ? false : super.isSatImpl(exp, expSimpl));
 	        } else {
 	        	throw new DecisionException(NOT_WORKING);
 	        }
@@ -191,16 +190,15 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	@Override
 	protected boolean isSatAliasesImpl(ReferenceSymbolic r, long heapPos, Objekt o) 
 	throws DecisionException {
-		boolean retVal;
 	    try {
 	        if (this.extIf.isWorking()) {
 	        	if (this.notInSynch) {
 	        		resynch();
 	        	}
 	        	this.extIf.sendClauseAssumeAliases(r, heapPos, o);
-	        	retVal = this.extIf.checkSat(true); 
+	        	final boolean extAnswersUnsat = !this.extIf.checkSat(true); 
 	        	this.extIf.retractClause();
-	            return retVal;
+	            return (extAnswersUnsat ? false : super.isSatAliasesImpl(r, heapPos, o));
 	        } else {
 	        	throw new DecisionException(NOT_WORKING);
 	        }
@@ -212,16 +210,15 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	@Override
 	protected boolean isSatExpandsImpl(ReferenceSymbolic r, String className)
 	throws DecisionException {
-		boolean retVal;
 	    try {
 	        if (this.extIf.isWorking()) {
 	        	if (this.notInSynch) {
 	        		resynch();
 	        	}
 	        	this.extIf.sendClauseAssumeExpands(r, className);
-	        	retVal = this.extIf.checkSat(true); 
+	        	final boolean extAnswersUnsat = !this.extIf.checkSat(true); 
 	        	this.extIf.retractClause();
-	            return retVal;
+	            return (extAnswersUnsat ? false : super.isSatExpandsImpl(r, className));
 	        } else {
 	        	throw new DecisionException(NOT_WORKING);
 	        }
@@ -233,16 +230,15 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	@Override
 	protected boolean isSatNullImpl(ReferenceSymbolic r)
 	throws DecisionException {
-		boolean retVal;
 	    try {
 	        if (this.extIf.isWorking()) {
 	        	if (this.notInSynch) {
 	        		resynch();
 	        	}
 	        	this.extIf.sendClauseAssumeNull(r);
-	        	retVal = this.extIf.checkSat(true); 
+	        	final boolean extAnswersUnsat = !this.extIf.checkSat(true); 
 	        	this.extIf.retractClause();
-	            return retVal;
+	            return (extAnswersUnsat ? false : super.isSatNullImpl(r));
 	        } else {
 	        	throw new DecisionException(NOT_WORKING);
 	        }
