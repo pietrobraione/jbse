@@ -105,7 +105,7 @@ First, JBSE is a Java Virtual Machine. As with any Java Virtual Machine, be it s
 public class RunIf {
     ...
 	private static void set(RunParameters p) {
-	    p.addClasspath("./bin", "../jbse/bin");
+	    p.addClasspath("./bin", "../jbse/bin", "../jbse/data/rt.jar");
 	    ...
 	}
 }
@@ -118,7 +118,7 @@ Note that `addClasspath` is a varargs method, so you can list as many path strin
 public class RunIf {
     ...
 	private static void set(RunParameters p) {
-	    p.addClasspath("./bin", "../jbse/bin");
+	    p.addClasspath("./bin", "../jbse/bin", "../jbse/data/rt.jar");
 	    p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
 	    ...
 	}
@@ -136,7 +136,7 @@ import jbse.apps.run.RunParameters.DecisionProcedureType;
 public class RunIf {
     ...
 	private static void set(RunParameters p) {
-	    p.addClasspath("./bin", "../jbse/bin");
+	    p.addClasspath("./bin", "../jbse/bin", "../jbse/data/rt.jar");
 	    p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
 		p.setDecisionProcedureType(DecisionProcedureType.Z3);
 		p.setExternalDecisionProcedurePath("/usr/bin/z3");
@@ -154,7 +154,7 @@ import jbse.apps.run.RunParameters.DecisionProcedureType;
 public class RunIf {
     ...
 	private static void set(RunParameters p) {
-	    p.addClasspath("./bin", "../jbse/bin");
+	    p.addClasspath("./bin", "../jbse/bin", "../jbse/data/rt.jar");
 	    p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
 		p.setDecisionProcedureType(DecisionProcedureType.Z3);
 		p.setExternalDecisionProcedurePath("/usr/bin/z3");
@@ -173,7 +173,7 @@ import jbse.apps.run.RunParameters.StepShowMode;
 public class RunIf {
     ...
 	private static void set(RunParameters p) {
-	    p.addClasspath("./bin", "../jbse/bin");
+	    p.addClasspath("./bin", "../jbse/bin", "../jbse/data/rt.jar");
 	    p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
 		p.setDecisionProcedureType(DecisionProcedureType.Z3);
 		p.setExternalDecisionProcedurePath("/usr/bin/z3");
