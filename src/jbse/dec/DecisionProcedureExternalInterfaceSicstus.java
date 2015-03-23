@@ -282,7 +282,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 			throw new ExternalProtocolInterfaceException("Attempted to check entailment with no current clause.");
 		}
 		//builds the predicate to check and parses it
-		//TODO in the case this.condition == null (clause outside theory) we may possibly cache the result of the previous invocation and return it
+		//TODO if this.condition == null (clause outside theory) we may possibly return true
 		final Primitive conditionTmp = (this.currentClause == null ? this.calc.valBoolean(true) : this.currentClause);
 		final Primitive predicateToCheck;
 		try {

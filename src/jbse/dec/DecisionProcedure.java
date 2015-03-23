@@ -145,8 +145,9 @@ public interface DecisionProcedure extends AutoCloseable {
     boolean isSatExpands(ReferenceSymbolic r, String className) throws DecisionException;
 	
     /**
-     * Determines the satisfiability of a class initialization under the
-     * current assumptions.
+     * Determines the satisfiability of the assumption that a class is
+     * initialized when symbolic execution starts, under the current
+     * assumptions.
      * 
      * @param className a {@link String}, the name of a class.
      * @return {@code true} iff the assumption that {@code className} is
@@ -157,8 +158,9 @@ public interface DecisionProcedure extends AutoCloseable {
     boolean isSatInitialized(String className) throws DecisionException;
 	
     /**
-     * Determines the satisfiability of a class (non)initialization under the
-     * current assumptions.
+     * Determines the satisfiability of the assumption that a class is
+     * not initialized when symbolic execution starts, under the current
+     * assumptions.
      * 
      * @param className a {@link String}, the name of a class.
      * @return {@code true} iff the assumption that {@code className} is

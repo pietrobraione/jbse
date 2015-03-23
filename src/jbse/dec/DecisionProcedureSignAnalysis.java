@@ -513,7 +513,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 	}
 	
 	@Override
-	protected boolean isSatImpl(Expression exp, Expression expSimpl) throws DecisionException {
+	protected boolean isSatLocal(Expression exp, Expression expSimpl) throws DecisionException {
 		if (isTrivial(expSimpl)) {
 			final SignPredicate predicateOperand = deduceSignPredicate(getOperand(expSimpl));
 			final SignPredicate predicateRange = bestApproxRange(expSimpl);
@@ -521,7 +521,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 				return false;
 			}
 		}
-		return super.isSatImpl(exp, expSimpl); //delegates to next in chain
+		return true; //out of the theory
 	}
 	
 

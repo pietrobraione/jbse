@@ -49,51 +49,30 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	private boolean fast = false;
 
 	/** true iff the external decision procedure has not yet received the current assumption. */
-	protected boolean notInSynch = false;
+	private boolean notInSynch = false;
 	
 	protected DecisionProcedureExternal(DecisionProcedure next, CalculatorRewriting calc, Rewriter... rewriters) {
 		super(next, calc, rewriters);
-		this.clauses = new ArrayDeque<Clause>();
+		this.clauses = new ArrayDeque<>();
 	}
 	
 	/**
 	 * Resynchs the external decision procedure with this.bs.
 	 * 
-	 * @throws ExternalProtocolInterfaceException
-	 * @throws IOException
+	 * @throws DecisionException
 	 */
-	private void resynch() 
-	throws ExternalProtocolInterfaceException, IOException {
-		this.extIf.clear();
-		final Iterable<Clause> i = () -> clauses.descendingIterator();
-		for (Clause c : i) {
-			sendClause(c);
-			this.extIf.pushAssumption(true);
-		}
-		this.notInSynch = false;
-	}
-	
-	protected final void sendClause(Clause c) 
-	throws ExternalProtocolInterfaceException, IOException {
-		//TODO use dispatcher
-		if (c instanceof ClauseAssume) {
-			this.extIf.sendClauseAssume(((ClauseAssume) c).getCondition());
-		} else if (c instanceof ClauseAssumeAliases) {
-			final ClauseAssumeAliases cAliases = (ClauseAssumeAliases) c;
-			this.extIf.sendClauseAssumeAliases(cAliases.getReference(), cAliases.getHeapPosition(), cAliases.getObjekt());
-		} else if (c instanceof ClauseAssumeExpands) {
-			final ClauseAssumeExpands cExpands = (ClauseAssumeExpands) c;
-			this.extIf.sendClauseAssumeExpands(cExpands.getReference(), cExpands.getObjekt().getType());
-		} else if (c instanceof ClauseAssumeNull) {
-			final ClauseAssumeNull cNull = (ClauseAssumeNull) c;
-			this.extIf.sendClauseAssumeNull(cNull.getReference());
-		} else if (c instanceof ClauseAssumeClassInitialized) {
-			final ClauseAssumeClassInitialized cIni = (ClauseAssumeClassInitialized) c;
-			this.extIf.sendClauseAssumeClassInitialized(cIni.getClassName());
-		} else { //c instanceof ClauseAssumeClassNotInitialized
-			final ClauseAssumeClassNotInitialized cNIni = (ClauseAssumeClassNotInitialized) c;
-			this.extIf.sendClauseAssumeClassNotInitialized(cNIni.getClassName());
-		}
+	private void resynch() throws DecisionException {
+	    try {
+	        this.extIf.clear();
+	        final Iterable<Clause> i = () -> clauses.descendingIterator();
+	        for (Clause c : i) {
+	            super.pushAssumptionLocal(c);
+	            this.extIf.pushAssumption(true);
+	        }
+	        this.notInSynch = false;
+	    } catch (ExternalProtocolInterfaceException | IOException e) {
+	        throw new DecisionException(e);
+	    }
 	}
 
 	@Override
@@ -118,7 +97,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 					if (this.notInSynch) {
 						resynch();
 					}
-					sendClause(cSimpl);
+					super.pushAssumptionLocal(cSimpl); //redispatches
 					this.extIf.pushAssumption(true);
 				} else {
 					throw new DecisionException(NOT_WORKING);
@@ -128,7 +107,67 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 			}
 		}
 	}
-	
+    
+	@Override
+	protected final void pushAssumptionLocal(ClauseAssume cSimpl)
+	throws DecisionException { 
+	    try {
+	        this.extIf.sendClauseAssume(cSimpl.getCondition());
+	    } catch (ExternalProtocolInterfaceException | IOException e) {
+	        throw new DecisionException(e);
+	    }
+	}
+
+	@Override
+	protected final void pushAssumptionLocal(ClauseAssumeAliases cSimpl)
+	throws DecisionException { 
+	    try {
+	        this.extIf.sendClauseAssumeAliases(cSimpl.getReference(), cSimpl.getHeapPosition(), cSimpl.getObjekt());
+	    } catch (ExternalProtocolInterfaceException | IOException e) {
+	        throw new DecisionException(e);
+	    }
+	}
+
+	@Override
+	protected final void pushAssumptionLocal(ClauseAssumeExpands cSimpl)
+	throws DecisionException { 
+	    try {
+	        this.extIf.sendClauseAssumeExpands(cSimpl.getReference(), cSimpl.getObjekt().getType());
+	    } catch (ExternalProtocolInterfaceException | IOException e) {
+	        throw new DecisionException(e);
+	    }
+	}
+
+	@Override
+	protected final void pushAssumptionLocal(ClauseAssumeNull cSimpl) 
+	throws DecisionException { 
+	    try {
+	        this.extIf.sendClauseAssumeNull(cSimpl.getReference());
+	    } catch (ExternalProtocolInterfaceException | IOException e) {
+	        throw new DecisionException(e);
+	    }
+	}
+
+	@Override
+	protected final void pushAssumptionLocal(ClauseAssumeClassInitialized cSimpl)
+	throws DecisionException { 
+	    try {
+	        this.extIf.sendClauseAssumeClassInitialized(cSimpl.getClassName());
+	    } catch (ExternalProtocolInterfaceException | IOException e) {
+	        throw new DecisionException(e);
+	    }
+	}
+
+	@Override
+	protected final void pushAssumptionLocal(ClauseAssumeClassNotInitialized cSimpl) 
+	throws DecisionException { 
+	    try {
+	        this.extIf.sendClauseAssumeClassNotInitialized(cSimpl.getClassName());
+	    } catch (ExternalProtocolInterfaceException | IOException e) {
+	        throw new DecisionException(e);
+	    }
+	}
+
 	@Override
 	protected final void clearAssumptionsLocal() 
 	throws DecisionException {
@@ -151,17 +190,15 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	}
 	
 	@Override
-	protected void popAssumptionLocal() 
+	protected final void popAssumptionLocal() 
 	throws DecisionException {
-		final Clause c = this.clauses.pop();
+		this.clauses.pop();
 		if (this.fast) {
 			this.notInSynch = true;
 		} else {
 			try {
 				if (this.extIf.isWorking()) {
-					if (c instanceof ClauseAssume) {
-						this.extIf.popAssumption();
-					}
+					this.extIf.popAssumption();
 				} else {
 					throw new DecisionException(NOT_WORKING);					
 				}
@@ -172,7 +209,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	}
 
 	@Override
-	protected boolean isSatImpl(Expression exp, Expression expSimpl) 
+	protected final boolean isSatLocal(Expression exp, Expression expSimpl) 
 	throws DecisionException {
 	    try {
 	        if (this.extIf.isWorking()) {
@@ -180,9 +217,9 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	        		resynch();
 	        	}
 	        	this.extIf.sendClauseAssume(expSimpl);
-	        	final boolean extAnswersUnsat = !this.extIf.checkSat(true); 
+	        	final boolean retVal = this.extIf.checkSat(true); 
 	        	this.extIf.retractClause();
-	            return (extAnswersUnsat ? false : super.isSatImpl(exp, expSimpl));
+	            return retVal;
 	        } else {
 	        	throw new DecisionException(NOT_WORKING);
 	        }
@@ -192,7 +229,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	}
 	
 	@Override
-	protected boolean isSatAliasesImpl(ReferenceSymbolic r, long heapPos, Objekt o) 
+	protected final boolean isSatAliasesLocal(ReferenceSymbolic r, long heapPos, Objekt o) 
 	throws DecisionException {
 	    try {
 	        if (this.extIf.isWorking()) {
@@ -200,9 +237,9 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	        		resynch();
 	        	}
 	        	this.extIf.sendClauseAssumeAliases(r, heapPos, o);
-	        	final boolean extAnswersUnsat = !this.extIf.checkSat(true); 
+	        	final boolean retVal = this.extIf.checkSat(true); 
 	        	this.extIf.retractClause();
-	            return (extAnswersUnsat ? false : super.isSatAliasesImpl(r, heapPos, o));
+	            return retVal;
 	        } else {
 	        	throw new DecisionException(NOT_WORKING);
 	        }
@@ -212,7 +249,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	}
 	
 	@Override
-	protected boolean isSatExpandsImpl(ReferenceSymbolic r, String className)
+	protected final boolean isSatExpandsLocal(ReferenceSymbolic r, String className)
 	throws DecisionException {
 	    try {
 	        if (this.extIf.isWorking()) {
@@ -220,9 +257,9 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	        		resynch();
 	        	}
 	        	this.extIf.sendClauseAssumeExpands(r, className);
-	        	final boolean extAnswersUnsat = !this.extIf.checkSat(true); 
+	        	final boolean retVal = this.extIf.checkSat(true); 
 	        	this.extIf.retractClause();
-	            return (extAnswersUnsat ? false : super.isSatExpandsImpl(r, className));
+	            return retVal;
 	        } else {
 	        	throw new DecisionException(NOT_WORKING);
 	        }
@@ -232,7 +269,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	}
 	
 	@Override
-	protected boolean isSatNullImpl(ReferenceSymbolic r)
+	protected final boolean isSatNullLocal(ReferenceSymbolic r)
 	throws DecisionException {
 	    try {
 	        if (this.extIf.isWorking()) {
@@ -240,9 +277,9 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	        		resynch();
 	        	}
 	        	this.extIf.sendClauseAssumeNull(r);
-	        	final boolean extAnswersUnsat = !this.extIf.checkSat(true); 
+	        	final boolean retVal = this.extIf.checkSat(true); 
 	        	this.extIf.retractClause();
-	            return (extAnswersUnsat ? false : super.isSatNullImpl(r));
+	            return retVal;
 	        } else {
 	        	throw new DecisionException(NOT_WORKING);
 	        }

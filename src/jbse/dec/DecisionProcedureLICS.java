@@ -40,7 +40,7 @@ public final class DecisionProcedureLICS extends DecisionProcedureChainOfRespons
 	}
 	
 	@Override
-	protected boolean isSatExpandsImpl(ReferenceSymbolic ref, String className) {
+	protected boolean isSatExpandsLocal(ReferenceSymbolic ref, String className) {
 		//gets the rules matching ref
 		final ArrayList<LICSRuleExpandsTo> rules = rulesRepo.matchingLICSRulesExpandsTo(ref);
 
@@ -62,7 +62,7 @@ public final class DecisionProcedureLICS extends DecisionProcedureChainOfRespons
 	}
 
 	@Override
-	protected boolean isSatAliasesImpl(ReferenceSymbolic ref, long heapPos, Objekt o) {
+	protected boolean isSatAliasesLocal(ReferenceSymbolic ref, long heapPos, Objekt o) {
 		//gets the rules matching ref
 		final ArrayList<LICSRuleAliases> rulesMax = rulesRepo.matchingLICSRulesAliasesMax(ref);
 		final ArrayList<LICSRuleAliases> rulesNonMax = rulesRepo.matchingLICSRulesAliasesNonMax(ref);
@@ -126,20 +126,20 @@ nextRule:
 	}
 
 	@Override
-	protected boolean isSatNullImpl(ReferenceSymbolic ref) {
+	protected boolean isSatNullLocal(ReferenceSymbolic ref) {
 		final boolean notNull = this.rulesRepo.someMatchingLICSRulesNotNull(ref);
 		return !notNull;
 	}
 
 	@Override
-	protected boolean isSatInitializedImpl(String c) {
+	protected boolean isSatInitializedLocal(String c) {
 		//we only support mutually exclusive initialized/not-initialized cases
-		return !isSatNotInitializedImpl(c);
+		return !isSatNotInitializedLocal(c);
 		//TODO drop mutual exclusion of class initialized/not-initialized cases and add support to branching over class initialization assumptions
 	}
 
 	@Override
-	protected boolean isSatNotInitializedImpl(String c) {
+	protected boolean isSatNotInitializedLocal(String c) {
 		return this.rulesRepo.notInitializedClassesContains(c);
 	}
 }

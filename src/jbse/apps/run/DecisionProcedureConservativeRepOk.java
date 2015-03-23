@@ -44,7 +44,7 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
     }
     
     @Override
-	protected boolean isSatExpandsImpl(ReferenceSymbolic r, String className)
+	protected boolean isSatExpandsLocal(ReferenceSymbolic r, String className)
 	throws DecisionException {
 		final State sIni = this.checker.makeInitialState();
 		try {
@@ -53,15 +53,11 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 			//this should not happen
 			throw new UnexpectedInternalException(e);
 		}
-		final boolean croTrue = this.checker.checkHeap(sIni, true);
-		if (croTrue) {
-		    return delegateIsSatExpands(r, className);
-		}
-		return false;
+        return this.checker.checkHeap(sIni, true);
 	}
 	
 	@Override
-	protected boolean isSatAliasesImpl(ReferenceSymbolic r, long heapPosition, Objekt o) 
+	protected boolean isSatAliasesLocal(ReferenceSymbolic r, long heapPosition, Objekt o) 
 	throws DecisionException {
 		final State sIni = this.checker.makeInitialState();
 		try {
@@ -70,15 +66,11 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 			//this should not happen
 			throw new UnexpectedInternalException(e);
 		}
-        final boolean croTrue = this.checker.checkHeap(sIni, true);
-        if (croTrue) {
-            return delegateIsSatAliases(r, heapPosition, o);
-        }
-        return false;
+        return this.checker.checkHeap(sIni, true);
 	}
 	
 	@Override
-	protected boolean isSatNullImpl(ReferenceSymbolic r)
+	protected boolean isSatNullLocal(ReferenceSymbolic r)
 	throws DecisionException {
 		final State sIni = this.checker.makeInitialState();
 		try {
@@ -87,10 +79,6 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 			//this should not happen
 			throw new UnexpectedInternalException(e);
 		}
-        final boolean croTrue = this.checker.checkHeap(sIni, true);
-        if (croTrue) {
-            return delegateIsSatNull(r);
-        }
-        return false;
+        return this.checker.checkHeap(sIni, true);
 	}
 }
