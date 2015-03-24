@@ -335,9 +335,9 @@ public class List {
 and to instruct JBSE by the following trigger rules (the syntax is simplified for the sake of clarity):
 
 ```
-{ROOT}:list expands to instanceof List triggers _triggerAssumeList
-{ROOT}:list.header(.next)* expands to instanceof Node triggers _triggerAssumeListNode
-{ROOT}:list.header(.next)* is null triggers _triggerAssumeListComplete
+{ROOT}:list expands to instanceof List triggers _triggerAssumeList({ROOT}:list)
+{ROOT}:list.header(.next)* expands to instanceof Node triggers _triggerAssumeListNode({ROOT}:list)
+{ROOT}:list.header(.next)* is null triggers _triggerAssumeListComplete({ROOT}:list)
 ```
 
 The first trigger rule states that, when JBSE assumes the existence of the `{ROOT}:list` object it must run the `_triggerAssumeList` method. This method stores the symbolic initial list size in `_initialSize`, and initializes a counter for the assumed list nodes in `_initialSizeBound`. The second trigger rule fires the `_triggerAssumeListNode` method, that increments `_initialSizeBounds`, whenever JBSE assumes the existence of another node in the list. Both triggers enforce the invariant that the initial list size is greater or equal to the total number of list nodes assumed by JBSE. Finally, JBSE fires the `_triggerAssumeListComplete` method after assuming that the chain of list nodes is terminated by a `null`, which is tantamount to assuming that there are no more nodes in the list. The trigger enforces the initial list size to be exactly equal to the number of assumed nodes.
