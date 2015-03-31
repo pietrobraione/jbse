@@ -28,16 +28,19 @@ import jbse.val.Term;
 import jbse.val.WideningConversion;
 
 /**
- * {@link DecisionProcedureExternalInterface} to the Z3 SMT solver. 
- * Uses push and pop commands along a trace, but does not implement popAssumption.
- * Uses the reset command to erase all assertions and declarations in Z3 Stack.
+ * {@link DecisionProcedureExternalInterface} to a generic SMTLIB 2 solver
+ * that supports the AUFNIRA logic. 
  * 
  * @author Diego Piazza
  * @author Pietro Braione
  */
 //TODO simplify implementation; make a general decision procedure for SMTLIB2-compatible solvers
 public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExternalInterface {
-	private static final String PROLOGUE = "(set-logic AUFNIRA) (define-fun round_to_zero ((x Real)) Int (ite (>= x 0.0) (to_int x) (- (to_int (- x)))))";
+	private static final String PROLOGUE = 
+	    "(set-option :print-success true)\n" +
+	    "(set-option :interactive-mode true)\n" +
+	    "(set-logic AUFNIRA)\n" +
+	    "(define-fun round_to_zero ((x Real)) Int (ite (>= x 0.0) (to_int x) (- (to_int (- x)))))";
 	private static final String PUSH = "(push 1)";
 	private static final String POP = "(pop 1)";
 	private static final String CHECKSAT = "(check-sat)";
@@ -46,9 +49,9 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 	
     private final ExpressionMangler m;
 	private boolean working;
-	private Process Z3;
-	private BufferedReader Z3In;
-	private BufferedWriter Z3Out;
+	private Process solver;
+	private BufferedReader solverIn;
+	private BufferedWriter solverOut;
 	private String currentClausePositive;
 	private String currentClauseNegative;
 	private boolean hasCurrentClause;
@@ -64,12 +67,12 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 	throws ExternalProtocolInterfaceException, IOException {
 		this.m = new ExpressionMangler("X", "", calc);
 		this.working = true;
-		this.Z3 = Runtime.getRuntime().exec(Z3path + "z3 -smt2 -in -t:10");
-		this.Z3In = new BufferedReader (new InputStreamReader (this.Z3.getInputStream()));
-		this.Z3Out = new BufferedWriter (new OutputStreamWriter (this.Z3.getOutputStream()));
-		this.Z3Out.write(PROLOGUE);
-		this.Z3Out.write(PUSH);
-		this.Z3Out.flush();
+		this.solver = Runtime.getRuntime().exec(Z3path + "z3 -smt2 -in -t:10");
+		this.solverIn = new BufferedReader (new InputStreamReader (this.solver.getInputStream()));
+		this.solverOut = new BufferedWriter (new OutputStreamWriter (this.solver.getOutputStream()));
+		this.solverOut.write(PROLOGUE);
+		this.solverOut.write(PUSH);
+		this.solverOut.flush();
 		//TODO log differently!
 		//System.err.println("--->Z3: " + PROLOGUE);
 		//System.err.println("--->Z3: " + PUSH);
@@ -181,8 +184,8 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 		}
 		final String query = (value ? this.currentClausePositive : this.currentClauseNegative) + " " + CHECKSAT;
 		try {
-			this.Z3Out.write(query + '\n');
-			this.Z3Out.flush();
+			this.solverOut.write(query + '\n');
+			this.solverOut.flush();
 		} catch (IOException e) {
 			this.working = false;
 			throw e;
@@ -191,7 +194,7 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 		//System.err.println("--- CHECKSAT: ");
 		//System.err.println("--->Z3: " + query);
 
-		final String result = this.Z3In.readLine();
+		final String result = this.solverIn.readLine();
 		if (result == null) {
 			this.working = false;
 			throw new IOException("failed read of Z3 output");
@@ -199,8 +202,8 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 		//TODO log differently!
 		//System.err.println("<---Z3: " + result);
 
-		this.Z3Out.write(POP);
-		this.Z3Out.flush();
+		this.solverOut.write(POP);
+		this.solverOut.flush();
 		//TODO log differently!
 		//System.err.println("--->Z3: " + POP);
 
@@ -222,8 +225,8 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 		}
 		final String query = (value ? this.currentClausePositive : this.currentClauseNegative);
 		try {
-			this.Z3Out.write(query);
-			this.Z3Out.flush();
+			this.solverOut.write(query);
+			this.solverOut.flush();
 		} catch (IOException e) {
 			this.working = false;
 			throw e;
@@ -237,8 +240,8 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 	@Override
 	public void popAssumption() throws IOException {
 		try {
-			this.Z3Out.write(POP);
-			this.Z3Out.flush();
+			this.solverOut.write(POP);
+			this.solverOut.flush();
 		} catch (IOException e) {
 			this.working = false;
 			throw e;
@@ -262,9 +265,9 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 			if (nToPop > 0) {
 				//TODO log differently!
 				//System.err.println("--->Z3: (pop " + nToPop + ")");
-				this.Z3Out.write("(pop " + nToPop + ")");
+				this.solverOut.write("(pop " + nToPop + ")");
 			}
-			this.Z3Out.flush();
+			this.solverOut.flush();
 		} catch (IOException e) {
 			this.working = false;
 			throw e;
@@ -294,10 +297,11 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 	}
 	
 	/**
-	 * returns z3 primitive operator which corresponds to a java operator
+	 * Returns the SMTLIB2 primitive operator which corresponds 
+	 * to a Java operator.
 	 * 
 	 */	
-	private static String Z3Op(Operator operator) {
+	private static String toSMTLIB2(Operator operator) {
 		if (operator == Operator.ADD)      return "+";
 		else if (operator == Operator.SUB) return "-";
 		else if (operator == Operator.MUL) return "*";
@@ -368,7 +372,7 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 		}
 		
 		protected void removeDeclaredSymbols(int nVars) {
-			final ArrayList<String> symToDel = new ArrayList<String>();
+			final ArrayList<String> symToDel = new ArrayList<>();
 			int n = nTotalSym - nVars;
 			int c = 0;
 			for (String s : this.declaredSymbols) {
@@ -399,7 +403,7 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 		@Override
 		public void visitExpression(Expression e) throws Exception {
 			final Operator operation = e.getOperator();
-			final String op = Z3Op(operation);
+			final String op = toSMTLIB2(operation);
 			final boolean isBooleanOperator = operation.acceptsBoolean();
 			if (operation.returnsBoolean() == this.isBooleanExpression) {
 				//operation well formed
@@ -552,9 +556,9 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 	public void quit() 
 	throws ExternalProtocolInterfaceException, IOException {
 		this.working = false;
-		this.Z3Out.close();
+		this.solverOut.close();
 		try {
-			if (this.Z3.waitFor() != 0) {
+			if (this.solver.waitFor() != 0) {
 				throw new ExternalProtocolInterfaceException();
 			}
 		} catch (InterruptedException e) {
@@ -568,6 +572,6 @@ public class DecisionProcedureExternalInterfaceZ3 extends DecisionProcedureExter
 	@Override
 	public void fail() {
 		this.working = false;
-		this.Z3.destroy();
+		this.solver.destroy();
 	}
 }

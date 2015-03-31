@@ -37,6 +37,7 @@ import jbse.dec.DecisionProcedureEquality;
 import jbse.dec.DecisionProcedureLICS;
 import jbse.dec.DecisionProcedureSicstus;
 import jbse.dec.DecisionProcedureSignAnalysis;
+import jbse.dec.DecisionProcedureSMTLIB2_AUFNIRA;
 import jbse.dec.DecisionProcedureZ3;
 import jbse.dec.exc.DecisionBacktrackException;
 import jbse.dec.exc.DecisionEmptyException;
@@ -896,7 +897,8 @@ public class Run {
 				coreNumeric = (needHeapCheck ? new DecisionProcedureCVC3(coreNumeric, calc, path) : null);
 			} else if (type == DecisionProcedureType.Z3) {
 				core = new DecisionProcedureZ3(core, calc, path);
-				coreNumeric = (needHeapCheck ? new DecisionProcedureZ3(coreNumeric, calc, path) : null);
+                coreNumeric = (needHeapCheck ? new DecisionProcedureSMTLIB2_AUFNIRA(coreNumeric, calc, path + "z3 -smt2 -in -t:10") : null);
+				//coreNumeric = (needHeapCheck ? new DecisionProcedureZ3(coreNumeric, calc, path) : null);
 			} else { //DecisionProcedureType.ALL_SAT
 				//do nothing
 			}				

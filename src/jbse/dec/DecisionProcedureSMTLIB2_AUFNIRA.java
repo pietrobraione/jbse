@@ -6,11 +6,11 @@ import jbse.rewr.CalculatorRewriting;
 
 import java.io.IOException;
 
-public final class DecisionProcedureZ3 extends DecisionProcedureExternal {
-	public DecisionProcedureZ3(DecisionProcedure next, CalculatorRewriting calc, String z3Path) throws DecisionException {
+public final class DecisionProcedureSMTLIB2_AUFNIRA extends DecisionProcedureExternal {
+	public DecisionProcedureSMTLIB2_AUFNIRA(DecisionProcedure next, CalculatorRewriting calc, String solverPath) throws DecisionException {
 		super(next, calc);
 		try {
-			this.extIf = new DecisionProcedureExternalInterfaceZ3(calc, z3Path);
+			this.extIf = new DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA(calc, solverPath);
 		} catch (ExternalProtocolInterfaceException | IOException e) {
 			throw new DecisionException(e);
 		}
@@ -18,6 +18,6 @@ public final class DecisionProcedureZ3 extends DecisionProcedureExternal {
 	
 	@Override
 	protected boolean canPopAssumptions() {
-		return true;
+		return true; //TODO should query the external tool for capabilities?
 	}
 }
