@@ -36,16 +36,23 @@ import jbse.val.WideningConversion;
  */
 //TODO simplify implementation; make a general decision procedure for SMTLIB2-compatible solvers
 public class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedureExternalInterface {
+    //commands
     private static final String PROLOGUE = 
         "(set-option :print-success true)\n" +
         "(set-option :interactive-mode true)\n" +
         "(set-logic AUFNIRA)\n" +
-        "(define-fun round_to_zero ((x Real)) Int (ite (>= x 0.0) (to_int x) (- (to_int (- x)))))";
-    private static final String PUSH = "(push 1)";
-    private static final String POP = "(pop 1)";
-    private static final String CHECKSAT = "(check-sat)";
+        "(define-fun round_to_zero ((x Real)) Int (ite (>= x 0.0) (to_int x) (- (to_int (- x)))))\n";
+    private static final String PUSH = "(push 1)\n";
+    private static final String POP = "(pop 1)\n";
+    private static final String CHECKSAT = "(check-sat)\n";
+    
+    //answers
     private static final String SUCCESS = "success";
+    private static final String SAT = "sat";
     private static final String UNSAT = "unsat";
+    private static final String UNKNOWN = "unknown";
+    
+    //etc
     private static final String OTHER = "";
 
     private final ExpressionMangler m;
@@ -71,20 +78,9 @@ public class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionP
         this.solver = Runtime.getRuntime().exec(solverBinaryPath);
         this.solverIn = new BufferedReader(new InputStreamReader(this.solver.getInputStream()));
         this.solverOut = new BufferedWriter(new OutputStreamWriter(this.solver.getOutputStream()));
-        this.solverOut.write(PROLOGUE);
-        this.solverOut.write(PUSH);
-        this.solverOut.flush();
-        for (int i = 1; i <= 5; ++i) {
-            final String l = this.solverIn.readLine();
-            if (l == null) {
-                this.working = false;
-                throw new IOException("failed read of solver output");
-            }
-            if (!l.equals(SUCCESS)) {
-                this.working = false;
-                throw new ExternalProtocolInterfaceException("solver answered insuccess during initialization");
-            }
-        }
+        
+        final String query = PROLOGUE + PUSH;
+        sendAndCheckAnswer(query);
         //TODO log differently!
         //System.err.println("--->SMTLIB2: " + PROLOGUE);
         //System.err.println("--->SMTLIB2: " + PUSH);
@@ -105,12 +101,13 @@ public class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionP
         if (cond == null || cond.getType() != Type.BOOLEAN) {
             throw new ExternalProtocolInterfaceException("Attempted to send an invalid clause.");
         }       
+        this.hasCurrentClause = true;
+
         try {
             cond.accept(this.v);
-            this.currentClausePositive = PUSH + this.v.getDecl() + " (assert " + this.v.popClause() + ")";
+            this.currentClausePositive = PUSH + this.v.getQueryDeclarations() + "(assert " + this.v.getQueryAssertClause() + ")\n";
             cond.not().accept(this.v);
-            this.currentClauseNegative = PUSH + this.v.getDecl() + " (assert " + this.v.popClause() + ")";
-            this.hasCurrentClause = true;
+            this.currentClauseNegative = PUSH + this.v.getQueryDeclarations() + "(assert " + this.v.getQueryAssertClause() + ")\n";
         } catch (ExternalProtocolInterfaceException | RuntimeException e) {
             throw e;
         } catch (Exception e) {
@@ -127,9 +124,9 @@ public class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionP
             this.working = false;
             throw new ExternalProtocolInterfaceException("Attempted to send a clause when a current clause already exists.");
         }
+        this.hasCurrentClause = true;
         //does nothing, this decision procedure works only for numbers
         this.currentClausePositive = this.currentClauseNegative = null;
-        this.hasCurrentClause = true;
     }
 
     @Override
@@ -138,9 +135,9 @@ public class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionP
         if (this.hasCurrentClause) {
             throw new ExternalProtocolInterfaceException("Attempted to send a clause when a current clause already exists.");
         }
+        this.hasCurrentClause = true;
         //does nothing, this decision procedure works only for numbers
         this.currentClausePositive = this.currentClauseNegative = null;
-        this.hasCurrentClause = true;
     }
 
     @Override
@@ -149,9 +146,9 @@ public class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionP
         if (this.hasCurrentClause) {
             throw new ExternalProtocolInterfaceException("Attempted to send a clause when a current clause already exists.");
         }
+        this.hasCurrentClause = true;
         //does nothing, this decision procedure works only for numbers      
         this.currentClausePositive = this.currentClauseNegative = null;
-        this.hasCurrentClause = true;
     }
 
     @Override
@@ -160,9 +157,9 @@ public class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionP
         if (this.hasCurrentClause) {
             throw new ExternalProtocolInterfaceException("Attempted to send a clause when a current clause already exists.");
         }
+        this.hasCurrentClause = true;
         //does nothing, this decision procedure works only for numbers
         this.currentClausePositive = this.currentClauseNegative = null;
-        this.hasCurrentClause = true;
     }
 
     @Override
@@ -171,18 +168,19 @@ public class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionP
         if (this.hasCurrentClause) {
             throw new ExternalProtocolInterfaceException("Attempted to send a clause when a current clause already exists.");
         }
+        this.hasCurrentClause = true;
         //does nothing, this decision procedure works only for numbers
         this.currentClausePositive = this.currentClauseNegative = null;
-        this.hasCurrentClause = true;
     }
 
     @Override
     public void retractClause() throws ExternalProtocolInterfaceException {
         if (!this.hasCurrentClause) {
-            throw new ExternalProtocolInterfaceException("Attempted to retract clause with no current predicate.");
+            throw new ExternalProtocolInterfaceException("Attempted to retract a clause with no current clause.");
         }
-        this.currentClausePositive = this.currentClauseNegative = null;
         this.hasCurrentClause = false;
+        this.currentClausePositive = this.currentClauseNegative = null;
+        forgetPushedDeclarations();
     }
 
     /**
@@ -192,57 +190,25 @@ public class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionP
     public boolean checkSat(boolean value) 
     throws ExternalProtocolInterfaceException, IOException {
         if (!this.hasCurrentClause) {
-            throw new ExternalProtocolInterfaceException("Attempted to check entailment with no current predicate.");
+            throw new ExternalProtocolInterfaceException("Attempted to check satisfiability with no current clause.");
         }
-        final String query = (value ? this.currentClausePositive : this.currentClauseNegative) + " " + CHECKSAT;
-        try {
-            this.solverOut.write(query + '\n');
-            this.solverOut.flush();
-        } catch (IOException e) {
-            this.working = false;
-            throw e;
+        
+        final String queryPush = (value ? this.currentClausePositive : this.currentClauseNegative);
+        if (queryPush == null) {
+            return true;
         }
+        sendAndCheckAnswer(queryPush);
         //TODO log differently!
         //System.err.println("--- CHECKSAT: ");
-        //System.err.println("--->SMTLIB2: " + query);
-        
-        {
-            final String l = this.solverIn.readLine();
-            if (l == null) {
-                this.working = false;
-                throw new IOException("failed read of solver output");
-            }
-            if (!l.equals(SUCCESS)) {
-                this.working = false;
-                throw new ExternalProtocolInterfaceException("solver answered insuccess while checking satisfiability");
-            }
-        }
-
-        final String result = this.solverIn.readLine();
-        if (result == null) {
-            this.working = false;
-            throw new IOException("failed read of solver output");
-        }
+        //System.err.println("--->SMTLIB2: " + queryPush);        
+        final boolean isSat = sendAndCheckAnswerChecksat();
         //TODO log differently!
-        //System.err.println("<---SMTLIB2: " + result);
-
-        this.solverOut.write(POP);
-        this.solverOut.flush();
+        //System.err.println("--->SMTLIB2: (check-sat)");        
+        //System.err.println("<---SMTLIB2: *" + isSat + "*");
+        sendAndCheckAnswer(POP);
         //TODO log differently!
-        //System.err.println("--->SMTLIB2: " + POP);
-        {
-            final String l = this.solverIn.readLine();
-            if (l == null) {
-                this.working = false;
-                throw new IOException("failed read of solver output");
-            }
-            if (!l.equals(SUCCESS)) {
-                this.working = false;
-                throw new ExternalProtocolInterfaceException("solver answered insuccess while checking satisfiability");
-            }
-        }
-
-        return !result.equals(UNSAT); //conservatively returns true if z3 answers that does not know the answer
+        //System.err.println("--->SMTLIB2: (pop 1)");
+        return isSat;
     }
 
     /**
@@ -252,60 +218,25 @@ public class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionP
     public void pushAssumption(boolean value) 
     throws ExternalProtocolInterfaceException, IOException {
         if (!this.hasCurrentClause) {
-            throw new ExternalProtocolInterfaceException("attempted to check entailment with no current predicate");
+            throw new ExternalProtocolInterfaceException("attempted to push assumption with no current clause");
         }
         this.hasCurrentClause = false;
-        if (this.currentClausePositive == null || this.currentClauseNegative == null) {
-            return;
-        }
-        final String query = (value ? this.currentClausePositive : this.currentClauseNegative);
-        try {
-            this.solverOut.write(query);
-            this.solverOut.flush();
-        } catch (IOException e) {
-            this.working = false;
-            throw e;
-        }
-        {
-            final String l = this.solverIn.readLine();
-            if (l == null) {
-                this.working = false;
-                throw new IOException("failed read of solver output");
-            }
-            if (!l.equals(SUCCESS)) {
-                this.working = false;
-                throw new ExternalProtocolInterfaceException("solver answered insuccess while sending assumption");
-            }
-        }
-
         rememberPushedDeclarations();
+        
+        String queryPush = (value ? this.currentClausePositive : this.currentClauseNegative);
+        if (queryPush == null) {
+            queryPush = PUSH; //TODO avoid empty pushes
+        }
+        sendAndCheckAnswer(queryPush);
         //TODO log differently!
         //System.err.println("--- PUSH_ASSUMPTION:");
-        //System.err.println("--->SMTLIB2: " + query);
+        //System.err.println("--->SMTLIB2: " + queryPush);
     }
 
     @Override
     public void popAssumption() throws ExternalProtocolInterfaceException, IOException {
-        try {
-            this.solverOut.write(POP);
-            this.solverOut.flush();
-        } catch (IOException e) {
-            this.working = false;
-            throw e;
-        }
-        {
-            final String l = this.solverIn.readLine();
-            if (l == null) {
-                this.working = false;
-                throw new IOException("failed read of solver output");
-            }
-            if (!l.equals(SUCCESS)) {
-                this.working = false;
-                throw new ExternalProtocolInterfaceException("solver answered insuccess while sending assumption");
-            }
-        }
-
         forgetPoppedDeclarations();
+        sendAndCheckAnswer(POP);
         //TODO log differently!
         //System.err.println("--- POP_ASSUMPTION:");
         //System.err.println("--->SMTLIB2: " + POP);
@@ -321,36 +252,65 @@ public class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionP
         //System.err.println("--- CLEAR:");
         final int nToPop = (this.nSymPushed == null ? 0 : this.nSymPushed.size());
         if (nToPop > 0) {
-            try {
-                //TODO log differently!
-                //System.err.println("--->Z3: (pop " + nToPop + ")");
-                this.solverOut.write("(pop " + nToPop + ")");
-                this.solverOut.flush();
-            } catch (IOException e) {
-                this.working = false;
-                throw e;
-            }
-            {
-                final String l = this.solverIn.readLine();
-                if (l == null) {
-                    this.working = false;
-                    throw new IOException("failed read of solver output");
-                }
-                if (!l.equals(SUCCESS)) {
-                    this.working = false;
-                    throw new ExternalProtocolInterfaceException("solver answered insuccess while popping");
-                }
-            }
-
+            sendAndCheckAnswer("(pop " + nToPop + ")\n");
+            //TODO log differently!
+            //System.err.println("--->SMTLIB2: (pop " + nToPop + ")");
         }
         this.currentClausePositive = this.currentClauseNegative = null;
         this.hasCurrentClause = false;
         forgetAllDeclarations();
     }
-
+    
+    private void send(String query) throws IOException {
+        try {
+            this.solverOut.write(query);
+            this.solverOut.flush();
+        } catch (IOException e) {
+            this.working = false;
+            throw e;
+        }
+    }
+    
+    private void sendAndCheckAnswer(String query) throws IOException, ExternalProtocolInterfaceException {
+        send(query);
+        for (int i = 0; i < query.length(); ++i) {
+            if (query.charAt(i) == '\n') {
+                final String answer = this.solverIn.readLine();
+                if (answer == null) {
+                    this.working = false;
+                    throw new IOException("failed read of solver answer");
+                }
+                if (!answer.equals(SUCCESS)) {
+                    this.working = false;
+                    throw new ExternalProtocolInterfaceException("unexpected solver answer. Message: " + answer);
+                }
+            }
+        }
+    }
+    
+    private boolean sendAndCheckAnswerChecksat() throws IOException, ExternalProtocolInterfaceException {
+        send(CHECKSAT);
+        final String answer = this.solverIn.readLine();
+        if (answer == null) {
+            this.working = false;
+            throw new IOException("failed read of solver output");
+        }
+        if (!answer.equals(SAT) && !answer.equals(UNSAT) && !answer.equals(UNKNOWN)) {
+            this.working = false;
+            throw new ExternalProtocolInterfaceException("unrecognized answer from solver when checking satisfiability. Message: " + answer);
+        }
+        return !answer.equals(UNSAT); //conservatively returns true if answer is unknown
+    }
+    
     private void rememberPushedDeclarations() {
-        this.v.clearDecl(); //reinitialize decl
+        this.v.clearQueryDeclarations();
         this.nSymPushed.add(this.nSymCurrent);
+        this.nSymCurrent = 0;
+    }
+    
+    private void forgetPushedDeclarations() {
+        this.v.clearQueryDeclarations();
+        this.v.removeDeclaredSymbols(this.nSymCurrent);
         this.nSymCurrent = 0;
     }
 
@@ -362,7 +322,7 @@ public class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionP
 
     private void forgetAllDeclarations() {
         this.v = new SMTLIB2ExpressionVisitor();
-        this.nSymPushed = new ArrayList<Integer>();
+        this.nSymPushed = new ArrayList<>();
         this.nSymCurrent = 0;
         this.nTotalSym = 0;
     }
@@ -429,22 +389,36 @@ public class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionP
      * Builds a SMTLIB2 string representing an expression.
      */
     private class SMTLIB2ExpressionVisitor implements PrimitiveVisitor {
+        /** Is this a boolean expression? */
         private boolean isBooleanExpression = true;
-        private LinkedHashSet<String> declaredSymbols = new LinkedHashSet<String>();
-        private StringBuilder decl = new StringBuilder();
-        private Stack<String> clauseStack = new Stack<String>();
+        
+        /** All the symbols declared in the visited Primitive. */
+        private LinkedHashSet<String> declaredSymbols = new LinkedHashSet<>();
+        
+        /** 
+         * SMTLIB2 query for the declaration of the symbols.
+         * This string contains the declarations that have
+         * not yet been sent to the solver, to avoid double
+         * declarations.
+         */
+        private StringBuilder queryDeclarations = new StringBuilder();
+        
+        /**
+         * Clauses stored during the visit.
+         */
+        private Stack<String> clauseStack = new Stack<>();
 
-        public String popClause() { return this.clauseStack.pop(); }
+        public String getQueryAssertClause() { return this.clauseStack.pop(); }
 
-        public String getDecl() { return this.decl.toString(); }
+        public String getQueryDeclarations() { return this.queryDeclarations.toString(); }
 
-        public void clearDecl() {
-            this.decl = new StringBuilder();                       
+        public void clearQueryDeclarations() {
+            this.queryDeclarations = new StringBuilder();                       
         }
 
-        protected void removeDeclaredSymbols(int nVars) {
+        void removeDeclaredSymbols(int nSymToDel) {
             final ArrayList<String> symToDel = new ArrayList<>();
-            int n = nTotalSym - nVars;
+            int n = nTotalSym - nSymToDel;
             int c = 0;
             for (String s : this.declaredSymbols) {
                 if (c < n){
@@ -453,8 +427,8 @@ public class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionP
                     symToDel.add(s);
                 }
             }
-            declaredSymbols.removeAll(symToDel);
-            nTotalSym = nTotalSym - nVars;
+            this.declaredSymbols.removeAll(symToDel);
+            nTotalSym = nTotalSym - nSymToDel;
         }
 
         public SMTLIB2ExpressionVisitor() { }
@@ -462,13 +436,13 @@ public class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionP
         public SMTLIB2ExpressionVisitor(SMTLIB2ExpressionVisitor v, boolean isBooleanExpression) {
             this.isBooleanExpression = isBooleanExpression;
             this.declaredSymbols = v.declaredSymbols;
-            this.decl = v.decl;
+            this.queryDeclarations = v.queryDeclarations;
             this.clauseStack = v.clauseStack;
         }
 
         @Override
         public void visitAny(Any x) throws ExternalProtocolInterfaceException {
-            throw new ExternalProtocolInterfaceException("values of type Any should not reach Z3");         
+            throw new ExternalProtocolInterfaceException("values of type Any should not reach the SMT solver");         
         }
 
         @Override
@@ -479,17 +453,17 @@ public class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionP
             if (operation.returnsBoolean() == this.isBooleanExpression) {
                 //operation well formed
                 if (operation == Operator.NE) {
-                    //1-NE is not a z3 operator but can be translated to a combination of Z3 operators
+                    //1-NE is not a SMTLIB2 operator but can be translated to a combination of SMTLIB2 operators
                     e.getFirstOperand().accept(new SMTLIB2ExpressionVisitor(this, isBooleanOperator));
                     e.getSecondOperand().accept(new SMTLIB2ExpressionVisitor(this, isBooleanOperator));
                     final String secondOperand = this.clauseStack.pop();
                     final String firstOperand = this.clauseStack.pop();
                     this.clauseStack.push("(not (= " + firstOperand + " " + secondOperand + "))");
                 } else if (op.equals(OTHER)) {
-                    //2-Operator does not correspond to a z3 operator
+                    //2-Operator does not correspond to a SMTLIB2 operator
                     m.mangle(e).accept(this);
                 } else {
-                    //3-The operator correspond to a z3 operator
+                    //3-The operator correspond to a SMTLIB2 operator
                     final String clause;
                     if (e.isUnary()) {
                         e.getOperand().accept(new SMTLIB2ExpressionVisitor (this , isBooleanOperator));
@@ -504,7 +478,7 @@ public class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionP
                     this.clauseStack.push(clause);
                 }
             } else {
-                throw new UnexpectedInternalException("error while parsing an expression for Z3: " + e.toString());
+                throw new UnexpectedInternalException("error while parsing expression (not a boolean expression): " + e.toString());
             }
         }
 
@@ -545,7 +519,7 @@ public class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionP
                 // does nothing
             } else {
                 this.declaredSymbols.add(operator);
-                this.decl.append(" (declare-fun " + z3Signature + " )");
+                this.queryDeclarations.append("(declare-fun " + z3Signature + " )\n");
                 nSymCurrent = nSymCurrent + 1;
                 nTotalSym = nTotalSym + 1;
             }
@@ -612,9 +586,9 @@ public class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionP
                 // does nothing
             } else {
                 this.declaredSymbols.add(z3VarName);
-                this.decl.append(" (declare-fun " + z3VarName + " () " + toSMTLIB2Type(type) + ")");
-                nSymCurrent = nSymCurrent + 1;
-                nTotalSym = nTotalSym + 1;
+                this.queryDeclarations.append("(declare-fun " + z3VarName + " () " + toSMTLIB2Type(type) + ")\n");
+                ++nSymCurrent;
+                ++nTotalSym;
             }
             this.clauseStack.push(z3VarName);
         }
