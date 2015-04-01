@@ -107,14 +107,17 @@ public final class RunParameters implements Cloneable {
 		/** Does not use a decision procedure, all formulas will be considered satisfiable. */
 		ALL_SAT,
 
-		/** Uses cvc3 (currently deprecated). */
+		/** Uses CVC3 (currently deprecated). */
 		CVC3, 
 		
 		/** Uses Sicstus constraint solver via prologbeans plus BDDs. */
 		SICSTUS, 
 		
 		/** Uses Z3. */
-		Z3 
+		Z3,
+		
+		/** Uses CVC4. */
+		CVC4
 	}
 
 	/**

@@ -669,6 +669,9 @@ public class Run {
 		IO.println(this.err, s);
 	}
 
+    private static final String COMMANDLINE_LAUNCH_Z3   = "z3 -smt2 -in -t:10";
+    private static final String COMMANDLINE_LAUNCH_CVC4 = "cvc4 --lang=smt2 --output-lang=smt2 --no-interactive --incremental --tlimit-per=10000";
+    
 	/**
 	 * Processes the provided {@link RunParameters} and builds the {@link Engine}
 	 * which will be used by the runner to perform the symbolic execution.
@@ -768,19 +771,22 @@ public class Run {
 		}
 
 		//prints some feedback on forthcoming decision procedure creation
-		if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.SICSTUS) {
-			IO.println(this.log, MSG_TRY_SICSTUS
-					+ this.parameters.getExternalDecisionProcedurePath() + ".");
-		} else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC3) {
-			IO.println(this.log, MSG_TRY_CVC3
-					+ this.parameters.getExternalDecisionProcedurePath() + ".");
-		} else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.Z3) {
-			IO.println(this.log, MSG_TRY_Z3
-					+ this.parameters.getExternalDecisionProcedurePath() + ".");
+		if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC3) {
+		    IO.println(this.log, MSG_TRY_CVC3
+		               + this.parameters.getExternalDecisionProcedurePath() + ".");
+		} else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.SICSTUS) {
+		    IO.println(this.log, MSG_TRY_SICSTUS
+		               + this.parameters.getExternalDecisionProcedurePath() + ".");
+        } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.Z3) {
+            IO.println(this.log, MSG_TRY_Z3
+                       + this.parameters.getExternalDecisionProcedurePath() + ".");
+        } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC4) {
+            IO.println(this.log, MSG_TRY_CVC4
+                       + this.parameters.getExternalDecisionProcedurePath() + ".");
 		} else if (this.parameters.interactionMode == InteractionMode.NO_INTERACTION) {
-			IO.println(this.log, MSG_DECISION_BASIC);
+		    IO.println(this.log, MSG_DECISION_BASIC);
 		} else {
-			IO.println(this.log, MSG_DECISION_INTERACTIVE);
+		    IO.println(this.log, MSG_DECISION_INTERACTIVE);
 		}
 		
 		//defines the engine builder
@@ -818,8 +824,10 @@ public class Run {
 					IO.println(err, ERROR_SICSTUS_FAILED + e.getCause() + ".");
 				} else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC3) {
 					IO.println(err, ERROR_CVC3_FAILED + e.getCause() + ".");
-				} else {
+				} else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.Z3) {
 					IO.println(err, ERROR_Z3_FAILED + e.getCause() + ".");
+                } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC4) {
+                    IO.println(err, ERROR_CVC4_FAILED + e.getCause() + ".");
 				}
 			} else {
 				IO.println(this.err, ERROR_BUILD_FAILED + e.getCause() + ".");
@@ -888,18 +896,21 @@ public class Run {
 		final DecisionProcedureType type = this.parameters.getDecisionProcedureType();
 		final String path = this.parameters.getExternalDecisionProcedurePath();		
 		try {
-			if (type == DecisionProcedureType.SICSTUS) {
-				core = new DecisionProcedureSicstus(core, calc, path);
-				coreNumeric = (needHeapCheck ? new DecisionProcedureSicstus(coreNumeric, calc, path) : null);
-			} else if (type == DecisionProcedureType.CVC3) {
-				core = new DecisionProcedureCVC3(core, calc, path);
-				coreNumeric = (needHeapCheck ? new DecisionProcedureCVC3(coreNumeric, calc, path) : null);
-			} else if (type == DecisionProcedureType.Z3) {
-				core = new DecisionProcedureSMTLIB2_AUFNIRA(core, calc, path + "z3 -smt2 -in -t:10");
-                coreNumeric = (needHeapCheck ? new DecisionProcedureSMTLIB2_AUFNIRA(coreNumeric, calc, path + "z3 -smt2 -in -t:10") : null);
-			} else { //DecisionProcedureType.ALL_SAT
-				//do nothing
-			}				
+		    if (type == DecisionProcedureType.CVC3) {
+		        core = new DecisionProcedureCVC3(core, calc, path);
+		        coreNumeric = (needHeapCheck ? new DecisionProcedureCVC3(coreNumeric, calc, path) : null);
+		    } else if (type == DecisionProcedureType.SICSTUS) {
+		        core = new DecisionProcedureSicstus(core, calc, path);
+		        coreNumeric = (needHeapCheck ? new DecisionProcedureSicstus(coreNumeric, calc, path) : null);
+		    } else if (type == DecisionProcedureType.Z3) {
+		        core = new DecisionProcedureSMTLIB2_AUFNIRA(core, calc, path + COMMANDLINE_LAUNCH_Z3);
+		        coreNumeric = (needHeapCheck ? new DecisionProcedureSMTLIB2_AUFNIRA(coreNumeric, calc, path + COMMANDLINE_LAUNCH_Z3) : null);
+		    } else if (type == DecisionProcedureType.CVC4) {
+		        core = new DecisionProcedureSMTLIB2_AUFNIRA(core, calc, path + COMMANDLINE_LAUNCH_CVC4);
+		        coreNumeric = (needHeapCheck ? new DecisionProcedureSMTLIB2_AUFNIRA(coreNumeric, calc, path + COMMANDLINE_LAUNCH_CVC4) : null);
+		    } else { //DecisionProcedureType.ALL_SAT
+		        //do nothing
+		    }				
 		} catch (DecisionException e) {
 			throw new CannotBuildDecisionProcedureException(e);
 		}
@@ -1021,8 +1032,11 @@ public class Run {
 	/** Message: trying to connect to CVC3. */
 	private static final String MSG_TRY_CVC3 = "Connecting to CVC3 at ";
 
-	/** Message: trying to connect to CVC3. */
+	/** Message: trying to connect to Z3. */
 	private static final String MSG_TRY_Z3 = "Connecting to Z3 at ";
+
+    /** Message: trying to connect to CVC4. */
+    private static final String MSG_TRY_CVC4 = "Connecting to CVC4 at ";
 
 	/** Message: trying to initialize guidance. */
 	private static final String MSG_TRY_GUIDANCE = "Initializing guidance by driver method ";
@@ -1122,6 +1136,9 @@ public class Run {
 	/** Error: unable to connect with Z3. */
 	private static final String ERROR_Z3_FAILED = "Failed connection to Z3, cause: ";
 	
+    /** Error: unable to connect with CVC4. */
+    private static final String ERROR_CVC4_FAILED = "Failed connection to CVC4, cause: ";
+    
 	/** Error: failed guidance. */
 	private static final String ERROR_GUIDANCE_FAILED = "Failed guidance, cause: ";
 
