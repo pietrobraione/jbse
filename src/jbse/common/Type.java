@@ -20,7 +20,7 @@ public final class Type {
     public static final char STRING_LITERAL = '$';
     
     /** The type of symbolic references to a class in the constant pool. */
-    public static final char CLASS_SYMREF   = '£';
+    public static final char CLASS_SYMREF   = '%';
     
     /** The primitive type {@code byte}. */
     public static final char BYTE     		= 'B';
