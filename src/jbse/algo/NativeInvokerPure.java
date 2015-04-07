@@ -2,6 +2,8 @@ package jbse.algo;
 
 import static jbse.algo.Util.throwVerifyError;
 
+import java.util.Arrays;
+
 import jbse.algo.exc.CannotInvokeNativeException;
 import jbse.bc.Signature;
 import jbse.common.Type;
@@ -55,7 +57,7 @@ public class NativeInvokerPure implements NativeInvoker {
 					argsPrim[i] = (Primitive) args[i];
 					someSymbolic = someSymbolic || (argsPrim[i].isSymbolic());
 				} else { 
-					throw new ValueDoesNotSupportNativeException();
+					throw new ValueDoesNotSupportNativeException("invoked method " + methodSignatureResolved + " with args " + Arrays.toString(args));
 				}
 			}
 			if (someSymbolic) {

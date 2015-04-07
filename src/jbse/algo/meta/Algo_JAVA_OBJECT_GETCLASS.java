@@ -1,6 +1,6 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.ensureClassInstance;
+import static jbse.algo.Util.ensureInstance_JAVA_CLASS;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
@@ -42,8 +42,8 @@ public class Algo_JAVA_OBJECT_GETCLASS implements Algorithm {
 			final String className = thisObj.getType();
 
 			//gets the instance of the class of the "this" object
-			ensureClassInstance(state, className, ctx.decisionProcedure);
-			final Reference classRef = state.referenceToClassInstance(className);
+			ensureInstance_JAVA_CLASS(state, className, ctx.decisionProcedure);
+			final Reference classRef = state.referenceToInstance_JAVA_CLASS(className);
 			state.popOperand();
 			state.pushOperand(classRef);
         } catch (ClassFileNotAccessibleException e) {
@@ -57,6 +57,7 @@ public class Algo_JAVA_OBJECT_GETCLASS implements Algorithm {
 		    throw new UnexpectedInternalException(e);
 		}
 
+        //increments the program counter
 		try {
 			state.incPC(INVOKESPECIALSTATICVIRTUAL_OFFSET);
 		} catch (InvalidProgramCounterException e) {

@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import jbse.bc.Signature;
 import jbse.val.Calculator;
@@ -142,7 +143,32 @@ public abstract class Objekt implements Cloneable {
             return null;
         }
     }
+
+    /**
+     * Sets the value of a field. Throws a runtime exception 
+     * in the case the field does not exist or is immutable.
+     * 
+     * @param field the {@link Signature} of the field.
+     * @param item the new {@link Value} that must be assigned to
+     *             the field.
+     */
+    //TODO throw a better exception in the case a field does not exist or is immutable
+    public void setFieldValue(Signature field, Value item) {
+        this.fields.get(field.toString()).setValue(item); //toString() is necessary, type erasure doesn't play well
+    }
     
+    /**
+     * Returns an immutable view of this 
+     * {@link Objekt}'s fields.
+     * 
+     * @return an immutable 
+     *         {@link Map}{@code <}{@link String}{@code , }{@link Variable}{@code <}
+     *         backed by this {@link Objekt}'s fields map.
+     */
+    public Map<String, Variable> fields() {
+        return Collections.unmodifiableMap(this.fields);
+    }
+   
     /**
      * Gets the value in a field of the {@link Instance}.
      * 

@@ -1,17 +1,14 @@
 package jbse.mem;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import jbse.bc.Signature;
 import jbse.val.Calculator;
-import jbse.val.Value;
 
 /**
- * Class that represent an instance of an object in memory.
+ * Class that represent an instance of an object in the heap.
  */
-
 public class Instance extends Objekt {
     /**
      * Constructor.
@@ -26,22 +23,6 @@ public class Instance extends Objekt {
      */
     protected Instance(Calculator calc, String className, String origin, Epoch epoch, Signature... fieldSignatures) {
     	super(calc, className, origin, epoch, fieldSignatures);
-    }
-
-    /**
-     * Sets the value of a field. Throws a runtime exception 
-     * in the case the field does not exist.
-     * 
-     * @param field the {@link Signature} of the field.
-     * @param item the new {@link Value} that must be assigned to
-     *             the field.
-     */
-    public void setFieldValue(Signature field, Value item) {
-        this.fields.get(field.toString()).setValue(item); //toString() is necessary, type erasure doesn't play well
-    }
-    
-    public Map<String, Variable> fields() {
-    	return Collections.unmodifiableMap(this.fields);
     }
     
     @Override

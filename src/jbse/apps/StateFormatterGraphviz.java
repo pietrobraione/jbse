@@ -89,7 +89,7 @@ public abstract class StateFormatterGraphviz implements StateFormatter {
 			this.currentNodeName = this.currentNodePrefix + e.getKey(); 
 			this.currentNode = this.currentNodeName + "[shape=box,label=\"" + e.getKey() + ":";
 			this.currentNode += e.getValue().getType();
-			this.formatObject(s, e.getValue());
+			formatObject(s, e.getValue());
 		}
 
 		if (this.nodes.equals("")) {
@@ -100,12 +100,11 @@ public abstract class StateFormatterGraphviz implements StateFormatter {
 	}
 	
 	public String formatObject(State s, Objekt o) {
-		if (o instanceof Instance) {
-			Instance i = (Instance) o;
-			for (Signature sig : i.getFieldSignatures()) {
+		if (o instanceof Instance || o instanceof Klass) {
+			for (Signature sig : o.getFieldSignatures()) {
 				if (Type.isArray(sig.getDescriptor()) ||
 					Type.isReference(sig.getDescriptor())) {
-					Reference r = (Reference) i.getFieldValue(sig);
+					Reference r = (Reference) o.getFieldValue(sig);
 					ReferenceSymbolic sr = null;
 					if (r instanceof ReferenceSymbolic) {
 						sr = (ReferenceSymbolic) r;
@@ -143,7 +142,7 @@ public abstract class StateFormatterGraphviz implements StateFormatter {
 					this.edges += this.currentNodeName + "->" + this.nullNodeName;
 					this.edges += "[label=\"" + sig.getName() + "\"]";
 				/*} else {
-					this.currentNode += "\\n" + sig.getName() + " = " + i.getFieldValue(sig);*/
+					this.currentNode += "\\n" + sig.getName() + " = " + o.getFieldValue(sig);*/
 				}
 			}
 		} else { //is an array

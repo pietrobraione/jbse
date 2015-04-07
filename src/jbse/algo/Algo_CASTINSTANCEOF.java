@@ -98,5 +98,5 @@ abstract class Algo_CASTINSTANCEOF implements Algorithm {
     }
     
     protected abstract void complete(State state, boolean isSubclass) 
-    throws ThreadStackEmptyException, InterruptException;
+    throws InterruptException;
 }

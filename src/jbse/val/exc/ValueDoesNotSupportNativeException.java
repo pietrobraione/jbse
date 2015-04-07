@@ -12,6 +12,13 @@ import jbse.val.Value;
  *
  */
 public class ValueDoesNotSupportNativeException extends CannotInvokeNativeException {
+    public ValueDoesNotSupportNativeException() {
+        super();
+    }
+
+    public ValueDoesNotSupportNativeException(String s) {
+        super(s);
+    }
 
 	/**
 	 * 

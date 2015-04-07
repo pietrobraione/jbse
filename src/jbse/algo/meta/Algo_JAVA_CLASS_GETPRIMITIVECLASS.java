@@ -31,8 +31,8 @@ public class Algo_JAVA_CLASS_GETPRIMITIVECLASS implements Algorithm {
 			}
 
 			//gets the instance of the class
-			state.ensurePrimitiveClassInstance(typeName);
-			final Reference classRef = state.referenceToPrimitiveClassInstance(typeName);
+			state.ensureInstance_JAVA_CLASS_primitive(typeName);
+			final Reference classRef = state.referenceToInstance_JAVA_CLASS_primitive(typeName);
 			state.pushOperand(classRef);
         } catch (ClassFileNotFoundException e) {
             throwNew(state, CLASS_NOT_FOUND_EXCEPTION);  //this is how Hotspot behaves

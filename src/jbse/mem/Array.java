@@ -28,7 +28,7 @@ import jbse.val.exc.InvalidTypeException;
  *  
  * @author Pietro Braione
  */
-public class Array extends Objekt {
+public final class Array extends Objekt {
 	/** 
 	 * The {@link String} identifier of the {@link Term} used to
 	 * represent an {@link Array}'s index.

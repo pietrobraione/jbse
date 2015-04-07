@@ -335,8 +335,8 @@ public class Util {
          * Phase 1 creates all the {@link Klass} objects for a class and its
          * superclasses that can be assumed to be not initialized. It also 
          * refines the path condition by adding all the initialization assumption
-         * and loads all the <clinit> frames for these classes, with the exclusion
-         * of the <clinit> of java.lang.Object.
+         * and loads all the {@code <clinit>} frames for these classes, with the exclusion
+         * of the {@code <clinit>} of {@code java.lang.Object}.
          * 
          * @param className a {@code String}, the name of the class.
          * @param it a {@code ListIterator} to {@code this.classesCreated}.
@@ -446,8 +446,8 @@ public class Util {
         }
         
         /**
-         * Pushes the {@code <clinit>} frames for all the initialized classes
-         * that have it.
+         * Phase 3 pushes the {@code <clinit>} frames for all the initialized 
+         * classes that have it.
          * 
          * @throws ClasspathException whenever the classfile for
          *         {@code java.lang.Object} is not in the classpath
@@ -558,7 +558,7 @@ public class Util {
 	    }
 	}
     
-    public static void ensureClassInstance(State state, String className, DecisionProcedure dec) 
+    public static void ensureInstance_JAVA_CLASS(State state, String className, DecisionProcedure dec) 
     throws DecisionException, ClasspathException, BadClassFileException, 
     ClassFileNotAccessibleException, ThreadStackEmptyException, InterruptException {
         //possibly creates and initializes java.lang.Class
@@ -572,10 +572,10 @@ public class Util {
         }
         
         //possibly creates and initializes the java.lang.Class Instance
-        final boolean mustInitClass = (!state.hasClassInstance(className));
-        state.ensureClassInstance(className);
+        final boolean mustInitClass = (!state.hasInstance_JAVA_CLASS(className));
+        state.ensureInstance_JAVA_CLASS(className);
         if (mustInitClass) {
-            final Reference r = state.referenceToClassInstance(className);
+            final Reference r = state.referenceToInstance_JAVA_CLASS(className);
             final Instance i = (Instance) state.getObject(r);
             final String classNameBinary = binaryClassName(className);
             try {

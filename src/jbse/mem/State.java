@@ -513,16 +513,36 @@ public final class State implements Cloneable {
 	 * Creates a new {@link Instance} of a given class in the 
 	 * heap of the state. The {@link Instance}'s fields are initialized 
 	 * with the default values for each field's type.
+	 * It cannot create instances of the {@code java.lang.Class} class.
 	 * 
 	 * @param className the name of the class of the new object.
 	 * @return a {@link ReferenceConcrete} to the newly created object.
 	 */
-	public ReferenceConcrete createInstance(String className) {    	
+	public ReferenceConcrete createInstance(String className) {
+	    if (className.equals(JAVA_CLASS)) {
+	        throw new RuntimeException(); //TODO better exception
+	    }
 		final Signature[] fieldsSignatures = this.classHierarchy.getAllFieldsInstance(className);
 		final Instance myObj = new Instance(this.calc, className, null, Epoch.EPOCH_AFTER_START, fieldsSignatures);
 		return new ReferenceConcrete(this.heap.addNew(myObj));
 	}
 	
+    /**
+     * Creates a new {@link Instance} of {@code java.lang.Class} in the 
+     * heap of the state (more precisely, creates a {@link Instance_JAVA_CLASS}).
+     * Its fields are initialized with the default values for each 
+     * field's type (which should not be a problem since all the fields are transient).
+     * 
+     * @param representedClass the name of the class the created {@code Instance_JAVA_CLASS}
+     *        represents.
+     * @return a {@link ReferenceConcrete} to the newly created object.
+     */
+    private ReferenceConcrete createInstance_JAVA_CLASS(String representedClass) {
+        final Signature[] fieldsSignatures = this.classHierarchy.getAllFieldsInstance(JAVA_CLASS);
+        final Instance myObj = new Instance_JAVA_CLASS(this.calc, null, Epoch.EPOCH_AFTER_START, representedClass, fieldsSignatures);
+        return new ReferenceConcrete(this.heap.addNew(myObj));
+    }
+    
 	/**
 	 * Creates a concrete {@link Klass} object and loads it in the 
 	 * static area of this state. It does not initialize the constant 
@@ -610,12 +630,12 @@ public final class State implements Cloneable {
 	}
 
 	/**
-	 * Initializes an {@link Instance} with symbolic values.
+	 * Initializes an {@link Objekt} with symbolic values.
 	 * 
-	 * @param myObj an {@link Instance} which will be initialized with 
+	 * @param myObj an {@link Objekt} which will be initialized with 
 	 *              symbolic values.
 	 */
-	private void initWithSymbolicValues(Instance myObj) {
+	private void initWithSymbolicValues(Objekt myObj) {
 		for (final Signature myActualSignature : myObj.getFieldSignatures()) {
 			//gets the field signature and name
 			final String tmpDescriptor = myActualSignature.getDescriptor();
@@ -714,7 +734,7 @@ public final class State implements Cloneable {
      * @return {@code true} iff there is a {@link Instance} of {@code java.lang.Class} in 
      *         this state's {@link Heap} corresponding to {@code className}.
      */
-    public boolean hasClassInstance(String className) {
+    public boolean hasInstance_JAVA_CLASS(String className) {
         return this.classes.containsKey(className);
     }
     
@@ -727,7 +747,7 @@ public final class State implements Cloneable {
      * @return {@code true} iff there is a {@link Instance} of {@code java.lang.Class} in 
      *         this state's {@link Heap} corresponding to {@code typeName}.
      */
-    public boolean hasPrimitiveClassInstance(String typeName) {
+    public boolean hasInstance_JAVA_CLASS_primitive(String typeName) {
         return this.classesPrimitive.containsKey(typeName);
     }
 	
@@ -743,23 +763,23 @@ public final class State implements Cloneable {
      *         {@code className}, or {@code null} if such instance does not
      *         exist. 
      */
-    public ReferenceConcrete referenceToClassInstance(String className) {
+    public ReferenceConcrete referenceToInstance_JAVA_CLASS(String className) {
         final ReferenceConcrete retVal = this.classes.get(className);
         return retVal;
     }
    
     /**
-     * Returns an {@link Instance} of class {@code java.lang.Class} 
-     * from the heap corresponding to a primitive type. 
+     * Returns a {@link ReferenceConcrete} to an instance of 
+     * {@code java.lang.Class} representing a primitive type. 
      * 
-     * @param typeName a {@link String} representing a primitive type
+     * @param typeName a {@link String}, a primitive type
      *        binary name (see Java Language Specification 13.1).
-     * @return a {@link ReferenceConcrete} to the {@link Instance} in 
-     *         {@code state}'s {@link Heap} of the class for primitive type
-     *         {@code typeName}, or {@code null} if such instance does not
-     *         exist. 
+     * @return a {@link ReferenceConcrete} to the {@link Instance_JAVA_CLASS} 
+     *         in this state's {@link Heap}, representing the class of 
+     *         the primitive type {@code typeName}, or {@code null} if 
+     *         such instance does not exist in the heap. 
      */
-    public ReferenceConcrete referenceToPrimitiveClassInstance(String typeName) {
+    public ReferenceConcrete referenceToInstance_JAVA_CLASS_primitive(String typeName) {
         final ReferenceConcrete retVal = this.classesPrimitive.get(typeName);
         return retVal;
     }
@@ -777,16 +797,16 @@ public final class State implements Cloneable {
      * @throws ClassFileNotAccessibleException if the class {@code className} 
      *         is not accessible from {@code accessor}.
      */
-    public void ensureClassInstance(String className) 
+    public void ensureInstance_JAVA_CLASS(String className) 
     throws ThreadStackEmptyException, BadClassFileException, 
     ClassFileNotAccessibleException {
-        if (hasClassInstance(className)) {
+        if (hasInstance_JAVA_CLASS(className)) {
             return;
         }
         final String currentClassName = getCurrentMethodSignature().getClassName();
         this.classHierarchy.resolveClass(currentClassName, className);
         //TODO resolve JAVA_CLASS
-        final ReferenceConcrete retVal = createInstance(JAVA_CLASS);
+        final ReferenceConcrete retVal = createInstance_JAVA_CLASS(className);
         this.classes.put(className, retVal);
     }
     
@@ -801,13 +821,13 @@ public final class State implements Cloneable {
      * @throws ClassFileNotFoundException if {@code typeName} is not
      *         the binary name of a primitive type.
      */
-    public void ensurePrimitiveClassInstance(String typeName) 
+    public void ensureInstance_JAVA_CLASS_primitive(String typeName) 
     throws ClassFileNotFoundException {
-        if (hasPrimitiveClassInstance(typeName)) {
+        if (hasInstance_JAVA_CLASS_primitive(typeName)) {
             return;
         }
         if (isPrimitiveBinaryClassName(typeName)) {
-            final ReferenceConcrete retVal = createInstance(JAVA_CLASS);
+            final ReferenceConcrete retVal = createInstance_JAVA_CLASS(typeName);
             this.classesPrimitive.put(typeName, retVal);
         } else {
             throw new ClassFileNotFoundException(typeName + " is not the binary name of a primitive type");

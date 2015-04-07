@@ -7,7 +7,7 @@ import jbse.val.Calculator;
  * Class that represents a Java class in the static
  * method area, i.e., its static fields.
  */
-public class Klass extends Instance {
+public final class Klass extends Objekt {
     /**
      * Constructor.
      * 

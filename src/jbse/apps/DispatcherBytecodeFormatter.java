@@ -283,8 +283,8 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 	}
 	
 	/**
-	 * A formatter for bytecodes with 1 operand with type unsigned word (16 bits) whose
-	 * meaning is a literal constant in the constant pool.
+	 * A formatter for bytecodes with 1 operand with type unsigned byte (8 bits) 
+	 * or unsigned word (16 bits) whose meaning is a literal constant in the constant pool.
 	 * 
 	 * @author Pietro Braione
 	 */
@@ -431,7 +431,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte,DispatcherBytecodeForm
 	/**
 	 * A formatter for bytecodes with 2 operands, the first with type unsigned word (16 bits) 
 	 * whose meaning is a class/array/interface signature in the constant pool, the second
-	 * with type unsigned byte.
+	 * with type unsigned byte (8 bits).
 	 * 
 	 * @author Pietro Braione
 	 */

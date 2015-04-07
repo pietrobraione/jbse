@@ -220,19 +220,20 @@ public abstract class StateFormatterText implements StateFormatter {
 	private static String formatStaticMethodArea(State state, boolean breakLines, String indentTxt, String indentCurrent) {
 		final String lineSep = (breakLines ? LINE_SEP : "");
 		final Map<String, Klass> a = state.getStaticMethodArea();
-		final int aSize = a.size();
         String retVal = indentCurrent;
-        int j = 0;
+        boolean doneFirst = false;
         for (Map.Entry<String, Klass> ee : a.entrySet()) {
-        	Klass k = ee.getValue();
-        	String c = ee.getKey();
-            retVal += "Class[" + c + "]: " + "{" + lineSep;
-            retVal += formatObject(state, k, breakLines, indentTxt, indentCurrent + indentTxt) + lineSep;
-            retVal += indentCurrent + "}";
-            if (j < aSize - 1) {
-            	retVal += lineSep + indentCurrent;
-            }
-            j++;
+            final Klass k = ee.getValue();
+            if (k.getFieldSignatures().size() > 0) {
+                if (doneFirst) {
+                    retVal += lineSep + indentCurrent;
+                }
+                doneFirst = true;
+                final String c = ee.getKey();
+                retVal += "Class[" + c + "]: " + "{" + lineSep;
+                retVal += formatObject(state, k, breakLines, indentTxt, indentCurrent + indentTxt) + lineSep;
+                retVal += indentCurrent + "}";
+        	}
         }
         return retVal;
 	}
@@ -250,7 +251,10 @@ public abstract class StateFormatterText implements StateFormatter {
 		} else if (o instanceof Instance) {
 			final Instance i = (Instance) o;
 			str += formatInstance(s, i, breakLines, indentTxt, indentCurrent);
-		} 
+		} else if (o instanceof Klass) {
+            final Klass k = (Klass) o;
+            str += formatKlass(s, k, breakLines, indentTxt, indentCurrent);
+		}
 		return str;
 	}
 	
@@ -343,6 +347,24 @@ public abstract class StateFormatterText implements StateFormatter {
         }
         return buf.toString();
 	}
+    
+    private static String formatKlass(State s, Klass k, boolean breakLines, String indentTxt, String indentCurrent) {
+        final StringBuilder buf = new StringBuilder();
+        int z = 0;
+        final String lineSep = (breakLines ? LINE_SEP : "");
+        for (Map.Entry<String, Variable> e : k.fields().entrySet()) {
+            if (z > 0) {
+                buf.append(lineSep);
+            }
+            buf.append(indentCurrent);
+            buf.append("Field[");
+            buf.append(z);
+            buf.append("]: ");
+            buf.append(formatVariable(s, e.getValue()));
+            ++z;
+        }
+        return buf.toString();
+    }
 	
 	
 	private static String formatVariable(State s, Variable v) {
