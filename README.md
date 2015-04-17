@@ -1,6 +1,8 @@
 JBSE
 ====
 
+[![Join the chat at https://gitter.im/pietrobraione/jbse](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/pietrobraione/jbse?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![Project Stats](https://www.openhub.net/p/JBSE/widgets/project_thin_badge.gif)](https://www.openhub.net/p/JBSE)
 
 Introduction
