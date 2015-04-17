@@ -5,7 +5,7 @@ package jbse.algo.exc;
  * 
  * @author Pietro Braione
  */
-public class UndefInstructionException extends CannotManageStateException {
+public class NotYetImplementedException extends CannotManageStateException {
     /**
      * 
      */
@@ -14,7 +14,7 @@ public class UndefInstructionException extends CannotManageStateException {
     /**
      * Constructor
      */
-    public UndefInstructionException(String param)
+    public NotYetImplementedException(String param)
     {
         super(param);
     }

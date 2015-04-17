@@ -2,7 +2,7 @@ package jbse.algo;
 
 import static jbse.bc.Opcodes.*;
 
-import jbse.algo.exc.UndefInstructionException;
+import jbse.algo.exc.NotYetImplementedException;
 import jbse.bc.Dispatcher;
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
@@ -18,7 +18,7 @@ import jbse.val.Operator;
  */
 public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm> {
     private Algo_INIT seInit = null;
-    private Algo_UNEXPECTED algo_UNEXPECTED = null;
+    private Algo_NOTALLOWED algo_UNEXPECTED = null;
     private Algo_ACONST_NULL algo_ACONST_NULL = null;
     private Algo_XALOAD algo_XALOAD = null;
     private Algo_ANEWARRAY algo_ANEWARRAY = null;
@@ -536,274 +536,233 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm> {
 		}
 	}
 
-	private class DispatchStrategy_UNEXPECTED implements Dispatcher.DispatchStrategy<Algo_UNEXPECTED> {
-		public Algo_UNEXPECTED doIt() {
+	private class DispatchStrategy_NOTALLOWED implements Dispatcher.DispatchStrategy<Algo_NOTALLOWED> {
+		public Algo_NOTALLOWED doIt() {
 			if (DispatcherBytecodeAlgorithm.this.algo_UNEXPECTED == null) {
-				DispatcherBytecodeAlgorithm.this.algo_UNEXPECTED = new Algo_UNEXPECTED();
+				DispatcherBytecodeAlgorithm.this.algo_UNEXPECTED = new Algo_NOTALLOWED();
 			}
 			return DispatcherBytecodeAlgorithm.this.algo_UNEXPECTED;
 		}
 	}
 
-	private static class DispatchStrategy_UNDEFINED implements Dispatcher.DispatchStrategy<Algorithm> {
+	private static class DispatchStrategy_NOTYETIMPLEMENTED implements Dispatcher.DispatchStrategy<Algorithm> {
 		private String bcName;
-		public DispatchStrategy_UNDEFINED(String bcName) { this.bcName = bcName; }
-		public Algorithm doIt() throws UndefInstructionException {
-        	throw new UndefInstructionException(this.bcName);
-		}
-	}
-
-	private static class DispatchStrategy_INTERNALERROR implements Dispatcher.DispatchStrategy<Algorithm> {
-		public Algorithm doIt() {
-        	throw new UnexpectedInternalException("this bytecode does not exist");
+		public DispatchStrategy_NOTYETIMPLEMENTED(String bcName) { this.bcName = bcName; }
+		public Algorithm doIt() throws NotYetImplementedException {
+        	throw new NotYetImplementedException(this.bcName);
 		}
 	}
 
 	public DispatcherBytecodeAlgorithm() {
 		//implemented bytecodes (sometimes with limited support)
-        this
-		.setDispatchStrategy(OP_NOP,             new DispatchStrategy_NOP())
-        .setDispatchStrategy(OP_ACONST_NULL,     new DispatchStrategy_ACONST_NULL())
-        .setDispatchStrategy(OP_ICONST_M1,       new DispatchStrategy_XCONST_Y(Type.INT, -1))
-        .setDispatchStrategy(OP_ICONST_0,        new DispatchStrategy_XCONST_Y(Type.INT, 0))
-        .setDispatchStrategy(OP_ICONST_1,        new DispatchStrategy_XCONST_Y(Type.INT, 1))
-        .setDispatchStrategy(OP_ICONST_2,        new DispatchStrategy_XCONST_Y(Type.INT, 2))
-        .setDispatchStrategy(OP_ICONST_3,        new DispatchStrategy_XCONST_Y(Type.INT, 3))
-        .setDispatchStrategy(OP_ICONST_4,        new DispatchStrategy_XCONST_Y(Type.INT, 4))
-        .setDispatchStrategy(OP_ICONST_5,        new DispatchStrategy_XCONST_Y(Type.INT, 5))
-        .setDispatchStrategy(OP_LCONST_0,        new DispatchStrategy_XCONST_Y(Type.LONG, 0))
-        .setDispatchStrategy(OP_LCONST_1,        new DispatchStrategy_XCONST_Y(Type.LONG, 1))
-        .setDispatchStrategy(OP_FCONST_0,        new DispatchStrategy_XCONST_Y(Type.FLOAT, 0))
-        .setDispatchStrategy(OP_FCONST_1,        new DispatchStrategy_XCONST_Y(Type.FLOAT, 1))
-        .setDispatchStrategy(OP_FCONST_2,        new DispatchStrategy_XCONST_Y(Type.FLOAT, 2))
-        .setDispatchStrategy(OP_DCONST_0,        new DispatchStrategy_XCONST_Y(Type.DOUBLE, 0))
-        .setDispatchStrategy(OP_DCONST_1,        new DispatchStrategy_XCONST_Y(Type.DOUBLE, 1))
-        .setDispatchStrategy(OP_BIPUSH,          new DispatchStrategy_BIPUSH())
-        .setDispatchStrategy(OP_SIPUSH,          new DispatchStrategy_SIPUSH())
-        .setDispatchStrategy(OP_LDC,             new DispatchStrategy_LDCX_Y(false, true))
-        .setDispatchStrategy(OP_LDC_W,           new DispatchStrategy_LDCX_Y(true, true))
-        .setDispatchStrategy(OP_LDC2_W,          new DispatchStrategy_LDCX_Y(true, false))
-		.setDispatchStrategy(OP_ILOAD,           new DispatchStrategy_XLOAD())
-		.setDispatchStrategy(OP_LLOAD,           new DispatchStrategy_XLOAD())
-        .setDispatchStrategy(OP_FLOAD,           new DispatchStrategy_XLOAD())
-        .setDispatchStrategy(OP_DLOAD,           new DispatchStrategy_XLOAD())
-        .setDispatchStrategy(OP_ALOAD,           new DispatchStrategy_XLOAD())
-        .setDispatchStrategy(OP_ILOAD_0,         new DispatchStrategy_XLOAD(0))
-        .setDispatchStrategy(OP_ILOAD_1,         new DispatchStrategy_XLOAD(1))
-        .setDispatchStrategy(OP_ILOAD_2,         new DispatchStrategy_XLOAD(2))
-        .setDispatchStrategy(OP_ILOAD_3,         new DispatchStrategy_XLOAD(3))
-        .setDispatchStrategy(OP_LLOAD_0,         new DispatchStrategy_XLOAD(0))
-        .setDispatchStrategy(OP_LLOAD_1,         new DispatchStrategy_XLOAD(1))
-        .setDispatchStrategy(OP_LLOAD_2,         new DispatchStrategy_XLOAD(2))
-        .setDispatchStrategy(OP_LLOAD_3,         new DispatchStrategy_XLOAD(3))
-		.setDispatchStrategy(OP_FLOAD_0,         new DispatchStrategy_XLOAD(0))
-        .setDispatchStrategy(OP_FLOAD_1,         new DispatchStrategy_XLOAD(1))
-        .setDispatchStrategy(OP_FLOAD_2,         new DispatchStrategy_XLOAD(2))
-        .setDispatchStrategy(OP_FLOAD_3,         new DispatchStrategy_XLOAD(3))
-        .setDispatchStrategy(OP_DLOAD_0,         new DispatchStrategy_XLOAD(0))
-		.setDispatchStrategy(OP_DLOAD_1,         new DispatchStrategy_XLOAD(1))
-		.setDispatchStrategy(OP_DLOAD_2,         new DispatchStrategy_XLOAD(2))
-        .setDispatchStrategy(OP_DLOAD_3,         new DispatchStrategy_XLOAD(3))
-        .setDispatchStrategy(OP_ALOAD_0,         new DispatchStrategy_XLOAD(0))
-        .setDispatchStrategy(OP_ALOAD_1,         new DispatchStrategy_XLOAD(1))
-        .setDispatchStrategy(OP_ALOAD_2,         new DispatchStrategy_XLOAD(2))
-		.setDispatchStrategy(OP_ALOAD_3,         new DispatchStrategy_XLOAD(3))
-        .setDispatchStrategy(OP_IALOAD,          new DispatchStrategy_XALOAD())
-        .setDispatchStrategy(OP_LALOAD,          new DispatchStrategy_XALOAD())
-        .setDispatchStrategy(OP_FALOAD,          new DispatchStrategy_XALOAD())
-        .setDispatchStrategy(OP_DALOAD,          new DispatchStrategy_XALOAD())
-        .setDispatchStrategy(OP_AALOAD,          new DispatchStrategy_XALOAD())
-        .setDispatchStrategy(OP_BALOAD,          new DispatchStrategy_XALOAD())
-        .setDispatchStrategy(OP_CALOAD,          new DispatchStrategy_XALOAD())
-        .setDispatchStrategy(OP_SALOAD,          new DispatchStrategy_XALOAD())
-        .setDispatchStrategy(OP_ISTORE,          new DispatchStrategy_XSTORE())
-        .setDispatchStrategy(OP_LSTORE,          new DispatchStrategy_XSTORE())
-        .setDispatchStrategy(OP_FSTORE,          new DispatchStrategy_XSTORE())
-		.setDispatchStrategy(OP_DSTORE,          new DispatchStrategy_XSTORE())
-        .setDispatchStrategy(OP_ASTORE,          new DispatchStrategy_XSTORE())
-        .setDispatchStrategy(OP_ISTORE_0,        new DispatchStrategy_XSTORE(0))
-        .setDispatchStrategy(OP_ISTORE_1,        new DispatchStrategy_XSTORE(1))
-        .setDispatchStrategy(OP_ISTORE_2,        new DispatchStrategy_XSTORE(2))
-        .setDispatchStrategy(OP_ISTORE_3,        new DispatchStrategy_XSTORE(3))
-		.setDispatchStrategy(OP_LSTORE_0,        new DispatchStrategy_XSTORE(0))
-        .setDispatchStrategy(OP_LSTORE_1,        new DispatchStrategy_XSTORE(1))
-        .setDispatchStrategy(OP_LSTORE_2,        new DispatchStrategy_XSTORE(2))
-        .setDispatchStrategy(OP_LSTORE_3,        new DispatchStrategy_XSTORE(3))
-        .setDispatchStrategy(OP_FSTORE_0,        new DispatchStrategy_XSTORE(0))
-        .setDispatchStrategy(OP_FSTORE_1,        new DispatchStrategy_XSTORE(1))
-        .setDispatchStrategy(OP_FSTORE_2,        new DispatchStrategy_XSTORE(2))
-        .setDispatchStrategy(OP_FSTORE_3,        new DispatchStrategy_XSTORE(3))
-        .setDispatchStrategy(OP_DSTORE_0,        new DispatchStrategy_XSTORE(0))
-        .setDispatchStrategy(OP_DSTORE_1,        new DispatchStrategy_XSTORE(1))
-        .setDispatchStrategy(OP_DSTORE_2,        new DispatchStrategy_XSTORE(2))
-        .setDispatchStrategy(OP_DSTORE_3,        new DispatchStrategy_XSTORE(3))
-        .setDispatchStrategy(OP_ASTORE_0,        new DispatchStrategy_XSTORE(0))
-		.setDispatchStrategy(OP_ASTORE_1,        new DispatchStrategy_XSTORE(1))
-		.setDispatchStrategy(OP_ASTORE_2,        new DispatchStrategy_XSTORE(2))
-		.setDispatchStrategy(OP_ASTORE_3,        new DispatchStrategy_XSTORE(3))
-        .setDispatchStrategy(OP_IASTORE,         new DispatchStrategy_XASTORE())
-        .setDispatchStrategy(OP_LASTORE,         new DispatchStrategy_XASTORE())
-        .setDispatchStrategy(OP_FASTORE,         new DispatchStrategy_XASTORE())
-        .setDispatchStrategy(OP_DASTORE,         new DispatchStrategy_XASTORE())
-        .setDispatchStrategy(OP_AASTORE,         new DispatchStrategy_XASTORE())
-        .setDispatchStrategy(OP_BASTORE,         new DispatchStrategy_XASTORE())
-        .setDispatchStrategy(OP_CASTORE,         new DispatchStrategy_XASTORE())
-        .setDispatchStrategy(OP_SASTORE,         new DispatchStrategy_XASTORE())
-        .setDispatchStrategy(OP_POP,             new DispatchStrategy_POPX(true))
-        .setDispatchStrategy(OP_POP2,            new DispatchStrategy_POPX(false))
-        .setDispatchStrategy(OP_DUP,             new DispatchStrategy_DUPX(true))
-        .setDispatchStrategy(OP_DUP_X1,          new DispatchStrategy_DUPX_Y(true, true))
-        .setDispatchStrategy(OP_DUP_X2,          new DispatchStrategy_DUPX_Y(true, false))
-        .setDispatchStrategy(OP_DUP2,            new DispatchStrategy_DUPX(false))
-        .setDispatchStrategy(OP_DUP2_X1,         new DispatchStrategy_DUPX_Y(false, true))
-        .setDispatchStrategy(OP_DUP2_X2,         new DispatchStrategy_DUPX_Y(false, false))
-        .setDispatchStrategy(OP_SWAP,            new DispatchStrategy_SWAP())
-        .setDispatchStrategy(OP_IADD,            new DispatchStrategy_XBINOP(Operator.ADD))
-        .setDispatchStrategy(OP_LADD,            new DispatchStrategy_XBINOP(Operator.ADD))
-        .setDispatchStrategy(OP_FADD,            new DispatchStrategy_XBINOP(Operator.ADD))
-		.setDispatchStrategy(OP_DADD,            new DispatchStrategy_XBINOP(Operator.ADD))
-        .setDispatchStrategy(OP_ISUB,            new DispatchStrategy_XBINOP(Operator.SUB))
-        .setDispatchStrategy(OP_LSUB,            new DispatchStrategy_XBINOP(Operator.SUB))
-        .setDispatchStrategy(OP_FSUB,            new DispatchStrategy_XBINOP(Operator.SUB))
-		.setDispatchStrategy(OP_DSUB,            new DispatchStrategy_XBINOP(Operator.SUB))
-        .setDispatchStrategy(OP_IMUL,            new DispatchStrategy_XBINOP(Operator.MUL))
-        .setDispatchStrategy(OP_LMUL,            new DispatchStrategy_XBINOP(Operator.MUL))
-		.setDispatchStrategy(OP_FMUL,            new DispatchStrategy_XBINOP(Operator.MUL))
-        .setDispatchStrategy(OP_DMUL,            new DispatchStrategy_XBINOP(Operator.MUL))
-        .setDispatchStrategy(OP_IDIV,            new DispatchStrategy_XBINOP(Operator.DIV))
-        .setDispatchStrategy(OP_LDIV,            new DispatchStrategy_XBINOP(Operator.DIV))
-		.setDispatchStrategy(OP_FDIV,            new DispatchStrategy_XBINOP(Operator.DIV))
-        .setDispatchStrategy(OP_DDIV,            new DispatchStrategy_XBINOP(Operator.DIV))
-        .setDispatchStrategy(OP_IREM,            new DispatchStrategy_XBINOP(Operator.REM))
-        .setDispatchStrategy(OP_LREM,            new DispatchStrategy_XBINOP(Operator.REM))
-        .setDispatchStrategy(OP_FREM,            new DispatchStrategy_XBINOP(Operator.REM))
-		.setDispatchStrategy(OP_DREM,            new DispatchStrategy_XBINOP(Operator.REM))
-		.setDispatchStrategy(OP_INEG,            new DispatchStrategy_XNEG())
-        .setDispatchStrategy(OP_LNEG,            new DispatchStrategy_XNEG())
-        .setDispatchStrategy(OP_FNEG,            new DispatchStrategy_XNEG())
-		.setDispatchStrategy(OP_DNEG,            new DispatchStrategy_XNEG())
-        .setDispatchStrategy(OP_ISHL,            new DispatchStrategy_XBINOP(Operator.SHL))
-		.setDispatchStrategy(OP_LSHL,            new DispatchStrategy_XBINOP(Operator.SHL))
-		.setDispatchStrategy(OP_ISHR,            new DispatchStrategy_XBINOP(Operator.SHR))
-		.setDispatchStrategy(OP_LSHR,            new DispatchStrategy_XBINOP(Operator.SHR))
-		.setDispatchStrategy(OP_IUSHR,           new DispatchStrategy_XBINOP(Operator.USHR))
-		.setDispatchStrategy(OP_LUSHR,           new DispatchStrategy_XBINOP(Operator.USHR))  
-        .setDispatchStrategy(OP_IAND,            new DispatchStrategy_XBINOP(Operator.ANDBW))
-        .setDispatchStrategy(OP_LAND,            new DispatchStrategy_XBINOP(Operator.ANDBW))
-		.setDispatchStrategy(OP_IOR,             new DispatchStrategy_XBINOP(Operator.ORBW))
-		.setDispatchStrategy(OP_LOR,             new DispatchStrategy_XBINOP(Operator.ORBW))
-		.setDispatchStrategy(OP_IXOR,            new DispatchStrategy_XBINOP(Operator.XORBW))
-		.setDispatchStrategy(OP_LXOR,            new DispatchStrategy_XBINOP(Operator.XORBW))
-		.setDispatchStrategy(OP_IINC,            new DispatchStrategy_IINC())
-        .setDispatchStrategy(OP_I2L,             new DispatchStrategy_X2Y(Type.INT, Type.LONG))
-        .setDispatchStrategy(OP_I2F,             new DispatchStrategy_X2Y(Type.INT, Type.FLOAT))
-		.setDispatchStrategy(OP_I2D,             new DispatchStrategy_X2Y(Type.INT, Type.DOUBLE))
-        .setDispatchStrategy(OP_L2I,             new DispatchStrategy_X2Y(Type.LONG, Type.INT))
-		.setDispatchStrategy(OP_L2F,             new DispatchStrategy_X2Y(Type.LONG, Type.FLOAT))
-        .setDispatchStrategy(OP_L2D,             new DispatchStrategy_X2Y(Type.LONG, Type.DOUBLE))
-        .setDispatchStrategy(OP_F2I,             new DispatchStrategy_X2Y(Type.FLOAT, Type.INT))
-        .setDispatchStrategy(OP_F2L,             new DispatchStrategy_X2Y(Type.FLOAT, Type.LONG))
-		.setDispatchStrategy(OP_F2D,             new DispatchStrategy_X2Y(Type.FLOAT, Type.DOUBLE))
-        .setDispatchStrategy(OP_D2I,             new DispatchStrategy_X2Y(Type.DOUBLE, Type.INT))
-        .setDispatchStrategy(OP_D2L,             new DispatchStrategy_X2Y(Type.DOUBLE, Type.LONG))
-		.setDispatchStrategy(OP_D2F,             new DispatchStrategy_X2Y(Type.DOUBLE, Type.FLOAT))
-		.setDispatchStrategy(OP_I2B,             new DispatchStrategy_X2Y(Type.INT, Type.BYTE))
-		.setDispatchStrategy(OP_I2C,             new DispatchStrategy_X2Y(Type.INT, Type.CHAR))
-		.setDispatchStrategy(OP_I2S,             new DispatchStrategy_X2Y(Type.INT, Type.SHORT))
-        .setDispatchStrategy(OP_LCMP,            new DispatchStrategy_XCMPY())
-        .setDispatchStrategy(OP_FCMPL,           new DispatchStrategy_XCMPY())
-        .setDispatchStrategy(OP_FCMPG,           new DispatchStrategy_XCMPY())
-        .setDispatchStrategy(OP_DCMPL,           new DispatchStrategy_XCMPY())
-        .setDispatchStrategy(OP_DCMPG,           new DispatchStrategy_XCMPY())
-		.setDispatchStrategy(OP_IFEQ,            new DispatchStrategy_IFX(true, Operator.EQ))
-        .setDispatchStrategy(OP_IFNE,            new DispatchStrategy_IFX(true, Operator.NE))
-        .setDispatchStrategy(OP_IFLT,            new DispatchStrategy_IFX(true, Operator.LT))
-		.setDispatchStrategy(OP_IFGE,            new DispatchStrategy_IFX(true, Operator.GE))
-		.setDispatchStrategy(OP_IFGT,            new DispatchStrategy_IFX(true, Operator.GT))
-        .setDispatchStrategy(OP_IFLE,            new DispatchStrategy_IFX(true, Operator.LE))
-		.setDispatchStrategy(OP_IF_ICMPEQ,       new DispatchStrategy_IFX(false, Operator.EQ))
-        .setDispatchStrategy(OP_IF_ICMPNE,       new DispatchStrategy_IFX(false, Operator.NE))
-        .setDispatchStrategy(OP_IF_ICMPLT,       new DispatchStrategy_IFX(false, Operator.LT))
-		.setDispatchStrategy(OP_IF_ICMPGE,       new DispatchStrategy_IFX(false, Operator.GE))
-		.setDispatchStrategy(OP_IF_ICMPGT,       new DispatchStrategy_IFX(false, Operator.GT))
-		.setDispatchStrategy(OP_IF_ICMPLE,       new DispatchStrategy_IFX(false, Operator.LE))
-		.setDispatchStrategy(OP_IF_ACMPEQ,       new DispatchStrategy_IF_ACMPX_XNULL(false, true))
-		.setDispatchStrategy(OP_IF_ACMPNE,       new DispatchStrategy_IF_ACMPX_XNULL(false, false))
-		.setDispatchStrategy(OP_GOTO,            new DispatchStrategy_GOTOX(false))
-		.setDispatchStrategy(OP_JSR,             new DispatchStrategy_JSRX(false))
-		.setDispatchStrategy(OP_RET,             new DispatchStrategy_RET())
-        .setDispatchStrategy(OP_TABLESWITCH,     new DispatchStrategy_XSWITCH(true))
-        .setDispatchStrategy(OP_LOOKUPSWITCH,    new DispatchStrategy_XSWITCH(false))
-        .setDispatchStrategy(OP_IRETURN,         new DispatchStrategy_XRETURN(false))
-        .setDispatchStrategy(OP_LRETURN,         new DispatchStrategy_XRETURN(false))
-        .setDispatchStrategy(OP_FRETURN,         new DispatchStrategy_XRETURN(false))
-        .setDispatchStrategy(OP_DRETURN,         new DispatchStrategy_XRETURN(false))
-		.setDispatchStrategy(OP_ARETURN,         new DispatchStrategy_XRETURN(false))
-        .setDispatchStrategy(OP_RETURN,          new DispatchStrategy_XRETURN(true))
-        .setDispatchStrategy(OP_GETSTATIC,       new DispatchStrategy_GETSTATIC())
-        .setDispatchStrategy(OP_PUTSTATIC,       new DispatchStrategy_PUTSTATIC())
-        .setDispatchStrategy(OP_GETFIELD,        new DispatchStrategy_GETFIELD())
-        .setDispatchStrategy(OP_PUTFIELD,        new DispatchStrategy_PUTFIELD())
-        .setDispatchStrategy(OP_INVOKEVIRTUAL,   new DispatchStrategy_INVOKEX(false, false, false))
-        .setDispatchStrategy(OP_INVOKESPECIAL,   new DispatchStrategy_INVOKEX(false, true, false))
-        .setDispatchStrategy(OP_INVOKESTATIC,    new DispatchStrategy_INVOKEX(false, false, true))
-        .setDispatchStrategy(OP_INVOKEINTERFACE, new DispatchStrategy_INVOKEX(true, false, false))
-        .setDispatchStrategy(OP_NEW,             new DispatchStrategy_NEW())
-        .setDispatchStrategy(OP_NEWARRAY,        new DispatchStrategy_NEWARRAY())
-        .setDispatchStrategy(OP_ANEWARRAY,       new DispatchStrategy_ANEWARRAY())
-        .setDispatchStrategy(OP_ARRAYLENGTH,     new DispatchStrategy_ARRAYLENGTH())
-        .setDispatchStrategy(OP_ATHROW,          new DispatchStrategy_ATHROW())
-        .setDispatchStrategy(OP_CHECKCAST,       new DispatchStrategy_CHECKCAST())
-        .setDispatchStrategy(OP_INSTANCEOF,      new DispatchStrategy_INSTANCEOF())
-        .setDispatchStrategy(OP_MONITORENTER,    new DispatchStrategy_MONITORX())
-        .setDispatchStrategy(OP_MONITOREXIT,     new DispatchStrategy_MONITORX())
-		.setDispatchStrategy(OP_WIDE,            new DispatchStrategy_WIDE())
-        .setDispatchStrategy(OP_MULTIANEWARRAY,  new DispatchStrategy_MULTIANEWARRAY())
-        .setDispatchStrategy(OP_IFNULL,          new DispatchStrategy_IF_ACMPX_XNULL(true, true))
-        .setDispatchStrategy(OP_IFNONNULL,       new DispatchStrategy_IF_ACMPX_XNULL(true, false))
-        .setDispatchStrategy(OP_GOTO_W,          new DispatchStrategy_GOTOX(true))
-        .setDispatchStrategy(OP_JSR_W,           new DispatchStrategy_JSRX(true))
-        .setDispatchStrategy(OP_BREAKPOINT,      new DispatchStrategy_NOP())
-		.setDispatchStrategy(OP_IMPDEP1,         new DispatchStrategy_NOP())
-		.setDispatchStrategy(OP_IMPDEP2,         new DispatchStrategy_NOP())
-		;
+		setCase(OP_NOP,             new DispatchStrategy_NOP());
+        setCase(OP_ACONST_NULL,     new DispatchStrategy_ACONST_NULL());
+        setCase(OP_ICONST_M1,       new DispatchStrategy_XCONST_Y(Type.INT, -1));
+        setCase(OP_ICONST_0,        new DispatchStrategy_XCONST_Y(Type.INT, 0));
+        setCase(OP_ICONST_1,        new DispatchStrategy_XCONST_Y(Type.INT, 1));
+        setCase(OP_ICONST_2,        new DispatchStrategy_XCONST_Y(Type.INT, 2));
+        setCase(OP_ICONST_3,        new DispatchStrategy_XCONST_Y(Type.INT, 3));
+        setCase(OP_ICONST_4,        new DispatchStrategy_XCONST_Y(Type.INT, 4));
+        setCase(OP_ICONST_5,        new DispatchStrategy_XCONST_Y(Type.INT, 5));
+        setCase(OP_LCONST_0,        new DispatchStrategy_XCONST_Y(Type.LONG, 0));
+        setCase(OP_LCONST_1,        new DispatchStrategy_XCONST_Y(Type.LONG, 1));
+        setCase(OP_FCONST_0,        new DispatchStrategy_XCONST_Y(Type.FLOAT, 0));
+        setCase(OP_FCONST_1,        new DispatchStrategy_XCONST_Y(Type.FLOAT, 1));
+        setCase(OP_FCONST_2,        new DispatchStrategy_XCONST_Y(Type.FLOAT, 2));
+        setCase(OP_DCONST_0,        new DispatchStrategy_XCONST_Y(Type.DOUBLE, 0));
+        setCase(OP_DCONST_1,        new DispatchStrategy_XCONST_Y(Type.DOUBLE, 1));
+        setCase(OP_BIPUSH,          new DispatchStrategy_BIPUSH());
+        setCase(OP_SIPUSH,          new DispatchStrategy_SIPUSH());
+        setCase(OP_LDC,             new DispatchStrategy_LDCX_Y(false, true));
+        setCase(OP_LDC_W,           new DispatchStrategy_LDCX_Y(true, true));
+        setCase(OP_LDC2_W,          new DispatchStrategy_LDCX_Y(true, false));
+		setCase(OP_ILOAD,           new DispatchStrategy_XLOAD());
+		setCase(OP_LLOAD,           new DispatchStrategy_XLOAD());
+        setCase(OP_FLOAD,           new DispatchStrategy_XLOAD());
+        setCase(OP_DLOAD,           new DispatchStrategy_XLOAD());
+        setCase(OP_ALOAD,           new DispatchStrategy_XLOAD());
+        setCase(OP_ILOAD_0,         new DispatchStrategy_XLOAD(0));
+        setCase(OP_ILOAD_1,         new DispatchStrategy_XLOAD(1));
+        setCase(OP_ILOAD_2,         new DispatchStrategy_XLOAD(2));
+        setCase(OP_ILOAD_3,         new DispatchStrategy_XLOAD(3));
+        setCase(OP_LLOAD_0,         new DispatchStrategy_XLOAD(0));
+        setCase(OP_LLOAD_1,         new DispatchStrategy_XLOAD(1));
+        setCase(OP_LLOAD_2,         new DispatchStrategy_XLOAD(2));
+        setCase(OP_LLOAD_3,         new DispatchStrategy_XLOAD(3));
+		setCase(OP_FLOAD_0,         new DispatchStrategy_XLOAD(0));
+        setCase(OP_FLOAD_1,         new DispatchStrategy_XLOAD(1));
+        setCase(OP_FLOAD_2,         new DispatchStrategy_XLOAD(2));
+        setCase(OP_FLOAD_3,         new DispatchStrategy_XLOAD(3));
+        setCase(OP_DLOAD_0,         new DispatchStrategy_XLOAD(0));
+		setCase(OP_DLOAD_1,         new DispatchStrategy_XLOAD(1));
+		setCase(OP_DLOAD_2,         new DispatchStrategy_XLOAD(2));
+        setCase(OP_DLOAD_3,         new DispatchStrategy_XLOAD(3));
+        setCase(OP_ALOAD_0,         new DispatchStrategy_XLOAD(0));
+        setCase(OP_ALOAD_1,         new DispatchStrategy_XLOAD(1));
+        setCase(OP_ALOAD_2,         new DispatchStrategy_XLOAD(2));
+		setCase(OP_ALOAD_3,         new DispatchStrategy_XLOAD(3));
+        setCase(OP_IALOAD,          new DispatchStrategy_XALOAD());
+        setCase(OP_LALOAD,          new DispatchStrategy_XALOAD());
+        setCase(OP_FALOAD,          new DispatchStrategy_XALOAD());
+        setCase(OP_DALOAD,          new DispatchStrategy_XALOAD());
+        setCase(OP_AALOAD,          new DispatchStrategy_XALOAD());
+        setCase(OP_BALOAD,          new DispatchStrategy_XALOAD());
+        setCase(OP_CALOAD,          new DispatchStrategy_XALOAD());
+        setCase(OP_SALOAD,          new DispatchStrategy_XALOAD());
+        setCase(OP_ISTORE,          new DispatchStrategy_XSTORE());
+        setCase(OP_LSTORE,          new DispatchStrategy_XSTORE());
+        setCase(OP_FSTORE,          new DispatchStrategy_XSTORE());
+		setCase(OP_DSTORE,          new DispatchStrategy_XSTORE());
+        setCase(OP_ASTORE,          new DispatchStrategy_XSTORE());
+        setCase(OP_ISTORE_0,        new DispatchStrategy_XSTORE(0));
+        setCase(OP_ISTORE_1,        new DispatchStrategy_XSTORE(1));
+        setCase(OP_ISTORE_2,        new DispatchStrategy_XSTORE(2));
+        setCase(OP_ISTORE_3,        new DispatchStrategy_XSTORE(3));
+		setCase(OP_LSTORE_0,        new DispatchStrategy_XSTORE(0));
+        setCase(OP_LSTORE_1,        new DispatchStrategy_XSTORE(1));
+        setCase(OP_LSTORE_2,        new DispatchStrategy_XSTORE(2));
+        setCase(OP_LSTORE_3,        new DispatchStrategy_XSTORE(3));
+        setCase(OP_FSTORE_0,        new DispatchStrategy_XSTORE(0));
+        setCase(OP_FSTORE_1,        new DispatchStrategy_XSTORE(1));
+        setCase(OP_FSTORE_2,        new DispatchStrategy_XSTORE(2));
+        setCase(OP_FSTORE_3,        new DispatchStrategy_XSTORE(3));
+        setCase(OP_DSTORE_0,        new DispatchStrategy_XSTORE(0));
+        setCase(OP_DSTORE_1,        new DispatchStrategy_XSTORE(1));
+        setCase(OP_DSTORE_2,        new DispatchStrategy_XSTORE(2));
+        setCase(OP_DSTORE_3,        new DispatchStrategy_XSTORE(3));
+        setCase(OP_ASTORE_0,        new DispatchStrategy_XSTORE(0));
+		setCase(OP_ASTORE_1,        new DispatchStrategy_XSTORE(1));
+		setCase(OP_ASTORE_2,        new DispatchStrategy_XSTORE(2));
+		setCase(OP_ASTORE_3,        new DispatchStrategy_XSTORE(3));
+        setCase(OP_IASTORE,         new DispatchStrategy_XASTORE());
+        setCase(OP_LASTORE,         new DispatchStrategy_XASTORE());
+        setCase(OP_FASTORE,         new DispatchStrategy_XASTORE());
+        setCase(OP_DASTORE,         new DispatchStrategy_XASTORE());
+        setCase(OP_AASTORE,         new DispatchStrategy_XASTORE());
+        setCase(OP_BASTORE,         new DispatchStrategy_XASTORE());
+        setCase(OP_CASTORE,         new DispatchStrategy_XASTORE());
+        setCase(OP_SASTORE,         new DispatchStrategy_XASTORE());
+        setCase(OP_POP,             new DispatchStrategy_POPX(true));
+        setCase(OP_POP2,            new DispatchStrategy_POPX(false));
+        setCase(OP_DUP,             new DispatchStrategy_DUPX(true));
+        setCase(OP_DUP_X1,          new DispatchStrategy_DUPX_Y(true, true));
+        setCase(OP_DUP_X2,          new DispatchStrategy_DUPX_Y(true, false));
+        setCase(OP_DUP2,            new DispatchStrategy_DUPX(false));
+        setCase(OP_DUP2_X1,         new DispatchStrategy_DUPX_Y(false, true));
+        setCase(OP_DUP2_X2,         new DispatchStrategy_DUPX_Y(false, false));
+        setCase(OP_SWAP,            new DispatchStrategy_SWAP());
+        setCase(OP_IADD,            new DispatchStrategy_XBINOP(Operator.ADD));
+        setCase(OP_LADD,            new DispatchStrategy_XBINOP(Operator.ADD));
+        setCase(OP_FADD,            new DispatchStrategy_XBINOP(Operator.ADD));
+		setCase(OP_DADD,            new DispatchStrategy_XBINOP(Operator.ADD));
+        setCase(OP_ISUB,            new DispatchStrategy_XBINOP(Operator.SUB));
+        setCase(OP_LSUB,            new DispatchStrategy_XBINOP(Operator.SUB));
+        setCase(OP_FSUB,            new DispatchStrategy_XBINOP(Operator.SUB));
+		setCase(OP_DSUB,            new DispatchStrategy_XBINOP(Operator.SUB));
+        setCase(OP_IMUL,            new DispatchStrategy_XBINOP(Operator.MUL));
+        setCase(OP_LMUL,            new DispatchStrategy_XBINOP(Operator.MUL));
+		setCase(OP_FMUL,            new DispatchStrategy_XBINOP(Operator.MUL));
+        setCase(OP_DMUL,            new DispatchStrategy_XBINOP(Operator.MUL));
+        setCase(OP_IDIV,            new DispatchStrategy_XBINOP(Operator.DIV));
+        setCase(OP_LDIV,            new DispatchStrategy_XBINOP(Operator.DIV));
+		setCase(OP_FDIV,            new DispatchStrategy_XBINOP(Operator.DIV));
+        setCase(OP_DDIV,            new DispatchStrategy_XBINOP(Operator.DIV));
+        setCase(OP_IREM,            new DispatchStrategy_XBINOP(Operator.REM));
+        setCase(OP_LREM,            new DispatchStrategy_XBINOP(Operator.REM));
+        setCase(OP_FREM,            new DispatchStrategy_XBINOP(Operator.REM));
+		setCase(OP_DREM,            new DispatchStrategy_XBINOP(Operator.REM));
+		setCase(OP_INEG,            new DispatchStrategy_XNEG());
+        setCase(OP_LNEG,            new DispatchStrategy_XNEG());
+        setCase(OP_FNEG,            new DispatchStrategy_XNEG());
+		setCase(OP_DNEG,            new DispatchStrategy_XNEG());
+        setCase(OP_ISHL,            new DispatchStrategy_XBINOP(Operator.SHL));
+		setCase(OP_LSHL,            new DispatchStrategy_XBINOP(Operator.SHL));
+		setCase(OP_ISHR,            new DispatchStrategy_XBINOP(Operator.SHR));
+		setCase(OP_LSHR,            new DispatchStrategy_XBINOP(Operator.SHR));
+		setCase(OP_IUSHR,           new DispatchStrategy_XBINOP(Operator.USHR));
+		setCase(OP_LUSHR,           new DispatchStrategy_XBINOP(Operator.USHR));
+        setCase(OP_IAND,            new DispatchStrategy_XBINOP(Operator.ANDBW));
+        setCase(OP_LAND,            new DispatchStrategy_XBINOP(Operator.ANDBW));
+		setCase(OP_IOR,             new DispatchStrategy_XBINOP(Operator.ORBW));
+		setCase(OP_LOR,             new DispatchStrategy_XBINOP(Operator.ORBW));
+		setCase(OP_IXOR,            new DispatchStrategy_XBINOP(Operator.XORBW));
+		setCase(OP_LXOR,            new DispatchStrategy_XBINOP(Operator.XORBW));
+		setCase(OP_IINC,            new DispatchStrategy_IINC());
+        setCase(OP_I2L,             new DispatchStrategy_X2Y(Type.INT, Type.LONG));
+        setCase(OP_I2F,             new DispatchStrategy_X2Y(Type.INT, Type.FLOAT));
+		setCase(OP_I2D,             new DispatchStrategy_X2Y(Type.INT, Type.DOUBLE));
+        setCase(OP_L2I,             new DispatchStrategy_X2Y(Type.LONG, Type.INT));
+		setCase(OP_L2F,             new DispatchStrategy_X2Y(Type.LONG, Type.FLOAT));
+        setCase(OP_L2D,             new DispatchStrategy_X2Y(Type.LONG, Type.DOUBLE));
+        setCase(OP_F2I,             new DispatchStrategy_X2Y(Type.FLOAT, Type.INT));
+        setCase(OP_F2L,             new DispatchStrategy_X2Y(Type.FLOAT, Type.LONG));
+		setCase(OP_F2D,             new DispatchStrategy_X2Y(Type.FLOAT, Type.DOUBLE));
+        setCase(OP_D2I,             new DispatchStrategy_X2Y(Type.DOUBLE, Type.INT));
+        setCase(OP_D2L,             new DispatchStrategy_X2Y(Type.DOUBLE, Type.LONG));
+		setCase(OP_D2F,             new DispatchStrategy_X2Y(Type.DOUBLE, Type.FLOAT));
+		setCase(OP_I2B,             new DispatchStrategy_X2Y(Type.INT, Type.BYTE));
+		setCase(OP_I2C,             new DispatchStrategy_X2Y(Type.INT, Type.CHAR));
+		setCase(OP_I2S,             new DispatchStrategy_X2Y(Type.INT, Type.SHORT));
+        setCase(OP_LCMP,            new DispatchStrategy_XCMPY());
+        setCase(OP_FCMPL,           new DispatchStrategy_XCMPY());
+        setCase(OP_FCMPG,           new DispatchStrategy_XCMPY());
+        setCase(OP_DCMPL,           new DispatchStrategy_XCMPY());
+        setCase(OP_DCMPG,           new DispatchStrategy_XCMPY());
+		setCase(OP_IFEQ,            new DispatchStrategy_IFX(true, Operator.EQ));
+        setCase(OP_IFNE,            new DispatchStrategy_IFX(true, Operator.NE));
+        setCase(OP_IFLT,            new DispatchStrategy_IFX(true, Operator.LT));
+		setCase(OP_IFGE,            new DispatchStrategy_IFX(true, Operator.GE));
+		setCase(OP_IFGT,            new DispatchStrategy_IFX(true, Operator.GT));
+        setCase(OP_IFLE,            new DispatchStrategy_IFX(true, Operator.LE));
+		setCase(OP_IF_ICMPEQ,       new DispatchStrategy_IFX(false, Operator.EQ));
+        setCase(OP_IF_ICMPNE,       new DispatchStrategy_IFX(false, Operator.NE));
+        setCase(OP_IF_ICMPLT,       new DispatchStrategy_IFX(false, Operator.LT));
+		setCase(OP_IF_ICMPGE,       new DispatchStrategy_IFX(false, Operator.GE));
+		setCase(OP_IF_ICMPGT,       new DispatchStrategy_IFX(false, Operator.GT));
+		setCase(OP_IF_ICMPLE,       new DispatchStrategy_IFX(false, Operator.LE));
+		setCase(OP_IF_ACMPEQ,       new DispatchStrategy_IF_ACMPX_XNULL(false, true));
+		setCase(OP_IF_ACMPNE,       new DispatchStrategy_IF_ACMPX_XNULL(false, false));
+		setCase(OP_GOTO,            new DispatchStrategy_GOTOX(false));
+		setCase(OP_JSR,             new DispatchStrategy_JSRX(false));
+		setCase(OP_RET,             new DispatchStrategy_RET());
+        setCase(OP_TABLESWITCH,     new DispatchStrategy_XSWITCH(true));
+        setCase(OP_LOOKUPSWITCH,    new DispatchStrategy_XSWITCH(false));
+        setCase(OP_IRETURN,         new DispatchStrategy_XRETURN(false));
+        setCase(OP_LRETURN,         new DispatchStrategy_XRETURN(false));
+        setCase(OP_FRETURN,         new DispatchStrategy_XRETURN(false));
+        setCase(OP_DRETURN,         new DispatchStrategy_XRETURN(false));
+		setCase(OP_ARETURN,         new DispatchStrategy_XRETURN(false));
+        setCase(OP_RETURN,          new DispatchStrategy_XRETURN(true));
+        setCase(OP_GETSTATIC,       new DispatchStrategy_GETSTATIC());
+        setCase(OP_PUTSTATIC,       new DispatchStrategy_PUTSTATIC());
+        setCase(OP_GETFIELD,        new DispatchStrategy_GETFIELD());
+        setCase(OP_PUTFIELD,        new DispatchStrategy_PUTFIELD());
+        setCase(OP_INVOKEVIRTUAL,   new DispatchStrategy_INVOKEX(false, false, false));
+        setCase(OP_INVOKESPECIAL,   new DispatchStrategy_INVOKEX(false, true, false));
+        setCase(OP_INVOKESTATIC,    new DispatchStrategy_INVOKEX(false, false, true));
+        setCase(OP_INVOKEINTERFACE, new DispatchStrategy_INVOKEX(true, false, false));
+        setCase(OP_INVOKEDYNAMIC,   new DispatchStrategy_NOTYETIMPLEMENTED("INVOKEDYNAMIC"));
+        setCase(OP_NEW,             new DispatchStrategy_NEW());
+        setCase(OP_NEWARRAY,        new DispatchStrategy_NEWARRAY());
+        setCase(OP_ANEWARRAY,       new DispatchStrategy_ANEWARRAY());
+        setCase(OP_ARRAYLENGTH,     new DispatchStrategy_ARRAYLENGTH());
+        setCase(OP_ATHROW,          new DispatchStrategy_ATHROW());
+        setCase(OP_CHECKCAST,       new DispatchStrategy_CHECKCAST());
+        setCase(OP_INSTANCEOF,      new DispatchStrategy_INSTANCEOF());
+        setCase(OP_MONITORENTER,    new DispatchStrategy_MONITORX());
+        setCase(OP_MONITOREXIT,     new DispatchStrategy_MONITORX());
+		setCase(OP_WIDE,            new DispatchStrategy_WIDE());
+        setCase(OP_MULTIANEWARRAY,  new DispatchStrategy_MULTIANEWARRAY());
+        setCase(OP_IFNULL,          new DispatchStrategy_IF_ACMPX_XNULL(true, true));
+        setCase(OP_IFNONNULL,       new DispatchStrategy_IF_ACMPX_XNULL(true, false));
+        setCase(OP_GOTO_W,          new DispatchStrategy_GOTOX(true));
+        setCase(OP_JSR_W,           new DispatchStrategy_JSRX(true));
+        setCase(OP_BREAKPOINT,      new DispatchStrategy_NOP());
+		setCase(OP_IMPDEP1,         new DispatchStrategy_NOP());
+		setCase(OP_IMPDEP2,         new DispatchStrategy_NOP());
 	
-        //this should never appear in a classfile
-        DispatchStrategy_UNEXPECTED s = new DispatchStrategy_UNEXPECTED();
-        this
-		.setDispatchStrategy(OP_ANEWARRAY_QUICK,           s)
-		.setDispatchStrategy(OP_CHECKCAST_QUICK,           s)
-		.setDispatchStrategy(OP_GETSTATIC_QUICK,           s)
-		.setDispatchStrategy(OP_GETSTATIC2_QUICK,          s)
-		.setDispatchStrategy(OP_GETFIELD_QUICK,            s)
-		.setDispatchStrategy(OP_GETFIELD_QUICK_W,          s)
-		.setDispatchStrategy(OP_GETFIELD2_QUICK,           s)
-		.setDispatchStrategy(OP_INSTANCEOF_QUICK,          s)
-		.setDispatchStrategy(OP_INVOKEINTERFACE_QUICK,     s)
-		.setDispatchStrategy(OP_INVOKENONVIRTUAL_QUICK,    s)
-		.setDispatchStrategy(OP_INVOKESTATIC_QUICK,        s)
-		.setDispatchStrategy(OP_INVOKESUPER_QUICK,         s)
-		.setDispatchStrategy(OP_INVOKEVIRTUAL_QUICK,       s)
-		.setDispatchStrategy(OP_INVOKEVIRTUAL_QUICK_W,     s)
-		.setDispatchStrategy(OP_INVOKEVIRTUALOBJECT_QUICK, s)
-		.setDispatchStrategy(OP_LDC_QUICK,                 s)
-		.setDispatchStrategy(OP_LDC_W_QUICK,               s)
-		.setDispatchStrategy(OP_LDC2_W_QUICK,              s)
-		.setDispatchStrategy(OP_MULTIANEWARRAY_QUICK,      s)
-		.setDispatchStrategy(OP_NEW_QUICK,                 s)
-		.setDispatchStrategy(OP_PUTFIELD_QUICK,            s)
-		.setDispatchStrategy(OP_PUTFIELD_QUICK_W,          s)
-		.setDispatchStrategy(OP_PUTFIELD2_QUICK,           s)
-		.setDispatchStrategy(OP_PUTSTATIC_QUICK,           s)
-		.setDispatchStrategy(OP_PUTSTATIC2_QUICK,          s)
-        ;
-
-        //not (yet) implemented
-        this 
-		.setDispatchStrategy(OP_INVOKEDYNAMIC,   new DispatchStrategy_UNDEFINED("INVOKEDYNAMIC"));
-	
-        //all 2^8 values should be mapped to a dispatch strategy
-        this.setDispatchNonexistentStrategy(new DispatchStrategy_INTERNALERROR());
+        //the remaining bytecodes should never appear in a classfile
+        setDefault(new DispatchStrategy_NOTALLOWED());
     }
 	
     public Algo_INIT select() {
@@ -815,11 +774,11 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm> {
 		
 	@Override
 	public Algorithm select(Byte bytecode) 
-	throws UndefInstructionException {
+	throws NotYetImplementedException {
 		final Algorithm retVal;
         try {
             retVal = super.select(bytecode);
-        } catch (UndefInstructionException | RuntimeException e) {
+        } catch (NotYetImplementedException | RuntimeException e) {
             throw e;
         } catch (Exception e) {
             //this should never happen

@@ -5,7 +5,8 @@ import java.util.HashMap;
 /**
  * A {@code Dispatcher}{@code <Q,R>} associates keys (objects with
  * class {@code Q}) to {@code DispatchStrategy} objects that return 
- * values with class {@code R}.  
+ * values with class {@code R}. It is just a thin layer of syntactic
+ * sugar spread over a map.
  *  
  * @author Pietro Braione
  *
@@ -40,7 +41,7 @@ public abstract class Dispatcher<Q,R> {
 	 *          In the case {@code s == null} the method has no effect.
 	 * @return {@code this} (allows chain invocations). 
 	 */
-	public Dispatcher<Q,R> setDispatchStrategy(Q key, DispatchStrategy<? extends R> s) {
+	public Dispatcher<Q,R> setCase(Q key, DispatchStrategy<? extends R> s) {
 		if (s != null) { 
 			this.dispatchTable.put(key, s);
 		}
@@ -58,7 +59,7 @@ public abstract class Dispatcher<Q,R> {
 	 *          In the case {@code s == null} the method has no effect.
 	 * @return {@code this} (allows chain invocations).
 	 */
-	public Dispatcher<Q,R> setDispatchNonexistentStrategy(DispatchStrategy<? extends R> s) {
+	public Dispatcher<Q,R> setDefault(DispatchStrategy<? extends R> s) {
 		if (s != null) {
 			this.dispatchNonexistent = s;
 		}

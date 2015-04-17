@@ -5,7 +5,7 @@ import static jbse.algo.Util.throwVerifyError;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 
-final class Algo_UNEXPECTED implements Algorithm {
+final class Algo_NOTALLOWED implements Algorithm {
 	
 	@Override
 	public void exec(State state, ExecutionContext ctx) 

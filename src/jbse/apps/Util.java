@@ -82,7 +82,7 @@ public class Util {
 	
 	public static String formatTimePercent(long part, long tot) {
 		final double timeRatio = (((double) part) / tot);
-		String timePercent = new DecimalFormat("##.##%").format(timeRatio);
+		final String timePercent = new DecimalFormat("##.##%").format(timeRatio);
 		return timePercent;
 	}
 	

@@ -45,7 +45,7 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
 	 * Constructor.
 	 */
 	public DispatcherMeta() {
-		this.setDispatchNonexistentStrategy(new DispatchStrategy<Algorithm>() {
+		setDefault(new DispatchStrategy<Algorithm>() {
 			@Override
 			public Algorithm doIt() {
 				return null;
@@ -65,7 +65,7 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
 		loadMetaDelegate(JAVA_THROWABLE_GETSTACKTRACEDEPTH,        new Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH());
 		loadMetaDelegate(JAVA_THROWABLE_GETSTACKTRACEELEMENT,      new Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT());
 
-		//meta delegates for some JBSE methods
+		//meta delegates for some jbse.meta.Analysis methods
         loadMetaDelegate(JBSE_ANALYSIS_ANY,                        new Algo_JBSE_ANALYSIS_ANY());
         loadMetaDelegate(JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION, new Algo_JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION());
         loadMetaDelegate(JBSE_ANALYSIS_ENDGUIDANCE,                new Algo_JBSE_ANALYSIS_ENDGUIDANCE());
@@ -74,8 +74,6 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
         loadMetaDelegate(JBSE_ANALYSIS_ISRESOLVED,                 new Algo_JBSE_ANALYSIS_ISRESOLVED());
         loadMetaDelegate(JBSE_ANALYSIS_ISRUNBYJBSE,                new Algo_JBSE_ANALYSIS_ISRUNBYJBSE());
         loadMetaDelegate(JBSE_ANALYSIS_SUCCEED,                    new Algo_JBSE_ANALYSIS_SUCCEED());
-		
-		//meta delegates for some jbse.meta.Analysis methods
 	}
 
 	/**
@@ -183,6 +181,6 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
 	}
 	
 	private void loadMetaDelegate(Signature methodSignatureResolved, final Algorithm metaDelegate) {
-		this.setDispatchStrategy(methodSignatureResolved, () -> metaDelegate);
+		this.setCase(methodSignatureResolved, () -> metaDelegate);
 	}
 }

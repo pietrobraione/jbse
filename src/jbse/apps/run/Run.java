@@ -9,7 +9,7 @@ import java.util.Date;
 import jbse.JBSE;
 import jbse.algo.exc.CannotInvokeNativeException;
 import jbse.algo.exc.CannotManageStateException;
-import jbse.algo.exc.UndefInstructionException;
+import jbse.algo.exc.NotYetImplementedException;
 import jbse.apps.DecisionProcedureDecoratorPrint;
 import jbse.apps.DecisionProcedureDecoratorTimer;
 import jbse.apps.IO;
@@ -478,7 +478,7 @@ public class Run {
 		throws CannotManageStateException {
 			if (e instanceof CannotInvokeNativeException) {
 				IO.println(Run.this.err, ERROR_CANNOT_INVOKE_NATIVE);
-			} else if (e instanceof UndefInstructionException) {
+			} else if (e instanceof NotYetImplementedException) {
 				IO.println(Run.this.err, ERROR_UNDEF_BYTECODE);
 			} else { // e instanceof MetaUnsupportedException or UninterpretedUnsupportedException
 				// TODO define an error message
@@ -566,51 +566,10 @@ public class Run {
 			IO.printException(Run.this.err, e);
 			retVal = 2;
 		}
+        IO.println(this.log, MSG_END + new Date() + ".");
 		
 		// prints statistics
-        final long stopTime = System.currentTimeMillis();
-        final long startTime = this.runner.getStartTime();
-        final long elapsedTime = stopTime - startTime;
-		final long tracesContradictory = 
-				this.runner.getTracesTotal() 
-				- this.tracesSafe 
-				- this.tracesUnsafe
-				- this.runner.getTracesOutOfScope();
-        IO.println(this.log, MSG_END + new Date() + ".");
-		IO.println(this.log, 
-				MSG_END_STATES + this.engine.getAnalyzedStates() + ", "
-				+ MSG_END_TRACES_TOT + this.runner.getTracesTotal() + ", "
-				+ MSG_END_TRACES_SAFE + this.tracesSafe 
-				+ (Run.this.parameters.doConcretization ? 
-						" (" + this.tracesConcretizableSafe + " concretizable)"
-					: "")
-				+ ", "
-				+ MSG_END_TRACES_UNSAFE + this.tracesUnsafe 
-				+ (Run.this.parameters.doConcretization ? 
-						" (" + this.tracesConcretizableUnsafe + " concretizable)"
-					: "")
-				+ ", "
-				+ MSG_END_TRACES_OUT_OF_SCOPE + this.runner.getTracesOutOfScope()
-				+ (Run.this.parameters.doConcretization ? 
-						" (" + this.tracesConcretizableOutOfScope + " concretizable)"  
-					: "")
-				+ ", "
-				+ MSG_END_TRACES_VIOLATING_ASSUMPTION + tracesContradictory + ".");
-		IO.print(this.log, 
-				MSG_END_ELAPSED + Util.formatTime(elapsedTime) + ", "
-				+ MSG_END_SPEED + this.engine.getAnalyzedStates() * 1000 / elapsedTime + " states/sec"
-				+ (Run.this.parameters.doConcretization ? 
-						", " + MSG_END_ELAPSED_CONCRETIZATION + Util.formatTime(elapsedTimeConcretization)
-						+ ", (" + Util.formatTimePercent(elapsedTimeConcretization, elapsedTime) + " of total)"
-					: ""));
-		if (this.timer == null) {
-			IO.println(this.log, ".");
-		} else {
-			final long elapsedTimeDecisionProcedure = this.timer.getTime();
-			IO.println(this.log, 
-				", " + MSG_END_DECISION + Util.formatTime(elapsedTimeDecisionProcedure) 
-				+ " (" + Util.formatTimePercent(elapsedTimeDecisionProcedure, elapsedTime) + " of total).");
-		}
+        printFinalStats();
 
 		// quits the engine
 		try {
@@ -640,6 +599,50 @@ public class Run {
 
 		// returns the error code
 		return retVal;
+	}
+	
+	private void printFinalStats() {
+        final long elapsedTime = this.runner.getStopTime() - this.runner.getStartTime();
+        final long tracesContradictory = 
+                this.runner.getTracesTotal() 
+                - this.tracesSafe 
+                - this.tracesUnsafe
+                - this.runner.getTracesOutOfScope();
+        IO.println(this.log, 
+                MSG_END_STATES + this.engine.getAnalyzedStates() + ", "
+                + MSG_END_TRACES_TOT + this.runner.getTracesTotal() + ", "
+                + MSG_END_TRACES_SAFE + this.tracesSafe 
+                + (Run.this.parameters.doConcretization ? 
+                        " (" + this.tracesConcretizableSafe + " concretizable)"
+                    : "")
+                + ", "
+                + MSG_END_TRACES_UNSAFE + this.tracesUnsafe 
+                + (Run.this.parameters.doConcretization ? 
+                        " (" + this.tracesConcretizableUnsafe + " concretizable)"
+                    : "")
+                + ", "
+                + MSG_END_TRACES_OUT_OF_SCOPE + this.runner.getTracesOutOfScope()
+                + (Run.this.parameters.doConcretization ? 
+                        " (" + this.tracesConcretizableOutOfScope + " concretizable)"  
+                    : "")
+                + ", "
+                + MSG_END_TRACES_VIOLATING_ASSUMPTION + tracesContradictory + ".");
+        IO.print(this.log, 
+                MSG_END_ELAPSED + Util.formatTime(elapsedTime) + ", "
+                + MSG_END_SPEED + this.engine.getAnalyzedStates() * 1000 / elapsedTime + " states/sec"
+                + (Run.this.parameters.doConcretization ? 
+                        ", " + MSG_END_ELAPSED_CONCRETIZATION + Util.formatTime(elapsedTimeConcretization)
+                        + ", (" + Util.formatTimePercent(elapsedTimeConcretization, elapsedTime) + " of total)"
+                    : ""));
+        if (this.timer == null) {
+            IO.println(this.log, ".");
+        } else {
+            final long elapsedTimeDecisionProcedure = this.timer.getTime();
+            IO.println(this.log, 
+                ", " + MSG_END_DECISION + Util.formatTime(elapsedTimeDecisionProcedure) 
+                + " (" + Util.formatTimePercent(elapsedTimeDecisionProcedure, elapsedTime) + " of total).");
+        }
+
 	}
 	
 	/**

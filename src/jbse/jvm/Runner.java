@@ -386,6 +386,9 @@ public class Runner {
 	/** Stores the start time. */
 	private long startTime;
 	
+    /** Stores the stop time. */
+    private long stopTime;
+    
 	/**
 	 * Constructor.
 	 * 
@@ -477,6 +480,18 @@ public class Runner {
 	FailureException  {
 		this.startTime = System.currentTimeMillis();
 		
+		try {
+		    doRun();
+		} finally {
+		    this.stopTime = System.currentTimeMillis();
+		}
+	}
+		
+    private void doRun() 
+    throws CannotBacktrackException, CannotManageStateException, 
+    ClasspathException, ThreadStackEmptyException, 
+    ContradictionException, DecisionException, EngineStuckException, 
+    FailureException  {
 		if (this.actions.atRoot()) { return; }
 		
 		//performs the symbolic execution loop
@@ -596,6 +611,17 @@ public class Runner {
 	public long getStartTime() {
 	    return this.startTime;
 	}
+    
+    /**
+     * Returns the start time, i.e., the time when
+     * the method {@link #run()} was invoked.
+     * 
+     * @return a {@code long}, {@code 0L} if this 
+     * method is invoked before {@link #run()}.
+     */
+    public long getStopTime() {
+        return this.stopTime;
+    }
 	
 	/**
 	 * Returns the total number of traces explored until 
