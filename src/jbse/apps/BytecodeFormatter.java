@@ -22,7 +22,7 @@ public class BytecodeFormatter {
 	 *         of {@code f}.
 	 */
 	public String format(Frame f, ClassHierarchy cfi) {
-		return bdf.select(f.getInstruction()).format(f, cfi);
+		return bdf.select(f.getInstruction()).apply(f, cfi);
 	}
 
 	/**

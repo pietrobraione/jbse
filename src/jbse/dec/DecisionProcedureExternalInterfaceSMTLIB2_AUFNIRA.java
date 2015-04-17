@@ -31,11 +31,11 @@ import jbse.val.WideningConversion;
  * {@link DecisionProcedureExternalInterface} to a generic SMTLIB 2 solver
  * that supports the AUFNIRA logic. 
  * 
- * @author Diego Piazza
  * @author Pietro Braione
+ * @author Diego Piazza
  */
-//TODO simplify implementation; make a general decision procedure for SMTLIB2-compatible solvers
-public class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedureExternalInterface {
+//TODO simplify implementation
+class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedureExternalInterface {
     //commands
     private static final String PROLOGUE = 
         "(set-option :print-success true)\n" +

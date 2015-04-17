@@ -45,29 +45,29 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 			":- use_module(library(charsio), [read_from_chars/2]).\n" +
      
 			// Register acceptable queries and start the server (using default port)
-			"main :-" +
-			"  register_query(do(C), my_predicate(C))," +
-			"  register_event_listener(server_started, server_started_listener)," +
-			"  start([port(_Port)])," +
+			"main :-\n" +
+			"  register_query(do(C), my_predicate(C)),\n" +
+			"  register_event_listener(server_started, server_started_listener),\n" +
+			"  start([port(_Port)]),\n" +
 			"  halt.\n"+
     
 			// The listener for the start event emits the port number
-			"server_started_listener :-" +
-			"  get_server_property(port(Port)),"+
-			"  format(user_error, 'port:~w~n', [Port]),"+
+			"server_started_listener :-\n" +
+			"  get_server_property(port(Port)),\n"+
+			"  format(user_error, 'port:~w~n', [Port]),\n"+
 			"  flush_output(user_error).\n" + 
      
 			// The query processor receives a list of characters
 			// and converts them into an expression to be evaluated
-			"my_predicate(Chars) :-" +
-			"  read_from_chars(Chars, X)," +
+			"my_predicate(Chars) :-\n" +
+			"  read_from_chars(Chars, X),\n" +
 			"  X.\n" +
 			
 			//starts
 			":- main.\n";
 	
 	private static class InitThread implements Runnable {
-		private String sicstusPath;
+		private final String sicstusPath;
 		private boolean ready = false;
 		private int port = -1;
 		private Process process = null;

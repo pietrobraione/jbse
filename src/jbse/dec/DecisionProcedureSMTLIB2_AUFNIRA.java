@@ -6,6 +6,15 @@ import jbse.rewr.CalculatorRewriting;
 
 import java.io.IOException;
 
+/**
+ * A decision procedure for solvers compatible with SMTLIB 2 specification
+ * supporting the AUFNIRA logic and interactive mode. Tested and working with
+ * Z3 and CVC4.
+ * 
+ * @author Pietro Braione
+ * @author Diego Piazza
+ *
+ */
 public final class DecisionProcedureSMTLIB2_AUFNIRA extends DecisionProcedureExternal {
 	public DecisionProcedureSMTLIB2_AUFNIRA(DecisionProcedure next, CalculatorRewriting calc, String solverPath) throws DecisionException {
 		super(next, calc);

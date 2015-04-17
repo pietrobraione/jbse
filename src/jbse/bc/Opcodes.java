@@ -8,6 +8,7 @@ package jbse.bc;
  *
  */
 public final class Opcodes {
+    //defined by the JVM specs
 	public static final byte OP_NOP = 0;
 	public static final byte OP_ACONST_NULL = 1;
 	public static final byte OP_ICONST_M1 = 2;
@@ -211,6 +212,8 @@ public final class Opcodes {
 	public static final byte OP_GOTO_W = -56;
 	public static final byte OP_JSR_W = -55;
 	public static final byte OP_BREAKPOINT = -54;
+	
+	//internally used in java v.1
 	public static final byte OP_LDC_QUICK = -53;
 	public static final byte OP_LDC_W_QUICK = -52;
 	public static final byte OP_LDC2_W_QUICK = -51;
@@ -236,6 +239,8 @@ public final class Opcodes {
 	public static final byte OP_INVOKEVIRTUAL_QUICK_W = -30;
 	public static final byte OP_GETFIELD_QUICK_W = -29;
 	public static final byte OP_PUTFIELD_QUICK_W = -28;
+
+	//implementation-dependent
 	public static final byte OP_IMPDEP1 = -2;
 	public static final byte OP_IMPDEP2 = -1;
 	
