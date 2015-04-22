@@ -20,7 +20,7 @@ public final class Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH implements Algorithm {
             state.popOperand();  //pops "this"
         } catch (OperandStackEmptyException e) {
             throwVerifyError(state);
-            throw new InterruptException();
+            throw InterruptException.getInstance();
         }
 		state.pushOperand(state.getCalculator().valInt(0));
 		
@@ -29,6 +29,6 @@ public final class Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH implements Algorithm {
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 		}
-        throw new InterruptException();
+        throw InterruptException.getInstance();
 	}
 }

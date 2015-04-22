@@ -13,8 +13,9 @@ import jbse.algo.exc.NotYetImplementedException;
 import jbse.apps.DecisionProcedureDecoratorPrint;
 import jbse.apps.DecisionProcedureDecoratorTimer;
 import jbse.apps.IO;
-import jbse.apps.StateFormatter;
+import jbse.apps.Formatter;
 import jbse.apps.StateFormatterGraphviz;
+import jbse.apps.StateFormatterJUnitTest;
 import jbse.apps.StateFormatterText;
 import jbse.apps.StateFormatterTrace;
 import jbse.apps.Timer;
@@ -105,11 +106,11 @@ public class Run {
 	/** The {@link PrintStream}s for errors (critical log information). */
 	private PrintStream[] err = null;
 
-	/** The {@link StateFormatter} to output states at branches. */
-	private StateFormatter formatterBranches = null;
+	/** The {@link Formatter} to output states at branches. */
+	private Formatter formatterBranches = null;
 
-	/** The {@link StateFormatter} to output states not at branches. */
-	private StateFormatter formatterOthers = null;
+	/** The {@link Formatter} to output states not at branches. */
+	private Formatter formatterOthers = null;
 
 	/** The {@link Timer} for the decision procedure. */
 	private Timer timer = null;
@@ -210,7 +211,7 @@ public class Run {
 			if (this.scopeExhaustionMessage == null && this.traceKind != TraceKind.CONTRADICTORY && this.stackSizeAcceptable()) {
 				try {
 		            final State currentState = Run.this.engine.getCurrentState();
-					Run.this.printState(currentState, this.isBranch);
+					Run.this.emitState(currentState, this.isBranch);
 				} catch (UnexpectedInternalException e) {
 					IO.println(Run.this.err, ERROR_ENGINE_UNEXPECTED);
 					IO.printException(Run.this.err, e);
@@ -228,6 +229,12 @@ public class Run {
 				}
 			}			
 			return stop;
+		}
+		
+		@Override
+		public boolean atRoot() {
+		    emitPrologue();
+		    return super.atRoot();
 		}
 		
 		@Override
@@ -275,6 +282,12 @@ public class Run {
 		public boolean atBranch(BranchPoint bp) {
 			this.isBranch = true;
 			return super.atBranch(bp);
+		}
+		
+		@Override
+		public void atEnd() {
+		    emitEpilogue();
+		    super.atEnd();
 		}
 
 		@Override
@@ -381,11 +394,11 @@ public class Run {
 					if (Run.this.parameters.stepShowMode == StepShowMode.SUMMARIES) {
 						State initialRefined = Run.this.engine.getInitialState();
 						initialRefined.refine(currentState);
-						Run.this.printState(initialRefined, true);
+						Run.this.emitState(initialRefined, true);
 						IO.print(out, "\n===\n");
 					}
 					//prints the leaf (stuck) state
-					Run.this.printState(currentState,
+					Run.this.emitState(currentState,
 							(Run.this.parameters.stepShowMode == StepShowMode.LEAVES || 
 							Run.this.parameters.stepShowMode == StepShowMode.SUMMARIES));
 				} 
@@ -548,9 +561,9 @@ public class Run {
 		if (retVal > 0) {
 			return retVal;
 		}
-		
-		// runs the method
-		IO.println(this.log, MSG_START + this.parameters.getMethodSignature() + " at " + new Date() + ".");
+
+        // runs the method
+        IO.println(this.log, MSG_START + this.parameters.getMethodSignature() + " at " + new Date() + ".");
 		try {
 			this.runner.run();
 		} catch (ClasspathException | 
@@ -723,12 +736,12 @@ public class Run {
 		if (this.parameters.stateFormatMode == StateFormatMode.FULLTEXT) {
 			this.formatterBranches = new StateFormatterText(this.parameters.srcPath) {
 				@Override
-				public void format(State s) {
+				public void formatState(State s) {
 					this.formatOutput += LINE_SEP; // gutter
 					this.formatOutput += banner(s.getIdentifier() + "["
-							+ s.getSequenceNumber() + "]", true) ;
+							+ s.getSequenceNumber() + "]", true);
 					this.formatOutput += LINE_SEP; // gutter
-					super.format(s);
+					super.formatState(s);
 				}
 
 				public void emit() {
@@ -737,12 +750,12 @@ public class Run {
 			};
 			this.formatterOthers = new StateFormatterText(this.parameters.srcPath) {
 				@Override
-				public void format(State s) {
-					this.formatOutput += LINE_SEP; //gutter
+				public void formatState(State s) {
+					this.formatOutput += LINE_SEP; // gutter
 					this.formatOutput += banner(s.getIdentifier() + "["
 							+ s.getSequenceNumber() + "]", false);
-					this.formatOutput += LINE_SEP; //gutter
-					super.format(s);
+					this.formatOutput += LINE_SEP; // gutter
+					super.formatState(s);
 				}
 
 				public void emit() {
@@ -750,27 +763,27 @@ public class Run {
 				}
 			};
 		} else if (this.parameters.stateFormatMode == StateFormatMode.GRAPHVIZ) {
-			this.formatterBranches = new StateFormatterGraphviz() {
+			this.formatterBranches = this.formatterOthers = new StateFormatterGraphviz() {
 				public void emit() {
 					IO.println(Run.this.out, this.formatOutput);
 				}
 			};
-			this.formatterOthers = new StateFormatterGraphviz() {
+		} else if (this.parameters.stateFormatMode == StateFormatMode.TRACE) {
+			this.formatterBranches = this.formatterOthers = new StateFormatterTrace() {
+                @Override
 				public void emit() {
-					IO.println(Run.this.out, this.formatOutput);
+					IO.println(Run.this.out, this.output);
 				}
 			};
-		} else { // this.parameters.outputFormatMode == OutputFormatMode.TRACE
-			this.formatterBranches = new StateFormatterTrace() {
-				public void emit() {
-					IO.println(Run.this.out, this.formatOutput);
-				}
-			};
-			this.formatterOthers = new StateFormatterTrace() {
-				public void emit() {
-					IO.println(Run.this.out, this.formatOutput);
-				}
-			};
+        } else if (this.parameters.stateFormatMode == StateFormatMode.JUNIT_TEST) {
+            this.formatterBranches = this.formatterOthers = new StateFormatterJUnitTest() {
+                @Override
+                public void emit() {
+                    IO.println(Run.this.out, this.output);
+                }
+            };
+		} else {
+		    throw new UnexpectedInternalException();
 		}
 
 		//prints some feedback on forthcoming decision procedure creation
@@ -899,7 +912,9 @@ public class Run {
 		final DecisionProcedureType type = this.parameters.getDecisionProcedureType();
 		final String path = this.parameters.getExternalDecisionProcedurePath();		
 		try {
-		    if (type == DecisionProcedureType.CVC3) {
+		    if (type == DecisionProcedureType.ALL_SAT) {
+		        //do nothing
+		    } else if (type == DecisionProcedureType.CVC3) {
 		        core = new DecisionProcedureCVC3(core, calc, path);
 		        coreNumeric = (needHeapCheck ? new DecisionProcedureCVC3(coreNumeric, calc, path) : null);
 		    } else if (type == DecisionProcedureType.SICSTUS) {
@@ -911,9 +926,9 @@ public class Run {
 		    } else if (type == DecisionProcedureType.CVC4) {
 		        core = new DecisionProcedureSMTLIB2_AUFNIRA(core, calc, path + COMMANDLINE_LAUNCH_CVC4);
 		        coreNumeric = (needHeapCheck ? new DecisionProcedureSMTLIB2_AUFNIRA(coreNumeric, calc, path + COMMANDLINE_LAUNCH_CVC4) : null);
-		    } else { //DecisionProcedureType.ALL_SAT
-		        //do nothing
-		    }				
+		    } else {
+		        throw new UnexpectedInternalException();
+		    }
 		} catch (DecisionException e) {
 			throw new CannotBuildDecisionProcedureException(e);
 		}
@@ -979,26 +994,42 @@ public class Run {
 		}
 		
 		//returns the result
-		if (core instanceof DecisionProcedureAlgorithms) {
-			return (DecisionProcedureAlgorithms) core;
-		}
-		return new DecisionProcedureAlgorithms(core, calc);
-	}	
+		return ((core instanceof DecisionProcedureAlgorithms) ? 
+		        (DecisionProcedureAlgorithms) core :
+		        new DecisionProcedureAlgorithms(core, calc));
+	}
+	
+	/**
+	 * Emits the prologue of the symbolic execution.
+	 */
+	private void emitPrologue() {
+        this.formatterOthers.formatPrologue();
+        this.formatterOthers.emit();
+        this.formatterOthers.cleanup();
+	}
 
 	/**
-	 * Displays a {@link State}.
+	 * Emits a {@link State} of the symbolic execution.
 	 * 
-	 * @param s
-	 *            the {@link State} to be displayed.
-	 * @param isRootBranch
-	 *            {@code true} iff {@code s} is at a branch point.
+	 * @param s the {@link State} to be emitted.
+	 * @param isRootBranch {@code true} iff 
+	 *        {@code s} is at a branch point.
 	 */
-	private void printState(State s, boolean isRootBranch) {
-		final StateFormatter f = 
+	private void emitState(State s, boolean isRootBranch) {
+		final Formatter f = 
 			(isRootBranch ? this.formatterBranches : this.formatterOthers);
-		f.format(s);
+		f.formatState(s);
 		f.emit();
 		f.cleanup();
+	}
+    
+    /**
+     * Emits the epilogue of the symbolic execution.
+     */
+	private void emitEpilogue() {
+        this.formatterOthers.formatEpilogue();
+        this.formatterOthers.emit();
+        this.formatterOthers.cleanup();
 	}
 
 	/**

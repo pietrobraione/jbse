@@ -1,7 +1,7 @@
 package jbse.algo;
 
 import static jbse.algo.Util.throwVerifyError;
-import static jbse.bc.Offsets.XLOADSTORE_WIDE_OFFSET;
+import static jbse.bc.Offsets.XLOADSTORE_IMMEDIATE_WIDE_OFFSET;
 import static jbse.bc.Offsets.XLOADSTORE_IMMEDIATE_OFFSET;
 
 import jbse.common.Util;
@@ -52,7 +52,7 @@ final class Algo_XSTORE implements Algorithm {
 			if (this.hasIndex) {
 				state.incPC();
 			} else if (wide) {
-				state.incPC(XLOADSTORE_WIDE_OFFSET);
+				state.incPC(XLOADSTORE_IMMEDIATE_WIDE_OFFSET);
 			} else {
 				state.incPC(XLOADSTORE_IMMEDIATE_OFFSET);
 			}

@@ -31,12 +31,12 @@ public class Algo_JAVA_SYSTEM_ARRAYCOPY implements Algorithm {
 	        src = (Reference) state.popOperand();
         } catch (OperandStackEmptyException e) {
             throwVerifyError(state);
-            throw new InterruptException();
+            throw InterruptException.getInstance();
         }
 	    
 	    if (state.isNull(src) || state.isNull(dest)) {
 	        throwNew(state, NULL_POINTER_EXCEPTION);
-            throw new InterruptException();
+	        throw InterruptException.getInstance();
 	    }
 
 	    final Array srcArray, destArray;
@@ -45,7 +45,7 @@ public class Algo_JAVA_SYSTEM_ARRAYCOPY implements Algorithm {
 	        destArray = (Array) state.getObject(dest);
 	    } catch (ClassCastException e) {
             throwNew(state, ARRAY_STORE_EXCEPTION);
-            throw new InterruptException();
+            throw InterruptException.getInstance();
 	    }
 	    
 	    //TODO
@@ -55,6 +55,6 @@ public class Algo_JAVA_SYSTEM_ARRAYCOPY implements Algorithm {
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 		}
-        throw new InterruptException();
+        throw InterruptException.getInstance();
 	}
 }

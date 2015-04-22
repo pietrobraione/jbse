@@ -55,7 +55,7 @@ public class Algo_JAVA_CLASS_ISINSTANCE implements Algorithm {
             state.pushOperand(valToPush);
 		} catch (OperandStackEmptyException | ClassCastException e) {
 		    throwVerifyError(state);
-            throw new InterruptException();
+		    throw InterruptException.getInstance();
 		}
 
         //increments the program counter
@@ -64,6 +64,6 @@ public class Algo_JAVA_CLASS_ISINSTANCE implements Algorithm {
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 		}
-        throw new InterruptException();
+		throw InterruptException.getInstance();
 	}
 }

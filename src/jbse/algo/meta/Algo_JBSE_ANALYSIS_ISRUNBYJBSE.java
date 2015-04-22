@@ -27,6 +27,6 @@ public class Algo_JBSE_ANALYSIS_ISRUNBYJBSE implements Algorithm {
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 		}
-        throw new InterruptException();
+        throw InterruptException.getInstance();
 	}
 }

@@ -24,7 +24,7 @@ public class Algo_JBSE_ANALYSIS_IGNORE implements Algorithm {
 			} catch (InvalidProgramCounterException e) {
 	            throwVerifyError(state);
 			}
-            throw new InterruptException();
+	        throw InterruptException.getInstance();
 		}
 	}
 }

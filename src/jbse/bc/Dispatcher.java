@@ -13,9 +13,9 @@ import java.util.HashMap;
  * @param <Q> the class for keys.  
  * @param <R> the class for values.  
  */
-public abstract class Dispatcher<Q,R> {
+public abstract class Dispatcher<Q, R> {
 	/**
-	 * A Strategy returning an object with class {@code RR}. 
+	 * A Strategy returning an object. 
 	 * 
 	 * @author Pietro Braione
 	 *
@@ -28,8 +28,7 @@ public abstract class Dispatcher<Q,R> {
 
 	private DispatchStrategy<? extends R> dispatchNonexistent = () -> null;
 
-	private HashMap<Q, DispatchStrategy<? extends R>> dispatchTable = 
-		new HashMap<Q, DispatchStrategy<? extends R>>();
+	private HashMap<Q, DispatchStrategy<? extends R>> dispatchTable = new HashMap<>();
 	
 	/**
 	 * Sets the {@link DispatchStrategy} for a given key. If the key

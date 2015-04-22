@@ -10,6 +10,6 @@ public class Algo_JBSE_ANALYSIS_SUCCEED implements Algorithm {
 	public void exec(State state, ExecutionContext ctx) 
 	throws InterruptException {
 		state.setStuckStop();
-        throw new InterruptException();
+		throw InterruptException.getInstance();
 	}
 }

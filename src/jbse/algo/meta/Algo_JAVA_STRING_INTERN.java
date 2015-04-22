@@ -36,7 +36,7 @@ public class Algo_JAVA_STRING_INTERN implements Algorithm {
             state.pushOperand(state.referenceToStringLiteral(valueString));
         } catch (OperandStackEmptyException | ClassCastException e) {
             throwVerifyError(state);
-            throw new InterruptException();
+            throw InterruptException.getInstance();
         }
         
         try {
@@ -44,6 +44,6 @@ public class Algo_JAVA_STRING_INTERN implements Algorithm {
         } catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
         }
-        throw new InterruptException();
+        throw InterruptException.getInstance();
     }
 }

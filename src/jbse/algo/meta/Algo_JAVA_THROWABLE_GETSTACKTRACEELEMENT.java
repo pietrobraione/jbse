@@ -21,9 +21,9 @@ public final class Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT implements Algorithm
 	        state.popOperand();
 	    } catch (OperandStackEmptyException e) {
 	        throwVerifyError(state);
-            throw new InterruptException();
+	        throw InterruptException.getInstance();
 	    }
         throwNew(state, INDEX_OUT_OF_BOUNDS_EXCEPTION);
-        throw new InterruptException();
+        throw InterruptException.getInstance();
 	}
 }

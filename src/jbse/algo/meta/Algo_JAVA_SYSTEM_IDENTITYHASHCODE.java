@@ -27,7 +27,7 @@ public class Algo_JAVA_SYSTEM_IDENTITYHASHCODE implements Algorithm {
             state.pushOperand(hashCode);
         } catch (OperandStackEmptyException e) {
             throwVerifyError(state);
-            throw new InterruptException();
+            throw InterruptException.getInstance();
         }
         
         try {
@@ -35,6 +35,6 @@ public class Algo_JAVA_SYSTEM_IDENTITYHASHCODE implements Algorithm {
         } catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
         }
-        throw new InterruptException();
+        throw InterruptException.getInstance();
     }
 }

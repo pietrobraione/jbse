@@ -297,10 +297,18 @@ public final class RunParameters implements Cloneable {
 		GRAPHVIZ,
 		
 		/** 
-		 * Displays just a trace of the traversed states in the format state id / state sequence 
-		 * number / method signature / source row / program counter. 
+		 * Displays just a trace of the traversed states in the 
+		 * format state id / state sequence number / 
+		 * method signature / source row / program counter. 
 		 */
-		TRACE
+		TRACE,
+		
+		/**
+		 * Displays a JUnit class containing a suite that 
+		 * covers all the symbolic states according to the
+		 * step show mode.  
+		 */
+		JUNIT_TEST
 	}
 
 	/** The runner parameters. */

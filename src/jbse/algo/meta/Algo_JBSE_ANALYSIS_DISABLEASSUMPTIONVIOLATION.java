@@ -28,6 +28,6 @@ public final class Algo_JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION implements Algo
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 		}
-        throw new InterruptException();
+        throw InterruptException.getInstance();
 	}
 }

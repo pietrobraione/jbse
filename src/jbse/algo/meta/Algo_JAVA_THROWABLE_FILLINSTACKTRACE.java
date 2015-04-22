@@ -29,7 +29,7 @@ public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE implements Algorithm {
 	        state.pushOperand(thisRef); //returns "this"
 	    } catch (OperandStackEmptyException | ClassCastException e) {
 	        throwVerifyError(state);
-            throw new InterruptException();
+	        throw InterruptException.getInstance();
 	    }
 		
         try {
@@ -37,6 +37,6 @@ public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE implements Algorithm {
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 		}
-        throw new InterruptException();
+        throw InterruptException.getInstance();
 	}
 }

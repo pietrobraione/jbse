@@ -32,12 +32,12 @@ import jbse.val.Value;
 import jbse.val.WideningConversion;
 
 /**
- * A {@link StateFormatter} which produces a complex, fully 
+ * A {@link Formatter} which produces a complex, fully 
  * descriptive rendition of a {@link State}.
  * 
  * @author Pietro Braione
  */
-public abstract class StateFormatterText implements StateFormatter {
+public abstract class StateFormatterText implements Formatter {
 	protected List<String> srcPath;
 	protected String formatOutput = "";
 	
@@ -46,7 +46,7 @@ public abstract class StateFormatterText implements StateFormatter {
 	}
 	
 	@Override
-	public void format(State s) {
+	public void formatState(State s) {
 		this.formatOutput = formatState(s, this.srcPath, true, "\t", "");
 	}
 

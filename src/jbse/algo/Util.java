@@ -192,7 +192,7 @@ public class Util {
             return;
         }
         if (ci.createdFrames > 0) {
-            throw new InterruptException();
+            throw InterruptException.getInstance();
         }
 	}
     

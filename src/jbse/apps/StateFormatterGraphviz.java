@@ -13,13 +13,13 @@ import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 
 /**
- * A {@link StateFormatter} which renders just the heap of a {@link State} as a 
+ * A {@link Formatter} which renders just the heap of a {@link State} as a 
  * Graphviz DOT graph.
  * 
  * @author Pietro
  *
  */
-public abstract class StateFormatterGraphviz implements StateFormatter {
+public abstract class StateFormatterGraphviz implements Formatter {
 	private static final String nullStyle = "[shape=invtriangle,label=\"null\",regular=true]";
 
 	private int nextFreshNode;
@@ -36,7 +36,7 @@ public abstract class StateFormatterGraphviz implements StateFormatter {
 	public StateFormatterGraphviz() { }
 
 	@Override
-	public void format(State s) {
+	public void formatState(State s) {
 		this.formatOutput = "";
 		this.formatOutput += "digraph \"" + s.getIdentifier() + "[" + s.getSequenceNumber() + "]\"" + " { ";
 		this.formatOutput += this.formatHeap(s);

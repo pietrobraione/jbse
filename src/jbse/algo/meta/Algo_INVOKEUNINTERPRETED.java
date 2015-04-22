@@ -52,7 +52,7 @@ final class Algo_INVOKEUNINTERPRETED implements Algorithm {
 				argsPrimitive = toPrimitive(opcode == OP_INVOKESTATIC ? args : Arrays.copyOfRange(args, 1, args.length));
             } catch (OperandStackEmptyException e) {
                 throwVerifyError(state);
-                throw new InterruptException();
+                throw InterruptException.getInstance();
 			} catch (InvalidTypeException e) {
 				throw new UninterpretedUnsupportedException("The method " + this.methodSignatureResolved + " has a nonprimitive argument other than 'this'."); 
 			}
@@ -73,6 +73,6 @@ final class Algo_INVOKEUNINTERPRETED implements Algorithm {
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 		}
-        throw new InterruptException();
+		throw InterruptException.getInstance();
 	}
 }

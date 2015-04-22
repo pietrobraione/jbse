@@ -10,7 +10,7 @@ import jbse.val.Reference;
 import jbse.val.Value;
 
 /**
- * A {@link StateFormatter} which yields a one-line text rendition of 
+ * A {@link Formatter} which yields a one-line text rendition of 
  * the current {@link State}, including only the current identification
  * of the state in its trace, the current method and the current 
  * statement/bytecode. Useful to print execution traces.
@@ -18,33 +18,34 @@ import jbse.val.Value;
  * @author Pietro Braione
  *
  */
-public abstract class StateFormatterTrace implements StateFormatter {
+public abstract class StateFormatterTrace implements Formatter {
 	/** 
-	 * The {@link String} used by {@link StateFormatterTrace#format(State)} to
+	 * The {@link String} used by {@link StateFormatterTrace#formatState(State)} to
 	 * indicate a stuck {@link State}. 
 	 */
 	protected String leaf = "LEAF";
 
-	/** The {@link String} used by {@link StateFormatterTrace#format(State)} to separates fields. */
+	/** The {@link String} used by {@link StateFormatterTrace#formatState(State)} to separates fields. */
 	protected String fieldSep = " ";
 	
-	/** Here the result of {@link StateFormatterTrace#format(State)}. */
-	protected String formatOutput;
+	/** Here the result of {@link StateFormatterTrace#formatState(State)}. */
+	protected String output;
 	
 	private BytecodeFormatter bcf = new BytecodeFormatter();
 
-	public void format(State s) {
-		this.formatOutput = s.getIdentifier() + "[" + s.getSequenceNumber() + "]" + fieldSep + s.getDepth()+","+s.getCount() + fieldSep;
+	public void formatState(State s) {
+		this.output = s.getIdentifier() + "[" + s.getSequenceNumber() + "]" + fieldSep 
+		                  + s.getDepth() + "," + s.getCount() + fieldSep;
         if (s.isStuck()) {
-        	this.formatOutput += leaf;
+        	this.output += leaf;
         	if (s.getStuckException() != null) {
-        		this.formatOutput += fieldSep + "exception" + fieldSep + formatReturn(s, s.getStuckException());
+        		this.output += fieldSep + "exception" + fieldSep + formatReturn(s, s.getStuckException());
         	} else if (s.getStuckReturn() != null) {
-        		this.formatOutput += fieldSep + "return" + fieldSep + formatReturn(s, s.getStuckReturn());
+        		this.output += fieldSep + "return" + fieldSep + formatReturn(s, s.getStuckReturn());
         	}
         } else {
         	try {
-        		this.formatOutput += s.getCurrentMethodSignature() + fieldSep + s.getSourceRow() + fieldSep 
+        		this.output += s.getCurrentMethodSignature() + fieldSep + s.getSourceRow() + fieldSep 
         				+ s.getPC() + fieldSep + bcf.format(s);
 			} catch (ThreadStackEmptyException e) {
 				//the state is not stuck but it has no frames:
@@ -66,6 +67,6 @@ public abstract class StateFormatterTrace implements StateFormatter {
 	
 	@Override
 	public void cleanup() {
-		this.formatOutput = "";
+		this.output = "";
 	}
 }

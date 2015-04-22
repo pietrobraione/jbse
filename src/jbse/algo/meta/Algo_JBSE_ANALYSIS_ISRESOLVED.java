@@ -31,7 +31,7 @@ public class Algo_JBSE_ANALYSIS_ISRESOLVED implements Algorithm {
 		    objRef = (Reference) state.popOperand();
         } catch (OperandStackEmptyException e) {
             throwVerifyError(state);
-            throw new InterruptException();
+            throw InterruptException.getInstance();
         }
 			
 		//gets the name of the field and converts it to a string
@@ -68,6 +68,6 @@ public class Algo_JBSE_ANALYSIS_ISRESOLVED implements Algorithm {
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 		}
-        throw new InterruptException();
+		throw InterruptException.getInstance();
 	}
 }

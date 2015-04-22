@@ -13,7 +13,7 @@ final class Algo_CHECKCAST extends Algo_CASTINSTANCEOF {
         //if the check fails throws a ClassCastException
         if (!isSubclass) {
             throwNew(state, CLASS_CAST_EXCEPTION);
-            throw new InterruptException();
+            throw InterruptException.getInstance();
         }
     }
 }

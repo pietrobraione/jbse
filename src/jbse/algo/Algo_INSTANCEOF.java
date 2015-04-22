@@ -23,7 +23,7 @@ final class Algo_INSTANCEOF extends Algo_CASTINSTANCEOF {
             }
         } catch (ClassCastException e) {
             throwVerifyError(state);
-            throw new InterruptException();
+            throw InterruptException.getInstance();
         } catch (ThreadStackEmptyException | OperandStackEmptyException e) {
             //should never happen
             throw new UnexpectedInternalException(e);

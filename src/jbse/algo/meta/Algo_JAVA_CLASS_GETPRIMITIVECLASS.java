@@ -36,10 +36,10 @@ public class Algo_JAVA_CLASS_GETPRIMITIVECLASS implements Algorithm {
 			state.pushOperand(classRef);
         } catch (ClassFileNotFoundException e) {
             throwNew(state, CLASS_NOT_FOUND_EXCEPTION);  //this is how Hotspot behaves
-            throw new InterruptException();
+            throw InterruptException.getInstance();
 		} catch (OperandStackEmptyException | ClassCastException e) {
 		    throwVerifyError(state);
-            throw new InterruptException();
+		    throw InterruptException.getInstance();
 		}
 
 		try {
@@ -47,6 +47,6 @@ public class Algo_JAVA_CLASS_GETPRIMITIVECLASS implements Algorithm {
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 		}
-        throw new InterruptException();
+		throw InterruptException.getInstance();
 	}
 }

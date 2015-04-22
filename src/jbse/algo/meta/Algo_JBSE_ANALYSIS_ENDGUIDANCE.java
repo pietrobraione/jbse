@@ -29,6 +29,6 @@ public class Algo_JBSE_ANALYSIS_ENDGUIDANCE implements Algorithm {
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 		}
-        throw new InterruptException();
+		throw InterruptException.getInstance();
 	}
 }

@@ -18,7 +18,7 @@ import jbse.val.Operator;
  */
 public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm> {
     private Algo_INIT seInit = null;
-    private Algo_NOTALLOWED algo_UNEXPECTED = null;
+    private Algo_NOTALLOWED algo_NOTALLOWED = null;
     private Algo_ACONST_NULL algo_ACONST_NULL = null;
     private Algo_XALOAD algo_XALOAD = null;
     private Algo_ANEWARRAY algo_ANEWARRAY = null;
@@ -538,10 +538,10 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm> {
 
 	private class DispatchStrategy_NOTALLOWED implements Dispatcher.DispatchStrategy<Algo_NOTALLOWED> {
 		public Algo_NOTALLOWED doIt() {
-			if (DispatcherBytecodeAlgorithm.this.algo_UNEXPECTED == null) {
-				DispatcherBytecodeAlgorithm.this.algo_UNEXPECTED = new Algo_NOTALLOWED();
+			if (DispatcherBytecodeAlgorithm.this.algo_NOTALLOWED == null) {
+				DispatcherBytecodeAlgorithm.this.algo_NOTALLOWED = new Algo_NOTALLOWED();
 			}
-			return DispatcherBytecodeAlgorithm.this.algo_UNEXPECTED;
+			return DispatcherBytecodeAlgorithm.this.algo_NOTALLOWED;
 		}
 	}
 

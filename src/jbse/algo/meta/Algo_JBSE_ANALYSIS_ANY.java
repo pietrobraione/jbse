@@ -27,6 +27,6 @@ public final class Algo_JBSE_ANALYSIS_ANY implements Algorithm {
 		} catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
 		}
-        throw new InterruptException();
+        throw InterruptException.getInstance();
 	}
 }

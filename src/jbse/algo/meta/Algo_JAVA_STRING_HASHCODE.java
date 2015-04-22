@@ -33,7 +33,7 @@ public class Algo_JAVA_STRING_HASHCODE implements Algorithm {
             }
         } catch (OperandStackEmptyException e) {
             throwVerifyError(state);
-            throw new InterruptException();
+            throw InterruptException.getInstance();
         }
         
         try {
@@ -41,6 +41,6 @@ public class Algo_JAVA_STRING_HASHCODE implements Algorithm {
         } catch (InvalidProgramCounterException e) {
             throwVerifyError(state);
         }
-        throw new InterruptException();
+        throw InterruptException.getInstance();
     }
 }

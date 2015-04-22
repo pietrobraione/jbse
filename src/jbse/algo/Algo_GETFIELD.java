@@ -35,13 +35,13 @@ final class Algo_GETFIELD extends Algo_GETX {
             final Reference myObjectRef = (Reference) this.state.popOperand();
             if (this.state.isNull(myObjectRef)) {
                 throwNew(this.state, NULL_POINTER_EXCEPTION);
-                throw new InterruptException();
+                throw InterruptException.getInstance();
             }
             final Instance myObject = (Instance) this.state.getObject(myObjectRef); 
             return myObject.getFieldValue(fieldSignatureResolved);
         } catch (OperandStackEmptyException | ClassCastException e) {
             throwVerifyError(state);
-            throw new InterruptException();
+            throw InterruptException.getInstance();
         }
     }    
 }

@@ -1,7 +1,7 @@
 package jbse.algo;
 
 import static jbse.algo.Util.throwVerifyError;
-import static jbse.bc.Offsets.XLOADSTORE_WIDE_OFFSET;
+import static jbse.bc.Offsets.XLOADSTORE_IMMEDIATE_WIDE_OFFSET;
 import static jbse.bc.Offsets.XLOADSTORE_IMMEDIATE_OFFSET;
 import static jbse.bc.Offsets.XLOADSTORE_OPCODE_OFFSET;
 
@@ -48,7 +48,7 @@ final class Algo_XLOAD extends MultipleStateGenerator_XLOAD_GETX implements Algo
                 final byte tmp1 = state.getInstruction(1);
                 final byte tmp2 = state.getInstruction(2);
             	this.index = Util.byteCat(tmp1, tmp2);
-            	ofst = XLOADSTORE_WIDE_OFFSET;
+            	ofst = XLOADSTORE_IMMEDIATE_WIDE_OFFSET;
             } else {
             	this.index = state.getInstruction(1);
             	ofst = XLOADSTORE_IMMEDIATE_OFFSET;

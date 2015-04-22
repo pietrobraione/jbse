@@ -3,18 +3,28 @@ package jbse.apps;
 import jbse.mem.State;
 
 /**
- * A state formatter.
+ * A formatter for symbolic execution.
  * 
  * @author Pietro Braione
  */
-public interface StateFormatter {
+public interface Formatter {
+    /** 
+     * Formats a (possible) prologue. 
+     */
+    default void formatPrologue() { }
+    
 	/**
 	 * Formats a {@link State}.
 	 * 
 	 * @param s the {@link State} to be formatted.
 	 */
-	void format(State s);
+	void formatState(State s);
 	
+    /** 
+     * Formats a (possible) epilogue. 
+     */
+    default void formatEpilogue() { }
+    
 	/**
 	 * Emits the formatted {@link State}.
 	 */
@@ -22,7 +32,7 @@ public interface StateFormatter {
 	
 	/**
 	 * Cleans the current formatting. Must be invoked
-	 * between two invocations of {@link #format(State)}
+	 * between two invocations of {@link #formatState(State)}
 	 * (and typically after one or more invocations of
 	 * {@link #emit()}.
 	 */
