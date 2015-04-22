@@ -7,6 +7,5 @@
 	<classpathentry exported="true" kind="lib" path="/usr/local/lib/sicstus-3.12.10/bin/prologbeans.jar" sourcepath="/usr/local/lib/sicstus-3.12.10"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="lib" path="/Users/pietro/Desktop/eclipseclp/lib/eclipse.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
