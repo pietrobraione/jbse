@@ -1,11 +1,10 @@
 package jbse.algo;
 
+import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwVerifyError;
 
-import jbse.algo.exc.InterruptException;
-import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.State;
-import jbse.mem.exc.OperandStackEmptyException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 
@@ -14,19 +13,18 @@ final class Algo_INSTANCEOF extends Algo_CASTINSTANCEOF {
     protected void complete(State state, boolean isSubclass)
     throws InterruptException {
         try {
-            //pops the checked reference and calculates the result
-            final Reference tmpValue = (Reference) state.popOperand();
-            if (!state.isNull(tmpValue) && isSubclass) { //null is not an instance of anything
+            final Reference tmpValue = (Reference) this.data.operand(0);
+            if (!state.isNull(tmpValue) && isSubclass) { //note that null is not an instance of anything
                 state.pushOperand(state.getCalculator().valInt(1));
             } else { 
                 state.pushOperand(state.getCalculator().valInt(0));
             }
         } catch (ClassCastException e) {
             throwVerifyError(state);
-            throw InterruptException.getInstance();
-        } catch (ThreadStackEmptyException | OperandStackEmptyException e) {
-            //should never happen
-            throw new UnexpectedInternalException(e);
+            exitFromAlgorithm();
+        } catch (ThreadStackEmptyException e) {
+            //this should never happen
+            failExecution(e);
         }
     }
 }

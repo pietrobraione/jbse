@@ -1,68 +1,62 @@
 package jbse.algo.meta;
 
+import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.ensureInstance_JAVA_CLASS;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
-import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 
-import jbse.algo.Algorithm;
-import jbse.algo.ExecutionContext;
-import jbse.algo.exc.InterruptException;
+import java.util.function.Supplier;
+
+import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
-import jbse.common.exc.ClasspathException;
-import jbse.common.exc.UnexpectedInternalException;
-import jbse.dec.exc.DecisionException;
 import jbse.mem.Objekt;
-import jbse.mem.State;
-import jbse.mem.exc.InvalidProgramCounterException;
-import jbse.mem.exc.OperandStackEmptyException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
-public class Algo_JAVA_OBJECT_GETCLASS implements Algorithm {
-	@Override
-	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, SymbolicValueNotAllowedException, 
-	ClasspathException, DecisionException, InterruptException {
-		try {			
-			//gets the "this" object and the name of its class
-            final Reference thisRef = (Reference) state.topOperand();
-            if (state.isNull(thisRef)) {
-                throwNew(state, NULL_POINTER_EXCEPTION);
-                throw InterruptException.getInstance();
+public final class Algo_JAVA_OBJECT_GETCLASS extends Algo_INVOKEMETA {
+    public Algo_JAVA_OBJECT_GETCLASS() {
+        super(false);
+    }
+    @Override
+    protected Supplier<Integer> numOperands() {
+        return () -> 1;
+    }
+    
+    @Override
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            try {
+                //gets the "this" object and the name of its class
+                final Reference thisRef = (Reference) this.data.operand(0);
+                if (state.isNull(thisRef)) {
+                    throwNew(state, NULL_POINTER_EXCEPTION);
+                    exitFromAlgorithm();
+                }
+                final Objekt thisObj = state.getObject(thisRef);
+                if (thisObj == null) {
+                    throw new SymbolicValueNotAllowedException("The 'this' parameter to java.lang.Object.getClass method is symbolic.");
+                }
+                final String className = thisObj.getType();
+
+                //gets the instance of the class of the "this" object
+                ensureInstance_JAVA_CLASS(state, className, ctx.decisionProcedure);
+                final Reference classRef = state.referenceToInstance_JAVA_CLASS(className);
+                state.pushOperand(classRef);
+            } catch (ClassFileNotAccessibleException e) {
+                throwNew(state, ILLEGAL_ACCESS_ERROR);
+                exitFromAlgorithm();
+            } catch (ClassCastException e) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            } catch (BadClassFileException e) {
+                //this should never happen
+                failExecution(e);
             }
-			final Objekt thisObj = state.getObject(thisRef);
-			if (thisObj == null) {
-				throw new UnexpectedInternalException("the 'this' parameter to java.lang.Object.getClass method is symbolic");
-			}
-			final String className = thisObj.getType();
-
-			//gets the instance of the class of the "this" object
-			ensureInstance_JAVA_CLASS(state, className, ctx.decisionProcedure);
-			final Reference classRef = state.referenceToInstance_JAVA_CLASS(className);
-			state.popOperand();
-			state.pushOperand(classRef);
-        } catch (ClassFileNotAccessibleException e) {
-            throwNew(state, ILLEGAL_ACCESS_ERROR);
-            throw InterruptException.getInstance();
-		} catch (OperandStackEmptyException | ClassCastException e) {
-		    throwVerifyError(state);
-		    throw InterruptException.getInstance();
-		} catch (BadClassFileException e) {
-		    //this should never happen
-		    throw new UnexpectedInternalException(e);
-		}
-
-        //increments the program counter
-		try {
-			state.incPC(INVOKESPECIALSTATICVIRTUAL_OFFSET);
-		} catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
-		}
-		throw InterruptException.getInstance();
-	}
+        };
+    }
 }

@@ -1,19 +1,16 @@
 package jbse.algo;
 
+import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Offsets.IFX_OFFSET;
+import static jbse.common.Type.INT;
+import static jbse.common.Type.widens;
 
-import jbse.bc.exc.BadClassFileException;
-import jbse.common.Type;
-import jbse.common.Util;
+import java.util.function.Supplier;
+
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
-import jbse.dec.exc.DecisionException;
-import jbse.dec.exc.InvalidInputException;
-import jbse.mem.State;
-import jbse.mem.exc.ContradictionException;
-import jbse.mem.exc.InvalidProgramCounterException;
-import jbse.mem.exc.OperandStackEmptyException;
-import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_IFX;
 import jbse.val.Operator;
 import jbse.val.Primitive;
@@ -27,100 +24,110 @@ import jbse.val.exc.InvalidTypeException;
  * the branch to be taken, a sheer numeric decision.
  * 
  * @author Pietro Braione
- *
  */
-final class Algo_IFX extends MultipleStateGenerator<DecisionAlternative_IFX> implements Algorithm {
-    boolean compareWithZero;
-    Operator operator;
+final class Algo_IFX extends Algorithm<
+BytecodeData_1ON,
+DecisionAlternative_IFX,
+StrategyDecide<DecisionAlternative_IFX>,
+StrategyRefine<DecisionAlternative_IFX>,
+StrategyUpdate<DecisionAlternative_IFX>> {
     
-    public Algo_IFX() {
-		super(DecisionAlternative_IFX.class);
-	}
+    private final boolean compareWithZero; //set by the constructor
+    private final Operator operator; //set by the constructor
+    
+    public Algo_IFX(boolean compareWithZero, Operator operator) {
+        this.compareWithZero = compareWithZero;
+        this.operator = operator;
+   }
+    
+    private Primitive comparison; //produced by cooker
+    private boolean doJump; //produced by updater
     
     @Override
-    public void exec(State state, final ExecutionContext ctx) 
-    throws DecisionException, ContradictionException, 
-    ThreadStackEmptyException {
-        //gets operands and calculates branch target
-        final int branchOffset;
-        try {
-	        final byte tmp1 = state.getInstruction(1);
-	        final byte tmp2 = state.getInstruction(2);
-	        branchOffset = Util.byteCatShort(tmp1, tmp2);
-		} catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
-			return;
-		} //note that now the program counter points to the next instruction
-
-        //takes operands from current frame's operand stack
-        Primitive val1, val2;
-        try {
-            val1 = (Primitive) state.popOperand();
-            if (this.compareWithZero) {
-                val2 = state.getCalculator().valInt(0);
-                //cast necessary because the Algo_XCMPY state space reduction  
-                //trick spills nonint values to the operand stack.
-                try {
-                    if (Type.widens(val1.getType(), Type.INT)) {
+    protected Supplier<Integer> numOperands() {
+        return () -> (this.compareWithZero ? 1 : 2);
+    }
+    
+    @Override
+    protected Supplier<BytecodeData_1ON> bytecodeData() {
+        return BytecodeData_1ON::get;
+    }
+    
+    @Override
+    protected BytecodeCooker bytecodeCooker() {
+        return (state) -> { 
+            //gets the operands
+            Primitive val1 = null, val2 = null; //to keep the compiler happy
+            try {
+                val1 = (Primitive) this.data.operand(0);
+                if (this.compareWithZero) {
+                    val2 = state.getCalculator().valInt(0);
+                    //the next conversion is necessary because the 
+                    //Algo_XCMPY state space reduction trick 
+                    //spills nonint values to the operand stack.
+                    if (widens(val1.getType(), INT)) {
                         val2 = val2.to(val1.getType());
                     } else {
                         val1 = val1.to(val2.getType());
                     }
-                } catch (InvalidTypeException e) {
-                    //this should never happen
-                    throw new UnexpectedInternalException(e);
+                } else {
+                    val2 = (Primitive) this.data.operand(1);
                 }
-            } else {
-                //swaps the operands for comparison
-                val2 = val1;
-                val1 = (Primitive) state.popOperand();
+            } catch (ClassCastException e) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            } catch (InvalidTypeException e) {
+                //this should never happen
+                failExecution(e);
             }
-        } catch (OperandStackEmptyException | ClassCastException e) {
-            throwVerifyError(state);
-            return;
-        }
-    	
-		final Primitive condition;
-		try {
-			condition = state.getCalculator().applyBinary(val1, this.operator, val2);
-		} catch (InvalidOperandException | InvalidTypeException e) {
-            throwVerifyError(state);
-			return;
-		} catch (InvalidOperatorException e) {
-			throw new UnexpectedInternalException(e);
-		}
-
-    	this.ds = (result) -> {
-    		final Outcome o = ctx.decisionProcedure.decide_IFX(condition, result);
-    		return o;
-		};
-		
-		this.rs = (State s, DecisionAlternative_IFX r) -> {
-			final Primitive condTrue = (r.value() ? condition : condition.not());
-			s.assume(ctx.decisionProcedure.simplify(condTrue));
-		};
-		
-		this.us = (State s, DecisionAlternative_IFX r) -> {
-			try {
-				if (r.value()) {
-					s.incPC(branchOffset);
-				} else {
-					s.incPC(3);
-				}
-			} catch (InvalidProgramCounterException e) {
-	            throwVerifyError(s);
-			}
-		};
-		
-		//generates all the states
-    	this.state = state;
-    	this.ctx = ctx;
-		try {
-			generateStates();
-		} catch (InvalidInputException | InvalidTypeException | 
-				BadClassFileException e) {
-			//this should never happen
-			throw new UnexpectedInternalException(e);
-		}
+            
+            //builds the comparison condition
+            try {
+                this.comparison = state.getCalculator().applyBinary(val1, this.operator, val2);
+            } catch (InvalidOperandException | InvalidTypeException e) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            } catch (InvalidOperatorException e) {
+                throw new UnexpectedInternalException(e);
+            }
+        };
+    }
+    
+    @Override
+    protected Class<DecisionAlternative_IFX> classDecisionAlternative() {
+        return DecisionAlternative_IFX.class;
+    }
+    
+    @Override
+    protected StrategyDecide<DecisionAlternative_IFX> decider() {
+        return (state, result) -> {
+            final Outcome o = this.ctx.decisionProcedure.decide_IFX(this.comparison, result);
+            return o;
+        };
+    }
+    
+    @Override
+    protected StrategyRefine<DecisionAlternative_IFX> refiner() {
+        return (state, alt) -> {
+            final Primitive assumption = (alt.value() ? this.comparison : this.comparison.not());
+            state.assume(this.ctx.decisionProcedure.simplify(assumption));
+        };
+    }
+    
+    @Override
+    protected StrategyUpdate<DecisionAlternative_IFX> updater() {
+        return (state, alt) -> {
+            this.doJump = alt.value();
+        };
+    }
+    
+    @Override
+    protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
+        return () -> true;
+    }
+    
+    @Override
+    protected Supplier<Integer> programCounterUpdate() {
+        return () -> (this.doJump ? this.data.jumpOffset() : IFX_OFFSET);
     }
 }

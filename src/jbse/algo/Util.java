@@ -22,7 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import jbse.algo.exc.InterruptException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.ConstantPoolPrimitive;
@@ -55,7 +54,48 @@ import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.Value;
 
-public class Util {	
+public class Util {
+    /**
+     * Cleanly interrupts the execution of an {@link Algorithm}.
+     */
+    public static void exitFromAlgorithm() throws InterruptException {
+        assert false;
+        throw InterruptException.mk();
+    }
+    
+    /**
+     * Abruptly interrupts the execution of JBSE
+     * in the case of an unexpected internal error.
+     * 
+     * @param e an {@code Exception}, the cause of
+     *        the internal error. 
+     */
+    public static void failExecution(Exception e) {
+        throw new UnexpectedInternalException(e);
+    }
+    
+    /**
+     * Abruptly interrupts the execution of JBSE
+     * in the case of an unexpected internal error.
+     * 
+     * @param m a {@code String}, the cause of
+     *        the internal error. 
+     */
+    public static void failExecution(String s) {
+        throw new UnexpectedInternalException(s);
+    }
+    
+    /**
+     * Cleanly interrupts the execution of an {@link Algorithm}, 
+     * and schedules another one as the next to be executed.
+     * 
+     * @param algo the 
+     */
+    public static void continueWith(Algorithm<?, ?, ?, ?, ?> algo) throws InterruptException {
+        throw InterruptException.mk(algo);
+    }
+    
+    
 	public static ClassFile lookupMethodImpl(State state, Signature methodSignatureResolved, boolean isStatic, boolean isSpecial, String receiverClassName) 
 	throws BadClassFileException, MethodNotFoundException, IncompatibleClassFileException, ThreadStackEmptyException {
         final ClassFile retVal;
@@ -192,7 +232,7 @@ public class Util {
             return;
         }
         if (ci.createdFrames > 0) {
-            throw InterruptException.getInstance();
+            exitFromAlgorithm();
         }
 	}
     

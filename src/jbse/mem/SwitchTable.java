@@ -54,7 +54,7 @@ public class SwitchTable implements Iterable<Integer> {
 		int ofst = 0;
 		do {
 			ofst++;
-		} while ((f.getPC() + ofst) % 4 != 0);
+		} while ((f.getProgramCounter() + ofst) % 4 != 0);
 		
 		//gets the default offset bytes and (in case of lookupswitch) 
 		//the number of pairs
@@ -67,7 +67,7 @@ public class SwitchTable implements Iterable<Integer> {
 		this.deflt = Util.byteCat(ops[0], ops[1], ops[2], ops[3]);
 		this.low = (this.ts ? Util.byteCat(ops[4], ops[5], ops[6], ops[7]) : 1);
 		this.high = (this.ts ? Util.byteCat(ops[8], ops[9], ops[10], ops[11]) : Util.byteCat(ops[4], ops[5], ops[6], ops[7]));
-		this.tableStart = f.getPC() + ofst;
+		this.tableStart = f.getProgramCounter() + ofst;
 		this.tableEnd = this.tableStart + (this.high - this.low + 1) * entrySizeInBytes;
 	}
 

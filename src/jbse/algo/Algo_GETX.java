@@ -1,108 +1,91 @@
 package jbse.algo;
 
+import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Offsets.GETX_PUTX_OFFSET;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
-import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.NO_SUCH_FIELD_ERROR;
 
-import jbse.algo.exc.InterruptException;
-import jbse.bc.ClassFile;
+import java.util.function.Supplier;
+
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotAccessibleException;
 import jbse.bc.exc.FieldNotFoundException;
-import jbse.bc.exc.InvalidIndexException;
-import jbse.common.Util;
 import jbse.common.exc.ClasspathException;
-import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
-import jbse.mem.exc.ContradictionException;
-import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
-import jbse.val.Value;
 
-abstract class Algo_GETX extends MultipleStateGenerator_XLOAD_GETX implements Algorithm {
+//TODO extract common superclass with Algo_PUTX and eliminate duplicate code
+abstract class Algo_GETX extends Algo_XLOAD_GETX<BytecodeData_1FI> {
+    
+    protected Signature fieldSignatureResolved; //set by cook
+
     @Override
-    public final void exec(State state, ExecutionContext ctx)
-    throws DecisionException, ContradictionException, 
-    ClasspathException, ThreadStackEmptyException,
-    InterruptException {
-        //gets the index of the field signature in the current class 
-        //constant pool
-        final int index;
-        try {
-            final byte tmp1 = state.getInstruction(1);
-            final byte tmp2 = state.getInstruction(2);
-            index = Util.byteCat(tmp1, tmp2);
-        } catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
-            return;
-        }
-        
-        //gets the field signature from the current class constant pool
-        final String currentClassName = state.getCurrentMethodSignature().getClassName();    
-        final ClassHierarchy hier = state.getClassHierarchy();
-        final Signature fieldSignature;
-        try {
-            fieldSignature = hier.getClassFile(currentClassName).getFieldSignature(index);
-        } catch (InvalidIndexException e) {
-            throwVerifyError(state);
-            return;
-        } catch (BadClassFileException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
-        
-        //performs field resolution
-        final Signature fieldSignatureResolved;
-        try {
-            fieldSignatureResolved = hier.resolveField(currentClassName, fieldSignature);
-        } catch (ClassFileNotFoundException e) {
-            throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
-            return;
-        } catch (FieldNotFoundException e) {
-            throwNew(state, NO_SUCH_FIELD_ERROR);
-            return;
-        } catch (FieldNotAccessibleException e) {
-            throwNew(state, ILLEGAL_ACCESS_ERROR);
-            return;
-        } catch (BadClassFileException e) {
-            throwVerifyError(state);
-            return;
-        }
-
-        //gets resolved field's class
-
-        //checks the field
-        try {
-            final String fieldClassName = fieldSignatureResolved.getClassName();        
-            final ClassFile fieldClassFile = hier.getClassFile(fieldClassName);
-            if (!fieldOk(fieldSignatureResolved, fieldClassFile)) {
-                throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
-                return;
-            }
-        } catch (BadClassFileException | FieldNotFoundException e) {
-            //this should never happen after field resolution
-            throw new UnexpectedInternalException(e);
-        }
-        
-        //generates all the next states
-        this.state = state;
-        this.ctx = ctx;
-        this.pcOffset = 3;
-        this.valToLoad = fieldValue(fieldSignatureResolved);
-        generateStates();
+    protected final Supplier<BytecodeData_1FI> bytecodeData() {
+        return BytecodeData_1FI::get;
     }
     
-    protected abstract boolean fieldOk(Signature fieldSignatureResolved, ClassFile fieldClassFile)
-    throws FieldNotFoundException;
+    @Override
+    protected final BytecodeCooker bytecodeCooker() {
+        return (state) -> {
+            //gets the class hierarchy
+            final ClassHierarchy hier = state.getClassHierarchy();
+
+            //performs field resolution
+            String currentClassName = null; //it's final 
+            try {
+                currentClassName = state.getCurrentMethodSignature().getClassName();    
+                this.fieldSignatureResolved = hier.resolveField(currentClassName, this.data.signature());
+            } catch (ClassFileNotFoundException e) {
+                throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                exitFromAlgorithm();
+            } catch (FieldNotFoundException e) {
+                throwNew(state, NO_SUCH_FIELD_ERROR);
+                exitFromAlgorithm();
+            } catch (FieldNotAccessibleException e) {
+                throwNew(state, ILLEGAL_ACCESS_ERROR);
+                exitFromAlgorithm();
+            } catch (BadClassFileException e) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            } catch (ThreadStackEmptyException e) {
+                //this should never happen
+                failExecution(e);
+            }
+
+            //checks the field
+            try {
+                check(state, currentClassName);
+            } catch (FieldNotFoundException | BadClassFileException e) {
+                //this should never happen
+                failExecution(e);
+            }
+            
+            //reads the field
+            get(state);
+        };
+    }
     
-    protected abstract Value fieldValue(Signature fieldSignatureResolved)
-    throws DecisionException, ThreadStackEmptyException, 
-    ClasspathException, InterruptException;
+    protected abstract void check(State state, String currentClass)
+    throws FieldNotFoundException, BadClassFileException, InterruptException;
+    
+    protected abstract void get(State state)
+    throws DecisionException, ClasspathException, InterruptException;
+    
+    @Override
+    protected final Supplier<Boolean> isProgramCounterUpdateAnOffset() {
+        return () -> true;
+    }
+    
+    @Override
+    protected final Supplier<Integer> programCounterUpdate() {
+        return () -> GETX_PUTX_OFFSET;
+    }
 }

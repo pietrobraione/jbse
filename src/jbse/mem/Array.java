@@ -255,9 +255,9 @@ public final class Array extends Objekt {
 	 * @return the corresponding primitive type, or {@link Type#ERROR ERROR} 
 	 *         in case {@code type} does not correspond to a valid primitive type.
 	 */
-	public static char checkAndReturnArrayPrimitive(int type) {
+	public static char arrayPrimitiveType(int type) {
 		char retVal;
-		
+
 		switch (type) {
 		case T_BOOLEAN:
 			retVal = Type.BOOLEAN;

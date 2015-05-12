@@ -1,18 +1,19 @@
 package jbse.algo;
 
+import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 
-import jbse.algo.exc.InterruptException;
+import java.util.function.Supplier;
+
 import jbse.bc.ClassFile;
-import jbse.bc.Signature;
+import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.FieldNotFoundException;
 import jbse.mem.Instance;
-import jbse.mem.exc.OperandStackEmptyException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.mem.State;
 import jbse.val.Reference;
-import jbse.val.Value;
 
 /**
  * Command managing the getfield bytecode. It decides over the value 
@@ -23,25 +24,36 @@ import jbse.val.Value;
  */
 final class Algo_GETFIELD extends Algo_GETX {
     @Override
-    protected boolean fieldOk(Signature fieldSignatureResolved, ClassFile fieldClassFile)
-    throws FieldNotFoundException {
-        return !(fieldClassFile.isFieldStatic(fieldSignatureResolved));
+    protected Supplier<Integer> numOperands() {
+        return () -> 1;
+    }
+    
+    @Override
+    protected void check(State state, String currentClass)
+    throws FieldNotFoundException, BadClassFileException, InterruptException {
+        final String fieldClassName = this.fieldSignatureResolved.getClassName();        
+        final ClassFile fieldClassFile = state.getClassHierarchy().getClassFile(fieldClassName);
+        
+        //checks that the field is not static
+        if (fieldClassFile.isFieldStatic(fieldSignatureResolved)) {
+            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+            exitFromAlgorithm();
+        }
     }
 
     @Override
-    protected Value fieldValue(Signature fieldSignatureResolved) 
-    throws ThreadStackEmptyException, InterruptException {
+    protected void get(State state) throws InterruptException {
         try {
-            final Reference myObjectRef = (Reference) this.state.popOperand();
-            if (this.state.isNull(myObjectRef)) {
-                throwNew(this.state, NULL_POINTER_EXCEPTION);
-                throw InterruptException.getInstance();
+            final Reference myObjectRef = (Reference) this.data.operand(0);
+            if (state.isNull(myObjectRef)) {
+                throwNew(state, NULL_POINTER_EXCEPTION);
+                exitFromAlgorithm();
             }
-            final Instance myObject = (Instance) this.state.getObject(myObjectRef); 
-            return myObject.getFieldValue(fieldSignatureResolved);
-        } catch (OperandStackEmptyException | ClassCastException e) {
+            final Instance myObject = (Instance) state.getObject(myObjectRef); 
+            this.valToLoad = myObject.getFieldValue(this.fieldSignatureResolved);
+        } catch (ClassCastException e) {
             throwVerifyError(state);
-            throw InterruptException.getInstance();
+            exitFromAlgorithm();
         }
     }    
 }

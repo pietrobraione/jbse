@@ -1,60 +1,87 @@
 package jbse.algo;
 
+import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Offsets.IINC_OFFSET;
+import static jbse.bc.Offsets.IINC_WIDE_OFFSET;
 
-import jbse.common.Util;
-import jbse.mem.State;
-import jbse.mem.exc.InvalidProgramCounterException;
+import java.util.function.Supplier;
+
+import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.mem.exc.InvalidSlotException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
 import jbse.val.Simplex;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
-final class Algo_IINC implements Algorithm {
+final class Algo_IINC extends Algorithm<
+BytecodeData_2LVIM,
+DecisionAlternative_NONE, 
+StrategyDecide<DecisionAlternative_NONE>, 
+StrategyRefine<DecisionAlternative_NONE>, 
+StrategyUpdate<DecisionAlternative_NONE>> {
     
     @Override
-	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException {
-		final boolean wide = state.nextWide();
-		final int index;
-		final int constant;
-		final int offset;
-		try {
-			if (wide) {
-				final byte tmp1, tmp2, tmp3, tmp4;
-				tmp1 = state.getInstruction(1);
-				tmp2 = state.getInstruction(2);
-				tmp3 = state.getInstruction(3);
-				tmp4 = state.getInstruction(4);
-				index = Util.byteCat(tmp1, tmp2);
-				constant = Util.byteCat(tmp3, tmp4);
-				offset = 5;
-			} else {
-				index = state.getInstruction(1);
-				constant = state.getInstruction(2);
-				offset = 3;
-			}
-		} catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
-			return;
-		}
-		
-		try {
-			final Primitive tmpVal = (Primitive) state.getLocalVariableValue(index);
-			final Simplex constantSimplex = state.getCalculator().valInt(constant);
-			state.setLocalVariable(index, tmpVal.add(constantSimplex));
-		} catch (InvalidSlotException | InvalidOperandException | InvalidTypeException e) {
-			//TODO InvalidOperandException and InvalidTypeException can also be caused by internal errors. Distinguish!
-            throwVerifyError(state);
-			return;
-		}
-		
-		try {
-			state.incPC(offset);
-		} catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
-		}
-	}
+    protected Supplier<Integer> numOperands() {
+        return () -> 0;
+    }
+    
+    @Override
+    protected Supplier<BytecodeData_2LVIM> bytecodeData() {
+        return BytecodeData_2LVIM::get;
+    }
+    
+    @Override
+    protected BytecodeCooker bytecodeCooker() {
+        return (state) -> { };
+    }
+    
+    @Override
+    protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
+        return DecisionAlternative_NONE.class;
+    }
+    
+    @Override
+    protected StrategyDecide<DecisionAlternative_NONE> decider() {
+        return (state, result) -> {
+            result.add(DecisionAlternative_NONE.instance());
+            return DecisionProcedureAlgorithms.Outcome.FF;
+        };
+    }
+
+    @Override
+    protected StrategyRefine<DecisionAlternative_NONE> refiner() {
+        return (state, alt) -> { };
+    }
+    
+    @Override
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> { 
+
+            try {
+                final int constant = this.data.nextWide() ? this.data.immediateSignedWord() : this.data.immediateSignedByte();
+                final Simplex constantSimplex = state.getCalculator().valInt(constant);
+                final Primitive tmpVal = (Primitive) this.data.localVariableValue();
+                state.setLocalVariable(this.data.localVariableSlot(), tmpVal.add(constantSimplex));
+            } catch (ClassCastException | InvalidOperandException e) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            } catch (InvalidSlotException | InvalidTypeException e) {
+                //this should never happen
+                failExecution(e);
+            }
+        };
+    }
+    
+    @Override
+    protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
+        return () -> true;
+    }
+    
+    @Override
+    protected Supplier<Integer> programCounterUpdate() {
+        return () -> (this.data.nextWide() ? IINC_WIDE_OFFSET : IINC_OFFSET);
+    }
 }

@@ -1,28 +1,29 @@
 package jbse.algo;
 
+import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.XALOADSTORE_OFFSET;
 import static jbse.bc.Signatures.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION;
 import static jbse.bc.Signatures.ARRAY_STORE_EXCEPTION;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
+import static jbse.common.Type.className;
+import static jbse.common.Type.getArrayMemberType;
+import static jbse.common.Type.isArray;
+import static jbse.common.Type.isPrimitive;
+import static jbse.common.Type.isPrimitiveOpStack;
+import static jbse.common.Type.isReference;
 
 import java.util.Iterator;
+import java.util.function.Supplier;
 
 import jbse.bc.ClassHierarchy;
 import jbse.bc.exc.BadClassFileException;
-import jbse.common.Type;
-import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
-import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
-import jbse.mem.State;
-import jbse.mem.exc.ContradictionException;
-import jbse.mem.exc.InvalidProgramCounterException;
-import jbse.mem.exc.OperandStackEmptyException;
-import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XASTORE;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -39,127 +40,146 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  *
  */
-class Algo_XASTORE extends MultipleStateGenerator<DecisionAlternative_XASTORE> implements Algorithm {
-	public Algo_XASTORE() {
-		super(DecisionAlternative_XASTORE.class);
-	}
-	
-	@Override
-    public void exec(final State state, final ExecutionContext ctx) 
-    throws DecisionException, ThreadStackEmptyException, ContradictionException {
-        final Value value;
-        final Primitive index;
-        final Reference arrayRef;
-        try {
-            value = state.popOperand();
-            index = (Primitive) state.popOperand();
-            arrayRef = (Reference) state.popOperand();
-        } catch (OperandStackEmptyException | ClassCastException e) {
-            throwVerifyError(state);
-            return;
-        }
-        
-        //null check
-        if (state.isNull(arrayRef)) {
-            throwNew(state, NULL_POINTER_EXCEPTION);
-	    	return;
-        }
+final class Algo_XASTORE extends Algorithm<
+BytecodeData_0,
+DecisionAlternative_XASTORE, 
+StrategyDecide<DecisionAlternative_XASTORE>, 
+StrategyRefine<DecisionAlternative_XASTORE>, 
+StrategyUpdate<DecisionAlternative_XASTORE>> {
+    
+    Primitive inRange, outOfRange; //produced by the cooker
+    Value valueToStore; //produced by the cooker
+    
+    @Override
+    protected Supplier<Integer> numOperands() {
+        return () -> 3;
+    }
+    
+    @Override
+    protected Supplier<BytecodeData_0> bytecodeData() {
+        return BytecodeData_0::get;
+    }
+    
+    @Override
+    protected BytecodeCooker bytecodeCooker() {
+        return (state) -> { 
+            Reference myObjectRef = null;
+            Primitive index = null;
+            Value value = null;
+            try {
+                myObjectRef = (Reference) this.data.operand(0);
+                index = (Primitive) this.data.operand(1);
+                value = this.data.operand(2);
+            } catch (ClassCastException e) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            }
+            
+            //null check
+            if (state.isNull(myObjectRef)) {
+                throwNew(state, NULL_POINTER_EXCEPTION);
+                exitFromAlgorithm();
+            }
 
-        //creates the Values that check whether the index
-        //is in range or out of range w.r.t. the array;
-        //moreover, converts the value in case of [b/c/s]astore
-        //and checks assignment compatibility in case of aastore
-    	final Primitive inRange;
-    	final Primitive outOfRange;
-        final Value valueToStore;
-    	try {
-    	    final Array array = (Array) state.getObject(arrayRef);
-    	    inRange = array.inRange(index);
-    		outOfRange = array.outOfRange(index);
-            final String arrayMemberType = Type.getArrayMemberType(array.getType());
-            if (Type.isPrimitive(arrayMemberType) && !Type.isPrimitiveOpStack(arrayMemberType.charAt(0))) {
-                if (!(value instanceof Primitive)) {
-                    throwVerifyError(state);
-                    return;
-                }
-                try {
-                    valueToStore = ((Primitive) value).to(arrayMemberType.charAt(0));
-                } catch (InvalidTypeException e) {
-                    throwVerifyError(state);
-                    return;
-                }
-            } else if (Type.isReference(arrayMemberType) || Type.isArray(arrayMemberType)) {
-                if (!(value instanceof Reference)) {
-                    throwVerifyError(state);
-                    return;
-                }
-                final Reference valueToStoreRef = (Reference) value;
-                final Objekt o = state.getObject(valueToStoreRef);
-                final ClassHierarchy hier = state.getClassHierarchy();
-                if (state.isNull(valueToStoreRef) ||
-                    hier.isAssignmentCompatible(o.getType(), Type.className(arrayMemberType))) {
-                    valueToStore = value;
+            //creates the Values that check whether the index
+            //is in range or out of range w.r.t. the array;
+            //moreover, converts the value in case of [b/c/s]astore
+            //and checks assignment compatibility in case of aastore
+            try {
+                final Array array = (Array) state.getObject(myObjectRef);
+                this.inRange = array.inRange(index);
+                this.outOfRange = array.outOfRange(index);
+                final String arrayMemberType = getArrayMemberType(array.getType());
+                if (isPrimitive(arrayMemberType) && !isPrimitiveOpStack(arrayMemberType.charAt(0))) {
+                    if (!(value instanceof Primitive)) {
+                        throwVerifyError(state);
+                        exitFromAlgorithm();
+                    }
+                    try {
+                        this.valueToStore = ((Primitive) value).to(arrayMemberType.charAt(0));
+                    } catch (InvalidTypeException e) {
+                        throwVerifyError(state);
+                        exitFromAlgorithm();
+                    }
+                } else if (isReference(arrayMemberType) || isArray(arrayMemberType)) {
+                    if (!(value instanceof Reference)) {
+                        throwVerifyError(state);
+                        exitFromAlgorithm();
+                    }
+                    final Reference valueToStoreRef = (Reference) value;
+                    final Objekt o = state.getObject(valueToStoreRef);
+                    final ClassHierarchy hier = state.getClassHierarchy();
+                    if (state.isNull(valueToStoreRef) ||
+                        hier.isAssignmentCompatible(o.getType(), className(arrayMemberType))) {
+                        this.valueToStore = value;
+                    } else {
+                        throwNew(state, ARRAY_STORE_EXCEPTION);
+                        exitFromAlgorithm();
+                    }
                 } else {
-                    throwNew(state, ARRAY_STORE_EXCEPTION);
-                    return;
+                    this.valueToStore = value;
+                }
+            } catch (InvalidOperandException | InvalidTypeException | 
+                     ClassCastException | BadClassFileException e) {
+                //index is bad or the reference does not point to an array
+                //or the class/superclasses of the array component, or of 
+                //the value to store, is not in the classpath or are incompatible
+                //with JBSE
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            }
+        };
+    }
+    
+    @Override
+    protected Class<DecisionAlternative_XASTORE> classDecisionAlternative() {
+        return DecisionAlternative_XASTORE.class;
+    }
+    
+    @Override
+    protected StrategyDecide<DecisionAlternative_XASTORE> decider() {
+        return (state, result) -> {
+            final Outcome o = this.ctx.decisionProcedure.decide_XASTORE(this.inRange, result);
+            return o;
+        };
+    }
+    
+    @Override
+    protected StrategyRefine<DecisionAlternative_XASTORE> refiner() {
+        return (state, alt) -> {
+            state.assume(this.ctx.decisionProcedure.simplify(alt.isInRange() ? this.inRange : this.outOfRange));
+        };
+    }
+    
+    @Override
+    protected StrategyUpdate<DecisionAlternative_XASTORE> updater() {
+        return (state, alt) -> {
+            if (alt.isInRange()) {
+                try {
+                    final Reference arrayRef = (Reference) this.data.operand(0);
+                    final Primitive index = (Primitive) this.data.operand(1);
+                    final Array array = (Array) state.getObject(arrayRef);
+                    final Iterator<Array.AccessOutcomeIn> entries = array.set(index, this.valueToStore);
+                    this.ctx.decisionProcedure.completeArraySet(entries, index);
+                } catch (InvalidOperandException | InvalidTypeException | 
+                         InvalidInputException | ClassCastException e) {
+                    //this should never happen
+                    failExecution(e);
                 }
             } else {
-                valueToStore = value;
+                throwNew(state, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
+                exitFromAlgorithm();
             }
-    	} catch (InvalidOperandException | InvalidTypeException | 
-    	         ClassCastException | BadClassFileException e) {
-    		//index is bad or the reference does not point to an array
-    	    //or the class/superclasses of the array component, or of 
-    	    //the value to store, is not in the classpath or are incompatible
-    	    //with JBSE
-    	    throwVerifyError(state);
-    		return;
-    	}
-        
-
-        //generates the next states    	
-    	this.ds = (results) -> {
-    		final Outcome o = ctx.decisionProcedure.decide_XASTORE(inRange, results);
-    		return o;
-		};
-		
-		this.rs = (State s, DecisionAlternative_XASTORE r) -> {
-			if (r.isInRange()) {
-				s.assume(ctx.decisionProcedure.simplify(inRange));
-			} else {
-				s.assume(ctx.decisionProcedure.simplify(outOfRange));
-			}
-		};
-		
-		this.us = (State s, DecisionAlternative_XASTORE r) -> {
-			if (r.isInRange()) {
-				try {
-					final Array array = (Array) s.getObject(arrayRef);
-					final Iterator<Array.AccessOutcomeIn> entries = array.set(index, valueToStore);
-					ctx.decisionProcedure.completeArraySet(entries, index);
-				} catch (InvalidOperandException | InvalidTypeException | 
-				         InvalidInputException | ClassCastException e) {
-					//this should never happen
-					throw new UnexpectedInternalException(e);
-				}
-				try {
-					s.incPC(XALOADSTORE_OFFSET);
-				} catch (InvalidProgramCounterException e) {
-				    throwVerifyError(s);
-				}
-			} else {
-			    throwNew(s, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
-			}
-		};
-
-    	this.state = state;
-    	this.ctx = ctx;
-		try {
-			generateStates();
-		} catch (BadClassFileException | InvalidInputException | 
-				InvalidTypeException e) {
-			//this should never happen
-			throw new UnexpectedInternalException(e);
-		}
-    } 
+        };
+    }
+    
+    @Override
+    protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
+        return () -> true;
+    }
+    
+    @Override
+    protected Supplier<Integer> programCounterUpdate() {
+        return () -> XALOADSTORE_OFFSET;
+    }
 }

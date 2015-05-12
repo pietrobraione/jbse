@@ -1,37 +1,99 @@
 package jbse.algo;
 
-import static jbse.algo.Util.throwVerifyError;
+import static jbse.algo.Util.failExecution;
 import static jbse.bc.Offsets.XCONST_OFFSET;
 
-import jbse.common.Type;
-import jbse.common.exc.UnexpectedInternalException;
-import jbse.mem.State;
-import jbse.mem.exc.InvalidProgramCounterException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import java.util.function.Supplier;
 
-class Algo_XCONST_Y implements Algorithm {
-    char type;
-    int value; //that's enough since all constants are small
+import jbse.common.Type;
+import jbse.dec.DecisionProcedureAlgorithms;
+import jbse.tree.DecisionAlternative_NONE;
+
+/**
+ * {@link Algorithm} for all the "push numeric constant" 
+ * bytecodes ([d/f/i/l]const_*).
+ * 
+ * @author Pietro Braione
+ *
+ */
+final class Algo_XCONST_Y extends Algorithm<
+BytecodeData_0,
+DecisionAlternative_NONE, 
+StrategyDecide<DecisionAlternative_NONE>, 
+StrategyRefine<DecisionAlternative_NONE>, 
+StrategyUpdate<DecisionAlternative_NONE>> {
+    
+    private final char type; //set by constructor
+    private final int value; //set by constructor
+    
+    /**
+     * Constructor.
+     * 
+     * @param type the type of the constant.
+     * @param value the value of the constant.
+     */
+    public Algo_XCONST_Y(char type, int value) {
+        this.type = type;
+        this.value = value;
+    }
     
     @Override
-    public void exec(State state, ExecutionContext ctx) 
-    throws ThreadStackEmptyException {
-        if (this.type == Type.INT) {
-        	state.pushOperand(state.getCalculator().valInt(value));
-        } else if (this.type == Type.DOUBLE) {
-        	state.pushOperand(state.getCalculator().valDouble((double) value));
-        } else if (this.type == Type.FLOAT) {
-        	state.pushOperand(state.getCalculator().valFloat((float) value));
-        } else if (this.type == Type.LONG) {
-        	state.pushOperand(state.getCalculator().valLong((long) value));
-        } else {
-            throw new UnexpectedInternalException("const bytecodes with type " + type + " do not exist");
-        }
+    protected Supplier<Integer> numOperands() {
+        return () -> 0;
+    }
+    
+    @Override
+    protected Supplier<BytecodeData_0> bytecodeData() {
+        return BytecodeData_0::get;
+    }
+    
+    @Override
+    protected BytecodeCooker bytecodeCooker() {
+        return (state) -> { };
+    }
 
-        try {
-			state.incPC(XCONST_OFFSET);
-		} catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
-		}
-    } 
+    @Override
+    protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
+        return DecisionAlternative_NONE.class;
+    }
+    
+    @Override
+    protected StrategyDecide<DecisionAlternative_NONE> decider() {
+        return (state, result) -> {
+            result.add(DecisionAlternative_NONE.instance());
+            return DecisionProcedureAlgorithms.Outcome.FF;
+        };
+    }
+
+    @Override
+    protected StrategyRefine<DecisionAlternative_NONE> refiner() {
+        return (state, alt) -> { };
+    }
+    
+    @Override
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            if (this.type == Type.INT) {
+                state.pushOperand(state.getCalculator().valInt(value));
+            } else if (this.type == Type.DOUBLE) {
+                state.pushOperand(state.getCalculator().valDouble((double) value));
+            } else if (this.type == Type.FLOAT) {
+                state.pushOperand(state.getCalculator().valFloat((float) value));
+            } else if (this.type == Type.LONG) {
+                state.pushOperand(state.getCalculator().valLong((long) value));
+            } else {
+                failExecution("const bytecode with type " + this.type + " does not exist.");
+            }
+        };
+    }
+    
+    @Override
+    protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
+        return () -> true;
+    }
+    
+    @Override
+    protected Supplier<Integer> programCounterUpdate() {
+        return () -> XCONST_OFFSET;
+    }
 }

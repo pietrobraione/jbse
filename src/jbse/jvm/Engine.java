@@ -3,11 +3,10 @@ package jbse.jvm;
 import java.util.Collection;
 
 import jbse.algo.Algorithm;
-import jbse.algo.DispatcherBytecodeAlgorithm;
 import jbse.algo.ExecutionContext;
 import jbse.algo.Algo_INIT;
 import jbse.algo.exc.CannotManageStateException;
-import jbse.algo.exc.InterruptException;
+import jbse.algo.exc.ContinuationException;
 import jbse.bc.Opcodes;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.ClasspathException;
@@ -48,9 +47,6 @@ import jbse.tree.StateTree.BranchPoint;
  */
 public class Engine implements AutoCloseable {
 	//Architecture of the engine
-	
-	/** The engine's {@link DispatcherBytecodeAlgorithm}. */
-	private final DispatcherBytecodeAlgorithm dispatcher = new DispatcherBytecodeAlgorithm();
 
 	/** The {@link ExecutionContext}. */
 	private final ExecutionContext ctx; 
@@ -62,6 +58,8 @@ public class Engine implements AutoCloseable {
 	
 	/** The current JVM {@link State} of the symbolic execution. */
 	private State currentState;
+	
+	private Algorithm<?, ?, ?, ?, ?> continuation;
 	
 	/** 
 	 * Whether some of the references resolved by the last
@@ -151,8 +149,10 @@ public class Engine implements AutoCloseable {
 	throws DecisionException, InitializationException, 
 	InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, 
 	ClasspathException {
+	    this.continuation = null;
+	    
 		//executes the initial state setup step
-		final Algo_INIT algo = this.dispatcher.select();
+		final Algo_INIT algo = this.ctx.dispatcher.select();
 		algo.exec(ctx);
 
 		//extracts the initial state from the tree
@@ -166,14 +166,9 @@ public class Engine implements AutoCloseable {
 		try {
 			this.vom.init(this);
 		} catch (ThreadStackEmptyException e) {
-			//should never happen
+			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}
-	}
-
-	//TODO eliminate this! (see jbse.meta.algo.SEInvokeAssertRepOk)
-	public ExecutionContext getContext() {
-		return this.ctx;
 	}
 
 	//public methods (operations)
@@ -238,14 +233,19 @@ public class Engine implements AutoCloseable {
 		this.preStepStackSize = this.currentState.getStackSize();
 		
 		//steps
-		final Algorithm algo = this.dispatcher.select(this.currentState.getInstruction());
+		final Algorithm<?, ?, ?, ?, ?> algo = 
+		    (this.continuation == null ? 
+		     this.ctx.dispatcher.select(this.currentState.getInstruction()) : 
+		     this.continuation);
+		this.continuation = null;
 		try {
 			algo.exec(this.currentState, this.ctx);
-		} catch (InterruptException e) {
-		    //nothing to do
-		} catch (ClasspathException | CannotManageStateException | ThreadStackEmptyException | 
-			    ContradictionException | DecisionException | FailureException | 
-			    UnexpectedInternalException e) {
+		} catch (ContinuationException e) {
+		    this.continuation = e.getContinuation();
+		} catch (ClasspathException | CannotManageStateException | 
+		         ThreadStackEmptyException |  ContradictionException | 
+		         DecisionException | FailureException | 
+			     UnexpectedInternalException e) {
 			this.stopCurrentTrace();
 			throw e;
 		} 

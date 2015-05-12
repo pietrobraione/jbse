@@ -1,5 +1,7 @@
 package jbse.algo;
 
+import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.XALOADSTORE_OFFSET;
@@ -9,16 +11,14 @@ import static jbse.common.Type.getArrayMemberType;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.function.Supplier;
 
-import jbse.bc.exc.BadClassFileException;
-import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
-import jbse.mem.exc.OperandStackEmptyException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XALOAD;
 import jbse.tree.DecisionAlternative_XALOAD_Out;
@@ -49,239 +49,267 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  * @author unknown
  */
-final class Algo_XALOAD extends MultipleStateGenerator_XYLOAD_GETX<DecisionAlternative_XALOAD> implements Algorithm {
-	private boolean someRefNotExpanded;
+final class Algo_XALOAD extends Algo_XYLOAD_GETX<
+BytecodeData_0, 
+DecisionAlternative_XALOAD,
+StrategyDecide<DecisionAlternative_XALOAD>, 
+StrategyRefine_XALOAD,
+StrategyUpdate_XALOAD> {
+
+    private Reference myObjectRef; //set by cooker
+    private Primitive index; //set by cooker
+    private Array arrayObj; //set by cooker
+    private Collection<Array.AccessOutcome> entries; //set by cooker
+
+    private boolean someRefNotExpanded;
 	private String nonExpandedRefTypes;
 	private String nonExpandedRefOrigins;
-	private Primitive index;
-	private Reference myObjectRef;
 	
-	public Algo_XALOAD() {
-		super(DecisionAlternative_XALOAD.class);
+	@Override
+	protected Supplier<Integer> numOperands() {
+        return () -> 2;
 	}
 
+    @Override
+    protected Supplier<BytecodeData_0> bytecodeData() {
+        return BytecodeData_0::get;
+    }
+	
+    @Override
+	protected BytecodeCooker bytecodeCooker() {
+	    return (state) -> { 
+	        try {
+	            this.myObjectRef = (Reference) data.operand(0);
+	            this.index = (Primitive) data.operand(1);
+	        } catch (ClassCastException e) {
+	            throwVerifyError(state);
+                exitFromAlgorithm();
+	        }
+	        
+	        //null check
+            if (state.isNull(this.myObjectRef)) {
+                throwNew(state, NULL_POINTER_EXCEPTION);
+                exitFromAlgorithm();
+            }
+            
+            //reads the array and its entries
+            try {
+                this.arrayObj = (Array) state.getObject(this.myObjectRef);
+                this.entries = this.arrayObj.get(this.index);
+            } catch (InvalidOperandException | InvalidTypeException | 
+                     ClassCastException e) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            }
+
+	    };
+	}
+
+    @Override
+    protected Class<DecisionAlternative_XALOAD> classDecisionAlternative() {
+        return DecisionAlternative_XALOAD.class;
+    }
+	
 	@Override
-	public void exec(final State state, final ExecutionContext ctx) 
-	throws DecisionException, ContradictionException, ThreadStackEmptyException {
-	    try {
-	        this.index = (Primitive) state.popOperand();
-	        this.myObjectRef = (Reference) state.popOperand();
-	    } catch (OperandStackEmptyException | ClassCastException e) {
-	        throwVerifyError(state);
-	        return;
-	    }
-	    
-		if (state.isNull(this.myObjectRef)) {
-			//null object 
-		    throwNew(state, NULL_POINTER_EXCEPTION);
-			return;
-		}
+	protected StrategyDecide<DecisionAlternative_XALOAD> decider() {
+	    return (state, result) -> { 
+            boolean shouldRefine = false;
+            boolean branchingDecision = false;
+            boolean first = true; //just for formatting
+            for (Array.AccessOutcome e : entries) {
+                //puts in val the value of the current entry, or a fresh symbol, 
+                //or null if the index is out of bound
+                Value val;
+                boolean fresh = false;  //true iff val is a fresh symbol
+                if (e instanceof Array.AccessOutcomeIn) {
+                    val = ((Array.AccessOutcomeIn) e).getValue();
+                    if (val == null) {
+                        val = state.createSymbol(getArrayMemberType(this.arrayObj.getType()), this.arrayObj.getOrigin() + "[" + this.index + "]");
+                        fresh = true;
+                    }
+                } else { //e instanceof AccessOutcomeOut
+                    val = null;
+                }
 
-		//takes the value from the array
-		final Array arrayObj;
-		final Collection<Array.AccessOutcome> entries;
-		try {
-		    arrayObj = (Array) state.getObject(this.myObjectRef);
-			entries = arrayObj.get(this.index);
-		} catch (InvalidOperandException | InvalidTypeException | 
-		         ClassCastException e) {
-			//bad index or object
-		    throwVerifyError(state);
-			return;
-		}
+                final Outcome o = this.ctx.decisionProcedure.resolve_XALOAD(state, e.getAccessCondition(), val, fresh, result);
 
-		//generates the next states
-		this.state = state;
-		this.ctx = ctx;
-		this.pcOffset = XALOADSTORE_OFFSET;
+                //if at least one reference has not been expanded, 
+                //sets someRefNotExpanded to true and stores data
+                //about the reference
+                this.someRefNotExpanded = this.someRefNotExpanded || o.noReferenceExpansion();
+                if (o.noReferenceExpansion()) {
+                    final ReferenceSymbolic refToLoad = (ReferenceSymbolic) val;
+                    this.nonExpandedRefTypes += (first ? "" : ", ") + refToLoad.getStaticType();
+                    this.nonExpandedRefOrigins += (first ? "" : ", ") + refToLoad.getOrigin();
+                    first = false;
+                }
+                
+                //if at least one reference should be refined, then it should be refined
+                shouldRefine = shouldRefine || o.shouldRefine();
+                
+                //if at least one decision is branching, then it is branching
+                branchingDecision = branchingDecision || o.branchingDecision();
+            }
 
-		this.ds = (result) -> {
-			boolean shouldRefine = false;
-			boolean branchingDecision = false;
-			boolean first = true; //just for formatting
-			for (Array.AccessOutcome e : entries) {
-				//puts in val the value of the current entry, or a fresh symbol, 
-				//or null if the index is out of bound
-				Value val;
-				boolean fresh = false; 	//true iff val is a fresh symbol
-				if (e instanceof Array.AccessOutcomeIn) {
-					val = ((Array.AccessOutcomeIn) e).getValue();
-					if (val == null) {
-						val = state.createSymbol(getArrayMemberType(arrayObj.getType()), arrayObj.getOrigin() + "[" + this.index + "]");
-						fresh = true;
-					}
-				} else { //e instanceof AccessOutcomeOut
-					val = null;
-				}
-
-				final Outcome o = ctx.decisionProcedure.resolve_XALOAD(state, e.getAccessCondition(), val, fresh, result);
-
-				//if at least one reference has not been expanded, 
-				//sets someRefNotExpanded to true and stores data
-				//about the reference
-				someRefNotExpanded = someRefNotExpanded || o.noReferenceExpansion();
-				if (o.noReferenceExpansion()) {
-					final ReferenceSymbolic refToLoad = (ReferenceSymbolic) val;
-					nonExpandedRefTypes += (first ? "" : ", ") + refToLoad.getStaticType();
-					nonExpandedRefOrigins += (first ? "" : ", ") + refToLoad.getOrigin();
-					first = false;
-				}
-				
-				//if at least one reference should be refined, then it should be refined
-				shouldRefine = shouldRefine || o.shouldRefine();
-				
-				//if at least one decision is branching, then it is branching
-				branchingDecision = branchingDecision || o.branchingDecision();
-			}
-
-			//also the size of the result matters to whether refine or not 
-			shouldRefine = shouldRefine || (result.size() > 1);
-			
-			//for branchingDecision nothing to do: it will be false only if
-			//the access is concrete and the value obtained is resolved 
-			//(if a symbolic reference): in this case, result.size() must
-			//be 1. Note that branchingDecision must be invariant
-			//on the used decision procedure, so we cannot make it dependent
-			//on result.size().
-			return Outcome.val(shouldRefine, someRefNotExpanded, branchingDecision);
-		};
-		
-		this.rs = new StrategyRefine_XALOAD() {
-			@Override
-			public void refineRefExpands(State s, DecisionAlternative_XALOAD_Expands dac) 
-			throws DecisionException, ContradictionException, InvalidTypeException {
-				//handles all the assumptions for reference resolution by expansion
-				Algo_XALOAD.this.refineRefExpands(s, dac); //implemented in MultipleStateGenerator_XYLOAD_GETX
-				
-				//assumes the array access expression (index in range)
-				final Primitive accessExpression = dac.getArrayAccessExpression();
-				s.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
-				
-				//updates the array with the resolved reference
-				final ReferenceSymbolic referenceToExpand = dac.getValueToLoad();
-				writeBackToSource(s, referenceToExpand);					
-			}
-
-			@Override
-			public void refineRefAliases(State s, DecisionAlternative_XALOAD_Aliases dai)
-			throws DecisionException, ContradictionException {
-				//handles all the assumptions for reference resolution by aliasing
-				Algo_XALOAD.this.refineRefAliases(s, dai); //implemented in MultipleStateGenerator_XYLOAD_GETX
-				
-				//assumes the array access expression (index in range)
-				final Primitive accessExpression = dai.getArrayAccessExpression();
-				s.assume(ctx.decisionProcedure.simplify(accessExpression));				
-
-				//updates the array with the resolved reference
-				final ReferenceSymbolic referenceToResolve = dai.getValueToLoad();
-				writeBackToSource(s, referenceToResolve);
-			}
-
-			@Override
-			public void refineRefNull(State s, DecisionAlternative_XALOAD_Null dan) 
-			throws DecisionException, ContradictionException {
-				Algo_XALOAD.this.refineRefNull(s, dan); //implemented in MultipleStateGenerator_XYLOAD_GETX
-				
-				//further augments the path condition 
-				final Primitive accessExpression = dan.getArrayAccessExpression();
-				s.assume(ctx.decisionProcedure.simplify(accessExpression));
-				
-				//updates the array with the resolved reference
-				final ReferenceSymbolic referenceToResolve = dan.getValueToLoad();
-				writeBackToSource(s, referenceToResolve);
-			}
-
-			@Override
-			public void refineResolved(State s, DecisionAlternative_XALOAD_Resolved dav)
-			throws DecisionException {
-				//augments the path condition
-				s.assume(ctx.decisionProcedure.simplify(dav.getArrayAccessExpression()));
-				
-				//if the value is fresh, it writes it back in the array
-				if (dav.isValueFresh()) {
-					writeBackToSource(s, dav.getValueToLoad());
-				}
-			}
-			
-			@Override
-			public void refineOut(State s, DecisionAlternative_XALOAD_Out dao) {
-				//augments the path condition
-				s.assume(ctx.decisionProcedure.simplify(dao.getArrayAccessExpression()));
-			}
-		};
-		
-		this.us = new StrategyUpdate_XALOAD() {
-			@Override
-			public void updateResolved(State s, DecisionAlternative_XALOAD_Resolved dav) 
-			throws DecisionException, ThreadStackEmptyException {
-				Algo_XALOAD.this.update(s, dav); //implemented in MultipleStateGenerator_XYLOAD_GETX
-			}
-
-			@Override
-			public void updateReference(State s, DecisionAlternative_XALOAD_Unresolved dar) 
-			throws DecisionException, ThreadStackEmptyException {
-				Algo_XALOAD.this.update(s, dar); //implemented in MultipleStateGenerator_XYLOAD_GETX
-			}
-
-			@Override
-			public void updateOut(State s, DecisionAlternative_XALOAD_Out dao) 
-			throws ThreadStackEmptyException {
-				throwNew(s, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
-			}
-		};
-		
-		try {
-			generateStates();
-		} catch (BadClassFileException e) {
-			//the array element type is a reference to a nonexistent or ill-formed class
-		    throwVerifyError(state); //TODO should we rather throw NO_CLASS_DEFINITION_FOUND_ERROR?
-		} catch (InvalidInputException | InvalidTypeException e) {
-			//this should never happen
-			throw new UnexpectedInternalException(e);
-		}
+            //also the size of the result matters to whether refine or not 
+            shouldRefine = shouldRefine || (result.size() > 1);
+            
+            //for branchingDecision nothing to do: it will be false only if
+            //the access is concrete and the value obtained is resolved 
+            //(if a symbolic reference): in this case, result.size() must
+            //be 1. Note that branchingDecision must be invariant
+            //on the used decision procedure, so we cannot make it dependent
+            //on result.size().
+            return Outcome.val(shouldRefine, this.someRefNotExpanded, branchingDecision);
+	    };
 	}
 	
-	@Override	
-	protected Value possiblyMaterialize(State s, Value val) 
-	throws DecisionException {
-		//calculates the actual value to push by materializing 
-		//a member array, if it is the case, and then pushes it
-		//on the operand stack
-		if (val instanceof ReferenceArrayImmaterial) { //TODO eliminate manual dispatch
-			try {
-				final ReferenceArrayImmaterial valRef = (ReferenceArrayImmaterial) val;
-				final ReferenceConcrete valMaterialized = 
-				    s.createArray(valRef.getMember(), valRef.getLength(), valRef.getArrayType());
-				writeBackToSource(s, valMaterialized);
-				return valMaterialized;
-			} catch (InvalidTypeException e) {
-				//this should never happen
-				throw new UnexpectedInternalException(e);
-			}
-		} else {
-			return val;
-		}
-	}
+	private final StrategyRefine_XALOAD refiner = new StrategyRefine_XALOAD() {
+        @Override
+        public void refineRefExpands(State state, DecisionAlternative_XALOAD_Expands altExpands) 
+        throws DecisionException, ContradictionException, InvalidTypeException {
+            //handles all the assumptions for reference resolution by expansion
+            Algo_XALOAD.this.refineRefExpands(state, altExpands); //implemented in MultipleStateGenerator_XYLOAD_GETX
+            
+            //assumes the array access expression (index in range)
+            final Primitive accessExpression = altExpands.getArrayAccessExpression();
+            state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
+            
+            //updates the array with the resolved reference
+            final ReferenceSymbolic referenceToExpand = altExpands.getValueToLoad();
+            writeBackToSource(state, referenceToExpand);                    
+        }
+
+        @Override
+        public void refineRefAliases(State state, DecisionAlternative_XALOAD_Aliases altAliases)
+        throws DecisionException, ContradictionException {
+            //handles all the assumptions for reference resolution by aliasing
+            Algo_XALOAD.this.refineRefAliases(state, altAliases); //implemented in MultipleStateGenerator_XYLOAD_GETX
+            
+            //assumes the array access expression (index in range)
+            final Primitive accessExpression = altAliases.getArrayAccessExpression();
+            state.assume(ctx.decisionProcedure.simplify(accessExpression));             
+
+            //updates the array with the resolved reference
+            final ReferenceSymbolic referenceToResolve = altAliases.getValueToLoad();
+            writeBackToSource(state, referenceToResolve);
+        }
+
+        @Override
+        public void refineRefNull(State state, DecisionAlternative_XALOAD_Null altNull) 
+        throws DecisionException, ContradictionException {
+            Algo_XALOAD.this.refineRefNull(state, altNull); //implemented in MultipleStateGenerator_XYLOAD_GETX
+            
+            //further augments the path condition 
+            final Primitive accessExpression = altNull.getArrayAccessExpression();
+            state.assume(ctx.decisionProcedure.simplify(accessExpression));
+            
+            //updates the array with the resolved reference
+            final ReferenceSymbolic referenceToResolve = altNull.getValueToLoad();
+            writeBackToSource(state, referenceToResolve);
+        }
+
+        @Override
+        public void refineResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved)
+        throws DecisionException {
+            //augments the path condition
+            state.assume(ctx.decisionProcedure.simplify(altResolved.getArrayAccessExpression()));
+            
+            //if the value is fresh, it writes it back in the array
+            if (altResolved.isValueFresh()) {
+                writeBackToSource(state, altResolved.getValueToLoad());
+            }
+        }
+        
+        @Override
+        public void refineOut(State state, DecisionAlternative_XALOAD_Out altOut) {
+            //augments the path condition
+            state.assume(ctx.decisionProcedure.simplify(altOut.getArrayAccessExpression()));
+        }
+    };
+    
+    @Override   
+    protected Value possiblyMaterialize(State state, Value val) 
+    throws DecisionException {
+        //calculates the actual value to push by materializing 
+        //a member array, if it is the case, and then pushes it
+        //on the operand stack
+        if (val instanceof ReferenceArrayImmaterial) { //TODO eliminate manual dispatch
+            try {
+                final ReferenceArrayImmaterial valRef = (ReferenceArrayImmaterial) val;
+                final ReferenceConcrete valMaterialized = 
+                    state.createArray(valRef.getMember(), valRef.getLength(), valRef.getArrayType());
+                writeBackToSource(state, valMaterialized);
+                return valMaterialized;
+            } catch (InvalidTypeException e) {
+                //this should never happen
+                failExecution(e);
+                return null; //to keep the compiler happy
+            }
+        } else {
+            return val;
+        }
+    }
+    
+    private void writeBackToSource(State state, Value val) 
+    throws DecisionException {
+        try {
+            final Array a = (Array) state.getObject(this.myObjectRef);
+            final Iterator<Array.AccessOutcomeIn> entries = a.set(this.index, val);
+            this.ctx.decisionProcedure.completeArraySet(entries, this.index);
+        } catch (InvalidInputException | InvalidOperandException | 
+                InvalidTypeException | ClassCastException e) {
+            //this should never happen
+            failExecution(e);
+        }
+    }
 	
-	private void writeBackToSource(State s, Value val) 
-	throws DecisionException {
-		try {
-	        final Array a = (Array) s.getObject(this.myObjectRef);
-			final Iterator<Array.AccessOutcomeIn> entries = a.set(this.index, val);
-			this.ctx.decisionProcedure.completeArraySet(entries, this.index);
-		} catch (InvalidInputException | InvalidOperandException | 
-				InvalidTypeException | ClassCastException e) {
-			//this should never happen
-			throw new UnexpectedInternalException(e);
-		}
+	@Override
+	protected StrategyRefine_XALOAD refiner() {
+	    return this.refiner;
 	}
 
-	@Override
-	public boolean someReferenceNotExpanded() { return this.someRefNotExpanded; }
+	private final StrategyUpdate_XALOAD updater =  new StrategyUpdate_XALOAD() {
+        @Override
+        public void updateResolved(State s, DecisionAlternative_XALOAD_Resolved dav) 
+        throws DecisionException, ThreadStackEmptyException, InterruptException {
+            Algo_XALOAD.this.update(s, dav); //implemented in Algo_XYLOAD_GETX
+        }
 
-	@Override
-	public String nonExpandedReferencesTypes() { return this.nonExpandedRefTypes; }
+        @Override
+        public void updateReference(State s, DecisionAlternative_XALOAD_Unresolved dar) 
+        throws DecisionException, ThreadStackEmptyException, InterruptException {
+            Algo_XALOAD.this.update(s, dar); //implemented in Algo_XYLOAD_GETX
+        }
 
-	@Override
-	public String nonExpandedReferencesOrigins() { return this.nonExpandedRefOrigins; }
+        @Override
+        public void updateOut(State s, DecisionAlternative_XALOAD_Out dao) 
+        throws ThreadStackEmptyException, InterruptException {
+            throwNew(s, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
+            exitFromAlgorithm();
+        }
+    };
+
+    protected StrategyUpdate_XALOAD updater() {
+        return this.updater;
+    }
+    
+    @Override
+    protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
+        return () -> true;
+    }
+    
+    @Override
+    protected Supplier<Integer> programCounterUpdate() {
+        return () -> XALOADSTORE_OFFSET;
+    }
+	
+    @Override
+    public boolean someReferenceNotExpanded() { return this.someRefNotExpanded; }
+
+    @Override
+    public String nonExpandedReferencesTypes() { return this.nonExpandedRefTypes; }
+
+    @Override
+    public String nonExpandedReferencesOrigins() { return this.nonExpandedRefOrigins; }
 }

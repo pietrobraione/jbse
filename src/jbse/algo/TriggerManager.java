@@ -45,31 +45,31 @@ public class TriggerManager {
 	}
 
 	/**
-	 * (Possibly) loads frames on a state for triggers execution. 
+	 * Possibly loads frames on a state for triggers execution. 
 	 * 
-	 * @param s a {@link State}.
+	 * @param state a {@link State}.
 	 * @param da a {@link DecisionAlternative_XYLOAD_GETX_Loads}. If it is a 
 	 *        {@link DecisionAlternative_XYLOAD_GETX_Unresolved}
-	 *        and has a trigger method, a frame for it will be pushed on {@code s}. 
-	 *        Otherwise, {@code s} remains unchanged.
-	 * @param pcOffset an {@code int}, an offset for the program counter of {@code s}. Used
+	 *        and has a trigger method, a frame for it will be pushed on {@code state}. 
+	 *        Otherwise, {@code state} remains unchanged.
+	 * @param pcOffset an {@code int}, an offset for the program counter of {@code state}. Used
 	 *        as return offset after the execution of the trigger method.
-	 * @return {@code true} ifF the method leaves unchanged the state.
+	 * @return {@code true} iff the method loads at least one trigger frame on {@code state}.
 	 * @throws InvalidProgramCounterException when {@code pcOffset} is not a valid
 	 *         return offset.
-	 * @throws ThreadStackEmptyException
+	 * @throws ThreadStackEmptyException if {@code state}'s thread stack is empty.
 	 */
-	public boolean runTriggers(State s, DecisionAlternative_XYLOAD_GETX_Loads da, int pcOffset) 
+	public boolean loadTriggerFrames(State state, DecisionAlternative_XYLOAD_GETX_Loads da, int pcOffset) 
 	throws InvalidProgramCounterException, ThreadStackEmptyException {
 		if (!(da instanceof DecisionAlternative_XYLOAD_GETX_Unresolved)) {
-			return true;
+			return false;
 		}
 /* TODO handle guidance; the following code tries to manage the case of guided 
  * execution without success (was thought for a different engine architecture). 
  */
 /*		else if (da instanceof DecisionAlternativeResolved && ctx.guided() && !ctx.tracking()) {
 			//this translation code is dual to DecisionProcedureGuidance.resolveLoadFromLocalVariable 
-			//(that was done by a tracking engine, this is done by a tracked engine)
+			//(that one was done by a tracking engine, this is done by a tracked engine)
 			DecisionAlternativeResolved dar = (DecisionAlternativeResolved) da;
 			Value valToPush = dar.getValueToPush();
 			if (Type.isReference(valToPush)) {
@@ -86,19 +86,19 @@ public class TriggerManager {
 		//handles triggers by creating a frame for the fresh object;
 		//first, gets data
 		final ReferenceSymbolic ref = ((DecisionAlternative_XYLOAD_GETX_Unresolved) da).getValueToLoad();
-		final ArrayList<TriggerRule> rules = satisfiedTriggerRules(s, da, this.triggerRulesRepo);
+		final ArrayList<TriggerRule> rules = satisfiedTriggerRules(state, da, this.triggerRulesRepo);
 
 		//then, pushes all the frames
-		boolean retVal = true;
+		boolean retVal = false;
 		for (TriggerRule rule : rules) {
 			final Signature triggerSig = rule.getTriggerSignature();
 			if (Type.splitReturnValueDescriptor(triggerSig.getDescriptor()).equals("" + Type.VOID) &&
 				Type.splitParametersDescriptors(triggerSig.getDescriptor()).length <= 1) {
-				final ReferenceConcrete triggerArg = getTriggerMethodParameterObject(rule, ref, s);
+				final ReferenceConcrete triggerArg = getTriggerMethodParameterObject(rule, ref, state);
 				try {
 				    //TODO resolution? lookup of implementation?
-					s.pushFrame(triggerSig, false, pcOffset, triggerArg);
-					retVal = false;
+					state.pushFrame(triggerSig, false, pcOffset, triggerArg);
+					retVal = true;
 					pcOffset = 0; //the offset of the second, third... frames
 				} catch (MethodNotFoundException | MethodCodeNotFoundException | 
 				         InvalidSlotException e) {

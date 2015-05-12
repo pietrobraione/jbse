@@ -1,106 +1,88 @@
 package jbse.algo;
 
+import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.MULTIANEWARRAY_OFFSET;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 
-import jbse.bc.ClassHierarchy;
+import java.util.function.Supplier;
+
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
-import jbse.bc.exc.InvalidIndexException;
-import jbse.common.Type;
-import jbse.common.Util;
-import jbse.common.exc.UnexpectedInternalException;
-import jbse.dec.exc.DecisionException;
-import jbse.mem.State;
-import jbse.mem.exc.InvalidProgramCounterException;
-import jbse.mem.exc.OperandStackEmptyException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Primitive;
 
 /**
+ * Algorithm managing the multianewarray bytecode.
  * 
  * @author Pietro Braione
- *
  */
-final class Algo_MULTIANEWARRAY extends MultipleStateGenerator_XNEWARRAY implements Algorithm {
+final class Algo_MULTIANEWARRAY extends Algo_XNEWARRAY<BytecodeData_2CLUB> {
+    
+    @Override
+    protected Supplier<Integer> numOperands() {
+        return () -> (int) this.data.immediateUnsignedByte();
+    }
+    
+    @Override
+    protected Supplier<BytecodeData_2CLUB> bytecodeData() {
+        return BytecodeData_2CLUB::get;
+    }
 	
-	@Override
-	public void exec(State state, ExecutionContext ctx) 
-	throws DecisionException, ThreadStackEmptyException {
-		//gets the number of dimensions and the constant pool index
-		final int ndims;
-		final int index;
-		try {
-			byte tmp1 = state.getInstruction(1);
-			byte tmp2 = state.getInstruction(2); 
-			index = Util.byteCat(tmp1, tmp2);
-			ndims = state.getInstruction(3);
-		} catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
-			return;
-		}
-		final ClassHierarchy hier = state.getClassHierarchy();
-		final String currentClassName = state.getCurrentMethodSignature().getClassName();    
-		
-		//gets the signature of the array type
-		final String arraySignature;
-		try {
-			arraySignature = hier.getClassFile(currentClassName).getClassSignature(index);
-		} catch (InvalidIndexException e) {
-            throwVerifyError(state);
-			return;
-		} catch (BadClassFileException e) {
-			//this must never happen
-			throw new UnexpectedInternalException(e);
-		}
-
-		//gets the type of the (innermost layer's) array members
-		String memberType = Type.getArrayMemberType(arraySignature);
-		while (Type.isArray(memberType)) {
-			memberType = Type.getArrayMemberType(memberType);
-		}
-
-		//(possibly) resolves the array signature
-    	if (Type.isReference(memberType)) {
-    		try {
-				hier.resolveClass(currentClassName, arraySignature);
-    		} catch (ClassFileNotFoundException e) {
-                throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
-    			return;
-    		} catch (ClassFileNotAccessibleException e) {
-                throwNew(state, ILLEGAL_ACCESS_ERROR);
-    			return;
-    		} catch (BadClassFileException e) {
-    		    throwVerifyError(state);
-    		    return;
+    @Override
+    protected BytecodeCooker bytecodeCooker() {
+        return (state) -> {
+            //checks the number of dimensions
+            final int ndims = data.immediateUnsignedByte();
+            if (ndims <= 0) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
             }
-    	}
 
-		//checks the number of instantiation dimensions
-		if (ndims <= 0) { //TODO check that no error arise because of incorrect byte concatenation interpreted as negative
-            throwVerifyError(state);
-			return;
-		}
+            //sets the array dimensions
+            this.dimensionsCounts = new Primitive[ndims];
+            try {
+                for (int i = 0; i < ndims; ++i) {
+                    this.dimensionsCounts[i] = (Primitive) this.data.operand(i);
+                    //TODO length check?
+                }
+            } catch (ClassCastException e) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            }
 
-		//generates the next states
-    	this.state = state;
-    	this.ctx = ctx;
-    	this.pcOffset = MULTIANEWARRAY_OFFSET;
-		this.dimensionsCounts = new Primitive[ndims];
-		try {
-		    for (int i = ndims - 1; i >= 0; --i) {
-		        this.dimensionsCounts[i] = (Primitive) state.popOperand();
-		        //TODO length check?
-		    }
-		} catch (OperandStackEmptyException | ClassCastException e) {
-            throwVerifyError(state);
-            return;
-		}
-    	this.arrayType = arraySignature;
-    	generateStates();
-	}
+            //sets the array type
+            this.arrayType = this.data.className();
+
+            //resolves the member class
+            try {
+                final String currentClassName = state.getCurrentMethodSignature().getClassName();
+                state.getClassHierarchy().resolveClass(currentClassName, this.data.className()); //same as resolving the member class
+            } catch (ClassFileNotFoundException e) {
+                throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                exitFromAlgorithm();
+            } catch (ClassFileNotAccessibleException e) {
+                throwNew(state, ILLEGAL_ACCESS_ERROR);
+                exitFromAlgorithm();
+            } catch (BadClassFileException e) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            } catch (ThreadStackEmptyException e) {
+                //this should never happen
+                failExecution(e);
+            }
+            
+            //completes cooking
+            cookMore(state, data);
+        };
+    }
+    
+    @Override
+    protected Supplier<Integer> programCounterUpdate() {
+        return () -> MULTIANEWARRAY_OFFSET;
+    }
 }

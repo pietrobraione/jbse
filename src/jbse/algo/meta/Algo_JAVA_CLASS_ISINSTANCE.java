@@ -1,44 +1,52 @@
 package jbse.algo.meta;
 
+import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.throwVerifyError;
-import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import static jbse.common.Type.isPrimitiveBinaryClassName;
 
-import jbse.algo.Algorithm;
-import jbse.algo.ExecutionContext;
-import jbse.algo.exc.InterruptException;
-import jbse.algo.exc.SymbolicValueNotAllowedException;
+import java.util.function.Supplier;
+
+import jbse.algo.StrategyUpdate;
 import jbse.bc.ClassHierarchy;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.Objekt;
-import jbse.mem.State;
-import jbse.mem.exc.InvalidProgramCounterException;
-import jbse.mem.exc.OperandStackEmptyException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 import jbse.val.Simplex;
 
-public class Algo_JAVA_CLASS_ISINSTANCE implements Algorithm {
-	@Override
-	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, SymbolicValueNotAllowedException, 
-	InterruptException {
-		try {
-            //gets from the operand stack the reference to the 
-            //object to be checked
-            final Reference tmpValue;
-            try {
-                tmpValue = (Reference) state.popOperand();
-            } catch (OperandStackEmptyException e) {
-                throwVerifyError(state);
-                return;
-            }
-            
-			//gets the 'this' java.lang.Class instance from the heap 
+public final class Algo_JAVA_CLASS_ISINSTANCE extends Algo_INVOKEMETA {
+    public Algo_JAVA_CLASS_ISINSTANCE() {
+        super(false);
+    }
+    
+    @Override
+    protected Supplier<Integer> numOperands() {
+        return () -> 2;
+    }
+    
+    @Override
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            //gets the 'this' java.lang.Class instance from the heap 
             //and the name of the class it represents
-            final Reference javaClassRef = (Reference) state.popOperand();
+            Reference javaClassRef = null; //to keep the compiler happy;
+            try {
+                javaClassRef = (Reference) this.data.operand(0);
+            } catch (ClassCastException e) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            }
             final Instance_JAVA_CLASS javaClassObject = (Instance_JAVA_CLASS) state.getObject(javaClassRef);
             final String representedClass = javaClassObject.representedClass();
+
+            //gets the reference to the object to be checked
+            Reference tmpValue = null; //to keep the compiler happy
+            try {
+                tmpValue = (Reference) this.data.operand(1);
+            } catch (ClassCastException e) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            }
 
             //determines which value to push on the operand stack
             final Simplex valToPush;
@@ -52,18 +60,9 @@ public class Algo_JAVA_CLASS_ISINSTANCE implements Algorithm {
                 final String objClass = obj.getType();
                 valToPush = state.getCalculator().valInt(hier.isSubclass(objClass, representedClass) ? 1 : 0);
             }
+            
+            //pushes the value
             state.pushOperand(valToPush);
-		} catch (OperandStackEmptyException | ClassCastException e) {
-		    throwVerifyError(state);
-		    throw InterruptException.getInstance();
-		}
-
-        //increments the program counter
-		try {
-			state.incPC(INVOKESPECIALSTATICVIRTUAL_OFFSET);
-		} catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
-		}
-		throw InterruptException.getInstance();
-	}
+        };
+    }
 }

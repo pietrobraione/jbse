@@ -1,19 +1,15 @@
 package jbse.algo;
 
+import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwVerifyError;
 
-import jbse.bc.exc.BadClassFileException;
-import jbse.common.exc.UnexpectedInternalException;
+import java.util.function.Supplier;
+
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
-import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.InvalidInputException;
-import jbse.mem.Frame;
 import jbse.mem.State;
 import jbse.mem.SwitchTable;
-import jbse.mem.exc.ContradictionException;
-import jbse.mem.exc.InvalidProgramCounterException;
-import jbse.mem.exc.OperandStackEmptyException;
-import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XSWITCH;
 import jbse.val.Calculator;
 import jbse.val.Expression;
@@ -28,86 +24,111 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  * @author unknown
  */
-final class Algo_XSWITCH extends MultipleStateGenerator<DecisionAlternative_XSWITCH> implements Algorithm {
-	boolean isTableSwitch;
+final class Algo_XSWITCH extends Algorithm<
+BytecodeData_SWITCH, 
+DecisionAlternative_XSWITCH,
+StrategyDecide<DecisionAlternative_XSWITCH>, 
+StrategyRefine<DecisionAlternative_XSWITCH>, 
+StrategyUpdate<DecisionAlternative_XSWITCH>> {
 
-	public Algo_XSWITCH() {
-		super(DecisionAlternative_XSWITCH.class);
-	}
-	
-	@Override
-	public void exec(State state, final ExecutionContext ctx) 
-	throws ThreadStackEmptyException, 
-	DecisionException, ContradictionException {
-		final Calculator calc = state.getCalculator();
-		
-		//gets the switch table
-		final SwitchTable tab;
-		try {
-			final Frame f = state.getCurrentFrame();
-			tab = new SwitchTable(f, calc, this.isTableSwitch);
-		} catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
-			return;
-		}
-		
-		//pops the selector
-		final Primitive selector;
-		try {
-		    selector = (Primitive) state.popOperand();
-		} catch (OperandStackEmptyException | ClassCastException e) {
-		    throwVerifyError(state);
-		    return;
-		}
-		
-		this.ds = (result) -> {
-			final Outcome o = ctx.decisionProcedure.decide_XSWITCH(selector, tab, result);
-			return o;
-		};
-		
-		this.rs = (State s, DecisionAlternative_XSWITCH r) -> {
-			//augments the path condition
-			final Expression branchCondition;
-			try {
-				if (r.isDefault()) {
-					branchCondition = (Expression) tab.getDefaultClause(selector);
-				} else {  
-					final int index = r.value();
-					branchCondition = (Expression) selector.eq(calc.valInt(index));
-				}
-			} catch (InvalidOperandException | InvalidTypeException e) {
-				//this should never happen after call to decideSwitch
-				throw new UnexpectedInternalException(e);
-			}
-			s.assume(ctx.decisionProcedure.simplify(branchCondition));
-		};
-		
-		this.us = (State s, DecisionAlternative_XSWITCH r) -> {
-			final int jumpOffset;
-			if (r.isDefault()) {
-				jumpOffset = tab.jumpOffsetDefault();
-			} else {
-				final int index = r.value();
-				jumpOffset = tab.jumpOffset(index);
-			}
-			try {
-				s.incPC(jumpOffset);
-			} catch (InvalidProgramCounterException e) {
-	            throwVerifyError(state);
-			}
-		};
-		
-		//generates all the states		
-    	this.state = state;
-    	this.ctx = ctx;		
-		try {
-			generateStates();
-		} catch (InvalidInputException e) {
-			//bad selector
-            throwVerifyError(state);
-		} catch (BadClassFileException | InvalidTypeException e) {
-			//this should never happen
-			throw new UnexpectedInternalException(e);
-		}
-	}
+    private final boolean isTableSwitch; //set by constructor
+    
+    /**
+     * Constructor.
+     * 
+     * @param isTableSwitch {@code true} for tableswitch, 
+     *        {@code false} for lookupswitch.
+     */
+    public Algo_XSWITCH(boolean isTableSwitch) {
+        this.isTableSwitch = isTableSwitch;
+    }
+    
+    private Primitive selector; //set by cooker
+    private int jumpOffset; //set by updater
+    
+    @Override
+    protected Supplier<Integer> numOperands() {
+        return () -> 1; //the switch selector
+    }
+    
+    @Override
+    protected Supplier<BytecodeData_SWITCH> bytecodeData() {
+        return () -> BytecodeData_SWITCH.whereTableSwitch(this.isTableSwitch).get();
+    }
+    
+    @Override
+    protected BytecodeCooker bytecodeCooker() {
+        return (state) -> {
+            try {
+                this.selector = (Primitive) this.data.operand(0);
+            } catch (ClassCastException e) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            }
+        };
+    }
+    
+    @Override
+    protected Class<DecisionAlternative_XSWITCH> classDecisionAlternative() {
+        return DecisionAlternative_XSWITCH.class;
+    }
+    
+    @Override
+    protected StrategyDecide<DecisionAlternative_XSWITCH> decider() {
+        return (state, result) -> {
+            final Outcome o = this.ctx.decisionProcedure.decide_XSWITCH(this.selector, this.data.switchTable(), result);
+            return o;
+        };
+    }
+    
+    @Override
+    protected StrategyRefine<DecisionAlternative_XSWITCH> refiner() {
+        return (state, alt) -> {
+            //augments the path condition
+            Expression branchCondition = null; //to keep the compiler happy
+            try {
+                final Primitive selector = (Primitive) this.data.operand(0);
+                if (alt.isDefault()) {
+                    branchCondition = (Expression) this.data.switchTable().getDefaultClause(selector);
+                } else {  
+                    final int index = alt.value();
+                    final Calculator calc = state.getCalculator();
+                    branchCondition = (Expression) selector.eq(calc.valInt(index));
+                }
+            } catch (InvalidOperandException | InvalidTypeException e) {
+                //this should never happen after call to decideSwitch
+                failExecution(e);
+            }
+            state.assume(this.ctx.decisionProcedure.simplify(branchCondition));
+        };
+    }
+    
+    @Override
+    protected StrategyUpdate<DecisionAlternative_XSWITCH> updater() {
+        return (state, alt) -> {
+            final SwitchTable tab = this.data.switchTable();
+            if (alt.isDefault()) {
+                this.jumpOffset = tab.jumpOffsetDefault();
+            } else {
+                final int index = alt.value();
+                this.jumpOffset = tab.jumpOffset(index);
+            }
+        };
+    }
+    
+    @Override
+    protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
+        return () -> true;
+    }
+    
+    @Override
+    protected Supplier<Integer> programCounterUpdate() {
+        return () -> this.jumpOffset;
+    }
+    
+    @Override
+    protected void onInvalidInputException(State state, InvalidInputException e) {
+        //bad selector
+        throwVerifyError(state);
+    }
 }

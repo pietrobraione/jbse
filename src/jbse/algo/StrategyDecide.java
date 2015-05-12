@@ -6,6 +6,7 @@ import jbse.bc.exc.BadClassFileException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.InvalidInputException;
+import jbse.mem.State;
 
 /**
  * Strategy for deciding the states following the current one.
@@ -15,20 +16,16 @@ import jbse.dec.exc.InvalidInputException;
  * @param <R> the type of the possible outcomes of the decision.
  */
 @FunctionalInterface
-interface StrategyDecide<R> {
+public interface StrategyDecide<R> {
 	/**
 	 * Decides the states following the current one.
 	 * 
-	 * @param results a (possibly empty) {@link SortedSet}{@code <R>}, 
+	 * @param state the {@link State} whose successors must be decided.
+	 * @param result a (possibly empty) {@link SortedSet}{@code <R>}, 
 	 *        which the method will update by storing in it an 
 	 *        instance of {@code R} for each possible outcome of 
 	 *        the decision. 
-	 * @return {@code true} iff some decision outcomes 
-	 *         require refinement of the produced state. Note
-	 *         that {@code result.size() > 1} is typically sufficient
-	 *         for the return value to be {@code true}, but it may not
-	 *         (e.g., for any values no refinement is necessary), and
-	 *         it may not even be necessary.
+	 * @return an {@link Outcome}.
 	 * @throws InvalidInputException possibly thrown by the decision procedure
 	 *         when invoked with invalid parameters.
      * @throws DecisionException possibly thrown by the decision procedure
@@ -37,6 +34,6 @@ interface StrategyDecide<R> {
      *         when performing reference resolution, if some classfile is
      *         missing or is incompatible with the current JBSE.
 	 */
-	public Outcome decide(SortedSet<R> results) 
+	public Outcome decide(State state, SortedSet<R> result) 
 	throws InvalidInputException, BadClassFileException, DecisionException;
 }

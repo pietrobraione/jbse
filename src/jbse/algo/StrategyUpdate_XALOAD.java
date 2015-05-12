@@ -25,13 +25,13 @@ import jbse.tree.VisitorDecisionAlternative_XALOAD;
  */
 abstract class StrategyUpdate_XALOAD implements StrategyUpdate<DecisionAlternative_XALOAD> {
 	abstract public void updateReference(State s, DecisionAlternative_XALOAD_Unresolved dar) 
-	throws DecisionException, ThreadStackEmptyException;
+	throws DecisionException, ThreadStackEmptyException, InterruptException;
 
 	abstract public void updateResolved(State s, DecisionAlternative_XALOAD_Resolved dav) 
-	throws DecisionException, ThreadStackEmptyException;
+	throws DecisionException, ThreadStackEmptyException, InterruptException;
 
 	abstract public void updateOut(State s, DecisionAlternative_XALOAD_Out dao) 
-	throws ThreadStackEmptyException;
+	throws ThreadStackEmptyException, InterruptException;
 
 	@Override
 	public final void update(final State s, DecisionAlternative_XALOAD r)
@@ -41,31 +41,31 @@ abstract class StrategyUpdate_XALOAD implements StrategyUpdate<DecisionAlternati
 		new VisitorDecisionAlternative_XALOAD() {
 			@Override
 			public void visitDecisionAlternative_XALOAD_Expands(DecisionAlternative_XALOAD_Expands dac) 
-			throws DecisionException, ThreadStackEmptyException {
+			throws DecisionException, ThreadStackEmptyException, InterruptException {
 				StrategyUpdate_XALOAD.this.updateReference(s, dac);
 			}
 
 			@Override
 			public void visitDecisionAlternative_XALOAD_Aliases(DecisionAlternative_XALOAD_Aliases dai) 
-			throws DecisionException, ThreadStackEmptyException {
+			throws DecisionException, ThreadStackEmptyException, InterruptException {
 				StrategyUpdate_XALOAD.this.updateReference(s, dai);
 			}
 
 			@Override
 			public void visitDecisionAlternative_XALOAD_Null(DecisionAlternative_XALOAD_Null dan) 
-			throws DecisionException, ThreadStackEmptyException {
+			throws DecisionException, ThreadStackEmptyException, InterruptException {
 				StrategyUpdate_XALOAD.this.updateReference(s, dan);
 			}
 
 			@Override
 			public void visitDecisionAlternative_XALOAD_Resolved(DecisionAlternative_XALOAD_Resolved dav) 
-			throws DecisionException, ThreadStackEmptyException {
+			throws DecisionException, ThreadStackEmptyException, InterruptException {
 				StrategyUpdate_XALOAD.this.updateResolved(s, dav);
 			}
 
 			@Override
 			public void visitDecisionAlternative_XALOAD_Out(DecisionAlternative_XALOAD_Out dao) 
-			throws ThreadStackEmptyException {
+			throws ThreadStackEmptyException, InterruptException {
 				StrategyUpdate_XALOAD.this.updateOut(s, dao);
 			}
 		};
