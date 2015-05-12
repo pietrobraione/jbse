@@ -2,7 +2,6 @@ package jbse.algo;
 
 import static jbse.algo.Util.ensureClassCreatedAndInitialized;
 
-import jbse.algo.exc.InterruptException;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodCodeNotFoundException;

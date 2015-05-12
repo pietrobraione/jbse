@@ -17,6 +17,21 @@ import jbse.common.exc.UnexpectedInternalException;
  */
 public class DecisionAlternativeComparators {
     /**
+     * Default comparator for {@link DecisionAlternative_NONE}s.
+     * 
+     * @return A {@link Comparator}{@code <}{@link DecisionAlternative_NONE}{@code >}. Being 
+     *         {@link DecisionAlternative_NONE} singleton the comparator always returns 0.
+     */
+    private static Comparator<DecisionAlternative_NONE> defaultComparatorDecisionAlternative_NONE() {
+        return new Comparator<DecisionAlternative_NONE>() {
+            @Override
+            public int compare(DecisionAlternative_NONE o1, DecisionAlternative_NONE o2) {
+                return 0;
+            }
+        };
+    }
+
+    /**
      * Default comparator for {@link DecisionAlternative_IFX}s.
      * 
      * @return A {@link Comparator}{@code <}{@link DecisionAlternative_IFX}{@code >} yielding
@@ -248,6 +263,7 @@ public class DecisionAlternativeComparators {
 	 * Default constructor.
 	 */
     public DecisionAlternativeComparators() {
+        this.comparators.put(DecisionAlternative_NONE.class,       defaultComparatorDecisionAlternative_NONE());
     	this.comparators.put(DecisionAlternative_IFX.class,        defaultComparatorDecisionAlternative_IFX());
     	this.comparators.put(DecisionAlternative_XCMPY.class,      defaultComparatorDecisionAlternative_XCMPY());
     	this.comparators.put(DecisionAlternative_XSWITCH.class,    defaultComparatorDecisionAlternative_XSWITCH());

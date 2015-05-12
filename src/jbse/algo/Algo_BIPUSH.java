@@ -1,34 +1,72 @@
 package jbse.algo;
 
-import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Offsets.BIPUSH_OFFSET;
 
-import jbse.mem.State;
-import jbse.mem.exc.InvalidProgramCounterException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import java.util.function.Supplier;
+
+import jbse.dec.DecisionProcedureAlgorithms;
+import jbse.tree.DecisionAlternative_NONE;
 
 /**
- * Command managing the "push byte" (bipush) bytecode. 
+ * Algorithm managing the "push byte immediate" 
+ * (bipush) bytecode. 
  * 
- * @author unknown
  * @author Pietro Braione
  */
-class Algo_BIPUSH implements Algorithm {
+final class Algo_BIPUSH extends Algorithm<
+BytecodeData_1SB,
+DecisionAlternative_NONE,
+StrategyDecide<DecisionAlternative_NONE>,
+StrategyRefine<DecisionAlternative_NONE>,
+StrategyUpdate<DecisionAlternative_NONE>> {
+    
+    @Override
+    protected Supplier<Integer> numOperands() {
+        return () -> 0;
+    }
+    
+    @Override
+    protected Supplier<BytecodeData_1SB> bytecodeData() {
+        return BytecodeData_1SB::get;
+    }
 	
-	@Override
-    public void exec(State state, ExecutionContext ctx) 
-    throws ThreadStackEmptyException {
-        try {
-        	state.pushOperand(state.getCalculator().valInt((int) state.getInstruction(1)));
-		} catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
-			return;
-		}
-		
-		try {
-			state.incPC(2);
-		} catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
-			return;
-		}
-    } 
+    @Override
+    protected BytecodeCooker bytecodeCooker() {
+        return (state) -> { };
+    }
+    
+    @Override
+    protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
+        return DecisionAlternative_NONE.class;
+    }
+    
+    @Override
+    protected StrategyDecide<DecisionAlternative_NONE> decider() {
+        return (state, result) -> {
+            result.add(DecisionAlternative_NONE.instance());
+            return DecisionProcedureAlgorithms.Outcome.FF;
+        };
+    }
+
+    @Override
+    protected StrategyRefine<DecisionAlternative_NONE> refiner() {
+        return (state, alt) -> { };
+    }
+
+    @Override
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> { 
+            state.pushOperand(state.getCalculator().valInt(this.data.immediateSignedByte()));
+        };
+    }
+    
+    @Override
+    protected final Supplier<Boolean> isProgramCounterUpdateAnOffset() {
+        return () -> true;
+    }
+    
+    @Override
+    protected final Supplier<Integer> programCounterUpdate() {
+        return () -> BIPUSH_OFFSET;
+    }
 }

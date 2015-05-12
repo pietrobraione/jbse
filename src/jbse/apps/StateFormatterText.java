@@ -417,7 +417,7 @@ public abstract class StateFormatterText implements Formatter {
 		final String lineSep = (breakLines ? LINE_SEP : "");
 		String tmp = "";
         tmp += indentCurrent + "Method signature: " + f.getCurrentMethodSignature().toString() + lineSep;
-        tmp += indentCurrent + "Program counter: " + f.getPC() + lineSep;
+        tmp += indentCurrent + "Program counter: " + f.getProgramCounter() + lineSep;
         tmp += indentCurrent + "Program counter after return: "; 
         tmp += ((f.getReturnProgramCounter() == Frame.UNKNOWN_PC) ? "<UNKNOWN>" : f.getReturnProgramCounter()) + lineSep;
 		final ClassHierarchy hier = s.getClassHierarchy();

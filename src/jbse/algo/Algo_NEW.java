@@ -1,85 +1,104 @@
 package jbse.algo;
 
-import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.ensureClassCreatedAndInitialized;
+import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Offsets.NEW_OFFSET;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 
-import jbse.algo.exc.InterruptException;
-import jbse.bc.ClassHierarchy;
+import java.util.function.Supplier;
+
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
-import jbse.bc.exc.InvalidIndexException;
-import jbse.common.Util;
-import jbse.common.exc.ClasspathException;
-import jbse.common.exc.UnexpectedInternalException;
-import jbse.dec.exc.DecisionException;
-import jbse.mem.State;
-import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 
-final class Algo_NEW implements Algorithm {
+final class Algo_NEW extends Algorithm<
+BytecodeData_1CL,
+DecisionAlternative_NONE, 
+StrategyDecide<DecisionAlternative_NONE>, 
+StrategyRefine<DecisionAlternative_NONE>, 
+StrategyUpdate<DecisionAlternative_NONE>> {
 	
-	@Override
-	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, DecisionException, ClasspathException, 
-	InterruptException {
-		final int index;
-		try {
-			final byte tmp1 = state.getInstruction(1);
-			final byte tmp2 = state.getInstruction(2);
-			index = Util.byteCat(tmp1,tmp2);
-		} catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
-			return;
-		}
-        
-        //performs resolution
-        final String classSignature;
-        {
-            final ClassHierarchy hier = state.getClassHierarchy();
-            final String currentClassName = state.getCurrentMethodSignature().getClassName();
+    @Override
+    protected Supplier<Integer> numOperands() {
+        return () -> 0;
+    }
+    
+    @Override
+    protected Supplier<BytecodeData_1CL> bytecodeData() {
+        return BytecodeData_1CL::get;
+    }
+    
+    @Override
+    protected BytecodeCooker bytecodeCooker() {
+        return (state) -> {
+            //performs resolution
             try {
-                classSignature = hier.getClassFile(currentClassName).getClassSignature(index);
-            } catch (InvalidIndexException e) {
-                throwVerifyError(state);
-                return;
-            } catch (BadClassFileException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
-            }
-            try {
-                hier.resolveClass(currentClassName, classSignature);
+                final String currentClassName = state.getCurrentMethodSignature().getClassName();
+                state.getClassHierarchy().resolveClass(currentClassName, this.data.className());
             } catch (ClassFileNotFoundException e) {
                 throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
-                return;
+                exitFromAlgorithm();
             } catch (ClassFileNotAccessibleException e) {
                 throwNew(state, ILLEGAL_ACCESS_ERROR);
-                return;
+                exitFromAlgorithm();
             } catch (BadClassFileException e) {
                 throwVerifyError(state);
-                return;
+                exitFromAlgorithm();
+            } catch (ThreadStackEmptyException e) {
+                //this should never happen
+                failExecution(e);
             }
-        }
+        };
+    }
+    
+    @Override
+    protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
+        return DecisionAlternative_NONE.class;
+    }
+    
+    @Override
+    protected StrategyDecide<DecisionAlternative_NONE> decider() {
+        return (state, result) -> {
+            result.add(DecisionAlternative_NONE.instance());
+            return DecisionProcedureAlgorithms.Outcome.FF;
+        };
+    }
 
-		//possibly creates and initializes the class
-		try {
-			ensureClassCreatedAndInitialized(state, classSignature, ctx.decisionProcedure);
-		} catch (BadClassFileException e) {
-			//this should never happen
-			throw new UnexpectedInternalException(e);
-		}
-
-        //creates the new object in the heap
-        state.pushOperand(state.createInstance(classSignature));
-        
-		try {
-			state.incPC(3);
-		} catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
-			return;
-		}
-	} 
+    @Override
+    protected StrategyRefine<DecisionAlternative_NONE> refiner() {
+        return (state, alt) -> { };
+    }
+    
+    @Override
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            try {
+                final String className = this.data.className(); 
+                //possibly creates and initializes the class
+                ensureClassCreatedAndInitialized(state, className, ctx.decisionProcedure);
+                //creates the new object in the heap
+                state.pushOperand(state.createInstance(className));
+            } catch (BadClassFileException e) {
+                //this should never happen
+                failExecution(e);
+            }
+        };
+    }
+    
+    @Override
+    protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
+        return () -> true;
+    }
+    
+    @Override
+    protected Supplier<Integer> programCounterUpdate() {
+        return () -> NEW_OFFSET;
+    }
 }

@@ -1,31 +1,67 @@
 package jbse.algo;
 
-import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Offsets.SWAP_OFFSET;
 
-import jbse.mem.State;
-import jbse.mem.exc.InvalidProgramCounterException;
-import jbse.mem.exc.OperandStackEmptyException;
-import jbse.mem.exc.ThreadStackEmptyException;
-import jbse.val.Value;
+import java.util.function.Supplier;
 
-final class Algo_SWAP implements Algorithm {
-	@Override
-	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException {
-	    try {
-	        final Value tmp2 = state.popOperand();
-	        final Value tmp1 = state.popOperand();
-	        state.pushOperand(tmp2);
-	        state.pushOperand(tmp1);
-	    } catch (OperandStackEmptyException e) {
-	        throwVerifyError(state);
-	        return;
-	    }
+import jbse.dec.DecisionProcedureAlgorithms;
+import jbse.tree.DecisionAlternative_NONE;
 
-		try {
-			state.incPC();
-		} catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
-		}
-	}
+final class Algo_SWAP extends Algorithm<
+BytecodeData_0,
+DecisionAlternative_NONE, 
+StrategyDecide<DecisionAlternative_NONE>, 
+StrategyRefine<DecisionAlternative_NONE>, 
+StrategyUpdate<DecisionAlternative_NONE>> {
+
+    @Override
+    protected Supplier<Integer> numOperands() {
+        return () -> 2;
+    }
+    
+    @Override
+    protected Supplier<BytecodeData_0> bytecodeData() {
+        return BytecodeData_0::get;
+    }
+    
+    @Override
+    protected BytecodeCooker bytecodeCooker() {
+        return (state) -> { };
+    }
+
+    @Override
+    protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
+        return DecisionAlternative_NONE.class;
+    }
+    
+    @Override
+    protected StrategyDecide<DecisionAlternative_NONE> decider() {
+        return (state, result) -> {
+            result.add(DecisionAlternative_NONE.instance());
+            return DecisionProcedureAlgorithms.Outcome.FF;
+        };
+    }
+
+    @Override
+    protected StrategyRefine<DecisionAlternative_NONE> refiner() {
+        return (state, alt) -> { };
+    }
+    
+    @Override
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.pushOperand(this.data.operand(1));
+            state.pushOperand(this.data.operand(0));
+        };
+    }
+    
+    @Override
+    protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
+        return () -> true;
+    }
+    
+    @Override
+    protected Supplier<Integer> programCounterUpdate() {
+        return () -> SWAP_OFFSET;
+    }
 }

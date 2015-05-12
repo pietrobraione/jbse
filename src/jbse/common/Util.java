@@ -6,6 +6,17 @@ package jbse.common;
 public final class Util {
     // symbols
     public static final String ROOT_FRAME_MONIKER = "{ROOT}:";
+    
+    /**
+     * Given a byte, returns its value interpreted
+     * as it were unsigned.
+     * 
+     * @param b a {@code byte}.
+     * @return a {@code short}, the zero-extension of {@code b}.
+     */
+    public static short asUnsignedByte(byte b) {
+        return (short) (((short) 0x00FF) & ((short) b));
+    }
 
     /**
      * Given four bytes, returns the int resulting by their bitwise

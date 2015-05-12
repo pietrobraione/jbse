@@ -13,7 +13,7 @@ import jbse.val.exc.InvalidTypeException;
  * @param <R> the type of the possible outcomes of a previous decision.
  */
 @FunctionalInterface
-interface StrategyRefine<R> {
+public interface StrategyRefine<R> {
 	/**
 	 * Refines a {@link State}. The implementors must augment the 
 	 * state's {@link PathCondition}, and possibly do other actions 

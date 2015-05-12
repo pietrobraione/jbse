@@ -1,36 +1,72 @@
 package jbse.algo;
 
-import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Offsets.SIPUSH_OFFSET;
 
-import jbse.common.Util;
-import jbse.mem.State;
-import jbse.mem.exc.InvalidProgramCounterException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import java.util.function.Supplier;
+
+import jbse.dec.DecisionProcedureAlgorithms;
+import jbse.tree.DecisionAlternative_NONE;
 
 /**
- * Command managing the "push short" (sipush) bytecode. 
+ * Algorithm managing the "push short immediate" 
+ * (sipush) bytecode. 
  * 
- * @author unknown
  * @author Pietro Braione
  */
-final class Algo_SIPUSH implements Algorithm {
+final class Algo_SIPUSH extends Algorithm<
+BytecodeData_1SW,
+DecisionAlternative_NONE,
+StrategyDecide<DecisionAlternative_NONE>,
+StrategyRefine<DecisionAlternative_NONE>,
+StrategyUpdate<DecisionAlternative_NONE>> {
 	
-	@Override
-	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException {
-		try {
-			final byte tmp0 = state.getInstruction(1);
-			final byte tmp1 = state.getInstruction(2);
-			state.pushOperand(state.getCalculator().valInt((int) Util.byteCatShort(tmp0, tmp1)));
-		} catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
-			return;
-		}
+    @Override
+    protected Supplier<Integer> numOperands() {
+        return () -> 0;
+    }
+    
+    @Override
+    protected Supplier<BytecodeData_1SW> bytecodeData() {
+        return BytecodeData_1SW::get;
+    }
+    
+    @Override
+    protected BytecodeCooker bytecodeCooker() {
+        return (state) -> { };
+    }
+    
+    @Override
+    protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
+        return DecisionAlternative_NONE.class;
+    }
+    
+    @Override
+    protected StrategyDecide<DecisionAlternative_NONE> decider() {
+        return (state, result) -> {
+            result.add(DecisionAlternative_NONE.instance());
+            return DecisionProcedureAlgorithms.Outcome.FF;
+        };
+    }
 
-		try {
-			state.incPC(3);
-		} catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
-		}
-	}
+    @Override
+    protected StrategyRefine<DecisionAlternative_NONE> refiner() {
+        return (state, alt) -> { };
+    }
+    
+    @Override
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> { 
+            state.pushOperand(state.getCalculator().valInt(this.data.immediateSignedWord()));
+        };
+    }
+    
+    @Override
+    protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
+        return () -> true;
+    }
+    
+    @Override
+    protected Supplier<Integer> programCounterUpdate() {
+        return () -> SIPUSH_OFFSET;
+    }
 }

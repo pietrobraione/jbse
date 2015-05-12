@@ -40,7 +40,6 @@ import jbse.dec.DecisionProcedureSicstus;
 import jbse.dec.DecisionProcedureSignAnalysis;
 import jbse.dec.DecisionProcedureSMTLIB2_AUFNIRA;
 import jbse.dec.exc.DecisionBacktrackException;
-import jbse.dec.exc.DecisionEmptyException;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.Engine;
 import jbse.jvm.EngineParameters;
@@ -87,7 +86,7 @@ import jbse.tree.StateTree.BranchPoint;
  * 
  * @author Pietro Braione
  */
-public class Run {
+public final class Run {
 	/** The {@link RunParameters} of the symbolic execution. */
 	private final RunParameters parameters;
 
@@ -213,7 +212,7 @@ public class Run {
 		            final State currentState = Run.this.engine.getCurrentState();
 					Run.this.emitState(currentState, this.isBranch);
 				} catch (UnexpectedInternalException e) {
-					IO.println(Run.this.err, ERROR_ENGINE_UNEXPECTED);
+					IO.println(Run.this.err, ERROR_UNEXPECTED);
 					IO.printException(Run.this.err, e);
 					return true;
 				}
@@ -223,7 +222,7 @@ public class Run {
 			// prompts the user for next step in case of interactive mode
 			boolean stop = false;
 			if (Run.this.parameters.interactionMode == InteractionMode.STEP_BY_STEP) {
-				String ans = IO.readln(Run.this.out, PROMPT_SHOULD_STEP);
+				final String ans = IO.readln(Run.this.out, PROMPT_SHOULD_STEP);
 				if (ans.equals("x")) {
 					stop = true;
 				}
@@ -248,7 +247,7 @@ public class Run {
 			//at the start of a trace we are on a branch
 			this.isBranch = true;
 
-			//prints the root/branch
+			//exits if user wants
 			boolean stop = false;
 			if ((Run.this.parameters.stepShowMode == StepShowMode.ALL
 					|| Run.this.parameters.stepShowMode == StepShowMode.ROOT_BRANCHES_LEAVES)) {
@@ -269,7 +268,7 @@ public class Run {
 					IO.printException(Run.this.err, e);
 					return true;
 				} catch (CannotManageStateException | UnexpectedInternalException e) {
-					IO.println(Run.this.err, ERROR_ENGINE_UNEXPECTED);
+					IO.println(Run.this.err, ERROR_UNEXPECTED);
 					IO.printException(Run.this.err, e);
 					return true;
 				}
@@ -380,13 +379,13 @@ public class Run {
 						|| Run.this.parameters.stepShowMode == StepShowMode.METHOD //already shown
 						|| Run.this.parameters.stepShowMode == StepShowMode.NONE   //not to show
 						|| (this.traceKind == TraceKind.UNSAFE 
-						&& !Run.this.parameters.tracesToShow.contains(TraceTypes.UNSAFE))
+						    && !Run.this.parameters.tracesToShow.contains(TraceTypes.UNSAFE))
 						|| (this.traceKind == TraceKind.SAFE 
-						&& !Run.this.parameters.tracesToShow.contains(TraceTypes.SAFE))
-						|| this.traceKind == TraceKind.CONTRADICTORY
-						&& !Run.this.parameters.tracesToShow.contains(TraceTypes.CONTRADICTORY)
-						|| this.traceKind == TraceKind.OUT_OF_SCOPE
-						&& !Run.this.parameters.tracesToShow.contains(TraceTypes.OUT_OF_SCOPE)) { 
+						    && !Run.this.parameters.tracesToShow.contains(TraceTypes.SAFE))
+						|| (this.traceKind == TraceKind.CONTRADICTORY
+						    && !Run.this.parameters.tracesToShow.contains(TraceTypes.CONTRADICTORY))
+						|| (this.traceKind == TraceKind.OUT_OF_SCOPE
+						    && !Run.this.parameters.tracesToShow.contains(TraceTypes.OUT_OF_SCOPE))) { 
 					//does nothing, the leaf state has been already printed 
 					//or must not be printed at all
 				} else {
@@ -438,8 +437,8 @@ public class Run {
 					//no counter
 					break;
 				}
-            } catch (CannotRefineException | UnexpectedInternalException e) { //unexpected
-                IO.println(Run.this.err, ERROR_ENGINE_UNEXPECTED);
+            } catch (CannotRefineException | UnexpectedInternalException e) {
+                IO.println(Run.this.err, ERROR_UNEXPECTED);
                 IO.printException(Run.this.err, e);
                 return true;
 			}
@@ -464,18 +463,9 @@ public class Run {
 		@Override
 		public boolean atDecisionException(DecisionException e) 
 		throws DecisionException {
-			if (e instanceof DecisionEmptyException) { //TODO ugly! Modify the visitor (or remove DecisionEmptyException and use only ContradictionException)
-				if (Run.this.parameters.showWarnings) { 
-	                final State currentState = Run.this.engine.getCurrentState();
-					IO.println(Run.this.err, currentState.getIdentifier() + WARNING_NO_DECISION_ALTERNATIVES);
-				}
-				this.traceKind = TraceKind.CONTRADICTORY;
-				return false;
-			} else {
-				IO.println(Run.this.err, ERROR_ENGINE_DECISION_PROCEDURE);
-				IO.printException(Run.this.err, e);
-				return super.atDecisionException(e);
-			}
+		    IO.println(Run.this.err, ERROR_ENGINE_DECISION_PROCEDURE);
+		    IO.printException(Run.this.err, e);
+		    return super.atDecisionException(e);
 		}
 
 		@Override
@@ -493,9 +483,8 @@ public class Run {
 				IO.println(Run.this.err, ERROR_CANNOT_INVOKE_NATIVE);
 			} else if (e instanceof NotYetImplementedException) {
 				IO.println(Run.this.err, ERROR_UNDEF_BYTECODE);
-			} else { // e instanceof MetaUnsupportedException or UninterpretedUnsupportedException
-				// TODO define an error message
-				IO.println(Run.this.err, ERROR_ENGINE_UNEXPECTED);
+			} else {
+				IO.println(Run.this.err, ERROR_UNEXPECTED);
 			}
 			IO.printException(Run.this.err, e);
 			return super.atCannotManageStateException(e);
@@ -520,7 +509,7 @@ public class Run {
 		@Override
 		public boolean atCannotBacktrackException(CannotBacktrackException e)
 		throws CannotBacktrackException {
-			IO.println(Run.this.err, ERROR_ENGINE_UNEXPECTED);
+			IO.println(Run.this.err, ERROR_UNEXPECTED);
 			IO.printException(Run.this.err, e);
 			return super.atCannotBacktrackException(e);
 		}
@@ -571,11 +560,10 @@ public class Run {
 				 EngineStuckException | CannotBacktrackException e) {
 			//already reported
 			retVal = 1;
-		} catch (ThreadStackEmptyException | 
-				 ContradictionException | FailureException | 
-				 UnexpectedInternalException e) {
+		} catch (ThreadStackEmptyException | ContradictionException |
+		         FailureException | UnexpectedInternalException e) {
 			//this should never happen because Actions does not rethrow these exceptions
-			IO.println(this.err, ERROR_ENGINE_UNEXPECTED);
+			IO.println(this.err, ERROR_UNEXPECTED);
 			IO.printException(Run.this.err, e);
 			retVal = 2;
 		}
@@ -592,7 +580,7 @@ public class Run {
 			IO.printException(this.err, e);
 			retVal = 1;
 		} catch (UnexpectedInternalException e) {
-			IO.println(this.err, ERROR_ENGINE_UNEXPECTED);
+			IO.println(this.err, ERROR_UNEXPECTED);
 			IO.printException(Run.this.err, e);
 			retVal = 2;
 		}
@@ -697,7 +685,7 @@ public class Run {
 	private int build() {
 		//TODO possibly move inside a builder
 		//TODO lots of controls on parameters
-		//TODO rethrow exception rather than returning an int, and move logging in the receiver
+		//TODO rethrow exception rather than returning an int, and centralize logging in the receiver
 
 		// sets the output and error streams
 		// first are to standard
@@ -783,7 +771,8 @@ public class Run {
                 }
             };
 		} else {
-		    throw new UnexpectedInternalException();
+		    IO.println(Run.this.err, ERROR_UNDEF_STATE_FORMAT);
+		    return 2;
 		}
 
 		//prints some feedback on forthcoming decision procedure creation
@@ -836,19 +825,12 @@ public class Run {
 			}
 		} catch (CannotBuildEngineException e) {
 			if (e instanceof CannotBuildDecisionProcedureException) {
-				if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.SICSTUS) {
-					IO.println(err, ERROR_SICSTUS_FAILED + e.getCause() + ".");
-				} else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC3) {
-					IO.println(err, ERROR_CVC3_FAILED + e.getCause() + ".");
-				} else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.Z3) {
-					IO.println(err, ERROR_Z3_FAILED + e.getCause() + ".");
-                } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC4) {
-                    IO.println(err, ERROR_CVC4_FAILED + e.getCause() + ".");
-				}
+                IO.println(err, ERROR_DECISION_PROCEDURE_FAILED + e.getCause() + ".");
+                return 1;
 			} else {
 				IO.println(this.err, ERROR_BUILD_FAILED + e.getCause() + ".");
+                return 2;
 			}
-			return 1;
 		} catch (DecisionException e) {
 			IO.println(this.err, ERROR_ENGINE_INIT_DECISION_PROCEDURE);
 			IO.printException(this.err, e);
@@ -864,16 +846,12 @@ public class Run {
 							+ (i == 1 ? "-st." : i == 2 ? "-nd." : i == 3 ? "-rd." : "-th."));
 				}
 			}
-		} catch (InvalidClassFileFactoryClassException e) {
-			IO.println(this.err, ERROR_ENGINE_CONFIGURATION);
-			IO.printException(Run.this.err, e);
-			return 1;
         } catch (ClasspathException e) {
             IO.println(this.err, ERROR_BAD_CLASSPATH);
             IO.printException(Run.this.err, e);
             return 1;
-		} catch (UnexpectedInternalException e) {
-			IO.println(this.err, ERROR_ENGINE_UNEXPECTED);
+		} catch (InvalidClassFileFactoryClassException | UnexpectedInternalException e) {
+			IO.println(this.err, ERROR_UNEXPECTED);
 			IO.printException(Run.this.err, e);
 			return 2;
 		}
@@ -927,7 +905,8 @@ public class Run {
 		        core = new DecisionProcedureSMTLIB2_AUFNIRA(core, calc, path + COMMANDLINE_LAUNCH_CVC4);
 		        coreNumeric = (needHeapCheck ? new DecisionProcedureSMTLIB2_AUFNIRA(coreNumeric, calc, path + COMMANDLINE_LAUNCH_CVC4) : null);
 		    } else {
-		        throw new UnexpectedInternalException();
+		        core.close(); //just to make the compiler happy
+		        throw new UnexpectedInternalException(ERROR_UNDEF_DECISION_PROCEDURE);
 		    }
 		} catch (DecisionException e) {
 			throw new CannotBuildDecisionProcedureException(e);
@@ -1139,10 +1118,6 @@ public class Run {
 	private static final String WARNING_PARTIAL_REFERENCE_RESOLUTION = " not expanded. It may be a " +
 			"hint of too strong user-defined constraints, possibly correct when enforcing redundancy by representation invariant.";
 
-	/** Warning: no alternative. */
-	private static final String WARNING_NO_DECISION_ALTERNATIVES = " contradictory path condition under any alternative. Will handle " 
-		+ "the situation as an undetected assumption violation occurred earlier, but it may be a hint of too strong user-defined constraints.";
-
 	/** Warning: timeout. */
 	private static final String WARNING_TIMEOUT = "Timeout.";
 
@@ -1155,24 +1130,15 @@ public class Run {
 	/** Warning: exhausted count scope. */
 	private static final String WARNING_SCOPE_EXHAUSTED_COUNT = " trace exhausted count scope.";
 
-	/** Error: unrecognizable signature. */
-	private static final String ERROR_BUILD_FAILED = "Failed construction of symbolic executor, cause: ";
-
 	/** Error: unable to open dump file. */
 	private static final String ERROR_DUMP_FILE_OPEN = "Could not open the dump file. The session will be displayed on console only.";
 
-	/** Error: unable to connect with Sicstus. */
-	private static final String ERROR_SICSTUS_FAILED = "Failed connection to Sicstus, cause: ";
+	/** Error: unable to connect with decision procedure. */
+	private static final String ERROR_DECISION_PROCEDURE_FAILED = "Failed connection to Sicstus, cause: ";
 
-	/** Error: unable to connect with CVC3. */
-	private static final String ERROR_CVC3_FAILED = "Failed connection to CVC3, cause: ";
-	
-	/** Error: unable to connect with Z3. */
-	private static final String ERROR_Z3_FAILED = "Failed connection to Z3, cause: ";
-	
-    /** Error: unable to connect with CVC4. */
-    private static final String ERROR_CVC4_FAILED = "Failed connection to CVC4, cause: ";
-    
+    /** Error: failed building symbolic executor. */
+    private static final String ERROR_BUILD_FAILED = "Failed construction of symbolic executor, cause: ";
+
 	/** Error: failed guidance. */
 	private static final String ERROR_GUIDANCE_FAILED = "Failed guidance, cause: ";
 
@@ -1195,25 +1161,28 @@ public class Run {
 	 * Error: unable to quit engine, because unable to quit the decision
 	 * procedure.
 	 */
-	private static final String ERROR_ENGINE_QUIT_DECISION_PROCEDURE = "Unexpected failure while quitting the decision procedure.";
+	private static final String ERROR_ENGINE_QUIT_DECISION_PROCEDURE = "Unexpected internal error while quitting the decision procedure.";
 
 	/** Error: cannot manage a bytecode. */
 	private static final String ERROR_UNDEF_BYTECODE = "Met an unmanageable bytecode.";
 
-    /** Error: no or bad JRE in the classpath. */
-    private static final String ERROR_BAD_CLASSPATH = "No JRE or incompatible JRE in the classpath.";
+    /** Error: unexpected internal error (undefined state format mode). */
+    private static final String ERROR_UNDEF_STATE_FORMAT = "Unexpected internal error: This state format mode is unimplemented.";
+
+    /** Error: unexpected internal error (undefined decision procedure). */
+    private static final String ERROR_UNDEF_DECISION_PROCEDURE = "Unexpected internal error: This decision procedure is unimplemented.";
+
+    /** Error: no or bad JRE. */
+    private static final String ERROR_BAD_CLASSPATH = "No or incompatible JRE in the classpath.";
 
 	/** Error: cannot manage a native method invocation. */
 	private static final String ERROR_CANNOT_INVOKE_NATIVE = "Met an unmanageable native method invocation.";
 
-	/** Error: unexpected failure (stepping while engine stuck). */
-	private static final String ERROR_ENGINE_STUCK = "Unexpected failure while running (attempted step while in a stuck state).";
+	/** Error: unexpected internal error (stepping while engine stuck). */
+	private static final String ERROR_ENGINE_STUCK = "Unexpected internal error: Attempted step while in a stuck state.";
 
-	/** Error: failed configuration. */
-	private static final String ERROR_ENGINE_CONFIGURATION = "One of the engine's components cannot fit the software architecture.";
-
-	/** Error: unexpected failure. */
-	private static final String ERROR_ENGINE_UNEXPECTED = "Unexpected failure.";
+	/** Error: unexpected internal error. */
+	private static final String ERROR_UNEXPECTED = "Unexpected internal error.";
 
 	/** Prompt: ask user whether should continue execution by stepping. */
 	private static final String PROMPT_SHOULD_STEP = "Proceed with next step? (x: abort, any other: step): ";

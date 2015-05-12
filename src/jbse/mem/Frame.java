@@ -12,7 +12,7 @@ import jbse.bc.exc.MethodNotFoundException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
-import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.InvalidNumberOfOperandsException;
 import jbse.val.Value;
 
 /**
@@ -70,15 +70,6 @@ public class Frame implements Cloneable {
     }
     
     /**
-     * Pushes a {@link Value} on the frame's operand stack.
-     * 
-     * @param item {@link Value} to put on the top of operand stack.
-     */
-    public void push(Value item) {
-        this.operandStack.push(item);
-    }
-    
-    /**
      * Returns the values on the operand stack.
      * 
      * @return an unmodifiable collection of the
@@ -86,50 +77,6 @@ public class Frame implements Cloneable {
      */
     public Collection<Value> values() {
     	return this.operandStack.values();
-    }
-    
-    /**
-     * Returns the name of a local variable.
-     *  
-     * @param slot the number of the slot of a local variable.
-     * @return a {@link String} containing the name of the local
-     *         variable at {@code slot} as from the available debug 
-     *         information, depending on the frame's program counter,
-     *         or {@code null} if no debug information is 
-     *         available for the {@code (slot, curPC)} combination.
-     */
-    public String getLocalVariableName(int slot) {
-        return this.localVariables.getLocalVariableName(slot, this.programCounter);
-    }
-
-    /**
-     * Returns a read-only version of the local variable area.
-     * 
-     * @return a {@link Map}{@code <}{@link Integer}{@code ,}{@link Variable}{@code >} 
-     *         which associates every slot number in the local variable area to its
-     *         {@link Variable};
-     */
-    public Map<Integer, Variable> localVariables() {
-    	final HashMap<Integer, Variable> retVal = new HashMap<>();
-    	for (int slot : this.localVariables.slots()) {
-    		try {
-				retVal.put(slot, this.localVariables.buildLocalVariable(slot, this.programCounter));
-			} catch (InvalidSlotException e) {
-				throw new UnexpectedInternalException(e);
-			}
-    	}
-        return retVal;
-    }
-    
-    /**
-     * Return and delete the value from the top of the frame's 
-     * operand stack.
-     * 
-     * @return the {@link Value} on the top of operand stack.
-     * @throws OperandStackEmptyException if the operand stack is empty.
-     */
-    public Value pop() throws OperandStackEmptyException {
-        return this.operandStack.pop();
     }
     
     /**
@@ -177,17 +124,6 @@ public class Frame implements Cloneable {
         this.returnProgramCounter = this.programCounter + returnProgramCounterOffset;
     }
     
-    /**
-     * Sets the {@link Frame}'s program counter to the return one.
-     * 
-     * @throws InvalidProgramCounterException whenever this method is
-     *         invoked without having invoked {@link #setReturnProgramCounter}
-     *         before.
-     */
-    public void useReturnProgramCounter() throws InvalidProgramCounterException {
-    	this.setProgramCounter(this.returnProgramCounter);
-    }
-
     private void boundCheckPCValue(int newPC) throws InvalidProgramCounterException {
     	if (newPC < 0 || newPC >= this.bytecode.length) {
             throw new InvalidProgramCounterException();
@@ -235,7 +171,7 @@ public class Frame implements Cloneable {
      * 
      * @return the value of program counter.
      */
-    public int getPC() {
+    public int getProgramCounter() {
         return this.programCounter;
     }
     
@@ -243,7 +179,7 @@ public class Frame implements Cloneable {
      * Returns the program counter of the caller frame
      * stored for a return bytecode.
      * 
-     * @return
+     * @return an {@code int}, the return program counter.
      */
     public int getReturnProgramCounter() {
         return this.returnProgramCounter;
@@ -257,6 +193,39 @@ public class Frame implements Cloneable {
      */
     public Signature getCurrentMethodSignature() {
         return this.mySignature;
+    }
+
+    /**
+     * Returns a read-only version of the local variable area.
+     * 
+     * @return a {@link Map}{@code <}{@link Integer}{@code ,}{@link Variable}{@code >} 
+     *         which associates every slot number in the local variable area to its
+     *         {@link Variable};
+     */
+    public Map<Integer, Variable> localVariables() {
+        final HashMap<Integer, Variable> retVal = new HashMap<>();
+        for (int slot : this.localVariables.slots()) {
+            try {
+                retVal.put(slot, this.localVariables.buildLocalVariable(slot, this.programCounter));
+            } catch (InvalidSlotException e) {
+                throw new UnexpectedInternalException(e);
+            }
+        }
+        return retVal;
+    }
+    
+    /**
+     * Returns the name of a local variable.
+     *  
+     * @param slot the number of the slot of a local variable.
+     * @return a {@link String} containing the name of the local
+     *         variable at {@code slot} as from the available debug 
+     *         information, depending on the frame's program counter,
+     *         or {@code null} if no debug information is 
+     *         available for the {@code (slot, curPC)} combination.
+     */
+    public String getLocalVariableName(int slot) {
+        return this.localVariables.getLocalVariableName(slot, this.programCounter);
     }
     
     /**
@@ -303,16 +272,65 @@ public class Frame implements Cloneable {
     throws InvalidSlotException {
     	this.localVariables.set(slot, currentPC, val);
     }
+    
+    /**
+     * Pushes a {@link Value} on the frame's operand stack.
+     * 
+     * @param item {@link Value} to put on the top of operand stack.
+     */
+    public void push(Value item) {
+        this.operandStack.push(item);
+    }
+    
+    /**
+     * Return and delete the value from the top of the frame's 
+     * operand stack.
+     * 
+     * @return the {@link Value} on the top of the operand stack.
+     * @throws InvalidNumberOfOperandsException if the operand stack is empty.
+     */
+    public Value pop() throws InvalidNumberOfOperandsException {
+        return this.operandStack.pop();
+    }
+    
+    /**
+     * Removes the topmost {@code num} elements in the operand stack.
+     * 
+     * @param num a nonnegative {@code int}.
+     * @throws InvalidNumberOfOperandsException if the operand stack 
+     *         does not contain at least {@code num} elements, or if 
+     *         {@code num} is negative.
+     */
+    public void pop(int num) throws InvalidNumberOfOperandsException {
+        this.operandStack.pop(num);
+    }
 
     /**
      * Returns the topmost element in the frame's operand stack, 
-     * without removing it.
+     * without removing it. Equivalent to {@link #operands(1)}{@code [0]}.
      * 
      * @return a {@link Value}.
-     * @throws OperandStackEmptyException if the operand stack is empty.
+     * @throws InvalidNumberOfOperandsException if the operand stack is empty.
      */
-    public Value top() throws OperandStackEmptyException {
+    public Value top() throws InvalidNumberOfOperandsException {
         return this.operandStack.top();
+    }
+
+    /**
+     * Returns the topmost {@code num} elements in the frame's operand stack,
+     * without removing them.
+     * 
+     * @param num a nonnegative {@code int}.
+     * @return a {@link Value}{@code []} containing the first {@code num}
+     *         elements of the operand stack in reverse depth order 
+     *         (the topmost value in the operand stack will be the last
+     *         value in the return value).
+     * @throws InvalidNumberOfOperandsException if the operand stack 
+     *         does not contain at least {@code num} elements, 
+     *         or if {@code num} is negative. 
+     */
+    public Value[] operands(int num) throws InvalidNumberOfOperandsException {
+        return this.operandStack.operands(num);
     }
     
     /**

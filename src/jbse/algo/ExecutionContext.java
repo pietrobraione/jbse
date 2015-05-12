@@ -58,6 +58,9 @@ public final class ExecutionContext {
     /** The symbolic execution's {@link DecisionAlternativeComparators}. */
     private final DecisionAlternativeComparators comparators;
     
+    /** The {@link DispatcherBytecodeAlgorithm}. */
+    public final DispatcherBytecodeAlgorithm dispatcher = new DispatcherBytecodeAlgorithm();
+    
     /** 
      * The {@link DispatcherMeta} for handling methods with 
      * meta-level implementation. 
@@ -175,13 +178,17 @@ public final class ExecutionContext {
 	 * @throws MetaUnsupportedException if the class indicated in 
 	 *         {@code metaDelegateClassName} does not exist, or cannot be loaded 
 	 *         or instantiated for any reason (misses from the meta-level classpath, 
-	 *         has insufficient visibility, does not implement {@link Algorithm}...).
+	 *         has insufficient visibility, does not extend {@link Algorithm}...).
 	 */
 	public void addMetaOverridden(String className, String paramsSig, String methodName, String metaDelegateClassName) 
 	throws MetaUnsupportedException {
 	    final Signature sig = new Signature(className, paramsSig, methodName);
 	    try {
-	        final Class<? extends Algorithm> metaDelegateClass = ClassLoader.getSystemClassLoader().loadClass(metaDelegateClassName).asSubclass(Algorithm.class);
+	        @SuppressWarnings("unchecked")
+            final Class<? extends Algorithm<?, ?, ?, ?, ?>> metaDelegateClass = 
+	            (Class<Algorithm<?, ?, ?, ?, ?>>)
+	            ClassLoader.getSystemClassLoader().loadClass(metaDelegateClassName).
+	            asSubclass(Algorithm.class);
 	        this.dispatcherMeta.loadAlgoMetaOverridden(sig, metaDelegateClass);
 	    } catch (ClassNotFoundException e) {
 	        throw new MetaUnsupportedException("meta-level implementation class " + metaDelegateClassName + " not found.");

@@ -40,14 +40,14 @@ import jbse.meta.annotations.Uninterpreted;
  * 
  * @author Pietro Braione
  */
-public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
+public class DispatcherMeta extends Dispatcher<Signature, Algorithm<?, ?, ?, ?, ?>> {
 	/**
 	 * Constructor.
 	 */
 	public DispatcherMeta() {
-		setDefault(new DispatchStrategy<Algorithm>() {
+		setDefault(new DispatchStrategy<Algorithm<?, ?, ?, ?, ?>>() {
 			@Override
-			public Algorithm doIt() {
+			public Algorithm<?, ?, ?, ?, ?> doIt() {
 				return null;
 			}
 		});
@@ -86,8 +86,8 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
 	 *         always preceded by a call to {@link #isMeta}.
 	 */
 	@Override
-	public Algorithm select(Signature methodSignatureResolved) {
-		final Algorithm retVal;
+	public Algorithm<?, ?, ?, ?, ?> select(Signature methodSignatureResolved) {
+		final Algorithm<?, ?, ?, ?, ?> retVal;
         try {
             retVal = super.select(methodSignatureResolved);
         } catch (RuntimeException e) {
@@ -121,7 +121,7 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
 	throws BadClassFileException, MethodNotFoundException, 
 	MetaUnsupportedException {
 		//already loaded: returns true
-		if (this.select(methodSignatureResolved) != null) {
+		if (select(methodSignatureResolved) != null) {
 			return true;
 		}
 		
@@ -149,10 +149,11 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
 	 *         does not exist, or cannot be loaded or instantiated for any reason 
 	 *         (has insufficient visibility or has not a parameterless constructor).
 	 */
-	public void loadAlgoMetaOverridden(Signature methodSignatureResolved, Class<? extends Algorithm> metaDelegateClass) 
+	public void loadAlgoMetaOverridden(Signature methodSignatureResolved, 
+	                                   Class<? extends Algorithm<?, ?, ?, ?, ?>> metaDelegateClass) 
 	throws MetaUnsupportedException {
 		try {
-			final Algorithm metaDelegate = metaDelegateClass.newInstance();
+			final Algorithm<?, ?, ?, ?, ?> metaDelegate = metaDelegateClass.newInstance();
 			loadMetaDelegate(methodSignatureResolved, metaDelegate);
 		} catch (InstantiationException e) {
 			throw new MetaUnsupportedException("meta-level implementation class " + metaDelegateClass + " cannot be instantiated.");
@@ -170,17 +171,14 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm> {
 	 *        then the (unqualified, to uppercase) name of the method will be used.
 	 */
 	public void loadAlgoUninterpreted(Signature methodSignatureResolved, String functionName) {
-		final Algo_INVOKEUNINTERPRETED metaDelegate = new Algo_INVOKEUNINTERPRETED();
-		metaDelegate.methodSignatureResolved = methodSignatureResolved;
-		if (functionName == null) {
-			metaDelegate.functionName = methodSignatureResolved.getName().toUpperCase();
-		} else {
-			metaDelegate.functionName = functionName;
-		}
+	    final String functionNameDflt = 
+	        (functionName == null ? methodSignatureResolved.getName().toUpperCase() : functionName);
+		final Algo_INVOKEUNINTERPRETED metaDelegate = 
+		    new Algo_INVOKEUNINTERPRETED(methodSignatureResolved, functionNameDflt);
 		loadMetaDelegate(methodSignatureResolved, metaDelegate);
 	}
 	
-	private void loadMetaDelegate(Signature methodSignatureResolved, final Algorithm metaDelegate) {
-		this.setCase(methodSignatureResolved, () -> metaDelegate);
+	private void loadMetaDelegate(Signature methodSignatureResolved, final Algorithm<?, ?, ?, ?, ?> metaDelegate) {
+		setCase(methodSignatureResolved, () -> metaDelegate);
 	}
 }

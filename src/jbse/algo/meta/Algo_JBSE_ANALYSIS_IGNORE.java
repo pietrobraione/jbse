@@ -1,30 +1,27 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.throwVerifyError;
-import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
+import java.util.function.Supplier;
 
-import jbse.algo.Algorithm;
-import jbse.algo.ExecutionContext;
-import jbse.algo.exc.InterruptException;
-import jbse.mem.State;
+import jbse.algo.StrategyUpdate;
 import jbse.mem.exc.ContradictionException;
-import jbse.mem.exc.InvalidProgramCounterException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 
-public class Algo_JBSE_ANALYSIS_IGNORE implements Algorithm {
-	@Override
-	public void exec(State state, ExecutionContext ctx) 
-	throws ContradictionException, ThreadStackEmptyException, 
-	InterruptException {
-		if (state.mayViolateAssumption()) {
-			throw new ContradictionException();
-		} else {
-	        try {
-				state.incPC(INVOKESPECIALSTATICVIRTUAL_OFFSET);
-			} catch (InvalidProgramCounterException e) {
-	            throwVerifyError(state);
-			}
-	        throw InterruptException.getInstance();
-		}
-	}
+public final class Algo_JBSE_ANALYSIS_IGNORE extends Algo_INVOKEMETA {
+    public Algo_JBSE_ANALYSIS_IGNORE() {
+        super(false);
+    }
+    
+    @Override
+    protected Supplier<Integer> numOperands() {
+        return () -> 0;
+    }
+    
+    @Override
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            if (state.mayViolateAssumption()) {
+                throw new ContradictionException();
+            }
+        };
+    }
 }

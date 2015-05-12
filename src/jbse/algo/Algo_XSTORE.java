@@ -1,63 +1,82 @@
 package jbse.algo;
 
+import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.XLOADSTORE_IMMEDIATE_WIDE_OFFSET;
 import static jbse.bc.Offsets.XLOADSTORE_IMMEDIATE_OFFSET;
 
-import jbse.common.Util;
-import jbse.common.exc.UnexpectedInternalException;
-import jbse.mem.State;
-import jbse.mem.exc.InvalidProgramCounterException;
+import java.util.function.Supplier;
+
+import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.mem.exc.InvalidSlotException;
-import jbse.mem.exc.OperandStackEmptyException;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Value;
 
-final class Algo_XSTORE implements Algorithm {
-	boolean hasIndex;
-	int index;
-
-	public Algo_XSTORE() { }
+final class Algo_XSTORE extends Algorithm<
+BytecodeData_1IM,
+DecisionAlternative_NONE,
+StrategyDecide<DecisionAlternative_NONE>, 
+StrategyRefine<DecisionAlternative_NONE>, 
+StrategyUpdate<DecisionAlternative_NONE>> {
 
 	@Override
-	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException {
-		final boolean wide = state.nextWide();
-		
-		try {
-	        final Value valTemp = state.popOperand();
-			if (!this.hasIndex) {
-				if (wide) {
-					final byte tmp1 = state.getInstruction(1);
-					final byte tmp2 = state.getInstruction(2);
-					this.index = Util.byteCat(tmp1, tmp2);
-				} else {
-					this.index = state.getInstruction(1);
-				}
-			}
-            state.setLocalVariable(this.index, valTemp);
-		} catch (OperandStackEmptyException | InvalidProgramCounterException e) {
-            throwVerifyError(state);
-			return;
-        } catch (InvalidSlotException e) {
-            if (this.hasIndex) {
-                throw new UnexpectedInternalException(e);
-            } else {
-                throwVerifyError(state);
-                return;
-            }
-		}
+	protected Supplier<Integer> numOperands() {
+        return () -> 1;
+	}
+	
+	@Override
+	protected Supplier<BytecodeData_1IM> bytecodeData() {
+	    return BytecodeData_1IM::get;
+	}
+    
+    @Override
+    protected BytecodeCooker bytecodeCooker() {
+        return (state) -> { };
+    }
 
-		try {
-			if (this.hasIndex) {
-				state.incPC();
-			} else if (wide) {
-				state.incPC(XLOADSTORE_IMMEDIATE_WIDE_OFFSET);
-			} else {
-				state.incPC(XLOADSTORE_IMMEDIATE_OFFSET);
-			}
-		} catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
-		}
-	} 
+    @Override
+    protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
+        return DecisionAlternative_NONE.class;
+    }
+    
+    @Override
+    protected StrategyDecide<DecisionAlternative_NONE> decider() {
+        return (state, result) -> {
+            result.add(DecisionAlternative_NONE.instance());
+            return DecisionProcedureAlgorithms.Outcome.FF;
+        };
+    }
+
+    @Override
+    protected StrategyRefine<DecisionAlternative_NONE> refiner() {
+        return (state, alt) -> { };
+    }
+
+    @Override
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            final Value valTemp = this.data.operand(0);
+            final int index = (this.data.nextWide() ? this.data.immediateUnsignedWord() : this.data.immediateUnsignedByte());
+            try {
+                state.setLocalVariable(index, valTemp);
+            } catch (InvalidSlotException e) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            } catch (ThreadStackEmptyException e) {
+                failExecution(e);
+            }
+        };
+    }
+    
+    @Override
+    protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
+        return () -> true;
+    }
+    
+    @Override
+    protected Supplier<Integer> programCounterUpdate() {
+        return () -> (this.data.nextWide() ? XLOADSTORE_IMMEDIATE_WIDE_OFFSET : XLOADSTORE_IMMEDIATE_OFFSET);
+    }
 }

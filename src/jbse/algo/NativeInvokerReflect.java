@@ -14,6 +14,7 @@ import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Calculator;
 import jbse.val.Value;
+import jbse.val.exc.ValueDoesNotSupportNativeException;
 
 /**
  * Implements native method invocation by invoking an 
@@ -111,7 +112,7 @@ public class NativeInvokerReflect implements NativeInvoker {
             return calc.val_(retValRefl);
 		} else {
 			//TODO implement reification of objects
-			throw new CannotInvokeNativeException();
+			throw new ValueDoesNotSupportNativeException("cannot reflect metacircularly values with type " + type + ".");
 		}
 	}
 }

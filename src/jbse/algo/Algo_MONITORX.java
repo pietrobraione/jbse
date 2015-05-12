@@ -1,40 +1,82 @@
 package jbse.algo;
 
+import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Offsets.MONITORX_OFFSET;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 
-import jbse.mem.State;
-import jbse.mem.exc.InvalidProgramCounterException;
-import jbse.mem.exc.OperandStackEmptyException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import java.util.function.Supplier;
+
+import jbse.dec.DecisionProcedureAlgorithms;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
-class Algo_MONITORX implements Algorithm {
-	
-	@Override
-	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException {
-		//pops its operand and checks it
-		final Reference v;
-		try {
-		    v = (Reference) state.popOperand();
-		} catch (OperandStackEmptyException | ClassCastException e) {
-            throwVerifyError(state);
-            return;
-		}
-		if (state.isNull(v)) {
-            throwNew(state, NULL_POINTER_EXCEPTION);
-			return;
-		}
-		
-		//nothing to do, JBSE is single-threading
-		//TODO when a multithreading JBSE?
+final class Algo_MONITORX extends Algorithm<
+BytecodeData_0,
+DecisionAlternative_NONE, 
+StrategyDecide<DecisionAlternative_NONE>, 
+StrategyRefine<DecisionAlternative_NONE>, 
+StrategyUpdate<DecisionAlternative_NONE>> {
+    
+    @Override
+    protected Supplier<Integer> numOperands() {
+        return () -> 1;
+    }
+    
+    @Override
+    protected Supplier<BytecodeData_0> bytecodeData() {
+        return BytecodeData_0::get;
+    }
+    
+    @Override
+    protected BytecodeCooker bytecodeCooker() {
+        return (state) -> {
+            try {
+                if (state.isNull((Reference) this.data.operand(0))) {
+                    throwNew(state, NULL_POINTER_EXCEPTION);
+                    exitFromAlgorithm();
+                }
+            } catch (ClassCastException e) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            }
+        };
+    }
 
-		try {
-			state.incPC();
-		} catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
-		}
-	}
+    @Override
+    protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
+        return DecisionAlternative_NONE.class;
+    }
+    
+    @Override
+    protected StrategyDecide<DecisionAlternative_NONE> decider() {
+        return (state, result) -> {
+            result.add(DecisionAlternative_NONE.instance());
+            return DecisionProcedureAlgorithms.Outcome.FF;
+        };
+    }
+
+    @Override
+    protected StrategyRefine<DecisionAlternative_NONE> refiner() {
+        return (state, alt) -> { };
+    }
+    
+    @Override
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            //nothing to do: JBSE does not support more than one thread
+            //TODO implement execution of multi-threaded code and monitor* bytecodes
+        };
+    }
+    
+    @Override
+    protected final Supplier<Boolean> isProgramCounterUpdateAnOffset() {
+        return () -> true;
+    }
+    
+    @Override
+    protected final Supplier<Integer> programCounterUpdate() {
+        return () -> MONITORX_OFFSET;
+    }
 }

@@ -1,46 +1,47 @@
 package jbse.algo.meta;
 
+import static jbse.algo.Util.continueWith;
+import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.JAVA_STRING_HASH;
-import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 
-import jbse.algo.Algorithm;
-import jbse.algo.ExecutionContext;
-import jbse.algo.exc.InterruptException;
+import java.util.function.Supplier;
+
+import jbse.algo.StrategyUpdate;
 import jbse.mem.Objekt;
-import jbse.mem.State;
-import jbse.mem.exc.InvalidProgramCounterException;
-import jbse.mem.exc.OperandStackEmptyException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 
-public class Algo_JAVA_STRING_HASHCODE implements Algorithm {
+public final class Algo_JAVA_STRING_HASHCODE extends Algo_INVOKEMETA {
+    public Algo_JAVA_STRING_HASHCODE() {
+        super(false);
+    }
+    
     @Override
-    public void exec(State state, ExecutionContext ctx) 
-    throws ThreadStackEmptyException, InterruptException {
-        try {
-            final Reference thisReference = (Reference) state.popOperand();
-            final Objekt thisObjekt = state.getObject(thisReference);
+    protected Supplier<Integer> numOperands() {
+        return () -> 1;
+    }
+    
+    @Override
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            try {
+                final Reference thisReference = (Reference) this.data.operand(0);
+                final Objekt thisObjekt = state.getObject(thisReference);
 
-            if (thisObjekt.isSymbolic()) {
-                //gets the hashCode field in the string and returns it
-                final Primitive hashCode = (Primitive) thisObjekt.getFieldValue(JAVA_STRING_HASH);
-                //TODO assume hashCode != 0 and ensure that strings that may not be equal have different hash codes
-                state.pushOperand(hashCode);
-            } else {
-                return; //executes the original String.hashCode implementation
+                if (thisObjekt.isSymbolic()) {
+                    //gets the hashCode field in the string and returns it
+                    final Primitive hashCode = (Primitive) thisObjekt.getFieldValue(JAVA_STRING_HASH);
+                    //TODO ensure that strings that may not be equal have different hash codes
+                    state.pushOperand(hashCode);
+                } else {
+                    continueWith(this.ctx.dispatcher.select(state.getInstruction())); //executes the original String.hashCode implementation
+                }
+            } catch (ClassCastException e) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
             }
-        } catch (OperandStackEmptyException e) {
-            throwVerifyError(state);
-            throw InterruptException.getInstance();
-        }
-        
-        try {
-            state.incPC(INVOKESPECIALSTATICVIRTUAL_OFFSET);
-        } catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
-        }
-        throw InterruptException.getInstance();
+        };
     }
 }

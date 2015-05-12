@@ -2,40 +2,73 @@ package jbse.algo;
 
 import static jbse.algo.Util.throwVerifyError;
 
-import jbse.common.Util;
-import jbse.mem.State;
-import jbse.mem.exc.InvalidProgramCounterException;
-import jbse.mem.exc.InvalidSlotException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import java.util.function.Supplier;
+
+import jbse.dec.DecisionProcedureAlgorithms;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Simplex;
 
-final class Algo_RET implements Algorithm {
-	
-	@Override
-	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException {
-		boolean wide = state.nextWide();
-		
-		try {
-			int index;
-			byte tmp1 = state.getInstruction(1);
-			if (wide) {
-				byte tmp2 = state.getInstruction(2);
-				index = Util.byteCat(tmp1, tmp2);
-			} else {
-				index = tmp1;
-			}
-			final Simplex ret;
-			try {
-				ret = (Simplex) state.getLocalVariableValue(index);
-			} catch (InvalidSlotException e) {
-	            throwVerifyError(state);
-				return;
-			}
-			state.setPC(((Integer) ret.getActualValue()).intValue());
-		} catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
-			return;
-		}
-	} 
+final class Algo_RET extends Algorithm<
+BytecodeData_1LV,
+DecisionAlternative_NONE, 
+StrategyDecide<DecisionAlternative_NONE>, 
+StrategyRefine<DecisionAlternative_NONE>, 
+StrategyUpdate<DecisionAlternative_NONE>> {
+    
+    private int pcReturn; //set by updater
+    
+    @Override
+    protected Supplier<Integer> numOperands() {
+        return () -> 0;
+    }
+    
+    @Override
+    protected Supplier<BytecodeData_1LV> bytecodeData() {
+        return BytecodeData_1LV::get;
+    }
+    
+    @Override
+    protected BytecodeCooker bytecodeCooker() {
+        return (state) -> { };
+    }
+
+    @Override
+    protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
+        return DecisionAlternative_NONE.class;
+    }
+    
+    @Override
+    protected StrategyDecide<DecisionAlternative_NONE> decider() {
+        return (state, result) -> {
+            result.add(DecisionAlternative_NONE.instance());
+            return DecisionProcedureAlgorithms.Outcome.FF;
+        };
+    }
+
+    @Override
+    protected StrategyRefine<DecisionAlternative_NONE> refiner() {
+        return (state, alt) -> { };
+    }
+    
+    @Override
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> { 
+            try {
+                final Simplex localVariableValueAsSimplex = (Simplex) this.data.localVariableValue();
+                this.pcReturn = ((Integer) localVariableValueAsSimplex.getActualValue()).intValue();
+            } catch (ClassCastException e) {
+                throwVerifyError(state);
+            }
+        };
+    }
+    
+    @Override
+    protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
+        return () -> false;
+    }
+    
+    @Override
+    protected Supplier<Integer> programCounterUpdate() {
+        return () -> this.pcReturn;
+    }
 }

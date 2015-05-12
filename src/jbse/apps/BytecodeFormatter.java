@@ -3,6 +3,7 @@ package jbse.apps;
 import jbse.bc.ClassHierarchy;
 import jbse.mem.Frame;
 import jbse.mem.State;
+import jbse.mem.exc.ThreadStackEmptyException;
 
 /**
  * A higher-level disassembler.
@@ -31,9 +32,11 @@ public class BytecodeFormatter {
 	 * @param s a {@link State}.
 	 * @return a {@link String}, the disassembly of the current bytecode
 	 *         of {@code s}.
+	 * @throws ThreadStackEmptyException when {@code s} has not a
+	 *         current frame (i.e., is stuck). 
 
 	 */
-	public String format(State s) {
+	public String format(State s) throws ThreadStackEmptyException {
 		return format(s.getCurrentFrame(), s.getClassHierarchy());
 	}
 }

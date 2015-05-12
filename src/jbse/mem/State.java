@@ -43,7 +43,7 @@ import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
-import jbse.mem.exc.OperandStackEmptyException;
+import jbse.mem.exc.InvalidNumberOfOperandsException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Calculator;
 import jbse.val.Expression;
@@ -200,11 +200,15 @@ public final class State implements Cloneable {
 	 * @return the {@link Value} on the top of the current 
 	 * operand stack.
 	 * @throws ThreadStackEmptyException if the thread stack is empty.
-	 * @throws OperandStackEmptyException if the current operand 
+	 * @throws InvalidNumberOfOperandsException if the current operand 
 	 * stack is empty
 	 */
-	public Value popOperand() throws ThreadStackEmptyException, OperandStackEmptyException {
+	public Value popOperand() throws ThreadStackEmptyException, InvalidNumberOfOperandsException {
 		return this.stack.currentFrame().pop();
+	}
+	
+	public void popOperands(int n) throws ThreadStackEmptyException, InvalidNumberOfOperandsException {
+	    this.stack.currentFrame().pop(n);
 	}
 
 	/**
@@ -213,10 +217,11 @@ public final class State implements Cloneable {
 	 * 
 	 * @return a {@link Value}.
 	 * @throws ThreadStackEmptyException if the thread stack is empty.
-	 * @throws OperandStackEmptyException if the current operand
+	 * @throws InvalidNumberOfOperandsException if the current operand
 	 *         stack is empty. 
 	 */
-	public Value topOperand() throws ThreadStackEmptyException, OperandStackEmptyException {
+	public Value topOperand() 
+	throws ThreadStackEmptyException, InvalidNumberOfOperandsException {
 		return this.stack.currentFrame().top();
 	}
 
@@ -309,6 +314,21 @@ public final class State implements Cloneable {
 		}
 	}
 
+    /**
+     * Returns the name of a local variable.
+     *  
+     * @param slot the number of the slot of a local variable.
+     * @return a {@link String} containing the name of the local
+     *         variable at {@code slot} as from the available debug 
+     *         information, depending on the current program counter
+     *         {@code curPC}, or {@code null} if no debug information is 
+     *         available for the {@code (slot, curPC)} combination.
+     * @throws ThreadStackEmptyException if the thread stack is empty.
+     */
+    public String getLocalVariableName(int slot) throws ThreadStackEmptyException {
+        return this.stack.currentFrame().getLocalVariableName(slot);
+    }
+
 	/**
 	 * Returns the value of a local variable in the current frame.
 	 * 
@@ -331,7 +351,7 @@ public final class State implements Cloneable {
 	 * @throws InvalidSlotException if {@code slot} is not a valid slot number.
 	 */
 	public void setLocalVariable(int slot, Value val) throws ThreadStackEmptyException, InvalidSlotException {
-		this.stack.currentFrame().setLocalVariableValue(slot, this.stack.currentFrame().getPC(), val);
+		this.stack.currentFrame().setLocalVariableValue(slot, this.stack.currentFrame().getProgramCounter(), val);
 	}
 
 
@@ -1061,8 +1081,9 @@ public final class State implements Cloneable {
 	 *         operand stack has not enough items, or the
 	 *         item in the position of the "this" parameter is
 	 *         not a reference. 
+	 * @throws ThreadStackEmptyException if the thread stack is empty.
 	 */
-	public Reference peekReceiverArg(Signature methodSignature) {
+	public Reference peekReceiverArg(Signature methodSignature) throws ThreadStackEmptyException {
 	    final String[] paramsDescriptors = Type.splitParametersDescriptors(methodSignature.getDescriptor());
 	    final int nParams = paramsDescriptors.length + 1;
 	    final Collection<Value> opStackVals = getCurrentFrame().values();
@@ -1077,31 +1098,6 @@ public final class State implements Cloneable {
 	        ++i;
 	    }
 	    return null;
-	}
-
-	/**
-	 * Parses the signature of a method, and pops from the operand stack 
-	 * a number of values consistent with the number of method parameters.
-	 * @param methodSignature
-	 *        the {@link Signature} of a method.
-	 * @param isStatic
-	 *        {@code true} iff the method is static.
-	 * @return a {@link Value}{@code []} of all the parameters, where the i-th 
-	 *         array element is the value for the i-th parameter in the 
-	 *         {@code methodSignature}. 
-	 * @throws ThreadStackEmptyException if the thread stack is empty.
-	 * @throws OperandStackEmptyException if there are not enough values
-	 *         in the current operand stack. 
-	 */
-	public Value[] popMethodCallArgs(Signature methodSignature, boolean isStatic) 
-	throws ThreadStackEmptyException, OperandStackEmptyException {
-		final String[] paramsDescriptors = Type.splitParametersDescriptors(methodSignature.getDescriptor());
-		final int nParams = (isStatic ? paramsDescriptors.length : paramsDescriptors.length + 1);
-		final Value[] argArray = new Value[nParams];
-		for (int i = 1; i <= nParams; ++i) { 
-			argArray[nParams - i] = popOperand();
-		}
-		return argArray;
 	}
 
 	/**
@@ -1138,11 +1134,17 @@ public final class State implements Cloneable {
 	 * Returns the root frame.
 	 * 
 	 * @return a {@link Frame}, the root (first  
-	 * pushed) one.
+	 *         pushed) one.
+	 * @throws ThreadStackEmptyException if the 
+     *         thread stack is empty.
 	 */
-	public Frame getRootFrame() {
+	public Frame getRootFrame() throws ThreadStackEmptyException {
 		final List<Frame> frames = this.stack.frames();
-		return frames.get(0);
+		try {
+		    return frames.get(0);
+		} catch (IndexOutOfBoundsException e) {
+		    throw new ThreadStackEmptyException();
+		}
 	}
 
 	/**
@@ -1150,10 +1152,11 @@ public final class State implements Cloneable {
 	 * 
 	 * @return a {@link Frame}, the current (last 
 	 * pushed) one.
+	 * @throws ThreadStackEmptyException if the 
+	 *         thread stack is empty.
 	 */
-	public Frame getCurrentFrame() {
-		final List<Frame> frames = this.stack.frames();
-		return frames.get(frames.size() - 1);
+	public Frame getCurrentFrame() throws ThreadStackEmptyException {
+		return this.stack.currentFrame();
 	}
 
 	/**
@@ -1279,17 +1282,6 @@ public final class State implements Cloneable {
 	}
 
 	/**
-	 * Returns the current program counter.
-	 * 
-	 * @return an {@code int} representing the state's 
-	 *         current program counter.
-	 * @throws ThreadStackEmptyException if the thread stack is empty.
-	 */
-	public int getPC() throws ThreadStackEmptyException {
-		return this.stack.currentFrame().getPC();
-	}
-
-	/**
 	 * Returns the source code row corresponding to the 
 	 * frame's program counter.
 	 *  
@@ -1301,6 +1293,28 @@ public final class State implements Cloneable {
 	public int getSourceRow() throws ThreadStackEmptyException {
 		return this.stack.currentFrame().getSourceRow();
 	}
+
+    /**
+     * Returns the current program counter.
+     * 
+     * @return an {@code int} representing the state's 
+     *         current program counter.
+     * @throws ThreadStackEmptyException if the thread stack is empty.
+     */
+    public int getPC() throws ThreadStackEmptyException {
+        return this.stack.currentFrame().getProgramCounter();
+    }
+    
+    /**
+     * Returns the return program counter of the caller frame
+     * stored for a return bytecode.
+     * 
+     * @return an {@code int}, the return program counter.
+     * @throws ThreadStackEmptyException  if the thread stack is empty.
+     */
+    public int getReturnPC() throws ThreadStackEmptyException {
+        return this.stack.currentFrame().getReturnProgramCounter();
+    }
 
 	/**
 	 * Increments/decrements the program counter by an arbitrary number.
@@ -1314,7 +1328,7 @@ public final class State implements Cloneable {
 	 */
 	public void incPC(int n) 
 	throws InvalidProgramCounterException, ThreadStackEmptyException {
-		this.setPC(this.getPC() + n);
+		this.setPC(getPC() + n);
 	}
 
 	/**
@@ -1329,32 +1343,6 @@ public final class State implements Cloneable {
 	public void setPC(int newPC) 
 	throws InvalidProgramCounterException, ThreadStackEmptyException {
 		this.stack.currentFrame().setProgramCounter(newPC);
-	}
-
-	/**
-	 * Copies the state's return program counter into the program counter.
-	 * 
-	 * @throws InvalidProgramCounterException if the return program 
-	 *         counter does not point to a valid bytecode in the current 
-	 *         method (the state's program counter is not changed).
-	 * @throws ThreadStackEmptyException if the thread stack is empty.
-	 */
-	public void useReturnPC() 
-	throws InvalidProgramCounterException, ThreadStackEmptyException {
-		this.stack.currentFrame().useReturnProgramCounter();
-	}
-
-	/**
-	 * Increments the program counter by {@code 1}.
-	 * 
-	 * @throws InvalidProgramCounterException if the incremented program counter
-	 *         would not point to a valid bytecode in the current method 
-	 *         (the state's program counter is not changed).
-	 * @throws ThreadStackEmptyException if the thread stack is empty.
-	 */
-	public void incPC() 
-	throws InvalidProgramCounterException, ThreadStackEmptyException {
-		this.incPC(1);
 	}
 
 	/**

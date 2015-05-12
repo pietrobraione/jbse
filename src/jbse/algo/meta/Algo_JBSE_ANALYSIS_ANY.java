@@ -1,14 +1,10 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.throwVerifyError;
-import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
+import java.util.function.Supplier;
 
 import jbse.algo.Algorithm;
-import jbse.algo.ExecutionContext;
-import jbse.algo.exc.InterruptException;
-import jbse.mem.State;
-import jbse.mem.exc.InvalidProgramCounterException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.algo.StrategyUpdate;
+import jbse.tree.DecisionAlternative_NONE;
 
 /**
  * An {@link Algorithm} implementing the effect of a method call
@@ -17,16 +13,20 @@ import jbse.mem.exc.ThreadStackEmptyException;
  * @author Pietro Braione
  *
  */
-public final class Algo_JBSE_ANALYSIS_ANY implements Algorithm {
-	@Override
-	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, InterruptException {
-		state.pushOperand(state.getCalculator().valAny());
-        try {
-			state.incPC(INVOKESPECIALSTATICVIRTUAL_OFFSET);
-		} catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
-		}
-        throw InterruptException.getInstance();
-	}
+public final class Algo_JBSE_ANALYSIS_ANY extends Algo_INVOKEMETA {
+    public Algo_JBSE_ANALYSIS_ANY() {
+        super(false);
+    }
+    
+    @Override
+    protected Supplier<Integer> numOperands() {
+        return () -> 0;
+    }
+    
+    @Override
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.pushOperand(state.getCalculator().valAny());
+        };
+    }
 }

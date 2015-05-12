@@ -1,29 +1,28 @@
 package jbse.algo.meta;
 
 import static jbse.algo.Util.throwNew;
-import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.INDEX_OUT_OF_BOUNDS_EXCEPTION;
 
-import jbse.algo.Algorithm;
-import jbse.algo.ExecutionContext;
-import jbse.algo.exc.InterruptException;
-import jbse.mem.State;
-import jbse.mem.exc.OperandStackEmptyException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import java.util.function.Supplier;
 
-public final class Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT implements Algorithm {
-	@Override
-	public void exec(State state, ExecutionContext ctx) 
-	throws ThreadStackEmptyException, InterruptException {
-		//TODO replace this dummy implementation
-	    try {
-	        state.popOperand();
-	        state.popOperand();
-	    } catch (OperandStackEmptyException e) {
-	        throwVerifyError(state);
-	        throw InterruptException.getInstance();
-	    }
-        throwNew(state, INDEX_OUT_OF_BOUNDS_EXCEPTION);
-        throw InterruptException.getInstance();
-	}
+import jbse.algo.StrategyUpdate;
+import jbse.tree.DecisionAlternative_NONE;
+
+public final class Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT extends Algo_INVOKEMETA {
+    public Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT() {
+        super(false);
+    }
+    
+    @Override
+    protected Supplier<Integer> numOperands() {
+        return () -> 2;
+    }
+    
+    @Override
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            //TODO replace this dummy implementation
+            throwNew(state, INDEX_OUT_OF_BOUNDS_EXCEPTION);
+        };
+    }
 }

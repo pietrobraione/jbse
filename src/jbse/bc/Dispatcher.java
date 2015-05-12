@@ -28,7 +28,7 @@ public abstract class Dispatcher<Q, R> {
 
 	private DispatchStrategy<? extends R> dispatchNonexistent = () -> null;
 
-	private HashMap<Q, DispatchStrategy<? extends R>> dispatchTable = new HashMap<>();
+	private final HashMap<Q, DispatchStrategy<? extends R>> dispatchTable = new HashMap<>();
 	
 	/**
 	 * Sets the {@link DispatchStrategy} for a given key. If the key
@@ -40,7 +40,7 @@ public abstract class Dispatcher<Q, R> {
 	 *          In the case {@code s == null} the method has no effect.
 	 * @return {@code this} (allows chain invocations). 
 	 */
-	public Dispatcher<Q,R> setCase(Q key, DispatchStrategy<? extends R> s) {
+	public Dispatcher<Q, R> setCase(Q key, DispatchStrategy<? extends R> s) {
 		if (s != null) { 
 			this.dispatchTable.put(key, s);
 		}
@@ -58,7 +58,7 @@ public abstract class Dispatcher<Q, R> {
 	 *          In the case {@code s == null} the method has no effect.
 	 * @return {@code this} (allows chain invocations).
 	 */
-	public Dispatcher<Q,R> setDefault(DispatchStrategy<? extends R> s) {
+	public Dispatcher<Q, R> setDefault(DispatchStrategy<? extends R> s) {
 		if (s != null) {
 			this.dispatchNonexistent = s;
 		}

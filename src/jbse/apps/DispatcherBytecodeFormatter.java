@@ -113,7 +113,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                 try {
                     final short UB = f.getInstruction(1);
                     final String type;
-                    switch (Array.checkAndReturnArrayPrimitive(UB)) {
+                    switch (Array.arrayPrimitiveType(UB)) {
                     case Type.BOOLEAN:
                         type = "bool";
                         break;
@@ -258,7 +258,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                 String retVal = DispatchStrategyFormat1ON.this.text + " ";
                 try {
                     final short SW = Util.byteCatShort(f.getInstruction(1), f.getInstruction(2));
-                    final int target = f.getPC() + SW;
+                    final int target = f.getProgramCounter() + SW;
                     retVal += target;
                 } catch (InvalidProgramCounterException e) {
                     //unrecognized bytecode
@@ -287,7 +287,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                 String retVal = DispatchStrategyFormat1OF.this.text + " ";
                 try {
                     final int SD = Util.byteCat(f.getInstruction(1), f.getInstruction(2), f.getInstruction(3), f.getInstruction(4));
-                    final int target = f.getPC() + SD;
+                    final int target = f.getProgramCounter() + SD;
                     retVal += target;
                 } catch (InvalidProgramCounterException e) {
                     //unrecognized bytecode
@@ -549,15 +549,14 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                     tab = new SwitchTable(f, null, DispatchStrategyFormatSWITCH.this.isTableSwitch);
                     final StringBuilder buf = new StringBuilder();
                     for (int val : tab) {
-                        int target = f.getPC() + tab.jumpOffset(val);
+                        final int target = f.getProgramCounter() + tab.jumpOffset(val);
                         buf.append(val);
                         buf.append(":");
                         buf.append(target);
                         buf.append(" ");
-                        //retVal += val + ":" + target + " ";
                     }
                     retVal += buf.toString();
-                    int target = f.getPC() + tab.jumpOffsetDefault();
+                    final int target = f.getProgramCounter() + tab.jumpOffsetDefault();
                     retVal += "dflt:" + target;
                 } catch (InvalidProgramCounterException e) {
                     retVal += UNRECOGNIZED_BYTECODE;
@@ -774,7 +773,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
         setCase(OP_IMPDEP1,         new DispatchStrategyFormat0("IMPDEP1"));
         setCase(OP_IMPDEP2,         new DispatchStrategyFormat0("IMPDEP2"));
 
-        DispatchStrategyFormat0 s = new DispatchStrategyFormat0(RESERVED_BYTECODE);
+        final DispatchStrategyFormat0 s = new DispatchStrategyFormat0(RESERVED_BYTECODE);
         setCase(OP_INVOKEDYNAMIC,             s);
         setCase(OP_ANEWARRAY_QUICK,           s);
         setCase(OP_CHECKCAST_QUICK,           s);

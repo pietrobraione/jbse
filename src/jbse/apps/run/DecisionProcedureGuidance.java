@@ -164,7 +164,12 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 		
 		//saves the current frame as the "root" frame
 		this.initialStateConcrete = this.engine.getCurrentState().clone();
-		this.rootFrameConcrete = this.initialStateConcrete.getCurrentFrame();
+		try {
+            this.rootFrameConcrete = this.initialStateConcrete.getCurrentFrame();
+        } catch (ThreadStackEmptyException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
 		
 		//the (resolved) root object is put in seenObject, if present
 		final Value refToRoot = getValue(this.initialStateConcrete, this.rootFrameConcrete, "{ROOT}:this");
