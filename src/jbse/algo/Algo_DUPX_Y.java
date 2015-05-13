@@ -43,7 +43,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     
     @Override
     protected Supplier<Integer> numOperands() {
-        return () -> 1; //two sure operand, but it can dup up to 4 operands
+        return () -> 2; //two sure operand, but it can dup up to 4 operands
     }
     
     @Override
