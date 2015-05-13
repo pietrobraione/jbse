@@ -15,7 +15,7 @@ public final class BytecodeData_1ZOF extends BytecodeData {
     final boolean far;
     
     @Override
-    public void read(State state) throws InterruptException {
+    public void readImmediates(State state) throws InterruptException {
         if (this.far) {
             readImmediateSignedDword(state, 1);
             readJump(state, immediateSignedDword());

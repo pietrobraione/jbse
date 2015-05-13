@@ -41,7 +41,7 @@ UP extends StrategyUpdate<R>> {
      * @return a {@link Supplier}{@code <}{@link Integer}{@code >}
      *         that, when evaluated, returns the number of 
      *         operands in the operand stack consumed by
-     *         the bytecode
+     *         the bytecode.
      */
     protected abstract Supplier<Integer> numOperands();
 
@@ -202,7 +202,7 @@ UP extends StrategyUpdate<R>> {
             this.data = bytecodeData().get();
         }
         try {
-            this.data.read(state, this.numOperands.get());
+            this.data.read(state, this.numOperands);
             this.cooker.cook(state);
         } catch (InterruptException e) {
             if (e.hasContinuation()) {

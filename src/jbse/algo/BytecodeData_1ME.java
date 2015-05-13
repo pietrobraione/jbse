@@ -8,7 +8,7 @@ public final class BytecodeData_1ME extends BytecodeData {
     private final boolean isInterfaceMethod;
     
     @Override
-    protected void read(State state) throws InterruptException {
+    protected void readImmediates(State state) throws InterruptException {
         readImmediateUnsignedWord(state, 1);
         if (this.isInterfaceMethod) {
             readInterfaceMethodSignature(state, immediateUnsignedWord());

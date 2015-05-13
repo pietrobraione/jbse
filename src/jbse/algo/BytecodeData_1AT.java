@@ -6,7 +6,7 @@ import jbse.mem.State;
 
 public final class BytecodeData_1AT extends BytecodeData {
     @Override
-    protected void read(State state) throws InterruptException {
+    protected void readImmediates(State state) throws InterruptException {
         readImmediateUnsignedByte(state, 1);
         setPrimitiveType(state, arrayPrimitiveType(immediateUnsignedByte()));
     }

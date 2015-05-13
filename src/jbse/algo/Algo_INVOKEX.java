@@ -56,7 +56,6 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         this.isStatic = isStatic;
     }
     
-    private int nParams; //set by cooker
     private int pcOffsetReturn; //set by cooker
     private boolean isNative; //set by cooker
     private Signature methodSignatureResolved; //set by cooker
@@ -64,7 +63,10 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     
     @Override
     protected Supplier<Integer> numOperands() {
-        return () -> this.nParams;
+        return () -> {
+            final String[] paramsDescriptors = splitParametersDescriptors(this.data.signature().getDescriptor());
+            return (this.isStatic ? paramsDescriptors.length : paramsDescriptors.length + 1);
+        };
     }
     
     @Override
@@ -76,10 +78,6 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
             final ClassHierarchy hier = state.getClassHierarchy();
-            
-            //calculates the number of parameters
-            final String[] paramsDescriptors = splitParametersDescriptors(this.data.signature().getDescriptor());
-            this.nParams = (this.isStatic ? paramsDescriptors.length : paramsDescriptors.length + 1);
             
             //sets the program counter offset for the return point
             this.pcOffsetReturn = (this.isInterface ? 

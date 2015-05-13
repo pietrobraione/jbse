@@ -15,7 +15,7 @@ public final class BytecodeData_SWITCH extends BytecodeData {
     final boolean isTableSwitch;
     
     @Override
-    public void read(State state) throws InterruptException {
+    public void readImmediates(State state) throws InterruptException {
         try {
             setSwitchTable(new SwitchTable(state.getCurrentFrame(), state.getCalculator(), this.isTableSwitch));
         } catch (InvalidProgramCounterException e) {

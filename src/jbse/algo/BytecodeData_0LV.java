@@ -8,7 +8,7 @@ public final class BytecodeData_0LV extends BytecodeData {
     private final int numVarSlot;
     
     @Override
-    protected void read(State state) throws InterruptException {
+    protected void readImmediates(State state) throws InterruptException {
         readLocalVariable(state, this.numVarSlot);
     }
     

@@ -10,7 +10,7 @@ import jbse.mem.State;
  */
 public final class BytecodeData_1ON extends BytecodeData {
     @Override
-    public void read(State state) throws InterruptException {
+    public void readImmediates(State state) throws InterruptException {
         readImmediateSignedWord(state, 1);
         readJump(state, immediateSignedWord());
     }

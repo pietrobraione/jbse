@@ -8,6 +8,8 @@ import static jbse.common.Util.asUnsignedByte;
 import static jbse.common.Util.byteCat;
 import static jbse.common.Util.byteCatShort;
 
+import java.util.function.Supplier;
+
 import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.InvalidIndexException;
@@ -42,11 +44,11 @@ public abstract class BytecodeData {
     private char primitiveType;
     private SwitchTable switchTable;
     
-    public final void read(State state, int numOperands) 
+    public final void read(State state, Supplier<Integer> numOperandsSupplier) 
     throws ThreadStackEmptyException, InterruptException {
         this.nextWide = state.nextWide();
-        read(state);
-        readOperands(state, numOperands);
+        readImmediates(state);
+        readOperands(state, numOperandsSupplier.get());
     }
     
     protected final void readOperands(State state, int numOperands) 
@@ -60,7 +62,7 @@ public abstract class BytecodeData {
         }
     }
     
-    protected abstract void read(State state) throws InterruptException;
+    protected abstract void readImmediates(State state) throws InterruptException;
 
     protected final void readImmediateSignedByte(State state, int immediatePos) 
     throws InterruptException {

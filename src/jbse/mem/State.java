@@ -959,7 +959,7 @@ public final class State implements Cloneable {
 			thisObjectRef = null;
 		} else {
 			if (args.length == 0 || !(args[0] instanceof Reference)) {
-				throw new UnexpectedInternalException("args for method invocation do not correspond to method signature"); //TODO better exception
+				throw new UnexpectedInternalException("Args for method invocation do not correspond to method signature."); //TODO better exception
 			}
 			thisObjectRef = (Reference) args[0];
 			if (isNull(thisObjectRef)) {

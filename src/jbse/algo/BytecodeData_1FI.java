@@ -4,7 +4,7 @@ import jbse.mem.State;
 
 public final class BytecodeData_1FI extends BytecodeData {
     @Override
-    protected void read(State state) throws InterruptException {
+    protected void readImmediates(State state) throws InterruptException {
         readImmediateUnsignedWord(state, 1);
         readFieldSignature(state, immediateUnsignedWord());
     }

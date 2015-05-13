@@ -4,7 +4,7 @@ import jbse.mem.State;
 
 public final class BytecodeData_0 extends BytecodeData {
     @Override
-    protected void read(State state) throws InterruptException {
+    protected void readImmediates(State state) throws InterruptException {
         //nothing to do
     }
     

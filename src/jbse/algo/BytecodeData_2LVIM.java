@@ -4,7 +4,7 @@ import jbse.mem.State;
 
 public final class BytecodeData_2LVIM extends BytecodeData {
     @Override
-    public void read(State state) throws InterruptException {
+    public void readImmediates(State state) throws InterruptException {
         if (nextWide()) {
             readImmediateUnsignedWord(state, 1);
             readLocalVariable(state, immediateUnsignedWord());
