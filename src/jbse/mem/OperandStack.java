@@ -92,13 +92,13 @@ final class OperandStack implements Cloneable {
             throw new InvalidNumberOfOperandsException();
         }
         final Value[] retVal = new Value[num];
-        int i = 0;
+        int i = num - 1;
         for (Value v : this.valueStack) {
-            if (i >= num) {
+            if (i < 0) {
                 break;
             }
             retVal[i] = v;
-            ++i;
+            --i;
         }
         return retVal;
     }
