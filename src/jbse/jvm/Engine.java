@@ -59,8 +59,6 @@ public class Engine implements AutoCloseable {
 	/** The current JVM {@link State} of the symbolic execution. */
 	private State currentState;
 	
-	private Algorithm<?, ?, ?, ?, ?> continuation;
-	
 	/** 
 	 * Whether some of the references resolved by the last
 	 * decision procedure call has not been expanded.
@@ -149,8 +147,6 @@ public class Engine implements AutoCloseable {
 	throws DecisionException, InitializationException, 
 	InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, 
 	ClasspathException {
-	    this.continuation = null;
-	    
 		//executes the initial state setup step
 		final Algo_INIT algo = this.ctx.dispatcher.select();
 		algo.exec(ctx);
@@ -233,23 +229,24 @@ public class Engine implements AutoCloseable {
 		this.preStepStackSize = this.currentState.getStackSize();
 		
 		//steps
-		final Algorithm<?, ?, ?, ?, ?> algo = 
-		    (this.continuation == null ? 
-		     this.ctx.dispatcher.select(this.currentState.getInstruction()) : 
-		     this.continuation);
-		this.continuation = null;
-		try {
-			algo.exec(this.currentState, this.ctx);
-		} catch (ContinuationException e) {
-		    this.continuation = e.getContinuation();
-		} catch (ClasspathException | CannotManageStateException | 
-		         ThreadStackEmptyException |  ContradictionException | 
-		         DecisionException | FailureException | 
-			     UnexpectedInternalException e) {
-			this.stopCurrentTrace();
-			throw e;
-		} 
-		
+		Algorithm<?, ?, ?, ?, ?> algo, continuation = null;
+		do {
+		    algo = (continuation == null ? 
+		            this.ctx.dispatcher.select(this.currentState.getInstruction()) : 
+		            continuation);
+		    continuation = null;
+		    try {
+		        algo.exec(this.currentState, this.ctx);
+		    } catch (ContinuationException e) {
+		        continuation = e.getContinuation();
+		    } catch (ClasspathException | CannotManageStateException | 
+		            ThreadStackEmptyException |  ContradictionException | 
+		            DecisionException | FailureException | 
+		            UnexpectedInternalException e) {
+		        this.stopCurrentTrace();
+		        throw e;
+		    } 
+		} while (continuation != null);
 		this.someReferenceNotExpanded = algo.someReferenceNotExpanded();
 		this.nonExpandedReferencesOrigins = algo.nonExpandedReferencesOrigins();
 		this.nonExpandedReferencesTypes = algo.nonExpandedReferencesTypes();
