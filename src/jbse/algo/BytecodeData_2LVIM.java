@@ -8,11 +8,11 @@ public final class BytecodeData_2LVIM extends BytecodeData {
         if (nextWide()) {
             readImmediateUnsignedWord(state, 1);
             readLocalVariable(state, immediateUnsignedWord());
-            readImmediateUnsignedWord(state, 3);
+            readImmediateSignedWord(state, 3);
         } else {
             readImmediateUnsignedByte(state, 1);
             readLocalVariable(state, immediateUnsignedByte());
-            readImmediateUnsignedByte(state, 2);
+            readImmediateSignedByte(state, 2);
         }
     }
 
