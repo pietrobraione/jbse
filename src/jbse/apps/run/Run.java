@@ -233,7 +233,16 @@ public final class Run {
 		@Override
 		public boolean atRoot() {
 		    emitPrologue();
-		    return super.atRoot();
+		    
+            //prints the state (all+bytecode and branches)
+            boolean stop = false;
+            if ((Run.this.parameters.stepShowMode == StepShowMode.ALL) ||
+                (Run.this.parameters.stepShowMode == StepShowMode.METHOD) || 
+                (Run.this.parameters.stepShowMode == StepShowMode.ROOT_BRANCHES_LEAVES) ||
+                (Run.this.parameters.stepShowMode == StepShowMode.SOURCE)) {
+                stop = printAndAsk();
+            } 
+            return stop;
 		}
 		
 		@Override
@@ -725,42 +734,42 @@ public final class Run {
 			this.formatterBranches = new StateFormatterText(this.parameters.srcPath) {
 				@Override
 				public void formatState(State s) {
-					this.formatOutput += LINE_SEP; // gutter
-					this.formatOutput += banner(s.getIdentifier() + "["
-							+ s.getSequenceNumber() + "]", true);
-					this.formatOutput += LINE_SEP; // gutter
+					this.output += LINE_SEP; // gutter
+					this.output += 
+					    banner(s.getIdentifier() + "[" + s.getSequenceNumber() + "]", true);
+					this.output += LINE_SEP; // gutter
 					super.formatState(s);
 				}
 
 				public void emit() {
-					IO.print(Run.this.out, this.formatOutput);
+					IO.print(Run.this.out, this.output);
 				}
 			};
 			this.formatterOthers = new StateFormatterText(this.parameters.srcPath) {
 				@Override
 				public void formatState(State s) {
-					this.formatOutput += LINE_SEP; // gutter
-					this.formatOutput += banner(s.getIdentifier() + "["
-							+ s.getSequenceNumber() + "]", false);
-					this.formatOutput += LINE_SEP; // gutter
+					this.output += LINE_SEP; // gutter
+					this.output += 
+					    banner(s.getIdentifier() + "[" + s.getSequenceNumber() + "]", false);
+					this.output += LINE_SEP; // gutter
 					super.formatState(s);
 				}
 
 				public void emit() {
-					IO.print(Run.this.out, this.formatOutput);
+					IO.print(Run.this.out, this.output);
 				}
 			};
 		} else if (this.parameters.stateFormatMode == StateFormatMode.GRAPHVIZ) {
 			this.formatterBranches = this.formatterOthers = new StateFormatterGraphviz() {
 				public void emit() {
-					IO.println(Run.this.out, this.formatOutput);
+					IO.print(Run.this.out, this.output);
 				}
 			};
 		} else if (this.parameters.stateFormatMode == StateFormatMode.TRACE) {
 			this.formatterBranches = this.formatterOthers = new StateFormatterTrace() {
                 @Override
 				public void emit() {
-					IO.println(Run.this.out, this.output);
+					IO.print(Run.this.out, this.output);
 				}
 			};
         } else if (this.parameters.stateFormatMode == StateFormatMode.JUNIT_TEST) {
@@ -982,9 +991,9 @@ public final class Run {
 	 * Emits the prologue of the symbolic execution.
 	 */
 	private void emitPrologue() {
+        this.formatterOthers.cleanup();
         this.formatterOthers.formatPrologue();
         this.formatterOthers.emit();
-        this.formatterOthers.cleanup();
 	}
 
 	/**
@@ -997,18 +1006,18 @@ public final class Run {
 	private void emitState(State s, boolean isRootBranch) {
 		final Formatter f = 
 			(isRootBranch ? this.formatterBranches : this.formatterOthers);
+        f.cleanup();
 		f.formatState(s);
 		f.emit();
-		f.cleanup();
 	}
     
     /**
      * Emits the epilogue of the symbolic execution.
      */
 	private void emitEpilogue() {
+        this.formatterOthers.cleanup();
         this.formatterOthers.formatEpilogue();
         this.formatterOthers.emit();
-        this.formatterOthers.cleanup();
 	}
 
 	/**

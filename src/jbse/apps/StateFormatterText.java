@@ -39,7 +39,7 @@ import jbse.val.WideningConversion;
  */
 public abstract class StateFormatterText implements Formatter {
 	protected List<String> srcPath;
-	protected String formatOutput = "";
+	protected String output = "";
 	
 	public StateFormatterText(List<String> srcPath) {
 		this.srcPath = Collections.unmodifiableList(srcPath);
@@ -47,12 +47,12 @@ public abstract class StateFormatterText implements Formatter {
 	
 	@Override
 	public void formatState(State s) {
-		this.formatOutput = formatState(s, this.srcPath, true, "\t", "");
+		this.output = formatState(s, this.srcPath, true, "\t", "");
 	}
 
 	@Override
 	public void cleanup() {
-		this.formatOutput = "";
+		this.output = "";
 	}
 	
 	private static String formatState(State state, List<String> srcPath, boolean breakLines, String indentTxt, String indentCurrent) {

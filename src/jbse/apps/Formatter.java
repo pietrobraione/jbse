@@ -32,7 +32,7 @@ public interface Formatter {
 	
 	/**
 	 * Cleans the current formatting. Must be invoked
-	 * between two invocations of {@link #formatState(State)}
+	 * before invocations of {@link #formatState(State)}
 	 * (and typically after one or more invocations of
 	 * {@link #emit()}.
 	 */

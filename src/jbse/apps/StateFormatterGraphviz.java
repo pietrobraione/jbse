@@ -31,23 +31,23 @@ public abstract class StateFormatterGraphviz implements Formatter {
 	private String nodes;
 	private String edges;
 
-	protected String formatOutput = "";
+	protected String output = "";
 	
 	public StateFormatterGraphviz() { }
 
 	@Override
 	public void formatState(State s) {
-		this.formatOutput = "";
-		this.formatOutput += "digraph \"" + s.getIdentifier() + "[" + s.getSequenceNumber() + "]\"" + " { ";
-		this.formatOutput += this.formatHeap(s);
+		this.output = "";
+		this.output += "digraph \"" + s.getIdentifier() + "[" + s.getSequenceNumber() + "]\"" + " { ";
+		this.output += this.formatHeap(s);
 		//this.formatOutput += this.formatStaticMethodArea(s);
-		this.formatOutput += "}";
+		this.output += "}\n";
 	}
 	
 
 	@Override
 	public void cleanup() {
-		this.formatOutput = "";
+		this.output = "";
 	}
 	
 

@@ -34,25 +34,26 @@ public abstract class StateFormatterTrace implements Formatter {
 	private BytecodeFormatter bcf = new BytecodeFormatter();
 
 	public void formatState(State s) {
-		this.output = s.getIdentifier() + "[" + s.getSequenceNumber() + "]" + fieldSep 
-		                  + s.getDepth() + "," + s.getCount() + fieldSep;
+		this.output = s.getIdentifier() + "[" + s.getSequenceNumber() + "]" + this.fieldSep 
+		                  + s.getDepth() + "," + s.getCount() + this.fieldSep;
         if (s.isStuck()) {
-        	this.output += leaf;
+        	this.output += this.leaf;
         	if (s.getStuckException() != null) {
-        		this.output += fieldSep + "exception" + fieldSep + formatReturn(s, s.getStuckException());
+        		this.output += this.fieldSep + "exception" + this.fieldSep + formatReturn(s, s.getStuckException());
         	} else if (s.getStuckReturn() != null) {
-        		this.output += fieldSep + "return" + fieldSep + formatReturn(s, s.getStuckReturn());
+        		this.output += this.fieldSep + "return" + this.fieldSep + formatReturn(s, s.getStuckReturn());
         	}
         } else {
         	try {
-        		this.output += s.getCurrentMethodSignature() + fieldSep + s.getSourceRow() + fieldSep 
-        				+ s.getPC() + fieldSep + bcf.format(s);
+        		this.output += s.getCurrentMethodSignature() + this.fieldSep + s.getSourceRow() + this.fieldSep 
+        				+ s.getPC() + this.fieldSep + bcf.format(s);
 			} catch (ThreadStackEmptyException e) {
 				//the state is not stuck but it has no frames:
 				//this case is not common but it can mean a state
 				//not completely ready to run
 			}
         }
+        this.output += "\n";
 	}
 	
 	private String formatReturn(State s, Value v) {
