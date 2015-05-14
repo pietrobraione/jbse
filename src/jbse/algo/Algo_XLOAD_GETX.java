@@ -64,34 +64,32 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
         };
 	}
     
-	private final StrategyRefine_XLOAD_GETX refiner = new StrategyRefine_XLOAD_GETX() {
-        @Override
-        public void refineRefExpands(State s, DecisionAlternative_XLOAD_GETX_Expands alt) 
-        throws ContradictionException, InvalidTypeException {
-            Algo_XLOAD_GETX.this.refineRefExpands(s, alt); //implemented in Algo_XYLOAD_GETX
-        }
-
-        @Override
-        public void refineRefAliases(State s, DecisionAlternative_XLOAD_GETX_Aliases alt)
-        throws ContradictionException {
-            Algo_XLOAD_GETX.this.refineRefAliases(s, alt); //implemented in Algo_XYLOAD_GETX
-        }
-
-        @Override
-        public void refineRefNull(State s, DecisionAlternative_XLOAD_GETX_Null alt)
-        throws ContradictionException {
-            Algo_XLOAD_GETX.this.refineRefNull(s, alt); //implemented in Algo_XYLOAD_GETX
-        }
-
-        @Override
-        public void refineResolved(State s, DecisionAlternative_XLOAD_GETX_Resolved alt) {
-            //nothing to do, the value is concrete or has been already refined
-        }
-    };
-	
 	@Override
 	protected final StrategyRefine_XLOAD_GETX refiner() {
-	    return this.refiner;
+	    return new StrategyRefine_XLOAD_GETX() {
+	        @Override
+	        public void refineRefExpands(State s, DecisionAlternative_XLOAD_GETX_Expands alt) 
+	        throws ContradictionException, InvalidTypeException {
+	            Algo_XLOAD_GETX.this.refineRefExpands(s, alt); //implemented in Algo_XYLOAD_GETX
+	        }
+
+	        @Override
+	        public void refineRefAliases(State s, DecisionAlternative_XLOAD_GETX_Aliases alt)
+	        throws ContradictionException {
+	            Algo_XLOAD_GETX.this.refineRefAliases(s, alt); //implemented in Algo_XYLOAD_GETX
+	        }
+
+	        @Override
+	        public void refineRefNull(State s, DecisionAlternative_XLOAD_GETX_Null alt)
+	        throws ContradictionException {
+	            Algo_XLOAD_GETX.this.refineRefNull(s, alt); //implemented in Algo_XYLOAD_GETX
+	        }
+
+	        @Override
+	        public void refineResolved(State s, DecisionAlternative_XLOAD_GETX_Resolved alt) {
+	            //nothing to do, the value is concrete or has been already refined
+	        }
+	    };
 	}
 	
     @Override

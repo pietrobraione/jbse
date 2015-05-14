@@ -163,70 +163,6 @@ StrategyUpdate_XALOAD> {
 	    };
 	}
 	
-	private final StrategyRefine_XALOAD refiner = new StrategyRefine_XALOAD() {
-        @Override
-        public void refineRefExpands(State state, DecisionAlternative_XALOAD_Expands altExpands) 
-        throws DecisionException, ContradictionException, InvalidTypeException {
-            //handles all the assumptions for reference resolution by expansion
-            Algo_XALOAD.this.refineRefExpands(state, altExpands); //implemented in MultipleStateGenerator_XYLOAD_GETX
-            
-            //assumes the array access expression (index in range)
-            final Primitive accessExpression = altExpands.getArrayAccessExpression();
-            state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
-            
-            //updates the array with the resolved reference
-            final ReferenceSymbolic referenceToExpand = altExpands.getValueToLoad();
-            writeBackToSource(state, referenceToExpand);                    
-        }
-
-        @Override
-        public void refineRefAliases(State state, DecisionAlternative_XALOAD_Aliases altAliases)
-        throws DecisionException, ContradictionException {
-            //handles all the assumptions for reference resolution by aliasing
-            Algo_XALOAD.this.refineRefAliases(state, altAliases); //implemented in MultipleStateGenerator_XYLOAD_GETX
-            
-            //assumes the array access expression (index in range)
-            final Primitive accessExpression = altAliases.getArrayAccessExpression();
-            state.assume(ctx.decisionProcedure.simplify(accessExpression));             
-
-            //updates the array with the resolved reference
-            final ReferenceSymbolic referenceToResolve = altAliases.getValueToLoad();
-            writeBackToSource(state, referenceToResolve);
-        }
-
-        @Override
-        public void refineRefNull(State state, DecisionAlternative_XALOAD_Null altNull) 
-        throws DecisionException, ContradictionException {
-            Algo_XALOAD.this.refineRefNull(state, altNull); //implemented in MultipleStateGenerator_XYLOAD_GETX
-            
-            //further augments the path condition 
-            final Primitive accessExpression = altNull.getArrayAccessExpression();
-            state.assume(ctx.decisionProcedure.simplify(accessExpression));
-            
-            //updates the array with the resolved reference
-            final ReferenceSymbolic referenceToResolve = altNull.getValueToLoad();
-            writeBackToSource(state, referenceToResolve);
-        }
-
-        @Override
-        public void refineResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved)
-        throws DecisionException {
-            //augments the path condition
-            state.assume(ctx.decisionProcedure.simplify(altResolved.getArrayAccessExpression()));
-            
-            //if the value is fresh, it writes it back in the array
-            if (altResolved.isValueFresh()) {
-                writeBackToSource(state, altResolved.getValueToLoad());
-            }
-        }
-        
-        @Override
-        public void refineOut(State state, DecisionAlternative_XALOAD_Out altOut) {
-            //augments the path condition
-            state.assume(ctx.decisionProcedure.simplify(altOut.getArrayAccessExpression()));
-        }
-    };
-    
     @Override   
     protected Value possiblyMaterialize(State state, Value val) 
     throws DecisionException {
@@ -265,32 +201,92 @@ StrategyUpdate_XALOAD> {
 	
 	@Override
 	protected StrategyRefine_XALOAD refiner() {
-	    return this.refiner;
+	    return new StrategyRefine_XALOAD() {
+	        @Override
+	        public void refineRefExpands(State state, DecisionAlternative_XALOAD_Expands altExpands) 
+	        throws DecisionException, ContradictionException, InvalidTypeException {
+	            //handles all the assumptions for reference resolution by expansion
+	            Algo_XALOAD.this.refineRefExpands(state, altExpands); //implemented in MultipleStateGenerator_XYLOAD_GETX
+	            
+	            //assumes the array access expression (index in range)
+	            final Primitive accessExpression = altExpands.getArrayAccessExpression();
+	            state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
+	            
+	            //updates the array with the resolved reference
+	            final ReferenceSymbolic referenceToExpand = altExpands.getValueToLoad();
+	            writeBackToSource(state, referenceToExpand);                    
+	        }
+
+	        @Override
+	        public void refineRefAliases(State state, DecisionAlternative_XALOAD_Aliases altAliases)
+	        throws DecisionException, ContradictionException {
+	            //handles all the assumptions for reference resolution by aliasing
+	            Algo_XALOAD.this.refineRefAliases(state, altAliases); //implemented in MultipleStateGenerator_XYLOAD_GETX
+	            
+	            //assumes the array access expression (index in range)
+	            final Primitive accessExpression = altAliases.getArrayAccessExpression();
+	            state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));             
+
+	            //updates the array with the resolved reference
+	            final ReferenceSymbolic referenceToResolve = altAliases.getValueToLoad();
+	            writeBackToSource(state, referenceToResolve);
+	        }
+
+	        @Override
+	        public void refineRefNull(State state, DecisionAlternative_XALOAD_Null altNull) 
+	        throws DecisionException, ContradictionException {
+	            Algo_XALOAD.this.refineRefNull(state, altNull); //implemented in MultipleStateGenerator_XYLOAD_GETX
+	            
+	            //further augments the path condition 
+	            final Primitive accessExpression = altNull.getArrayAccessExpression();
+	            state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
+	            
+	            //updates the array with the resolved reference
+	            final ReferenceSymbolic referenceToResolve = altNull.getValueToLoad();
+	            writeBackToSource(state, referenceToResolve);
+	        }
+
+	        @Override
+	        public void refineResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved)
+	        throws DecisionException {
+	            //augments the path condition
+	            state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(altResolved.getArrayAccessExpression()));
+	            
+	            //if the value is fresh, it writes it back in the array
+	            if (altResolved.isValueFresh()) {
+	                writeBackToSource(state, altResolved.getValueToLoad());
+	            }
+	        }
+	        
+	        @Override
+	        public void refineOut(State state, DecisionAlternative_XALOAD_Out altOut) {
+	            //augments the path condition
+	            state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(altOut.getArrayAccessExpression()));
+	        }
+	    };
 	}
 
-	private final StrategyUpdate_XALOAD updater =  new StrategyUpdate_XALOAD() {
-        @Override
-        public void updateResolved(State s, DecisionAlternative_XALOAD_Resolved dav) 
-        throws DecisionException, InterruptException {
-            Algo_XALOAD.this.update(s, dav); //implemented in Algo_XYLOAD_GETX
-        }
-
-        @Override
-        public void updateReference(State s, DecisionAlternative_XALOAD_Unresolved dar) 
-        throws DecisionException, InterruptException {
-            Algo_XALOAD.this.update(s, dar); //implemented in Algo_XYLOAD_GETX
-        }
-
-        @Override
-        public void updateOut(State s, DecisionAlternative_XALOAD_Out dao) 
-        throws InterruptException {
-            throwNew(s, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
-            exitFromAlgorithm();
-        }
-    };
-
     protected StrategyUpdate_XALOAD updater() {
-        return this.updater;
+        return new StrategyUpdate_XALOAD() {
+            @Override
+            public void updateResolved(State s, DecisionAlternative_XALOAD_Resolved dav) 
+            throws DecisionException, InterruptException {
+                Algo_XALOAD.this.update(s, dav); //implemented in Algo_XYLOAD_GETX
+            }
+
+            @Override
+            public void updateReference(State s, DecisionAlternative_XALOAD_Unresolved dar) 
+            throws DecisionException, InterruptException {
+                Algo_XALOAD.this.update(s, dar); //implemented in Algo_XYLOAD_GETX
+            }
+
+            @Override
+            public void updateOut(State s, DecisionAlternative_XALOAD_Out dao) 
+            throws InterruptException {
+                throwNew(s, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
+                exitFromAlgorithm();
+            }
+        };
     }
     
     @Override
