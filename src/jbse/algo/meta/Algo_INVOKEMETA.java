@@ -8,10 +8,15 @@ import java.util.function.Supplier;
 import jbse.algo.Algorithm;
 import jbse.algo.BytecodeCooker;
 import jbse.algo.BytecodeData_1ME;
+import jbse.algo.InterruptException;
 import jbse.algo.StrategyDecide;
 import jbse.algo.StrategyRefine;
 import jbse.algo.StrategyUpdate;
+import jbse.algo.exc.SymbolicValueNotAllowedException;
+import jbse.common.exc.ClasspathException;
 import jbse.dec.DecisionProcedureAlgorithms;
+import jbse.dec.exc.DecisionException;
+import jbse.mem.State;
 import jbse.tree.DecisionAlternative_NONE;
 
 /**
@@ -48,7 +53,14 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             this.pcOffset = (this.isInterface ? 
                             INVOKEDYNAMICINTERFACE_OFFSET : 
                             INVOKESPECIALSTATICVIRTUAL_OFFSET);
+            cookMore(state);
         };
+    }
+    
+    protected void cookMore(State state) 
+    throws DecisionException, ClasspathException, 
+    SymbolicValueNotAllowedException, InterruptException {
+        //the default implementation does nothing
     }
 
     @Override

@@ -35,6 +35,8 @@ public interface StrategyUpdate<R> {
      * @throws CannotManageStateException possibly raised if JBSE
      *         does not implement the bytecode semantics for the
      *         current execution state.
+     * @throws DecisionException possibly raised by array-related
+     *         operations (e.g., detecting unsatisfiable entries).
      * @throws ContradictionException possibly raised if the state 
      *         falsifies an assumption.
      * @throws FailureException possibly raised if the state falsifies
@@ -43,7 +45,7 @@ public interface StrategyUpdate<R> {
      *         bytecode for {@code state} must be prematurely ended now.
 	 */
 	public void update(State state, R alt) 
-	throws DecisionException, ThreadStackEmptyException, 
-	ClasspathException, CannotManageStateException, 
+	throws ThreadStackEmptyException, ClasspathException,
+	CannotManageStateException, DecisionException, 
 	ContradictionException, FailureException, InterruptException;
 }

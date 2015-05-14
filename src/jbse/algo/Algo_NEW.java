@@ -24,7 +24,7 @@ DecisionAlternative_NONE,
 StrategyDecide<DecisionAlternative_NONE>, 
 StrategyRefine<DecisionAlternative_NONE>, 
 StrategyUpdate<DecisionAlternative_NONE>> {
-	
+    
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 0;
@@ -55,6 +55,14 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 //this should never happen
                 failExecution(e);
             }
+            
+            //possibly creates and initializes the class
+            try {
+                ensureClassCreatedAndInitialized(state, this.data.className(), this.ctx.decisionProcedure);
+            } catch (BadClassFileException e) {
+                //this should never happen
+                failExecution(e);
+            }
         };
     }
     
@@ -79,16 +87,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            try {
-                final String className = this.data.className(); 
-                //possibly creates and initializes the class
-                ensureClassCreatedAndInitialized(state, className, ctx.decisionProcedure);
-                //creates the new object in the heap
-                state.pushOperand(state.createInstance(className));
-            } catch (BadClassFileException e) {
-                //this should never happen
-                failExecution(e);
-            }
+            //creates the new object in the heap
+            state.pushOperand(state.createInstance(this.data.className()));
         };
     }
     

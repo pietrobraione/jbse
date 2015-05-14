@@ -74,13 +74,13 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
             if (this.type == Type.INT) {
-                state.pushOperand(state.getCalculator().valInt(value));
+                state.pushOperand(state.getCalculator().valInt(this.value));
             } else if (this.type == Type.DOUBLE) {
-                state.pushOperand(state.getCalculator().valDouble((double) value));
+                state.pushOperand(state.getCalculator().valDouble((double) this.value));
             } else if (this.type == Type.FLOAT) {
-                state.pushOperand(state.getCalculator().valFloat((float) value));
+                state.pushOperand(state.getCalculator().valFloat((float) this.value));
             } else if (this.type == Type.LONG) {
-                state.pushOperand(state.getCalculator().valLong((long) value));
+                state.pushOperand(state.getCalculator().valLong((long) this.value));
             } else {
                 failExecution("const bytecode with type " + this.type + " does not exist.");
             }

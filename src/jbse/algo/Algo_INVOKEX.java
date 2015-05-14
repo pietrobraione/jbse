@@ -191,6 +191,17 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 //this should never happen after resolution 
                 failExecution(e);
             }     
+
+            //possibly creates and initializes the class of the resolved method
+            //TODO should we do it in the invoke[interface/special/virtual] cases? If so, isn't the same doing on methodSignatureImpl?
+            if (this.isStatic) { 
+                try {
+                    ensureClassCreatedAndInitialized(state, this.methodSignatureResolved.getClassName(), this.ctx.decisionProcedure);
+                } catch (BadClassFileException e) {
+                    //this should never happen after resolution 
+                    failExecution(e);
+                }
+            }
         };
     }
     
@@ -215,17 +226,6 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            //possibly creates and initializes the class of the resolved method
-            //TODO should we do it in the invoke[interface/special/virtual] cases? If so, isn't the same doing on methodSignatureImpl?
-            if (this.isStatic) { 
-                try {
-                    ensureClassCreatedAndInitialized(state, this.methodSignatureResolved.getClassName(), this.ctx.decisionProcedure);
-                } catch (BadClassFileException e) {
-                    //this should never happen after resolution 
-                    failExecution(e);
-                }
-            }
-            
             //if the method is native, delegates the responsibility 
             //to the native invoker
             if (this.isNative) {

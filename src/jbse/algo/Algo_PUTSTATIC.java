@@ -25,7 +25,8 @@ final class Algo_PUTSTATIC extends Algo_PUTX {
     
     @Override
     protected void check(State state, String currentClassName)
-    throws FieldNotFoundException, BadClassFileException, InterruptException {
+    throws FieldNotFoundException, BadClassFileException, 
+    DecisionException, ClasspathException, InterruptException {
         final String fieldClassName = this.fieldSignatureResolved.getClassName();
         final ClassFile fieldClassFile = state.getClassHierarchy().getClassFile(fieldClassName);
 
@@ -44,12 +45,6 @@ final class Algo_PUTSTATIC extends Algo_PUTX {
         }
 
         //TODO compare types of field and of the value to put in
-    }
-    
-    @Override
-    protected void put(State state) 
-    throws DecisionException, ClasspathException, InterruptException {
-        final String fieldClassName = this.fieldSignatureResolved.getClassName();
 
         //possibly creates and initializes the class 
         try {
@@ -60,7 +55,11 @@ final class Algo_PUTSTATIC extends Algo_PUTX {
             failExecution(e);
         }
 
-        //sets the field
+    }
+    
+    @Override
+    protected void put(State state) throws InterruptException {
+        final String fieldClassName = this.fieldSignatureResolved.getClassName();
         state.getKlass(fieldClassName).setFieldValue(this.fieldSignatureResolved, this.data.operand(0));
     }
 }

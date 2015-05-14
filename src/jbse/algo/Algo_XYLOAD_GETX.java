@@ -83,7 +83,7 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
 	}
 	
 	protected final void update(State state, DecisionAlternative_XYLOAD_GETX_Loads altLoads) 
-	throws DecisionException, ThreadStackEmptyException, InterruptException {
+	throws DecisionException, InterruptException {
 	    //possibly materializes the value
 		final Value val = altLoads.getValueToLoad();
 		final Value valMaterialized = possiblyMaterialize(state, val);
@@ -98,7 +98,8 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
                 valToPush = valMaterialized;
             }
             state.pushOperand(valToPush);
-        } catch (ClassCastException | InvalidTypeException e) {
+        } catch (ClassCastException | InvalidTypeException | 
+                 ThreadStackEmptyException e) {
             //this should not happen
             failExecution(e);
         }
@@ -112,8 +113,11 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
 	        }
 		} catch (InvalidProgramCounterException e) {
 		    throwVerifyError(state);
-			return;
-		}
+		    exitFromAlgorithm();
+        } catch (ThreadStackEmptyException e) {
+            //this should not happen
+            failExecution(e);
+        }
 	}
 	
 	protected abstract Value possiblyMaterialize(State s, Value val) 

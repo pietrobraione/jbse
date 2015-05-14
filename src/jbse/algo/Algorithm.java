@@ -207,6 +207,8 @@ UP extends StrategyUpdate<R>> {
         } catch (InterruptException e) {
             if (e.hasContinuation()) {
                 throw new ContinuationException(e.getContinuation());
+            } else {
+                return;
             }
         }
 
@@ -250,6 +252,8 @@ UP extends StrategyUpdate<R>> {
                 this.updater.update(s, r);
             } catch (InterruptException e) {
                 interrupt = e;
+            } catch (ThreadStackEmptyException e) {
+                failExecution(e);
             }
 
             //updates the program counter

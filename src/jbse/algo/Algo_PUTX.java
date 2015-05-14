@@ -80,7 +80,6 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     @Override
     protected final StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            //writes the field
             put(state);
         };
     }
@@ -104,10 +103,11 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
     
     protected abstract void check(State state, String currentClass)
-    throws FieldNotFoundException, BadClassFileException, InterruptException;
+    throws FieldNotFoundException, BadClassFileException, 
+    DecisionException, ClasspathException, InterruptException;
 
     protected abstract void put(State state)
-    throws DecisionException, ClasspathException, InterruptException;
+    throws InterruptException;
     
     @Override
     protected final Supplier<Boolean> isProgramCounterUpdateAnOffset() {

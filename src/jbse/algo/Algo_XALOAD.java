@@ -19,7 +19,6 @@ import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
-import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XALOAD;
 import jbse.tree.DecisionAlternative_XALOAD_Out;
 import jbse.tree.DecisionAlternative_XALOAD_Unresolved;
@@ -272,19 +271,19 @@ StrategyUpdate_XALOAD> {
 	private final StrategyUpdate_XALOAD updater =  new StrategyUpdate_XALOAD() {
         @Override
         public void updateResolved(State s, DecisionAlternative_XALOAD_Resolved dav) 
-        throws DecisionException, ThreadStackEmptyException, InterruptException {
+        throws DecisionException, InterruptException {
             Algo_XALOAD.this.update(s, dav); //implemented in Algo_XYLOAD_GETX
         }
 
         @Override
         public void updateReference(State s, DecisionAlternative_XALOAD_Unresolved dar) 
-        throws DecisionException, ThreadStackEmptyException, InterruptException {
+        throws DecisionException, InterruptException {
             Algo_XALOAD.this.update(s, dar); //implemented in Algo_XYLOAD_GETX
         }
 
         @Override
         public void updateOut(State s, DecisionAlternative_XALOAD_Out dao) 
-        throws ThreadStackEmptyException, InterruptException {
+        throws InterruptException {
             throwNew(s, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
             exitFromAlgorithm();
         }
