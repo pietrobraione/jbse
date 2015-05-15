@@ -29,21 +29,19 @@ final class Algo_INVOKEUNINTERPRETED extends Algo_INVOKEMETA {
         this.functionName = functionName;
     }
     
-    private int nParams; //set by cooker
     private Primitive[] argsPrimitive; //set by cooker
     private char returnType; //set by cooker
 
     @Override
     protected Supplier<Integer> numOperands() {
-        return () -> this.nParams;
+        return () -> {
+            final String[] paramsDescriptors = splitParametersDescriptors(this.data.signature().getDescriptor());
+            return (this.isStatic ? paramsDescriptors.length : paramsDescriptors.length + 1);
+        };
     }
     
     @Override
     protected void cookMore(State state) throws UninterpretedUnsupportedException {
-        //calculates the number of parameters
-        final String[] paramsDescriptors = splitParametersDescriptors(this.data.signature().getDescriptor());
-        this.nParams = (this.isStatic ? paramsDescriptors.length : paramsDescriptors.length + 1);
-
         final char returnType = splitReturnValueDescriptor(this.methodSignatureImpl.getDescriptor()).charAt(0);
         if (!isPrimitive(returnType)) {
             throw new UninterpretedUnsupportedException("The method " + this.methodSignatureImpl + " does not return a primitive value."); 
