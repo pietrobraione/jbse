@@ -50,14 +50,13 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
     protected final void cookMore(State state, D data) 
     throws InterruptException {
         //calculates layersToCreateNow, i.e., the number of layers that 
-        //can be created when the bytecode is executed; this number is
-        //the number of consecutive concrete dimensionsCounts, 
-        //plus one
+        //can be created when this algorithm is executed; this number is
+        //calculated by considering that the last layer that can be
+        //created now is the first that has a symbolic length
         this.layersToCreateNow = 0;
         for (Primitive l : this.dimensionsCounts) {
-            if (l instanceof Simplex) {
-                ++this.layersToCreateNow;
-            } else {
+            ++this.layersToCreateNow;
+            if (!(l instanceof Simplex)) {
                 break;
             }
         }
