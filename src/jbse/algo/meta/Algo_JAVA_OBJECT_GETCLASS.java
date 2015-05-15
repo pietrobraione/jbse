@@ -10,8 +10,8 @@ import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 
 import java.util.function.Supplier;
 
+import jbse.algo.Algo_INVOKEMETA;
 import jbse.algo.InterruptException;
-import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
@@ -20,14 +20,9 @@ import jbse.dec.exc.DecisionException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
-import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
 public final class Algo_JAVA_OBJECT_GETCLASS extends Algo_INVOKEMETA {
-    public Algo_JAVA_OBJECT_GETCLASS() {
-        super(false);
-    }
-    
     String className; //set by cookMore
     
     @Override
@@ -37,9 +32,9 @@ public final class Algo_JAVA_OBJECT_GETCLASS extends Algo_INVOKEMETA {
     
     @Override
     protected void cookMore(State state) 
-    throws DecisionException, ClasspathException, 
-    SymbolicValueNotAllowedException, InterruptException {
-        super.cookMore(state);
+    throws ThreadStackEmptyException, DecisionException, 
+    ClasspathException, SymbolicValueNotAllowedException, 
+    InterruptException {
         try {
             //gets the "this" object and the name of its class
             final Reference thisRef = (Reference) this.data.operand(0);
@@ -59,18 +54,16 @@ public final class Algo_JAVA_OBJECT_GETCLASS extends Algo_INVOKEMETA {
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (ThreadStackEmptyException | BadClassFileException e) {
+        } catch (BadClassFileException e) {
             //this should never happen
             failExecution(e);
         }
     }
     
     @Override
-    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
-        return (state, alt) -> {
-            //gets the instance of the class of the "this" object
-            final Reference classRef = state.referenceToInstance_JAVA_CLASS(this.className);
-            state.pushOperand(classRef);
-        };
+    protected void update(State state) throws ThreadStackEmptyException {
+        //gets the instance of the class of the "this" object
+        final Reference classRef = state.referenceToInstance_JAVA_CLASS(this.className);
+        state.pushOperand(classRef);
     }
 }

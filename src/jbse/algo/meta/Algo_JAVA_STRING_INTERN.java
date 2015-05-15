@@ -2,27 +2,21 @@ package jbse.algo.meta;
 
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.ensureStringLiteral;
-import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
 
 import java.util.function.Supplier;
 
+import jbse.algo.Algo_INVOKEMETA;
 import jbse.algo.InterruptException;
-import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
-import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
 public final class Algo_JAVA_STRING_INTERN extends Algo_INVOKEMETA {
-    public Algo_JAVA_STRING_INTERN() {
-        super(false);
-    }
-    
     private String valueString; //set by cookMore
     
     @Override
@@ -32,9 +26,9 @@ public final class Algo_JAVA_STRING_INTERN extends Algo_INVOKEMETA {
     
     @Override
     protected void cookMore(State state) 
-    throws DecisionException, ClasspathException, 
-    SymbolicValueNotAllowedException, InterruptException {
-        super.cookMore(state);
+    throws ThreadStackEmptyException, DecisionException, 
+    ClasspathException, SymbolicValueNotAllowedException, 
+    InterruptException {
         try {
             this.valueString = valueString(state, (Reference) this.data.operand(0));
             if (this.valueString == null) {
@@ -49,15 +43,11 @@ public final class Algo_JAVA_STRING_INTERN extends Algo_INVOKEMETA {
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (ThreadStackEmptyException e) {
-            failExecution(e);
         }
     }
     
     @Override
-    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
-        return (state, alt) -> {
-            state.pushOperand(state.referenceToStringLiteral(this.valueString));
-        };
+    protected void update(State state) throws ThreadStackEmptyException {
+        state.pushOperand(state.referenceToStringLiteral(this.valueString));
     }
 }

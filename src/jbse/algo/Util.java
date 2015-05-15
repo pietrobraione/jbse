@@ -96,7 +96,7 @@ public class Util {
     }
     
     
-	public static ClassFile lookupMethodImpl(State state, Signature methodSignatureResolved, boolean isStatic, boolean isSpecial, String receiverClassName) 
+	public static ClassFile lookupClassfileMethodImpl(State state, Signature methodSignatureResolved, boolean isStatic, boolean isSpecial, String receiverClassName) 
 	throws BadClassFileException, MethodNotFoundException, IncompatibleClassFileException, ThreadStackEmptyException {
         final ClassFile retVal;
         final ClassHierarchy hier = state.getClassHierarchy();

@@ -6,25 +6,22 @@ import static jbse.bc.Signatures.JAVA_THROWABLE_STACKTRACE;
 
 import java.util.function.Supplier;
 
-import jbse.algo.StrategyUpdate;
+import jbse.algo.Algo_INVOKEMETA;
+import jbse.algo.InterruptException;
 import jbse.mem.Instance;
-import jbse.tree.DecisionAlternative_NONE;
+import jbse.mem.State;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Null;
 import jbse.val.Reference;
 
 public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE extends Algo_INVOKEMETA {
-    public Algo_JAVA_THROWABLE_FILLINSTACKTRACE() {
-        super(false);
-    }
-    
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 1;
     }
     
     @Override
-    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
-        return (state, alt) -> {
+    protected void update(State state) throws ThreadStackEmptyException, InterruptException {
             try {
                 final Reference thisRef = (Reference) this.data.operand(0);
                 final Instance exc = (Instance) state.getObject(thisRef);
@@ -37,6 +34,5 @@ public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE extends Algo_INVOKEMETA 
                 throwVerifyError(state);
                 exitFromAlgorithm();
             }
-        };
     }
 }

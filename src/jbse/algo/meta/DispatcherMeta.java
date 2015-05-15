@@ -20,6 +20,7 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRESOLVED;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRUNBYJBSE;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SUCCEED;
 
+import jbse.algo.Algo_INVOKEMETA;
 import jbse.algo.Algorithm;
 import jbse.algo.exc.MetaUnsupportedException;
 import jbse.bc.ClassHierarchy;
@@ -40,14 +41,14 @@ import jbse.meta.annotations.Uninterpreted;
  * 
  * @author Pietro Braione
  */
-public class DispatcherMeta extends Dispatcher<Signature, Algorithm<?, ?, ?, ?, ?>> {
+public class DispatcherMeta extends Dispatcher<Signature, Algo_INVOKEMETA> {
 	/**
 	 * Constructor.
 	 */
 	public DispatcherMeta() {
-		setDefault(new DispatchStrategy<Algorithm<?, ?, ?, ?, ?>>() {
+		setDefault(new DispatchStrategy<Algo_INVOKEMETA>() {
 			@Override
-			public Algorithm<?, ?, ?, ?, ?> doIt() {
+			public Algo_INVOKEMETA doIt() {
 				return null;
 			}
 		});
@@ -86,17 +87,16 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm<?, ?, ?, ?, 
 	 *         always preceded by a call to {@link #isMeta}.
 	 */
 	@Override
-	public Algorithm<?, ?, ?, ?, ?> select(Signature methodSignatureResolved) {
-		final Algorithm<?, ?, ?, ?, ?> retVal;
+	public Algo_INVOKEMETA select(Signature methodSignatureResolved) {
         try {
-            retVal = super.select(methodSignatureResolved);
+            final Algo_INVOKEMETA retVal = super.select(methodSignatureResolved);
+            return retVal;
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-		return retVal;
 	}
 	
 	/**
@@ -150,10 +150,10 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm<?, ?, ?, ?, 
 	 *         (has insufficient visibility or has not a parameterless constructor).
 	 */
 	public void loadAlgoMetaOverridden(Signature methodSignatureResolved, 
-	                                   Class<? extends Algorithm<?, ?, ?, ?, ?>> metaDelegateClass) 
+	                                   Class<? extends Algo_INVOKEMETA> metaDelegateClass) 
 	throws MetaUnsupportedException {
 		try {
-			final Algorithm<?, ?, ?, ?, ?> metaDelegate = metaDelegateClass.newInstance();
+			final Algo_INVOKEMETA metaDelegate = metaDelegateClass.newInstance();
 			loadMetaDelegate(methodSignatureResolved, metaDelegate);
 		} catch (InstantiationException e) {
 			throw new MetaUnsupportedException("meta-level implementation class " + metaDelegateClass + " cannot be instantiated.");
@@ -178,7 +178,7 @@ public class DispatcherMeta extends Dispatcher<Signature, Algorithm<?, ?, ?, ?, 
 		loadMetaDelegate(methodSignatureResolved, metaDelegate);
 	}
 	
-	private void loadMetaDelegate(Signature methodSignatureResolved, final Algorithm<?, ?, ?, ?, ?> metaDelegate) {
+	private void loadMetaDelegate(Signature methodSignatureResolved, final Algo_INVOKEMETA metaDelegate) {
 		setCase(methodSignatureResolved, () -> metaDelegate);
 	}
 }

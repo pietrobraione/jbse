@@ -5,7 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import jbse.algo.Algorithm;
+import jbse.algo.Algo_INVOKEMETA;
 
 /**
  * This annotation applies to methods. It indicates that the annotated 
@@ -24,5 +24,5 @@ import jbse.algo.Algorithm;
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.CLASS)
 public @interface MetaOverriddenBy {
-	java.lang.Class<? extends Algorithm<?, ?, ?, ?, ?>> value();
+	java.lang.Class<? extends Algo_INVOKEMETA> value();
 }

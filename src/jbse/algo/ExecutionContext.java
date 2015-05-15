@@ -185,8 +185,7 @@ public final class ExecutionContext {
 	    final Signature sig = new Signature(className, paramsSig, methodName);
 	    try {
 	        @SuppressWarnings("unchecked")
-            final Class<? extends Algorithm<?, ?, ?, ?, ?>> metaDelegateClass = 
-	            (Class<Algorithm<?, ?, ?, ?, ?>>)
+            final Class<Algo_INVOKEMETA> metaDelegateClass = (Class<Algo_INVOKEMETA>)
 	            ClassLoader.getSystemClassLoader().loadClass(metaDelegateClassName).
 	            asSubclass(Algorithm.class);
 	        this.dispatcherMeta.loadAlgoMetaOverridden(sig, metaDelegateClass);
