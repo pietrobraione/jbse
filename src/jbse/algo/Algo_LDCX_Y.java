@@ -36,7 +36,7 @@ import jbse.val.Value;
  *
  */
 final class Algo_LDCX_Y extends Algorithm<
-BytecodeData_1IM,
+BytecodeData_1ZIM,
 DecisionAlternative_NONE, 
 StrategyDecide<DecisionAlternative_NONE>, 
 StrategyRefine<DecisionAlternative_NONE>, 
@@ -65,8 +65,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
     
     @Override
-    protected Supplier<BytecodeData_1IM> bytecodeData() {
-        return BytecodeData_1IM::get;
+    protected Supplier<BytecodeData_1ZIM> bytecodeData() {
+        return () -> BytecodeData_1ZIM.withWide(this.wide).get();
     }
     
     @Override
@@ -81,7 +81,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     //this should never happen
                     failExecution(e);
                 }
-                final int index = (this.data.nextWide() ? this.data.immediateUnsignedWord() : this.data.immediateUnsignedByte());
+                final int index = (this.wide ? this.data.immediateUnsignedWord() : this.data.immediateUnsignedByte());
                 final ConstantPoolValue cpv = cf.getValueFromConstantPool(index);
                 if (cpv instanceof ConstantPoolPrimitive) {
                     this.val = state.getCalculator().val_(cpv.getValue());
