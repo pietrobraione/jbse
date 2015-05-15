@@ -236,9 +236,7 @@ public final class Run {
 		    
             //prints the state (all+bytecode and branches)
             boolean stop = false;
-            if ((Run.this.parameters.stepShowMode == StepShowMode.ALL) ||
-                (Run.this.parameters.stepShowMode == StepShowMode.METHOD) || 
-                (Run.this.parameters.stepShowMode == StepShowMode.ROOT_BRANCHES_LEAVES) ||
+            if ((Run.this.parameters.stepShowMode == StepShowMode.METHOD) || 
                 (Run.this.parameters.stepShowMode == StepShowMode.SOURCE)) {
                 stop = printAndAsk();
             } 
