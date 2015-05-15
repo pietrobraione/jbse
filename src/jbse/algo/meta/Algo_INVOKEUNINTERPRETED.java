@@ -42,8 +42,9 @@ final class Algo_INVOKEUNINTERPRETED extends Algo_INVOKEMETA {
     
     @Override
     protected void cookMore(State state) throws UninterpretedUnsupportedException {
-        final char returnType = splitReturnValueDescriptor(this.methodSignatureImpl.getDescriptor()).charAt(0);
-        if (!isPrimitive(returnType)) {
+        //gets and checks the return type
+        this.returnType = splitReturnValueDescriptor(this.methodSignatureImpl.getDescriptor()).charAt(0);
+        if (!isPrimitive(this.returnType)) {
             throw new UninterpretedUnsupportedException("The method " + this.methodSignatureImpl + " does not return a primitive value."); 
         }
 
