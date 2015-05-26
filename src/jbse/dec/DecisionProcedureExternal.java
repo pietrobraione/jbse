@@ -289,8 +289,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	}
 	
 	@Override
-	public void close() 
-	throws DecisionException {
+	protected final void closeLocal() throws DecisionException {
 		if (this.extIf.isWorking()) {
 			try {
 				this.extIf.quit();

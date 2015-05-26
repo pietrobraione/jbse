@@ -763,7 +763,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	}
 	
 	@Override
-	public void close() throws DecisionException {
+	public final void close() throws DecisionException {
 		closeLocal();
 		if (hasNext()) {
 			this.next.close();
@@ -774,7 +774,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	 * May be implemented by subclasses to locally quit a decision 
 	 * procedure. By default it does nothing.
 	 */
-	protected void closeLocal() {
+	protected void closeLocal() throws DecisionException {
 		//default implementation
 	}
 }
