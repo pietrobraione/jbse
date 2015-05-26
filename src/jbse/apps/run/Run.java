@@ -578,6 +578,19 @@ public final class Run {
 		
 		// prints statistics
         printFinalStats();
+        
+        // quits the numeric decision procedure for the checker
+        if (this.decisionProcedureConcretization != null) {
+            try {
+                this.decisionProcedureConcretization.close();
+                this.decisionProcedureConcretization = null;
+                this.checker = null;
+            } catch (DecisionException e) {
+                IO.println(this.err, ERROR_ENGINE_QUIT_DECISION_PROCEDURE);
+                IO.printException(this.err, e);
+                retVal = 1;
+            }
+        }
 
 		// quits the engine
 		try {
@@ -912,7 +925,10 @@ public final class Run {
 		        core = new DecisionProcedureSMTLIB2_AUFNIRA(core, calc, path + COMMANDLINE_LAUNCH_CVC4);
 		        coreNumeric = (needHeapCheck ? new DecisionProcedureSMTLIB2_AUFNIRA(coreNumeric, calc, path + COMMANDLINE_LAUNCH_CVC4) : null);
 		    } else {
-		        core.close(); //just to make the compiler happy
+		        core.close();
+		        if (coreNumeric != null) {
+		            coreNumeric.close();
+		        }
 		        throw new UnexpectedInternalException(ERROR_UNDEF_DECISION_PROCEDURE);
 		    }
 		} catch (DecisionException e) {

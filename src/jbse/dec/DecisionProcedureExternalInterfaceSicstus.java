@@ -37,36 +37,41 @@ import se.sics.prologbeans.PrologSession;
 import se.sics.prologbeans.QueryAnswer;
 
 class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExternalInterface {
-	private final static String SERVER_PL = 
-			"[user].\n" +
-			":- module(server,[main/0,my_predicate/2]).\n" +
-			":- use_module(library(prologbeans)).\n" +
-			":- use_module(library(clpq)).\n"+
-			":- use_module(library(charsio), [read_from_chars/2]).\n" +
-     
-			// Register acceptable queries and start the server (using default port)
-			"main :-\n" +
-			"  register_query(do(C), my_predicate(C)),\n" +
-			"  register_event_listener(server_started, server_started_listener),\n" +
-			"  start([port(_Port)]),\n" +
-			"  halt.\n"+
-    
-			// The listener for the start event emits the port number
-			"server_started_listener :-\n" +
-			"  get_server_property(port(Port)),\n"+
-			"  format(user_error, 'port:~w~n', [Port]),\n"+
-			"  flush_output(user_error).\n" + 
-     
-			// The query processor receives a list of characters
-			// and converts them into an expression to be evaluated
-			"my_predicate(Chars) :-\n" +
-			"  read_from_chars(Chars, X),\n" +
-			"  X.\n" +
-			
-			//starts
-			":- main.\n";
-	
-	private static class InitThread implements Runnable {
+	private static class SicstusServer implements Runnable {
+	    private final static String SERVER_PL = 
+        "[user].\n" +
+        ":- module(server,[main/0,server_started_listener/0,server_shutdown/0,my_predicate/2]).\n" +
+        ":- use_module(library(prologbeans)).\n" +
+        ":- use_module(library(clpq)).\n"+
+        ":- use_module(library(charsio), [read_from_chars/2]).\n" +
+ 
+        // Register acceptable queries and start the server (using default port)
+        "main :-\n" +
+        "  register_query(do(C), my_predicate(C)),\n" +
+        "  register_query(shutdown, server_shutdown),\n" +
+        "  register_event_listener(server_started, server_started_listener),\n" +
+        "  start([port(_Port)]),\n" +
+        "  halt.\n"+
+
+        // The listener for the start event emits the port number
+        "server_started_listener :-\n" +
+        "  get_server_property(port(Port)),\n"+
+        "  format(user_error, 'port:~w~n', [Port]),\n"+
+        "  flush_output(user_error).\n" + 
+ 
+        // Shutting down the server
+        "server_shutdown :- shutdown(now).\n" +
+        
+        // The query processor receives a list of characters
+        // and converts them into an expression to be evaluated
+        "my_predicate(Chars) :-\n" +
+        "  read_from_chars(Chars, X),\n" +
+        "  X.\n" +
+        
+        //starts
+        ":- main.\n";
+
+	    private Thread thread = null;
 		private final String sicstusPath;
 		private boolean ready = false;
 		private int port = -1;
@@ -75,8 +80,10 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 		private BufferedWriter in;
 		private BufferedReader err;
 
-		public InitThread(String sicstusPath) {
+		public SicstusServer(String sicstusPath) {
 			this.sicstusPath = sicstusPath;
+	        this.thread = new Thread(this);
+	        this.thread.start();
 		}
 
 		@Override
@@ -146,11 +153,25 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
             } catch (IOException e) {
                 //does nothing
             }
+            try {
+                if (this.process.getInputStream() != null) {
+                    this.process.getInputStream().close();
+                }
+            } catch (IOException e) {
+                //does nothing
+            }
 			if (!this.ready) {
 				wait(timeout);
 			}
 			if (this.process != null) {
-				process.destroy();
+                this.process.waitFor();
+                this.process.destroy();
+			    this.process = null;
+			}
+			if (this.thread != null) {
+			    this.thread.interrupt();
+			    this.thread.join();
+			    this.thread = null;
 			}
 		}
 	}
@@ -162,7 +183,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 	
 	private final CalculatorRewriting calc;
     private final ExpressionMangler m;
-	private final InitThread initThread;
+	private final SicstusServer sicstusServer;
 	private final PrologSession session;
 	private boolean working;
 	private Primitive assumptions;
@@ -173,15 +194,12 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 	throws ExternalProtocolInterfaceException, IOException {
 		this.calc = calc;
 		this.m = new ExpressionMangler("X", "", calc); //a format for mangled names compatible with Sicstus
-		this.initThread = new InitThread(sicstusPath); 
-		final Thread t = new Thread(this.initThread);
-		t.setDaemon(true);
-		t.start();
+		this.sicstusServer = new SicstusServer(sicstusPath); 
 
 		// Get the port from the SICStus process (and fail if port is an error value)
 		int port;
 		try {
-			port = initThread.getPort(TIMEOUT_INIT);
+			port = this.sicstusServer.getPort(TIMEOUT_INIT);
 			if (port > 0) {
 				this.session = new PrologSession();
 				this.session.setPort(port);
@@ -190,7 +208,7 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 			} else {
 				this.session = null;
 				this.working = false;
-				final Exception e = initThread.getException(TIMEOUT_INIT);
+				final Exception e = this.sicstusServer.getException(TIMEOUT_INIT);
 				throw new ExternalProtocolInterfaceException(e);
 			}
 		} catch (InterruptedException e) {
@@ -470,8 +488,9 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 	@Override
 	public void quit() throws ExternalProtocolInterfaceException {
 		try {
-			this.initThread.shutdown(TIMEOUT_INIT);
-		} catch (InterruptedException e) {
+            this.session.executeQuery("shutdown");
+			this.sicstusServer.shutdown(TIMEOUT_INIT);
+		} catch (InterruptedException | IOException | IllegalCharacterSetException e) {
 			throw new ExternalProtocolInterfaceException(e);
 		}
 	}
@@ -479,8 +498,9 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 	@Override
 	public void fail() {
 		try {
-			this.initThread.shutdown(TIMEOUT_INIT);
-		} catch (InterruptedException e) {
+		    this.session.executeQuery("shutdown");
+			this.sicstusServer.shutdown(TIMEOUT_INIT);
+		} catch (InterruptedException | IOException | IllegalCharacterSetException e) {
 			//nothing
 		}
 	}
