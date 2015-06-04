@@ -2,6 +2,7 @@ package jbse.dec;
 
 import java.util.LinkedHashMap;
 
+import jbse.bc.ClassHierarchy;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.ClauseAssume;
@@ -57,7 +58,8 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 	}
 
 	@Override
-	protected boolean isSatLocal(Expression exp, Expression expSimpl) throws DecisionException {
+	protected boolean isSatLocal(ClassHierarchy hier, Expression exp, Expression expSimpl) 
+	throws DecisionException {
 		final PrimitiveVisitorEquality vEq = new PrimitiveVisitorEquality();
 		try {
 			expSimpl.accept(vEq);

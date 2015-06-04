@@ -2,6 +2,7 @@ package jbse.apps;
 
 import java.util.Collection;
 
+import jbse.bc.ClassHierarchy;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureDecorator;
 import jbse.dec.exc.DecisionException;
@@ -70,60 +71,60 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
 	}
 
 	@Override
-	public boolean isSat(Expression exp) 
+	public boolean isSat(ClassHierarchy hier, Expression exp) 
 	throws DecisionException {
 		this.startTimer();
-		final boolean result = super.isSat(exp);
+		final boolean result = super.isSat(hier, exp);
 		final long elapsed = this.elapsed();
 		System.err.println("ISSAT\t" + exp + "\t" + result + "\t" + elapsed);
         return result;
 	}
 	
 	@Override
-	public boolean isSatAliases(ReferenceSymbolic r, long heapPos, Objekt o)
+	public boolean isSatAliases(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o)
 	throws DecisionException {
 		this.startTimer();
-		final boolean result = super.isSatAliases(r, heapPos, o);
+		final boolean result = super.isSatAliases(hier, r, heapPos, o);
 		final long elapsed = this.elapsed();
 		System.err.println("ISSATALIASES\t" + r + "\t" + heapPos + "\t" + o + "\t" + result + "\t" + elapsed);
         return result;
 	}
 	
 	@Override
-	public boolean isSatExpands(ReferenceSymbolic r, String className)
+	public boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, String className)
 	throws DecisionException {
 		this.startTimer();
-		final boolean result = super.isSatExpands(r, className);
+		final boolean result = super.isSatExpands(hier, r, className);
 		final long elapsed = this.elapsed();
 		System.err.println("ISSATEXPANDS\t" + r + "\t" + className + "\t" + result + "\t" + elapsed);
         return result;
 	}
 	
 	@Override
-	public boolean isSatNull(ReferenceSymbolic r) 
+	public boolean isSatNull(ClassHierarchy hier, ReferenceSymbolic r) 
 	throws DecisionException {
 		this.startTimer();
-		final boolean result = super.isSatNull(r);
+		final boolean result = super.isSatNull(hier, r);
 		final long elapsed = this.elapsed();
 		System.err.println("ISSATNULL\t" + r + "\t" + result + "\t" + elapsed);
         return result;
 	}
 	
 	@Override
-	public boolean isSatInitialized(String className) 
+	public boolean isSatInitialized(ClassHierarchy hier, String className) 
 	throws DecisionException {
 		this.startTimer();
-		final boolean result = super.isSatInitialized(className);
+		final boolean result = super.isSatInitialized(hier, className);
 		final long elapsed = this.elapsed();
 		System.err.println("ISSATINITIALIZED\t" + className + "\t" + result + "\t" + elapsed);
         return result;
 	}
 	
 	@Override
-	public boolean isSatNotInitialized(String className)
+	public boolean isSatNotInitialized(ClassHierarchy hier, String className)
 	throws DecisionException {
 		this.startTimer();
-		final boolean result = super.isSatInitialized(className);
+		final boolean result = super.isSatInitialized(hier, className);
 		final long elapsed = this.elapsed();
 		System.err.println("ISSATNOTINITIALIZED\t" + className + "\t" + result + "\t" + elapsed);
         return result;

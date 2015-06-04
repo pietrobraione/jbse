@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import jbse.apps.IO;
+import jbse.bc.ClassHierarchy;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.DecisionProcedureAlwSat;
@@ -46,7 +47,7 @@ public class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
 	}
 
 	@Override
-	public boolean isSat(Expression exp) {
+	public boolean isSat(ClassHierarchy hier, Expression exp) {
 		boolean retVal;
 		IO.println(this.ps, CLASS_NAME + ": Please solve the following clause:");
 		IO.print(this.ps, CLASS_NAME + ": "); 
@@ -64,7 +65,7 @@ public class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
 	}
 
 	@Override
-	protected Outcome decide_IFX_Nonconcrete(Primitive exp, SortedSet<DecisionAlternative_IFX> result) {
+	protected Outcome decide_IFX_Nonconcrete(ClassHierarchy hier, Primitive exp, SortedSet<DecisionAlternative_IFX> result) {
 		final DecisionAlternative_IFX T = DecisionAlternative_IFX.toNonconcrete(true);
 		final DecisionAlternative_IFX F = DecisionAlternative_IFX.toNonconcrete(false);
 		if (exp instanceof Any) {
@@ -92,7 +93,7 @@ public class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
 	}
 
 	@Override
-	protected Outcome decide_XCMPY_Nonconcrete(Primitive val1, Primitive val2, SortedSet<DecisionAlternative_XCMPY> result) {
+	protected Outcome decide_XCMPY_Nonconcrete(ClassHierarchy hier, Primitive val1, Primitive val2, SortedSet<DecisionAlternative_XCMPY> result) {
 		final DecisionAlternative_XCMPY GT = DecisionAlternative_XCMPY.toNonconcrete(Values.GT);
 		final DecisionAlternative_XCMPY EQ = DecisionAlternative_XCMPY.toNonconcrete(Values.EQ);
 		final DecisionAlternative_XCMPY LT = DecisionAlternative_XCMPY.toNonconcrete(Values.LT);
@@ -135,7 +136,7 @@ public class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
 	}
 
 	@Override
-	protected Outcome decide_XSWITCH_Nonconcrete(Primitive val, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result) {
+	protected Outcome decide_XSWITCH_Nonconcrete(ClassHierarchy hier, Primitive val, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result) {
 		boolean shouldRefine;
 		if (val instanceof Any) {
 			int branchCounter = 1;

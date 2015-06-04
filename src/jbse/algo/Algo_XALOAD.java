@@ -191,7 +191,7 @@ StrategyUpdate_XALOAD> {
         try {
             final Array a = (Array) state.getObject(this.myObjectRef);
             final Iterator<Array.AccessOutcomeIn> entries = a.set(this.index, val);
-            this.ctx.decisionProcedure.completeArraySet(entries, this.index);
+            this.ctx.decisionProcedure.completeArraySet(state.getClassHierarchy(), entries, this.index);
         } catch (InvalidInputException | InvalidOperandException | 
                 InvalidTypeException | ClassCastException e) {
             //this should never happen

@@ -3,6 +3,7 @@ package jbse.apps.run;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import jbse.bc.ClassHierarchy;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureChainOfResponsibility;
@@ -44,7 +45,7 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
     }
     
     @Override
-	protected boolean isSatExpandsLocal(ReferenceSymbolic r, String className)
+	protected boolean isSatExpandsLocal(ClassHierarchy hier, ReferenceSymbolic r, String className)
 	throws DecisionException {
 		final State sIni = this.checker.makeInitialState();
 		try {
@@ -57,7 +58,7 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 	}
 	
 	@Override
-	protected boolean isSatAliasesLocal(ReferenceSymbolic r, long heapPosition, Objekt o) 
+	protected boolean isSatAliasesLocal(ClassHierarchy hier, ReferenceSymbolic r, long heapPosition, Objekt o) 
 	throws DecisionException {
 		final State sIni = this.checker.makeInitialState();
 		try {
@@ -70,7 +71,7 @@ public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOf
 	}
 	
 	@Override
-	protected boolean isSatNullLocal(ReferenceSymbolic r)
+	protected boolean isSatNullLocal(ClassHierarchy hier, ReferenceSymbolic r)
 	throws DecisionException {
 		final State sIni = this.checker.makeInitialState();
 		try {

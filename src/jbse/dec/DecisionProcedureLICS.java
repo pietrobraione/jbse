@@ -3,6 +3,7 @@ package jbse.dec;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import jbse.bc.ClassHierarchy;
 import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.Objekt;
 import jbse.rewr.CalculatorRewriting;
@@ -40,7 +41,7 @@ public final class DecisionProcedureLICS extends DecisionProcedureChainOfRespons
 	}
 	
 	@Override
-	protected boolean isSatExpandsLocal(ReferenceSymbolic ref, String className) {
+	protected boolean isSatExpandsLocal(ClassHierarchy hier, ReferenceSymbolic ref, String className) {
 		//gets the rules matching ref
 		final ArrayList<LICSRuleExpandsTo> rules = rulesRepo.matchingLICSRulesExpandsTo(ref);
 
@@ -62,7 +63,7 @@ public final class DecisionProcedureLICS extends DecisionProcedureChainOfRespons
 	}
 
 	@Override
-	protected boolean isSatAliasesLocal(ReferenceSymbolic ref, long heapPos, Objekt o) {
+	protected boolean isSatAliasesLocal(ClassHierarchy hier, ReferenceSymbolic ref, long heapPos, Objekt o) {
 		//gets the rules matching ref
 		final ArrayList<LICSRuleAliases> rulesMax = rulesRepo.matchingLICSRulesAliasesMax(ref);
 		final ArrayList<LICSRuleAliases> rulesNonMax = rulesRepo.matchingLICSRulesAliasesNonMax(ref);
@@ -126,20 +127,20 @@ nextRule:
 	}
 
 	@Override
-	protected boolean isSatNullLocal(ReferenceSymbolic ref) {
+	protected boolean isSatNullLocal(ClassHierarchy hier, ReferenceSymbolic ref) {
 		final boolean notNull = this.rulesRepo.someMatchingLICSRulesNotNull(ref);
 		return !notNull;
 	}
 
 	@Override
-	protected boolean isSatInitializedLocal(String c) {
+	protected boolean isSatInitializedLocal(ClassHierarchy hier, String c) {
 		//we only support mutually exclusive initialized/not-initialized cases
-		return !isSatNotInitializedLocal(c);
+		return !isSatNotInitializedLocal(hier, c);
 		//TODO drop mutual exclusion of class initialized/not-initialized cases and add support to branching over class initialization assumptions
 	}
 
 	@Override
-	protected boolean isSatNotInitializedLocal(String c) {
+	protected boolean isSatNotInitializedLocal(ClassHierarchy hier, String c) {
 		return this.rulesRepo.notInitializedClassesContains(c);
 	}
 }

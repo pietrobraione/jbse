@@ -8,6 +8,7 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayDeque;
 import java.util.HashSet;
 
+import jbse.bc.ClassHierarchy;
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.ExternalProtocolInterfaceException;
@@ -417,7 +418,7 @@ class DecisionProcedureExternalInterfaceCVC3 extends DecisionProcedureExternalIn
 	}
 
 	@Override
-	public boolean checkSat(boolean value) 		
+	public boolean checkSat(ClassHierarchy hier, boolean value) 		
 	throws ExternalProtocolInterfaceException, IOException {
 		if (!this.hasCurrentClause) {
 			throw new ExternalProtocolInterfaceException("Attempted to check entailment with no current clause.");

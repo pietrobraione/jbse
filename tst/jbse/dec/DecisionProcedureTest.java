@@ -64,7 +64,7 @@ public class DecisionProcedureTest {
 
 		//expected: {F_concrete}
 		TreeSet<DecisionAlternative_IFX> d = new TreeSet<>(cmp.get(DecisionAlternative_IFX.class));
-		dec.decide_IFX(p, d);
+		dec.decide_IFX(null, p, d);
 		assertEquals(1, d.size());
 		DecisionAlternative_IFX dai = d.first();
 		assertTrue(dai.concrete());
@@ -80,7 +80,7 @@ public class DecisionProcedureTest {
 
 		//expected: {T_nonconcrete, F_nonconcrete}
 		TreeSet<DecisionAlternative_IFX> d = new TreeSet<>(cmp.get(DecisionAlternative_IFX.class));
-		dec.decide_IFX(e, d);
+		dec.decide_IFX(null, e, d);
 		assertEquals(2, d.size());
 		DecisionAlternative_IFX dai1 = d.first();
 		d.remove(dai1);
@@ -99,7 +99,7 @@ public class DecisionProcedureTest {
 
 		//expected {LT_concrete}
 		TreeSet<DecisionAlternative_XCMPY> d = new TreeSet<>(cmp.get(DecisionAlternative_XCMPY.class));
-		dec.decide_XCMPY(two, five, d);
+		dec.decide_XCMPY(null, two, five, d);
 		assertEquals(1, d.size());
 		DecisionAlternative_XCMPY dac = d.first();
 		assertTrue(dac.concrete());
@@ -116,7 +116,7 @@ public class DecisionProcedureTest {
 		//expected {GT_nonconcrete, EQ_nonconcrete}
 		TreeSet<DecisionAlternative_XCMPY> d = new TreeSet<>(cmp.get(DecisionAlternative_XCMPY.class));
 		dec.pushAssumption(new ClauseAssume(Agezero));
-		dec.decide_XCMPY(Atwice, A, d);
+		dec.decide_XCMPY(null, Atwice, A, d);
 		assertEquals(2, d.size());
 		DecisionAlternative_XCMPY dac1 = d.first();
 		d.remove(dac1);
@@ -138,7 +138,7 @@ public class DecisionProcedureTest {
 		e = (Expression) e.and(A.eq(calc.valInt(3)).not());
 
 		//expected satisfiable (by A == 4)
-		assertTrue(dec.isSat(e));
+		assertTrue(dec.isSat(null, e));
 	}
 
 	@Test
@@ -151,7 +151,7 @@ public class DecisionProcedureTest {
 		e = (Expression) e.and(A.eq(calc.valInt(-1)));
 
 		//expected unsatisfiable
-		assertFalse(dec.isSat((Expression) e));
+		assertFalse(dec.isSat(null, (Expression) e));
 	}
 
 	@Test
@@ -172,7 +172,7 @@ public class DecisionProcedureTest {
 		Primitive e = e0.or(e1);
 
 		//expected satisfiable
-		assertTrue(dec.isSat((Expression) e));
+		assertTrue(dec.isSat(null, (Expression) e));
 	}
 
 	@Test
@@ -215,7 +215,7 @@ public class DecisionProcedureTest {
 
 		//Expression ee = (Expression) X0.ne(zero);
 
-		assertTrue(dec.isSat((Expression) e));
+		assertTrue(dec.isSat(null, (Expression) e));
 	}
 
 	@Test
@@ -235,7 +235,7 @@ public class DecisionProcedureTest {
 		e = e.and(B.neg().le(C));
 		e = e.and(B.add(A.mul(ten)).eq(zero));
 
-		assertTrue(dec.isSat((Expression) e));
+		assertTrue(dec.isSat(null, (Expression) e));
 		//shows a past bug: the Sicstus server first simplifies the expression with the clpqr solver, 
 		//which simplifies the third constraint as B - 1/10*C <= 0 , then reuses the simplified constraint
 		//to feed the integer solver. The latter apparently solves 1/10 as 0, yielding an unsatisfiable set 
@@ -246,28 +246,28 @@ public class DecisionProcedureTest {
 	@Test
 	public void testBoundary1() throws DecisionException, InvalidOperandException, InvalidTypeException {
 		Expression e = (Expression) calc.valTerm(Type.INT, "A").eq(calc.valInt(Integer.MIN_VALUE));
-		assertTrue(dec.isSat(e));
+		assertTrue(dec.isSat(null, e));
 	}
 	
 	//Other boundary value for integers
 	@Test
 	public void testBoundary2() throws DecisionException, InvalidOperandException, InvalidTypeException {
 		Expression e = (Expression) calc.valTerm(Type.INT, "A").eq(calc.valInt(Integer.MAX_VALUE));
-		assertTrue(dec.isSat(e));
+		assertTrue(dec.isSat(null, e));
 	}
 	
 	//Test floats
 	@Test
 	public void testType1() throws DecisionException, InvalidOperandException, InvalidTypeException {
 		Expression e = (Expression) calc.valTerm(Type.FLOAT, "A").gt(calc.valInt(0)).and(calc.valTerm(Type.FLOAT, "A").lt(calc.valInt(1)));
-		assertTrue(dec.isSat(e));
+		assertTrue(dec.isSat(null, e));
 	}
 	
 	//Test ints
 	@Test
 	public void testType2() throws DecisionException, InvalidOperandException, InvalidTypeException {
 		Expression e = (Expression) calc.valTerm(Type.INT, "A").gt(calc.valInt(0)).and(calc.valTerm(Type.FLOAT, "A").lt(calc.valInt(1)));
-		assertFalse(dec.isSat(e));
+		assertFalse(dec.isSat(null, e));
 	}
     
     //Test integer division (Sicstus bug)
@@ -277,7 +277,7 @@ public class DecisionProcedureTest {
         final Term A = calc.valTerm(Type.INT, "A");
         final Term B = calc.valTerm(Type.INT, "B");
         final Expression e = (Expression) A.ge(calc.valInt(0)).and(A.lt(B)).and(A.ge(B.div(calc.valInt(2)))).and(B.eq(calc.valInt(1)));
-        assertTrue(dec.isSat(e));
+        assertTrue(dec.isSat(null, e));
     }
 	
 	//Old Sicstus bug
@@ -294,7 +294,7 @@ public class DecisionProcedureTest {
 		e = e.and(A.div(B).add(C.sub(C).div(D)).lt(E));
 		
 		//expected satisfiable
-		assertTrue(dec.isSat((Expression) e));
+		assertTrue(dec.isSat(null, (Expression) e));
 	}
 	
 	@Test
@@ -308,7 +308,7 @@ public class DecisionProcedureTest {
 		e = e.and(two.sub(three.add(A)).le(A));
 		
 		//expected satisfiable
-		assertTrue(dec.isSat((Expression) e));
+		assertTrue(dec.isSat(null, (Expression) e));
 	}
 	
 	@Test
@@ -320,6 +320,6 @@ public class DecisionProcedureTest {
 		e = e.and(A.div(two).lt(two));
 		
 		//expected satisfiable
-		assertTrue(dec.isSat((Expression) e));
+		assertTrue(dec.isSat(null, (Expression) e));
 	}	
 }

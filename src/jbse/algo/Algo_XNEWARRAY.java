@@ -8,6 +8,7 @@ import static jbse.bc.Signatures.NEGATIVE_ARRAY_SIZE_EXCEPTION;
 
 import java.util.function.Supplier;
 
+import jbse.bc.ClassHierarchy;
 import jbse.common.Type;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
@@ -88,7 +89,7 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
     protected StrategyDecide<DecisionAlternative_XNEWARRAY> decider() {
         return (state, result) -> {
             //invokes the decision procedure
-            final Outcome o = this.ctx.decisionProcedure.decide_XNEWARRAY(this.countsNonNegative, result);
+            final Outcome o = this.ctx.decisionProcedure.decide_XNEWARRAY(state.getClassHierarchy(), this.countsNonNegative, result);
             return o;
         };
     }
@@ -184,9 +185,10 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
 				final Expression currentLayerLengthZero, currentLayerLengthNonzero;
 				try {
 					currentLayerLengthZero = (Expression) currentLayerLength.eq(calc.valInt(0));
-					currentLayerLengthNonzero = (Expression) currentLayerLengthZero.not(); 
-	                zeroBreak = this.ctx.decisionProcedure.isSat(currentLayerLengthZero); 
-	                zeroBreak = zeroBreak && !this.ctx.decisionProcedure.isSat(currentLayerLengthNonzero);
+					currentLayerLengthNonzero = (Expression) currentLayerLengthZero.not();
+					final ClassHierarchy hier = state.getClassHierarchy();
+	                zeroBreak = this.ctx.decisionProcedure.isSat(hier, currentLayerLengthZero); 
+	                zeroBreak = zeroBreak && !this.ctx.decisionProcedure.isSat(hier, currentLayerLengthNonzero);
 				} catch (ClassCastException | InvalidOperandException | InvalidTypeException e) {
 					//this should never happen
 					failExecution(e);

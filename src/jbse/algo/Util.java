@@ -264,7 +264,7 @@ public class Util {
 			return false;
 		}
 
-		return dec.isSatInitialized(className);
+		return dec.isSatInitialized(state.getClassHierarchy(), className);
 	}
 	
 	private static class ClassInitializer {

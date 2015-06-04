@@ -2,6 +2,7 @@ package jbse.dec;
 
 import java.util.Collection;
 
+import jbse.bc.ClassHierarchy;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Clause;
 import jbse.mem.Objekt;
@@ -100,28 +101,31 @@ public interface DecisionProcedure extends AutoCloseable {
      * Determines the satisfiability of an {@link Expression} under the
      * current assumption.
      * 
+     * @param hier a {@link ClassHierarchy}.
      * @param exp a boolean {@link Expression}.
      * @return {@code true} iff {@code exp} is satisfiable under
      *         the current assumptions.
      * @throws DecisionException upon failure.
      */
-    boolean isSat(Expression exp) throws DecisionException;
+    boolean isSat(ClassHierarchy hier, Expression exp) throws DecisionException;
     
     /**
      * Determines the satisfiability of a resolution by null under the
      * current assumptions.
      * 
+     * @param hier a {@link ClassHierarchy}.
      * @param r a {@link ReferenceSymbolic}.
      * @return {@code true} iff {@code r} can be resolved by null under
      *         the current assumption.
      * @throws DecisionException upon failure.
      */
-    boolean isSatNull(ReferenceSymbolic r) throws DecisionException;
+    boolean isSatNull(ClassHierarchy hier, ReferenceSymbolic r) throws DecisionException;
 	
     /**
      * Determines the satisfiability of a resolution by aliasing under the
      * current assumptions.
      * 
+     * @param hier a {@link ClassHierarchy}.
      * @param r a {@link ReferenceSymbolic}.
      * @param heapPos a {@code long} value, the position of {@code o} in the heap.
      * @param o an {@link Objekt}, the object to which {@code r} refers.
@@ -129,12 +133,13 @@ public interface DecisionProcedure extends AutoCloseable {
      *         under the current assumption.
      * @throws DecisionException upon failure.
      */
-    boolean isSatAliases(ReferenceSymbolic r, long heapPos, Objekt o) throws DecisionException;
+    boolean isSatAliases(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o) throws DecisionException;
 	
     /**
      * Determines the satisfiability of a resolution by expansion under the
      * current assumptions.
      * 
+     * @param hier a {@link ClassHierarchy}.
      * @param r a {@link ReferenceSymbolic}.
      * @param className a {@link String}, the name of a class.
      * @return {@code true} iff {@code r} can be resolved by aliasing to 
@@ -142,33 +147,35 @@ public interface DecisionProcedure extends AutoCloseable {
      *         the current assumption.
      * @throws DecisionException upon failure.
      */
-    boolean isSatExpands(ReferenceSymbolic r, String className) throws DecisionException;
+    boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, String className) throws DecisionException;
 	
     /**
      * Determines the satisfiability of the assumption that a class is
      * initialized when symbolic execution starts, under the current
      * assumptions.
      * 
+     * @param hier a {@link ClassHierarchy}.
      * @param className a {@link String}, the name of a class.
      * @return {@code true} iff the assumption that {@code className} is
      *         initialized at the start of the symbolic execution is 
      *         satisfiable under the current assumption.
      * @throws DecisionException upon failure.
      */
-    boolean isSatInitialized(String className) throws DecisionException;
+    boolean isSatInitialized(ClassHierarchy hier, String className) throws DecisionException;
 	
     /**
      * Determines the satisfiability of the assumption that a class is
      * not initialized when symbolic execution starts, under the current
      * assumptions.
      * 
+     * @param hier a {@link ClassHierarchy}.
      * @param className a {@link String}, the name of a class.
      * @return {@code true} iff the assumption that {@code className} is
      *         not initialized at the start of the symbolic execution is 
      *         satisfiable under the current assumption.
      * @throws DecisionException upon failure. 
      */
-    boolean isSatNotInitialized(String className) throws DecisionException;
+    boolean isSatNotInitialized(ClassHierarchy hier, String className) throws DecisionException;
     
     /**
      * Simplifies a {@link Primitive} under the current assumptions.

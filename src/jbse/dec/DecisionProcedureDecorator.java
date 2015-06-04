@@ -2,6 +2,7 @@ package jbse.dec;
 
 import java.util.Collection;
 
+import jbse.bc.ClassHierarchy;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Clause;
 import jbse.mem.Objekt;
@@ -70,39 +71,39 @@ public class DecisionProcedureDecorator implements DecisionProcedure {
 	}
 
 	@Override
-	public boolean isSat(Expression exp) 
+	public boolean isSat(ClassHierarchy hier, Expression exp) 
 	throws DecisionException {
-		return this.component.isSat(exp);
+		return this.component.isSat(hier, exp);
 	}
 
 	@Override
-	public boolean isSatNull(ReferenceSymbolic r) 
+	public boolean isSatNull(ClassHierarchy hier, ReferenceSymbolic r) 
 	throws DecisionException {
-		return this.component.isSatNull(r);
+		return this.component.isSatNull(hier, r);
 	}
 
 	@Override
-	public boolean isSatAliases(ReferenceSymbolic r, long heapPos, Objekt o)
+	public boolean isSatAliases(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o)
 	throws DecisionException {
-		return this.component.isSatAliases(r, heapPos, o);
+		return this.component.isSatAliases(hier, r, heapPos, o);
 	}
 
 	@Override
-	public boolean isSatExpands(ReferenceSymbolic r, String className)
+	public boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, String className)
 	throws DecisionException {
-		return this.component.isSatExpands(r, className);
+		return this.component.isSatExpands(hier, r, className);
 	}
 
 	@Override
-	public boolean isSatInitialized(String className) 
+	public boolean isSatInitialized(ClassHierarchy hier, String className) 
 	throws DecisionException {
-		return this.component.isSatInitialized(className);
+		return this.component.isSatInitialized(hier, className);
 	}
 
 	@Override
-	public boolean isSatNotInitialized(String className) 
+	public boolean isSatNotInitialized(ClassHierarchy hier, String className) 
 	throws DecisionException {
-		return this.component.isSatNotInitialized(className);
+		return this.component.isSatNotInitialized(hier, className);
 	}
 
 	@Override

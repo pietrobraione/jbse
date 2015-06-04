@@ -220,6 +220,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	/**
 	 * Decides a condition for "branch if integer comparison" bytecodes.
 	 * 
+	 * @param hier a {@link ClassHierarchy}.
 	 * @param condition a {@link Primitive} representing a logical value or clause.
 	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_IFX}{@code >}, 
 	 *            where the method will put a {@link DecisionAlternative_IFX_True} object
@@ -233,7 +234,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws DecisionException upon failure.
 	 */
 	//TODO should be final?
-	public Outcome decide_IFX(Primitive condition, SortedSet<DecisionAlternative_IFX> result)
+	public Outcome decide_IFX(ClassHierarchy hier, Primitive condition, SortedSet<DecisionAlternative_IFX> result)
 	throws InvalidInputException, DecisionException {
 		if (condition == null || result == null) {
 			throw new InvalidInputException("decideIf invoked with a null parameter");
@@ -245,7 +246,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 			decide_IFX_Concrete((Simplex) condition, result);
 			return Outcome.val(false, false);
 		} else {		
-			final Outcome o = decide_IFX_Nonconcrete(condition, result);
+			final Outcome o = decide_IFX_Nonconcrete(hier, condition, result);
 			return o;
 		}
 	}
@@ -255,7 +256,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		result.add(DecisionAlternative_IFX.toConcrete(conditionBoolean));
 	}
 
-	protected Outcome decide_IFX_Nonconcrete(Primitive condition, SortedSet<DecisionAlternative_IFX> result) 
+	protected Outcome decide_IFX_Nonconcrete(ClassHierarchy hier, Primitive condition, SortedSet<DecisionAlternative_IFX> result) 
 	throws DecisionException {	
 		final boolean shouldRefine;
 		final DecisionAlternative_IFX T = DecisionAlternative_IFX.toNonconcrete(true);
@@ -272,10 +273,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 				//this implementation saves one sat check in 50% cases
 				//(it exploits the fact that if exp is unsat 
 				//exp.not() is valid)
-				if (isSat(exp)) {
+				if (isSat(hier, exp)) {
 					result.add(T);
 					final Expression expNot = (Expression) condition.not(); 
-					if (isSat(expNot)) {
+					if (isSat(hier, expNot)) {
 						result.add(F);
 					}
 				} else {
@@ -294,6 +295,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	/**
 	 * Decides a comparison for comparison bytecodes.
 	 * 
+	 * @param hier a {@link ClassHierarchy}.
 	 * @param val1 a {@link Primitive}.
 	 * @param val2 another {@link Primitive}.
 	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XCMPY}{@code >}, 
@@ -308,7 +310,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws DecisionException upon failure.
 	 */
 	//TODO should be final?
-	public Outcome decide_XCMPY(Primitive val1, Primitive val2, SortedSet<DecisionAlternative_XCMPY> result)
+	public Outcome decide_XCMPY(ClassHierarchy hier, Primitive val1, Primitive val2, SortedSet<DecisionAlternative_XCMPY> result)
 	throws InvalidInputException, DecisionException {
 		if (val1 == null || val2 == null || result == null) {
 			throw new InvalidInputException("decideComparison invoked with a null parameter");
@@ -322,7 +324,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 			decide_XCMPY_Concrete((Simplex) val1, (Simplex) val2, result);
 			return Outcome.val(false, false);
 		} else {
-			final Outcome o = decide_XCMPY_Nonconcrete(val1, val2, result);
+			final Outcome o = decide_XCMPY_Nonconcrete(hier, val1, val2, result);
 			return o;
 		}
 	}
@@ -348,7 +350,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		}
 	}
 
-	protected Outcome decide_XCMPY_Nonconcrete(Primitive val1, Primitive val2,
+	protected Outcome decide_XCMPY_Nonconcrete(ClassHierarchy hier, Primitive val1, Primitive val2,
 	SortedSet<DecisionAlternative_XCMPY> result) 
 	throws DecisionException {
 		final boolean shouldRefine;
@@ -378,17 +380,17 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 			//this implementation saves one sat check in 33% cases
 			//(it exploits the fact that if both val1 > val2 and 
 			//val1 = val2 are unsat, then val1 < val2 is valid)
-			if (isSat(expGT)) {
+			if (isSat(hier, expGT)) {
 				result.add(GT);
-				if (isSat(expEQ)) {
+				if (isSat(hier, expEQ)) {
 					result.add(EQ);
 				}
-				if (isSat(expLT)) {
+				if (isSat(hier, expLT)) {
 					result.add(LT); 
 				}
-			} else if (isSat(expEQ)) { //expGT is unsat, so either expEQ or expLT, or both, are SAT 
+			} else if (isSat(hier, expEQ)) { //expGT is unsat, so either expEQ or expLT, or both, are SAT 
 				result.add(EQ);
-				if (isSat(expLT)) {
+				if (isSat(hier, expLT)) {
 					result.add(LT); 
 				}
 			} else {
@@ -403,6 +405,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	/**
 	 * Decides a table or a range for switch bytecodes.
 	 * 
+	 * @param hier a {@link ClassHierarchy}.
 	 * @param selector a {@link Primitive} with type int. 
 	 * @param tab a {@link SwitchTable}.
 	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XSWITCH}{@code >} 
@@ -414,10 +417,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws DecisionException upon failure.
 	 */
 	//TODO should be final?
-	public Outcome decide_XSWITCH(Primitive selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result)
+	public Outcome decide_XSWITCH(ClassHierarchy hier, Primitive selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result)
 	throws InvalidInputException, DecisionException {
 		if (selector == null || tab == null || result == null) {
-			throw new InvalidInputException("decideSwitch invoked with a null parameter");
+			throw new InvalidInputException("decide_XSWITCH invoked with a null parameter");
 		}
 		if (selector.getType() != Type.INT) {
 			throw new InvalidInputException("switch selector has type " + selector.getType());
@@ -426,7 +429,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 			decide_XSWITCH_Concrete((Simplex) selector, tab, result);
 			return Outcome.val(false, false);
 		} else {
-			final Outcome o = decide_XSWITCH_Nonconcrete(selector, tab, result);
+			final Outcome o = decide_XSWITCH_Nonconcrete(hier, selector, tab, result);
 			return o;
 		}
 	}
@@ -445,14 +448,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		result.add(DecisionAlternative_XSWITCH.toConcreteDefault(branchCounter));
 	}
 
-	/**
-	 * Implements the portion of {@link #decideSwitch} which
-	 * must query the component {@link DecisionProcedure}.
-	 * @throws DecisionException upon failure.
-	 * 
-	 * @see {@link #decideSwitch}.
-	 */
-	protected Outcome decide_XSWITCH_Nonconcrete(Primitive selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result) 
+	protected Outcome decide_XSWITCH_Nonconcrete(ClassHierarchy hier, Primitive selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result) 
 	throws DecisionException {
 		final boolean shouldRefine;
 
@@ -461,12 +457,12 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		try {
 			for (int i : tab) {
 				final Expression exp = (isAny ? null : (Expression) selector.eq(this.calc.valInt(i)));
-				if (isAny || isSat(exp)) { 
+				if (isAny || isSat(hier, exp)) { 
 					result.add(DecisionAlternative_XSWITCH.toNonconcrete(i, branchCounter));
 				}
 				++branchCounter;
 			}
-			if (isAny || isSat(tab.getDefaultClause(selector))) { 
+			if (isAny || isSat(hier, tab.getDefaultClause(selector))) { 
 				result.add(DecisionAlternative_XSWITCH.toNonconcreteDefault(branchCounter));
 			}
 			shouldRefine = (!isAny && (result.size() > 1));
@@ -481,6 +477,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	/**
 	 * Decides array creation.
 	 * 
+	 * @param hier a {@link ClassHierarchy}.
 	 * @param countsNonNegative a {@link Primitive} expressing the fact that the count 
 	 *        values popped from the operand stack are nonnegative.
 	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XNEWARRAY}{@code >}, which the method 
@@ -494,10 +491,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws DecisionException upon failure.
 	 */
 	//TODO should be final?
-	public Outcome decide_XNEWARRAY(Primitive countsNonNegative, SortedSet<DecisionAlternative_XNEWARRAY> result) 
+	public Outcome decide_XNEWARRAY(ClassHierarchy hier, Primitive countsNonNegative, SortedSet<DecisionAlternative_XNEWARRAY> result) 
 	throws InvalidInputException, DecisionException {
 		if (countsNonNegative == null || result == null) {
-			throw new InvalidInputException("decideNewarray invoked with a null parameter");
+			throw new InvalidInputException("decide_XNEWARRAY invoked with a null parameter");
 		}
 		if (countsNonNegative.getType() != Type.BOOLEAN) {
 			throw new InvalidInputException("countsNonNegative type is " + countsNonNegative.getType());
@@ -506,7 +503,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 			decide_XNEWARRAY_Concrete((Simplex) countsNonNegative, result);
 			return Outcome.val(false, false);
 		} else {
-			final Outcome o = decide_XNEWARRAY_Nonconcrete(countsNonNegative, result);
+			final Outcome o = decide_XNEWARRAY_Nonconcrete(hier, countsNonNegative, result);
 			return o;
 		}
 	}
@@ -516,7 +513,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		result.add(DecisionAlternative_XNEWARRAY.toConcrete(countsNonNegativeBoolean));
 	}
 	
-	protected Outcome decide_XNEWARRAY_Nonconcrete(Primitive countsNonNegative, SortedSet<DecisionAlternative_XNEWARRAY> result) 
+	protected Outcome decide_XNEWARRAY_Nonconcrete(ClassHierarchy hier, Primitive countsNonNegative, SortedSet<DecisionAlternative_XNEWARRAY> result) 
 	throws DecisionException {
 		final boolean shouldRefine;
 		final DecisionAlternative_XNEWARRAY OK = DecisionAlternative_XNEWARRAY.toNonconcrete(true);
@@ -534,10 +531,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 				//(it exploits the fact that if exp is unsat 
 				//exp.not() is valid)
 				final Expression negative = (Expression) countsNonNegative.not(); 
-				if (isSat(negative)) {
+				if (isSat(hier, negative)) {
 					result.add(WRONG);
 					final Expression nonNegative = (Expression) countsNonNegative;
-					if (isSat(nonNegative)) {
+					if (isSat(hier, nonNegative)) {
 						result.add(OK);
 					}
 				} else {
@@ -555,6 +552,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	/**
 	 * Decides a store to an array.
 	 * 
+	 * @param hier a {@link ClassHierarchy}.
 	 * @param inRange a {@link Primitive} expressing the fact that the access
 	 *        index is in the interval 0..array.length. 
 	 * @param result a {@link SortedSet}&lt;{@link DecisionAlternative_XASTORE}&gt;, which the method 
@@ -566,7 +564,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
 	 */
-	public Outcome decide_XASTORE(Primitive inRange, SortedSet<DecisionAlternative_XASTORE> result)
+	public Outcome decide_XASTORE(ClassHierarchy hier, Primitive inRange, SortedSet<DecisionAlternative_XASTORE> result)
 	throws InvalidInputException, DecisionException {
 		if (inRange == null || result == null) {
 			throw new InvalidInputException("decideAstore invoked with a null parameter");
@@ -578,7 +576,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 			decide_XASTORE_Concrete((Simplex) inRange, result);
 			return Outcome.val(false, false);
 		} else {
-			final Outcome o = decide_XASTORE_Nonconcrete(inRange, result);
+			final Outcome o = decide_XASTORE_Nonconcrete(hier, inRange, result);
 			return o;
 		}
 	}
@@ -588,7 +586,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		result.add(DecisionAlternative_XASTORE.toConcrete(inRangeBoolean));
 	}
 	
-	protected Outcome decide_XASTORE_Nonconcrete(Primitive inRange, SortedSet<DecisionAlternative_XASTORE> result)
+	protected Outcome decide_XASTORE_Nonconcrete(ClassHierarchy hier, Primitive inRange, SortedSet<DecisionAlternative_XASTORE> result)
 	throws DecisionException {
 		final boolean shouldRefine;
 		final DecisionAlternative_XASTORE IN = DecisionAlternative_XASTORE.toNonconcrete(true);
@@ -605,10 +603,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 				//(it exploits the fact that if exp is unsat 
 				//exp.not() is valid)
 				final Expression outOfRangeExp = (Expression) inRange.not();
-				if (isSat(outOfRangeExp)) {
+				if (isSat(hier, outOfRangeExp)) {
 					result.add(OUT);
 					final Expression inRangeExp = (Expression) inRange;
-					if (isSat(inRangeExp)) {
+					if (isSat(hier, inRangeExp)) {
 						result.add(IN);
 					}
 				} else {
@@ -702,7 +700,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		if (valToLoadResolved && accessConcrete) {
 		    return resolve_XALOAD_ResolvedConcrete(valToLoad, fresh, result);
 		} else if (valToLoadResolved && !accessConcrete) {
-		    return resolve_XALOAD_ResolvedNonconcrete(accessExpression, valToLoad, fresh, result);
+		    return resolve_XALOAD_ResolvedNonconcrete(state.getClassHierarchy(), accessExpression, valToLoad, fresh, result);
 		} else {
 		    return resolve_XALOAD_Unresolved(state, accessExpression, (ReferenceSymbolic) valToLoad, fresh, result);
 		}
@@ -745,6 +743,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      * concrete, or a symbolic primitive, or a resolved symbolic
      * reference) and the index used for the access is symbolic.
 	 * 
+	 * @param hier a {@link ClassHierarchy}.
 	 * @param accessExpression an {@link Expression}, the condition under
 	 *        which the array access yields {@code valToLoad} as result. 
 	 *        It must not be {@code null}.
@@ -762,10 +761,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      * @return an {@link Outcome}.
 	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet) resolve_XALOAD}.
 	 */
-	protected Outcome resolve_XALOAD_ResolvedNonconcrete(Expression accessExpression, Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
+	protected Outcome resolve_XALOAD_ResolvedNonconcrete(ClassHierarchy hier, Expression accessExpression, Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
 	throws DecisionException {
 		final boolean shouldRefine;
-		if (isSat(accessExpression)) {
+		if (isSat(hier, accessExpression)) {
 			shouldRefine = fresh; //a fresh value to load always requires a refinement action
 	        final boolean accessOutOfBounds = (valToLoad == null);
 	        final int branchNumber = result.size() + 1;
@@ -808,7 +807,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		final boolean accessConcrete = (accessExpression == null);
 		final boolean shouldRefine;
 		final boolean noReferenceExpansion;
-		if (accessConcrete || isSat(accessExpression)) {
+		if (accessConcrete || isSat(state.getClassHierarchy(), accessExpression)) {
 			shouldRefine = true; //unresolved symbolic references always require a refinement action
 			noReferenceExpansion =
 				doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFromArrayFactory(accessExpression), result);
@@ -859,11 +858,13 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		}
 		
 		int branchCounter = result.size() + 1;
+		final ClassHierarchy hier = state.getClassHierarchy();
+		
 		//filters static aliases based on their satisfiability
 		for (Map.Entry<Long, Objekt> ae : possibleAliases.entrySet()) {
 			final long i = ae.getKey();
 			final Objekt o = ae.getValue();
-			if (isSatAliases(refToResolve, i, o)) {
+			if (isSatAliases(hier, refToResolve, i, o)) {
 				final DA a = factory.createAlternativeRefAliases(refToResolve, i, o.getOrigin(), branchCounter);
 				result.add(a);
 			}
@@ -873,7 +874,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		//same for static expansions
 		boolean partialReferenceResolution = true;
 		for (String className : possibleExpansions) {
-			if (isSatInitialized(className) && isSatExpands(refToResolve, className)) {
+			if (isSatInitialized(hier, className) && isSatExpands(hier, refToResolve, className)) {
 				final DE e = factory.createAlternativeRefExpands(refToResolve, className, branchCounter);
 				result.add(e);
 				partialReferenceResolution = false;
@@ -882,7 +883,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		}
 		
 		//same for null
-		if (isSatNull(refToResolve)) {
+		if (isSatNull(hier, refToResolve)) {
 			final DN n = factory.createAlternativeRefNull(refToResolve, branchCounter);
 			result.add(n);
 			//no need to increment branchNumber
@@ -904,7 +905,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *         If {@code ref} does not denote a reference or array type, the method 
 	 *         returns {@code null}.
 	 */
-	private Map<Long, Objekt> getPossibleAliases(State state, ReferenceSymbolic ref) {
+	private static Map<Long, Objekt> getPossibleAliases(State state, ReferenceSymbolic ref) {
 		//checks preconditions
 		final String type = ref.getStaticType();
 		if (!Type.isReference(type) && !Type.isArray(type)) {
@@ -968,7 +969,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *         names does not denote a classfile in the classpath, or if the 
 	 *         classfile is ill-formed for the current JBSE.
 	 */
-	private Set<String> getPossibleExpansions(State state, ReferenceSymbolic ref) 
+	private static Set<String> getPossibleExpansions(State state, ReferenceSymbolic ref) 
 	throws BadClassFileException {
 		final String type = ref.getStaticType();
 		if (!Type.isReference(type) && !Type.isArray(type)) {
@@ -995,6 +996,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      * Completes the set operation of an {@link Array} by constraining the affected entries
      * and removing the unsatisfiable ones.
      * 
+     * @param hier a {@link ClassHierarchy}.
      * @param entries an {@link Iterator}{@code <}{@link AccessOutcomeIn}{@code >}. The method
      *        will determine the items affected by the set operation, constrain them, and 
      *        delete all the entries which after constraining become unsatisfiable.
@@ -1002,7 +1004,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
      */
-    public void completeArraySet(Iterator<Array.AccessOutcomeIn> entries, Primitive index) 
+    public void completeArraySet(ClassHierarchy hier, Iterator<Array.AccessOutcomeIn> entries, Primitive index) 
     throws InvalidInputException, DecisionException {
         if (entries == null || index == null) {
             throw new InvalidInputException("completeArraySet invoked with a null parameter");
@@ -1014,13 +1016,13 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
             while (entries.hasNext()) {
                 final Array.AccessOutcomeIn e = entries.next();
                 final Primitive indexInRange = e.inRange(index);
-                final boolean entryAffected = isSat((Expression) indexInRange);
+                final boolean entryAffected = isSat(hier, (Expression) indexInRange);
 
                 //if the entry is affected, it is constrained and possibly removed
                 if (entryAffected) {
                     e.constrainExpression(index); //TODO possibly move this back to Array?
                     final Expression rangeConstrained = e.getAccessCondition();
-                    if (isSat(rangeConstrained)) {
+                    if (isSat(hier, rangeConstrained)) {
                         //do nothing
                     } else {
                         entries.remove();

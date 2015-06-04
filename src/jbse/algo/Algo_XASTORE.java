@@ -139,7 +139,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
     @Override
     protected StrategyDecide<DecisionAlternative_XASTORE> decider() {
         return (state, result) -> {
-            final Outcome o = this.ctx.decisionProcedure.decide_XASTORE(this.inRange, result);
+            final Outcome o = this.ctx.decisionProcedure.decide_XASTORE(state.getClassHierarchy(), this.inRange, result);
             return o;
         };
     }
@@ -160,7 +160,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                     final Primitive index = (Primitive) this.data.operand(1);
                     final Array array = (Array) state.getObject(arrayRef);
                     final Iterator<Array.AccessOutcomeIn> entries = array.set(index, this.valueToStore);
-                    this.ctx.decisionProcedure.completeArraySet(entries, index);
+                    this.ctx.decisionProcedure.completeArraySet(state.getClassHierarchy(), entries, index);
                 } catch (InvalidOperandException | InvalidTypeException | 
                          InvalidInputException | ClassCastException e) {
                     //this should never happen

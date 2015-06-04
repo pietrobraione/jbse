@@ -101,7 +101,7 @@ StrategyUpdate<DecisionAlternative_IFX>> {
     @Override
     protected StrategyDecide<DecisionAlternative_IFX> decider() {
         return (state, result) -> {
-            final Outcome o = this.ctx.decisionProcedure.decide_IFX(this.comparison, result);
+            final Outcome o = this.ctx.decisionProcedure.decide_IFX(state.getClassHierarchy(), this.comparison, result);
             return o;
         };
     }

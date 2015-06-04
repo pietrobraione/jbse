@@ -7,6 +7,7 @@ import java.util.Collection;
 import org.junit.Before;
 import org.junit.Test;
 
+import jbse.bc.ClassHierarchy;
 import jbse.common.Type;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Clause;
@@ -48,27 +49,27 @@ public class DecisionProcedureEqualityTest {
 		throws DecisionException { return null; }
 
 		@Override
-		public boolean isSat(Expression exp) 
+		public boolean isSat(ClassHierarchy hier, Expression exp) 
 		throws DecisionException { throw new NoDecisionException(); }
 
 		@Override
-		public boolean isSatNull(ReferenceSymbolic r) 
+		public boolean isSatNull(ClassHierarchy hier, ReferenceSymbolic r) 
 		throws DecisionException { throw new NoDecisionException(); }
 
 		@Override
-		public boolean isSatAliases(ReferenceSymbolic r, long heapPos, Objekt o)
+		public boolean isSatAliases(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o)
 		throws DecisionException { throw new NoDecisionException(); }
 
 		@Override
-		public boolean isSatExpands(ReferenceSymbolic r, String className)
+		public boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, String className)
 		throws DecisionException { throw new NoDecisionException(); }
 
 		@Override
-		public boolean isSatInitialized(String className)
+		public boolean isSatInitialized(ClassHierarchy hier, String className)
 		throws DecisionException { throw new NoDecisionException(); }
 
 		@Override
-		public boolean isSatNotInitialized(String className)
+		public boolean isSatNotInitialized(ClassHierarchy hier, String className)
 		throws DecisionException { throw new NoDecisionException(); }
 	}
 	
@@ -77,25 +78,25 @@ public class DecisionProcedureEqualityTest {
 		dec = new DecisionProcedureEquality(new DecisionProcedureNoDecision(), calc);
 	}
 	
-	@Test
+	@Test(expected=NoDecisionException.class)
 	public void simpleTest1() throws DecisionException, InvalidTypeException, InvalidOperandException {
 		//A == B |- B == A
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
 		dec.pushAssumption(new ClauseAssume((Expression) A.eq(B)));
-		assertTrue(dec.isSat((Expression) B.eq(A)));
+		dec.isSat(null, (Expression) B.eq(A));
 	}	
 	
-	@Test
+	@Test(expected=NoDecisionException.class)
 	public void simpleTest2() throws DecisionException, InvalidTypeException, InvalidOperandException {
 		//A == B |- f(A) == f(B)
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
 		dec.pushAssumption(new ClauseAssume((Expression) A.eq(B)));
-		assertTrue(dec.isSat((Expression) calc.applyFunction(Type.INT, "f", A).eq(calc.applyFunction(Type.INT, "f", B))));
+		dec.isSat(null, (Expression) calc.applyFunction(Type.INT, "f", A).eq(calc.applyFunction(Type.INT, "f", B)));
 	}
 	
-	@Test
+	@Test(expected=NoDecisionException.class)
 	public void simpleTest3() throws DecisionException, InvalidTypeException, InvalidOperandException {
 		//A == E, B == F, C == G, D == H |- f((A - B) / (C - D)) == f((E - F) / (G - H))
 		Term A = calc.valTerm(Type.INT, "A");
@@ -110,7 +111,7 @@ public class DecisionProcedureEqualityTest {
 		dec.pushAssumption(new ClauseAssume((Expression) B.eq(F)));
 		dec.pushAssumption(new ClauseAssume((Expression) C.eq(G)));
 		dec.pushAssumption(new ClauseAssume((Expression) D.eq(H)));
-		assertTrue(dec.isSat((Expression) calc.applyFunction(Type.INT, "f", A.sub(B).div(C.sub(D))).eq(calc.applyFunction(Type.INT, "f", E.sub(F).div(G.sub(H))))));
+		dec.isSat(null, (Expression) calc.applyFunction(Type.INT, "f", A.sub(B).div(C.sub(D))).eq(calc.applyFunction(Type.INT, "f", E.sub(F).div(G.sub(H)))));
 	}	
 	
 	@Test
@@ -128,10 +129,10 @@ public class DecisionProcedureEqualityTest {
 		dec.pushAssumption(new ClauseAssume((Expression) B.eq(F)));
 		dec.pushAssumption(new ClauseAssume((Expression) C.eq(G)));
 		dec.pushAssumption(new ClauseAssume((Expression) D.eq(H)));
-		assertFalse(dec.isSat((Expression) calc.applyFunction(Type.INT, "f", A.sub(B).div(C.sub(D))).ne(calc.applyFunction(Type.INT, "f", E.sub(F).div(G.sub(H))))));
+		assertFalse(dec.isSat(null, (Expression) calc.applyFunction(Type.INT, "f", A.sub(B).div(C.sub(D))).ne(calc.applyFunction(Type.INT, "f", E.sub(F).div(G.sub(H))))));
 	}	
 	
-	@Test
+	@Test(expected=NoDecisionException.class)
 	public void simpleTest5() throws DecisionException, InvalidTypeException, InvalidOperandException {
 		//A == E, B == F, C == G, D == H |- !(f((A - B) / (C - D)) != f((E - F) / (G - H)))
 		Term A = calc.valTerm(Type.INT, "A");
@@ -146,19 +147,19 @@ public class DecisionProcedureEqualityTest {
 		dec.pushAssumption(new ClauseAssume((Expression) B.eq(F)));
 		dec.pushAssumption(new ClauseAssume((Expression) C.eq(G)));
 		dec.pushAssumption(new ClauseAssume((Expression) D.eq(H)));
-		assertTrue(dec.isSat((Expression) calc.applyFunction(Type.INT, "f", A.sub(B).div(C.sub(D))).ne(calc.applyFunction(Type.INT, "f", E.sub(F).div(G.sub(H)))).not()));
+		dec.isSat(null, (Expression) calc.applyFunction(Type.INT, "f", A.sub(B).div(C.sub(D))).ne(calc.applyFunction(Type.INT, "f", E.sub(F).div(G.sub(H)))).not());
 	}	
 	
-	@Test
+	@Test(expected=NoDecisionException.class)
 	public void pushExpTest1() throws DecisionException, InvalidTypeException, InvalidOperandException {
 		//f(A) == g(B) |- A + g(f(A)) == A + g(g(B))
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
 		dec.pushAssumption(new ClauseAssume((Expression) calc.applyFunction(Type.INT, "f", A).eq(calc.applyFunction(Type.INT, "g", B))));
-		assertTrue(dec.isSat((Expression) A.add(calc.applyFunction(Type.INT, "g", calc.applyFunction(Type.INT, "f", A))).eq(A.add(calc.applyFunction(Type.INT, "g", calc.applyFunction(Type.INT, "g", B))))));
+		dec.isSat(null, (Expression) A.add(calc.applyFunction(Type.INT, "g", calc.applyFunction(Type.INT, "f", A))).eq(A.add(calc.applyFunction(Type.INT, "g", calc.applyFunction(Type.INT, "g", B)))));
 	}	
 	
-	@Test
+	@Test(expected=NoDecisionException.class)
 	public void transitiveTest1() throws DecisionException, InvalidOperandException, InvalidTypeException {
 		//A == B, B == C |- A == C
 		Term A = calc.valTerm(Type.INT, "A");
@@ -166,7 +167,7 @@ public class DecisionProcedureEqualityTest {
 		Term C = calc.valTerm(Type.INT, "C");
 		dec.pushAssumption(new ClauseAssume((Expression) A.eq(B)));
 		dec.pushAssumption(new ClauseAssume((Expression) B.eq(C)));
-		assertTrue(dec.isSat((Expression) A.eq(C)));
+		dec.isSat(null, (Expression) A.eq(C));
 	}	
 	
 	@Test
@@ -175,6 +176,6 @@ public class DecisionProcedureEqualityTest {
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
 		dec.pushAssumption(new ClauseAssume((Expression) A.add(calc.valInt(-1).mul(B)).eq(calc.valInt(0))));
-		assertFalse(dec.isSat((Expression) A.add(calc.valInt(-1).mul(B)).ne(calc.valInt(0))));
+		assertFalse(dec.isSat(null, (Expression) A.add(calc.valInt(-1).mul(B)).ne(calc.valInt(0))));
 	}	
 }

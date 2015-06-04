@@ -3,6 +3,7 @@ package jbse.dec;
 import java.io.IOException;
 import java.util.ArrayDeque;
 
+import jbse.bc.ClassHierarchy;
 import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.ExternalProtocolInterfaceException;
 import jbse.mem.Clause;
@@ -209,7 +210,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	}
 
 	@Override
-	protected final boolean isSatLocal(Expression exp, Expression expSimpl) 
+	protected final boolean isSatLocal(ClassHierarchy hier, Expression exp, Expression expSimpl) 
 	throws DecisionException {
 	    try {
 	        if (this.extIf.isWorking()) {
@@ -217,7 +218,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	        		resynch();
 	        	}
 	        	this.extIf.sendClauseAssume(expSimpl);
-	        	final boolean retVal = this.extIf.checkSat(true); 
+	        	final boolean retVal = this.extIf.checkSat(hier, true); 
 	        	this.extIf.retractClause();
 	            return retVal;
 	        } else {
@@ -229,7 +230,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	}
 	
 	@Override
-	protected final boolean isSatAliasesLocal(ReferenceSymbolic r, long heapPos, Objekt o) 
+	protected final boolean isSatAliasesLocal(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o) 
 	throws DecisionException {
 	    try {
 	        if (this.extIf.isWorking()) {
@@ -237,7 +238,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	        		resynch();
 	        	}
 	        	this.extIf.sendClauseAssumeAliases(r, heapPos, o);
-	        	final boolean retVal = this.extIf.checkSat(true); 
+	        	final boolean retVal = this.extIf.checkSat(hier, true); 
 	        	this.extIf.retractClause();
 	            return retVal;
 	        } else {
@@ -249,7 +250,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	}
 	
 	@Override
-	protected final boolean isSatExpandsLocal(ReferenceSymbolic r, String className)
+	protected final boolean isSatExpandsLocal(ClassHierarchy hier, ReferenceSymbolic r, String className)
 	throws DecisionException {
 	    try {
 	        if (this.extIf.isWorking()) {
@@ -257,7 +258,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	        		resynch();
 	        	}
 	        	this.extIf.sendClauseAssumeExpands(r, className);
-	        	final boolean retVal = this.extIf.checkSat(true); 
+	        	final boolean retVal = this.extIf.checkSat(hier, true); 
 	        	this.extIf.retractClause();
 	            return retVal;
 	        } else {
@@ -269,7 +270,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	}
 	
 	@Override
-	protected final boolean isSatNullLocal(ReferenceSymbolic r)
+	protected final boolean isSatNullLocal(ClassHierarchy hier, ReferenceSymbolic r)
 	throws DecisionException {
 	    try {
 	        if (this.extIf.isWorking()) {
@@ -277,7 +278,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 	        		resynch();
 	        	}
 	        	this.extIf.sendClauseAssumeNull(r);
-	        	final boolean retVal = this.extIf.checkSat(true); 
+	        	final boolean retVal = this.extIf.checkSat(hier, true); 
 	        	this.extIf.retractClause();
 	            return retVal;
 	        } else {

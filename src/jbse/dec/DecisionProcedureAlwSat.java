@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import jbse.bc.ClassHierarchy;
 import jbse.mem.Clause;
 import jbse.mem.Objekt;
 import jbse.val.Expression;
@@ -153,32 +154,32 @@ public class DecisionProcedureAlwSat implements DecisionProcedure {
 	}
 
 	@Override
-	public boolean isSat(Expression exp) {
+	public boolean isSat(ClassHierarchy hier, Expression exp) {
 		return true;
 	}
 
 	@Override
-	public boolean isSatNull(ReferenceSymbolic r) {
+	public boolean isSatNull(ClassHierarchy hier, ReferenceSymbolic r) {
 		return true;
 	}
 
 	@Override
-	public boolean isSatAliases(ReferenceSymbolic r, long heapPos, Objekt o) {
+	public boolean isSatAliases(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o) {
 		return true;
 	}
 
 	@Override
-	public boolean isSatExpands(ReferenceSymbolic r, String className) {
+	public boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, String className) {
 		return true;
 	}
 
 	@Override
-	public boolean isSatInitialized(String className) {
+	public boolean isSatInitialized(ClassHierarchy hier, String className) {
 		return true;
 	}
 
 	@Override
-	public boolean isSatNotInitialized(String className) {
+	public boolean isSatNotInitialized(ClassHierarchy hier, String className) {
 		return true;
 	}
 }

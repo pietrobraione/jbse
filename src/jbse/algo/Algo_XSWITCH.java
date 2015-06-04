@@ -76,7 +76,7 @@ StrategyUpdate<DecisionAlternative_XSWITCH>> {
     @Override
     protected StrategyDecide<DecisionAlternative_XSWITCH> decider() {
         return (state, result) -> {
-            final Outcome o = this.ctx.decisionProcedure.decide_XSWITCH(this.selector, this.data.switchTable(), result);
+            final Outcome o = this.ctx.decisionProcedure.decide_XSWITCH(state.getClassHierarchy(), this.selector, this.data.switchTable(), result);
             return o;
         };
     }
