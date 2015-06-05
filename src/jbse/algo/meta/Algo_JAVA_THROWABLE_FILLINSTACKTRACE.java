@@ -22,17 +22,17 @@ public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE extends Algo_INVOKEMETA 
     
     @Override
     protected void update(State state) throws ThreadStackEmptyException, InterruptException {
-            try {
-                final Reference thisRef = (Reference) this.data.operand(0);
-                final Instance exc = (Instance) state.getObject(thisRef);
+        try {
+            final Reference thisRef = (Reference) this.data.operand(0);
+            final Instance exc = (Instance) state.getObject(thisRef);
 
-                //TODO replace this dummy implementation
-                exc.setFieldValue(JAVA_THROWABLE_STACKTRACE, Null.getInstance());
+            //TODO replace this dummy implementation
+            exc.setFieldValue(JAVA_THROWABLE_STACKTRACE, Null.getInstance());
 
-                state.pushOperand(thisRef); //returns "this"
-            } catch (ClassCastException e) {
-                throwVerifyError(state);
-                exitFromAlgorithm();
-            }
+            state.pushOperand(thisRef); //returns "this"
+        } catch (ClassCastException e) {
+            throwVerifyError(state);
+            exitFromAlgorithm();
+        }
     }
 }
