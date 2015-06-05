@@ -99,13 +99,6 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 //this should never happen
                 failExecution(e);
             }
-            
-            //possibly falls through
-            if (fallthrough()) {
-                final Algo_INVOKEX_COMPLETION continuation = 
-                    new Algo_INVOKEX_COMPLETION(this.isInterface, this.isSpecial, this.isStatic);
-                continueWith(continuation);
-            }
         };
     }
     
@@ -115,20 +108,15 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     ContradictionException, FailureException, InterruptException;
     
     /**
-     * Determines whether this {@link Algorithm} must 
-     * fall through.
-     * 
-     * @return {@code true} iff, upon completion of this
-     *         {@link Algorithm}, the suspended execution 
-     *         of the invoke* algorithm must be resumed. 
-     *         In such case a frame for the method call
-     *         will be pushed on the state. In most cases 
-     *         you do not need to override the default
-     *         implementation of this method, that returns
-     *         {@code false}.  
+     * Cleanly interrupts the execution and schedules 
+     * the base-level implementation of the method
+     * for execution. 
      */
-    protected boolean fallthrough() {
-        return false;
+    protected final void continueWithBaseLevelImpl() 
+    throws InterruptException {
+        final Algo_INVOKEX_COMPLETION continuation = 
+            new Algo_INVOKEX_COMPLETION(this.isInterface, this.isSpecial, this.isStatic);
+        continueWith(continuation);
     }
     
     @Override

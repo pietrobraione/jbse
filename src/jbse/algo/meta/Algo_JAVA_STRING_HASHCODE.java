@@ -1,6 +1,5 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.continueWithBaseLevelImpl;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.JAVA_STRING_HASH;
@@ -35,7 +34,7 @@ public final class Algo_JAVA_STRING_HASHCODE extends Algo_INVOKEMETA {
                 state.pushOperand(hashCode);
             } else {
                 state.pushOperand(thisReference); //repushes the (only) parameter of String.hashCode
-                continueWithBaseLevelImpl(state, this.ctx); //executes the original String.hashCode implementation
+                continueWithBaseLevelImpl(); //executes the original String.hashCode implementation
             }
         } catch (ClassCastException e) {
             throwVerifyError(state);

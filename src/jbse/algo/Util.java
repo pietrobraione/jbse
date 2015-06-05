@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.concurrent.ExecutionException;
 
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
@@ -96,23 +95,6 @@ public class Util {
     throws InterruptException {
         throw InterruptException.mk(algo);
     }
-    
-    /**
-     * Use it in the meta-level implementation of a meta-overridden
-     * method to cleanly interrupt the execution and continue by 
-     * invoking the base-level implementation.
-     * 
-     * @param state the current {link State}.
-     * @param ctx the {@link ExecutionContext}.
-     * @throws ThreadStackEmptyException if {@code state} has
-     *         an empty stack.
-     */
-    public static void continueWithBaseLevelImpl(State state, ExecutionContext ctx) 
-    throws ThreadStackEmptyException, InterruptException {
-        final Algo_INVOKEX algoInvoke = (Algo_INVOKEX) ctx.dispatcher.select(state.getInstruction());
-        throw InterruptException.mk(algoInvoke.algo_INVOKEX_COMPLETION);
-    }
-    
     
 	public static ClassFile lookupClassfileMethodImpl(State state, Signature methodSignatureResolved, boolean isStatic, boolean isSpecial, String receiverClassName) 
 	throws BadClassFileException, MethodNotFoundException, IncompatibleClassFileException, ThreadStackEmptyException {
