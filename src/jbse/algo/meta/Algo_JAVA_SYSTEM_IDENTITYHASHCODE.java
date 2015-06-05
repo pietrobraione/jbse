@@ -21,16 +21,16 @@ public final class Algo_JAVA_SYSTEM_IDENTITYHASHCODE extends Algo_INVOKEMETA {
     
     @Override
     protected void update(State state) throws ThreadStackEmptyException, InterruptException {
-            try {
-                final Reference thisReference = (Reference) this.data.operand(0);
-                final Objekt thisObjekt = state.getObject(thisReference);
+        try {
+            final Reference thisReference = (Reference) this.data.operand(0);
+            final Objekt thisObjekt = state.getObject(thisReference);
 
-                //gets the hash code stored in the objekt and returns it
-                final Primitive hashCode = state.getCalculator().valInt(thisObjekt.getObjektHashCode());
-                state.pushOperand(hashCode);
-            } catch (ClassCastException e) {
-                throwVerifyError(state);
-                exitFromAlgorithm();
-            }
+            //gets the hash code stored in the objekt and returns it
+            final Primitive hashCode = state.getCalculator().valInt(thisObjekt.getObjektHashCode());
+            state.pushOperand(hashCode);
+        } catch (ClassCastException e) {
+            throwVerifyError(state);
+            exitFromAlgorithm();
+        }
     }
 }
