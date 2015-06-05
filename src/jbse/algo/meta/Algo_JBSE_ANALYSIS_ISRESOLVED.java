@@ -51,10 +51,10 @@ public final class Algo_JBSE_ANALYSIS_ISRESOLVED extends Algo_INVOKEMETA {
         try {
             objectInstance = (Instance) (state.getObject(objRef));
             if (objectInstance == null) {
-                throw new SymbolicValueNotAllowedException("The method needs a nonnull object as the object where to search the field.");
+                throw new SymbolicValueNotAllowedException("Null has no fields."); //TODO this is not really a limitation of JBSE, rather an invalid input
             }
         } catch (ClassCastException e) {
-            throw new SymbolicValueNotAllowedException("The method needs an Instance as the object where to search the field.");
+            throw new SymbolicValueNotAllowedException("The object is not an Instance and thus has no fields."); //TODO this is not really a limitation of JBSE, rather an invalid input
         }
 
         //looks for the signature of the field

@@ -10,6 +10,7 @@ import jbse.val.Calculator;
  * in the heap.
  */
 public final class Instance_JAVA_CLASS extends Instance {
+    /** The java class it represents. Immutable. */
     private final String representedClass;
 
     protected Instance_JAVA_CLASS(Calculator calc, String origin, Epoch epoch, String representedClass, Signature... fieldSignatures) {
