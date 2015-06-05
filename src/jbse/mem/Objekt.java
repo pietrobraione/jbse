@@ -46,7 +46,9 @@ public abstract class Objekt implements Cloneable {
     
     /** 
      * The fields as a map of signatures (as strings) to variables.
-     * Variables are possibly mutable (immutable for arrays). 
+     * Immutable for arrays, but mutable otherwise (the map
+     * is by itself immutable but the stored Variables may be 
+     * mutable). 
      */
     protected HashMap<String, Variable> fields;
 	
@@ -186,6 +188,15 @@ public abstract class Objekt implements Cloneable {
             }
         }
         return null;
+    }
+    
+    protected final HashMap<String, Variable> fieldsDeepCopy() {
+        final HashMap<String, Variable> retVal = new HashMap<>();
+        for (String key : this.fields.keySet()) {
+            final Variable variableClone = this.fields.get(key).clone();
+            retVal.put(key, variableClone);
+        }
+        return retVal;
     }
     
 	@Override

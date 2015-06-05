@@ -1,6 +1,5 @@
 package jbse.mem;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import jbse.bc.Signature;
@@ -47,14 +46,7 @@ public class Instance extends Objekt {
     @Override
     public Instance clone() {
         final Instance o = (Instance) super.clone();
-        
-        //deep copy of fields
-        final HashMap<String, Variable> fieldsClone = new HashMap<>();
-        for (String key : this.fields.keySet()) {
-            final Variable variableClone = this.fields.get(key).clone();
-            fieldsClone.put(key, variableClone);
-        }
-        o.fields = fieldsClone;
+        o.fields = fieldsDeepCopy();
         
         return o;
     }

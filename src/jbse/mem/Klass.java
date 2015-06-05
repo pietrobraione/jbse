@@ -24,6 +24,9 @@ public final class Klass extends Objekt {
     
     @Override
     public Klass clone() {
-    	return (Klass) super.clone();
+    	final Klass o = (Klass) super.clone();
+        o.fields = fieldsDeepCopy();
+        
+        return o;
     }
 }
