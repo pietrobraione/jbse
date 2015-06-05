@@ -23,7 +23,7 @@ import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
-abstract class Algo_INVOKEX_BASE extends Algorithm<
+abstract class Algo_INVOKEX_Abstract extends Algorithm<
 BytecodeData_1ME,
 DecisionAlternative_NONE,
 StrategyDecide<DecisionAlternative_NONE>, 
@@ -34,7 +34,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected final boolean isSpecial; //set by the constructor
     protected final boolean isStatic; //set by the constructor
     
-    public Algo_INVOKEX_BASE(boolean isInterface, boolean isSpecial, boolean isStatic) {
+    public Algo_INVOKEX_Abstract(boolean isInterface, boolean isSpecial, boolean isStatic) {
         this.isInterface = isInterface;
         this.isSpecial = isSpecial;
         this.isStatic = isStatic;

@@ -24,8 +24,8 @@ import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.tree.DecisionAlternative_NONE;
 
-final class Algo_INVOKEX extends Algo_INVOKEX_BASE {
-    private final Algo_INVOKEX_COMPLETION algo_INVOKEX_COMPLETION;
+final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
+    final Algo_INVOKEX_COMPLETION algo_INVOKEX_COMPLETION;
     
     public Algo_INVOKEX(boolean isInterface, boolean isSpecial, boolean isStatic) {
         super(isInterface, isSpecial, isStatic);

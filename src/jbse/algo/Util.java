@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.concurrent.ExecutionException;
 
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
@@ -89,10 +90,27 @@ public class Util {
      * Cleanly interrupts the execution of an {@link Algorithm}, 
      * and schedules another one as the next to be executed.
      * 
-     * @param algo the 
+     * @param algo the next {@link Algorithm} to be executed.
      */
-    public static void continueWith(Algorithm<?, ?, ?, ?, ?> algo) throws InterruptException {
+    public static void continueWith(Algorithm<?, ?, ?, ?, ?> algo)
+    throws InterruptException {
         throw InterruptException.mk(algo);
+    }
+    
+    /**
+     * Use it in the meta-level implementation of a meta-overridden
+     * method to cleanly interrupt the execution and continue by 
+     * invoking the base-level implementation.
+     * 
+     * @param state the current {link State}.
+     * @param ctx the {@link ExecutionContext}.
+     * @throws ThreadStackEmptyException if {@code state} has
+     *         an empty stack.
+     */
+    public static void continueWithBaseLevelImpl(State state, ExecutionContext ctx) 
+    throws ThreadStackEmptyException, InterruptException {
+        final Algo_INVOKEX algoInvoke = (Algo_INVOKEX) ctx.dispatcher.select(state.getInstruction());
+        throw InterruptException.mk(algoInvoke.algo_INVOKEX_COMPLETION);
     }
     
     

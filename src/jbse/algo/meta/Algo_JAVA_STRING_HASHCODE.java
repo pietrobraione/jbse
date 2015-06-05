@@ -1,6 +1,6 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.continueWith;
+import static jbse.algo.Util.continueWithBaseLevelImpl;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.JAVA_STRING_HASH;
@@ -26,15 +26,16 @@ public final class Algo_JAVA_STRING_HASHCODE extends Algo_INVOKEMETA {
     throws ThreadStackEmptyException, InterruptException {
         try {
             final Reference thisReference = (Reference) this.data.operand(0);
-            final Objekt thisObjekt = state.getObject(thisReference);
+            final Objekt thisObject = state.getObject(thisReference);
 
-            if (thisObjekt.isSymbolic()) {
+            if (thisObject.isSymbolic()) {
                 //gets the hashCode field in the string and returns it
-                final Primitive hashCode = (Primitive) thisObjekt.getFieldValue(JAVA_STRING_HASH);
+                final Primitive hashCode = (Primitive) thisObject.getFieldValue(JAVA_STRING_HASH);
                 //TODO ensure that strings that may not be equal have different hash codes
                 state.pushOperand(hashCode);
             } else {
-                continueWith(this.ctx.dispatcher.select(state.getInstruction())); //executes the original String.hashCode implementation
+                state.pushOperand(thisReference); //repushes the (only) parameter of String.hashCode
+                continueWithBaseLevelImpl(state, this.ctx); //executes the original String.hashCode implementation
             }
         } catch (ClassCastException e) {
             throwVerifyError(state);

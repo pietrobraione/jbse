@@ -24,7 +24,7 @@ import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.tree.DecisionAlternative_NONE;
 
-final class Algo_INVOKEX_COMPLETION extends Algo_INVOKEX_BASE {
+final class Algo_INVOKEX_COMPLETION extends Algo_INVOKEX_Abstract {
     
     public Algo_INVOKEX_COMPLETION(boolean isInterface, boolean isSpecial, boolean isStatic) {
         super(isInterface, isSpecial, isStatic);
@@ -43,7 +43,7 @@ final class Algo_INVOKEX_COMPLETION extends Algo_INVOKEX_BASE {
                      MethodNotFoundException | 
                      MethodNotAccessibleException | 
                      BadClassFileException e) {
-                //this should never happen
+                //this should never happen (Algo_INVOKEX already checked them)
                 failExecution(e);
             }
             
@@ -116,7 +116,7 @@ final class Algo_INVOKEX_COMPLETION extends Algo_INVOKEX_BASE {
                 exitFromAlgorithm();
             }
 
-            //pushes the frame
+            //otherwise, pushes a new frame for the method
             try {
                 state.pushFrame(this.methodSignatureImpl, false, this.pcOffsetReturn, this.data.operands());
             } catch (InvalidProgramCounterException | InvalidSlotException e) {
