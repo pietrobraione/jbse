@@ -640,12 +640,17 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
                     case NE:
                         final Primitive firstOp = e.getFirstOperand();
                         final Primitive secondOp = e.getSecondOperand();
+                        //sicstus clp(q) handles < and > better than =\=
+                        //so we translate A != B as (A < B) || (A > B);
+                        //since it is unclear the advantage in the 
+                        //noninteger case, we only do it for integers,
+                        //except for the easy case var != const.
+                        //Note that this trick might stress a lot the 
+                        //boolean part as it makes 
                         if (Type.isPrimitiveIntegral(firstOp.getType()) && 
-                            Type.isPrimitiveIntegral(secondOp.getType())) {
-                            //sicstus clp(q) handles < and > better than =\=
-                            //so we translate A != B as (A < B) || (A > B);
-                            //since it is unclear the advantage in the 
-                            //noninteger case, we only do it for integers
+                            Type.isPrimitiveIntegral(secondOp.getType()) && 
+                            !( (firstOp instanceof PrimitiveSymbolic && secondOp instanceof Simplex) ||
+                               (firstOp instanceof Simplex && secondOp instanceof PrimitiveSymbolic))) {
                             final Primitive val = firstOp.lt(secondOp).or(firstOp.gt(secondOp));
                             val.accept(this);
                             break;
