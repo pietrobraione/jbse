@@ -454,15 +454,17 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 
 		final boolean isAny = (selector instanceof Any);
 		int branchCounter = 1;
+		boolean noEntryIsSat = true; //allows to skip the last sat check
 		try {
 			for (int i : tab) {
 				final Expression exp = (isAny ? null : (Expression) selector.eq(this.calc.valInt(i)));
 				if (isAny || isSat(hier, exp)) { 
 					result.add(DecisionAlternative_XSWITCH.toNonconcrete(i, branchCounter));
+					noEntryIsSat = false;
 				}
 				++branchCounter;
 			}
-			if (isAny || isSat(hier, tab.getDefaultClause(selector))) { 
+			if (isAny || noEntryIsSat || isSat(hier, tab.getDefaultClause(selector))) { 
 				result.add(DecisionAlternative_XSWITCH.toNonconcreteDefault(branchCounter));
 			}
 			shouldRefine = (!isAny && (result.size() > 1));
