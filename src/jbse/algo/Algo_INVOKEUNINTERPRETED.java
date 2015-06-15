@@ -1,4 +1,4 @@
-package jbse.algo.meta;
+package jbse.algo;
 
 import static jbse.algo.Util.failExecution;
 import static jbse.common.Type.splitParametersDescriptors;
@@ -9,7 +9,6 @@ import static jbse.common.Type.splitReturnValueDescriptor;
 import java.util.Arrays;
 import java.util.function.Supplier;
 
-import jbse.algo.Algo_INVOKEMETA;
 import jbse.algo.exc.UninterpretedUnsupportedException;
 import jbse.bc.Signature;
 import jbse.mem.State;
@@ -19,7 +18,7 @@ import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
-final class Algo_INVOKEUNINTERPRETED extends Algo_INVOKEMETA {
+public final class Algo_INVOKEUNINTERPRETED extends Algo_INVOKEMETA {
     
     private final Signature methodSignatureImpl; //set by constructor
     private final String functionName; //set by constructor

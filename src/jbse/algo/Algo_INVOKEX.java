@@ -86,7 +86,6 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
                 exitFromAlgorithm();
             }
             
-            
             //looks for a meta-level implementation, and in case 
             //delegates the responsibility to the dispatcherMeta
             final ClassHierarchy hier = state.getClassHierarchy();

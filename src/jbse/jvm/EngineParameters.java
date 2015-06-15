@@ -195,14 +195,16 @@ public final class EngineParameters implements Cloneable {
 	 * The alias resolution triggers (instance of class), a list of 
 	 * {@link String} triples. 
 	 */
-	ArrayList<String[]> resolveAliasInstanceofTriggers = new ArrayList<String[]>();
+	ArrayList<String[]> resolveAliasInstanceofTriggers = new ArrayList<>();
 	
-	/** The {@code null} resolution triggers, a list of string triples. */
+	/** The {@code null} resolution triggers, a list of String triples. */
 	ArrayList<String[]> resolveNullTriggers = new ArrayList<>();
 
-	ArrayList<String[]> metaOverridden = new ArrayList<String[]>();
+	/** The methods overridden at the meta-level. */
+	ArrayList<String[]> metaOverridden = new ArrayList<>();
 
-	ArrayList<String[]> uninterpreted = new ArrayList<String[]>();
+    /** The methods to be handled as uninterpreted functions. */
+	ArrayList<String[]> uninterpreted = new ArrayList<>();
 
 	/**  
 	 * The signature of the method to be executed; overridden by {@code initialState}'s 

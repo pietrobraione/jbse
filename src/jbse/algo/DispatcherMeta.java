@@ -1,27 +1,5 @@
-package jbse.algo.meta;
+package jbse.algo;
 
-import static jbse.bc.Signatures.JAVA_CLASS_GETPRIMITIVECLASS;
-import static jbse.bc.Signatures.JAVA_CLASS_ISINSTANCE;
-import static jbse.bc.Signatures.JAVA_OBJECT_GETCLASS;
-import static jbse.bc.Signatures.JAVA_OBJECT_HASHCODE;
-import static jbse.bc.Signatures.JAVA_STRING_HASHCODE;
-import static jbse.bc.Signatures.JAVA_STRING_INTERN;
-import static jbse.bc.Signatures.JAVA_SYSTEM_ARRAYCOPY;
-import static jbse.bc.Signatures.JAVA_SYSTEM_IDENTITYHASHCODE;
-import static jbse.bc.Signatures.JAVA_THROWABLE_FILLINSTACKTRACE;
-import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEDEPTH;
-import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEELEMENT;
-import static jbse.bc.Signatures.JBSE_ANALYSIS_ANY;
-import static jbse.bc.Signatures.JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION;
-import static jbse.bc.Signatures.JBSE_ANALYSIS_ENDGUIDANCE;
-import static jbse.bc.Signatures.JBSE_ANALYSIS_FAIL;
-import static jbse.bc.Signatures.JBSE_ANALYSIS_IGNORE;
-import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRESOLVED;
-import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRUNBYJBSE;
-import static jbse.bc.Signatures.JBSE_ANALYSIS_SUCCEED;
-
-import jbse.algo.Algo_INVOKEMETA;
-import jbse.algo.Algorithm;
 import jbse.algo.exc.MetaUnsupportedException;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Dispatcher;
@@ -41,7 +19,7 @@ import jbse.meta.annotations.Uninterpreted;
  * 
  * @author Pietro Braione
  */
-public class DispatcherMeta extends Dispatcher<Signature, Algo_INVOKEMETA> {
+class DispatcherMeta extends Dispatcher<Signature, Algo_INVOKEMETA> {
 	/**
 	 * Constructor.
 	 */
@@ -52,29 +30,6 @@ public class DispatcherMeta extends Dispatcher<Signature, Algo_INVOKEMETA> {
 				return null;
 			}
 		});
-		
-		//meta delegates for some JRE methods
-        loadMetaDelegate(JAVA_CLASS_GETPRIMITIVECLASS,             new Algo_JAVA_CLASS_GETPRIMITIVECLASS());
-        loadMetaDelegate(JAVA_CLASS_ISINSTANCE,                    new Algo_JAVA_CLASS_ISINSTANCE());
-        loadMetaDelegate(JAVA_OBJECT_GETCLASS,                     new Algo_JAVA_OBJECT_GETCLASS());
-        loadMetaDelegate(JAVA_OBJECT_HASHCODE,                     new Algo_JAVA_OBJECT_HASHCODE());
-        loadMetaDelegate(JAVA_STRING_HASHCODE,                     new Algo_JAVA_STRING_HASHCODE());
-        loadMetaDelegate(JAVA_STRING_INTERN,                       new Algo_JAVA_STRING_INTERN());
-        loadMetaDelegate(JAVA_SYSTEM_ARRAYCOPY,                    new Algo_JAVA_SYSTEM_ARRAYCOPY());
-        loadMetaDelegate(JAVA_SYSTEM_IDENTITYHASHCODE,             new Algo_JAVA_SYSTEM_IDENTITYHASHCODE());
-		loadMetaDelegate(JAVA_THROWABLE_FILLINSTACKTRACE,          new Algo_JAVA_THROWABLE_FILLINSTACKTRACE());
-		loadMetaDelegate(JAVA_THROWABLE_GETSTACKTRACEDEPTH,        new Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH());
-		loadMetaDelegate(JAVA_THROWABLE_GETSTACKTRACEELEMENT,      new Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT());
-
-		//meta delegates for some jbse.meta.Analysis methods
-        loadMetaDelegate(JBSE_ANALYSIS_ANY,                        new Algo_JBSE_ANALYSIS_ANY());
-        loadMetaDelegate(JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION, new Algo_JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION());
-        loadMetaDelegate(JBSE_ANALYSIS_ENDGUIDANCE,                new Algo_JBSE_ANALYSIS_ENDGUIDANCE());
-        loadMetaDelegate(JBSE_ANALYSIS_FAIL,                       new Algo_JBSE_ANALYSIS_FAIL());
-        loadMetaDelegate(JBSE_ANALYSIS_IGNORE,                     new Algo_JBSE_ANALYSIS_IGNORE());
-        loadMetaDelegate(JBSE_ANALYSIS_ISRESOLVED,                 new Algo_JBSE_ANALYSIS_ISRESOLVED());
-        loadMetaDelegate(JBSE_ANALYSIS_ISRUNBYJBSE,                new Algo_JBSE_ANALYSIS_ISRUNBYJBSE());
-        loadMetaDelegate(JBSE_ANALYSIS_SUCCEED,                    new Algo_JBSE_ANALYSIS_SUCCEED());
 	}
 
 	/**

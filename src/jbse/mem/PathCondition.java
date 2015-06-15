@@ -54,49 +54,50 @@ final class PathCondition implements Cloneable {
      * Adds a clause to the path condition. The clause is the resolution 
      * of a symbolic reference by expansion. 
      * 
-     * @param r the {@link ReferenceSymbolic} which is resolved. It 
+     * @param reference the {@link ReferenceSymbolic} which is resolved. It 
      *          must be {@code r != null} or the method has no effect.
      * @param heapPosition the position in the heap of the object to 
-     *        which {@code r} is expanded.
-     * @param o the {@link Objekt} to which {@code r} is expanded.
+     *        which {@code reference} is expanded.
+     * @param object the {@link Objekt} to which {@code reference} 
+     *        is expanded.
      */
-    void addClauseAssumeExpands(ReferenceSymbolic r, long heapPosition, Objekt o) {
-    	this.clauses.add(new ClauseAssumeExpands(r, heapPosition, o));
-    	this.referenceResolutionMap.put(r.getId(), heapPosition);
+    void addClauseAssumeExpands(ReferenceSymbolic reference, long heapPosition, Objekt object) {
+    	this.clauses.add(new ClauseAssumeExpands(reference, heapPosition, object));
+    	this.referenceResolutionMap.put(reference.getId(), heapPosition);
     	
     	//increments objectCounters
-    	if (!this.objectCounters.containsKey(o.getType())) {
-    		this.objectCounters.put(o.getType(), 0);
+    	if (!this.objectCounters.containsKey(object.getType())) {
+    		this.objectCounters.put(object.getType(), 0);
     	}
-    	final int nobjects = this.objectCounters.get(o.getType());
-    	this.objectCounters.put(o.getType(), nobjects + 1);
+    	final int nobjects = this.objectCounters.get(object.getType());
+    	this.objectCounters.put(object.getType(), nobjects + 1);
     }
 
     /**
      * Adds a clause to the path condition. The clause is the resolution 
      * of a symbolic reference by aliasing. 
      * 
-     * @param r the {@link ReferenceSymbolic} which is resolved. 
+     * @param reference the {@link ReferenceSymbolic} which is resolved. 
      * @param heapPosition the position in the heap of the object to 
-     *        which {@code r} is resolved.
-	 * @param aliasOrigin the {@link Objekt} at position {@code heapPosition}
+     *        which {@code reference} is resolved.
+	 * @param object the {@link Objekt} at position {@code heapPosition}
 	 *        as it was at the beginning of symbolic execution, or equivalently 
 	 *        at the time of its assumption.
      */
-    void addClauseAssumeAliases(ReferenceSymbolic r, long heapPosition, Objekt object) {
-    	this.clauses.add(new ClauseAssumeAliases(r, heapPosition, object));
-    	this.referenceResolutionMap.put(r.getId(), heapPosition);
+    void addClauseAssumeAliases(ReferenceSymbolic reference, long heapPosition, Objekt object) {
+    	this.clauses.add(new ClauseAssumeAliases(reference, heapPosition, object));
+    	this.referenceResolutionMap.put(reference.getId(), heapPosition);
     }
 
     /**
      * Adds a clause to the path condition. The clause is the resolution 
      * of a symbolic reference by assuming it null. 
      * 
-     * @param r the {@link ReferenceSymbolic} which is resolved. 
+     * @param reference the {@link ReferenceSymbolic} which is resolved. 
      */
-    void addClauseAssumeNull(ReferenceSymbolic r) {
-		this.clauses.add(new ClauseAssumeNull(r));
-		this.referenceResolutionMap.put(r.getId(), Util.POS_NULL);
+    void addClauseAssumeNull(ReferenceSymbolic reference) {
+		this.clauses.add(new ClauseAssumeNull(reference));
+		this.referenceResolutionMap.put(reference.getId(), Util.POS_NULL);
     }
 
     /**
@@ -104,11 +105,11 @@ final class PathCondition implements Cloneable {
      * class by assuming it preloaded.
      *   
      * @param className the class name as a {@link String}.
-     * @param k the symbolic {@link Klass} object to which {@code className}
+     * @param klass the symbolic {@link Klass} object to which {@code className}
      * is resolved.
      */
-    void addClauseAssumeClassInitialized(String className, Klass k) {
-   		this.clauses.add(new ClauseAssumeClassInitialized(className, k));
+    void addClauseAssumeClassInitialized(String className, Klass klass) {
+   		this.clauses.add(new ClauseAssumeClassInitialized(className, klass));
     }
 
     /**
@@ -124,43 +125,43 @@ final class PathCondition implements Cloneable {
 	/**
 	 * Tests whether a symbolic reference is resolved.
 	 * 
-	 * @param ref a {@link ReferenceSymbolic}.
-	 * @return {@code true} iff {@code ref} is resolved.
-     * @throws NullPointerException if {@code ref == null}.
+	 * @param reference a {@link ReferenceSymbolic}.
+	 * @return {@code true} iff {@code reference} is resolved.
+     * @throws NullPointerException if {@code reference == null}.
 	 */
-    boolean resolved(ReferenceSymbolic ref) {
-    	return this.referenceResolutionMap.containsKey(ref.getId());
+    boolean resolved(ReferenceSymbolic reference) {
+    	return this.referenceResolutionMap.containsKey(reference.getId());
     }
         
 	/**
 	 * Returns the heap position associated to a resolved 
 	 * symbolic reference.
 	 * 
-	 * @param ref a {@link ReferenceSymbolic}. It must be 
-	 * {@link #resolved}{@code (ref) == true}.
+	 * @param reference a {@link ReferenceSymbolic}. It must be 
+	 * {@link #resolved}{@code (reference) == true}.
 	 * @return a {@code long}, the heap position to which
-	 * {@code ref} has been resolved or {@code null} if
-     * {@link #resolved}{@code (ref) == false}.
-	 * @throws NullPointerException if {@code ref == null}.
+	 * {@code reference} has been resolved or {@code null} if
+     * {@link #resolved}{@code (reference) == false}.
+	 * @throws NullPointerException if {@code reference == null}.
 	 */
-    long getResolution(ReferenceSymbolic ref) {
-    	return this.referenceResolutionMap.get(ref.getId());
+    long getResolution(ReferenceSymbolic reference) {
+    	return this.referenceResolutionMap.get(reference.getId());
     }
     
     /**
      * Tests whether this path condition refines, i.e., 
      * if it has more clauses than, another one.
      * 
-     * @param pc the {@link PathCondition} to be compared against.
+     * @param pathCondition the {@link PathCondition} to be compared against.
      * @return an {@link Iterator}{@code <}{@link Clause}{@code >} 
-     *         if {@code this} refines {@code pc}, pointing to the
+     *         if {@code this} refines {@code pathCondition}, pointing to the
      *         first clause in {@code this} that does not appear in 
-     *         {@code pc}. If {@code this} does not refine {@code pc}
-     *         returns {@code null}.
+     *         {@code pathCondition}. If {@code this} does not refine 
+     *         {@code pathCondition} returns {@code null}.
      */
-    Iterator<Clause> refines(PathCondition pc) {
+    Iterator<Clause> refines(PathCondition pathCondition) {
     	final Iterator<Clause> i = this.clauses.iterator();
-    	for (Clause c : pc.clauses) {
+    	for (Clause c : pathCondition.clauses) {
     		if (!i.hasNext()) {
     			return null;
     		}

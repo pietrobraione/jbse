@@ -1,5 +1,25 @@
 package jbse.jvm;
 
+import static jbse.bc.Signatures.JAVA_CLASS_GETPRIMITIVECLASS;
+import static jbse.bc.Signatures.JAVA_CLASS_ISINSTANCE;
+import static jbse.bc.Signatures.JAVA_OBJECT_GETCLASS;
+import static jbse.bc.Signatures.JAVA_OBJECT_HASHCODE;
+import static jbse.bc.Signatures.JAVA_STRING_HASHCODE;
+import static jbse.bc.Signatures.JAVA_STRING_INTERN;
+import static jbse.bc.Signatures.JAVA_SYSTEM_ARRAYCOPY;
+import static jbse.bc.Signatures.JAVA_SYSTEM_IDENTITYHASHCODE;
+import static jbse.bc.Signatures.JAVA_THROWABLE_FILLINSTACKTRACE;
+import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEDEPTH;
+import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEELEMENT;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_ANY;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_ENDGUIDANCE;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_FAIL;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_IGNORE;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRESOLVED;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRUNBYJBSE;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_SUCCEED;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -12,6 +32,7 @@ import jbse.bc.ClassFileFactoryJavassist;
 import jbse.bc.Signature;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.exc.CannotBuildEngineException;
 import jbse.jvm.exc.InitializationException;
@@ -141,15 +162,44 @@ public class EngineBuilder {
 	}
 	
 	private static void setMeta(ExecutionContext ctx, EngineParameters parameters) {
+	    //defaults
+        try {
+            //JRE methods
+            ctx.addMetaOverridden(JAVA_CLASS_GETPRIMITIVECLASS,             "jbse/algo/meta/Algo_JAVA_CLASS_GETPRIMITIVECLASS");
+            ctx.addMetaOverridden(JAVA_CLASS_ISINSTANCE,                    "jbse/algo/meta/Algo_JAVA_CLASS_ISINSTANCE");
+            ctx.addMetaOverridden(JAVA_OBJECT_GETCLASS,                     "jbse/algo/meta/Algo_JAVA_OBJECT_GETCLASS");
+            ctx.addMetaOverridden(JAVA_OBJECT_HASHCODE,                     "jbse/algo/meta/Algo_JAVA_OBJECT_HASHCODE");
+            ctx.addMetaOverridden(JAVA_STRING_HASHCODE,                     "jbse/algo/meta/Algo_JAVA_STRING_HASHCODE");
+            ctx.addMetaOverridden(JAVA_STRING_INTERN,                       "jbse/algo/meta/Algo_JAVA_STRING_INTERN");
+            ctx.addMetaOverridden(JAVA_SYSTEM_ARRAYCOPY,                    "jbse/algo/meta/Algo_JAVA_SYSTEM_ARRAYCOPY");
+            ctx.addMetaOverridden(JAVA_SYSTEM_IDENTITYHASHCODE,             "jbse/algo/meta/Algo_JAVA_SYSTEM_IDENTITYHASHCODE");
+            ctx.addMetaOverridden(JAVA_THROWABLE_FILLINSTACKTRACE,          "jbse/algo/meta/Algo_JAVA_THROWABLE_FILLINSTACKTRACE");
+            ctx.addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEDEPTH,        "jbse/algo/meta/Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH");
+            ctx.addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEELEMENT,      "jbse/algo/meta/Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT");
+
+            //jbse.meta.Analysis methods
+            ctx.addMetaOverridden(JBSE_ANALYSIS_ANY,                        "jbse/algo/meta/Algo_JBSE_ANALYSIS_ANY");
+            ctx.addMetaOverridden(JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION, "jbse/algo/meta/Algo_JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION");
+            ctx.addMetaOverridden(JBSE_ANALYSIS_ENDGUIDANCE,                "jbse/algo/meta/Algo_JBSE_ANALYSIS_ENDGUIDANCE");
+            ctx.addMetaOverridden(JBSE_ANALYSIS_FAIL,                       "jbse/algo/meta/Algo_JBSE_ANALYSIS_FAIL");
+            ctx.addMetaOverridden(JBSE_ANALYSIS_IGNORE,                     "jbse/algo/meta/Algo_JBSE_ANALYSIS_IGNORE");
+            ctx.addMetaOverridden(JBSE_ANALYSIS_ISRESOLVED,                 "jbse/algo/meta/Algo_JBSE_ANALYSIS_ISRESOLVED");
+            ctx.addMetaOverridden(JBSE_ANALYSIS_ISRUNBYJBSE,                "jbse/algo/meta/Algo_JBSE_ANALYSIS_ISRUNBYJBSE");
+            ctx.addMetaOverridden(JBSE_ANALYSIS_SUCCEED,                    "jbse/algo/meta/Algo_JBSE_ANALYSIS_SUCCEED");
+        } catch (MetaUnsupportedException e) {
+            throw new UnexpectedInternalException(e);
+        }
+	    
+	    //custom
 		for (String[] rule : parameters.metaOverridden) {
 			try {
-				ctx.addMetaOverridden(rule[0], rule[1], rule[2], rule[3]);
+				ctx.addMetaOverridden(new Signature(rule[0], rule[1], rule[2]), rule[3]);
 			} catch (MetaUnsupportedException e) {
 				// TODO manage the situation
 			}
 		}
 		for (String[] rule : parameters.uninterpreted) {
-			ctx.addUninterpreted(rule[0], rule[1], rule[2], rule[3]);
+			ctx.addUninterpreted(new Signature(rule[0], rule[1], rule[2]), rule[3]);
 		}
 	}
 	

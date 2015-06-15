@@ -1,6 +1,5 @@
-package jbse.algo.exc;
+package jbse.algo;
 
-import jbse.algo.Algorithm;
 
 /**
  * Exception raised whenever an algorithm requires 

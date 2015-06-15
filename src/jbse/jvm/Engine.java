@@ -3,10 +3,10 @@ package jbse.jvm;
 import java.util.Collection;
 
 import jbse.algo.Algorithm;
+import jbse.algo.ContinuationException;
 import jbse.algo.ExecutionContext;
 import jbse.algo.Algo_INIT;
 import jbse.algo.exc.CannotManageStateException;
-import jbse.algo.exc.ContinuationException;
 import jbse.bc.Opcodes;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.ClasspathException;

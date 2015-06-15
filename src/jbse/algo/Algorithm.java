@@ -8,7 +8,6 @@ import java.util.SortedSet;
 import java.util.function.Supplier;
 
 import jbse.algo.exc.CannotManageStateException;
-import jbse.algo.exc.ContinuationException;
 import jbse.bc.exc.BadClassFileException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;

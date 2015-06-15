@@ -7,7 +7,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import jbse.algo.exc.MetaUnsupportedException;
-import jbse.algo.meta.DispatcherMeta;
 import jbse.bc.ClassFileFactory;
 import jbse.bc.Classpath;
 import jbse.bc.Signature;
@@ -166,10 +165,7 @@ public final class ExecutionContext {
 	 * Allows to customize the behavior of the invocations to a method 
 	 * by specifying an {@link Algorithm} that implements its semantics.
 	 * 
-	 * @param className a class name as a {@link String}.
-	 * @param paramsSig the signature of the method's parameters as a 
-	 *                  {@link String}.
-	 * @param methodName the name of the method as a {@link String}. 
+     * @param methodSignature the {@link Signature} of a method. 
 	 * @param metaDelegateClassName a class name as a {@link String}, 
 	 *        indicating a class (that must be in the meta-level classpath, 
 	 *        must have a default constructor, must implement {@link Algorithm})
@@ -180,15 +176,13 @@ public final class ExecutionContext {
 	 *         or instantiated for any reason (misses from the meta-level classpath, 
 	 *         has insufficient visibility, does not extend {@link Algorithm}...).
 	 */
-	public void addMetaOverridden(String className, String paramsSig, String methodName, String metaDelegateClassName) 
+	public void addMetaOverridden(Signature methodSignature, String metaDelegateClassName) 
 	throws MetaUnsupportedException {
-	    final Signature sig = new Signature(className, paramsSig, methodName);
 	    try {
-	        @SuppressWarnings("unchecked")
-            final Class<Algo_INVOKEMETA> metaDelegateClass = (Class<Algo_INVOKEMETA>)
+            final Class<? extends Algo_INVOKEMETA> metaDelegateClass = 
 	            ClassLoader.getSystemClassLoader().loadClass(metaDelegateClassName).
-	            asSubclass(Algorithm.class);
-	        this.dispatcherMeta.loadAlgoMetaOverridden(sig, metaDelegateClass);
+	            asSubclass(Algo_INVOKEMETA.class);
+	        this.dispatcherMeta.loadAlgoMetaOverridden(methodSignature, metaDelegateClass);
 	    } catch (ClassNotFoundException e) {
 	        throw new MetaUnsupportedException("meta-level implementation class " + metaDelegateClassName + " not found.");
 	    } catch (ClassCastException e) {
@@ -202,17 +196,13 @@ public final class ExecutionContext {
 	 * the application of an uninterpreted symbolic function
 	 * with no side effect.
 	 * 
-	 * @param className a class name as a {@link String}.
-	 * @param paramsSig the signature of the method's parameters as a 
-	 *                  {@link String}.
-	 * @param methodName the name of the method as a {@link String}. 
+	 * @param methodSignature the {@link Signature} of a method. 
 	 * @param functionName the name of the uninterpreted symbolic function
 	 *        whose application to the invocation parameter is 
 	 *        the result of all the invocations to {@code className.methodName}.
 	 */
-	public void addUninterpreted(String className, String paramsSig, String methodName, String functionName) { 
-		final Signature sig = new Signature(className, paramsSig, methodName);
-		this.dispatcherMeta.loadAlgoUninterpreted(sig, functionName);
+	public void addUninterpreted(Signature methodSignature, String functionName) { 
+		this.dispatcherMeta.loadAlgoUninterpreted(methodSignature, functionName);
 	}
 	
 	public <R extends DecisionAlternative> 
