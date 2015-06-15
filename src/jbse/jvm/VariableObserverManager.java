@@ -31,13 +31,13 @@ class VariableObserverManager {
 	private Reference rootObjectReference = null;
 
 	/** The {@link Signature}s of the variables under observation. */
-	private LinkedList<Signature> varSigs = new LinkedList<Signature>();
+	private LinkedList<Signature> varSigs = new LinkedList<>();
 
 	/** The {@link ExecutionObserver}s of the variables {@link varSigs}. */
-	private LinkedList<ExecutionObserver> obs = new LinkedList<ExecutionObserver>();
+	private LinkedList<ExecutionObserver> obs = new LinkedList<>();
 
 	/** Cache for the current {@link Value}s of the variables under observation. */
-	private LinkedList<Value> values = new LinkedList<Value>();
+	private LinkedList<Value> values = new LinkedList<>();
 
 	/** Cache for the {@link Value}s of the variables under observation (for backtrack). */
 	private Map<BranchPoint, LinkedList<Value>> savedValues;

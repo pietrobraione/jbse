@@ -894,7 +894,7 @@ public final class State implements Cloneable {
 		            this.stack.pop();
 		        } else {
 		            clearOperands();
-		            setPC(tmpEntry.getPCHandle());
+		            setProgramCounter(tmpEntry.getPCHandle());
 		            pushOperand(exceptionToThrow);
 		            return;				
 		        }
@@ -1326,9 +1326,9 @@ public final class State implements Cloneable {
 	 *         (the state's program counter is not changed).
 	 * @throws ThreadStackEmptyException if the thread stack is empty.
 	 */
-	public void incPC(int n) 
+	public void incProgramCounter(int n) 
 	throws InvalidProgramCounterException, ThreadStackEmptyException {
-		this.setPC(getPC() + n);
+		this.setProgramCounter(getPC() + n);
 	}
 
 	/**
@@ -1340,7 +1340,7 @@ public final class State implements Cloneable {
 	 *         state's program counter is not changed).
 	 * @throws ThreadStackEmptyException if the thread stack is empty.
 	 */
-	public void setPC(int newPC) 
+	public void setProgramCounter(int newPC) 
 	throws InvalidProgramCounterException, ThreadStackEmptyException {
 		this.stack.currentFrame().setProgramCounter(newPC);
 	}

@@ -3,6 +3,7 @@ package jbse.algo;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwVerifyError;
 
+import java.util.Collection;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 
@@ -225,14 +226,14 @@ UP extends StrategyUpdate<R>> {
         //generates the next states
         final boolean shouldRefine = outcome.shouldRefine();
         final boolean branchingDecision = outcome.branchingDecision();
-        final boolean branchAdded = this.ctx.stateTree.possiblyAddBranch(decisionResults);
+        final boolean branchAdded = possiblyAddBranch(decisionResults);
         int cur = 1;
-        for (R r : decisionResults) {
-            final State s = (cur < tot ? state.clone() : state);
+        for (R result : decisionResults) {
+            final State stateCurrent = (cur < tot ? state.clone() : state);
 
             //pops the operands from the operand stack
             try {
-                s.popOperands(this.numOperands.get());
+                stateCurrent.popOperands(this.numOperands.get());
             } catch (InvalidNumberOfOperandsException e) {
                 failExecution(e);
             }
@@ -240,7 +241,7 @@ UP extends StrategyUpdate<R>> {
             //possibly refines the state
             try {
                 if (shouldRefine) {
-                    this.refiner.refine(s, r);
+                    this.refiner.refine(stateCurrent, result);
                 }
             } catch (InvalidTypeException e) {
                 failExecution(e);
@@ -249,7 +250,7 @@ UP extends StrategyUpdate<R>> {
             //completes the bytecode semantics
             InterruptException interrupt = null;
             try {
-                this.updater.update(s, r);
+                this.updater.update(stateCurrent, result);
             } catch (InterruptException e) {
                 interrupt = e;
             } catch (ThreadStackEmptyException e) {
@@ -258,30 +259,38 @@ UP extends StrategyUpdate<R>> {
 
             //updates the program counter
             try {
-                if (!s.isStuck()) {
-                    if (interrupt == null) {
-                        if (this.isProgramCounterUpdateAnOffset.get()) {
-                            s.incPC(this.programCounterUpdate.get());
-                        } else {
-                            s.setPC(this.programCounterUpdate.get());
-                        }
-                    } else if (interrupt.hasContinuation()) {
-                        throw new ContinuationException(interrupt.getContinuation());
+                if (stateCurrent.isStuck()) {
+                    //nothing to do
+                } else if (interrupt == null) {
+                    if (this.isProgramCounterUpdateAnOffset.get()) {
+                        stateCurrent.incProgramCounter(this.programCounterUpdate.get());
+                    } else {
+                        stateCurrent.setProgramCounter(this.programCounterUpdate.get());
                     }
-                }
+                } else if (interrupt.hasContinuation()) {
+                    throw new ContinuationException(interrupt.getContinuation());
+                } //else, nothing to do
             } catch (InvalidProgramCounterException e) {
-                throwVerifyError(s);
+                throwVerifyError(stateCurrent);
             }
 
             //is the state the result of a branching decision?
-            s.setBranchingDecision(branchingDecision);
+            stateCurrent.setBranchingDecision(branchingDecision);
 
             //adds the created state to the tree, if on a new branch
             if (branchAdded) {
-                this.ctx.stateTree.addState(s, r.getBranchNumber(), r.getIdentifier());
+                this.ctx.stateTree.addState(stateCurrent, result.getBranchNumber(), result.getIdentifier());
             }
 
             ++cur;
         }
+    }
+    
+    private boolean possiblyAddBranch(Collection<R> decisionResults) {
+        final boolean moreThanOneResult = (decisionResults.size() > 1);
+        final DecisionAlternative d = decisionResults.iterator().next();
+        final boolean trivial = d.trivial();
+        final boolean concrete = d.concrete();
+        return this.ctx.stateTree.possiblyAddBranchPoint(moreThanOneResult, trivial, concrete);
     }
 }

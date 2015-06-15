@@ -711,7 +711,7 @@ public final class RunParameters implements Cloneable {
 	 * Sets the class names of the rewriters to be applied to
 	 * the terms created during symbolic execution.
 	 * 
-	 * @param rewriterClasses an array of {@link Class}{@code <? extends }
+	 * @param rewriterClasses a vararg of {@link Class}{@code <? extends }
 	 *        {@link Rewriter}{@code >}s.
 	 *        They all must be either {@code null} (no rewriter)
 	 *        or the class name of a class extending 

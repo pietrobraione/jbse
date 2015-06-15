@@ -36,7 +36,7 @@ public interface DecisionAlternative {
 	 * @return {@code true} iff the alternative 
 	 * resulted from a trivial decision.
 	 */
-	boolean trivial();
+	boolean trivial(); //TODO move in Outcome
 	
 	/**
 	 * Checks whether the alternative result
@@ -47,5 +47,5 @@ public interface DecisionAlternative {
 	 * {@code concrete()} implies
 	 * {@link #trivial()}.
 	 */
-	boolean concrete();
+	boolean concrete(); //TODO move in Outcome
 }

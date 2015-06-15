@@ -1,11 +1,9 @@
 package jbse.tree;
 
-import java.util.Collection;
 import java.util.LinkedList;
 
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.State;
-
 
 /**
  * Class storing the {@link State}s in the symbolic execution
@@ -227,7 +225,7 @@ public class StateTree {
      * @throws NoSuchElementException if {@link #hasStates()} {@code == false}.
      */
     public boolean nextIsLastInCurrentBranch() {
-        BranchInfo b = this.branchList.getFirst();
+        final BranchInfo b = this.branchList.getFirst();
         return (b.emittedStates == b.totalStates - 1);
     }
     
@@ -252,42 +250,55 @@ public class StateTree {
         return stateBuffer.removeFirst();
     }
     
-    public <R extends DecisionAlternative> boolean possiblyAddBranch(Collection<R> s) {
-		final DecisionAlternative d = s.iterator().next();
-		boolean mustAddBranch = (s.size() > 1);
+    /**
+     * Possibly increases by one the level of the tree. 
+     * Note that increasing the level without adding a 
+     * {@code State} will crash the engine.
+     * 
+     * @param moreThanOneResult {@code true} iff the 
+     *        created branch will have than one state. 
+     * @param trivial iff the branch originates from a 
+     *        trivial decision.
+     * @param concrete iff the branch originates from a 
+     *        concrete decision.
+     * @return {@code true} iff the method has increased
+     *         the tree level.
+     */
+    public boolean possiblyAddBranchPoint(boolean moreThanOneResult, boolean trivial, boolean concrete) {
+		boolean retVal = moreThanOneResult;
     	switch (this.breadthMode) {
     	case MORE_THAN_ONE:
     		break;
     	case ALL_DECISIONS_NONTRIVIAL:
-    		mustAddBranch = mustAddBranch || !d.trivial();
+    		retVal = retVal || !trivial;
     		break;
     	case ALL_DECISIONS_SYMBOLIC:
-			mustAddBranch = mustAddBranch || !d.concrete();
+			retVal = retVal || !concrete;
 			break;
     	case ALL_DECISIONS:
-    		mustAddBranch = true;
+    		retVal = true;
     		break;
     	default: 
-    		throw new UnexpectedInternalException();	    		
+    		throw new UnexpectedInternalException("Unexpected breadth mode " + this.breadthMode + ".");	    		
     	}
 		
-		if (mustAddBranch) {
-			this.addBranchPoint();
+		if (retVal) {
+			addBranchPoint();
 		}
 		
-		return mustAddBranch;
+		return retVal;
     }
     
     /**
-     * Increases by one the level of the tree. Note that 
-     * increasing the level implies adding a {@code State}.
+     * Increases by one the level of the tree and 
+     * adds a {@code State}.
      * 
-     * @param s a {@link State} to be added
-     * @param id the identifier of the {@link State}. 
+     * @param state the {@link State} to be added
+     * @param id the identifier for {@code state}. 
      */
-    public void addBranchPoint(State s, String id) {
+    public void addBranchPoint(State state, String id) {
     	addBranchPoint();
-		addState(s, 1, id); //exactly one state in the branch
+		addState(state, 1, id); //exactly one state in the branch
     }
     
     /**
@@ -342,15 +353,4 @@ public class StateTree {
     	this.stateBuffer.addFirst(s);
         ++(this.branchList.getFirst().totalStates);
     }
-
-    /**
-     * Returns the underlying collection of {@link State}s
-     * so they can be modified. This is OBSOLETE only
-     * to support the current management of tracking.
-     *  
-     * @return an {@link Iterable}{@code <}{@link State}{@code >}.
-     */
-	public Iterable<State> states() {
-		return this.stateBuffer;
-	}
 }

@@ -125,7 +125,7 @@ StrategyUpdate<DecisionAlternative_XCMPY>> {
         return (state, alt) -> {
             state.pushOperand(state.getCalculator().valInt(alt.value()));
             try {
-                state.incPC(XCMPY_OFFSET);
+                state.incProgramCounter(XCMPY_OFFSET);
             } catch (InvalidProgramCounterException e) {
                 throwVerifyError(state);
             }

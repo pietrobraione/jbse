@@ -76,7 +76,7 @@ public class NativeInvokerReflect implements NativeInvoker {
 
 		//increments the program counter
 		try {
-			state.incPC(pcOffset);
+			state.incProgramCounter(pcOffset);
 		} catch (InvalidProgramCounterException e) {
 		    throwVerifyError(state);
 		}
