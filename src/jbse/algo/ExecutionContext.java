@@ -170,7 +170,8 @@ public final class ExecutionContext {
 	 *        indicating a class (that must be in the meta-level classpath, 
 	 *        must have a default constructor, must implement {@link Algorithm})
 	 *        of an algorithm that implements at the meta-level the 
-	 *        semantics of the invocations to {@code className.methodName}. 
+	 *        semantics of the invocations to the method with signature 
+	 *        {@code methodSignature}. 
 	 * @throws MetaUnsupportedException if the class indicated in 
 	 *         {@code metaDelegateClassName} does not exist, or cannot be loaded 
 	 *         or instantiated for any reason (misses from the meta-level classpath, 
@@ -180,7 +181,7 @@ public final class ExecutionContext {
 	throws MetaUnsupportedException {
 	    try {
             final Class<? extends Algo_INVOKEMETA> metaDelegateClass = 
-	            ClassLoader.getSystemClassLoader().loadClass(metaDelegateClassName).
+	            ClassLoader.getSystemClassLoader().loadClass(metaDelegateClassName.replace('/', '.')).
 	            asSubclass(Algo_INVOKEMETA.class);
 	        this.dispatcherMeta.loadAlgoMetaOverridden(methodSignature, metaDelegateClass);
 	    } catch (ClassNotFoundException e) {
