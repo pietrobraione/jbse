@@ -118,8 +118,8 @@ public final class Simplex extends Primitive implements Cloneable {
     		c = 0;
     		i = 0;
     		l = 0L;
-    		f = 0F;
-    		d = 0D;
+    		f = 0F; //TODO negative zero
+    		d = 0D; //TODO negative zero
     	} else {
     		b = 1;
     		c = 1;

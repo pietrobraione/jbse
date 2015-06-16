@@ -316,7 +316,7 @@ public class DecisionProcedureSignAnalysisTest {
 		Term B = calc.valTerm(Type.INT, "B");
 		Term C = calc.valTerm(Type.INT, "C");
 		dec.pushAssumption(new ClauseAssume((Expression) A.div(B).lt(C)));
-		assertFalse(dec.isSat(null, (Expression) A.div(B).eq(C)));
+		dec.isSat(null, (Expression) A.div(B).eq(C));
 	}
 	
 	@Test
@@ -356,7 +356,28 @@ public class DecisionProcedureSignAnalysisTest {
 		dec.pushAssumption(new ClauseAssume((Expression) A.lt(calc.valInt(0))));
 		assertFalse(dec.isSat(null, (Expression) calc.applyFunction(Type.DOUBLE, FunctionApplication.ATAN, A).ge(calc.valInt(0))));
 	}
+
+    @Test
+    public void powTest1() throws DecisionException, InvalidTypeException, InvalidOperandException {
+        //true |- pow(A, 0.0) > 0
+        Term A = calc.valTerm(Type.DOUBLE, "A");
+        assertTrue(dec.isSat(null, (Expression) calc.applyFunction(Type.DOUBLE, FunctionApplication.POW, A, calc.valDouble(0.0)).gt(calc.valInt(0))));
+    }
 	
+    @Test
+    public void powTest2() throws DecisionException, InvalidTypeException, InvalidOperandException {
+        //true |-/- pow(A, 2.0) < 0
+        Term A = calc.valTerm(Type.DOUBLE, "A");
+        assertFalse(dec.isSat(null, (Expression) calc.applyFunction(Type.DOUBLE, FunctionApplication.POW, A, calc.valDouble(2.0)).lt(calc.valInt(0))));
+    }
+    
+    @Test(expected=NoDecisionException.class)
+    public void powTest3() throws DecisionException, InvalidTypeException, InvalidOperandException {
+        //true |-?- pow(A, 2.0) >= 0 (can refute but cannot prove)
+        Term A = calc.valTerm(Type.DOUBLE, "A");
+        dec.isSat(null, (Expression) calc.applyFunction(Type.DOUBLE, FunctionApplication.POW, A, calc.valDouble(2.0)).ge(calc.valInt(0)));
+    }
+    
 	@Test
 	public void funTest1() throws DecisionException, InvalidTypeException, InvalidOperandException {
 		calc.addRewriter(new RewriterPolynomials()); //necessary to normalize ~x to -1.0 * x

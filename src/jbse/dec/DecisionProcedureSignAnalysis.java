@@ -888,6 +888,26 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 					operator.equals(FunctionApplication.SQRT) ||
 					operator.equals(FunctionApplication.ACOS)) {//TODO also POW with even exponent
 				infoFromOperator = SignPredicate.GE;
+            } else if (operator.equals(FunctionApplication.POW)) {
+                final Primitive arg = x.getArgs()[1];
+                if (arg instanceof Simplex) {
+                    final Simplex argSimplex = (Simplex) arg;
+                    if (argSimplex.isZeroOne(true)) {
+                        //exponent is zero
+                        infoFromOperator = SignPredicate.GT;
+                    } else {
+                        final double exponent = ((Double) argSimplex.getActualValue()).doubleValue();
+                        final double exponentCeil = Math.ceil(exponent);
+                        if (exponent > 1 && exponent == exponentCeil && ((long) exponentCeil) % 2 == 0) {
+                            //exponent is positive, integral and even
+                            infoFromOperator = SignPredicate.GE;
+                        } else {
+                            infoFromOperator = SignPredicate.UNK;
+                        }
+                    }
+                } else {
+                    infoFromOperator = SignPredicate.UNK;
+                }
 			} else if (operator.equals(FunctionApplication.COS)) {
 				final Primitive arg = x.getArgs()[0];
 				if (arg instanceof FunctionApplication) {
