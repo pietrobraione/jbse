@@ -74,7 +74,8 @@ abstract class Algo_GETX extends Algo_XLOAD_GETX<BytecodeData_1FI> {
     }
     
     protected abstract void check(State state, String currentClass)
-    throws FieldNotFoundException, BadClassFileException, InterruptException;
+    throws FieldNotFoundException, BadClassFileException, 
+    InterruptException;
     
     protected abstract void get(State state)
     throws DecisionException, ClasspathException, InterruptException;

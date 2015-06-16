@@ -3,8 +3,7 @@ package jbse.algo;
 
 /**
  * Exception raised whenever an algorithm requires 
- * the engine to execute another algorithm before
- * executing the next bytecode.
+ * the engine to execute another algorithm.
  * 
  * @author Pietro Braione
  *
