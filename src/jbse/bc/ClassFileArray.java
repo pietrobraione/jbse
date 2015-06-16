@@ -177,7 +177,7 @@ public class ClassFileArray extends ClassFile {
 
 	@Override
 	public boolean isMethodAbstract(Signature methodSignature)
-			throws MethodNotFoundException {
+	throws MethodNotFoundException {
 		if (isMethodClone(methodSignature)) {
 			return false;
 		}
@@ -186,7 +186,7 @@ public class ClassFileArray extends ClassFile {
 
 	@Override
 	public boolean isMethodNative(Signature methodSignature)
-			throws MethodNotFoundException {
+	throws MethodNotFoundException {
 		if (isMethodClone(methodSignature)) {
 			return true;
 		}
