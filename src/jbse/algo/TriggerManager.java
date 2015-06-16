@@ -64,25 +64,7 @@ public class TriggerManager {
 		if (!(da instanceof DecisionAlternative_XYLOAD_GETX_Unresolved)) {
 			return false;
 		}
-/* TODO handle guidance; the following code tries to manage the case of guided 
- * execution without success (was thought for a different engine architecture). 
- */
-/*		else if (da instanceof DecisionAlternativeResolved && ctx.guided() && !ctx.tracking()) {
-			//this translation code is dual to DecisionProcedureGuidance.resolveLoadFromLocalVariable 
-			//(that one was done by a tracking engine, this is done by a tracked engine)
-			DecisionAlternativeResolved dar = (DecisionAlternativeResolved) da;
-			Value valToPush = dar.getValueToPush();
-			if (Type.isReference(valToPush)) {
-				Integer posResolved = ctx.tracker.getLast();
-				if (posResolved == null) {
-					refUnknown = true;
-					Reference refTrackedObject = ctx.tracker.getLastTracked(); //equivalently, ... = (Reference) valToPush
-					Objekt o = s.getHeap().getObject(refTrackedObject);
-					className = o.getType();
-				} 
-			} 
-		} 
-*/		
+
 		//handles triggers by creating a frame for the fresh object;
 		//first, gets data
 		final ReferenceSymbolic ref = ((DecisionAlternative_XYLOAD_GETX_Unresolved) da).getValueToLoad();

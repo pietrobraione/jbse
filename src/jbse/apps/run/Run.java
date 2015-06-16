@@ -269,12 +269,16 @@ public final class Run {
 			//steps the guidance
 			if (Run.this.guidance != null) {
 				try {
-					Run.this.guidance.step();
+				    if (Run.this.engine.getCurrentState().getCurrentMethodSignature().equals( 
+				            Run.this.guidance.getCurrentMethodSignature())) {
+				        Run.this.guidance.step();
+				    }
 				} catch (GuidanceException e) {
 					IO.println(Run.this.err, ERROR_GUIDANCE_FAILED);
 					IO.printException(Run.this.err, e);
 					return true;
-				} catch (CannotManageStateException | UnexpectedInternalException e) {
+				} catch (CannotManageStateException | ThreadStackEmptyException | 
+				         UnexpectedInternalException e) {
 					IO.println(Run.this.err, ERROR_UNEXPECTED);
 					IO.printException(Run.this.err, e);
 					return true;

@@ -64,7 +64,9 @@ import jbse.val.exc.InvalidTypeException;
 
 /**
  * {@link DecisionProcedure} for guided symbolic execution. It keeps 
- * a parallel
+ * a guiding {@link Engine} that must be stepped in parallel with the 
+ * guided one, and filters all the decisions according to the steps 
+ * done by the guiding engine.
  */
 public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 	private final Engine engine;
@@ -82,7 +84,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 	 * @param calc a {@link Calculator}.
 	 * @param runnerParameters the {@link RunnerParameters} of the symbolic execution.
 	 * @throws GuidanceException if something fails during creation (and the caller
-	 *         is blamed).
+	 *         is to blame).
 	 */
 	public DecisionProcedureGuidance(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, final Signature stopSignature) 
 	throws GuidanceException {
@@ -97,7 +99,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 			@Override
 			public boolean atStepPre() {
 				try {
-					return (this.getEngine().getCurrentState().getCurrentMethodSignature().equals(stopSignature));
+					return (getEngine().getCurrentState().getCurrentMethodSignature().equals(stopSignature));
 				} catch (ThreadStackEmptyException e) {
 					//this should never happen
 					catastrophicFailure = e;
@@ -127,7 +129,8 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 			runner = b.build(runnerParameters);
 			this.engine = b.getEngine();
 		} catch (CannotBuildEngineException | InitializationException | ClasspathException e) {
-			//CannotBuildEngineException may happen if something goes wrong in the construction of the decision procedure
+			//CannotBuildEngineException may happen if something goes wrong in the construction 
+		    //of the decision procedure
 			//InitializationException happens when the method does not exist or is native
 		    //ClasspathException happens when the classpath does not point to a valid JRE
 			throw new GuidanceException(e);
@@ -139,7 +142,7 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 		}
 		
 		//disables theorem proving (this is concrete execution)
-		this.goFastAndImprecise();
+		goFastAndImprecise();
 
 		//runs the private engine until it arrives at methodToRun
 		try {
@@ -206,16 +209,28 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 			}
 		} else {
 			//should never happen, guidance and guided should make the same number of steps
-			throw new UnexpectedInternalException(); //TODO maybe this is the wrong exception, since it may depend on the caller
+			throw new GuidanceException(ERROR_DIVERGENCE);
 		}
 	}
 	
+    /**
+     * Returns the {@link Signature} of the  
+     * guiding engine's current method.
+     * 
+     * @return a {@link Signature}.
+     * @throws ThreadStackEmptyException if the stack is empty.
+     */
+	public Signature getCurrentMethodSignature() throws ThreadStackEmptyException {
+	    return this.engine.getCurrentState().getCurrentMethodSignature();
+	}
+	
 	/**
-	 * Ends guidance decision, and falls back on the component decision procedure.
+	 * Ends guidance decision, and falls back on the 
+	 * component decision procedure.
 	 */
 	public void endGuidance() {
-		this.ended = true;
-		this.stopFastAndImprecise();
+        this.ended = true;
+        stopFastAndImprecise();
 		try {
 			this.engine.close();
 		} catch (DecisionException e) {
@@ -568,5 +583,6 @@ public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 		
 	}
 	
-	private static final String ERROR_NONCONCRETE_GUIDANCE = "Guided execution fell outside the concrete domain; Please improve your driver.";
+    private static final String ERROR_NONCONCRETE_GUIDANCE = "Guided execution fell outside the concrete domain.";
+    private static final String ERROR_DIVERGENCE = "Guided execution diverged from guiding execution.";
 }
