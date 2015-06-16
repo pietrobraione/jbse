@@ -58,7 +58,8 @@ public class DecisionProcedureTest {
 
 
 	@Test
-	public void testSimplifyDecision1() throws InvalidOperandException, InvalidTypeException, InvalidInputException, DecisionException {
+	public void testSimplifyDecision1() 
+    throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// 2 > 4
 		Primitive p = calc.valInt(2).gt(calc.valInt(4));
 
@@ -72,7 +73,8 @@ public class DecisionProcedureTest {
 	}
 
 	@Test
-	public void testSimplifyDecision2() throws InvalidOperandException, InvalidTypeException, InvalidInputException, DecisionException {
+	public void testSimplifyDecision2() 
+    throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// true |- (A > 0) && (A <= 1)
 		Term A = calc.valTerm(Type.INT, "A");
 		Expression e = (Expression) A.gt(calc.valInt(0));
@@ -92,7 +94,8 @@ public class DecisionProcedureTest {
 	}
 
 	@Test
-	public void testSimplifyComparison1() throws InvalidInputException, DecisionException {
+	public void testSimplifyComparison1() 
+	throws InvalidInputException, DecisionException {
 		// true |- 2 ? 5
 		Simplex two = calc.valInt(2);
 		Simplex five = calc.valInt(5);
@@ -107,7 +110,8 @@ public class DecisionProcedureTest {
 	}
 
 	@Test
-	public void testSimplifyComparison2() throws InvalidOperandException, InvalidInputException, InvalidTypeException, DecisionException {
+	public void testSimplifyComparison2() 
+    throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// A >= 0 |- 2 * A ? A
 		Term A = calc.valTerm(Type.INT, "A");
 		Expression Agezero = (Expression) A.ge(calc.valInt(0));
@@ -128,7 +132,8 @@ public class DecisionProcedureTest {
 	}
 
 	@Test
-	public void testSimplify1() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void testSimplify1() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// true |- (A >= 0) && (A < 5) && !(A == 1) && !(A == 2) && !(A == 3)
 		Term A = calc.valTerm(Type.INT, "A");
 		Expression e = (Expression) A.ge(calc.valInt(0));
@@ -142,7 +147,8 @@ public class DecisionProcedureTest {
 	}
 
 	@Test
-	public void testSimplify2() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void testSimplify2() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// true |- ((A >= 0) || (A < -3)) && (A == -1)  
 		Term A = calc.valTerm(Type.INT, "A");
 		Primitive e = calc.valBoolean(true);
@@ -155,7 +161,8 @@ public class DecisionProcedureTest {
 	}
 
 	@Test
-	public void testSimplify3() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void testSimplify3() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// true |- (X && !Y) || (!X && Y)
 
 		//boolean terms are emulated with satisfiable independent clauses
@@ -176,7 +183,8 @@ public class DecisionProcedureTest {
 	}
 
 	@Test
-	public void testAssumption1() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void testAssumption1() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		//assume:
 		//(0 > {V12}) && 
 		//     ({V14} >= 0) && 
@@ -219,7 +227,8 @@ public class DecisionProcedureTest {
 	}
 
 	@Test
-	public void testAssumption2() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void testAssumption2() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		//assume:
 		//0 > B &&
 		//-B <= C &&
@@ -244,35 +253,40 @@ public class DecisionProcedureTest {
 
 	//Boundary value for integers (regression bug of the Sicstus server)
 	@Test
-	public void testBoundary1() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void testBoundary1() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		Expression e = (Expression) calc.valTerm(Type.INT, "A").eq(calc.valInt(Integer.MIN_VALUE));
 		assertTrue(dec.isSat(null, e));
 	}
 	
 	//Other boundary value for integers
 	@Test
-	public void testBoundary2() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void testBoundary2() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		Expression e = (Expression) calc.valTerm(Type.INT, "A").eq(calc.valInt(Integer.MAX_VALUE));
 		assertTrue(dec.isSat(null, e));
 	}
 	
 	//Test floats
 	@Test
-	public void testType1() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void testType1() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		Expression e = (Expression) calc.valTerm(Type.FLOAT, "A").gt(calc.valInt(0)).and(calc.valTerm(Type.FLOAT, "A").lt(calc.valInt(1)));
 		assertTrue(dec.isSat(null, e));
 	}
 	
 	//Test ints
 	@Test
-	public void testType2() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void testType2() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		Expression e = (Expression) calc.valTerm(Type.INT, "A").gt(calc.valInt(0)).and(calc.valTerm(Type.FLOAT, "A").lt(calc.valInt(1)));
 		assertFalse(dec.isSat(null, e));
 	}
     
     //Test integer division (Sicstus bug)
     @Test
-    public void testIDiv() throws DecisionException, InvalidOperandException, InvalidTypeException {
+    public void testIDiv() 
+    throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
         // 0 <= A < B && A >= B / 2 && B = 1 (for integer division A == 0 is a solution, no solution for real division).
         final Term A = calc.valTerm(Type.INT, "A");
         final Term B = calc.valTerm(Type.INT, "B");
@@ -282,7 +296,8 @@ public class DecisionProcedureTest {
 	
 	//Old Sicstus bug
 	@Test
-	public void testOther1() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void testOther1() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		//true |- A/B + (C - C) / D < E  
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -298,7 +313,8 @@ public class DecisionProcedureTest {
 	}
 	
 	@Test
-	public void testOther2() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void testOther2() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		//true |- 2 - (3 + A) <= A
 		Simplex two = calc.valInt(2);
 		Simplex three = calc.valInt(3);
@@ -312,7 +328,8 @@ public class DecisionProcedureTest {
 	}
 	
 	@Test
-	public void testOther3() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void testOther3() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		Simplex two = calc.valInt(2);
 		Term A = calc.valTerm(Type.INT, "A");
 		

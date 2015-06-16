@@ -43,6 +43,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.mem.Instance;
 import jbse.mem.Klass;
@@ -210,6 +211,7 @@ public class Util {
 	 * @return {@code true} iff it is necessary to run the 
 	 *         {@code <clinit>} methods for the initialized 
 	 *         class(es).
+	 * @throws InvalidInputException
 	 * @throws DecisionException if {@code dec} fails in determining
 	 *         whether {@code className} is or is not initialized.
 	 * @throws BadClassFileException if {@code className} or
@@ -224,7 +226,7 @@ public class Util {
      *         class(es).
 	 */
 	public static void ensureClassCreatedAndInitialized(State state, String className, DecisionProcedure dec) 
-	throws DecisionException, BadClassFileException, 
+	throws InvalidInputException, DecisionException, BadClassFileException, 
 	ClasspathException, InterruptException {
         final ClassInitializer ci = new ClassInitializer(state, dec);
         final boolean failed = ci.initialize(className);
@@ -246,10 +248,12 @@ public class Util {
 	 * @param dec a {@link DecisionProcedure}.
 	 * @return {@code true} if the class has been initialized, 
 	 *         {@code false} otherwise.
+     * @throws InvalidInputException when one of the parameters to the 
+     *         decision procedure is incorrect.
 	 * @throws DecisionException if the decision procedure fails.
 	 */
 	private static boolean decideClassInitialized(State state, String className, DecisionProcedure dec) 
-	throws DecisionException {
+	throws InvalidInputException, DecisionException {
 		//Assume that some classes are not initialized to
 		//trigger the execution of their <clinit> methods 
 		//TODO move these assumptions into DecisionProcedure or DecisionProcedureAlgorithms.
@@ -328,6 +332,7 @@ public class Util {
          * @return {@code true} iff the initialization of 
          *         {@code className} or of one of its superclasses 
          *         fails for some reason.
+         * @throws InvalidInputException
          * @throws DecisionException if the decision procedure fails.
          * @throws BadClassFileException if the classfile for {@code className} or
          *         for one of its superclasses is not in the classpath or
@@ -337,7 +342,7 @@ public class Util {
          *         current version of JBSE.
          */
 		private boolean initialize(String className)
-		throws DecisionException, BadClassFileException, ClasspathException {
+		throws InvalidInputException, DecisionException, BadClassFileException, ClasspathException {
 		    phase1(className);
             if (this.failed) {
                 handleFailure();
@@ -361,13 +366,14 @@ public class Util {
    		 * 
 		 * @param className a {@code String}, the name of the class.
          * @param it a {@code ListIterator}, the name of the class.
+         * @throws InvalidInputException 
 		 * @throws DecisionException if the decision procedure fails.
 		 * @throws BadClassFileException if the classfile for {@code className} or
 		 *         for one of its superclasses is not in the classpath or
 		 *         is ill-formed.
 		 */
         private void phase1(String className)
-        throws DecisionException, BadClassFileException {
+        throws InvalidInputException, DecisionException, BadClassFileException {
             phase1(className, null);
         }
         
@@ -380,13 +386,14 @@ public class Util {
          * 
          * @param className a {@code String}, the name of the class.
          * @param it a {@code ListIterator} to {@code this.classesCreated}.
+         * @throws InvalidInputException 
          * @throws DecisionException if the decision procedure fails.
          * @throws BadClassFileException if the classfile for {@code className} or
          *         for one of its superclasses is not in the classpath or
          *         is ill-formed.
          */
         private void phase1(String className, ListIterator<String> it)
-        throws DecisionException, BadClassFileException {
+        throws InvalidInputException, DecisionException, BadClassFileException {
             //if there is a Klass object for className, then 
             //there is nothing to do
             if (this.s.initialized(className)) {
@@ -466,6 +473,9 @@ public class Util {
                                 final String stringLit = ((ConstantPoolString) cpv).getValue();
                                 try {
                                     phase1(JAVA_STRING, it);
+                                } catch (InvalidInputException e) {
+                                    //this should never happen
+                                    throw new UnexpectedInternalException(e);
                                 } catch (ClassFileNotFoundException e) {
                                     throw new ClasspathException(e);
                                 }
@@ -591,6 +601,9 @@ public class Util {
 	        throw new ClasspathException(e);
 	    } catch (InterruptException e) {
 	        exc = e;
+        } catch (InvalidInputException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
 	    }
 	    state.ensureStringLiteral(stringLit);
 	    if (exc != null) {
@@ -609,6 +622,9 @@ public class Util {
             throw new ClasspathException(e);
         } catch (InterruptException e) {
             exc = e;
+        } catch (InvalidInputException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
         }
         
         //possibly creates and initializes the java.lang.Class Instance

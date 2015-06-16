@@ -9,6 +9,7 @@ import jbse.bc.exc.MethodNotFoundException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.InvalidInputException;
 import jbse.jvm.exc.InitializationException;
 import jbse.mem.State;
 
@@ -52,7 +53,7 @@ public final class Algo_INIT {
 			ensureClassCreatedAndInitialized(state, ctx.rootMethodSignature.getClassName(), ctx.decisionProcedure);
         } catch (InterruptException e) {
             //nothing to do: fall through
-		} catch (BadClassFileException e) {
+		} catch (InvalidInputException | BadClassFileException e) {
 			//this should not happen after push frame
 			throw new UnexpectedInternalException(e);
         }

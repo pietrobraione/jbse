@@ -12,6 +12,7 @@ import jbse.bc.ClassHierarchy;
 import jbse.common.Type;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
@@ -182,14 +183,14 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
 				zeroBreak = (currentLayerLengthInt == 0); 
 			} else {
 				currentLayerLengthInt = -1; //not meaningful, set to an arbitrary value
-				final Expression currentLayerLengthZero, currentLayerLengthNonzero;
 				try {
-					currentLayerLengthZero = (Expression) currentLayerLength.eq(calc.valInt(0));
-					currentLayerLengthNonzero = (Expression) currentLayerLengthZero.not();
+				    final Expression currentLayerLengthZero = (Expression) currentLayerLength.eq(calc.valInt(0));
+				    final Expression currentLayerLengthNonzero = (Expression) currentLayerLengthZero.not();
 					final ClassHierarchy hier = state.getClassHierarchy();
 	                zeroBreak = this.ctx.decisionProcedure.isSat(hier, currentLayerLengthZero); 
 	                zeroBreak = zeroBreak && !this.ctx.decisionProcedure.isSat(hier, currentLayerLengthNonzero);
-				} catch (ClassCastException | InvalidOperandException | InvalidTypeException e) {
+				} catch (ClassCastException | InvalidOperandException | 
+				         InvalidTypeException | InvalidInputException e) {
 					//this should never happen
 					failExecution(e);
 				} 

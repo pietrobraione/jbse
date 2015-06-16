@@ -7,6 +7,7 @@ import jbse.bc.ClassHierarchy;
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Clause;
 import jbse.mem.ClauseAssume;
 import jbse.mem.ClauseAssumeAliases;
@@ -119,7 +120,11 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	}
 	
 	@Override
-	public final void pushAssumption(Clause c) throws DecisionException {
+	public final void pushAssumption(Clause c) 
+	throws InvalidInputException, DecisionException {
+	    if (c == null) {
+	        throw new InvalidInputException("pushAssumption invoked with a null parameter.");
+	    }
         final Clause cSimpl = simplifyLocal(c);
 		pushAssumptionLocal(cSimpl);
 		if (hasNext()) {
@@ -285,7 +290,10 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 
 	@Override
     public final void setAssumptions(Collection<Clause> newAssumptions) 
-    throws DecisionException {
+    throws InvalidInputException, DecisionException {
+	    if (newAssumptions == null) {
+	        throw new InvalidInputException("setAssumptions invoked with a null parameter.");
+	    }
 		Collection<Clause> currentAssumptions;
 		try {
 		    currentAssumptions = getAssumptionsLocal();
@@ -425,17 +433,21 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
     }
 
     @Override
-    public final boolean isSat(ClassHierarchy hier, Expression exp) throws DecisionException {
-    	if (exp.getType() != Type.BOOLEAN) {
-    		throw new DecisionException("cannot decide satisfiability of " + exp + " because it is not boolean."); //TODO throw a better exception
+    public final boolean isSat(ClassHierarchy hier, Expression expression) 
+    throws InvalidInputException, DecisionException {
+        if (hier == null || expression == null) {
+            throw new InvalidInputException("isSat invoked with a null parameter.");
+        }
+    	if (expression.getType() != Type.BOOLEAN) {
+    		throw new DecisionException("isSat expression has type " + expression.getType());
     	}
-    	final Primitive expSimpl = simplifyLocal(exp);
+    	final Primitive expSimpl = simplifyLocal(expression);
 		if (expSimpl instanceof Simplex) {
 			return ((Simplex) expSimpl).surelyTrue();
 		} else if (expSimpl instanceof Expression) {
-			final boolean localDecidesSat = isSatLocal(hier, exp, (Expression) expSimpl);
+			final boolean localDecidesSat = isSatLocal(hier, expression, (Expression) expSimpl);
 			if (localDecidesSat) {
-			    return delegateIsSat(hier, exp);  //TODO shouldn't we pass expSimpl instead? do we really need to pass the original exp to the next in chain?
+			    return delegateIsSat(hier, expression);  //TODO shouldn't we pass expSimpl instead? do we really need to pass the original exp to the next in chain?
 			}
 			return false; //surely unsat
 		}
@@ -474,16 +486,25 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @throws DecisionException if this decision procedure has
      *         not a successor in the chain.
      */
-    private final boolean delegateIsSat(ClassHierarchy hier, Expression exp) throws DecisionException {
+    private final boolean delegateIsSat(ClassHierarchy hier, Expression exp) 
+    throws DecisionException {
     	if (hasNext()) {
-    		return this.next.isSat(hier, exp);
+    		try {
+                return this.next.isSat(hier, exp);
+            } catch (InvalidInputException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            }
     	}
     	throw new DecisionException(NO_DELEGATE_ERROR);
     }
 
     @Override
-    public final boolean isSatNull(ClassHierarchy hier, ReferenceSymbolic r) throws DecisionException {
-    	//TODO check input parameters; simplify?
+    public final boolean isSatNull(ClassHierarchy hier, ReferenceSymbolic r) 
+    throws InvalidInputException, DecisionException {
+        if (hier == null || r == null) {
+            throw new InvalidInputException("isSatNull invoked with a null parameter.");
+        }
         final boolean localDecidesSat = isSatNullLocal(hier, r);
         if (localDecidesSat) {
             return delegateIsSatNull(hier, r);
@@ -521,17 +542,24 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      *         not a successor in the chain.
      */
    private final boolean delegateIsSatNull(ClassHierarchy hier, ReferenceSymbolic r) 
-    throws DecisionException {
+   throws DecisionException {
     	if (hasNext()) {
-    		return this.next.isSatNull(hier, r);
+    		try {
+                return this.next.isSatNull(hier, r);
+            } catch (InvalidInputException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            }
     	}
     	throw new DecisionException(NO_DELEGATE_ERROR);
     }
 
     @Override
     public final boolean isSatAliases(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o) 
-    throws DecisionException {
-    	//TODO check input parameters; simplify?
+    throws InvalidInputException, DecisionException {
+        if (hier == null || r == null || o == null) {
+            throw new InvalidInputException("isSatAliases invoked with a null parameter.");
+        }
         final boolean localDecidesSat = isSatAliasesLocal(hier, r, heapPos, o);
         if (localDecidesSat) {
             return delegateIsSatAliases(hier, r, heapPos, o);
@@ -575,15 +603,22 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
     private final boolean delegateIsSatAliases(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o) 
     throws DecisionException {
     	if (hasNext()) {
-    		return this.next.isSatAliases(hier, r, heapPos, o);
+    		try {
+                return this.next.isSatAliases(hier, r, heapPos, o);
+            } catch (InvalidInputException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            }
     	}
     	throw new DecisionException(NO_DELEGATE_ERROR);
     }
 
     @Override
     public final boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, String className) 
-    throws DecisionException {
-    	//TODO check input parameters; simplify?
+    throws InvalidInputException, DecisionException {
+        if (hier == null || r == null || className == null) {
+            throw new InvalidInputException("isSatExpands invoked with a null parameter.");
+        }
         final boolean localDecidesSat = isSatExpandsLocal(hier, r, className);
         if (localDecidesSat) {
             return delegateIsSatExpands(hier, r, className);
@@ -625,15 +660,22 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
     private final boolean delegateIsSatExpands(ClassHierarchy hier, ReferenceSymbolic r, String className) 
     throws DecisionException {
     	if (hasNext()) {
-    		return this.next.isSatExpands(hier, r, className);
+    		try {
+                return this.next.isSatExpands(hier, r, className);
+            } catch (InvalidInputException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            }
     	}
     	throw new DecisionException(NO_DELEGATE_ERROR);
     }
 
     @Override
     public final boolean isSatInitialized(ClassHierarchy hier, String className) 
-    throws DecisionException {
-    	//TODO check input parameters; simplify?
+    throws InvalidInputException, DecisionException {
+        if (hier == null || className == null) {
+            throw new InvalidInputException("isSatInitialized invoked with a null parameter.");
+        }
         final boolean localDecidesSat = isSatInitializedLocal(hier, className);
         if (localDecidesSat) {
             return delegateIsSatInitialized(hier, className);
@@ -676,15 +718,22 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
     private final boolean delegateIsSatInitialized(ClassHierarchy hier, String className) 
     throws DecisionException {
     	if (hasNext()) {
-    		return this.next.isSatInitialized(hier, className);
+    		try {
+                return this.next.isSatInitialized(hier, className);
+            } catch (InvalidInputException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            }
     	}
     	throw new DecisionException(NO_DELEGATE_ERROR);
     }
 
     @Override
     public final boolean isSatNotInitialized(ClassHierarchy hier, String className) 
-    throws DecisionException {
-    	//TODO check input parameters; simplify?
+    throws InvalidInputException, DecisionException {
+    	if (hier == null || className == null) {
+    	    throw new InvalidInputException("isSatNotInitialized invoked with a null parameter.");
+    	}
         final boolean localDecidesSat = isSatNotInitializedLocal(hier, className);
         if (localDecidesSat) {
             return delegateIsSatNotInitialized(hier, className);
@@ -725,7 +774,12 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
     private final boolean delegateIsSatNotInitialized(ClassHierarchy hier, String className) 
     throws DecisionException {
     	if (hasNext()) {
-    		return this.next.isSatNotInitialized(hier, className);
+    		try {
+                return this.next.isSatNotInitialized(hier, className);
+            } catch (InvalidInputException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            }
     	}
     	throw new DecisionException(NO_DELEGATE_ERROR);
     }

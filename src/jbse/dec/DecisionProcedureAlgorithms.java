@@ -193,7 +193,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		 */
 		public boolean noReferenceExpansion() {
 			if (this == TT || this == TF || this == FT || this == FF) {
-				throw new UnexpectedInternalException(this.toString() + " does not refer to reference expansion."); //TODO throw a better exception
+				throw new UnexpectedInternalException(this.toString() + " carries no reference expansion information."); //TODO throw a better exception
 			}
 			return this.noReferenceExpansion;
 		}
@@ -237,10 +237,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	public Outcome decide_IFX(ClassHierarchy hier, Primitive condition, SortedSet<DecisionAlternative_IFX> result)
 	throws InvalidInputException, DecisionException {
 		if (condition == null || result == null) {
-			throw new InvalidInputException("decideIf invoked with a null parameter");
+			throw new InvalidInputException("decide_IFX invoked with a null parameter.");
 		}
 		if (condition.getType() != Type.BOOLEAN) {
-			throw new InvalidInputException("condition has type " + condition.getType());
+			throw new InvalidInputException("decide_IFX condition has type " + condition.getType());
 		}
 		if (condition instanceof Simplex) {
 			decide_IFX_Concrete((Simplex) condition, result);
@@ -284,7 +284,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 					result.add(F);
 				}
 				shouldRefine = (result.size() > 1);
-			} catch (InvalidTypeException e) {
+			} catch (InvalidTypeException | InvalidInputException e) {
 				//this should never happen as arguments have been checked by the caller
 				throw new UnexpectedInternalException(e);
 			}
@@ -313,12 +313,12 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	public Outcome decide_XCMPY(ClassHierarchy hier, Primitive val1, Primitive val2, SortedSet<DecisionAlternative_XCMPY> result)
 	throws InvalidInputException, DecisionException {
 		if (val1 == null || val2 == null || result == null) {
-			throw new InvalidInputException("decideComparison invoked with a null parameter");
+			throw new InvalidInputException("decide_XCMPY invoked with a null parameter.");
 		}
 		try {
 			Operator.typeCheck(Operator.EQ, val1.getType(), val2.getType());
 		} catch (InvalidTypeException e) {
-			throw new InvalidInputException("decideComparison invoked with noncomparable parameters");
+			throw new InvalidInputException("decide_XCMPY invoked with noncomparable parameters.");
 		}
 		if ((val1 instanceof Simplex) && (val2 instanceof Simplex)) {
 			decide_XCMPY_Concrete((Simplex) val1, (Simplex) val2, result);
@@ -365,39 +365,36 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 			result.add(LT);
 			shouldRefine = false;
 		} else {
-			final Expression expGT;
-			final Expression expEQ;
-			final Expression expLT;
-			try {
-				expGT = (Expression) val1.gt(val2);
-				expEQ = (Expression) val1.eq(val2);
-				expLT = (Expression) val1.lt(val2);
-			} catch (InvalidTypeException | InvalidOperandException e) {
-				//this should never happen as arguments have been checked by the caller
-				throw new UnexpectedInternalException(e);
-			}
+            try {
+                final Expression expGT = (Expression) val1.gt(val2);
+                final Expression expEQ = (Expression) val1.eq(val2);
+                final Expression expLT = (Expression) val1.lt(val2);
 
-			//this implementation saves one sat check in 33% cases
-			//(it exploits the fact that if both val1 > val2 and 
-			//val1 = val2 are unsat, then val1 < val2 is valid)
-			if (isSat(hier, expGT)) {
-				result.add(GT);
-				if (isSat(hier, expEQ)) {
-					result.add(EQ);
-				}
-				if (isSat(hier, expLT)) {
-					result.add(LT); 
-				}
-			} else if (isSat(hier, expEQ)) { //expGT is unsat, so either expEQ or expLT, or both, are SAT 
-				result.add(EQ);
-				if (isSat(hier, expLT)) {
-					result.add(LT); 
-				}
-			} else {
-				//both expGT and expEQ are unsat; so expLT is valid
-				result.add(LT);
-			}
-			shouldRefine = (result.size() > 1);
+                //this implementation saves one sat check in 33% cases
+                //(it exploits the fact that if both val1 > val2 and 
+                //val1 = val2 are unsat, then val1 < val2 is valid)
+                if (isSat(hier, expGT)) {
+                    result.add(GT);
+                    if (isSat(hier, expEQ)) {
+                        result.add(EQ);
+                    }
+                    if (isSat(hier, expLT)) {
+                        result.add(LT); 
+                    }
+                } else if (isSat(hier, expEQ)) { //expGT is unsat, so either expEQ or expLT, or both, are SAT 
+                    result.add(EQ);
+                    if (isSat(hier, expLT)) {
+                        result.add(LT); 
+                    }
+                } else {
+                    //both expGT and expEQ are unsat; so expLT is valid
+                    result.add(LT);
+                }
+                shouldRefine = (result.size() > 1);
+            } catch (InvalidTypeException | InvalidOperandException | InvalidInputException e) {
+                //this should never happen as arguments have been checked by the caller
+                throw new UnexpectedInternalException(e);
+            }
 		}
 		return Outcome.val(shouldRefine, true);
 	}
@@ -420,10 +417,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	public Outcome decide_XSWITCH(ClassHierarchy hier, Primitive selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result)
 	throws InvalidInputException, DecisionException {
 		if (selector == null || tab == null || result == null) {
-			throw new InvalidInputException("decide_XSWITCH invoked with a null parameter");
+			throw new InvalidInputException("decide_XSWITCH invoked with a null parameter.");
 		}
 		if (selector.getType() != Type.INT) {
-			throw new InvalidInputException("switch selector has type " + selector.getType());
+			throw new InvalidInputException("decide_XSWITCH selector has type " + selector.getType());
 		}
 		if (selector instanceof Simplex) {
 			decide_XSWITCH_Concrete((Simplex) selector, tab, result);
@@ -450,12 +447,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 
 	protected Outcome decide_XSWITCH_Nonconcrete(ClassHierarchy hier, Primitive selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result) 
 	throws DecisionException {
-		final boolean shouldRefine;
-
-		final boolean isAny = (selector instanceof Any);
-		int branchCounter = 1;
-		boolean noEntryIsSat = true; //allows to skip the last sat check
 		try {
+	        final boolean isAny = (selector instanceof Any);
+	        int branchCounter = 1;
+	        boolean noEntryIsSat = true; //allows to skip the last sat check
 			for (int i : tab) {
 				final Expression exp = (isAny ? null : (Expression) selector.eq(this.calc.valInt(i)));
 				if (isAny || isSat(hier, exp)) { 
@@ -467,13 +462,12 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 			if (isAny || noEntryIsSat || isSat(hier, tab.getDefaultClause(selector))) { 
 				result.add(DecisionAlternative_XSWITCH.toNonconcreteDefault(branchCounter));
 			}
-			shouldRefine = (!isAny && (result.size() > 1));
+			final boolean shouldRefine = (!isAny && (result.size() > 1));
 			return Outcome.val(shouldRefine, true);
-		} catch (InvalidOperandException | InvalidTypeException e) {
+		} catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
 			//this should never happen as arguments have been checked by the caller
 			throw new UnexpectedInternalException(e);
 		}
-
 	}
 
 	/**
@@ -499,7 +493,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 			throw new InvalidInputException("decide_XNEWARRAY invoked with a null parameter");
 		}
 		if (countsNonNegative.getType() != Type.BOOLEAN) {
-			throw new InvalidInputException("countsNonNegative type is " + countsNonNegative.getType());
+			throw new InvalidInputException("decide_XNEWARRAY countsNonNegative type is " + countsNonNegative.getType());
 		}
 		if (countsNonNegative instanceof Simplex) {
 			decide_XNEWARRAY_Concrete((Simplex) countsNonNegative, result);
@@ -543,7 +537,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 					result.add(OK);
 				}
 				shouldRefine = (result.size() > 1);
-			} catch (InvalidTypeException e) {
+			} catch (InvalidTypeException | InvalidInputException e) {
 				//this should never happen as arguments have been checked by the caller
 				throw new UnexpectedInternalException(e);
 			}
@@ -569,10 +563,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	public Outcome decide_XASTORE(ClassHierarchy hier, Primitive inRange, SortedSet<DecisionAlternative_XASTORE> result)
 	throws InvalidInputException, DecisionException {
 		if (inRange == null || result == null) {
-			throw new InvalidInputException("decideAstore invoked with a null parameter");
+			throw new InvalidInputException("decide_XASTORE invoked with a null parameter");
 		}
 		if (inRange.getType() != Type.BOOLEAN) {
-			throw new InvalidInputException("inRange type is " + inRange.getType());
+			throw new InvalidInputException("decide_XASTORE inRange type is " + inRange.getType());
 		}
 		if (inRange instanceof Simplex) {
 			decide_XASTORE_Concrete((Simplex) inRange, result);
@@ -615,7 +609,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 					result.add(IN);			
 				}
 				shouldRefine = (result.size() > 1);
-			} catch (InvalidTypeException e) {
+			} catch (InvalidTypeException | InvalidInputException e) {
 				//this should never happen as arguments have been checked by the caller
 				throw new UnexpectedInternalException(e);
 			}
@@ -645,7 +639,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	public Outcome resolve_XLOAD_GETX(State state, Value valToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result) 
 	throws InvalidInputException, DecisionException, BadClassFileException {
 		if (state == null || valToLoad == null || result == null) {
-			throw new InvalidInputException("resolveLFLoad invoked with a null parameter");
+			throw new InvalidInputException("resolve_XLOAD_GETX invoked with a null parameter.");
 		}
 		if (Util.isResolved(state, valToLoad)) {
         	result.add(new DecisionAlternative_XLOAD_GETX_Resolved(valToLoad));
@@ -657,9 +651,14 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	
 	protected Outcome resolve_XLOAD_GETX_Unresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)
 	throws DecisionException, BadClassFileException {
-		final boolean partialReferenceResolution = 
-			doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFromLocalVariableFactory(), result);
-		return Outcome.val(true, partialReferenceResolution, true); //uninitialized symbolic references always require a refinement action
+	    try {
+	        final boolean partialReferenceResolution = 
+	            doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFromLocalVariableFactory(), result);
+	        return Outcome.val(true, partialReferenceResolution, true); //uninitialized symbolic references always require a refinement action
+        } catch (InvalidInputException e) {
+            //this should never happen as arguments have been checked by the caller
+            throw new UnexpectedInternalException(e);
+        }
 	}
 	
 	/**
@@ -694,7 +693,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	public Outcome resolve_XALOAD(State state, Expression accessExpression, Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
 	throws InvalidInputException, DecisionException, BadClassFileException {
 		if (state == null || result == null) {
-			throw new InvalidInputException("resolveLFLoad invoked with a null parameter");
+			throw new InvalidInputException("resolve_XALOAD invoked with a null parameter.");
 		}
 		final boolean accessConcrete = (accessExpression == null);
 		final boolean accessOutOfBounds = (valToLoad == null);
@@ -765,21 +764,26 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 */
 	protected Outcome resolve_XALOAD_ResolvedNonconcrete(ClassHierarchy hier, Expression accessExpression, Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
 	throws DecisionException {
-		final boolean shouldRefine;
-		if (isSat(hier, accessExpression)) {
-			shouldRefine = fresh; //a fresh value to load always requires a refinement action
-	        final boolean accessOutOfBounds = (valToLoad == null);
-	        final int branchNumber = result.size() + 1;
-			if (accessOutOfBounds) {
-				result.add(new DecisionAlternative_XALOAD_Out(accessExpression, branchNumber));
-			} else {
-				result.add(new DecisionAlternative_XALOAD_Resolved(accessExpression, valToLoad, fresh, branchNumber));
-			}
-		} else {
-            //accessExpression is unsatisfiable: nothing to do
-			shouldRefine = false;
-		}
-		return Outcome.val(shouldRefine, false, true);
+	    try {
+	        final boolean shouldRefine;
+	        if (isSat(hier, accessExpression)) {
+	            shouldRefine = fresh; //a fresh value to load always requires a refinement action
+	            final boolean accessOutOfBounds = (valToLoad == null);
+	            final int branchNumber = result.size() + 1;
+	            if (accessOutOfBounds) {
+	                result.add(new DecisionAlternative_XALOAD_Out(accessExpression, branchNumber));
+	            } else {
+	                result.add(new DecisionAlternative_XALOAD_Resolved(accessExpression, valToLoad, fresh, branchNumber));
+	            }
+	        } else {
+	            //accessExpression is unsatisfiable: nothing to do
+	            shouldRefine = false;
+	        }
+	        return Outcome.val(shouldRefine, false, true);
+	    } catch (InvalidInputException e) {
+	        //this should never happen as arguments have been checked by the caller
+	        throw new UnexpectedInternalException(e);
+	    }
 	}
 
     /**
@@ -806,19 +810,24 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      */
 	protected Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
 	throws DecisionException, BadClassFileException {
-		final boolean accessConcrete = (accessExpression == null);
-		final boolean shouldRefine;
-		final boolean noReferenceExpansion;
-		if (accessConcrete || isSat(state.getClassHierarchy(), accessExpression)) {
-			shouldRefine = true; //unresolved symbolic references always require a refinement action
-			noReferenceExpansion =
-				doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFromArrayFactory(accessExpression), result);
-		} else {
-            //accessExpression is unsatisfiable: nothing to do
-			shouldRefine = false;
-			noReferenceExpansion = true;
-		}
-		return Outcome.val(shouldRefine, noReferenceExpansion, true);
+	    try {
+	        final boolean accessConcrete = (accessExpression == null);
+	        final boolean shouldRefine;
+	        final boolean noReferenceExpansion;
+	        if (accessConcrete || isSat(state.getClassHierarchy(), accessExpression)) {
+	            shouldRefine = true; //unresolved symbolic references always require a refinement action
+	            noReferenceExpansion =
+	            doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFromArrayFactory(accessExpression), result);
+	        } else {
+	            //accessExpression is unsatisfiable: nothing to do
+	            shouldRefine = false;
+	            noReferenceExpansion = true;
+	        }
+	        return Outcome.val(shouldRefine, noReferenceExpansion, true);
+	    } catch (InvalidInputException e) {
+	        //this should never happen as arguments have been checked by the caller
+	        throw new UnexpectedInternalException(e);
+	    }
 	}
 	
 	/**
@@ -839,6 +848,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *            representing all the valid expansions of {@code notInitializedRef}.
 	 * @return {@code true} iff the resolution of the reference is 
 	 *         partial (see {@link Outcome#noReferenceExpansion()}).
+     * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
 	 * @throws BadClassFileException when 
 	 *         {@code refToResolve.}{@link Signature#getClassName() getClassName()}
@@ -849,7 +859,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	protected <D, DA extends D, DE extends D, DN extends D> 
 	boolean doResolveReference(State state, ReferenceSymbolic refToResolve, 
 	DecisionAlternativeReferenceFactory<DA, DE, DN> factory, SortedSet<D> result) 
-	throws DecisionException, BadClassFileException {
+	throws InvalidInputException, DecisionException, BadClassFileException {
 		//gets the statically compatible possible aliases 
 		//and expansions of refToResolve
 		final Map<Long, Objekt> possibleAliases = getPossibleAliases(state, refToResolve);
@@ -1009,10 +1019,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
     public void completeArraySet(ClassHierarchy hier, Iterator<Array.AccessOutcomeIn> entries, Primitive index) 
     throws InvalidInputException, DecisionException {
         if (entries == null || index == null) {
-            throw new InvalidInputException("completeArraySet invoked with a null parameter");
+            throw new InvalidInputException("completeArraySet invoked with a null parameter.");
         }
         if (index.getType() != Type.INT) {
-            throw new InvalidInputException("index of array access has type " + index.getType());
+            throw new InvalidInputException("completeArraySet index has type " + index.getType());
         }
         try {
             while (entries.hasNext()) {

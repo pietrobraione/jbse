@@ -32,13 +32,14 @@ public class ClassFileJavassist extends ClassFile {
 	private ConstPool cp;
 	
 	ClassFileJavassist(String className, ClassPool cpool) throws BadClassFileException {
-		//TODO understand how in Javassist "file not found" is differentiated from "file found and invalid"
 		try {
 			this.cls = cpool.get(className.replace("/", "."));
 			this.cp = this.cls.getClassFile().getConstPool();
 		} catch (NotFoundException e) {
 			throw new ClassFileNotFoundException(className);
 		} catch (RuntimeException e) {
+		    //ugly, but it seems to be the only way to detect
+		    //an ill-formed classfile
 		    if (e.getMessage().equals("java.io.IOException: non class file")) {
 		        throw new ClassFileIllFormedException(className);
 		    } else {

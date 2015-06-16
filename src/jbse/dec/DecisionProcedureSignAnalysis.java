@@ -886,7 +886,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 				infoFromOperator = SignPredicate.GT; //does nothing, indeed
 			} else if (operator.equals(FunctionApplication.ABS) || 
 					operator.equals(FunctionApplication.SQRT) ||
-					operator.equals(FunctionApplication.ACOS)) {//TODO also POW with even exponent
+					operator.equals(FunctionApplication.ACOS)) {
 				infoFromOperator = SignPredicate.GE;
             } else if (operator.equals(FunctionApplication.POW)) {
                 final Primitive arg = x.getArgs()[1];

@@ -10,6 +10,7 @@ import org.junit.Test;
 import jbse.bc.ClassHierarchy;
 import jbse.common.Type;
 import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Clause;
 import jbse.mem.ClauseAssume;
 import jbse.mem.Objekt;
@@ -79,7 +80,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test
-	public void simpleTest1() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void simpleTest1() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		//A > 0 |-/- A <= 0
 		Term A = calc.valTerm(Type.INT, "A");
 		dec.pushAssumption(new ClauseAssume((Expression) A.gt(calc.valInt(0))));
@@ -87,7 +89,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test
-	public void simpleTest2() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void simpleTest2() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		//0 < A |-/- A <= 0 
 		Term A = calc.valTerm(Type.INT, "A");
 		dec.pushAssumption(new ClauseAssume((Expression) calc.valInt(0).lt(A)));
@@ -95,7 +98,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test(expected=NoDecisionException.class)
-	public void simpleTest3() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void simpleTest3() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		//A > 0, B <= 0 |-?- A * B >= 0
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -105,7 +109,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test
-	public void simpleTest4() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void simpleTest4() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		//A > 0, B <= 0 |-/- A * B > 0
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -115,7 +120,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test(expected=NoDecisionException.class)
-	public void simpleTest5() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void simpleTest5() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		//A > B |-?- A > 0
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -124,7 +130,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test(expected=NoDecisionException.class)
-	public void simpleTest6() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void simpleTest6() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		//A > B |-?- A <= 0
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -133,7 +140,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test
-	public void simpleTest7() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void simpleTest7() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// A : INT, A > 0 |-/- A < 1
 		Term A = calc.valTerm(Type.INT, "A");
 		dec.pushAssumption(new ClauseAssume((Expression) A.gt(calc.valInt(0))));
@@ -141,7 +149,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test(expected=NoDecisionException.class)
-	public void simpleTest8() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void simpleTest8() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// A : FLOAT, A > 0 |-?- A < 1
 		Term A = calc.valTerm(Type.FLOAT, "A");
 		dec.pushAssumption(new ClauseAssume((Expression) A.gt(calc.valFloat(0.0f))));
@@ -149,7 +158,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test
-	public void simpleTest9() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void simpleTest9() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// A > 0, B > 0 |- A * B >= 0
 		Term A = calc.valTerm(Type.DOUBLE, "A");
 		Term B = calc.valTerm(Type.DOUBLE, "B");
@@ -159,7 +169,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test(expected=NoDecisionException.class)
-	public void simpleTest10() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void simpleTest10() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// A >= 0, B <= 0 |-?- A * B == 0
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -169,7 +180,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test
-	public void mulTest1() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void mulTest1() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// A : INT, B : INT, A > 0, B <= 0 |-/- A * B > 0
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -179,7 +191,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test(expected=NoDecisionException.class)
-	public void mulTest2() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void mulTest2() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// A : INT, B : INT, A > 0, B <= 0 |-?- A * B > -1
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -189,7 +202,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test
-	public void mulTest3() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void mulTest3() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// A : INT, B : INT, A > 0, B < 0 |-/- A * B > -1
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -199,7 +213,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test(expected=NoDecisionException.class)
-	public void mulTest4() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void mulTest4() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// A : INT, B : DOUBLE, A > 0, B < 0 |-?- A * B > -1
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.DOUBLE, "B");
@@ -209,7 +224,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test(expected=NoDecisionException.class)
-	public void addTest1() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void addTest1() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// A >= 0, B >= 0 |-?- A + B <= 0
 		Term A = calc.valTerm(Type.DOUBLE, "A");
 		Term B = calc.valTerm(Type.DOUBLE, "B");
@@ -219,7 +235,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test
-	public void addTest2() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void addTest2() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// A > 0, B >= 0 |-/- A + B <= 0
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -229,7 +246,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test(expected=NoDecisionException.class)
-	public void addTest3() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void addTest3() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// A >= 0, B >= 0 |-?- A - B <= 0
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -239,7 +257,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test(expected=NoDecisionException.class)
-	public void addTest4() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void addTest4() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// A >= 0, B >= 0 |-?- A - B > 0
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -249,7 +268,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test
-	public void addTest5() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void addTest5() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// A > 0, B <= 0 |-/- A - B <= 0
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -259,7 +279,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test
-	public void negTest1() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void negTest1() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// A > 0 |-/- -A >= 0
 		Term A = calc.valTerm(Type.INT, "A");
 		dec.pushAssumption(new ClauseAssume((Expression) A.gt(calc.valInt(0))));
@@ -267,7 +288,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test
-	public void negTest2() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void negTest2() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// A > 0, B < 0 |-/- -A * B <= 0
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -277,7 +299,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test
-	public void complexAssumptionTest1() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void complexAssumptionTest1() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// A * B > 0 |-/- A * B <= 0
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -286,7 +309,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test
-	public void complexAssumptionTest2() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void complexAssumptionTest2() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		// A * B >= 0, A >= 0, B <= 0 |-/- A * B != 0
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -297,7 +321,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test
-	public void complexAssumptionTest3() throws DecisionException, InvalidTypeException, InvalidOperandException {
+	public void complexAssumptionTest3() 
+	throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
 		// A > 0, B > 0, A * B + -1 * sqrt(C * C)) > 0 |-/- (A * B + -1 * sqrt(C * C)) / (-1 * A) > 0
 		Term A = calc.valTerm(Type.DOUBLE, "A");
 		Term B = calc.valTerm(Type.DOUBLE, "B");
@@ -310,7 +335,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test(expected=NoDecisionException.class)
-	public void divAssumptionTest1() throws DecisionException, InvalidOperandException, InvalidTypeException {
+	public void divAssumptionTest1() 
+	throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
 		//A / B < C |-?- A / B = C (it can only check exp rel_op number)
 		Term A = calc.valTerm(Type.INT, "A");
 		Term B = calc.valTerm(Type.INT, "B");
@@ -320,28 +346,32 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Test
-	public void trigTest1() throws DecisionException, InvalidTypeException, InvalidOperandException {
+	public void trigTest1() 
+	throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
 		//true |-/- asin(A) + 10 < 0
 		Term A = calc.valTerm(Type.INT, "A");
 		assertFalse(dec.isSat(null, (Expression) calc.applyFunction(Type.DOUBLE, FunctionApplication.ASIN, A).add(calc.valDouble(10.0d)).lt(calc.valInt(0))));
 	}
 
 	@Test
-	public void trigTest2() throws DecisionException, InvalidTypeException, InvalidOperandException {
+	public void trigTest2() 
+	throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
 		//true |-/- cos(atan(A)) <= 0
 		Term A = calc.valTerm(Type.INT, "A");
 		assertFalse(dec.isSat(null, (Expression) calc.applyFunction(Type.DOUBLE, FunctionApplication.COS, calc.applyFunction(Type.DOUBLE, FunctionApplication.ATAN, A)).le(calc.valInt(0))));
 	}
 
 	@Test
-	public void trigTest3() throws DecisionException, InvalidTypeException, InvalidOperandException {
+	public void trigTest3() 
+	throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
 		//true |- cos(atan(A)) > 0 (decided by simplification to true)
 		Term A = calc.valTerm(Type.INT, "A");
 		assertTrue(dec.isSat(null, (Expression) calc.applyFunction(Type.DOUBLE, FunctionApplication.COS, calc.applyFunction(Type.DOUBLE, FunctionApplication.ATAN, A)).gt(calc.valInt(0))));
 	}
 
 	@Test
-	public void trigTest4() throws DecisionException, InvalidTypeException, InvalidOperandException {
+	public void trigTest4() 
+	throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
 		//true |-/- cos(PI + atan(A)) >= 0
 		calc.addRewriter(new RewriterTrigNormalize());
 		Term A = calc.valTerm(Type.DOUBLE, "A");
@@ -349,7 +379,8 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 
 	@Test
-	public void trigTest5() throws DecisionException, InvalidTypeException, InvalidOperandException {
+	public void trigTest5() 
+	throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
 		//A < 0 |-/- atan(A) >= 0
 		calc.addRewriter(new RewriterTrigNormalize());
 		Term A = calc.valTerm(Type.DOUBLE, "A");
@@ -358,28 +389,32 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 
     @Test
-    public void powTest1() throws DecisionException, InvalidTypeException, InvalidOperandException {
+    public void powTest1() 
+    throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
         //true |- pow(A, 0.0) > 0
         Term A = calc.valTerm(Type.DOUBLE, "A");
         assertTrue(dec.isSat(null, (Expression) calc.applyFunction(Type.DOUBLE, FunctionApplication.POW, A, calc.valDouble(0.0)).gt(calc.valInt(0))));
     }
 	
     @Test
-    public void powTest2() throws DecisionException, InvalidTypeException, InvalidOperandException {
+    public void powTest2() 
+    throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
         //true |-/- pow(A, 2.0) < 0
         Term A = calc.valTerm(Type.DOUBLE, "A");
         assertFalse(dec.isSat(null, (Expression) calc.applyFunction(Type.DOUBLE, FunctionApplication.POW, A, calc.valDouble(2.0)).lt(calc.valInt(0))));
     }
     
     @Test(expected=NoDecisionException.class)
-    public void powTest3() throws DecisionException, InvalidTypeException, InvalidOperandException {
+    public void powTest3() 
+    throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
         //true |-?- pow(A, 2.0) >= 0 (can refute but cannot prove)
         Term A = calc.valTerm(Type.DOUBLE, "A");
         dec.isSat(null, (Expression) calc.applyFunction(Type.DOUBLE, FunctionApplication.POW, A, calc.valDouble(2.0)).ge(calc.valInt(0)));
     }
     
 	@Test
-	public void funTest1() throws DecisionException, InvalidTypeException, InvalidOperandException {
+	public void funTest1() 
+	throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
 		calc.addRewriter(new RewriterPolynomials()); //necessary to normalize ~x to -1.0 * x
 		Term A = calc.valTerm(Type.DOUBLE, "A");
 		Term B = calc.valTerm(Type.DOUBLE, "B");

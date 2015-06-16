@@ -13,6 +13,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionBacktrackException;
 import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.InvalidInputException;
 import jbse.jvm.exc.CannotBacktrackException;
 import jbse.jvm.exc.EngineStuckException;
 import jbse.jvm.exc.FailureException;
@@ -155,7 +156,12 @@ public class Engine implements AutoCloseable {
 		this.currentState = this.ctx.stateTree.nextState();
 		
         //synchronizes the decision procedure with the path condition
-		this.ctx.decisionProcedure.setAssumptions(this.currentState.getPathCondition());
+		try {
+		    this.ctx.decisionProcedure.setAssumptions(this.currentState.getPathCondition());
+		} catch (InvalidInputException e) {
+		    //this should never happen
+		    throw new UnexpectedInternalException(e);
+		}
 		this.currentState.resetLastPathConditionClauses();
 
         //inits the variable observer manager
@@ -270,7 +276,12 @@ public class Engine implements AutoCloseable {
         }
 
 		//synchronizes the decision procedure with the path condition
-		this.ctx.decisionProcedure.addAssumptions(this.currentState.getLastPathConditionPushedClauses());
+		try {
+            this.ctx.decisionProcedure.addAssumptions(this.currentState.getLastPathConditionPushedClauses());
+        } catch (InvalidInputException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
 		this.currentState.resetLastPathConditionClauses();
 
 		//manages variable observation
@@ -387,7 +398,10 @@ public class Engine implements AutoCloseable {
 			this.currentState.resetLastPathConditionClauses();
 		} catch (DecisionException e) {
 			throw new DecisionBacktrackException(e);
-		}
+		} catch (InvalidInputException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
 		
 		//updates the counters for depth/count scope
         if (this.currentState.branchingDecision()) {

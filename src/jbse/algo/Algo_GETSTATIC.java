@@ -13,6 +13,7 @@ import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.FieldNotFoundException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.InvalidInputException;
 import jbse.mem.State;
 
 /**
@@ -50,7 +51,7 @@ final class Algo_GETSTATIC extends Algo_GETX {
         //possibly creates and initializes the class of the field
         try {
             ensureClassCreatedAndInitialized(state, fieldClassName, this.ctx.decisionProcedure);
-        } catch (BadClassFileException e) {
+        } catch (InvalidInputException | BadClassFileException e) {
             //this should never happen
             //TODO really?
             failExecution(e);

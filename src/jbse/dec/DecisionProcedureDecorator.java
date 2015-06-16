@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import jbse.bc.ClassHierarchy;
 import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Clause;
 import jbse.mem.Objekt;
 import jbse.val.Expression;
@@ -39,25 +40,24 @@ public class DecisionProcedureDecorator implements DecisionProcedure {
 	
 	@Override
 	public void pushAssumption(Clause c) 
-	throws DecisionException {
+	throws InvalidInputException, DecisionException {
 		this.component.pushAssumption(c);
 	}
 
 	@Override
-	public void clearAssumptions() 
-	throws DecisionException {
+	public void clearAssumptions() throws DecisionException {
 		this.component.clearAssumptions();
 	}
 
 	@Override
 	public void addAssumptions(Iterable<Clause> assumptionsToAdd) 
-	throws DecisionException {
+	throws InvalidInputException, DecisionException {
 		this.component.addAssumptions(assumptionsToAdd);
 	}
 	
 	@Override
 	public void setAssumptions(Collection<Clause> newAssumptions) 
-	throws DecisionException {
+	throws InvalidInputException, DecisionException {
 		this.component.setAssumptions(newAssumptions);
 	}
 	
@@ -72,37 +72,37 @@ public class DecisionProcedureDecorator implements DecisionProcedure {
 
 	@Override
 	public boolean isSat(ClassHierarchy hier, Expression exp) 
-	throws DecisionException {
+	throws InvalidInputException, DecisionException {
 		return this.component.isSat(hier, exp);
 	}
 
 	@Override
 	public boolean isSatNull(ClassHierarchy hier, ReferenceSymbolic r) 
-	throws DecisionException {
+	throws InvalidInputException, DecisionException {
 		return this.component.isSatNull(hier, r);
 	}
 
 	@Override
 	public boolean isSatAliases(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o)
-	throws DecisionException {
+	throws InvalidInputException, DecisionException {
 		return this.component.isSatAliases(hier, r, heapPos, o);
 	}
 
 	@Override
 	public boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, String className)
-	throws DecisionException {
+	throws InvalidInputException, DecisionException {
 		return this.component.isSatExpands(hier, r, className);
 	}
 
 	@Override
 	public boolean isSatInitialized(ClassHierarchy hier, String className) 
-	throws DecisionException {
+	throws InvalidInputException, DecisionException {
 		return this.component.isSatInitialized(hier, className);
 	}
 
 	@Override
 	public boolean isSatNotInitialized(ClassHierarchy hier, String className) 
-	throws DecisionException {
+	throws InvalidInputException, DecisionException {
 		return this.component.isSatNotInitialized(hier, className);
 	}
 

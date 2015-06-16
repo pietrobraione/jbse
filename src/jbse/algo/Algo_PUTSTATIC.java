@@ -14,6 +14,7 @@ import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.FieldNotFoundException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.InvalidInputException;
 import jbse.mem.State;
 
 //TODO merge with Algo_GETSTATIC
@@ -49,7 +50,7 @@ final class Algo_PUTSTATIC extends Algo_PUTX {
         //possibly creates and initializes the class 
         try {
             ensureClassCreatedAndInitialized(state, fieldClassName, this.ctx.decisionProcedure);
-        } catch (BadClassFileException e) {
+        } catch (InvalidInputException | BadClassFileException e) {
             //this should never happen
             //TODO really?
             failExecution(e);

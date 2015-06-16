@@ -22,6 +22,7 @@ import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.MethodAbstractException;
 import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
+import jbse.dec.exc.InvalidInputException;
 import jbse.tree.DecisionAlternative_NONE;
 
 final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
@@ -67,7 +68,7 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
             if (this.isStatic) { 
                 try {
                     ensureClassCreatedAndInitialized(state, this.methodSignatureResolved.getClassName(), this.ctx.decisionProcedure);
-                } catch (BadClassFileException e) {
+                } catch (InvalidInputException | BadClassFileException e) {
                     //this should never happen after resolution 
                     failExecution(e);
                 }

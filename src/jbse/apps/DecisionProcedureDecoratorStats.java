@@ -6,6 +6,7 @@ import jbse.bc.ClassHierarchy;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureDecorator;
 import jbse.dec.exc.DecisionException;
+import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Clause;
 import jbse.mem.Objekt;
 import jbse.val.Expression;
@@ -35,7 +36,7 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
 	
 	@Override
 	public void pushAssumption(Clause c) 
-	throws DecisionException {
+	throws InvalidInputException, DecisionException {
 		this.startTimer();
 		super.pushAssumption(c);
 		final long elapsed = this.elapsed();
@@ -53,7 +54,7 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
 	
 	@Override
 	public void setAssumptions(Collection<Clause> newAssumptions) 
-	throws DecisionException {
+	throws InvalidInputException, DecisionException {
 		this.startTimer();
 		super.setAssumptions(newAssumptions);
 		final long elapsed = this.elapsed();
@@ -72,7 +73,7 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
 
 	@Override
 	public boolean isSat(ClassHierarchy hier, Expression exp) 
-	throws DecisionException {
+	throws InvalidInputException, DecisionException {
 		this.startTimer();
 		final boolean result = super.isSat(hier, exp);
 		final long elapsed = this.elapsed();
@@ -82,7 +83,7 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
 	
 	@Override
 	public boolean isSatAliases(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o)
-	throws DecisionException {
+	throws InvalidInputException, DecisionException {
 		this.startTimer();
 		final boolean result = super.isSatAliases(hier, r, heapPos, o);
 		final long elapsed = this.elapsed();
@@ -92,7 +93,7 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
 	
 	@Override
 	public boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, String className)
-	throws DecisionException {
+	throws InvalidInputException, DecisionException {
 		this.startTimer();
 		final boolean result = super.isSatExpands(hier, r, className);
 		final long elapsed = this.elapsed();
@@ -102,7 +103,7 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
 	
 	@Override
 	public boolean isSatNull(ClassHierarchy hier, ReferenceSymbolic r) 
-	throws DecisionException {
+	throws InvalidInputException, DecisionException {
 		this.startTimer();
 		final boolean result = super.isSatNull(hier, r);
 		final long elapsed = this.elapsed();
@@ -112,7 +113,7 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
 	
 	@Override
 	public boolean isSatInitialized(ClassHierarchy hier, String className) 
-	throws DecisionException {
+	throws InvalidInputException, DecisionException {
 		this.startTimer();
 		final boolean result = super.isSatInitialized(hier, className);
 		final long elapsed = this.elapsed();
@@ -122,7 +123,7 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
 	
 	@Override
 	public boolean isSatNotInitialized(ClassHierarchy hier, String className)
-	throws DecisionException {
+	throws InvalidInputException, DecisionException {
 		this.startTimer();
 		final boolean result = super.isSatInitialized(hier, className);
 		final long elapsed = this.elapsed();

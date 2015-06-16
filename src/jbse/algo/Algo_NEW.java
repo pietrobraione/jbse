@@ -15,6 +15,7 @@ import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.dec.DecisionProcedureAlgorithms;
+import jbse.dec.exc.InvalidInputException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 
@@ -59,7 +60,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             //possibly creates and initializes the class
             try {
                 ensureClassCreatedAndInitialized(state, this.data.className(), this.ctx.decisionProcedure);
-            } catch (BadClassFileException e) {
+            } catch (InvalidInputException | BadClassFileException e) {
                 //this should never happen
                 failExecution(e);
             }
