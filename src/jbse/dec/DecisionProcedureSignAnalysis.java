@@ -667,27 +667,27 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 		//if num is 1 or -1 and exp is integral, the range is shifted by one
 		if (Type.isPrimitiveIntegral(type)) {
 			try {
-			if (num.isZeroOne(false)) {
-				if (operator == Operator.EQ || operator == Operator.GE || operator == Operator.GT) {
-					return SignPredicate.GT;
-				} else if (operator == Operator.NE || operator == Operator.LE) {
-					return SignPredicate.UNK;
-				} else if (operator == Operator.LT) {
-					return SignPredicate.LE;
-				} else {
-					throw new UnexpectedInternalException("invalid operator " + operator.toString());
-				}
-			} else if (((Simplex) num.neg()).isZeroOne(false)) {
-				if (operator == Operator.EQ || operator == Operator.LE || operator == Operator.LT) {
-					return SignPredicate.LT;
-				} else if (operator == Operator.NE || operator == Operator.GE) {
-					return SignPredicate.UNK;
-				} else if (operator == Operator.GT) {
-					return SignPredicate.GE;
-				} else {
-					throw new UnexpectedInternalException("invalid operator " + operator.toString());
-				}
-			} //else fall through
+			    if (num.isZeroOne(false)) {
+			        if (operator == Operator.EQ || operator == Operator.GE || operator == Operator.GT) {
+			            return SignPredicate.GT;
+			        } else if (operator == Operator.NE || operator == Operator.LE) {
+			            return SignPredicate.UNK;
+			        } else if (operator == Operator.LT) {
+			            return SignPredicate.LE;
+			        } else {
+			            throw new UnexpectedInternalException("invalid operator " + operator.toString());
+			        }
+			    } else if (((Simplex) num.neg()).isZeroOne(false)) {
+			        if (operator == Operator.EQ || operator == Operator.LE || operator == Operator.LT) {
+			            return SignPredicate.LT;
+			        } else if (operator == Operator.NE || operator == Operator.GE) {
+			            return SignPredicate.UNK;
+			        } else if (operator == Operator.GT) {
+			            return SignPredicate.GE;
+			        } else {
+			            throw new UnexpectedInternalException("invalid operator " + operator.toString());
+			        }
+			    } //else fall through
 			} catch (InvalidTypeException e) {
 				//TODO blame the caller
 				throw new UnexpectedInternalException(e);
