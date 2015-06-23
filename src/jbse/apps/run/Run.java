@@ -15,7 +15,7 @@ import jbse.apps.DecisionProcedureDecoratorTimer;
 import jbse.apps.IO;
 import jbse.apps.Formatter;
 import jbse.apps.StateFormatterGraphviz;
-import jbse.apps.StateFormatterJUnitTest;
+import jbse.apps.StateFormatterJUnitTestSuite;
 import jbse.apps.StateFormatterText;
 import jbse.apps.StateFormatterTrace;
 import jbse.apps.Timer;
@@ -563,7 +563,9 @@ public final class Run {
 		}
 
         // runs the method
-        IO.println(this.log, MSG_START + this.parameters.getMethodSignature() + " at " + new Date() + ".");
+        if (this.parameters.showWarnings) {
+            IO.println(this.log, MSG_START + this.parameters.getMethodSignature() + " at " + new Date() + ".");
+        }
 		try {
 			this.runner.run();
 		} catch (ClasspathException | 
@@ -578,10 +580,12 @@ public final class Run {
 			IO.printException(Run.this.err, e);
 			retVal = 2;
 		}
-        IO.println(this.log, MSG_END + new Date() + ".");
 		
 		// prints statistics
-        printFinalStats();
+        if (this.parameters.showWarnings) {
+            IO.println(this.log, MSG_END + new Date() + ".");
+            printFinalStats();
+        }
         
         // quits the numeric decision procedure for the checker
         if (this.decisionProcedureConcretization != null) {
@@ -742,7 +746,9 @@ public final class Run {
 		}
 
 		// prints a welcome message
-		IO.println(this.log, MSG_WELCOME_TXT);
+        if (this.parameters.showWarnings) {
+            IO.println(this.log, MSG_WELCOME_TXT);
+        }
 
 		// creates the output formatter
 		if (this.parameters.stateFormatMode == StateFormatMode.FULLTEXT) {
@@ -788,7 +794,7 @@ public final class Run {
 				}
 			};
         } else if (this.parameters.stateFormatMode == StateFormatMode.JUNIT_TEST) {
-            this.formatterBranches = this.formatterOthers = new StateFormatterJUnitTest() {
+            this.formatterBranches = this.formatterOthers = new StateFormatterJUnitTestSuite(() -> this.engine.getInitialState()) {
                 @Override
                 public void emit() {
                     IO.println(Run.this.out, this.output);
@@ -800,30 +806,32 @@ public final class Run {
 		}
 
 		//prints some feedback on forthcoming decision procedure creation
-		if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC3) {
-		    IO.println(this.log, MSG_TRY_CVC3
-		               + this.parameters.getExternalDecisionProcedurePath() + ".");
-		} else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.SICSTUS) {
-		    IO.println(this.log, MSG_TRY_SICSTUS
-		               + this.parameters.getExternalDecisionProcedurePath() + ".");
-        } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.Z3) {
-            IO.println(this.log, MSG_TRY_Z3
-                       + this.parameters.getExternalDecisionProcedurePath() + ".");
-        } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC4) {
-            IO.println(this.log, MSG_TRY_CVC4
-                       + this.parameters.getExternalDecisionProcedurePath() + ".");
-		} else if (this.parameters.interactionMode == InteractionMode.NO_INTERACTION) {
-		    IO.println(this.log, MSG_DECISION_BASIC);
-		} else {
-		    IO.println(this.log, MSG_DECISION_INTERACTIVE);
-		}
+        if (this.parameters.showWarnings) {
+            if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC3) {
+                IO.println(this.log, MSG_TRY_CVC3
+                           + this.parameters.getExternalDecisionProcedurePath() + ".");
+            } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.SICSTUS) {
+                IO.println(this.log, MSG_TRY_SICSTUS
+                           + this.parameters.getExternalDecisionProcedurePath() + ".");
+            } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.Z3) {
+                IO.println(this.log, MSG_TRY_Z3
+                           + this.parameters.getExternalDecisionProcedurePath() + ".");
+            } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC4) {
+                IO.println(this.log, MSG_TRY_CVC4
+                           + this.parameters.getExternalDecisionProcedurePath() + ".");
+            } else if (this.parameters.interactionMode == InteractionMode.NO_INTERACTION) {
+                IO.println(this.log, MSG_DECISION_BASIC);
+            } else {
+                IO.println(this.log, MSG_DECISION_INTERACTIVE);
+            }
+        }
 		
 		//defines the engine builder
 		final RunnerParameters runnerParameters = this.parameters.getRunnerParameters();
 		final EngineParameters engineParameters = runnerParameters.getEngineParameters();
 		runnerParameters.setActions(new ActionsRun());
 
-		// builds the runner
+		//builds the runner
 		try {
 			final CalculatorRewriting calc = createCalculator();
 			final DecisionProcedureAlgorithms dec = createDecisionProcedure(calc);

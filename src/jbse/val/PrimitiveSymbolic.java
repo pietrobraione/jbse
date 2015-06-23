@@ -64,6 +64,7 @@ public final class PrimitiveSymbolic extends Primitive implements Symbolic {
     /**
      * Returns the value of symbolic type.
      */
+    @Override
     public String getValue() {
     	return toString();
     }

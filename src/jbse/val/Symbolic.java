@@ -8,7 +8,14 @@ package jbse.val;
  *
  */
 public interface Symbolic {
-	/**
+    /**
+     * Returns a {@link String} value
+     * for the symbol. Two different
+     * symbols must have different value.
+     */
+    public String getValue();
+
+    /**
 	 * Returns the origin of the symbol, i.e., 
 	 * the sequence of fields (path) from 
 	 * the root through which the symbol was 

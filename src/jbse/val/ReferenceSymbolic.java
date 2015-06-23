@@ -18,6 +18,9 @@ public final class ReferenceSymbolic extends Reference implements Symbolic {
 
     /** The origin of the reference. */
 	private final String origin;
+	
+    /** The string representation of this object. */
+	private final String toString;
 
     /**
      * Constructor returning an uninitialized symbolic reference.
@@ -33,6 +36,9 @@ public final class ReferenceSymbolic extends Reference implements Symbolic {
         this.id = id;
         this.staticType = staticType;
         this.origin = origin;
+
+        //calculates toString
+        this.toString = "{R" + this.id + "}";
     }
     
     /**
@@ -60,18 +66,18 @@ public final class ReferenceSymbolic extends Reference implements Symbolic {
     	return this.staticType;
     }
 
+    @Override
     public String getValue() {
-    	return "{R" + this.id + "}";
+    	return toString();
     }
 
+    /**
+     * {@inheritDoc}
+     * For {@link ReferenceSymbolic} values it will always return {@code true}.
+     */
     @Override
     public boolean isSymbolic() {
     	return true;
-    }
-    
-    @Override
-    public String toString() {
-    	return this.getValue();
     }
 
     @Override
@@ -92,5 +98,10 @@ public final class ReferenceSymbolic extends Reference implements Symbolic {
     @Override
     public int hashCode() {
     	return this.id;
+    }
+    
+    @Override
+    public String toString() {
+        return this.toString;
     }
 }
