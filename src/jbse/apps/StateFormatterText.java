@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 import jbse.bc.ClassHierarchy;
 import jbse.common.Type;
@@ -456,8 +457,9 @@ public abstract class StateFormatterText implements Formatter {
         buf.append(indentCurrent);
         boolean isFirst = true;
         final Map<Integer, Variable> lva = f.localVariables();
+        final TreeSet<Integer> slots = new TreeSet<>(lva.keySet());
         final String lineSep = (breakLines ? LINE_SEP : "");
-       	for (int i : lva.keySet()) {
+       	for (int i : slots) {
             if (isFirst) {
                 isFirst = false;
             } else {
