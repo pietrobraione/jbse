@@ -131,7 +131,7 @@ public abstract class BytecodeData {
     throws InterruptException {
         try {
             this.varSlot = varSlot;
-            this.varName = state.getLocalVariableName(varSlot);
+            this.varName = state.getLocalVariableDeclaredName(varSlot);
             this.varValue = state.getLocalVariableValue(varSlot);
         } catch (InvalidSlotException e) {
             throwVerifyError(state);

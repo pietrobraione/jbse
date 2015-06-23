@@ -160,7 +160,8 @@ class LocalVariablesArea implements Cloneable {
     }
     
     /**
-     * Returns the name of a local variable.
+     * Returns the name of a local variable as declared in the 
+     * debug information of the class.
      *  
      * @param slot the number of the slot of a local variable.
      * @param curPC the current program counter.
@@ -169,7 +170,7 @@ class LocalVariablesArea implements Cloneable {
      *         information, or {@code null} if no debug information is 
      *         available for the {@code (slot, curPC)} combination.
      */
-    String getLocalVariableName(int slot, int curPC) {
+    String getLocalVariableDeclaredName(int slot, int curPC) {
         final LocalVariableTable.Row r = this.lvt.row(slot, curPC);
         return (r == null ? null : r.name);
     }

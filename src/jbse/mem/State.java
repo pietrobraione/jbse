@@ -315,7 +315,8 @@ public final class State implements Cloneable {
 	}
 
     /**
-     * Returns the name of a local variable.
+     * Returns the name of a local variable in the current frame 
+     * as declared in the debug information of the class.
      *  
      * @param slot the number of the slot of a local variable.
      * @return a {@link String} containing the name of the local
@@ -325,8 +326,8 @@ public final class State implements Cloneable {
      *         available for the {@code (slot, curPC)} combination.
      * @throws ThreadStackEmptyException if the thread stack is empty.
      */
-    public String getLocalVariableName(int slot) throws ThreadStackEmptyException {
-        return this.stack.currentFrame().getLocalVariableName(slot);
+    public String getLocalVariableDeclaredName(int slot) throws ThreadStackEmptyException {
+        return this.stack.currentFrame().getLocalVariableDeclaredName(slot);
     }
 
 	/**
@@ -1008,7 +1009,7 @@ public final class State implements Cloneable {
 		final Value[] args = new Value[numArgs];
 		for (int i = 0, slot = 0; i < numArgs; ++i) {
 			//builds a symbolic value from signature and name
-			final String origin = ROOT_FRAME_MONIKER + f.getLocalVariableName(slot);
+			final String origin = ROOT_FRAME_MONIKER + f.getLocalVariableDeclaredName(slot);
 			if (slot == ROOT_THIS_SLOT && !isStatic) {
 				args[i] = createSymbol(Type.REFERENCE + rootClassName + Type.TYPEEND, origin);
 				//must assume {ROOT}:this epands to nonnull object (were it null the frame would not exist!)

@@ -88,7 +88,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
         
         public TextGenerator doIt() {
             return (Frame f, ClassHierarchy hier) -> { 
-                final String varName = f.getLocalVariableName(DispatchStrategyFormat0LV.this.slot);
+                final String varName = f.getLocalVariableDeclaredName(DispatchStrategyFormat0LV.this.slot);
                 return DispatchStrategyFormat0LV.this.text + (varName == null ? "" : " [" + varName + "]"); 
             };
         }		
@@ -229,7 +229,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                     } else {
                         UW = f.getInstruction(1);
                     }
-                    final String varName = f.getLocalVariableName(UW);
+                    final String varName = f.getLocalVariableDeclaredName(UW);
                     retVal += (varName == null ? UW : varName + " [" + UW + "]");
                 } catch (InvalidProgramCounterException e) {
                     //unrecognized bytecode
@@ -517,7 +517,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                         UW0 = f.getInstruction(1);
                         UW1 = f.getInstruction(2);
                     }
-                    final String varName = f.getLocalVariableName(UW0);
+                    final String varName = f.getLocalVariableDeclaredName(UW0);
                     retVal += UW0 + " " + UW1 + (varName == null ? "" : " [" + varName + "]");
                 } catch (InvalidProgramCounterException e) {
                     //unrecognized bytecode

@@ -215,7 +215,8 @@ public class Frame implements Cloneable {
     }
     
     /**
-     * Returns the name of a local variable.
+     * Returns the name of a local variable as declared in 
+     * the debug information of the class.
      *  
      * @param slot the number of the slot of a local variable.
      * @return a {@link String} containing the name of the local
@@ -224,8 +225,8 @@ public class Frame implements Cloneable {
      *         or {@code null} if no debug information is 
      *         available for the {@code (slot, curPC)} combination.
      */
-    public String getLocalVariableName(int slot) {
-        return this.localVariables.getLocalVariableName(slot, this.programCounter);
+    public String getLocalVariableDeclaredName(int slot) {
+        return this.localVariables.getLocalVariableDeclaredName(slot, this.programCounter);
     }
     
     /**
