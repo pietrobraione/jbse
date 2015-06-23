@@ -66,5 +66,4 @@ extends DecisionAlternative_XLOAD_GETX implements DecisionAlternative_XYLOAD_GET
     public String toString() {
         return getIdentifier();
     }
-	//TODO toString
 }
