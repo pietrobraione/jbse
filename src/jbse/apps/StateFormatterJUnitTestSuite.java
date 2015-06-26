@@ -113,10 +113,10 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
         "    }\n" +
         "\n";
 
-    private class JUnitTestCase {
+    private static class JUnitTestCase {
         private static final String INDENT = "        ";
         private final StringBuilder s = new StringBuilder(); 
-        private final HashMap<String, String> h = new HashMap<>();
+        private final HashMap<String, String> symboslToVariables = new HashMap<>();
         
         JUnitTestCase(State initialState, State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) {
             //method declaration
@@ -212,8 +212,8 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
                 final int numParams = splitParametersDescriptors(initialState.getRootMethodSignature().getDescriptor()).length;
                 int currentParam = 1;
                 for (int slot : slots) {
-                    final Variable var = lva.get(slot);
-                    if ("this".equals(var.getName())) {
+                    final Variable lv = lva.get(slot);
+                    if ("this".equals(lv.getName())) {
                         continue;
                     }
                     if (currentParam > numParams) {
@@ -222,8 +222,16 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
                     if (currentParam > 1) {
                         s.append(", ");
                     }
-                    this.s.append("__ROOT_");
-                    this.s.append(var.getName());
+                    final String variable = "__ROOT_" + lv.getName();
+                    if (this.symboslToVariables.containsValue(variable)) {
+                        this.s.append(variable);
+                    } else if (jbse.common.Type.isPrimitiveIntegral(lv.getType().charAt(0))) {
+                        this.s.append('0');
+                    } else if (jbse.common.Type.isPrimitiveFloating(lv.getType().charAt(0))) {
+                        this.s.append("0.0f");
+                    } else {
+                        this.s.append("null");
+                    }
                     ++currentParam;
                 }
                 this.s.append(");\n");
@@ -260,7 +268,7 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
             if (s == null) {
                 return null;
             }
-            final String a = s.replace('/', '.');
+            final String a = s.replace('/', '.').replace('$', '.');
             return (isReference(a) ? className(a) : a);
         }
         
@@ -272,17 +280,17 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
         private void makeVariableFor(Symbolic symbol) {
             final String value = symbol.getValue(); 
             final String origin = symbol.getOrigin();
-            if (!h.containsKey(value)) {
-                h.put(value, generateName(origin));
+            if (!this.symboslToVariables.containsKey(value)) {
+                this.symboslToVariables.put(value, generateName(origin));
             }
         }
         
         private String getVariableFor(Symbolic symbol) {
             final String value = symbol.getValue(); 
-            return h.get(value);
+            return this.symboslToVariables.get(value);
         }
         
-        private String getClassOfObjectInHeap(State finalState, long num) {
+        private static String getClassOfObjectInHeap(State finalState, long num) {
             final Map<Long, Objekt> heap = finalState.getHeap();
             final Objekt o = heap.get(num);
             return o.getType();
