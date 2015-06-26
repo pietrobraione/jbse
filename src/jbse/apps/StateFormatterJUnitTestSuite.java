@@ -1,6 +1,9 @@
 package jbse.apps;
 
 import static jbse.common.Type.className;
+import static jbse.common.Type.isPrimitive;
+import static jbse.common.Type.isPrimitiveFloating;
+import static jbse.common.Type.isPrimitiveIntegral;
 import static jbse.common.Type.isReference;
 import static jbse.common.Type.splitParametersDescriptors;
 
@@ -28,10 +31,12 @@ import jbse.val.NarrowingConversion;
 import jbse.val.Primitive;
 import jbse.val.PrimitiveSymbolic;
 import jbse.val.PrimitiveVisitor;
+import jbse.val.Reference;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
 import jbse.val.Symbolic;
 import jbse.val.Term;
+import jbse.val.Value;
 import jbse.val.WideningConversion;
 
 /**
@@ -120,7 +125,14 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
         
         JUnitTestCase(State initialState, State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) {
             //method declaration
-            this.s.append("    @Test\n");
+            final Reference exception = finalState.getStuckException();
+            if (exception == null) {
+                this.s.append("    @Test\n");
+            } else {
+                this.s.append("    @Test(expected=");
+                this.s.append(javaType(finalState.getObject(exception).getType()));
+                this.s.append(".class)\n");
+            }
             this.s.append("    public void testCase");
             this.s.append(testCounter);
             this.s.append("() {\n");
@@ -197,8 +209,26 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
             }
             
             //test method invocation
+            final Value returnedValue = finalState.getStuckReturn();
+            final boolean mustCheckReturnedValue = 
+                (returnedValue != null)  && (isPrimitive(returnedValue.getType()) || returnedValue instanceof Symbolic);
             this.s.append(INDENT);
             try {
+                if (mustCheckReturnedValue) {
+                    if (isPrimitiveIntegral(returnedValue.getType())) {
+                        this.s.append("long");
+                    } else if (isPrimitiveFloating(returnedValue.getType())) {
+                        this.s.append("double");
+                    } else {
+                        final Reference returnedRef = (Reference) returnedValue;
+                        if (finalState.isNull(returnedRef)) {
+                            this.s.append("java.lang.Object");
+                        } else {
+                            this.s.append(javaType(finalState.getObject(returnedRef).getType()));
+                        }
+                    }
+                    this.s.append(" __returnedValue = ");
+                }
                 final String methodName = initialState.getRootMethodSignature().getName();
                 if ("this".equals(initialState.getRootFrame().getLocalVariableDeclaredName(0))) {
                     this.s.append("__ROOT_this.");
@@ -225,9 +255,9 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
                     final String variable = "__ROOT_" + lv.getName();
                     if (this.symboslToVariables.containsValue(variable)) {
                         this.s.append(variable);
-                    } else if (jbse.common.Type.isPrimitiveIntegral(lv.getType().charAt(0))) {
+                    } else if (isPrimitiveIntegral(lv.getType().charAt(0))) {
                         this.s.append('0');
-                    } else if (jbse.common.Type.isPrimitiveFloating(lv.getType().charAt(0))) {
+                    } else if (isPrimitiveFloating(lv.getType().charAt(0))) {
                         this.s.append("0.0f");
                     } else {
                         this.s.append("null");
@@ -238,6 +268,28 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
             } catch (ThreadStackEmptyException e) {
                 //TODO
                 throw new RuntimeException(e);
+            }
+
+            //assert
+            if (mustCheckReturnedValue) {
+                this.s.append(INDENT);
+                this.s.append("assertTrue(__returnedValue == ");
+                if (isPrimitive(returnedValue.getType())) {
+                    this.s.append(returnedValue.toString());
+                } else {
+                    final Reference returnedRef = (Reference) returnedValue;
+                    if (finalState.isNull(returnedRef)) {
+                        this.s.append("null");
+                    } else {
+                        final String var = generateName(finalState.getObject(returnedRef).getOrigin());
+                        if (hasMemberAccessor(var)) {
+                            this.s.append(getValueByReflection(var));
+                        } else {
+                            this.s.append(var);
+                        }
+                    }
+                }
+                this.s.append(");\n");
             }
             
             //end of the method
