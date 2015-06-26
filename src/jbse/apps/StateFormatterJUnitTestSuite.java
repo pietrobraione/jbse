@@ -21,6 +21,7 @@ import jbse.mem.State;
 import jbse.mem.Variable;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Any;
+import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.FunctionApplication;
 import jbse.val.NarrowingConversion;
@@ -42,11 +43,17 @@ import jbse.val.WideningConversion;
  */
 public abstract class StateFormatterJUnitTestSuite implements Formatter {
     protected String output = "";
+    private Calculator calc;
     private Supplier<State> initialStateSupplier;
+    private Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier;
     private int testCounter = 0;
     
-    public StateFormatterJUnitTestSuite(Supplier<State> initialStateSupplier) {
+    public StateFormatterJUnitTestSuite(Calculator calc,
+                                        Supplier<State> initialStateSupplier, 
+                                        Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier) {
+        this.calc = calc;
         this.initialStateSupplier = initialStateSupplier;
+        this.modelSupplier = modelSupplier;
     }
 
     @Override
@@ -109,7 +116,7 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
         "    }\n" +
         "\n";
 
-    private static class JUnitTestCase {
+    private class JUnitTestCase {
         private static final String INDENT = "        ";
         private final StringBuilder s = new StringBuilder(); 
         private final HashMap<String, String> h = new HashMap<>();
@@ -264,7 +271,7 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
             return h.get(value);
         }
         
-        private static String getClassOfObjectInHeap(State finalState, long num) {
+        private String getClassOfObjectInHeap(State finalState, long num) {
             final Map<Long, Objekt> heap = finalState.getHeap();
             final Objekt o = heap.get(num);
             return o.getType();
@@ -284,12 +291,12 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
             return null;
         }
         
-        private static boolean hasMemberAccessor(String s) {
+        private boolean hasMemberAccessor(String s) {
             return (s.indexOf('.') != -1);
         }
         
         
-        private static String replaceAccessorsWithGetters(String container, String accessExpression) {
+        private String replaceAccessorsWithGetters(String container, String accessExpression) {
             String a = container;
             String s = accessExpression;    
             if (hasMemberAccessor(s)) {
@@ -338,6 +345,8 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
         }
         
         private String primitiveSymbolAssignments(Primitive e) {
+            final Map<PrimitiveSymbolic, Simplex> model =
+                StateFormatterJUnitTestSuite.this.modelSupplier.get();
             final HashSet<PrimitiveSymbolic> symbols = new HashSet<>();
             PrimitiveVisitor v = new PrimitiveVisitor() {
                 
@@ -391,25 +400,36 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
             
             final StringBuilder s = new StringBuilder();
             for (PrimitiveSymbolic symbol : symbols) {
-                if (getVariableFor(symbol) == null) {
-                    setWithNumericValue(symbol, "0"); //TODO get the real value from solver
+                if (getVariableFor(symbol) == null) { //not yet done
+                    final Simplex defaultValue = (Simplex)
+                        StateFormatterJUnitTestSuite.this.calc.createDefault("" + symbol.getType());
+                    if (model == null) {
+                        setWithNumericValue(symbol, defaultValue);
+                    } else {
+                        final Simplex value = model.get(symbol);
+                        if (value == null) {
+                            setWithNumericValue(symbol, defaultValue);
+                        } else {
+                            setWithNumericValue(symbol, value);
+                        }
+                    }
                     s.append(' ');
                 }
             }
             return s.toString();
         }
         
-        private void setWithNumericValue(PrimitiveSymbolic symbol, String value) {
+        private void setWithNumericValue(PrimitiveSymbolic symbol, Simplex value) {
             final boolean variableNotYetCreated = (getVariableFor(symbol) == null);
             if (variableNotYetCreated) {
                 makeVariableFor(symbol);
                 final String var = getVariableFor(symbol);
                 if (hasMemberAccessor(var)) {
-                    setByReflection(var, value); 
+                    setByReflection(var, value.toString()); 
                 } else {
                     this.s.append("int ");
                     this.s.append(var);
-                    this.s.append(" = " + value + ";");
+                    this.s.append(" = " + value.toString() + ";");
                 }
             }
         }

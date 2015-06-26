@@ -18,7 +18,6 @@ import jbse.jvm.ExecutionObserver;
 import jbse.jvm.RunnerParameters;
 import jbse.jvm.EngineParameters.BreadthMode;
 import jbse.jvm.EngineParameters.StateIdentificationMode;
-import jbse.jvm.exc.CannotBuildDecisionProcedureException;
 import jbse.mem.State;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.Rewriter;

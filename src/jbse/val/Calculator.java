@@ -267,7 +267,7 @@ public abstract class Calculator {
      * 2nd edition, paragraph 2.5.1).
      *  
      * @param type a type.
-     * @return a new instance of {@link Value}, the default for <code>type</code>
+     * @return a new instance of {@link Value}, the default for {@code type}
      *         (either a {@link Simplex} or {@link Null#getInstance()}), 
      *         or {@code null} if {@code type} does not 
      *         indicate a primitive or reference type.

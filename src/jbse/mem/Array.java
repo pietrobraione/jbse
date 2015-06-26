@@ -385,7 +385,7 @@ public final class Array extends Objekt {
 	 * @return a {@link Primitive}.
 	 */
 	public Primitive getLength() {
-		return (Primitive) this.getFieldValue(this.lengthSignature);
+		return (Primitive) getFieldValue(this.lengthSignature);
 	}
 	
 	/**

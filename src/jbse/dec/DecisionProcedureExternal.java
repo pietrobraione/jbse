@@ -2,6 +2,7 @@ package jbse.dec;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
+import java.util.Map;
 
 import jbse.bc.ClassHierarchy;
 import jbse.dec.exc.DecisionException;
@@ -17,7 +18,9 @@ import jbse.mem.Objekt;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.Rewriter;
 import jbse.val.Expression;
+import jbse.val.PrimitiveSymbolic;
 import jbse.val.ReferenceSymbolic;
+import jbse.val.Simplex;
 
 /**
  * A {@link DecisionProcedureExternal} is a {@link DecisionProcedureChainOfResponsibility} 
@@ -287,6 +290,16 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
 		} catch (ExternalProtocolInterfaceException | IOException e) {
 			throw new DecisionException(e);
 		}
+	}
+	
+	@Override
+	protected Map<PrimitiveSymbolic, Simplex> getModelLocal()
+	throws DecisionException {
+        try {
+            return this.extIf.getModel();
+        } catch (ExternalProtocolInterfaceException | IOException e) {
+            throw new DecisionException(e);
+        }
 	}
 	
 	@Override

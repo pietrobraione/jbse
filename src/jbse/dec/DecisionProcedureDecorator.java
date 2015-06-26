@@ -1,6 +1,7 @@
 package jbse.dec;
 
 import java.util.Collection;
+import java.util.Map;
 
 import jbse.bc.ClassHierarchy;
 import jbse.dec.exc.DecisionException;
@@ -9,7 +10,9 @@ import jbse.mem.Clause;
 import jbse.mem.Objekt;
 import jbse.val.Expression;
 import jbse.val.Primitive;
+import jbse.val.PrimitiveSymbolic;
 import jbse.val.ReferenceSymbolic;
+import jbse.val.Simplex;
 
 /**
  * A decision procedure which delegates its operation to another one 
@@ -104,6 +107,11 @@ public class DecisionProcedureDecorator implements DecisionProcedure {
 	public boolean isSatNotInitialized(ClassHierarchy hier, String className) 
 	throws InvalidInputException, DecisionException {
 		return this.component.isSatNotInitialized(hier, className);
+	}
+	
+	@Override
+	public Map<PrimitiveSymbolic, Simplex> getModel() throws DecisionException {
+	    return this.component.getModel();
 	}
 
 	@Override

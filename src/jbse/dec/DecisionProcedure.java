@@ -1,15 +1,19 @@
 package jbse.dec;
 
 import java.util.Collection;
+import java.util.Map;
 
 import jbse.bc.ClassHierarchy;
 import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.InvalidInputException;
+import jbse.dec.exc.NoModelException;
 import jbse.mem.Clause;
 import jbse.mem.Objekt;
 import jbse.val.Expression;
 import jbse.val.Primitive;
+import jbse.val.PrimitiveSymbolic;
 import jbse.val.ReferenceSymbolic;
+import jbse.val.Simplex;
 
 /**
  * A {@code DecisionProcedure} accumulates a satisfiable assumption as a 
@@ -205,6 +209,22 @@ public interface DecisionProcedure extends AutoCloseable {
      */
     boolean isSatNotInitialized(ClassHierarchy hier, String className) 
     throws InvalidInputException, DecisionException;
+    
+    /**
+     * Returns a model of the last clause whose satisfiability
+     * was checked with one of the {@code isSat}Xxx methods.
+     * The model is for the numeric symbols only.
+     * 
+     * @return a {@link Map}{@code <}{@link PrimitiveSymbolic}{@code ,}
+     *         {@link Simplex}{@code >} associating a concrete 
+     *         numeric value to all the symbols with numeric type
+     *         in the last checked clause. 
+     * @throws DecisionException upon failure.
+     */
+    default Map<PrimitiveSymbolic, Simplex> getModel() 
+    throws DecisionException {
+        throw new NoModelException();
+    }
     
     /**
      * Simplifies a {@link Primitive} under the current assumptions.

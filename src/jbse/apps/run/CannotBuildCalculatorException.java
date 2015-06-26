@@ -1,4 +1,6 @@
-package jbse.jvm.exc;
+package jbse.apps.run;
+
+import jbse.jvm.exc.CannotBuildEngineException;
 
 public class CannotBuildCalculatorException extends CannotBuildEngineException {
 

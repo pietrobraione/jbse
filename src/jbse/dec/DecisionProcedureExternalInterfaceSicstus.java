@@ -8,11 +8,13 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 
 import jbse.bc.ClassHierarchy;
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.ExternalProtocolInterfaceException;
+import jbse.dec.exc.NoModelException;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
 import jbse.rewr.CalculatorRewriting;
@@ -455,6 +457,12 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 			fail();
 			throw new UnexpectedInternalException(e);
 		}
+	}
+	
+	@Override
+	public Map<PrimitiveSymbolic, Simplex> getModel() 
+	throws NoModelException, ExternalProtocolInterfaceException, IOException {
+	    throw new NoModelException();
 	}
 
 	@Override

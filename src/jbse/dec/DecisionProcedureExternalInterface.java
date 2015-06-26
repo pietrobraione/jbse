@@ -1,12 +1,16 @@
 package jbse.dec;
 
 import java.io.IOException;
+import java.util.Map;
 
 import jbse.bc.ClassHierarchy;
 import jbse.dec.exc.ExternalProtocolInterfaceException;
+import jbse.dec.exc.NoModelException;
 import jbse.mem.Objekt;
 import jbse.val.Primitive;
+import jbse.val.PrimitiveSymbolic;
 import jbse.val.ReferenceSymbolic;
+import jbse.val.Simplex;
 
 public abstract class DecisionProcedureExternalInterface {
     /**
@@ -147,6 +151,25 @@ public abstract class DecisionProcedureExternalInterface {
 	 */
 	public abstract boolean checkSat(ClassHierarchy hier, boolean positive)
 	throws ExternalProtocolInterfaceException, IOException;
+	
+    /**
+     * Returns a model of the last sent clause whose satisfiability
+     * was checked with {@link #checkSat(ClassHierarchy, boolean) checkSat}.
+     * The model is for the numeric symbols only.
+     * 
+     * @return a {@link Map}{@code <}{@link PrimitiveSymbolic}{@code ,}
+     *         {@link Simplex}{@code >} associating a concrete 
+     *         numeric value to all the symbols with numeric type
+     *         in the last checked clause. 
+     * @throws NoModelException if the external decision
+     *         procedure cannot produce a model.
+     * @throws ExternalProtocolInterfaceException if this method is 
+     *         invoked when there is no current predicate.
+     * @throws IOException if communication with the external 
+     *         decision procedure fails. 
+     */
+	public abstract Map<PrimitiveSymbolic, Simplex> getModel() 
+    throws NoModelException, ExternalProtocolInterfaceException, IOException;
 
 	/**
 	 * Pushes the (possibly negated) current clauses to the current

@@ -20,4 +20,6 @@ public class CannotBuildEngineException extends Exception {
 	
 	public CannotBuildEngineException(Exception e) { super(e); }
 
+    public CannotBuildEngineException() { super(); }
+
 }

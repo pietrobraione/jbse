@@ -6,13 +6,17 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.Map;
 import java.util.Stack;
 
 import jbse.bc.ClassHierarchy;
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.ExternalProtocolInterfaceException;
+import jbse.dec.exc.NoModelException;
 import jbse.mem.Objekt;
 import jbse.rewr.CalculatorRewriting;
 import jbse.val.Any;
@@ -41,11 +45,17 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
     private static final String PROLOGUE = 
         "(set-option :print-success true)\n" +
         "(set-option :interactive-mode true)\n" +
+        "(set-option :produce-models true)\n" +
         "(set-logic AUFNIRA)\n" +
         "(define-fun round_to_zero ((x Real)) Int (ite (>= x 0.0) (to_int x) (- (to_int (- x)))))\n";
-    private static final String PUSH = "(push 1)\n";
-    private static final String POP = "(pop 1)\n";
+    private static final String PUSH_1 = "(push 1)\n";
+    private static final String POP_BEGIN = "(pop ";
+    private static final String POP_END = ")\n";
+    private static final String POP_1 = "(pop 1)\n";
     private static final String CHECKSAT = "(check-sat)\n";
+    private static final String GETVALUE_BEGIN = "(get-value (";
+    private static final String GETVALUE_END = "))\n";
+    private static final String EXIT = "(exit)\n";
     
     //answers
     private static final String SUCCESS = "success";
@@ -56,6 +66,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
     //etc
     private static final String OTHER = "";
 
+    private final CalculatorRewriting calc;
     private final ExpressionMangler m;
     private boolean working;
     private Process solver;
@@ -67,24 +78,23 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
     private SMTLIB2ExpressionVisitor v;
     private ArrayList<Integer> nSymPushed; 
     private int nSymCurrent;
-    private int nTotalSym;
+    private int nTotalSymbols;
+    private String smtlib2Model;
 
     /** 
      * Costructor.
      */
     public DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA(CalculatorRewriting calc, String solverBinaryPath) 
     throws ExternalProtocolInterfaceException, IOException {
-        this.m = new ExpressionMangler("X", "", calc);
+        this.calc = calc;
+        this.m = new ExpressionMangler("X", "", this.calc);
         this.working = true;
         this.solver = Runtime.getRuntime().exec(solverBinaryPath);
         this.solverIn = new BufferedReader(new InputStreamReader(this.solver.getInputStream()));
         this.solverOut = new BufferedWriter(new OutputStreamWriter(this.solver.getOutputStream()));
         
-        final String query = PROLOGUE + PUSH;
+        final String query = PROLOGUE + PUSH_1;
         sendAndCheckAnswer(query);
-        //TODO log differently!
-        //System.err.println("--->SMTLIB2: " + PROLOGUE);
-        //System.err.println("--->SMTLIB2: " + PUSH);
         clear();
     }
 
@@ -106,9 +116,9 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
 
         try {
             cond.accept(this.v);
-            this.currentClausePositive = PUSH + this.v.getQueryDeclarations() + "(assert " + this.v.getQueryAssertClause() + ")\n";
+            this.currentClausePositive = PUSH_1 + this.v.getQueryDeclarations() + "(assert " + this.v.getQueryAssertClause() + ")\n";
             cond.not().accept(this.v);
-            this.currentClauseNegative = PUSH + this.v.getQueryDeclarations() + "(assert " + this.v.getQueryAssertClause() + ")\n";
+            this.currentClauseNegative = PUSH_1 + this.v.getQueryDeclarations() + "(assert " + this.v.getQueryAssertClause() + ")\n";
         } catch (ExternalProtocolInterfaceException | RuntimeException e) {
             throw e;
         } catch (Exception e) {
@@ -184,9 +194,6 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
         forgetPushedDeclarations();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean checkSat(ClassHierarchy hier, boolean value) 
     throws ExternalProtocolInterfaceException, IOException {
@@ -199,22 +206,170 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
             return true;
         }
         sendAndCheckAnswer(queryPush);
-        //TODO log differently!
-        //System.err.println("--- CHECKSAT: ");
-        //System.err.println("--->SMTLIB2: " + queryPush);        
         final boolean isSat = sendAndCheckAnswerChecksat();
-        //TODO log differently!
-        //System.err.println("--->SMTLIB2: (check-sat)");        
-        //System.err.println("<---SMTLIB2: *" + isSat + "*");
-        sendAndCheckAnswer(POP);
-        //TODO log differently!
-        //System.err.println("--->SMTLIB2: (pop 1)");
+        this.smtlib2Model = sendAndCheckAnswerGetmodel();
+        sendAndCheckAnswer(POP_1);
         return isSat;
     }
+    
+    @Override
+    public Map<PrimitiveSymbolic, Simplex> getModel() 
+    throws NoModelException, ExternalProtocolInterfaceException, IOException {
+        if (this.smtlib2Model == null || this.smtlib2Model.startsWith("(error")) {
+            throw new NoModelException();
+        }
+        
+        final HashMap<PrimitiveSymbolic, Simplex> model = new HashMap<>();
+        String smtlib2Symbol = null;
+        LinkedList<LinkedList<Object>> smtlib2ParseStack = new LinkedList<>();
+        smtlib2ParseStack.push(new LinkedList<>());
+        int nestingLevel = 0;
+        boolean scanningSymbol = false;
+        final String[] smtlib2ModelTokens = this.smtlib2Model.replace("(", " ( ").replace(")", " ) ").trim().split("\\s+"); //thanks Peter Norvig!
+        for (String token : smtlib2ModelTokens) {
+            final int prevNestingLevel = nestingLevel;
+            if (token.equals("(")) {
+                ++nestingLevel;
+            } else if (token.equals(")")) {
+                --nestingLevel;
+            }
+            if (prevNestingLevel == 1 && nestingLevel == 2) {
+                scanningSymbol = true;
+            } else if (nestingLevel == 2 && scanningSymbol) {
+                smtlib2Symbol = token;
+                scanningSymbol = false;
+            } else if (nestingLevel >= 2 && !scanningSymbol) {
+                if (token.equals("(")) {
+                    smtlib2ParseStack.push(new LinkedList<>());
+                } else if (token.equals(")")) {
+                    final LinkedList<Object> list = smtlib2ParseStack.pop();
+                    smtlib2ParseStack.peek().add(list);
+                } else {
+                    smtlib2ParseStack.peek().add(token);
+                }
+            } else if (prevNestingLevel == 2 && nestingLevel == 1) {
+                final Primitive jbseSymbol = this.v.smtlib2VarsToJBSESymbols.get(smtlib2Symbol);
+                if (jbseSymbol != null && jbseSymbol instanceof PrimitiveSymbolic) {
+                    final Number value = smtlib2Interpret(smtlib2ParseStack.pop());
+                    if (value == null) {
+                        //unable to interpret the SMTLIB2 expression
+                        //TODO
+                    } else {
+                        model.put((PrimitiveSymbolic) jbseSymbol, (Simplex) calc.val_(value));
+                    }
+                }   
+                smtlib2Symbol = null;
+                smtlib2ParseStack = new LinkedList<>();
+                smtlib2ParseStack.push(new LinkedList<>());
+            }
+        }
+        return model;
+    }
+    
+    private Number smtlib2Interpret(Object smtlib2ParsedExpression) {
+        if (smtlib2ParsedExpression == null) {
+            return null;
+        }
+        if (smtlib2ParsedExpression instanceof String) {
+            // <constant>
+            final String constant = (String) smtlib2ParsedExpression;
+            try {
+                final Long l = Long.parseLong(constant);
+                return l;
+            } catch (NumberFormatException e1) {
+                try {
+                    final Double d = Double.parseDouble(constant);
+                    return d;
+                } catch (NumberFormatException e2) {
+                    return null;
+                }
+            }
+        }
+        if (smtlib2ParsedExpression instanceof LinkedList<?>) {
+            // ( ... )
+            final LinkedList<?> exprList = (LinkedList<?>) smtlib2ParsedExpression;
+            if (exprList.isEmpty()) {
+                // ()
+                return null;
+            }
+            final Object head = exprList.pollFirst();
+            if (exprList.isEmpty()) {
+                // (<subexpression>)
+                return smtlib2Interpret(head);
+            } else if (head instanceof String) {
+                final String headString = (String) head;
+                final Number firstOperand, secondOperand;
+                switch (headString) {
+                case "+":
+                    firstOperand = smtlib2Interpret(exprList.pollFirst());
+                    if (exprList.isEmpty()) {
+                        // (+ <firstOperand>)
+                        return firstOperand;
+                    } else {
+                        // (+ <firstOperand> <secondOperand>)
+                        secondOperand = smtlib2Interpret(exprList.pollFirst());
+                        if (firstOperand == null || secondOperand == null) {
+                            return null;
+                        } else if (firstOperand instanceof Float || firstOperand instanceof Double ||
+                        secondOperand instanceof Float || secondOperand instanceof Double) {
+                            return firstOperand.doubleValue() + secondOperand.doubleValue();
+                        } else {
+                            return firstOperand.longValue() + secondOperand.longValue();
+                        }
+                    }
+                case "-":
+                    firstOperand = smtlib2Interpret(exprList.pollFirst());
+                    if (exprList.isEmpty()) {
+                        // (- <firstOperand>)
+                        if (firstOperand == null) {
+                            return null;
+                        } else if (firstOperand instanceof Float || firstOperand instanceof Double) {
+                            return - firstOperand.doubleValue();
+                        } else {
+                            return - firstOperand.longValue();
+                        }
+                    } else {
+                        // (- <firstOperand> <secondOperand>)
+                        secondOperand = smtlib2Interpret(exprList.pollFirst());
+                        if (firstOperand == null || secondOperand == null) {
+                            return null;
+                        } else if (firstOperand instanceof Float || firstOperand instanceof Double ||
+                        secondOperand instanceof Float || secondOperand instanceof Double) {
+                            return firstOperand.doubleValue() - secondOperand.doubleValue();
+                        } else {
+                            return firstOperand.longValue() - secondOperand.longValue();
+                        }
+                    }
+                case "*":
+                    // (* <firstOperand> <secondOperand>)
+                    firstOperand = smtlib2Interpret(exprList.pollFirst());
+                    secondOperand = smtlib2Interpret(exprList.pollFirst());
+                    if (firstOperand == null || secondOperand == null) {
+                        return null;
+                    } else if (firstOperand instanceof Float || firstOperand instanceof Double ||
+                    secondOperand instanceof Float || secondOperand instanceof Double) {
+                        return firstOperand.doubleValue() * secondOperand.doubleValue();
+                    } else {
+                        return firstOperand.longValue() * secondOperand.longValue();
+                    }
+                case "/":
+                    // (/ <firstOperand> <secondOperand>)
+                    firstOperand = smtlib2Interpret(exprList.pollFirst());
+                    secondOperand = smtlib2Interpret(exprList.pollFirst());
+                    if (firstOperand == null || secondOperand == null) {
+                        return null;
+                    } else if (firstOperand instanceof Float || firstOperand instanceof Double ||
+                    secondOperand instanceof Float || secondOperand instanceof Double) {
+                        return firstOperand.doubleValue() / secondOperand.doubleValue();
+                    } else {
+                        return firstOperand.longValue() / secondOperand.longValue();
+                    }
+                }
+            }
+        }
+        return null;
+    }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void pushAssumption(boolean value) 
     throws ExternalProtocolInterfaceException, IOException {
@@ -226,36 +381,23 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
         
         String queryPush = (value ? this.currentClausePositive : this.currentClauseNegative);
         if (queryPush == null) {
-            queryPush = PUSH; //TODO avoid empty pushes
+            queryPush = PUSH_1; //TODO avoid empty pushes
         }
         sendAndCheckAnswer(queryPush);
-        //TODO log differently!
-        //System.err.println("--- PUSH_ASSUMPTION:");
-        //System.err.println("--->SMTLIB2: " + queryPush);
     }
 
     @Override
     public void popAssumption() throws ExternalProtocolInterfaceException, IOException {
         forgetPoppedDeclarations();
-        sendAndCheckAnswer(POP);
-        //TODO log differently!
-        //System.err.println("--- POP_ASSUMPTION:");
-        //System.err.println("--->SMTLIB2: " + POP);
+        sendAndCheckAnswer(POP_1);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void clear() 
     throws ExternalProtocolInterfaceException, IOException {
-        //TODO log differently!
-        //System.err.println("--- CLEAR:");
         final int nToPop = (this.nSymPushed == null ? 0 : this.nSymPushed.size());
         if (nToPop > 0) {
-            sendAndCheckAnswer("(pop " + nToPop + ")\n");
-            //TODO log differently!
-            //System.err.println("--->SMTLIB2: (pop " + nToPop + ")");
+            sendAndCheckAnswer(POP_BEGIN + nToPop + POP_END);
         }
         this.currentClausePositive = this.currentClauseNegative = null;
         this.hasCurrentClause = false;
@@ -263,6 +405,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
     }
     
     private void send(String query) throws IOException {
+        //System.err.print("--->SMTLIB2: " + query); //TODO log differently!
         try {
             this.solverOut.write(query);
             this.solverOut.flush();
@@ -277,6 +420,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
         for (int i = 0; i < query.length(); ++i) {
             if (query.charAt(i) == '\n') {
                 final String answer = this.solverIn.readLine();
+                //System.err.println("<---SMTLIB2: " + answer); //TODO log differently!
                 if (answer == null) {
                     this.working = false;
                     throw new IOException("failed read of solver answer");
@@ -292,6 +436,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
     private boolean sendAndCheckAnswerChecksat() throws IOException, ExternalProtocolInterfaceException {
         send(CHECKSAT);
         final String answer = this.solverIn.readLine();
+        //System.err.println("<---SMTLIB2: " + answer); //TODO log differently!
         if (answer == null) {
             this.working = false;
             throw new IOException("failed read of solver output");
@@ -301,6 +446,38 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
             throw new ExternalProtocolInterfaceException("unrecognized answer from solver when checking satisfiability. Message: " + answer);
         }
         return !answer.equals(UNSAT); //conservatively returns true if answer is unknown
+    }
+    
+    private String sendAndCheckAnswerGetmodel() 
+    throws IOException, ExternalProtocolInterfaceException {
+        final StringBuilder query = new StringBuilder(GETVALUE_BEGIN);
+        for (String symbol : this.v.smtlib2DeclaredSymbols) {
+            query.append(symbol);
+            query.append(' ');
+        }
+        query.append(GETVALUE_END);
+        send(query.toString());
+        //answer can be multiline, we count parentheses to
+        //determine when the answer is over
+        final StringBuilder retVal = new StringBuilder();
+        int nestingLevel = 0;
+        do {
+            final String answer = this.solverIn.readLine();
+            //System.err.println("<---SMTLIB2: " + answer); //TODO log differently!
+            if (answer == null) {
+                this.working = false;
+                throw new IOException("failed read of solver output");
+            }
+            retVal.append(answer);
+            for (char c : answer.toCharArray()) {
+                if (c == '(') {
+                    ++nestingLevel;
+                } else if (c == ')') {
+                    --nestingLevel;
+                }
+            }
+        } while (nestingLevel > 0);
+        return retVal.toString();
     }
     
     private void rememberPushedDeclarations() {
@@ -325,7 +502,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
         this.v = new SMTLIB2ExpressionVisitor();
         this.nSymPushed = new ArrayList<>();
         this.nSymCurrent = 0;
-        this.nTotalSym = 0;
+        this.nTotalSymbols = 0;
     }
 
     /**
@@ -393,8 +570,17 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
         /** Is this a boolean expression? */
         private boolean isBooleanExpression = true;
         
-        /** All the symbols declared in the visited Primitive. */
-        private LinkedHashSet<String> declaredSymbols = new LinkedHashSet<>();
+        /** 
+         * All the SMTLIB v2 symbols declared in 
+         * the visited Primitive. 
+         */
+        private LinkedHashSet<String> smtlib2DeclaredSymbols = new LinkedHashSet<>();
+        
+        /** 
+         * Remaps the SMTLIB v2 symbols to
+         * their original JBSE primitives 
+         */
+        private HashMap<String, Primitive> smtlib2VarsToJBSESymbols = new HashMap<>();
         
         /** 
          * SMTLIB2 query for the declaration of the symbols.
@@ -417,26 +603,28 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
             this.queryDeclarations = new StringBuilder();                       
         }
 
-        void removeDeclaredSymbols(int nSymToDel) {
-            final ArrayList<String> symToDel = new ArrayList<>();
-            int n = nTotalSym - nSymToDel;
+        void removeDeclaredSymbols(int nSymbolsToForget) {
+            final ArrayList<String> symbolsToForget = new ArrayList<>();
+            int n = nTotalSymbols - nSymbolsToForget;
             int c = 0;
-            for (String s : this.declaredSymbols) {
-                if (c < n){
+            for (String s : this.smtlib2DeclaredSymbols) {
+                if (c < n) {
                     ++c;
                 } else {
-                    symToDel.add(s);
+                    this.smtlib2VarsToJBSESymbols.remove(s);
+                    symbolsToForget.add(s);
                 }
             }
-            this.declaredSymbols.removeAll(symToDel);
-            nTotalSym = nTotalSym - nSymToDel;
+            this.smtlib2DeclaredSymbols.removeAll(symbolsToForget);
+            nTotalSymbols = nTotalSymbols - nSymbolsToForget;
         }
 
         public SMTLIB2ExpressionVisitor() { }
 
         public SMTLIB2ExpressionVisitor(SMTLIB2ExpressionVisitor v, boolean isBooleanExpression) {
             this.isBooleanExpression = isBooleanExpression;
-            this.declaredSymbols = v.declaredSymbols;
+            this.smtlib2DeclaredSymbols = v.smtlib2DeclaredSymbols;
+            this.smtlib2VarsToJBSESymbols = v.smtlib2VarsToJBSESymbols;
             this.queryDeclarations = v.queryDeclarations;
             this.clauseStack = v.clauseStack;
         }
@@ -488,41 +676,42 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
             final String operator = x.getOperator();
             final char type = x.getType();
             final StringBuilder clause = new StringBuilder();
-            final StringBuilder z3Signature = new StringBuilder();
+            final StringBuilder smtlib2Signature = new StringBuilder();
             boolean builtIn = false;
             if (operator.equals(FunctionApplication.ABS)) {
                 if (Type.isPrimitiveIntegral(x.getType())) {
                     builtIn = true;
                     clause.append("(abs ");
-                    z3Signature.append("abs ("); //useless, but we keep it
+                    smtlib2Signature.append("abs ("); //useless, but we keep it
                 } else {
                     clause.append("(absReals ");
-                    z3Signature.append("absReals (");
+                    smtlib2Signature.append("absReals (");
                 }
             } else {
                 clause.append("(" + operator + " ");
-                z3Signature.append(operator + " (");
+                smtlib2Signature.append(operator + " (");
             }
             for (Primitive p : x.getArgs()) {
                 p.accept(new SMTLIB2ExpressionVisitor(this, false));
                 clause.append(this.clauseStack.pop());
                 clause.append(" ");
-                final String z3Type = toSMTLIB2Type(p.getType());
-                z3Signature.append(z3Type);
-                z3Signature.append(" ");
+                final String smtlib2Type = toSMTLIB2Type(p.getType());
+                smtlib2Signature.append(smtlib2Type);
+                smtlib2Signature.append(" ");
             }
             clause.append(")");
             this.clauseStack.push(clause.toString());
-            z3Signature.append(") ");
-            z3Signature.append(toSMTLIB2Type(type));
+            smtlib2Signature.append(") ");
+            smtlib2Signature.append(toSMTLIB2Type(type));
 
-            if (this.declaredSymbols.contains(operator) || builtIn) {
+            if (this.smtlib2DeclaredSymbols.contains(operator) || builtIn) {
                 // does nothing
             } else {
-                this.declaredSymbols.add(operator);
-                this.queryDeclarations.append("(declare-fun " + z3Signature + " )\n");
+                this.smtlib2DeclaredSymbols.add(operator);
+                //not added to smtlib2VarsToJBSESymbols, sorry, no model for this
+                this.queryDeclarations.append("(declare-fun " + smtlib2Signature + " )\n");
                 nSymCurrent = nSymCurrent + 1;
-                nTotalSym = nTotalSym + 1;
+                nTotalSymbols = nTotalSymbols + 1;
             }
         }
 
@@ -571,27 +760,28 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
 
         @Override
         public void visitPrimitiveSymbolic(PrimitiveSymbolic s) {
-            final char type = s.getType();
-            this.putSymbol(type, s.toString());
+            putSymbol(s);
         }
 
         @Override
         public void visitTerm(Term x) {
-            final char type = x.getType();
-            this.putSymbol(type, x.toString());
+            putSymbol(x);
         }
 
-        private void putSymbol(char type, String symbol) {
-            final String z3VarName = symbol.substring(1, symbol.length() -1);
-            if (this.declaredSymbols.contains(z3VarName)) {
+        private void putSymbol(Primitive symbol) {
+            final char type = symbol.getType();
+            final String symbolToString = symbol.toString();
+            final String smtlib2Variable = symbolToString.substring(1, symbolToString.length() - 1);
+            if (this.smtlib2DeclaredSymbols.contains(smtlib2Variable)) {
                 // does nothing
             } else {
-                this.declaredSymbols.add(z3VarName);
-                this.queryDeclarations.append("(declare-fun " + z3VarName + " () " + toSMTLIB2Type(type) + ")\n");
+                this.smtlib2DeclaredSymbols.add(smtlib2Variable);
+                this.smtlib2VarsToJBSESymbols.put(smtlib2Variable, symbol);
+                this.queryDeclarations.append("(declare-fun " + smtlib2Variable + " () " + toSMTLIB2Type(type) + ")\n");
                 ++nSymCurrent;
-                ++nTotalSym;
+                ++nTotalSymbols;
             }
-            this.clauseStack.push(z3VarName);
+            this.clauseStack.push(smtlib2Variable);
         }
     }
 
@@ -602,13 +792,17 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
     public void quit() 
     throws ExternalProtocolInterfaceException, IOException {
         this.working = false;
+        send(EXIT);
+        while (this.solverIn.readLine() != null) {
+            //do nothing
+        }
         this.solverOut.close();
         try {
-            if (this.solver.waitFor() != 0) {
-                throw new ExternalProtocolInterfaceException();
-            }
+            //we don't check the exit code because Z3 seems to 
+            //always exit with code 1 when invoked from Java
+            this.solver.waitFor();
         } catch (InterruptedException e) {
-            throw new ExternalProtocolInterfaceException();
+            throw new ExternalProtocolInterfaceException(e);
         }
     }
 

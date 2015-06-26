@@ -47,8 +47,6 @@ import jbse.jvm.Runner;
 import jbse.jvm.RunnerBuilder;
 import jbse.jvm.RunnerParameters;
 import jbse.jvm.exc.CannotBacktrackException;
-import jbse.jvm.exc.CannotBuildCalculatorException;
-import jbse.jvm.exc.CannotBuildDecisionProcedureException;
 import jbse.jvm.exc.CannotBuildEngineException;
 import jbse.jvm.exc.EngineStuckException;
 import jbse.jvm.exc.FailureException;
@@ -95,6 +93,9 @@ public final class Run {
 	
 	/** The {@link Engine} underlying {@code runner}. */
 	private Engine engine = null; //TODO build run object during construction and make this final
+    
+    /** The {@link DecisionProcedure} used by {@code engine}. */
+    private DecisionProcedureAlgorithms decisionProcedure = null; //TODO build run object during construction and make this final
 	
 	/** The {@link PrintStream}s for the output. */
 	private PrintStream[] out = null;
@@ -448,6 +449,7 @@ public final class Run {
 					//no counter
 					break;
 				}
+				
             } catch (CannotRefineException | UnexpectedInternalException e) {
                 IO.println(Run.this.err, ERROR_UNEXPECTED);
                 IO.printException(Run.this.err, e);
@@ -751,81 +753,7 @@ public final class Run {
         }
 
 		// creates the output formatter
-		if (this.parameters.stateFormatMode == StateFormatMode.FULLTEXT) {
-			this.formatterBranches = new StateFormatterText(this.parameters.srcPath) {
-				@Override
-				public void formatState(State s) {
-					this.output += LINE_SEP; // gutter
-					this.output += 
-					    banner(s.getIdentifier() + "[" + s.getSequenceNumber() + "]", true);
-					this.output += LINE_SEP; // gutter
-					super.formatState(s);
-				}
 
-				public void emit() {
-					IO.print(Run.this.out, this.output);
-				}
-			};
-			this.formatterOthers = new StateFormatterText(this.parameters.srcPath) {
-				@Override
-				public void formatState(State s) {
-					this.output += LINE_SEP; // gutter
-					this.output += 
-					    banner(s.getIdentifier() + "[" + s.getSequenceNumber() + "]", false);
-					this.output += LINE_SEP; // gutter
-					super.formatState(s);
-				}
-
-				public void emit() {
-					IO.print(Run.this.out, this.output);
-				}
-			};
-		} else if (this.parameters.stateFormatMode == StateFormatMode.GRAPHVIZ) {
-			this.formatterBranches = this.formatterOthers = new StateFormatterGraphviz() {
-				public void emit() {
-					IO.print(Run.this.out, this.output);
-				}
-			};
-		} else if (this.parameters.stateFormatMode == StateFormatMode.TRACE) {
-			this.formatterBranches = this.formatterOthers = new StateFormatterTrace() {
-                @Override
-				public void emit() {
-					IO.print(Run.this.out, this.output);
-				}
-			};
-        } else if (this.parameters.stateFormatMode == StateFormatMode.JUNIT_TEST) {
-            this.formatterBranches = this.formatterOthers = new StateFormatterJUnitTestSuite(() -> this.engine.getInitialState()) {
-                @Override
-                public void emit() {
-                    IO.println(Run.this.out, this.output);
-                }
-            };
-		} else {
-		    IO.println(Run.this.err, ERROR_UNDEF_STATE_FORMAT);
-		    return 2;
-		}
-
-		//prints some feedback on forthcoming decision procedure creation
-        if (this.parameters.showWarnings) {
-            if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC3) {
-                IO.println(this.log, MSG_TRY_CVC3
-                           + this.parameters.getExternalDecisionProcedurePath() + ".");
-            } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.SICSTUS) {
-                IO.println(this.log, MSG_TRY_SICSTUS
-                           + this.parameters.getExternalDecisionProcedurePath() + ".");
-            } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.Z3) {
-                IO.println(this.log, MSG_TRY_Z3
-                           + this.parameters.getExternalDecisionProcedurePath() + ".");
-            } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC4) {
-                IO.println(this.log, MSG_TRY_CVC4
-                           + this.parameters.getExternalDecisionProcedurePath() + ".");
-            } else if (this.parameters.interactionMode == InteractionMode.NO_INTERACTION) {
-                IO.println(this.log, MSG_DECISION_BASIC);
-            } else {
-                IO.println(this.log, MSG_DECISION_INTERACTIVE);
-            }
-        }
-		
 		//defines the engine builder
 		final RunnerParameters runnerParameters = this.parameters.getRunnerParameters();
 		final EngineParameters engineParameters = runnerParameters.getEngineParameters();
@@ -834,11 +762,12 @@ public final class Run {
 		//builds the runner
 		try {
 			final CalculatorRewriting calc = createCalculator();
-			final DecisionProcedureAlgorithms dec = createDecisionProcedure(calc);
+			createFormatter(calc);
+			createDecisionProcedure(calc);
 			engineParameters.setCalculator(calc);
-			engineParameters.setDecisionProcedure(dec);
+			engineParameters.setDecisionProcedure(this.decisionProcedure);
 			final RunnerBuilder rb = new RunnerBuilder();
-			this.runner = rb.build(parameters.getRunnerParameters());
+			this.runner = rb.build(this.parameters.getRunnerParameters());
 			this.engine = rb.getEngine();
 			if (this.engine == null) {
 				return 1;
@@ -910,11 +839,32 @@ public final class Run {
 		return calc;
 	}
 	
-	private DecisionProcedureAlgorithms createDecisionProcedure(CalculatorRewriting calc)
+	private void createDecisionProcedure(CalculatorRewriting calc)
 	throws CannotBuildDecisionProcedureException {
-	    final boolean needHeapCheck = (this.parameters.useConservativeRepOks || this.parameters.doConcretization);
+        //prints some feedback on forthcoming decision procedure creation
+        if (this.parameters.showWarnings) {
+            if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC3) {
+                IO.println(this.log, MSG_TRY_CVC3
+                           + this.parameters.getExternalDecisionProcedurePath() + ".");
+            } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.SICSTUS) {
+                IO.println(this.log, MSG_TRY_SICSTUS
+                           + this.parameters.getExternalDecisionProcedurePath() + ".");
+            } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.Z3) {
+                IO.println(this.log, MSG_TRY_Z3
+                           + this.parameters.getExternalDecisionProcedurePath() + ".");
+            } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC4) {
+                IO.println(this.log, MSG_TRY_CVC4
+                           + this.parameters.getExternalDecisionProcedurePath() + ".");
+            } else if (this.parameters.interactionMode == InteractionMode.NO_INTERACTION) {
+                IO.println(this.log, MSG_DECISION_BASIC);
+            } else {
+                IO.println(this.log, MSG_DECISION_INTERACTIVE);
+            }
+        }
+        
 	    
 		//initializes cores
+        final boolean needHeapCheck = (this.parameters.useConservativeRepOks || this.parameters.doConcretization);
 		DecisionProcedure core = new DecisionProcedureAlwSat();
 		DecisionProcedure coreNumeric = (needHeapCheck ? new DecisionProcedureAlwSat() : null);
 		
@@ -1007,10 +957,75 @@ public final class Run {
 			core = this.guidance;
 		}
 		
-		//returns the result
-		return ((core instanceof DecisionProcedureAlgorithms) ? 
+		//sets the result
+		this.decisionProcedure = ((core instanceof DecisionProcedureAlgorithms) ? 
 		        (DecisionProcedureAlgorithms) core :
 		        new DecisionProcedureAlgorithms(core, calc));
+	}
+	
+	private void createFormatter(CalculatorRewriting calc) throws CannotBuildFormatterException {
+        if (this.parameters.stateFormatMode == StateFormatMode.FULLTEXT) {
+            this.formatterBranches = new StateFormatterText(this.parameters.srcPath) {
+                @Override
+                public void formatState(State s) {
+                    this.output += LINE_SEP; // gutter
+                    this.output += 
+                        banner(s.getIdentifier() + "[" + s.getSequenceNumber() + "]", true);
+                    this.output += LINE_SEP; // gutter
+                    super.formatState(s);
+                }
+
+                public void emit() {
+                    IO.print(Run.this.out, this.output);
+                }
+            };
+            this.formatterOthers = new StateFormatterText(this.parameters.srcPath) {
+                @Override
+                public void formatState(State s) {
+                    this.output += LINE_SEP; // gutter
+                    this.output += 
+                        banner(s.getIdentifier() + "[" + s.getSequenceNumber() + "]", false);
+                    this.output += LINE_SEP; // gutter
+                    super.formatState(s);
+                }
+
+                public void emit() {
+                    IO.print(Run.this.out, this.output);
+                }
+            };
+        } else if (this.parameters.stateFormatMode == StateFormatMode.GRAPHVIZ) {
+            this.formatterBranches = this.formatterOthers = new StateFormatterGraphviz() {
+                public void emit() {
+                    IO.print(Run.this.out, this.output);
+                }
+            };
+        } else if (this.parameters.stateFormatMode == StateFormatMode.TRACE) {
+            this.formatterBranches = this.formatterOthers = new StateFormatterTrace() {
+                @Override
+                public void emit() {
+                    IO.print(Run.this.out, this.output);
+                }
+            };
+        } else if (this.parameters.stateFormatMode == StateFormatMode.JUNIT_TEST) {
+            this.formatterBranches = this.formatterOthers = 
+            new StateFormatterJUnitTestSuite(calc,
+                                             () -> this.engine.getInitialState(), 
+                                             () -> {
+                                                 try {
+                                                    return this.decisionProcedure.getModel();
+                                                } catch (DecisionException e) {
+                                                    return null;
+                                                }
+                                             }) {
+                @Override
+                public void emit() {
+                    IO.println(Run.this.out, this.output);
+                }
+            };
+        } else {
+            IO.println(Run.this.err, ERROR_UNDEF_STATE_FORMAT);
+            throw new CannotBuildFormatterException();
+        }
 	}
 	
 	/**

@@ -7,11 +7,13 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayDeque;
 import java.util.HashSet;
+import java.util.Map;
 
 import jbse.bc.ClassHierarchy;
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.ExternalProtocolInterfaceException;
+import jbse.dec.exc.NoModelException;
 import jbse.mem.Objekt;
 import jbse.rewr.CalculatorRewriting;
 import jbse.val.Any;
@@ -471,6 +473,12 @@ class DecisionProcedureExternalInterfaceCVC3 extends DecisionProcedureExternalIn
             throw e;
         }
 	}
+    
+    @Override
+    public Map<PrimitiveSymbolic, Simplex> getModel() 
+    throws NoModelException, ExternalProtocolInterfaceException, IOException {
+        throw new NoModelException();
+    }
 
 	@Override
 	public void pushAssumption(boolean value) 

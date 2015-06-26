@@ -91,7 +91,7 @@ public final class Simplex extends Primitive implements Cloneable {
      *         {@link Float}, {@link Double}, or {@link Character}. 
      */
     public Object getActualValue(){
-        return(value);
+        return this.value;
     }
 
     /**
@@ -149,15 +149,51 @@ public final class Simplex extends Primitive implements Cloneable {
 
     /**
      * {@inheritDoc}
+     * For {@link Simplex} it returns {@code true} iff
+     * the object has type boolean and represents the {@code true} value.
+     * In all other cases it returns {@code false}.
+     */
+    @Override
+    public boolean surelyTrue() {
+        return (this.getType() == Type.BOOLEAN && ((Boolean) this.value).booleanValue());
+    }
+
+    /**
+     * {@inheritDoc}
+     * For {@link Simplex} it returns {@code true} iff
+     * the object has type boolean and represents the {@code false} value.
+     * In all other cases it returns {@code false}.
+     */
+    @Override
+    public boolean surelyFalse() {
+        return (this.getType() == Type.BOOLEAN && !((Boolean) this.value).booleanValue());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void accept(PrimitiveVisitor v) throws Exception {
+        v.visitSimplex(this);
+    }
+
+    /**
+     * {@inheritDoc}
+     * For {@link Simplex} instances it always returns {@code false}.
+     */
+    @Override
+    public boolean isSymbolic() {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
      */
 	@Override
 	public Object getValueForNative() {
 		return this.value;
 	}
     
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
     	return this.toString;
@@ -168,9 +204,6 @@ public final class Simplex extends Primitive implements Cloneable {
 		return this.hashCode;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -193,44 +226,5 @@ public final class Simplex extends Primitive implements Cloneable {
 			}
 		}
 		return true;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * For {@link Simplex} it returns {@code true} iff
-	 * the object has type boolean and represents the {@code true} value.
-	 * In all other cases it returns {@code false}.
-	 */
-	@Override
-	public boolean surelyTrue() {
-		return (this.getType() == Type.BOOLEAN && ((Boolean) this.value).booleanValue());
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * For {@link Simplex} it returns {@code true} iff
-	 * the object has type boolean and represents the {@code false} value.
-	 * In all other cases it returns {@code false}.
-	 */
-	@Override
-	public boolean surelyFalse() {
-		return (this.getType() == Type.BOOLEAN && !((Boolean) this.value).booleanValue());
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void accept(PrimitiveVisitor v) throws Exception {
-		v.visitSimplex(this);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * For {@link Simplex} instances it always returns {@code false}.
-	 */
-	@Override
-	public boolean isSymbolic() {
-		return false;
 	}
 }
