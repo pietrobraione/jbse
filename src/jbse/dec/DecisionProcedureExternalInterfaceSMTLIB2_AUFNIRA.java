@@ -79,7 +79,6 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
     private ArrayList<Integer> nSymPushed; 
     private int nSymCurrent;
     private int nTotalSymbols;
-    private String smtlib2Model;
 
     /** 
      * Costructor.
@@ -207,7 +206,6 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
         }
         sendAndCheckAnswer(queryPush);
         final boolean isSat = sendAndCheckAnswerChecksat();
-        this.smtlib2Model = sendAndCheckAnswerGetmodel();
         sendAndCheckAnswer(POP_1);
         return isSat;
     }
@@ -215,7 +213,9 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
     @Override
     public Map<PrimitiveSymbolic, Simplex> getModel() 
     throws NoModelException, ExternalProtocolInterfaceException, IOException {
-        if (this.smtlib2Model == null || this.smtlib2Model.startsWith("(error")) {
+        sendAndCheckAnswerChecksat(); //always need a checksat before reading a model
+        final String smtlib2Model = sendAndCheckAnswerGetmodel();
+        if (smtlib2Model == null || smtlib2Model.startsWith("(error")) {
             throw new NoModelException();
         }
         
@@ -225,7 +225,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
         smtlib2ParseStack.push(new LinkedList<>());
         int nestingLevel = 0;
         boolean scanningSymbol = false;
-        final String[] smtlib2ModelTokens = this.smtlib2Model.replace("(", " ( ").replace(")", " ) ").trim().split("\\s+"); //thanks Peter Norvig!
+        final String[] smtlib2ModelTokens = smtlib2Model.replace("(", " ( ").replace(")", " ) ").trim().split("\\s+"); //thanks for the idea Peter Norvig!
         for (String token : smtlib2ModelTokens) {
             final int prevNestingLevel = nestingLevel;
             if (token.equals("(")) {
@@ -253,7 +253,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
                     final Number value = smtlib2Interpret(smtlib2ParseStack.pop());
                     if (value == null) {
                         //unable to interpret the SMTLIB2 expression
-                        //TODO
+                        throw new NoModelException(); //TODO possibly throw a different exception
                     } else {
                         model.put((PrimitiveSymbolic) jbseSymbol, (Simplex) calc.val_(value));
                     }

@@ -162,14 +162,17 @@ public abstract class DecisionProcedureExternalInterface {
      *         numeric value to all the symbols with numeric type
      *         in the last checked clause. 
      * @throws NoModelException if the external decision
-     *         procedure cannot produce a model.
+     *         procedure cannot produce a model, either because
+     *         the method is unimplemented or for any reason.
      * @throws ExternalProtocolInterfaceException if this method is 
      *         invoked when there is no current predicate.
      * @throws IOException if communication with the external 
      *         decision procedure fails. 
      */
-	public abstract Map<PrimitiveSymbolic, Simplex> getModel() 
-    throws NoModelException, ExternalProtocolInterfaceException, IOException;
+	public Map<PrimitiveSymbolic, Simplex> getModel() 
+    throws NoModelException, ExternalProtocolInterfaceException, IOException {
+        throw new NoModelException("Model extraction is not implemented for external decision procedure interface of class " + this.getClass().getName());
+	}
 
 	/**
 	 * Pushes the (possibly negated) current clauses to the current
@@ -197,7 +200,7 @@ public abstract class DecisionProcedureExternalInterface {
 	 */
 	public void popAssumption()
 	throws ExternalProtocolInterfaceException, IOException {
-		throw new ExternalProtocolInterfaceException("popping assumptions is not implemented for external decision procedure interface of class " + this.getClass().getName());
+		throw new ExternalProtocolInterfaceException("Popping assumptions is not implemented for external decision procedure interface of class " + this.getClass().getName());
 	}
 
 	/**

@@ -761,8 +761,8 @@ public final class Run {
 
 		//builds the runner
 		try {
-			final CalculatorRewriting calc = createCalculator();
-			createFormatter(calc);
+			createFormatter();
+            final CalculatorRewriting calc = createCalculator();
 			createDecisionProcedure(calc);
 			engineParameters.setCalculator(calc);
 			engineParameters.setDecisionProcedure(this.decisionProcedure);
@@ -784,14 +784,12 @@ public final class Run {
 	            this.checker.setInitialStateSupplier(() -> this.engine.getInitialState()); 
                 this.checker.setCurrentStateSupplier(() -> this.engine.getCurrentState()); 
 			}
+		} catch (CannotBuildDecisionProcedureException e) {
+		    IO.println(err, ERROR_DECISION_PROCEDURE_FAILED + e.getCause() + ".");
+		    return 1;
 		} catch (CannotBuildEngineException e) {
-			if (e instanceof CannotBuildDecisionProcedureException) {
-                IO.println(err, ERROR_DECISION_PROCEDURE_FAILED + e.getCause() + ".");
-                return 1;
-			} else {
-				IO.println(this.err, ERROR_BUILD_FAILED + e.getCause() + ".");
-                return 2;
-			}
+		    IO.println(this.err, ERROR_BUILD_FAILED + e.getCause() + ".");
+		    return 2;
 		} catch (DecisionException e) {
 			IO.println(this.err, ERROR_ENGINE_INIT_DECISION_PROCEDURE);
 			IO.printException(this.err, e);
@@ -963,7 +961,7 @@ public final class Run {
 		        new DecisionProcedureAlgorithms(core, calc));
 	}
 	
-	private void createFormatter(CalculatorRewriting calc) throws CannotBuildFormatterException {
+	private void createFormatter() throws CannotBuildFormatterException {
         if (this.parameters.stateFormatMode == StateFormatMode.FULLTEXT) {
             this.formatterBranches = new StateFormatterText(this.parameters.srcPath) {
                 @Override
@@ -1008,8 +1006,7 @@ public final class Run {
             };
         } else if (this.parameters.stateFormatMode == StateFormatMode.JUNIT_TEST) {
             this.formatterBranches = this.formatterOthers = 
-            new StateFormatterJUnitTestSuite(calc,
-                                             () -> this.engine.getInitialState(), 
+            new StateFormatterJUnitTestSuite(() -> this.engine.getInitialState(), 
                                              () -> {
                                                  try {
                                                     return this.decisionProcedure.getModel();

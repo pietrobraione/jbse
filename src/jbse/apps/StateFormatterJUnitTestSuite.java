@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.TreeSet;
 import java.util.function.Supplier;
 
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Clause;
 import jbse.mem.ClauseAssume;
 import jbse.mem.ClauseAssumeAliases;
@@ -21,7 +22,6 @@ import jbse.mem.State;
 import jbse.mem.Variable;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Any;
-import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.FunctionApplication;
 import jbse.val.NarrowingConversion;
@@ -43,15 +43,12 @@ import jbse.val.WideningConversion;
  */
 public abstract class StateFormatterJUnitTestSuite implements Formatter {
     protected String output = "";
-    private Calculator calc;
     private Supplier<State> initialStateSupplier;
     private Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier;
     private int testCounter = 0;
     
-    public StateFormatterJUnitTestSuite(Calculator calc,
-                                        Supplier<State> initialStateSupplier, 
+    public StateFormatterJUnitTestSuite(Supplier<State> initialStateSupplier, 
                                         Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier) {
-        this.calc = calc;
         this.initialStateSupplier = initialStateSupplier;
         this.modelSupplier = modelSupplier;
     }
@@ -64,7 +61,7 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
     @Override
     public final void formatState(State state) {
         final JUnitTestCase t = 
-            new JUnitTestCase(this.initialStateSupplier.get(), state, this.testCounter++);
+            new JUnitTestCase(this.initialStateSupplier.get(), state, this.modelSupplier.get(), this.testCounter++);
         this.output = t.get();
     }
     
@@ -121,10 +118,12 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
         private final StringBuilder s = new StringBuilder(); 
         private final HashMap<String, String> h = new HashMap<>();
         
-        JUnitTestCase(State initialState, State finalState, int testCounter) {
+        JUnitTestCase(State initialState, State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) {
             //method declaration
             this.s.append("    @Test\n");
-            this.s.append("    public void testCase" + testCounter +"() {\n");
+            this.s.append("    public void testCase");
+            this.s.append(testCounter);
+            this.s.append("() {\n");
             this.s.append("        //test case for state ");
             this.s.append(finalState.getIdentifier());
             this.s.append('[');
@@ -173,9 +172,21 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
                         this.s.append(';'); 
                     }
                 } else if (clause instanceof ClauseAssume) {
+                    if (model == null) {
+                        //panic: no model
+                        this.s.delete(0, s.length());
+                        this.s.append("    //Unable to generate test case ");
+                        this.s.append(testCounter);
+                        this.s.append(" for state ");
+                        this.s.append(finalState.getIdentifier());
+                        this.s.append('[');
+                        this.s.append(finalState.getSequenceNumber());
+                        this.s.append("] (no numeric solution from the solver)\n");
+                        return;
+                    }
                     final ClauseAssume clauseAssume = (ClauseAssume) clause;
                     final Primitive p = clauseAssume.getCondition();
-                    this.s.append(primitiveSymbolAssignments(p));
+                    this.s.append(primitiveSymbolAssignments(p, model));
                 } else {
                     this.s.append(';');
                 }
@@ -344,9 +355,7 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
             }
         }
         
-        private String primitiveSymbolAssignments(Primitive e) {
-            final Map<PrimitiveSymbolic, Simplex> model =
-                StateFormatterJUnitTestSuite.this.modelSupplier.get();
+        private String primitiveSymbolAssignments(Primitive e, Map<PrimitiveSymbolic, Simplex> model) {
             final HashSet<PrimitiveSymbolic> symbols = new HashSet<>();
             PrimitiveVisitor v = new PrimitiveVisitor() {
                 
@@ -401,17 +410,12 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
             final StringBuilder s = new StringBuilder();
             for (PrimitiveSymbolic symbol : symbols) {
                 if (getVariableFor(symbol) == null) { //not yet done
-                    final Simplex defaultValue = (Simplex)
-                        StateFormatterJUnitTestSuite.this.calc.createDefault("" + symbol.getType());
-                    if (model == null) {
-                        setWithNumericValue(symbol, defaultValue);
+                    final Simplex value = model.get(symbol);
+                    if (value == null) {
+                        //this should never happen
+                        throw new UnexpectedInternalException("No value found in model for symbol " + symbol.toString() + ".");
                     } else {
-                        final Simplex value = model.get(symbol);
-                        if (value == null) {
-                            setWithNumericValue(symbol, defaultValue);
-                        } else {
-                            setWithNumericValue(symbol, value);
-                        }
+                        setWithNumericValue(symbol, value);
                     }
                     s.append(' ');
                 }
