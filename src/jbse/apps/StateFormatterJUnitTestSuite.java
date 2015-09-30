@@ -82,7 +82,8 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
     private static final String PROLOGUE =
         "import static org.junit.Assert.*;\n" +
         "\n" +
-        "import java.lang.reflect.Field;" +
+        "import sun.misc.Unsafe;\n" +
+        "import java.lang.reflect.Field;\n" +
         "\n" +
         "import org.junit.Test;\n" +
         "\n" +
@@ -104,7 +105,7 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
         "        }\n" +
         "        AccessibleObject get(String fieldName) {\n" +
         "            try {\n" +
-        "                Field p = target.getClass().getDeclaredField(fieldName);\n" +
+        "                final Field p = target.getClass().getDeclaredField(fieldName);\n" +
         "                p.setAccessible(true);\n" +
         "                return new AccessibleObject(p.get(target));\n" +
         "            } catch (IllegalArgumentException | IllegalAccessException\n" +
@@ -116,6 +117,32 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
         "            return target;\n" +
         "        }\n" +
         "    }\n" +
+        "\n" +
+        "    private static final Unsafe UNSAFE;\n" +
+        "\n" +
+        "    static {\n" +
+        "        final Field uns;\n" +
+        "        try {\n" +
+        "            uns = Unsafe.class.getDeclaredField(\"theUnsafe\");\n" +
+        "            uns.setAccessible(true);\n" +
+        "            UNSAFE = (Unsafe) uns.get(null);\n" +
+        "        } catch (NoSuchFieldException e) {\n" +
+        "            throw new RuntimeException(e);\n" +
+        "        } catch (IllegalAccessException e) {\n" +
+        "            throw new RuntimeException(e);\n" +
+        "        }\n" +
+        "    }\n" +
+        "\n" +
+        "    private static Object newInstance(String type) {\n"+
+        "        try {\n"+
+        "            final Class<?> clazz = Class.forName(type);\n" +
+        "            return clazz.cast(UNSAFE.allocateInstance(clazz));\n"+
+        "        } catch (ClassNotFoundException e) {\n"+
+        "            throw new RuntimeException(e);\n"+
+        "        } catch (InstantiationException e) {\n"+
+        "            throw new RuntimeException(e);\n"+
+        "        }\n"+
+        "    }\n"+
         "\n";
 
     private static class JUnitTestCase {
@@ -130,7 +157,7 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
                 this.s.append("    @Test\n");
             } else {
                 this.s.append("    @Test(expected=");
-                this.s.append(javaType(finalState.getObject(exception).getType()));
+                this.s.append(javaClass(finalState.getObject(exception).getType()));
                 this.s.append(".class)\n");
             }
             this.s.append("    public void testCase");
@@ -159,7 +186,7 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
                     if (hasMemberAccessor(var)) {
                         setByReflection(var, "null");
                     } else {
-                        final String type = javaType(symbol.getStaticType());
+                        final String type = javaClass(symbol.getStaticType());
                         this.s.append(type);
                         this.s.append(' ');
                         this.s.append(var);
@@ -175,7 +202,7 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
                     if (hasMemberAccessor(var)) {
                         setByReflection(var, value);
                     } else {
-                        final String type = javaType(getClassOfObjectInHeap(finalState, heapPosition));
+                        final String type = javaClass(getClassOfObjectInHeap(finalState, heapPosition));
                         this.s.append(type);
                         this.s.append(' '); 
                         this.s.append(var); 
@@ -224,7 +251,7 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
                         if (finalState.isNull(returnedRef)) {
                             this.s.append("java.lang.Object");
                         } else {
-                            this.s.append(javaType(finalState.getObject(returnedRef).getType()));
+                            this.s.append(javaClass(finalState.getObject(returnedRef).getType()));
                         }
                     }
                     this.s.append(" __returnedValue = ");
@@ -303,28 +330,35 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
         private void setWithNewObject(State finalState, Symbolic symbol, long heapPosition) {        
             makeVariableFor(symbol);
             final String var = getVariableFor(symbol);
-            final String type = javaType(getClassOfObjectInHeap(finalState, heapPosition));
+            final String type = getClassOfObjectInHeap(finalState, heapPosition);
+            final String className = javaClass(type);
+            final String instantiationStmt = "newInstance(\"" + javaType(type) + "\")";
             if (hasMemberAccessor(var)){
-                setByReflection(var, "new " + type + "()");
+                setByReflection(var, instantiationStmt);
             } else {
-                this.s.append(type);
+                this.s.append(className);
                 this.s.append(' ');
                 this.s.append(var);
-                this.s.append(" = new ");
-                this.s.append(type);
-                this.s.append("();");
+                this.s.append(" = (");
+                this.s.append(className);
+                this.s.append(") ");
+                this.s.append(instantiationStmt);
+                this.s.append(";");
             }
         }
 
+        private String javaClass(String s){
+            return javaType(s).replace('$', '.');
+        }
+                
         private String javaType(String s){
             if (s == null) {
                 return null;
             }
-            final String a = s.replace('/', '.').replace('$', '.');
+            final String a = s.replace('/', '.');
             return (isReference(a) ? className(a) : a);
         }
-        
-        
+                
         private String generateName(String name) {
             return name.replace("{ROOT}:", "__ROOT_");
         }
