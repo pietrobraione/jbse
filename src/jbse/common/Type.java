@@ -176,8 +176,8 @@ public final class Type {
     public static String className(String type) {
     	//if reference, remove REFERENCE and TYPEEND; 
     	//if array, just return it
-    	return (Type.isReference(type) ? Type.getReferenceClassName(type) : 
-    	        Type.isArray(type) ? type : null);
+    	return (isReference(type) ? getReferenceClassName(type) : 
+    	        isArray(type) ? type : null);
     }
     
     public static boolean isPrimitiveBinaryClassName(String primitiveType) {
