@@ -123,7 +123,7 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
         "        }\n" +
         "    }\n" +
         "\n" +
-        "    private static final Unsafe UNSAFE;\n" +
+        "    private static final Unsafe UNSAFE; //ugly!\n" +
         "\n" +
         "    static {\n" +
         "        final Field uns;\n" +
@@ -166,7 +166,18 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
         private ClauseAssume clauseLength = null;
         
         JUnitTestCase(State initialState, State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) {
-            //method declaration
+            appendMethodDeclaration(finalState, testCounter);
+            appendInputsInitialization(finalState, model, testCounter);
+            appendInvocationOfMethodUnderTest(initialState, finalState);
+            appendAssert(finalState);
+            appendMethodEnd();
+        }
+        
+        String get() {
+            return s.toString();
+        }
+        
+        private void appendMethodDeclaration(State finalState, int testCounter) {
             final Reference exception = finalState.getStuckException();
             if (exception == null) {
                 this.s.append("    @Test\n");
@@ -183,8 +194,9 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
             this.s.append('[');
             this.s.append(finalState.getSequenceNumber());
             this.s.append("]\n");
-            
-            //inputs initialization
+        }
+        
+        private void appendInputsInitialization(State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) {
             final Collection<Clause> pathCondition = finalState.getPathCondition();
             for (Iterator<Clause> iterator = pathCondition.iterator(); iterator.hasNext(); ) {
                 final Clause clause = iterator.next();
@@ -230,30 +242,30 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
                     this.clauseLength = null;
                 }
                 this.s.append('\n');
-            
             }
-            
-            //test method invocation
+        }
+        
+        private void appendInvocationOfMethodUnderTest(State initialState, State finalState) {
             final Value returnedValue = finalState.getStuckReturn();
             final boolean mustCheckReturnedValue = 
                 (returnedValue != null)  && (isPrimitive(returnedValue.getType()) || returnedValue instanceof Symbolic);
             this.s.append(INDENT);
-            try {
-                if (mustCheckReturnedValue) {
-                    if (isPrimitiveIntegral(returnedValue.getType())) {
-                        this.s.append("long");
-                    } else if (isPrimitiveFloating(returnedValue.getType())) {
-                        this.s.append("double");
+            if (mustCheckReturnedValue) {
+                if (isPrimitiveIntegral(returnedValue.getType())) {
+                    this.s.append("long");
+                } else if (isPrimitiveFloating(returnedValue.getType())) {
+                    this.s.append("double");
+                } else {
+                    final Reference returnedRef = (Reference) returnedValue;
+                    if (finalState.isNull(returnedRef)) {
+                        this.s.append("java.lang.Object");
                     } else {
-                        final Reference returnedRef = (Reference) returnedValue;
-                        if (finalState.isNull(returnedRef)) {
-                            this.s.append("java.lang.Object");
-                        } else {
-                            this.s.append(javaClass(finalState.getObject(returnedRef).getType()));
-                        }
+                        this.s.append(javaClass(finalState.getObject(returnedRef).getType()));
                     }
-                    this.s.append(" __returnedValue = ");
                 }
+                this.s.append(" __returnedValue = ");
+            }
+            try {
                 final String methodName = initialState.getRootMethodSignature().getName();
                 if ("this".equals(initialState.getRootFrame().getLocalVariableDeclaredName(0))) {
                     this.s.append("__ROOT_this.");
@@ -294,8 +306,12 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
                 //TODO
                 throw new RuntimeException(e);
             }
-
-            //assert
+        }
+        
+        private void appendAssert(State finalState) {
+            final Value returnedValue = finalState.getStuckReturn();
+            final boolean mustCheckReturnedValue = 
+                (returnedValue != null)  && (isPrimitive(returnedValue.getType()) || returnedValue instanceof Symbolic);
             if (mustCheckReturnedValue) {
                 this.s.append(INDENT);
                 this.s.append("assertTrue(__returnedValue == ");
@@ -316,14 +332,11 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
                 }
                 this.s.append(");\n");
             }
-            
-            //end of the method
-            this.s.append("    }\n");
         }
         
-        String get() {
-            return s.toString();
-        }   
+        private void appendMethodEnd() {
+            this.s.append("    }\n");
+        }
         
         private void setWithNewObject(State finalState, Symbolic symbol, long heapPosition, 
                                       Iterator<Clause> iterator, Map<PrimitiveSymbolic, Simplex> model) {        
