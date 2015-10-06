@@ -1,6 +1,7 @@
 package jbse.apps;
 
 import static jbse.common.Type.getArrayMemberType;
+
 import static jbse.common.Type.className;
 import static jbse.common.Type.isArray;
 import static jbse.common.Type.isReference;
@@ -84,10 +85,12 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
     }
     
     private static final String PROLOGUE =
+        "import static java.lang.System.identityHashCode;\n" +
         "import static org.junit.Assert.*;\n" +
         "\n" +
         "import java.lang.reflect.Array;\n" +
         "import java.lang.reflect.Field;\n" +
+        "import java.util.HashSet;\n" +
         "import sun.misc.Unsafe;\n" +
         "\n" +
         "import org.junit.Test;\n" +
@@ -138,31 +141,83 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
         "        }\n" +
         "    }\n" +
         "\n" +
-        "    private static Object newInstance(String type) {\n"+
+        "    private static Object newInstance(String type) {\n" +
         "        try {\n"+
         "            final Class<?> clazz = Class.forName(type);\n" +
-        "            return clazz.cast(UNSAFE.allocateInstance(clazz));\n"+
-        "        } catch (ClassNotFoundException e) {\n"+
-        "            throw new RuntimeException(e);\n"+
-        "        } catch (InstantiationException e) {\n"+
-        "            throw new RuntimeException(e);\n"+
-        "        }\n"+
-        "    }\n"+
+        "            return clazz.cast(UNSAFE.allocateInstance(clazz));\n" +
+        "        } catch (ClassNotFoundException e) {\n" +
+        "            throw new RuntimeException(e);\n" +
+        "        } catch (InstantiationException e) {\n" +
+        "            throw new RuntimeException(e);\n" +
+        "        }\n" +
+        "    }\n" +
         "\n" +
-        "    private static Object newArray(String memberType, int length) {\n"+
-        "        try {\n"+
+        "    private static Object newArray(String memberType, int length) {\n" +
+        "        try {\n" +
         "            final Class<?> clazz = Class.forName(memberType);\n" +
-        "            return Array.newInstance(clazz, length);\n"+
-        "        } catch (ClassNotFoundException e) {\n"+
-        "            throw new RuntimeException(e);\n"+
-        "        }\n"+
-        "    }\n"+
+        "            return Array.newInstance(clazz, length);\n" +
+        "        } catch (ClassNotFoundException e) {\n" +
+        "            throw new RuntimeException(e);\n" +
+        "        }\n" +
+        "    }\n" +
+        "\n" +
+        "    public class ObjectField {\n" +
+        "        private final Object obj;\n" +
+        "        private final Field fld;\n" +
+        "        public ObjectField(Object obj, String fldName) {\n" +
+        "            this.obj = obj;\n" +
+        "            try {\n" + 
+        "                this.fld = obj.getClass().getDeclaredField(fldName);\n" +
+        "            } catch (NoSuchFieldException | SecurityException e) {\n" +
+        "                throw new RuntimeException(e);\n" +
+        "            }\n" +
+        "        }\n" +
+        "        @Override\n" +
+        "        public int hashCode() {\n" +
+        "            final int prime = 31;\n" +
+        "            int result = 1;\n" +
+        "            result = prime * result + ((fld == null) ? 0 : fld.hashCode());\n" +
+        "            result = prime * result + ((obj == null) ? 0 : identityHashCode(obj));\n" +
+        "            return result;\n" +
+        "        }\n" +
+        "        @Override\n" +
+        "        public boolean equals(Object obj) {\n" +
+        "            if (this == obj) {\n" +
+        "                return true;\n" +
+        "            }\n" +
+        "            if (obj == null) {\n" +
+        "                return false;\n" +
+        "            }\n" +
+        "            if (getClass() != obj.getClass()) {\n" +
+        "                return false;\n" +
+        "            }\n" +
+        "            final ObjectField other = (ObjectField) obj;\n" +
+        "            if (this.fld == null) {\n" +
+        "                if (other.fld != null) {\n" +
+        "                    return false;\n" +
+        "                }\n" +
+        "            } else if (!fld.equals(other.fld)) {\n" +
+        "                return false;\n" +
+        "            }\n" +
+        "            if (this.obj == null) {\n" +
+        "                if (other.obj != null) {\n" +
+        "                    return false;\n" +
+        "                }\n" +
+        "            } else if (this.obj != other.obj) {\n" +
+        "                return false;\n" +
+        "            }\n" +
+        "            return true;\n" +
+        "        }\n" +
+        "    }\n" +
+        "\n" +
+        "    public HashSet<ObjectField> nullObjectFields;\n" +
         "\n";
 
     private static class JUnitTestCase {
         private static final String INDENT = "        ";
         private final StringBuilder s = new StringBuilder(); 
         private final HashMap<String, String> symbolsToVariables = new HashMap<>();
+        private boolean panic = false;
         private ClauseAssume clauseLength = null;
         
         JUnitTestCase(State initialState, State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) {
@@ -170,7 +225,7 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
             appendInputsInitialization(finalState, model, testCounter);
             appendInvocationOfMethodUnderTest(initialState, finalState);
             appendAssert(finalState);
-            appendMethodEnd();
+            appendMethodEnd(finalState, testCounter);
         }
         
         String get() {
@@ -178,6 +233,9 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
         }
         
         private void appendMethodDeclaration(State finalState, int testCounter) {
+            if (this.panic) {
+                return;
+            }
             final Reference exception = finalState.getStuckException();
             if (exception == null) {
                 this.s.append("    @Test\n");
@@ -197,16 +255,21 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
         }
         
         private void appendInputsInitialization(State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) {
+            if (this.panic) {
+                return;
+            }
+            this.s.append(INDENT);
+            this.s.append("this.nullObjectFields = new HashSet<>();\n");
             final Collection<Clause> pathCondition = finalState.getPathCondition();
             for (Iterator<Clause> iterator = pathCondition.iterator(); iterator.hasNext(); ) {
                 final Clause clause = iterator.next();
-                this.s.append(INDENT); //indent
+                this.s.append(INDENT);
                 if (clause instanceof ClauseAssumeExpands) {
                     final ClauseAssumeExpands clauseExpands = (ClauseAssumeExpands) clause;
                     final Symbolic symbol = clauseExpands.getReference();
                     final long heapPosition = clauseExpands.getHeapPosition();
                     setWithNewObject(finalState, symbol, heapPosition, iterator, model);
-                } else if (clause instanceof ClauseAssumeNull) { // == null
+                } else if (clause instanceof ClauseAssumeNull) {
                     final ClauseAssumeNull clauseNull = (ClauseAssumeNull) clause;
                     final ReferenceSymbolic symbol = clauseNull.getReference();
                     setWithNull(symbol);
@@ -217,15 +280,7 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
                     setWithAlias(finalState, symbol, heapPosition);
                 } else if (clause instanceof ClauseAssume) {
                     if (model == null) {
-                        //panic: no model
-                        this.s.delete(0, s.length());
-                        this.s.append("    //Unable to generate test case ");
-                        this.s.append(testCounter);
-                        this.s.append(" for state ");
-                        this.s.append(finalState.getIdentifier());
-                        this.s.append('[');
-                        this.s.append(finalState.getSequenceNumber());
-                        this.s.append("] (no numeric solution from the solver)\n");
+                        this.panic = true;
                         return;
                     }
                     final ClauseAssume clauseAssume = (ClauseAssume) clause;
@@ -246,6 +301,9 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
         }
         
         private void appendInvocationOfMethodUnderTest(State initialState, State finalState) {
+            if (this.panic) {
+                return;
+            }
             final Value returnedValue = finalState.getStuckReturn();
             final boolean mustCheckReturnedValue = 
                 (returnedValue != null)  && (isPrimitive(returnedValue.getType()) || returnedValue instanceof Symbolic);
@@ -309,6 +367,9 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
         }
         
         private void appendAssert(State finalState) {
+            if (this.panic) {
+                return;
+            }
             final Value returnedValue = finalState.getStuckReturn();
             final boolean mustCheckReturnedValue = 
                 (returnedValue != null)  && (isPrimitive(returnedValue.getType()) || returnedValue instanceof Symbolic);
@@ -334,8 +395,19 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
             }
         }
         
-        private void appendMethodEnd() {
-            this.s.append("    }\n");
+        private void appendMethodEnd(State finalState, int testCounter) {
+            if (this.panic) {
+                this.s.delete(0, s.length());
+                this.s.append("    //Unable to generate test case ");
+                this.s.append(testCounter);
+                this.s.append(" for state ");
+                this.s.append(finalState.getIdentifier());
+                this.s.append('[');
+                this.s.append(finalState.getSequenceNumber());
+                this.s.append("] (no numeric solution from the solver)\n");
+            } else {
+                this.s.append("    }\n");
+            }
         }
         
         private void setWithNewObject(State finalState, Symbolic symbol, long heapPosition, 
@@ -388,6 +460,14 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
                 this.s.append(' ');
                 this.s.append(var);
                 this.s.append(" = null;");
+            }
+            if (hasMemberAccessor(var)) {
+                final int splitPoint = var.lastIndexOf('.');
+                this.s.append("this.nullObjectFields.add(new ObjectField(");
+                this.s.append(getValue(var.substring(0, splitPoint)));
+                this.s.append(", \"");
+                this.s.append(var.substring(splitPoint + 1));
+                this.s.append("\"));");
             }
         }
         
