@@ -737,19 +737,57 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
         public void visitSimplex(Simplex x) {
             final Object obj = x.getActualValue();
             final char mytype = x.getType();
-            if (mytype == Type.BYTE ||
-            mytype == Type.SHORT ||
-            mytype == Type.INT ||
-            mytype == Type.LONG ||
-            mytype == Type.CHAR ||
-            mytype == Type.FLOAT ||
-            mytype == Type.DOUBLE) {
+            if (mytype == Type.BYTE || mytype == Type.SHORT ||
+                mytype == Type.INT || mytype == Type.LONG ||
+                mytype == Type.CHAR) {
                 if (obj instanceof Number && ((Number) obj).doubleValue() < 0) {
                     this.clauseStack.push("(- " + obj.toString().substring(1) + ")");
                 } else {
                     this.clauseStack.push(obj.toString());
                 }
-            }  else if (mytype == Type.BOOLEAN) {
+            } else if (mytype == Type.FLOAT || mytype == Type.DOUBLE) {
+                String value = obj.toString();
+                
+                //breaks value in its significand and exponent parts 
+                final String significand;
+                final String exponent;
+                String[] parts = value.split("E|e");
+                if (parts.length == 2) {                    
+                    significand = parts[0];
+                    exponent = parts[1];
+                } else { //parts.length == 1
+                    significand = value;
+                    exponent = "0";
+                }
+
+                //encodes the base in SMTLIB2 format
+                final String smtlib2Significand;
+                if (significand.contains("-")) {
+                    smtlib2Significand = String.format("(- %s)", significand.replace("-", ""));
+                } else {
+                    smtlib2Significand = significand;
+                }
+                
+                //builds smtlib2Value
+                final String smtlib2Value;
+                if (Long.parseLong(exponent) == 0) {
+                    smtlib2Value = smtlib2Significand;
+                } else {
+                    //smtlib2Multiplier == 10 to the power of abs(exponent)
+                    final StringBuilder smtlib2Multiplier = new StringBuilder("1");
+                    final long numZeros = Math.abs(Long.parseLong(exponent));
+                    for (int i = 1; i <= numZeros ; ++i) {
+                        smtlib2Multiplier.append('0');
+                    }
+                    //multiplies or divides smtlib2Significand by 
+                    //smtlib2Multiplier based on the sign of exponent
+                    final String smtlib2Operator = (exponent.contains("-") ? "/" : "*");                    
+                    smtlib2Value = String.format("(%s %s %s)", smtlib2Operator, smtlib2Significand, smtlib2Multiplier.toString());                   
+                }
+
+                //pushes it
+                this.clauseStack.push(smtlib2Value);
+              } else if (mytype == Type.BOOLEAN) {
                 if ((Boolean) obj) {
                     this.clauseStack.push("1");
                 } else {
