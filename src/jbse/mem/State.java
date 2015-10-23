@@ -1012,7 +1012,7 @@ public final class State implements Cloneable {
 			final String origin = ROOT_FRAME_MONIKER + f.getLocalVariableDeclaredName(slot);
 			if (slot == ROOT_THIS_SLOT && !isStatic) {
 				args[i] = createSymbol(Type.REFERENCE + rootClassName + Type.TYPEEND, origin);
-				//must assume {ROOT}:this epands to nonnull object (were it null the frame would not exist!)
+				//must assume {ROOT}:this expands to nonnull object (were it null the frame would not exist!)
 				try {
 					assumeExpands((ReferenceSymbolic) args[i], rootClassName);
 				} catch (InvalidTypeException | ContradictionException e) {
@@ -1043,6 +1043,8 @@ public final class State implements Cloneable {
      *        frame is built. The bytecode for the method will be
      *        looked for in 
      *        {@code methodSignatureImpl.}{@link Signature#getClassName() getClassName()}.
+     * @return a {@link ReferenceSymbolic}, the "this" (target) of the method invocation
+     *         if the invocation is not static, otherwise {@code null}.
      * @throws BadClassFileException when the classfile with name 
      *         {@code methodSignatureImpl.}{@link Signature#getClassName() getClassName()}
      *         does not exist in the classpath or is ill-formed.
@@ -1054,7 +1056,7 @@ public final class State implements Cloneable {
      *         does not contain bytecode for the method (i.e., the method is abstract
      *         or native).
 	 */
-	public void pushFrameSymbolic(Signature methodSignatureImpl) 
+	public ReferenceSymbolic pushFrameSymbolic(Signature methodSignatureImpl) 
 	throws BadClassFileException, MethodNotFoundException, MethodCodeNotFoundException {
 	    final ClassFile classMethodImpl = this.classHierarchy.getClassFile(methodSignatureImpl.getClassName());
         final boolean isStatic = classMethodImpl.isMethodStatic(methodSignatureImpl);
@@ -1067,6 +1069,7 @@ public final class State implements Cloneable {
             throw new UnexpectedInternalException(e);
         }
 	    this.stack.push(f);
+	    return (isStatic ? null : ((ReferenceSymbolic) args[0]));
 	}
 	
 	/**

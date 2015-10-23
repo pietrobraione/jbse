@@ -12,6 +12,9 @@ import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.InvalidInputException;
 import jbse.jvm.exc.InitializationException;
 import jbse.mem.State;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_XLOAD_GETX_Expands;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * {@link Algorithm} for the first execution step.
@@ -43,9 +46,16 @@ public final class Algo_INIT {
 		try {
 			//TODO resolve rootMethodSignature and lookup implementation
 			//TODO instead of assuming that {ROOT}:this exists and create the frame, use lazy initialization also on {ROOT}:this, for homogeneity and to explore a wider range of alternatives  
-			state.pushFrameSymbolic(ctx.rootMethodSignature);
+		    final ReferenceSymbolic rootThis = state.pushFrameSymbolic(ctx.rootMethodSignature);
+		    if (rootThis != null) {
+		        final String className = state.getObject(rootThis).getType();
+		        final DecisionAlternative_XLOAD_GETX_Expands rootExpansion = ctx.decisionProcedure.getRootDecisionAlternative(rootThis, className);
+		        ctx.triggerManager.loadTriggerFramesRoot(state, rootExpansion);
+		    }
 		} catch (BadClassFileException | MethodNotFoundException | MethodCodeNotFoundException e) {
 			throw new InitializationException(e);
+        } catch (ThreadStackEmptyException e) {
+            throw new UnexpectedInternalException(e);
         }
 
 		//creates and initializes the root class

@@ -23,6 +23,7 @@ import jbse.rules.TriggerRuleNull;
 import jbse.rules.TriggerRulesRepo;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Unresolved;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Loads;
+import jbse.tree.DecisionAlternative_XLOAD_GETX_Expands;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Aliases;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Expands;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Null;
@@ -43,6 +44,27 @@ public class TriggerManager {
 	public TriggerManager(TriggerRulesRepo triggerRulesRepo) {
 		this.triggerRulesRepo = triggerRulesRepo;
 	}
+	
+
+    /**
+     * Possibly loads frames on an initial state for 
+     * execution of triggers fired by the expansion 
+     * of {ROOT}:this. 
+     * 
+     * @param state a {@link State}. Must be initial.
+     * @param rootExpansion a {@link DecisionAlternative_XLOAD_GETX_Expands}
+     *        for the initial expansion of the {ROOT}:this reference.
+     * @throws ThreadStackEmptyException if {@code state}'s thread stack is empty.
+     */
+    public void loadTriggerFramesRoot(State state, DecisionAlternative_XLOAD_GETX_Expands rootExpansion) 
+    throws ThreadStackEmptyException {
+        try {
+            loadTriggerFrames(state, rootExpansion, 0);
+        } catch (InvalidProgramCounterException e) {
+            throw new UnexpectedInternalException(e); //should never happen
+        }
+    }
+
 
 	/**
 	 * Possibly loads frames on a state for triggers execution. 

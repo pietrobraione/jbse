@@ -31,6 +31,7 @@ import jbse.tree.DecisionAlternative_IFX;
 import jbse.tree.DecisionAlternative_IFX_False;
 import jbse.tree.DecisionAlternative_IFX_True;
 import jbse.tree.DecisionAlternative_XLOAD_GETX;
+import jbse.tree.DecisionAlternative_XLOAD_GETX_Expands;
 import jbse.tree.DecisionAlternative_XLOAD_GETX_Resolved;
 import jbse.tree.DecisionAlternative_XNEWARRAY;
 import jbse.tree.DecisionAlternative_XNEWARRAY_Ok;
@@ -653,7 +654,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	throws DecisionException, BadClassFileException {
 	    try {
 	        final boolean partialReferenceResolution = 
-	            doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFromLocalVariableFactory(), result);
+	            doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFactory_XLOAD_GETX(), result);
 	        return Outcome.val(true, partialReferenceResolution, true); //uninitialized symbolic references always require a refinement action
         } catch (InvalidInputException e) {
             //this should never happen as arguments have been checked by the caller
@@ -817,7 +818,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	        if (accessConcrete || isSat(state.getClassHierarchy(), accessExpression)) {
 	            shouldRefine = true; //unresolved symbolic references always require a refinement action
 	            noReferenceExpansion =
-	            doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFromArrayFactory(accessExpression), result);
+	              doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFactory_XALOAD(accessExpression), result);
 	        } else {
 	            //accessExpression is unsatisfiable: nothing to do
 	            shouldRefine = false;
@@ -1047,5 +1048,18 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
             throw new UnexpectedInternalException(exc);
         }
         //TODO coalesce entries that have same value (after investigating the impact on guided execution)
+    }
+    
+    /**
+     * Returns the only decision alternative for the expansion
+     * of the {ROOT}:this reference.
+     * 
+     * @param rootThis a {@link ReferenceSymbolic}, the {ROOT}:this 
+     *        reference.
+     * @param className the class name of the root object.
+     * @return a {@link DecisionAlternative_XLOAD_GETX_Expands}.
+     */
+    public DecisionAlternative_XLOAD_GETX_Expands getRootDecisionAlternative(ReferenceSymbolic rootThis, String className) {
+        return new DecisionAlternative_XLOAD_GETX_Expands(rootThis, className, 1);
     }
 }
