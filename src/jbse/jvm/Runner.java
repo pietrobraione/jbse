@@ -244,12 +244,12 @@ public class Runner {
 		/**
 		 * Invoked by a {@link Runner}'s {@link Runner#run run} method whenever a 
 		 * {@link ContradictionException} is thrown by the {@link Engine}. 
-		 * In this (default) implementation rethrows the exception.
+		 * By default rethrows the exception.
 		 * 
 		 * @param e the {@link ContradictionException} thrown by the {@link Engine}.
 		 * @return {@code true} iff the {@link Runner} must stop
 		 *         {@link Runner#run run}ning.
-		 * @throws ContradictionException by default.
+		 * @throws ContradictionException.
 		 */
 		public boolean atContradictionException(ContradictionException e) 
 		throws ContradictionException { throw e; }
@@ -258,12 +258,12 @@ public class Runner {
 		/**
 		 * Invoked by a {@link Runner}'s {@link Runner#run run} method whenever a 
 		 * {@link FailureException} is thrown by the {@link Engine}. 
-		 * In this (default) implementation returns {@code false}.
+		 * By default returns {@code false}.
 		 * 
 		 * @param e the {@link FailureException} thrown by the {@link Engine}.
 		 * @return {@code true} iff the {@link Runner} must stop
 		 *         {@link Runner#run run}ning.
-		 * @throws FailureException by default.
+		 * @throws FailureException.
 		 */
 		public boolean atFailureException(FailureException e) 
 		throws FailureException { return false; }
@@ -271,12 +271,12 @@ public class Runner {
 		/**
 		 * Invoked by a {@link Runner}'s {@link Runner#run run} method whenever a 
 		 * {@link ThreadStackEmptyException} is thrown by the {@link Engine}. 
-		 * In this (default) implementation returns {@code false}.
+		 * By default returns {@code false}.
 		 * 
 		 * @param e the {@link ThreadStackEmptyException} thrown by the {@link Engine}.
 		 * @return {@code true} iff the {@link Runner} must stop
 		 *         {@link Runner#run run}ning.
-		 * @throws ThreadStackEmptyException by default.
+		 * @throws ThreadStackEmptyException.
 		 */
 		public boolean atThreadStackEmptyException(ThreadStackEmptyException e) 
 		throws ThreadStackEmptyException { return false; }

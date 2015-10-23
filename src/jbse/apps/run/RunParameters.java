@@ -388,6 +388,9 @@ public final class RunParameters implements Cloneable {
 	
 	/** The {@link DecisionProcedureCreationStrategy} list. */
 	ArrayList<DecisionProcedureCreationStrategy> creationStrategies = new ArrayList<>();
+	
+	/** Should show output on console? */
+	boolean showOnConsole = true;
 
 	/** The name of the output file. */
 	String outFileName = null;
@@ -962,22 +965,32 @@ public final class RunParameters implements Cloneable {
      * is an abstract class or an interface.
      * This method allows to override this default.
      * 
-     * @param toExpand     the static type of the reference to be expanded. It must 
-     *                     be {@code toExpand != null}.
-     * @param originExp    an expression describing the origin of the 
-     *                     symbolic references which match this replacement.
+     * @param toExpand     the static type of the reference to be expanded. 
+     *                     It must be {@code toExpand != null}.
+     * @param originExp    a path expression describing the origin of the 
+     *                     symbolic references that match this rule.
      *                     If {@code originExp == null}, all the symbolic 
      *                     references with static type {@code toExpand} 
      *                     will match. 
      * @param classAllowed the name of the class whose instances are possible 
-     *                     expansions for {@code toExpand}. During the 
+     *                     expansions for {@code toExpand}. During  
      *                     symbolic execution, every symbolic reference with 
      *                     static type {@code toExpand} and origin matching 
      *                     {@code originExp}, will be expanded 
      *                     when necessary to a symbolic object with class 
-     *                     {@code classAllowed}. If {@code originExp == null}, 
+     *                     {@code classAllowed}. If {@code classAllowed == null}, 
      *                     the matching {@link ReferenceSymbolic}s will not be expanded.
-     * @param trigger      the instrumentation method to be triggered when this rule fires.
+     * @param triggerClassName 
+     *                     the class of the instrumentation method to be triggered 
+     *                     when this rule fires.
+     * @param triggerParametersSignature 
+     *                     the types of the parameters of the instrumentation method 
+     *                     to be triggered when this rule fires.
+     * @param triggerMethodName 
+     *                     the name of the instrumentation method to be triggered 
+     *                     when this rule fires.
+     * @param triggerParameter
+     *                     the parameter to be passed to the trigger when the rule fires. 
      */
 	public void addExpandTo(String toExpand, String originExp, String classAllowed, 
 			String triggerClassName, String triggerParametersSignature, String triggerMethodName,
@@ -989,35 +1002,57 @@ public final class RunParameters implements Cloneable {
 	}
 
     /**
-     * Specifies a LICS rule for symbolic reference resolution by aliasing. 
+     * Specifies a LICS rule for symbolic reference resolution by alias. 
      * By default, symbolic references are resolved by aliases to all the 
      * type-compatible objects assumed by previous epoch-compatible expansions. 
      * This method allows to override this default.
      * 
-     * @param toResolve      the static type of the reference to be resolved. It must 
-     *                       be {@code toResolve != null}.
-     * @param originExp      an expression describing the origin of the 
-     *                       symbolic references which match this replacement.
+     * @param toResolve      the static type of the reference to be resolved. 
+     *                       It must be {@code toResolve != null}.
+     * @param originExp      a path expression describing the origin of the 
+     *                       symbolic references that match this rule.
+     *                       The path expression is a slash-separated list of field
+     *                       names that starts from {ROOT}:x, indicating the 
+     *                       parameter with name {@code x} of the root method 
+     *                       invocation (including {@code this}).
      *                       If {@code originExp == null}, all the symbolic 
      *                       references with static type {@code toResolve} 
      *                       will match. 
-     * @param pathAllowedExp an expression describing the objects which are 
-     *                       acceptable as alias for {@code toResolve}. During the 
-     *                       symbolic execution, every symbolic reference with 
-     *                       class {@code toResolve} and origin matching 
-     *                       {@code originExp}, will be resolved 
-     *                       when necessary to all the type- and epoch-compatible 
-     *                       symbolic objects whose paths match
-     *                       {@code pathAllowedExp} (use root to indicate
-     *                       the root object, {REF} to indicate a path 
-     *                       starting from the origin of the reference to expand, 
-     *                       and {UP} to move back in the path; for instance, if 
-     *                       the reference to expand has origin 
-     *                       root/list/head/next/next, then {REF}/{UP}/{UP}/{UP} denotes 
-     *                       the path root/list). If {@code pathAllowedExp == null}
+     * @param pathAllowedExp a path expression describing the objects that are 
+     *                       acceptable as alias for {@code toResolve}. 
+     *                       The path expression is a slash-separated list of field
+     *                       names that starts from {ROOT}:x, indicating the 
+     *                       parameter with name {@code x} of the root method 
+     *                       invocation (including {@code this}), or from 
+     *                       {REF}, indicating a path starting from the origin 
+     *                       of the reference matched by the left part of the rule. 
+     *                       You can also use the special {UP} to move back in the 
+     *                       path; for instance, if the reference matching 
+     *                       {@code originExp} has origin 
+     *                       {ROOT}:this/list/head/next/next, then you can use both 
+     *                       {REF}/{UP}/{UP}/{UP} and {ROOT}:this/list to denote 
+     *                       the field with name {@code list} of the object that is
+     *                       referred by the {@code this} parameter of the root method
+     *                       invocation.
+     *                       During symbolic execution, every symbolic reference 
+     *                       with class {@code toResolve} and origin matching 
+     *                       {@code originExp} will be resolved when necessary 
+     *                       to all the type- and epoch-compatible 
+     *                       symbolic objects whose origins match
+     *                       {@code pathAllowedExp}. If {@code pathAllowedExp == null}
      *                       the matching {@link ReferenceSymbolic} will not be
      *                       resolved by alias.
-     * @param trigger        the instrumentation method to be triggered when this rule fires.
+     * @param triggerClassName 
+     *                       the class of the instrumentation method to be triggered 
+     *                       when this rule fires.
+     * @param triggerParametersSignature 
+     *                       the types of the parameters of the instrumentation method 
+     *                       to be triggered when this rule fires.
+     * @param triggerMethodName 
+     *                       the name of the instrumentation method to be triggered 
+     *                       when this rule fires.
+     * @param triggerParameter
+     *                       the parameter to be passed to the trigger when the rule fires. 
      */
 	public void addResolveAliasOrigin(String toResolve, String originExp, String pathAllowedExp, 
 			String triggerClassName, String triggerParametersSignature, String triggerMethodName,
@@ -1029,29 +1064,42 @@ public final class RunParameters implements Cloneable {
 	}
 
     /**
-     * Specifies a LICS rule for symbolic reference resolution by aliasing. 
+     * Specifies a LICS rule for symbolic reference resolution by alias. 
      * By default, symbolic references are resolved by aliases to all the 
      * type-compatible objects assumed by previous epoch-compatible expansions. 
      * This method allows to override this default.
      * 
-     * @param toResolve      the static type of the reference to be resolved. It must 
-     *                       be {@code toResolve != null}.
-     * @param originExp      an expression describing the origin of the 
-     *                       symbolic references which match this replacement.
-     *                       If {@code originExp == null}, all the symbolic 
-     *                       references with static type {@code toResolve} 
-     *                       will match. 
-     * @param classAllowed   the name of the class whose instances are possible 
-     *                       aliases for {@code toResolve}. During the 
-     *                       symbolic execution, every symbolic reference with 
-     *                       static type {@code toResolve} and origin matching 
-     *                       {@code originExp}, will be resolved 
-     *                       when necessary to all the epoch-compatible symbolic objects 
-     *                       with class
-     *                       {@code classAllowed}. If {@code classAllowed == null}
-     *                       the matching {@link ReferenceSymbolic} will not be
-     *                       resolved by alias.
-     * @param trigger        the instrumentation method to be triggered when this rule fires.
+     * @param toResolve    the static type of the reference to be resolved. 
+     *                     It must be {@code toResolve != null}.
+     * @param originExp    a path expression describing the origin of the 
+     *                     symbolic references that match this rule.
+     *                     The path expression is a slash-separated list of field
+     *                     names that starts from {ROOT}:x, indicating the 
+     *                     parameter with name {@code x} of the root method 
+     *                     invocation (including {@code this}).
+     *                     If {@code originExp == null}, all the symbolic 
+     *                     references with static type {@code toResolve} 
+     *                     will match. 
+     * @param classAllowed the name of the class whose instances are possible 
+     *                     aliases for {@code toResolve}. During  
+     *                     symbolic execution, every symbolic reference with 
+     *                     static type {@code toResolve} and origin matching 
+     *                     {@code originExp}, will be resolved 
+     *                     when necessary to all the epoch-compatible symbolic 
+     *                     objects with class {@code classAllowed}. If 
+     *                     {@code classAllowed == null} the matching 
+     *                     {@link ReferenceSymbolic} will not be resolved by alias.
+     * @param triggerClassName 
+     *                     the class of the instrumentation method to be triggered 
+     *                     when this rule fires.
+     * @param triggerParametersSignature 
+     *                     the types of the parameters of the instrumentation method 
+     *                     to be triggered when this rule fires.
+     * @param triggerMethodName 
+     *                     the name of the instrumentation method to be triggered 
+     *                     when this rule fires.
+     * @param triggerParameter
+     *                     the parameter to be passed to the trigger when the rule fires. 
      */
 	public void addResolveAliasInstanceof(String toResolve, String originExp, String classAllowed, 
 			String triggerClassName, String triggerParametersSignature, String triggerMethodName,
@@ -1064,34 +1112,48 @@ public final class RunParameters implements Cloneable {
 
     /**
      * Specifies a LICS rule for symbolic reference resolution by null. By 
-     * default all symbolic references are resolved to null. This method
+     * default all symbolic references are resolved by null. This method
      * allows to override this default.
      * 
-     * @param toResolve      the static type of the reference to be resolved. It must 
-     *                       be {@code toResolve != null}.
-     * @param originExp      an expression describing the origin of the 
-     *                       symbolic references which match this replacement.
-     *                       If {@code originExp == null}, all the symbolic 
-     *                       references with static type {@code toResolve} 
-     *                       will match.
+     * @param toResolve the static type of the reference to be resolved. 
+     *                  It must be {@code toResolve != null}.
+     * @param originExp a path expression describing the origin of the 
+     *                  symbolic references which match this rule.
+     *                  The path expression is a slash-separated list of field
+     *                  names that starts from {ROOT}:x, indicating the 
+     *                  parameter with name {@code x} of the root method 
+     *                  invocation (including {@code this}).
+     *                  If {@code originExp == null}, all the symbolic 
+     *                  references with static type {@code toResolve} 
+     *                  will match.
      */ 
 	public void addResolveNotNull(String toResolve, String originExp) {
 		this.resolveNotNull.add(new String[] { toResolve,  originExp });
 	}
 
     /**
-     * This method allows to introduce triggers when references are resolved to
+     * Adds a trigger method that fires when some references are resolved by
      * null.
      * 
-     * @param toResolve      the static type of the reference to be resolved. It must 
-     *                       be {@code toResolve != null}.
-     * @param originExp      an expression describing the origin of the 
-     *                       symbolic references which match this replacement.
-     *                       If {@code originExp == null}, all the symbolic 
-     *                       references with static type {@code toResolve} 
-     *                       will match.
-     * @param trigger        the instrumentation method to be triggered when this 
-     *                       rule fires.
+     * @param toResolve the static type of the reference to be resolved. 
+     *                  It must be {@code toResolve != null}.
+     * @param originExp a path expression describing the origin of the 
+     *                  symbolic references that match this rule.
+     *                  The path expression is a slash-separated list of field
+     *                  names that starts from {ROOT}:x, indicating the 
+     *                  parameter with name {@code x} of the root method 
+     *                  invocation (including {@code this}).
+     *                  If {@code originExp == null}, all the symbolic 
+     *                  references with static type {@code toResolve} 
+     *                  will match.
+     * @param triggerClassName 
+     *                  the class of the trigger method.
+     * @param triggerParametersSignature 
+     *                  the types of the parameters of the trigger method.
+     * @param triggerMethodName 
+     *                  the name of the trigger method.
+     * @param triggerParameter
+     *                  the parameter to be passed to the trigger method. 
      */ 
 	public void addResolveNull(String toResolve, String originExp, 
 			String triggerClassName, String triggerParametersSignature, String triggerMethodName,
@@ -1103,7 +1165,24 @@ public final class RunParameters implements Cloneable {
 	}
 	
 	/**
+	 * Sets whether the output should be shown on 
+	 * console (stdout, stderr). Note that if the 
+	 * output is not shown on the console and no
+	 * output file is specified (see {@link #setOutputFileName}
+	 * and {@link #setOutputFileNone}) no output
+	 * of the symbolic execution will be emitted.
+	 * 
+	 * @param showOnConsole {@code true} iff the output
+	 *        should be shown on the console. By default
+	 *        it is {@code true}. 
+	 */
+	public void setShowOnConsole(boolean showOnConsole) {
+	    this.showOnConsole = showOnConsole;
+	}
+	
+	/**
 	 * Sets the name of the output file.
+	 * 
 	 * @param s A {@link String} representing the pathname of a 
 	 *          file where the console output (stdout and stderr) will 
 	 *          be copied.
@@ -1117,7 +1196,7 @@ public final class RunParameters implements Cloneable {
 	}
 
 	/**
-	 * Instructs not to copy the console output to any file, cancelling
+	 * Instructs not to copy the console output to file, cancelling
 	 * any previous invocation of the {@link #setOutputFileName}
 	 * method. This is the default behaviour. 
 	 */
@@ -1260,7 +1339,8 @@ public final class RunParameters implements Cloneable {
 	
 	/**
 	 * Sets whether, at the end of each trace, it should be
-	 * checked if the final state can be concretized.
+	 * checked if the final state can be concretized. By 
+	 * default concretization check is not performed.
 	 * 
 	 * @param doConcretization {@code true} iff the concretization 
 	 *        check must be performed.
@@ -1270,7 +1350,7 @@ public final class RunParameters implements Cloneable {
 	}
 
     /**
-     * Specifies the concretization method of a class
+     * Specifies the concretization method of a class.
      * 
      * @param className the name of a class.
      * @param methodName the name of the concretization method 
