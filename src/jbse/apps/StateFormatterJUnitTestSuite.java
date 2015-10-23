@@ -703,14 +703,14 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
             final boolean variableNotYetCreated = (getVariableFor(symbol) == null);
             if (variableNotYetCreated) {
                 makeVariableFor(symbol);
-                final String var = getVariableFor(symbol);
-                if (hasMemberAccessor(var)) {
-                    setByReflection(var, value.toString()); 
-                } else {
-                    this.s.append("int ");
-                    this.s.append(var);
-                    this.s.append(" = " + value.toString() + ";");
-                }
+            }
+            final String var = getVariableFor(symbol);
+            if (hasMemberAccessor(var)) {
+                setByReflection(var, value.toString()); 
+            } else {
+                this.s.append("int ");
+                this.s.append(var);
+                this.s.append(" = " + value.toString() + ";");
             }
         }
     }
