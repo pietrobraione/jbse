@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<jardesc>
+    <jar path="/Users/pietro/Desktop/jbse.jar"/>
+    <options buildIfNeeded="true" compress="true" descriptionLocation="/jbse/jbse-jar.jardesc" exportErrors="false" exportWarnings="true" includeDirectoryEntries="true" overwrite="false" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
+    <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
+    <selectedProjects/>
+    <manifest generateManifest="true" manifestLocation="" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
+        <sealing sealJar="false">
+            <packagesToSeal/>
+            <packagesToUnSeal/>
+        </sealing>
+    </manifest>
+    <selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.meta"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.algo"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.apps.settings{SimpleCharStream.java"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.apps.settings{SettingsParserConstants.java"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.apps.settings{TokenMgrError.java"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.algo.meta"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.dec.exc"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.apps.settings{SettingsParserTokenManager.java"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.rewr"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.dec"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.mem.exc"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.bc.exc"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.jvm.exc"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.val.exc"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.algo.exc"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.common.exc"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.apps.run"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.val"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.apps.settings{SettingsParser.java"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.apps.settings{Token.java"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.rules"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.jvm"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.mem"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.apps.settings{SettingsReader.java"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.rewr.exc"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.meta.annotations"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.apps"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.tree"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.apps.settings{ParseException.java"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.common"/>
+        <javaElement handleIdentifier="=jbse/src&lt;jbse.bc"/>
+    </selectedElements>
+</jardesc>
