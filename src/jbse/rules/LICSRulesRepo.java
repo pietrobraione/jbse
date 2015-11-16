@@ -1,22 +1,24 @@
 package jbse.rules;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import jbse.common.Type;
 import jbse.val.ReferenceSymbolic;
 
-public class LICSRulesRepo {
+public final class LICSRulesRepo implements Cloneable {
+    private HashSet<String> notInitializedClasses = new HashSet<>();
 	private HashMap<String, Set<LICSRuleExpandsTo>> rulesExpandsTo = new HashMap<>();
 	private HashMap<String, Set<LICSRuleAliases>> rulesAliases = new HashMap<>();
 	private HashMap<String, Set<LICSRuleNull>> rulesNull = new HashMap<>();
 	private HashMap<String, Set<LICSRuleNotNull>> rulesNotNull = new HashMap<>();
-	private HashSet<String> notInitializedClasses = new HashSet<>();
 
-	public void addNotInitializedClass(String s) {
-		this.notInitializedClasses.add(s);
+	public void addNotInitializedClass(String... notInitializedClasses) {
+        Collections.addAll(this.notInitializedClasses, notInitializedClasses);
 	}
 	
     /**
@@ -45,10 +47,10 @@ public class LICSRulesRepo {
      *                     on the existence of other matching expansion rules.
      */
 	public void addExpandTo(String toExpand, String originExp, String classAllowed) {
-		Set<LICSRuleExpandsTo> c = rulesExpandsTo.get(toExpand);
+		Set<LICSRuleExpandsTo> c = this.rulesExpandsTo.get(toExpand);
 		if (c == null) {
 			c = new HashSet<>();
-			rulesExpandsTo.put(toExpand, c);
+			this.rulesExpandsTo.put(toExpand, c);
 		}
 		c.add(new LICSRuleExpandsTo(originExp, classAllowed));
 		//TODO detect overlap of expand-to-nothing with expand-to-something rules and throw exception  
@@ -83,10 +85,10 @@ public class LICSRulesRepo {
      *                       the path {ROOT}/list).
      */
 	public void addResolveAliasOrigin(String toResolve, String originExp, String pathAllowedExp) {
-		Set<LICSRuleAliases> c = rulesAliases.get(toResolve);
+		Set<LICSRuleAliases> c = this.rulesAliases.get(toResolve);
 		if (c == null) {
 			c = new HashSet<>();
-			rulesAliases.put(toResolve, c);
+			this.rulesAliases.put(toResolve, c);
 		}
 		c.add(new LICSRuleAliasesOrigin(originExp, pathAllowedExp));
 	}
@@ -116,10 +118,10 @@ public class LICSRulesRepo {
      *                       on the existence of other matching alias rules.
      */
 	public void addResolveAliasInstanceof(String toResolve, String originExp, String classAllowed) {
-		Set<LICSRuleAliases> c = rulesAliases.get(toResolve);
+		Set<LICSRuleAliases> c = this.rulesAliases.get(toResolve);
 		if (c == null) {
 			c = new HashSet<>();
-			rulesAliases.put(toResolve, c);
+			this.rulesAliases.put(toResolve, c);
 		}
 		c.add(new LICSRuleAliasesInstanceof(originExp, classAllowed));
 	}
@@ -138,10 +140,10 @@ public class LICSRulesRepo {
      *                       will match.
      */ 
 	public void addResolveNull(String toResolve, String originExp) {
-		Set<LICSRuleNull> c = rulesNull.get(toResolve);
+		Set<LICSRuleNull> c = this.rulesNull.get(toResolve);
 		if (c == null) {
 			c = new HashSet<>();
-			rulesNull.put(toResolve, c);
+			this.rulesNull.put(toResolve, c);
 		}
 		c.add(new LICSRuleNull(originExp));
 	}
@@ -160,10 +162,10 @@ public class LICSRulesRepo {
      *                       will match.
      */ 
 	public void addResolveNotNull(String toResolve, String originExp) {
-		Set<LICSRuleNotNull> c = rulesNotNull.get(toResolve);
+		Set<LICSRuleNotNull> c = this.rulesNotNull.get(toResolve);
 		if (c == null) {
 			c = new HashSet<>();
-			rulesNotNull.put(toResolve, c);
+			this.rulesNotNull.put(toResolve, c);
 		}
 		c.add(new LICSRuleNotNull(originExp));
 	}
@@ -180,7 +182,7 @@ public class LICSRulesRepo {
 		final String type = ref.getStaticType();
 		final String refClass = Type.className(type);
 		final ArrayList<LICSRuleExpandsTo> retVal = new ArrayList<LICSRuleExpandsTo>();
-		final Set<LICSRuleExpandsTo> rulesSet = rulesExpandsTo.get(refClass);
+		final Set<LICSRuleExpandsTo> rulesSet = this.rulesExpandsTo.get(refClass);
 		if (rulesSet != null) {
 			for (LICSRuleExpandsTo rule : rulesSet) {
 				if (rule.matches(ref)) {
@@ -203,7 +205,7 @@ public class LICSRulesRepo {
 		final String type = ref.getStaticType();
 		final String refClass = Type.className(type);
 		final ArrayList<LICSRuleAliases> retVal = new ArrayList<LICSRuleAliases>();
-		final Set<LICSRuleAliases> rulesSet = rulesAliases.get(refClass);
+		final Set<LICSRuleAliases> rulesSet = this.rulesAliases.get(refClass);
 		if (rulesSet != null) {
 			for (LICSRuleAliases rule : rulesSet) {
 				if (rule.matches(ref) && !rule.requiresMax()) {
@@ -226,7 +228,7 @@ public class LICSRulesRepo {
 		final String type = ref.getStaticType();
 		final String refClass = Type.className(type);
 		final ArrayList<LICSRuleAliases> retVal = new ArrayList<LICSRuleAliases>();
-		final Set<LICSRuleAliases> rulesSet = rulesAliases.get(refClass);
+		final Set<LICSRuleAliases> rulesSet = this.rulesAliases.get(refClass);
 		if (rulesSet != null) {
 			for (LICSRuleAliases rule : rulesSet) {
 				if (rule.matches(ref) && rule.requiresMax()) {
@@ -246,7 +248,7 @@ public class LICSRulesRepo {
 	public boolean someMatchingLICSRulesNotNull(ReferenceSymbolic ref) {
 		final String type = ref.getStaticType();
 		final String refClass = Type.className(type);
-		final Set<LICSRuleNotNull> rulesSet = rulesNotNull.get(refClass);
+		final Set<LICSRuleNotNull> rulesSet = this.rulesNotNull.get(refClass);
 		if (rulesSet != null) {
 			for (LICSRuleNotNull rule : rulesSet) {
 				if (rule.matches(ref)) {
@@ -270,7 +272,7 @@ public class LICSRulesRepo {
 		final String type = ref.getStaticType();
 		final String refClass = Type.className(type);
 		final ArrayList<LICSRuleNull> retVal = new ArrayList<LICSRuleNull>();
-		final Set<LICSRuleNull> rulesSet = rulesNull.get(refClass);
+		final Set<LICSRuleNull> rulesSet = this.rulesNull.get(refClass);
 		if (rulesSet != null) {
 			for (LICSRuleNull rule : rulesSet) {
 				if (rule.matches(ref)) {
@@ -284,5 +286,37 @@ public class LICSRulesRepo {
 	//TODO do it better!!!
 	public boolean notInitializedClassesContains(String c) {
 		return this.notInitializedClasses.contains(c);
+	}
+	
+	@SuppressWarnings("unchecked")
+    @Override
+	public LICSRulesRepo clone() {
+        final LICSRulesRepo o;
+        try {
+            o = (LICSRulesRepo) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError(e); //will not happen
+        }
+        
+        //deep copy
+        o.notInitializedClasses = (HashSet<String>) this.notInitializedClasses.clone();
+        o.rulesAliases = new HashMap<>();
+        for (Map.Entry<String, Set<LICSRuleAliases>> e : this.rulesAliases.entrySet()) {
+            o.rulesAliases.put(e.getKey(), new HashSet<>(e.getValue()));
+        }
+        o.rulesExpandsTo = new HashMap<>();
+        for (Map.Entry<String, Set<LICSRuleExpandsTo>> e : this.rulesExpandsTo.entrySet()) {
+            o.rulesExpandsTo.put(e.getKey(), new HashSet<>(e.getValue()));
+        }
+        o.rulesNotNull = new HashMap<>();
+        for (Map.Entry<String, Set<LICSRuleNotNull>> e : this.rulesNotNull.entrySet()) {
+            o.rulesNotNull.put(e.getKey(), new HashSet<>(e.getValue()));
+        }
+        o.rulesNull = new HashMap<>();
+        for (Map.Entry<String, Set<LICSRuleNull>> e : this.rulesNull.entrySet()) {
+            o.rulesNull.put(e.getKey(), new HashSet<>(e.getValue()));
+        }
+        
+        return o;
 	}
 }

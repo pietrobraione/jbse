@@ -27,7 +27,7 @@ public final class DecisionProcedureLICS extends DecisionProcedureChainOfRespons
 
 	public DecisionProcedureLICS(DecisionProcedure next, CalculatorRewriting calc, LICSRulesRepo rulesRepo) {
 		super(next, calc);
-		this.rulesRepo = rulesRepo;
+		this.rulesRepo = rulesRepo.clone(); //safety copy
 	}
 
 	@Override

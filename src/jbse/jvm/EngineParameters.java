@@ -2,12 +2,17 @@ package jbse.jvm;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import jbse.bc.Classpath;
 import jbse.bc.Signature;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.rules.TriggerRulesRepo;
 import jbse.tree.StateTree;
 import jbse.val.Calculator;
 
@@ -180,23 +185,11 @@ public final class EngineParameters implements Cloneable {
 	/** The {@code ExecutionObserver}s. */
 	ArrayList<ExecutionObserver> observers = new ArrayList<>();
 	
-	/** The expansion triggers, a list of {@link String} triples. */
-	ArrayList<String[]> expandToTriggers = new ArrayList<>();
-
-	/** 
-	 * The alias resolution triggers (origin pattern), a list of 
-	 * {@link String} triples. 
-	 */
-	ArrayList<String[]> resolveAliasOriginTriggers = new ArrayList<>();
-
-	/** 
-	 * The alias resolution triggers (instance of class), a list of 
-	 * {@link String} triples. 
-	 */
-	ArrayList<String[]> resolveAliasInstanceofTriggers = new ArrayList<>();
+	/** The {@link TriggerRulesRepo}, containing all the trigger rules. */
+	TriggerRulesRepo repoTrigger = new TriggerRulesRepo();
 	
-	/** The {@code null} resolution triggers, a list of String triples. */
-	ArrayList<String[]> resolveNullTriggers = new ArrayList<>();
+	/** The expansion backdoor. */
+	HashMap<String, Set<String>> expansionBackdoor = new HashMap<>();
 
 	/** The methods overridden at the meta-level. */
 	ArrayList<String[]> metaOverridden = new ArrayList<>();
@@ -378,16 +371,45 @@ public final class EngineParameters implements Cloneable {
 	 */
 	public Classpath getClasspath() {
 		if (this.initialState == null) {
-			return new Classpath(this.paths.toArray(FOO)); //safety copy
+			return new Classpath(this.paths.toArray(ARRAY_OF_STRING)); //safety copy
 		} else {
 			return this.initialState.getClasspath();
 		}
 	}
-	private static final String[] FOO = { };
+	private static final String[] ARRAY_OF_STRING = { };
+	
+	
+    /**
+     * Returns the {@link TriggerRulesRepo} 
+     * containing all the trigger rules that
+     * must be used.
+     * 
+     * @return a {@link TriggerRulesRepo}. It
+     *         is the one that backs this
+     *         {@link EngineParameters}, not a
+     *         safety copy.
+     */
+	public TriggerRulesRepo getTriggerRulesRepo() {
+	    return this.repoTrigger;
+	}
+	
+    /**
+     * Returns the expansion backdoor.
+     * 
+     * @return a {@link Map}{@code <}{@link String}{@code , }{@link Set}{@code <}{@link String}{@code >>},
+     *         associating class names with set of
+     *         other class names. 
+     *         It is the one that backs this
+     *         {@link EngineParameters}, not a
+     *         safety copy.
+     */
+	public Map<String, Set<String>> getExpansionBackdoor() {
+	    return this.expansionBackdoor;
+	}
 	
     /**
      * Adds a trigger method that fires when some references are resolved by
-     * expansion.
+     * expansion. Also adds a class to the expansion backdoor.
      * 
      * @param toExpand     the static type of the reference to be expanded. 
      *                     It must be {@code toExpand != null}.
@@ -403,19 +425,35 @@ public final class EngineParameters implements Cloneable {
      * @param classAllowed the name of the class whose instances are possible 
      *                     expansions for this trigger to fire. 
      * @param triggerClassName 
-     *                     the class of the trigger method.
+     *                     the class of the trigger method. When {@code null}
+     *                     no trigger method will fire (only the expansion backdoor
+     *                     is updated).
      * @param triggerParametersSignature 
-     *                     the types of the parameters of the trigger method.
+     *                     the types of the parameters of the trigger method. 
+     *                     When {@code null} no trigger method will fire (only 
+     *                     the expansion backdoor is updated).
      * @param triggerMethodName 
-     *                     the name of the trigger method.
+     *                     the name of the trigger method. When {@code null}
+     *                     no trigger method will fire (only the expansion backdoor
+     *                     is updated).
      * @param triggerParameter
      *                     the parameter to be passed to the trigger method. 
      */
 	public void addExpandToTrigger(String toExpand, String originExp, String classAllowed, 
 			String triggerClassName, String triggerParametersSignature, String triggerMethodName,
 			String triggerParameter) {
-		this.expandToTriggers.add(new String[] { toExpand, originExp, classAllowed,
-				triggerClassName, triggerParametersSignature, triggerMethodName, triggerParameter});
+	    if (triggerClassName != null && triggerParametersSignature != null && triggerMethodName == null) {
+	        this.repoTrigger.addExpandTo(toExpand, originExp, classAllowed, 
+		            new Signature(triggerClassName, triggerParametersSignature, triggerMethodName), triggerParameter);
+	    }
+		
+		//updates expansion backdoor
+	    Set<String> classesAllowed = this.expansionBackdoor.get(toExpand);
+	    if (classesAllowed == null) {
+	        classesAllowed = new HashSet<>();
+	        this.expansionBackdoor.put(toExpand, classesAllowed);
+	    }
+	    classesAllowed.add(classAllowed);	
 	}
 	
     /**
@@ -461,8 +499,8 @@ public final class EngineParameters implements Cloneable {
 	public void addResolveAliasOriginTrigger(String toResolve, String originExp, String pathAllowedExp, 
 			String triggerClassName, String triggerParametersSignature, String triggerMethodName,
 			String triggerParameter) {
-		this.resolveAliasOriginTriggers.add(new String[] { toResolve, originExp, pathAllowedExp, 
-				triggerClassName, triggerParametersSignature, triggerMethodName, triggerParameter});
+        this.repoTrigger.addResolveAliasOrigin(toResolve, originExp, pathAllowedExp, 
+                new Signature(triggerClassName, triggerParametersSignature, triggerMethodName), triggerParameter);
 	}
 
     /**
@@ -494,8 +532,8 @@ public final class EngineParameters implements Cloneable {
 	public void addResolveAliasInstanceofTrigger(String toResolve, String originExp, String classAllowed, 
 			String triggerClassName, String triggerParametersSignature, String triggerMethodName,
 			String triggerParameter) {
-		this.resolveAliasInstanceofTriggers.add(new String[] { toResolve, originExp, classAllowed, 
-				triggerClassName, triggerParametersSignature, triggerMethodName, triggerParameter});
+	    this.repoTrigger.addResolveAliasInstanceof(toResolve, originExp, classAllowed,
+	            new Signature(triggerClassName, triggerParametersSignature, triggerMethodName), triggerParameter);
 	}
 
     /**
@@ -525,8 +563,8 @@ public final class EngineParameters implements Cloneable {
 	public void addResolveNullTrigger(String toResolve, String originExp, 
 			String triggerClassName, String triggerParametersSignature, String triggerMethodName,
 			String triggerParameter) {
-		this.resolveNullTriggers.add(new String[] { toResolve,  originExp, triggerClassName, 
-				triggerParametersSignature, triggerMethodName, triggerParameter});
+	    this.repoTrigger.addResolveNull(toResolve, originExp,
+	            new Signature(triggerClassName, triggerParametersSignature, triggerMethodName), triggerParameter);
 	}
 
 	/**
@@ -617,11 +655,12 @@ public final class EngineParameters implements Cloneable {
 		}
 		o.paths = (ArrayList<String>) this.paths.clone();
 		//calc and decisionProcedure are *not* cloned
-		o.observedVars = (ArrayList<Signature>) this.observedVars.clone();		
-		o.resolveNullTriggers = (ArrayList<String[]>) this.resolveNullTriggers.clone();
-		o.expandToTriggers = (ArrayList<String[]>) this.expandToTriggers.clone();
-		o.resolveAliasOriginTriggers = (ArrayList<String[]>) this.resolveAliasOriginTriggers.clone();
-		o.resolveAliasInstanceofTriggers = (ArrayList<String[]>) this.resolveAliasInstanceofTriggers.clone();
+		o.observedVars = (ArrayList<Signature>) this.observedVars.clone();
+		o.repoTrigger = (TriggerRulesRepo) this.repoTrigger.clone();
+		o.expansionBackdoor = new HashMap<>();
+		for (Map.Entry<String, Set<String>> e : o.expansionBackdoor.entrySet()) {
+		    o.expansionBackdoor.put(e.getKey(), new HashSet<>(e.getValue()));
+		}
 		o.metaOverridden = (ArrayList<String[]>) this.metaOverridden.clone();
 		o.uninterpreted = (ArrayList<String[]>) this.uninterpreted.clone();
 		return o;

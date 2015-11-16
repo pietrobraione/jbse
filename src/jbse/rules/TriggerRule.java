@@ -19,10 +19,10 @@ import jbse.val.ReferenceSymbolic;
  */
 public abstract class TriggerRule extends Rule {
 	/** Should not be {@code null}. */
-	private Signature triggerMethod;
+	private final Signature triggerMethod;
 	
 	/** Should not be {@code null}. */
-	private String triggerParameter;
+	private final String triggerParameter;
 
 	public TriggerRule(String originExp, Signature triggerMethod, String triggerParameter) { 
 		super(originExp);

@@ -14,7 +14,7 @@ import jbse.val.ReferenceSymbolic;
  */
 public class LICSRuleAliasesInstanceof extends LICSRuleAliases {
 	/** {@code null} means "aliases nothing". */
-	private String classAllowed;
+	private final String classAllowed;
 
 	public LICSRuleAliasesInstanceof(String originExp, String classAllowed) {
 		super(originExp);

@@ -19,10 +19,10 @@ import jbse.val.ReferenceSymbolic;
  */
 public class LICSRuleAliasesOrigin extends LICSRuleAliases {
 	/** Should not be {@code null}. */
-	private String pathAllowedExp;
+	private final String pathAllowedExp;
 	
 	/** When {@code true} only the maximal path matches. */
-	private boolean hasMax;
+	private final boolean hasMax;
 	
 	public LICSRuleAliasesOrigin(String originExp, String pathAllowedExp) {
 		super(originExp);

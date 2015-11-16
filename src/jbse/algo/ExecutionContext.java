@@ -1,6 +1,7 @@
 package jbse.algo;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -132,8 +133,8 @@ public final class ExecutionContext {
 		this.decisionProcedure = decisionProcedure;
 		this.stateTree = new StateTree(stateIdentificationMode, breadthMode);
 		this.classFileFactoryClass = classFileFactoryClass;
-		this.expansionBackdoor = expansionBackdoor;
-		this.triggerManager = new TriggerManager(rulesTrigger);
+		this.expansionBackdoor = new HashMap<>(expansionBackdoor);      //safety copy
+		this.triggerManager = new TriggerManager(rulesTrigger.clone()); //safety copy
 		this.comparators = comparators;
 		this.nativeInvoker = nativeInvoker;
     }

@@ -20,10 +20,10 @@ import jbse.val.ReferenceSymbolic;
  */
 public class TriggerRuleAliasesOrigin extends TriggerRuleAliases {
 	/** Should not be {@code null}. */
-	private String pathAllowedExp;
+	private final String pathAllowedExp;
 	
 	/** When {@code true} only the maximal path matches. */
-	private boolean hasMax;
+	private final boolean hasMax;
 	
 	public TriggerRuleAliasesOrigin(String originExp, String pathAllowedExp, Signature triggerMethod, String triggerParameter) {
 		super(originExp, triggerMethod, triggerParameter);

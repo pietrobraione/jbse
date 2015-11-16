@@ -11,7 +11,7 @@ import jbse.val.ReferenceSymbolic;
  */
 public class TriggerRuleExpandsTo extends TriggerRule {
 	/** Should not be {@code null}. */
-	private String className;
+	private final String className;
 
 	public TriggerRuleExpandsTo(String originExp, String className, Signature triggerMethod, String triggerParameter) {
 		super(originExp, triggerMethod, triggerParameter);

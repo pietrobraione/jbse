@@ -3,6 +3,7 @@ package jbse.rules;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import jbse.bc.Signature;
@@ -15,7 +16,7 @@ import jbse.val.ReferenceSymbolic;
  *  
  * @author Pietro Braione
  */
-public class TriggerRulesRepo {
+public final class TriggerRulesRepo implements Cloneable {
 	private HashMap<String, Set<TriggerRuleExpandsTo>> rulesExpandsTo = new HashMap<>();
 	private HashMap<String, Set<TriggerRuleAliases>> rulesAliases = new HashMap<>();
 	private HashMap<String, Set<TriggerRuleNull>> rulesNull = new HashMap<>();
@@ -40,7 +41,7 @@ public class TriggerRulesRepo {
      *                     static type {@code toExpand} and origin matching 
      *                     {@code originExp}, will be expanded 
      *                     when necessary to a symbolic object with class 
-     *                     {@code classAllowed}. If {@code originExp == null}, 
+     *                     {@code classAllowed}. If {@code classAllowed == null}, 
      *                     the matching {@link ReferenceSymbolic}s will not be expanded.
      * @param triggerMethod the {@link Signature} of the instrumentation method to be 
      *                      triggered when this rule fires.
@@ -257,5 +258,31 @@ public class TriggerRulesRepo {
 			}
 		}
 		return retVal;
+	}
+	
+	@Override
+	public TriggerRulesRepo clone() {
+        final TriggerRulesRepo o;
+        try {
+            o = (TriggerRulesRepo) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError(e); //will not happen
+        }
+        
+        //deep copy
+        o.rulesAliases = new HashMap<>();
+        for (Map.Entry<String, Set<TriggerRuleAliases>> e : this.rulesAliases.entrySet()) {
+            o.rulesAliases.put(e.getKey(), new HashSet<>(e.getValue()));
+        }
+        o.rulesExpandsTo = new HashMap<>();
+        for (Map.Entry<String, Set<TriggerRuleExpandsTo>> e : this.rulesExpandsTo.entrySet()) {
+            o.rulesExpandsTo.put(e.getKey(), new HashSet<>(e.getValue()));
+        }
+        o.rulesNull = new HashMap<>();
+        for (Map.Entry<String, Set<TriggerRuleNull>> e : this.rulesNull.entrySet()) {
+            o.rulesNull.put(e.getKey(), new HashSet<>(e.getValue()));
+        }
+        
+        return o;
 	}
 }

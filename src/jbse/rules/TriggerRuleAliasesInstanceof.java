@@ -13,7 +13,7 @@ import jbse.val.ReferenceSymbolic;
  */
 public class TriggerRuleAliasesInstanceof extends TriggerRuleAliases {
 	/** Should not be {@code null}. */
-	private String classAllowed;
+	private final String classAllowed;
 
 	public TriggerRuleAliasesInstanceof(String originExp, String classAllowed, Signature triggerMethod, String triggerParameter) {
 		super(originExp, triggerMethod, triggerParameter);

@@ -20,11 +20,6 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRESOLVED;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRUNBYJBSE;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SUCCEED;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import jbse.algo.ExecutionContext;
 import jbse.algo.NativeInvokerPure;
 import jbse.algo.exc.MetaUnsupportedException;
@@ -37,7 +32,6 @@ import jbse.dec.exc.DecisionException;
 import jbse.jvm.exc.CannotBuildEngineException;
 import jbse.jvm.exc.InitializationException;
 import jbse.jvm.exc.NonexistingObservedVariablesException;
-import jbse.rules.TriggerRulesRepo;
 import jbse.tree.DecisionAlternativeComparators;
 
 /**
@@ -99,11 +93,11 @@ public class EngineBuilder {
 				parameters.getDecisionProcedure(),
 				parameters.getStateIdentificationMode().toInternal(), 
 				parameters.getBreadthMode().toInternal(),
-				ClassFileFactoryJavassist.class,      //default
-				getExpansionBackdoor(parameters), 
-				getRulesTrigger(parameters), 
-				new DecisionAlternativeComparators(), //default 
-				new NativeInvokerPure()               //default
+				ClassFileFactoryJavassist.class,          //default
+				parameters.getExpansionBackdoor(), 
+				parameters.getTriggerRulesRepo(),
+				new DecisionAlternativeComparators(),     //default 
+				new NativeInvokerPure()                   //default
 				);
 		
 		//sets the meta-level directives
@@ -115,50 +109,6 @@ public class EngineBuilder {
         setObservers(vom, parameters);
 
 		return new Engine(ctx, vom);
-	}
-	
-	private static Map<String, Set<String>> getExpansionBackdoor(EngineParameters parameters) {
-		final HashMap<String, Set<String>> retVal = new HashMap<>();
-		for (String[] rule : parameters.expandToTriggers) {
-			final String toExpand = rule[0];
-			final String classAllowed = rule[2];
-			if (classAllowed == null) {
-				continue;
-			}
-			Set<String> classesAllowed = retVal.get(toExpand);
-			if (classesAllowed == null) {
-				classesAllowed = new HashSet<>();
-				retVal.put(toExpand, classesAllowed);
-			}
-			classesAllowed.add(classAllowed);
-		}
-		return retVal;
-	}
-
-	private static TriggerRulesRepo getRulesTrigger(EngineParameters parameters) {
-		final TriggerRulesRepo retVal = new TriggerRulesRepo();
-		
-		for (String[] rule : parameters.expandToTriggers) {
-			if (rule[3] == null) { continue; }
-			retVal.addExpandTo(rule[0], rule[1], rule[2], 
-					new Signature(rule[3], rule[4], rule[5]), rule[6]);
-		}
-		for (String[] rule : parameters.resolveAliasOriginTriggers) {
-			if (rule[3] == null) { continue; }
-			retVal.addResolveAliasOrigin(rule[0], rule[1], rule[2], 
-					new Signature(rule[3], rule[4], rule[5]), rule[6]);
-		}
-		for (String[] rule : parameters.resolveAliasInstanceofTriggers) {
-			if (rule[3] == null) { continue; }
-			retVal.addResolveAliasInstanceof(rule[0], rule[1], rule[2],
-					new Signature(rule[3], rule[4], rule[5]), rule[6]);
-		}
-		for (String[] rule : parameters.resolveNullTriggers) {
-			if (rule[3] == null) { continue; }
-			retVal.addResolveNull(rule[0], rule[1], 
-					new Signature(rule[2], rule[3], rule[4]), rule[5]);
-		}
-		return retVal;
 	}
 	
 	private static void setMeta(ExecutionContext ctx, EngineParameters parameters) {

@@ -10,6 +10,7 @@ import jbse.val.ReferenceSymbolic;
 /**
  * A rule predicating on the origin of a symbolic reference
  * by means of an extended regular expression language.
+ * Rules are immutable.
  * 
  * @author Pietro Braione
  *

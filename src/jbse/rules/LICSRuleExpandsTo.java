@@ -12,7 +12,7 @@ import jbse.val.ReferenceSymbolic;
  * 
  */
 public class LICSRuleExpandsTo extends LICSRule {
-	private String className;
+	private final String className;
 
 	/**
 	 * Constructor.

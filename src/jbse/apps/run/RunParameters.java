@@ -341,30 +341,9 @@ public final class RunParameters implements Cloneable {
 	 */
 	boolean useLICS = true;
 	
-	/** The names of the not initialized classes. */
-	private ArrayList<String> notInizializedClasses = new ArrayList<>();
-
-	/** The LICS expansion rules, a list of {@link String} triples. */
-	private ArrayList<String[]> expandTo = new ArrayList<>();
-
-	/** 
-	 * The reference alias resolution rules (origin pattern), a list of 
-	 * {@link String} triples. 
-	 */
-	private ArrayList<String[]> resolveAliasOrigin = new ArrayList<>();
-
-	/** 
-	 * The reference alias resolution rules (instance of class), a list of 
-	 * {@link String} triples. 
-	 */
-	private ArrayList<String[]> resolveAliasInstanceof = new ArrayList<String[]>();
-
-	/** The LICS not-{@code null} rules, a list of string pairs. */
-	private ArrayList<String[]> resolveNotNull = new ArrayList<>();
-
-	/** The LICS {@code null} rules, a list of string triples. */
-	private ArrayList<String[]> resolveNull = new ArrayList<>();
-
+	/** The {@link LICSRuleRepo}, containing all the LICS rules. */
+	private LICSRulesRepo licsRepo = new LICSRulesRepo();
+	
 	/** 
 	 * Whether the engine should use the conservative 
 	 * repOK decision procedure.
@@ -943,7 +922,7 @@ public final class RunParameters implements Cloneable {
      * @param notInitializedClasses a list of class names as a {@link String}{@code []}.
      */
 	public void addNotInitializedClasses(String... notInitializedClasses) {
-		Collections.addAll(this.notInizializedClasses, notInitializedClasses);
+	    this.licsRepo.addNotInitializedClass(notInitializedClasses);
 	}
     
     /**
@@ -957,6 +936,20 @@ public final class RunParameters implements Cloneable {
     public void setUseLICS(boolean useLICS) {
         this.useLICS = useLICS;
     }
+    
+    /**
+     * Returns the {@link LICSRulesRepo} 
+     * containing all the LICS rules that
+     * must be used.
+     * 
+     * @return a {@link LICSRulesRepo}. It
+     *         is the one that backs this
+     *         {@link RunParameters}, not a
+     *         safety copy.
+     */
+    public LICSRulesRepo getLICSRulesRepo() {
+        return this.licsRepo;
+    }
 
     /**
      * Specifies a LICS rule for symbolic reference expansion. By default a 
@@ -964,6 +957,128 @@ public final class RunParameters implements Cloneable {
      * of its static type, or is not expanded if the static type of the reference
      * is an abstract class or an interface.
      * This method allows to override this default.
+     * 
+     * @param toExpand     the static type of the reference to be expanded. 
+     *                     It must be {@code toExpand != null}.
+     * @param originExp    a path expression describing the origin of the 
+     *                     symbolic references that match this rule.
+     *                     If {@code originExp == null}, all the symbolic 
+     *                     references with static type {@code toExpand} 
+     *                     will match. 
+     * @param classAllowed the name of the class whose instances are possible 
+     *                     expansions for {@code toExpand}. During  
+     *                     symbolic execution, every symbolic reference with 
+     *                     static type {@code toExpand} and origin matching 
+     *                     {@code originExp}, will be expanded 
+     *                     when necessary to a symbolic object with class 
+     *                     {@code classAllowed}. If {@code classAllowed == null}, 
+     *                     the matching {@link ReferenceSymbolic}s will not be expanded.
+     */
+	public void addExpandToLICS(String toExpand, String originExp, String classAllowed) {
+		this.licsRepo.addExpandTo(toExpand, originExp, classAllowed);
+	}
+
+    /**
+     * Specifies a LICS rule for symbolic reference resolution by alias. 
+     * By default, symbolic references are resolved by aliases to all the 
+     * type-compatible objects assumed by previous epoch-compatible expansions. 
+     * This method allows to override this default.
+     * 
+     * @param toResolve      the static type of the reference to be resolved. 
+     *                       It must be {@code toResolve != null}.
+     * @param originExp      a path expression describing the origin of the 
+     *                       symbolic references that match this rule.
+     *                       The path expression is a slash-separated list of field
+     *                       names that starts from {ROOT}:x, indicating the 
+     *                       parameter with name {@code x} of the root method 
+     *                       invocation (including {@code this}).
+     *                       If {@code originExp == null}, all the symbolic 
+     *                       references with static type {@code toResolve} 
+     *                       will match. 
+     * @param pathAllowedExp a path expression describing the objects that are 
+     *                       acceptable as alias for {@code toResolve}. 
+     *                       The path expression is a slash-separated list of field
+     *                       names that starts from {ROOT}:x, indicating the 
+     *                       parameter with name {@code x} of the root method 
+     *                       invocation (including {@code this}), or from 
+     *                       {REF}, indicating a path starting from the origin 
+     *                       of the reference matched by the left part of the rule. 
+     *                       You can also use the special {UP} to move back in the 
+     *                       path; for instance, if the reference matching 
+     *                       {@code originExp} has origin 
+     *                       {ROOT}:this/list/head/next/next, then you can use both 
+     *                       {REF}/{UP}/{UP}/{UP} and {ROOT}:this/list to denote 
+     *                       the field with name {@code list} of the object that is
+     *                       referred by the {@code this} parameter of the root method
+     *                       invocation.
+     *                       During symbolic execution, every symbolic reference 
+     *                       with class {@code toResolve} and origin matching 
+     *                       {@code originExp} will be resolved when necessary 
+     *                       to all the type- and epoch-compatible 
+     *                       symbolic objects whose origins match
+     *                       {@code pathAllowedExp}. If {@code pathAllowedExp == null}
+     *                       the matching {@link ReferenceSymbolic} will not be
+     *                       resolved by alias.
+     */
+	public void addResolveAliasOriginLICS(String toResolve, String originExp, String pathAllowedExp) {
+	    this.licsRepo.addResolveAliasOrigin(toResolve, originExp, pathAllowedExp);
+	}
+
+    /**
+     * Specifies a LICS rule for symbolic reference resolution by alias. 
+     * By default, symbolic references are resolved by aliases to all the 
+     * type-compatible objects assumed by previous epoch-compatible expansions. 
+     * This method allows to override this default.
+     * 
+     * @param toResolve    the static type of the reference to be resolved. 
+     *                     It must be {@code toResolve != null}.
+     * @param originExp    a path expression describing the origin of the 
+     *                     symbolic references that match this rule.
+     *                     The path expression is a slash-separated list of field
+     *                     names that starts from {ROOT}:x, indicating the 
+     *                     parameter with name {@code x} of the root method 
+     *                     invocation (including {@code this}).
+     *                     If {@code originExp == null}, all the symbolic 
+     *                     references with static type {@code toResolve} 
+     *                     will match. 
+     * @param classAllowed the name of the class whose instances are possible 
+     *                     aliases for {@code toResolve}. During  
+     *                     symbolic execution, every symbolic reference with 
+     *                     static type {@code toResolve} and origin matching 
+     *                     {@code originExp}, will be resolved 
+     *                     when necessary to all the epoch-compatible symbolic 
+     *                     objects with class {@code classAllowed}. If 
+     *                     {@code classAllowed == null} the matching 
+     *                     {@link ReferenceSymbolic} will not be resolved by alias.
+     */
+	public void addResolveAliasInstanceofLICS(String toResolve, String originExp, String classAllowed) {
+	    this.licsRepo.addResolveAliasInstanceof(toResolve, originExp, classAllowed);
+	}
+
+    /**
+     * Specifies a LICS rule for symbolic reference resolution by null. By 
+     * default all symbolic references are resolved by null. This method
+     * allows to override this default.
+     * 
+     * @param toResolve the static type of the reference to be resolved. 
+     *                  It must be {@code toResolve != null}.
+     * @param originExp a path expression describing the origin of the 
+     *                  symbolic references which match this rule.
+     *                  The path expression is a slash-separated list of field
+     *                  names that starts from {ROOT}:x, indicating the 
+     *                  parameter with name {@code x} of the root method 
+     *                  invocation (including {@code this}).
+     *                  If {@code originExp == null}, all the symbolic 
+     *                  references with static type {@code toResolve} 
+     *                  will match.
+     */ 
+	public void addResolveNotNullLICS(String toResolve, String originExp) {
+	    this.licsRepo.addResolveNotNull(toResolve, originExp);
+	}
+
+    /**
+     * Adds a trigger method that fires when some references are resolved by
+     * expansion.
      * 
      * @param toExpand     the static type of the reference to be expanded. 
      *                     It must be {@code toExpand != null}.
@@ -992,20 +1107,15 @@ public final class RunParameters implements Cloneable {
      * @param triggerParameter
      *                     the parameter to be passed to the trigger when the rule fires. 
      */
-	public void addExpandTo(String toExpand, String originExp, String classAllowed, 
-			String triggerClassName, String triggerParametersSignature, String triggerMethodName,
-			String triggerParameter) {
-		this.expandTo.add(new String[] { toExpand, originExp, classAllowed,
-				triggerClassName, triggerParametersSignature, triggerMethodName, triggerParameter});
-		this.runnerParameters.addExpandToTrigger(toExpand, originExp, classAllowed, 
-				triggerClassName, triggerParametersSignature, triggerMethodName, triggerParameter);
-	}
-
+    public void addExpandToTrigger(String toExpand, String originExp, String classAllowed, 
+            String triggerClassName, String triggerParametersSignature, String triggerMethodName,
+            String triggerParameter) {
+        this.runnerParameters.addExpandToTrigger(toExpand, originExp, classAllowed, 
+                triggerClassName, triggerParametersSignature, triggerMethodName, triggerParameter);
+    }
     /**
-     * Specifies a LICS rule for symbolic reference resolution by alias. 
-     * By default, symbolic references are resolved by aliases to all the 
-     * type-compatible objects assumed by previous epoch-compatible expansions. 
-     * This method allows to override this default.
+     * Adds a trigger method that fires when some references are resolved by
+     * alias.
      * 
      * @param toResolve      the static type of the reference to be resolved. 
      *                       It must be {@code toResolve != null}.
@@ -1054,20 +1164,16 @@ public final class RunParameters implements Cloneable {
      * @param triggerParameter
      *                       the parameter to be passed to the trigger when the rule fires. 
      */
-	public void addResolveAliasOrigin(String toResolve, String originExp, String pathAllowedExp, 
-			String triggerClassName, String triggerParametersSignature, String triggerMethodName,
-			String triggerParameter) {
-		this.resolveAliasOrigin.add(new String[] { toResolve, originExp, pathAllowedExp, 
-				triggerClassName, triggerParametersSignature, triggerMethodName, triggerParameter});
-		this.runnerParameters.addResolveAliasOriginTrigger(toResolve, originExp, pathAllowedExp, 
-				triggerClassName, triggerParametersSignature, triggerMethodName, triggerParameter);
-	}
+    public void addResolveAliasOriginTrigger(String toResolve, String originExp, String pathAllowedExp, 
+            String triggerClassName, String triggerParametersSignature, String triggerMethodName,
+            String triggerParameter) {
+        this.runnerParameters.addResolveAliasOriginTrigger(toResolve, originExp, pathAllowedExp, 
+                triggerClassName, triggerParametersSignature, triggerMethodName, triggerParameter);
+    }
 
     /**
-     * Specifies a LICS rule for symbolic reference resolution by alias. 
-     * By default, symbolic references are resolved by aliases to all the 
-     * type-compatible objects assumed by previous epoch-compatible expansions. 
-     * This method allows to override this default.
+     * Adds a trigger method that fires when some references are resolved by
+     * alias.
      * 
      * @param toResolve    the static type of the reference to be resolved. 
      *                     It must be {@code toResolve != null}.
@@ -1101,35 +1207,12 @@ public final class RunParameters implements Cloneable {
      * @param triggerParameter
      *                     the parameter to be passed to the trigger when the rule fires. 
      */
-	public void addResolveAliasInstanceof(String toResolve, String originExp, String classAllowed, 
-			String triggerClassName, String triggerParametersSignature, String triggerMethodName,
-			String triggerParameter) {
-		this.resolveAliasInstanceof.add(new String[] { toResolve, originExp, classAllowed, 
-				triggerClassName, triggerParametersSignature, triggerMethodName, triggerParameter});
-		this.runnerParameters.addResolveAliasInstanceofTrigger(toResolve, originExp, classAllowed, 
-				triggerClassName, triggerParametersSignature, triggerMethodName, triggerParameter);
-	}
-
-    /**
-     * Specifies a LICS rule for symbolic reference resolution by null. By 
-     * default all symbolic references are resolved by null. This method
-     * allows to override this default.
-     * 
-     * @param toResolve the static type of the reference to be resolved. 
-     *                  It must be {@code toResolve != null}.
-     * @param originExp a path expression describing the origin of the 
-     *                  symbolic references which match this rule.
-     *                  The path expression is a slash-separated list of field
-     *                  names that starts from {ROOT}:x, indicating the 
-     *                  parameter with name {@code x} of the root method 
-     *                  invocation (including {@code this}).
-     *                  If {@code originExp == null}, all the symbolic 
-     *                  references with static type {@code toResolve} 
-     *                  will match.
-     */ 
-	public void addResolveNotNull(String toResolve, String originExp) {
-		this.resolveNotNull.add(new String[] { toResolve,  originExp });
-	}
+    public void addResolveAliasInstanceofTrigger(String toResolve, String originExp, String classAllowed, 
+            String triggerClassName, String triggerParametersSignature, String triggerMethodName,
+            String triggerParameter) {
+        this.runnerParameters.addResolveAliasInstanceofTrigger(toResolve, originExp, classAllowed, 
+                triggerClassName, triggerParametersSignature, triggerMethodName, triggerParameter);
+    }
 
     /**
      * Adds a trigger method that fires when some references are resolved by
@@ -1155,11 +1238,9 @@ public final class RunParameters implements Cloneable {
      * @param triggerParameter
      *                  the parameter to be passed to the trigger method. 
      */ 
-	public void addResolveNull(String toResolve, String originExp, 
+	public void addResolveNullTrigger(String toResolve, String originExp, 
 			String triggerClassName, String triggerParametersSignature, String triggerMethodName,
 			String triggerParameter) {
-		this.resolveNull.add(new String[] { toResolve,  originExp, triggerClassName, 
-				triggerParametersSignature, triggerMethodName, triggerParameter});
 		this.runnerParameters.addResolveNullTrigger(toResolve, originExp, triggerClassName, 
 				triggerParametersSignature, triggerMethodName, triggerParameter);
 	}
@@ -1519,28 +1600,6 @@ public final class RunParameters implements Cloneable {
 		return retVal;
 	}
 	
-	public LICSRulesRepo getRulesLICS() {
-		final LICSRulesRepo retVal = new LICSRulesRepo();
-		
-		for (String[] rule : this.expandTo) {
-			retVal.addExpandTo(rule[0], rule[1], rule[2]);
-		}
-		for (String[] rule : this.resolveAliasOrigin) {
-			retVal.addResolveAliasOrigin(rule[0], rule[1], rule[2]);
-		}
-		for (String[] rule : this.resolveAliasInstanceof) {
-			retVal.addResolveAliasInstanceof(rule[0], rule[1], rule[2]);
-		}
-		for (String[] rule : this.resolveNotNull) {
-			retVal.addResolveNotNull(rule[0], rule[1]);
-		}
-		for (String rule : this.notInizializedClasses) {
-			retVal.addNotInitializedClass(rule);
-		}
-		
-		return retVal;
-	}
-	
 	@SuppressWarnings("unchecked")
 	@Override 
 	public RunParameters clone() {
@@ -1552,12 +1611,7 @@ public final class RunParameters implements Cloneable {
 		}
 		o.runnerParameters = this.runnerParameters.clone();
 		o.rewriterClasses = (ArrayList<Class<? extends Rewriter>>) this.rewriterClasses.clone();
-		o.notInizializedClasses = (ArrayList<String>) this.notInizializedClasses.clone();
-		o.expandTo =  (ArrayList<String[]>) this.expandTo.clone();
-		o.resolveAliasOrigin =  (ArrayList<String[]>) this.resolveAliasOrigin.clone();
-		o.resolveAliasInstanceof =  (ArrayList<String[]>) this.resolveAliasInstanceof.clone();
-		o.resolveNotNull =  (ArrayList<String[]>) this.resolveNotNull.clone();
-		o.resolveNull =  (ArrayList<String[]>) this.resolveNull.clone();
+		o.licsRepo = (LICSRulesRepo) this.licsRepo.clone();
 		o.conservativeRepOks = (HashMap<String, String>) this.conservativeRepOks.clone();
 		o.concretizationHeapScope = (HashMap<String, Function<State, Integer>>) this.concretizationHeapScope.clone();
 		o.creationStrategies = (ArrayList<DecisionProcedureCreationStrategy>) this.creationStrategies.clone();

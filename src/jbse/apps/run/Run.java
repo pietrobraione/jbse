@@ -15,6 +15,7 @@ import jbse.apps.DecisionProcedureDecoratorTimer;
 import jbse.apps.IO;
 import jbse.apps.Formatter;
 import jbse.apps.StateFormatterGraphviz;
+import jbse.apps.StateFormatterSushi;
 import jbse.apps.StateFormatterJUnitTestSuite;
 import jbse.apps.StateFormatterText;
 import jbse.apps.StateFormatterTrace;
@@ -350,7 +351,7 @@ public final class Run {
 		            + WARNING_PARTIAL_REFERENCE_RESOLUTION);
 		    }
 
-		    //prints the state (all+bytecode and branches)
+		    //prints/asks (all+bytecode and branches)
 		    boolean stop = false;
 		    if (Run.this.parameters.stepShowMode == StepShowMode.ALL || 
 		        (Run.this.parameters.stepShowMode == StepShowMode.ROOT_BRANCHES_LEAVES &&
@@ -363,7 +364,7 @@ public final class Run {
 		
 		@Override
 		public boolean atSourceRowPost() {
-			//prints/asks for the all+source case
+			//prints/asks (all+source)
 			boolean stop = false;
 			if (Run.this.parameters.stepShowMode == StepShowMode.SOURCE) {
 				stop = printAndAsk();
@@ -373,7 +374,7 @@ public final class Run {
 		
 		@Override
 		public boolean atMethodPost() {
-			//prints/asks for the all+method case
+			//prints/asks (all+method)
 			boolean stop = false;
 			if (Run.this.parameters.stepShowMode == StepShowMode.METHOD) {
 				stop = this.printAndAsk();
@@ -460,9 +461,8 @@ public final class Run {
 
 		@Override
 		public boolean atBacktrackPre() {
-			boolean stop = false;
-
 			// prompts the user for backtrack in the case of interactive mode
+            boolean stop = false;
 			if (Run.this.parameters.interactionMode == InteractionMode.PROMPT_BACKTRACK) {
 				final String ans = IO.readln(Run.this.out, PROMPT_SHOULD_BACKTRACK);
 				if (ans.equals("x")) {
@@ -722,9 +722,11 @@ public final class Run {
 		this.out = new PrintStream[2];
 		this.log = new PrintStream[2];
 		this.err = new PrintStream[2];
-		this.out[0] = System.out;
-		this.log[0] = System.err;
-		this.err[0] = System.err;
+		if (this.parameters.showOnConsole) {
+		    this.out[0] = System.out;
+		    this.log[0] = System.err;
+		    this.err[0] = System.err;
+		}
 
 		// tries to open the dump file
 		if (this.parameters.outFileName == null) {
@@ -914,8 +916,7 @@ public final class Run {
 		
 		//further wraps core with LICS decision procedure
 		if (this.parameters.useLICS) {
-			final LICSRulesRepo rulesLICS = this.parameters.getRulesLICS();
-			core = new DecisionProcedureLICS(core, calc, rulesLICS);
+			core = new DecisionProcedureLICS(core, calc, this.parameters.getLICSRulesRepo());
 		}
 		
 		//further wraps core with conservative repOk decision procedure
@@ -1006,7 +1007,8 @@ public final class Run {
             };
         } else if (this.parameters.stateFormatMode == StateFormatMode.JUNIT_TEST) {
             this.formatterBranches = this.formatterOthers = 
-            new StateFormatterJUnitTestSuite(() -> this.engine.getInitialState(), 
+            new StateFormatterSushi(() -> this.engine.getInitialState(), 
+            //new StateFormatterJUnitTestSuite(() -> this.engine.getInitialState(), 
                                              () -> {
                                                  try {
                                                     return this.decisionProcedure.getModel();
@@ -1181,7 +1183,7 @@ public final class Run {
 	private static final String ERROR_DUMP_FILE_OPEN = "Could not open the dump file. The session will be displayed on console only.";
 
 	/** Error: unable to connect with decision procedure. */
-	private static final String ERROR_DECISION_PROCEDURE_FAILED = "Failed connection to Sicstus, cause: ";
+	private static final String ERROR_DECISION_PROCEDURE_FAILED = "Connection failed, cause: ";
 
     /** Error: failed building symbolic executor. */
     private static final String ERROR_BUILD_FAILED = "Failed construction of symbolic executor, cause: ";
