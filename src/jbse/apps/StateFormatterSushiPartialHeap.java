@@ -38,12 +38,13 @@ import jbse.val.Term;
 import jbse.val.WideningConversion;
 
 /**
- * A {@link Formatter} used by Sushi.
+ * A {@link Formatter} used by Sushi (comparison with 
+ * partial heap). 
  * 
  * @author Esther Turati
  * @author Pietro Braione
  */
-public abstract class StateFormatterSushi implements Formatter {
+public abstract class StateFormatterSushiPartialHeap implements Formatter {
     protected String output = "";
     private Supplier<State> initialStateSupplier;
     private Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier;
@@ -51,7 +52,7 @@ public abstract class StateFormatterSushi implements Formatter {
     private int bestTest = -1;
     private int bestPathConditionLength = -1;
     
-    public StateFormatterSushi(Supplier<State> initialStateSupplier, 
+    public StateFormatterSushiPartialHeap(Supplier<State> initialStateSupplier, 
                                   Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier) {
         this.initialStateSupplier = initialStateSupplier;
         this.modelSupplier = modelSupplier;

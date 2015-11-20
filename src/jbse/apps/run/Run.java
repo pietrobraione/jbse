@@ -15,8 +15,9 @@ import jbse.apps.DecisionProcedureDecoratorTimer;
 import jbse.apps.IO;
 import jbse.apps.Formatter;
 import jbse.apps.StateFormatterGraphviz;
-import jbse.apps.StateFormatterSushi;
 import jbse.apps.StateFormatterJUnitTestSuite;
+import jbse.apps.StateFormatterSushiPartialHeap;
+import jbse.apps.StateFormatterSushiPathCondition;
 import jbse.apps.StateFormatterText;
 import jbse.apps.StateFormatterTrace;
 import jbse.apps.Timer;
@@ -61,7 +62,6 @@ import jbse.meta.annotations.ConcretizationCheck;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.Rewriter;
 import jbse.rewr.RewriterOperationOnSimplex;
-import jbse.rules.LICSRulesRepo;
 import jbse.tree.StateTree.BranchPoint;
 
 /**
@@ -1007,8 +1007,37 @@ public final class Run {
             };
         } else if (this.parameters.stateFormatMode == StateFormatMode.JUNIT_TEST) {
             this.formatterBranches = this.formatterOthers = 
-            new StateFormatterSushi(() -> this.engine.getInitialState(), 
-            //new StateFormatterJUnitTestSuite(() -> this.engine.getInitialState(), 
+            new StateFormatterJUnitTestSuite(() -> this.engine.getInitialState(), 
+                                             () -> {
+                                                 try {
+                                                    return this.decisionProcedure.getModel();
+                                                } catch (DecisionException e) {
+                                                    return null;
+                                                }
+                                             }) {
+                @Override
+                public void emit() {
+                    IO.println(Run.this.out, this.output);
+                }
+            };
+        } else if (this.parameters.stateFormatMode == StateFormatMode.SUSHI_PARTIAL_HEAP) {
+            this.formatterBranches = this.formatterOthers = 
+            new StateFormatterSushiPartialHeap(() -> this.engine.getInitialState(), 
+                                             () -> {
+                                                 try {
+                                                    return this.decisionProcedure.getModel();
+                                                } catch (DecisionException e) {
+                                                    return null;
+                                                }
+                                             }) {
+                @Override
+                public void emit() {
+                    IO.println(Run.this.out, this.output);
+                }
+            };
+        } else if (this.parameters.stateFormatMode == StateFormatMode.SUSHI_PATH_CONDITION) {
+            this.formatterBranches = this.formatterOthers = 
+            new StateFormatterSushiPathCondition(() -> this.engine.getInitialState(), 
                                              () -> {
                                                  try {
                                                     return this.decisionProcedure.getModel();
