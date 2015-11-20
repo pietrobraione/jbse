@@ -145,7 +145,7 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
                     }
                     final String type;
                     if (symbol instanceof ReferenceSymbolic) {
-                        type = javaClass(((ReferenceSymbolic) symbol).getStaticType());
+                        type = javaClass(((ReferenceSymbolic) symbol).getStaticType(), true);
                     } else {
                         type = javaPrimitiveType(((PrimitiveSymbolic) symbol).getType());
                     }
@@ -154,7 +154,7 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
                     this.s.append(varName);
                     }
             }
-            this.s.append(") {\n");
+            this.s.append(") throws Exception {\n");
             this.s.append(INDENT_2);
             this.s.append("//generated for state ");
             this.s.append(finalState.getIdentifier());
@@ -267,26 +267,26 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
         }
         
         private void setWithNewObject(State finalState, Symbolic symbol, long heapPosition) {
-            final String expansionClass = javaClass(getTypeOfObjectInHeap(finalState, heapPosition));
+            final String expansionClass = javaClass(getTypeOfObjectInHeap(finalState, heapPosition), false);
             this.s.append(INDENT_2);
             this.s.append("pathConditionHandler.add(new SimilarityWithRefToFreshObject(\"");
             this.s.append(symbol.getOrigin());
-            this.s.append("\", ");
+            this.s.append("\", Class.forName(\"");
             this.s.append(expansionClass); //TODO arrays
-            this.s.append(".class));\n");
+            this.s.append("\")));\n");
         }
         
         private void setWithNull(ReferenceSymbolic symbol) {
             this.s.append(INDENT_2);
             this.s.append("pathConditionHandler.add(new SimilarityWithRefToNull(\"");
             this.s.append(symbol.getOrigin());
-            this.s.append("\"))\n");
+            this.s.append("\"));\n");
         }
         
         private void setWithAlias(State finalState, Symbolic symbol, long heapPosition) {
             final String target = getOriginOfObjectInHeap(finalState, heapPosition);
             this.s.append(INDENT_2);
-            this.s.append("pathConditionHandler.add(new SimilarityWithRefToFreshObject(\"");
+            this.s.append("pathConditionHandler.add(new SimilarityWithRefToAlias(\"");
             this.s.append(symbol.getOrigin());
             this.s.append("\", \"");
             this.s.append(target);
@@ -315,13 +315,13 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
             }
         }
 
-        private String javaClass(String type){
+        private String javaClass(String type, boolean forDeclaration){
             if (type == null) {
                 return null;
             }
             final String a = type.replace('/', '.');
             final String b = (isReference(a) ? className(a) : a);
-            final String s = b.replace('$', '.');
+            final String s = (forDeclaration ? b.replace('$', '.') : b);
             final char[] tmp = s.toCharArray();
             int arrayNestingLevel = 0;
             boolean hasReference = false;
