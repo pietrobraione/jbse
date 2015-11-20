@@ -375,7 +375,7 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
                     final ClauseAssumeExpands clauseExpands = (ClauseAssumeExpands) clause;
                     final long heapPosCurrent = clauseExpands.getHeapPosition();
                     if (heapPosCurrent == heapPos) {
-                        return getVariableFor(clauseExpands.getReference());
+                        return generateOriginFromVarName(getVariableFor(clauseExpands.getReference()));
                     }
                 }
             }
