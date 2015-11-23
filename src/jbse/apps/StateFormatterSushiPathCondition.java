@@ -452,6 +452,9 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
                 
                 @Override
                 public void visitPrimitiveSymbolic(PrimitiveSymbolic s) {
+                    if (symbols.contains(s)) {
+                        return;
+                    }
                     symbols.add(s);
                 }
                 
@@ -570,7 +573,6 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
                         e.getSecondOperand().accept(this);
                         final String secondArg = translation.remove(0);
                         if (op.equals(Operator.EQ) ||
-                            op.equals(Operator.NE) ||
                             op.equals(Operator.GT) ||
                             op.equals(Operator.LT) ||
                             op.equals(Operator.GE) ||
@@ -586,6 +588,14 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
                             b.append(") - (");
                             b.append(secondArg);
                             b.append("))");
+                        } else if (op.equals(Operator.NE)) {
+                            b.append("(");
+                            b.append(firstArg);
+                            b.append(") ");
+                            b.append(op.toString());
+                            b.append(" (");
+                            b.append(secondArg);
+                            b.append(") ? 0 : 1");
                         } else {
                             b.append("(");
                             b.append(firstArg);
