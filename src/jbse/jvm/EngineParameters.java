@@ -17,25 +17,27 @@ import jbse.tree.StateTree;
 import jbse.val.Calculator;
 
 /**
- * Class encapsulating the protocol of an {@link Engine}'s 
- * parameters. These are:
+ * Encapsulates an {@link Engine}'s parameters. The 
+ * most important ones are:
  * 
  * <ul>
- * <li>The choice of a decision procedure for pruning
+ * <li>A {@link DecisionProcedureAlgorithms} for pruning
  * unfeasible branches;</li>
- * <li>The path of the solver's executable (. by default);</li>
  * <li>The initial state of the symbolic execution, or
  * alternatively:
  * <ul>
- * <li>A classpath and a source path (. by default);</li>
- * <li>The rules for class initialization and reference resolution 
- * (none by default);</li>
+ * <li>A classpath (. by default);</li>
  * <li>The signature of the method to be symbolically executed;</li> 
- * <li>The signature of a variable which is assumed initially 
- * volatile (none by default);</li>
- * <li>A set of {@link ExecutionObserver}s together with the
- * specification of the variables they observe (none by default).</li> 
+ * <li>A {@link Calculator} for simplifying symbolic expressions;</li>
  * </ul>
+ * </li>
+ * <li>The signatures of the methods that must be treated as uninterpreted
+ * functions, or for which there is a meta-level overriding implementation;</li>
+ * <li>The signatures of the trigger instrumentation methods plus the 
+ * reference resolution events that fire them;</li> 
+ * <li>A {@link StateIdentificationMode} and a {@link BreadthMode};</li>
+ * <li>A set of {@link ExecutionObserver}s plus the
+ * specification of the variables they observe (none by default).</li> 
  * </ul> 
  * 
  * @author Pietro Braione
@@ -176,9 +178,6 @@ public final class EngineParameters implements Cloneable {
 	/** The decision procedure. */
 	private DecisionProcedureAlgorithms decisionProcedure = null;
 	
-	/** Whether the symbolic execution should be guided along a concrete one. */
-	private boolean guided = false;
-	
 	/** The signatures of the variables observed by {@code this.observers}. */
 	ArrayList<Signature> observedVars = new ArrayList<>();
 
@@ -273,24 +272,6 @@ public final class EngineParameters implements Cloneable {
 	public BreadthMode getBreadthMode() {
 		return this.breadthMode;
 	}
-	
-	/**
-	 * Sets whether the symbolic execution is guided.
-	 * 
-	 * @param guided {@code true} iff the symbolic execution is guided.
-	 */
-	public void setGuided(boolean guided) {
-		this.guided = guided;
-	}
-	
-	/**
-	 * Tests whether the symbolic execution is guided.
-	 * 
-	 * @return {@code true} iff the symbolic execution is guided.
-	 */
-	public boolean isGuided() {
-		return this.guided;
-	}
 
 	/** 
 	 * Adds an {@link ExecutionObserver} performing additional
@@ -377,8 +358,7 @@ public final class EngineParameters implements Cloneable {
 		}
 	}
 	private static final String[] ARRAY_OF_STRING = { };
-	
-	
+	    
     /**
      * Returns the {@link TriggerRulesRepo} 
      * containing all the trigger rules that
@@ -389,9 +369,9 @@ public final class EngineParameters implements Cloneable {
      *         {@link EngineParameters}, not a
      *         safety copy.
      */
-	public TriggerRulesRepo getTriggerRulesRepo() {
-	    return this.repoTrigger;
-	}
+    public TriggerRulesRepo getTriggerRulesRepo() {
+        return this.repoTrigger;
+    }
 	
     /**
      * Returns the expansion backdoor.
@@ -656,7 +636,7 @@ public final class EngineParameters implements Cloneable {
 		o.paths = (ArrayList<String>) this.paths.clone();
 		//calc and decisionProcedure are *not* cloned
 		o.observedVars = (ArrayList<Signature>) this.observedVars.clone();
-		o.repoTrigger = (TriggerRulesRepo) this.repoTrigger.clone();
+		o.repoTrigger = this.repoTrigger.clone();
 		o.expansionBackdoor = new HashMap<>();
 		for (Map.Entry<String, Set<String>> e : o.expansionBackdoor.entrySet()) {
 		    o.expansionBackdoor.put(e.getKey(), new HashSet<>(e.getValue()));

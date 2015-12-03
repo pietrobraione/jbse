@@ -365,7 +365,7 @@ public final class State implements Cloneable {
 	 *         case the {@link State}'s static store contains
 	 *         a {@link Klass} object for {@link className}.
 	 */
-	public boolean initialized(String className) {
+	public boolean existsKlass(String className) {
 		return this.staticMethodArea.contains(className);
 	}
 
@@ -569,18 +569,16 @@ public final class State implements Cloneable {
 	 * static area of this state. It does not initialize the constant 
      * fields nor loads on the stack of the state the frames for the
      * {@code <clinit>} methods. It does not create {@link Klass} objects
-     * for superclasses}.
-	 * If the {@link Klass} exists it does nothing.
+     * for superclasses. If the {@link Klass} already exists it does nothing.
 	 * 
 	 * @param className the name of the class to be loaded. The method 
 	 *        creates and loads a {@link Klass} object only for {@code className}, 
 	 *        not for its superclasses in the hierarchy.
      * @throws BadClassFileException when the classfile for {@code className} 
      *         cannot be found in the classpath or is ill-formed.
-	 * @throws InvalidIndexException if the access to the class constant pool fails.
 	 */
-	private void ensureKlass(String className) throws BadClassFileException, InvalidIndexException {
-	    if (initialized(className)) {
+	public void ensureKlass(String className) throws BadClassFileException {
+	    if (existsKlass(className)) {
 	        return;
 	    }
 		final ClassFile classFile = this.getClassHierarchy().getClassFile(className);
@@ -593,8 +591,8 @@ public final class State implements Cloneable {
 	 * Creates a symbolic {@link Klass} object and loads it in the 
 	 * static area of this state. It does not initialize the constant 
 	 * fields. It does not create {@link Klass} objects
-     * for superclasses.
-	 * If the {@link Klass} already exists it does nothing.
+     * for superclasses. If the {@link Klass} already exists it 
+     * does nothing.
 	 * 
 	 * @param className the name of the class to be loaded.
      * @throws BadClassFileException when the classfile for {@code className} 
@@ -603,7 +601,7 @@ public final class State implements Cloneable {
 	 *         constant pool fails.
 	 */
 	public void ensureKlassSymbolic(String className) throws BadClassFileException, InvalidIndexException {
-        if (initialized(className)) {
+        if (existsKlass(className)) {
             return;
         }
 		final ClassFile classFile = this.getClassHierarchy().getClassFile(className);
@@ -1450,9 +1448,10 @@ public final class State implements Cloneable {
 
 	/**
 	 * Assumes that a class is initialized before the 
-	 * start of symbolic execution. Additionally, it
-	 * creates a symbolic {@link Klass} and adds it 
-	 * to the static store.
+	 * start of symbolic execution and
+	 * creates a symbolic {@link Klass} object in the 
+	 * static method area if absent (it does not 
+	 * create {@link Klass} objects for superclasses).
 	 * 
 	 * @param className the corresponding concrete class 
 	 *        name as a {@link String}. It must be 
@@ -1470,17 +1469,15 @@ public final class State implements Cloneable {
 		if (className == null) {
 			throw new NullPointerException();
 		}
-		ensureKlassSymbolic(className);
-		final Klass k = this.getKlass(className);
+        ensureKlassSymbolic(className);
+		final Klass k = getKlass(className);
 		this.pathCondition.addClauseAssumeClassInitialized(className, k);
 		++this.nPushedClauses;
 	}
 
 	/**
 	 * Assumes that a class is not initialized before the 
-	 * start of symbolic execution. Additionally, it
-     * creates a concrete {@link Klass} and adds it to the 
-     * static store.
+	 * start of symbolic execution.
 	 * 
 	 * @param className the corresponding concrete class 
 	 *        name as a {@link String}. It must be 
@@ -1490,15 +1487,12 @@ public final class State implements Cloneable {
      * @throws BadClassFileException if the classfile with name 
      *         {@code className} does not exist in the classpath
      *         or is ill-formed.
-     * @throws InvalidIndexException if the access to the class 
-     *         constant pool fails.
 	 */
 	public void assumeClassNotInitialized(String className) 
-	throws BadClassFileException, InvalidIndexException {
+	throws BadClassFileException {
 		if (className == null) {
 			throw new NullPointerException();
 		}
-		ensureKlass(className);
 		this.pathCondition.addClauseAssumeClassNotInitialized(className);
 		++this.nPushedClauses;
 	}

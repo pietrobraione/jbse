@@ -36,6 +36,7 @@ import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.DecisionProcedureAlwSat;
 import jbse.dec.DecisionProcedureCVC3;
+import jbse.dec.DecisionProcedureClassInit;
 import jbse.dec.DecisionProcedureEquality;
 import jbse.dec.DecisionProcedureLICS;
 import jbse.dec.DecisionProcedureSicstus;
@@ -861,7 +862,6 @@ public final class Run {
                 IO.println(this.log, MSG_DECISION_INTERACTIVE);
             }
         }
-        
 	    
 		//initializes cores
         final boolean needHeapCheck = (this.parameters.useConservativeRepOks || this.parameters.doConcretization);
@@ -918,6 +918,9 @@ public final class Run {
 		if (this.parameters.useLICS) {
 			core = new DecisionProcedureLICS(core, calc, this.parameters.getLICSRulesRepo());
 		}
+		
+		//further wraps core with class init decision procedure
+		core = new DecisionProcedureClassInit(core, calc, this.parameters.getClassInitRulesRepo());
 		
 		//further wraps core with conservative repOk decision procedure
 		if (this.parameters.useConservativeRepOks) {

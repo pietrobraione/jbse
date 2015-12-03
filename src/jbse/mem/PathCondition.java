@@ -102,7 +102,7 @@ final class PathCondition implements Cloneable {
 
     /**
      * Adds a clause to the path condition. The clause is the resolution of a 
-     * class by assuming it preloaded.
+     * class by assuming it loaded and initialized.
      *   
      * @param className the class name as a {@link String}.
      * @param klass the symbolic {@link Klass} object to which {@code className}
@@ -114,7 +114,7 @@ final class PathCondition implements Cloneable {
 
     /**
      * Adds a clause to the path condition. The clause is the resolution of a 
-     * class by assuming it non-preloaded.
+     * class by assuming it not initialized.
      *   
      * @param className the concrete class name as a {@link String}.
      */

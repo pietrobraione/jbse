@@ -63,12 +63,12 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * {@link DecisionProcedure} for guided symbolic execution. It keeps 
+ * {@link DecisionProcedureAlgorithms} for guided symbolic execution. It keeps 
  * a guiding {@link Engine} that must be stepped in parallel with the 
  * guided one, and filters all the decisions according to the steps 
  * done by the guiding engine.
  */
-public class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
+public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 	private final Engine engine;
 	private final Frame rootFrameConcrete;
 	private State initialStateConcrete;

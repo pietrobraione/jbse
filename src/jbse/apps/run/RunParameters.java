@@ -14,6 +14,7 @@ import jbse.bc.Signature;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.DecisionProcedureAlwSat;
+import jbse.jvm.EngineParameters;
 import jbse.jvm.ExecutionObserver;
 import jbse.jvm.RunnerParameters;
 import jbse.jvm.EngineParameters.BreadthMode;
@@ -21,76 +22,48 @@ import jbse.jvm.EngineParameters.StateIdentificationMode;
 import jbse.mem.State;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.Rewriter;
+import jbse.rules.ClassInitRulesRepo;
 import jbse.rules.LICSRulesRepo;
 import jbse.val.ReferenceSymbolic;
 
 /**
- * Class encapsulating the protocol of a {@link Run}'s 
- * parameters. These are:
+ * Encapsulates a {@link Run}'s parameters. The most
+ * important ones are:
  * 
  * <ul>
  * <li>Some of the {@link RunnerParameters};
- * <li>The output file, where the output produced to 
+ * <li>The source path (. by default);</li>
+ * <li>A {@link DecisionProcedureType}, specifying 
+ * which decision procedure must be used;</li>
+ * <li>The output file to copy the output produced to 
  * stdout and stderr is copied (by default, no output 
  * file is created and the output is just sent to 
  * stdout and stderr);</li>
- * <li>The text mode, indicating how the rows on the 
- * output file must be terminated, whether in a Windows 
- * (i.e., with characters CR LF) or in a UNIX (i.e., 
- * just with LF) style, or in the default style of the 
- * current platform; by default, the platform's text 
- * mode is used. This parameter is relevant only when 
- * an output file is specified;</li>
- * <li>The interaction mode, indicating the amount of 
- * required user interaction; the possible alternatives 
- * are:
- * <ul>
- * <li>prompts user at all computation steps (just pause), 
- * at backtrack points (queries whether it should backtrack 
- * or not) and in case a decision procedure is unavailable, 
- * also at undecidable branches (queries which 
- * branches should be explored);</li>
- * <li>prompts at backtrack points and undecidable branches;</li> 
- * <li>prompts only at undecidable branches and backtracks 
- * at all backtrack points;</li>
- * <li>never prompts the user and explores all branches of the 
- * conditions it is unable to decide;
- * this is the default behaviour.</li>
- * </ul>
- * </li>
- * <li>The temporal granularity mode, indicating the amount 
- * of information about the symbolic execution which is actually 
- * displayed; the possible alternatives are:
- * <ul>
- * <li>Displays all the traversed states; this is the default 
- * behaviour;</li>
- * <li>Displays only the initial (root) state, the decision 
- * (branches) states, and the stuck (leaves) states;</li>
- * <li>Displays all the pairs initial/stuck state, where each 
- * initial state is refined with the path condition of the 
- * corresponding stuck state;</li>
- * <li>Displays only the stuck (leaves) states.</li>
- * </ul>
- * </li>
- * <li>The output format mode used for displaying states;
- * the currently available format modes are a plaintext 
- * prettyprint of the state (default) and one where the 
- * heap is rendered as a graphviz/dot string;</li>
+ * <li>A {@link TextMode}, indicating how the rows on the 
+ * output file must be terminated; by default, the 
+ * platform's line termination mode is used. This parameter 
+ * is relevant only when an output file is specified;</li>
+ * <li>An {@link InteractionMode}, indicating the amount of 
+ * required user interaction (none by default);</li>
+ * <li>A {@link StepShowMode}, indicating which states
+ * of the symbolic execution must be displayed;</li>
+ * <li>A {@link StateFormatMode}, indicating how a 
+ * symbolic execution state is displayed;</li>
  * <li>The visualization status of the interactions 
  * between the decision procedure and the runner; by default, 
  * nothing is showed, but it is possible to dump a high-level 
- * description of the exchanged messages on the output;</li> 
- * <li>The semicolumn-separated list of paths where the
- * source code must be found, in which case, if the source 
- * code for some class is found in the path, the code will 
- * be executed from a source row to the next one, skipping 
- * visualization of the intermediate states.
- * This is another way to control the granularity at which 
- * the symbolic execution is displayed. 
- * By default, the source code information is ignored and 
- * all states at the bytecode granularity are shown.</li>
- * <li>Three different bounds (scopes) for limiting the 
- * exploration of the symbolic execution state space.</li>
+ * description of the exchanged messages on the output;</li>
+ * <li>The classes that must be assumed to be not yet initialized 
+ * at the beginning of symbolic execution (none by default);</li>
+ * <li>The LICS rules and/or conservative repOk methods to be 
+ * used for filtering states that violate assumed 
+ * preconditions/invariants (none by default);</li>
+ * <li>Whether the symbolic execution should be guided by a 
+ * concrete execution or not, and in the positive case the 
+ * signature of the driver method for the concrete execution;</li>
+ * <li>The signatures of the methods to be used for checking 
+ * whether a leaf symbolic states is concretizable, i.e., is 
+ * inhabited by a well-formed concrete state (none by default).
  * </ul> 
  * 
  * @author Pietro Braione
@@ -356,8 +329,11 @@ public final class RunParameters implements Cloneable {
 	boolean useLICS = true;
 	
 	/** The {@link LICSRuleRepo}, containing all the LICS rules. */
-	private LICSRulesRepo licsRepo = new LICSRulesRepo();
+	private LICSRulesRepo repoLICS = new LICSRulesRepo();
 	
+    /** The {@link ClassInitRulesRepo}, containing all the class initialization rules. */
+    private ClassInitRulesRepo repoInit = new ClassInitRulesRepo();
+    
 	/** 
 	 * Whether the engine should use the conservative 
 	 * repOK decision procedure.
@@ -440,6 +416,9 @@ public final class RunParameters implements Cloneable {
 	 */
 	ArrayList<String> srcPath = new ArrayList<String>();
 
+    /** Whether the symbolic execution is guided along a concrete one. */
+    private boolean guided = false;
+    
 	/** The signature of the driver method when guided == true. */
 	Signature driverSignature = null;
 	
@@ -788,7 +767,7 @@ public final class RunParameters implements Cloneable {
      * to plain decoration with
      * {@link DecisionProcedureAlgorithms}. This is the default.
      */
-    public void clearDecisionProedureCreationStrategies() {
+    public void clearDecisionProcedureCreationStrategies() {
         this.creationStrategies.clear();
     }
 	
@@ -929,15 +908,6 @@ public final class RunParameters implements Cloneable {
 	public void setConcretizationCountScopeUnlimited() { 
 		this.concretizationCountScope = 0; 
 	}
-
-    /**
-     * Adds a class name to the set of not initialized classes.
-     * 
-     * @param notInitializedClasses a list of class names as a {@link String}{@code []}.
-     */
-	public void addNotInitializedClasses(String... notInitializedClasses) {
-	    this.licsRepo.addNotInitializedClass(notInitializedClasses);
-	}
     
     /**
      * Sets whether the engine should use LICS rules
@@ -962,9 +932,24 @@ public final class RunParameters implements Cloneable {
      *         safety copy.
      */
     public LICSRulesRepo getLICSRulesRepo() {
-        return this.licsRepo;
+        return this.repoLICS;
     }
 
+    /**
+     * Returns the {@link ClassInitRulesRepo} 
+     * containing all the class initialization 
+     * rules (list of classes that are assumed
+     * not to be initialized) that must be used.
+     * 
+     * @return a {@link ClassInitRulesRepo}. It
+     *         is the one that backs this
+     *         {@link EngineParameters}, not a
+     *         safety copy.
+     */
+    public ClassInitRulesRepo getClassInitRulesRepo() {
+        return this.repoInit;
+    }
+    
     /**
      * Specifies a LICS rule for symbolic reference expansion. By default a 
      * symbolic reference is expanded to a fresh symbolic object with class
@@ -989,7 +974,7 @@ public final class RunParameters implements Cloneable {
      *                     the matching {@link ReferenceSymbolic}s will not be expanded.
      */
 	public void addExpandToLICS(String toExpand, String originExp, String classAllowed) {
-		this.licsRepo.addExpandTo(toExpand, originExp, classAllowed);
+		this.repoLICS.addExpandTo(toExpand, originExp, classAllowed);
 	}
 
     /**
@@ -1035,7 +1020,7 @@ public final class RunParameters implements Cloneable {
      *                       resolved by alias.
      */
 	public void addResolveAliasOriginLICS(String toResolve, String originExp, String pathAllowedExp) {
-	    this.licsRepo.addResolveAliasOrigin(toResolve, originExp, pathAllowedExp);
+	    this.repoLICS.addResolveAliasOrigin(toResolve, originExp, pathAllowedExp);
 	}
 
     /**
@@ -1066,7 +1051,7 @@ public final class RunParameters implements Cloneable {
      *                     {@link ReferenceSymbolic} will not be resolved by alias.
      */
 	public void addResolveAliasInstanceofLICS(String toResolve, String originExp, String classAllowed) {
-	    this.licsRepo.addResolveAliasInstanceof(toResolve, originExp, classAllowed);
+	    this.repoLICS.addResolveAliasInstanceof(toResolve, originExp, classAllowed);
 	}
 
     /**
@@ -1087,9 +1072,18 @@ public final class RunParameters implements Cloneable {
      *                  will match.
      */ 
 	public void addResolveNotNullLICS(String toResolve, String originExp) {
-	    this.licsRepo.addResolveNotNull(toResolve, originExp);
+	    this.repoLICS.addResolveNotNull(toResolve, originExp);
 	}
 
+    /**
+     * Adds class names to the set of not initialized classes.
+     * 
+     * @param notInitializedClasses a list of class names as a {@link String} varargs.
+     */
+    public void addNotInitializedClasses(String... notInitializedClasses) {
+        this.repoInit.addNotInitializedClass(notInitializedClasses);
+    }
+    
     /**
      * Adds a trigger method that fires when some references are resolved by
      * expansion.
@@ -1127,6 +1121,7 @@ public final class RunParameters implements Cloneable {
         this.runnerParameters.addExpandToTrigger(toExpand, originExp, classAllowed, 
                 triggerClassName, triggerParametersSignature, triggerMethodName, triggerParameter);
     }
+    
     /**
      * Adds a trigger method that fires when some references are resolved by
      * alias.
@@ -1328,10 +1323,9 @@ public final class RunParameters implements Cloneable {
 	}
 
 	/**
-	 * Sets which states will be shown.
+	 * Sets which states will be shown on the output.
 	 * 
-	 * @param stepShowMode A {@link StepShowMode} 
-	 *        representing the granularity of execution.
+	 * @param stepShowMode A {@link StepShowMode}.
 	 * @throws NullPointerException if {@code stepShowMode == null}.
 	 */
 	public void setStepShowMode(StepShowMode stepShowMode) { 
@@ -1526,7 +1520,7 @@ public final class RunParameters implements Cloneable {
 		if (driverClass == null || driverParametersSignature == null || driverName == null) {
 			throw new NullPointerException();
 		}
-		this.runnerParameters.setGuided(true);
+		this.guided = true;
 		this.driverSignature = new Signature(driverClass, driverParametersSignature, driverName); 
 	}
 	
@@ -1535,7 +1529,7 @@ public final class RunParameters implements Cloneable {
 	 * This is the default behaviour.
 	 */
 	public void setUnguided() {
-		this.runnerParameters.setGuided(false);
+		this.guided = false;
 		this.driverSignature = null;
 	}
 	
@@ -1545,7 +1539,7 @@ public final class RunParameters implements Cloneable {
 	 * @return {@code true} iff the symbolic execution is guided.
 	 */
 	public boolean isGuided() {
-		return this.runnerParameters.isGuided();
+		return this.guided;
 	}
 
 	/**
@@ -1625,7 +1619,8 @@ public final class RunParameters implements Cloneable {
 		}
 		o.runnerParameters = this.runnerParameters.clone();
 		o.rewriterClasses = (ArrayList<Class<? extends Rewriter>>) this.rewriterClasses.clone();
-		o.licsRepo = (LICSRulesRepo) this.licsRepo.clone();
+		o.repoLICS = this.repoLICS.clone();
+        o.repoInit = this.repoInit.clone();
 		o.conservativeRepOks = (HashMap<String, String>) this.conservativeRepOks.clone();
 		o.concretizationHeapScope = (HashMap<String, Function<State, Integer>>) this.concretizationHeapScope.clone();
 		o.creationStrategies = (ArrayList<DecisionProcedureCreationStrategy>) this.creationStrategies.clone();

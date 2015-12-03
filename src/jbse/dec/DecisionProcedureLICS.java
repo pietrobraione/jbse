@@ -18,8 +18,6 @@ import jbse.val.ReferenceSymbolic;
  * @author Pietro Braione
  */
 public final class DecisionProcedureLICS extends DecisionProcedureChainOfResponsibility {
-	//TODO support pop of assumptions
-
 	private final LICSRulesRepo rulesRepo;
 	
 	/** Stores all the {@link ClauseAssumeExpands} that are pushed. */
@@ -40,10 +38,12 @@ public final class DecisionProcedureLICS extends DecisionProcedureChainOfRespons
 		this.expansions.add(c);
 	}
 	
+    //TODO support pop of assumptions
+
 	@Override
 	protected boolean isSatExpandsLocal(ClassHierarchy hier, ReferenceSymbolic ref, String className) {
 		//gets the rules matching ref
-		final ArrayList<LICSRuleExpandsTo> rules = rulesRepo.matchingLICSRulesExpandsTo(ref);
+		final ArrayList<LICSRuleExpandsTo> rules = this.rulesRepo.matchingLICSRulesExpandsTo(ref);
 
 		//1- if no rule matches ref, no constraint applies
 		//and returns true
@@ -65,8 +65,8 @@ public final class DecisionProcedureLICS extends DecisionProcedureChainOfRespons
 	@Override
 	protected boolean isSatAliasesLocal(ClassHierarchy hier, ReferenceSymbolic ref, long heapPos, Objekt o) {
 		//gets the rules matching ref
-		final ArrayList<LICSRuleAliases> rulesMax = rulesRepo.matchingLICSRulesAliasesMax(ref);
-		final ArrayList<LICSRuleAliases> rulesNonMax = rulesRepo.matchingLICSRulesAliasesNonMax(ref);
+		final ArrayList<LICSRuleAliases> rulesMax = this.rulesRepo.matchingLICSRulesAliasesMax(ref);
+		final ArrayList<LICSRuleAliases> rulesNonMax = this.rulesRepo.matchingLICSRulesAliasesNonMax(ref);
 
 		//1- if no rule matches ref, no constraint applies
 		//and returns true
@@ -130,17 +130,5 @@ nextRule:
 	protected boolean isSatNullLocal(ClassHierarchy hier, ReferenceSymbolic ref) {
 		final boolean notNull = this.rulesRepo.someMatchingLICSRulesNotNull(ref);
 		return !notNull;
-	}
-
-	@Override
-	protected boolean isSatInitializedLocal(ClassHierarchy hier, String c) {
-		//we only support mutually exclusive initialized/not-initialized cases
-		return !isSatNotInitializedLocal(hier, c);
-		//TODO drop mutual exclusion of class initialized/not-initialized cases and add support to branching over class initialization assumptions
-	}
-
-	@Override
-	protected boolean isSatNotInitializedLocal(ClassHierarchy hier, String c) {
-		return this.rulesRepo.notInitializedClassesContains(c);
 	}
 }

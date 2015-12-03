@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 import jbse.bc.ClassHierarchy;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
+import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.DecisionProcedureChainOfResponsibility;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.RunnerParameters;
@@ -18,16 +19,16 @@ import jbse.val.ReferenceSymbolic;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * A decision procedure based on the execution of conservative repOk methods;
- * it validates a path condition by constructing the corresponding initial 
- * state, and running the methods annotated with the {@link ConservativeRepOk}
+ * {@link DecisionProcedureAlgorithms} based on the execution of conservative 
+ * repOk methods. It validates a path condition by building the corresponding 
+ * initial state and running the methods annotated with the {@link ConservativeRepOk}
  * annotation on all the object of the corresponding classes that are present
- * in the refined initial state's heap.  
+ * in the initial state's heap.  
  * 
  * @author Pietro Braione
  *
  */
-public class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOfResponsibility {
+public final class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOfResponsibility {
     private final InitialHeapChecker checker;
     
     public DecisionProcedureConservativeRepOk(DecisionProcedure next, CalculatorRewriting calc, 

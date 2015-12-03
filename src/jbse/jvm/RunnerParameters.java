@@ -14,6 +14,21 @@ import jbse.jvm.Runner.Actions;
 import jbse.mem.State;
 import jbse.val.Calculator;
 
+/**
+ * Encapsulates a {@link Runner}'s parameters. The most
+ * important ones are:
+ * 
+ * <ul>
+ * <li>The {@link EngineParameters};</li>
+ * <li>The {@link Actions} to be performed at prescribed points 
+ * of the symbolic execution;</li>
+ * <li>Bounds (scopes) for limiting the exploration of the 
+ * symbolic execution state space (none by default).</li>
+ * </ul>
+ * 
+ * @author Pietro Braione
+ *
+ */
 public final class RunnerParameters implements Cloneable {
 	/** The engine parameters */
 	private EngineParameters engineParameters;
@@ -128,24 +143,6 @@ public final class RunnerParameters implements Cloneable {
 	public BreadthMode getBreadthMode() {
 		return this.engineParameters.getBreadthMode();
 	}
-	
-	/**
-	 * Sets whether the symbolic execution is guided.
-	 * 
-	 * @param guided {@code true} iff the symbolic execution is guided.
-	 */
-	public void setGuided(boolean guided) {
-		this.engineParameters.setGuided(guided);
-	}
-	
-	/**
-	 * Tests whether the symbolic execution is guided.
-	 * 
-	 * @return {@code true} iff the symbolic execution is guided.
-	 */
-	public boolean isGuided() {
-		return this.engineParameters.isGuided();
-	}
 
 	/**
 	 * Sets the initial state of the symbolic execution, and cancels the 
@@ -256,7 +253,7 @@ public final class RunnerParameters implements Cloneable {
 	public void addUninterpreted(String className, String parametersSignature, String methodName, String functionName) {
 		this.engineParameters.addUninterpreted(className, parametersSignature, methodName, functionName);
 	}
-
+    
     /**
      * Adds a trigger method that fires when some references are resolved by
      * expansion.

@@ -99,6 +99,8 @@ public final class Signatures {
         new Signature(JBSE_ANALYSIS, "()" + BOOLEAN, "isRunByJBSE");
     public static final Signature JBSE_ANALYSIS_SUCCEED = 
         new Signature(JBSE_ANALYSIS, "()" + VOID, "succeed");
+    public static final Signature JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED = 
+        new Signature(JBSE_ANALYSIS, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + VOID, "assumeClassNotInitialized");
     
     //fields
     public static final Signature JAVA_CLASS_NAME = 

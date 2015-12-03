@@ -25,7 +25,7 @@ import jbse.val.Any;
 import jbse.val.Expression;
 import jbse.val.Primitive;
 
-public class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
+public final class DecisionProcedureConsole extends DecisionProcedureAlgorithms {
 	private static final String CLASS_NAME = DecisionProcedureConsole.class.getName().substring(DecisionProcedureConsole.class.getName().lastIndexOf('.') + 1);
 	private static final String TURNSTILE = " |-SAT- ";
 	private static final String PROMPT = "? > ";

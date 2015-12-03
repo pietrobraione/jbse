@@ -12,6 +12,7 @@ import jbse.apps.run.RunParameters;
 import jbse.bc.Signature;
 import jbse.jvm.EngineParameters;
 import jbse.jvm.RunnerParameters;
+import jbse.rules.ClassInitRulesRepo;
 import jbse.rules.LICSRulesRepo;
 import jbse.rules.TriggerRulesRepo;
 
@@ -43,11 +44,14 @@ public class SettingsReader {
 			// does nothing
 		}
 	}
-		   
-    public void fillRulesLICS(LICSRulesRepo repo) {
+	
+	public void fillRulesClassInit(ClassInitRulesRepo repo) {
         for (String cname : this.parser.notInitializedClasses) {
             repo.addNotInitializedClass(cname);
         }
+	}
+		   
+    public void fillRulesLICS(LICSRulesRepo repo) {
         for (String[] rule : this.parser.expandToLICS) {
             repo.addExpandTo(rule[0], rule[1], rule[2]);
         }
@@ -124,5 +128,6 @@ public class SettingsReader {
 	public void fillRunParameters(RunParameters params) {
 		fillRunnerParameters(params.getRunnerParameters());
 		fillRulesLICS(params.getLICSRulesRepo());
+        fillRulesClassInit(params.getClassInitRulesRepo());
 	}
 }

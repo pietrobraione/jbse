@@ -256,7 +256,7 @@ public class Util {
 	throws InvalidInputException, DecisionException {
 		//Assume that some classes are not initialized to
 		//trigger the execution of their <clinit> methods 
-		//TODO move these assumptions into DecisionProcedure or DecisionProcedureAlgorithms.
+		//TODO trigger execution of pure <clinit> *without* assuming about their initialization status 
 		if (className.equals(JAVA_CLASS)      ||
             className.equals(JAVA_HASHSET)    || className.equals(JAVA_IDENTITYHASHMAP)      || 
             className.equals(JAVA_INTEGER)    || className.equals(JAVA_INTEGER_INTEGERCACHE) || 
@@ -380,9 +380,7 @@ public class Util {
         /**
          * Phase 1 creates all the {@link Klass} objects for a class and its
          * superclasses that can be assumed to be not initialized. It also 
-         * refines the path condition by adding all the initialization assumption
-         * and loads all the {@code <clinit>} frames for these classes, with the exclusion
-         * of the {@code <clinit>} of {@code java.lang.Object}.
+         * refines the path condition by adding all the initialization assumption.
          * 
          * @param className a {@code String}, the name of the class.
          * @param it a {@code ListIterator} to {@code this.classesCreated}.
@@ -396,7 +394,7 @@ public class Util {
         throws InvalidInputException, DecisionException, BadClassFileException {
             //if there is a Klass object for className, then 
             //there is nothing to do
-            if (this.s.initialized(className)) {
+            if (this.s.existsKlass(className)) {
                 return;
             }    
 
@@ -405,14 +403,15 @@ public class Util {
             } else {
                 it.add(className);
             }
-            //TODO here we assume mutual exclusion of the initialized/not initialized assumptions. We could withdraw this assumption at the expense of a considerable blow in the number of cases.
+            //TODO here we assume mutual exclusion of the initialized/not initialized assumptions. Withdraw this assumption and branch.
             try {
                 //invokes the decision procedure, adds the returned 
                 //assumption to the state's path condition and creates 
                 //a Klass
                 if (decideClassInitialized(this.s, className, this.dec)) { 
-                    this.s.assumeClassInitialized(className); 
+                    this.s.assumeClassInitialized(className);
                 } else {
+                    this.s.ensureKlass(className);
                     this.s.assumeClassNotInitialized(className);
                     //schedules the Klass object for phase 2
                     if (className.equals(JAVA_OBJECT)) {
@@ -440,7 +439,7 @@ public class Util {
 		}
         
         /**
-         * Phase 2 inits the constant fields for all the {@code Klass} objects
+         * Phase 2 inits the constant fields for all the {@link Klass} objects
          * created during phase 1; in the case one of these fields is a 
          * {@code String} constant launches phase 1 on {@code java.lang.String}.
          * 

@@ -19,6 +19,7 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_IGNORE;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRESOLVED;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRUNBYJBSE;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SUCCEED;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED;
 
 import jbse.algo.ExecutionContext;
 import jbse.algo.NativeInvokerPure;
@@ -136,6 +137,7 @@ public class EngineBuilder {
             ctx.addMetaOverridden(JBSE_ANALYSIS_ISRESOLVED,                 "jbse/algo/meta/Algo_JBSE_ANALYSIS_ISRESOLVED");
             ctx.addMetaOverridden(JBSE_ANALYSIS_ISRUNBYJBSE,                "jbse/algo/meta/Algo_JBSE_ANALYSIS_ISRUNBYJBSE");
             ctx.addMetaOverridden(JBSE_ANALYSIS_SUCCEED,                    "jbse/algo/meta/Algo_JBSE_ANALYSIS_SUCCEED");
+            ctx.addMetaOverridden(JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED,  "jbse/algo/meta/Algo_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED");
         } catch (MetaUnsupportedException e) {
             throw new UnexpectedInternalException(e);
         }

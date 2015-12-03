@@ -1,7 +1,6 @@
 package jbse.rules;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -11,16 +10,10 @@ import jbse.common.Type;
 import jbse.val.ReferenceSymbolic;
 
 public final class LICSRulesRepo implements Cloneable {
-    private HashSet<String> notInitializedClasses = new HashSet<>();
 	private HashMap<String, Set<LICSRuleExpandsTo>> rulesExpandsTo = new HashMap<>();
 	private HashMap<String, Set<LICSRuleAliases>> rulesAliases = new HashMap<>();
-	private HashMap<String, Set<LICSRuleNull>> rulesNull = new HashMap<>();
 	private HashMap<String, Set<LICSRuleNotNull>> rulesNotNull = new HashMap<>();
 
-	public void addNotInitializedClass(String... notInitializedClasses) {
-        Collections.addAll(this.notInitializedClasses, notInitializedClasses);
-	}
-	
     /**
      * Specifies a possible expansion for symbolic references. Typically, a 
      * symbolic reference is expanded to a fresh symbolic object with class
@@ -139,28 +132,6 @@ public final class LICSRulesRepo implements Cloneable {
      *                       references with static type {@code toResolve} 
      *                       will match.
      */ 
-	public void addResolveNull(String toResolve, String originExp) {
-		Set<LICSRuleNull> c = this.rulesNull.get(toResolve);
-		if (c == null) {
-			c = new HashSet<>();
-			this.rulesNull.put(toResolve, c);
-		}
-		c.add(new LICSRuleNull(originExp));
-	}
-
-    /**
-     * Specifies which symbolic references shall not be resolved to null. By 
-     * default all symbolic references are resolved by null. This method
-     * allows to override this default.
-     * 
-     * @param toResolve      the static type of the reference to be resolved. It must 
-     *                       be {@code toResolve != null}.
-     * @param originExp      an expression describing the origin of the 
-     *                       symbolic references which match this replacement.
-     *                       If {@code originExp == null}, all the symbolic 
-     *                       references with static type {@code toResolve} 
-     *                       will match.
-     */ 
 	public void addResolveNotNull(String toResolve, String originExp) {
 		Set<LICSRuleNotNull> c = this.rulesNotNull.get(toResolve);
 		if (c == null) {
@@ -259,36 +230,6 @@ public final class LICSRulesRepo implements Cloneable {
 		return false;
 	}
 
-	/**
-	 * Returns all the null resolution rules matching a reference to be resolved.
-	 * 
-	 * @param ref a {@link ReferenceSymbolic}.
-	 * @return an {@link ArrayList}{@code <}{@link LICSRuleNull}{@code >} 
-	 *         containing all the expansion rules matching {@code ref} (empty 
-	 *         in the case no rule matches {@code ref}).
-	 */
-	//TODO use it for triggers
-	ArrayList<LICSRuleNull> matchingRulesResolutionNull(ReferenceSymbolic ref) {
-		final String type = ref.getStaticType();
-		final String refClass = Type.className(type);
-		final ArrayList<LICSRuleNull> retVal = new ArrayList<LICSRuleNull>();
-		final Set<LICSRuleNull> rulesSet = this.rulesNull.get(refClass);
-		if (rulesSet != null) {
-			for (LICSRuleNull rule : rulesSet) {
-				if (rule.matches(ref)) {
-					retVal.add(rule);
-				}
-			}
-		}
-		return retVal;
-	}
-
-	//TODO do it better!!!
-	public boolean notInitializedClassesContains(String c) {
-		return this.notInitializedClasses.contains(c);
-	}
-	
-	@SuppressWarnings("unchecked")
     @Override
 	public LICSRulesRepo clone() {
         final LICSRulesRepo o;
@@ -299,7 +240,6 @@ public final class LICSRulesRepo implements Cloneable {
         }
         
         //deep copy
-        o.notInitializedClasses = (HashSet<String>) this.notInitializedClasses.clone();
         o.rulesAliases = new HashMap<>();
         for (Map.Entry<String, Set<LICSRuleAliases>> e : this.rulesAliases.entrySet()) {
             o.rulesAliases.put(e.getKey(), new HashSet<>(e.getValue()));
@@ -311,10 +251,6 @@ public final class LICSRulesRepo implements Cloneable {
         o.rulesNotNull = new HashMap<>();
         for (Map.Entry<String, Set<LICSRuleNotNull>> e : this.rulesNotNull.entrySet()) {
             o.rulesNotNull.put(e.getKey(), new HashSet<>(e.getValue()));
-        }
-        o.rulesNull = new HashMap<>();
-        for (Map.Entry<String, Set<LICSRuleNull>> e : this.rulesNull.entrySet()) {
-            o.rulesNull.put(e.getKey(), new HashSet<>(e.getValue()));
         }
         
         return o;

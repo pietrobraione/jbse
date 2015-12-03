@@ -1,5 +1,7 @@
 package jbse.meta;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Random;
 
 /**
@@ -197,4 +199,29 @@ final public class Analysis {
 	public static boolean isResolved(Object obj, String fieldName) {
 		return true;
 	}
+	
+	/**
+	 * Assumes that a class has not yet been initialized; if 
+	 * it is initialized it {@link #ignore() ignore}s the current
+	 * trace. When executed on a JVM different from JBSE, it 
+     * exits with error code 99 iff the class is loaded (that is, 
+     * an approximation of the desired semantics).
+	 * 
+	 * @param className The name of the class as a {@link String}.
+	 */
+	public static void assumeClassNotInitialized(String className) {
+        try {
+            final Method m = ClassLoader.class.getDeclaredMethod("findLoadedClass", new Class[] { String.class });
+            m.setAccessible(true);
+            final ClassLoader cl = ClassLoader.getSystemClassLoader();
+            final Object c = m.invoke(cl, className.replace('/', '.'));
+            if (c != null) {
+                System.exit(99);
+            }
+        } catch (NoSuchMethodException | SecurityException | 
+                 IllegalAccessException | IllegalArgumentException | 
+                 InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
