@@ -14,6 +14,7 @@ import jbse.bc.Signature;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.DecisionProcedureAlwSat;
+import jbse.dec.DecisionProcedureClassInit;
 import jbse.jvm.EngineParameters;
 import jbse.jvm.ExecutionObserver;
 import jbse.jvm.RunnerParameters;
@@ -1598,7 +1599,7 @@ public final class RunParameters implements Cloneable {
 			retVal = this.runnerParameters.clone();
 			retVal.setMethodSignature(this.driverSignature.getClassName(), this.driverSignature.getDescriptor(), this.driverSignature.getName());
 			retVal.setCalculator(calc);
-			retVal.setDecisionProcedure(new DecisionProcedureAlgorithms(new DecisionProcedureAlwSat(), calc)); //for concrete execution
+			retVal.setDecisionProcedure(new DecisionProcedureAlgorithms(new DecisionProcedureClassInit(new DecisionProcedureAlwSat(), calc, new ClassInitRulesRepo()), calc)); //for concrete execution
 			retVal.setStateIdentificationMode(StateIdentificationMode.COMPACT);
 			retVal.setBreadthMode(BreadthMode.MORE_THAN_ONE);
 			retVal.setIdentifierSubregionRoot();

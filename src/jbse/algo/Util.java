@@ -302,7 +302,7 @@ public class Util {
 		private final ArrayList<String> classesToInitialize = new ArrayList<>();
 		
 		/**
-		 * Set to true iff must load a frame for {@code java.lang.Object}'s 
+		 * Set to {@code true} iff must load a frame for {@code java.lang.Object}'s 
 		 * {@code <clinit>}.
 		 */
 		private boolean pushFrameForJavaLangObject = false;
@@ -326,7 +326,7 @@ public class Util {
 		}
 		
         /**
-         * Implements {@link Util#initializeKlass(State, String, DecisionProcedure)}.
+         * Implements {@link Util#ensureClassCreatedAndInitialized}.
          * 
          * @param className the class to be initialized.
          * @return {@code true} iff the initialization of 
@@ -411,9 +411,9 @@ public class Util {
                 if (decideClassInitialized(this.s, className, this.dec)) { 
                     this.s.assumeClassInitialized(className);
                 } else {
-                    this.s.ensureKlass(className);
                     this.s.assumeClassNotInitialized(className);
-                    //schedules the Klass object for phase 2
+                    //creates the Klass and schedules it for phase 2
+                    this.s.ensureKlass(className);
                     if (className.equals(JAVA_OBJECT)) {
                         this.pushFrameForJavaLangObject = true;
                     } else {
