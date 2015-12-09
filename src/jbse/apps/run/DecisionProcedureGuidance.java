@@ -450,7 +450,7 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 			}
 		} else if (dar instanceof DecisionAlternative_XYLOAD_GETX_Expands) {
 			final long refHeapPosInConcreteState = Util.heapPosition(this.initialStateConcrete, refInConcreteState);
-			if (this.seenObjects.contains(refHeapPosInConcreteState)) {
+			if (Util.isNull(this.initialStateConcrete, refInConcreteState) || this.seenObjects.contains(refHeapPosInConcreteState)) {
 				it.remove();
 			} else {
 				this.seenObjects.add(refHeapPosInConcreteState);
