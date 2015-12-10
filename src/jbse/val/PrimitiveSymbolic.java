@@ -18,7 +18,7 @@ public final class PrimitiveSymbolic extends Primitive implements Symbolic {
     private final String toString;
 
     /** The origin. */
-    private final String origin;
+    private final MemoryPath origin;
     
     /**
      * Constructor.
@@ -26,11 +26,11 @@ public final class PrimitiveSymbolic extends Primitive implements Symbolic {
      * @param id an {@link int}, the identifier of the symbol. Different
      *        object with same identifier will be treated as equal.
      * @param type the type of the represented value.
-     * @param origin the origin of the symbol.
+     * @param origin a {@link MemoryPath}, the origin of the symbol.
      * @param calc a {@link Calculator}.
      * @throws InvalidTypeException if {@code type} is not primitive.
      */
-    PrimitiveSymbolic(int id, char type, String origin, Calculator calc) throws InvalidTypeException {
+    PrimitiveSymbolic(int id, char type, MemoryPath origin, Calculator calc) throws InvalidTypeException {
     	super(type, calc);
     	this.id = id;
         this.origin = origin;
@@ -57,7 +57,7 @@ public final class PrimitiveSymbolic extends Primitive implements Symbolic {
      * {@inheritDoc}
      */
     @Override
-    public String getOrigin() {
+    public MemoryPath getOrigin() {
     	return this.origin;
     }
     

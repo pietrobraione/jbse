@@ -4,6 +4,7 @@ import java.util.Map;
 
 import jbse.bc.Signature;
 import jbse.val.Calculator;
+import jbse.val.MemoryPath;
 
 /**
  * Class that represent an instance of an object in the heap.
@@ -20,7 +21,7 @@ public class Instance extends Objekt {
      * @param epoch the creation {@link Epoch} of this {@link Instance}.
      * @param fieldSignatures varargs of field {@link Signature}s.
      */
-    protected Instance(Calculator calc, String className, String origin, Epoch epoch, Signature... fieldSignatures) {
+    protected Instance(Calculator calc, String className, MemoryPath origin, Epoch epoch, Signature... fieldSignatures) {
     	super(calc, className, origin, epoch, fieldSignatures);
     }
     

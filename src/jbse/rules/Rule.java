@@ -29,7 +29,7 @@ public abstract class Rule {
 	}
 	
 	/**
-	 * Checks if a reference matches this {@link LICSRule}.
+	 * Checks if a reference matches this rule.
 	 * 
 	 * @param ref a {@link ReferenceSymbolic}.
 	 * @return {@code true} iff {@code ref} 
@@ -38,7 +38,7 @@ public abstract class Rule {
 	public final boolean matches(ReferenceSymbolic ref) {
 		// checks ref's origin matches the pattern
 		final Pattern p = makeOriginPattern(this.originExp);
-		final String originReference = ref.getOrigin();
+		final String originReference = ref.getOrigin().toString();
 		final Matcher m = p.matcher(originReference);
 		final boolean retVal = m.matches();
 		return retVal;

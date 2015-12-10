@@ -42,7 +42,7 @@ public class LICSRuleAliasesOrigin extends LICSRuleAliases {
 		final String specializedPathAllowedExp = specializeAny(this.pathAllowedExp, valueForAny);
 		final Pattern p = makePatternRelative(specializedPathAllowedExp, ref.getOrigin());
 		//checks if the origin of o matches the pattern
-		final Matcher m = p.matcher(o.getOrigin());
+		final Matcher m = p.matcher(o.getOrigin().toString());
 		final boolean retVal = m.matches();
 		
 		return retVal;

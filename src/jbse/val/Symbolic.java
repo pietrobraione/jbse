@@ -17,13 +17,12 @@ public interface Symbolic {
 
     /**
 	 * Returns the origin of the symbol, i.e., 
-	 * the sequence of fields (path) from 
-	 * the root through which the symbol was 
+	 * the memory path through which the symbol was 
 	 * first discovered.
 	 * 
-	 * @return a {@link String}.
+	 * @return a {@link MemoryPath}.
 	 */
-	String getOrigin();
+    MemoryPath getOrigin();
 
 	/**
 	 * Returns the identifier of the symbol.

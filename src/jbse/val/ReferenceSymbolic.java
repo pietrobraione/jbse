@@ -17,7 +17,7 @@ public final class ReferenceSymbolic extends Reference implements Symbolic {
     private final String staticType;
 
     /** The origin of the reference. */
-	private final String origin;
+	private final MemoryPath origin;
 	
     /** The string representation of this object. */
 	private final String toString;
@@ -29,9 +29,9 @@ public final class ReferenceSymbolic extends Reference implements Symbolic {
      * @param staticType a {@link String}, the static type of the
      *        variable from which this reference originates (as 
      *        from {@code origin}).
-     * @param origin a {@link String}, the origin of this reference.
+     * @param origin a {@link MemoryPath}, the origin of this reference.
      */
-    ReferenceSymbolic(int id, String staticType, String origin) {
+    ReferenceSymbolic(int id, String staticType, MemoryPath origin) {
     	super(Type.REFERENCE);
         this.id = id;
         this.staticType = staticType;
@@ -53,7 +53,7 @@ public final class ReferenceSymbolic extends Reference implements Symbolic {
      * {@inheritDoc}
      */
     @Override
-    public String getOrigin() {
+    public MemoryPath getOrigin() {
     	return this.origin;
     }
 

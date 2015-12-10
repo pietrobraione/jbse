@@ -1,5 +1,6 @@
 package jbse.tree;
 
+import jbse.val.MemoryPath;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -12,8 +13,8 @@ import jbse.val.ReferenceSymbolic;
 public final class DecisionAlternative_XLOAD_GETX_Aliases extends DecisionAlternative_XLOAD_GETX_Unresolved implements DecisionAlternative_XYLOAD_GETX_Aliases {
 	private final long aliasPosition;
 
-	public DecisionAlternative_XLOAD_GETX_Aliases(ReferenceSymbolic referenceToResolve, long aliasPosition, String objectOrigin, int branchNumber) {
-		super(ALT_CODE + "_Aliases:" + objectOrigin, referenceToResolve, branchNumber);
+	public DecisionAlternative_XLOAD_GETX_Aliases(ReferenceSymbolic referenceToResolve, long aliasPosition, MemoryPath objectOrigin, int branchNumber) {
+		super(ALT_CODE + "_Aliases:" + objectOrigin.toString(), referenceToResolve, branchNumber);
 		this.aliasPosition = aliasPosition;
 	}
 

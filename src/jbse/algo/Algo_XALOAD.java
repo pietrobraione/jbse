@@ -123,7 +123,7 @@ StrategyUpdate_XALOAD> {
                 if (e instanceof Array.AccessOutcomeIn) {
                     val = ((Array.AccessOutcomeIn) e).getValue();
                     if (val == null) {
-                        val = state.createSymbol(getArrayMemberType(this.arrayObj.getType()), this.arrayObj.getOrigin() + "[" + this.index + "]");
+                        val = state.createSymbol(getArrayMemberType(this.arrayObj.getType()), this.arrayObj.getOrigin().thenArrayMember(this.index));
                         fresh = true;
                     }
                 } else { //e instanceof AccessOutcomeOut

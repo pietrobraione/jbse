@@ -116,7 +116,7 @@ public abstract class StateFormatterText implements Formatter {
     			if (s.isNull(ref)) {
     				expression += "null";
     			} else {
-    				final String tgtOrigin = s.getObject(ref).getOrigin();
+    				final String tgtOrigin = s.getObject(ref).getOrigin().toString();
     				expression += "Object[" + s.getResolution(ref) + "] (" + (ref.getOrigin().equals(tgtOrigin) ? "fresh" : ("aliases " + tgtOrigin)) + ")";
     			}
     			final String referenceFormatted = formatReferenceForPathCondition(ref, doneSymbols); 

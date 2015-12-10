@@ -409,7 +409,7 @@ public abstract class StateFormatterSushiPartialHeap implements Formatter {
         }
         
         private void makeVariableFor(Symbolic symbol) {
-            final String origin = symbol.getOrigin();
+            final String origin = symbol.getOrigin().toString();
             if (!this.symbolsToVariables.containsKey(symbol)) {
                 this.symbolsToVariables.put(symbol, generateName(origin));
             }

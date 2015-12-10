@@ -7,7 +7,6 @@ import static jbse.bc.Signatures.JAVA_STRING_HASH;
 import static jbse.bc.Signatures.JAVA_STRING_OFFSET;
 import static jbse.bc.Signatures.JAVA_STRING_VALUE;
 import static jbse.common.Type.isPrimitiveBinaryClassName;
-import static jbse.common.Util.ROOT_FRAME_MONIKER;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -47,6 +46,7 @@ import jbse.mem.exc.InvalidNumberOfOperandsException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Calculator;
 import jbse.val.Expression;
+import jbse.val.MemoryPath;
 import jbse.val.Null;
 import jbse.val.Primitive;
 import jbse.val.PrimitiveSymbolic;
@@ -606,7 +606,7 @@ public final class State implements Cloneable {
         }
 		final ClassFile classFile = this.getClassHierarchy().getClassFile(className);
 		final Signature[] fieldsSignatures = classFile.getFieldsStatic();
-		final Klass k = new Klass(this.calc, "[" + className + "]", Objekt.Epoch.EPOCH_BEFORE_START, fieldsSignatures);
+		final Klass k = new Klass(this.calc, MemoryPath.mkStatic(className), Objekt.Epoch.EPOCH_BEFORE_START, fieldsSignatures);
 		initWithSymbolicValues(k);
         this.staticMethodArea.set(className, k);
 	}
@@ -617,13 +617,13 @@ public final class State implements Cloneable {
 	 * values.
 	 *  
 	 * @param type the name of either a class or an array type.
-	 * @param origin a {@link String}, the origin of the object.
+	 * @param origin a {@link MemoryPath}, the origin of the object.
 	 * @return a {@code long}, the position in the heap of the newly 
 	 *         created object.
 	 * @throws NullPointerException if {@code origin} is {@code null}.
 	 * @throws InvalidTypeException if {@code type} is invalid.
 	 */
-	private long createObjectSymbolic(String type, String origin) 
+	private long createObjectSymbolic(String type, MemoryPath origin) 
 	throws InvalidTypeException {
 		if (origin == null) {
 			throw new NullPointerException(); //TODO improve?
@@ -634,14 +634,14 @@ public final class State implements Cloneable {
 		return pos;
 	}
 
-	private Array newArraySymbolic(String arraySignature, String origin) 
+	private Array newArraySymbolic(String arraySignature, MemoryPath origin) 
 	throws InvalidTypeException {
-		final Primitive length = (Primitive) createSymbol("" + Type.INT, origin + ".length");
+		final Primitive length = (Primitive) createSymbol("" + Type.INT, origin.thenArrayLength());
 		final Array obj = new Array(this.calc, true, null, length, arraySignature, origin, Epoch.EPOCH_BEFORE_START);
 		return obj;
 	}
 
-	private Instance newInstanceSymbolic(String className, String origin) {
+	private Instance newInstanceSymbolic(String className, MemoryPath origin) {
 		final Signature[] fieldsSignatures = this.classHierarchy.getAllFieldsInstance(className);
 		final Instance obj = new Instance(this.calc, className, origin, Epoch.EPOCH_BEFORE_START, fieldsSignatures);
 		initWithSymbolicValues(obj);
@@ -663,7 +663,7 @@ public final class State implements Cloneable {
 			//builds a symbolic value from signature and name 
 			//and assigns it to the field
 			myObj.setFieldValue(myActualSignature, 
-					createSymbol(tmpDescriptor, myObj.getOrigin() + "." + tmpName));
+					createSymbol(tmpDescriptor, myObj.getOrigin().thenField(tmpName)));
 		}
 	}
 	
@@ -1007,7 +1007,7 @@ public final class State implements Cloneable {
 		final Value[] args = new Value[numArgs];
 		for (int i = 0, slot = 0; i < numArgs; ++i) {
 			//builds a symbolic value from signature and name
-			final String origin = ROOT_FRAME_MONIKER + f.getLocalVariableDeclaredName(slot);
+			final MemoryPath origin = MemoryPath.mkLocalVariable(f.getLocalVariableDeclaredName(slot));
 			if (slot == ROOT_THIS_SLOT && !isStatic) {
 				args[i] = createSymbol(Type.REFERENCE + rootClassName + Type.TYPEEND, origin);
 				//must assume {ROOT}:this expands to nonnull object (were it null the frame would not exist!)
@@ -1809,11 +1809,11 @@ public final class State implements Cloneable {
      * @param staticType a {@link String}, the static type of the
      *        variable from which this reference originates (as 
      *        from {@code origin}).
-     * @param origin a {@link String}, the origin of this reference.
+     * @param origin a {@link MemoryPath}, the origin of this reference.
 	 * @return a {@link PrimitiveSymbolic} or a {@link ReferenceSymbolic}
 	 *         according to {@code descriptor}.
 	 */
-	public Value createSymbol(String staticType, String origin) {
+	public Value createSymbol(String staticType, MemoryPath origin) {
 		return this.symbolFactory.createSymbol(staticType, origin);
 	}
 	

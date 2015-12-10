@@ -383,7 +383,7 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
                     if (finalState.isNull(returnedRef)) {
                         this.s.append("null");
                     } else {
-                        final String var = generateName(finalState.getObject(returnedRef).getOrigin());
+                        final String var = generateName(finalState.getObject(returnedRef).getOrigin().toString());
                         if (hasMemberAccessor(var)) {
                             this.s.append(getValue(var));
                         } else {
@@ -544,7 +544,7 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
         
         private void makeVariableFor(Symbolic symbol) {
             final String value = symbol.getValue(); 
-            final String origin = symbol.getOrigin();
+            final String origin = symbol.getOrigin().toString();
             if (!this.symbolsToVariables.containsKey(value)) {
                 this.symbolsToVariables.put(value, generateName(origin));
             }

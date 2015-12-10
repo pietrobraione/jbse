@@ -20,7 +20,7 @@ public final class SymbolFactory implements Cloneable {
 		this.nextIdPrimSym = 0;
 	}
 	
-	public Value createSymbol(String staticType, String origin) {
+	public Value createSymbol(String staticType, MemoryPath origin) {
         try {
             final Value retVal;
             if (Type.isPrimitive(staticType)) {

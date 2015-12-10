@@ -253,7 +253,7 @@ public class Util {
 	}
 	
 	public static String formatPrimitiveSymbolic(PrimitiveSymbolic p) {
-		return p.getOrigin();
+		return p.getOrigin().toString();
 	}
 	
 	public static String formatSimplex(Simplex s) {

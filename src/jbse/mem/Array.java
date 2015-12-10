@@ -12,6 +12,7 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.val.Calculator;
 import jbse.val.Expression;
+import jbse.val.MemoryPath;
 import jbse.val.Primitive;
 import jbse.val.ReferenceArrayImmaterial;
 import jbse.val.Simplex;
@@ -300,11 +301,11 @@ public final class Array extends Objekt {
 	 *        the default value for the array member type is used for initialization.
 	 * @param length a {@link Primitive}, the number of elements in the array.
 	 * @param type a {@link String}, the type of the array.
-	 * @param origin the origin of the array.
+	 * @param origin a {@link MemoryPath}, the origin of the array.
 	 * @param epoch the creation {@link Epoch} of the array.
 	 * @throws InvalidTypeException iff {@code type} is invalid. 
 	 */
-	public Array(Calculator calc, boolean initSymbolic, Value initValue, Primitive length, String type, String origin, Epoch epoch) 
+	public Array(Calculator calc, boolean initSymbolic, Value initValue, Primitive length, String type, MemoryPath origin, Epoch epoch) 
 	throws InvalidTypeException {
 		super(calc, type, origin, epoch, new Signature(type, "" + Type.INT, "length"));
 		this.lengthSignature = new Signature(type, "" + Type.INT, "length");
@@ -604,7 +605,6 @@ public final class Array extends Objekt {
 					return this.next;
 				}
 
-
 				@Override
 				public void remove() {
 					if (this.canRemove) { 
@@ -616,6 +616,25 @@ public final class Array extends Objekt {
 			};
 		}
 	}
+	
+	/**
+	 * Implements {@code java.System.arraycopy}, where this array is
+	 * the destination.
+	 * 
+     * @param src The source {@link Array}.
+     * @param srcPos The source initial position.
+     * @param destPos The destination initial position.
+     * @param length How many elements should be copied.
+	 * @return an {@link Iterator}{@code <}{@link AccessOutcomeIn}{@code >}
+     *         to the entries of this {@link Array} that are possibly 
+     *         modified by the update; the caller must decide whether 
+     *         constrain and possibly delete them.
+	 */
+    public Iterator<AccessOutcomeIn> arraycopy(Array src, Primitive srcPos, Primitive destPos, Primitive length) {
+        //TODO arraycopy
+        return null;
+    }
+
 	
 	/**
 	 * Returns a {@link Primitive} denoting the fact that an index 
@@ -636,12 +655,12 @@ public final class Array extends Objekt {
 	}
 	
 	/**
-	 * Returns a {@link Value} denoting the fact that an index is 
-	 * out of range.
+	 * Returns a {@link Primitive} denoting the fact that 
+	 * an index is out of range.
 	 * 
-	 * @param index a {@link Primitive} denoting an int.
+	 * @param index a {@link Primitive} denoting an int value.
 	 * @return an {@link Expression} denoting the fact that 
-	 * {@code index</code> is out of range. If the fact can be 
+	 * {@code index} is out of range. If the fact can be 
 	 * proved or disproved by normalization, a {@link Simplex} 
 	 * denoting {@code true} or {@code false} respectively 
 	 * is returned. 

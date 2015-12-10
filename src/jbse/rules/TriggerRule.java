@@ -57,7 +57,7 @@ public abstract class TriggerRule extends Rule {
 		final Pattern p = makePatternRelative(specializedTriggerExp, ref.getOrigin());
 
 		// checks o's origin matches the resulting pattern
-		final Matcher m = p.matcher(o.getOrigin());
+		final Matcher m = p.matcher(o.getOrigin().toString());
 		final boolean retVal = m.matches();
 		return retVal;
 	}

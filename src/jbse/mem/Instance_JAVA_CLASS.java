@@ -4,6 +4,7 @@ import static jbse.bc.Signatures.JAVA_CLASS;
 
 import jbse.bc.Signature;
 import jbse.val.Calculator;
+import jbse.val.MemoryPath;
 
 /**
  * Class that represent an instance of an object with class {@code java.lang.Class} 
@@ -13,7 +14,7 @@ public final class Instance_JAVA_CLASS extends Instance {
     /** The java class it represents. Immutable. */
     private final String representedClass;
 
-    protected Instance_JAVA_CLASS(Calculator calc, String origin, Epoch epoch, String representedClass, Signature... fieldSignatures) {
+    protected Instance_JAVA_CLASS(Calculator calc, MemoryPath origin, Epoch epoch, String representedClass, Signature... fieldSignatures) {
         super(calc, JAVA_CLASS, origin, epoch, fieldSignatures);
         this.representedClass = representedClass;
     }

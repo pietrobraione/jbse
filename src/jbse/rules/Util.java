@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.val.MemoryPath;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 
@@ -39,8 +40,8 @@ public final class Util {
 	 *         {UP} are
 	 *         resolved using {@code origin}.
 	 */
-	static Pattern makePatternRelative(String s, String origin) {
-		return Pattern.compile(translateToOriginPattern(translateRelativeToAbsolute(s, origin)));
+	static Pattern makePatternRelative(String s, MemoryPath origin) {
+		return Pattern.compile(translateToOriginPattern(translateRelativeToAbsolute(s, origin.toString())));
 	}
 	
 	/* TODO this is really ugly, but it works with the current 
@@ -58,9 +59,9 @@ public final class Util {
 	/* TODO this also is really ugly, and it does not work with 
 	 * multiple candidate origins for the same object.
 	 */
-	private static String translateRelativeToAbsolute(String s, String origin) {
+	private static String translateRelativeToAbsolute(String s, String originString) {
 		// replaces REF with ref.origin
-		String retVal = s.replace(REF, origin.replace(".", "/"));
+		String retVal = s.replace(REF, originString.replace(".", "/"));
 		
 		// eats all /whatever/UP pairs 
 		String retValOld;
@@ -71,9 +72,9 @@ public final class Util {
 		return retVal;
 	}
 	
-	static String findAny(String pattern, String origin) {
+	static String findAny(String pattern, MemoryPath origin) {
 		final Pattern p = makeOriginPattern(pattern);
-		final Matcher m = p.matcher(origin);
+		final Matcher m = p.matcher(origin.toString());
 		if (m.matches() && m.pattern().pattern().startsWith("(.*)") && m.groupCount() >= 1) {
 			final String valueForAny = m.group(1).replace(".","/");
 			return valueForAny;

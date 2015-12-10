@@ -80,9 +80,9 @@ public final class DecisionProcedureLICS extends DecisionProcedureChainOfRespons
 nextRule:
 		for (LICSRuleAliases rule : rulesMax) {
 			if (rule.satisfies(ref, o)) {
-				final int oLen = o.getOrigin().length();
+				final int oLen = o.getOrigin().toString().length();
 				for (Objekt oOther : objectsSymbolic()) {
-					if (oLen < oOther.getOrigin().length() && 
+					if (oLen < oOther.getOrigin().toString().length() && 
 							rule.satisfies(ref, oOther)) {
 						continue nextRule;
 					}

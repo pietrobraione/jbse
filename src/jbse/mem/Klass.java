@@ -2,6 +2,7 @@ package jbse.mem;
 
 import jbse.bc.Signature;
 import jbse.val.Calculator;
+import jbse.val.MemoryPath;
 
 /**
  * Class that represents a Java class in the static
@@ -18,7 +19,7 @@ public final class Klass extends Objekt {
      * @param epoch the creation {@link Epoch} of this {@link Klass}.
      * @param fieldSignatures varargs of field {@link Signature}s.
      */
-    Klass(Calculator calc, String origin, Epoch epoch, Signature... fieldSignatures) {
+    Klass(Calculator calc, MemoryPath origin, Epoch epoch, Signature... fieldSignatures) {
     	super(calc, "KLASS", origin, epoch, fieldSignatures);
     }
     

@@ -9,6 +9,7 @@ import java.util.Map;
 
 import jbse.bc.Signature;
 import jbse.val.Calculator;
+import jbse.val.MemoryPath;
 import jbse.val.Value;
 
 /**
@@ -33,7 +34,7 @@ public abstract class Objekt implements Cloneable {
 	 * The origin of the object in the case it is created by 
 	 * lazy initialization. Immutable.
 	 */
-	private final String origin;
+	private final MemoryPath origin;
 
     /** The creation epoch of this {@link Objekt}. Immutable. */
     private final Epoch epoch;
@@ -58,12 +59,12 @@ public abstract class Objekt implements Cloneable {
      * @param calc a {@link Calculator}.
      * @param fieldSignatures an array of field {@link Signature}s.
      * @param type a {@link String}, the class of this object.
-     * @param origin a {@link String}, the
-     * chain of reference accesses which allowed to discover
-     * the object in first instance.
+     * @param origin a {@link MemoryPath}, the
+     * chain of memory accesses which allowed to discover
+     * the object for the first time.
      * @param epoch the creation {@link Epoch} of this object.
      */
-    protected Objekt(Calculator calc, String type, String origin, Epoch epoch, Signature... fieldSignatures) {
+    protected Objekt(Calculator calc, String type, MemoryPath origin, Epoch epoch, Signature... fieldSignatures) {
         this.fields = new HashMap<>();
         this.fieldSignatures = Arrays.asList(fieldSignatures.clone()); //safety copy
         for (Signature s : this.fieldSignatures) {
@@ -90,7 +91,7 @@ public abstract class Objekt implements Cloneable {
      * 
      * @return a {@link String}
      */
-    public final String getOrigin() {
+    public final MemoryPath getOrigin() {
     	return this.origin;
     }
     

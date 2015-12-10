@@ -25,7 +25,11 @@ import jbse.jvm.exc.FailureException;
 import jbse.jvm.exc.InitializationException;
 import jbse.jvm.exc.NonexistingObservedVariablesException;
 import jbse.jvm.RunnerParameters;
+import jbse.mem.Array;
+import jbse.mem.Array.AccessOutcome;
+import jbse.mem.Array.AccessOutcomeIn;
 import jbse.mem.Frame;
+import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.SwitchTable;
 import jbse.mem.Util;
@@ -43,10 +47,17 @@ import jbse.tree.DecisionAlternative_XYLOAD_GETX_Expands;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Null;
 import jbse.tree.DecisionAlternative_XNEWARRAY;
 import jbse.tree.DecisionAlternative_XSWITCH;
+import jbse.val.Access;
+import jbse.val.AccessArrayLength;
+import jbse.val.AccessArrayMember;
+import jbse.val.AccessField;
+import jbse.val.AccessLocalVariable;
+import jbse.val.AccessStatic;
 import jbse.val.Any;
 import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.FunctionApplication;
+import jbse.val.MemoryPath;
 import jbse.val.NarrowingConversion;
 import jbse.val.Operator;
 import jbse.val.Primitive;
@@ -166,7 +177,8 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
 		}
 		
-		//saves the current frame as the "root" frame
+		//saves the current state and its current frame as the 
+		//concrete initial state/frame
 		this.initialStateConcrete = this.engine.getCurrentState().clone();
 		try {
             this.rootFrameConcrete = this.initialStateConcrete.getCurrentFrame();
@@ -176,7 +188,13 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
         }
 		
 		//the (resolved) root object is put in seenObject, if present
-		final Value refToRoot = getValue(this.initialStateConcrete, this.rootFrameConcrete, "{ROOT}:this");
+		Value refToRoot;
+        try {
+            refToRoot = getValue(this.initialStateConcrete, this.rootFrameConcrete, MemoryPath.mkLocalVariable("this"));
+        } catch (GuidanceException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
 		if (refToRoot != null) {
 			this.seenObjects.add(Util.heapPosition(this.initialStateConcrete, (Reference) refToRoot));
 		}
@@ -437,13 +455,14 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 		return retVal;
 	}
 	
-	private void filter(State state, ReferenceSymbolic refToLoad, DecisionAlternative_XYLOAD_GETX_Unresolved dar, Iterator<?> it) {
+	private void filter(State state, ReferenceSymbolic refToLoad, DecisionAlternative_XYLOAD_GETX_Unresolved dar, Iterator<?> it) 
+	throws GuidanceException {
 		final Reference refInConcreteState = (Reference) getValue(this.initialStateConcrete, this.rootFrameConcrete, refToLoad.getOrigin());
 		if (dar instanceof DecisionAlternative_XYLOAD_GETX_Null && !Util.isNull(this.initialStateConcrete, refInConcreteState)) {
 			it.remove();
 		} else if (dar instanceof DecisionAlternative_XYLOAD_GETX_Aliases) {
 			final DecisionAlternative_XYLOAD_GETX_Aliases dara = (DecisionAlternative_XYLOAD_GETX_Aliases) dar;
-			final String aliasOrigin = state.getObject(new ReferenceConcrete(dara.getAliasPosition())).getOrigin();
+			final MemoryPath aliasOrigin = state.getObject(new ReferenceConcrete(dara.getAliasPosition())).getOrigin();
 			final Reference aliasInConcreteState = (Reference) getValue(this.initialStateConcrete, this.rootFrameConcrete, aliasOrigin);
 			if (!Util.areAlias(this.initialStateConcrete, refInConcreteState, aliasInConcreteState)) {
 				it.remove();
@@ -462,26 +481,61 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 		this.failedConcrete = this.engine.canBacktrack();
 	}
 	
-	private static Value getValue(State state, Frame rootFrame, String origin) {
-		final String[] originFields = origin.split("\\.");
-		final String rootVariableName = originFields[0].replaceAll("\\{ROOT\\}:", ""); //from {ROOT}:var extracts var
-		Value fieldValue = rootFrame.getLocalVariableValue(rootVariableName);
-		for (int i = 1; i < originFields.length; ++i) {
-			if (fieldValue == null || !(fieldValue instanceof Reference)) {
-				return null;
-			} else {
-				final Reference nextField = (Reference) fieldValue;
-				fieldValue = state.getObject(nextField).getFieldValue(originFields[i]);
-			}
-		}
-		return fieldValue;
+	private static Value getValue(State state, Frame rootFrame, MemoryPath origin) 
+	throws GuidanceException {
+        Value fieldValue = null;
+	    Objekt o = null;
+	    for (Access a : origin) {
+	        if (a instanceof AccessLocalVariable) {
+	            final AccessLocalVariable al = (AccessLocalVariable) a;
+	            fieldValue = rootFrame.getLocalVariableValue(al.variableName());
+	        } else if (a instanceof AccessStatic) {
+	            final AccessStatic as = (AccessStatic) a;
+                fieldValue = null;
+	            o = state.getKlass(as.className());
+            } else if (a instanceof AccessField) {
+                if (o == null) {
+                    throw new GuidanceException(ERROR_BAD_PATH);
+                }
+                final AccessField af = (AccessField) a;
+                fieldValue = o.getFieldValue(af.fieldName());
+            } else if (a instanceof AccessArrayLength) {
+                if (! (o instanceof Array)) {
+                    throw new GuidanceException(ERROR_BAD_PATH);
+                }
+                fieldValue = ((Array) o).getLength();
+            } else if (a instanceof AccessArrayMember) {
+                if (! (o instanceof Array)) {
+                    throw new GuidanceException(ERROR_BAD_PATH);
+                }
+                final AccessArrayMember aa = (AccessArrayMember) a;
+                try {
+                    for (AccessOutcome ao : ((Array) o).get(eval(state, rootFrame, aa.index()))) {
+                        if (ao instanceof AccessOutcomeIn) {
+                            final AccessOutcomeIn aoi = (AccessOutcomeIn) ao;
+                            fieldValue = aoi.getValue();
+                            break;
+                        }
+                    }
+                } catch (InvalidOperandException | InvalidTypeException e) {
+                    throw new GuidanceException(e);
+                }
+	        }
+            if (fieldValue instanceof Reference) {
+                o = state.getObject((Reference) fieldValue);
+            } else if (fieldValue != null) {
+                o = null;
+            }
+	    }
+        return fieldValue;
 	}
 	
-	private static Primitive eval(State state, Frame rootFrame, Primitive toEval) {
+	private static Primitive eval(State state, Frame rootFrame, Primitive toEval) 
+	throws GuidanceException {
 		final Evaluator evaluator = new Evaluator(state, rootFrame);
 		try {
 			toEval.accept(evaluator);
-		} catch (RuntimeException e) {
+		} catch (RuntimeException | GuidanceException e) {
 			throw e;
 		} catch (Exception e) {
 			//should not happen
@@ -550,7 +604,7 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 		}
 
 		@Override
-		public void visitPrimitiveSymbolic(PrimitiveSymbolic s) {
+		public void visitPrimitiveSymbolic(PrimitiveSymbolic s) throws GuidanceException {
 			final Value fieldValue = getValue(this.state, this.rootFrame, s.getOrigin());
 			if (fieldValue instanceof Primitive) {
 				this.value = (Primitive) fieldValue;
@@ -585,4 +639,5 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 	
     private static final String ERROR_NONCONCRETE_GUIDANCE = "Guided execution fell outside the concrete domain.";
     private static final String ERROR_DIVERGENCE = "Guided execution diverged from guiding execution.";
+    private static final String ERROR_BAD_PATH = "Failed accessing through a memory access path.";
 }

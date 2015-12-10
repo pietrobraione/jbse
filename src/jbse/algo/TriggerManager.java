@@ -137,7 +137,7 @@ nextRule:
 			for (TriggerRuleAliases rule : rulesMax) {
 				if (rule.satisfies(ref, o)) {
 					for (Objekt oOther : s.objectsSymbolic()) {
-						if (o.getOrigin().length() < oOther.getOrigin().length() && 
+						if (o.getOrigin().toString().length() < oOther.getOrigin().toString().length() && 
 							rule.satisfies(ref, oOther)) {
 							continue nextRule;
 						}
