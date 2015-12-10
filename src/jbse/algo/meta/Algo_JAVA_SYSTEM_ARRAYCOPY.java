@@ -7,6 +7,7 @@ import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import static jbse.bc.Signatures.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION;
 import static jbse.bc.Signatures.ARRAY_STORE_EXCEPTION;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
+import static jbse.common.Type.className;
 import static jbse.common.Type.getArrayMemberType;
 import static jbse.common.Type.isPrimitive;
 
@@ -75,15 +76,16 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
             //specification (that allows dynamic assignment compatibility), 
             //but implementing the latter would be too complex
             if (isPrimitive(srcTypeComponent) && 
-                isPrimitive(destTypeComponent) &&
-                !srcTypeComponent.equals(destTypeComponent)) {
-                throwNew(state, ARRAY_STORE_EXCEPTION);
-                exitFromAlgorithm();
+                isPrimitive(destTypeComponent)) {
+                if (!srcTypeComponent.equals(destTypeComponent)) {
+                    throwNew(state, ARRAY_STORE_EXCEPTION);
+                    exitFromAlgorithm();
+                }
             } else if (isPrimitive(srcTypeComponent) != isPrimitive(destTypeComponent)) {
                 throwNew(state, ARRAY_STORE_EXCEPTION);
                 exitFromAlgorithm();
             } else try {
-                if (state.getClassHierarchy().isAssignmentCompatible(srcTypeComponent, destTypeComponent)) {
+                if (!state.getClassHierarchy().isAssignmentCompatible(className(srcTypeComponent), className(destTypeComponent))) {
                     throwNew(state, ARRAY_STORE_EXCEPTION);
                     exitFromAlgorithm();
                 }
@@ -97,8 +99,8 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                 this.inRange = this.srcPos.ge(zero)
                                .and(this.destPos.ge(zero))
                                .and(this.length.ge(zero))
-                               .and(this.srcPos.add(this.length).lt(srcArray.getLength()))
-                               .and(this.destPos.add(this.length).lt(destArray.getLength()));
+                               .and(this.srcPos.add(this.length).le(srcArray.getLength()))
+                               .and(this.destPos.add(this.length).le(destArray.getLength()));
             } catch (InvalidOperandException | InvalidTypeException e) {
                 throwVerifyError(state);
                 exitFromAlgorithm();
