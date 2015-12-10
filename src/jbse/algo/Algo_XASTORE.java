@@ -11,7 +11,6 @@ import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.common.Type.className;
 import static jbse.common.Type.getArrayMemberType;
 import static jbse.common.Type.isArray;
-import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isPrimitiveOpStack;
 import static jbse.common.Type.isReference;
 
@@ -90,18 +89,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                 this.inRange = array.inRange(index);
                 this.outOfRange = array.outOfRange(index);
                 final String arrayMemberType = getArrayMemberType(array.getType());
-                if (isPrimitive(arrayMemberType) && !isPrimitiveOpStack(arrayMemberType.charAt(0))) {
-                    if (!(value instanceof Primitive)) {
-                        throwVerifyError(state);
-                        exitFromAlgorithm();
-                    }
-                    try {
-                        this.valueToStore = ((Primitive) value).to(arrayMemberType.charAt(0));
-                    } catch (InvalidTypeException e) {
-                        throwVerifyError(state);
-                        exitFromAlgorithm();
-                    }
-                } else if (isReference(arrayMemberType) || isArray(arrayMemberType)) {
+                if (isReference(arrayMemberType) || isArray(arrayMemberType)) {
                     if (!(value instanceof Reference)) {
                         throwVerifyError(state);
                         exitFromAlgorithm();
@@ -110,14 +98,24 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                     final Objekt o = state.getObject(valueToStoreRef);
                     final ClassHierarchy hier = state.getClassHierarchy();
                     if (state.isNull(valueToStoreRef) ||
-                        hier.isAssignmentCompatible(o.getType(), className(arrayMemberType))) {
+                    hier.isAssignmentCompatible(o.getType(), className(arrayMemberType))) {
                         this.valueToStore = value;
                     } else {
                         throwNew(state, ARRAY_STORE_EXCEPTION);
                         exitFromAlgorithm();
                     }
                 } else {
-                    this.valueToStore = value;
+                    if (!(value instanceof Primitive)) {
+                        throwVerifyError(state);
+                        exitFromAlgorithm();
+                    }
+                    try {
+                        this.valueToStore = (isPrimitiveOpStack(arrayMemberType.charAt(0)) ? value : 
+                                            ((Primitive) value).to(arrayMemberType.charAt(0)));
+                    } catch (InvalidTypeException e) {
+                        throwVerifyError(state);
+                        exitFromAlgorithm();
+                    }
                 }
             } catch (InvalidOperandException | InvalidTypeException | 
                      ClassCastException | BadClassFileException e) {
