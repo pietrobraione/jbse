@@ -10,7 +10,7 @@ import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 
 import java.util.function.Supplier;
 
-import jbse.algo.Algo_INVOKEMETA;
+import jbse.algo.Algo_INVOKEMETA_NONBRANCHING;
 import jbse.algo.InterruptException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.exc.BadClassFileException;
@@ -22,7 +22,7 @@ import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 
-public final class Algo_JAVA_OBJECT_GETCLASS extends Algo_INVOKEMETA {
+public final class Algo_JAVA_OBJECT_GETCLASS extends Algo_INVOKEMETA_NONBRANCHING {
     String className; //set by cookMore
     
     @Override

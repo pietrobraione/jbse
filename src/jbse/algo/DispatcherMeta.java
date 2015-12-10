@@ -19,14 +19,14 @@ import jbse.meta.annotations.Uninterpreted;
  * 
  * @author Pietro Braione
  */
-class DispatcherMeta extends Dispatcher<Signature, Algo_INVOKEMETA> {
+class DispatcherMeta extends Dispatcher<Signature, Algo_INVOKEMETA<?, ?, ?, ?>> {
 	/**
 	 * Constructor.
 	 */
 	public DispatcherMeta() {
-		setDefault(new DispatchStrategy<Algo_INVOKEMETA>() {
+		setDefault(new DispatchStrategy<Algo_INVOKEMETA<?, ?, ?, ?>>() {
 			@Override
-			public Algo_INVOKEMETA doIt() {
+			public Algo_INVOKEMETA<?, ?, ?, ?> doIt() {
 				return null;
 			}
 		});
@@ -42,9 +42,9 @@ class DispatcherMeta extends Dispatcher<Signature, Algo_INVOKEMETA> {
 	 *         always preceded by a call to {@link #isMeta}.
 	 */
 	@Override
-	public Algo_INVOKEMETA select(Signature methodSignatureResolved) {
+	public Algo_INVOKEMETA<?, ?, ?, ?> select(Signature methodSignatureResolved) {
         try {
-            final Algo_INVOKEMETA retVal = super.select(methodSignatureResolved);
+            final Algo_INVOKEMETA<?, ?, ?, ?> retVal = super.select(methodSignatureResolved);
             return retVal;
         } catch (RuntimeException e) {
             throw e;
@@ -98,17 +98,18 @@ class DispatcherMeta extends Dispatcher<Signature, Algo_INVOKEMETA> {
 	 * {@link MetaOverriddenBy} annotation.
 	 * 
 	 * @param methodSignatureResolved the {@link Signature} of a <em>resolved</em> method.
-	 * @param metaDelegateClass the class name of the {@link Algorithm} that
+	 * @param metaDelegateClass the class of the {@link Algorithm} that
 	 *        implements the invocation semantics for {@code methodSignatureResolved}.
+	 *        The class must be a subclass of {@link Algo_INVOKEMETA}.
 	 * @throws MetaUnsupportedException if the class indicated in {@code metaDelegateClassName} 
 	 *         does not exist, or cannot be loaded or instantiated for any reason 
 	 *         (has insufficient visibility or has not a parameterless constructor).
 	 */
 	public void loadAlgoMetaOverridden(Signature methodSignatureResolved, 
-	                                   Class<? extends Algo_INVOKEMETA> metaDelegateClass) 
+	                                   Class<? extends Algo_INVOKEMETA<?, ?, ?, ?>> metaDelegateClass) 
 	throws MetaUnsupportedException {
 		try {
-			final Algo_INVOKEMETA metaDelegate = metaDelegateClass.newInstance();
+			final Algo_INVOKEMETA<?, ?, ?, ?> metaDelegate = metaDelegateClass.newInstance();
 			loadMetaDelegate(methodSignatureResolved, metaDelegate);
 		} catch (InstantiationException e) {
 			throw new MetaUnsupportedException("meta-level implementation class " + metaDelegateClass + " cannot be instantiated.");
@@ -133,7 +134,7 @@ class DispatcherMeta extends Dispatcher<Signature, Algo_INVOKEMETA> {
 		loadMetaDelegate(methodSignatureResolved, metaDelegate);
 	}
 	
-	private void loadMetaDelegate(Signature methodSignatureResolved, final Algo_INVOKEMETA metaDelegate) {
+	private void loadMetaDelegate(Signature methodSignatureResolved, final Algo_INVOKEMETA<?, ?, ?, ?> metaDelegate) {
 		setCase(methodSignatureResolved, () -> metaDelegate);
 	}
 }

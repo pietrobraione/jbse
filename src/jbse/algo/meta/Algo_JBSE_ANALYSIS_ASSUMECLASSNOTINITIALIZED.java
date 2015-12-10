@@ -6,7 +6,7 @@ import static jbse.algo.Util.valueString;
 
 import java.util.function.Supplier;
 
-import jbse.algo.Algo_INVOKEMETA;
+import jbse.algo.Algo_INVOKEMETA_NONBRANCHING;
 import jbse.algo.InterruptException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.exc.BadClassFileException;
@@ -14,7 +14,7 @@ import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 
-public final class Algo_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED extends Algo_INVOKEMETA {
+public final class Algo_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED extends Algo_INVOKEMETA_NONBRANCHING {
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 1;

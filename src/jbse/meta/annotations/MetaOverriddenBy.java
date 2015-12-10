@@ -24,5 +24,5 @@ import jbse.algo.Algo_INVOKEMETA;
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.CLASS)
 public @interface MetaOverriddenBy {
-	java.lang.Class<? extends Algo_INVOKEMETA> value();
+	java.lang.Class<? extends Algo_INVOKEMETA<?, ?, ?, ?>> value();
 }

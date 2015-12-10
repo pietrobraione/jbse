@@ -6,7 +6,7 @@ import static jbse.bc.Signatures.JAVA_THROWABLE_STACKTRACE;
 
 import java.util.function.Supplier;
 
-import jbse.algo.Algo_INVOKEMETA;
+import jbse.algo.Algo_INVOKEMETA_NONBRANCHING;
 import jbse.algo.InterruptException;
 import jbse.mem.Instance;
 import jbse.mem.State;
@@ -14,7 +14,7 @@ import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Null;
 import jbse.val.Reference;
 
-public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE extends Algo_INVOKEMETA {
+public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE extends Algo_INVOKEMETA_NONBRANCHING {
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 1;

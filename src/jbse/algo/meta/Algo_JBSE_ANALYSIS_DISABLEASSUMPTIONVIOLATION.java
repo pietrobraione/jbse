@@ -2,7 +2,7 @@ package jbse.algo.meta;
 
 import java.util.function.Supplier;
 
-import jbse.algo.Algo_INVOKEMETA;
+import jbse.algo.Algo_INVOKEMETA_NONBRANCHING;
 import jbse.algo.Algorithm;
 import jbse.mem.State;
 
@@ -13,7 +13,7 @@ import jbse.mem.State;
  * @author Pietro Braione
  *
  */
-public final class Algo_JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION extends Algo_INVOKEMETA {
+public final class Algo_JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION extends Algo_INVOKEMETA_NONBRANCHING {
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 0;

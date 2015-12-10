@@ -2,11 +2,11 @@ package jbse.algo.meta;
 
 import java.util.function.Supplier;
 
-import jbse.algo.Algo_INVOKEMETA;
+import jbse.algo.Algo_INVOKEMETA_NONBRANCHING;
 import jbse.apps.run.DecisionProcedureGuidance;
 import jbse.mem.State;
 
-public final class Algo_JBSE_ANALYSIS_ENDGUIDANCE extends Algo_INVOKEMETA {
+public final class Algo_JBSE_ANALYSIS_ENDGUIDANCE extends Algo_INVOKEMETA_NONBRANCHING {
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 0;

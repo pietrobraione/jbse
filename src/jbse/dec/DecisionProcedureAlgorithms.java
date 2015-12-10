@@ -1011,8 +1011,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      * 
      * @param hier a {@link ClassHierarchy}.
      * @param entries an {@link Iterator}{@code <}{@link AccessOutcomeIn}{@code >}. The method
-     *        will determine the items affected by the set operation, constrain them, and 
-     *        delete all the entries which after constraining become unsatisfiable.
+     *        will determine the entries affected by the set operation, constrain them, and 
+     *        delete all of them that become unsatisfiable.
      * @param index a {@link Primitive}, the position in the {@link Array} which is set.
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
@@ -1048,6 +1048,23 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
             throw new UnexpectedInternalException(exc);
         }
         //TODO coalesce entries that have same value (after investigating the impact on guided execution)
+    }
+    
+    /**
+     * Completes a {@code java.System.arraycopy} by 
+     * constraining the affected entries and removing 
+     * the unsatisfiable ones.
+     * 
+     * @param hier a {@link ClassHierarchy}.
+     * @param entries an {@link Iterator}{@code <}{@link AccessOutcomeIn}{@code >}. The method
+     *        will determine the entries affected by the copy operation, constrain them, and 
+     *        delete all of them that become unsatisfiable.
+     * @param srcPos The source initial position.
+     * @param destPos The destination initial position.
+     * @param length How many elements should be copied.
+     */
+    public void completeArraycopy(ClassHierarchy hier, Iterator<Array.AccessOutcomeIn> entries, Primitive srcPos, Primitive destPos, Primitive length) {
+        //TODO completeArraycopy
     }
     
     /**

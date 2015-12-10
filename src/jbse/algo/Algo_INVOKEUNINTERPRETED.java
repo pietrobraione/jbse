@@ -18,7 +18,7 @@ import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
-public final class Algo_INVOKEUNINTERPRETED extends Algo_INVOKEMETA {
+public final class Algo_INVOKEUNINTERPRETED extends Algo_INVOKEMETA_NONBRANCHING {
     
     private final Signature methodSignatureImpl; //set by constructor
     private final String functionName; //set by constructor

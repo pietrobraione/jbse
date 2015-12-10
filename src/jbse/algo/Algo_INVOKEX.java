@@ -92,7 +92,7 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
             final ClassHierarchy hier = state.getClassHierarchy();
             try {
                 if (this.ctx.dispatcherMeta.isMeta(hier, this.methodSignatureImpl)) {
-                    final Algo_INVOKEMETA algo = 
+                    final Algo_INVOKEMETA<?, ?, ?, ?> algo = 
                         this.ctx.dispatcherMeta.select(this.methodSignatureImpl);
                     algo.setFeatures(this.isInterface, this.isSpecial, this.isStatic);
                     continueWith(algo);

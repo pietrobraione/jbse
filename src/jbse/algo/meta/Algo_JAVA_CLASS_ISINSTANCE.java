@@ -6,7 +6,7 @@ import static jbse.common.Type.isPrimitiveBinaryClassName;
 
 import java.util.function.Supplier;
 
-import jbse.algo.Algo_INVOKEMETA;
+import jbse.algo.Algo_INVOKEMETA_NONBRANCHING;
 import jbse.algo.InterruptException;
 import jbse.bc.ClassHierarchy;
 import jbse.mem.Instance_JAVA_CLASS;
@@ -16,7 +16,7 @@ import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 import jbse.val.Simplex;
 
-public final class Algo_JAVA_CLASS_ISINSTANCE extends Algo_INVOKEMETA {
+public final class Algo_JAVA_CLASS_ISINSTANCE extends Algo_INVOKEMETA_NONBRANCHING {
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 2;

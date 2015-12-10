@@ -181,7 +181,8 @@ public final class ExecutionContext {
 	public void addMetaOverridden(Signature methodSignature, String metaDelegateClassName) 
 	throws MetaUnsupportedException {
 	    try {
-            final Class<? extends Algo_INVOKEMETA> metaDelegateClass = 
+            @SuppressWarnings("unchecked")
+            final Class<? extends Algo_INVOKEMETA<?, ?, ?, ?>> metaDelegateClass = (Class<? extends Algo_INVOKEMETA<?, ?, ?, ?>>) 
 	            ClassLoader.getSystemClassLoader().loadClass(metaDelegateClassName.replace('/', '.')).
 	            asSubclass(Algo_INVOKEMETA.class);
 	        this.dispatcherMeta.loadAlgoMetaOverridden(methodSignature, metaDelegateClass);
