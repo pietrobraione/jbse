@@ -314,7 +314,6 @@ public class ClassHierarchy {
 		private class MyIterator implements Iterator<ClassFile> {
 			private final LinkedList<ClassFile> nextClassFiles;
 			private final HashSet<ClassFile> visitedClassFiles;
-			private int toEmit;
 
 			public MyIterator(String startClassName) {
 				this.visitedClassFiles = new HashSet<>();
@@ -323,18 +322,14 @@ public class ClassHierarchy {
 				if (cf instanceof ClassFileBad || cf.isInterface()) {
 					this.nextClassFiles.add(cf);
 				} else { //is not interface and is not ClassFileBad
-				    final String superClassName = cf.getSuperClassName();
-				    if (superClassName != null) {
-				        this.nextClassFiles.add(ClassHierarchy.this.cfs.getClassFile(superClassName));
+				    for (ClassFile cfSuper : superclasses(startClassName)) {
+	                    this.nextClassFiles.addAll(superinterfacesImmediateFiltered(cfSuper));
 				    }
-				    final List<ClassFile> superinterfacesImmediate = superinterfacesImmediateFiltered(cf);
-					this.nextClassFiles.addAll(superinterfacesImmediate);
-					this.toEmit = superinterfacesImmediate.size();
 				}
 			}
 
 			public boolean hasNext() {
-				return this.toEmit > 0;
+				return !(this.nextClassFiles.isEmpty());
 			}
 
 			public ClassFile next() {
@@ -345,24 +340,12 @@ public class ClassHierarchy {
 
 				//gets the next interface into the return value
 				//and updates the iteration state
-				ClassFile retVal;
-				do {
-				    retVal = this.nextClassFiles.removeFirst(); 
-	                if (!retVal.isInterface() && !(retVal instanceof ClassFileBad)) {
-	                    final String superClassName = retVal.getSuperClassName();
-	                    if (superClassName != null) {
-	                        this.nextClassFiles.add(ClassHierarchy.this.cfs.getClassFile(superClassName));
-	                    }
-	                }
-                    final List<ClassFile> superinterfacesImmediate = superinterfacesImmediateFiltered(retVal);
-                    this.nextClassFiles.addAll(superinterfacesImmediate);
-                    this.toEmit += superinterfacesImmediate.size();
-				} while (!retVal.isInterface() && !(retVal instanceof ClassFileBad));
+				final ClassFile retVal = this.nextClassFiles.removeFirst(); 
 				if (retVal instanceof ClassFileBad) {
-				    this.toEmit = 0; //stops iteration
+				    this.nextClassFiles.clear(); //stops iteration
 				} else { //retVal.isInterface()
-				    this.toEmit--;
 				    this.visitedClassFiles.add(retVal);
+                    this.nextClassFiles.addAll(superinterfacesImmediateFiltered(retVal));
 				}
 
 				//returns the result
