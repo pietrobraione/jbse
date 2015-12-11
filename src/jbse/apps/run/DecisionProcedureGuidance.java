@@ -643,7 +643,10 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 		@Override
 		public void visitWideningConversion(WideningConversion x) throws Exception {
 			x.getArg().accept(this);
-			this.value = this.calc.widen(x.getType(), this.value);
+			this.value = (x.getType() == this.value.getType() ? this.value : this.calc.widen(x.getType(), this.value));
+			//note that the concrete this.value could already be widened
+			//because of convertion of actual types to computational types
+			//through operand stack, see JVMSpec 2.11.1, tab. 2.3
 		}
 		
 	}
