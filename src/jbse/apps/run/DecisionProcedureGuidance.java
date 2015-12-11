@@ -468,8 +468,11 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 				it.remove();
 			}
 		} else if (dar instanceof DecisionAlternative_XYLOAD_GETX_Expands) {
-			final long refHeapPosInConcreteState = Util.heapPosition(this.initialStateConcrete, refInConcreteState);
-			if (Util.isNull(this.initialStateConcrete, refInConcreteState) || this.seenObjects.contains(refHeapPosInConcreteState)) {
+		    final DecisionAlternative_XYLOAD_GETX_Expands dare = (DecisionAlternative_XYLOAD_GETX_Expands) dar;
+		    final long refHeapPosInConcreteState = Util.heapPosition(this.initialStateConcrete, refInConcreteState);
+			if (Util.isNull(this.initialStateConcrete, refInConcreteState) || 
+			    this.seenObjects.contains(refHeapPosInConcreteState) ||
+			    !dare.getClassNameOfTargetObject().equals(this.initialStateConcrete.getObject(refInConcreteState).getType())) {
 				it.remove();
 			} else {
 				this.seenObjects.add(refHeapPosInConcreteState);
