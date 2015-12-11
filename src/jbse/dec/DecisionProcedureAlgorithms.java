@@ -1012,14 +1012,14 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      * @param hier a {@link ClassHierarchy}.
      * @param entries an {@link Iterator}{@code <}{@link AccessOutcomeIn}{@code >}. The method
      *        will determine the entries affected by the set operation, constrain them, and 
-     *        delete all of them that become unsatisfiable.
+     *        delete the entries that become unsatisfiable.
      * @param index a {@link Primitive}, the position in the {@link Array} which is set.
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
      */
     public void completeArraySet(ClassHierarchy hier, Iterator<Array.AccessOutcomeIn> entries, Primitive index) 
     throws InvalidInputException, DecisionException {
-        if (entries == null || index == null) {
+        if (hier == null || entries == null || index == null) {
             throw new InvalidInputException("completeArraySet invoked with a null parameter.");
         }
         if (index.getType() != Type.INT) {
@@ -1033,9 +1033,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 
                 //if the entry is affected, it is constrained and possibly removed
                 if (entryAffected) {
-                    e.constrainExpression(index); //TODO possibly move this back to Array?
-                    final Expression rangeConstrained = e.getAccessCondition();
-                    if (isSat(hier, rangeConstrained)) {
+                    e.constrainAccessCondition(index); //TODO possibly move this back to Array?
+                    final Expression accessCondition = e.getAccessCondition();
+                    if (isSat(hier, accessCondition)) {
                         //do nothing
                     } else {
                         entries.remove();
@@ -1058,13 +1058,31 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      * @param hier a {@link ClassHierarchy}.
      * @param entries an {@link Iterator}{@code <}{@link AccessOutcomeIn}{@code >}. The method
      *        will determine the entries affected by the copy operation, constrain them, and 
-     *        delete all of them that become unsatisfiable.
+     *        delete the entries that become unsatisfiable.
      * @param srcPos The source initial position.
      * @param destPos The destination initial position.
      * @param length How many elements should be copied.
+     * @throws InvalidInputException when one of the parameters is incorrect.
+     * @throws DecisionException upon failure.
      */
-    public void completeArraycopy(ClassHierarchy hier, Iterator<Array.AccessOutcomeIn> entries, Primitive srcPos, Primitive destPos, Primitive length) {
-        //TODO completeArraycopy
+    public void completeArraycopy(ClassHierarchy hier, Iterator<Array.AccessOutcomeIn> entries, Primitive srcPos, Primitive destPos, Primitive length) 
+    throws InvalidInputException, DecisionException {
+        if (hier == null || entries == null || srcPos == null || destPos == null || length == null) {
+            throw new InvalidInputException("completeArraycopy invoked with a null parameter.");
+        }
+        if (srcPos.getType() != Type.INT || destPos.getType() != Type.INT || length.getType() != Type.INT) {
+            throw new InvalidInputException("completeArraySet invoked with a nonint srcPos, destPos or length parameter.");
+        }
+        while (entries.hasNext()) {
+            final Array.AccessOutcomeIn e = entries.next();
+            final Expression accessCondition = e.getAccessCondition();
+            if (isSat(hier, accessCondition)) {
+                //do nothing
+            } else {
+                entries.remove();
+            }
+        }
+        //TODO coalesce entries that have same value (after investigating the impact on guided execution)
     }
     
     /**

@@ -1,6 +1,7 @@
 package jbse.algo.meta;
 
 import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
@@ -20,8 +21,8 @@ import jbse.algo.StrategyDecide;
 import jbse.algo.StrategyRefine;
 import jbse.algo.StrategyUpdate;
 import jbse.bc.exc.BadClassFileException;
-import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
+import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.tree.DecisionAlternative_XASTORE;
 import jbse.val.Primitive;
@@ -136,12 +137,13 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                 try {
                     srcArray = (Array) state.getObject(this.src);
                     destArray = (Array) state.getObject(this.dest);
-                } catch (ClassCastException e) {
-                    //this should not happen now
-                    throw new UnexpectedInternalException(e);
+                    final Iterator<Array.AccessOutcomeIn> entries = destArray.arraycopy(srcArray, this.srcPos, this.destPos, this.length);
+                    this.ctx.decisionProcedure.completeArraycopy(state.getClassHierarchy(), entries, this.srcPos, this.destPos, this.length);
+                } catch (InvalidOperandException | InvalidTypeException | 
+                         InvalidInputException | ClassCastException e) {
+                    //this should never happen
+                    failExecution(e);
                 }
-                final Iterator<Array.AccessOutcomeIn> entries = destArray.arraycopy(srcArray, this.srcPos, this.destPos, this.length);
-                this.ctx.decisionProcedure.completeArraycopy(state.getClassHierarchy(), entries, this.srcPos, this.destPos, this.length);
             } else {
                 throwNew(state, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
                 exitFromAlgorithm();

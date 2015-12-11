@@ -1,6 +1,7 @@
 package jbse.mem;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.LinkedList;
@@ -35,13 +36,6 @@ public final class Array extends Objekt {
 	 * represent an {@link Array}'s index.
 	 */
 	public static final String INDEX_ID = "{INDEX}";
-	
-	/** 
-	 * The conventional term used for indicating the array's index.
-	 * Note that it cannot be declared static because we need a 
-	 * {@link Calculator} to create it, but it actually is
-	 */
-	private final Term INDEX;
 
 	private static final int T_BOOLEAN = 4;
 	private static final int T_CHAR    = 5;
@@ -53,6 +47,13 @@ public final class Array extends Objekt {
 	private static final int T_LONG    = 11;
 
 	/*Fields*/
+    
+    /** 
+     * The conventional term used for indicating the array's index.
+     * Note that it cannot be declared static because it depends on 
+     * the {@link Calculator} stored in the array.
+     */
+    private final Term INDEX;
 	
 	/** The {@link Calculator}. */
 	private final Calculator calc;
@@ -84,18 +85,24 @@ public final class Array extends Objekt {
 	 * @author Pietro Braione
 	 */
 	public abstract class AccessOutcome {
-		/** The condition (null means trivially true because of concrete array access). */
+		/** 
+		 * An {@link Expression} denoting the condition over 
+		 * the array index yielding this {@link AccessOutcome}. 
+		 * The {@code null} value denotes {@code true}, either 
+		 * trivially because of concrete access, or explicit.
+         */
 		protected Expression accessCondition;
 		
 		/**
-		 * Constructor (concrete access).
+		 * Constructor (outcome returned by a concrete get).
 		 */
 		private AccessOutcome() {
 			this.accessCondition = null;
 		}
 
 		/** 
-		 * Constructor (nonconcrete access).
+		 * Constructor (outcome returned by a nonconcrete get or
+		 * stored in array entries).
 		 * 
 		 * @param accessCondition An {@link Expression} denoting a  
 		 *        condition over the array index. When {@code null} 
@@ -117,26 +124,46 @@ public final class Array extends Objekt {
 		}
 		
 		/**
-		 * Strengthens the condition of this {@link AccessOutcome}. 
+		 * Strengthens the access condition of this {@link AccessOutcome}. 
 		 * 
-		 * @param val a {@link Primitive} denoting an integer value. 
-		 *        This {@link AccessOutcome}'s
-		 *        condition will be strengthened by asserting that
-		 *        the array index must be different from {@code val}.
-		 * @throws InvalidOperandException if {@code val} is {@code null}. 
-		 * @throws InvalidTypeException if {@code val} is not integer.
+		 * @param condition an {@link Expression} This {@link AccessOutcome}'s 
+		 *        access condition will be strengthened by conjoining it
+		 *        with {@code condition}.
+		 * @throws InvalidOperandException if {@code condition} is {@code null}. 
+		 * @throws InvalidTypeException if {@code condition} has not boolean type.
 		 */
-		public void constrainExpression(Primitive val) 
+		void constrainAccessCondition(Expression condition) 
 		throws InvalidOperandException, InvalidTypeException {
-			final Expression indexIsDifferentFromVal = (Expression) INDEX.eq(val).not();
-			if (val.getType() != Type.INT) {
-				throw new InvalidTypeException("attempted array access with index of type " + val.getType());
-			}
 			if (this.accessCondition == null) {
-				this.accessCondition = indexIsDifferentFromVal;
+				this.accessCondition = condition;
 			} else {
-				this.accessCondition = (Expression) this.accessCondition.and(indexIsDifferentFromVal);
+				this.accessCondition = (Expression) this.accessCondition.and(condition);
 			}
+		}
+		
+        /**
+         * Strengthens the access condition of this {@link AccessOutcome}
+         * by imposing that the index is different from a value. 
+         * 
+         * @param val a {@link Primitive} This {@link AccessOutcome}'s 
+         *        access condition will be strengthened by conjoining it
+         *        with an expression stating that the index is different
+         *        from {@code val}.
+         * @throws InvalidOperandException if {@code val} is {@code null}. 
+         * @throws InvalidTypeException if {@code val} has not int type.
+         */
+		public void constrainAccessCondition(Primitive val)
+		throws InvalidOperandException, InvalidTypeException {
+            if (val.getType() != Type.INT) {
+                throw new InvalidTypeException("attempted array access with index of type " + val.getType());
+            }
+            final Expression indexIsDifferentFromVal = (Expression) INDEX.eq(val).not();
+            try {
+                constrainAccessCondition(indexIsDifferentFromVal);
+            } catch (InvalidTypeException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            }
 		}
 		
 		/**
@@ -161,15 +188,25 @@ public final class Array extends Objekt {
 
 	/**
 	 * The outcome of an access by means of an index 
-	 * in the range 0..array.length.
+	 * in the range 0..array.length (its result is 
+	 * a value stored in the array).
 	 * 
 	 * @author Pietro Braione
 	 */
 	public class AccessOutcomeIn extends AccessOutcome implements Cloneable {
-		protected Value returnedValue;
+		/**
+		 * A {@link Value} denoting the value returned  
+         * by the array access. It can be either a 
+         * {@link Value} of the array member type, 
+         * or the special {@link ReferenceArrayImmaterial} 
+         * value denoting a reference to another array 
+         * not yet available in the state's heap, or 
+         * {@code null} if the value is unknown.
+		 */
+	    protected Value returnedValue;
 
 		/**
-		 * Constructor (concrete access).
+		 * Constructor (outcome returned by a concrete get).
 		 * 
 		 * @param returnedValue A {@link Value} denoting the value returned  
 		 *        by the array access. It 
@@ -184,10 +221,11 @@ public final class Array extends Objekt {
 		}
 		
 		/**
-		 * Constructor (nonconcrete access).
+         * Constructor (outcome returned by a nonconcrete get or
+         * stored in array entries).
 		 * 
-		 * @param accessExpression An {@link Expression} denoting a  
-		 *        constraint over the array index. 
+		 * @param accessCondition An {@link Expression} denoting a  
+		 *        condition over the array index. 
 		 *        When {@code null} denotes {@code true}. 
 		 * @param returnedValue A {@link Value} denoting the value returned  
 		 *        by an array access with index satisfying {@code exp}. It 
@@ -196,8 +234,8 @@ public final class Array extends Objekt {
 		 *        a reference to another array not yet available in the state's heap,
 		 *        or {@code null} if the value is unknown.
 		 */
-		private AccessOutcomeIn(Expression accessExpression, Value returnedValue) {
-			super(accessExpression);
+		private AccessOutcomeIn(Expression accessCondition, Value returnedValue) {
+			super(accessCondition);
 			this.returnedValue = returnedValue;
 		}
 
@@ -234,12 +272,22 @@ public final class Array extends Objekt {
 	 * @author Pietro Braione
 	 */
 	public class AccessOutcomeOut extends AccessOutcome { 
+	    /**
+	     * Constructor (outcome returned by a concrete get).
+	     */
 		private AccessOutcomeOut() {
 			super();
 		}
 		
-		private AccessOutcomeOut(Expression exp) { 
-			super(exp); 
+		/**
+         * Constructor (outcome returned by a nonconcrete get).
+         * 
+         * @param accessCondition An {@link Expression} denoting a  
+         *        condition over the array index. 
+         *        When {@code null} denotes {@code true}. 
+		 */
+		private AccessOutcomeOut(Expression accessCondition) { 
+			super(accessCondition); 
 		}
         
         @Override
@@ -448,7 +496,7 @@ public final class Array extends Objekt {
 		    //inbound cases
 			for (AccessOutcomeIn e : this.entries) {
 				final Primitive inRangeEntry = e.inRange(index);
-				if (inRangeEntry.surelyTrue()) { //this happens when index is Simplex
+				if (inRangeEntry.surelyTrue()) { //this may only happen when index is Simplex
 					retVal.add(new AccessOutcomeIn(e.returnedValue));
 				} else if (inRangeEntry.surelyFalse()) {
 					//do nothing
@@ -497,13 +545,21 @@ public final class Array extends Objekt {
 		final int actualIndex = (Integer) index.getActualValue();
 		final int actualLength = (Integer) ((Simplex) this.getLength()).getActualValue();
 		if (actualIndex >= 0 && actualIndex < actualLength) {
-			this.values().get(actualIndex).returnedValue = item;
+			this.entries.get(actualIndex).returnedValue = item;
 		} 	//TODO else throw an exception???
 	}
+	
+	/** An iterator that terminates instantaneously. */
+	private static final Iterator<Array.AccessOutcomeIn> EMPTY_ITERATOR = 
+	    new Iterator<Array.AccessOutcomeIn>() {
+            @Override public boolean hasNext() { return false; }
+            @Override public AccessOutcomeIn next() { throw new NoSuchElementException(); }
+            @Override public void remove() { throw new UnsupportedOperationException(); }
+        };
 
 	/**
-	 * Sets an element of the array. It <em>assumes</em> that the index by which
-	 * the array is accessed may be in range (i.e., that 
+	 * Sets an element of the array. It <em>assumes</em> that the index 
+	 * by which the array is accessed may be in range (i.e., that 
 	 * {@code this.}{@link #inRange(Primitive) inRange(index)} is 
 	 * satisfiable) and updates the theory accordingly.
 	 * 
@@ -526,18 +582,13 @@ public final class Array extends Objekt {
 				//this should never happen
 				throw new UnexpectedInternalException(e);
 			}
-			return new Iterator<Array.AccessOutcomeIn>() {
-				//an iterator which terminates instantaneously
-				@Override public boolean hasNext() { return false; }
-				@Override public AccessOutcomeIn next() { throw new NoSuchElementException(); }
-				@Override public void remove() { throw new UnsupportedOperationException(); }
-			};
+			return EMPTY_ITERATOR;
 		} else {
 			this.simpleRep = false;
 
 			//adds a new entry for the set index value
 			final Expression formalIndexIsSetIndex = (Expression) INDEX.eq(index);
-			final Expression accessExpression = (Expression) this.indexInRange.and(formalIndexIsSetIndex);
+			final Expression accessExpression = (Expression) this.indexInRange.and(formalIndexIsSetIndex); //if we assume that index may be in range, this is an Expression
 			this.entries.add(new AccessOutcomeIn(accessExpression, valToSet));
 			
 			//returns the iterator
@@ -551,11 +602,11 @@ public final class Array extends Objekt {
 				
 				private void findNext() {
 					this.next = null;
-					//looks for the next entry affected by the set operation
+					//looks for the next entry possibly affected by the set operation
 					while (this.it.hasNext()) {
 						final AccessOutcomeIn e = this.it.next();
 
-						//determines whether the entry is affected by the set
+						//determines whether the entry is possibly affected by the set
 						//operation
 						boolean entryAffected;
 						try {
@@ -566,7 +617,7 @@ public final class Array extends Objekt {
 							throw new UnexpectedInternalException(exc);
 						}
 
-						//if the entry is affected, it is the next value
+						//if the entry is possibly affected, it is the next value
 						if (entryAffected) {
 							this.next = e;
 							return;
@@ -619,7 +670,10 @@ public final class Array extends Objekt {
 	
 	/**
 	 * Implements {@code java.System.arraycopy}, where this array is
-	 * the destination.
+	 * the destination. It <em>assumes</em> that the preconditions of
+	 * a successful copy (source and destination copy ranges are 
+	 * within the bounds of the respective arrays, the arrays are 
+	 * type-compatible for assignment) and updates the theory accordingly. 
 	 * 
      * @param src The source {@link Array}.
      * @param srcPos The source initial position.
@@ -629,10 +683,45 @@ public final class Array extends Objekt {
      *         to the entries of this {@link Array} that are possibly 
      *         modified by the update; the caller must decide whether 
      *         constrain and possibly delete them.
+     * @throws InvalidOperandException if {@code srcPos} or {@code destPos} 
+     *         or {@code length} is {@code null}.
+     * @throws InvalidTypeException if {@code srcPos} or {@code destPos} 
+     *         or {@code length} is not an int. 
 	 */
-    public Iterator<AccessOutcomeIn> arraycopy(Array src, Primitive srcPos, Primitive destPos, Primitive length) {
-        //TODO arraycopy
-        return null;
+    public Iterator<AccessOutcomeIn> arraycopy(Array src, Primitive srcPos, Primitive destPos, Primitive length) 
+    throws InvalidOperandException, InvalidTypeException {
+        if (this.simpleRep && src.simpleRep && 
+            srcPos instanceof Simplex && destPos instanceof Simplex && 
+            length instanceof Simplex) {
+            //fast operation
+            int srcPosInt = (Integer) ((Simplex) srcPos).getActualValue();
+            int destPosInt = (Integer) ((Simplex) destPos).getActualValue();
+            int lengthInt = (Integer) ((Simplex) length).getActualValue();
+            for (int ofst = 0; ofst < lengthInt; ++ofst) {
+                this.entries.get(destPosInt + ofst).returnedValue = src.entries.get(srcPosInt + ofst).returnedValue;
+            }
+            return EMPTY_ITERATOR;
+        } else {
+            this.simpleRep = false;
+
+            final Expression indexInDestRange = (Expression) INDEX.ge(destPos).and(INDEX.lt(destPos.add(length)));
+            final Expression indexNotInDestRange = (Expression) indexInDestRange.not();
+
+            //constrains the entries
+            for (AccessOutcomeIn destEntry : this.entries) {
+                destEntry.constrainAccessCondition(indexNotInDestRange);
+            }
+
+            //adds new entries for the source array entries
+            final Primitive srcIndex = INDEX.sub(destPos).add(srcPos);
+            for (AccessOutcomeIn srcEntry : src.entries) {
+                final Expression accessCondition = (Expression) srcEntry.inRange(srcIndex).and(indexInDestRange);
+                this.entries.add(new AccessOutcomeIn(accessCondition, srcEntry.returnedValue));
+            }
+
+            //returns the iterator
+            return Array.this.entries.iterator(); //for sake of simplicity all the entries are considered potentially affected
+        }
     }
 
 	
@@ -680,7 +769,7 @@ public final class Array extends Objekt {
 	 * @return a {@link List}{@code <}{@link AccessOutcomeIn}{@code >}.
 	 */
 	public List<AccessOutcomeIn> values() {
-		return this.entries;
+		return Collections.unmodifiableList(this.entries);
 	}
 	
 	/**

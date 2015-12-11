@@ -1,8 +1,8 @@
 package jbse.tree;
 
 /**
- * {@link DecisionAlternative} for the store into array (*astore) bytecodes:
- * [a/b/c/d/f/i/l/s]astore.
+ * {@link DecisionAlternative} for the store into array (*astore) bytecodes
+ * ([a/b/c/d/f/i/l/s]astore) and {@code System.arraycopy}.
  * 
  * @author Pietro Braione
  */
