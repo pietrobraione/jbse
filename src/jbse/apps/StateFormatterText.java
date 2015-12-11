@@ -24,6 +24,7 @@ import jbse.mem.Variable;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Expression;
 import jbse.val.FunctionApplication;
+import jbse.val.MemoryPath;
 import jbse.val.NarrowingConversion;
 import jbse.val.Primitive;
 import jbse.val.PrimitiveSymbolic;
@@ -116,7 +117,7 @@ public abstract class StateFormatterText implements Formatter {
     			if (s.isNull(ref)) {
     				expression += "null";
     			} else {
-    				final String tgtOrigin = s.getObject(ref).getOrigin().toString();
+    				final MemoryPath tgtOrigin = s.getObject(ref).getOrigin();
     				expression += "Object[" + s.getResolution(ref) + "] (" + (ref.getOrigin().equals(tgtOrigin) ? "fresh" : ("aliases " + tgtOrigin)) + ")";
     			}
     			final String referenceFormatted = formatReferenceForPathCondition(ref, doneSymbols); 

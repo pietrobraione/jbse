@@ -14,10 +14,13 @@ import java.util.stream.Stream;
 public final class MemoryPath implements Iterable<Access> {
     private final Access[] accesses;
     private final String toString;
+    private final int hashCode;
 
     private MemoryPath(Access... accesses) {
         this.accesses = accesses.clone();
         this.toString = String.join(".", Arrays.stream(this.accesses).map(Object::toString).toArray(String[]::new));
+        final int prime = 2311;
+        this.hashCode = prime + Arrays.hashCode(this.accesses);
     }
     
     public static MemoryPath mkStatic(String className) {
@@ -55,6 +58,28 @@ public final class MemoryPath implements Iterable<Access> {
                 return accesses[this.index++];
             }
         };
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final MemoryPath other = (MemoryPath) obj;
+        if (!Arrays.equals(this.accesses, other.accesses)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.hashCode;
     }
     
     @Override
