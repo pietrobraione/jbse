@@ -492,6 +492,9 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 	        if (a instanceof AccessLocalVariable) {
 	            final AccessLocalVariable al = (AccessLocalVariable) a;
 	            fieldValue = rootFrame.getLocalVariableValue(al.variableName());
+	            if (fieldValue == null) {
+	                throw new GuidanceException(ERROR_BAD_PATH);
+	            }
 	        } else if (a instanceof AccessStatic) {
 	            final AccessStatic as = (AccessStatic) a;
                 fieldValue = null;
@@ -530,6 +533,9 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
                 o = null;
             }
 	    }
+        if (fieldValue == null) {
+            throw new GuidanceException(ERROR_BAD_PATH);
+        }
         return fieldValue;
 	}
 	
