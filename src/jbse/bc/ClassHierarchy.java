@@ -314,6 +314,7 @@ public class ClassHierarchy {
 		private class MyIterator implements Iterator<ClassFile> {
 			private final LinkedList<ClassFile> nextClassFiles;
 			private final HashSet<ClassFile> visitedClassFiles;
+			private int toEmit;
 
 			public MyIterator(String startClassName) {
 				this.visitedClassFiles = new HashSet<>();
@@ -326,12 +327,14 @@ public class ClassHierarchy {
 				    if (superClassName != null) {
 				        this.nextClassFiles.add(ClassHierarchy.this.cfs.getClassFile(superClassName));
 				    }
-					this.nextClassFiles.addAll(superinterfacesImmediateFiltered(cf));
+				    final List<ClassFile> superinterfacesImmediate = superinterfacesImmediateFiltered(cf);
+					this.nextClassFiles.addAll(superinterfacesImmediate);
+					this.toEmit = superinterfacesImmediate.size();
 				}
 			}
 
 			public boolean hasNext() {
-				return !(this.nextClassFiles.isEmpty());
+				return this.toEmit > 0;
 			}
 
 			public ClassFile next() {
@@ -351,11 +354,14 @@ public class ClassHierarchy {
 	                        this.nextClassFiles.add(ClassHierarchy.this.cfs.getClassFile(superClassName));
 	                    }
 	                }
-                    this.nextClassFiles.addAll(superinterfacesImmediateFiltered(retVal));
+                    final List<ClassFile> superinterfacesImmediate = superinterfacesImmediateFiltered(retVal);
+                    this.nextClassFiles.addAll(superinterfacesImmediate);
+                    this.toEmit += superinterfacesImmediate.size();
 				} while (!retVal.isInterface() && !(retVal instanceof ClassFileBad));
 				if (retVal instanceof ClassFileBad) {
-				    this.nextClassFiles.clear(); //stops iteration
+				    this.toEmit = 0; //stops iteration
 				} else { //retVal.isInterface()
+				    this.toEmit--;
 				    this.visitedClassFiles.add(retVal);
 				}
 
