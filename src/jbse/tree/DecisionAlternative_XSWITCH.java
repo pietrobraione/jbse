@@ -1,15 +1,19 @@
 package jbse.tree;
 
 public final class DecisionAlternative_XSWITCH implements DecisionAlternative {
-	/** The value of the case entry. */
+	/** The value of the case entry, when {@code isDefault == false}. */
 	private final int value;
+	
+	/** Is this the default case? */
+	private final boolean isDefault;
 	
 	private final boolean isConcrete;
 	
 	private final String toString;
 	
-	private DecisionAlternative_XSWITCH(int value, boolean isConcrete, int branchNumber) {
+	private DecisionAlternative_XSWITCH(int value, boolean isDefault, boolean isConcrete, int branchNumber) {
 		this.value = value;
+		this.isDefault = isDefault;
 		this.isConcrete = isConcrete;
 		this.toString = "XSWITCH:" + (isDefault() ? "DEFAULT" : Integer.toString(this.value));
 	}
@@ -21,7 +25,7 @@ public final class DecisionAlternative_XSWITCH implements DecisionAlternative {
 	 *        greater than zero.
 	 */
 	public static DecisionAlternative_XSWITCH toConcrete(int value, int branchNumber) { 
-		return new DecisionAlternative_XSWITCH(value, true, branchNumber);
+		return new DecisionAlternative_XSWITCH(value, false, true, branchNumber);
 	}	
 	
 	/**
@@ -32,7 +36,7 @@ public final class DecisionAlternative_XSWITCH implements DecisionAlternative {
 	 * @param branchNumber an {@code int}, the number of the branch.
 	 */
 	public static DecisionAlternative_XSWITCH toNonconcrete(int value, int branchNumber) { 
-		return new DecisionAlternative_XSWITCH(value, false, branchNumber);
+		return new DecisionAlternative_XSWITCH(value, false, false, branchNumber);
 	}
 
 	/**
@@ -42,7 +46,7 @@ public final class DecisionAlternative_XSWITCH implements DecisionAlternative {
 	 * @return the corresponding {@link DecisionAlternative_XSWITCH}.
 	 */
 	public static DecisionAlternative_XSWITCH toConcreteDefault(int branchNumber) {
-		return new DecisionAlternative_XSWITCH(0, true, branchNumber);
+		return new DecisionAlternative_XSWITCH(0, true, true, branchNumber);
 	}
 	
 	/**
@@ -52,11 +56,11 @@ public final class DecisionAlternative_XSWITCH implements DecisionAlternative {
 	 * @return the corresponding {@link DecisionAlternative_XSWITCH}.
 	 */
 	public static DecisionAlternative_XSWITCH toNonconcreteDefault(int branchNumber) {
-		return new DecisionAlternative_XSWITCH(0, false, branchNumber);
+		return new DecisionAlternative_XSWITCH(0, true, false, branchNumber);
 	}
 	
 	public boolean isDefault() {
-		return (this.value == 0);
+		return this.isDefault;
 	}
 	
 	public int value() {

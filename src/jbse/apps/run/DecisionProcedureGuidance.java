@@ -328,7 +328,9 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 				while (it.hasNext()) {
 					final DecisionAlternative_XSWITCH da = it.next();
 					final Primitive conditionToCheck;
-					conditionToCheck = selector.eq(this.initialStateConcrete.getCalculator().valInt(da.value()));
+					conditionToCheck = (da.isDefault() ?
+					    tab.getDefaultClause(selector) :
+					    selector.eq(this.initialStateConcrete.getCalculator().valInt(da.value())));
 					final Primitive valueInConcreteState = eval(this.initialStateConcrete, this.rootFrameConcrete, conditionToCheck);
 					if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
 						it.remove();
