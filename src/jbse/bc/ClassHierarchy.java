@@ -154,12 +154,13 @@ public class ClassHierarchy {
 	}
 
 	/**
-	 * Produces all the superclasses of a given class.
+	 * Produces all the superinterfaces of a given class.
 	 * 
-	 * @param startClassName the name of the class whose superclasses 
+	 * @param startClassName the name of the class whose superinterfaces 
 	 *                       are returned.
 	 * @return an {@link Iterable}{@code <}{@link ClassFile}{@code >} containing 
-	 *         all the superinterfaces of {@code startClassName} (included).
+	 *         all the superinterfaces of {@code startClassName} (included if
+	 *         it is an interface).
 	 */
 	public Iterable<ClassFile> superinterfaces(String startClassName) {
 		return new IterableSuperinterfaces(startClassName);
@@ -304,8 +305,8 @@ public class ClassHierarchy {
 
 		/**
 		 * {@link Iterator}{@code <}{@link ClassFile}{@code >} for
-		 * upwardly scanning an interface hierarchy. For 
-		 * the sake of simplicity it scans in breadth-first 
+		 * upwardly scanning the superinterfaces of a class/interface. 
+		 * For the sake of simplicity it scans in breadth-first 
 		 * order. It does not visit a same interface twice. 
 		 * 
 		 * @author Pietro Braione
@@ -315,18 +316,17 @@ public class ClassHierarchy {
 			private final HashSet<ClassFile> visitedClassFiles;
 
 			public MyIterator(String startClassName) {
-				this.nextClassFiles = new LinkedList<>();
 				this.visitedClassFiles = new HashSet<>();
-
+                this.nextClassFiles = new LinkedList<>();
 				final ClassFile cf = ClassHierarchy.this.cfs.getClassFile(startClassName);
-
 				if (cf instanceof ClassFileBad || cf.isInterface()) {
 					this.nextClassFiles.add(cf);
-				} else {
-				    final List<ClassFile> superinterfaces = cf.getSuperInterfaceNames().stream()
-				        .map((s) -> ClassHierarchy.this.cfs.getClassFile(s))
-				        .collect(Collectors.toList());
-					this.nextClassFiles.addAll(superinterfaces);
+				} else { //is not interface and is not ClassFileBad
+				    final String superClassName = cf.getSuperClassName();
+				    if (superClassName != null) {
+				        this.nextClassFiles.add(ClassHierarchy.this.cfs.getClassFile(superClassName));
+				    }
+					this.nextClassFiles.addAll(superinterfacesImmediateFiltered(cf));
 				}
 			}
 
@@ -341,23 +341,38 @@ public class ClassHierarchy {
 				}
 
 				//gets the next interface into the return value
-				final ClassFile retval = this.nextClassFiles.removeFirst(); 
-				this.visitedClassFiles.add(retval);
-
-				//prepares for the next invocation
-                final List<ClassFile> superinterfaces = retval.getSuperInterfaceNames().stream()
-                    .map((s) -> ClassHierarchy.this.cfs.getClassFile(s))
-                    .filter((cf) -> !this.visitedClassFiles.contains(cf))
-                    .collect(Collectors.toList());
-                this.nextClassFiles.addAll(superinterfaces);
+				//and updates the iteration state
+				ClassFile retVal;
+				do {
+				    retVal = this.nextClassFiles.removeFirst(); 
+	                if (!retVal.isInterface() && !(retVal instanceof ClassFileBad)) {
+	                    final String superClassName = retVal.getSuperClassName();
+	                    if (superClassName != null) {
+	                        this.nextClassFiles.add(ClassHierarchy.this.cfs.getClassFile(superClassName));
+	                    }
+	                }
+                    this.nextClassFiles.addAll(superinterfacesImmediateFiltered(retVal));
+				} while (!retVal.isInterface() && !(retVal instanceof ClassFileBad));
+				if (retVal instanceof ClassFileBad) {
+				    this.nextClassFiles.clear(); //stops iteration
+				} else { //retVal.isInterface()
+				    this.visitedClassFiles.add(retVal);
+				}
 
 				//returns the result
-				return retval;
+				return retVal;
 			}
 
 			public void remove() {
 				throw new UnsupportedOperationException();
 			}
+            
+            private List<ClassFile> superinterfacesImmediateFiltered(ClassFile base) {
+                return base.getSuperInterfaceNames().stream()
+                .map((s) -> ClassHierarchy.this.cfs.getClassFile(s))
+                .filter((cf) -> !this.visitedClassFiles.contains(cf))
+                .collect(Collectors.toList());
+            }
 		}
 	}
 	
@@ -434,6 +449,11 @@ public class ClassHierarchy {
 		}
 
 		//if nothing has been found, searches in the superinterfaces
+        /* TODO this procedure differs from JVM Specification 5.4.3.2 because
+         * the specification requires to search in the *immediate* superinterfaces, 
+         * then recursively in the superclass, immediate superinterfaces of the
+         * superclass, etc. 
+         */
 		if (fieldSignatureResolved == null) {
 			for (ClassFile cf : superinterfaces(fieldSignature.getClassName())) {
         		if (cf.hasFieldDeclaration(fieldSignature)) {
