@@ -315,32 +315,37 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
             }
         }
 
-        private String javaClass(String type, boolean forDeclaration){
+        private String javaClass(String type, boolean forDeclaration) {
             if (type == null) {
                 return null;
             }
             final String a = type.replace('/', '.');
             final String b = (isReference(a) ? className(a) : a);
             final String s = (forDeclaration ? b.replace('$', '.') : b);
-            final char[] tmp = s.toCharArray();
-            int arrayNestingLevel = 0;
-            boolean hasReference = false;
-            int start = 0;
-            for (int i = 0; i < tmp.length ; ++i) {
-                if (tmp[i] == '[') {
-                    ++arrayNestingLevel;
-                } else if (tmp[i] == 'L') {
-                    hasReference = true;
-                } else {
-                    start = i;
-                    break;
+            
+            if (forDeclaration) {
+                final char[] tmp = s.toCharArray();
+                int arrayNestingLevel = 0;
+                boolean hasReference = false;
+                int start = 0;
+                for (int i = 0; i < tmp.length ; ++i) {
+                    if (tmp[i] == '[') {
+                        ++arrayNestingLevel;
+                    } else if (tmp[i] == 'L') {
+                        hasReference = true;
+                    } else {
+                        start = i;
+                        break;
+                    }
                 }
+                final StringBuilder retVal = new StringBuilder(s.substring(start, (hasReference ? tmp.length - 1 : tmp.length)));
+                for (int k = 1; k <= arrayNestingLevel; ++k) {
+                    retVal.append("[]");
+                }
+                return retVal.toString();
+            } else {
+                return s;
             }
-            final StringBuilder retVal = new StringBuilder(s.substring(start, (hasReference ? tmp.length - 1 : tmp.length)));
-            for (int k = 1; k <= arrayNestingLevel; ++k) {
-                retVal.append("[]");
-            }
-            return retVal.toString();
         }
                 
         private String generateVarNameFromOrigin(String name) {
