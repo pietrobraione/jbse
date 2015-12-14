@@ -504,6 +504,13 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
                 @Override
                 public void visitWideningConversion(WideningConversion x) throws Exception {
                     x.getArg().accept(this);
+                    final char argType = x.getArg().getType();
+                    final char type = x.getType();
+                    if (argType == Type.BOOLEAN && type == Type.INT) {
+                        //operand stack widening of booleans
+                        final String arg = translation.remove(0);
+                        translation.add("(" + arg + " == false ? 0 : 1)");
+                    }
                 }
                 
                 @Override
