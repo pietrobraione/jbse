@@ -509,7 +509,7 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
                     if (argType == Type.BOOLEAN && type == Type.INT) {
                         //operand stack widening of booleans
                         final String arg = translation.remove(0);
-                        translation.add("(" + arg + " == false ? 0 : 1)");
+                        translation.add("((" + arg + ") == false ? 0 : 1)");
                     }
                 }
                 
@@ -607,7 +607,13 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
                             b.append("(");
                             b.append(firstArg);
                             b.append(") ");
-                            b.append(op.toString());
+                            if (op.equals(Operator.AND)) {
+                                b.append("+");
+                            } else if (op.equals(Operator.OR)) {
+                                b.append("*");
+                            } else {
+                                b.append(op.toString());
+                            }
                             b.append(" (");
                             b.append(secondArg);
                             b.append(")");
