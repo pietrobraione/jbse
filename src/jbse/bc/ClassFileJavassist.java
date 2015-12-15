@@ -47,6 +47,11 @@ public class ClassFileJavassist extends ClassFile {
 		    }
 		}
 	}
+	
+	@Override
+	public String getSourceFile() {
+	    return this.cls.getClassFile().getSourceFile();
+	}
 
 	@Override
 	public String getClassName() {

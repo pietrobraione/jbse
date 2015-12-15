@@ -866,7 +866,7 @@ public final class State implements Cloneable {
      * @throws InvalidProgramCounterException if the program counter handle in a row 
      *         of the exception table does not contain a valid program counter.
 	 */
-	public void throwObject(Reference exceptionToThrow) 
+	public void unwindStack(Reference exceptionToThrow) 
 	throws InvalidIndexException, InvalidProgramCounterException {
 		//TODO check that exceptionToThrow is resolved/concrete
 		final Objekt myException = getObject(exceptionToThrow);
@@ -974,7 +974,7 @@ public final class State implements Cloneable {
 		if (isRoot) {
 			//do nothing, after creation the frame has already a dummy return program counter
 		} else {
-			this.setReturnProgramCounter(returnPCOffset);
+			setReturnProgramCounter(returnPCOffset);
 		}
 
 		//pushes the frame on the thread stack
@@ -1164,11 +1164,11 @@ public final class State implements Cloneable {
 	/**
 	 * Returns an immutable view of the thread stack.
 	 * 
-	 * @return an {@link Iterable}{@code <}{@link Frame}{@code >} 
+	 * @return a {@link List}{@code <}{@link Frame}{@code >} 
      *         of the method activation frames in the thread stack, 
      *         in their push order.
 	 */
-	public Iterable<Frame> getStack() {
+	public List<Frame> getStack() {
 		return this.stack.frames();
 	}
 	

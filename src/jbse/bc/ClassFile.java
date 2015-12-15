@@ -16,6 +16,8 @@ import jbse.common.Type;
 public abstract class ClassFile {
 	protected static final String JAR_FILE_EXTENSION = ".jar";
 	
+	public abstract String getSourceFile();
+	
     /**
      * Returns the name of the package where this class has been declared.
      * 

@@ -62,7 +62,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 }
             } catch (ClassCastException e) {
                 throwVerifyError(state);
-            }       
+            }
         };
     }
     

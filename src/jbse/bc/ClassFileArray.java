@@ -34,6 +34,11 @@ public class ClassFileArray extends ClassFile {
 		this.visibility = visibility;
 		this.signatureCloneMethod = new Signature(this.className, METHOD_CLONE_DESCRIPTOR, METHOD_CLONE_NAME);
 	}
+	
+	@Override
+	public String getSourceFile() {
+	    return "";
+	}
 
 	@Override
 	public String getPackageName() {

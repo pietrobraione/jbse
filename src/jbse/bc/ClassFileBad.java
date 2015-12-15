@@ -22,6 +22,11 @@ public final class ClassFileBad extends ClassFile {
     BadClassFileException getException() {
         return this.e;
     }
+    
+    @Override
+    public String getSourceFile() {
+        return "";
+    }
 
     @Override
     public String getClassName() {

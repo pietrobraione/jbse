@@ -60,6 +60,11 @@ abstract class ClassFilePrimitive extends ClassFile {
 	}
 	
 	@Override
+	public String getSourceFile() {
+	    return "";
+	}
+	
+	@Override
 	public String getPackageName() {
 		return ""; //TODO is it ok?
 	}

@@ -11,10 +11,20 @@ import static jbse.bc.Signatures.JAVA_LINKEDLIST;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
 import static jbse.bc.Signatures.JAVA_NUMBER;
 import static jbse.bc.Signatures.JAVA_OBJECT;
+import static jbse.bc.Signatures.JAVA_STACK_TRACE_ELEMENT;
+import static jbse.bc.Signatures.JAVA_STACK_TRACE_ELEMENT_DECLARINGCLASS;
+import static jbse.bc.Signatures.JAVA_STACK_TRACE_ELEMENT_FILENAME;
+import static jbse.bc.Signatures.JAVA_STACK_TRACE_ELEMENT_LINENUMBER;
+import static jbse.bc.Signatures.JAVA_STACK_TRACE_ELEMENT_METHODNAME;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_STRING_CASEINSCOMP;
 import static jbse.bc.Signatures.JAVA_STRING_VALUE;
+import static jbse.bc.Signatures.JAVA_THROWABLE_BACKTRACE;
+import static jbse.bc.Signatures.JAVA_THROWABLE_STACKTRACE;
 import static jbse.bc.Signatures.VERIFY_ERROR;
+import static jbse.common.Type.ARRAYOF;
+import static jbse.common.Type.REFERENCE;
+import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.binaryClassName;
 
 import java.util.ArrayList;
@@ -45,15 +55,21 @@ import jbse.dec.DecisionProcedure;
 import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Array;
+import jbse.mem.Frame;
 import jbse.mem.Instance;
 import jbse.mem.Klass;
 import jbse.mem.State;
+import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Calculator;
+import jbse.val.Null;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.Value;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
 public class Util {
     /**
@@ -153,10 +169,11 @@ public class Util {
 	public static void throwVerifyError(State state) {
 	    try {
 	        final ReferenceConcrete excReference = state.createInstance(VERIFY_ERROR);
-            state.throwObject(excReference);
+	        fillExceptionBacktrace(state, excReference);
+            state.unwindStack(excReference);
         } catch (InvalidIndexException | InvalidProgramCounterException e) {
             //there is not much we can do if this happens
-            throw new UnexpectedInternalException(e);
+            failExecution(e);
         }
 	}
 	   
@@ -178,24 +195,99 @@ public class Util {
             return;
         }
         final ReferenceConcrete excReference = state.createInstance(exceptionClassName);
+        fillExceptionBacktrace(state, excReference);
         throwObject(state, excReference);
     }
 
     /**
      * Unwinds the stack of a state until it finds an exception 
      * handler for an object. This procedure aims to wrap 
-     * {@link State#throwObject(Reference)} with a fail-safe  
+     * {@link State#unwindStack(Reference)} with a fail-safe  
      * interface to errors in the classfile.
      * 
      * @param state the {@link State} where the new object will be 
      *        created and whose stack will be unwound.
-     * @param toThrow see {@link State#throwObject(Reference)}.
+     * @param toThrow see {@link State#unwindStack(Reference)}.
      */
     public static void throwObject(State state, Reference toThrow) {
         try {
-            state.throwObject(toThrow);
+            state.unwindStack(toThrow);
         } catch (InvalidIndexException | InvalidProgramCounterException e) {
             throwVerifyError(state); //TODO that's desperate
+        }
+    }
+    
+    /**
+     * Sets the {@code backtrace} and {@code stackTrace} fields 
+     * of an exception {@link Instance} to their initial values.
+     * This method is low-level, in that it does <em>not</em> 
+     * initialize statically (i.e., create the {@code <clinit>} frames)
+     * the classes involved in the backtrace creation. This way it
+     * can be used in hostile contexts where it is impractical or
+     * impossible to initialize statically the classes without 
+     * creating races.
+     * 
+     * @param state a {@link State}. The backtrace will be created 
+     *        in the heap of {@code state}.
+     * @param exc a {@link Reference} to the exception {@link Instance} 
+     *        whose {@code backtrace} and {@code stackTrace}
+     *        fields must be set.
+     */
+    public static void fillExceptionBacktrace(State state, Reference excReference) {
+        try {
+            final Instance exc = (Instance) state.getObject(excReference);
+            exc.setFieldValue(JAVA_THROWABLE_STACKTRACE, Null.getInstance());
+            final String excClass = exc.getType();
+            int stackDepth = 0;
+            for (Frame f : state.getStack()) {
+                final String fClass = f.getCurrentMethodSignature().getClassName();
+                final String methodName = f.getCurrentMethodSignature().getName();
+                if (excClass.equals(fClass) && "<init>".equals(methodName)) {
+                    break;
+                }
+                ++stackDepth;
+            }
+            final ReferenceConcrete refToArray = 
+            state.createArray(null, state.getCalculator().valInt(stackDepth), "" + ARRAYOF + REFERENCE + JAVA_STACK_TRACE_ELEMENT + TYPEEND);
+            final Array theArray = (Array) state.getObject(refToArray);
+            exc.setFieldValue(JAVA_THROWABLE_BACKTRACE, refToArray);
+            int i = 0;
+            for (Frame f : state.getStack()) {
+                final Calculator calc = state.getCalculator();
+                final String fClass = f.getCurrentMethodSignature().getClassName();
+
+                //gets the data
+                final String declaringClass = fClass.replace('/', '.').replace('$', '.'); //TODO is it ok?
+                final String fileName       = state.getClassHierarchy().getClassFile(declaringClass).getSourceFile();
+                final int    lineNumber     = f.getSourceRow(); 
+                final String methodName     = f.getCurrentMethodSignature().getName();
+
+                //break if we reach the first frame for the exception <init>
+                if (excClass.equals(fClass) && "<init>".equals(methodName)) {
+                    break;
+                }
+
+                //creates the string literals
+                state.ensureStringLiteral(declaringClass);
+                state.ensureStringLiteral(fileName);
+                state.ensureStringLiteral(methodName);
+
+                //creates the java.lang.StackTraceElement object and fills it
+                final ReferenceConcrete steReference = state.createInstance(JAVA_STACK_TRACE_ELEMENT);
+                final Instance stackTraceElement = (Instance) state.getObject(steReference);
+                stackTraceElement.setFieldValue(JAVA_STACK_TRACE_ELEMENT_DECLARINGCLASS, state.referenceToStringLiteral(declaringClass));
+                stackTraceElement.setFieldValue(JAVA_STACK_TRACE_ELEMENT_FILENAME,       state.referenceToStringLiteral(fileName));
+                stackTraceElement.setFieldValue(JAVA_STACK_TRACE_ELEMENT_LINENUMBER,     calc.valInt(lineNumber));
+                stackTraceElement.setFieldValue(JAVA_STACK_TRACE_ELEMENT_METHODNAME,     state.referenceToStringLiteral(methodName));
+
+                //sets the array
+                theArray.setFast(calc.valInt(i++), steReference);
+            }
+        } catch (BadClassFileException | ClassCastException | 
+                 InvalidTypeException | InvalidOperandException | 
+                 FastArrayAccessNotAllowedException e) {
+            //this should not happen (and if happens there is not much we can do)
+            failExecution(e);
         }
     }
 	
@@ -211,7 +303,8 @@ public class Util {
 	 * @return {@code true} iff it is necessary to run the 
 	 *         {@code <clinit>} methods for the initialized 
 	 *         class(es).
-	 * @throws InvalidInputException
+	 * @throws InvalidInputException if {@code className} or {@code state} 
+	 *         is null.
 	 * @throws DecisionException if {@code dec} fails in determining
 	 *         whether {@code className} is or is not initialized.
 	 * @throws BadClassFileException if {@code className} or
@@ -332,7 +425,7 @@ public class Util {
          * @return {@code true} iff the initialization of 
          *         {@code className} or of one of its superclasses 
          *         fails for some reason.
-         * @throws InvalidInputException
+         * @throws InvalidInputException if {@code className} is null.
          * @throws DecisionException if the decision procedure fails.
          * @throws BadClassFileException if the classfile for {@code className} or
          *         for one of its superclasses is not in the classpath or
@@ -366,7 +459,7 @@ public class Util {
    		 * 
 		 * @param className a {@code String}, the name of the class.
          * @param it a {@code ListIterator}, the name of the class.
-         * @throws InvalidInputException 
+         * @throws InvalidInputException if {@code className} is null.
 		 * @throws DecisionException if the decision procedure fails.
 		 * @throws BadClassFileException if the classfile for {@code className} or
 		 *         for one of its superclasses is not in the classpath or
@@ -384,7 +477,7 @@ public class Util {
          * 
          * @param className a {@code String}, the name of the class.
          * @param it a {@code ListIterator} to {@code this.classesCreated}.
-         * @throws InvalidInputException 
+         * @throws InvalidInputException if {@code className} is null.
          * @throws DecisionException if the decision procedure fails.
          * @throws BadClassFileException if the classfile for {@code className} or
          *         for one of its superclasses is not in the classpath or
@@ -593,58 +686,58 @@ public class Util {
 	   
 	public static void ensureStringLiteral(State state, String stringLit, DecisionProcedure dec) 
 	throws DecisionException, ClasspathException, ThreadStackEmptyException, InterruptException {
-	    InterruptException exc = null;
+        state.ensureStringLiteral(stringLit);
 	    try {
 	        ensureClassCreatedAndInitialized(state, JAVA_STRING, dec);
 	    } catch (BadClassFileException e) {
 	        throw new ClasspathException(e);
-	    } catch (InterruptException e) {
-	        exc = e;
         } catch (InvalidInputException e) {
             //this should never happen
-            throw new UnexpectedInternalException(e);
-	    }
-	    state.ensureStringLiteral(stringLit);
-	    if (exc != null) {
-	        throw exc;
+            failExecution(e);
 	    }
 	}
     
     public static void ensureInstance_JAVA_CLASS(State state, String className, DecisionProcedure dec) 
     throws DecisionException, ClasspathException, BadClassFileException, 
     ClassFileNotAccessibleException, ThreadStackEmptyException, InterruptException {
+        //we store locally the interrupt and throw it at the end
+        //to ensure the invariant that, at the end of the invocation, 
+        //everything is created so the second time this method is 
+        //invoked because of interruption nothing remains to do 
+        InterruptException exc = null;  
+        
         //possibly creates and initializes java.lang.Class
-        InterruptException exc = null;
         try {
             ensureClassCreatedAndInitialized(state, JAVA_CLASS, dec);
-        } catch (BadClassFileException e) {
-            throw new ClasspathException(e);
         } catch (InterruptException e) {
             exc = e;
+        } catch (BadClassFileException e) {
+            throw new ClasspathException(e);
         } catch (InvalidInputException e) {
             //this should never happen
-            throw new UnexpectedInternalException(e);
+            failExecution(e);
+        }
+
+        //creates a String object for the binary class name
+        final String classNameBinary = binaryClassName(className);
+        //TODO is it ok to treat the class name String as a string literal?
+        try {
+            ensureStringLiteral(state, classNameBinary, dec);
+        } catch (InterruptException e) {
+            exc = e;
         }
         
         //possibly creates and initializes the java.lang.Class Instance
-        final boolean mustInitClass = (!state.hasInstance_JAVA_CLASS(className));
+        final boolean mustInit = (!state.hasInstance_JAVA_CLASS(className));
         state.ensureInstance_JAVA_CLASS(className);
-        if (mustInitClass) {
+        if (mustInit) {
             final Reference r = state.referenceToInstance_JAVA_CLASS(className);
             final Instance i = (Instance) state.getObject(r);
-            final String classNameBinary = binaryClassName(className);
-            try {
-                //TODO is it ok to treat the class name String as a string literal?
-                ensureStringLiteral(state, classNameBinary, dec);
-            } catch (InterruptException e) {
-                exc = e;
-            }
             final ReferenceConcrete classNameString = state.referenceToStringLiteral(classNameBinary);
             i.setFieldValue(JAVA_CLASS_NAME, classNameString);
         }
         
-        //throws InterruptException if there is some <clinit>
-        //frame on the stack
+        //throws the interrupt, if any
         if (exc != null) {
             throw exc;
         }

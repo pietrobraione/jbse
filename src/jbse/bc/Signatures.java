@@ -40,7 +40,7 @@ public final class Signatures {
     //exceptions
     public static final String ARITHMETIC_EXCEPTION 				= "java/lang/ArithmeticException";
     public static final String ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION 	= "java/lang/ArrayIndexOutOfBoundsException";
-    public static final String ARRAY_STORE_EXCEPTION                = "java/lang/ArrayIndexOutOfBoundsException";
+    public static final String ARRAY_STORE_EXCEPTION                = "java/lang/ArrayStoreException";
     public static final String CLASS_CAST_EXCEPTION 				= "java/lang/ClassCastException";
     public static final String CLASS_NOT_FOUND_EXCEPTION            = "java/lang/ClassNotFoundException";
     public static final String INDEX_OUT_OF_BOUNDS_EXCEPTION 		= "java/lang/IndexOutOfBoundsException";
@@ -113,8 +113,18 @@ public final class Signatures {
         new Signature(JAVA_STRING, "" + INT, "count");
     public static final Signature JAVA_STRING_VALUE = 
         new Signature(JAVA_STRING, "" + ARRAYOF + CHAR, "value");
+    public static final Signature JAVA_THROWABLE_BACKTRACE = 
+        new Signature(JAVA_THROWABLE, "" + REFERENCE + JAVA_OBJECT + TYPEEND, "backtrace");
     public static final Signature JAVA_THROWABLE_STACKTRACE = 
         new Signature(JAVA_THROWABLE, "" + ARRAYOF + REFERENCE + JAVA_STACK_TRACE_ELEMENT + TYPEEND, "stackTrace");
+    public static final Signature JAVA_STACK_TRACE_ELEMENT_DECLARINGCLASS = 
+        new Signature(JAVA_STACK_TRACE_ELEMENT, "" + REFERENCE + JAVA_STRING + TYPEEND, "declaringClass");
+    public static final Signature JAVA_STACK_TRACE_ELEMENT_FILENAME = 
+        new Signature(JAVA_STACK_TRACE_ELEMENT, "" + REFERENCE + JAVA_STRING + TYPEEND, "fileName");
+    public static final Signature JAVA_STACK_TRACE_ELEMENT_LINENUMBER = 
+        new Signature(JAVA_STACK_TRACE_ELEMENT, "" + INT, "lineNumber");
+    public static final Signature JAVA_STACK_TRACE_ELEMENT_METHODNAME = 
+        new Signature(JAVA_STACK_TRACE_ELEMENT, "" + REFERENCE + JAVA_STRING + TYPEEND, "methodName");
 
     /**
      * Do not instantiate it! 
