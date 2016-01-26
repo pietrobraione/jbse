@@ -244,7 +244,7 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
                 this.s.append(javaClass(finalState.getObject(exception).getType()));
                 this.s.append(".class)\n");
             }
-            this.s.append("    public void testCase");
+            this.s.append("    public void test");
             this.s.append(testCounter);
             this.s.append("() {\n");
             this.s.append("        //test case for state ");

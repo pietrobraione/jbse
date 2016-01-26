@@ -46,7 +46,7 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
     private Supplier<State> initialStateSupplier;
     private Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier;
     private int testCounter = 0;
-    private int bestTest = -1;
+    private int bestTest = -1; //the test with shortest path condition
     private int bestPathConditionLength = -1;
     
     public StateFormatterSushiPathCondition(Supplier<State> initialStateSupplier, 

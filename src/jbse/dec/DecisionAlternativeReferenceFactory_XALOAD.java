@@ -14,7 +14,7 @@ import jbse.val.ReferenceSymbolic;
  * @author Pietro Braione
  *
  */
-public class DecisionAlternativeReferenceFactory_XALOAD 
+class DecisionAlternativeReferenceFactory_XALOAD 
 implements DecisionAlternativeReferenceFactory<DecisionAlternative_XALOAD_Aliases, 
 DecisionAlternative_XALOAD_Expands, DecisionAlternative_XALOAD_Null> {
 	private final Expression exp;
