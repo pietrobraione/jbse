@@ -258,7 +258,7 @@ public class Util {
 
                 //gets the data
                 final String declaringClass = fClass.replace('/', '.').replace('$', '.'); //TODO is it ok?
-                final String fileName       = state.getClassHierarchy().getClassFile(declaringClass).getSourceFile();
+                final String fileName       = state.getClassHierarchy().getClassFile(fClass).getSourceFile();
                 final int    lineNumber     = f.getSourceRow(); 
                 final String methodName     = f.getCurrentMethodSignature().getName();
 
