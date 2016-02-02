@@ -748,6 +748,9 @@ public class RewriterOperationOnSimplex extends Rewriter {
 		if (from == Type.CHAR) {
 		    final char c = ((Character) toConvert.getActualValue()).charValue();
 		    n = Integer.valueOf((int) c);
+		} else if (from == Type.BOOLEAN) {
+		    final boolean b = ((Boolean) toConvert.getActualValue()).booleanValue();
+		    n = Integer.valueOf(b ? 1 : 0);
 		} else {
 		    n = (Number) toConvert.getActualValue();
 		}
