@@ -1,5 +1,6 @@
 package jbse.algo;
 
+import static jbse.bc.Signatures.JAVA_BOOLEAN;
 import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_CLASS_NAME;
 import static jbse.bc.Signatures.JAVA_ENUM;
@@ -356,6 +357,7 @@ public class Util {
             className.equals(JAVA_LINKEDLIST) || className.equals(JAVA_LINKEDLIST_ENTRY)     ||
             className.equals(JAVA_NUMBER)     || className.equals(JAVA_OBJECT)               ||
             className.equals(JAVA_STRING)     || className.equals(JAVA_STRING_CASEINSCOMP)   ||
+            className.equals(JAVA_BOOLEAN)    ||
             state.getClassHierarchy().isSubclass(className, JAVA_ENUM)
            ) {
 			return false;

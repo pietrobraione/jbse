@@ -17,6 +17,7 @@ import static jbse.common.Type.VOID;
  */
 public final class Signatures {
     //classes and interfaces
+    public static final String JAVA_BOOLEAN              = "java/lang/Boolean";
     public static final String JAVA_CLASS                = "java/lang/Class";
     public static final String JAVA_CLONEABLE            = "java/lang/Cloneable";
     public static final String JAVA_ENUM                 = "java/lang/Enum";
