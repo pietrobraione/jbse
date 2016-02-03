@@ -9,6 +9,7 @@ import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
+import jbse.bc.exc.MethodNotFoundException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
@@ -190,8 +191,13 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 		//the (resolved) root object is put in seenObject, if present
 		Value refToRoot;
         try {
-            refToRoot = getValue(this.initialStateConcrete, this.rootFrameConcrete, MemoryPath.mkLocalVariable("this"));
-        } catch (GuidanceException e) {
+            final ClassHierarchy hier = this.initialStateConcrete.getClassHierarchy();
+            final Signature currentMethod = this.initialStateConcrete.getCurrentMethodSignature();
+            refToRoot = hier.getClassFile(currentMethod.getClassName()).isMethodStatic(currentMethod) ?
+                        null :
+                        getValue(this.initialStateConcrete, this.rootFrameConcrete, MemoryPath.mkLocalVariable("this"));
+        } catch (GuidanceException | ThreadStackEmptyException | 
+                 MethodNotFoundException | BadClassFileException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
