@@ -1,5 +1,7 @@
 package jbse.jvm;
 
+import static jbse.bc.Signatures.JAVA_CLASS_DESIREDASSERTIONSTATUS0;
+import static jbse.bc.Signatures.JAVA_CLASS_GETCLASSLOADER0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETPRIMITIVECLASS;
 import static jbse.bc.Signatures.JAVA_CLASS_ISINSTANCE;
 import static jbse.bc.Signatures.JAVA_OBJECT_GETCLASS;
@@ -116,6 +118,8 @@ public class EngineBuilder {
 	    //defaults
         try {
             //JRE methods
+            ctx.addMetaOverridden(JAVA_CLASS_DESIREDASSERTIONSTATUS0,       "jbse/algo/meta/Algo_JAVA_CLASS_DESIREDASSERTIONSTATUS0");
+            ctx.addMetaOverridden(JAVA_CLASS_GETCLASSLOADER0,               "jbse/algo/meta/Algo_JAVA_CLASS_GETCLASSLOADER0");
             ctx.addMetaOverridden(JAVA_CLASS_GETPRIMITIVECLASS,             "jbse/algo/meta/Algo_JAVA_CLASS_GETPRIMITIVECLASS");
             ctx.addMetaOverridden(JAVA_CLASS_ISINSTANCE,                    "jbse/algo/meta/Algo_JAVA_CLASS_ISINSTANCE");
             ctx.addMetaOverridden(JAVA_OBJECT_GETCLASS,                     "jbse/algo/meta/Algo_JAVA_OBJECT_GETCLASS");

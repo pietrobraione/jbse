@@ -19,6 +19,7 @@ public final class Signatures {
     //classes and interfaces
     public static final String JAVA_BOOLEAN              = "java/lang/Boolean";
     public static final String JAVA_CLASS                = "java/lang/Class";
+    public static final String JAVA_CLASSLOADER          = "java/lang/ClassLoader";
     public static final String JAVA_CLONEABLE            = "java/lang/Cloneable";
     public static final String JAVA_ENUM                 = "java/lang/Enum";
     public static final String JAVA_IDENTITYHASHMAP      = "java/util/IdentityHashMap";
@@ -58,6 +59,10 @@ public final class Signatures {
     public static final String VERIFY_ERROR                         = "java/lang/VerifyError";
     
     //methods
+    public static final Signature JAVA_CLASS_DESIREDASSERTIONSTATUS0 =
+        new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + BOOLEAN, "desiredAssertionStatus0");
+    public static final Signature JAVA_CLASS_GETCLASSLOADER0 =
+        new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_CLASSLOADER + TYPEEND, "getClassLoader0");
     public static final Signature JAVA_CLASS_GETPRIMITIVECLASS =
         new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + 
                       REFERENCE + JAVA_CLASS + TYPEEND, "getPrimitiveClass");
