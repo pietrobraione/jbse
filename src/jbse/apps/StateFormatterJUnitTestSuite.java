@@ -9,6 +9,7 @@ import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isPrimitiveFloating;
 import static jbse.common.Type.isPrimitiveIntegral;
 import static jbse.common.Type.splitParametersDescriptors;
+import static jbse.common.Type.splitReturnValueDescriptor;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -19,6 +20,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Supplier;
 
+import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Clause;
 import jbse.mem.ClauseAssume;
@@ -224,7 +226,7 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
             appendMethodDeclaration(finalState, testCounter);
             appendInputsInitialization(finalState, model, testCounter);
             appendInvocationOfMethodUnderTest(initialState, finalState);
-            appendAssert(finalState);
+            appendAssert(initialState, finalState);
             appendMethodEnd(finalState, testCounter);
         }
         
@@ -308,22 +310,27 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
             final boolean mustCheckReturnedValue = 
                 (returnedValue != null)  && (isPrimitive(returnedValue.getType()) || returnedValue instanceof Symbolic);
             this.s.append(INDENT);
-            if (mustCheckReturnedValue) {
-                if (isPrimitiveIntegral(returnedValue.getType())) {
-                    this.s.append("long");
-                } else if (isPrimitiveFloating(returnedValue.getType())) {
-                    this.s.append("double");
-                } else {
-                    final Reference returnedRef = (Reference) returnedValue;
-                    if (finalState.isNull(returnedRef)) {
-                        this.s.append("java.lang.Object");
-                    } else {
-                        this.s.append(javaClass(finalState.getObject(returnedRef).getType()));
-                    }
-                }
-                this.s.append(" __returnedValue = ");
-            }
             try {
+                if (mustCheckReturnedValue) {
+                    final char returnType = splitReturnValueDescriptor(initialState.getRootMethodSignature().getDescriptor()).charAt(0);
+                    if (returnType == Type.CHAR) {
+                        this.s.append("char");
+                    } else if (returnType == Type.BOOLEAN) {
+                        this.s.append("boolean");
+                    } else if (isPrimitiveIntegral(returnType)) {
+                        this.s.append("long");
+                    } else if (isPrimitiveFloating(returnType)) {
+                        this.s.append("double");
+                    } else {
+                        final Reference returnedRef = (Reference) returnedValue;
+                        if (finalState.isNull(returnedRef)) {
+                            this.s.append("java.lang.Object");
+                        } else {
+                            this.s.append(javaClass(finalState.getObject(returnedRef).getType()));
+                        }
+                    }
+                    this.s.append(" __returnedValue = ");
+                }
                 final String methodName = initialState.getRootMethodSignature().getName();
                 if ("this".equals(initialState.getRootFrame().getLocalVariableDeclaredName(0))) {
                     this.s.append("__ROOT_this.");
@@ -361,12 +368,12 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
                 }
                 this.s.append(");\n");
             } catch (ThreadStackEmptyException e) {
-                //TODO
-                throw new RuntimeException(e);
+                //this should never happen
+                throw new UnexpectedInternalException(e);
             }
         }
         
-        private void appendAssert(State finalState) {
+        private void appendAssert(State initialState, State finalState) {
             if (this.panic) {
                 return;
             }
@@ -376,7 +383,30 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
             if (mustCheckReturnedValue) {
                 this.s.append(INDENT);
                 this.s.append("assertTrue(__returnedValue == ");
-                if (isPrimitive(returnedValue.getType())) {
+                final char returnType;
+                try {
+                    returnType = splitReturnValueDescriptor(initialState.getRootMethodSignature().getDescriptor()).charAt(0);
+                } catch (ThreadStackEmptyException e) {
+                    //this should never happen
+                    throw new UnexpectedInternalException(e);
+                }
+                if (returnType == Type.BOOLEAN) {
+                    if (returnedValue instanceof Simplex) {
+                        final Simplex returnedValueSimplex = (Simplex) returnedValue;
+                        this.s.append(returnedValueSimplex.isZeroOne(true) ? "false" : "true");
+                    } else {
+                        this.s.append(returnedValue.toString());
+                    }
+                } else if (isPrimitive(returnType)) {
+                    if (returnedValue instanceof Simplex) {
+                        if (returnType == Type.BYTE) {
+                            this.s.append("(byte) "); 
+                        } else if (returnType == Type.CHAR) {
+                            this.s.append("(char) ");
+                        } else if (returnType == Type.SHORT) {
+                            this.s.append("(short) "); 
+                        }
+                    }
                     this.s.append(returnedValue.toString());
                 } else {
                     final Reference returnedRef = (Reference) returnedValue;
@@ -706,9 +736,20 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
             }
             final String var = getVariableFor(symbol);
             if (hasMemberAccessor(var)) {
-                setByReflection(var, value.toString()); 
+                if (symbol.getType() == Type.BOOLEAN) {
+                    setByReflection(var, "(" + value.toString() + " > 0)");
+                } else if (symbol.getType() == Type.BYTE) {
+                    setByReflection(var, "(byte) " + value.toString());
+                } else if (symbol.getType() == Type.CHAR) {
+                    setByReflection(var, "(char) " + value.toString());
+                } else if (symbol.getType() == Type.SHORT) {
+                    setByReflection(var, "(short) " + value.toString());
+                } else {
+                    setByReflection(var, value.toString());
+                }
             } else {
-                this.s.append("int ");
+                //TODO floating point values
+                this.s.append("long ");
                 this.s.append(var);
                 this.s.append(" = " + value.toString() + ";");
             }
