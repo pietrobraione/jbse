@@ -566,7 +566,7 @@ public final class Run {
 		}
 
         // runs the method
-        if (this.parameters.showWarnings) {
+        if (this.parameters.showInfo) {
             IO.println(this.log, MSG_START + this.parameters.getMethodSignature() + " at " + new Date() + ".");
         }
 		try {
@@ -585,7 +585,7 @@ public final class Run {
 		}
 		
 		// prints statistics
-        if (this.parameters.showWarnings) {
+        if (this.parameters.showInfo) {
             IO.println(this.log, MSG_END + new Date() + ".");
             printFinalStats();
         }
@@ -751,7 +751,7 @@ public final class Run {
 		}
 
 		// prints a welcome message
-        if (this.parameters.showWarnings) {
+        if (this.parameters.showInfo) {
             IO.println(this.log, MSG_WELCOME_TXT);
         }
 
@@ -843,7 +843,7 @@ public final class Run {
 	private void createDecisionProcedure(CalculatorRewriting calc)
 	throws CannotBuildDecisionProcedureException {
         //prints some feedback on forthcoming decision procedure creation
-        if (this.parameters.showWarnings) {
+        if (this.parameters.showInfo) {
             if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC3) {
                 IO.println(this.log, MSG_TRY_CVC3
                            + this.parameters.getExternalDecisionProcedurePath() + ".");
@@ -949,7 +949,9 @@ public final class Run {
 		//finally guidance
 		if (this.parameters.isGuided()) {
 			final RunnerParameters guidanceDriverParameters = this.parameters.getGuidanceDriverParameters(calc);
-			IO.println(log, MSG_TRY_GUIDANCE + guidanceDriverParameters.getMethodSignature() + ".");
+			if (this.parameters.showInfo) {
+			    IO.println(log, MSG_TRY_GUIDANCE + guidanceDriverParameters.getMethodSignature() + ".");
+			}
 			try {
 				this.guidance = new DecisionProcedureGuidance(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
 			} catch (GuidanceException | UnexpectedInternalException e) {

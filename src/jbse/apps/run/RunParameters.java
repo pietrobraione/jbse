@@ -398,9 +398,16 @@ public final class RunParameters implements Cloneable {
      */
     HashMap<String, String> concretizationMethods = new HashMap<>();
 
+    /** 
+     * {@code true} iff the tool info (welcome message, 
+     * progress of tool initialization, final stats) 
+     * must be logged. 
+     */
+    boolean showInfo = true;
+
 	/** 
-	 * {@code true} iff the warnings must be logged to 
-	 * the output. 
+	 * {@code true} iff the symbolic execution warnings 
+	 * must be logged. 
 	 */
 	boolean showWarnings = true;
 
@@ -1483,11 +1490,22 @@ public final class RunParameters implements Cloneable {
 		Collections.addAll(this.srcPath, srcPath); 
 	}
 
+    /**
+     * Instructs whether the tool info produced at startup
+     * (welcome message and progress of tool initialization) 
+     * and at the end of symbolic execution (stats) should 
+     * be logged
+     * @param show {@code true} iff the info must
+     *        be logged.
+     */
+    public void setShowInfo(boolean show) {
+        this.showInfo = show; 
+    }
+
 	/**
 	 * Instructs whether the warnings issued during symbolic 
-	 * execution should be logged on the 
-	 * out (by default they are).
-	 * @param show {@code true} iff the interactions must
+	 * execution should be logged (by default they are).
+	 * @param show {@code true} iff the warnings must
 	 *        be logged.
 	 */
 	public void setShowWarnings(boolean show) {
