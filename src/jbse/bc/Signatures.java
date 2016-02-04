@@ -37,6 +37,7 @@ public final class Signatures {
     public static final String JAVA_STRING_CASEINSCOMP   = "java/lang/String$CaseInsensitiveComparator";
     public static final String JAVA_SYSTEM               = "java/lang/System";
     public static final String JAVA_THROWABLE            = "java/lang/Throwable";
+    public static final String JAVA_TREESET              = "java/util/TreeSet";
     public static final String JBSE_ANALYSIS             = "jbse/meta/Analysis";
 
     //exceptions

@@ -22,6 +22,7 @@ import static jbse.bc.Signatures.JAVA_STRING_CASEINSCOMP;
 import static jbse.bc.Signatures.JAVA_STRING_VALUE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_BACKTRACE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_STACKTRACE;
+import static jbse.bc.Signatures.JAVA_TREESET;
 import static jbse.bc.Signatures.VERIFY_ERROR;
 import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.REFERENCE;
@@ -357,7 +358,7 @@ public class Util {
             className.equals(JAVA_LINKEDLIST) || className.equals(JAVA_LINKEDLIST_ENTRY)     ||
             className.equals(JAVA_NUMBER)     || className.equals(JAVA_OBJECT)               ||
             className.equals(JAVA_STRING)     || className.equals(JAVA_STRING_CASEINSCOMP)   ||
-            className.equals(JAVA_BOOLEAN)    ||
+            className.equals(JAVA_BOOLEAN)    || className.equals(JAVA_TREESET)   ||
             state.getClassHierarchy().isSubclass(className, JAVA_ENUM)
            ) {
 			return false;
