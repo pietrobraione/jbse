@@ -36,12 +36,10 @@ public class SettingsReader {
 	 * @throws FileNotFoundException if the file does not exist.
 	 * @throws ParseException if the content of the file is not correct.
 	 */
-	public SettingsReader(String fname) throws FileNotFoundException, ParseException {
+	public SettingsReader(String fname) throws IOException, FileNotFoundException, ParseException {
 		try (final BufferedReader reader = new BufferedReader(new FileReader(fname))) {
 			parser = new SettingsParser(reader);
 			parser.start();
-		} catch (IOException e) {
-			// does nothing
 		}
 	}
 	
