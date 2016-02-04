@@ -737,7 +737,7 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
             final String var = getVariableFor(symbol);
             if (hasMemberAccessor(var)) {
                 if (symbol.getType() == Type.BOOLEAN) {
-                    setByReflection(var, "(" + value.toString() + " > 0)");
+                    setByReflection(var, "(" + value.toString() + " != 0)");
                 } else if (symbol.getType() == Type.BYTE) {
                     setByReflection(var, "(byte) " + value.toString());
                 } else if (symbol.getType() == Type.CHAR) {
