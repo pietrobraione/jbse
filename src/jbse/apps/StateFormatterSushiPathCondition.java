@@ -595,7 +595,7 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
                             b.append(op.toString());
                             b.append(" (");
                             b.append(secondArg);
-                            b.append(") ? 0 : abs((");
+                            b.append(") ? 0 : 1E-3 + abs((");
                             b.append(firstArg);
                             b.append(") - (");
                             b.append(secondArg);
