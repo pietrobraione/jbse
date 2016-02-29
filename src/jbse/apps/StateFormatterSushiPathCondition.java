@@ -81,9 +81,14 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
         this.output = "";        
     }
     
+    private static final String INDENT_1 = "    ";
+    private static final String INDENT_2 = INDENT_1 + INDENT_1;
+    private static final String INDENT_3 = INDENT_1 + INDENT_2;
+    private static final String INDENT_4 = INDENT_1 + INDENT_3;
     private static final String PROLOGUE =
         "import static sushi.compile.path_condition_distance.DistanceBySimilarityWithPathCondition.distance;\n" +
         "\n" +
+        "import static java.lang.Double.*;\n" +
         "import static java.lang.Math.*;\n" +
         "\n" +
         "import sushi.compile.path_condition_distance.*;\n" +
@@ -95,13 +100,11 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
         "import java.util.List;\n" +
         "\n" +
         "public class EvoSuiteWrapper {\n" +
+        INDENT_1 + "private static final double SMALL_DISTANCE = 1E-3;\n" +
+        INDENT_1 + "private static final double BIG_DISTANCE = 1E300;\n" +
         "\n";
 
     private static class MethodUnderTest {
-        private static final String INDENT_1 = "    ";
-        private static final String INDENT_2 = INDENT_1 + INDENT_1;
-        private static final String INDENT_3 = INDENT_1 + INDENT_2;
-        private static final String INDENT_4 = INDENT_1 + INDENT_3;
         private final StringBuilder s = new StringBuilder();
         private final int pathConditionLength;
         private final HashMap<Symbolic, String> symbolsToVariables = new HashMap<>();
@@ -595,7 +598,11 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
                             b.append(op.toString());
                             b.append(" (");
                             b.append(secondArg);
-                            b.append(") ? 0 : 1E-3 + abs((");
+                            b.append(") ? 0 : isNaN((");
+                            b.append(firstArg);
+                            b.append(") - (");
+                            b.append(secondArg);
+                            b.append(")) ? BIG_DISTANCE : SMALL_DISTANCE + abs((");
                             b.append(firstArg);
                             b.append(") - (");
                             b.append(secondArg);
@@ -607,7 +614,11 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
                             b.append(op.toString());
                             b.append(" (");
                             b.append(secondArg);
-                            b.append(") ? 0 : 1");
+                            b.append(") ? 0 : isNaN((");
+                            b.append(firstArg);
+                            b.append(") - (");
+                            b.append(secondArg);
+                            b.append(")) ? BIG_DISTANCE : 1");
                         } else {
                             b.append("(");
                             b.append(firstArg);
