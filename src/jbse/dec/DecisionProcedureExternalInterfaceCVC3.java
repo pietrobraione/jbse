@@ -370,7 +370,7 @@ class DecisionProcedureExternalInterfaceCVC3 extends DecisionProcedureExternalIn
 		}
 
 		private void putSymbol(char type, String symbol) {
-			String cvc3VarName = symbol.substring(1, symbol.length() - 1);
+			String cvc3VarName = (symbol.charAt(0) == '{' ? symbol.substring(1, symbol.length() - 1) : symbol);
 			if (this.declaredVars.contains(cvc3VarName)) {
 				//does nothing
 			} else {

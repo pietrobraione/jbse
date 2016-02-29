@@ -809,7 +809,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
         private void putSymbol(Primitive symbol) {
             final char type = symbol.getType();
             final String symbolToString = symbol.toString();
-            final String smtlib2Variable = (symbol instanceof PrimitiveSymbolic ? 
+            final String smtlib2Variable = (symbolToString.charAt(0) == '{' ? 
                                             symbolToString.substring(1, symbolToString.length() - 1) :
                                             symbolToString);
             if (this.smtlib2DeclaredSymbols.contains(smtlib2Variable)) {
