@@ -38,7 +38,6 @@ import jbse.val.WideningConversion;
 /**
  * A {@link Formatter} used by Sushi.
  * 
- * @author Esther Turati
  * @author Pietro Braione
  */
 public abstract class StateFormatterSushiPathCondition implements Formatter {
@@ -100,7 +99,7 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
         "import java.util.List;\n" +
         "\n" +
         "public class EvoSuiteWrapper {\n" +
-        INDENT_1 + "private static final double SMALL_DISTANCE = 1E-3;\n" +
+        INDENT_1 + "private static final double SMALL_DISTANCE = 1;\n" +
         INDENT_1 + "private static final double BIG_DISTANCE = 1E300;\n" +
         "\n";
 
@@ -618,7 +617,7 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
                             b.append(firstArg);
                             b.append(") - (");
                             b.append(secondArg);
-                            b.append(")) ? BIG_DISTANCE : 1");
+                            b.append(")) ? BIG_DISTANCE : SMALL_DISTANCE");
                         } else {
                             b.append("(");
                             b.append(firstArg);
