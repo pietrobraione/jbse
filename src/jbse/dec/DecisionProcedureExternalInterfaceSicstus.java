@@ -349,10 +349,14 @@ class DecisionProcedureExternalInterfaceSicstus extends DecisionProcedureExterna
 	/**
 	 * Fixes a bug in {@link BDD#oneSat(int, int[])}
 	 * (does not set don't care to -1 in result).
+	 * This bug was present in JDD v.103, don't know
+	 * if it has been fixed in current version. Also, 
+	 * this method uses an iterative algorithm, while
+	 * {@link BDD#oneSat(int, int[])} is recursive.
 	 * 
-	 * @param bdd a {@link BDD}
+	 * @param bdd a {@link BDD}.
 	 * @param predicate an {@code int}, a predicate (node)
-	 *        in {@code bdd}
+	 *        in {@code bdd}.
 	 * @return a satisfying assignment.
 	 * @see BDD#oneSat(int, int[]) 
 	 */
