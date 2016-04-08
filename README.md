@@ -32,7 +32,7 @@ Thus it all boils down to fixing the dependency on JavaCC, a thing that under Ec
 
 ### Runtime dependencies (and one more build dependency) ###
 
-Most of the JBSE runtime dependencies (Javassist and JDD) are already fixed by the default Eclipse project included with this distribution. But in order to have a working JBSE setup there is another runtime dependency you need to fix. JBSE needs to interact at runtime an external numeric solver for pruning infeasible program paths. At the purpose JBSE is able to communicate with [CVC3](http://www.cs.nyu.edu/acsys/cvc3/), [Sicstus](https://sicstus.sics.se), [Z3](http://z3.codeplex.com), or [CVC4](http://cvc4.cs.nyu.edu/). Since we decided to redistribute none of them with JBSE, you need to download and install at least one of them on the machine that runs JBSE. We strongly advise to use Z3, or alternatively CVC4 (both of them are free), because Sicstus and CVC3 are slower and less complete, and sooner or later we may decide to drop them altogether. Note that JBSE connects to Sicstus via the Java PrologBeans library that is included with the Sicstus distribution, so there is one more inevitable build and runtime dependency you need to configure: the Eclipse JBSE project build path to point to that library. Open the package explorer and right-click the jbse project, select Build Path > Configure Build Path... and under Libraries fix the link to prologbeans.jar. The exact location of this file in your filesystem depends on the path where you installed Sicstus: Please refer to the Sicstus user manual for instructions on how to locate it. Note that right now there is no way to automatically disable this dependency, so if you do not want to use nor install Sicstus the only alternative is removing the link to prologbeans.jar in the project build path so that Eclipse does not complain, and ignore the resulting compilation errors.
+Most of the JBSE runtime dependencies (Javassist and JDD) are already fixed by the default Eclipse project included with this distribution. But in order to have a working JBSE setup there is another runtime dependency you need to fix. JBSE needs to interact at runtime an external numeric solver for pruning infeasible program paths. At the purpose JBSE is able to communicate with [CVC3](http://www.cs.nyu.edu/acsys/cvc3/), [Sicstus](https://sicstus.sics.se), [Z3](https://github.com/Z3Prover/z3), or [CVC4](http://cvc4.cs.nyu.edu/). Since we decided to redistribute none of them with JBSE, you need to download and install at least one of them on the machine that runs JBSE. We strongly advise to use Z3, or alternatively CVC4 (both of them are free), because Sicstus and CVC3 are slower and less complete, and sooner or later we may decide to drop support to them altogether. Note that JBSE connects to Sicstus via the Java PrologBeans library that is included with the Sicstus distribution, so there is one more inevitable build and runtime dependency you need to configure: the Eclipse JBSE project build path to point to that library. Open the package explorer and right-click the jbse project, select Build Path > Configure Build Path... and under Libraries fix the link to prologbeans.jar. The exact location of this file in your filesystem depends on the path where you installed Sicstus: Please refer to the Sicstus user manual for instructions on how to locate it. Note that right now there is no way to automatically disable this dependency, so if you do not want to use nor install Sicstus the only alternative is removing the link to prologbeans.jar in the project build path so that Eclipse does not complain, and ignore the resulting compilation errors.
 
 ### Testing JBSE ###
 
@@ -142,7 +142,7 @@ public class RunIf {
 	    p.addClasspath("./bin", "../jbse/bin", "../jbse/data/rt.jar");
 	    p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
 		p.setDecisionProcedureType(DecisionProcedureType.Z3);
-		p.setExternalDecisionProcedurePath("/usr/bin/");
+		p.setExternalDecisionProcedurePath("/usr/bin/z3");
 	    ...
 	}
 }
@@ -160,7 +160,7 @@ public class RunIf {
 	    p.addClasspath("./bin", "../jbse/bin", "../jbse/data/rt.jar");
 	    p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
 		p.setDecisionProcedureType(DecisionProcedureType.Z3);
-		p.setExternalDecisionProcedurePath("/usr/bin/");
+		p.setExternalDecisionProcedurePath("/usr/bin/z3");
 		p.setOutputFileName("out/runIf_z3.txt");
 	    ...
 	}
@@ -180,7 +180,7 @@ public class RunIf {
 	    p.addClasspath("./bin", "../jbse/bin", "../jbse/data/rt.jar");
 	    p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
 		p.setDecisionProcedureType(DecisionProcedureType.Z3);
-		p.setExternalDecisionProcedurePath("/usr/bin/");
+		p.setExternalDecisionProcedurePath("/usr/bin/z3");
 		p.setOutputFileName("out/runIf_z3.txt");
 	    p.setStepShowMode(StepShowMode.LEAVES);
 	}
