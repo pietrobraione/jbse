@@ -232,7 +232,7 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 				throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
 			}
 		} else {
-			//should never happen, guidance and guided should make the same number of steps
+			//this happens if guidance and guided do not make the same number of steps
 			throw new GuidanceException(ERROR_DIVERGENCE);
 		}
 	}

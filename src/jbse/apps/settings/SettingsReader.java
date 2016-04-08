@@ -38,8 +38,8 @@ public class SettingsReader {
 	 */
 	public SettingsReader(String fname) throws IOException, FileNotFoundException, ParseException {
 		try (final BufferedReader reader = new BufferedReader(new FileReader(fname))) {
-			parser = new SettingsParser(reader);
-			parser.start();
+			this.parser = new SettingsParser(reader);
+			this.parser.start();
 		}
 	}
 	

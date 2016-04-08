@@ -423,7 +423,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
                 //System.err.println("<---SMTLIB2: " + answer); //TODO log differently!
                 if (answer == null) {
                     this.working = false;
-                    throw new IOException("failed read of solver answer");
+                    throw new IOException("failed read of solver answer. Query: " + query + ", failed at character " + i);
                 }
                 if (!answer.equals(SUCCESS)) {
                     this.working = false;

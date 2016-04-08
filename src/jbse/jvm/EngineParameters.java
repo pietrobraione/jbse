@@ -63,7 +63,7 @@ public final class EngineParameters implements Cloneable {
 		
         /** 
          * Each branch is identified by a number
-         * statically assigned accordint to the type of the branch. 
+         * statically assigned according to the type of the branch. 
          * This identification is still compact but not exec-faithful, 
          * and is fragile on the number of siblings, that might
          * depend on the decision procedure and on the preconditions.
@@ -102,12 +102,7 @@ public final class EngineParameters implements Cloneable {
 		 * is guided, it will not produce any branch. 
 		 * This yields the most breadth-compact tree. 
 		 */
-		MORE_THAN_ONE {
-			@Override
-			public StateTree.BreadthMode toInternal() {
-				return StateTree.BreadthMode.MORE_THAN_ONE;
-			}
-		},
+		MORE_THAN_ONE(StateTree.BreadthMode.MORE_THAN_ONE),
 		
 		/**
 		 * Creates a branch only when a decision involving
@@ -115,24 +110,14 @@ public final class EngineParameters implements Cloneable {
 		 * symbolic decisions that have been resolved before
 		 * (just on references).
 		 */
-		ALL_DECISIONS_NONTRIVIAL {
-			@Override
-			public StateTree.BreadthMode toInternal() {
-				return StateTree.BreadthMode.ALL_DECISIONS_NONTRIVIAL;
-			}
-		},
+		ALL_DECISIONS_NONTRIVIAL(StateTree.BreadthMode.ALL_DECISIONS_NONTRIVIAL),
 		
 		/**
 		 * Create a branch whenever a decision involving 
 		 * symbolic values is taken, independently on 
 		 * the number of possible outcomes.
 		 */
-		ALL_DECISIONS_SYMBOLIC {
-			@Override
-			public StateTree.BreadthMode toInternal() {
-				return StateTree.BreadthMode.ALL_DECISIONS_SYMBOLIC;
-			}
-		},
+		ALL_DECISIONS_SYMBOLIC(StateTree.BreadthMode.ALL_DECISIONS_SYMBOLIC),
 		
 		/**
 		 * Create a branch whenever we hit a bytecode that
@@ -140,14 +125,17 @@ public final class EngineParameters implements Cloneable {
 		 * on whether all the involved values are concrete
 		 * or not.
 		 */
-		ALL_DECISIONS {
-			@Override
-			public StateTree.BreadthMode toInternal() {
-				return StateTree.BreadthMode.ALL_DECISIONS;
-			}
-		};
+		ALL_DECISIONS(StateTree.BreadthMode.ALL_DECISIONS);
+	    
+	    private final StateTree.BreadthMode internal;
+	    
+	    private BreadthMode(StateTree.BreadthMode internal) {
+	        this.internal = internal;
+	    }
 
-		public abstract StateTree.BreadthMode toInternal();
+		public final StateTree.BreadthMode toInternal() {
+		    return this.internal;
+		}
 	}
 	
 	/** The state identification mode. */
