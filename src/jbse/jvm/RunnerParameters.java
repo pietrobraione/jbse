@@ -22,8 +22,8 @@ import jbse.val.Calculator;
  * <li>The {@link EngineParameters};</li>
  * <li>The {@link Actions} to be performed at prescribed points 
  * of the symbolic execution;</li>
- * <li>Bounds (scopes) for limiting the exploration of the 
- * symbolic execution state space (none by default).</li>
+ * <li>Bounds for limiting the (scope of the) exploration of the 
+ * symbolic execution state space.</li>
  * </ul>
  * 
  * @author Pietro Braione
