@@ -1,7 +1,5 @@
 package jbse.jvm;
 
-import java.util.Map;
-
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
@@ -47,10 +45,10 @@ public class RunnerBuilder {
 	public Runner build(RunnerParameters parameters) 
 	throws CannotBuildEngineException, DecisionException, InitializationException, 
 	InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, ClasspathException {
-		this.engine = eb.build(parameters.getEngineParameters());
-		final Map<String, Integer> heapScope = parameters.getHeapScope();
-		return new Runner(engine, parameters.actions, parameters.identifierSubregion, 
-				parameters.timeout, heapScope, parameters.depthScope, parameters.countScope);
+		this.engine = this.eb.build(parameters.getEngineParameters());
+		return new Runner(this.engine, parameters.getActions(), parameters.getIdentifierSubregion(), 
+				parameters.getTimeout(), parameters.getHeapScope(), parameters.getDepthScope(), 
+				parameters.getCountScope());
 	}
 	
 	/**

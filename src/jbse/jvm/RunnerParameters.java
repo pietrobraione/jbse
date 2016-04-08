@@ -37,22 +37,26 @@ public final class RunnerParameters implements Cloneable {
 	private HashMap<String, Integer> heapScopeStatic = new HashMap<>();
 	
 	/** The (function-based) heap scope used for concretization. */
-	HashMap<String, Function<State, Integer>> heapScopeComputed = new HashMap<>();
+	private HashMap<String, Function<State, Integer>> heapScopeComputed = new HashMap<>();
 	
 	/** The timeout. */
-	long timeout = 0;
+	private long timeout = 0;
 
 	/** The depth scope. */
-	int depthScope = 0;
+	private int depthScope = 0;
 
 	/** The count scope. */
-	int countScope = 0;
+	private int countScope = 0;
 	
 	/** The {@link Actions}. */
-	Actions actions = new Actions();
+	private Actions actions = new Actions();
 	
-	/** The identifier of the branch state in the state space subregion we want to explore (null for everything). */
-	String identifierSubregion = null;
+	/** 
+	 * The identifier of the branch state in the state space subregion 
+	 * we want to explore (null for exploring the whole state space
+	 * starting from root). 
+	 */
+	private String identifierSubregion = null;
 	
 	/** 
 	 * Constructor. 
@@ -120,7 +124,6 @@ public final class RunnerParameters implements Cloneable {
 	 */
 	public StateIdentificationMode getStateIdentificationMode() {
 		return this.engineParameters.getStateIdentificationMode();
-
 	}
 	
 	/**
@@ -174,6 +177,13 @@ public final class RunnerParameters implements Cloneable {
 	 */
 	public void addClasspath(String... paths) { 
 		this.engineParameters.addClasspath(paths);
+	}
+	
+    /**
+     * Clears the symbolic execution's classpath.
+     */
+	public void clearClasspath() {
+	    this.engineParameters.clearClasspath();
 	}
 
 	/**
@@ -418,6 +428,15 @@ public final class RunnerParameters implements Cloneable {
 	}
 	
 	/**
+	 * Gets the timeout for execution.
+	 * 
+	 * @return a {@code long}, the timeout in milliseconds.
+	 */
+	public long getTimeout() {
+	    return this.timeout;
+	}
+	
+	/**
 	 * Sets a limited heap scope for the objects of a given class. 
 	 * The heap scope is the maximum number of objects of a given class 
 	 * in the initial state's heap. If during the symbolic execution 
@@ -537,6 +556,16 @@ public final class RunnerParameters implements Cloneable {
 	}
 	
 	/**
+	 * Gets the depth scope.
+	 * 
+	 * @return an {@code int}, the depth scope or {@code 0}
+	 *         for unlimited depth scope.
+	 */
+	public int getDepthScope() {
+	    return this.depthScope;
+	}
+	
+	/**
 	 * Sets a limited count scope. 
 	 * If a state has a number of predecessor states greater than the 
 	 * count scope the exploration of the branch it belongs is interrupted.
@@ -552,6 +581,16 @@ public final class RunnerParameters implements Cloneable {
 	 */
 	public void setCountScopeUnlimited() { 
 		this.countScope = 0; 
+	}
+	
+    /**
+     * Gets the count scope.
+     * 
+     * @return an {@code int}, the count scope or {@code 0}
+     *         for unlimited count scope.
+     */
+	public int getCountScope() {
+	    return this.countScope;
 	}
 	
 	/**
@@ -577,6 +616,13 @@ public final class RunnerParameters implements Cloneable {
 	}
 	
 	/**
+	 * Gets the actions to be performed while running.
+	 */
+	public Actions getActions() {
+	    return this.actions;
+	}
+	
+	/**
 	 * Sets the identifier of the initial state in the state space subregion 
 	 * to be explored.
 	 * 
@@ -599,6 +645,17 @@ public final class RunnerParameters implements Cloneable {
 	 */
 	public void setIdentifierSubregionRoot() {
 		this.identifierSubregion = null;
+	}
+	
+	/**
+	 * Gets the identifier of the initial state in the state space subregion 
+     * to be explored.
+     * 
+	 * @return a {@code String}, or {@code null} if the state space
+	 *         must be explored starting from root.
+	 */
+	public String getIdentifierSubregion() {
+	    return this.identifierSubregion;
 	}
 	
 	@SuppressWarnings("unchecked")

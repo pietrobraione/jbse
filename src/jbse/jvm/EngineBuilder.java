@@ -21,6 +21,9 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_IGNORE;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRESOLVED;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRUNBYJBSE;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SUCCEED;
+
+import java.util.List;
+
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED;
 
 import jbse.algo.ExecutionContext;
@@ -147,21 +150,23 @@ public class EngineBuilder {
         }
 	    
 	    //custom
-		for (String[] rule : parameters.metaOverridden) {
+		for (String[] rule : parameters.getMetaOverridden()) {
 			try {
 				ctx.addMetaOverridden(new Signature(rule[0], rule[1], rule[2]), rule[3]);
 			} catch (MetaUnsupportedException e) {
 				// TODO manage the situation
 			}
 		}
-		for (String[] rule : parameters.uninterpreted) {
+		for (String[] rule : parameters.getUninterpreted()) {
 			ctx.addUninterpreted(new Signature(rule[0], rule[1], rule[2]), rule[3]);
 		}
 	}
 	
 	private static void setObservers(VariableObserverManager vom, EngineParameters parameters) {
-		for (int i = 0; i < parameters.observedVars.size(); ++i) {
-			vom.addObserver(parameters.observedVars.get(i), parameters.observers.get(i));
+	    final List<Signature> observedFields = parameters.getObservedFields();
+	    final List<ExecutionObserver> observers = parameters.getObservers();
+		for (int i = 0; i < observedFields.size(); ++i) {
+			vom.addObserver(observedFields.get(i), observers.get(i));
 		}
 	}
 }

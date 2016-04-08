@@ -158,22 +158,6 @@ public final class Run {
 	}
 
 	/**
-	 * Enum that classifies traces based on how they terminate.
-	 * 
-	 * @author Pietro Braione
-	 */
-	enum TraceKind {
-		/** The trace terminates by returning from the target code. */
-		SAFE, 
-		/** The trace terminates because it fails some assertion. */
-		UNSAFE, 
-		/** The trace terminates because it is out of scope. */
-		OUT_OF_SCOPE,
-		/** The trace terminates because it contradicts some assumption. */
-		CONTRADICTORY
-	}
-	
-	/**
 	 * Enum listing which counter must be incremented for stats.
 	 * 
 	 * @author Pietro Braione
@@ -189,8 +173,8 @@ public final class Run {
 	}
 	
 	private class ActionsRun extends Runner.Actions {
-		private String scopeExhaustionMessage;
-		private TraceKind traceKind;
+		private String endOfTraceMessage;
+		private TraceTypes traceKind;
 		private boolean isBranch;
 		
 		/**
@@ -201,8 +185,8 @@ public final class Run {
 		 */
 		private boolean stackSizeAcceptable() {
 		    final State currentState = Run.this.engine.getCurrentState();
-			return (Run.this.parameters.stackDepthShow == 0 || 
-					 Run.this.parameters.stackDepthShow > currentState.getStackSize());
+			return (Run.this.parameters.getStackDepthShow() == 0 || 
+					 Run.this.parameters.getStackDepthShow() > currentState.getStackSize());
 		}
 
 		/**
@@ -212,13 +196,13 @@ public final class Run {
 		 * @return {@code true} iff the user told to stop execution.
 		 */
 		private boolean printAndAsk() {
-			if (this.scopeExhaustionMessage == null && this.traceKind != TraceKind.CONTRADICTORY && this.stackSizeAcceptable()) {
+			if (this.endOfTraceMessage == null && this.traceKind != TraceTypes.CONTRADICTORY && this.stackSizeAcceptable()) {
 				try {
-		            final State currentState = Run.this.engine.getCurrentState();
+		            final State currentState = Run.this.getCurrentState();
 					Run.this.emitState(currentState, this.isBranch);
 				} catch (UnexpectedInternalException e) {
-					IO.println(Run.this.err, ERROR_UNEXPECTED);
-					IO.printException(Run.this.err, e);
+				    Run.this.err(ERROR_UNEXPECTED);
+				    Run.this.err(e);
 					return true;
 				}
 			}
@@ -226,8 +210,8 @@ public final class Run {
 
 			// prompts the user for next step in case of interactive mode
 			boolean stop = false;
-			if (Run.this.parameters.interactionMode == InteractionMode.STEP_BY_STEP) {
-				final String ans = IO.readln(Run.this.out, PROMPT_SHOULD_STEP);
+			if (Run.this.parameters.getInteractionMode() == InteractionMode.STEP_BY_STEP) {
+				final String ans = Run.this.in(PROMPT_SHOULD_STEP);
 				if (ans.equals("x")) {
 					stop = true;
 				}
@@ -237,12 +221,12 @@ public final class Run {
 		
 		@Override
 		public boolean atRoot() {
-		    emitPrologue();
+		    Run.this.emitPrologue();
 		    
             //prints the state (all+bytecode and branches)
             boolean stop = false;
-            if ((Run.this.parameters.stepShowMode == StepShowMode.METHOD) || 
-                (Run.this.parameters.stepShowMode == StepShowMode.SOURCE)) {
+            if (Run.this.parameters.getStepShowMode() == StepShowMode.METHOD || 
+                Run.this.parameters.getStepShowMode() == StepShowMode.SOURCE) {
                 stop = printAndAsk();
             } 
             return stop;
@@ -251,18 +235,18 @@ public final class Run {
 		@Override
 		public boolean atTraceStart() {
 			//scope not yet exhausted
-			this.scopeExhaustionMessage = null;
+			this.endOfTraceMessage = null;
 
 			//trace initially assumed to be safe
-			this.traceKind = TraceKind.SAFE;
+			this.traceKind = TraceTypes.SAFE;
 			
 			//at the start of a trace we are on a branch
 			this.isBranch = true;
 
 			//exits if user wants
 			boolean stop = false;
-			if ((Run.this.parameters.stepShowMode == StepShowMode.ALL
-					|| Run.this.parameters.stepShowMode == StepShowMode.ROOT_BRANCHES_LEAVES)) {
+			if (Run.this.parameters.getStepShowMode() == StepShowMode.ALL ||
+				Run.this.parameters.getStepShowMode() == StepShowMode.ROOT_BRANCHES_LEAVES) {
 				stop = printAndAsk();
 			}
 			
@@ -279,8 +263,8 @@ public final class Run {
 				        Run.this.guidance.step();
 				    }
 				} catch (GuidanceException e) {
-					IO.println(Run.this.err, ERROR_GUIDANCE_FAILED);
-					IO.printException(Run.this.err, e);
+				    Run.this.err(ERROR_GUIDANCE_FAILED);
+				    Run.this.err(e);
 					return true;
 				} catch (CannotManageStateException | ThreadStackEmptyException e) {
 				    throw new UnexpectedInternalException(e);
@@ -298,63 +282,65 @@ public final class Run {
 		
 		@Override
 		public void atEnd() {
-		    emitEpilogue();
+		    Run.this.emitEpilogue();
 		    super.atEnd();
 		}
 
 		@Override
 		public boolean atContradictionException(ContradictionException e) {
-			this.traceKind = TraceKind.CONTRADICTORY;
+			this.traceKind = TraceTypes.CONTRADICTORY;
 			return false;
 		}
 
 		@Override
 		public boolean atFailureException(FailureException e) {
-			this.traceKind = TraceKind.UNSAFE;
+			this.traceKind = TraceTypes.UNSAFE;
 			return false;
 		}
 		
 		@Override
 		public void atTimeout() {
-			IO.println(Run.this.log, WARNING_TIMEOUT);
+            if (Run.this.parameters.getShowWarnings()) {
+                Run.this.log(WARNING_TIMEOUT);
+            }
 		}
 		
 		@Override
 		public boolean atScopeExhaustionHeap() {
-			this.traceKind = TraceKind.OUT_OF_SCOPE;
-			this.scopeExhaustionMessage = WARNING_SCOPE_EXHAUSTED_HEAP;
+			this.traceKind = TraceTypes.OUT_OF_SCOPE;
+			this.endOfTraceMessage = WARNING_SCOPE_EXHAUSTED_HEAP;
 			return super.atScopeExhaustionHeap();
 		}
 		
 		@Override
 		public boolean atScopeExhaustionDepth() {
-			this.traceKind = TraceKind.OUT_OF_SCOPE;
-			this.scopeExhaustionMessage = WARNING_SCOPE_EXHAUSTED_DEPTH;
+			this.traceKind = TraceTypes.OUT_OF_SCOPE;
+			this.endOfTraceMessage = WARNING_SCOPE_EXHAUSTED_DEPTH;
 			return super.atScopeExhaustionDepth();
 		}
 		
 		@Override
 		public boolean atScopeExhaustionCount() {
-			this.traceKind = TraceKind.OUT_OF_SCOPE;
-			this.scopeExhaustionMessage = WARNING_SCOPE_EXHAUSTED_COUNT;
+			this.traceKind = TraceTypes.OUT_OF_SCOPE;
+			this.endOfTraceMessage = WARNING_SCOPE_EXHAUSTED_COUNT;
 			return super.atScopeExhaustionCount();
 		}
 
 		@Override
 		public boolean atStepPost() {
 		    //if a resolved reference has not been expanded, prints a warning
-		    if (Run.this.parameters.showWarnings && 
-		        this.getEngine().someReferenceNotExpanded()) {
+		    if (Run.this.parameters.getShowWarnings() && 
+		        getEngine().someReferenceNotExpanded()) {
 		        final State currentState = Run.this.engine.getCurrentState();
-		        IO.println(Run.this.log, currentState.getIdentifier() + " "
-		            + this.getEngine().getNonExpandedReferencesOrigins()
+		        Run.this.log(currentState.getIdentifier() + " "
+		            + getEngine().getNonExpandedReferencesOrigins()
 		            + WARNING_PARTIAL_REFERENCE_RESOLUTION);
 		    }
 
 		    //prints/asks (all+bytecode and branches)
 		    boolean stop = false;
-		    if (Run.this.parameters.stepShowMode == StepShowMode.ALL || 
-		        (Run.this.parameters.stepShowMode == StepShowMode.ROOT_BRANCHES_LEAVES &&
+		    if (Run.this.parameters.getStepShowMode() == StepShowMode.ALL || 
+		        (Run.this.parameters.getStepShowMode() == StepShowMode.ROOT_BRANCHES_LEAVES &&
 		        this.isBranch)) {
 		        stop = printAndAsk();
 		    } 
@@ -366,7 +352,7 @@ public final class Run {
 		public boolean atSourceRowPost() {
 			//prints/asks (all+source)
 			boolean stop = false;
-			if (Run.this.parameters.stepShowMode == StepShowMode.SOURCE) {
+			if (Run.this.parameters.getStepShowMode() == StepShowMode.SOURCE) {
 				stop = printAndAsk();
 			} 
 			return stop;
@@ -376,7 +362,7 @@ public final class Run {
 		public boolean atMethodPost() {
 			//prints/asks (all+method)
 			boolean stop = false;
-			if (Run.this.parameters.stepShowMode == StepShowMode.METHOD) {
+			if (Run.this.parameters.getStepShowMode() == StepShowMode.METHOD) {
 				stop = this.printAndAsk();
 			}
 			return stop;
@@ -387,69 +373,60 @@ public final class Run {
 			try {
                 final State currentState = Run.this.engine.getCurrentState();
 				//prints the leaf state if the case
-				if (Run.this.parameters.stepShowMode == StepShowMode.ALL       //already shown
-						|| Run.this.parameters.stepShowMode == StepShowMode.SOURCE //already shown
-						|| Run.this.parameters.stepShowMode == StepShowMode.METHOD //already shown
-						|| Run.this.parameters.stepShowMode == StepShowMode.NONE   //not to show
-						|| (this.traceKind == TraceKind.UNSAFE 
-						    && !Run.this.parameters.tracesToShow.contains(TraceTypes.UNSAFE))
-						|| (this.traceKind == TraceKind.SAFE 
-						    && !Run.this.parameters.tracesToShow.contains(TraceTypes.SAFE))
-						|| (this.traceKind == TraceKind.CONTRADICTORY
-						    && !Run.this.parameters.tracesToShow.contains(TraceTypes.CONTRADICTORY))
-						|| (this.traceKind == TraceKind.OUT_OF_SCOPE
-						    && !Run.this.parameters.tracesToShow.contains(TraceTypes.OUT_OF_SCOPE))) { 
+				if (Run.this.parameters.getStepShowMode() == StepShowMode.ALL ||    //already shown
+				    Run.this.parameters.getStepShowMode() == StepShowMode.SOURCE || //already shown
+				    Run.this.parameters.getStepShowMode() == StepShowMode.METHOD || //already shown
+				    Run.this.parameters.getStepShowMode() == StepShowMode.NONE   || //not to show
+				    !Run.this.parameters.getTracesToShow().contains(this.traceKind)) {   //not to show
 					//does nothing, the leaf state has been already printed 
 					//or must not be printed at all
 				} else {
 					//prints the refined root state for the summaries case
-					if (Run.this.parameters.stepShowMode == StepShowMode.SUMMARIES) {
+					if (Run.this.parameters.getStepShowMode() == StepShowMode.SUMMARIES) {
 						State initialRefined = Run.this.engine.getInitialState();
 						initialRefined.refine(currentState);
 						Run.this.emitState(initialRefined, true);
-						IO.print(out, "\n===\n");
+						Run.this.out("\n===\n");
 					}
 					//prints the leaf (stuck) state
 					Run.this.emitState(currentState,
-							(Run.this.parameters.stepShowMode == StepShowMode.LEAVES || 
-							Run.this.parameters.stepShowMode == StepShowMode.SUMMARIES));
+							(Run.this.parameters.getStepShowMode() == StepShowMode.LEAVES || 
+							Run.this.parameters.getStepShowMode() == StepShowMode.SUMMARIES));
 				} 
 
 				//displays trace end message and updates stats
+				final CounterKind counterKind;
 				switch (this.traceKind) {
 				case SAFE:
-					if (Run.this.parameters.showWarnings) {
-						IO.println(Run.this.log, currentState.getIdentifier() + MSG_SAFE_TRACE);
-					}
 					++Run.this.tracesSafe;
-					if (Run.this.parameters.doConcretization) {
-						checkFinalStateIsConcretizable(CounterKind.INC_SAFE);
-					}
+					this.endOfTraceMessage = MSG_SAFE_TRACE;
+					counterKind = CounterKind.INC_SAFE;
 					break;
 				case UNSAFE:
-					if (Run.this.parameters.showWarnings) {
-						IO.println(Run.this.log, currentState.getIdentifier() + MSG_UNSAFE_TRACE);
-					}
 					++Run.this.tracesUnsafe;
-					if (Run.this.parameters.doConcretization) {
-						checkFinalStateIsConcretizable(CounterKind.INC_UNSAFE);
-					}
-					break;
+                    this.endOfTraceMessage = MSG_UNSAFE_TRACE;
+                    counterKind = CounterKind.INC_UNSAFE;
+                    break;
 				case OUT_OF_SCOPE:
-					if (Run.this.parameters.showWarnings) {
-						IO.println(Run.this.log, currentState.getIdentifier() + this.scopeExhaustionMessage);
-					}
-					if (Run.this.parameters.doConcretization) {
-						checkFinalStateIsConcretizable(CounterKind.INC_OUT_OF_SCOPE);
-					}
+				    //counter is provided by runner
+                    //this.endOfTraceMessage already set
+                    counterKind = CounterKind.INC_OUT_OF_SCOPE;
 					break;
 				case CONTRADICTORY:
-					if (Run.this.parameters.showWarnings) {
-						IO.println(Run.this.log, currentState.getIdentifier() + MSG_CONTRADICTORY_TRACE);
-					}
-					//no counter
-					break;
+				    //no counter, calculated by difference
+                    this.endOfTraceMessage = MSG_CONTRADICTORY_TRACE;
+                    counterKind = null;
+                    break;
+                //to keep compiler happy:
+				default:
+				    throw new AssertionError();
 				}
+                if (Run.this.parameters.getShowWarnings()) {
+                    Run.this.log(currentState.getIdentifier() + this.endOfTraceMessage);
+                }
+                if (Run.this.parameters.getDoConcretization()) {
+                    checkFinalStateIsConcretizable(counterKind);
+                }
 				
             } catch (CannotRefineException e) {
                 throw new UnexpectedInternalException(e);
@@ -461,8 +438,8 @@ public final class Run {
 		public boolean atBacktrackPre() {
 			// prompts the user for backtrack in the case of interactive mode
             boolean stop = false;
-			if (Run.this.parameters.interactionMode == InteractionMode.PROMPT_BACKTRACK) {
-				final String ans = IO.readln(Run.this.out, PROMPT_SHOULD_BACKTRACK);
+			if (Run.this.parameters.getInteractionMode() == InteractionMode.PROMPT_BACKTRACK) {
+				final String ans = Run.this.in(PROMPT_SHOULD_BACKTRACK);
 				if (ans.equals("x")) {
 					stop = true;
 				}
@@ -474,16 +451,16 @@ public final class Run {
 		@Override
 		public boolean atDecisionException(DecisionException e) 
 		throws DecisionException {
-		    IO.println(Run.this.err, ERROR_ENGINE_DECISION_PROCEDURE);
-		    IO.printException(Run.this.err, e);
+		    Run.this.err(ERROR_ENGINE_DECISION_PROCEDURE);
+		    Run.this.err(e);
 		    return super.atDecisionException(e);
 		}
 
 		@Override
 		public boolean atEngineStuckException(EngineStuckException e)
 		throws EngineStuckException {
-			IO.println(Run.this.err, ERROR_ENGINE_STUCK);
-			IO.printException(Run.this.err, e);
+		    Run.this.err(ERROR_ENGINE_STUCK);
+		    Run.this.err(e);
 			return super.atEngineStuckException(e);
 		}
 
@@ -491,41 +468,44 @@ public final class Run {
 		public boolean atCannotManageStateException(CannotManageStateException e)
 		throws CannotManageStateException {
 			if (e instanceof CannotInvokeNativeException) {
-				IO.println(Run.this.err, ERROR_CANNOT_INVOKE_NATIVE);
+			    Run.this.err(ERROR_CANNOT_INVOKE_NATIVE);
 			} else if (e instanceof NotYetImplementedException) {
-				IO.println(Run.this.err, ERROR_UNDEF_BYTECODE);
+			    Run.this.err(ERROR_UNDEF_BYTECODE);
 			} else {
-				IO.println(Run.this.err, ERROR_UNEXPECTED);
+			    Run.this.err(ERROR_UNEXPECTED);
 			}
-			IO.printException(Run.this.err, e);
+			Run.this.err(e);
 			return super.atCannotManageStateException(e);
 		}
 
         @Override
         public boolean atClasspathException(ClasspathException e)
         throws ClasspathException {
-            IO.println(Run.this.err, ERROR_BAD_CLASSPATH);
-            IO.printException(Run.this.err, e);
+            Run.this.err(ERROR_BAD_CLASSPATH);
+            Run.this.err(e);
             return super.atClasspathException(e);
         }
 
 		@Override
 		public boolean atDecisionBacktrackException(DecisionBacktrackException e)
 		throws DecisionBacktrackException {
-			IO.println(Run.this.err, ERROR_ENGINE_DECISION_PROCEDURE);
-			IO.printException(Run.this.err, e);
+		    Run.this.err(ERROR_ENGINE_DECISION_PROCEDURE);
+		    Run.this.err(e);
 			return super.atDecisionBacktrackException(e);
 		}
 
 		@Override
 		public boolean atCannotBacktrackException(CannotBacktrackException e)
 		throws CannotBacktrackException {
-			IO.println(Run.this.err, ERROR_UNEXPECTED);
-			IO.printException(Run.this.err, e);
+		    Run.this.err(ERROR_UNEXPECTED);
+		    Run.this.err(e);
 			return super.atCannotBacktrackException(e);
 		}
 		
 		private void checkFinalStateIsConcretizable(CounterKind ctr) {
+		    if (ctr == null) {
+		        return;
+		    }
 			final long startTime = System.currentTimeMillis();
 			final boolean concretizable = Run.this.checker.checkHeap(false);
 			final long elapsedTime = System.currentTimeMillis() - startTime;
@@ -539,10 +519,10 @@ public final class Run {
 					++Run.this.tracesConcretizableUnsafe;
 				}
 			}
-            if (Run.this.parameters.showWarnings) {
+            if (Run.this.parameters.getShowWarnings()) {
                 final State currentState = Run.this.engine.getCurrentState();
-                IO.println(Run.this.log, currentState.getIdentifier() 
-                           + (concretizable ? MSG_CONCRETIZABLE_TRACE : MSG_NOT_CONCRETIZABLE_TRACE));
+                Run.this.log(currentState.getIdentifier() 
+                    + (concretizable ? MSG_CONCRETIZABLE_TRACE : MSG_NOT_CONCRETIZABLE_TRACE));
             }
 		}
 	}
@@ -562,10 +542,12 @@ public final class Run {
 			return retVal;
 		}
 
-        // runs the method
-        if (this.parameters.showInfo) {
-            IO.println(this.log, MSG_START + this.parameters.getMethodSignature() + " at " + new Date() + ".");
+		// prints feedback
+        if (this.parameters.getShowInfo()) {
+            log(MSG_START + this.parameters.getMethodSignature() + " at " + new Date() + ".");
         }
+        
+        // runs
 		try {
 			this.runner.run();
 		} catch (ClasspathException | 
@@ -576,106 +558,33 @@ public final class Run {
 		} catch (ThreadStackEmptyException | ContradictionException |
 		         FailureException | UnexpectedInternalException e) {
 			//this should never happen because Actions does not rethrow these exceptions
-			IO.println(this.err, ERROR_UNEXPECTED);
-			IO.printException(Run.this.err, e);
+			err(ERROR_UNEXPECTED);
+			err(e);
 			retVal = 2;
 		}
 		
 		// prints statistics
-        if (this.parameters.showInfo) {
-            IO.println(this.log, MSG_END + new Date() + ".");
+        if (this.parameters.getShowInfo()) {
+            log(MSG_END + new Date() + ".");
             printFinalStats();
         }
-        
-        // quits the numeric decision procedure for the checker
-        if (this.decisionProcedureConcretization != null) {
-            try {
-                this.decisionProcedureConcretization.close();
-                this.decisionProcedureConcretization = null;
-                this.checker = null;
-            } catch (DecisionException e) {
-                IO.println(this.err, ERROR_ENGINE_QUIT_DECISION_PROCEDURE);
-                IO.printException(this.err, e);
-                retVal = 1;
-            }
-        }
 
-		// quits the engine
-		try {
-			this.engine.close();
-		} catch (DecisionException e) {
-			IO.println(this.err, ERROR_ENGINE_QUIT_DECISION_PROCEDURE);
-			IO.printException(this.err, e);
-			retVal = 1;
-		} catch (UnexpectedInternalException e) {
-			IO.println(this.err, ERROR_UNEXPECTED);
-			IO.printException(Run.this.err, e);
-			retVal = 2;
-		}
-
-		// closes all the output streams with the exception of
-		// stdout/err
-		for (PrintStream p : this.out) {
-			if (p != null && p != System.out) {
-				p.close();
-			}
-		}
-		for (PrintStream p : this.err) {
-			if (p != null && p != System.err) {
-				p.close();
-			}
-		}
-
-		// returns the error code
-		return retVal;
+		// closes and returns the error code
+		return close();
 	}
 	
-	private void printFinalStats() {
-        final long elapsedTime = this.runner.getStopTime() - this.runner.getStartTime();
-        final long tracesContradictory = 
-                this.runner.getTracesTotal() 
-                - this.tracesSafe 
-                - this.tracesUnsafe
-                - this.runner.getTracesOutOfScope();
-        IO.println(this.log, 
-                MSG_END_STATES + this.engine.getAnalyzedStates() + ", "
-                + MSG_END_TRACES_TOT + this.runner.getTracesTotal() + ", "
-                + MSG_END_TRACES_SAFE + this.tracesSafe 
-                + (Run.this.parameters.doConcretization ? 
-                        " (" + this.tracesConcretizableSafe + " concretizable)"
-                    : "")
-                + ", "
-                + MSG_END_TRACES_UNSAFE + this.tracesUnsafe 
-                + (Run.this.parameters.doConcretization ? 
-                        " (" + this.tracesConcretizableUnsafe + " concretizable)"
-                    : "")
-                + ", "
-                + MSG_END_TRACES_OUT_OF_SCOPE + this.runner.getTracesOutOfScope()
-                + (Run.this.parameters.doConcretization ? 
-                        " (" + this.tracesConcretizableOutOfScope + " concretizable)"  
-                    : "")
-                + ", "
-                + MSG_END_TRACES_VIOLATING_ASSUMPTION + tracesContradictory + ".");
-        IO.print(this.log, 
-                MSG_END_ELAPSED + Util.formatTime(elapsedTime) + ", "
-                + MSG_END_SPEED + this.engine.getAnalyzedStates() * 1000 / elapsedTime + " states/sec"
-                + (Run.this.parameters.doConcretization ? 
-                        ", " + MSG_END_ELAPSED_CONCRETIZATION + Util.formatTime(elapsedTimeConcretization)
-                        + ", (" + Util.formatTimePercent(elapsedTimeConcretization, elapsedTime) + " of total)"
-                    : ""));
-        if (this.timer == null) {
-            IO.println(this.log, ".");
-        } else {
-            final long elapsedTimeDecisionProcedure = this.timer.getTime();
-            IO.println(this.log, 
-                ", " + MSG_END_DECISION + Util.formatTime(elapsedTimeDecisionProcedure) 
-                + " (" + Util.formatTimePercent(elapsedTimeDecisionProcedure, elapsedTime) + " of total).");
-        }
+    /**
+     * Gets a line of text on the input stream.
+     * 
+     * @param s the input prompt.
+     * @return the read line.
+     */
+    public String in(String prompt) {
+        return IO.readln(this.out, prompt);
+    }
 
-	}
-	
 	/**
-	 * Prints a line of text on the output.
+	 * Prints a line of text on the output streams.
 	 * 
 	 * @param s the text to be printed.
 	 */
@@ -684,7 +593,7 @@ public final class Run {
 	}
 
 	/**
-	 * Prints a line of text on the log.
+	 * Prints a line of text on the log streams.
 	 * 
 	 * @param s the text to be printed.
 	 */
@@ -693,12 +602,21 @@ public final class Run {
 	}
 
 	/**
-	 * Prints a line of text on the error.
+	 * Prints a line of text on the error streams.
 	 * 
 	 * @param s the text to be printed.
 	 */
 	public void err(String s) {
 		IO.println(this.err, s);
+	}
+	
+	/**
+	 * Prints a throwable on the error streams.
+	 * 
+	 * @param t the {@link Throwable} to be printed.
+	 */
+	public void err(Throwable t) {
+	    IO.printException(this.err, t);
 	}
 
     private static final String COMMANDLINE_LAUNCH_Z3   = " -smt2 -in -t:10";
@@ -708,7 +626,7 @@ public final class Run {
 	 * Processes the provided {@link RunParameters} and builds the {@link Engine}
 	 * which will be used by the runner to perform the symbolic execution.
 	 * 
-	 * @return a {@code int} value representing an error code.
+	 * @return an {@code int} value representing an error code.
 	 */
 	private int build() {
 		//TODO possibly move inside a builder
@@ -719,11 +637,9 @@ public final class Run {
 	    setStreams();
 	    
 		// prints a welcome message
-        if (this.parameters.showInfo) {
-            IO.println(this.log, MSG_WELCOME_TXT);
+        if (this.parameters.getShowInfo()) {
+            log(MSG_WELCOME_TXT);
         }
-
-		//defines the runner actions
 
 		//builds
 		try {
@@ -744,32 +660,32 @@ public final class Run {
             createHeapChecker(this.decisionProcedureConcretization);
         } catch (NonexistingObservedVariablesException e) {
             for (int i : e.getVariableIndices()) {
-                if (Run.this.parameters.showWarnings) {
-                    IO.println(this.log, WARNING_PARAMETERS_UNRECOGNIZABLE_VARIABLE + i
-                            + (i == 1 ? "-st." : i == 2 ? "-nd." : i == 3 ? "-rd." : "-th."));
+                if (Run.this.parameters.getShowWarnings()) {
+                    log(WARNING_PARAMETERS_UNRECOGNIZABLE_VARIABLE + i
+                        + (i == 1 ? "-st." : i == 2 ? "-nd." : i == 3 ? "-rd." : "-th."));
                 }
             }
 		} catch (DecisionException e) {
-			IO.println(this.err, ERROR_ENGINE_INIT_DECISION_PROCEDURE);
-			IO.printException(this.err, e);
+			err(ERROR_ENGINE_INIT_DECISION_PROCEDURE);
+			err(e);
 			return 1;
 		} catch (InitializationException e) {
-			IO.println(this.err, ERROR_ENGINE_INIT_INITIAL_STATE);
-			IO.printException(this.err, e);
+			err(ERROR_ENGINE_INIT_INITIAL_STATE);
+			err(e);
 			return 1;
         } catch (ClasspathException e) {
-            IO.println(this.err, ERROR_BAD_CLASSPATH);
-            IO.printException(Run.this.err, e);
+            err(ERROR_BAD_CLASSPATH);
+            err(e);
             return 1;
         } catch (CannotBuildDecisionProcedureException e) {
-            IO.println(this.err, ERROR_DECISION_PROCEDURE_FAILED + e.getCause() + ".");
+            err(ERROR_DECISION_PROCEDURE_FAILED + e.getCause() + ".");
             return 1;
         } catch (CannotBuildEngineException e) {
-            IO.println(this.err, ERROR_BUILD_FAILED + e.getCause() + ".");
+            err(ERROR_BUILD_FAILED + e.getCause() + ".");
             return 2;
 		} catch (InvalidClassFileFactoryClassException | UnexpectedInternalException e) {
-			IO.println(this.err, ERROR_UNEXPECTED);
-			IO.printException(Run.this.err, e);
+			err(ERROR_UNEXPECTED);
+			err(e);
 			return 2;
 		}
 		
@@ -782,7 +698,7 @@ public final class Run {
         this.out = new PrintStream[2];
         this.log = new PrintStream[2];
         this.err = new PrintStream[2];
-        if (this.parameters.showOnConsole) {
+        if (this.parameters.getShowOnConsole()) {
             this.out[0] = System.out;
             this.log[0] = System.err;
             this.err[0] = System.err;
@@ -796,18 +712,18 @@ public final class Run {
                 final File f = new File(this.parameters.getOutputFileName());
                 this.err[1] = new PrintStream(f);
             } catch (FileNotFoundException | SecurityException e) {
-                IO.println(this.err, ERROR_DUMP_FILE_OPEN);
+                err(ERROR_DUMP_FILE_OPEN);
                 this.err[1] = null;
             }
         }
         this.out[1] = this.log[1] = this.err[1];
 
         // sets line separator style
-        if (this.parameters.textMode == TextMode.WINDOWS) {
+        if (this.parameters.getTextMode() == TextMode.WINDOWS) {
             System.setProperty("line.separator", "\r\n");
-        } else if (this.parameters.textMode == TextMode.UNIX) {
+        } else if (this.parameters.getTextMode() == TextMode.UNIX) {
             System.setProperty("line.separator", "\n");
-        }
+        } //else it is platform: nothing to do
 	}
 	
 	/**
@@ -855,7 +771,7 @@ public final class Run {
     private void createFormatter() throws CannotBuildFormatterException {
         final StateFormatMode type = this.parameters.getStateFormatMode();
         if (type == StateFormatMode.FULLTEXT) {
-            this.formatterBranches = new StateFormatterText(this.parameters.srcPath) {
+            this.formatterBranches = new StateFormatterText(this.parameters.getSourcePath()) {
                 @Override
                 public void formatState(State s) {
                     this.output += LINE_SEP; // gutter
@@ -865,7 +781,7 @@ public final class Run {
                     super.formatState(s);
                 }
             };
-            this.formatterOthers = new StateFormatterText(this.parameters.srcPath) {
+            this.formatterOthers = new StateFormatterText(this.parameters.getSourcePath()) {
                 @Override
                 public void formatState(State s) {
                     this.output += LINE_SEP; // gutter
@@ -892,13 +808,37 @@ public final class Run {
             throw new CannotBuildFormatterException(ERROR_UNDEF_STATE_FORMAT);
         }
     }
+
+    /**
+     * Returns a banner around a {@link String}.
+     * 
+     * @param s a {@link String} around which the banner is built, or
+     *            {@link null} for a clean banner.
+     * @return the banner.
+     */
+    private static String banner(String s, boolean branch) {
+        String retVal = (branch ? (".:: " + s + " ::. ") : (s + " "));
+        final StringBuilder buf = new StringBuilder();
+        for (int i = retVal.length() + 1; i <= BANNER_LENGTH; i++) {
+            buf.append(BANNER_CHAR);
+        }
+        retVal += buf.toString();
+        return retVal;
+    }
 	
+    /**
+     * Creates a {@link CalculatorRewriting}.
+     * 
+     * @return the {@link CalculatorRewriting}.
+     * @throws CannotBuildEngineException upon failure 
+     *         (cannot instantiate rewriters).
+     */
 	private CalculatorRewriting createCalculator() throws CannotBuildEngineException {
 		final CalculatorRewriting calc;
 		try {
 			calc = new CalculatorRewriting();
 			calc.addRewriter(new RewriterOperationOnSimplex()); //indispensable
-			for (final Class<? extends Rewriter> rewriterClass : this.parameters.rewriterClasses) {
+			for (final Class<? extends Rewriter> rewriterClass : this.parameters.getRewriters()) {
 				if (rewriterClass == null) { 
 				    //no rewriter
 				    continue; 
@@ -924,24 +864,24 @@ public final class Run {
         final Path path = this.parameters.getExternalDecisionProcedurePath();       
 
         //prints some feedback
-        if (this.parameters.showInfo) {
+        if (this.parameters.getShowInfo()) {
             if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC3) {
-                IO.println(this.log, MSG_TRY_CVC3 + (path == null ? "default" : path.toString()) + ".");
+                log(MSG_TRY_CVC3 + (path == null ? "default" : path.toString()) + ".");
             } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.SICSTUS) {
-                IO.println(this.log, MSG_TRY_SICSTUS + (path == null ? "default" : path.toString()) + ".");
+                log(MSG_TRY_SICSTUS + (path == null ? "default" : path.toString()) + ".");
             } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.Z3) {
-                IO.println(this.log, MSG_TRY_Z3 + (path == null ? "default" : path.toString()) + ".");
+                log(MSG_TRY_Z3 + (path == null ? "default" : path.toString()) + ".");
             } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC4) {
-                IO.println(this.log, MSG_TRY_CVC4 + (path == null ? "default" : path.toString()) + ".");
-            } else if (this.parameters.interactionMode == InteractionMode.NO_INTERACTION) {
-                IO.println(this.log, MSG_DECISION_BASIC);
+                log(MSG_TRY_CVC4 + (path == null ? "default" : path.toString()) + ".");
+            } else if (this.parameters.getInteractionMode() == InteractionMode.NO_INTERACTION) {
+                log(MSG_DECISION_BASIC);
             } else {
-                IO.println(this.log, MSG_DECISION_INTERACTIVE);
+                log(MSG_DECISION_INTERACTIVE);
             }
         }
 	    
 		//initializes cores
-        final boolean needHeapCheck = (this.parameters.useConservativeRepOks || this.parameters.doConcretization);
+        final boolean needHeapCheck = (this.parameters.getUseConservativeRepOks() || this.parameters.getDoConcretization());
 		DecisionProcedure core = new DecisionProcedureAlwSat();
 		DecisionProcedure coreNumeric = (needHeapCheck ? new DecisionProcedureAlwSat() : null);
 		
@@ -1008,7 +948,7 @@ public final class Run {
 		    checkerParameters.setDecisionProcedure(this.decisionProcedureConcretization);
 			@SuppressWarnings("resource")
             final DecisionProcedureConservativeRepOk dec = 
-			    new DecisionProcedureConservativeRepOk(core, calc, checkerParameters, this.parameters.conservativeRepOks);
+			    new DecisionProcedureConservativeRepOk(core, calc, checkerParameters, this.parameters.getConservativeRepOks());
             dec.setInitialStateSupplier(this::getInitialState); 
             dec.setCurrentStateSupplier(this::getCurrentState); 
 			core = dec;
@@ -1025,20 +965,20 @@ public final class Run {
 		core = tCore;
 
 		//wraps with printer if interaction with decision procedure must be shown
-		if (this.parameters.showDecisionProcedureInteraction) {
+		if (this.parameters.getShowDecisionProcedureInteraction()) {
 			core = new DecisionProcedureDecoratorPrint(core, out);
 		}
 				
 		//finally guidance
 		if (this.parameters.isGuided()) {
 			final RunnerParameters guidanceDriverParameters = this.parameters.getGuidanceDriverParameters(calc);
-			if (this.parameters.showInfo) {
-			    IO.println(log, MSG_TRY_GUIDANCE + guidanceDriverParameters.getMethodSignature() + ".");
+			if (this.parameters.getShowInfo()) {
+			    log(MSG_TRY_GUIDANCE + guidanceDriverParameters.getMethodSignature() + ".");
 			}
 			try {
 				this.guidance = new DecisionProcedureGuidance(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
 			} catch (GuidanceException | UnexpectedInternalException e) {
-				IO.println(err, ERROR_GUIDANCE_FAILED + e.getMessage());
+				err(ERROR_GUIDANCE_FAILED + e.getMessage());
 				throw new CannotBuildDecisionProcedureException(e);
 			}
 			core = this.guidance;
@@ -1061,7 +1001,7 @@ public final class Run {
             final RunnerParameters checkerParameters = this.parameters.getConcretizationDriverParameters();
             checkerParameters.setDecisionProcedure(decisionProcedureConcretization);
             this.checker = 
-                new InitialHeapChecker(checkerParameters, ConcretizationCheck.class, this.parameters.concretizationMethods);
+                new InitialHeapChecker(checkerParameters, ConcretizationCheck.class, this.parameters.getConcretizationMethods());
             this.checker.setInitialStateSupplier(this::getInitialState); 
             this.checker.setCurrentStateSupplier(this::getCurrentState); 
         }
@@ -1073,7 +1013,7 @@ public final class Run {
 	private void emitPrologue() {
         this.formatterOthers.cleanup();
         this.formatterOthers.formatPrologue();
-        IO.print(this.out, this.formatterOthers.emit());
+        out(this.formatterOthers.emit());
 	}
 
 	/**
@@ -1088,7 +1028,7 @@ public final class Run {
 			(isRootBranch ? this.formatterBranches : this.formatterOthers);
         f.cleanup();
 		f.formatState(s);
-		IO.print(this.out, f.emit());
+		out(f.emit());
 	}
     
     /**
@@ -1097,27 +1037,104 @@ public final class Run {
 	private void emitEpilogue() {
         this.formatterOthers.cleanup();
         this.formatterOthers.formatEpilogue();
-        IO.print(this.out, this.formatterOthers.emit());
+        out(this.formatterOthers.emit());
 	}
-
+    
 	/**
-	 * Returns a banner around a {@link String}.
-	 * 
-	 * @param s a {@link String} around which the banner is built, or
-	 *            {@link null} for a clean banner.
-	 * @return the banner.
+	 * Prints statistics.
 	 */
-	private static String banner(String s, boolean branch) {
-		String retVal = (branch ? (".:: " + s + " ::. ") : (s + " "));
-		final StringBuilder buf = new StringBuilder();
-		for (int i = retVal.length() + 1; i <= BANNER_LENGTH; i++) {
-			buf.append(BANNER_CHAR);
-		}
-		retVal += buf.toString();
-		return retVal;
-	}
+    private void printFinalStats() {
+        final long elapsedTime = this.runner.getStopTime() - this.runner.getStartTime();
+        final long tracesContradictory = 
+                this.runner.getTracesTotal() 
+                - this.tracesSafe 
+                - this.tracesUnsafe
+                - this.runner.getTracesOutOfScope();
+        log(MSG_END_STATES + this.engine.getAnalyzedStates() + ", "
+            + MSG_END_TRACES_TOT + this.runner.getTracesTotal() + ", "
+            + MSG_END_TRACES_SAFE + this.tracesSafe 
+            + (Run.this.parameters.getDoConcretization() ? 
+                    " (" + this.tracesConcretizableSafe + " concretizable)"
+                : "")
+            + ", "
+            + MSG_END_TRACES_UNSAFE + this.tracesUnsafe 
+            + (Run.this.parameters.getDoConcretization() ? 
+                    " (" + this.tracesConcretizableUnsafe + " concretizable)"
+                : "")
+            + ", "
+            + MSG_END_TRACES_OUT_OF_SCOPE + this.runner.getTracesOutOfScope()
+            + (Run.this.parameters.getDoConcretization() ? 
+                    " (" + this.tracesConcretizableOutOfScope + " concretizable)"  
+                : "")
+            + ", "
+            + MSG_END_TRACES_VIOLATING_ASSUMPTION + tracesContradictory + ".");
+        log(MSG_END_ELAPSED + Util.formatTime(elapsedTime) + ", "
+            + MSG_END_SPEED + this.engine.getAnalyzedStates() * 1000 / elapsedTime + " states/sec"
+            + (Run.this.parameters.getDoConcretization() ? 
+                    ", " + MSG_END_ELAPSED_CONCRETIZATION + Util.formatTime(elapsedTimeConcretization)
+                    + ", (" + Util.formatTimePercent(elapsedTimeConcretization, elapsedTime) + " of total)"
+                : ""));
+        if (this.timer == null) {
+            log(".");
+        } else {
+            final long elapsedTimeDecisionProcedure = this.timer.getTime();
+            log(", " + MSG_END_DECISION + Util.formatTime(elapsedTimeDecisionProcedure) 
+                + " (" + Util.formatTimePercent(elapsedTimeDecisionProcedure, elapsedTime) + " of total).");
+        }
 
-	// Static final members.
+    }
+    
+    /**
+     * Closes this {@link Run} object.
+     * 
+     * @return an {@code int} value representing an error code.
+     */
+    private int close() {
+        int retVal = 0;
+        
+        // quits the numeric decision procedure for the checker
+        if (this.decisionProcedureConcretization != null) {
+            try {
+                this.decisionProcedureConcretization.close();
+                this.decisionProcedureConcretization = null;
+                this.checker = null;
+            } catch (DecisionException e) {
+                err(ERROR_ENGINE_QUIT_DECISION_PROCEDURE);
+                err(e);
+                retVal = 1;
+            }
+        }
+
+        // quits the engine
+        try {
+            this.engine.close();
+        } catch (DecisionException e) {
+            err(ERROR_ENGINE_QUIT_DECISION_PROCEDURE);
+            err(e);
+            retVal = 1;
+        } catch (UnexpectedInternalException e) {
+            err(ERROR_UNEXPECTED);
+            err(e);
+            retVal = 2;
+        }
+
+        // closes all the output streams with the exception of
+        // stdout/err
+        for (PrintStream p : this.out) {
+            if (p != null && p != System.out) {
+                p.close();
+            }
+        }
+        for (PrintStream p : this.err) {
+            if (p != null && p != System.err) {
+                p.close();
+            }
+        }
+        
+        return retVal;
+    }
+
+	// Private constants.
 
 	/** Length of separator between text areas. */
 	private static final int BANNER_LENGTH = 35;

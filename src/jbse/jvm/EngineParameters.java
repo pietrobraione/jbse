@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -167,22 +168,22 @@ public final class EngineParameters implements Cloneable {
 	private DecisionProcedureAlgorithms decisionProcedure = null;
 	
 	/** The signatures of the variables observed by {@code this.observers}. */
-	ArrayList<Signature> observedVars = new ArrayList<>();
+	private ArrayList<Signature> observedVars = new ArrayList<>();
 
 	/** The {@code ExecutionObserver}s. */
-	ArrayList<ExecutionObserver> observers = new ArrayList<>();
+	private ArrayList<ExecutionObserver> observers = new ArrayList<>();
 	
 	/** The {@link TriggerRulesRepo}, containing all the trigger rules. */
-	TriggerRulesRepo repoTrigger = new TriggerRulesRepo();
+	private TriggerRulesRepo repoTrigger = new TriggerRulesRepo();
 	
 	/** The expansion backdoor. */
-	HashMap<String, Set<String>> expansionBackdoor = new HashMap<>();
+	private HashMap<String, Set<String>> expansionBackdoor = new HashMap<>();
 
 	/** The methods overridden at the meta-level. */
-	ArrayList<String[]> metaOverridden = new ArrayList<>();
+	private ArrayList<String[]> metaOverridden = new ArrayList<>();
 
     /** The methods to be handled as uninterpreted functions. */
-	ArrayList<String[]> uninterpreted = new ArrayList<>();
+	private ArrayList<String[]> uninterpreted = new ArrayList<>();
 
 	/**  
 	 * The signature of the method to be executed; overridden by {@code initialState}'s 
@@ -265,18 +266,50 @@ public final class EngineParameters implements Cloneable {
 	 * Adds an {@link ExecutionObserver} performing additional
 	 * actions when a field changes its value.
 	 * 
-	 * @param className the name of the class where the field
+	 * @param fldClassName the name of the class where the field
 	 *        resides.
-	 * @param type the type of the field.
-	 * @param observedVar the name of the field.
+	 * @param fldType the type of the field.
+	 * @param fldName the name of the field.
 	 * @param observer an {@link ExecutionObserver}. It will be 
 	 *        notified whenever the field {@code observedVar} of 
 	 *        any instance of {@code className} is modified.
 	 */ 
-	public void addExecutionObserver(String className, String type, String observedVar, ExecutionObserver observer) {
-		final Signature sig = new Signature(className, type, observedVar);
+	public void addExecutionObserver(String fldClassName, String fldType, String fldName, ExecutionObserver observer) {
+		final Signature sig = new Signature(fldClassName, fldType, fldName);
 		this.observedVars.add(sig);
 		this.observers.add(observer);
+	}
+	
+	/**
+	 * Clears the {@link ExecutionObserver}s.
+	 */
+	public void clearExecutionObservers() {
+	    this.observedVars.clear();
+	    this.observers.clear();
+	}
+	
+	/**
+	 * Returns the {@link Signature}s of the fields
+	 * observed by some {@link ExecutionObserver}.
+	 * 
+	 * @return a {@link List}{@code <}{@link Signature}{@code >},
+     *         in the order matching that of the return value 
+     *         of {@link #getObservers()}.
+	 */
+	public List<Signature> getObservedFields() {
+	    return new ArrayList<>(this.observedVars);
+	}
+	
+	/**
+     * Returns the {@link Signature}s of the fields
+     * observed by some {@link ExecutionObserver}.
+     * 
+     * @return a {@link List}{@code <}{@link Signature}{@code >},
+     *         in the order matching that of the return value 
+     *         of {@link #getObservedFields()}.
+	 */
+	public List<ExecutionObserver> getObservers() {
+	    return new ArrayList<>(this.observers);
 	}
 
 	/**
@@ -331,6 +364,13 @@ public final class EngineParameters implements Cloneable {
 	public void addClasspath(String... paths) { 
 		this.initialState = null; 
 		Collections.addAll(this.paths, paths); 
+	}
+	
+	/**
+	 * Clears the symbolic execution's classpath.
+	 */
+	public void clearClasspath() {
+	    this.paths.clear();
 	}
 
 	/**
@@ -552,6 +592,27 @@ public final class EngineParameters implements Cloneable {
 		}
 		this.metaOverridden.add(new String[] { className, parametersSignature, methodName, metaDelegateClassName });
 	}
+	
+	/**
+	 * Clears the specifications of the meta-level implementations 
+     * of methods.
+	 */
+	public void clearMetaOverridden() {
+	    this.metaOverridden.clear();
+	}
+	
+	/**
+	 * Returns the specifications of the meta-level implementations 
+	 * of methods.
+	 * 
+	 * @return A {@link List}{@code <}{@link String}{@code []>}, 
+     *         where each array is a 4-ple (method class name, 
+     *         method parameters, method name, meta delegate
+     *         class name).
+	 */
+	public ArrayList<String[]> getMetaOverridden() {
+	    return new ArrayList<>(this.metaOverridden);
+	}
 
 	/**
 	 * Specifies that a method must be treated as an uninterpreted pure
@@ -570,6 +631,27 @@ public final class EngineParameters implements Cloneable {
 			throw new NullPointerException();
 		}
 		this.uninterpreted.add(new String[] { className, parametersSignature, methodName, functionName });
+	}
+	
+	/**
+	 * Clears the methods that must be treated as
+     * uninterpreted pure functions.
+	 */
+	public void clearUninterpreted() {
+	    this.uninterpreted.clear();
+	}
+	
+	/**
+	 * Returns the methods that must be treated as
+	 * uninterpreted pure functions.
+	 * 
+	 * @return A {@link List}{@code <}{@link String}{@code []>}, 
+	 *         where each array is a 4-ple (method class name, 
+	 *         method parameters, method name, uninterpreted 
+	 *         function name).
+	 */
+	public List<String[]> getUninterpreted() {
+	    return new ArrayList<>(this.uninterpreted);
 	}
 	
 	/**

@@ -4,7 +4,6 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -13,7 +12,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
-import jbse.apps.run.Run.TraceKind;
 import jbse.bc.Classpath;
 import jbse.bc.Signature;
 import jbse.dec.DecisionProcedure;
@@ -160,7 +158,7 @@ public final class RunParameters implements Cloneable {
 	}
 	
 	/**
-	 * The leaf types.
+	 * The trace (leaf) types.
 	 * 
 	 * @author Pietro Braione
 	 */
@@ -170,47 +168,25 @@ public final class RunParameters implements Cloneable {
 		 * trace that does not violate any assertion
 		 * or assumption. 
 		 */
-		SAFE {
-			@Override
-			TraceKind toInternal() {
-				return TraceKind.SAFE;
-			}
-		},
+		SAFE,
 
 		/** 
 		 * An unsafe leaf, i.e., the final state of a 
 		 * trace that violates an assertion. 
 		 */
-		UNSAFE {
-			@Override
-			TraceKind toInternal() {
-				return TraceKind.UNSAFE;
-			}
-		},
+		UNSAFE,
 
 		/** 
 		 * A leaf that exhausts a bound.
 		 */
-		OUT_OF_SCOPE {
-			@Override
-			TraceKind toInternal() {
-				return TraceKind.OUT_OF_SCOPE;
-			}
-		},
+		OUT_OF_SCOPE,
 		
 		/**
 		 * A contradictory leaf, i.e, the final 
 		 * state of a trace that violates an 
 		 * assumption.
 		 */
-		CONTRADICTORY {
-			@Override
-			TraceKind toInternal() {
-				return TraceKind.CONTRADICTORY;
-			}
-		};
-		
-		abstract TraceKind toInternal();
+		CONTRADICTORY
 	}
 
 	/**
@@ -307,7 +283,7 @@ public final class RunParameters implements Cloneable {
 	private RunnerParameters runnerParameters;
 
 	/** The {@link Class}es of all the rewriters to be applied to terms (order matters). */
-	ArrayList<Class<? extends Rewriter>> rewriterClasses = new ArrayList<>();
+	private ArrayList<Class<? extends Rewriter>> rewriterClasses = new ArrayList<>();
 	
 	/**
 	 * The decision procedure to be used for deciding the 
@@ -322,17 +298,17 @@ public final class RunParameters implements Cloneable {
 	 * Whether the engine should use its sign analysis 
 	 * decision support.
 	 */
-	boolean doSignAnalysis = false;
+	private boolean doSignAnalysis = false;
 	
 	/** Whether the engine should do sign analysis before invoking the decision procedure. */
-	boolean doEqualityAnalysis = false;
+	private boolean doEqualityAnalysis = false;
 	
 	/** 
 	 * Whether the engine should use the LICS decision procedure.
 	 * Set to true by default because the LICS decision procedure
 	 * also resolves class initialization. 
 	 */
-	boolean useLICS = true;
+	private boolean useLICS = true;
 	
 	/** The {@link LICSRuleRepo}, containing all the LICS rules. */
 	private LICSRulesRepo repoLICS = new LICSRulesRepo();
@@ -344,96 +320,96 @@ public final class RunParameters implements Cloneable {
 	 * Whether the engine should use the conservative 
 	 * repOK decision procedure.
 	 */
-	boolean useConservativeRepOks = false;
+    private boolean useConservativeRepOks = false;
 	
 	/**
 	 *  Associates classes with the name of their respective
 	 *  conservative repOK methods. 
 	 */
-	HashMap<String, String> conservativeRepOks = new HashMap<>();
+	private HashMap<String, String> conservativeRepOks = new HashMap<>();
 
 	/** The heap scope for conservative repOK and concretization execution. */
 	private HashMap<String, Function<State, Integer>> concretizationHeapScope = new HashMap<>();
 
 	/** The depth scope for conservative repOK and concretization execution. */
-	int concretizationDepthScope = 0;
+	private int concretizationDepthScope = 0;
 
 	/** The count scope for conservative repOK and concretization execution. */
-	int concretizationCountScope = 0;
+	private int concretizationCountScope = 0;
 	
 	/** The {@link DecisionProcedureCreationStrategy} list. */
-	ArrayList<DecisionProcedureCreationStrategy> creationStrategies = new ArrayList<>();
+	private ArrayList<DecisionProcedureCreationStrategy> creationStrategies = new ArrayList<>();
 	
 	/** Should show output on console? */
-	boolean showOnConsole = true;
+	private boolean showOnConsole = true;
 
 	/** The name of the output file. */
-	String outFileName = null;
+	private String outFileName = null;
 
 	/** The text mode. */
-	TextMode textMode = TextMode.PLATFORM;
+	private TextMode textMode = TextMode.PLATFORM;
 
 	/** The interaction mode. */
-	InteractionMode interactionMode = InteractionMode.NO_INTERACTION;
+	private InteractionMode interactionMode = InteractionMode.NO_INTERACTION;
 
 	/** The step show mode. */
-	StepShowMode stepShowMode = StepShowMode.ALL;
+	private StepShowMode stepShowMode = StepShowMode.ALL;
 
 	/** The traces to show. */
-	EnumSet<TraceTypes> tracesToShow = EnumSet.allOf(TraceTypes.class);
+	private EnumSet<TraceTypes> tracesToShow = EnumSet.allOf(TraceTypes.class);
 
 	/** The format mode. */
-	StateFormatMode stateFormatMode = StateFormatMode.FULLTEXT;
+	private StateFormatMode stateFormatMode = StateFormatMode.FULLTEXT;
 	
 	/** 
 	 * Maximum stack depth to which we show code;
 	 * if 0 we show at any depth (default).
 	 */
-	int stackDepthShow = 0;
+	private int stackDepthShow = 0;
 	
 	/** 
 	 * {@code true} iff at the end of traces the engine 
 	 * must check if the trace can be concretized.
 	 */
-	boolean doConcretization = false;
+	private boolean doConcretization = false;
     
     /**
      *  Associates classes with the name of their respective
      *  concretization methods. 
      */
-    HashMap<String, String> concretizationMethods = new HashMap<>();
+	private HashMap<String, String> concretizationMethods = new HashMap<>();
 
     /** 
      * {@code true} iff the tool info (welcome message, 
      * progress of tool initialization, final stats) 
      * must be logged. 
      */
-    boolean showInfo = true;
+	private boolean showInfo = true;
 
 	/** 
 	 * {@code true} iff the symbolic execution warnings 
 	 * must be logged. 
 	 */
-	boolean showWarnings = true;
+	private boolean showWarnings = true;
 
 	/** 
 	 * {@code true} iff the interactions between the 
 	 * runner and the decision procedure must be logged to 
 	 * the output. 
 	 */
-	boolean showDecisionProcedureInteraction = false;
+	private boolean showDecisionProcedureInteraction = false;
 
 	/**  
 	 * The source code path, or {@code null} iff no path is specified, 
 	 * which is the default. 
 	 */
-	ArrayList<String> srcPath = new ArrayList<String>();
+	private ArrayList<String> srcPath = new ArrayList<String>();
 
     /** Whether the symbolic execution is guided along a concrete one. */
     private boolean guided = false;
     
 	/** The signature of the driver method when guided == true. */
-	Signature driverSignature = null;
+    private Signature driverSignature = null;
 	
 	/**
 	 * Constructor.
@@ -493,6 +469,13 @@ public final class RunParameters implements Cloneable {
 	 */
 	public void addClasspath(String... paths) { 
 		this.runnerParameters.addClasspath(paths);
+	}
+	
+    /**
+     * Clears the symbolic execution's classpath.
+     */
+	public void clearClasspath() {
+	    this.runnerParameters.clearClasspath();
 	}
 
 	/**
@@ -717,15 +700,22 @@ public final class RunParameters implements Cloneable {
 	}
 	
 	/**
+	 * Clears the classes of the rewriters to be applied to
+     * the terms created during symbolic execution.
+	 */
+	public void clearRewriters() {
+	    this.rewriterClasses.clear();
+	}
+	
+	/**
 	 * Returns the classes of the rewriters to be applied to
      * the terms created during symbolic execution.
      * 
-	 * @return a {@link Collection}{@code <}{@link Class}{@code <? extends }
+	 * @return a {@link List}{@code <}{@link Class}{@code <? extends }
 	 * {@link Rewriter}{@code >>}. It may contain {@code null}.
 	 */
-	@SuppressWarnings("unchecked")
-    public Collection<Class<? extends Rewriter>> getRewriters() {
-	    return (Collection<Class<? extends Rewriter>>) this.rewriterClasses.clone();
+    public List<Class<? extends Rewriter>> getRewriters() {
+	    return new ArrayList<>(this.rewriterClasses);
 	}
 
 	/**
@@ -811,7 +801,7 @@ public final class RunParameters implements Cloneable {
      * @return a {@link List}{@code <}{@link DecisionProcedureCreationStrategy}{@code >}.
      */
     public List<DecisionProcedureCreationStrategy> getDecisionProcedureCreationStrategies() {
-        return Collections.unmodifiableList(this.creationStrategies);
+        return new ArrayList<>(this.creationStrategies);
     }
 	
 	/**
@@ -877,7 +867,7 @@ public final class RunParameters implements Cloneable {
 	}
 
 	/**
-	 * Specifies the conservative repOK method of a class
+	 * Specifies the conservative repOK method of a class.
 	 * 
      * @param className the name of a class.
      * @param methodName the name of the conservative repOK method 
@@ -891,6 +881,13 @@ public final class RunParameters implements Cloneable {
 	}
 	
 	/**
+	 * Clears the conservative repOK methods of classes.
+	 */
+	public void clearConservativeRepOks() {
+	    this.conservativeRepOks.clear();
+	}
+	
+	/**
 	 * Gets the conservative repOK methods of classes.
 	 * 
 	 * @return a {@link Map}{@code <}{@link String}{@code , }{@link String}{@code >}
@@ -898,7 +895,7 @@ public final class RunParameters implements Cloneable {
 	 *         repOK methods.
 	 */
 	public Map<String, String> getConservativeRepOks() {
-	    return Collections.unmodifiableMap(this.conservativeRepOks);
+	    return new HashMap<>(this.conservativeRepOks);
 	}
 	
 	//TODO static (noncomputed) concretization heap scope
@@ -1364,6 +1361,16 @@ public final class RunParameters implements Cloneable {
 	}
 	
 	/**
+	 * Gets whether the output should be shown on 
+     * console (stdout, stderr).
+     * 
+	 * @return a {@code boolean}.
+	 */
+	public boolean getShowOnConsole() {
+	    return this.showOnConsole;
+	}
+	
+	/**
 	 * Sets the name of the output file.
 	 * 
 	 * @param s A {@link String} representing the pathname of a 
@@ -1401,7 +1408,7 @@ public final class RunParameters implements Cloneable {
 	/**
 	 * Sets the line separation text mode.
 	 * 
-	 * @param textMode A {@link TextMode} representing the
+	 * @param textMode a {@link TextMode} representing the
 	 *        line separation text mode to be set.
 	 * @throws NullPointerException if {@code textMode == null}.
 	 */
@@ -1411,11 +1418,20 @@ public final class RunParameters implements Cloneable {
 		}
 		this.textMode = textMode; 
 	}
+	
+	/**
+	 * Gets the line separation text mode.
+	 * 
+	 * @return a {@link TextMode}.
+	 */
+	public TextMode getTextMode() {
+	    return this.textMode;
+	}
 
 	/**
 	 * Sets the degree of user interaction.
 	 * 
-	 * @param interactionMode An {@link InteractionMode} representing the
+	 * @param interactionMode an {@link InteractionMode} representing the
 	 *        degree of user interaction to be set.
 	 * @throws NullPointerException if {@code interactionMode == null}.
 	 */
@@ -1424,6 +1440,15 @@ public final class RunParameters implements Cloneable {
 			throw new NullPointerException();
 		}
 		this.interactionMode = interactionMode; 
+	}
+	
+	/**
+	 * Gets the degree of user interaction.
+	 * 
+	 * @return an {@link InteractionMode}.
+	 */
+	public InteractionMode getInteractionMode() {
+	    return this.interactionMode;
 	}
 
 	/**
@@ -1437,6 +1462,15 @@ public final class RunParameters implements Cloneable {
 			throw new NullPointerException();
 		}
 		this.stepShowMode = stepShowMode; 
+	}
+	
+	/**
+	 * Gets which states will be shown on the output.
+	 * 
+	 * @return a {@link StepShowMode}.
+	 */
+	public StepShowMode getStepShowMode() {
+	    return this.stepShowMode;
 	}
 	
 	/**
@@ -1518,10 +1552,9 @@ public final class RunParameters implements Cloneable {
 	}
 	
 	/**
-	 * Sets the maximum stack depth beyond which we do not
-	 * show what's happening.
+	 * Sets the maximum stack depth to display.
 	 * 
-	 * @param stackDepthShow A {@code int}, the maximum depth
+	 * @param stackDepthShow an {@code int}, the maximum depth
 	 * @throws NullPointerException if {@code stackDepthShow <= 0}.
 	 */
 	public void setStackDepthShow(int stackDepthShow) {
@@ -1532,12 +1565,21 @@ public final class RunParameters implements Cloneable {
 	}
 	
 	/**
-	 * Resets the maximum stack depth beyond which we do not
-	 * show what's happening to its default (i.e., show at 
-	 * any depth).
+	 * Resets the maximum stack depth to display 
+	 * to its default (i.e., display the whole stack).
 	 */
 	public void setStackDepthShowAll() {
 		this.stackDepthShow = 0;
+	}
+	
+	/**
+	 * Gets the maximum stack depth to display.
+	 * 
+	 * @return an {@code int}, the maximum depth or {@code 0} 
+	 *         if should display the whole stack.
+	 */
+	public int getStackDepthShow() {
+	    return this.stackDepthShow;
 	}
 	
 	/**
@@ -1575,6 +1617,16 @@ public final class RunParameters implements Cloneable {
     public void addConcretizationMethod(String className, String methodName) {
         this.concretizationMethods.put(className, methodName);
     }
+    
+    /**
+     * Returns the concretization methods of classes.
+     * 
+     * @return a {@link Map}{@code <}{@link String}{@code , }{@link String}{@code >},
+     *         associating a class name to the name of its concretization method.
+     */
+    public Map<String, String> getConcretizationMethods() {
+        return new HashMap<>(this.concretizationMethods);
+    }
 
 	/**
 	 * Sets the state output format mode. 
@@ -1603,9 +1655,8 @@ public final class RunParameters implements Cloneable {
 	/**
 	 * Sets the path of the source files.
 	 * 
-	 * @param srcPath a {@link String} representing a 
-	 * list of paths, separated by the default path separator 
-	 * character of the system, where the source files will be searched.
+	 * @param srcPath a varargs of {@link String}, the 
+	 *        paths to be added to the list of source paths.
 	 * @throws NullPointerException if {@code srcPath == null}.
 	 */
 	public void addSourcePath(String... srcPath) { 
@@ -1614,17 +1665,46 @@ public final class RunParameters implements Cloneable {
 		}
 		Collections.addAll(this.srcPath, srcPath); 
 	}
+	
+	/**
+	 * Clears the paths of the source files.
+	 */
+	public void clearSourcePath() {
+	    this.srcPath.clear();
+	}
+	
+	/**
+	 * Gets the paths of the source files.
+	 * 
+	 * @return a {@link List}{@code <}{@link String}{@code >}
+	 */
+	public List<String> getSourcePath() {
+	    return new ArrayList<>(this.srcPath);
+	}
 
     /**
      * Instructs whether the tool info produced at startup
      * (welcome message and progress of tool initialization) 
      * and at the end of symbolic execution (stats) should 
-     * be logged
+     * be logged (by default they are).
+     * 
      * @param show {@code true} iff the info must
      *        be logged.
      */
     public void setShowInfo(boolean show) {
         this.showInfo = show; 
+    }
+    
+    /**
+     * Returns whether the tool info produced at startup
+     * (welcome message and progress of tool initialization) 
+     * and at the end of symbolic execution (stats) should 
+     * be logged.
+     * 
+     * @return a {@code boolean}.
+     */
+    public boolean getShowInfo() {
+        return this.showInfo;
     }
 
 	/**
@@ -1638,6 +1718,16 @@ public final class RunParameters implements Cloneable {
 	}
 
 	/**
+	 * Returns whether the warnings issued during symbolic 
+     * execution should be logged.
+	 * 
+	 * @return a {@code boolean}.
+	 */
+    public boolean getShowWarnings() {
+        return this.showWarnings;
+    }
+
+	/**
 	 * Instructs whether the interactions between the runner 
 	 * and the decision procedure should be logged 
 	 * (by default they are not).
@@ -1646,6 +1736,16 @@ public final class RunParameters implements Cloneable {
 	 */
 	public void setShowDecisionProcedureInteraction(boolean show) { 
 		this.showDecisionProcedureInteraction = show; 
+	}
+	
+	/**
+	 * Returns whether the interactions between the runner 
+     * and the decision procedure should be logged.
+	 * 
+	 * @return a {@code boolean}.
+	 */
+	public boolean getShowDecisionProcedureInteraction() {
+	    return this.showDecisionProcedureInteraction;
 	}
 
 	/**
