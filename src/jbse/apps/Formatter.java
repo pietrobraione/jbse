@@ -28,11 +28,12 @@ public interface Formatter {
 	/**
 	 * Emits the formatted {@link State}.
 	 */
-	void emit();
+	String emit();
 	
 	/**
 	 * Cleans the current formatting. Must be invoked
-	 * before invocations of {@link #formatState(State)}
+	 * before invocations of {@link #formatPrologue()} or 
+	 * {@link #formatState(State)}
 	 * (and typically after one or more invocations of
 	 * {@link #emit()}.
 	 */

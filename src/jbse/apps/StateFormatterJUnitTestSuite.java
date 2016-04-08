@@ -53,10 +53,10 @@ import jbse.val.WideningConversion;
  * @author Esther Turati
  * @author Pietro Braione
  */
-public abstract class StateFormatterJUnitTestSuite implements Formatter {
-    protected String output = "";
-    private Supplier<State> initialStateSupplier;
-    private Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier;
+public final class StateFormatterJUnitTestSuite implements Formatter {
+    private final Supplier<State> initialStateSupplier;
+    private final Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier;
+    private StringBuilder output = new StringBuilder();
     private int testCounter = 0;
     
     public StateFormatterJUnitTestSuite(Supplier<State> initialStateSupplier, 
@@ -66,24 +66,29 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
     }
 
     @Override
-    public final void formatPrologue() {
-        this.output = PROLOGUE;
+    public void formatPrologue() {
+        this.output.append(PROLOGUE);
     }
 
     @Override
-    public final void formatState(State state) {
-        final JUnitTestCase t = 
-            new JUnitTestCase(this.initialStateSupplier.get(), state, this.modelSupplier.get(), this.testCounter++);
-        this.output = t.get();
+    public void formatState(State state) {
+        new JUnitTestCase(this.output, this.initialStateSupplier.get(), state, this.modelSupplier.get(), this.testCounter++);
     }
     
-    public final void formatEpilogue() {
-        this.output = "}\n";
+    @Override
+    public void formatEpilogue() {
+        this.output.append("}\n");
+    }
+    
+    @Override
+    public String emit() {
+        return this.output.toString();
     }
 
     @Override
     public void cleanup() {
-        this.output = "";        
+        this.output = new StringBuilder();
+        this.testCounter = 0;
     }
     
     private static final String PROLOGUE =
@@ -217,21 +222,18 @@ public abstract class StateFormatterJUnitTestSuite implements Formatter {
 
     private static class JUnitTestCase {
         private static final String INDENT = "        ";
-        private final StringBuilder s = new StringBuilder(); 
+        private final StringBuilder s; 
         private final HashMap<String, String> symbolsToVariables = new HashMap<>();
         private boolean panic = false;
         private ClauseAssume clauseLength = null;
         
-        JUnitTestCase(State initialState, State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) {
+        JUnitTestCase(StringBuilder s, State initialState, State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) {
+            this.s = s;
             appendMethodDeclaration(finalState, testCounter);
             appendInputsInitialization(finalState, model, testCounter);
             appendInvocationOfMethodUnderTest(initialState, finalState);
             appendAssert(initialState, finalState);
             appendMethodEnd(finalState, testCounter);
-        }
-        
-        String get() {
-            return s.toString();
         }
         
         private void appendMethodDeclaration(State finalState, int testCounter) {

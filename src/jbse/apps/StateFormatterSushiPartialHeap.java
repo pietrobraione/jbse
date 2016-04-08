@@ -44,10 +44,10 @@ import jbse.val.WideningConversion;
  * @author Esther Turati
  * @author Pietro Braione
  */
-public abstract class StateFormatterSushiPartialHeap implements Formatter {
-    protected String output = "";
-    private Supplier<State> initialStateSupplier;
-    private Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier;
+public final class StateFormatterSushiPartialHeap implements Formatter {
+    private final Supplier<State> initialStateSupplier;
+    private final Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier;
+    private StringBuilder output = new StringBuilder();
     private int testCounter = 0;
     private int bestTest = -1;
     private int bestPathConditionLength = -1;
@@ -59,15 +59,14 @@ public abstract class StateFormatterSushiPartialHeap implements Formatter {
     }
 
     @Override
-    public final void formatPrologue() {
-        this.output = PROLOGUE;
+    public void formatPrologue() {
+        this.output.append(PROLOGUE);
     }
 
     @Override
-    public final void formatState(State state) {
+    public void formatState(State state) {
         final MethodUnderTest t = 
-            new MethodUnderTest(this.initialStateSupplier.get(), state, this.modelSupplier.get(), this.testCounter);
-        this.output = t.getText();
+            new MethodUnderTest(this.output, this.initialStateSupplier.get(), state, this.modelSupplier.get(), this.testCounter);
         if (this.bestTest == -1 || this.bestPathConditionLength > t.getPathConditionLength()) {
             this.bestTest = this.testCounter;
             this.bestPathConditionLength = t.getPathConditionLength();
@@ -75,13 +74,21 @@ public abstract class StateFormatterSushiPartialHeap implements Formatter {
         ++this.testCounter;
     }
     
-    public final void formatEpilogue() {
-        this.output = "}\n//USE: test" + this.bestTest +"\n";
+    public void formatEpilogue() {
+        this.output.append("}\n//USE: test");
+        this.output.append(this.bestTest);
+        this.output.append('\n');
+    }
+    
+    @Override
+    public String emit() {
+        return this.output.toString();
     }
 
     @Override
     public void cleanup() {
-        this.output = "";        
+        this.output = new StringBuilder();
+        this.testCounter = 0;
     }
     
     private static final String PROLOGUE =
@@ -102,7 +109,7 @@ public abstract class StateFormatterSushiPartialHeap implements Formatter {
         private static final String INDENT_1 = "    ";
         private static final String INDENT_2 = INDENT_1 + INDENT_1;
         private static final String INDENT_3 = INDENT_1 + INDENT_2;
-        private final StringBuilder s = new StringBuilder();
+        private final StringBuilder s;
         private final int pathConditionLength;
         private final HashMap<Symbolic, String> symbolsToVariables = new HashMap<>();
         private final HashSet<String> evoSuiteInputVariables = new HashSet<>();
@@ -110,16 +117,13 @@ public abstract class StateFormatterSushiPartialHeap implements Formatter {
         private boolean panic = false;
         private ClauseAssume clauseLength = null;
         
-        MethodUnderTest(State initialState, State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) {
+        MethodUnderTest(StringBuilder s, State initialState, State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) {
+            this.s = s;
             this.pathConditionLength = finalState.getPathCondition().size();
             appendMethodDeclaration(finalState, testCounter);
             appendInputsInitialization(finalState, model, testCounter);
             appendIfStatement(initialState, finalState, testCounter);
             appendMethodEnd(finalState, testCounter);
-        }
-        
-        String getText() {
-            return this.s.toString();
         }
         
         int getPathConditionLength() {

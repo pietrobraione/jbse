@@ -39,7 +39,7 @@ import jbse.val.WideningConversion;
  * 
  * @author Pietro Braione
  */
-public abstract class StateFormatterText implements Formatter {
+public class StateFormatterText implements Formatter {
 	protected List<String> srcPath;
 	protected String output = "";
 	
@@ -50,6 +50,11 @@ public abstract class StateFormatterText implements Formatter {
 	@Override
 	public void formatState(State s) {
 		this.output = formatState(s, this.srcPath, true, "\t", "");
+	}
+	
+	@Override
+	public String emit() {
+	    return this.output;
 	}
 
 	@Override

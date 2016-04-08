@@ -40,10 +40,10 @@ import jbse.val.WideningConversion;
  * 
  * @author Pietro Braione
  */
-public abstract class StateFormatterSushiPathCondition implements Formatter {
-    protected String output = "";
-    private Supplier<State> initialStateSupplier;
-    private Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier;
+public final class StateFormatterSushiPathCondition implements Formatter {
+    private final Supplier<State> initialStateSupplier;
+    private final Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier;
+    private StringBuilder output = new StringBuilder();
     private int testCounter = 0;
     private int bestTest = -1; //the test with shortest path condition
     private int bestPathConditionLength = -1;
@@ -55,15 +55,14 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
     }
 
     @Override
-    public final void formatPrologue() {
-        this.output = PROLOGUE;
+    public void formatPrologue() {
+        this.output.append(PROLOGUE);
     }
 
     @Override
-    public final void formatState(State state) {
+    public void formatState(State state) {
         final MethodUnderTest t = 
-            new MethodUnderTest(this.initialStateSupplier.get(), state, this.modelSupplier.get(), this.testCounter);
-        this.output = t.getText();
+            new MethodUnderTest(this.output, this.initialStateSupplier.get(), state, this.modelSupplier.get(), this.testCounter);
         if (this.bestTest == -1 || this.bestPathConditionLength > t.getPathConditionLength()) {
             this.bestTest = this.testCounter;
             this.bestPathConditionLength = t.getPathConditionLength();
@@ -71,13 +70,22 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
         ++this.testCounter;
     }
     
-    public final void formatEpilogue() {
-        this.output = "}\n//USE: test" + this.bestTest +"\n";
+    @Override
+    public void formatEpilogue() {
+        this.output.append("}\n//USE: test");
+        this.output.append(this.bestTest);
+        this.output.append('\n');
+    }
+    
+    @Override
+    public String emit() {
+        return this.output.toString();
     }
 
     @Override
     public void cleanup() {
-        this.output = "";        
+        this.output = new StringBuilder();
+        this.testCounter = 0;
     }
     
     private static final String INDENT_1 = "    ";
@@ -104,22 +112,19 @@ public abstract class StateFormatterSushiPathCondition implements Formatter {
         "\n";
 
     private static class MethodUnderTest {
-        private final StringBuilder s = new StringBuilder();
+        private final StringBuilder s;
         private final int pathConditionLength;
         private final HashMap<Symbolic, String> symbolsToVariables = new HashMap<>();
         private final ArrayList<String> evoSuiteInputVariables = new ArrayList<>();
         private boolean panic = false;
         
-        MethodUnderTest(State initialState, State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) {
+        MethodUnderTest(StringBuilder s, State initialState, State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) {
+            this.s = s;
             this.pathConditionLength = finalState.getPathCondition().size();
             appendMethodDeclaration(finalState, testCounter);
             appendPathCondition(finalState, testCounter);
             appendIfStatement(initialState, finalState, testCounter);
             appendMethodEnd(finalState, testCounter);
-        }
-        
-        String getText() {
-            return this.s.toString();
         }
         
         int getPathConditionLength() {

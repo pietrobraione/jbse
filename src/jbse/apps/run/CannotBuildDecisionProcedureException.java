@@ -4,6 +4,8 @@ import jbse.jvm.exc.CannotBuildEngineException;
 
 public class CannotBuildDecisionProcedureException extends CannotBuildEngineException {
 	
+    public CannotBuildDecisionProcedureException(String s) { super(s); }
+    
 	public CannotBuildDecisionProcedureException(Exception e) { super(e); }
 
 	/**

@@ -18,7 +18,7 @@ import jbse.val.Value;
  * @author Pietro Braione
  *
  */
-public abstract class StateFormatterTrace implements Formatter {
+public class StateFormatterTrace implements Formatter {
 	/** 
 	 * The {@link String} used by {@link StateFormatterTrace#formatState(State)} to
 	 * indicate a stuck {@link State}. 
@@ -67,7 +67,12 @@ public abstract class StateFormatterTrace implements Formatter {
 	}
 	
 	@Override
-	public void cleanup() {
+	public final String emit() {
+	    return this.output;
+	}
+	
+	@Override
+	public final void cleanup() {
 		this.output = "";
 	}
 }

@@ -1,9 +1,14 @@
 package jbse.apps.run;
 
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -310,8 +315,8 @@ public final class RunParameters implements Cloneable {
 	 */
 	private DecisionProcedureType decisionProcedureType = DecisionProcedureType.SICSTUS;
 	
-	/** The path where the executable of the external decision procedure is. */
-	private String externalDecisionProcedurePath = null;
+	/** The {@link Path} where the executable of the external decision procedure is. */
+	private Path externalDecisionProcedurePath = null;
 
 	/** 
 	 * Whether the engine should use its sign analysis 
@@ -374,7 +379,7 @@ public final class RunParameters implements Cloneable {
 	/** The step show mode. */
 	StepShowMode stepShowMode = StepShowMode.ALL;
 
-	/** The leaves to show. */
+	/** The traces to show. */
 	EnumSet<TraceTypes> tracesToShow = EnumSet.allOf(TraceTypes.class);
 
 	/** The format mode. */
@@ -447,6 +452,12 @@ public final class RunParameters implements Cloneable {
 		this.runnerParameters = runnerParameters;
 	}
 	
+	/**
+	 * Gets the embedder {@link RunnerParameters} object.
+	 * 
+	 * @return the {@link RunnerParameters} that backs this 
+	 *         {@link RunParameters} object.
+	 */
 	public RunnerParameters getRunnerParameters() {
 		return this.runnerParameters;
 	}
@@ -690,7 +701,7 @@ public final class RunParameters implements Cloneable {
 	}	
 	
 	/**
-	 * Sets the class names of the rewriters to be applied to
+	 * Sets the classes of the rewriters to be applied to
 	 * the terms created during symbolic execution.
 	 * 
 	 * @param rewriterClasses a vararg of {@link Class}{@code <? extends }
@@ -703,6 +714,18 @@ public final class RunParameters implements Cloneable {
 	@SafeVarargs
 	public final void addRewriter(Class<? extends Rewriter>... rewriterClasses) {
 		Collections.addAll(this.rewriterClasses, rewriterClasses);
+	}
+	
+	/**
+	 * Returns the classes of the rewriters to be applied to
+     * the terms created during symbolic execution.
+     * 
+	 * @return a {@link Collection}{@code <}{@link Class}{@code <? extends }
+	 * {@link Rewriter}{@code >>}. It may contain {@code null}.
+	 */
+	@SuppressWarnings("unchecked")
+    public Collection<Class<? extends Rewriter>> getRewriters() {
+	    return (Collection<Class<? extends Rewriter>>) this.rewriterClasses.clone();
 	}
 
 	/**
@@ -735,14 +758,16 @@ public final class RunParameters implements Cloneable {
 	 * {@link #setDecisionProcedureType(DecisionProcedureType)}).
 	 * 
 	 * @param externalDecisionProcedurePath a {@link String} containing a valid 
-	 *        pathname for the CVC3 executable.
+	 *        pathname for the decision procedure executable.
 	 * @throws NullPointerException if {@code externalDecisionProcedurePath == null}.
+	 * @throws InvalidPathException if {@code externalDecisionProcedurePath} is not
+	 *         a valid path file name.
 	 */
 	public void setExternalDecisionProcedurePath(String externalDecisionProcedurePath) { 
 		if (externalDecisionProcedurePath == null) {
 			throw new NullPointerException();
 		}
-		this.externalDecisionProcedurePath = externalDecisionProcedurePath; 
+		this.externalDecisionProcedurePath = Paths.get(externalDecisionProcedurePath); 
 	}
 	
 	/**
@@ -752,12 +777,12 @@ public final class RunParameters implements Cloneable {
 	 * 
 	 * @return a nonnull {@link String}.
 	 */
-	public String getExternalDecisionProcedurePath() {
+	public Path getExternalDecisionProcedurePath() {
 		return this.externalDecisionProcedurePath;
 	}
     
     /**
-     * Adds another creation strategy to the strategies 
+     * Adds a creation strategy to the strategies 
      * for creating the {@link DecisionProcedure}.
      * 
      * @param creationStrategy a {@link DecisionProcedureCreationStrategy}.
@@ -778,9 +803,19 @@ public final class RunParameters implements Cloneable {
     public void clearDecisionProcedureCreationStrategies() {
         this.creationStrategies.clear();
     }
+    
+    /**
+     * Returns all the strategies for creating the {@link DecisionProcedure},
+     * in their order of addition.
+     * 
+     * @return a {@link List}{@code <}{@link DecisionProcedureCreationStrategy}{@code >}.
+     */
+    public List<DecisionProcedureCreationStrategy> getDecisionProcedureCreationStrategies() {
+        return Collections.unmodifiableList(this.creationStrategies);
+    }
 	
 	/**
-	 * Sets whether the engine should do a simple sign analysis
+	 * Sets whether the engine should perform sign analysis
 	 * for deciding inequations before invoking the decision procedure
 	 * set with {@link #setDecisionProcedureType(DecisionProcedureType)}.
 	 * 
@@ -791,9 +826,18 @@ public final class RunParameters implements Cloneable {
 	}
 	
 	/**
+	 * Gets whether the engine should perform sign analysis
+     * for deciding inequations.
+	 * 
+	 * @return {@code true} iff the engine must do sign analysis.
+	 */
+	public boolean getDoSignAnalysis() {
+	    return this.doSignAnalysis;
+	}
+	
+	/**
 	 * Sets whether the engine should decide equality with a
-	 * simple closure algorithm before sign analysis and 
-	 * what it follows. 
+	 * simple closure algorithm. 
 	 * 
 	 * @param doEqualityAnalysis {@code true} iff the engine must decide equalities.
 	 */
@@ -801,6 +845,15 @@ public final class RunParameters implements Cloneable {
 		this.doEqualityAnalysis = doEqualityAnalysis;
 	}
 
+	/**
+	 * Gets whether the engine should decide equality.
+	 * 
+	 * @return {@code true} iff the engine must decide equalities.
+	 */
+    public boolean getDoEqualityAnalysis() {
+        return this.doEqualityAnalysis;
+    }
+    
 	/**
 	 * Sets whether the engine shall invoke or not the conservative
 	 * repOk methods at every heap expansion. By default they are
@@ -811,6 +864,16 @@ public final class RunParameters implements Cloneable {
 	 */
 	public void setUseConservativeRepOks(boolean useConservativeRepOks) {
 		this.useConservativeRepOks = useConservativeRepOks;
+	}
+	
+	/**
+	 * Returns whether the engine shall invoke or not the conservative
+     * repOk methods at every heap expansion.
+	 * 
+	 * @return {@code true} iff conservative repOk methods are invoked.
+	 */
+	public boolean getUseConservativeRepOks() {
+	    return this.useConservativeRepOks;
 	}
 
 	/**
@@ -825,6 +888,17 @@ public final class RunParameters implements Cloneable {
 	 */
 	public void addConservativeRepOk(String className, String methodName) {
 	    this.conservativeRepOks.put(className, methodName);
+	}
+	
+	/**
+	 * Gets the conservative repOK methods of classes.
+	 * 
+	 * @return a {@link Map}{@code <}{@link String}{@code , }{@link String}{@code >}
+	 *         mapping class names with the name of their respective conservative
+	 *         repOK methods.
+	 */
+	public Map<String, String> getConservativeRepOks() {
+	    return Collections.unmodifiableMap(this.conservativeRepOks);
 	}
 	
 	//TODO static (noncomputed) concretization heap scope
@@ -927,6 +1001,17 @@ public final class RunParameters implements Cloneable {
      */
     public void setUseLICS(boolean useLICS) {
         this.useLICS = useLICS;
+    }
+    
+    /**
+     * Gets whether the engine should use LICS rules
+     * to decide on references resolution.
+     * 
+     * @return {@code true} iff the engine must 
+     * use LICS rules.
+     */
+    public boolean getUseLICS() {
+        return this.useLICS;
     }
     
     /**
@@ -1301,6 +1386,17 @@ public final class RunParameters implements Cloneable {
 	public void setOutputFileNone() { 
 		this.outFileName = null; 
 	}
+	
+	/**
+	 * Returns the name of the output file
+	 * 
+	 * @return a {@link String} representing the pathname of a 
+     *          file where the console output (stdout and stderr) will 
+     *          be copied, or {@code null} if none was previously specified.
+	 */
+	public String getOutputFileName() {
+	    return this.outFileName;
+	}
 
 	/**
 	 * Sets the line separation text mode.
@@ -1412,6 +1508,16 @@ public final class RunParameters implements Cloneable {
 	}
 	
 	/**
+	 * Returns the traces types to be shown.
+	 * 
+	 * @return an {@link EnumSet}{@code <}{@link TraceTypes}{@code >}
+	 *         containing the trace types to be shown.
+	 */
+	public EnumSet<TraceTypes> getTracesToShow() {
+	    return this.tracesToShow.clone();
+	}
+	
+	/**
 	 * Sets the maximum stack depth beyond which we do not
 	 * show what's happening.
 	 * 
@@ -1445,6 +1551,16 @@ public final class RunParameters implements Cloneable {
 	public void setDoConcretization(boolean doConcretization) {
 		this.doConcretization = doConcretization;		
 	}
+	
+	/**
+	 * Gets whether, at the end of each trace, it should be
+     * checked if the final state can be concretized.
+     * 
+	 * @return a {@code boolean}.
+	 */
+	public boolean getDoConcretization() {
+	    return this.doConcretization;
+	}
 
     /**
      * Specifies the concretization method of a class.
@@ -1473,6 +1589,15 @@ public final class RunParameters implements Cloneable {
 			throw new NullPointerException();
 		}
 		this.stateFormatMode = stateFormatMode; 
+	}
+	
+	/**
+	 * Gets the state output format mode.
+	 * 
+	 * @return A {@link StateFormatMode}.
+	 */
+	public StateFormatMode getStateFormatMode() {
+	    return this.stateFormatMode;
 	}
 	
 	/**

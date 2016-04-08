@@ -19,7 +19,7 @@ import jbse.val.ReferenceSymbolic;
  * @author Pietro
  *
  */
-public abstract class StateFormatterGraphviz implements Formatter {
+public class StateFormatterGraphviz implements Formatter {
 	private static final String nullStyle = "[shape=invtriangle,label=\"null\",regular=true]";
 
 	private int nextFreshNode;
@@ -44,14 +44,17 @@ public abstract class StateFormatterGraphviz implements Formatter {
 		this.output += "}\n";
 	}
 	
+	@Override
+	public final String emit() {
+	    return this.output;
+	}
 
 	@Override
-	public void cleanup() {
+	public final void cleanup() {
 		this.output = "";
 	}
-	
 
-	public String formatHeap(State s) {
+	private String formatHeap(State s) {
 		final Map<Long, Objekt> h = s.getHeap();
 		String retVal = ""; //= "subgraph cluster_heap { label=\"heap\" labeljust=l ";
 		this.currentNodePrefix = "H";
@@ -76,7 +79,8 @@ public abstract class StateFormatterGraphviz implements Formatter {
 		return retVal;
 	}
 
-	public String formatStaticMethodArea(State s) {
+	/*
+	private String formatStaticMethodArea(State s) {
 		final Map<String, Klass> a = s.getStaticMethodArea();
 		String retVal = "subgraph cluster_staticstore { label=\"static store\" labeljust=l ";
 		this.currentNodePrefix = "S";
@@ -97,9 +101,9 @@ public abstract class StateFormatterGraphviz implements Formatter {
 		}
 		retVal += this.nodes + this.edges + "}";
 		return retVal;
-	}
+	}*/
 	
-	public String formatObject(State s, Objekt o) {
+	private String formatObject(State s, Objekt o) {
 		if (o instanceof Instance || o instanceof Klass) {
 			for (Signature sig : o.getFieldSignatures()) {
 				if (Type.isArray(sig.getDescriptor()) ||
