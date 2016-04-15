@@ -245,7 +245,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		}
 		if (condition instanceof Simplex) {
 			decide_IFX_Concrete((Simplex) condition, result);
-			return Outcome.val(false, false);
+			return Outcome.FF;
 		} else {		
 			final Outcome o = decide_IFX_Nonconcrete(hier, condition, result);
 			return o;
@@ -323,7 +323,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		}
 		if ((val1 instanceof Simplex) && (val2 instanceof Simplex)) {
 			decide_XCMPY_Concrete((Simplex) val1, (Simplex) val2, result);
-			return Outcome.val(false, false);
+			return Outcome.FF;
 		} else {
 			final Outcome o = decide_XCMPY_Nonconcrete(hier, val1, val2, result);
 			return o;
@@ -425,7 +425,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		}
 		if (selector instanceof Simplex) {
 			decide_XSWITCH_Concrete((Simplex) selector, tab, result);
-			return Outcome.val(false, false);
+			return Outcome.FF;
 		} else {
 			final Outcome o = decide_XSWITCH_Nonconcrete(hier, selector, tab, result);
 			return o;
@@ -498,7 +498,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		}
 		if (countsNonNegative instanceof Simplex) {
 			decide_XNEWARRAY_Concrete((Simplex) countsNonNegative, result);
-			return Outcome.val(false, false);
+			return Outcome.FF;
 		} else {
 			final Outcome o = decide_XNEWARRAY_Nonconcrete(hier, countsNonNegative, result);
 			return o;
@@ -571,7 +571,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		}
 		if (inRange instanceof Simplex) {
 			decide_XASTORE_Concrete((Simplex) inRange, result);
-			return Outcome.val(false, false);
+			return Outcome.FF;
 		} else {
 			final Outcome o = decide_XASTORE_Nonconcrete(hier, inRange, result);
 			return o;
@@ -644,7 +644,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		}
 		if (Util.isResolved(state, valToLoad)) {
         	result.add(new DecisionAlternative_XLOAD_GETX_Resolved(valToLoad));
-        	return Outcome.val(false, false, false);
+        	return Outcome.FFF;
 		} else { 
 			return resolve_XLOAD_GETX_Unresolved(state, (ReferenceSymbolic) valToLoad, result);
 		}
