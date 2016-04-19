@@ -3,9 +3,8 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry excluding="jbse/bc/testdata/|jbse/apps/settings/testdata/" kind="src" path="tst"/>
 	<classpathentry exported="true" kind="lib" path="lib/javassist/javassist.jar"/>
-	<classpathentry exported="true" kind="lib" path="/usr/local/lib/sicstus-3.12.10/bin/prologbeans.jar" sourcepath="/usr/local/lib/sicstus-3.12.10"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="lib" path="lib/jdd/jdd_105.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/jdd/jdd_105.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

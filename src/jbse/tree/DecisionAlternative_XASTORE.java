@@ -35,11 +35,6 @@ public abstract class DecisionAlternative_XASTORE implements DecisionAlternative
 	}
 	
 	@Override
-	public final boolean concrete() {
-		return this.isConcrete;
-	}
-	
-	@Override
 	public final int getBranchNumber() {
 		return this.branchNumber;
 	}
@@ -48,5 +43,15 @@ public abstract class DecisionAlternative_XASTORE implements DecisionAlternative
 	public final boolean trivial() {
 		return this.concrete();
 	}
+    
+    @Override
+    public final boolean concrete() {
+        return this.isConcrete;
+    }
+    
+    @Override
+    public final boolean noDecision() {
+        return false;
+    }
 }
 

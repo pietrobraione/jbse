@@ -47,6 +47,12 @@ public abstract class DecisionAlternative_XALOAD implements DecisionAlternative 
 	public final int getBranchNumber() {
 		return this.branchNumber;
 	}
+	    
+    @Override
+    public final boolean noDecision() {
+        return false;
+    }
+
 
     @Override
     public int hashCode() {

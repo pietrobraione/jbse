@@ -49,4 +49,9 @@ public abstract class DecisionAlternative_IFX implements DecisionAlternative {
     public final boolean concrete() {
         return this.isConcrete;
     }
+    
+    @Override
+    public final boolean noDecision() {
+        return false;
+    }
 }

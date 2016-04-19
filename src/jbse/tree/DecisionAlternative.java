@@ -48,4 +48,15 @@ public interface DecisionAlternative {
 	 * {@link #trivial()}.
 	 */
 	boolean concrete(); //TODO move in Outcome
+	
+	/**
+	 * Checks whether this alternative is the
+	 * "no decision" one.
+	 * 
+	 * @return {@code true} iff the alternative was 
+	 * taken without making any decision. Note that
+	 * {@code noDecision()} implies
+	 * {@link #concrete()}.
+	 */
+	boolean noDecision();
 }

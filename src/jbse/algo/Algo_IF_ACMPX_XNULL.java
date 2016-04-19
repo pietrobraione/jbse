@@ -9,7 +9,6 @@ import java.util.function.Supplier;
 
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.tree.DecisionAlternative_IFX;
-import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Null;
 import jbse.val.Reference;
 

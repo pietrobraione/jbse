@@ -29,4 +29,9 @@ implements DecisionAlternative_XYLOAD_GETX_Loads {
 	public final int getBranchNumber() {
 		return this.branchNumber;
 	}
+    
+    @Override
+    public final boolean noDecision() {
+        return false;
+    }
 }

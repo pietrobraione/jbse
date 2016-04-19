@@ -29,11 +29,6 @@ public abstract class DecisionAlternative_XNEWARRAY implements DecisionAlternati
 	public final String getIdentifier() {
 		return toString();
 	}
-
-	@Override
-	public final boolean concrete() {
-		return this.isConcrete;
-	}
 	
 	@Override
 	public final int getBranchNumber() {
@@ -44,4 +39,14 @@ public abstract class DecisionAlternative_XNEWARRAY implements DecisionAlternati
 	public final boolean trivial() {
 		return this.concrete();
 	}
+
+    @Override
+    public final boolean concrete() {
+        return this.isConcrete;
+    }
+    
+    @Override
+    public final boolean noDecision() {
+        return false;
+    }
 }

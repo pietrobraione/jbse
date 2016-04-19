@@ -57,12 +57,17 @@ public abstract class DecisionAlternative_XCMPY implements DecisionAlternative {
 	}
 
 	@Override
-	public boolean trivial() {
+	public final boolean trivial() {
 		return this.isConcrete;
 	}
     
     @Override
-    public boolean concrete() {
+    public final boolean concrete() {
         return this.isConcrete;
+    }
+    
+    @Override
+    public final boolean noDecision() {
+        return false;
     }
 }

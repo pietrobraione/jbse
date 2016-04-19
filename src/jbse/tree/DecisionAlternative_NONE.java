@@ -8,7 +8,7 @@ package jbse.tree;
  * @author Pietro Braione
  *
  */
-public class DecisionAlternative_NONE implements DecisionAlternative {
+public final class DecisionAlternative_NONE implements DecisionAlternative {
     /**
      * Do not instantiate!
      */
@@ -39,6 +39,11 @@ public class DecisionAlternative_NONE implements DecisionAlternative {
 
     @Override
     public boolean concrete() {
+        return true;
+    }
+    
+    @Override
+    public final boolean noDecision() {
         return true;
     }
 }

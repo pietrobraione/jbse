@@ -261,10 +261,12 @@ public class StateTree {
      *        trivial decision.
      * @param concrete iff the branch originates from a 
      *        concrete decision.
+     * @param noDecision iff the branch originates from a
+     *        bytecode that takes no decision.
      * @return {@code true} iff the method has increased
      *         the tree level.
      */
-    public boolean possiblyAddBranchPoint(boolean moreThanOneResult, boolean trivial, boolean concrete) {
+    public boolean possiblyAddBranchPoint(boolean moreThanOneResult, boolean trivial, boolean concrete, boolean noDecision) {
 		boolean retVal = moreThanOneResult;
     	switch (this.breadthMode) {
     	case MORE_THAN_ONE:
@@ -276,7 +278,7 @@ public class StateTree {
 			retVal = retVal || !concrete;
 			break;
     	case ALL_DECISIONS:
-    		retVal = true;
+    		retVal = retVal || !noDecision;
     		break;
     	default: 
     		throw new UnexpectedInternalException("Unexpected breadth mode " + this.breadthMode + ".");	    		

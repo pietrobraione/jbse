@@ -88,6 +88,11 @@ public final class DecisionAlternative_XSWITCH implements DecisionAlternative {
 	}
     
     @Override
+    public final boolean noDecision() {
+        return false;
+    }
+    
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;

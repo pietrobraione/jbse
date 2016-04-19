@@ -290,6 +290,7 @@ UP extends StrategyUpdate<R>> {
         final DecisionAlternative d = decisionResults.iterator().next();
         final boolean trivial = d.trivial();
         final boolean concrete = d.concrete();
-        return this.ctx.stateTree.possiblyAddBranchPoint(moreThanOneResult, trivial, concrete);
+        final boolean noDecision = d.noDecision();
+        return this.ctx.stateTree.possiblyAddBranchPoint(moreThanOneResult, trivial, concrete, noDecision);
     }
 }
