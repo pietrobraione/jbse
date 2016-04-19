@@ -8,6 +8,7 @@ import static jbse.mem.Util.areAlias;
 import java.util.function.Supplier;
 
 import jbse.dec.DecisionProcedureAlgorithms;
+import jbse.tree.DecisionAlternative_IFX;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Null;
 import jbse.val.Reference;
@@ -21,10 +22,10 @@ import jbse.val.Reference;
  */
 final class Algo_IF_ACMPX_XNULL extends Algorithm<
 BytecodeData_1ON,
-DecisionAlternative_NONE,
-StrategyDecide<DecisionAlternative_NONE>,
-StrategyRefine<DecisionAlternative_NONE>,
-StrategyUpdate<DecisionAlternative_NONE>> {
+DecisionAlternative_IFX,
+StrategyDecide<DecisionAlternative_IFX>,
+StrategyRefine<DecisionAlternative_IFX>,
+StrategyUpdate<DecisionAlternative_IFX>> {
     
     private final boolean compareWithNull; //set by constructor
     private final boolean compareForEquality; //set by constructor
@@ -45,7 +46,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         this.compareForEquality = compareForEquality;
     }
     
-    boolean doJump; //set by updater
+    boolean doJump; //produced by updater
 
     @Override
     protected Supplier<Integer> numOperands() {
@@ -59,30 +60,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     
     @Override
     protected BytecodeCooker bytecodeCooker() {
-        return (state) -> { };
-    }
-    
-    @Override
-    protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
-        return DecisionAlternative_NONE.class;
-    }
-    
-    @Override
-    protected StrategyDecide<DecisionAlternative_NONE> decider() {
-        return (state, result) -> {
-            result.add(DecisionAlternative_NONE.instance());
-            return DecisionProcedureAlgorithms.Outcome.FF;
-        };
-    }
-
-    @Override
-    protected StrategyRefine<DecisionAlternative_NONE> refiner() {
-        return (state, alt) -> { };
-    }
-
-    @Override
-    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
-        return (state, alt) -> { 
+        return (state) -> { 
             //gets the values to compare
             Reference val1 = null, val2 = null; //to keep the compiler happy
             try {
@@ -105,6 +83,29 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 (this.compareForEquality ? areAlias(state, val1, val2) :  //also true when both are null
                 !areAlias(state, val1, val2));
         };
+    }
+    
+    @Override
+    protected Class<DecisionAlternative_IFX> classDecisionAlternative() {
+        return DecisionAlternative_IFX.class;
+    }
+    
+    @Override
+    protected StrategyDecide<DecisionAlternative_IFX> decider() {
+        return (state, result) -> {
+            result.add(DecisionAlternative_IFX.toConcrete(this.doJump));
+            return DecisionProcedureAlgorithms.Outcome.FF;
+        };
+    }
+
+    @Override
+    protected StrategyRefine<DecisionAlternative_IFX> refiner() {
+        return (state, alt) -> { };
+    }
+
+    @Override
+    protected StrategyUpdate<DecisionAlternative_IFX> updater() {
+        return (state, alt) -> { };
     }
     
     @Override

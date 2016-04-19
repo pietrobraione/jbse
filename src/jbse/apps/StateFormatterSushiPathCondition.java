@@ -41,6 +41,7 @@ import jbse.val.WideningConversion;
  * @author Pietro Braione
  */
 public final class StateFormatterSushiPathCondition implements Formatter {
+    private final Supplier<Long> traceCounterSupplier;
     private final Supplier<State> initialStateSupplier;
     private final Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier;
     private StringBuilder output = new StringBuilder();
@@ -48,15 +49,26 @@ public final class StateFormatterSushiPathCondition implements Formatter {
     private int bestTest = -1; //the test with shortest path condition
     private int bestPathConditionLength = -1;
     
-    public StateFormatterSushiPathCondition(Supplier<State> initialStateSupplier, 
-                                  Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier) {
+    public StateFormatterSushiPathCondition(Supplier<Long> traceCounterSupplier,
+                                            Supplier<State> initialStateSupplier, 
+                                            Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier) {
+        this.traceCounterSupplier = traceCounterSupplier;
         this.initialStateSupplier = initialStateSupplier;
         this.modelSupplier = modelSupplier;
     }
 
+    public StateFormatterSushiPathCondition(Supplier<State> initialStateSupplier, 
+                                            Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier) {
+        this(null, initialStateSupplier, modelSupplier);
+    }
+    
     @Override
     public void formatPrologue() {
-        this.output.append(PROLOGUE);
+        this.output.append(PROLOGUE_1);
+        if (this.traceCounterSupplier != null) {
+            this.output.append(this.traceCounterSupplier.get());
+        }
+        this.output.append(PROLOGUE_2);
     }
 
     @Override
@@ -92,7 +104,7 @@ public final class StateFormatterSushiPathCondition implements Formatter {
     private static final String INDENT_2 = INDENT_1 + INDENT_1;
     private static final String INDENT_3 = INDENT_1 + INDENT_2;
     private static final String INDENT_4 = INDENT_1 + INDENT_3;
-    private static final String PROLOGUE =
+    private static final String PROLOGUE_1 =
         "import static sushi.compile.path_condition_distance.DistanceBySimilarityWithPathCondition.distance;\n" +
         "\n" +
         "import static java.lang.Double.*;\n" +
@@ -106,7 +118,8 @@ public final class StateFormatterSushiPathCondition implements Formatter {
         "import java.util.HashMap;\n" +
         "import java.util.List;\n" +
         "\n" +
-        "public class EvoSuiteWrapper {\n" +
+        "public class EvoSuiteWrapper";
+    private static final String PROLOGUE_2 = " {\n" +
         INDENT_1 + "private static final double SMALL_DISTANCE = 1;\n" +
         INDENT_1 + "private static final double BIG_DISTANCE = 1E300;\n" +
         "\n";

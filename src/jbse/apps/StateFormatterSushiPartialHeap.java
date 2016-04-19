@@ -45,6 +45,7 @@ import jbse.val.WideningConversion;
  * @author Pietro Braione
  */
 public final class StateFormatterSushiPartialHeap implements Formatter {
+    private final Supplier<Long> traceCounterSupplier;
     private final Supplier<State> initialStateSupplier;
     private final Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier;
     private StringBuilder output = new StringBuilder();
@@ -52,15 +53,26 @@ public final class StateFormatterSushiPartialHeap implements Formatter {
     private int bestTest = -1;
     private int bestPathConditionLength = -1;
     
-    public StateFormatterSushiPartialHeap(Supplier<State> initialStateSupplier, 
+    public StateFormatterSushiPartialHeap(Supplier<Long> traceCounterSupplier,
+                                  Supplier<State> initialStateSupplier, 
                                   Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier) {
+        this.traceCounterSupplier = traceCounterSupplier;
         this.initialStateSupplier = initialStateSupplier;
         this.modelSupplier = modelSupplier;
+    }
+
+    public StateFormatterSushiPartialHeap(Supplier<State> initialStateSupplier, 
+                                          Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier) {
+        this(null, initialStateSupplier, modelSupplier);
     }
 
     @Override
     public void formatPrologue() {
         this.output.append(PROLOGUE);
+        if (this.traceCounterSupplier != null) {
+            this.output.append(this.traceCounterSupplier.get());
+        }
+        this.output.append(" {\n\n");
     }
 
     @Override
@@ -102,8 +114,7 @@ public final class StateFormatterSushiPartialHeap implements Formatter {
         "\n" +
         "import java.util.HashSet;\n" +
         "\n" +
-        "public class EvoSuiteWrapper {\n" +
-        "\n";
+        "public class EvoSuiteWrapper";
 
     private static class MethodUnderTest {
         private static final String INDENT_1 = "    ";
