@@ -146,7 +146,7 @@ public final class StateFormatterSushiPartialHeap implements Formatter {
                 return;
             }
             this.s.append(INDENT_1);
-            this.s.append("public void test");
+            this.s.append("public double test");
             this.s.append(testCounter);
             this.s.append("(");
             makeVariables(finalState);
@@ -235,7 +235,7 @@ public final class StateFormatterSushiPartialHeap implements Formatter {
                 return;
             }
             this.s.append(INDENT_2);
-            this.s.append("if (distance(initializedObjectFields");
+            this.s.append("double d = distance(initializedObjectFields");
             for (String varName : this.evoSuiteInputVariables) {
                 this.s.append(", ");
                 this.s.append(varName);
@@ -243,11 +243,15 @@ public final class StateFormatterSushiPartialHeap implements Formatter {
                 this.s.append(varName);
                 this.s.append("_actual");
             }
-            this.s.append(") == 0.0d)\n");
+            this.s.append(");\n");
+            this.s.append(INDENT_2);
+            this.s.append("if (d == 0.0d)\n");
             this.s.append(INDENT_3);
             this.s.append("System.out.println(\"test");
             this.s.append(testCounter);
             this.s.append(" 0 distance\");\n");
+            this.s.append(INDENT_2);
+            this.s.append("return d;\n");
         }
         
         private void appendMethodEnd(State finalState, int testCounter) {

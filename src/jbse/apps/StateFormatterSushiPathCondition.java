@@ -149,7 +149,7 @@ public final class StateFormatterSushiPathCondition implements Formatter {
                 return;
             }
             this.s.append(INDENT_1);
-            this.s.append("public void test");
+            this.s.append("public double test");
             this.s.append(testCounter);
             this.s.append("(");
             makeVariables(finalState);
@@ -241,11 +241,15 @@ public final class StateFormatterSushiPathCondition implements Formatter {
             }
             this.s.append('\n');
             this.s.append(INDENT_2);
-            this.s.append("if (distance(pathConditionHandler, candidateObjects) == 0.0d)\n");
+            this.s.append("double d = distance(pathConditionHandler, candidateObjects);\n");
+            this.s.append(INDENT_2);
+            this.s.append("if (d == 0.0d)\n");
             this.s.append(INDENT_3);
             this.s.append("System.out.println(\"test");
             this.s.append(testCounter);
             this.s.append(" 0 distance\");\n");
+            this.s.append(INDENT_2);
+            this.s.append("return d;\n");
         }
         
         private void appendMethodEnd(State finalState, int testCounter) {
