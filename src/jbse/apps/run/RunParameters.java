@@ -1099,7 +1099,8 @@ public final class RunParameters implements Cloneable {
      *                       {REF}/{UP}/{UP}/{UP} and {ROOT}:this/list to denote 
      *                       the field with name {@code list} of the object that is
      *                       referred by the {@code this} parameter of the root method
-     *                       invocation.
+     *                       invocation. Start the expression with {MAX} to indicate
+     *                       a max-rule.
      *                       During symbolic execution, every symbolic reference 
      *                       with class {@code toResolve} and origin matching 
      *                       {@code originExp} will be resolved when necessary 
@@ -1143,6 +1144,49 @@ public final class RunParameters implements Cloneable {
 	public void addResolveAliasInstanceofLICS(String toResolve, String originExp, String classAllowed) {
 	    this.repoLICS.addResolveAliasInstanceof(toResolve, originExp, classAllowed);
 	}
+
+    /**
+     * Specifies a LICS rule for symbolic reference resolution by alias. 
+     * By default, symbolic references are resolved by aliases to all the 
+     * type-compatible objects assumed by previous epoch-compatible expansions. 
+     * This method allows to override this default.
+     * 
+     * @param toResolve      the static type of the reference to be resolved. 
+     *                       It must be {@code toResolve != null}.
+     * @param originExp      a path expression describing the origin of the 
+     *                       symbolic references that match this rule.
+     *                       The path expression is a slash-separated list of field
+     *                       names that starts from {ROOT}:x, indicating the 
+     *                       parameter with name {@code x} of the root method 
+     *                       invocation (including {@code this}).
+     *                       If {@code originExp == null}, all the symbolic 
+     *                       references with static type {@code toResolve} 
+     *                       will match. 
+     * @param pathDisallowedExp a path expression describing the objects that are not
+     *                          acceptable as alias for {@code toResolve}. 
+     *                          The path expression is a slash-separated list of field
+     *                          names that starts from {ROOT}:x, indicating the 
+     *                          parameter with name {@code x} of the root method 
+     *                          invocation (including {@code this}), or from 
+     *                          {REF}, indicating a path starting from the origin 
+     *                          of the reference matched by the left part of the rule. 
+     *                          You can also use the special {UP} to move back in the 
+     *                          path; for instance, if the reference matching 
+     *                          {@code originExp} has origin 
+     *                          {ROOT}:this/list/head/next/next, then you can use both 
+     *                          {REF}/{UP}/{UP}/{UP} and {ROOT}:this/list to denote 
+     *                          the field with name {@code list} of the object that is
+     *                          referred by the {@code this} parameter of the root method
+     *                          invocation.
+     *                          During symbolic execution, every symbolic reference 
+     *                          with class {@code toResolve} and origin matching 
+     *                          {@code originExp} will not be resolved when necessary 
+     *                          to a type- and epoch-compatible symbolic object 
+     *                          if its origin matches {@code pathDisallowedExp}.
+     */
+    public void addResolveAliasNeverLICS(String toResolve, String originExp, String pathDisallowedExp) {
+        this.repoLICS.addResolveAliasNever(toResolve, originExp, pathDisallowedExp);
+    }
 
     /**
      * Specifies a LICS rule for symbolic reference resolution by null. By 

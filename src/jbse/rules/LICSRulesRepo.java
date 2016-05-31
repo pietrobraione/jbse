@@ -12,6 +12,7 @@ import jbse.val.ReferenceSymbolic;
 public final class LICSRulesRepo implements Cloneable {
 	private HashMap<String, Set<LICSRuleExpandsTo>> rulesExpandsTo = new HashMap<>();
 	private HashMap<String, Set<LICSRuleAliases>> rulesAliases = new HashMap<>();
+    private HashMap<String, Set<LICSRuleAliases>> rulesNeverAliases = new HashMap<>();
 	private HashMap<String, Set<LICSRuleNotNull>> rulesNotNull = new HashMap<>();
 
     /**
@@ -70,12 +71,14 @@ public final class LICSRulesRepo implements Cloneable {
      *                       {@code originExp}, will be resolved 
      *                       when necessary to all the type- and epoch-compatible 
      *                       symbolic objects whose paths match
-     *                       {@code pathAllowedExp}. Use {ROOT} to indicate
-     *                       the root object, {REF} to indicate the origin  
+     *                       {@code pathAllowedExp}. Use {ROOT}:x to indicate the
+     *                       parameter with name {@code x} of the root method invocation, 
+     *                       {REF} to indicate the origin  
      *                       of the reference to resolve, and {UP} to move to the upper
      *                       level in some path (if, e.g., the reference to expand has origin 
      *                       {ROOT}/list/header/next/next, then {REF}/{UP}/{UP}/{UP} denotes 
-     *                       the path {ROOT}/list).
+     *                       the path {ROOT}/list). Start the expression with {MAX} to indicate
+     *                       a max-rule.
      */
 	public void addResolveAliasOrigin(String toResolve, String originExp, String pathAllowedExp) {
 		Set<LICSRuleAliases> c = this.rulesAliases.get(toResolve);
@@ -118,6 +121,42 @@ public final class LICSRulesRepo implements Cloneable {
 		}
 		c.add(new LICSRuleAliasesInstanceof(originExp, classAllowed));
 	}
+
+    /**
+     * Specifies a possible way to resolve a symbolic reference by alias. 
+     * By default, symbolic references are resolved by aliases to all the 
+     * type-compatible objects assumed by previous epoch-compatible expansions. 
+     * This method allows to override this default.
+     * 
+     * @param toResolve      the static type of the reference to be resolved. It must 
+     *                       be {@code toResolve != null}.
+     * @param originExp      an expression describing the origin of the 
+     *                       symbolic references which match this replacement.
+     *                       If {@code originExp == null}, all the symbolic 
+     *                       references with static type {@code toResolve} 
+     *                       will match. 
+     * @param pathDisallowedExp a {@link String} describing the objects which are not
+     *                          acceptable as alias for {@code toResolve}. It must 
+     *                          be {@code pathDisallowedExp != null}. During the 
+     *                          symbolic execution, every symbolic reference with 
+     *                          class {@code toResolve} and origin matching 
+     *                          {@code originExp}, will not be resolved 
+     *                          a type- and epoch-compatible symbolic objects if its path 
+     *                          matches {@code pathDisallowedExp}. Use {ROOT} to indicate
+     *                          the root object, {REF} to indicate the origin  
+     *                          of the reference to resolve, and {UP} to move to the upper
+     *                          level in some path (if, e.g., the reference to expand has origin 
+     *                          {ROOT}/list/header/next/next, then {REF}/{UP}/{UP}/{UP} denotes 
+     *                          the path {ROOT}/list).
+     */
+    public void addResolveAliasNever(String toResolve, String originExp, String pathDisallowedExp) {
+        Set<LICSRuleAliases> c = this.rulesNeverAliases.get(toResolve);
+        if (c == null) {
+            c = new HashSet<>();
+            this.rulesNeverAliases.put(toResolve, c);
+        }
+        c.add(new LICSRuleAliasesOrigin(originExp, pathDisallowedExp));
+    }
 
     /**
      * Specifies which symbolic references shall not be resolved to null. By 
@@ -165,11 +204,11 @@ public final class LICSRulesRepo implements Cloneable {
 	}
 
 	/**
-	 * Returns all the aliasing "max" resolution rules matching a reference to be resolved.
+	 * Returns all the aliasing non-"max" resolution rules matching a reference to be resolved.
 	 * 
 	 * @param ref a {@link ReferenceSymbolic}.
 	 * @return an {@link ArrayList}{@code <}{@link LICSRuleAliases}{@code >} 
-	 *         containing all the "max" aliasing rules matching {@code ref} (empty 
+	 *         containing all the non-"max" aliasing rules matching {@code ref} (empty 
 	 *         in the case no rule matches {@code ref}).
 	 */
 	public ArrayList<LICSRuleAliases> matchingLICSRulesAliasesNonMax(ReferenceSymbolic ref) {
@@ -209,6 +248,30 @@ public final class LICSRulesRepo implements Cloneable {
 		}
 		return retVal;
 	}
+
+    /**
+     * Returns all the negative aliasing resolution rules matching a reference 
+     * to be resolved.
+     * 
+     * @param ref a {@link ReferenceSymbolic}.
+     * @return an {@link ArrayList}{@code <}{@link LICSRuleAliases}{@code >} 
+     *         containing all the "never aliases" rules matching {@code ref} (empty 
+     *         in the case no rule matches {@code ref}).
+     */
+    public ArrayList<LICSRuleAliases> matchingLICSRulesNeverAliases(ReferenceSymbolic ref) {
+        final String type = ref.getStaticType();
+        final String refClass = Type.className(type);
+        final ArrayList<LICSRuleAliases> retVal = new ArrayList<LICSRuleAliases>();
+        final Set<LICSRuleAliases> rulesSet = this.rulesNeverAliases.get(refClass);
+        if (rulesSet != null) {
+            for (LICSRuleAliases rule : rulesSet) {
+                if (rule.matches(ref)) {
+                    retVal.add(rule);
+                }
+            }
+        }
+        return retVal;
+    }
 
 	/**
 	 * Checks if some not-null resolution rule matches a reference to be resolved.

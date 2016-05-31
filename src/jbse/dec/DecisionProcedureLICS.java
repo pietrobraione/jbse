@@ -67,14 +67,23 @@ public final class DecisionProcedureLICS extends DecisionProcedureChainOfRespons
 		//gets the rules matching ref
 		final ArrayList<LICSRuleAliases> rulesMax = this.rulesRepo.matchingLICSRulesAliasesMax(ref);
 		final ArrayList<LICSRuleAliases> rulesNonMax = this.rulesRepo.matchingLICSRulesAliasesNonMax(ref);
+		final ArrayList<LICSRuleAliases> rulesNegative = this.rulesRepo.matchingLICSRulesNeverAliases(ref);
 
-		//1- if no rule matches ref, no constraint applies
-		//and returns true
+        //1- if ref satisfies a negative rule, 
+        //returns false
+        for (LICSRuleAliases rule : rulesNegative) {
+            if (rule.satisfies(ref, o)) {
+                return false;
+            }
+        }
+        
+		//2- if no positive rule matches ref, no constraint applies
+		//and returns the default
 		if (rulesMax.isEmpty() && rulesNonMax.isEmpty()) {
 			return true;
 		}
 		
-		//2- if ref satisfies at least one "max"
+		//3- if ref satisfies at least one "max" positive
 		//rule and o's origin has length not less than
 		//the current maxLen for the rule, returns true
 nextRule:
@@ -91,7 +100,7 @@ nextRule:
 			}
 		}
 
-		//3- if ref satisfies some non-"max" rules, 
+		//4- if ref satisfies a non-"max" positive rule, 
 		//returns true 
 		for (LICSRuleAliases rule : rulesNonMax) {
 			if (rule.satisfies(ref, o)) {
@@ -99,7 +108,7 @@ nextRule:
 			}
 		}
 		
-		//4- no matching rule is satisfied
+		//5- no matching positive rule is satisfied
 		return false;
 	}
 	

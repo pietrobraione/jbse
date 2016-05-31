@@ -59,6 +59,9 @@ public class SettingsReader {
         for (String[] rule : this.parser.resolveAliasInstanceofLICS) {
             repo.addResolveAliasInstanceof(rule[0], rule[1], rule[2]);
         }
+        for (String[] rule : this.parser.resolveAliasNeverLICS) {
+            repo.addResolveAliasNever(rule[0], rule[1], rule[2]);
+        }
         for (String[] rule : this.parser.resolveNotNullLICS) {
             repo.addResolveNotNull(rule[0], rule[1]);
         }
