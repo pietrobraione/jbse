@@ -137,18 +137,21 @@ public final class StateFormatterSushiPathCondition implements Formatter {
             if (this.panic) {
                 return;
             }
-            this.s.append(INDENT_1);
-            this.s.append("public double test");
-            this.s.append(testCounter);
-            this.s.append("(");
+            
             final List<Symbolic> inputs;
             try {
                 inputs = initialState.getStack().get(0).localVariables().values().stream()
+                         .filter((v) -> v instanceof Symbolic)
                          .map((v) -> (Symbolic) v.getValue())
                          .collect(Collectors.toList());
             } catch (IndexOutOfBoundsException e) {
                 throw new UnexpectedInternalException(e);
-            }            
+            }
+            
+            this.s.append(INDENT_1);
+            this.s.append("public double test");
+            this.s.append(testCounter);
+            this.s.append("(");
             boolean firstDone = false;
             for (Symbolic symbol : inputs) {
                 makeVariableFor(symbol);
