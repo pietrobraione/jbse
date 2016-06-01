@@ -10,9 +10,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import jbse.apps.Formatter;
 import jbse.common.exc.UnexpectedInternalException;
@@ -50,8 +52,6 @@ public final class StateFormatterSushiPartialHeap implements Formatter {
     private final Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier;
     private StringBuilder output = new StringBuilder();
     private int testCounter = 0;
-    private int bestTest = -1;
-    private int bestPathConditionLength = -1;
     
     public StateFormatterSushiPartialHeap(Supplier<Long> traceCounterSupplier,
                                   Supplier<State> initialStateSupplier, 
@@ -77,19 +77,12 @@ public final class StateFormatterSushiPartialHeap implements Formatter {
 
     @Override
     public void formatState(State state) {
-        final MethodUnderTest t = 
-            new MethodUnderTest(this.output, this.initialStateSupplier.get(), state, this.modelSupplier.get(), this.testCounter);
-        if (this.bestTest == -1 || this.bestPathConditionLength > t.getPathConditionLength()) {
-            this.bestTest = this.testCounter;
-            this.bestPathConditionLength = t.getPathConditionLength();
-        }
+        new MethodUnderTest(this.output, this.initialStateSupplier.get(), state, this.modelSupplier.get(), this.testCounter);
         ++this.testCounter;
     }
     
     public void formatEpilogue() {
-        this.output.append("}\n//USE: test");
-        this.output.append(this.bestTest);
-        this.output.append('\n');
+        this.output.append("}\n");
     }
     
     @Override
@@ -121,7 +114,6 @@ public final class StateFormatterSushiPartialHeap implements Formatter {
         private static final String INDENT_2 = INDENT_1 + INDENT_1;
         private static final String INDENT_3 = INDENT_1 + INDENT_2;
         private final StringBuilder s;
-        private final int pathConditionLength;
         private final HashMap<Symbolic, String> symbolsToVariables = new HashMap<>();
         private final HashSet<String> evoSuiteInputVariables = new HashSet<>();
         private final HashSet<PrimitiveSymbolic> primitiveSymbolsDone = new HashSet<>();
@@ -130,18 +122,14 @@ public final class StateFormatterSushiPartialHeap implements Formatter {
         
         MethodUnderTest(StringBuilder s, State initialState, State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) {
             this.s = s;
-            this.pathConditionLength = finalState.getPathCondition().size();
-            appendMethodDeclaration(finalState, testCounter);
+            makeVariables(finalState);
+            appendMethodDeclaration(initialState, finalState, testCounter);
             appendInputsInitialization(finalState, model, testCounter);
             appendIfStatement(initialState, finalState, testCounter);
             appendMethodEnd(finalState, testCounter);
         }
         
-        int getPathConditionLength() {
-            return this.pathConditionLength;
-        }
-        
-        private void appendMethodDeclaration(State finalState, int testCounter) {
+        private void appendMethodDeclaration(State initialState, State finalState, int testCounter) {
             if (this.panic) {
                 return;
             }
@@ -149,28 +137,34 @@ public final class StateFormatterSushiPartialHeap implements Formatter {
             this.s.append("public double test");
             this.s.append(testCounter);
             this.s.append("(");
-            makeVariables(finalState);
+            final List<Symbolic> inputs;
+            try {
+                inputs = initialState.getStack().get(0).localVariables().values().stream()
+                         .map((v) -> (Symbolic) v.getValue())
+                         .collect(Collectors.toList());
+            } catch (IndexOutOfBoundsException e) {
+                throw new UnexpectedInternalException(e);
+            }            
             boolean firstDone = false;
-            for (Symbolic symbol : this.symbolsToVariables.keySet()) {
+            for (Symbolic symbol : inputs) {
                 //the values of the symbolic primitives are found by the
                 //solver, so EvoSuite must build only inputs of reference
                 //type
+                makeVariableFor(symbol);
                 if (symbol instanceof ReferenceSymbolic) {
                     final String varName = getVariableFor(symbol);
-                    if (isEvoSuiteInput(varName)) {
-                        this.evoSuiteInputVariables.add(varName);
-                        if (firstDone) {
-                            this.s.append(", ");
-                        } else {
-                            firstDone = true;
-                        }
-                        final String type = ((ReferenceSymbolic) symbol).getStaticType();
-                        final String className = javaClass(type);
-                        this.s.append(className);
-                        this.s.append(' ');
-                        this.s.append(varName);
-                        this.s.append("_actual");
+                    this.evoSuiteInputVariables.add(varName);
+                    if (firstDone) {
+                        this.s.append(", ");
+                    } else {
+                        firstDone = true;
                     }
+                    final String type = ((ReferenceSymbolic) symbol).getStaticType();
+                    final String className = javaClass(type);
+                    this.s.append(className);
+                    this.s.append(' ');
+                    this.s.append(varName);
+                    this.s.append("_actual");
                 }
             }
             this.s.append(") {\n");
@@ -286,10 +280,6 @@ public final class StateFormatterSushiPartialHeap implements Formatter {
                     }
                 } //else do nothing
             }
-        }
-        
-        private boolean isEvoSuiteInput(String varName) {
-            return !hasArrayAccessor(varName) && !hasMemberAccessor(varName);
         }
         
         private void setWithNewObject(State finalState, Symbolic symbol, long heapPosition, 

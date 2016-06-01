@@ -10,9 +10,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import jbse.apps.Formatter;
 import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Clause;
 import jbse.mem.ClauseAssume;
 import jbse.mem.ClauseAssumeAliases;
@@ -36,7 +38,8 @@ import jbse.val.Term;
 import jbse.val.WideningConversion;
 
 /**
- * A {@link Formatter} used by Sushi.
+ * A {@link Formatter} used by Sushi (check of path condition
+ * clauses).
  * 
  * @author Pietro Braione
  */
@@ -46,8 +49,6 @@ public final class StateFormatterSushiPathCondition implements Formatter {
     private final Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier;
     private StringBuilder output = new StringBuilder();
     private int testCounter = 0;
-    private int bestTest = -1; //the test with shortest path condition
-    private int bestPathConditionLength = -1;
     
     public StateFormatterSushiPathCondition(Supplier<Long> traceCounterSupplier,
                                             Supplier<State> initialStateSupplier, 
@@ -73,20 +74,13 @@ public final class StateFormatterSushiPathCondition implements Formatter {
 
     @Override
     public void formatState(State state) {
-        final MethodUnderTest t = 
-            new MethodUnderTest(this.output, this.initialStateSupplier.get(), state, this.modelSupplier.get(), this.testCounter);
-        if (this.bestTest == -1 || this.bestPathConditionLength > t.getPathConditionLength()) {
-            this.bestTest = this.testCounter;
-            this.bestPathConditionLength = t.getPathConditionLength();
-        }
+        new MethodUnderTest(this.output, this.initialStateSupplier.get(), state, this.modelSupplier.get(), this.testCounter);
         ++this.testCounter;
     }
     
     @Override
     public void formatEpilogue() {
-        this.output.append("}\n//USE: test");
-        this.output.append(this.bestTest);
-        this.output.append('\n');
+        this.output.append("}\n");
     }
     
     @Override
@@ -126,25 +120,20 @@ public final class StateFormatterSushiPathCondition implements Formatter {
 
     private static class MethodUnderTest {
         private final StringBuilder s;
-        private final int pathConditionLength;
         private final HashMap<Symbolic, String> symbolsToVariables = new HashMap<>();
         private final ArrayList<String> evoSuiteInputVariables = new ArrayList<>();
         private boolean panic = false;
         
         MethodUnderTest(StringBuilder s, State initialState, State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) {
             this.s = s;
-            this.pathConditionLength = finalState.getPathCondition().size();
-            appendMethodDeclaration(finalState, testCounter);
+            makeVariables(finalState);
+            appendMethodDeclaration(initialState, finalState, testCounter);
             appendPathCondition(finalState, testCounter);
             appendIfStatement(initialState, finalState, testCounter);
             appendMethodEnd(finalState, testCounter);
         }
         
-        int getPathConditionLength() {
-            return this.pathConditionLength;
-        }
-        
-        private void appendMethodDeclaration(State finalState, int testCounter) {
+        private void appendMethodDeclaration(State initialState, State finalState, int testCounter) {
             if (this.panic) {
                 return;
             }
@@ -152,27 +141,33 @@ public final class StateFormatterSushiPathCondition implements Formatter {
             this.s.append("public double test");
             this.s.append(testCounter);
             this.s.append("(");
-            makeVariables(finalState);
+            final List<Symbolic> inputs;
+            try {
+                inputs = initialState.getStack().get(0).localVariables().values().stream()
+                         .map((v) -> (Symbolic) v.getValue())
+                         .collect(Collectors.toList());
+            } catch (IndexOutOfBoundsException e) {
+                throw new UnexpectedInternalException(e);
+            }            
             boolean firstDone = false;
-            for (Symbolic symbol : this.symbolsToVariables.keySet()) {
+            for (Symbolic symbol : inputs) {
+                makeVariableFor(symbol);
                 final String varName = getVariableFor(symbol);
-                if (isEvoSuiteInput(varName)) {
-                    this.evoSuiteInputVariables.add(varName);
-                    if (firstDone) {
-                        this.s.append(", ");
-                    } else {
-                        firstDone = true;
-                    }
-                    final String type;
-                    if (symbol instanceof ReferenceSymbolic) {
-                        type = javaClass(((ReferenceSymbolic) symbol).getStaticType(), true);
-                    } else {
-                        type = javaPrimitiveType(((PrimitiveSymbolic) symbol).getType());
-                    }
-                    this.s.append(type);
-                    this.s.append(' ');
-                    this.s.append(varName);
-                    }
+                this.evoSuiteInputVariables.add(varName);
+                if (firstDone) {
+                    this.s.append(", ");
+                } else {
+                    firstDone = true;
+                }
+                final String type;
+                if (symbol instanceof ReferenceSymbolic) {
+                    type = javaClass(((ReferenceSymbolic) symbol).getStaticType(), true);
+                } else {
+                    type = javaPrimitiveType(((PrimitiveSymbolic) symbol).getType());
+                }
+                this.s.append(type);
+                this.s.append(' ');
+                this.s.append(varName);
             }
             this.s.append(") throws Exception {\n");
             this.s.append(INDENT_2);
@@ -284,10 +279,6 @@ public final class StateFormatterSushiPathCondition implements Formatter {
                     }
                 } //else do nothing
             }
-        }
-        
-        private boolean isEvoSuiteInput(String varName) {
-            return !hasArrayAccessor(varName) && !hasMemberAccessor(varName);
         }
         
         private void setWithNewObject(State finalState, Symbolic symbol, long heapPosition) {
@@ -411,14 +402,6 @@ public final class StateFormatterSushiPathCondition implements Formatter {
             return null;
         }
         
-        private boolean hasMemberAccessor(String s) {
-            return (s.indexOf('.') != -1);
-        }
-
-        private boolean hasArrayAccessor(String s) {
-            return (s.indexOf('[') != -1);
-        }
-
         private void setNumericAssumption(Primitive assumption) {
             final List<PrimitiveSymbolic> symbols = symbolsIn(assumption);
             this.s.append(INDENT_2);

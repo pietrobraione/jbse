@@ -1,8 +1,8 @@
 package jbse.mem;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import jbse.bc.ClassFile;
 import jbse.bc.LineNumberTable;
@@ -198,12 +198,12 @@ public class Frame implements Cloneable {
     /**
      * Returns a read-only version of the local variable area.
      * 
-     * @return a {@link Map}{@code <}{@link Integer}{@code ,}{@link Variable}{@code >} 
+     * @return a {@link SortedMap}{@code <}{@link Integer}{@code ,}{@link Variable}{@code >} 
      *         which associates every slot number in the local variable area to its
-     *         {@link Variable};
+     *         {@link Variable}.
      */
-    public Map<Integer, Variable> localVariables() {
-        final HashMap<Integer, Variable> retVal = new HashMap<>();
+    public SortedMap<Integer, Variable> localVariables() {
+        final TreeMap<Integer, Variable> retVal = new TreeMap<>();
         for (int slot : this.localVariables.slots()) {
             try {
                 retVal.put(slot, this.localVariables.buildLocalVariable(slot, this.programCounter));
