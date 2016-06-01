@@ -141,7 +141,7 @@ public final class StateFormatterSushiPathCondition implements Formatter {
             final List<Symbolic> inputs;
             try {
                 inputs = initialState.getStack().get(0).localVariables().values().stream()
-                         .filter((v) -> v instanceof Symbolic)
+                         .filter((v) -> v.getValue() instanceof Symbolic)
                          .map((v) -> (Symbolic) v.getValue())
                          .collect(Collectors.toList());
             } catch (IndexOutOfBoundsException e) {
