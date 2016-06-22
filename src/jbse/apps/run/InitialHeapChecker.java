@@ -291,29 +291,17 @@ public final class InitialHeapChecker {
 /*
         @Override
         public boolean atStepPost() {
-            //final StateFormatterTrace f = new StateFormatterTrace(new ArrayList<String>()) {
-            final StateFormatterTrace f = new StateFormatterTrace() {
-                @Override
-                public void emit() {
-                    System.out.println("==> " + this.formatOutput);
-                }
-            };
-            f.format(getEngine().getCurrentState());
-            f.emit();
+            final StateFormatterTrace f = new StateFormatterTrace();
+            f.formatState(getEngine().getCurrentState());
+            System.out.println("==> " + f.emit());
             return super.atStepPost();
         }
 
         @Override
         public boolean atBacktrackPost(BranchPoint bp) {
-            //final StateFormatterTrace f = new StateFormatterTrace(new ArrayList<String>()) {
-            final StateFormatterTrace f = new StateFormatterTrace() {
-                @Override
-                public void emit() {
-                    System.out.println("==> " + this.formatOutput);
-                }
-            };
-            f.format(getEngine().getCurrentState());
-            f.emit();
+            final StateFormatterTrace f = new StateFormatterTrace();
+            f.formatState(getEngine().getCurrentState());
+            System.out.println("==> " + f.emit());
             return super.atBacktrackPost(bp);
         }
 */

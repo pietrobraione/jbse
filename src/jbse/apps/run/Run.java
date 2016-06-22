@@ -592,6 +592,15 @@ public final class Run {
 		IO.println(this.out, s);
 	}
 
+    /**
+     * Prints some text on the output streams.
+     * 
+     * @param s the text to be printed.
+     */
+    public void outNoBreak(String s) {
+        IO.print(this.out, s);
+    }
+
 	/**
 	 * Prints a line of text on the log streams.
 	 * 
@@ -1013,7 +1022,7 @@ public final class Run {
 	private void emitPrologue() {
         this.formatterOthers.cleanup();
         this.formatterOthers.formatPrologue();
-        out(this.formatterOthers.emit());
+        outNoBreak(this.formatterOthers.emit());
 	}
 
 	/**
@@ -1028,7 +1037,7 @@ public final class Run {
 			(isRootBranch ? this.formatterBranches : this.formatterOthers);
         f.cleanup();
 		f.formatState(s);
-		out(f.emit());
+		outNoBreak(f.emit());
 	}
     
     /**
@@ -1037,7 +1046,7 @@ public final class Run {
 	private void emitEpilogue() {
         this.formatterOthers.cleanup();
         this.formatterOthers.formatEpilogue();
-        out(this.formatterOthers.emit());
+        outNoBreak(this.formatterOthers.emit());
 	}
     
 	/**
@@ -1068,20 +1077,18 @@ public final class Run {
                 : "")
             + ", "
             + MSG_END_TRACES_VIOLATING_ASSUMPTION + tracesContradictory + ".");
+        final long elapsedTimeDecisionProcedure = (this.timer == null ? 0 : this.timer.getTime());
         log(MSG_END_ELAPSED + Util.formatTime(elapsedTime) + ", "
             + MSG_END_SPEED + this.engine.getAnalyzedStates() * 1000 / elapsedTime + " states/sec"
             + (Run.this.parameters.getDoConcretization() ? 
                     ", " + MSG_END_ELAPSED_CONCRETIZATION + Util.formatTime(elapsedTimeConcretization)
-                    + ", (" + Util.formatTimePercent(elapsedTimeConcretization, elapsedTime) + " of total)"
-                : ""));
-        if (this.timer == null) {
-            log(".");
-        } else {
-            final long elapsedTimeDecisionProcedure = this.timer.getTime();
-            log(", " + MSG_END_DECISION + Util.formatTime(elapsedTimeDecisionProcedure) 
-                + " (" + Util.formatTimePercent(elapsedTimeDecisionProcedure, elapsedTime) + " of total).");
-        }
-
+                    + " (" + Util.formatTimePercent(elapsedTimeConcretization, elapsedTime) + " of total)"
+                  : "")
+            + (this.timer == null ? 
+                    "."
+                  : ", " + MSG_END_DECISION + Util.formatTime(elapsedTimeDecisionProcedure) 
+                    + " (" + Util.formatTimePercent(elapsedTimeDecisionProcedure, elapsedTime) + " of total)."
+            ));
     }
     
     /**

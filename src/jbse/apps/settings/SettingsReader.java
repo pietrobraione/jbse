@@ -35,6 +35,8 @@ public class SettingsReader {
 	 *        constructor will read the file.
 	 * @throws FileNotFoundException if the file does not exist.
 	 * @throws ParseException if the content of the file is not correct.
+	 * @throws IOException (other than {@link FileNotFoundException}) 
+	 *         if some error occurs while closing the file.
 	 */
 	public SettingsReader(String fname) throws IOException, FileNotFoundException, ParseException {
 		try (final BufferedReader reader = new BufferedReader(new FileReader(fname))) {
