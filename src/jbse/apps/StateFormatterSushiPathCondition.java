@@ -44,29 +44,36 @@ import jbse.val.WideningConversion;
  * @author Pietro Braione
  */
 public final class StateFormatterSushiPathCondition implements Formatter {
+    private final int methodNumber;
     private final Supplier<Long> traceCounterSupplier;
     private final Supplier<State> initialStateSupplier;
     private final Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier;
     private StringBuilder output = new StringBuilder();
     private int testCounter = 0;
     
-    public StateFormatterSushiPathCondition(Supplier<Long> traceCounterSupplier,
+    public StateFormatterSushiPathCondition(int methodNumber,
+                                            Supplier<Long> traceCounterSupplier,
                                             Supplier<State> initialStateSupplier, 
                                             Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier) {
+        this.methodNumber = methodNumber;
         this.traceCounterSupplier = traceCounterSupplier;
         this.initialStateSupplier = initialStateSupplier;
         this.modelSupplier = modelSupplier;
     }
 
-    public StateFormatterSushiPathCondition(Supplier<State> initialStateSupplier, 
+    public StateFormatterSushiPathCondition(int methodNumber,
+                                            Supplier<State> initialStateSupplier, 
                                             Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier) {
-        this(null, initialStateSupplier, modelSupplier);
+        this(methodNumber, null, initialStateSupplier, modelSupplier);
     }
     
     @Override
     public void formatPrologue() {
         this.output.append(PROLOGUE_1);
+        this.output.append('_');
+        this.output.append(this.methodNumber);
         if (this.traceCounterSupplier != null) {
+            this.output.append('_');
             this.output.append(this.traceCounterSupplier.get());
         }
         this.output.append(PROLOGUE_2);

@@ -47,29 +47,36 @@ import jbse.val.WideningConversion;
  * @author Pietro Braione
  */
 public final class StateFormatterSushiPartialHeap implements Formatter {
+    private final int methodNumber;
     private final Supplier<Long> traceCounterSupplier;
     private final Supplier<State> initialStateSupplier;
     private final Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier;
     private StringBuilder output = new StringBuilder();
     private int testCounter = 0;
     
-    public StateFormatterSushiPartialHeap(Supplier<Long> traceCounterSupplier,
-                                  Supplier<State> initialStateSupplier, 
-                                  Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier) {
+    public StateFormatterSushiPartialHeap(int methodNumber,
+                                          Supplier<Long> traceCounterSupplier,
+                                          Supplier<State> initialStateSupplier, 
+                                          Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier) {
+        this.methodNumber = methodNumber;
         this.traceCounterSupplier = traceCounterSupplier;
         this.initialStateSupplier = initialStateSupplier;
         this.modelSupplier = modelSupplier;
     }
 
-    public StateFormatterSushiPartialHeap(Supplier<State> initialStateSupplier, 
+    public StateFormatterSushiPartialHeap(int methodNumber,
+                                          Supplier<State> initialStateSupplier, 
                                           Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier) {
-        this(null, initialStateSupplier, modelSupplier);
+        this(methodNumber, null, initialStateSupplier, modelSupplier);
     }
 
     @Override
     public void formatPrologue() {
         this.output.append(PROLOGUE);
+        this.output.append('_');
+        this.output.append(this.methodNumber);
         if (this.traceCounterSupplier != null) {
+            this.output.append('_');
             this.output.append(this.traceCounterSupplier.get());
         }
         this.output.append(" {\n\n");
