@@ -809,10 +809,10 @@ public final class Run {
                 new StateFormatterJUnitTestSuite(this::getInitialState, this::getModel);
         } else if (type == StateFormatMode.SUSHI_PARTIAL_HEAP) {
             this.formatterBranches = this.formatterOthers = 
-                new StateFormatterSushiPartialHeap(this::getInitialState, this::getModel);
+                new StateFormatterSushiPartialHeap(1, this::getInitialState, this::getModel);
         } else if (type == StateFormatMode.SUSHI_PATH_CONDITION) {
             this.formatterBranches = this.formatterOthers = 
-                new StateFormatterSushiPathCondition(this::getInitialState, this::getModel);
+                new StateFormatterSushiPathCondition(1, this::getInitialState, this::getModel);
         } else {
             throw new CannotBuildFormatterException(ERROR_UNDEF_STATE_FORMAT);
         }
