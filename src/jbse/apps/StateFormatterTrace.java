@@ -60,7 +60,11 @@ public class StateFormatterTrace implements Formatter {
 		if (v instanceof Primitive) {
 			return formatPrimitive((Primitive) v);
 		} else if (v instanceof Reference) {
-			return s.getObject((Reference) v).getType();
+		    if (s.isNull((Reference) v)) {
+		        return "null";
+		    } else {
+		        return s.getObject((Reference) v).getType();
+		    }
 		} else {
 			throw new UnexpectedInternalException("Unexpected value " + v + " returned.");
 		}
