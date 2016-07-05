@@ -262,21 +262,7 @@ public final class RunParameters implements Cloneable {
 		 * covers all the symbolic states according to the
 		 * step show mode.  
 		 */
-		JUNIT_TEST,
-		
-		/**
-		 * Displays an EvoSuite wrapper class for Sushi;
-		 * distance is calculated by comparing against
-		 * a partial heap built from the path condition.
-		 */
-		SUSHI_PARTIAL_HEAP,
-		
-        /**
-         * Displays an EvoSuite wrapper class for Sushi;
-         * distance is calculated by directly comparing 
-         * against the path condition clauses.
-         */
-		SUSHI_PATH_CONDITION
+		JUNIT_TEST
 	}
 
 	/** The runner parameters. */

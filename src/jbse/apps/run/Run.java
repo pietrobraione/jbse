@@ -19,8 +19,6 @@ import jbse.apps.IO;
 import jbse.apps.Formatter;
 import jbse.apps.StateFormatterGraphviz;
 import jbse.apps.StateFormatterJUnitTestSuite;
-import jbse.apps.StateFormatterSushiPartialHeap;
-import jbse.apps.StateFormatterSushiPathCondition;
 import jbse.apps.StateFormatterText;
 import jbse.apps.StateFormatterTrace;
 import jbse.apps.Timer;
@@ -807,12 +805,6 @@ public final class Run {
         } else if (type == StateFormatMode.JUNIT_TEST) {
             this.formatterBranches = this.formatterOthers = 
                 new StateFormatterJUnitTestSuite(this::getInitialState, this::getModel);
-        } else if (type == StateFormatMode.SUSHI_PARTIAL_HEAP) {
-            this.formatterBranches = this.formatterOthers = 
-                new StateFormatterSushiPartialHeap(1, this::getInitialState, this::getModel);
-        } else if (type == StateFormatMode.SUSHI_PATH_CONDITION) {
-            this.formatterBranches = this.formatterOthers = 
-                new StateFormatterSushiPathCondition(1, this::getInitialState, this::getModel);
         } else {
             throw new CannotBuildFormatterException(ERROR_UNDEF_STATE_FORMAT);
         }
