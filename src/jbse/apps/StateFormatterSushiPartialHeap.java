@@ -47,14 +47,14 @@ import jbse.val.WideningConversion;
  * @author Pietro Braione
  */
 public final class StateFormatterSushiPartialHeap implements Formatter {
-    private final int methodNumber;
+    private final long methodNumber;
     private final Supplier<Long> traceCounterSupplier;
     private final Supplier<State> initialStateSupplier;
     private final Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier;
     private StringBuilder output = new StringBuilder();
     private int testCounter = 0;
     
-    public StateFormatterSushiPartialHeap(int methodNumber,
+    public StateFormatterSushiPartialHeap(long methodNumber,
                                           Supplier<Long> traceCounterSupplier,
                                           Supplier<State> initialStateSupplier, 
                                           Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier) {

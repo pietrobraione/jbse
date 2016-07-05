@@ -44,14 +44,14 @@ import jbse.val.WideningConversion;
  * @author Pietro Braione
  */
 public final class StateFormatterSushiPathCondition implements Formatter {
-    private final int methodNumber;
+    private final long methodNumber;
     private final Supplier<Long> traceCounterSupplier;
     private final Supplier<State> initialStateSupplier;
     private final Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier;
     private StringBuilder output = new StringBuilder();
     private int testCounter = 0;
     
-    public StateFormatterSushiPathCondition(int methodNumber,
+    public StateFormatterSushiPathCondition(long methodNumber,
                                             Supplier<Long> traceCounterSupplier,
                                             Supplier<State> initialStateSupplier, 
                                             Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier) {
