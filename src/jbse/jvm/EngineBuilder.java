@@ -14,7 +14,6 @@ import static jbse.bc.Signatures.JAVA_THROWABLE_FILLINSTACKTRACE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEDEPTH;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEELEMENT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ANY;
-import static jbse.bc.Signatures.JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ENDGUIDANCE;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_FAIL;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_IGNORE;
@@ -137,7 +136,6 @@ public class EngineBuilder {
 
             //jbse.meta.Analysis methods
             ctx.addMetaOverridden(JBSE_ANALYSIS_ANY,                        "jbse/algo/meta/Algo_JBSE_ANALYSIS_ANY");
-            ctx.addMetaOverridden(JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION, "jbse/algo/meta/Algo_JBSE_ANALYSIS_DISABLEASSUMPTIONVIOLATION");
             ctx.addMetaOverridden(JBSE_ANALYSIS_ENDGUIDANCE,                "jbse/algo/meta/Algo_JBSE_ANALYSIS_ENDGUIDANCE");
             ctx.addMetaOverridden(JBSE_ANALYSIS_FAIL,                       "jbse/algo/meta/Algo_JBSE_ANALYSIS_FAIL");
             ctx.addMetaOverridden(JBSE_ANALYSIS_IGNORE,                     "jbse/algo/meta/Algo_JBSE_ANALYSIS_IGNORE");

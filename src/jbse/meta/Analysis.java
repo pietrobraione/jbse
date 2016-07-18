@@ -12,8 +12,6 @@ import java.util.Random;
  * @author Pietro Braione
  */
 final public class Analysis {
-	private static boolean mayViolateAssumptions = true;
-	
 	private Analysis() { } //no instances of this class, thanks
 	
 	/**
@@ -40,9 +38,8 @@ final public class Analysis {
 	 * 
 	 */
 	public static void ignore() { 
-		if (mayViolateAssumptions) {
-			System.exit(99);
-		}
+        System.out.print("Assumption violated by " + getInvoker());
+		System.exit(99);
 	}
 	
 	private static String getInvoker() {
@@ -67,17 +64,6 @@ final public class Analysis {
 	}
 	
 	/**
-	 * Informs JBSE that the current execution will no 
-	 * longer add assumptions henceforth, and thus that
-	 * any subsequent call to {@link #succeed()}
-	 * should have no effect. When executed on a JVM different
-	 * from JBSE the effect is identical (see also {@link #ignore()}).
-	 */
-	public static void disableAssumptionViolation() { 
-		Analysis.mayViolateAssumptions = false;
-	}
-	
-	/**
 	 * Equivalent to {@code if (!b) }{@link #ignore()}; it 
 	 * should be used whenever you do not want to continue
 	 * execution because you have detected the violation of
@@ -91,15 +77,12 @@ final public class Analysis {
 	 */
 	public static void assume(boolean b) {
 		if (!b) {
-			if (!isRunByJBSE() && mayViolateAssumptions) {
-				System.out.print("Assumption violated by " + getInvoker());
-			}
 			ignore();
 		}
 	}
 	
 	/**
-	 * Dual to {@link #ignore()}; it should be 
+	 * Opposite to {@link #fail()}; it should be 
 	 * used whenever you are sure that the current program 
 	 * behavior is correct, and will not become incorrect 
 	 * henceforth, e.g., because has passed all the 
@@ -114,7 +97,8 @@ final public class Analysis {
 	
 	/**
 	 * Asks JBSE to stop the execution of the current trace
-	 * and report it. It is dual to {@link #succeed()}.
+	 * and report it. It is dual to {@link #ignore()} and 
+	 * opposite to {@link #succeed()}.
 	 * It is used whenever instrumentation code discovers a failure. 
 	 * of the software under analysis (e.g., a violation of an assertion). 
 	 * When executed on a JVM different from JBSE it prints a message and 
@@ -122,7 +106,7 @@ final public class Analysis {
 	 */
 	public static void fail() {
 		System.out.println("Assertion violated by " + getInvoker());
-		System.exit(98);
+        System.exit(98);
 	}
 
 	/**
@@ -132,7 +116,7 @@ final public class Analysis {
 	 */
 	public static void ass3rt(boolean b) {
 		if (!b) {
-			Analysis.fail();
+			fail();
 		}
 	}
 	
