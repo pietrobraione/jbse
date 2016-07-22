@@ -88,7 +88,6 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
     @Override
     public void cleanup() {
         this.output = new StringBuilder();
-        this.testCounter = 0;
     }
     
     private static final String PROLOGUE =
