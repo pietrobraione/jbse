@@ -155,6 +155,10 @@ public class Util {
         if (i.getType().equals(JAVA_STRING)) {
             final Reference valueRef = (Reference) i.getFieldValue(JAVA_STRING_VALUE);
             final Array value = (Array) s.getObject(valueRef);
+            if (value == null) {
+                //this happens when valueRef is symbolic and unresolved
+                return null;
+            }
             return value.valueString();
         } else {
             return null;
