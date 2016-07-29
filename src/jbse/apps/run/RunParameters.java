@@ -86,9 +86,6 @@ public final class RunParameters implements Cloneable {
 		/** Uses CVC3 (currently deprecated). */
 		CVC3, 
 		
-		/** Uses Sicstus constraint solver via prologbeans plus BDDs. */
-		SICSTUS, 
-		
 		/** Uses Z3. */
 		Z3,
 		
@@ -275,7 +272,7 @@ public final class RunParameters implements Cloneable {
 	 * The decision procedure to be used for deciding the 
 	 * arithmetic conditions.
 	 */
-	private DecisionProcedureType decisionProcedureType = DecisionProcedureType.SICSTUS;
+	private DecisionProcedureType decisionProcedureType = DecisionProcedureType.Z3;
 	
 	/** The {@link Path} where the executable of the external decision procedure is. */
 	private Path externalDecisionProcedurePath = null;

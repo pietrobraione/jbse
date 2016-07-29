@@ -40,7 +40,6 @@ import jbse.dec.DecisionProcedureCVC3;
 import jbse.dec.DecisionProcedureClassInit;
 import jbse.dec.DecisionProcedureEquality;
 import jbse.dec.DecisionProcedureLICS;
-import jbse.dec.DecisionProcedureSicstus;
 import jbse.dec.DecisionProcedureSignAnalysis;
 import jbse.dec.DecisionProcedureSMTLIB2_AUFNIRA;
 import jbse.dec.exc.DecisionBacktrackException;
@@ -868,8 +867,6 @@ public final class Run {
         if (this.parameters.getShowInfo()) {
             if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC3) {
                 log(MSG_TRY_CVC3 + (path == null ? "default" : path.toString()) + ".");
-            } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.SICSTUS) {
-                log(MSG_TRY_SICSTUS + (path == null ? "default" : path.toString()) + ".");
             } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.Z3) {
                 log(MSG_TRY_Z3 + (path == null ? "default" : path.toString()) + ".");
             } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC4) {
@@ -895,10 +892,6 @@ public final class Run {
 		        final String cvc3 = (path == null ? "cvc3" : path.toString());
 		        core = new DecisionProcedureCVC3(core, calc, cvc3);
 		        coreNumeric = (needHeapCheck ? new DecisionProcedureCVC3(coreNumeric, calc, cvc3) : null);
-		    } else if (type == DecisionProcedureType.SICSTUS) {
-		        final String sicstus = (path == null ? "sicstus" : path.toString());
-		        core = new DecisionProcedureSicstus(core, calc, sicstus);
-		        coreNumeric = (needHeapCheck ? new DecisionProcedureSicstus(coreNumeric, calc, sicstus) : null);
 		    } else if (type == DecisionProcedureType.Z3) {
 		        final String z3 = (path == null ? "z3" : path.toString()) + COMMANDLINE_LAUNCH_Z3;
 		        core = new DecisionProcedureSMTLIB2_AUFNIRA(core, calc, z3);
@@ -1143,9 +1136,6 @@ public final class Run {
 
 	/** Message: welcome. */
 	private static final String MSG_WELCOME_TXT = "This is the " + JBSE.NAME + "'s Run Tool (" + JBSE.ACRONYM + " v." + JBSE.VERSION +").";
-
-	/** Message: trying to connect to Sicstus. */
-	private static final String MSG_TRY_SICSTUS = "Connecting to Sicstus at ";
 
 	/** Message: trying to connect to CVC3. */
 	private static final String MSG_TRY_CVC3 = "Connecting to CVC3 at ";

@@ -1,7 +1,6 @@
 package jbse.apps;
 
 import static jbse.common.Type.getArrayMemberType;
-
 import static jbse.common.Type.className;
 import static jbse.common.Type.isArray;
 import static jbse.common.Type.isReference;

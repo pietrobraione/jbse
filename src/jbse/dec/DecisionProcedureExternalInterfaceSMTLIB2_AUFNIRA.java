@@ -30,6 +30,7 @@ import jbse.val.PrimitiveVisitor;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
 import jbse.val.Term;
+import jbse.val.Value;
 import jbse.val.WideningConversion;
 
 /**
@@ -510,11 +511,17 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
      * to a Java operator.
      * 
      */ 
-    private static String toSMTLIB2Operator(Operator operator) {
+    private static String toSMTLIB2Operator(Operator operator, Primitive firstOperand, Primitive secondOperand) {
         if (operator == Operator.ADD)      return "+";
         else if (operator == Operator.SUB) return "-";
         else if (operator == Operator.MUL) return "*";
-        else if (operator == Operator.DIV) return "/";
+        else if (operator == Operator.DIV) {
+            if (Type.isPrimitiveIntegral(firstOperand.getType()) && Type.isPrimitiveIntegral(secondOperand.getType())) {
+                return "div";
+            } else {
+                return "/";
+            }
+        }
         else if (operator == Operator.REM) return "mod";
         else if (operator == Operator.NEG) return "-";
         else if (operator == Operator.LT)  return "<";
@@ -637,17 +644,19 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
         @Override
         public void visitExpression(Expression e) throws Exception {
             final Operator operation = e.getOperator();
-            final String op = toSMTLIB2Operator(operation);
+            final Primitive firstOperand = e.getFirstOperand();
+            final Primitive secondOperand = e.getSecondOperand();
+            final String op = toSMTLIB2Operator(operation, firstOperand, secondOperand);
             final boolean isBooleanOperator = operation.acceptsBoolean();
             if (operation.returnsBoolean() == this.isBooleanExpression) {
                 //operation well formed
                 if (operation == Operator.NE) {
                     //1-NE is not a SMTLIB2 operator but can be translated to a combination of SMTLIB2 operators
-                    e.getFirstOperand().accept(new SMTLIB2ExpressionVisitor(this, isBooleanOperator));
-                    e.getSecondOperand().accept(new SMTLIB2ExpressionVisitor(this, isBooleanOperator));
-                    final String secondOperand = this.clauseStack.pop();
-                    final String firstOperand = this.clauseStack.pop();
-                    this.clauseStack.push("(not (= " + firstOperand + " " + secondOperand + "))");
+                    firstOperand.accept(new SMTLIB2ExpressionVisitor(this, isBooleanOperator));
+                    secondOperand.accept(new SMTLIB2ExpressionVisitor(this, isBooleanOperator));
+                    final String secondOperandSMT = this.clauseStack.pop();
+                    final String firstOperandSMT = this.clauseStack.pop();
+                    this.clauseStack.push("(not (= " + firstOperandSMT + " " + secondOperandSMT + "))");
                 } else if (op.equals(OTHER)) {
                     //2-Operator does not correspond to a SMTLIB2 operator
                     m.mangle(e).accept(this);
@@ -655,14 +664,14 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
                     //3-The operator correspond to a SMTLIB2 operator
                     final String clause;
                     if (e.isUnary()) {
-                        e.getOperand().accept(new SMTLIB2ExpressionVisitor (this , isBooleanOperator));
+                        e.getOperand().accept(new SMTLIB2ExpressionVisitor(this, isBooleanOperator));
                         clause = "("+ op +" "+ this.clauseStack.pop() + ")";
                     } else {
-                        e.getFirstOperand().accept(new SMTLIB2ExpressionVisitor (this , isBooleanOperator));
-                        e.getSecondOperand().accept(new SMTLIB2ExpressionVisitor (this, isBooleanOperator));
-                        final String secondOperand = this.clauseStack.pop();
-                        final String firstOperand = this.clauseStack.pop();
-                        clause = "("+ op + " " + firstOperand + " " + secondOperand + ")";
+                        firstOperand.accept(new SMTLIB2ExpressionVisitor(this, isBooleanOperator));
+                        secondOperand.accept(new SMTLIB2ExpressionVisitor(this, isBooleanOperator));
+                        final String secondOperandSMT = this.clauseStack.pop();
+                        final String firstOperandSMT = this.clauseStack.pop();
+                        clause = "("+ op + " " + firstOperandSMT + " " + secondOperandSMT + ")";
                     }
                     this.clauseStack.push(clause);
                 }
