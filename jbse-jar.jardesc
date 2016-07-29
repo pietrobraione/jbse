@@ -11,7 +11,6 @@
         </sealing>
     </manifest>
     <selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
-        <javaElement handleIdentifier="=jbse/src&lt;jbse.meta"/>
         <javaElement handleIdentifier="=jbse/src&lt;jbse.algo"/>
         <javaElement handleIdentifier="=jbse/src&lt;jbse.apps.settings{SimpleCharStream.java"/>
         <javaElement handleIdentifier="=jbse/src&lt;jbse.apps.settings{SettingsParserConstants.java"/>

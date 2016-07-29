@@ -30,7 +30,6 @@ import jbse.val.PrimitiveVisitor;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
 import jbse.val.Term;
-import jbse.val.Value;
 import jbse.val.WideningConversion;
 
 /**
