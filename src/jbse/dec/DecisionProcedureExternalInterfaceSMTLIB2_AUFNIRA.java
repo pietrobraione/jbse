@@ -88,10 +88,12 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
         this.calc = calc;
         this.m = new ExpressionMangler("X", "", this.calc);
         this.working = true;
-        this.solver = Runtime.getRuntime().exec(solverBinaryPath);
+        final ProcessBuilder pb = new ProcessBuilder(solverBinaryPath.split(" "));
+        pb.redirectErrorStream(true);
+        this.solver = pb.start();
         this.solverIn = new BufferedReader(new InputStreamReader(this.solver.getInputStream()));
         this.solverOut = new BufferedWriter(new OutputStreamWriter(this.solver.getOutputStream()));
-        
+
         final String query = PROLOGUE + PUSH_1;
         sendAndCheckAnswer(query);
         clear();
@@ -406,6 +408,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
     
     private void send(String query) throws IOException {
         //System.err.print("--->SMTLIB2: " + query); //TODO log differently!
+
         try {
             this.solverOut.write(query);
             this.solverOut.flush();
@@ -419,8 +422,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
         send(query);
         for (int i = 0; i < query.length(); ++i) {
             if (query.charAt(i) == '\n') {
-                final String answer = this.solverIn.readLine();
-                //System.err.println("<---SMTLIB2: " + answer); //TODO log differently!
+                final String answer = read();
                 if (answer == null) {
                     this.working = false;
                     throw new IOException("failed read of solver answer. Query: " + query + ", failed at character " + i);
@@ -433,14 +435,26 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
         }
     }
     
-    private boolean sendAndCheckAnswerChecksat() throws IOException, ExternalProtocolInterfaceException {
-        send(CHECKSAT);
-        final String answer = this.solverIn.readLine();
-        //System.err.println("<---SMTLIB2: " + answer); //TODO log differently!
+    private String read() throws IOException {
+        final String answer;
+        try {
+            answer = this.solverIn.readLine();
+        } catch (IOException e) {
+            this.working = false;
+            throw e;
+        }
         if (answer == null) {
             this.working = false;
-            throw new IOException("failed read of solver output");
+            throw new IOException("failed read of solver output, premature end of stream reached, process alive: " + this.solver.isAlive() + ", exit value: " + this.solver.exitValue());
         }
+
+        //System.err.println("<---SMTLIB2: " + answer); //TODO log differently!
+        return answer;
+    }
+    
+    private boolean sendAndCheckAnswerChecksat() throws IOException, ExternalProtocolInterfaceException {
+        send(CHECKSAT);
+        final String answer = read();
         if (!answer.equals(SAT) && !answer.equals(UNSAT) && !answer.equals(UNKNOWN)) {
             this.working = false;
             throw new ExternalProtocolInterfaceException("unrecognized answer from solver when checking satisfiability. Message: " + answer);
@@ -462,12 +476,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
         final StringBuilder retVal = new StringBuilder();
         int nestingLevel = 0;
         do {
-            final String answer = this.solverIn.readLine();
-            //System.err.println("<---SMTLIB2: " + answer); //TODO log differently!
-            if (answer == null) {
-                this.working = false;
-                throw new IOException("failed read of solver output");
-            }
+            final String answer = read();
             retVal.append(answer);
             for (char c : answer.toCharArray()) {
                 if (c == '(') {
