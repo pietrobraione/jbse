@@ -46,7 +46,6 @@ import jbse.val.exc.InvalidTypeException;
  * each entry in the symbolic array.
  *  
  * @author Pietro Braione
- * @author unknown
  */
 final class Algo_XALOAD extends Algo_XYLOAD_GETX<
 BytecodeData_0, 

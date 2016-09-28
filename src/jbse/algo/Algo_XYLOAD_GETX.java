@@ -35,12 +35,6 @@ import jbse.val.exc.InvalidTypeException;
  * from an {@link Array}.
  * 
  * @author Pietro Braione
- *
- * @param <R> the {@link DecisionAlternative}s used to encode the results 
- *            of splitting decisions. It is <em>not</em> assumed to be a {@link DecisionAlternative_XYLOAD_GETX_Loads}
- *            so it can be used as a superclass also for array bytecodes {@link Algorithm}s, 
- *            which do not load any {@link Value} to the operand stack in the 
- *            out-of-range case. 
  */
 abstract class Algo_XYLOAD_GETX<
 D extends BytecodeData, 

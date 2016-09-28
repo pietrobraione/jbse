@@ -59,7 +59,6 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> { 
-
             try {
                 final int constant = this.data.nextWide() ? this.data.immediateSignedWord() : this.data.immediateSignedByte();
                 final Simplex constantSimplex = state.getCalculator().valInt(constant);

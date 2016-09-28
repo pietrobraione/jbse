@@ -175,7 +175,7 @@ UP extends StrategyUpdate<R>> {
         return null; 
     }
     
-    protected ExecutionContext ctx; //just caches (across a call of exec)
+    protected ExecutionContext ctx; //just caches across a call of exec (note that this makes Algorithms nonreentrant!)
 
     public final void exec(State state, ExecutionContext ctx) 
     throws DecisionException, ContradictionException, 

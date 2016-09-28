@@ -21,7 +21,7 @@ import jbse.val.Reference;
  */
 final class Algo_IF_ACMPX_XNULL extends Algorithm<
 BytecodeData_1ON,
-DecisionAlternative_IFX,
+DecisionAlternative_IFX,  //does not really need a decision alternative, but it's necessary to mark that this is a branching bytecode
 StrategyDecide<DecisionAlternative_IFX>,
 StrategyRefine<DecisionAlternative_IFX>,
 StrategyUpdate<DecisionAlternative_IFX>> {

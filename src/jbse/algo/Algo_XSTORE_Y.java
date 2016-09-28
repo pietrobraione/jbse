@@ -13,6 +13,12 @@ import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Value;
 
+/**
+ * Algorithm managing all the *store_* (store into local variable) bytecodes 
+ * ([a/d/f/i/l]store_[0/1/2/3]).
+ * 
+ * @author Pietro Braione
+ */
 final class Algo_XSTORE_Y extends Algorithm<
 BytecodeData_0,
 DecisionAlternative_NONE,

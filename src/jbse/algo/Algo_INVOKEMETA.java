@@ -20,9 +20,9 @@ RE extends StrategyRefine<R>,
 UP extends StrategyUpdate<R>> 
 extends Algorithm<BytecodeData_1ME, R, DE, RE, UP> {
     
-    protected boolean isInterface; //set by setter (called by INVOKEX)
-    protected boolean isSpecial; //set by setter (called by INVOKEX)
-    protected boolean isStatic; //set by setter (called by INVOKEX)
+    protected boolean isInterface; //set by setter (called by Algo_INVOKEX)
+    protected boolean isSpecial; //set by setter (called by Algo_INVOKEX)
+    protected boolean isStatic; //set by setter (called by Algo_INVOKEX)
     
     public final void setFeatures(boolean isInterface, boolean isSpecial, boolean isStatic) {
         this.isInterface = isInterface;

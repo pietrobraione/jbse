@@ -51,17 +51,6 @@ public abstract class BytecodeData {
         readOperands(state, numOperandsSupplier.get());
     }
     
-    protected final void readOperands(State state, int numOperands) 
-    throws ThreadStackEmptyException, InterruptException {
-        final Frame frame = state.getCurrentFrame();
-        try {
-            this.operands = frame.operands(numOperands);
-        } catch (InvalidNumberOfOperandsException e) {
-            throwVerifyError(state);
-            exitFromAlgorithm();
-        }
-    }
-    
     protected abstract void readImmediates(State state) throws InterruptException;
 
     protected final void readImmediateSignedByte(State state, int immediatePos) 
@@ -210,6 +199,17 @@ public abstract class BytecodeData {
 
     protected final void setSwitchTable(SwitchTable switchTable) {
         this.switchTable = switchTable;
+    }
+    
+    private void readOperands(State state, int numOperands) 
+    throws ThreadStackEmptyException, InterruptException {
+        final Frame frame = state.getCurrentFrame();
+        try {
+            this.operands = frame.operands(numOperands);
+        } catch (InvalidNumberOfOperandsException e) {
+            throwVerifyError(state);
+            exitFromAlgorithm();
+        }
     }
     
     /**

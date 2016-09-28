@@ -2,7 +2,7 @@ package jbse.tree;
 
 /**
  * A {@link DecisionAlternative} for the outcome of a 
- * "branch if integer comparison" bytecode.
+ * "branch if comparison" bytecode.
  * 
  * @author Pietro Braione
  *

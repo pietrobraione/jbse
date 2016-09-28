@@ -62,9 +62,9 @@ StrategyUpdate<DecisionAlternative_IFX>> {
                 val1 = (Primitive) this.data.operand(0);
                 if (this.compareWithZero) {
                     val2 = state.getCalculator().valInt(0);
-                    //the next conversion is necessary because the 
-                    //Algo_XCMPY state space reduction trick 
-                    //spills nonint values to the operand stack.
+                    //the next conversion is necessary because  
+                    //Algo_XCMPY_FAST spills nonint values 
+                    //to the operand stack.
                     if (widens(val1.getType(), INT)) {
                         val2 = val2.to(val1.getType());
                     } else {

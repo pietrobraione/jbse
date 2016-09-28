@@ -102,16 +102,16 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		private final boolean noReferenceExpansion;
 		private final boolean branchingDecision;
 		
-		private Outcome(boolean shouldRefine, boolean isBranching) {
+		private Outcome(boolean shouldRefine, boolean branchingDecision) {
 			this.shouldRefine = shouldRefine;
 			this.noReferenceExpansion = false;
-			this.branchingDecision = isBranching;
+			this.branchingDecision = branchingDecision;
 		}
 
-		private Outcome(boolean shouldRefine, boolean noReferenceExpansion, boolean isBranching) {
+		private Outcome(boolean shouldRefine, boolean noReferenceExpansion, boolean branchingDecision) {
 			this.shouldRefine = shouldRefine;
 			this.noReferenceExpansion = noReferenceExpansion;
-			this.branchingDecision = isBranching;
+			this.branchingDecision = branchingDecision;
 		}
 		
 		/**
@@ -1023,7 +1023,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
             throw new InvalidInputException("completeArraySet invoked with a null parameter.");
         }
         if (index.getType() != Type.INT) {
-            throw new InvalidInputException("completeArraySet index has type " + index.getType());
+            throw new InvalidInputException("completeArraySet invoked with an index having type " + index.getType());
         }
         try {
             while (entries.hasNext()) {
@@ -1071,7 +1071,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
             throw new InvalidInputException("completeArraycopy invoked with a null parameter.");
         }
         if (srcPos.getType() != Type.INT || destPos.getType() != Type.INT || length.getType() != Type.INT) {
-            throw new InvalidInputException("completeArraySet invoked with a nonint srcPos, destPos or length parameter.");
+            throw new InvalidInputException("completeArraycopy invoked with a nonint srcPos, destPos or length parameter.");
         }
         while (entries.hasNext()) {
             final Array.AccessOutcomeIn e = entries.next();

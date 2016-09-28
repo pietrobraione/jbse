@@ -29,6 +29,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     
     @Override
     protected BytecodeCooker bytecodeCooker() {
+        //TODO check that this.data.localVariableValue() is Simplex and integer, and when it is symbolic throw a CannotManageStateException, possibly SymbolicValueNotAllowedException.
         return (state) -> { };
     }
 

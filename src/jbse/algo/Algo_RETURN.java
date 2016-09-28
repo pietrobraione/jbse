@@ -5,7 +5,6 @@ import java.util.function.Supplier;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.tree.DecisionAlternative_NONE;
 
-//TODO merge with Algo_RETURN
 final class Algo_RETURN extends Algorithm<
 BytecodeData_0, 
 DecisionAlternative_NONE,
