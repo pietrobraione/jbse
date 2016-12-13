@@ -109,6 +109,24 @@ public class ClassHierarchy {
         }
         return retval;
     }
+    
+    /**
+     * Adds a pair (supertype, subtype) to the expansion backdoor
+     * provided at construction time.
+     * 
+     * @param supertype a {@link String}, the supertype.
+     * @param subtype a {@link String}, the subtype.
+     */
+    public void addToExpansionBackdoor(String supertype, String subtype) {
+        Set<String> expansions = this.expansionBackdoor.get(supertype);
+        if (expansions == null) {
+            expansions = new HashSet<>();
+            this.expansionBackdoor.put(supertype, expansions);
+        }
+        if (!expansions.contains(subtype)) {
+            expansions.add(subtype);
+        }
+    }
 
 	/**
 	 * Lists the concrete subclasses of a class. <br />

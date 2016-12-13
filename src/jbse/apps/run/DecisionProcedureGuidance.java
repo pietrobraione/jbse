@@ -10,6 +10,7 @@ import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodNotFoundException;
+import jbse.common.Type;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
@@ -408,6 +409,7 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 		if (this.failedConcrete) {
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
 		}
+		updateExpansionBackdoor(state, refToLoad);
 		final Outcome retVal = super.resolve_XLOAD_GETX_Unresolved(state, refToLoad, result);
 		if (!this.ended) {
 			final Iterator<DecisionAlternative_XLOAD_GETX> it = result.iterator();
@@ -446,6 +448,7 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 		if (this.failedConcrete) {
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
 		}
+        updateExpansionBackdoor(state, refToLoad);
 		final Outcome retVal = super.resolve_XALOAD_Unresolved(state, accessExpression, refToLoad, fresh, result);
 		if (!this.ended) {
 			final Iterator<DecisionAlternative_XALOAD> it = result.iterator();
@@ -461,6 +464,16 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 			}
 		}
 		return retVal;
+	}
+	
+	private void updateExpansionBackdoor(State state, ReferenceSymbolic refToLoad) throws GuidanceException {
+	    final String refType = Type.getReferenceClassName(refToLoad.getStaticType());
+        final Reference refInConcreteState = (Reference) getValue(this.initialStateConcrete, this.rootFrameConcrete, refToLoad.getOrigin());
+        final Objekt objInConcreteState = this.initialStateConcrete.getObject(refInConcreteState);
+	    final String objType = objInConcreteState.getType();
+	    if (!refType.equals(objType)) {
+	        state.getClassHierarchy().addToExpansionBackdoor(refType, objType);
+	    }
 	}
 	
 	private void filter(State state, ReferenceSymbolic refToLoad, DecisionAlternative_XYLOAD_GETX_Unresolved dar, Iterator<?> it) 
@@ -651,7 +664,7 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 			x.getArg().accept(this);
 			this.value = (x.getType() == this.value.getType() ? this.value : this.calc.widen(x.getType(), this.value));
 			//note that the concrete this.value could already be widened
-			//because of convertion of actual types to computational types
+			//because of conversion of actual types to computational types
 			//through operand stack, see JVMSpec 2.11.1, tab. 2.3
 		}
 		
