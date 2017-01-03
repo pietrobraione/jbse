@@ -72,7 +72,7 @@ public class NativeInvokerPure implements NativeInvoker {
 				return;
 			}
 		} else {
-            throw new ValueDoesNotSupportNativeException();
+            throw new ValueDoesNotSupportNativeException("invoked method " + methodSignatureResolved + " with args " + Arrays.toString(args));
 			//TODO put reference resolution here or in the invoke* bytecodes and assign returnValue = state.createSymbol(returnType, "__NATIVE[" + state.getIdentifier() + "[" + state.getSequenceNumber() + "]");
 		}
 		
