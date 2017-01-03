@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project basedir="." default="build" name="jbse">
+    <property environment="env"/>
     <property name="debuglevel" value="source,lines,vars"/>
     <property name="target" value="1.8"/>
     <property name="source" value="1.8"/>
@@ -24,8 +25,19 @@
     <target name="clean">
         <delete dir="bin"/>
     </target>
-    <target depends="clean" name="cleanall"/>
-    <target depends="init" name="build">
+    <target depends="clean" name="cleanall">
+      <delete file="src/jbse/apps/settings/SettingsParser.java"/>
+      <delete file="src/jbse/apps/settings/ParseException.java"/>
+      <delete file="src/jbse/apps/settings/SettingsParserConstants.java"/>
+      <delete file="src/jbse/apps/settings/SettingsParserTokenManager.java"/>
+      <delete file="src/jbse/apps/settings/SimpleCharStream.java"/>
+      <delete file="src/jbse/apps/settings/Token.java"/>
+      <delete file="src/jbse/apps/settings/TokenMgrError.java"/>
+    </target>
+    <target name="javacc">
+      <javacc target="src/jbse/apps/settings/SettingsParser.jj" outputdirectory="src/jbse/apps/settings" javacchome="${env.JAVACC_HOME}"/>
+    </target>
+    <target depends="init,javacc" name="build">
         <javac debug="true" debuglevel="${debuglevel}" destdir="bin" includeantruntime="false" source="${source}" target="${target}">
             <src path="src"/>
             <exclude name="jbse/bc/testdata/"/>
