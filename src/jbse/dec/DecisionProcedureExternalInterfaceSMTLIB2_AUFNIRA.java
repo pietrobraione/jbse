@@ -684,12 +684,17 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
                     this.clauseStack.push(clause);
                 }
             } else {
-                throw new UnexpectedInternalException("error while parsing expression (not a boolean expression): " + e.toString());
+                throw new UnexpectedInternalException("error while parsing expression (expected a boolean expression but it is not): " + e.toString());
             }
         }
 
         @Override
         public void visitFunctionApplication(FunctionApplication x) throws Exception {
+            if (x.getType() == Type.BOOLEAN && !this.isBooleanExpression) {
+                throw new UnexpectedInternalException("error while parsing expression (expected a boolean expression but it is not): " + x.toString());
+            } else if (x.getType() != Type.BOOLEAN && this.isBooleanExpression) {
+                throw new UnexpectedInternalException("error while parsing expression (expected a numeric expression but it is not): " + x.toString());
+            }
             final String operator = x.getOperator();
             final char type = x.getType();
             final StringBuilder clause = new StringBuilder();
@@ -734,6 +739,11 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
 
         @Override
         public void visitWideningConversion(WideningConversion x) throws Exception {
+            if (x.getType() == Type.BOOLEAN && !this.isBooleanExpression) {
+                throw new UnexpectedInternalException("error while parsing expression (expected a boolean expression but it is not): " + x.toString());
+            } else if (x.getType() != Type.BOOLEAN && this.isBooleanExpression) {
+                throw new UnexpectedInternalException("error while parsing expression (expected a numeric expression but it is not): " + x.toString());
+            }
             final Primitive arg = x.getArg();
             arg.accept(new SMTLIB2ExpressionVisitor(this, false));
             if (Type.isPrimitiveIntegral(x.getType()) != Type.isPrimitiveIntegral(arg.getType())) {
@@ -743,6 +753,11 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
 
         @Override
         public void visitNarrowingConversion(NarrowingConversion x) throws Exception {
+            if (x.getType() == Type.BOOLEAN && !this.isBooleanExpression) {
+                throw new UnexpectedInternalException("error while parsing expression (expected a boolean expression but it is not): " + x.toString());
+            } else if (x.getType() != Type.BOOLEAN && this.isBooleanExpression) {
+                throw new UnexpectedInternalException("error while parsing expression (expected a numeric expression but it is not): " + x.toString());
+            }
             final Primitive arg = x.getArg();
             arg.accept(new SMTLIB2ExpressionVisitor(this, false));
             if (Type.isPrimitiveIntegral(x.getType()) != Type.isPrimitiveIntegral(arg.getType())) {
@@ -806,9 +821,9 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
                 this.clauseStack.push(smtlib2Value);
               } else if (mytype == Type.BOOLEAN) {
                 if ((Boolean) obj) {
-                    this.clauseStack.push("1");
+                    this.clauseStack.push(this.isBooleanExpression ? "true" : "1");
                 } else {
-                    this.clauseStack.push("0");
+                    this.clauseStack.push(this.isBooleanExpression ? "false" : "0");
                 }
             }
         }
