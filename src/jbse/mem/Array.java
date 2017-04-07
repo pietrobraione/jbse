@@ -1,11 +1,15 @@
 package jbse.mem;
 
+import static jbse.common.Type.getArrayMemberType;
+import static jbse.common.Type.isPrimitive;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
+import java.util.function.Consumer;
 
 import jbse.bc.Signature;
 import jbse.common.Type;
@@ -15,6 +19,7 @@ import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.MemoryPath;
 import jbse.val.Primitive;
+import jbse.val.Reference;
 import jbse.val.ReferenceArrayImmaterial;
 import jbse.val.Simplex;
 import jbse.val.Term;
@@ -688,8 +693,10 @@ public final class Array extends Objekt {
      * @throws InvalidTypeException if {@code srcPos} or {@code destPos} 
      *         or {@code length} is not an int. 
 	 */
-    public Iterator<AccessOutcomeIn> arraycopy(Array src, Primitive srcPos, Primitive destPos, Primitive length) 
+    public Iterator<AccessOutcomeIn> arraycopy(Array src, Primitive srcPos, Primitive destPos, Primitive length, Consumer<Reference> checkOk) 
     throws InvalidOperandException, InvalidTypeException {
+        final String srcTypeComponent = getArrayMemberType(src.getType());
+        final String destTypeComponent = getArrayMemberType(getType());
         if (this.simpleRep && src.simpleRep && 
             srcPos instanceof Simplex && destPos instanceof Simplex && 
             length instanceof Simplex) {
@@ -698,7 +705,11 @@ public final class Array extends Objekt {
             int destPosInt = (Integer) ((Simplex) destPos).getActualValue();
             int lengthInt = (Integer) ((Simplex) length).getActualValue();
             for (int ofst = 0; ofst < lengthInt; ++ofst) {
-                this.entries.get(destPosInt + ofst).returnedValue = src.entries.get(srcPosInt + ofst).returnedValue;
+                final Value srcValue = src.entries.get(srcPosInt + ofst).returnedValue;
+                if (!isPrimitive(srcTypeComponent) && !isPrimitive(destTypeComponent)) { 
+                    checkOk.accept((Reference) srcValue);
+                }
+                this.entries.get(destPosInt + ofst).returnedValue = srcValue;
             }
             return EMPTY_ITERATOR;
         } else {
@@ -715,8 +726,12 @@ public final class Array extends Objekt {
             //adds new entries for the source array entries
             final Primitive srcIndex = INDEX.sub(destPos).add(srcPos);
             for (AccessOutcomeIn srcEntry : src.entries) {
+                final Value srcValue = srcEntry.returnedValue;
+                if (!isPrimitive(srcTypeComponent) && !isPrimitive(destTypeComponent)) { 
+                    checkOk.accept((Reference) srcValue);
+                }
                 final Expression accessCondition = (Expression) srcEntry.inRange(srcIndex).and(indexInDestRange);
-                this.entries.add(new AccessOutcomeIn(accessCondition, srcEntry.returnedValue));
+                this.entries.add(new AccessOutcomeIn(accessCondition, srcValue));
             }
 
             //returns the iterator

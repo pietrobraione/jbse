@@ -24,7 +24,9 @@ import jbse.bc.exc.BadClassFileException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Array;
+import jbse.mem.Objekt;
 import jbse.tree.DecisionAlternative_XASTORE;
+import jbse.val.Null;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.exc.InvalidOperandException;
@@ -73,9 +75,6 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
             
             final String srcTypeComponent = getArrayMemberType(srcArray.getType());
             final String destTypeComponent = getArrayMemberType(destArray.getType());
-            //this is actually stronger than what required by the arraylength 
-            //specification (that allows dynamic assignment compatibility), 
-            //but implementing the latter would be too complex
             if (isPrimitive(srcTypeComponent) && 
                 isPrimitive(destTypeComponent)) {
                 if (!srcTypeComponent.equals(destTypeComponent)) {
@@ -84,14 +83,6 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                 }
             } else if (isPrimitive(srcTypeComponent) != isPrimitive(destTypeComponent)) {
                 throwNew(state, ARRAY_STORE_EXCEPTION);
-                exitFromAlgorithm();
-            } else try {
-                if (!state.getClassHierarchy().isAssignmentCompatible(className(srcTypeComponent), className(destTypeComponent))) {
-                    throwNew(state, ARRAY_STORE_EXCEPTION);
-                    exitFromAlgorithm();
-                }
-            } catch (BadClassFileException exc) {
-                throwVerifyError(state);
                 exitFromAlgorithm();
             }
             
@@ -129,6 +120,10 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
         };
     }
     
+    private static class ExitFromAlgorithmException extends RuntimeException {
+        private static final long serialVersionUID = 7040464752195180704L;        
+    }
+    
     @Override
     protected StrategyUpdate<DecisionAlternative_XASTORE> updater() {
         return (state, alt) -> {
@@ -137,12 +132,31 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                 try {
                     srcArray = (Array) state.getObject(this.src);
                     destArray = (Array) state.getObject(this.dest);
-                    final Iterator<Array.AccessOutcomeIn> entries = destArray.arraycopy(srcArray, this.srcPos, this.destPos, this.length);
+                    final String destTypeComponent = getArrayMemberType(destArray.getType());
+                    final Iterator<Array.AccessOutcomeIn> entries = 
+                        destArray.arraycopy(srcArray, this.srcPos, this.destPos, this.length,  
+                                            (Reference ref) -> {
+                                                if (ref instanceof Null) {
+                                                    return;
+                                                }
+                                                final Objekt srcElement = state.getObject(ref);
+                                                try {
+                                                    if (!state.getClassHierarchy().isAssignmentCompatible(srcElement.getType(), className(destTypeComponent))) {
+                                                        throwNew(state, ARRAY_STORE_EXCEPTION);
+                                                        throw new ExitFromAlgorithmException();
+                                                    }
+                                                } catch (BadClassFileException exc) {
+                                                    throwVerifyError(state);
+                                                    throw new ExitFromAlgorithmException();
+                                                }
+                                            });
                     this.ctx.decisionProcedure.completeArraycopy(state.getClassHierarchy(), entries, this.srcPos, this.destPos, this.length);
                 } catch (InvalidOperandException | InvalidTypeException | 
                          InvalidInputException | ClassCastException e) {
                     //this should never happen
                     failExecution(e);
+                } catch (ExitFromAlgorithmException e) {
+                    exitFromAlgorithm();
                 }
             } else {
                 throwNew(state, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
