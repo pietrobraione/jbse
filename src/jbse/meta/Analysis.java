@@ -33,8 +33,7 @@ final public class Analysis {
 	 * interest for the analysis (e.g., because they violate 
 	 * some assumed precondition).
 	 * When executed on a JVM different from JBSE, it 
-	 * exits with error code 99 unless {@link #disableAssumptionViolation()} 
-	 * has been invoked before, in which case it does nothing.
+	 * exits with error code 99.
 	 * 
 	 */
 	public static void ignore() { 

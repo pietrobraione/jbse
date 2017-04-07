@@ -112,7 +112,8 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 			@Override
 			public boolean atStepPre() {
 				try {
-					return (getEngine().getCurrentState().getCurrentMethodSignature().equals(stopSignature));
+				    final State currentState = getEngine().getCurrentState();
+					return (currentState.getCurrentMethodSignature().equals(stopSignature));
 				} catch (ThreadStackEmptyException e) {
 					//this should never happen
 					catastrophicFailure = e;
@@ -468,7 +469,10 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 	
 	private void updateExpansionBackdoor(State state, ReferenceSymbolic refToLoad) throws GuidanceException {
 	    final String refType = Type.getReferenceClassName(refToLoad.getStaticType());
-        final Reference refInConcreteState = (Reference) getValue(this.initialStateConcrete, this.rootFrameConcrete, refToLoad.getOrigin());
+        final ReferenceConcrete refInConcreteState = (ReferenceConcrete) getValue(this.initialStateConcrete, this.rootFrameConcrete, refToLoad.getOrigin());
+        if (refInConcreteState.isNull()) {
+            return;
+        }
         final Objekt objInConcreteState = this.initialStateConcrete.getObject(refInConcreteState);
 	    final String objType = objInConcreteState.getType();
 	    if (!refType.equals(objType)) {
