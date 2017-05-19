@@ -391,10 +391,16 @@ public class ClassHierarchy {
 	 * 
 	 * @param className a {@link String}, the name of the class.
 	 * @return a {@link Signature}{@code []}.
+     * @throws BadClassFileException if the classfile for the class 
+     *         {@code className}, or for one of its superclasses, 
+     *         does not exist in the classpath or is ill-formed.
 	 */	
-	public Signature[] getAllFieldsInstance(String className) {
+	public Signature[] getAllFieldsInstance(String className) throws BadClassFileException {
         final ArrayList<Signature> signatures = new ArrayList<Signature>(0);
         for (ClassFile c : superclasses(className)) {
+            if (c instanceof ClassFileBad) {
+                throw ((ClassFileBad) c).getException();
+            }
             Signature[] fields = c.getFieldsNonStatic();
             signatures.addAll(Arrays.asList(fields));
         }

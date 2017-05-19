@@ -543,7 +543,12 @@ public final class State implements Cloneable {
 	    if (className.equals(JAVA_CLASS)) {
 	        throw new RuntimeException(); //TODO better exception
 	    }
-		final Signature[] fieldsSignatures = this.classHierarchy.getAllFieldsInstance(className);
+		final Signature[] fieldsSignatures;
+        try {
+            fieldsSignatures = this.classHierarchy.getAllFieldsInstance(className);
+        } catch (BadClassFileException e) {
+            throw new UnexpectedInternalException(e); //TODO do something better
+        }
 		final Instance myObj = new Instance(this.calc, className, null, Epoch.EPOCH_AFTER_START, fieldsSignatures);
 		return new ReferenceConcrete(this.heap.addNew(myObj));
 	}
@@ -559,7 +564,12 @@ public final class State implements Cloneable {
      * @return a {@link ReferenceConcrete} to the newly created object.
      */
     private ReferenceConcrete createInstance_JAVA_CLASS(String representedClass) {
-        final Signature[] fieldsSignatures = this.classHierarchy.getAllFieldsInstance(JAVA_CLASS);
+        Signature[] fieldsSignatures;
+        try {
+            fieldsSignatures = this.classHierarchy.getAllFieldsInstance(JAVA_CLASS);
+        } catch (BadClassFileException e) {
+            throw new UnexpectedInternalException(e); //TODO do something better
+        }
         final Instance myObj = new Instance_JAVA_CLASS(this.calc, null, Epoch.EPOCH_AFTER_START, representedClass, fieldsSignatures);
         return new ReferenceConcrete(this.heap.addNew(myObj));
     }
@@ -642,7 +652,12 @@ public final class State implements Cloneable {
 	}
 
 	private Instance newInstanceSymbolic(String className, MemoryPath origin) {
-		final Signature[] fieldsSignatures = this.classHierarchy.getAllFieldsInstance(className);
+		final Signature[] fieldsSignatures;
+        try {
+            fieldsSignatures = this.classHierarchy.getAllFieldsInstance(className);
+        } catch (BadClassFileException e) {
+            throw new UnexpectedInternalException(e); //TODO do something better
+        }
 		final Instance obj = new Instance(this.calc, className, origin, Epoch.EPOCH_BEFORE_START, fieldsSignatures);
 		initWithSymbolicValues(obj);
 		return obj;
