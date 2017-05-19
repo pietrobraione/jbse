@@ -116,7 +116,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
     @Override
     protected StrategyRefine<DecisionAlternative_XASTORE> refiner() {
         return (state, alt) -> {
-            state.assume(this.ctx.decisionProcedure.simplify(alt.isInRange() ? this.inRange : this.inRange.neg()));
+            state.assume(this.ctx.decisionProcedure.simplify(alt.isInRange() ? this.inRange : this.inRange.not()));
         };
     }
     
