@@ -39,7 +39,7 @@ public class ExceptionTable {
 		for (ExceptionTableEntry tmpEntry : this.exTable) {
 			if (excTypes.contains(tmpEntry.getType()) && 
 					(PC >= tmpEntry.getStartPC()) && 
-					(PC <= tmpEntry.getEndPC())) {
+					(PC < tmpEntry.getEndPC())) {
 				return tmpEntry;
 			}
 		}
