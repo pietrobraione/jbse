@@ -119,6 +119,14 @@ UP extends StrategyUpdate<R>> {
      */
     protected abstract Supplier<Integer> programCounterUpdate();
     
+    /**
+     * Override this method to perform cleanup of 
+     * the algorithm's state whenever it has some state. 
+     * Cleanup will be performed at the beginning of {@link #exec} 
+     * to bring the algorithm at its virgin state.
+     */
+    protected void cleanup() { }
+    
     private final Supplier<Integer> numOperands; //just caches
     protected D data; //just caches
     private final BytecodeCooker cooker;  //just caches
@@ -163,25 +171,62 @@ UP extends StrategyUpdate<R>> {
         failExecution(e);
     }
     
+    /** 
+     * Checks whether some reference was not 
+     * expanded by resolution during {@link #exec}.
+     * 
+     * @return {@code true} if some reference was 
+     * resolved but not expanded, {@code false}
+     * otherwise (i.e., no reference was resolved
+     * or all the resolved references were expanded).
+     */
     public boolean someReferenceNotExpanded() { 
         return false; 
     }
     
+    //TODO improve the two methods that follow (possibly return a java.util.List of the References)
+
+    /**
+     * Returns a list of the origins of the nonexpanded
+     * references origins.
+     * 
+     * @return a {@link String}.
+     */
     public String nonExpandedReferencesOrigins() { 
         return null; 
     }
     
+    /**
+     * Returns a list of the origins of the nonexpanded
+     * references types.
+     * 
+     * @return a {@link String}.
+     */
     public String nonExpandedReferencesTypes() { 
         return null; 
     }
     
     protected ExecutionContext ctx; //just caches across a call of exec (note that this makes Algorithms nonreentrant!)
 
+    /**
+     * Executes the algorithm.
+     * 
+     * @param state the {@link State} on which the algorithm must operate.
+     * @param ctx the {@link ExecutionContext}.
+     * @throws DecisionException
+     * @throws ContradictionException
+     * @throws ThreadStackEmptyException
+     * @throws ClasspathException
+     * @throws CannotManageStateException
+     * @throws FailureException
+     * @throws ContinuationException
+     */
     public final void exec(State state, ExecutionContext ctx) 
     throws DecisionException, ContradictionException, 
     ThreadStackEmptyException, ClasspathException, 
     CannotManageStateException, FailureException, 
     ContinuationException {
+        cleanup();
         this.ctx = ctx;
         try {
             doExec(state);

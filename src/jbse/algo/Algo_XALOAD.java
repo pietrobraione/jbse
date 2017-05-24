@@ -59,10 +59,6 @@ StrategyUpdate_XALOAD> {
     private Array arrayObj; //set by cooker
     private Collection<Array.AccessOutcome> entries; //set by cooker
 
-    private boolean someRefNotExpanded;
-	private String nonExpandedRefTypes;
-	private String nonExpandedRefOrigins;
-	
 	@Override
 	protected Supplier<Integer> numOperands() {
         return () -> 2;
@@ -297,13 +293,4 @@ StrategyUpdate_XALOAD> {
     protected Supplier<Integer> programCounterUpdate() {
         return () -> XALOADSTORE_OFFSET;
     }
-	
-    @Override
-    public boolean someReferenceNotExpanded() { return this.someRefNotExpanded; }
-
-    @Override
-    public String nonExpandedReferencesTypes() { return this.nonExpandedRefTypes; }
-
-    @Override
-    public String nonExpandedReferencesOrigins() { return this.nonExpandedRefOrigins; }
 }

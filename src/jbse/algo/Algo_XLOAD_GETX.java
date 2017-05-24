@@ -36,11 +36,6 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
     //set by subclasses
     protected Value valToLoad;
 
-	//set by the decision strategies
-	private boolean refNotExpanded;
-	private String nonExpandedRefType;
-	private String nonExpandedRefOrigin;
-	
 	@Override
 	protected final Class<DecisionAlternative_XLOAD_GETX> classDecisionAlternative() {
 	    return DecisionAlternative_XLOAD_GETX.class;
@@ -50,12 +45,12 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
 	protected final StrategyDecide<DecisionAlternative_XLOAD_GETX> decider() {
 	    return (state, result) -> {
             final Outcome o = this.ctx.decisionProcedure.resolve_XLOAD_GETX(state, this.valToLoad, result);
-            this.refNotExpanded = o.noReferenceExpansion();
-            if (this.refNotExpanded) {
+            this.someRefNotExpanded = o.noReferenceExpansion();
+            if (this.someRefNotExpanded) {
                 try {
                     final ReferenceSymbolic refToLoad = (ReferenceSymbolic) this.valToLoad;
-                    this.nonExpandedRefType = refToLoad.getStaticType();
-                    this.nonExpandedRefOrigin = refToLoad.getOrigin().toString();
+                    this.nonExpandedRefTypes = refToLoad.getStaticType();
+                    this.nonExpandedRefOrigins = refToLoad.getOrigin().toString();
                 } catch (ClassCastException e) {
                     throw new UnexpectedInternalException(e);
                 }
@@ -114,19 +109,4 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
         //bad value to load (triggered by call to resolve_XLOAD_GETX done by decider())
         throwVerifyError(state);
 	}
-	
-	@Override
-    public final boolean someReferenceNotExpanded() { 
-    	return this.refNotExpanded; 
-    }
-
-    @Override
-    public final String nonExpandedReferencesTypes() { 
-    	return this.nonExpandedRefType; 
-    }
-    
-    @Override
-    public final String nonExpandedReferencesOrigins() { 
-    	return this.nonExpandedRefOrigin; 
-    }
 }

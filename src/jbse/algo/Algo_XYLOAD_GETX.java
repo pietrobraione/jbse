@@ -42,8 +42,20 @@ R extends DecisionAlternative,
 DE extends StrategyDecide<R>, 
 RE extends StrategyRefine<R>, 
 UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
+    //set by subclasses (decider method)
+	protected boolean someRefNotExpanded;
+    protected String nonExpandedRefTypes;
+    protected String nonExpandedRefOrigins;
+    
+    @Override
+    protected final void cleanup() {
+        this.someRefNotExpanded = false;
+        this.nonExpandedRefTypes = "";
+        this.nonExpandedRefOrigins = "";
+        super.cleanup();
+    }
 
-	protected final void refineRefExpands(State state, DecisionAlternative_XYLOAD_GETX_Expands drc) 
+    protected final void refineRefExpands(State state, DecisionAlternative_XYLOAD_GETX_Expands drc) 
 	throws ContradictionException, InvalidTypeException {
 		final ReferenceSymbolic referenceToExpand = drc.getValueToLoad();
 		final String classNameOfTargetObject = drc.getClassNameOfTargetObject();
@@ -116,4 +128,19 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
 	
 	protected abstract Value possiblyMaterialize(State s, Value val) 
 	throws DecisionException;
+
+    @Override
+    public final boolean someReferenceNotExpanded() { 
+    	return this.someRefNotExpanded; 
+    }
+
+    @Override
+    public final String nonExpandedReferencesTypes() { 
+    	return this.nonExpandedRefTypes; 
+    }
+
+    @Override
+    public final String nonExpandedReferencesOrigins() { 
+    	return this.nonExpandedRefOrigins; 
+    }
 }
