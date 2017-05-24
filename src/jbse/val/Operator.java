@@ -147,7 +147,7 @@ public enum Operator {
 	}
 	
 	/**
-	 * Twists an operator.
+	 * Twists a binary operator.
 	 * 
 	 * @return the operator such that 
 	 *         {@code x op y == y op.twist() x},
@@ -240,5 +240,4 @@ public enum Operator {
 		//TODO that's wrong!!! well, at least with some operators like shifts
 		return Type.lub(typeFirstOperand, typeSecondOperand);	
 	}
-    
 }
