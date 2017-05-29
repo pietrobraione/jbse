@@ -91,11 +91,11 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     }
                 } else if (cpv instanceof ConstantPoolString) {
                     final String stringLit = ((ConstantPoolString) cpv).getValue();
-                    ensureStringLiteral(state, stringLit, ctx.decisionProcedure);
+                    ensureStringLiteral(state, stringLit, this.ctx.decisionProcedure);
                     this.val = state.referenceToStringLiteral(stringLit);
                 } else { // cpv instanceof ConstantPoolClass
                     final String classSignature = ((ConstantPoolClass) cpv).getValue();
-                    ensureInstance_JAVA_CLASS(state, classSignature, ctx.decisionProcedure);
+                    ensureInstance_JAVA_CLASS(state, classSignature, this.ctx.decisionProcedure);
                     this.val = state.referenceToInstance_JAVA_CLASS(classSignature);
                 }
             } catch (ClassFileNotFoundException e) {
