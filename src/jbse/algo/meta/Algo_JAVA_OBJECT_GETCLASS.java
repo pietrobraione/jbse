@@ -6,7 +6,6 @@ import static jbse.algo.Util.ensureInstance_JAVA_CLASS;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
-import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 
 import java.util.function.Supplier;
 
@@ -39,12 +38,13 @@ public final class Algo_JAVA_OBJECT_GETCLASS extends Algo_INVOKEMETA_NONBRANCHIN
             //gets the "this" object and the name of its class
             final Reference thisRef = (Reference) this.data.operand(0);
             if (state.isNull(thisRef)) {
-                throwNew(state, NULL_POINTER_EXCEPTION);
-                exitFromAlgorithm();
+                //this should never happen
+                failExecution("The 'this' parameter to java.lang.Object.getClass method is null.");
             }
             final Objekt thisObj = state.getObject(thisRef);
             if (thisObj == null) {
-                throw new SymbolicValueNotAllowedException("The 'this' parameter to java.lang.Object.getClass method is symbolic.");
+                //this should never happen
+                failExecution("The 'this' parameter to java.lang.Object.getClass method is symbolic and unresolved.");
             }
             this.className = thisObj.getType();
             ensureInstance_JAVA_CLASS(state, this.className, this.ctx.decisionProcedure);
