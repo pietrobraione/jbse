@@ -822,7 +822,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	        } else {
 	            //accessExpression is unsatisfiable: nothing to do
 	            shouldRefine = false;
-	            noReferenceExpansion = true;
+	            noReferenceExpansion = false;
 	        }
 	        return Outcome.val(shouldRefine, noReferenceExpansion, true);
 	    } catch (InvalidInputException e) {
