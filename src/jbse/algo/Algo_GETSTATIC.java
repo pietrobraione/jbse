@@ -58,6 +58,6 @@ final class Algo_GETSTATIC extends Algo_GETX {
         }
         
         //gets the field's value 
-        this.valToLoad = state.getKlass(fieldClassName).getFieldValue(fieldSignatureResolved);
+        this.valToLoad = state.getKlass(fieldClassName).getFieldValue(this.fieldSignatureResolved);
     }
 }
