@@ -32,53 +32,62 @@ import jbse.val.exc.InvalidTypeException;
  * Abstract algorithm for the *newarray bytecodes
  * (newarray, anewarray, multianewarray). It decides over the
  * dimensions counts, a sheer numeric decision.
+ * It is public because it is also used to implement the 
+ * native {@code java.lang.reflect.Array.newArray} and 
+ * {@code java.lang.reflect.Array.multiNewArray} methods.
  * 
  * @author Pietro Braione
  */
-abstract class Algo_XNEWARRAY<D extends BytecodeData> extends Algorithm<
+public abstract class Algo_XNEWARRAY<D extends BytecodeData> extends Algorithm<
 D, 
 DecisionAlternative_XNEWARRAY,
 StrategyDecide<DecisionAlternative_XNEWARRAY>,
 StrategyRefine<DecisionAlternative_XNEWARRAY>,
 StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
     
-    //must be set by subclasses *before* invoking cookMore
+    //must be set by subclasses in preCook
     protected Primitive[] dimensionsCounts;
     protected String arrayType;
 
-    private int layersToCreateNow; //produced by cookMore
-    private Primitive countsNonNegative, countsNegative; //produced by cookMore
+    private int layersToCreateNow; //produced by cook
+    private Primitive countsNonNegative, countsNegative; //produced by cook
+    
+    protected abstract void preCook(State state) throws InterruptException;
+    
+    @Override
+    protected BytecodeCooker bytecodeCooker() {
+        return (state) -> {
+            preCook(state);
 
-    protected final void cookMore(State state, D data) 
-    throws InterruptException {
-        //calculates layersToCreateNow, i.e., the number of layers that 
-        //can be created when this algorithm is executed; this number is
-        //calculated by considering that the last layer that can be
-        //created now is the first that has a symbolic length
-        this.layersToCreateNow = 0;
-        for (Primitive l : this.dimensionsCounts) {
-            ++this.layersToCreateNow;
-            if (!(l instanceof Simplex)) {
-                break;
-            }
-        }
-
-        //builds countsNonNegative, countsNegative; this are two
-        //boolean Primitives stating that all the dimension count 
-        //values are nonnegative (respectively, negative)
-        try {
-            final Calculator calc = state.getCalculator();
-            Primitive tmp = calc.valBoolean(true);
+            //calculates layersToCreateNow, i.e., the number of layers that 
+            //can be created when this algorithm is executed; this number is
+            //calculated by considering that the last layer that can be
+            //created now is the first that has a symbolic length
+            this.layersToCreateNow = 0;
             for (Primitive l : this.dimensionsCounts) {
-                tmp = tmp.and(l.ge(calc.valInt(0)));
+                ++this.layersToCreateNow;
+                if (!(l instanceof Simplex)) {
+                    break;
+                }
             }
-            this.countsNonNegative = tmp;
-            this.countsNegative = countsNonNegative.not();
-        } catch (InvalidTypeException | InvalidOperandException e) {
-            //TODO is it ok, or should we throw UnexpectedInternalException?
-            throwVerifyError(state);
-            exitFromAlgorithm();
-        }
+
+            //builds countsNonNegative, countsNegative; this are two
+            //boolean Primitives stating that all the dimension count 
+            //values are nonnegative (respectively, negative)
+            try {
+                final Calculator calc = state.getCalculator();
+                Primitive tmp = calc.valBoolean(true);
+                for (Primitive l : this.dimensionsCounts) {
+                    tmp = tmp.and(l.ge(calc.valInt(0)));
+                }
+                this.countsNonNegative = tmp;
+                this.countsNegative = countsNonNegative.not();
+            } catch (InvalidTypeException | InvalidOperandException e) {
+                //TODO is it ok, or should we throw UnexpectedInternalException?
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            }
+        };
     }
     
     @Override

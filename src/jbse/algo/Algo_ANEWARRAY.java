@@ -16,6 +16,7 @@ import java.util.function.Supplier;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Primitive;
 
@@ -35,42 +36,37 @@ final class Algo_ANEWARRAY extends Algo_XNEWARRAY<BytecodeData_1CL> {
     protected Supplier<BytecodeData_1CL> bytecodeData() {
         return BytecodeData_1CL::get;
     }
-    
+        
     @Override
-    protected BytecodeCooker bytecodeCooker() {
-        return (state) -> {
-            //sets the array length
-            try {
-                this.dimensionsCounts = new Primitive[] { (Primitive) this.data.operand(0) };
-            } catch (ClassCastException e) {
-                throwVerifyError(state);
-                exitFromAlgorithm();
-            }
+    protected void preCook(State state) throws InterruptException {
+        //sets the array length
+        try {
+            this.dimensionsCounts = new Primitive[] { (Primitive) this.data.operand(0) };
+        } catch (ClassCastException e) {
+            throwVerifyError(state);
+            exitFromAlgorithm();
+        }
 
-            //sets the array type
-            this.arrayType = "" + ARRAYOF + REFERENCE + this.data.className() + TYPEEND;
+        //sets the array type
+        this.arrayType = "" + ARRAYOF + REFERENCE + this.data.className() + TYPEEND;
 
-            //resolves the member class
-            try {
-                final String currentClassName = state.getCurrentMethodSignature().getClassName();
-                state.getClassHierarchy().resolveClass(currentClassName, this.data.className());
-            } catch (ClassFileNotFoundException e) {
-                throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
-                exitFromAlgorithm();
-            } catch (ClassFileNotAccessibleException e) {
-                throwNew(state, ILLEGAL_ACCESS_ERROR);
-                exitFromAlgorithm();
-            } catch (BadClassFileException e) {
-                throwVerifyError(state);
-                exitFromAlgorithm();
-            } catch (ThreadStackEmptyException e) {
-                //this should never happen
-                failExecution(e);
-            }
-            
-            //completes cooking
-            cookMore(state, data);
-        };
+        //resolves the member class
+        try {
+            final String currentClassName = state.getCurrentMethodSignature().getClassName();
+            state.getClassHierarchy().resolveClass(currentClassName, this.data.className());
+        } catch (ClassFileNotFoundException e) {
+            throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+            exitFromAlgorithm();
+        } catch (ClassFileNotAccessibleException e) {
+            throwNew(state, ILLEGAL_ACCESS_ERROR);
+            exitFromAlgorithm();
+        } catch (BadClassFileException e) {
+            throwVerifyError(state);
+            exitFromAlgorithm();
+        } catch (ThreadStackEmptyException e) {
+            //this should never happen
+            failExecution(e);
+        }
     }
     
     @Override

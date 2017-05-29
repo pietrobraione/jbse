@@ -7,6 +7,7 @@ import static jbse.bc.Offsets.NEWARRAY_OFFSET;
 import java.util.function.Supplier;
 
 import jbse.common.Type;
+import jbse.mem.State;
 import jbse.val.Primitive;
 
 /**
@@ -27,22 +28,17 @@ final class Algo_NEWARRAY extends Algo_XNEWARRAY<BytecodeData_1AT> {
     }
     
     @Override
-    protected BytecodeCooker bytecodeCooker() {
-        return (state) -> {
-            //sets the array length
-            try {
-                this.dimensionsCounts = new Primitive[] { (Primitive) this.data.operand(0) };
-            } catch (ClassCastException e) {
-                throwVerifyError(state);
-                exitFromAlgorithm();
-            }
-            
-            //sets the array type
-            this.arrayType = "" + Type.ARRAYOF + this.data.primitiveType();
-            
-            //completes cooking
-            cookMore(state, data);
-        };
+    protected void preCook(State state) throws InterruptException {
+        //sets the array length
+        try {
+            this.dimensionsCounts = new Primitive[] { (Primitive) this.data.operand(0) };
+        } catch (ClassCastException e) {
+            throwVerifyError(state);
+            exitFromAlgorithm();
+        }
+
+        //sets the array type
+        this.arrayType = "" + Type.ARRAYOF + this.data.primitiveType();
     }
     
     @Override
