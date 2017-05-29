@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileException;
+import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotAccessibleException;
 import jbse.bc.exc.FieldNotFoundException;
@@ -56,7 +57,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             } catch (FieldNotFoundException e) {
                 throwNew(state, NO_SUCH_FIELD_ERROR);
                 exitFromAlgorithm();
-            } catch (FieldNotAccessibleException e) {
+            } catch (ClassFileNotAccessibleException | FieldNotAccessibleException e) {
                 throwNew(state, ILLEGAL_ACCESS_ERROR);
                 exitFromAlgorithm();
             } catch (BadClassFileException e) {

@@ -447,12 +447,18 @@ public class ClassHierarchy {
 	 * @return the {@link Signature} of the declaration of the resolved field.
 	 * @throws BadClassFileException if the classfile for {@code fieldSignature}'s 
 	 *         class and its superclasses does not exist in the classpath.
+     * @throws ClassFileNotAccessibleException if the resolved class is not accessible
+     *         from {@code accessor}.
 	 * @throws FieldNotAccessibleException if the resolved field cannot 
 	 *         be accessed by {@code accessor}.
 	 * @throws FieldNotFoundException if resolution of the field fails.
 	 */
 	public Signature resolveField(String accessor, Signature fieldSignature) 
-	throws BadClassFileException, FieldNotAccessibleException, FieldNotFoundException {
+	throws BadClassFileException, ClassFileNotAccessibleException, 
+	FieldNotAccessibleException, FieldNotFoundException {
+	    //first resolves the class
+	    resolveClass(accessor, fieldSignature.getClassName());
+	    
 		//searches a declaration for the field in the field's
 		//signature class (lookup starts from there)
 		Signature fieldSignatureResolved = null;

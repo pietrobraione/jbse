@@ -55,7 +55,7 @@ public final class Algo_JAVA_CLASS_GETCOMPONENTTYPE extends Algo_INVOKEMETA_NONB
                     this.componentClassRef = state.referenceToInstance_JAVA_CLASS_primitive(componentTypeNameBinary);
                 } else {
                     final String componentClassName = className(componentTypeName);
-                    ensureInstance_JAVA_CLASS(state, componentClassName, this.ctx.decisionProcedure);
+                    ensureInstance_JAVA_CLASS(state, componentClassName, componentClassName, this.ctx.decisionProcedure);
                     this.componentClassRef = state.referenceToInstance_JAVA_CLASS(componentClassName);
                 }
             } else {

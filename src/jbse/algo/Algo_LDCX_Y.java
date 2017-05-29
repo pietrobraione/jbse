@@ -95,7 +95,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     this.val = state.referenceToStringLiteral(stringLit);
                 } else { // cpv instanceof ConstantPoolClass
                     final String classSignature = ((ConstantPoolClass) cpv).getValue();
-                    ensureInstance_JAVA_CLASS(state, classSignature, this.ctx.decisionProcedure);
+                    ensureInstance_JAVA_CLASS(state, currentClassName, classSignature, this.ctx.decisionProcedure);
                     this.val = state.referenceToInstance_JAVA_CLASS(classSignature);
                 }
             } catch (ClassFileNotFoundException e) {

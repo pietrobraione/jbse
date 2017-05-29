@@ -704,7 +704,7 @@ public class Util {
 	    }
 	}
     
-    public static void ensureInstance_JAVA_CLASS(State state, String className, DecisionProcedure dec) 
+    public static void ensureInstance_JAVA_CLASS(State state, String accessor, String className, DecisionProcedure dec) 
     throws DecisionException, ClasspathException, BadClassFileException, 
     ClassFileNotAccessibleException, ThreadStackEmptyException, InterruptException {
         //we store locally the interrupt and throw it at the end
@@ -736,7 +736,7 @@ public class Util {
         
         //possibly creates and initializes the java.lang.Class Instance
         final boolean mustInit = (!state.hasInstance_JAVA_CLASS(className));
-        state.ensureInstance_JAVA_CLASS(className);
+        state.ensureInstance_JAVA_CLASS(accessor, className);
         if (mustInit) {
             final Reference r = state.referenceToInstance_JAVA_CLASS(className);
             final Instance i = (Instance) state.getObject(r);

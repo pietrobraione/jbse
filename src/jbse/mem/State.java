@@ -824,6 +824,8 @@ public final class State implements Cloneable {
      * the instance does not exist, it resolves the class and creates 
      * it, otherwise it does nothing.
      * 
+     * @param accessor a {@link String} representing the name of 
+     *        the class acceding to the instance.
      * @param className a {@link String} representing the name of a class.
      * @throws ThreadStackEmptyException if this state has an empty thread stack.
      * @throws BadClassFileException if the classfile for {@code className}
@@ -831,14 +833,13 @@ public final class State implements Cloneable {
      * @throws ClassFileNotAccessibleException if the class {@code className} 
      *         is not accessible from {@code accessor}.
      */
-    public void ensureInstance_JAVA_CLASS(String className) 
+    public void ensureInstance_JAVA_CLASS(String accessor, String className) 
     throws ThreadStackEmptyException, BadClassFileException, 
     ClassFileNotAccessibleException {
         if (hasInstance_JAVA_CLASS(className)) {
             return;
         }
-        final String currentClassName = getCurrentMethodSignature().getClassName();
-        this.classHierarchy.resolveClass(currentClassName, className);
+        this.classHierarchy.resolveClass(accessor, className);
         //TODO resolve JAVA_CLASS
         final ReferenceConcrete retVal = createInstance_JAVA_CLASS(className);
         this.classes.put(className, retVal);
@@ -1888,6 +1889,12 @@ public final class State implements Cloneable {
 
 		//stringLiterals
 		o.stringLiterals = new HashMap<>(o.stringLiterals);
+
+        //classes
+        o.classes = new HashMap<>(o.classes);
+
+        //classesPrimitive
+        o.classesPrimitive = new HashMap<>(o.classesPrimitive);
 
 		//stack
 		o.stack = o.stack.clone();
