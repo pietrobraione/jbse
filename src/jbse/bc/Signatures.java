@@ -17,6 +17,7 @@ import static jbse.common.Type.VOID;
  */
 public final class Signatures {
     //classes and interfaces
+    public static final String JAVA_REFLECT_ARRAY        = "java/lang/reflect/Array";
     public static final String JAVA_BOOLEAN              = "java/lang/Boolean";
     public static final String JAVA_CLASS                = "java/lang/Class";
     public static final String JAVA_CLASSLOADER          = "java/lang/ClassLoader";
@@ -46,6 +47,7 @@ public final class Signatures {
     public static final String ARRAY_STORE_EXCEPTION                = "java/lang/ArrayStoreException";
     public static final String CLASS_CAST_EXCEPTION 				= "java/lang/ClassCastException";
     public static final String CLASS_NOT_FOUND_EXCEPTION            = "java/lang/ClassNotFoundException";
+    public static final String ILLEGAL_ARGUMENT_EXCEPTION           = "java/lang/IllegalArgumentException";
     public static final String INDEX_OUT_OF_BOUNDS_EXCEPTION 		= "java/lang/IndexOutOfBoundsException";
     public static final String NEGATIVE_ARRAY_SIZE_EXCEPTION 		= "java/lang/NegativeArraySizeException";
     public static final String NULL_POINTER_EXCEPTION				= "java/lang/NullPointerException";
@@ -64,6 +66,8 @@ public final class Signatures {
         new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + BOOLEAN, "desiredAssertionStatus0");
     public static final Signature JAVA_CLASS_GETCLASSLOADER0 =
         new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_CLASSLOADER + TYPEEND, "getClassLoader0");
+    public static final Signature JAVA_CLASS_GETCOMPONENTTYPE =
+        new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getComponentType");
     public static final Signature JAVA_CLASS_GETPRIMITIVECLASS =
         new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + 
                       REFERENCE + JAVA_CLASS + TYPEEND, "getPrimitiveClass");
@@ -73,6 +77,8 @@ public final class Signatures {
         new Signature(JAVA_OBJECT, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getClass");
     public static final Signature JAVA_OBJECT_HASHCODE =
         new Signature(JAVA_OBJECT, "()" + INT, "hashCode");
+    public static final Signature JAVA_REFLECT_ARRAY_NEWARRAY =
+        new Signature(JAVA_REFLECT_ARRAY, "(" + REFERENCE + JAVA_CLASS + TYPEEND + INT + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "newArray");
     public static final Signature JAVA_STRING_HASHCODE =
         new Signature(JAVA_STRING, "()" + INT, "hashCode");
     public static final Signature JAVA_STRING_INTERN =

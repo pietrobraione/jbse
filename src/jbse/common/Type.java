@@ -180,21 +180,90 @@ public final class Type {
     	        isArray(type) ? type : null);
     }
     
-    public static boolean isPrimitiveBinaryClassName(String primitiveType) {
-        return ("byte".equals(primitiveType) ||
-            "short".equals(primitiveType) ||
-            "int".equals(primitiveType) ||
-            "long".equals(primitiveType) ||
-            "boolean".equals(primitiveType) ||
-            "char".equals(primitiveType) ||
-            "float".equals(primitiveType) ||
-            "double".equals(primitiveType));
+    /**
+     * Checks whether its parameter is the binary name
+     * of a primitive class (including {@link java.lang.Void#TYPE})
+     * 
+     * @param type a {@link String}.
+     * @return {@code true} iff {@code type} equals one of 
+     * {@code "byte"},
+     * {@code "short"},
+     * {@code "int"},
+     * {@code "long"},
+     * {@code "boolean"},
+     * {@code "char"},
+     * {@code "float"},
+     * {@code "double"}, or
+     * {@code "void"}.
+     */
+    public static boolean isPrimitiveBinaryClassName(String type) {
+        return ("byte".equals(type) ||
+            "short".equals(type) ||
+            "int".equals(type) ||
+            "long".equals(type) ||
+            "boolean".equals(type) ||
+            "char".equals(type) ||
+            "float".equals(type) ||
+            "double".equals(type) ||
+            "void".equals(type));
     }
     
     public static String binaryClassName(String className) {
         return className.replace('/', '.');
     }
     
+    public static String toPrimitiveBinaryClassName(char primitiveType) {
+        if (primitiveType == BYTE) {
+            return "byte";
+        } else if (primitiveType == SHORT) {
+            return "short";
+        } else if (primitiveType == INT) {
+            return "int";   
+        } else if (primitiveType == LONG) {
+            return "long";
+        } else if (primitiveType == BOOLEAN) {
+            return "boolean";
+        } else if (primitiveType == CHAR) {
+            return "char";
+        } else if (primitiveType == FLOAT) {
+            return "float";
+        } else if (primitiveType == DOUBLE) {
+            return "double";
+        } else {
+            return null;
+        }
+    }
+    
+    public static String toPrimitiveBinaryClassName(String primitiveType) {
+        if (isPrimitive(primitiveType)) {
+            return toPrimitiveBinaryClassName(primitiveType.charAt(0));
+        } else {
+            return null;
+        }
+    }
+    
+    public static char binaryPrimitiveClassNameToInternal(String primitiveType) {
+        if ("byte".equals(primitiveType)) {
+            return BYTE;
+        } else if ("short".equals(primitiveType)) {
+            return SHORT;
+        } else if ("int".equals(primitiveType)) {
+            return INT;   
+        } else if ("long".equals(primitiveType)) {
+            return LONG;
+        } else if ("boolean".equals(primitiveType)) {
+            return BOOLEAN;
+        } else if ("char".equals(primitiveType)) {
+            return CHAR;
+        } else if ("float".equals(primitiveType)) {
+            return FLOAT;
+        } else if ("double".equals(primitiveType)) {
+            return DOUBLE;
+        } else {
+            return ERROR;
+        }
+    }
+
     public static boolean isCat_1(char c) {
     	return (c != Type.LONG && c != Type.DOUBLE);
     	//note that UNKNOWN ha category 1 because DefaultValues 

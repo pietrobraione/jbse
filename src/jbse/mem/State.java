@@ -864,7 +864,7 @@ public final class State implements Cloneable {
             final ReferenceConcrete retVal = createInstance_JAVA_CLASS(typeName);
             this.classesPrimitive.put(typeName, retVal);
         } else {
-            throw new ClassFileNotFoundException(typeName + " is not the binary name of a primitive type");
+            throw new ClassFileNotFoundException(typeName + " is not the binary name of a primitive type or void");
         }
     }
 

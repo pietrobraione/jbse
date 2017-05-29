@@ -2,10 +2,12 @@ package jbse.jvm;
 
 import static jbse.bc.Signatures.JAVA_CLASS_DESIREDASSERTIONSTATUS0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETCLASSLOADER0;
+import static jbse.bc.Signatures.JAVA_CLASS_GETCOMPONENTTYPE;
 import static jbse.bc.Signatures.JAVA_CLASS_GETPRIMITIVECLASS;
 import static jbse.bc.Signatures.JAVA_CLASS_ISINSTANCE;
 import static jbse.bc.Signatures.JAVA_OBJECT_GETCLASS;
 import static jbse.bc.Signatures.JAVA_OBJECT_HASHCODE;
+import static jbse.bc.Signatures.JAVA_REFLECT_ARRAY_NEWARRAY;
 import static jbse.bc.Signatures.JAVA_STRING_HASHCODE;
 import static jbse.bc.Signatures.JAVA_STRING_INTERN;
 import static jbse.bc.Signatures.JAVA_SYSTEM_ARRAYCOPY;
@@ -122,10 +124,12 @@ public class EngineBuilder {
             //JRE methods
             ctx.addMetaOverridden(JAVA_CLASS_DESIREDASSERTIONSTATUS0,       "jbse/algo/meta/Algo_JAVA_CLASS_DESIREDASSERTIONSTATUS0");
             ctx.addMetaOverridden(JAVA_CLASS_GETCLASSLOADER0,               "jbse/algo/meta/Algo_JAVA_CLASS_GETCLASSLOADER0");
+            ctx.addMetaOverridden(JAVA_CLASS_GETCOMPONENTTYPE,              "jbse/algo/meta/Algo_JAVA_CLASS_GETCOMPONENTTYPE");
             ctx.addMetaOverridden(JAVA_CLASS_GETPRIMITIVECLASS,             "jbse/algo/meta/Algo_JAVA_CLASS_GETPRIMITIVECLASS");
             ctx.addMetaOverridden(JAVA_CLASS_ISINSTANCE,                    "jbse/algo/meta/Algo_JAVA_CLASS_ISINSTANCE");
             ctx.addMetaOverridden(JAVA_OBJECT_GETCLASS,                     "jbse/algo/meta/Algo_JAVA_OBJECT_GETCLASS");
             ctx.addMetaOverridden(JAVA_OBJECT_HASHCODE,                     "jbse/algo/meta/Algo_JAVA_OBJECT_HASHCODE");
+            ctx.addMetaOverridden(JAVA_REFLECT_ARRAY_NEWARRAY,              "jbse/algo/meta/Algo_JAVA_REFLECT_ARRAY_NEWARRAY");
             ctx.addMetaOverridden(JAVA_STRING_HASHCODE,                     "jbse/algo/meta/Algo_JAVA_STRING_HASHCODE");
             ctx.addMetaOverridden(JAVA_STRING_INTERN,                       "jbse/algo/meta/Algo_JAVA_STRING_INTERN");
             ctx.addMetaOverridden(JAVA_SYSTEM_ARRAYCOPY,                    "jbse/algo/meta/Algo_JAVA_SYSTEM_ARRAYCOPY");
