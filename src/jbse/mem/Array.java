@@ -354,8 +354,11 @@ public final class Array extends Objekt {
 	 *        the default value for the array member type is used for initialization.
 	 * @param length a {@link Primitive}, the number of elements in the array.
 	 * @param type a {@link String}, the type of the array.
-	 * @param origin a {@link MemoryPath}, the origin of the array.
-	 * @param epoch the creation {@link Epoch} of the array.
+     * @param origin a {@link MemoryPath}, the
+     *        chain of memory accesses which allowed to discover
+     *        the {@link Array} for the first time. It can be null when
+     *        {@code epoch == }{@link Epoch#EPOCH_AFTER_START}.
+	 * @param epoch the creation {@link Epoch} of the {@link Array}.
 	 * @throws InvalidTypeException iff {@code type} is invalid. 
 	 */
 	public Array(Calculator calc, boolean initSymbolic, Value initValue, Primitive length, String type, MemoryPath origin, Epoch epoch) 

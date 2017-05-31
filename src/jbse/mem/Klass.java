@@ -13,9 +13,10 @@ public final class Klass extends Objekt {
      * Constructor.
      * 
      * @param calc a {@link Calculator}.
-     * @param origin the origin of this {@code Klass}, or {@code null}
-     *        iff the {@code Klass} has not been created by lazy
-     *        initialization.
+     * @param origin a {@link MemoryPath}, the
+     *        chain of memory accesses which allowed to discover
+     *        the object for the first time. It can be null when
+     *        {@code epoch == }{@link Epoch#EPOCH_AFTER_START}.
      * @param epoch the creation {@link Epoch} of this {@link Klass}.
      * @param fieldSignatures varargs of field {@link Signature}s.
      */

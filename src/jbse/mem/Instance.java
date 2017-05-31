@@ -18,7 +18,9 @@ public class Instance extends Objekt {
      *        this {@link Instance} (e.g. {@code "java/lang/Object"}).
      * @param origin the origin of the {@code Instance}, if symbolic, 
      *        or {@code null}, if concrete.
-     * @param epoch the creation {@link Epoch} of this {@link Instance}.
+     * @param epoch the creation {@link Epoch} of this {@link Instance}. 
+     *        It can be null when
+     *        {@code epoch == }{@link Epoch#EPOCH_AFTER_START}.
      * @param fieldSignatures varargs of field {@link Signature}s.
      */
     protected Instance(Calculator calc, String className, MemoryPath origin, Epoch epoch, Signature... fieldSignatures) {
