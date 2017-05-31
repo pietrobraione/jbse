@@ -354,50 +354,50 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	protected Outcome decide_XCMPY_Nonconcrete(ClassHierarchy hier, Primitive val1, Primitive val2,
 	SortedSet<DecisionAlternative_XCMPY> result) 
 	throws DecisionException {
-		final boolean shouldRefine;
-		final DecisionAlternative_XCMPY GT = DecisionAlternative_XCMPY.toNonconcrete(Values.GT);
-		final DecisionAlternative_XCMPY EQ = DecisionAlternative_XCMPY.toNonconcrete(Values.EQ);
-		final DecisionAlternative_XCMPY LT = DecisionAlternative_XCMPY.toNonconcrete(Values.LT);
-		
-		if ((val1 instanceof Any) || (val2 instanceof Any)) {
-			//1 - condition involving "don't care" values
-			result.add(GT);
-			result.add(EQ);
-			result.add(LT);
-			shouldRefine = false;
-		} else {
-            try {
-                final Expression expGT = (Expression) val1.gt(val2);
-                final Expression expEQ = (Expression) val1.eq(val2);
-                final Expression expLT = (Expression) val1.lt(val2);
+	    final boolean shouldRefine;
+	    final DecisionAlternative_XCMPY GT = DecisionAlternative_XCMPY.toNonconcrete(Values.GT);
+	    final DecisionAlternative_XCMPY EQ = DecisionAlternative_XCMPY.toNonconcrete(Values.EQ);
+	    final DecisionAlternative_XCMPY LT = DecisionAlternative_XCMPY.toNonconcrete(Values.LT);
 
-                //this implementation saves one sat check in 33% cases
-                //(it exploits the fact that if both val1 > val2 and 
-                //val1 = val2 are unsat, then val1 < val2 is valid)
-                if (isSat(hier, expGT)) {
-                    result.add(GT);
-                    if (isSat(hier, expEQ)) {
-                        result.add(EQ);
-                    }
-                    if (isSat(hier, expLT)) {
-                        result.add(LT); 
-                    }
-                } else if (isSat(hier, expEQ)) { //expGT is unsat, so either expEQ or expLT, or both, are SAT 
-                    result.add(EQ);
-                    if (isSat(hier, expLT)) {
-                        result.add(LT); 
-                    }
-                } else {
-                    //both expGT and expEQ are unsat; so expLT is valid
-                    result.add(LT);
-                }
-                shouldRefine = (result.size() > 1);
-            } catch (InvalidTypeException | InvalidOperandException | InvalidInputException e) {
-                //this should never happen as arguments have been checked by the caller
-                throw new UnexpectedInternalException(e);
-            }
-		}
-		return Outcome.val(shouldRefine, true);
+	    if ((val1 instanceof Any) || (val2 instanceof Any)) {
+	        //1 - condition involving "don't care" values
+	        result.add(GT);
+	        result.add(EQ);
+	        result.add(LT);
+	        shouldRefine = false;
+	    } else {
+	        try {
+	            final Expression expGT = (Expression) val1.gt(val2);
+	            final Expression expEQ = (Expression) val1.eq(val2);
+	            final Expression expLT = (Expression) val1.lt(val2);
+
+	            //this implementation saves one sat check in 33% cases
+	            //(it exploits the fact that if both val1 > val2 and 
+	            //val1 = val2 are unsat, then val1 < val2 is valid)
+	            if (isSat(hier, expGT)) {
+	                result.add(GT);
+	                if (isSat(hier, expEQ)) {
+	                    result.add(EQ);
+	                }
+	                if (isSat(hier, expLT)) {
+	                    result.add(LT); 
+	                }
+	            } else if (isSat(hier, expEQ)) { //expGT is unsat, so either expEQ or expLT, or both, are SAT 
+	                result.add(EQ);
+	                if (isSat(hier, expLT)) {
+	                    result.add(LT); 
+	                }
+	            } else {
+	                //both expGT and expEQ are unsat; so expLT is valid
+	                result.add(LT);
+	            }
+	            shouldRefine = (result.size() > 1);
+	        } catch (InvalidTypeException | InvalidOperandException | InvalidInputException e) {
+	            //this should never happen as arguments have been checked by the caller
+	            throw new UnexpectedInternalException(e);
+	        }
+	    }
+	    return Outcome.val(shouldRefine, true);
 	}
 
 	/**
@@ -639,27 +639,27 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 */
 	public Outcome resolve_XLOAD_GETX(State state, Value valToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result) 
 	throws InvalidInputException, DecisionException, BadClassFileException {
-		if (state == null || valToLoad == null || result == null) {
-			throw new InvalidInputException("resolve_XLOAD_GETX invoked with a null parameter.");
-		}
-		if (Util.isResolved(state, valToLoad)) {
-        	result.add(new DecisionAlternative_XLOAD_GETX_Resolved(valToLoad));
-        	return Outcome.FFF;
-		} else { 
-			return resolve_XLOAD_GETX_Unresolved(state, (ReferenceSymbolic) valToLoad, result);
-		}
+	    if (state == null || valToLoad == null || result == null) {
+	        throw new InvalidInputException("resolve_XLOAD_GETX invoked with a null parameter.");
+	    }
+	    if (Util.isResolved(state, valToLoad)) {
+	        result.add(new DecisionAlternative_XLOAD_GETX_Resolved(valToLoad));
+	        return Outcome.FFF;
+	    } else { 
+	        return resolve_XLOAD_GETX_Unresolved(state, (ReferenceSymbolic) valToLoad, result);
+	    }
 	}
 	
 	protected Outcome resolve_XLOAD_GETX_Unresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)
 	throws DecisionException, BadClassFileException {
 	    try {
 	        final boolean partialReferenceResolution = 
-	            doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFactory_XLOAD_GETX(), result);
+	        doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFactory_XLOAD_GETX(), result);
 	        return Outcome.val(true, partialReferenceResolution, true); //uninitialized symbolic references always require a refinement action
-        } catch (InvalidInputException e) {
-            //this should never happen as arguments have been checked by the caller
-            throw new UnexpectedInternalException(e);
-        }
+	    } catch (InvalidInputException e) {
+	        //this should never happen as arguments have been checked by the caller
+	        throw new UnexpectedInternalException(e);
+	    }
 	}
 	
 	/**
@@ -729,14 +729,14 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet)}.
 	 */
 	private Outcome resolve_XALOAD_ResolvedConcrete(Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result) {
-		final boolean accessOutOfBounds = (valToLoad == null);
-		final int branchNumber = result.size() + 1;
-		if (accessOutOfBounds) {
-			result.add(new DecisionAlternative_XALOAD_Out(branchNumber));
-		} else {
-			result.add(new DecisionAlternative_XALOAD_Resolved(valToLoad, fresh, branchNumber));
-		}
-        return Outcome.val(fresh, false, false); //a fresh value to load always requires a refinement action
+	    final boolean accessOutOfBounds = (valToLoad == null);
+	    final int branchNumber = result.size() + 1;
+	    if (accessOutOfBounds) {
+	        result.add(new DecisionAlternative_XALOAD_Out(branchNumber));
+	    } else {
+	        result.add(new DecisionAlternative_XALOAD_Resolved(valToLoad, fresh, branchNumber));
+	    }
+	    return Outcome.val(fresh, false, false); //a fresh value to load always requires a refinement action
 	}
 
 	/**
@@ -919,33 +919,33 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *         returns {@code null}.
 	 */
 	private static Map<Long, Objekt> getPossibleAliases(State state, ReferenceSymbolic ref) {
-		//checks preconditions
-		final String type = ref.getStaticType();
-		if (!Type.isReference(type) && !Type.isArray(type)) {
-			return null;
-		}
-		
-		final TreeMap<Long, Objekt> retVal = new TreeMap<>();
+	    //checks preconditions
+	    final String type = ref.getStaticType();
+	    if (!Type.isReference(type) && !Type.isArray(type)) {
+	        return null;
+	    }
 
-    	//TODO extract this code and share with State.getObjectInitial
-		//scans the path condition for compatible objects
-		final ClassHierarchy classHierarchy = state.getClassHierarchy();
-		final Iterable<Clause> pathCondition = state.getPathCondition();
-		for (Clause c : pathCondition) {
-			if (c instanceof ClauseAssumeExpands) {
-				//gets the object and its position in the heap
-				final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
-				final Long i = cExp.getHeapPosition();
-				final Objekt o = cExp.getObjekt();
+	    final TreeMap<Long, Objekt> retVal = new TreeMap<>();
 
-				//if it is time and epoch compatible, adds the object
-				//to the result
-				if (isTypeAndEpochCompatible(o, ref, classHierarchy)) {
-					retVal.put(i, o);
-				}
-			}
-		}
-		return retVal;
+	    //TODO extract this code and share with State.getObjectInitial
+	    //scans the path condition for compatible objects
+	    final ClassHierarchy classHierarchy = state.getClassHierarchy();
+	    final Iterable<Clause> pathCondition = state.getPathCondition();
+	    for (Clause c : pathCondition) {
+	        if (c instanceof ClauseAssumeExpands) {
+	            //gets the object and its position in the heap
+	            final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
+	            final Long i = cExp.getHeapPosition();
+	            final Objekt o = cExp.getObjekt();
+
+	            //if it is time and epoch compatible, adds the object
+	            //to the result
+	            if (isTypeAndEpochCompatible(o, ref, classHierarchy)) {
+	                retVal.put(i, o);
+	            }
+	        }
+	    }
+	    return retVal;
 	}
 	
 	/**
@@ -961,10 +961,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *         is a subtype of the static type of {@code ref}.
 	 */
 	private static boolean isTypeAndEpochCompatible(Objekt o, ReferenceSymbolic ref, ClassHierarchy classHierarchy) {
-		final String type = ref.getStaticType();
-		final String className = Type.className(type);
-		return (o.isSymbolic() && //TODO this works only with the two-epoch approach 
-		        classHierarchy.isSubclass(o.getType(), className));
+	    final String type = ref.getStaticType();
+	    final String className = Type.className(type);
+	    return (o.isSymbolic() && //TODO this works only with the two-epoch approach 
+	            classHierarchy.isSubclass(o.getType(), className));
 	}
 
 	/**
@@ -984,25 +984,25 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 */
 	private static Set<String> getPossibleExpansions(State state, ReferenceSymbolic ref) 
 	throws BadClassFileException {
-		final String type = ref.getStaticType();
-		if (!Type.isReference(type) && !Type.isArray(type)) {
-			return null;
-		}
-		
-		final Set<String> retVal;
-		if (Type.isArray(type)) {
-			//the (really trivial) array case:
-			//array classes are final, concrete, and can
-			//always be assumed to be initialized, so
-			//this is the only expansion possible
-			retVal = new HashSet<>();
-			retVal.add(type);
-		} else {
-			final String className = Type.getReferenceClassName(type);
-			retVal = state.getClassHierarchy().getAllConcreteSubclasses(className);
-		}
-		
-		return retVal;
+	    final String type = ref.getStaticType();
+	    if (!Type.isReference(type) && !Type.isArray(type)) {
+	        return null;
+	    }
+
+	    final Set<String> retVal;
+	    if (Type.isArray(type)) {
+	        //the (really trivial) array case:
+	        //array classes are final, concrete, and can
+	        //always be assumed to be initialized, so
+	        //this is the only expansion possible
+	        retVal = new HashSet<>();
+	        retVal.add(type);
+	    } else {
+	        final String className = Type.getReferenceClassName(type);
+	        retVal = state.getClassHierarchy().getAllConcreteSubclasses(className);
+	    }
+
+	    return retVal;
 	}
     
     /**
@@ -1017,38 +1017,38 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
      */
-    public void constrainArrayForSet(ClassHierarchy hier, Iterator<Array.AccessOutcomeIn> entries, Primitive index) 
-    throws InvalidInputException, DecisionException {
-        if (hier == null || entries == null || index == null) {
-            throw new InvalidInputException("completeArraySet invoked with a null parameter.");
-        }
-        if (index.getType() != Type.INT) {
-            throw new InvalidInputException("completeArraySet invoked with an index having type " + index.getType());
-        }
-        try {
-            while (entries.hasNext()) {
-                final Array.AccessOutcomeIn e = entries.next();
-                final Primitive indexInRange = e.inRange(index);
-                final boolean entryAffected = isSat(hier, (Expression) indexInRange);
+	public void constrainArrayForSet(ClassHierarchy hier, Iterator<Array.AccessOutcomeIn> entries, Primitive index) 
+	throws InvalidInputException, DecisionException {
+	    if (hier == null || entries == null || index == null) {
+	        throw new InvalidInputException("completeArraySet invoked with a null parameter.");
+	    }
+	    if (index.getType() != Type.INT) {
+	        throw new InvalidInputException("completeArraySet invoked with an index having type " + index.getType());
+	    }
+	    try {
+	        while (entries.hasNext()) {
+	            final Array.AccessOutcomeIn e = entries.next();
+	            final Primitive indexInRange = e.inRange(index);
+	            final boolean entryAffected = isSat(hier, (Expression) indexInRange);
 
-                //if the entry is affected, it is constrained and possibly removed
-                if (entryAffected) {
-                    e.constrainAccessCondition(index); //TODO possibly move this back to Array?
-                    final Expression accessCondition = e.getAccessCondition();
-                    if (isSat(hier, accessCondition)) {
-                        //do nothing
-                    } else {
-                        entries.remove();
-                    }
-                }
+	            //if the entry is affected, it is constrained and possibly removed
+	            if (entryAffected) {
+	                e.constrainAccessCondition(index); //TODO possibly move this back to Array?
+	                final Expression accessCondition = e.getAccessCondition();
+	                if (isSat(hier, accessCondition)) {
+	                    //do nothing
+	                } else {
+	                    entries.remove();
+	                }
+	            }
 
-            }
-        } catch (InvalidOperandException | InvalidTypeException exc) {
-            //this should never happen after argument check
-            throw new UnexpectedInternalException(exc);
-        }
-        //TODO coalesce entries that have same value (after investigating the impact on guided execution)
-    }
+	        }
+	    } catch (InvalidOperandException | InvalidTypeException exc) {
+	        //this should never happen after argument check
+	        throw new UnexpectedInternalException(exc);
+	    }
+	    //TODO coalesce entries that have same value (after investigating the impact on guided execution)
+	}
     
     /**
      * Completes a {@code java.System.arraycopy} by 
@@ -1065,25 +1065,25 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
      */
-    public void completeArraycopy(ClassHierarchy hier, Iterator<Array.AccessOutcomeIn> entries, Primitive srcPos, Primitive destPos, Primitive length) 
-    throws InvalidInputException, DecisionException {
-        if (hier == null || entries == null || srcPos == null || destPos == null || length == null) {
-            throw new InvalidInputException("completeArraycopy invoked with a null parameter.");
-        }
-        if (srcPos.getType() != Type.INT || destPos.getType() != Type.INT || length.getType() != Type.INT) {
-            throw new InvalidInputException("completeArraycopy invoked with a nonint srcPos, destPos or length parameter.");
-        }
-        while (entries.hasNext()) {
-            final Array.AccessOutcomeIn e = entries.next();
-            final Expression accessCondition = e.getAccessCondition();
-            if (isSat(hier, accessCondition)) {
-                //do nothing
-            } else {
-                entries.remove();
-            }
-        }
-        //TODO coalesce entries that have same value (after investigating the impact on guided execution)
-    }
+	public void completeArraycopy(ClassHierarchy hier, Iterator<Array.AccessOutcomeIn> entries, Primitive srcPos, Primitive destPos, Primitive length) 
+	throws InvalidInputException, DecisionException {
+	    if (hier == null || entries == null || srcPos == null || destPos == null || length == null) {
+	        throw new InvalidInputException("completeArraycopy invoked with a null parameter.");
+	    }
+	    if (srcPos.getType() != Type.INT || destPos.getType() != Type.INT || length.getType() != Type.INT) {
+	        throw new InvalidInputException("completeArraycopy invoked with a nonint srcPos, destPos or length parameter.");
+	    }
+	    while (entries.hasNext()) {
+	        final Array.AccessOutcomeIn e = entries.next();
+	        final Expression accessCondition = e.getAccessCondition();
+	        if (isSat(hier, accessCondition)) {
+	            //do nothing
+	        } else {
+	            entries.remove();
+	        }
+	    }
+	    //TODO coalesce entries that have same value (after investigating the impact on guided execution)
+	}
     
     /**
      * Returns the only decision alternative for the expansion
@@ -1094,7 +1094,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      * @param className the class name of the root object.
      * @return a {@link DecisionAlternative_XLOAD_GETX_Expands}.
      */
-    public DecisionAlternative_XLOAD_GETX_Expands getRootDecisionAlternative(ReferenceSymbolic rootThis, String className) {
-        return new DecisionAlternative_XLOAD_GETX_Expands(rootThis, className, 1);
-    }
+	public DecisionAlternative_XLOAD_GETX_Expands getRootDecisionAlternative(ReferenceSymbolic rootThis, String className) {
+	    return new DecisionAlternative_XLOAD_GETX_Expands(rootThis, className, 1);
+	}
 }
