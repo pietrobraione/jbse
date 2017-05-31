@@ -67,8 +67,10 @@ import jbse.mem.exc.InvalidSlotException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Calculator;
 import jbse.val.Null;
+import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
+import jbse.val.Simplex;
 import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
@@ -747,6 +749,39 @@ public class Util {
         //throws the interrupt, if any
         if (exc != null) {
             throw exc;
+        }
+    }
+    
+    /**
+     * Utility function that writes a value to an array,
+     * invoked by *aload and *astore algorithms. If the parameters
+     * are incorrect fails symbolic execution.
+     * 
+     * @param state a {@link State}.
+     * @param ctx an {@link ExecutionContext}.
+     * @param arrayReference a {@link Reference} to an {@link Array} in the heap 
+     *        of {@code State}.
+     * @param index the index in the array where the value should be put.
+     *        It must be a {@link Primitive} with type {@link Type#INT INT}.
+     * @param valueToStore the {@link Value} to be stored in the array.
+     * @throws DecisionException upon failure of the decision procedure.
+     */
+    public static void storeInArray(State state, ExecutionContext ctx, Reference arrayReference, Primitive index, Value valueToStore) 
+    throws DecisionException {
+        try {
+            final Array array = (Array) state.getObject(arrayReference);
+            if (array.hasSimpleRep() && index instanceof Simplex) {
+                array.setFast((Simplex) index, valueToStore);
+            } else {
+                final Iterator<Array.AccessOutcomeIn> entries = array.entriesPossiblyAffectedByAccess(index, valueToStore);
+                ctx.decisionProcedure.constrainArrayForSet(state.getClassHierarchy(), entries, index);
+                array.set(index, valueToStore);
+            }
+        } catch (InvalidInputException | InvalidOperandException | 
+                InvalidTypeException | ClassCastException | 
+                FastArrayAccessNotAllowedException e) {
+            //this should never happen
+            failExecution(e);
         }
     }
 

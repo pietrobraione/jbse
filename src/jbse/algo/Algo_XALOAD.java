@@ -2,6 +2,7 @@ package jbse.algo;
 
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.storeInArray;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.XALOADSTORE_OFFSET;
@@ -10,12 +11,10 @@ import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.common.Type.getArrayMemberType;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.function.Supplier;
 
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
-import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
@@ -158,6 +157,11 @@ StrategyUpdate_XALOAD> {
 	    };
 	}
 	
+    private void writeBackToSource(State state, Value valueToStore) 
+    throws DecisionException {
+        storeInArray(state, this.ctx, this.myObjectRef, this.index, valueToStore);
+    }
+    
     @Override   
     protected Value possiblyMaterialize(State state, Value val) 
     throws DecisionException {
@@ -181,19 +185,6 @@ StrategyUpdate_XALOAD> {
         }
     }
     
-    private void writeBackToSource(State state, Value val) 
-    throws DecisionException {
-        try {
-            final Array a = (Array) state.getObject(this.myObjectRef);
-            final Iterator<Array.AccessOutcomeIn> entries = a.set(this.index, val);
-            this.ctx.decisionProcedure.completeArraySet(state.getClassHierarchy(), entries, this.index);
-        } catch (InvalidInputException | InvalidOperandException | 
-                InvalidTypeException | ClassCastException e) {
-            //this should never happen
-            failExecution(e);
-        }
-    }
-	
 	@Override
 	protected StrategyRefine_XALOAD refiner() {
 	    return new StrategyRefine_XALOAD() {

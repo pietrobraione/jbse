@@ -405,7 +405,7 @@ public final class Array extends Objekt {
 	}
 
 	private void setEntriesInit(boolean initSymbolic, Value initValue) {
-		Value entryValue;
+		final Value entryValue;
 		if (initSymbolic) {
 			entryValue = null;
 		} else if (initValue == null) {
@@ -569,40 +569,42 @@ public final class Array extends Objekt {
 	 * Sets an element of the array. It <em>assumes</em> that the index 
 	 * by which the array is accessed may be in range (i.e., that 
 	 * {@code this.}{@link #inRange(Primitive) inRange(index)} is 
-	 * satisfiable) and updates the theory accordingly.
+	 * satisfiable) and updates the theory accordingly by adding a 
+	 * new entry. All the entries already present are unaffected.
 	 * 
 	 * @param index the position of the array element to set, a {@code Primitive}
 	 *        denoting an int.  
 	 * @param valToSet the {@link Value} to be set at {@code index}.
-	 * @return an {@link Iterator}{@code <}{@link AccessOutcomeIn}{@code >}
-	 *         to the entries of this {@link Array} that are possibly 
-	 *         modified by the update; the caller must decide whether 
-	 *         constrain and possibly delete them.
 	 * @throws InvalidOperandException if {@code index} is {@code null}.
 	 * @throws InvalidTypeException if {@code index} is not an int. 
 	 */
-	public Iterator<AccessOutcomeIn> set(final Primitive index, final Value valToSet)
+	public void set(final Primitive index, final Value valToSet)
 	throws InvalidOperandException, InvalidTypeException {
-		if (this.simpleRep && index instanceof Simplex) {
-			try {
-				setFast((Simplex) index, valToSet);
-			} catch (FastArrayAccessNotAllowedException e) {
-				//this should never happen
-				throw new UnexpectedInternalException(e);
-			}
-			return EMPTY_ITERATOR;
-		} else {
-			this.simpleRep = false;
-
-			//adds a new entry for the set index value
-			final Expression formalIndexIsSetIndex = (Expression) INDEX.eq(index);
-			final Expression accessExpression = (Expression) this.indexInRange.and(formalIndexIsSetIndex); //if we assume that index may be in range, this is an Expression
-			this.entries.add(new AccessOutcomeIn(accessExpression, valToSet));
-			return entriesPossiblyAffectedByAccess(index, valToSet);
-		}
+        if (index == null) {
+            throw new InvalidOperandException("attempted array access with null index");
+        }
+        if (index.getType() != Type.INT) {
+            throw new InvalidTypeException("attempted array access with an index with type " + index.getType());
+        }
+	    this.simpleRep = false;
+	    final Expression formalIndexIsSetIndex = (Expression) INDEX.eq(index);
+	    final Expression accessExpression = (Expression) this.indexInRange.and(formalIndexIsSetIndex); //if we assume that index may be in range, this is an Expression
+	    this.entries.add(new AccessOutcomeIn(accessExpression, valToSet));
 	}
-		
-	private Iterator<Array.AccessOutcomeIn> entriesPossiblyAffectedByAccess(final Primitive index, final Value valToSet) {
+	
+	/**
+	 * Returns an iterator to the entries that are possibly affected by 
+	 * a set operation on this array.
+	 * 
+     * @param index the position of the array element to set, a {@code Primitive}
+     *        denoting an int.  
+     * @param valToSet the {@link Value} to be set at {@code index}.
+     * @return an {@link Iterator}{@code <}{@link AccessOutcomeIn}{@code >}
+     *         to the entries of this {@link Array} that are possibly 
+     *         modified by the update; the caller must decide whether 
+     *         constrain and possibly delete them.
+	 */
+	public Iterator<Array.AccessOutcomeIn> entriesPossiblyAffectedByAccess(final Primitive index, final Value valToSet) {
 	    return new Iterator<Array.AccessOutcomeIn>() {
 	        //this iterator filters the relevant members in Array.this.values
 	        //by wrapping the default iterator to it

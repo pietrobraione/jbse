@@ -887,7 +887,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		//same for static expansions
 		boolean partialReferenceResolution = true;
 		for (String className : possibleExpansions) {
-			if (isSatInitialized(hier, className) && isSatExpands(hier, refToResolve, className)) {
+			if (/*isSatInitialized(hier, className) && */isSatExpands(hier, refToResolve, className)) {
 				final DE e = factory.createAlternativeRefExpands(refToResolve, className, branchCounter);
 				result.add(e);
 				partialReferenceResolution = false;
@@ -1017,7 +1017,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
      */
-    public void completeArraySet(ClassHierarchy hier, Iterator<Array.AccessOutcomeIn> entries, Primitive index) 
+    public void constrainArrayForSet(ClassHierarchy hier, Iterator<Array.AccessOutcomeIn> entries, Primitive index) 
     throws InvalidInputException, DecisionException {
         if (hier == null || entries == null || index == null) {
             throw new InvalidInputException("completeArraySet invoked with a null parameter.");

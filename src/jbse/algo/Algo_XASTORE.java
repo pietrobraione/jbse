@@ -1,7 +1,7 @@
 package jbse.algo;
 
 import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.storeInArray;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.XALOADSTORE_OFFSET;
@@ -14,13 +14,11 @@ import static jbse.common.Type.isArray;
 import static jbse.common.Type.isPrimitiveOpStack;
 import static jbse.common.Type.isReference;
 
-import java.util.Iterator;
 import java.util.function.Supplier;
 
 import jbse.bc.ClassHierarchy;
 import jbse.bc.exc.BadClassFileException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
-import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
 import jbse.tree.DecisionAlternative_XASTORE;
@@ -153,17 +151,9 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
     protected StrategyUpdate<DecisionAlternative_XASTORE> updater() {
         return (state, alt) -> {
             if (alt.isInRange()) {
-                try {
-                    final Reference arrayRef = (Reference) this.data.operand(0);
-                    final Primitive index = (Primitive) this.data.operand(1);
-                    final Array array = (Array) state.getObject(arrayRef);
-                    final Iterator<Array.AccessOutcomeIn> entries = array.set(index, this.valueToStore);
-                    this.ctx.decisionProcedure.completeArraySet(state.getClassHierarchy(), entries, index);
-                } catch (InvalidOperandException | InvalidTypeException | 
-                         InvalidInputException | ClassCastException e) {
-                    //this should never happen
-                    failExecution(e);
-                }
+                final Reference arrayReference = (Reference) this.data.operand(0);
+                final Primitive index = (Primitive) this.data.operand(1);
+                storeInArray(state, this.ctx, arrayReference, index, this.valueToStore);
             } else {
                 throwNew(state, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
                 exitFromAlgorithm();
