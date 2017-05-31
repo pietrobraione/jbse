@@ -10,6 +10,7 @@ import java.util.Map;
 import jbse.bc.Signature;
 import jbse.val.Calculator;
 import jbse.val.MemoryPath;
+import jbse.val.Primitive;
 import jbse.val.Value;
 
 /**
@@ -39,12 +40,16 @@ public abstract class Objekt implements Cloneable {
     /** The creation epoch of this {@link Objekt}. Immutable. */
     private final Epoch epoch;
     
-    /** The (base-level) hash code of this {@link Objekt}. Immutable. */
-    private final int hashCode;
-
     /** All the signatures of all the fields. Immutable. */
     private final List<Signature> fieldSignatures;
     
+    /** 
+     * The hash code of this {@link Objekt}. Mutable only
+     * because it must be set after creation, but should not
+     * be changed after its initialization.
+     */
+    private Primitive hashCode;
+
     /** 
      * The fields as a map of signatures (as strings) to variables.
      * Immutable for arrays, but mutable otherwise (the map
@@ -57,12 +62,13 @@ public abstract class Objekt implements Cloneable {
      * Constructor.
      * 
      * @param calc a {@link Calculator}.
-     * @param fieldSignatures an array of field {@link Signature}s.
      * @param type a {@link String}, the class of this object.
      * @param origin a {@link MemoryPath}, the
-     * chain of memory accesses which allowed to discover
-     * the object for the first time.
+     *        chain of memory accesses which allowed to discover
+     *        the object for the first time. It can be null when
+     *        {@code epoch == }{@link Epoch#EPOCH_AFTER_START}.
      * @param epoch the creation {@link Epoch} of this object.
+     * @param fieldSignatures an array of field {@link Signature}s.
      */
     protected Objekt(Calculator calc, String type, MemoryPath origin, Epoch epoch, Signature... fieldSignatures) {
         this.fields = new HashMap<>();
@@ -73,7 +79,7 @@ public abstract class Objekt implements Cloneable {
     	this.type = type;
     	this.origin = origin;
     	this.epoch = epoch;
-    	this.hashCode = hashCode(); //we piggyback the underlying JVM for hash codes
+    	this.hashCode = calc.valInt(hashCode()); //TODO calc.valInt(hashCode()) is a VERY POOR choice! Use a suitable symbol also when the Objekt is concrete.
     }
     
 	/**
@@ -107,14 +113,25 @@ public abstract class Objekt implements Cloneable {
     }
     
     /**
-     * Returns the hash code of this {@code Objekt}.
-     * Do not be confused! This is the base-level 
-     * hash code, i.e., the hash code JBSE will 
-     * expose during symbolic execution.
+     * Sets the hash code of this {@link Objekt}.
      * 
-     * @return an {@code int}.
+     * @param hashCode a {@link Primitive} for the hash code
+     *        of this {@link Objekt}. It must be set when 
+     *        {@code epoch == }{@link Epoch#EPOCH_BEFORE_START}.
+     *        When {@code epoch == }{@link Epoch#EPOCH_AFTER_START}
+     *        the hash code of this {@link Objekt} from the underlying
+     *        JVM is used.
      */
-    public final int getObjektHashCode() {
+    public final void setObjektHashCode(Primitive hashCode) {
+        this.hashCode = hashCode;
+    }
+    
+    /**
+     * Returns the hash code of this {@code Objekt}.
+     * 
+     * @return a {@code Primitive}.
+     */
+    public final Primitive getObjektHashCode() {
         return this.hashCode;
     }
     
@@ -209,7 +226,7 @@ public abstract class Objekt implements Cloneable {
     	}
     	//note that we do not clone this.fields because
     	//it is immutable for arrays and mutable for instances;
-    	//note also that the clone will have same base-level
+    	//note also that the clone will have same
     	//hash code as the original.
     }
 }

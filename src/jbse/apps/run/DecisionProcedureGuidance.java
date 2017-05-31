@@ -53,6 +53,7 @@ import jbse.val.Access;
 import jbse.val.AccessArrayLength;
 import jbse.val.AccessArrayMember;
 import jbse.val.AccessField;
+import jbse.val.AccessHashCode;
 import jbse.val.AccessLocalVariable;
 import jbse.val.AccessStatic;
 import jbse.val.Any;
@@ -551,6 +552,11 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
                 } catch (InvalidOperandException | InvalidTypeException e) {
                     throw new GuidanceException(e);
                 }
+            } else if (a instanceof AccessHashCode) {
+                if (o == null) {
+                    throw new GuidanceException(ERROR_BAD_PATH);
+                }
+                fieldValue = o.getObjektHashCode();
 	        }
             if (fieldValue instanceof Reference) {
                 o = state.getObject((Reference) fieldValue);

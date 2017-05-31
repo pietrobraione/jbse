@@ -43,6 +43,10 @@ public final class MemoryPath implements Iterable<Access> {
         return new MemoryPath(Stream.concat(Arrays.stream(this.accesses), Stream.of(AccessArrayLength.instance())).toArray(Access[]::new));
     }
 
+    public MemoryPath thenHashCode() {
+        return new MemoryPath(Stream.concat(Arrays.stream(this.accesses), Stream.of(AccessHashCode.instance())).toArray(Access[]::new));
+    }
+
     @Override
     public Iterator<Access> iterator() {
         return new Iterator<Access>() {

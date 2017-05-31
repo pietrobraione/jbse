@@ -618,6 +618,7 @@ public final class State implements Cloneable {
 		final Signature[] fieldsSignatures = classFile.getFieldsStatic();
 		final Klass k = new Klass(this.calc, MemoryPath.mkStatic(className), Objekt.Epoch.EPOCH_BEFORE_START, fieldsSignatures);
 		initWithSymbolicValues(k);
+		initHashCodeSymbolic(k);
         this.staticMethodArea.set(className, k);
 	}
 
@@ -648,6 +649,7 @@ public final class State implements Cloneable {
 	throws InvalidTypeException {
 		final Primitive length = (Primitive) createSymbol("" + Type.INT, origin.thenArrayLength());
 		final Array obj = new Array(this.calc, true, null, length, arraySignature, origin, Epoch.EPOCH_BEFORE_START);
+		initHashCodeSymbolic(obj);
 		return obj;
 	}
 
@@ -660,6 +662,7 @@ public final class State implements Cloneable {
         }
 		final Instance obj = new Instance(this.calc, className, origin, Epoch.EPOCH_BEFORE_START, fieldsSignatures);
 		initWithSymbolicValues(obj);
+		initHashCodeSymbolic(obj);
 		return obj;
 	}
 
@@ -670,16 +673,25 @@ public final class State implements Cloneable {
 	 *              symbolic values.
 	 */
 	private void initWithSymbolicValues(Objekt myObj) {
-		for (final Signature myActualSignature : myObj.getFieldSignatures()) {
+		for (final Signature fieldSignature : myObj.getFieldSignatures()) {
 			//gets the field signature and name
-			final String tmpDescriptor = myActualSignature.getDescriptor();
-			final String tmpName = myActualSignature.getName();
+			final String fieldType = fieldSignature.getDescriptor();
+			final String fieldName = fieldSignature.getName();
 
 			//builds a symbolic value from signature and name 
 			//and assigns it to the field
-			myObj.setFieldValue(myActualSignature, 
-					createSymbol(tmpDescriptor, myObj.getOrigin().thenField(tmpName)));
+			myObj.setFieldValue(fieldSignature, 
+					createSymbol(fieldType, myObj.getOrigin().thenField(fieldName)));
 		}
+	}
+	
+    /**
+     * Initializes the hash code of an {@link Objekt} with a symbolic value.
+     * 
+     * @param myObj the {@link Objekt} whose hash code will be initialized.
+     */
+	private void initHashCodeSymbolic(Objekt myObj) {
+	    myObj.setObjektHashCode((PrimitiveSymbolic) createSymbol("" + Type.INT, myObj.getOrigin().thenHashCode()));
 	}
 	
 	/**
