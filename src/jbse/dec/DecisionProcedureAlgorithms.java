@@ -1004,19 +1004,19 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 
 	    return retVal;
 	}
-    
-    /**
-     * Completes the set operation of an {@link Array} by constraining the affected entries
-     * and removing the unsatisfiable ones.
-     * 
-     * @param hier a {@link ClassHierarchy}.
-     * @param entries an {@link Iterator}{@code <}{@link AccessOutcomeIn}{@code >}. The method
-     *        will determine the entries affected by the set operation, constrain them, and 
-     *        delete the entries that become unsatisfiable.
-     * @param index a {@link Primitive}, the position in the {@link Array} which is set.
-     * @throws InvalidInputException when one of the parameters is incorrect.
-     * @throws DecisionException upon failure.
-     */
+
+	/**
+	 * Completes the set operation of an {@link Array} by constraining the affected entries
+	 * and removing the unsatisfiable ones.
+	 * 
+	 * @param hier a {@link ClassHierarchy}.
+	 * @param entries an {@link Iterator}{@code <}{@link AccessOutcomeIn}{@code >}. The method
+	 *        will determine the entries affected by the set operation, constrain them, and 
+	 *        delete the entries that become unsatisfiable.
+	 * @param index a {@link Primitive}, the position in the {@link Array} which is set.
+	 * @throws InvalidInputException when one of the parameters is incorrect.
+	 * @throws DecisionException upon failure.
+	 */
 	public void constrainArrayForSet(ClassHierarchy hier, Iterator<Array.AccessOutcomeIn> entries, Primitive index) 
 	throws InvalidInputException, DecisionException {
 	    if (hier == null || entries == null || index == null) {
@@ -1049,22 +1049,22 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	    }
 	    //TODO coalesce entries that have same value (after investigating the impact on guided execution)
 	}
-    
-    /**
-     * Completes a {@code java.System.arraycopy} by 
-     * constraining the affected entries and removing 
-     * the unsatisfiable ones.
-     * 
-     * @param hier a {@link ClassHierarchy}.
-     * @param entries an {@link Iterator}{@code <}{@link AccessOutcomeIn}{@code >}. The method
-     *        will determine the entries affected by the copy operation, constrain them, and 
-     *        delete the entries that become unsatisfiable.
-     * @param srcPos The source initial position.
-     * @param destPos The destination initial position.
-     * @param length How many elements should be copied.
-     * @throws InvalidInputException when one of the parameters is incorrect.
-     * @throws DecisionException upon failure.
-     */
+
+	/**
+	 * Completes a {@code java.System.arraycopy} by 
+	 * constraining the affected entries and removing 
+	 * the unsatisfiable ones.
+	 * 
+	 * @param hier a {@link ClassHierarchy}.
+	 * @param entries an {@link Iterator}{@code <}{@link AccessOutcomeIn}{@code >}. The method
+	 *        will determine the entries affected by the copy operation, constrain them, and 
+	 *        delete the entries that become unsatisfiable.
+	 * @param srcPos The source initial position.
+	 * @param destPos The destination initial position.
+	 * @param length How many elements should be copied.
+	 * @throws InvalidInputException when one of the parameters is incorrect.
+	 * @throws DecisionException upon failure.
+	 */
 	public void completeArraycopy(ClassHierarchy hier, Iterator<Array.AccessOutcomeIn> entries, Primitive srcPos, Primitive destPos, Primitive length) 
 	throws InvalidInputException, DecisionException {
 	    if (hier == null || entries == null || srcPos == null || destPos == null || length == null) {
@@ -1084,16 +1084,16 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	    }
 	    //TODO coalesce entries that have same value (after investigating the impact on guided execution)
 	}
-    
-    /**
-     * Returns the only decision alternative for the expansion
-     * of the {ROOT}:this reference.
-     * 
-     * @param rootThis a {@link ReferenceSymbolic}, the {ROOT}:this 
-     *        reference.
-     * @param className the class name of the root object.
-     * @return a {@link DecisionAlternative_XLOAD_GETX_Expands}.
-     */
+
+	/**
+	 * Returns the only decision alternative for the expansion
+	 * of the {ROOT}:this reference.
+	 * 
+	 * @param rootThis a {@link ReferenceSymbolic}, the {ROOT}:this 
+	 *        reference.
+	 * @param className the class name of the root object.
+	 * @return a {@link DecisionAlternative_XLOAD_GETX_Expands}.
+	 */
 	public DecisionAlternative_XLOAD_GETX_Expands getRootDecisionAlternative(ReferenceSymbolic rootThis, String className) {
 	    return new DecisionAlternative_XLOAD_GETX_Expands(rootThis, className, 1);
 	}
