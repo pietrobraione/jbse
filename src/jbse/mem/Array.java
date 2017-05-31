@@ -598,82 +598,84 @@ public final class Array extends Objekt {
 			final Expression formalIndexIsSetIndex = (Expression) INDEX.eq(index);
 			final Expression accessExpression = (Expression) this.indexInRange.and(formalIndexIsSetIndex); //if we assume that index may be in range, this is an Expression
 			this.entries.add(new AccessOutcomeIn(accessExpression, valToSet));
-			
-			//returns the iterator
-			return new Iterator<Array.AccessOutcomeIn>() {
-				//this iterator filters the relevant members in Array.this.values
-				//by wrapping the default iterator to it
-				private final Iterator<Array.AccessOutcomeIn> it = Array.this.entries.iterator();
-				private Array.AccessOutcomeIn next = null;
-				private boolean emitted = true;
-				private boolean canRemove = false;
-				
-				private void findNext() {
-					this.next = null;
-					//looks for the next entry possibly affected by the set operation
-					while (this.it.hasNext()) {
-						final AccessOutcomeIn e = this.it.next();
-
-						//determines whether the entry is possibly affected by the set
-						//operation
-						boolean entryAffected;
-						try {
-							entryAffected = !e.inRange(index).surelyFalse() && 
-									(e.returnedValue == null || !e.returnedValue.equals(valToSet));
-						} catch (InvalidOperandException | InvalidTypeException exc) {
-							//this should never happen because index was already checked
-							throw new UnexpectedInternalException(exc);
-						}
-
-						//if the entry is possibly affected, it is the next value
-						if (entryAffected) {
-							this.next = e;
-							return;
-						}
-					}
-				}
-
-				@Override
-				public boolean hasNext() {
-					if (this.emitted) {
-						try {
-							findNext();
-						} catch (UnexpectedInternalException e) {
-							throw new RuntimeException(e);
-						}
-					}
-					this.emitted = false;
-					this.canRemove = false;
-					return (this.next != null);
-				}
-
-				@Override
-				public AccessOutcomeIn next() {
-					if (this.emitted) {
-						try {
-							findNext();
-						} catch (UnexpectedInternalException e) {
-							throw new RuntimeException(e);
-						}
-					}
-					if (this.next == null) {
-						throw new NoSuchElementException();
-					}
-					this.emitted = true;
-					this.canRemove = true;
-					return this.next;
-				}
-
-				@Override
-				public void remove() {
-					if (this.canRemove) { 
-						it.remove();
-					} else {
-						throw new IllegalStateException();
-					}
-				}
-			};
+			return entriesPossiblyAffectedByAccess(index, valToSet);
 		}
+	}
+		
+	private Iterator<Array.AccessOutcomeIn> entriesPossiblyAffectedByAccess(final Primitive index, final Value valToSet) {
+	    return new Iterator<Array.AccessOutcomeIn>() {
+	        //this iterator filters the relevant members in Array.this.values
+	        //by wrapping the default iterator to it
+	        private final Iterator<Array.AccessOutcomeIn> it = Array.this.entries.iterator();
+	        private Array.AccessOutcomeIn next = null;
+	        private boolean emitted = true;
+	        private boolean canRemove = false;
+
+	        private void findNext() {
+	            this.next = null;
+	            //looks for the next entry possibly affected by the set operation
+	            while (this.it.hasNext()) {
+	                final AccessOutcomeIn e = this.it.next();
+
+	                //determines whether the entry is possibly affected by the set
+	                //operation
+	                boolean entryAffected;
+	                try {
+	                    entryAffected = !e.inRange(index).surelyFalse() && 
+	                    (e.returnedValue == null || !e.returnedValue.equals(valToSet));
+	                } catch (InvalidOperandException | InvalidTypeException exc) {
+	                    //this should never happen because index was already checked
+	                    throw new UnexpectedInternalException(exc);
+	                }
+
+	                //if the entry is possibly affected, it is the next value
+	                if (entryAffected) {
+	                    this.next = e;
+	                    return;
+	                }
+	            }
+	        }
+
+	        @Override
+	        public boolean hasNext() {
+	            if (this.emitted) {
+	                try {
+	                    findNext();
+	                } catch (UnexpectedInternalException e) {
+	                    throw new RuntimeException(e);
+	                }
+	            }
+	            this.emitted = false;
+	            this.canRemove = false;
+	            return (this.next != null);
+	        }
+
+	        @Override
+	        public AccessOutcomeIn next() {
+	            if (this.emitted) {
+	                try {
+	                    findNext();
+	                } catch (UnexpectedInternalException e) {
+	                    throw new RuntimeException(e);
+	                }
+	            }
+	            if (this.next == null) {
+	                throw new NoSuchElementException();
+	            }
+	            this.emitted = true;
+	            this.canRemove = true;
+	            return this.next;
+	        }
+
+	        @Override
+	        public void remove() {
+	            if (this.canRemove) { 
+	                it.remove();
+	            } else {
+	                throw new IllegalStateException();
+	            }
+	        }
+	    };
 	}
 	
 	/**
