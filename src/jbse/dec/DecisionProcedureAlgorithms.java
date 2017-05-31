@@ -675,9 +675,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *        when {@code accessExpression} is true,
 	 *        or {@code null} to denote an access out of the 
 	 *        array bounds.
-     * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
-     *        its existence was assumed during the array access and thus it 
-     *        is not yet stored in the {@link Array} it originates from.
+	 * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
+	 *        its existence was assumed during the array access and thus it 
+	 *        is not yet stored in the {@link Array} it originates from.
 	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
 	 *        where the method will put all the 
 	 *        {@link DecisionAlternative_XALOAD}s representing all the 
@@ -685,10 +685,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @return an {@link Outcome}.
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
-     * @throws BadClassFileException if {@code valToLoad} is a symbolic reference and
-     *         its class name, or the class names of one of its possible expansions, 
-     *         does not detect a classfile in the classpath, or if the classfile is
-     *         ill-formed for JBSE.
+	 * @throws BadClassFileException if {@code valToLoad} is a symbolic reference and
+	 *         its class name, or the class names of one of its possible expansions, 
+	 *         does not detect a classfile in the classpath, or if the classfile is
+	 *         ill-formed for JBSE.
 	 */
 	//TODO should be final?
 	public Outcome resolve_XALOAD(State state, Expression accessExpression, Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
@@ -710,22 +710,22 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	
 	/**
 	 * Resolves loading a value from an array to the operand stack, 
-     * in the case the value to load is resolved (i.e., either 
-     * concrete, or a symbolic primitive, or a resolved symbolic
-     * reference) and the index used for the access is concrete.
+	 * in the case the value to load is resolved (i.e., either 
+	 * concrete, or a symbolic primitive, or a resolved symbolic
+	 * reference) and the index used for the access is concrete.
 	 * 
 	 * @param valToLoad the {@link Value} returned by the array access 
 	 *        when {@code accessCondition} is true,
 	 *        or {@code null} to denote an access out of the 
 	 *        array bounds.
-     * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
-     *        its existence was assumed during the array access and thus it 
-     *        is not yet stored in the {@link Array} it originates from.
+	 * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
+	 *        its existence was assumed during the array access and thus it 
+	 *        is not yet stored in the {@link Array} it originates from.
 	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
 	 *        where the method will put all the 
 	 *        {@link DecisionAlternative_XALOAD}s representing all the 
 	 *        satisfiable outcomes of the operation.
-     * @return an {@link Outcome}.
+	 * @return an {@link Outcome}.
 	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet)}.
 	 */
 	private Outcome resolve_XALOAD_ResolvedConcrete(Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result) {
@@ -740,10 +740,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	}
 
 	/**
-     * Resolves loading a value from an array to the operand stack, 
-     * in the case the value to load is resolved (i.e., either 
-     * concrete, or a symbolic primitive, or a resolved symbolic
-     * reference) and the index used for the access is symbolic.
+	 * Resolves loading a value from an array to the operand stack, 
+	 * in the case the value to load is resolved (i.e., either 
+	 * concrete, or a symbolic primitive, or a resolved symbolic
+	 * reference) and the index used for the access is symbolic.
 	 * 
 	 * @param hier a {@link ClassHierarchy}.
 	 * @param accessExpression an {@link Expression}, the condition under
@@ -760,7 +760,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *        where the method will put all the 
 	 *        {@link DecisionAlternative_XALOAD}s representing all the 
 	 *        satisfiable outcomes of the operation.
-     * @return an {@link Outcome}.
+	 * @return an {@link Outcome}.
 	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet) resolve_XALOAD}.
 	 */
 	protected Outcome resolve_XALOAD_ResolvedNonconcrete(ClassHierarchy hier, Expression accessExpression, Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
@@ -787,28 +787,28 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	    }
 	}
 
-    /**
-     * Resolves loading a value from an array to the operand stack, 
-     * in the case the value to load is an unresolved symbolic
-     * reference.
-     * 
-     * @param accessExpression an {@link Expression}, the condition under
-     *        which the array access yields {@code valToLoad} as result. 
-     *        It must not be {@code null}.
-     * @param valToLoad the {@link Value} returned by the array access 
-     *        when {@code accessExpression} is true,
-     *        or {@code null} to denote an access out of the 
-     *        array bounds.
-     * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
-     *        its existence was assumed during the array access and thus it 
-     *        is not yet stored in the {@link Array} it originates from.
-     * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
-     *        where the method will put all the 
-     *        {@link DecisionAlternative_XALOAD}s representing all the 
-     *        satisfiable outcomes of the operation.
-     * @return an {@link Outcome}.
-     * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet) resolve_XALOAD}.
-     */
+	/**
+	 * Resolves loading a value from an array to the operand stack, 
+	 * in the case the value to load is an unresolved symbolic
+	 * reference.
+	 * 
+	 * @param accessExpression an {@link Expression}, the condition under
+	 *        which the array access yields {@code valToLoad} as result. 
+	 *        It must not be {@code null}.
+	 * @param valToLoad the {@link Value} returned by the array access 
+	 *        when {@code accessExpression} is true,
+	 *        or {@code null} to denote an access out of the 
+	 *        array bounds.
+	 * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
+	 *        its existence was assumed during the array access and thus it 
+	 *        is not yet stored in the {@link Array} it originates from.
+	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
+	 *        where the method will put all the 
+	 *        {@link DecisionAlternative_XALOAD}s representing all the 
+	 *        satisfiable outcomes of the operation.
+	 * @return an {@link Outcome}.
+	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet) resolve_XALOAD}.
+	 */
 	protected Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
 	throws DecisionException, BadClassFileException {
 	    try {
@@ -849,7 +849,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *            representing all the valid expansions of {@code notInitializedRef}.
 	 * @return {@code true} iff the resolution of the reference is 
 	 *         partial (see {@link Outcome#noReferenceExpansion()}).
-     * @throws InvalidInputException when one of the parameters is incorrect.
+	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
 	 * @throws BadClassFileException when 
 	 *         {@code refToResolve.}{@link Signature#getClassName() getClassName()}
@@ -887,7 +887,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		//same for static expansions
 		boolean partialReferenceResolution = true;
 		for (String className : possibleExpansions) {
-			if (/*isSatInitialized(hier, className) && */isSatExpands(hier, refToResolve, className)) {
+			if (isSatInitialized(hier, className) && isSatExpands(hier, refToResolve, className)) {
 				final DE e = factory.createAlternativeRefExpands(refToResolve, className, branchCounter);
 				result.add(e);
 				partialReferenceResolution = false;
