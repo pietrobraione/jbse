@@ -7,7 +7,7 @@ package jbse.mem.exc;
  * @author Pietro Braione
  *
  */
-public class ThreadStackEmptyException extends Exception {
+public final class ThreadStackEmptyException extends Exception {
     /**
      * 
      */

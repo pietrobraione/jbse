@@ -725,7 +725,8 @@ public final class State implements Cloneable {
      * the constructors of {@code java.lang.String} to avoid incredible 
      * circularity issues with string constant fields. Does not
      * manage the creation of the {@link Klass} for {@code java.lang.String}
-     * and its members. If the literal already exists, does nothing.
+     * and for the classes of the members of the created object. 
+     * If the literal already exists, does nothing.
      * 
      * @param stringLit a {@link String} representing a string literal.
      */
@@ -748,6 +749,13 @@ public final class State implements Cloneable {
         this.stringLiterals.put(stringLit, retVal);
 	}
 	
+	/**
+	 * Creates an array of characters in this state and initializes
+	 * it with some text.
+	 * 
+	 * @param value the text that will be put in the array.
+	 * @return a {@link ReferenceConcrete} to the created {@link Instance}.
+	 */
 	private ReferenceConcrete createArrayOfChars(String value) {
 		final Simplex stringLength = this.calc.valInt(value.length());
 		final ReferenceConcrete retVal;
@@ -834,20 +842,20 @@ public final class State implements Cloneable {
      * Ensures an {@link Instance} of class {@code java.lang.Class} 
      * corresponding to a class name exists in the {@link Heap}. If
      * the instance does not exist, it resolves the class and creates 
-     * it, otherwise it does nothing.
+     * it, otherwise it does nothing. Does not manage the creation 
+     * of the {@link Klass}es for {@code java.lang.Class} and for 
+     * the classes of the members of the created object.
      * 
      * @param accessor a {@link String} representing the name of 
      *        the class acceding to the instance.
      * @param className a {@link String} representing the name of a class.
-     * @throws ThreadStackEmptyException if this state has an empty thread stack.
      * @throws BadClassFileException if the classfile for {@code className}
      *         does not exist in the classpath or is ill-formed.
      * @throws ClassFileNotAccessibleException if the class {@code className} 
      *         is not accessible from {@code accessor}.
      */
     public void ensureInstance_JAVA_CLASS(String accessor, String className) 
-    throws ThreadStackEmptyException, BadClassFileException, 
-    ClassFileNotAccessibleException {
+    throws BadClassFileException, ClassFileNotAccessibleException {
         if (hasInstance_JAVA_CLASS(className)) {
             return;
         }

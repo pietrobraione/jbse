@@ -21,8 +21,8 @@ import jbse.bc.ConstantPoolString;
 import jbse.bc.ConstantPoolValue;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
-import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
+import jbse.common.exc.ClasspathException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
@@ -98,8 +98,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     ensureInstance_JAVA_CLASS(state, currentClassName, classSignature, this.ctx.decisionProcedure);
                     this.val = state.referenceToInstance_JAVA_CLASS(classSignature);
                 }
-            } catch (ClassFileNotFoundException e) {
-                throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+            } catch (ClasspathException e) {
+                throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR); //TODO is it right? This is when java.lang.Class is missing, what if ((ConstantPoolClass) cpv).getValue() is missing?
                 exitFromAlgorithm();
             } catch (ClassFileNotAccessibleException e) {
                 throwNew(state, ILLEGAL_ACCESS_ERROR);

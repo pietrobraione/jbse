@@ -42,6 +42,7 @@ import jbse.bc.ConstantPoolValue;
 import jbse.bc.Signature;
 import jbse.bc.exc.AttributeNotFoundException;
 import jbse.bc.exc.BadClassFileException;
+import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotFoundException;
@@ -83,7 +84,7 @@ public class Util {
         assert false;
         throw InterruptException.mk();
     }
-    
+
     /**
      * Abruptly interrupts the execution of JBSE
      * in the case of an unexpected internal error.
@@ -94,7 +95,7 @@ public class Util {
     public static void failExecution(Exception e) {
         throw new UnexpectedInternalException(e);
     }
-    
+
     /**
      * Abruptly interrupts the execution of JBSE
      * in the case of an unexpected internal error.
@@ -105,7 +106,7 @@ public class Util {
     public static void failExecution(String s) {
         throw new UnexpectedInternalException(s);
     }
-    
+
     /**
      * Cleanly interrupts the execution of an {@link Algorithm}, 
      * and schedules another one as the next to be executed.
@@ -116,9 +117,30 @@ public class Util {
     throws InterruptException {
         throw InterruptException.mk(algo);
     }
-    
-	public static ClassFile lookupClassfileMethodImpl(State state, Signature methodSignatureResolved, boolean isStatic, boolean isSpecial, String receiverClassName) 
-	throws BadClassFileException, MethodNotFoundException, IncompatibleClassFileException, ThreadStackEmptyException {
+
+    /**
+     * Finds the {@link ClassFile} where the implementation of a method
+     * resides (or where the method is declared native).
+     * 
+     * @param state a {@link State}
+     * @param methodSignatureResolved the {@link Signature} of the resolved method
+     *        to lookup.
+     * @param isStatic {@code true} iff the method is declared static.
+     * @param isSpecial {@code true} iff the method is declared special.
+     * @param receiverClassName a {@link String}, the class name of the receiver
+     *        of the method invocation.
+     * @return the {@link ClassFile} of the class which contains the method implementation.
+     * @throws BadClassFileException  when the class file 
+     *         with name {@code methodSignature.}{@link Signature#getClassName() getClassName()}
+     *         does not exist or is ill-formed.
+     * @throws MethodNotFoundException if lookup fails in finding the method implementation.
+     * @throws IncompatibleClassFileException when the resolved method is not compatible
+     *         with {@code isStatic} or {@code isSpecial}.
+     * @throws ThreadStackEmptyException if {@code state} has an empty stack (i.e., no
+     *         current method).
+     */
+    public static ClassFile lookupClassfileMethodImpl(State state, Signature methodSignatureResolved, boolean isStatic, boolean isSpecial, String receiverClassName) 
+    throws BadClassFileException, MethodNotFoundException, IncompatibleClassFileException, ThreadStackEmptyException {
         final ClassFile retVal;
         final ClassHierarchy hier = state.getClassHierarchy();
         if (isStatic) {
@@ -131,8 +153,8 @@ public class Util {
         }
         //TODO invokedynamic
         return retVal;
-	}
-        
+    }
+
     /**
      * Converts a {@code java.lang.String} {@link Instance}
      * into a (meta-level) string.
@@ -168,23 +190,23 @@ public class Util {
     }
 
     /**
-	 * Equivalent to 
-	 * {@link #throwNew}{@code (state, "java/lang/VerifyError")}.
-	 * 
-	 * @param state the {@link State} whose {@link Heap} will receive 
-	 *              the new object.
-	 */
-	public static void throwVerifyError(State state) {
-	    try {
-	        final ReferenceConcrete excReference = state.createInstance(VERIFY_ERROR);
-	        fillExceptionBacktrace(state, excReference);
+     * Equivalent to 
+     * {@link #throwNew}{@code (state, "java/lang/VerifyError")}.
+     * 
+     * @param state the {@link State} whose {@link Heap} will receive 
+     *              the new object.
+     */
+    public static void throwVerifyError(State state) {
+        try {
+            final ReferenceConcrete excReference = state.createInstance(VERIFY_ERROR);
+            fillExceptionBacktrace(state, excReference);
             state.unwindStack(excReference);
         } catch (InvalidIndexException | InvalidProgramCounterException e) {
             //there is not much we can do if this happens
             failExecution(e);
         }
-	}
-	   
+    }
+
     /**
      * Creates a new instance of a given class in the 
      * heap of a state. The fields of the object are initialized 
@@ -224,7 +246,7 @@ public class Util {
             throwVerifyError(state); //TODO that's desperate
         }
     }
-    
+
     /**
      * Sets the {@code backtrace} and {@code stackTrace} fields 
      * of an exception {@link Instance} to their initial values.
@@ -292,43 +314,43 @@ public class Util {
                 theArray.setFast(calc.valInt(i++), steReference);
             }
         } catch (BadClassFileException | ClassCastException | 
-                 InvalidTypeException | InvalidOperandException | 
-                 FastArrayAccessNotAllowedException e) {
+        InvalidTypeException | InvalidOperandException | 
+        FastArrayAccessNotAllowedException e) {
             //this should not happen (and if happens there is not much we can do)
             failExecution(e);
         }
     }
-	
-	/**
-	 * Ensures that a {@link State} has a {@link Klass} in its 
-	 * static store, possibly by creating it together with all 
-	 * the necessary super{@link Klass}es and all the necessary
-	 * frames for the {@code <clinit>} methods.
-	 * 
-	 * @param state a {@link State}. It must have a current frame.
-	 * @param className a {@link String}, the name of a class.
-	 * @param dec a {@link DecisionProcedure}.
-	 * @return {@code true} iff it is necessary to run the 
-	 *         {@code <clinit>} methods for the initialized 
-	 *         class(es).
-	 * @throws InvalidInputException if {@code className} or {@code state} 
-	 *         is null.
-	 * @throws DecisionException if {@code dec} fails in determining
-	 *         whether {@code className} is or is not initialized.
-	 * @throws BadClassFileException if {@code className} or
-	 *         one of its superclasses is not in the classpath or
-	 *         is ill-formed.
-	 * @throws ClasspathException if some standard JRE class is missing
-	 *         from {@code state}'s classpath or is incompatible with the
-	 *         current version of JBSE. 
-	 * @throws InterruptException iff it is necessary to interrupt the
-	 *         execution of the bytecode and run the 
+
+    /**
+     * Ensures that a {@link State} has a {@link Klass} in its 
+     * static store, possibly by creating it together with all 
+     * the necessary super{@link Klass}es and all the necessary
+     * frames for the {@code <clinit>} methods.
+     * 
+     * @param state a {@link State}. It must have a current frame.
+     * @param className a {@link String}, the name of a class.
+     * @param dec a {@link DecisionProcedure}.
+     * @return {@code true} iff it is necessary to run the 
+     *         {@code <clinit>} methods for the initialized 
+     *         class(es).
+     * @throws InvalidInputException if {@code className} or {@code state} 
+     *         is null.
+     * @throws DecisionException if {@code dec} fails in determining
+     *         whether {@code className} is or is not initialized.
+     * @throws BadClassFileException if {@code className} or
+     *         one of its superclasses is not in the classpath or
+     *         is ill-formed.
+     * @throws ClasspathException if some standard JRE class is missing
+     *         from {@code state}'s classpath or is incompatible with the
+     *         current version of JBSE. 
+     * @throws InterruptException iff it is necessary to interrupt the
+     *         execution of the bytecode and run the 
      *         {@code <clinit>} method(s) for the initialized 
      *         class(es).
-	 */
-	public static void ensureClassCreatedAndInitialized(State state, String className, DecisionProcedure dec) 
-	throws InvalidInputException, DecisionException, BadClassFileException, 
-	ClasspathException, InterruptException {
+     */
+    public static void ensureClassCreatedAndInitialized(State state, String className, DecisionProcedure dec) 
+    throws InvalidInputException, DecisionException, BadClassFileException, 
+    ClasspathException, InterruptException {
         final ClassInitializer ci = new ClassInitializer(state, dec);
         final boolean failed = ci.initialize(className);
         if (failed) {
@@ -337,28 +359,28 @@ public class Util {
         if (ci.createdFrames > 0) {
             exitFromAlgorithm();
         }
-	}
-    
+    }
+
     /**
-	 * Determines the satisfiability of a class initialization under
-	 * the current assumption. Wraps {@link DecisionProcedure#isSatInitialized(String)} 
-	 * to inject some assumptions on the initialization over some JRE standard classes.
-	 * 
-	 * @param state a {@link State}.
-	 * @param className the name of the class.
-	 * @param dec a {@link DecisionProcedure}.
-	 * @return {@code true} if the class has been initialized, 
-	 *         {@code false} otherwise.
+     * Determines the satisfiability of a class initialization under
+     * the current assumption. Wraps {@link DecisionProcedure#isSatInitialized(String)} 
+     * to inject some assumptions on the initialization over some JRE standard classes.
+     * 
+     * @param state a {@link State}.
+     * @param className the name of the class.
+     * @param dec a {@link DecisionProcedure}.
+     * @return {@code true} if the class has been initialized, 
+     *         {@code false} otherwise.
      * @throws InvalidInputException when one of the parameters to the 
      *         decision procedure is incorrect.
-	 * @throws DecisionException if the decision procedure fails.
-	 */
-	private static boolean decideClassInitialized(State state, String className, DecisionProcedure dec) 
-	throws InvalidInputException, DecisionException {
-		//Assume that some classes are not initialized to
-		//trigger the execution of their <clinit> methods 
-		//TODO trigger execution of pure <clinit> *without* assuming about their initialization status 
-		if (className.equals(JAVA_CLASS)      ||
+     * @throws DecisionException if the decision procedure fails.
+     */
+    private static boolean decideClassInitialized(State state, String className, DecisionProcedure dec) 
+    throws InvalidInputException, DecisionException {
+        //Assume that some classes are not initialized to
+        //trigger the execution of their <clinit> methods 
+        //TODO trigger execution of pure <clinit> *without* assuming about their initialization status 
+        if (className.equals(JAVA_CLASS)      ||
             className.equals(JAVA_HASHSET)    || className.equals(JAVA_IDENTITYHASHMAP)      || 
             className.equals(JAVA_INTEGER)    || className.equals(JAVA_INTEGER_INTEGERCACHE) || 
             className.equals(JAVA_LINKEDLIST) || className.equals(JAVA_LINKEDLIST_ENTRY)     ||
@@ -366,67 +388,67 @@ public class Util {
             className.equals(JAVA_STRING)     || className.equals(JAVA_STRING_CASEINSCOMP)   ||
             className.equals(JAVA_BOOLEAN)    || className.equals(JAVA_TREESET)   ||
             state.getClassHierarchy().isSubclass(className, JAVA_ENUM)
-           ) {
-			return false;
-		}
+        ) {
+            return false;
+        }
 
-		return dec.isSatInitialized(state.getClassHierarchy(), className);
-	}
-	
-	private static class ClassInitializer {
-	    /**
-	     * The current state.
-	     */
-	    private final State s;
-	    
-	    /**
-	     * The decision procedure.
-	     */
-	    private final DecisionProcedure dec;
-	    
-		/**
-		 * Counts the number of frames created during class initialization. 
-		 * Used in case {@link #initializeClass} fails to restore the stack.
-		 * Its value is used only in the context of an {@link #initializeClass} call, 
-		 * and is not reused across multiple calls.
-		 */
-		private int createdFrames = 0;
-        
+        return dec.isSatInitialized(state.getClassHierarchy(), className);
+    }
+
+    private static class ClassInitializer {
+        /**
+         * The current state.
+         */
+        private final State s;
+
+        /**
+         * The decision procedure.
+         */
+        private final DecisionProcedure dec;
+
+        /**
+         * Counts the number of frames created during class initialization. 
+         * Used in case {@link #initializeClass} fails to restore the stack.
+         * Its value is used only in the context of an {@link #initializeClass} call, 
+         * and is not reused across multiple calls.
+         */
+        private int createdFrames = 0;
+
         /**
          * Stores the names of the {@link Klass}es that are created by this initializer.
          */
         private final ArrayList<String> classesCreated = new ArrayList<>();
-		
-		/**
-		 * Stores the names of the {@link Klass}es for which the {@code <clinit>} 
-		 * method must be run.
-		 */
-		private final ArrayList<String> classesToInitialize = new ArrayList<>();
-		
-		/**
-		 * Set to {@code true} iff must load a frame for {@code java.lang.Object}'s 
-		 * {@code <clinit>}.
-		 */
-		private boolean pushFrameForJavaLangObject = false;
-		
-		/**
-		 * Is the initialization process failed?
-		 */
-		private boolean failed = false;
-		
-		/**
-		 * What is the cause of the failure? (meaningless if failed == false)
-		 */
-		private String failure = null;
-		
-		/**
-		 * Constructor.
-		 */
-		private ClassInitializer(State s, DecisionProcedure dec) {
-		    this.s = s;
-		    this.dec = dec;
-		}
-		
+
+        /**
+         * Stores the names of the {@link Klass}es for which the {@code <clinit>} 
+         * method must be run.
+         */
+        private final ArrayList<String> classesToInitialize = new ArrayList<>();
+
+        /**
+         * Set to {@code true} iff must load a frame for {@code java.lang.Object}'s 
+         * {@code <clinit>}.
+         */
+        private boolean pushFrameForJavaLangObject = false;
+
+        /**
+         * Is the initialization process failed?
+         */
+        private boolean failed = false;
+
+        /**
+         * What is the cause of the failure? (meaningless if failed == false)
+         */
+        private String failure = null;
+
+        /**
+         * Constructor.
+         */
+        private ClassInitializer(State s, DecisionProcedure dec) {
+            this.s = s;
+            this.dec = dec;
+        }
+
         /**
          * Implements {@link Util#ensureClassCreatedAndInitialized}.
          * 
@@ -443,9 +465,9 @@ public class Util {
          *         is not in the classpath or is incompatible with the
          *         current version of JBSE.
          */
-		private boolean initialize(String className)
-		throws InvalidInputException, DecisionException, BadClassFileException, ClasspathException {
-		    phase1(className);
+        private boolean initialize(String className)
+        throws InvalidInputException, DecisionException, BadClassFileException, ClasspathException {
+            phase1(className);
             if (this.failed) {
                 handleFailure();
                 return true;
@@ -461,24 +483,24 @@ public class Util {
                 return true;
             }
             return false;
-		}
-		
-		/**
+        }
+
+        /**
          * Equivalent to {@link #phase1(String, ListIterator) phase1}{@code (className, null)}.
-   		 * 
-		 * @param className a {@code String}, the name of the class.
+         * 
+         * @param className a {@code String}, the name of the class.
          * @param it a {@code ListIterator}, the name of the class.
          * @throws InvalidInputException if {@code className} is null.
-		 * @throws DecisionException if the decision procedure fails.
-		 * @throws BadClassFileException if the classfile for {@code className} or
-		 *         for one of its superclasses is not in the classpath or
-		 *         is ill-formed.
-		 */
+         * @throws DecisionException if the decision procedure fails.
+         * @throws BadClassFileException if the classfile for {@code className} or
+         *         for one of its superclasses is not in the classpath or
+         *         is ill-formed.
+         */
         private void phase1(String className)
         throws InvalidInputException, DecisionException, BadClassFileException {
             phase1(className, null);
         }
-        
+
         /**
          * Phase 1 creates all the {@link Klass} objects for a class and its
          * superclasses that can be assumed to be not initialized. It also 
@@ -527,19 +549,19 @@ public class Util {
                 this.failure = VERIFY_ERROR;
                 return;
             }
-			
-			//if className denotes a class rather than an interface
+
+            //if className denotes a class rather than an interface
             //and has a superclass, then recursively performs phase1 
             //on its superclass(es)
             final ClassFile classFile = this.s.getClassHierarchy().getClassFile(className);
-			if (!classFile.isInterface()) {
-				final String superName = classFile.getSuperClassName();
-				if (superName != null) {
-	                phase1(superName, it);
-				}
-			}
-		}
-        
+            if (!classFile.isInterface()) {
+                final String superName = classFile.getSuperClassName();
+                if (superName != null) {
+                    phase1(superName, it);
+                }
+            }
+        }
+
         /**
          * Phase 2 inits the constant fields for all the {@link Klass} objects
          * created during phase 1; in the case one of these fields is a 
@@ -595,7 +617,7 @@ public class Util {
                 }
             }
         }
-        
+
         /**
          * Phase 3 pushes the {@code <clinit>} frames for all the initialized 
          * classes that have it.
@@ -642,12 +664,12 @@ public class Util {
                 this.failed = true;
                 this.failure = VERIFY_ERROR;
             } catch (InvalidProgramCounterException | NullMethodReceiverException | 
-                    ThreadStackEmptyException | InvalidSlotException e) {
+            ThreadStackEmptyException | InvalidSlotException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
             } 
         }
-        
+
         private void handleFailure() {
             //pops all the frames created by the recursive calls
             for (int i = 1; i <= this.createdFrames; ++i) {
@@ -658,22 +680,29 @@ public class Util {
                     throw new UnexpectedInternalException(e);
                 }
             }
-            
+
             //TODO delete all the Klass objects from the static store?
             //TODO delete all the created String object from static field initialization?
-            
+
             //throws and exits
             throwNew(this.s, this.failure);
         }
-	}
+    }
 
-	private static <T> Iterable<T> reverse(final List<T> list) {
-	    return new Iterable<T>() {
+    /**
+     * Returns an {@link Iterable} that scans a {@link List} in 
+     * reverse order, from tail to head.
+     * 
+     * @param list a {@link List}{@code <T>}. It must not be {@code null}.
+     * @return an {@link Iterable}{@code <T>}.
+     */
+    private static <T> Iterable<T> reverse(final List<T> list) {
+        return new Iterable<T>() {
             @Override
             public Iterator<T> iterator() {
                 return new Iterator<T>() {
                     private ListIterator<T> delegate = list.listIterator(list.size());
-                    
+
                     @Override
                     public boolean hasNext() {
                         return this.delegate.hasPrevious();
@@ -683,7 +712,7 @@ public class Util {
                     public T next() {
                         return this.delegate.previous();
                     }
-                    
+
                     @Override
                     public void remove() {
                         this.delegate.remove();
@@ -691,38 +720,92 @@ public class Util {
                 };
             }
         };
-	}
-	   
-	public static void ensureStringLiteral(State state, String stringLit, DecisionProcedure dec) 
-	throws DecisionException, ClasspathException, ThreadStackEmptyException, InterruptException {
+    }
+
+    /**
+     * Creates an {@link Instance} of class {@code java.lang.String} 
+     * in a {@link State}'s heap corresponding to a string literal sidestepping 
+     * the constructors of {@code java.lang.String} to avoid incredible 
+     * circularity issues with string constant fields. Also 
+     * manages the creation and initialization of the {@link Klass} for 
+     * {@code java.lang.String} and its members. If the literal already 
+     * exists in the {@link State}'s heap, does nothing.
+     * 
+     * @param state the {@link State} on which this method will operate.
+     * @param stringLit a {@link String} representing a string literal.
+     * @param dec a {@link DecisionProcedure}.
+     * @throws DecisionException if {@code dec} fails in determining
+     *         whether {@code java.lang.String} is or is not initialized.
+     * @throws ClassFileIllFormedException if the {@code java.lang.String} classfile 
+     *         is ill-formed.
+     * @throws ClasspathException if the {@code java.lang.String} class is 
+     *         missing from {@code state}'s classpath or is incompatible with the
+     *         current version of JBSE.
+     * @throws InterruptException  iff it is necessary to interrupt the
+     *         execution of the current bytecode and run the 
+     *         {@code <clinit>} method for {@code java.lang.String}.
+     */
+    public static void ensureStringLiteral(State state, String stringLit, DecisionProcedure dec) 
+    throws DecisionException, ClassFileIllFormedException, ClasspathException, InterruptException {
         state.ensureStringLiteral(stringLit);
-	    try {
-	        ensureClassCreatedAndInitialized(state, JAVA_STRING, dec);
-	    } catch (BadClassFileException e) {
-	        throw new ClasspathException(e);
-        } catch (InvalidInputException e) {
+        try {
+            ensureClassCreatedAndInitialized(state, JAVA_STRING, dec);
+        } catch (ClassFileNotFoundException e) {
+            throw new ClasspathException(e);
+        } catch (ClassFileIllFormedException e) {
+            throw e;
+        } catch (InvalidInputException | BadClassFileException e) {
             //this should never happen
             failExecution(e);
-	    }
-	}
-    
+        }
+    }
+
+    /**
+     * Ensures an {@link Instance} of class {@code java.lang.Class} 
+     * corresponding to a class name exists in the {@link Heap}. If
+     * the instance does not exist, it resolves the class and creates 
+     * it, otherwise it does nothing. Also manages the creation 
+     * of the {@link Klass}es for {@code java.lang.Class} and for 
+     * the classes of the members of the created object.
+     * 
+     * @param state the {@link State} on which this method will operate.
+     * @param accessor a {@link String}, the name of the class of the accessor 
+     *        that wants to obtain the {@link Instance} of {@code java.lang.Class}. 
+     * @param className a {@link String}, the name of the class reified
+     *        by the {@link Instance} of {@code java.lang.Class}.
+     * @param dec a {@link DecisionProcedure}.
+     * @throws DecisionException if {@code dec} fails in determining
+     *         whether {@code java.lang.String} is or is not initialized.
+     * @throws ClassFileIllFormedException if the {@code java.lang.String} classfile 
+     *         is ill-formed.
+     * @throws ClassFileNotAccessibleException if {@code className} is not
+     *         accessible from {@code accessor}.
+     * @throws ClasspathException if the {@code java.lang.String} class is 
+     *         missing from {@code state}'s classpath or is incompatible with the
+     *         current version of JBSE.
+     * @throws InterruptException  iff it is necessary to interrupt the
+     *         execution of the current bytecode and run the 
+     *         {@code <clinit>} method for {@code java.lang.String}.
+     */
     public static void ensureInstance_JAVA_CLASS(State state, String accessor, String className, DecisionProcedure dec) 
-    throws DecisionException, ClasspathException, BadClassFileException, 
-    ClassFileNotAccessibleException, ThreadStackEmptyException, InterruptException {
+    throws DecisionException, ClassFileIllFormedException, ClassFileNotAccessibleException, 
+    ClasspathException, InterruptException {
         //we store locally the interrupt and throw it at the end
         //to ensure the invariant that, at the end of the invocation, 
         //everything is created so the second time this method is 
         //invoked because of interruption nothing remains to do 
         InterruptException exc = null;  
-        
+
         //possibly creates and initializes java.lang.Class
         try {
             ensureClassCreatedAndInitialized(state, JAVA_CLASS, dec);
         } catch (InterruptException e) {
             exc = e;
-        } catch (BadClassFileException e) {
+        } catch (ClassFileNotFoundException e) {
             throw new ClasspathException(e);
-        } catch (InvalidInputException e) {
+        } catch (ClassFileIllFormedException e) {
+            throw e;
+        } catch (InvalidInputException | BadClassFileException e) {
             //this should never happen
             failExecution(e);
         }
@@ -735,23 +818,30 @@ public class Util {
         } catch (InterruptException e) {
             exc = e;
         }
-        
+
         //possibly creates and initializes the java.lang.Class Instance
         final boolean mustInit = (!state.hasInstance_JAVA_CLASS(className));
-        state.ensureInstance_JAVA_CLASS(accessor, className);
+        try {
+            state.ensureInstance_JAVA_CLASS(accessor, className);
+        } catch (ClassFileIllFormedException e) {
+            throw e;
+        } catch (BadClassFileException e) {
+            //this should never happen
+            failExecution(e);
+        }
         if (mustInit) {
             final Reference r = state.referenceToInstance_JAVA_CLASS(className);
             final Instance i = (Instance) state.getObject(r);
             final ReferenceConcrete classNameString = state.referenceToStringLiteral(classNameBinary);
             i.setFieldValue(JAVA_CLASS_NAME, classNameString);
         }
-        
+
         //throws the interrupt, if any
         if (exc != null) {
             throw exc;
         }
     }
-    
+
     /**
      * Utility function that writes a value to an array,
      * invoked by *aload and *astore algorithms. If the parameters
@@ -778,16 +868,16 @@ public class Util {
                 array.set(index, valueToStore);
             }
         } catch (InvalidInputException | InvalidOperandException | 
-                InvalidTypeException | ClassCastException | 
-                FastArrayAccessNotAllowedException e) {
+        InvalidTypeException | ClassCastException | 
+        FastArrayAccessNotAllowedException e) {
             //this should never happen
             failExecution(e);
         }
     }
 
-	/** 
-	 * Do not instantiate it!
-	 */
-	private Util() { }
+    /** 
+     * Do not instantiate it!
+     */
+    private Util() { }
 
 }
