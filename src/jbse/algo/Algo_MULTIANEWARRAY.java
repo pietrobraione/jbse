@@ -23,17 +23,17 @@ import jbse.val.Primitive;
  * @author Pietro Braione
  */
 final class Algo_MULTIANEWARRAY extends Algo_XNEWARRAY<BytecodeData_2CLUB> {
-    
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> (int) this.data.immediateUnsignedByte();
     }
-    
+
     @Override
     protected Supplier<BytecodeData_2CLUB> bytecodeData() {
         return BytecodeData_2CLUB::get;
     }
-	
+
     @Override
     protected void preCook(State state) throws InterruptException {
         //checks the number of dimensions
@@ -76,7 +76,7 @@ final class Algo_MULTIANEWARRAY extends Algo_XNEWARRAY<BytecodeData_2CLUB> {
             failExecution(e);
         }
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> MULTIANEWARRAY_OFFSET;

@@ -44,16 +44,26 @@ DecisionAlternative_XNEWARRAY,
 StrategyDecide<DecisionAlternative_XNEWARRAY>,
 StrategyRefine<DecisionAlternative_XNEWARRAY>,
 StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
-    
+
     //must be set by subclasses in preCook
     protected Primitive[] dimensionsCounts;
     protected String arrayType;
 
     private int layersToCreateNow; //produced by cook
     private Primitive countsNonNegative, countsNegative; //produced by cook
-    
+
+    /**
+     * Subclasses implement this method to
+     * check/set the dimensions count, to
+     * set the array type, and possibly to 
+     * resolve the member class.
+     * 
+     * @param state a {@link State}
+     * @throws InterruptException if the execution of this {@link Algorithm}
+     *         must be interrupted.
+     */
     protected abstract void preCook(State state) throws InterruptException;
-    
+
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
@@ -89,12 +99,12 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
             }
         };
     }
-    
+
     @Override
     protected Class<DecisionAlternative_XNEWARRAY> classDecisionAlternative() {
         return DecisionAlternative_XNEWARRAY.class;
     }
-    
+
     @Override
     protected StrategyDecide<DecisionAlternative_XNEWARRAY> decider() {
         return (state, result) -> {
@@ -103,7 +113,7 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
             return o;
         };
     }
-    
+
     @Override
     protected StrategyRefine<DecisionAlternative_XNEWARRAY> refiner() {
         return (state, alt) -> {
@@ -111,7 +121,7 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
             state.assume(this.ctx.decisionProcedure.simplify(condTrue));
         };
     }
-    
+
     @Override
     protected StrategyUpdate<DecisionAlternative_XNEWARRAY> updater() {
         return (state, alt) -> {
@@ -160,94 +170,94 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
         };
 
     }
-	
-	private ReferenceConcrete createArrayMultilayer(State state, Value initValue) 
-	throws DecisionException, InvalidTypeException {
-		//the reference to be pushed on the operand stack at the end of the
-		//creation; note that it is initialized to null, but this is just 
-		//to make the compiler happy. It will be initialized during the loop, 
-		//at the end of which it must be nonnull 
-		ReferenceConcrete retVal = null;
-		
-		//array of references to the Arrays created at the previous iteration
-		Reference[] prev = null;
 
-		//the number of arrays to be created in the current layer
-		int toCreateInCurrentLayer = 1;
+    private ReferenceConcrete createArrayMultilayer(State state, Value initValue) 
+    throws DecisionException, InvalidTypeException {
+        //the reference to be pushed on the operand stack at the end of the
+        //creation; note that it is initialized to null, but this is just 
+        //to make the compiler happy. It will be initialized during the loop, 
+        //at the end of which it must be nonnull 
+        ReferenceConcrete retVal = null;
 
-		//creates all the layers of monodimensional arrays that it can create now, 
-		//initializes them, puts them in the heap, and sets toPush with a reference
-		//to the topmost array
-		final Calculator calc = state.getCalculator();
-		for (int currentLayer = 0; currentLayer < this.layersToCreateNow; ++currentLayer) {
-			//caches the length of the arrays in the current layer 
-			final Primitive currentLayerLength = this.dimensionsCounts[currentLayer];
+        //array of references to the Arrays created at the previous iteration
+        Reference[] prev = null;
 
-			//determines if such length is (concretely or provably) 0 to early stop the 
-			//creation process
-			final int currentLayerLengthInt; //to use only when currentLayerLength instanceof Simplex
-			boolean zeroBreak = false; //only to keep the compiler happy
-			if (currentLayerLength instanceof Simplex) {
-				currentLayerLengthInt = ((Integer) ((Simplex) currentLayerLength).getActualValue());
-				zeroBreak = (currentLayerLengthInt == 0); 
-			} else {
-				currentLayerLengthInt = -1; //not meaningful, set to an arbitrary value
-				try {
-				    final Expression currentLayerLengthZero = (Expression) currentLayerLength.eq(calc.valInt(0));
-				    final Expression currentLayerLengthNonzero = (Expression) currentLayerLengthZero.not();
-					final ClassHierarchy hier = state.getClassHierarchy();
-	                zeroBreak = this.ctx.decisionProcedure.isSat(hier, currentLayerLengthZero); 
-	                zeroBreak = zeroBreak && !this.ctx.decisionProcedure.isSat(hier, currentLayerLengthNonzero);
-				} catch (ClassCastException | InvalidOperandException | 
-				         InvalidTypeException | InvalidInputException e) {
-					//this should never happen
-					failExecution(e);
-				} 
-			}
+        //the number of arrays to be created in the current layer
+        int toCreateInCurrentLayer = 1;
 
-			//creates the i-th layer of arrays
-			final Reference[] next = new Reference[toCreateInCurrentLayer];
-			for (int k = 0; k < toCreateInCurrentLayer; ++k) {
-				//creates the k-th array in the layer
-				final String subarrayType = this.arrayType.substring(currentLayer);
-				final ReferenceConcrete ref = state.createArray(initValue, currentLayerLength, subarrayType);
+        //creates all the layers of monodimensional arrays that it can create now, 
+        //initializes them, puts them in the heap, and sets toPush with a reference
+        //to the topmost array
+        final Calculator calc = state.getCalculator();
+        for (int currentLayer = 0; currentLayer < this.layersToCreateNow; ++currentLayer) {
+            //caches the length of the arrays in the current layer 
+            final Primitive currentLayerLength = this.dimensionsCounts[currentLayer];
 
-				//stores the reference to the created array
-				if (currentLayer == 0) { //topmost reference
-					retVal = ref;
-				} else {				
-					//stores the reference in one of the arrays created 
-					//at (i-1)-th iteration; since only the objects in the
-					//last layer are not normalized, we may use the fast
-					//version of setting
-					final int prevArraySize = toCreateInCurrentLayer / prev.length; //size of arrays created at iteration i-1
-					final Simplex index = calc.valInt(k % prevArraySize);
-					try {
-						((Array) state.getObject(prev[k /prevArraySize])).setFast(index, ref);
-					} catch (FastArrayAccessNotAllowedException | InvalidOperandException e) {
-						//this should never happen
-						failExecution(e);
-					}
-				}
+            //determines if such length is (concretely or provably) 0 to early stop the 
+            //creation process
+            final int currentLayerLengthInt; //to use only when currentLayerLength instanceof Simplex
+            boolean zeroBreak = false; //only to keep the compiler happy
+            if (currentLayerLength instanceof Simplex) {
+                currentLayerLengthInt = ((Integer) ((Simplex) currentLayerLength).getActualValue());
+                zeroBreak = (currentLayerLengthInt == 0); 
+            } else {
+                currentLayerLengthInt = -1; //not meaningful, set to an arbitrary value
+                try {
+                    final Expression currentLayerLengthZero = (Expression) currentLayerLength.eq(calc.valInt(0));
+                    final Expression currentLayerLengthNonzero = (Expression) currentLayerLengthZero.not();
+                    final ClassHierarchy hier = state.getClassHierarchy();
+                    zeroBreak = this.ctx.decisionProcedure.isSat(hier, currentLayerLengthZero); 
+                    zeroBreak = zeroBreak && !this.ctx.decisionProcedure.isSat(hier, currentLayerLengthNonzero);
+                } catch (ClassCastException | InvalidOperandException | 
+                InvalidTypeException | InvalidInputException e) {
+                    //this should never happen
+                    failExecution(e);
+                } 
+            }
 
-				//saves the created reference for initialization  
-				//at (i+1)-th iteration
-				next[k] = ref;
-			}
-			prev = next;
-			if (currentLayerLength instanceof Simplex) {
-				toCreateInCurrentLayer *= currentLayerLengthInt;
-			}
+            //creates the i-th layer of arrays
+            final Reference[] next = new Reference[toCreateInCurrentLayer];
+            for (int k = 0; k < toCreateInCurrentLayer; ++k) {
+                //creates the k-th array in the layer
+                final String subarrayType = this.arrayType.substring(currentLayer);
+                final ReferenceConcrete ref = state.createArray(initValue, currentLayerLength, subarrayType);
 
-			//exits if the length of the arrays in the current layer is zero
-			if (zeroBreak) {
-				break;
-			}
-		}
-		
-		return retVal;
-	}
-    
+                //stores the reference to the created array
+                if (currentLayer == 0) { //topmost reference
+                    retVal = ref;
+                } else {				
+                    //stores the reference in one of the arrays created 
+                    //at (i-1)-th iteration; since only the objects in the
+                    //last layer are not normalized, we may use the fast
+                    //version of setting
+                    final int prevArraySize = toCreateInCurrentLayer / prev.length; //size of arrays created at iteration i-1
+                    final Simplex index = calc.valInt(k % prevArraySize);
+                    try {
+                        ((Array) state.getObject(prev[k /prevArraySize])).setFast(index, ref);
+                    } catch (FastArrayAccessNotAllowedException | InvalidOperandException e) {
+                        //this should never happen
+                        failExecution(e);
+                    }
+                }
+
+                //saves the created reference for initialization  
+                //at (i+1)-th iteration
+                next[k] = ref;
+            }
+            prev = next;
+            if (currentLayerLength instanceof Simplex) {
+                toCreateInCurrentLayer *= currentLayerLengthInt;
+            }
+
+            //exits if the length of the arrays in the current layer is zero
+            if (zeroBreak) {
+                break;
+            }
+        }
+
+        return retVal;
+    }
+
     @Override
     protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;

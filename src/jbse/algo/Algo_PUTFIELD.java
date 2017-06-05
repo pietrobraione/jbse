@@ -17,18 +17,26 @@ import jbse.mem.State;
 import jbse.val.Reference;
 
 //TODO merge with Algo_GETFIELD
+/**
+ * {@link Algorithm} managing the "set field in object" 
+ * (putfield) bytecode.
+ * 
+ * @author Pietro Braione
+ *
+ */
 final class Algo_PUTFIELD extends Algo_PUTX {
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 2;
     }
-    
+
     @Override
     protected void check(State state, String currentClass)
     throws FieldNotFoundException, BadClassFileException, InterruptException {
         final String fieldClassName = this.fieldSignatureResolved.getClassName();
         final ClassFile fieldClassFile = state.getClassHierarchy().getClassFile(fieldClassName);
-        
+
         //checks that the field is not static
         if (fieldClassFile.isFieldStatic(this.fieldSignatureResolved)) {
             throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
@@ -44,7 +52,7 @@ final class Algo_PUTFIELD extends Algo_PUTX {
 
         //TODO compare types of field and of the value to put in
     }
-    
+
     @Override
     protected void put(State state) throws InterruptException {
         try {

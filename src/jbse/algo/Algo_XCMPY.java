@@ -24,7 +24,7 @@ import jbse.val.exc.InvalidOperatorException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Command managing all the *cmp* commands ([d/f/l]cmp[g/l]). 
+ * {@link Algorithm} managing all the *cmp* bytecodes ([d/f/l]cmp[g/l]). 
  * It decides over a comparison between primitives (longs, 
  * doubles, floats), a sheer numeric decision.
  * This implementation detects whether the faster 
@@ -40,25 +40,25 @@ DecisionAlternative_XCMPY,
 StrategyDecide<DecisionAlternative_XCMPY>,
 StrategyRefine<DecisionAlternative_XCMPY>,
 StrategyUpdate<DecisionAlternative_XCMPY>> {
-    
+
     /**
      * Faster, but not always applicable, alternative 
      * implementation of the bytecode.
      */
     private final Algo_XCMPY_FAST algo_XCMPY_FAST = new Algo_XCMPY_FAST();
-    
+
     private Primitive val1, val2; //set by cook
-    
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 2;
     }
-    
+
     @Override
     protected Supplier<BytecodeData_0> bytecodeData() {
         return BytecodeData_0::get;
     }
-    
+
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
@@ -74,12 +74,12 @@ StrategyUpdate<DecisionAlternative_XCMPY>> {
                 //check 
                 final int nextBytecode = state.getInstruction(1);
                 final boolean fast = 
-                    (nextBytecode == OP_IFEQ ||
-                     nextBytecode == OP_IFGE ||
-                     nextBytecode == OP_IFGT ||
-                     nextBytecode == OP_IFLE ||
-                     nextBytecode == OP_IFLT ||
-                     nextBytecode == OP_IFNE);
+                   (nextBytecode == OP_IFEQ ||
+                    nextBytecode == OP_IFGE ||
+                    nextBytecode == OP_IFGT ||
+                    nextBytecode == OP_IFLE ||
+                    nextBytecode == OP_IFLT ||
+                    nextBytecode == OP_IFNE);
                 if (fast) {
                     continueWith(this.algo_XCMPY_FAST);
                     exitFromAlgorithm();
@@ -93,12 +93,12 @@ StrategyUpdate<DecisionAlternative_XCMPY>> {
             }
         };
     }
-    
+
     @Override
     protected Class<DecisionAlternative_XCMPY> classDecisionAlternative() {
         return DecisionAlternative_XCMPY.class;
     }
-    
+
     @Override
     protected StrategyDecide<DecisionAlternative_XCMPY> decider() {
         return (state, result) -> {
@@ -106,20 +106,20 @@ StrategyUpdate<DecisionAlternative_XCMPY>> {
             return o;
         };
     }
-    
+
     @Override
     protected StrategyRefine<DecisionAlternative_XCMPY> refiner() {
         return (state, alt) -> {
             try {
                 state.assume(ctx.decisionProcedure.simplify(state.getCalculator().applyBinary(this.val1, alt.operator(), this.val2)));
             } catch (InvalidOperatorException | InvalidOperandException
-                    | InvalidTypeException e) {
+            | InvalidTypeException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
             }
         };
     }
-    
+
     @Override
     protected StrategyUpdate<DecisionAlternative_XCMPY> updater() {
         return (state, alt) -> {
@@ -131,12 +131,12 @@ StrategyUpdate<DecisionAlternative_XCMPY>> {
             }
         };
     }
-    
+
     @Override
     protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> XCMPY_OFFSET;

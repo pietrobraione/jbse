@@ -19,27 +19,27 @@ DecisionAlternative_NONE,
 StrategyDecide<DecisionAlternative_NONE>,
 StrategyRefine<DecisionAlternative_NONE>,
 StrategyUpdate<DecisionAlternative_NONE>> {
-	
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 0;
     }
-    
+
     @Override
     protected Supplier<BytecodeData_1SW> bytecodeData() {
         return BytecodeData_1SW::get;
     }
-    
+
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> { };
     }
-    
+
     @Override
     protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
         return DecisionAlternative_NONE.class;
     }
-    
+
     @Override
     protected StrategyDecide<DecisionAlternative_NONE> decider() {
         return (state, result) -> {
@@ -52,19 +52,19 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected StrategyRefine<DecisionAlternative_NONE> refiner() {
         return (state, alt) -> { };
     }
-    
+
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> { 
             state.pushOperand(state.getCalculator().valInt(this.data.immediateSignedWord()));
         };
     }
-    
+
     @Override
     protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> SIPUSH_OFFSET;

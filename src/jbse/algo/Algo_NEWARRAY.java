@@ -16,17 +16,17 @@ import jbse.val.Primitive;
  * @author Pietro Braione
  */
 final class Algo_NEWARRAY extends Algo_XNEWARRAY<BytecodeData_1AT> {
-    
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 1;
     }
-    
+
     @Override
     protected Supplier<BytecodeData_1AT> bytecodeData() {
         return BytecodeData_1AT::get;
     }
-    
+
     @Override
     protected void preCook(State state) throws InterruptException {
         //sets the array length
@@ -40,7 +40,7 @@ final class Algo_NEWARRAY extends Algo_XNEWARRAY<BytecodeData_1AT> {
         //sets the array type
         this.arrayType = "" + Type.ARRAYOF + this.data.primitiveType();
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> NEWARRAY_OFFSET;

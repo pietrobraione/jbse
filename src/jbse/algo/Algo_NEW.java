@@ -19,6 +19,13 @@ import jbse.dec.exc.InvalidInputException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 
+/**
+ * {@link Algorithm} managing the "create new object"
+ * bytecode (new).
+ * 
+ * @author Pietro Braione
+ *
+ */
 final class Algo_NEW extends Algorithm<
 BytecodeData_1CL,
 DecisionAlternative_NONE, 

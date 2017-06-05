@@ -12,6 +12,12 @@ import jbse.val.Primitive;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
+/**
+ * {@link Algorithm} managing all the *add ([i/l/f/d]add)
+ * bytecodes.
+ * 
+ * @author Pietro Braione
+ */
 final class Algo_XADD extends Algorithm<
 BytecodeData_0,
 DecisionAlternative_NONE,

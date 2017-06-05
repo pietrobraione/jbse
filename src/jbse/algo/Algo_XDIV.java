@@ -17,28 +17,34 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 //TODO this implementation of division works only for concrete values, add the case for symbolic ones with multiple successors
+/**
+ * {@link Algorithm} managing all the *div bytecodes
+ * ([i/l/f/d]div).
+ * 
+ * @author Pietro Braione
+ */
 final class Algo_XDIV extends Algorithm<
 BytecodeData_0,
 DecisionAlternative_NONE,
 StrategyDecide<DecisionAlternative_NONE>, 
 StrategyRefine<DecisionAlternative_NONE>, 
 StrategyUpdate<DecisionAlternative_NONE>> {
-    
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 2;
     }
-    
+
     @Override
     protected Supplier<BytecodeData_0> bytecodeData() {
         return BytecodeData_0::get;
     }
-    
+
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> { };
     }
-    
+
     @Override
     protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
         return DecisionAlternative_NONE.class;
@@ -51,12 +57,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             return DecisionProcedureAlgorithms.Outcome.FF;
         };
     }
-    
+
     @Override
     protected StrategyRefine<DecisionAlternative_NONE> refiner() {
         return (state, alt) -> { };
     }
-    
+
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
@@ -79,12 +85,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             }
         };
     }
-    
+
     @Override
     protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> MATH_LOGICAL_OP_OFFSET;

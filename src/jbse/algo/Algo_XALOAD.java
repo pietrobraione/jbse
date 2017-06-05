@@ -35,7 +35,7 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Algorithm managing all the *aload (load from array) bytecodes 
+ * {@link Algorithm} managing all the *aload (load from array) bytecodes 
  * ([a/b/c/d/f/i/l/s]aload). 
  * It decides over access index membership (inbound vs. outbound) 
  * which is a sheer numeric decision, and in the case of 
@@ -58,33 +58,33 @@ StrategyUpdate_XALOAD> {
     private Array arrayObj; //set by cooker
     private Collection<Array.AccessOutcome> entries; //set by cooker
 
-	@Override
-	protected Supplier<Integer> numOperands() {
+    @Override
+    protected Supplier<Integer> numOperands() {
         return () -> 2;
-	}
+    }
 
     @Override
     protected Supplier<BytecodeData_0> bytecodeData() {
         return BytecodeData_0::get;
     }
-	
+
     @Override
-	protected BytecodeCooker bytecodeCooker() {
-	    return (state) -> { 
-	        try {
-	            this.myObjectRef = (Reference) data.operand(0);
-	            this.index = (Primitive) data.operand(1);
-	        } catch (ClassCastException e) {
-	            throwVerifyError(state);
+    protected BytecodeCooker bytecodeCooker() {
+        return (state) -> { 
+            try {
+                this.myObjectRef = (Reference) data.operand(0);
+                this.index = (Primitive) data.operand(1);
+            } catch (ClassCastException e) {
+                throwVerifyError(state);
                 exitFromAlgorithm();
-	        }
-	        
-	        //null check
+            }
+
+            //null check
             if (state.isNull(this.myObjectRef)) {
                 throwNew(state, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
-            
+
             //reads the array and its entries
             try {
                 this.arrayObj = (Array) state.getObject(this.myObjectRef);
@@ -95,17 +95,17 @@ StrategyUpdate_XALOAD> {
                 exitFromAlgorithm();
             }
 
-	    };
-	}
+        };
+    }
 
     @Override
     protected Class<DecisionAlternative_XALOAD> classDecisionAlternative() {
         return DecisionAlternative_XALOAD.class;
     }
-	
-	@Override
-	protected StrategyDecide<DecisionAlternative_XALOAD> decider() {
-	    return (state, result) -> { 
+
+    @Override
+    protected StrategyDecide<DecisionAlternative_XALOAD> decider() {
+        return (state, result) -> { 
             boolean shouldRefine = false;
             boolean branchingDecision = false;
             boolean first = true; //just for formatting
@@ -117,7 +117,8 @@ StrategyUpdate_XALOAD> {
                 if (e instanceof Array.AccessOutcomeIn) {
                     val = ((Array.AccessOutcomeIn) e).getValue();
                     if (val == null) {
-                        val = state.createSymbol(getArrayMemberType(this.arrayObj.getType()), this.arrayObj.getOrigin().thenArrayMember(this.index));
+                        val = state.createSymbol(getArrayMemberType(this.arrayObj.getType()), 
+                                                 this.arrayObj.getOrigin().thenArrayMember(this.index));
                         fresh = true;
                     }
                 } else { //e instanceof AccessOutcomeOut
@@ -136,17 +137,17 @@ StrategyUpdate_XALOAD> {
                     this.nonExpandedRefOrigins += (first ? "" : ", ") + refToLoad.getOrigin();
                     first = false;
                 }
-                
+
                 //if at least one reference should be refined, then it should be refined
                 shouldRefine = shouldRefine || o.shouldRefine();
-                
+
                 //if at least one decision is branching, then it is branching
                 branchingDecision = branchingDecision || o.branchingDecision();
             }
 
             //also the size of the result matters to whether refine or not 
             shouldRefine = shouldRefine || (result.size() > 1);
-            
+
             //for branchingDecision nothing to do: it will be false only if
             //the access is concrete and the value obtained is resolved 
             //(if a symbolic reference): in this case, result.size() must
@@ -154,14 +155,14 @@ StrategyUpdate_XALOAD> {
             //on the used decision procedure, so we cannot make it dependent
             //on result.size().
             return Outcome.val(shouldRefine, this.someRefNotExpanded, branchingDecision);
-	    };
-	}
-	
+        };
+    }
+
     private void writeBackToSource(State state, Value valueToStore) 
     throws DecisionException {
         storeInArray(state, this.ctx, this.myObjectRef, this.index, valueToStore);
     }
-    
+
     @Override   
     protected Value possiblyMaterialize(State state, Value val) 
     throws DecisionException {
@@ -184,73 +185,73 @@ StrategyUpdate_XALOAD> {
             return val;
         }
     }
-    
-	@Override
-	protected StrategyRefine_XALOAD refiner() {
-	    return new StrategyRefine_XALOAD() {
-	        @Override
-	        public void refineRefExpands(State state, DecisionAlternative_XALOAD_Expands altExpands) 
-	        throws DecisionException, ContradictionException, InvalidTypeException {
-	            //handles all the assumptions for reference resolution by expansion
-	            Algo_XALOAD.this.refineRefExpands(state, altExpands); //implemented in MultipleStateGenerator_XYLOAD_GETX
-	            
-	            //assumes the array access expression (index in range)
-	            final Primitive accessExpression = altExpands.getArrayAccessExpression();
-	            state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
-	            
-	            //updates the array with the resolved reference
-	            final ReferenceSymbolic referenceToExpand = altExpands.getValueToLoad();
-	            writeBackToSource(state, referenceToExpand);                    
-	        }
 
-	        @Override
-	        public void refineRefAliases(State state, DecisionAlternative_XALOAD_Aliases altAliases)
-	        throws DecisionException, ContradictionException {
-	            //handles all the assumptions for reference resolution by aliasing
-	            Algo_XALOAD.this.refineRefAliases(state, altAliases); //implemented in MultipleStateGenerator_XYLOAD_GETX
-	            
-	            //assumes the array access expression (index in range)
-	            final Primitive accessExpression = altAliases.getArrayAccessExpression();
-	            state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));             
+    @Override
+    protected StrategyRefine_XALOAD refiner() {
+        return new StrategyRefine_XALOAD() {
+            @Override
+            public void refineRefExpands(State state, DecisionAlternative_XALOAD_Expands altExpands) 
+            throws DecisionException, ContradictionException, InvalidTypeException {
+                //handles all the assumptions for reference resolution by expansion
+                Algo_XALOAD.this.refineRefExpands(state, altExpands); //implemented in MultipleStateGenerator_XYLOAD_GETX
 
-	            //updates the array with the resolved reference
-	            final ReferenceSymbolic referenceToResolve = altAliases.getValueToLoad();
-	            writeBackToSource(state, referenceToResolve);
-	        }
+                //assumes the array access expression (index in range)
+                final Primitive accessExpression = altExpands.getArrayAccessExpression();
+                state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
 
-	        @Override
-	        public void refineRefNull(State state, DecisionAlternative_XALOAD_Null altNull) 
-	        throws DecisionException, ContradictionException {
-	            Algo_XALOAD.this.refineRefNull(state, altNull); //implemented in MultipleStateGenerator_XYLOAD_GETX
-	            
-	            //further augments the path condition 
-	            final Primitive accessExpression = altNull.getArrayAccessExpression();
-	            state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
-	            
-	            //updates the array with the resolved reference
-	            final ReferenceSymbolic referenceToResolve = altNull.getValueToLoad();
-	            writeBackToSource(state, referenceToResolve);
-	        }
+                //updates the array with the resolved reference
+                final ReferenceSymbolic referenceToExpand = altExpands.getValueToLoad();
+                writeBackToSource(state, referenceToExpand);                    
+            }
 
-	        @Override
-	        public void refineResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved)
-	        throws DecisionException {
-	            //augments the path condition
-	            state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(altResolved.getArrayAccessExpression()));
-	            
-	            //if the value is fresh, it writes it back in the array
-	            if (altResolved.isValueFresh()) {
-	                writeBackToSource(state, altResolved.getValueToLoad());
-	            }
-	        }
-	        
-	        @Override
-	        public void refineOut(State state, DecisionAlternative_XALOAD_Out altOut) {
-	            //augments the path condition
-	            state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(altOut.getArrayAccessExpression()));
-	        }
-	    };
-	}
+            @Override
+            public void refineRefAliases(State state, DecisionAlternative_XALOAD_Aliases altAliases)
+            throws DecisionException, ContradictionException {
+                //handles all the assumptions for reference resolution by aliasing
+                Algo_XALOAD.this.refineRefAliases(state, altAliases); //implemented in MultipleStateGenerator_XYLOAD_GETX
+
+                //assumes the array access expression (index in range)
+                final Primitive accessExpression = altAliases.getArrayAccessExpression();
+                state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));             
+
+                //updates the array with the resolved reference
+                final ReferenceSymbolic referenceToResolve = altAliases.getValueToLoad();
+                writeBackToSource(state, referenceToResolve);
+            }
+
+            @Override
+            public void refineRefNull(State state, DecisionAlternative_XALOAD_Null altNull) 
+            throws DecisionException, ContradictionException {
+                Algo_XALOAD.this.refineRefNull(state, altNull); //implemented in MultipleStateGenerator_XYLOAD_GETX
+
+                //further augments the path condition 
+                final Primitive accessExpression = altNull.getArrayAccessExpression();
+                state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
+
+                //updates the array with the resolved reference
+                final ReferenceSymbolic referenceToResolve = altNull.getValueToLoad();
+                writeBackToSource(state, referenceToResolve);
+            }
+
+            @Override
+            public void refineResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved)
+            throws DecisionException {
+                //augments the path condition
+                state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(altResolved.getArrayAccessExpression()));
+
+                //if the value is fresh, it writes it back in the array
+                if (altResolved.isValueFresh()) {
+                    writeBackToSource(state, altResolved.getValueToLoad());
+                }
+            }
+
+            @Override
+            public void refineOut(State state, DecisionAlternative_XALOAD_Out altOut) {
+                //augments the path condition
+                state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(altOut.getArrayAccessExpression()));
+            }
+        };
+    }
 
     protected StrategyUpdate_XALOAD updater() {
         return new StrategyUpdate_XALOAD() {
@@ -274,12 +275,12 @@ StrategyUpdate_XALOAD> {
             }
         };
     }
-    
+
     @Override
     protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> XALOADSTORE_OFFSET;

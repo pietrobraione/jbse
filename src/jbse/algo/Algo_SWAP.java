@@ -7,6 +7,11 @@ import java.util.function.Supplier;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.tree.DecisionAlternative_NONE;
 
+/**
+ * {@link Algorithm} handling the swap bytecode.
+ * 
+ * @author Pietro Braione
+ */
 final class Algo_SWAP extends Algorithm<
 BytecodeData_0,
 DecisionAlternative_NONE, 
@@ -18,12 +23,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected Supplier<Integer> numOperands() {
         return () -> 2;
     }
-    
+
     @Override
     protected Supplier<BytecodeData_0> bytecodeData() {
         return BytecodeData_0::get;
     }
-    
+
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> { };
@@ -33,7 +38,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
         return DecisionAlternative_NONE.class;
     }
-    
+
     @Override
     protected StrategyDecide<DecisionAlternative_NONE> decider() {
         return (state, result) -> {
@@ -46,7 +51,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected StrategyRefine<DecisionAlternative_NONE> refiner() {
         return (state, alt) -> { };
     }
-    
+
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
@@ -54,12 +59,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             state.pushOperand(this.data.operand(0));
         };
     }
-    
+
     @Override
     protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> SWAP_OFFSET;

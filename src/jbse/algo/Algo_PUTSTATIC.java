@@ -18,12 +18,18 @@ import jbse.dec.exc.InvalidInputException;
 import jbse.mem.State;
 
 //TODO merge with Algo_GETSTATIC
+/**
+ * {@link Algorithm} managing the "set static field in class"
+ * (putstatic) bytecode.
+ * 
+ * @author Pietro Braione
+ */
 final class Algo_PUTSTATIC extends Algo_PUTX {
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 1;
     }
-    
+
     @Override
     protected void check(State state, String currentClassName)
     throws FieldNotFoundException, BadClassFileException, 
@@ -40,7 +46,7 @@ final class Algo_PUTSTATIC extends Algo_PUTX {
 
         //checks that if the field is final is declared in the current class
         if (fieldClassFile.isFieldFinal(this.fieldSignatureResolved) &&
-            !fieldClassName.equals(currentClassName)) {
+        !fieldClassName.equals(currentClassName)) {
             throwNew(state, ILLEGAL_ACCESS_ERROR);
             exitFromAlgorithm();
         }
@@ -55,9 +61,8 @@ final class Algo_PUTSTATIC extends Algo_PUTX {
             //TODO really?
             failExecution(e);
         }
-
     }
-    
+
     @Override
     protected void put(State state) throws InterruptException {
         final String fieldClassName = this.fieldSignatureResolved.getClassName();
