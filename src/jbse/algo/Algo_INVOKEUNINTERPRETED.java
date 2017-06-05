@@ -18,16 +18,25 @@ import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
+/**
+ * {@link Algorithm} implementing the effect of a method call that
+ * produces as result a symbolic uninterpreted function application
+ * on its arguments. Works only for methods that accept as parameters
+ * (except possibly the {@code this} parameter) and produce as return
+ * value only primitive values.
+ * 
+ * @author Pietro Braione
+ */
 public final class Algo_INVOKEUNINTERPRETED extends Algo_INVOKEMETA_Nonbranching {
-    
+
     private final Signature methodSignatureImpl; //set by constructor
     private final String functionName; //set by constructor
-    
+
     public Algo_INVOKEUNINTERPRETED(Signature methodSignatureImpl, String functionName) {
         this.methodSignatureImpl = methodSignatureImpl;
         this.functionName = functionName;
     }
-    
+
     private Primitive[] argsPrimitive; //set by cooker
     private char returnType; //set by cooker
 
@@ -38,7 +47,7 @@ public final class Algo_INVOKEUNINTERPRETED extends Algo_INVOKEMETA_Nonbranching
             return (this.isStatic ? paramsDescriptors.length : paramsDescriptors.length + 1);
         };
     }
-    
+
     @Override
     protected void cookMore(State state) throws UninterpretedUnsupportedException {
         //gets and checks the return type
@@ -55,7 +64,7 @@ public final class Algo_INVOKEUNINTERPRETED extends Algo_INVOKEMETA_Nonbranching
             throw new UninterpretedUnsupportedException("The method " + this.methodSignatureImpl + " has a nonprimitive argument other than 'this'."); 
         }
     }
-    
+
     @Override
     protected void update(State state) throws ThreadStackEmptyException {
         //pushes the uninterpreted function term

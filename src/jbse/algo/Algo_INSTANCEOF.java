@@ -8,6 +8,11 @@ import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 
+/**
+ * {@link Algorithm} implementing the instanceof bytecode.
+ *  
+ * @author Pietro Braione
+ */
 final class Algo_INSTANCEOF extends Algo_CASTINSTANCEOF {
     @Override
     protected void complete(State state, boolean isSubclass)

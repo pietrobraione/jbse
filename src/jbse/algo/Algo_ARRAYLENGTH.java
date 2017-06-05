@@ -13,6 +13,11 @@ import jbse.mem.Array;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
+/**
+ * {@link Algorithm} implementing the arraylength bytecode.
+ * 
+ * @author Pietro Braione
+ */
 final class Algo_ARRAYLENGTH extends Algorithm<
 BytecodeData_0,
 DecisionAlternative_NONE,

@@ -23,28 +23,35 @@ import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
+/**
+ * Abstract algorithm for the invoke* bytecodes
+ * (invoke[interface/special/static/virtual]).
+ * 
+ * @author Pietro Braione
+ *
+ */
 abstract class Algo_INVOKEX_Abstract extends Algorithm<
 BytecodeData_1ME,
 DecisionAlternative_NONE,
 StrategyDecide<DecisionAlternative_NONE>, 
 StrategyRefine<DecisionAlternative_NONE>, 
 StrategyUpdate<DecisionAlternative_NONE>> {
-    
+
     protected final boolean isInterface; //set by the constructor
     protected final boolean isSpecial; //set by the constructor
     protected final boolean isStatic; //set by the constructor
-    
+
     public Algo_INVOKEX_Abstract(boolean isInterface, boolean isSpecial, boolean isStatic) {
         this.isInterface = isInterface;
         this.isSpecial = isSpecial;
         this.isStatic = isStatic;
     }
-    
+
     protected ClassFile classFileMethodImpl; //set by cooking methods
     protected boolean isNative; //set by cooking methods
     protected Signature methodSignatureResolved; //set by cooking methods
     protected Signature methodSignatureImpl; //set by cooking methods
-    
+
     @Override
     protected final Supplier<Integer> numOperands() {
         return () -> {
@@ -52,12 +59,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             return (this.isStatic ? paramsDescriptors.length : paramsDescriptors.length + 1);
         };
     }
-    
+
     @Override
     protected final Supplier<BytecodeData_1ME> bytecodeData() {
         return () -> BytecodeData_1ME.withInterfaceMethod(this.isInterface).get();
     }
-    
+
     protected final void resolveMethod(State state) 
     throws BadClassFileException, IncompatibleClassFileException, MethodAbstractException, 
     MethodNotFoundException, MethodNotAccessibleException {
@@ -71,7 +78,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             failExecution(e);
         }
     }
-    
+
     protected final void check(State state) throws InterruptException {
         //checks the resolved method; note that more checks 
         //are done later, by the last call to state.pushFrame
@@ -88,7 +95,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             failExecution(e);
         }
     }
-    
+
     protected final void findImplAndCalcNative(State state) 
     throws BadClassFileException, IncompatibleClassFileException, 
     InterruptException {
@@ -117,7 +124,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             //this should never happen
             failExecution(e);
         }
-        
+
         //builds a signature for the method implementation;
         //falls back to the signature of the resolved method
         //if there is no base-level implementation
@@ -126,4 +133,4 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                           this.methodSignatureResolved.getDescriptor(), 
                           this.methodSignatureResolved.getName()));
     }
- }
+}

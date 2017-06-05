@@ -21,25 +21,32 @@ import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
+/**
+ * Abstract {@link Algorithm} implementing the 
+ * checkcast and the instanceof bytecodes.
+ * 
+ * @author Pietro Braione
+ *
+ */
 abstract class Algo_CASTINSTANCEOF extends Algorithm<
 BytecodeData_1CL,
 DecisionAlternative_NONE,
 StrategyDecide<DecisionAlternative_NONE>, 
 StrategyRefine<DecisionAlternative_NONE>, 
 StrategyUpdate<DecisionAlternative_NONE>> {
-    
+
     boolean isSubclass; //result of the check, for the subclasses of this algorithm
 
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 1;
     }
-    
+
     @Override
     protected Supplier<BytecodeData_1CL> bytecodeData() {
         return BytecodeData_1CL::get;
     }
-    
+
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> { 
@@ -63,12 +70,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             }
         };
     }
-    
+
     @Override
     protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
         return DecisionAlternative_NONE.class;
     }
-    
+
     @Override
     protected StrategyDecide<DecisionAlternative_NONE> decider() {
         return (state, result) -> { 
@@ -76,7 +83,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             return DecisionProcedureAlgorithms.Outcome.FF;
         };
     }
-    
+
     @Override
     protected StrategyRefine<DecisionAlternative_NONE> refiner() {
         return (state, alt) -> { };
@@ -111,12 +118,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
 
     protected abstract void complete(State state, boolean isSubclass) 
     throws InterruptException;
-    
+
     @Override
     protected final Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected final Supplier<Integer> programCounterUpdate() {
         return () -> CASTINSTANCEOF_OFFSET;

@@ -25,14 +25,22 @@ import jbse.bc.exc.MethodNotFoundException;
 import jbse.dec.exc.InvalidInputException;
 import jbse.tree.DecisionAlternative_NONE;
 
+/**
+ * Algorithm for the invoke* bytecodes
+ * (invoke[interface/special/static/virtual]).
+ * Should be followed by the execution of 
+ * {@link Algo_INVOKEX_Completion}.
+ *  
+ * @author Pietro Braione
+ */
 final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
     private final Algo_INVOKEX_Completion algo_INVOKEX_Completion;
-    
+
     public Algo_INVOKEX(boolean isInterface, boolean isSpecial, boolean isStatic) {
         super(isInterface, isSpecial, isStatic);
         this.algo_INVOKEX_Completion = new Algo_INVOKEX_Completion(isInterface, isSpecial, isStatic);
     }
-    
+
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
@@ -58,7 +66,7 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
                 throwVerifyError(state);
                 exitFromAlgorithm();
             }
-            
+
             //checks the resolved method; note that more checks 
             //are done later when the frame is pushed
             check(state);
@@ -73,7 +81,7 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
                     failExecution(e);
                 }
             }
-            
+
             //looks for the method implementation and determines
             //whether it is native
             try {
@@ -86,7 +94,7 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
                 throwVerifyError(state);
                 exitFromAlgorithm();
             }
-            
+
             //looks for a meta-level implementation, and in case 
             //delegates the responsibility to the dispatcherMeta
             final ClassHierarchy hier = state.getClassHierarchy();
@@ -102,17 +110,17 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
                 //this should never happen after resolution 
                 failExecution(e);
             }
-            
+
             //otherwise, concludes the execution of the bytecode algorithm
             continueWith(this.algo_INVOKEX_Completion);
         };
     }
-    
+
     @Override
     protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
         return null; //never used
     }
-    
+
     @Override
     protected StrategyDecide<DecisionAlternative_NONE> decider() {
         return null; //never used
@@ -122,19 +130,19 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
     protected StrategyRefine<DecisionAlternative_NONE> refiner() {
         return null; //never used
     }
-    
+
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return null; //never used
     }
-    
+
     @Override
     protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return null; //never used
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return null; //never used
     }
- }
+}

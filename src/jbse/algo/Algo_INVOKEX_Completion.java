@@ -24,14 +24,21 @@ import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.tree.DecisionAlternative_NONE;
 
+/**
+ * Algorithm for completing the semantics of the 
+ * invoke* bytecodes
+ * (invoke[interface/special/static/virtual]).
+ *  
+ * @author Pietro Braione
+ */
 final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
-    
+
     public Algo_INVOKEX_Completion(boolean isInterface, boolean isSpecial, boolean isStatic) {
         super(isInterface, isSpecial, isStatic);
     }
-    
+
     private int pcOffsetReturn; //set by cooker
-    
+
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
@@ -46,7 +53,7 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
                 //this should never happen (Algo_INVOKEX already checked them)
                 failExecution(e);
             }
-            
+
             //looks for the method implementation, and determines
             //whether the implementation is native
             try {
@@ -57,7 +64,7 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
                 //this should never happen
                 failExecution(e);
             }
-            
+
             //builds a signature for the method implementation;
             //falls back to the signature of the resolved method
             //if there is no base-level implementation
@@ -65,7 +72,7 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
                 new Signature(this.classFileMethodImpl.getClassName(), 
                               this.methodSignatureResolved.getDescriptor(), 
                               this.methodSignatureResolved.getName()));
-            
+
             //if the method has no implementation, raises AbstractMethodError
             try {
                 if (this.classFileMethodImpl == null || this.classFileMethodImpl.isMethodAbstract(this.methodSignatureImpl)) {
@@ -76,19 +83,19 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
                 //this should never happen after resolution 
                 failExecution(e);
             }     
-            
+
             //sets the program counter offset for the return point
             this.pcOffsetReturn = (this.isInterface ? 
-                                   INVOKEDYNAMICINTERFACE_OFFSET : 
-                                   INVOKESPECIALSTATICVIRTUAL_OFFSET);
+                INVOKEDYNAMICINTERFACE_OFFSET : 
+                INVOKESPECIALSTATICVIRTUAL_OFFSET);
         };
     }
-    
+
     @Override
     protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
         return DecisionAlternative_NONE.class;
     }
-    
+
     @Override
     protected StrategyDecide<DecisionAlternative_NONE> decider() {
         return (state, result) -> {
@@ -101,7 +108,7 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
     protected StrategyRefine<DecisionAlternative_NONE> refiner() {
         return (state, alt) -> { };
     }
-    
+
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
@@ -129,14 +136,14 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
             }
         };
     }
-    
+
     @Override
     protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> 0; //nothing to add to the program counter of the pushed frame
     }
- }
+}

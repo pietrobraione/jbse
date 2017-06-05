@@ -19,7 +19,7 @@ import jbse.val.exc.InvalidOperatorException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Command managing all the "branch if integer comparison" bytecodes 
+ * {@link Algorithm} managing all the "branch if integer comparison" bytecodes 
  * (if[eq/ge/gt/le/lt/ne], if_icmp[eq/ge/gt/le/lt/ne]). It decides over
  * the branch to be taken, a sheer numeric decision.
  * 

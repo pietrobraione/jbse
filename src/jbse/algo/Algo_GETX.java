@@ -24,15 +24,22 @@ import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 
 //TODO extract common superclass with Algo_PUTX and eliminate duplicate code
+/**
+ * Abstract {@link Algorithm} for the get* bytecodes (get[field/static]).
+ * It decides over the value loaded to the operand stack in the cases 
+ * it is an uninitialized symbolic reference ("lazy initialization").
+ * 
+ * @author Pietro Braione
+ */
 abstract class Algo_GETX extends Algo_XLOAD_GETX<BytecodeData_1FI> {
-    
+
     protected Signature fieldSignatureResolved; //set by cook
 
     @Override
     protected final Supplier<BytecodeData_1FI> bytecodeData() {
         return BytecodeData_1FI::get;
     }
-    
+
     @Override
     protected final BytecodeCooker bytecodeCooker() {
         return (state) -> {
@@ -68,24 +75,24 @@ abstract class Algo_GETX extends Algo_XLOAD_GETX<BytecodeData_1FI> {
                 //this should never happen
                 failExecution(e);
             }
-            
+
             //reads the field
             get(state);
         };
     }
-    
+
     protected abstract void check(State state, String currentClass)
     throws FieldNotFoundException, BadClassFileException, 
     InterruptException;
-    
+
     protected abstract void get(State state)
     throws DecisionException, ClasspathException, InterruptException;
-    
+
     @Override
     protected final Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected final Supplier<Integer> programCounterUpdate() {
         return () -> GETX_PUTX_OFFSET;

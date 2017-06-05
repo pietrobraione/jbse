@@ -19,11 +19,11 @@ DE extends StrategyDecide<R>,
 RE extends StrategyRefine<R>, 
 UP extends StrategyUpdate<R>> 
 extends Algorithm<BytecodeData_1ME, R, DE, RE, UP> {
-    
+
     protected boolean isInterface; //set by setter (called by Algo_INVOKEX)
     protected boolean isSpecial; //set by setter (called by Algo_INVOKEX)
     protected boolean isStatic; //set by setter (called by Algo_INVOKEX)
-    
+
     public final void setFeatures(boolean isInterface, boolean isSpecial, boolean isStatic) {
         this.isInterface = isInterface;
         this.isSpecial = isSpecial;
@@ -34,7 +34,7 @@ extends Algorithm<BytecodeData_1ME, R, DE, RE, UP> {
     protected final Supplier<BytecodeData_1ME> bytecodeData() {
         return () -> BytecodeData_1ME.withInterfaceMethod(this.isInterface).get();
     }
-    
+
     /**
      * Cleanly interrupts the execution and schedules 
      * the base-level implementation of the method
@@ -43,7 +43,7 @@ extends Algorithm<BytecodeData_1ME, R, DE, RE, UP> {
     protected final void continueWithBaseLevelImpl() 
     throws InterruptException {
         final Algo_INVOKEX_Completion continuation = 
-            new Algo_INVOKEX_Completion(this.isInterface, this.isSpecial, this.isStatic);
+        new Algo_INVOKEX_Completion(this.isInterface, this.isSpecial, this.isStatic);
         continueWith(continuation);
     }    
 }

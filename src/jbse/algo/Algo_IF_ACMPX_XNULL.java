@@ -13,8 +13,8 @@ import jbse.val.Null;
 import jbse.val.Reference;
 
 /**
- * Command managing all the "branch if reference comparison" bytecodes, including 
- * comparison with null (if_acmp[eq/ne], ifnull, ifnonnull). 
+ * {@link Algorithm} managing all the "branch if reference comparison" 
+ * bytecodes, including comparison with null (if_acmp[eq/ne], ifnull, ifnonnull). 
  * 
  * @author Pietro Braione
  *
@@ -25,10 +25,10 @@ DecisionAlternative_IFX,  //does not really need a decision alternative, but it'
 StrategyDecide<DecisionAlternative_IFX>,
 StrategyRefine<DecisionAlternative_IFX>,
 StrategyUpdate<DecisionAlternative_IFX>> {
-    
+
     private final boolean compareWithNull; //set by constructor
     private final boolean compareForEquality; //set by constructor
-    
+
     /**
      * Constructor.
      * 
@@ -44,19 +44,19 @@ StrategyUpdate<DecisionAlternative_IFX>> {
         this.compareWithNull = compareWithNull;
         this.compareForEquality = compareForEquality;
     }
-    
+
     boolean doJump; //produced by updater
 
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> (this.compareWithNull ? 1 : 2);
     }
-    
+
     @Override
     protected Supplier<BytecodeData_1ON> bytecodeData() {
         return BytecodeData_1ON::get;
     }
-    
+
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> { 
@@ -74,21 +74,21 @@ StrategyUpdate<DecisionAlternative_IFX>> {
                 throwVerifyError(state);
                 exitFromAlgorithm();
             }
-            
+
             //computes branch condition by comparing val1 and
             //val2 (note that both are resolved as they come
             //from the operand stack)
             this.doJump = 
-                (this.compareForEquality ? areAlias(state, val1, val2) :  //also true when both are null
+               (this.compareForEquality ? areAlias(state, val1, val2) :  //also true when both are null
                 !areAlias(state, val1, val2));
         };
     }
-    
+
     @Override
     protected Class<DecisionAlternative_IFX> classDecisionAlternative() {
         return DecisionAlternative_IFX.class;
     }
-    
+
     @Override
     protected StrategyDecide<DecisionAlternative_IFX> decider() {
         return (state, result) -> {
@@ -106,12 +106,12 @@ StrategyUpdate<DecisionAlternative_IFX>> {
     protected StrategyUpdate<DecisionAlternative_IFX> updater() {
         return (state, alt) -> { };
     }
-    
+
     @Override
     protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> (this.doJump ? this.data.jumpOffset() : IF_ACMPX_XNULL_OFFSET);

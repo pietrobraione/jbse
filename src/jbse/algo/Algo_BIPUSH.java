@@ -19,27 +19,27 @@ DecisionAlternative_NONE,
 StrategyDecide<DecisionAlternative_NONE>,
 StrategyRefine<DecisionAlternative_NONE>,
 StrategyUpdate<DecisionAlternative_NONE>> {
-    
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 0;
     }
-    
+
     @Override
     protected Supplier<BytecodeData_1SB> bytecodeData() {
         return BytecodeData_1SB::get;
     }
-	
+
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> { };
     }
-    
+
     @Override
     protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
         return DecisionAlternative_NONE.class;
     }
-    
+
     @Override
     protected StrategyDecide<DecisionAlternative_NONE> decider() {
         return (state, result) -> {
@@ -59,12 +59,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             state.pushOperand(state.getCalculator().valInt(this.data.immediateSignedByte()));
         };
     }
-    
+
     @Override
     protected final Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected final Supplier<Integer> programCounterUpdate() {
         return () -> BIPUSH_OFFSET;

@@ -11,6 +11,11 @@ import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
+/**
+ * {@link Algorithm} implementing the athrow bytecode.
+ * 
+ * @author Pietro Braione
+ */
 final class Algo_ATHROW extends Algorithm<
 BytecodeData_0,
 DecisionAlternative_NONE,

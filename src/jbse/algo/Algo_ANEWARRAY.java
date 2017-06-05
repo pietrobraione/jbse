@@ -26,17 +26,17 @@ import jbse.val.Primitive;
  * @author Pietro Braione
  */
 final class Algo_ANEWARRAY extends Algo_XNEWARRAY<BytecodeData_1CL> {
-    
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 1;
     }
-    
+
     @Override
     protected Supplier<BytecodeData_1CL> bytecodeData() {
         return BytecodeData_1CL::get;
     }
-        
+
     @Override
     protected void preCook(State state) throws InterruptException {
         //sets the array length
@@ -68,7 +68,7 @@ final class Algo_ANEWARRAY extends Algo_XNEWARRAY<BytecodeData_1CL> {
             failExecution(e);
         }
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> ANEWARRAY_OFFSET;

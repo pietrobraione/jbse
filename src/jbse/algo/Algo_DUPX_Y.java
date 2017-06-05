@@ -27,30 +27,30 @@ StrategyDecide<DecisionAlternative_NONE>,
 StrategyRefine<DecisionAlternative_NONE>, 
 StrategyUpdate<DecisionAlternative_NONE>> {
 
-	private final boolean cat1; //set by constructor
-	private final boolean x1; //set by constructor
-	
-	/**
-	 * Constructor.
-	 * 
-	 * @param cat1 {@code true} for dup_*, {@code false} for dup2_*.
-	 * @param x1 {@code true} for dup*_x1, {@code false} for dup*_x2.
-	 */
-	public Algo_DUPX_Y(boolean cat1, boolean x1) {
-	    this.cat1 = cat1;
-	    this.x1 = x1;
+    private final boolean cat1; //set by constructor
+    private final boolean x1; //set by constructor
+
+    /**
+     * Constructor.
+     * 
+     * @param cat1 {@code true} for dup_*, {@code false} for dup2_*.
+     * @param x1 {@code true} for dup*_x1, {@code false} for dup*_x2.
+     */
+    public Algo_DUPX_Y(boolean cat1, boolean x1) {
+        this.cat1 = cat1;
+        this.x1 = x1;
     }
-    
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 2; //two sure operand, but it can dup up to 4 operands
     }
-    
+
     @Override
     protected Supplier<BytecodeData_0> bytecodeData() {
         return BytecodeData_0::get;
     }
-    
+
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
@@ -79,7 +79,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
         return DecisionAlternative_NONE.class;
     }
-    
+
     @Override
     protected StrategyDecide<DecisionAlternative_NONE> decider() {
         return (state, result) -> {
@@ -92,7 +92,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected StrategyRefine<DecisionAlternative_NONE> refiner() {
         return (state, alt) -> { };
     }
-    
+
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
@@ -123,14 +123,14 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             }
         };
     }
-    
+
     private static void dup_x1(State state, Value value1, Value value2) 
     throws ThreadStackEmptyException {
         state.pushOperand(value1);
         state.pushOperand(value2);
         state.pushOperand(value1);
     }
-    
+
     private static void dup_x2_form1(State state, Value value1, Value value2) 
     throws ThreadStackEmptyException, InterruptException {
         //we need a third cat1 operand
@@ -149,7 +149,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             exitFromAlgorithm();
         }
     }
-    
+
     private static void dup_x2_form2(State state, Value value1, Value value2) 
     throws ThreadStackEmptyException {
         state.pushOperand(value1);
@@ -200,7 +200,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             exitFromAlgorithm();
         }
     }
-    
+
     private static void dup2_x2_form1(State state, Value value1, Value value2, Value value3) 
     throws ThreadStackEmptyException, InterruptException {
         try {
@@ -221,7 +221,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             exitFromAlgorithm();
         }
     }
-    
+
     private static void dup2_x2_form2(State state, Value value1, Value value2) 
     throws ThreadStackEmptyException, InterruptException {
         //we need a third cat1 operand
@@ -240,7 +240,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             exitFromAlgorithm();
         }
     }
-    
+
     private static void dup2_x2_form3(State state, Value value1, Value value2, Value value3) 
     throws ThreadStackEmptyException {
         state.pushOperand(value2);
@@ -249,19 +249,19 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         state.pushOperand(value2);
         state.pushOperand(value1);
     }
-    
+
     private static void dup2_x2_form4(State state, Value value1, Value value2) 
     throws ThreadStackEmptyException {
         state.pushOperand(value1);
         state.pushOperand(value2);
         state.pushOperand(value1);
     }
-    
+
     @Override
     protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> DUP_OFFSET;

@@ -17,7 +17,7 @@ import jbse.dec.exc.InvalidInputException;
 import jbse.mem.State;
 
 /**
- * Command managing the getstatic bytecode. It decides over the value 
+ * {@link Algorithm} managing the getstatic bytecode. It decides over the value 
  * loaded to the operand stack in the case this is a symbolic reference 
  * ("lazy initialization").
  * 
