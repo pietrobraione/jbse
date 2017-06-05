@@ -42,8 +42,8 @@ extends Algorithm<BytecodeData_1ME, R, DE, RE, UP> {
      */
     protected final void continueWithBaseLevelImpl() 
     throws InterruptException {
-        final Algo_INVOKEX_COMPLETION continuation = 
-            new Algo_INVOKEX_COMPLETION(this.isInterface, this.isSpecial, this.isStatic);
+        final Algo_INVOKEX_Completion continuation = 
+            new Algo_INVOKEX_Completion(this.isInterface, this.isSpecial, this.isStatic);
         continueWith(continuation);
     }    
 }

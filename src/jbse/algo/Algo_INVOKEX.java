@@ -26,11 +26,11 @@ import jbse.dec.exc.InvalidInputException;
 import jbse.tree.DecisionAlternative_NONE;
 
 final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
-    private final Algo_INVOKEX_COMPLETION algo_INVOKEX_COMPLETION;
+    private final Algo_INVOKEX_Completion algo_INVOKEX_Completion;
     
     public Algo_INVOKEX(boolean isInterface, boolean isSpecial, boolean isStatic) {
         super(isInterface, isSpecial, isStatic);
-        this.algo_INVOKEX_COMPLETION = new Algo_INVOKEX_COMPLETION(isInterface, isSpecial, isStatic);
+        this.algo_INVOKEX_Completion = new Algo_INVOKEX_Completion(isInterface, isSpecial, isStatic);
     }
     
     @Override
@@ -104,7 +104,7 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
             }
             
             //otherwise, concludes the execution of the bytecode algorithm
-            continueWith(this.algo_INVOKEX_COMPLETION);
+            continueWith(this.algo_INVOKEX_Completion);
         };
     }
     

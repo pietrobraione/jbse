@@ -24,9 +24,9 @@ import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.tree.DecisionAlternative_NONE;
 
-final class Algo_INVOKEX_COMPLETION extends Algo_INVOKEX_Abstract {
+final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
     
-    public Algo_INVOKEX_COMPLETION(boolean isInterface, boolean isSpecial, boolean isStatic) {
+    public Algo_INVOKEX_Completion(boolean isInterface, boolean isSpecial, boolean isStatic) {
         super(isInterface, isSpecial, isStatic);
     }
     
