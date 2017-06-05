@@ -2,7 +2,7 @@ package jbse.algo.meta;
 
 import java.util.function.Supplier;
 
-import jbse.algo.Algo_INVOKEMETA_NONBRANCHING;
+import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.Algorithm;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -14,7 +14,7 @@ import jbse.mem.exc.ThreadStackEmptyException;
  * @author Pietro Braione
  *
  */
-public final class Algo_JBSE_ANALYSIS_ISRUNBYJBSE extends Algo_INVOKEMETA_NONBRANCHING {
+public final class Algo_JBSE_ANALYSIS_ISRUNBYJBSE extends Algo_INVOKEMETA_Nonbranching {
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 0;

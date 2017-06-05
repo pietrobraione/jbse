@@ -2,11 +2,11 @@ package jbse.algo.meta;
 
 import java.util.function.Supplier;
 
-import jbse.algo.Algo_INVOKEMETA_NONBRANCHING;
+import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 
-public final class Algo_JAVA_CLASS_DESIREDASSERTIONSTATUS0 extends Algo_INVOKEMETA_NONBRANCHING {
+public final class Algo_JAVA_CLASS_DESIREDASSERTIONSTATUS0 extends Algo_INVOKEMETA_Nonbranching {
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 0;

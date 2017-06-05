@@ -8,7 +8,7 @@ import static jbse.bc.Signatures.JAVA_THROWABLE_BACKTRACE;
 
 import java.util.function.Supplier;
 
-import jbse.algo.Algo_INVOKEMETA_NONBRANCHING;
+import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
@@ -24,7 +24,7 @@ import jbse.val.Simplex;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
-public final class Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT extends Algo_INVOKEMETA_NONBRANCHING {
+public final class Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT extends Algo_INVOKEMETA_Nonbranching {
     private Reference thisObject; //set by cookMore
     private Primitive index; //set by cookMore
     private Array backtrace; //set by cookMore

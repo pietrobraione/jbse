@@ -6,7 +6,7 @@ import static jbse.algo.Util.valueString;
 
 import java.util.function.Supplier;
 
-import jbse.algo.Algo_INVOKEMETA_NONBRANCHING;
+import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.Signature;
@@ -19,7 +19,7 @@ import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
 import jbse.val.Value;
 
-public final class Algo_JBSE_ANALYSIS_ISRESOLVED extends Algo_INVOKEMETA_NONBRANCHING {
+public final class Algo_JBSE_ANALYSIS_ISRESOLVED extends Algo_INVOKEMETA_Nonbranching {
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 2;

@@ -7,7 +7,7 @@ import static jbse.common.Type.isPrimitiveBinaryClassName;
 
 import java.util.function.Supplier;
 
-import jbse.algo.Algo_INVOKEMETA_NONBRANCHING;
+import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
 import jbse.bc.ClassHierarchy;
 import jbse.mem.Instance_JAVA_CLASS;
@@ -17,7 +17,7 @@ import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 import jbse.val.Simplex;
 
-public final class Algo_JAVA_CLASS_ISINSTANCE extends Algo_INVOKEMETA_NONBRANCHING {
+public final class Algo_JAVA_CLASS_ISINSTANCE extends Algo_INVOKEMETA_Nonbranching {
     private String representedClass; //set by cookMore
     private Reference tmpValue; //set by cookMore
     

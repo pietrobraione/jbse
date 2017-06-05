@@ -7,7 +7,7 @@ import static jbse.algo.Util.valueString;
 
 import java.util.function.Supplier;
 
-import jbse.algo.Algo_INVOKEMETA_NONBRANCHING;
+import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.exc.ClassFileIllFormedException;
@@ -17,7 +17,7 @@ import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 
-public final class Algo_JAVA_STRING_INTERN extends Algo_INVOKEMETA_NONBRANCHING {
+public final class Algo_JAVA_STRING_INTERN extends Algo_INVOKEMETA_Nonbranching {
     private String valueString; //set by cookMore
     
     @Override

@@ -18,17 +18,18 @@ import jbse.tree.DecisionAlternative_NONE;
 
 /**
  * Abstract {@link Algorithm} implementing the effect of 
- * a method call.
+ * a method call that does not branch symbolic execution, 
+ * i.e., produces one successor state.
  * 
  * @author Pietro Braione
  *
  */
-public abstract class Algo_INVOKEMETA_NONBRANCHING extends Algo_INVOKEMETA<
+public abstract class Algo_INVOKEMETA_Nonbranching extends Algo_INVOKEMETA<
 DecisionAlternative_NONE,
 StrategyDecide<DecisionAlternative_NONE>, 
 StrategyRefine<DecisionAlternative_NONE>, 
 StrategyUpdate<DecisionAlternative_NONE>> {
-    
+
     private int pcOffset; //set by cooker
 
     @Override
@@ -36,8 +37,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         return (state) -> { 
             //sets the program counter offset for the return point
             this.pcOffset = (this.isInterface ? 
-                            INVOKEDYNAMICINTERFACE_OFFSET : 
-                            INVOKESPECIALSTATICVIRTUAL_OFFSET);
+                INVOKEDYNAMICINTERFACE_OFFSET : 
+                INVOKESPECIALSTATICVIRTUAL_OFFSET);
             try {
                 cookMore(state);
             } catch (ThreadStackEmptyException e) {
@@ -46,7 +47,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             }
         };
     }
-    
+
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, DecisionException, 
     ClasspathException, CannotManageStateException, 
@@ -58,7 +59,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected final Class<DecisionAlternative_NONE> classDecisionAlternative() {
         return DecisionAlternative_NONE.class;
     }
-    
+
     @Override
     protected final StrategyDecide<DecisionAlternative_NONE> decider() {
         return (state, result) -> {
@@ -71,7 +72,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected final StrategyRefine<DecisionAlternative_NONE> refiner() {
         return (state, alt) -> { };
     }
-    
+
     @Override
     protected final StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
@@ -84,17 +85,17 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             }
         };
     }
-    
+
     protected abstract void update(State state)
     throws ThreadStackEmptyException, ClasspathException,
     CannotManageStateException, DecisionException, 
     ContradictionException, FailureException, InterruptException;
-    
+
     @Override
     protected final Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected final Supplier<Integer> programCounterUpdate() {
         return () -> this.pcOffset;

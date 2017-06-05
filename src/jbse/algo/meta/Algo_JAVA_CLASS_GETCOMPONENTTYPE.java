@@ -15,7 +15,7 @@ import static jbse.common.Type.toPrimitiveBinaryClassName;
 
 import java.util.function.Supplier;
 
-import jbse.algo.Algo_INVOKEMETA_NONBRANCHING;
+import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
@@ -30,7 +30,7 @@ import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Null;
 import jbse.val.Reference;
 
-public final class Algo_JAVA_CLASS_GETCOMPONENTTYPE extends Algo_INVOKEMETA_NONBRANCHING {
+public final class Algo_JAVA_CLASS_GETCOMPONENTTYPE extends Algo_INVOKEMETA_Nonbranching {
     private Reference componentClassRef;  //set by cookMore
     
     @Override
