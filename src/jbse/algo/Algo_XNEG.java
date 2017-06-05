@@ -10,6 +10,12 @@ import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
 import jbse.val.exc.InvalidTypeException;
 
+/**
+ * {@link Algorithm} for all the *neg bytecodes
+ * ([i/l/f/d]neg).
+ * 
+ * @author Pietro Braione
+ */
 final class Algo_XNEG extends Algorithm<
 BytecodeData_0,
 DecisionAlternative_NONE,

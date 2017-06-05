@@ -12,28 +12,34 @@ import jbse.val.Primitive;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
+/**
+ * {@link Algorithm} for all the *mul bytecodes
+ * ([i/l/f/d]mul).
+ * 
+ * @author Pietro Braione
+ */
 final class Algo_XMUL extends Algorithm<
 BytecodeData_0,
 DecisionAlternative_NONE,
 StrategyDecide<DecisionAlternative_NONE>, 
 StrategyRefine<DecisionAlternative_NONE>, 
 StrategyUpdate<DecisionAlternative_NONE>> {
-    
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 2;
     }
-    
+
     @Override
     protected Supplier<BytecodeData_0> bytecodeData() {
         return BytecodeData_0::get;
     }
-    
+
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> { };
     }
-    
+
     @Override
     protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
         return DecisionAlternative_NONE.class;
@@ -46,12 +52,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             return DecisionProcedureAlgorithms.Outcome.FF;
         };
     }
-    
+
     @Override
     protected StrategyRefine<DecisionAlternative_NONE> refiner() {
         return (state, alt) -> { };
     }
-    
+
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
@@ -65,12 +71,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             }
         };
     }
-    
+
     @Override
     protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> MATH_LOGICAL_OP_OFFSET;

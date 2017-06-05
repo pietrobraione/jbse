@@ -18,24 +18,24 @@ final class Algo_XLOAD extends Algo_XLOAD_GETX<BytecodeData_1LV> {
     protected Supplier<Integer> numOperands() {
         return () -> 0;
     }
-    
+
     @Override
     protected Supplier<BytecodeData_1LV> bytecodeData() {
         return () -> BytecodeData_1LV.get();
     }
-    
+
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
             this.valToLoad = this.data.localVariableValue();
         };
     }
-    
+
     @Override
     protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> (this.data.nextWide() ? XLOADSTORE_IMMEDIATE_WIDE_OFFSET : XLOADSTORE_IMMEDIATE_OFFSET);

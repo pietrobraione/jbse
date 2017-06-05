@@ -41,34 +41,34 @@ DecisionAlternative_NONE,
 StrategyDecide<DecisionAlternative_NONE>, 
 StrategyRefine<DecisionAlternative_NONE>, 
 StrategyUpdate<DecisionAlternative_NONE>> {
-    
-	private final boolean wide; //set by constructor
-	private final boolean cat1; //set by constructor
 
-	/**
-	 * Constructor.
-	 * 
-	 * @param wide {@code true} for ldc*_w, {@code false} for ldc.
-	 * @param cat1 {@code true} for ldc_w, {@code false} for ldc2_w.
-	 */
-	public Algo_LDCX_Y(boolean wide, boolean cat1) {
-	    this.wide = wide;
-	    this.cat1 = cat1;
-	}
-	
-	private Value val; //set by cooker
-	
-    
+    private final boolean wide; //set by constructor
+    private final boolean cat1; //set by constructor
+
+    /**
+     * Constructor.
+     * 
+     * @param wide {@code true} for ldc*_w, {@code false} for ldc.
+     * @param cat1 {@code true} for ldc_w, {@code false} for ldc2_w.
+     */
+    public Algo_LDCX_Y(boolean wide, boolean cat1) {
+        this.wide = wide;
+        this.cat1 = cat1;
+    }
+
+    private Value val; //set by cooker
+
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 0;
     }
-    
+
     @Override
     protected Supplier<BytecodeData_1ZIM> bytecodeData() {
         return () -> BytecodeData_1ZIM.withWide(this.wide).get();
     }
-    
+
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
@@ -118,7 +118,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
         return DecisionAlternative_NONE.class;
     }
-    
+
     @Override
     protected StrategyDecide<DecisionAlternative_NONE> decider() {
         return (state, result) -> {
@@ -131,19 +131,19 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected StrategyRefine<DecisionAlternative_NONE> refiner() {
         return (state, alt) -> { };
     }
-    
+
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
             state.pushOperand(this.val);            
         };
     }
-    
+
     @Override
     protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> (this.wide ? LDC_W_OFFSET : LDC_OFFSET);

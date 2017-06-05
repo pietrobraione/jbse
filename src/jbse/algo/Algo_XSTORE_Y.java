@@ -26,27 +26,27 @@ StrategyDecide<DecisionAlternative_NONE>,
 StrategyRefine<DecisionAlternative_NONE>, 
 StrategyUpdate<DecisionAlternative_NONE>> {
 
-	private final int index; //set by constructor
-	
+    private final int index; //set by constructor
+
     /**
      * Constructor.
      * 
      * @param index the index of the local variable.
      */
-	public Algo_XSTORE_Y(int index) {
+    public Algo_XSTORE_Y(int index) {
         this.index = index;
     }
-	
-	@Override
-	protected Supplier<Integer> numOperands() {
+
+    @Override
+    protected Supplier<Integer> numOperands() {
         return () -> 1;
-	}
-	
+    }
+
     @Override
     protected Supplier<BytecodeData_0> bytecodeData() {
         return BytecodeData_0::get;
     }
-    
+
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> { };
@@ -56,7 +56,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
         return DecisionAlternative_NONE.class;
     }
-    
+
     @Override
     protected StrategyDecide<DecisionAlternative_NONE> decider() {
         return (state, result) -> {
@@ -84,12 +84,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             }
         };
     }
-    
+
     @Override
     protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> XLOADSTORE_IMPLICIT_OFFSET;

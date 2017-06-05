@@ -18,11 +18,11 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Command for managing the *switch (tableswitch, lookupswitch). 
+ * {@link Algorithm} managing all the *switch bytecodes 
+ * (tableswitch, lookupswitch). 
  * It decides over the branch to be taken, a sheer numeric decision.
  * 
  * @author Pietro Braione
- * @author unknown
  */
 final class Algo_XSWITCH extends Algorithm<
 BytecodeData_SWITCH, 
@@ -32,7 +32,7 @@ StrategyRefine<DecisionAlternative_XSWITCH>,
 StrategyUpdate<DecisionAlternative_XSWITCH>> {
 
     private final boolean isTableSwitch; //set by constructor
-    
+
     /**
      * Constructor.
      * 
@@ -42,20 +42,20 @@ StrategyUpdate<DecisionAlternative_XSWITCH>> {
     public Algo_XSWITCH(boolean isTableSwitch) {
         this.isTableSwitch = isTableSwitch;
     }
-    
+
     private Primitive selector; //set by cooker
     private int jumpOffset; //set by updater
-    
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 1; //the switch selector
     }
-    
+
     @Override
     protected Supplier<BytecodeData_SWITCH> bytecodeData() {
         return () -> BytecodeData_SWITCH.whereTableSwitch(this.isTableSwitch).get();
     }
-    
+
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
@@ -67,12 +67,12 @@ StrategyUpdate<DecisionAlternative_XSWITCH>> {
             }
         };
     }
-    
+
     @Override
     protected Class<DecisionAlternative_XSWITCH> classDecisionAlternative() {
         return DecisionAlternative_XSWITCH.class;
     }
-    
+
     @Override
     protected StrategyDecide<DecisionAlternative_XSWITCH> decider() {
         return (state, result) -> {
@@ -80,7 +80,7 @@ StrategyUpdate<DecisionAlternative_XSWITCH>> {
             return o;
         };
     }
-    
+
     @Override
     protected StrategyRefine<DecisionAlternative_XSWITCH> refiner() {
         return (state, alt) -> {
@@ -102,7 +102,7 @@ StrategyUpdate<DecisionAlternative_XSWITCH>> {
             state.assume(this.ctx.decisionProcedure.simplify(branchCondition));
         };
     }
-    
+
     @Override
     protected StrategyUpdate<DecisionAlternative_XSWITCH> updater() {
         return (state, alt) -> {
@@ -115,17 +115,17 @@ StrategyUpdate<DecisionAlternative_XSWITCH>> {
             }
         };
     }
-    
+
     @Override
     protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> this.jumpOffset;
     }
-    
+
     @Override
     protected void onInvalidInputException(State state, InvalidInputException e) {
         //bad selector

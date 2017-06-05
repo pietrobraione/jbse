@@ -27,16 +27,16 @@ StrategyDecide<DecisionAlternative_NONE>,
 StrategyRefine<DecisionAlternative_NONE>, 
 StrategyUpdate<DecisionAlternative_NONE>> {
 
-	@Override
-	protected Supplier<Integer> numOperands() {
+    @Override
+    protected Supplier<Integer> numOperands() {
         return () -> 1;
-	}
-	
-	@Override
-	protected Supplier<BytecodeData_1IM> bytecodeData() {
-	    return BytecodeData_1IM::get;
-	}
-    
+    }
+
+    @Override
+    protected Supplier<BytecodeData_1IM> bytecodeData() {
+        return BytecodeData_1IM::get;
+    }
+
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> { };
@@ -46,7 +46,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
         return DecisionAlternative_NONE.class;
     }
-    
+
     @Override
     protected StrategyDecide<DecisionAlternative_NONE> decider() {
         return (state, result) -> {
@@ -75,12 +75,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             }
         };
     }
-    
+
     @Override
     protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> (this.data.nextWide() ? XLOADSTORE_IMMEDIATE_WIDE_OFFSET : XLOADSTORE_IMMEDIATE_OFFSET);
