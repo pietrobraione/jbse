@@ -17,7 +17,8 @@ public interface StrategyRefine<R> {
 	/**
 	 * Refines a {@link State}. The implementors must augment the 
 	 * state's {@link PathCondition}, and possibly do other actions 
-	 * to refine the structure of the state.
+	 * on the structure of the state to reflect the additional
+	 * assumption.
 	 * 
 	 * @param s the {@link State} to be refined.
 	 * @param r the outcome of a previous decision, which establishes 

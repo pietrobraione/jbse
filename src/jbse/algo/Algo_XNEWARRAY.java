@@ -91,7 +91,7 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
                     tmp = tmp.and(l.ge(calc.valInt(0)));
                 }
                 this.countsNonNegative = tmp;
-                this.countsNegative = countsNonNegative.not();
+                this.countsNegative = this.countsNonNegative.not();
             } catch (InvalidTypeException | InvalidOperandException e) {
                 //TODO is it ok, or should we throw UnexpectedInternalException?
                 throwVerifyError(state);

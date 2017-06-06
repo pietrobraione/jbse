@@ -9,8 +9,8 @@ import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.ThreadStackEmptyException;
 
 /**
- * Strategy for updating a state, i.e., for completing its 
- * bytecode semantics after a refinement.
+ * Strategy for updating a state, i.e., for performing the 
+ * operations that put in effect the bytecode semantics.
  * 
  * @author Pietro Braione
  *
@@ -18,17 +18,17 @@ import jbse.mem.exc.ThreadStackEmptyException;
  */
 @FunctionalInterface
 public interface StrategyUpdate<R> {
-	/**
-	 * Updates a state, i.e., completes its current bytecode's 
-	 * semantics after a refinement.
-	 * 
-	 * @param state the {@link State} to be updated.
-	 * @param alt the decision alternative that justifies {@code state}, 
-	 *        and gives the criterion on which the state shall be updated.
-	 * @throws DecisionException possibly raised if the update 
+    /**
+     * Updates a state, i.e., performs the 
+     * operations that put in effect the bytecode semantics.
+     * 
+     * @param state the {@link State} to be updated.
+     * @param alt the decision alternative that justifies {@code state}, 
+     *        and gives the criterion on which the state shall be updated.
+     * @throws DecisionException possibly raised if the update 
      *         action must simplify some symbolic array entries.
-	 * @throws ThreadStackEmptyException raised if the
-	 *         state has an empty stack during the update action.
+     * @throws ThreadStackEmptyException raised if the
+     *         state has an empty stack during the update action.
      * @throws ClasspathException possibly raised if the classpath 
      *         does not contain the standard library, or if its 
      *         version is incompatible with JBSE.
@@ -43,9 +43,9 @@ public interface StrategyUpdate<R> {
      *         an assertion.
      * @throws InterruptException whenever the execution of the current 
      *         bytecode for {@code state} must be prematurely ended now.
-	 */
-	public void update(State state, R alt) 
-	throws ThreadStackEmptyException, ClasspathException,
-	CannotManageStateException, DecisionException, 
-	ContradictionException, FailureException, InterruptException;
+     */
+    public void update(State state, R alt) 
+    throws ThreadStackEmptyException, ClasspathException,
+    CannotManageStateException, DecisionException, 
+    ContradictionException, FailureException, InterruptException;
 }
