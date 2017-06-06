@@ -23,7 +23,7 @@ import jbse.val.exc.InvalidTypeException;
  *
  */
 final class Algo_IINC extends Algorithm<
-BytecodeData_2LVIM,
+BytecodeData_2LVSX,
 DecisionAlternative_NONE, 
 StrategyDecide<DecisionAlternative_NONE>, 
 StrategyRefine<DecisionAlternative_NONE>, 
@@ -35,8 +35,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     @Override
-    protected Supplier<BytecodeData_2LVIM> bytecodeData() {
-        return BytecodeData_2LVIM::get;
+    protected Supplier<BytecodeData_2LVSX> bytecodeData() {
+        return BytecodeData_2LVSX::get;
     }
 
     @Override

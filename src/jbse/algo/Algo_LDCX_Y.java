@@ -36,7 +36,7 @@ import jbse.val.Value;
  *
  */
 final class Algo_LDCX_Y extends Algorithm<
-BytecodeData_1ZIM,
+BytecodeData_1ZUX,
 DecisionAlternative_NONE, 
 StrategyDecide<DecisionAlternative_NONE>, 
 StrategyRefine<DecisionAlternative_NONE>, 
@@ -65,8 +65,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     @Override
-    protected Supplier<BytecodeData_1ZIM> bytecodeData() {
-        return () -> BytecodeData_1ZIM.withWide(this.wide).get();
+    protected Supplier<BytecodeData_1ZUX> bytecodeData() {
+        return () -> BytecodeData_1ZUX.withWide(this.wide).get();
     }
 
     @Override

@@ -123,7 +123,7 @@ UP extends StrategyUpdate<R>> {
      * Override this method to perform cleanup of 
      * the algorithm's state whenever it has some state. 
      * Cleanup will be performed at the beginning of {@link #exec} 
-     * to bring the algorithm at its virgin state.
+     * to set the {@link Algorithm} to its virgin state.
      */
     protected void cleanup() { }
     
@@ -270,7 +270,7 @@ UP extends StrategyUpdate<R>> {
         //generates the next states
         final boolean shouldRefine = outcome.shouldRefine();
         final boolean branchingDecision = outcome.branchingDecision();
-        final boolean branchAdded = possiblyAddBranch(decisionResults);
+        final boolean branchAdded = possiblyAddBranchPoint(decisionResults);
         int cur = 1;
         for (R result : decisionResults) {
             final State stateCurrent = (cur < tot ? state.clone() : state);
@@ -330,7 +330,7 @@ UP extends StrategyUpdate<R>> {
         }
     }
     
-    private boolean possiblyAddBranch(Collection<R> decisionResults) {
+    private boolean possiblyAddBranchPoint(Collection<R> decisionResults) {
         final boolean moreThanOneResult = (decisionResults.size() > 1);
         final DecisionAlternative d = decisionResults.iterator().next();
         final boolean trivial = d.trivial();

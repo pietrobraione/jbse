@@ -2,7 +2,13 @@ package jbse.algo;
 
 import jbse.mem.State;
 
-public final class BytecodeData_1IM extends BytecodeData {
+/**
+ * Zero implicits, 
+ * one immediate (unsigned byte or word).
+ * 
+ * @author Pietro Braione
+ */
+public final class BytecodeData_1UX extends BytecodeData {
     @Override
     public void readImmediates(State state) throws InterruptException {
         if (nextWide()) {
@@ -15,11 +21,16 @@ public final class BytecodeData_1IM extends BytecodeData {
     /**
      * Do not instantiate!
      */
-    private BytecodeData_1IM() {
+    private BytecodeData_1UX() {
         //nothing to do
     }    
-    
-    public static BytecodeData_1IM get() {
-        return new BytecodeData_1IM();
+
+    /**
+     * Factory method.
+     * 
+     * @return a {@link BytecodeData_1UX}.
+     */
+    public static BytecodeData_1UX get() {
+        return new BytecodeData_1UX();
     }
 }

@@ -11,7 +11,13 @@ import jbse.mem.SwitchTable;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
 
-public final class BytecodeData_SWITCH extends BytecodeData {
+/**
+ * One implicit (boolean, is the switch a tableswitch?),
+ * one immediate ({@link SwitchTable}).
+ * 
+ * @author Pietro Braione
+ */
+public final class BytecodeData_1ZSWITCH extends BytecodeData {
     final boolean isTableSwitch;
     
     @Override
@@ -29,11 +35,20 @@ public final class BytecodeData_SWITCH extends BytecodeData {
     /**
      * Do not instantiate!
      */
-    private BytecodeData_SWITCH(boolean isTableSwitch) {
+    private BytecodeData_1ZSWITCH(boolean isTableSwitch) {
         this.isTableSwitch = isTableSwitch;
     }
     
-    public static Supplier<BytecodeData_SWITCH> whereTableSwitch(boolean isTableSwitch) {
-        return () -> new BytecodeData_SWITCH(isTableSwitch);
+    /**
+     * Factory (with fluent interface).
+     * 
+     * @param isTableSwitch a {@code boolean}, whether the switch
+     *        is a tableswitch.
+     *        It is the value of the implicit of the created object.
+     * @return a {@link Supplier}{@code <}{@link BytecodeData_1ZOF}{@code >},
+     *         the actual factory for {@link BytecodeData_1ZOF} objects.
+     */
+    public static Supplier<BytecodeData_1ZSWITCH> whereTableSwitch(boolean isTableSwitch) {
+        return () -> new BytecodeData_1ZSWITCH(isTableSwitch);
     }
 }

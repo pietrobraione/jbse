@@ -31,7 +31,7 @@ import jbse.val.Reference;
  *
  */
 abstract class Algo_INVOKEX_Abstract extends Algorithm<
-BytecodeData_1ME,
+BytecodeData_1ZME,
 DecisionAlternative_NONE,
 StrategyDecide<DecisionAlternative_NONE>, 
 StrategyRefine<DecisionAlternative_NONE>, 
@@ -61,8 +61,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     @Override
-    protected final Supplier<BytecodeData_1ME> bytecodeData() {
-        return () -> BytecodeData_1ME.withInterfaceMethod(this.isInterface).get();
+    protected final Supplier<BytecodeData_1ZME> bytecodeData() {
+        return () -> BytecodeData_1ZME.withInterfaceMethod(this.isInterface).get();
     }
 
     protected final void resolveMethod(State state) 

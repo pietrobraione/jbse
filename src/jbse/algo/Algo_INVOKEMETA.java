@@ -18,7 +18,7 @@ R extends DecisionAlternative,
 DE extends StrategyDecide<R>, 
 RE extends StrategyRefine<R>, 
 UP extends StrategyUpdate<R>> 
-extends Algorithm<BytecodeData_1ME, R, DE, RE, UP> {
+extends Algorithm<BytecodeData_1ZME, R, DE, RE, UP> {
 
     protected boolean isInterface; //set by setter (called by Algo_INVOKEX)
     protected boolean isSpecial; //set by setter (called by Algo_INVOKEX)
@@ -31,8 +31,8 @@ extends Algorithm<BytecodeData_1ME, R, DE, RE, UP> {
     }
 
     @Override
-    protected final Supplier<BytecodeData_1ME> bytecodeData() {
-        return () -> BytecodeData_1ME.withInterfaceMethod(this.isInterface).get();
+    protected final Supplier<BytecodeData_1ZME> bytecodeData() {
+        return () -> BytecodeData_1ZME.withInterfaceMethod(this.isInterface).get();
     }
 
     /**

@@ -16,22 +16,22 @@ import static jbse.common.Type.isPrimitiveBinaryClassName;
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_XNEWARRAY;
-import jbse.algo.BytecodeData_1ME;
+import jbse.algo.BytecodeData_1ZME;
 import jbse.algo.InterruptException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 
-public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEWARRAY<BytecodeData_1ME> {
+public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEWARRAY<BytecodeData_1ZME> {
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 2;
     }
     
     @Override
-    protected final Supplier<BytecodeData_1ME> bytecodeData() {
-        return () -> BytecodeData_1ME.withInterfaceMethod(false).get();
+    protected final Supplier<BytecodeData_1ZME> bytecodeData() {
+        return () -> BytecodeData_1ZME.withInterfaceMethod(false).get();
     }
 
     @Override

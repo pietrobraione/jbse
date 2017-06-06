@@ -2,7 +2,13 @@ package jbse.algo;
 
 import jbse.mem.State;
 
-public final class BytecodeData_2LVIM extends BytecodeData {
+/**
+ * Zero implicits, 
+ * two immediates (local variable, signed byte or word).
+ * 
+ * @author Pietro Braione
+ */
+public final class BytecodeData_2LVSX extends BytecodeData {
     @Override
     public void readImmediates(State state) throws InterruptException {
         if (nextWide()) {
@@ -19,11 +25,16 @@ public final class BytecodeData_2LVIM extends BytecodeData {
     /**
      * Do not instantiate!
      */
-    private BytecodeData_2LVIM() {
+    private BytecodeData_2LVSX() {
         //nothing to do
     }    
     
-    public static BytecodeData_2LVIM get() {
-        return new BytecodeData_2LVIM();
+    /**
+     * Factory method.
+     * 
+     * @return a {@link BytecodeData_2LVSX}.
+     */
+    public static BytecodeData_2LVSX get() {
+        return new BytecodeData_2LVSX();
     }
 }

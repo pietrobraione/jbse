@@ -25,7 +25,7 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  */
 final class Algo_XSWITCH extends Algorithm<
-BytecodeData_SWITCH, 
+BytecodeData_1ZSWITCH, 
 DecisionAlternative_XSWITCH,
 StrategyDecide<DecisionAlternative_XSWITCH>, 
 StrategyRefine<DecisionAlternative_XSWITCH>, 
@@ -52,8 +52,8 @@ StrategyUpdate<DecisionAlternative_XSWITCH>> {
     }
 
     @Override
-    protected Supplier<BytecodeData_SWITCH> bytecodeData() {
-        return () -> BytecodeData_SWITCH.whereTableSwitch(this.isTableSwitch).get();
+    protected Supplier<BytecodeData_1ZSWITCH> bytecodeData() {
+        return () -> BytecodeData_1ZSWITCH.whereTableSwitch(this.isTableSwitch).get();
     }
 
     @Override

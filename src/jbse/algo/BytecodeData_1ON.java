@@ -3,10 +3,10 @@ package jbse.algo;
 import jbse.mem.State;
 
 /**
- * One immediate parameter (offset, near).
+ * Zero implicit, 
+ * one immediate (offset, near).
  * 
  * @author Pietro Braione
- *
  */
 public final class BytecodeData_1ON extends BytecodeData {
     @Override
@@ -21,7 +21,12 @@ public final class BytecodeData_1ON extends BytecodeData {
     private BytecodeData_1ON() {
         //nothing to do
     }
-    
+
+    /**
+     * Factory method.
+     * 
+     * @return a {@link BytecodeData_1ON}.
+     */
     public static BytecodeData_1ON get() {
         return new BytecodeData_1ON();
     }

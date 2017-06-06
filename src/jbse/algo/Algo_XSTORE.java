@@ -21,7 +21,7 @@ import jbse.val.Value;
  * @author Pietro Braione
  */
 final class Algo_XSTORE extends Algorithm<
-BytecodeData_1IM,
+BytecodeData_1UX,
 DecisionAlternative_NONE,
 StrategyDecide<DecisionAlternative_NONE>, 
 StrategyRefine<DecisionAlternative_NONE>, 
@@ -33,8 +33,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     @Override
-    protected Supplier<BytecodeData_1IM> bytecodeData() {
-        return BytecodeData_1IM::get;
+    protected Supplier<BytecodeData_1UX> bytecodeData() {
+        return BytecodeData_1UX::get;
     }
 
     @Override
