@@ -109,7 +109,7 @@ StrategyUpdate_XALOAD> {
             boolean shouldRefine = false;
             boolean branchingDecision = false;
             boolean first = true; //just for formatting
-            for (Array.AccessOutcome e : entries) {
+            for (Array.AccessOutcome e : this.entries) {
                 //puts in val the value of the current entry, or a fresh symbol, 
                 //or null if the index is out of bound
                 Value val;
