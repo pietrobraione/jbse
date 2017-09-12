@@ -55,6 +55,24 @@
     </plugins>
   </build>
 
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-project-info-reports-plugin</artifactId>
+        <version>2.9</version>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>findbugs-maven-plugin</artifactId>
+        <version>3.0.5</version>
+        <configuration>
+          <omitVisitors>BadAppletConstructor,CallToUnsupportedMethod,CheckExpectedWarnings,EmptyZipFileEntry,FindCircularDependencies,InefficientMemberAccess,PublicSemaphores,UselessSubclassMethod</omitVisitors>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
+
   <dependencies>
     <dependency>
       <groupId>javassist</groupId>
