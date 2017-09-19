@@ -1,5 +1,8 @@
 /bin/
 /.README.md.html
 /.TODO.md.html
-.DS_Store
+/.DS_Store
+/.classpath
+/.project
+/.settings/
 /target/
