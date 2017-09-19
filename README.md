@@ -184,7 +184,7 @@ public class RunIf {
         p.setExternalDecisionProcedurePath("/usr/bin/z3");
         p.setOutputFileName("out/runIf_z3.txt");
         p.setStepShowMode(StepShowMode.LEAVES);
-	}
+    }
 }
 ``` 
 
@@ -279,12 +279,12 @@ An area where JBSE stands apart from all the other symbolic executors is its sup
 import static jbse.meta.Analysis.assume;
 
 public class IfExample {
-	boolean a, b;
-	public void m(int x) {
-	    assume(x > 0);
-		if (x > 0) {
-		...
-	}
+    boolean a, b;
+    public void m(int x) {
+        assume(x > 0);
+        if (x > 0) {
+        ...
+    }
 }
 ```
 
