@@ -26,7 +26,7 @@ This repository provides a Maven POM file that must be used to build JBSE. It sh
 * Create a new run configuration of Maven Build type, and put eclipse:eclipse in the Goals text field, then run it;
 * Finally, right-click on the JBSE project in the Package Explorer and then select Refresh: Now the JBSE project should show no errors.
 
-### Runtime dependencies (and one more build dependency) ###
+### Dependencies ###
 
 JBSE has several build dependencies, that are automatically resolved by Maven:
 
@@ -41,7 +41,7 @@ When you are done you may try and run the (very small) JUnit test suite under th
 
 ### Deploying JBSE ###
 
-Once JBSE is compiled, you can export JBSE as a pair of jar file to be used it in your project. The jbse.jar file contains JBSE itself plus its dependencies, while the jbse-lib.jar file contains the files in the `jbse.meta` package and its subpackages. The latter jar is usually linked against the code under analysis, and contains the API that the code under analysis may invoke to issue assertions, assumptions, and otherwise control the analysis process itself.
+Once JBSE is compiled, you can export JBSE as a jar file to be used it in your project by running `mvn package`. The command will generate a `jbse.jar` file in the `target` directory of the project. The jar file contains JBSE itself *but not* its dependencies. Note that `jbse.jar` also includes the `jbse.meta` package and its subpackages, containing the API that the code under analysis can invoke to issue assertions, assumptions, and otherwise control the analysis process itself. Remember that dependencies are not included, so you need to deploy the Javassist jar together with `jbse.jar`.
 
 Using JBSE
 ----------
@@ -102,14 +102,14 @@ public class RunIf {
 
 Well, that's not *exactly* all. Which parameters should we set, and how?
 
-First, JBSE is a Java Virtual Machine. As with any Java Virtual Machine, be it symbolic or not, we must specify the classpath where JBSE will find the binaries. In this case the classpath will contain three paths, one for the target `smalldemos.ifx.IfExample` class, one for the `jbse.meta.Analysis` class that contains the `ass3rt` method invoked by `m`, and one for the Java standard library, containing the indispensable classes of the kind of `java.lang.Object`. A version of the latter that JBSE is able to use is under the `data` directory of the `jbse` project. For the other paths, note that under Eclipse all the binaries are emitted to a hidden `bin` project directory, and that the implicit execution directory of an Eclipse project is the project root directory. This means that, if the current directory is the home of the `example` project, and if the `jbse` git repository clone is at `/home/example/jbse`, the required paths should be provided approximatively as follows:
+First, JBSE is a Java Virtual Machine. As with any Java Virtual Machine, be it symbolic or not, we must specify the classpath where JBSE will find the binaries. In this case the classpath will contain three paths, one for the target `smalldemos.ifx.IfExample` class, one for the `jbse.meta.Analysis` class that contains the `ass3rt` method invoked by `m`, and one for the Java standard library, containing the indispensable classes of the kind of `java.lang.Object`. A version of the latter that JBSE is able to use is under the `data` directory of the `jbse` project. For the other paths, note that under Eclipse all the binaries are emitted to a hidden `bin` project directory, and that the implicit execution directory of an Eclipse project is the project root directory. This means that, if the current directory is the home of the `example` project, and if the `jbse` git repository clone is at `/home/guest/jbse`, the required paths should be approximately as follows:
 
 ```Java
 ...
 public class RunIf {
     ...
 	private static void set(RunParameters p) {
-	    p.addClasspath("./bin", "jbse-lib.jar", "/home/example/jbse/data/rt.jar");
+	    p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar", "/home/guest/jbse/data/rt.jar");
 	    ...
 	}
 }
@@ -122,7 +122,7 @@ Note that `addClasspath` is a varargs method, so you can list as many path strin
 public class RunIf {
     ...
 	private static void set(RunParameters p) {
-	    p.addClasspath("./bin", "jbse-lib.jar", "/home/example/jbse/data/rt.jar");
+	    p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar", "/home/guest/jbse/data/rt.jar");
 	    p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
 	    ...
 	}
@@ -140,7 +140,7 @@ import jbse.apps.run.RunParameters.DecisionProcedureType;
 public class RunIf {
     ...
 	private static void set(RunParameters p) {
-	    p.addClasspath("./bin", "jbse-lib.jar", "/home/example/jbse/data/rt.jar");
+	    p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar", "/home/guest/jbse/data/rt.jar");
 	    p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
 		p.setDecisionProcedureType(DecisionProcedureType.Z3);
 		p.setExternalDecisionProcedurePath("/usr/bin/z3");
@@ -158,7 +158,7 @@ import jbse.apps.run.RunParameters.DecisionProcedureType;
 public class RunIf {
     ...
 	private static void set(RunParameters p) {
-	    p.addClasspath("./bin", "jbse-lib.jar", "/home/example/jbse/data/rt.jar");
+	    p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar", "/home/guest/jbse/data/rt.jar");
 	    p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
 		p.setDecisionProcedureType(DecisionProcedureType.Z3);
 		p.setExternalDecisionProcedurePath("/usr/bin/z3");
@@ -178,7 +178,7 @@ import jbse.apps.run.RunParameters.StepShowMode;
 public class RunIf {
     ...
 	private static void set(RunParameters p) {
-	    p.addClasspath("./bin", "jbse-lib.jar", "/home/example/jbse/data/rt.jar");
+	    p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar", "/home/guest/jbse/data/rt.jar");
 	    p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
 		p.setDecisionProcedureType(DecisionProcedureType.Z3);
 		p.setExternalDecisionProcedurePath("/usr/bin/z3");
