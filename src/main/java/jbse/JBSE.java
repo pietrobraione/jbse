@@ -13,7 +13,7 @@ public final class JBSE {
     public static final String ACRONYM = "JBSE";
 
     /** The current version of this project. */
-    public static final String VERSION = "0.7";
+    public static final String VERSION = "0.8.0-SNAPSHOT";
 
     /** The license under which this project is distributed. */
     public static final String LICENSE = "GNU GPL v.3.0 or greater";

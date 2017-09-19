@@ -4,7 +4,7 @@
 
   <groupId>jbse</groupId>
   <artifactId>jbse</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.8.0-SNAPSHOT</version>
   <name>JBSE</name>
   <description>A symbolic Java virtual machine for program analysis, verification and test generation</description>
   <url>http://pietrobraione.github.io/jbse/</url>
