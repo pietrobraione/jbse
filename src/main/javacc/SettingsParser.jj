@@ -1,4 +1,4 @@
-options{  JDK_VERSION = "1.5";  STATIC = false;  SUPPORT_CLASS_VISIBILITY_PUBLIC = false;}PARSER_BEGIN(SettingsParser)package jbse.apps.settings;
+options{  JDK_VERSION = "1.8";  STATIC = false;  SUPPORT_CLASS_VISIBILITY_PUBLIC = false;}PARSER_BEGIN(SettingsParser)package jbse.apps.settings;
 
 import java.util.ArrayList;
 
