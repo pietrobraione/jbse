@@ -33,7 +33,7 @@ JBSE has several build dependencies, that are automatically resolved by Maven:
 * [Javassist](http://jboss-javassist.github.io/javassist/): JBSE uses Javassist at runtime for all the bytecode manipulation tasks. It is also needed at runtime.
 * [JavaCC](https://javacc.org): Necessary for compiling the parser for the JBSE settings files. It is not needed at runtime.
 
-However JBSE also needs to interact at runtime an external numeric solver for pruning infeasible program paths. JBSE works well with [Z3](https://github.com/Z3Prover/z3) and, to a less extent, [CVC4](http://cvc4.cs.stanford.edu/), but any SMT solver that supports the AUFNIRA logic should work. The dependency on the solver is not handled by Maven so you need to download and install at least one of them on the machine that runs JBSE. We strongly advise to use Z3 because it is what we routinely use.
+JBSE also needs to interact at runtime an external numeric solver for pruning infeasible program paths. JBSE works well with [Z3](https://github.com/Z3Prover/z3) and, to a less extent, with [CVC4](http://cvc4.cs.stanford.edu/), but any SMT solver that supports the AUFNIRA logic should work. The dependency on the solver is not handled by Maven so you need to download and install at least one of them on the machine that runs JBSE. We strongly advise to use Z3 because it is what we routinely use.
 
 ### Testing JBSE ###
 
@@ -56,20 +56,20 @@ package smalldemos.ifx;
 import static jbse.meta.Analysis.ass3rt;
 
 public class IfExample {
-	boolean a, b;
-	public void m(int x) {
-		if (x > 0) {
-			a = true;
-		} else {
-			a = false;
-		}
-		if (x > 0) {
-			b = true;
-		} else {
-			b = false;
-		}
-		ass3rt(a == b);
-	}
+    boolean a, b;
+    public void m(int x) {
+        if (x > 0) {
+            a = true;
+        } else {
+            a = false;
+        }
+        if (x > 0) {
+            b = true;
+        } else {
+            b = false;
+        }
+        ass3rt(a == b);
+    }
 }
 ```
 
@@ -87,16 +87,16 @@ import jbse.apps.run.Run;
 ...
 
 public class RunIf {
-	public static void main(String[] args)	{
-		final RunParameters p = new RunParameters();
-		set(p);
-		final Run r = new Run(p);
-		r.run();
-	}
+    public static void main(String[] args)	{
+        final RunParameters p = new RunParameters();
+        set(p);
+        final Run r = new Run(p);
+        r.run();
+    }
 	
-	private static void set(RunParameters p) {
-	    ...
-	}
+    private static void set(RunParameters p) {
+        ...
+    }
 }
 ``` 
 
