@@ -179,6 +179,14 @@ public final class RunParameters implements Cloneable {
 		OUT_OF_SCOPE,
 		
 		/**
+		 * An unmanageable leaf, i.e., the final 
+		 * state of a trace that cannot be executed
+		 * because the symbolic executor is unable
+		 * to do that.
+		 */
+		UNMANAGEABLE,
+		
+		/**
 		 * A contradictory leaf, i.e, the final 
 		 * state of a trace that violates an 
 		 * assumption.

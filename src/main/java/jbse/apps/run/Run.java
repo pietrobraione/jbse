@@ -12,7 +12,9 @@ import java.util.Map;
 import jbse.JBSE;
 import jbse.algo.exc.CannotInvokeNativeException;
 import jbse.algo.exc.CannotManageStateException;
+import jbse.algo.exc.MetaUnsupportedException;
 import jbse.algo.exc.NotYetImplementedException;
+import jbse.algo.exc.UninterpretedUnsupportedException;
 import jbse.apps.DecisionProcedureDecoratorPrint;
 import jbse.apps.DecisionProcedureDecoratorTimer;
 import jbse.apps.IO;
@@ -133,6 +135,12 @@ public final class Run {
 	
 	/** Counter for the number of analyzed traces that are unsafe (violate some assertion). */
 	private long tracesUnsafe = 0;
+
+	/** 
+	 * Counter for the number of analyzed traces that are unmanageable 
+	 * (the symbolic executor is not able to execute them). 
+	 */
+	private long tracesUnmanageable = 0;
 
 	/** Counter for the number of analyzed traces that are safe and concretizable. */
 	private long tracesConcretizableSafe = 0;
@@ -261,7 +269,7 @@ public final class Run {
 		    Run.this.emitEpilogue();
 		    super.atEnd();
 		}
-
+		
 		@Override
 		public boolean atContradictionException(ContradictionException e) {
 			this.traceKind = TraceTypes.CONTRADICTORY;
@@ -300,6 +308,32 @@ public final class Run {
 			this.traceKind = TraceTypes.OUT_OF_SCOPE;
 			this.endOfTraceMessage = WARNING_SCOPE_EXHAUSTED_COUNT;
 			return super.atScopeExhaustionCount();
+		}
+
+		@Override
+		public boolean atCannotManageStateException(CannotManageStateException e)
+		throws CannotManageStateException {
+			if (e instanceof CannotInvokeNativeException) {
+			    this.traceKind = TraceTypes.UNMANAGEABLE;
+				this.endOfTraceMessage = WARNING_CANNOT_INVOKE_NATIVE;
+			    return false;
+			} else if (e instanceof NotYetImplementedException) {
+			    this.traceKind = TraceTypes.UNMANAGEABLE;
+			    this.endOfTraceMessage = WARNING_NOT_IMPLEMENTED_BYTECODE;
+			    return false;
+			} else if (e instanceof MetaUnsupportedException) {
+			    this.traceKind = TraceTypes.UNMANAGEABLE;
+			    this.endOfTraceMessage = WARNING_META_UNSUPPORTED + e.getMessage();
+			    return false;
+			} else if (e instanceof UninterpretedUnsupportedException) {
+			    this.traceKind = TraceTypes.UNMANAGEABLE;
+			    this.endOfTraceMessage = WARNING_UNINTERPRETED_UNSUPPORTED + e.getMessage();
+			    return false;
+			} else {
+			    Run.this.err(ERROR_UNEXPECTED);
+				Run.this.err(e);
+				return true;
+			}
 		}
 
 		@Override
@@ -380,22 +414,25 @@ public final class Run {
 					break;
 				case UNSAFE:
 					++Run.this.tracesUnsafe;
-                    this.endOfTraceMessage = MSG_UNSAFE_TRACE;
-                    counterKind = CounterKind.INC_UNSAFE;
-                    break;
+					this.endOfTraceMessage = MSG_UNSAFE_TRACE;
+					counterKind = CounterKind.INC_UNSAFE;
+					break;
 				case OUT_OF_SCOPE:
-				    //counter is provided by runner
-                    //this.endOfTraceMessage already set
-                    counterKind = CounterKind.INC_OUT_OF_SCOPE;
+					//counter is provided by runner
+					//this.endOfTraceMessage already set
+					counterKind = CounterKind.INC_OUT_OF_SCOPE;
+					break;
+				case UNMANAGEABLE:
+					++Run.this.tracesUnmanageable;
+					//this.endOfTraceMessage already set
+					counterKind = null;
 					break;
 				case CONTRADICTORY:
-				    //no counter, calculated by difference
-                    this.endOfTraceMessage = MSG_CONTRADICTORY_TRACE;
-                    counterKind = null;
-                    break;
-                //to keep compiler happy:
-				default:
-				    throw new AssertionError();
+					this.endOfTraceMessage = MSG_CONTRADICTORY_TRACE;
+					counterKind = null;
+					break;
+				default: //to keep compiler happy:
+					throw new AssertionError();
 				}
                 if (Run.this.parameters.getShowWarnings()) {
                     Run.this.log(currentState.getIdentifier() + this.endOfTraceMessage);
@@ -438,20 +475,6 @@ public final class Run {
 		    Run.this.err(ERROR_ENGINE_STUCK);
 		    Run.this.err(e);
 			return super.atEngineStuckException(e);
-		}
-
-		@Override
-		public boolean atCannotManageStateException(CannotManageStateException e)
-		throws CannotManageStateException {
-			if (e instanceof CannotInvokeNativeException) {
-			    Run.this.err(ERROR_CANNOT_INVOKE_NATIVE);
-			} else if (e instanceof NotYetImplementedException) {
-			    Run.this.err(ERROR_UNDEF_BYTECODE);
-			} else {
-			    Run.this.err(ERROR_UNEXPECTED);
-			}
-			Run.this.err(e);
-			return super.atCannotManageStateException(e);
 		}
 
         @Override
@@ -1040,7 +1063,9 @@ public final class Run {
                     " (" + this.tracesConcretizableOutOfScope + " concretizable)"  
                 : "")
             + ", "
-            + MSG_END_TRACES_VIOLATING_ASSUMPTION + tracesContradictory + ".");
+            + MSG_END_TRACES_VIOLATING_ASSUMPTION + tracesContradictory
+            + ", "
+            + MSG_END_TRACES_UNMANAGEABLE + this.tracesUnmanageable + ".");
         final long elapsedTimeDecisionProcedure = (this.timer == null ? 0 : this.timer.getTime());
         log(MSG_END_ELAPSED + Util.formatTime(elapsedTime) + ", "
             + MSG_END_SPEED + this.engine.getAnalyzedStates() * 1000 / elapsedTime + " states/sec"
@@ -1170,6 +1195,9 @@ public final class Run {
 	/** Message: total traces violating assumptions. */
 	private static final String MSG_END_TRACES_VIOLATING_ASSUMPTION = "Violating assumptions: ";
 	
+	/** Message: total unmanageable traces. */
+	private static final String MSG_END_TRACES_UNMANAGEABLE = "Unmanageable: ";
+	
 	/** Message: total safe traces. */
 	private static final String MSG_END_TRACES_SAFE = "Safe: ";
 	
@@ -1204,6 +1232,18 @@ public final class Run {
 	/** Warning: exhausted count scope. */
 	private static final String WARNING_SCOPE_EXHAUSTED_COUNT = " trace exhausted count scope.";
 
+	/** Warning: cannot manage a native method invocation. */
+	private static final String WARNING_CANNOT_INVOKE_NATIVE = "Met an unmanageable native method invocation.";
+
+	/** Warning: cannot handle a bytecode. */
+	private static final String WARNING_NOT_IMPLEMENTED_BYTECODE = "Met a bytecode that it is not yet implemented.";
+
+	/** Warning: the meta-level implementation is unsupported. */
+	private static final String WARNING_META_UNSUPPORTED = "Meta-level implementation of a method cannot be executed: ";
+
+	/** Warning: a method call cannot be treated as returning an uninterpreted function value. */
+	private static final String WARNING_UNINTERPRETED_UNSUPPORTED = "Method call cannot be treated as returning an uninterpreted function symbolic value: ";
+
 	/** Error: unable to open dump file. */
 	private static final String ERROR_DUMP_FILE_OPEN = "Could not open the dump file. The session will be displayed on console only.";
 
@@ -1237,9 +1277,6 @@ public final class Run {
 	 */
 	private static final String ERROR_ENGINE_QUIT_DECISION_PROCEDURE = "Unexpected internal error while quitting the decision procedure.";
 
-	/** Error: cannot manage a bytecode. */
-	private static final String ERROR_UNDEF_BYTECODE = "Met an unmanageable bytecode.";
-
     /** Error: unexpected internal error (undefined state format mode). */
     private static final String ERROR_UNDEF_STATE_FORMAT = "Unexpected internal error: This state format mode is unimplemented.";
 
@@ -1248,9 +1285,6 @@ public final class Run {
 
     /** Error: no or bad JRE. */
     private static final String ERROR_BAD_CLASSPATH = "No or incompatible JRE in the classpath.";
-
-	/** Error: cannot manage a native method invocation. */
-	private static final String ERROR_CANNOT_INVOKE_NATIVE = "Met an unmanageable native method invocation.";
 
 	/** Error: unexpected internal error (stepping while engine stuck). */
 	private static final String ERROR_ENGINE_STUCK = "Unexpected internal error: Attempted step while in a stuck state.";

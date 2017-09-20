@@ -302,7 +302,7 @@ public class Runner {
          * @param e the {@link ClasspathException} thrown by the {@link Engine}.
          * @return {@code true} iff the {@link Runner} must stop
          *         {@link Runner#run run}ning.
-         * @throws CannotManageStateException by default.
+         * @throws ClasspathException by default.
          */
         public boolean atClasspathException(ClasspathException e) 
         throws ClasspathException { throw e; }
