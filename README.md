@@ -26,22 +26,30 @@ This repository provides a Maven POM file that must be used to build JBSE. It sh
 * Create a new run configuration of Maven Build type, and put eclipse:eclipse in the Goals text field, then run it;
 * Finally, right-click on the JBSE project in the Package Explorer and then select Refresh: Now the JBSE project should show no errors.
 
+The supported Maven goals are:
+
+* clean
+* compile
+* test
+* package
+
 ### Dependencies ###
 
 JBSE has several build dependencies, that are automatically resolved by Maven:
 
 * [Javassist](http://jboss-javassist.github.io/javassist/): JBSE uses Javassist at runtime for all the bytecode manipulation tasks. It is also needed at runtime.
 * [JavaCC](https://javacc.org): Necessary for compiling the parser for the JBSE settings files. It is not needed at runtime.
+* [JUnit](http://junit.org): Necessary for running the tests. It is not needed at runtime.
 
 JBSE also needs to interact at runtime an external numeric solver for pruning infeasible program paths. JBSE works well with [Z3](https://github.com/Z3Prover/z3) and, to a less extent, with [CVC4](http://cvc4.cs.stanford.edu/), but any SMT solver that supports the AUFNIRA logic should work. The dependency on the solver is not handled by Maven so you need to download and install at least one of them on the machine that runs JBSE. We strongly advise to use Z3 because it is what we routinely use.
 
 ### Testing JBSE ###
 
-When you are done you may try and run the (very small) JUnit test suite under the `tst` directory. At the purpose you need JUnit 4, a dependency that Maven fixes automatically. All tests should pass, with the possible exception of the tests in the class `jbse.dec.DecisionProcedureTest` that require that you fix the path to the Z3 executable. You must modify line 54 and replace `/opt/local/bin/z3` with your local path to the Z3 executable.
+When you are done you may try the (very small) JUnit test suite under the `src/test` directory by running `mvn test`. As said before, running the tests depends on the presence of JUnit 4, a dependency that Maven fixes automatically. All tests should pass, with the possible exception of the tests in the class `jbse.dec.DecisionProcedureTest` that require that you fix the path to the Z3 executable. You must modify line 54 and replace `/opt/local/bin/z3` with your local path to the Z3 executable.
 
 ### Deploying JBSE ###
 
-Once JBSE is compiled, you can export JBSE as a jar file to be used it in your project by running `mvn package`. The command will generate a `jbse.jar` file in the `target` directory of the project. The jar file contains JBSE itself *but not* its dependencies. Note that `jbse.jar` also includes the `jbse.meta` package and its subpackages, containing the API that the code under analysis can invoke to issue assertions, assumptions, and otherwise control the analysis process itself. Remember that dependencies are not included, so you need to deploy the Javassist jar together with `jbse.jar`.
+Once JBSE is compiled, you can export JBSE as a jar file to be used in your project by running `mvn package`. The command will generate a `jbse-<VERSION>.jar` file in the `target` directory of the project. Note that `jbse-<VERSION>.jar` also includes the `jbse.meta` package and its subpackages, containing the API that the code under analysis can invoke to issue assertions, assumptions, and otherwise control the analysis process itself. The jar file does not include the runtime dependencies (Javassist), so you need to deploy the Javassist jar together with it. To ease deployment, Maven will also build an uber jar containing all the runtime dependencies. You will find it in the `target` directory as the file `jbse-shaded-<VERSION>.jar`. To avoid conflicts the uber jar renames the `javassist` package as `jbse.javassist`.
 
 Using JBSE
 ----------
