@@ -251,27 +251,6 @@ public final class Run {
 		}
 		
 		@Override
-		public boolean atStepPre() {
-			//steps the guidance
-			if (Run.this.guidance != null) {
-				try {
-				    if (Run.this.engine.getCurrentState().getCurrentMethodSignature().equals( 
-				            Run.this.guidance.getCurrentMethodSignature())) {
-				        Run.this.guidance.step();
-				    }
-				} catch (GuidanceException e) {
-				    Run.this.err(ERROR_GUIDANCE_FAILED);
-				    Run.this.err(e);
-					return true;
-				} catch (CannotManageStateException | ThreadStackEmptyException e) {
-				    throw new UnexpectedInternalException(e);
-				}
-			}
-			
-			return super.atStepPre();
-		}
-		
-		@Override
 		public boolean atBranch(BranchPoint bp) {
 			this.isBranch = true;
 			return super.atBranch(bp);

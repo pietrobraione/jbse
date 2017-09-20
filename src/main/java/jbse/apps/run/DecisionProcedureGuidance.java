@@ -78,9 +78,9 @@ import jbse.val.exc.InvalidTypeException;
 
 /**
  * {@link DecisionProcedureAlgorithms} for guided symbolic execution. It keeps 
- * a guiding {@link Engine} that must be stepped in parallel with the 
- * guided one, and filters all the decisions according to the steps 
- * done by the guiding engine.
+ * a guiding {@link Engine} that runs a guiding concrete execution and filters 
+ * all the decisions taken by a component decision procedure it decorates 
+ * according to the state reached by the guiding engine.
  */
 public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
 	private final Engine engine;
@@ -97,6 +97,8 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 	 * @param component the component {@link DecisionProcedure} it decorates.
 	 * @param calc a {@link Calculator}.
 	 * @param runnerParameters the {@link RunnerParameters} of the symbolic execution.
+	 *        The constructor modifies this object by adding the {@link Runner.Actions}s
+	 *        necessary to the execution.
 	 * @throws GuidanceException if something fails during creation (and the caller
 	 *         is to blame).
 	 */
@@ -159,7 +161,7 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 		//disables theorem proving (this is concrete execution)
 		goFastAndImprecise();
 
-		//runs the private engine until it arrives at methodToRun
+		//runs the private engine until it arrives at stopSignature
 		try {
 			runner.run();
         } catch (ClasspathException e) {
@@ -207,36 +209,12 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 		if (refToRoot != null) {
 			this.seenObjects.add(Util.heapPosition(this.initialStateConcrete, (Reference) refToRoot));
 		}
-	}
-	
-	public void step() throws CannotManageStateException, GuidanceException {
-		if (this.failedConcrete) {
-			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
-		}
-		if (this.ended) {
-			return;
-		}
-		if (this.engine.canStep()) {
-			try {
-				this.engine.step();
-			} catch (DecisionException | EngineStuckException | 
-					ThreadStackEmptyException e) {
-				//should never happen if guidance is correctly implemented
-				throw new UnexpectedInternalException(e);
-			} catch (ContradictionException | FailureException e) {
-				//failed an assumption or an assertion; this ends both the guided 
-				//and the guiding execution
-				return;
-			} catch (ClasspathException e) {
-			    throw new GuidanceException(e);
-            }
-			updateFailedConcrete();
-			if (this.failedConcrete) {
-				throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
-			}
-		} else {
-			//this happens if guidance and guided do not make the same number of steps
-			throw new GuidanceException(ERROR_DIVERGENCE);
+		
+		//we don't need the guiding engine anymore
+		try {
+			this.engine.close();
+		} catch (DecisionException e) {
+			throw new UnexpectedInternalException(e);
 		}
 	}
 	
@@ -258,11 +236,6 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 	public void endGuidance() {
         this.ended = true;
         stopFastAndImprecise();
-		try {
-			this.engine.close();
-		} catch (DecisionException e) {
-			throw new UnexpectedInternalException(e);
-		}
 	}
 	
 	@Override
@@ -681,6 +654,5 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 	}
 	
     private static final String ERROR_NONCONCRETE_GUIDANCE = "Guided execution fell outside the concrete domain.";
-    private static final String ERROR_DIVERGENCE = "Guided execution diverged from guiding execution.";
     private static final String ERROR_BAD_PATH = "Failed accessing through a memory access path.";
 }
