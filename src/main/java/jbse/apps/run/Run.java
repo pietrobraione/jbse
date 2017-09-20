@@ -627,7 +627,7 @@ public final class Run {
 	    IO.printException(this.err, t);
 	}
 
-    private static final String COMMANDLINE_LAUNCH_Z3   = " -smt2 -in -t:10";
+    private static final String COMMANDLINE_LAUNCH_Z3   = System.getProperty("os.name").toLowerCase().contains("windows") ? " /smt2 /in /t:10" : " -smt2 -in -t:10";
     private static final String COMMANDLINE_LAUNCH_CVC4 = " --lang=smt2 --output-lang=smt2 --no-interactive --incremental --tlimit-per=10000";
     
 	/**
