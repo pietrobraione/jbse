@@ -99,12 +99,40 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 	 * @param runnerParameters the {@link RunnerParameters} of the symbolic execution.
 	 *        The constructor modifies this object by adding the {@link Runner.Actions}s
 	 *        necessary to the execution.
+	 * @param stopSignature the {@link Signature} of a method. The guiding concrete execution 
+	 *        will stop at the entry of the first invocation of the method whose 
+	 *        signature is {@code stopSignature}, and the reached state will be used 
+	 *        to answer queries.
 	 * @throws GuidanceException if something fails during creation (and the caller
 	 *         is to blame).
 	 */
-	public DecisionProcedureGuidance(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, final Signature stopSignature) 
+	public DecisionProcedureGuidance(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature) 
 	throws GuidanceException {
-		super(component, calc); 
+		this(component, calc, runnerParameters, stopSignature, 1);
+	}
+	
+	/**
+	 * Builds the {@link DecisionProcedureGuidance}.
+	 *
+	 * @param component the component {@link DecisionProcedure} it decorates.
+	 * @param calc a {@link Calculator}.
+	 * @param runnerParameters the {@link RunnerParameters} of the symbolic execution.
+	 *        The constructor modifies this object by adding the {@link Runner.Actions}s
+	 *        necessary to the execution.
+	 * @param stopSignature the {@link Signature} of a method. The guiding concrete execution 
+	 *        will stop at the entry of the {@code numberOfHits}-th invocation of the 
+	 *        method whose signature is {@code stopSignature}, and the reached state will be used 
+	 *        to answer queries.
+	 * @param numberOfHits an {@code int} greater or equal to one.
+	 * @throws GuidanceException if something fails during creation (and the caller
+	 *         is to blame).
+	 */
+	public DecisionProcedureGuidance(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits) 
+	throws GuidanceException {
+		super(component, calc);
+		if (numberOfHits < 1) {
+			throw new GuidanceException("Invalid number of hits " + numberOfHits + ".");
+		}
 		this.seenObjects = new HashSet<>();
 		this.failedConcrete = false;
 		this.catastrophicFailure = null;
@@ -112,11 +140,16 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 
 		//builds the runner actions
 		final Actions a = new Actions() {
+			private int hitCount = 0;
+			
 			@Override
 			public boolean atStepPre() {
 				try {
 				    final State currentState = getEngine().getCurrentState();
-					return (currentState.getCurrentMethodSignature().equals(stopSignature));
+				    if (currentState.getCurrentMethodSignature().equals(stopSignature)) {
+				    		++this.hitCount;
+				    }
+					return (this.hitCount == numberOfHits);
 				} catch (ThreadStackEmptyException e) {
 					//this should never happen
 					catastrophicFailure = e;
