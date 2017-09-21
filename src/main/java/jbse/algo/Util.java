@@ -362,37 +362,24 @@ public class Util {
     }
 
     /**
-     * Determines the satisfiability of a class initialization under
-     * the current assumption. Wraps {@link DecisionProcedure#isSatInitialized(String)} 
-     * to inject some assumptions on the initialization over some JRE standard classes.
+     * Determines whether a class has a pure static initializer, where with
+     * "pure" we mean that its effect is independent on when the initializer
+     * is executed.
      * 
-     * @param state a {@link State}.
+     * @param classHierarchy a {@link ClassHierarchy}.
      * @param className the name of the class.
-     * @param dec a {@link DecisionProcedure}.
-     * @return {@code true} if the class has been initialized, 
-     *         {@code false} otherwise.
-     * @throws InvalidInputException when one of the parameters to the 
-     *         decision procedure is incorrect.
-     * @throws DecisionException if the decision procedure fails.
+     * @return {@code true} iff the class has a pure static initializer.
      */
-    private static boolean decideClassInitialized(State state, String className, DecisionProcedure dec) 
-    throws InvalidInputException, DecisionException {
-        //Assume that some classes are not initialized to
-        //trigger the execution of their <clinit> methods 
-        //TODO trigger execution of pure <clinit> *without* assuming about their initialization status 
-        if (className.equals(JAVA_CLASS)      ||
+    private static boolean hasClassAPureInitializer(ClassHierarchy classHierarchy, String className) {
+        return 
+        	   (className.equals(JAVA_CLASS)      ||
             className.equals(JAVA_HASHSET)    || className.equals(JAVA_IDENTITYHASHMAP)      || 
             className.equals(JAVA_INTEGER)    || className.equals(JAVA_INTEGER_INTEGERCACHE) || 
             className.equals(JAVA_LINKEDLIST) || className.equals(JAVA_LINKEDLIST_ENTRY)     ||
             className.equals(JAVA_NUMBER)     || className.equals(JAVA_OBJECT)               ||
             className.equals(JAVA_STRING)     || className.equals(JAVA_STRING_CASEINSCOMP)   ||
             className.equals(JAVA_BOOLEAN)    || className.equals(JAVA_TREESET)   ||
-            state.getClassHierarchy().isSubclass(className, JAVA_ENUM)
-        ) {
-            return false;
-        }
-
-        return dec.isSatInitialized(state.getClassHierarchy(), className);
+            classHierarchy.isSubclass(className, JAVA_ENUM));
     }
 
     private static class ClassInitializer {
@@ -532,11 +519,20 @@ public class Util {
                 //invokes the decision procedure, adds the returned 
                 //assumption to the state's path condition and creates 
                 //a Klass
-                if (decideClassInitialized(this.s, className, this.dec)) { 
+            		final ClassHierarchy hier = this.s.getClassHierarchy();
+            		final boolean pure = hasClassAPureInitializer(hier, className);
+            		final boolean createKlass;
+            		if (pure) {
+            			createKlass = true;
+            		} else if (this.dec.isSatInitialized(hier, className)) { 
                     this.s.assumeClassInitialized(className);
+                    createKlass = false;
                 } else {
                     this.s.assumeClassNotInitialized(className);
-                    //creates the Klass and schedules it for phase 2
+                    createKlass = true;
+                }
+            		if (createKlass) {
+                    //creates the Klass and schedules it for phase 3
                     this.s.ensureKlass(className);
                     if (className.equals(JAVA_OBJECT)) {
                         this.pushFrameForJavaLangObject = true;
@@ -577,7 +573,7 @@ public class Util {
          */
         private void phase2() 
         throws DecisionException, BadClassFileException, ClasspathException {
-            ListIterator<String> it = this.classesCreated.listIterator();
+            final ListIterator<String> it = this.classesCreated.listIterator();
             while (it.hasNext()) {
                 final String className = it.next();
                 final Klass k = this.s.getKlass(className);
