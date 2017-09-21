@@ -39,7 +39,7 @@ import jbse.val.Simplex;
 public abstract class DecisionProcedureChainOfResponsibility implements DecisionProcedure {
 	/** The next {@link DecisionProcedure} in the Chain Of Responsibility */
 	protected final DecisionProcedure next;
-	
+
 	/** The {@link CalculatorRewriting}; it is set by the constructor. */
 	protected final CalculatorRewriting calc;
 
@@ -48,7 +48,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	 * Not final to allow to set it later than construction (may be necessary 
 	 * if the rewriters are created by the decision procedure itself). 
 	 */
-    protected Rewriter[] rewriters;
+	protected Rewriter[] rewriters;
 
 	/**
 	 * Constructor.
@@ -61,10 +61,10 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	 */
 	protected DecisionProcedureChainOfResponsibility(DecisionProcedure next, CalculatorRewriting calc, Rewriter... rewriters) {
 		this.next = next;
-    	this.calc = calc;
-    	this.rewriters = rewriters;
+		this.calc = calc;
+		this.rewriters = rewriters;
 	}
-	
+
 	/**
 	 * Constructor (no next procedure in the Chain Of Responsibility).
 	 * 
@@ -75,7 +75,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	protected DecisionProcedureChainOfResponsibility(CalculatorRewriting calc, Rewriter... rewriters) {
 		this(null, calc, rewriters);
 	}
-	
+
 	/**
 	 * Checks whether there is a next {@code DecisionProcedure}
 	 * in the Chain Of Responsibility.
@@ -85,7 +85,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	private final boolean hasNext() {
 		return (this.next != null);
 	}
-	
+
 	@Override
 	public final void goFastAndImprecise() { 
 		goFastAndImpreciseLocal();
@@ -93,7 +93,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 			this.next.goFastAndImprecise();
 		}
 	}
-	
+
 	/**
 	 * Must be overridden by subclasses that 
 	 * offer the "fast and imprecise" mode feature
@@ -111,7 +111,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 			this.next.stopFastAndImprecise();
 		}
 	}
-	
+
 	/**
 	 * Must be overridden by subclasses that 
 	 * offer the "fast and imprecise" mode feature
@@ -121,14 +121,14 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	protected void stopFastAndImpreciseLocal() {
 		//default implementation
 	}
-	
+
 	@Override
 	public final void pushAssumption(Clause c) 
 	throws InvalidInputException, DecisionException {
-	    if (c == null) {
-	        throw new InvalidInputException("pushAssumption invoked with a null parameter.");
-	    }
-        final Clause cSimpl = simplifyLocal(c);
+		if (c == null) {
+			throw new InvalidInputException("pushAssumption invoked with a null parameter.");
+		}
+		final Clause cSimpl = simplifyLocal(c);
 		pushAssumptionLocal(cSimpl);
 		if (hasNext()) {
 			this.next.pushAssumption(cSimpl);
@@ -158,7 +158,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 			throw new UnexpectedInternalException(e);
 		}
 	}
-	
+
 	/**
 	 * Must be overridden by subclasses that need to 
 	 * locally add a {@link ClauseAssume}.
@@ -272,14 +272,13 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	};
 
 	@Override
-	public final void clearAssumptions() 
-	throws DecisionException {
+	public final void clearAssumptions() throws DecisionException {
 		clearAssumptionsLocal();
 		if (hasNext()) {
 			this.next.clearAssumptions();
 		}
 	}
-	
+
 	/**
 	 * Must be implemented by subclasses to locally drop
 	 * the current assumptions.
@@ -292,30 +291,30 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	}
 
 	@Override
-    public final void setAssumptions(Collection<Clause> newAssumptions) 
-    throws InvalidInputException, DecisionException {
-	    if (newAssumptions == null) {
-	        throw new InvalidInputException("setAssumptions invoked with a null parameter.");
-	    }
+	public final void setAssumptions(Collection<Clause> newAssumptions) 
+	throws InvalidInputException, DecisionException {
+		if (newAssumptions == null) {
+			throw new InvalidInputException("setAssumptions invoked with a null parameter.");
+		}
 		Collection<Clause> currentAssumptions;
 		try {
-		    currentAssumptions = getAssumptionsLocal();
+			currentAssumptions = getAssumptionsLocal();
 		} catch (DecisionException e) {
-		    //sorry, no locally stored assumptions
-		    currentAssumptions = getAssumptions(); //queries the successor (best effort)
+			//sorry, no locally stored assumptions
+			currentAssumptions = getAssumptions(); //queries the successor (best effort)
 		}
 		final int common = numCommonAssumptions(currentAssumptions, newAssumptions);
 		final int toPop = currentAssumptions.size() - common;
 		final int toPush = newAssumptions.size() - common;
-    	if (canPopAssumptions() && toPop < common) { //TODO toPop < common is a guess! Implement better heuristics
-    	    setAssumptionsLocalConservatively(newAssumptions, toPop, toPush);
-    	} else {
-    	    setAssumptionsLocalDestructively(newAssumptions);
-    	}
-    	if (hasNext()) {
-            this.next.setAssumptions(newAssumptions);
-    	}
-    }
+		if (canPopAssumptions() && toPop < common) { //TODO toPop < common is a guess! Implement better heuristics
+			setAssumptionsLocalConservatively(newAssumptions, toPop, toPush);
+		} else {
+			setAssumptionsLocalDestructively(newAssumptions);
+		}
+		if (hasNext()) {
+			this.next.setAssumptions(newAssumptions);
+		}
+	}
 
 	private static int numCommonAssumptions(Collection<Clause> oldAssumptions, Collection<Clause> newAssumptions) {
 		final Iterator<Clause> iterOld = oldAssumptions.iterator();
@@ -340,26 +339,26 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	 * @param toPush see {@link #setAssumptions}.
 	 * @throws DecisionException upon failure.
 	 */
-    private void 
-    setAssumptionsLocalConservatively(Collection<Clause> newAssumptions, int toPop, int toPush)
-    throws DecisionException {
-    	//pops
-    	for (int i = 1; i <= toPop; ++i) {
-    		popAssumptionLocal();
-    	}
+	private void 
+	setAssumptionsLocalConservatively(Collection<Clause> newAssumptions, int toPop, int toPush)
+	throws DecisionException {
+		//pops
+		for (int i = 1; i <= toPop; ++i) {
+			popAssumptionLocal();
+		}
 
-    	//pushes
-    	final int common = newAssumptions.size() - toPush;
+		//pushes
+		final int common = newAssumptions.size() - toPush;
 		int i = 1;
-    	for (Clause c : newAssumptions) {
-    		if (i > common) {
-                final Clause cSimpl = simplifyLocal(c);
-    			pushAssumptionLocal(cSimpl);
-    		}
-    		++i;
-    	}
-    }
-    
+		for (Clause c : newAssumptions) {
+			if (i > common) {
+				final Clause cSimpl = simplifyLocal(c);
+				pushAssumptionLocal(cSimpl);
+			}
+			++i;
+		}
+	}
+
 	/**
 	 * Clears the current local assumption, and locally pushes 
 	 * the whole new assumption.
@@ -367,470 +366,469 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 	 * @param newAssumptions see {@link #setAssumptions}.
 	 * @throws DecisionException upon failure.
 	 */
-    private void 
-    setAssumptionsLocalDestructively(Collection<Clause> newAssumptions) 
-    throws DecisionException {
-    	clearAssumptionsLocal();
-    	for (Clause c : newAssumptions) {
-            final Clause cSimpl = simplifyLocal(c);
-    		pushAssumptionLocal(cSimpl);
-    	}
-    }
-    
-    /**
-     * Must be overridden by subclasses that implement {@link #popAssumptionLocal()}
-     * to return {@code true}.
-     * 
-     * @return {@code false} in the default implementation.
-     */
-    protected boolean canPopAssumptions() {
-    	//default implementation
-    	return false;
-    }
-    
-    /**
-     * Must be overridden by subclasses that want to offer the
-     * ability of locally popping the last clause added to the 
-     * current assumptions. In some cases this feature might increase the
-     * speed of the decision procedure. The default implementation 
-     * doesn't offer this feature and throws {@link DecisionException}.
-     * 
-     * @throws DecisionException if the subclass does not offer
-     *         this feature.
-     */
-    protected void popAssumptionLocal() throws DecisionException {
-    	//default implementation
-    	throw new DecisionException();
-    }
-        
-    @Override
-    public final Collection<Clause> getAssumptions() throws DecisionException {
-    	//the farthest element in the chain has
-    	//the most simplified assumptions
-    	if (hasNext()) {
-    		return this.next.getAssumptions();
-    	}
-    	return getAssumptionsLocal();
-    }
+	private void 
+	setAssumptionsLocalDestructively(Collection<Clause> newAssumptions) 
+	throws DecisionException {
+		clearAssumptionsLocal();
+		for (Clause c : newAssumptions) {
+			final Clause cSimpl = simplifyLocal(c);
+			pushAssumptionLocal(cSimpl);
+		}
+	}
 
-    /**
-     * Must be overridden by subclasses to implement 
-     * {@link #getAssumptions()} in the case they store
-     * locally. It will only be invoked when this decision
-     * procedure is the last in the chain of responsibility. 
-     * The default implementation throws a {@link DecisionException}.
-     * 
-     * @return see {@link #getAssumptions()}.
-     * @throws DecisionException upon failure.
-     */
-    protected Collection<Clause> getAssumptionsLocal() 
-    throws DecisionException {
-    	throw new DecisionException(NO_ASSUMPTION_ERROR); //TODO throw a better exception
-    }
-    
-    private final String NO_ASSUMPTION_ERROR, NO_DELEGATE_ERROR; 
-    {
-        NO_ASSUMPTION_ERROR = "Class " + getClass().getName() + " does not store assumptions and is the last in the Chain of Responsibility.";
-        NO_DELEGATE_ERROR = "Class " + getClass().getName() + " cannot delegate to successor in Chain Of Responsibility because it is the last one.";
-        
-    }
+	/**
+	 * Must be overridden by subclasses that implement {@link #popAssumptionLocal()}
+	 * to return {@code true}.
+	 * 
+	 * @return {@code false} in the default implementation.
+	 */
+	protected boolean canPopAssumptions() {
+		//default implementation
+		return false;
+	}
 
-    @Override
-    public final boolean isSat(ClassHierarchy hier, Expression expression) 
-    throws InvalidInputException, DecisionException {
-        if (hier == null || expression == null) {
-            throw new InvalidInputException("isSat invoked with a null parameter.");
-        }
-    	if (expression.getType() != Type.BOOLEAN) {
-    		throw new DecisionException("isSat expression has type " + expression.getType());
-    	}
-    	final Primitive expSimpl = simplifyLocal(expression);
+	/**
+	 * Must be overridden by subclasses that want to offer the
+	 * ability of locally popping the last clause added to the 
+	 * current assumptions. In some cases this feature might increase the
+	 * speed of the decision procedure. The default implementation 
+	 * doesn't offer this feature and throws {@link DecisionException}.
+	 * 
+	 * @throws DecisionException if the subclass does not offer
+	 *         this feature.
+	 */
+	protected void popAssumptionLocal() throws DecisionException {
+		//default implementation
+		throw new DecisionException();
+	}
+
+	@Override
+	public final Collection<Clause> getAssumptions() throws DecisionException {
+		//the farthest element in the chain has
+		//the most simplified assumptions
+		if (hasNext()) {
+			return this.next.getAssumptions();
+		}
+		return getAssumptionsLocal();
+	}
+
+	/**
+	 * Must be overridden by subclasses to implement 
+	 * {@link #getAssumptions()} in the case they store
+	 * locally. It will only be invoked when this decision
+	 * procedure is the last in the chain of responsibility. 
+	 * The default implementation throws a {@link DecisionException}.
+	 * 
+	 * @return see {@link #getAssumptions()}.
+	 * @throws DecisionException upon failure.
+	 */
+	protected Collection<Clause> getAssumptionsLocal() 
+	throws DecisionException {
+		throw new DecisionException(NO_ASSUMPTION_ERROR); //TODO throw a better exception
+	}
+
+	private final String NO_ASSUMPTION_ERROR, NO_DELEGATE_ERROR; 
+	{
+		NO_ASSUMPTION_ERROR = "Class " + getClass().getName() + " does not store assumptions and is the last in the Chain of Responsibility.";
+		NO_DELEGATE_ERROR = "Class " + getClass().getName() + " cannot delegate to successor in Chain Of Responsibility because it is the last one.";
+	}
+
+	@Override
+	public final boolean isSat(ClassHierarchy hier, Expression expression) 
+	throws InvalidInputException, DecisionException {
+		if (hier == null || expression == null) {
+			throw new InvalidInputException("isSat invoked with a null parameter.");
+		}
+		if (expression.getType() != Type.BOOLEAN) {
+			throw new DecisionException("isSat expression has type " + expression.getType());
+		}
+		final Primitive expSimpl = simplifyLocal(expression);
 		if (expSimpl instanceof Simplex) {
 			return ((Simplex) expSimpl).surelyTrue();
 		} else if (expSimpl instanceof Expression) {
 			final boolean localDecidesSat = isSatLocal(hier, expression, (Expression) expSimpl);
 			if (localDecidesSat) {
-			    return delegateIsSat(hier, expression);  //TODO shouldn't we pass expSimpl instead? do we really need to pass the original exp to the next in chain?
+				return delegateIsSat(hier, expression);  //TODO shouldn't we pass expSimpl instead? do we really need to pass the original exp to the next in chain?
 			}
 			return false; //surely unsat
 		}
 		throw new DecisionException("the simplified " + expSimpl + " is neither a Simplex nor an Expression"); //TODO throw a better exception
-    }
-    
-    /**
-     * Must be overridden by subclasses to implement 
-     * {@link #isSat(ClassHierarchy, Expression)}. 
-     * The default implementation 
-     * answers {@code true} (no local decision) so the
-     * answer is generated by the next decision procedure in 
-     * the chain. 
-     *  
-     * @param hier see {@link #isSat(ClassHierarchy, Expression) isSat}.
-     * @param exp see {@link #isSat(ClassHierarchy, Expression) isSat}. 
-     *        Note that it is <em>not</em> locally simplified, and that 
-     *        it remains an {@link Expression} after local simplification.
-     * @param expSimpl {@code exp} after local simplification.
-     * @return see {@link #isSat(ClassHierarchy, Expression) isSat}.
-     * @throws DecisionException upon failure.
-     */
-    protected boolean isSatLocal(ClassHierarchy hier, Expression exp, Expression expSimpl) throws DecisionException {
-    	return true;
-    }
+	}
 
-    /**
-     * Queries the next decision procedure in the chain for 
-     * satisfiability of an {@link Expression}.
-     *  
-     * @param hier see {@link #isSat(ClassHierarchy, Expression) isSat}.
-     * @param exp see {@link #isSat(ClassHierarchy, Expression) isSat}.
-     * @return the result of invoking 
-     *         {@link DecisionProcedure#isSat(ClassHierarchy, Expression) isSat}{@code (hier, exp)}
-     *         on the next decision procedure in the chain.
-     * @throws DecisionException if this decision procedure has
-     *         not a successor in the chain.
-     */
-    private final boolean delegateIsSat(ClassHierarchy hier, Expression exp) 
-    throws DecisionException {
-    	if (hasNext()) {
-    		try {
-                return this.next.isSat(hier, exp);
-            } catch (InvalidInputException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
-            }
-    	}
-    	throw new DecisionException(NO_DELEGATE_ERROR);
-    }
+	/**
+	 * Must be overridden by subclasses to implement 
+	 * {@link #isSat(ClassHierarchy, Expression)}. 
+	 * The default implementation 
+	 * answers {@code true} (no local decision) so the
+	 * answer is generated by the next decision procedure in 
+	 * the chain. 
+	 *  
+	 * @param hier see {@link #isSat(ClassHierarchy, Expression) isSat}.
+	 * @param exp see {@link #isSat(ClassHierarchy, Expression) isSat}. 
+	 *        Note that it is <em>not</em> locally simplified, and that 
+	 *        it remains an {@link Expression} after local simplification.
+	 * @param expSimpl {@code exp} after local simplification.
+	 * @return see {@link #isSat(ClassHierarchy, Expression) isSat}.
+	 * @throws DecisionException upon failure.
+	 */
+	protected boolean isSatLocal(ClassHierarchy hier, Expression exp, Expression expSimpl) throws DecisionException {
+		return true;
+	}
 
-    @Override
-    public final boolean isSatNull(ClassHierarchy hier, ReferenceSymbolic r) 
-    throws InvalidInputException, DecisionException {
-        if (hier == null || r == null) {
-            throw new InvalidInputException("isSatNull invoked with a null parameter.");
-        }
-        final boolean localDecidesSat = isSatNullLocal(hier, r);
-        if (localDecidesSat) {
-            return delegateIsSatNull(hier, r);
-        }
-        return false; //surely unsat
-    }
-    
-    /**
-     * Must be overridden by subclasses to implement 
-     * {@link #isSatNull(ClassHierarchy, ReferenceSymbolic)}. 
-     * The default implementation 
-     * answers {@code true} (no local decision) so the
-     * answer is generated by the next decision procedure in 
-     * the chain.
-     * 
-     * @param hier see {@link #isSatNull(ClassHierarchy, ReferenceSymbolic) isSatNull}.
-     * @param r see {@link #isSatNull(ClassHierarchy, ReferenceSymbolic) isSatNull}.
-     * @return see {@link #isSatNull(ClassHierarchy, ReferenceSymbolic) isSatNull}.
-     * @throws DecisionException upon failure.
-     */
-    protected boolean isSatNullLocal(ClassHierarchy hier, ReferenceSymbolic r) throws DecisionException {
-    	return true;
-    }
-    
-    /**
-     * Queries the next decision procedure in the chain for 
-     * satisfiability of a resolution by null.
-     *  
-     * @param hier see {@link #isSatNull(ClassHierarchy, ReferenceSymbolic) isSatNull}.
-     * @param r see {@link #isSatNull(ClassHierarchy, ReferenceSymbolic) isSatNull}.
-     * @return the result of invoking 
-     *         {@link DecisionProcedure#isSatNull(ClassHierarchy, ReferenceSymbolic) isSatNull}{@code (hier, r)}
-     *         on the next decision procedure in the chain.
-     * @throws DecisionException if this decision procedure has
-     *         not a successor in the chain.
-     */
-   private final boolean delegateIsSatNull(ClassHierarchy hier, ReferenceSymbolic r) 
-   throws DecisionException {
-    	if (hasNext()) {
-    		try {
-                return this.next.isSatNull(hier, r);
-            } catch (InvalidInputException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
-            }
-    	}
-    	throw new DecisionException(NO_DELEGATE_ERROR);
-    }
+	/**
+	 * Queries the next decision procedure in the chain for 
+	 * satisfiability of an {@link Expression}.
+	 *  
+	 * @param hier see {@link #isSat(ClassHierarchy, Expression) isSat}.
+	 * @param exp see {@link #isSat(ClassHierarchy, Expression) isSat}.
+	 * @return the result of invoking 
+	 *         {@link DecisionProcedure#isSat(ClassHierarchy, Expression) isSat}{@code (hier, exp)}
+	 *         on the next decision procedure in the chain.
+	 * @throws DecisionException if this decision procedure has
+	 *         not a successor in the chain.
+	 */
+	private final boolean delegateIsSat(ClassHierarchy hier, Expression exp) 
+	throws DecisionException {
+		if (hasNext()) {
+			try {
+				return this.next.isSat(hier, exp);
+			} catch (InvalidInputException e) {
+				//this should never happen
+				throw new UnexpectedInternalException(e);
+			}
+		}
+		throw new DecisionException(NO_DELEGATE_ERROR);
+	}
 
-    @Override
-    public final boolean isSatAliases(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o) 
-    throws InvalidInputException, DecisionException {
-        if (hier == null || r == null || o == null) {
-            throw new InvalidInputException("isSatAliases invoked with a null parameter.");
-        }
-        final boolean localDecidesSat = isSatAliasesLocal(hier, r, heapPos, o);
-        if (localDecidesSat) {
-            return delegateIsSatAliases(hier, r, heapPos, o);
-        }
-        return false; //surely unsat
-    }
-	
-    /**
-     * Must be overridden by subclasses to implement 
-     * {@link #isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt)}. 
-     * The default implementation answers {@code true} 
-     * (no local decision) so the answer is generated by 
-     * the next decision procedure in the chain.
-     *  
-     * @param hier see {@link #isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt) isSatAliases}.
-     * @param r see {@link #isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt) isSatAliases}.
-     * @param heapPos see {@link #isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt) isSatAliases}.
-     * @param o see {@link #isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt) isSatAliases}.
-     * @return see {@link #isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt) isSatAliases}.
-     * @throws DecisionException upon failure.
-     */
-    protected boolean isSatAliasesLocal(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o) 
-    throws DecisionException {
-    	return true;
-    }
-    
-    /**
-     * Queries the next decision procedure in the chain for 
-     * satisfiability of a resolution by aliasing.
-     *  
-     * @param hier see {@link #isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt) isSatAliases}.
-     * @param r see {@link #isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt) isSatAliases}.
-     * @param heapPos see {@link #isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt) isSatAliases}.
-     * @param o see {@link #isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt) isSatAliases}.
-     * @return the result of invoking 
-     *         {@link DecisionProcedure#isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt) isSatAliases}{@code (hier, r, heapPos, o)}
-     *         on the next decision procedure in the chain.
-     * @throws DecisionException if this decision procedure has
-     *         not a successor in the chain.
-     */
-    private final boolean delegateIsSatAliases(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o) 
-    throws DecisionException {
-    	if (hasNext()) {
-    		try {
-                return this.next.isSatAliases(hier, r, heapPos, o);
-            } catch (InvalidInputException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
-            }
-    	}
-    	throw new DecisionException(NO_DELEGATE_ERROR);
-    }
+	@Override
+	public final boolean isSatNull(ClassHierarchy hier, ReferenceSymbolic r) 
+	throws InvalidInputException, DecisionException {
+		if (hier == null || r == null) {
+			throw new InvalidInputException("isSatNull invoked with a null parameter.");
+		}
+		final boolean localDecidesSat = isSatNullLocal(hier, r);
+		if (localDecidesSat) {
+			return delegateIsSatNull(hier, r);
+		}
+		return false; //surely unsat
+	}
 
-    @Override
-    public final boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, String className) 
-    throws InvalidInputException, DecisionException {
-        if (hier == null || r == null || className == null) {
-            throw new InvalidInputException("isSatExpands invoked with a null parameter.");
-        }
-        final boolean localDecidesSat = isSatExpandsLocal(hier, r, className);
-        if (localDecidesSat) {
-            return delegateIsSatExpands(hier, r, className);
-        }
-        return false; //surely unsat
-    }
-    
-    /**
-     * Must be overridden by subclasses to implement 
-     * {@link #isSatExpands(ClassHierarchy, ReferenceSymbolic, String)}. 
-     * The default implementation answers {@code true} 
-     * (no local decision) so the answer is generated by 
-     * the next decision procedure in the chain. 
-     *  
-     * @param hier see {@link #isSatExpands(ClassHierarchy, ReferenceSymbolic, String) isSatExpands}.
-     * @param r see {@link #isSatExpands(ClassHierarchy, ReferenceSymbolic, String) isSatExpands}.
-     * @param className see {@link #isSatExpands(ClassHierarchy, ReferenceSymbolic, String) isSatExpands}.
-     * @return see {@link #isSatExpands(ClassHierarchy, ReferenceSymbolic, String) isSatExpands}.
-     * @throws DecisionException upon failure.
-     */
-    protected boolean isSatExpandsLocal(ClassHierarchy hier, ReferenceSymbolic r, String className) 
-    throws DecisionException {
-    	return true;
-    }
-    
-    /**
-     * Queries the next decision procedure in the chain for 
-     * satisfiability of a resolution by expansion.
-     *  
-     * @param hier see {@link #isSatExpands(ClassHierarchy, ReferenceSymbolic, String) isSatExpands}.
-     * @param r see {@link #isSatExpands(ClassHierarchy, ReferenceSymbolic, String) isSatExpands}.
-     * @param className see {@link #isSatExpands(ClassHierarchy, ReferenceSymbolic, String) isSatExpands}.
-     * @return the result of invoking 
-     *         {@link DecisionProcedure#isSatExpands(ClassHierarchy, ReferenceSymbolic, String) isSatExpands}{@code (hier, r, className)}
-     *         on the next decision procedure in the chain.
-     * @throws DecisionException if this decision procedure has
-     *         not a successor in the chain.
-     */
-    private final boolean delegateIsSatExpands(ClassHierarchy hier, ReferenceSymbolic r, String className) 
-    throws DecisionException {
-    	if (hasNext()) {
-    		try {
-                return this.next.isSatExpands(hier, r, className);
-            } catch (InvalidInputException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
-            }
-    	}
-    	throw new DecisionException(NO_DELEGATE_ERROR);
-    }
+	/**
+	 * Must be overridden by subclasses to implement 
+	 * {@link #isSatNull(ClassHierarchy, ReferenceSymbolic)}. 
+	 * The default implementation 
+	 * answers {@code true} (no local decision) so the
+	 * answer is generated by the next decision procedure in 
+	 * the chain.
+	 * 
+	 * @param hier see {@link #isSatNull(ClassHierarchy, ReferenceSymbolic) isSatNull}.
+	 * @param r see {@link #isSatNull(ClassHierarchy, ReferenceSymbolic) isSatNull}.
+	 * @return see {@link #isSatNull(ClassHierarchy, ReferenceSymbolic) isSatNull}.
+	 * @throws DecisionException upon failure.
+	 */
+	protected boolean isSatNullLocal(ClassHierarchy hier, ReferenceSymbolic r) throws DecisionException {
+		return true;
+	}
 
-    @Override
-    public final boolean isSatInitialized(ClassHierarchy hier, String className) 
-    throws InvalidInputException, DecisionException {
-        if (hier == null || className == null) {
-            throw new InvalidInputException("isSatInitialized invoked with a null parameter.");
-        }
-        final boolean localDecidesSat = isSatInitializedLocal(hier, className);
-        if (localDecidesSat) {
-            return delegateIsSatInitialized(hier, className);
-        }
-        return false; //surely unsat
-    }
-    
-    /**
-     * Must be overridden by subclasses to implement 
-     * {@link #isSatInitialized(ClassHierarchy, String)}. 
-     * The default implementation answers {@code true} 
-     * (no local decision) so the answer is generated 
-     * by the next decision procedure in 
-     * the chain.
-     *  
-     * @param hier see {@link #isSatInitialized(ClassHierarchy, String) isSatInitialized}.
-     * @param className see {@link #isSatInitialized(ClassHierarchy, String) isSatInitialized}.
-     * @return see {@link #isSatInitialized(ClassHierarchy, String) isSatInitialized}.
-     * @throws DecisionException upon failure.
-     */
-    protected boolean isSatInitializedLocal(ClassHierarchy hier, String className) 
-    throws DecisionException {
-    	return true;
-    }
-    
-    
-    /**
-     * Queries the next decision procedure in the chain for 
-     * satisfiability of the assumption that a class is
-     * initialized when symbolic execution starts.
-     *  
-     * @param hier see {@link #isSatInitialized(ClassHierarchy, String) isSatInitialized}.
-     * @param className see {@link #isSatInitialized(ClassHierarchy, String) isSatInitialized}.
-     * @return the result of invoking 
-     *         {@link DecisionProcedure#isSatInitialized(ClassHierarchy, String) isSatInitialized}{@code (hier, className)}
-     *         on the next decision procedure in the chain.
-     * @throws DecisionException if this decision procedure has
-     *         not a successor in the chain.
-     */
-    private final boolean delegateIsSatInitialized(ClassHierarchy hier, String className) 
-    throws DecisionException {
-    	if (hasNext()) {
-    		try {
-                return this.next.isSatInitialized(hier, className);
-            } catch (InvalidInputException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
-            }
-    	}
-    	throw new DecisionException(NO_DELEGATE_ERROR);
-    }
+	/**
+	 * Queries the next decision procedure in the chain for 
+	 * satisfiability of a resolution by null.
+	 *  
+	 * @param hier see {@link #isSatNull(ClassHierarchy, ReferenceSymbolic) isSatNull}.
+	 * @param r see {@link #isSatNull(ClassHierarchy, ReferenceSymbolic) isSatNull}.
+	 * @return the result of invoking 
+	 *         {@link DecisionProcedure#isSatNull(ClassHierarchy, ReferenceSymbolic) isSatNull}{@code (hier, r)}
+	 *         on the next decision procedure in the chain.
+	 * @throws DecisionException if this decision procedure has
+	 *         not a successor in the chain.
+	 */
+	private final boolean delegateIsSatNull(ClassHierarchy hier, ReferenceSymbolic r) 
+	throws DecisionException {
+		if (hasNext()) {
+			try {
+				return this.next.isSatNull(hier, r);
+			} catch (InvalidInputException e) {
+				//this should never happen
+				throw new UnexpectedInternalException(e);
+			}
+		}
+		throw new DecisionException(NO_DELEGATE_ERROR);
+	}
 
-    @Override
-    public final boolean isSatNotInitialized(ClassHierarchy hier, String className) 
-    throws InvalidInputException, DecisionException {
-    	if (hier == null || className == null) {
-    	    throw new InvalidInputException("isSatNotInitialized invoked with a null parameter.");
-    	}
-        final boolean localDecidesSat = isSatNotInitializedLocal(hier, className);
-        if (localDecidesSat) {
-            return delegateIsSatNotInitialized(hier, className);
-        }
-        return false; //surely unsat
-    }
-    
-    /**
-     * Must be overridden by subclasses to implement 
-     * {@link #isSatNotInitialized(ClassHierarchy, String)}. 
-     * The default implementation answers {@code true} 
-     * (no local decision) so the answer is generated by 
-     * the next decision procedure in the chain. 
-     *  
-     * @param hier see {@link #isSatNotInitialized(ClassHierarchy, String) isSatNotInitialized}.
-     * @param className see {@link #isSatNotInitialized(ClassHierarchy, String) isSatNotInitialized}.
-     * @return see {@link #isSatNotInitialized(ClassHierarchy, String) isSatNotInitialized}.
-     * @throws DecisionException upon failure.
-     */
-    protected boolean isSatNotInitializedLocal(ClassHierarchy hier, String className) 
-    throws DecisionException {
-    	return true;
-    }
-    
-    /**
-     * Queries the next decision procedure in the chain for 
-     * satisfiability of the assumption that a class is
-     * not initialized when symbolic execution starts.
-     *  
-     * @param hier see {@link #isSatNotInitialized(ClassHierarchy, String) isSatNotInitialized}.
-     * @param className see {@link #isSatNotInitialized(ClassHierarchy, String) isSatNotInitialized}.
-     * @return the result of invoking 
-     *         {@link DecisionProcedure#isSatNotInitialized(ClassHierarchy, String) isSatNotInitialized}{@code (hier, className)}
-     *         on the next decision procedure in the chain.
-     * @throws DecisionException if this decision procedure has
-     *         not a successor in the chain.
-     */
-    private final boolean delegateIsSatNotInitialized(ClassHierarchy hier, String className) 
-    throws DecisionException {
-    	if (hasNext()) {
-    		try {
-                return this.next.isSatNotInitialized(hier, className);
-            } catch (InvalidInputException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
-            }
-    	}
-    	throw new DecisionException(NO_DELEGATE_ERROR);
-    }
-    
-    @Override
-    public Map<PrimitiveSymbolic, Simplex> getModel() 
-    throws DecisionException {
-        try {
-            return getModelLocal();
-        } catch (NoModelException e) {
-            return delegateGetModel();
-        }
-    }
-    
-    /**
-     * Must be overridden by subclasses to implement 
-     * {@link #getModel()}. 
-     * The default implementation throws {@link NoModelException} 
-     * (no local decision) so the answer is generated by 
-     * the next decision procedure in the chain. 
-     * 
-     * @return see {@link #getModel() getModel}.
-     * @throws DecisionException upon failure.
-     */
-    protected Map<PrimitiveSymbolic, Simplex> getModelLocal() 
-    throws DecisionException {
-        throw new NoModelException();
-    }
-    
-    /**
-     * Queries the next decision procedure in the chain for 
-     * a model.
-     * 
-     * @return the result of invoking 
-     *         {@link DecisionProcedure#getModel()}
-     *         on the next decision procedure in the chain.
-     * @throws DecisionException if this decision procedure has
-     *         not a successor in the chain.
-     */
-    private final Map<PrimitiveSymbolic, Simplex> delegateGetModel() 
-    throws DecisionException {
-        if (hasNext()) {
-            return this.next.getModel();
-        }
-        throw new DecisionException(NO_DELEGATE_ERROR);
-    }
-	
-    @Override
+	@Override
+	public final boolean isSatAliases(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o) 
+	throws InvalidInputException, DecisionException {
+		if (hier == null || r == null || o == null) {
+			throw new InvalidInputException("isSatAliases invoked with a null parameter.");
+		}
+		final boolean localDecidesSat = isSatAliasesLocal(hier, r, heapPos, o);
+		if (localDecidesSat) {
+			return delegateIsSatAliases(hier, r, heapPos, o);
+		}
+		return false; //surely unsat
+	}
+
+	/**
+	 * Must be overridden by subclasses to implement 
+	 * {@link #isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt)}. 
+	 * The default implementation answers {@code true} 
+	 * (no local decision) so the answer is generated by 
+	 * the next decision procedure in the chain.
+	 *  
+	 * @param hier see {@link #isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt) isSatAliases}.
+	 * @param r see {@link #isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt) isSatAliases}.
+	 * @param heapPos see {@link #isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt) isSatAliases}.
+	 * @param o see {@link #isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt) isSatAliases}.
+	 * @return see {@link #isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt) isSatAliases}.
+	 * @throws DecisionException upon failure.
+	 */
+	protected boolean isSatAliasesLocal(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o) 
+	throws DecisionException {
+		return true;
+	}
+
+	/**
+	 * Queries the next decision procedure in the chain for 
+	 * satisfiability of a resolution by aliasing.
+	 *  
+	 * @param hier see {@link #isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt) isSatAliases}.
+	 * @param r see {@link #isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt) isSatAliases}.
+	 * @param heapPos see {@link #isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt) isSatAliases}.
+	 * @param o see {@link #isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt) isSatAliases}.
+	 * @return the result of invoking 
+	 *         {@link DecisionProcedure#isSatAliases(ClassHierarchy, ReferenceSymbolic, long, Objekt) isSatAliases}{@code (hier, r, heapPos, o)}
+	 *         on the next decision procedure in the chain.
+	 * @throws DecisionException if this decision procedure has
+	 *         not a successor in the chain.
+	 */
+	private final boolean delegateIsSatAliases(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o) 
+	throws DecisionException {
+		if (hasNext()) {
+			try {
+				return this.next.isSatAliases(hier, r, heapPos, o);
+			} catch (InvalidInputException e) {
+				//this should never happen
+				throw new UnexpectedInternalException(e);
+			}
+		}
+		throw new DecisionException(NO_DELEGATE_ERROR);
+	}
+
+	@Override
+	public final boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, String className) 
+	throws InvalidInputException, DecisionException {
+		if (hier == null || r == null || className == null) {
+			throw new InvalidInputException("isSatExpands invoked with a null parameter.");
+		}
+		final boolean localDecidesSat = isSatExpandsLocal(hier, r, className);
+		if (localDecidesSat) {
+			return delegateIsSatExpands(hier, r, className);
+		}
+		return false; //surely unsat
+	}
+
+	/**
+	 * Must be overridden by subclasses to implement 
+	 * {@link #isSatExpands(ClassHierarchy, ReferenceSymbolic, String)}. 
+	 * The default implementation answers {@code true} 
+	 * (no local decision) so the answer is generated by 
+	 * the next decision procedure in the chain. 
+	 *  
+	 * @param hier see {@link #isSatExpands(ClassHierarchy, ReferenceSymbolic, String) isSatExpands}.
+	 * @param r see {@link #isSatExpands(ClassHierarchy, ReferenceSymbolic, String) isSatExpands}.
+	 * @param className see {@link #isSatExpands(ClassHierarchy, ReferenceSymbolic, String) isSatExpands}.
+	 * @return see {@link #isSatExpands(ClassHierarchy, ReferenceSymbolic, String) isSatExpands}.
+	 * @throws DecisionException upon failure.
+	 */
+	protected boolean isSatExpandsLocal(ClassHierarchy hier, ReferenceSymbolic r, String className) 
+	throws DecisionException {
+		return true;
+	}
+
+	/**
+	 * Queries the next decision procedure in the chain for 
+	 * satisfiability of a resolution by expansion.
+	 *  
+	 * @param hier see {@link #isSatExpands(ClassHierarchy, ReferenceSymbolic, String) isSatExpands}.
+	 * @param r see {@link #isSatExpands(ClassHierarchy, ReferenceSymbolic, String) isSatExpands}.
+	 * @param className see {@link #isSatExpands(ClassHierarchy, ReferenceSymbolic, String) isSatExpands}.
+	 * @return the result of invoking 
+	 *         {@link DecisionProcedure#isSatExpands(ClassHierarchy, ReferenceSymbolic, String) isSatExpands}{@code (hier, r, className)}
+	 *         on the next decision procedure in the chain.
+	 * @throws DecisionException if this decision procedure has
+	 *         not a successor in the chain.
+	 */
+	private final boolean delegateIsSatExpands(ClassHierarchy hier, ReferenceSymbolic r, String className) 
+	throws DecisionException {
+		if (hasNext()) {
+			try {
+				return this.next.isSatExpands(hier, r, className);
+			} catch (InvalidInputException e) {
+				//this should never happen
+				throw new UnexpectedInternalException(e);
+			}
+		}
+		throw new DecisionException(NO_DELEGATE_ERROR);
+	}
+
+	@Override
+	public final boolean isSatInitialized(ClassHierarchy hier, String className) 
+	throws InvalidInputException, DecisionException {
+		if (hier == null || className == null) {
+			throw new InvalidInputException("isSatInitialized invoked with a null parameter.");
+		}
+		final boolean localDecidesSat = isSatInitializedLocal(hier, className);
+		if (localDecidesSat) {
+			return delegateIsSatInitialized(hier, className);
+		}
+		return false; //surely unsat
+	}
+
+	/**
+	 * Must be overridden by subclasses to implement 
+	 * {@link #isSatInitialized(ClassHierarchy, String)}. 
+	 * The default implementation answers {@code true} 
+	 * (no local decision) so the answer is generated 
+	 * by the next decision procedure in 
+	 * the chain.
+	 *  
+	 * @param hier see {@link #isSatInitialized(ClassHierarchy, String) isSatInitialized}.
+	 * @param className see {@link #isSatInitialized(ClassHierarchy, String) isSatInitialized}.
+	 * @return see {@link #isSatInitialized(ClassHierarchy, String) isSatInitialized}.
+	 * @throws DecisionException upon failure.
+	 */
+	protected boolean isSatInitializedLocal(ClassHierarchy hier, String className) 
+	throws DecisionException {
+		return true;
+	}
+
+
+	/**
+	 * Queries the next decision procedure in the chain for 
+	 * satisfiability of the assumption that a class is
+	 * initialized when symbolic execution starts.
+	 *  
+	 * @param hier see {@link #isSatInitialized(ClassHierarchy, String) isSatInitialized}.
+	 * @param className see {@link #isSatInitialized(ClassHierarchy, String) isSatInitialized}.
+	 * @return the result of invoking 
+	 *         {@link DecisionProcedure#isSatInitialized(ClassHierarchy, String) isSatInitialized}{@code (hier, className)}
+	 *         on the next decision procedure in the chain.
+	 * @throws DecisionException if this decision procedure has
+	 *         not a successor in the chain.
+	 */
+	private final boolean delegateIsSatInitialized(ClassHierarchy hier, String className) 
+	throws DecisionException {
+		if (hasNext()) {
+			try {
+				return this.next.isSatInitialized(hier, className);
+			} catch (InvalidInputException e) {
+				//this should never happen
+				throw new UnexpectedInternalException(e);
+			}
+		}
+		throw new DecisionException(NO_DELEGATE_ERROR);
+	}
+
+	@Override
+	public final boolean isSatNotInitialized(ClassHierarchy hier, String className) 
+	throws InvalidInputException, DecisionException {
+		if (hier == null || className == null) {
+			throw new InvalidInputException("isSatNotInitialized invoked with a null parameter.");
+		}
+		final boolean localDecidesSat = isSatNotInitializedLocal(hier, className);
+		if (localDecidesSat) {
+			return delegateIsSatNotInitialized(hier, className);
+		}
+		return false; //surely unsat
+	}
+
+	/**
+	 * Must be overridden by subclasses to implement 
+	 * {@link #isSatNotInitialized(ClassHierarchy, String)}. 
+	 * The default implementation answers {@code true} 
+	 * (no local decision) so the answer is generated by 
+	 * the next decision procedure in the chain. 
+	 *  
+	 * @param hier see {@link #isSatNotInitialized(ClassHierarchy, String) isSatNotInitialized}.
+	 * @param className see {@link #isSatNotInitialized(ClassHierarchy, String) isSatNotInitialized}.
+	 * @return see {@link #isSatNotInitialized(ClassHierarchy, String) isSatNotInitialized}.
+	 * @throws DecisionException upon failure.
+	 */
+	protected boolean isSatNotInitializedLocal(ClassHierarchy hier, String className) 
+	throws DecisionException {
+		return true;
+	}
+
+	/**
+	 * Queries the next decision procedure in the chain for 
+	 * satisfiability of the assumption that a class is
+	 * not initialized when symbolic execution starts.
+	 *  
+	 * @param hier see {@link #isSatNotInitialized(ClassHierarchy, String) isSatNotInitialized}.
+	 * @param className see {@link #isSatNotInitialized(ClassHierarchy, String) isSatNotInitialized}.
+	 * @return the result of invoking 
+	 *         {@link DecisionProcedure#isSatNotInitialized(ClassHierarchy, String) isSatNotInitialized}{@code (hier, className)}
+	 *         on the next decision procedure in the chain.
+	 * @throws DecisionException if this decision procedure has
+	 *         not a successor in the chain.
+	 */
+	private final boolean delegateIsSatNotInitialized(ClassHierarchy hier, String className) 
+	throws DecisionException {
+		if (hasNext()) {
+			try {
+				return this.next.isSatNotInitialized(hier, className);
+			} catch (InvalidInputException e) {
+				//this should never happen
+				throw new UnexpectedInternalException(e);
+			}
+		}
+		throw new DecisionException(NO_DELEGATE_ERROR);
+	}
+
+	@Override
+	public Map<PrimitiveSymbolic, Simplex> getModel() 
+	throws DecisionException {
+		try {
+			return getModelLocal();
+		} catch (NoModelException e) {
+			return delegateGetModel();
+		}
+	}
+
+	/**
+	 * Must be overridden by subclasses to implement 
+	 * {@link #getModel()}. 
+	 * The default implementation throws {@link NoModelException} 
+	 * (no local decision) so the answer is generated by 
+	 * the next decision procedure in the chain. 
+	 * 
+	 * @return see {@link #getModel() getModel}.
+	 * @throws DecisionException upon failure.
+	 */
+	protected Map<PrimitiveSymbolic, Simplex> getModelLocal() 
+	throws DecisionException {
+		throw new NoModelException();
+	}
+
+	/**
+	 * Queries the next decision procedure in the chain for 
+	 * a model.
+	 * 
+	 * @return the result of invoking 
+	 *         {@link DecisionProcedure#getModel()}
+	 *         on the next decision procedure in the chain.
+	 * @throws DecisionException if this decision procedure has
+	 *         not a successor in the chain.
+	 */
+	private final Map<PrimitiveSymbolic, Simplex> delegateGetModel() 
+	throws DecisionException {
+		if (hasNext()) {
+			return this.next.getModel();
+		}
+		throw new DecisionException(NO_DELEGATE_ERROR);
+	}
+
+	@Override
 	public final Primitive simplify(Primitive p) {
 		final Primitive pSimpl = simplifyLocal(p);
 		if (this.next == null) {
@@ -839,15 +837,15 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 			return this.next.simplify(pSimpl);
 		}
 	}
-    
-    /**
-     * Simplifies a {@link Clause} under the current assumption.
-     * 
-     * @param c a {@link Clause}.
-     * @return a {@link Clause} equivalent to {@code c}
-     *         under the current assumption (possibly {@code c} itself).
-     */
-    private final Clause simplifyLocal(Clause c) {
+
+	/**
+	 * Simplifies a {@link Clause} under the current assumption.
+	 * 
+	 * @param c a {@link Clause}.
+	 * @return a {@link Clause} equivalent to {@code c}
+	 *         under the current assumption (possibly {@code c} itself).
+	 */
+	private final Clause simplifyLocal(Clause c) {
 		if (c instanceof ClauseAssume) {
 			final Primitive p = ((ClauseAssume) c).getCondition();
 			final Primitive pSimpl = simplifyLocal(p);
@@ -855,20 +853,20 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
 		} else {
 			return c;
 		}
-    }
+	}
 
-    /**
-     * Applies all the {@link Rewriter}s of this decision procedure
-     * to a {@link Primitive}.
-     * 
-     * @param p The {@link Primitive}.
-     * @return Another {@link Primitive} equivalent to {@code p} 
-     * (possibly {@code p} itself).
-     */
+	/**
+	 * Applies all the {@link Rewriter}s of this decision procedure
+	 * to a {@link Primitive}.
+	 * 
+	 * @param p The {@link Primitive}.
+	 * @return Another {@link Primitive} equivalent to {@code p} 
+	 * (possibly {@code p} itself).
+	 */
 	protected final Primitive simplifyLocal(Primitive p) {
 		return this.calc.applyRewriters(p, this.rewriters);
 	}
-	
+
 	@Override
 	public final void close() throws DecisionException {
 		closeLocal();
