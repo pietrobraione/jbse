@@ -83,9 +83,6 @@ public final class RunParameters implements Cloneable {
 		/** Does not use a decision procedure, all formulas will be considered satisfiable. */
 		ALL_SAT,
 
-		/** Uses CVC3 (currently deprecated). */
-		CVC3, 
-		
 		/** Uses Z3. */
 		Z3,
 		

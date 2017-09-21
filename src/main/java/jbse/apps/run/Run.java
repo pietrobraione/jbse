@@ -38,7 +38,6 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.DecisionProcedureAlwSat;
-import jbse.dec.DecisionProcedureCVC3;
 import jbse.dec.DecisionProcedureClassInit;
 import jbse.dec.DecisionProcedureEquality;
 import jbse.dec.DecisionProcedureLICS;
@@ -867,9 +866,7 @@ public final class Run {
 
         //prints some feedback
         if (this.parameters.getShowInfo()) {
-            if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC3) {
-                log(MSG_TRY_CVC3 + (path == null ? "default" : path.toString()) + ".");
-            } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.Z3) {
+            if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.Z3) {
                 log(MSG_TRY_Z3 + (path == null ? "default" : path.toString()) + ".");
             } else if (this.parameters.getDecisionProcedureType() == DecisionProcedureType.CVC4) {
                 log(MSG_TRY_CVC4 + (path == null ? "default" : path.toString()) + ".");
@@ -890,10 +887,6 @@ public final class Run {
 		try {
 		    if (type == DecisionProcedureType.ALL_SAT) {
 		        //do nothing
-		    } else if (type == DecisionProcedureType.CVC3) {
-		        final String cvc3 = (path == null ? "cvc3" : path.toString());
-		        core = new DecisionProcedureCVC3(core, calc, cvc3);
-		        coreNumeric = (needHeapCheck ? new DecisionProcedureCVC3(coreNumeric, calc, cvc3) : null);
 		    } else if (type == DecisionProcedureType.Z3) {
 		        final String z3 = (path == null ? "z3" : path.toString()) + COMMANDLINE_LAUNCH_Z3;
 		        core = new DecisionProcedureSMTLIB2_AUFNIRA(core, calc, z3);
@@ -1140,9 +1133,6 @@ public final class Run {
 
 	/** Message: welcome. */
 	private static final String MSG_WELCOME_TXT = "This is the " + JBSE.NAME + "'s Run Tool (" + JBSE.ACRONYM + " v." + JBSE.VERSION +").";
-
-	/** Message: trying to connect to CVC3. */
-	private static final String MSG_TRY_CVC3 = "Connecting to CVC3 at ";
 
 	/** Message: trying to connect to Z3. */
 	private static final String MSG_TRY_Z3 = "Connecting to Z3 at ";
