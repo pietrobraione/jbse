@@ -39,7 +39,7 @@ public final class Algo_JAVA_STRING_INTERN extends Algo_INVOKEMETA_Nonbranching 
             if (state.hasStringLiteral(this.valueString)) {
                 //nothing to do
             } else {
-                ensureStringLiteral(state, this.valueString, this.ctx.decisionProcedure);
+                ensureStringLiteral(state, this.valueString, this.ctx);
             }
         } catch (ClassCastException | ClassFileIllFormedException e) {
             throwVerifyError(state);

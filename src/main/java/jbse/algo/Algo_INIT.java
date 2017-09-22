@@ -60,7 +60,7 @@ public final class Algo_INIT {
 
         //creates and initializes the root class
         try {
-            ensureClassCreatedAndInitialized(state, ctx.rootMethodSignature.getClassName(), ctx.decisionProcedure);
+            ensureClassCreatedAndInitialized(state, ctx.rootMethodSignature.getClassName(), ctx);
         } catch (InterruptException e) {
             //nothing to do: fall through
         } catch (InvalidInputException | BadClassFileException e) {

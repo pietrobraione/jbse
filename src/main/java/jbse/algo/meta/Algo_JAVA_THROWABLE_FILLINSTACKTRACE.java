@@ -32,8 +32,8 @@ public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE extends Algo_INVOKEMETA_
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
     CannotManageStateException, InterruptException {
         try {
-            ensureClassCreatedAndInitialized(state, JAVA_STRING, this.ctx.decisionProcedure);
-            ensureClassCreatedAndInitialized(state, JAVA_THROWABLE, this.ctx.decisionProcedure);
+            ensureClassCreatedAndInitialized(state, JAVA_STRING, this.ctx);
+            ensureClassCreatedAndInitialized(state, JAVA_THROWABLE, this.ctx);
         } catch (BadClassFileException e) {
             throw new ClasspathException(e);
         } catch (InvalidInputException e) {

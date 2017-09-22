@@ -47,7 +47,7 @@ public final class Algo_JAVA_OBJECT_GETCLASS extends Algo_INVOKEMETA_Nonbranchin
                 failExecution("The 'this' parameter to java.lang.Object.getClass method is symbolic and unresolved.");
             }
             this.className = thisObj.getType();
-            ensureInstance_JAVA_CLASS(state, this.className, this.className, this.ctx.decisionProcedure);
+            ensureInstance_JAVA_CLASS(state, this.className, this.className, this.ctx);
         } catch (ClassFileNotAccessibleException e) {
             throwNew(state, ILLEGAL_ACCESS_ERROR);
             exitFromAlgorithm();

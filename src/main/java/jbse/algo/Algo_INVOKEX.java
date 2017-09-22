@@ -75,7 +75,7 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
             //TODO should we do it in the invoke[interface/special/virtual] cases? If so, isn't the same doing on methodSignatureImpl?
             if (this.isStatic) { 
                 try {
-                    ensureClassCreatedAndInitialized(state, this.methodSignatureResolved.getClassName(), this.ctx.decisionProcedure);
+                    ensureClassCreatedAndInitialized(state, this.methodSignatureResolved.getClassName(), this.ctx);
                 } catch (InvalidInputException | BadClassFileException e) {
                     //this should never happen after resolution 
                     failExecution(e);

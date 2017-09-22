@@ -50,7 +50,7 @@ final class Algo_GETSTATIC extends Algo_GETX {
         
         //possibly creates and initializes the class of the field
         try {
-            ensureClassCreatedAndInitialized(state, fieldClassName, this.ctx.decisionProcedure);
+            ensureClassCreatedAndInitialized(state, fieldClassName, this.ctx);
         } catch (InvalidInputException | BadClassFileException e) {
             //this should never happen
             //TODO really?

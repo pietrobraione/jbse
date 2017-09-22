@@ -55,7 +55,7 @@ final class Algo_PUTSTATIC extends Algo_PUTX {
 
         //possibly creates and initializes the class 
         try {
-            ensureClassCreatedAndInitialized(state, fieldClassName, this.ctx.decisionProcedure);
+            ensureClassCreatedAndInitialized(state, fieldClassName, this.ctx);
         } catch (InvalidInputException | BadClassFileException e) {
             //this should never happen
             //TODO really?

@@ -66,7 +66,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             
             //possibly creates and initializes the class
             try {
-                ensureClassCreatedAndInitialized(state, this.data.className(), this.ctx.decisionProcedure);
+                ensureClassCreatedAndInitialized(state, this.data.className(), this.ctx);
             } catch (InvalidInputException | BadClassFileException e) {
                 //this should never happen
                 failExecution(e);

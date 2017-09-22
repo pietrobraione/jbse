@@ -1,16 +1,7 @@
 package jbse.algo;
 
-import static jbse.bc.Signatures.JAVA_BOOLEAN;
 import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_CLASS_NAME;
-import static jbse.bc.Signatures.JAVA_ENUM;
-import static jbse.bc.Signatures.JAVA_HASHSET;
-import static jbse.bc.Signatures.JAVA_IDENTITYHASHMAP;
-import static jbse.bc.Signatures.JAVA_INTEGER;
-import static jbse.bc.Signatures.JAVA_INTEGER_INTEGERCACHE;
-import static jbse.bc.Signatures.JAVA_LINKEDLIST;
-import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
-import static jbse.bc.Signatures.JAVA_NUMBER;
 import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_STACK_TRACE_ELEMENT;
 import static jbse.bc.Signatures.JAVA_STACK_TRACE_ELEMENT_DECLARINGCLASS;
@@ -18,11 +9,9 @@ import static jbse.bc.Signatures.JAVA_STACK_TRACE_ELEMENT_FILENAME;
 import static jbse.bc.Signatures.JAVA_STACK_TRACE_ELEMENT_LINENUMBER;
 import static jbse.bc.Signatures.JAVA_STACK_TRACE_ELEMENT_METHODNAME;
 import static jbse.bc.Signatures.JAVA_STRING;
-import static jbse.bc.Signatures.JAVA_STRING_CASEINSCOMP;
 import static jbse.bc.Signatures.JAVA_STRING_VALUE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_BACKTRACE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_STACKTRACE;
-import static jbse.bc.Signatures.JAVA_TREESET;
 import static jbse.bc.Signatures.VERIFY_ERROR;
 import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.REFERENCE;
@@ -54,7 +43,6 @@ import jbse.bc.exc.NullMethodReceiverException;
 import jbse.common.Type;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
-import jbse.dec.DecisionProcedure;
 import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Array;
@@ -329,7 +317,7 @@ public class Util {
      * 
      * @param state a {@link State}. It must have a current frame.
      * @param className a {@link String}, the name of a class.
-     * @param dec a {@link DecisionProcedure}.
+     * @param ctx an {@link ExecutionContext}.
      * @return {@code true} iff it is necessary to run the 
      *         {@code <clinit>} methods for the initialized 
      *         class(es).
@@ -348,10 +336,10 @@ public class Util {
      *         {@code <clinit>} method(s) for the initialized 
      *         class(es).
      */
-    public static void ensureClassCreatedAndInitialized(State state, String className, DecisionProcedure dec) 
+    public static void ensureClassCreatedAndInitialized(State state, String className, ExecutionContext ctx) 
     throws InvalidInputException, DecisionException, BadClassFileException, 
     ClasspathException, InterruptException {
-        final ClassInitializer ci = new ClassInitializer(state, dec);
+        final ClassInitializer ci = new ClassInitializer(state, ctx);
         final boolean failed = ci.initialize(className);
         if (failed) {
             return;
@@ -359,27 +347,6 @@ public class Util {
         if (ci.createdFrames > 0) {
             exitFromAlgorithm();
         }
-    }
-
-    /**
-     * Determines whether a class has a pure static initializer, where with
-     * "pure" we mean that its effect is independent on when the initializer
-     * is executed.
-     * 
-     * @param classHierarchy a {@link ClassHierarchy}.
-     * @param className the name of the class.
-     * @return {@code true} iff the class has a pure static initializer.
-     */
-    private static boolean hasClassAPureInitializer(ClassHierarchy classHierarchy, String className) {
-        return 
-        	   (className.equals(JAVA_CLASS)      ||
-            className.equals(JAVA_HASHSET)    || className.equals(JAVA_IDENTITYHASHMAP)      || 
-            className.equals(JAVA_INTEGER)    || className.equals(JAVA_INTEGER_INTEGERCACHE) || 
-            className.equals(JAVA_LINKEDLIST) || className.equals(JAVA_LINKEDLIST_ENTRY)     ||
-            className.equals(JAVA_NUMBER)     || className.equals(JAVA_OBJECT)               ||
-            className.equals(JAVA_STRING)     || className.equals(JAVA_STRING_CASEINSCOMP)   ||
-            className.equals(JAVA_BOOLEAN)    || className.equals(JAVA_TREESET)   ||
-            classHierarchy.isSubclass(className, JAVA_ENUM));
     }
 
     private static class ClassInitializer {
@@ -391,7 +358,7 @@ public class Util {
         /**
          * The decision procedure.
          */
-        private final DecisionProcedure dec;
+        private final ExecutionContext ctx;
 
         /**
          * Counts the number of frames created during class initialization. 
@@ -431,9 +398,9 @@ public class Util {
         /**
          * Constructor.
          */
-        private ClassInitializer(State s, DecisionProcedure dec) {
+        private ClassInitializer(State s, ExecutionContext ctx) {
             this.s = s;
-            this.dec = dec;
+            this.ctx = ctx;
         }
 
         /**
@@ -520,11 +487,11 @@ public class Util {
                 //assumption to the state's path condition and creates 
                 //a Klass
             		final ClassHierarchy hier = this.s.getClassHierarchy();
-            		final boolean pure = hasClassAPureInitializer(hier, className);
+            		final boolean pure = this.ctx.hasClassAPureInitializer(hier, className);
             		final boolean createKlass;
             		if (pure) {
             			createKlass = true;
-            		} else if (this.dec.isSatInitialized(hier, className)) { 
+            		} else if (this.ctx.decisionProcedure.isSatInitialized(hier, className)) { 
                     this.s.assumeClassInitialized(className);
                     createKlass = false;
                 } else {
@@ -729,7 +696,7 @@ public class Util {
      * 
      * @param state the {@link State} on which this method will operate.
      * @param stringLit a {@link String} representing a string literal.
-     * @param dec a {@link DecisionProcedure}.
+     * @param ctx an {@link ExecutionContext}.
      * @throws DecisionException if {@code dec} fails in determining
      *         whether {@code java.lang.String} is or is not initialized.
      * @throws ClassFileIllFormedException if the {@code java.lang.String} classfile 
@@ -741,11 +708,11 @@ public class Util {
      *         execution of the current bytecode and run the 
      *         {@code <clinit>} method for {@code java.lang.String}.
      */
-    public static void ensureStringLiteral(State state, String stringLit, DecisionProcedure dec) 
+    public static void ensureStringLiteral(State state, String stringLit, ExecutionContext ctx) 
     throws DecisionException, ClassFileIllFormedException, ClasspathException, InterruptException {
         state.ensureStringLiteral(stringLit);
         try {
-            ensureClassCreatedAndInitialized(state, JAVA_STRING, dec);
+            ensureClassCreatedAndInitialized(state, JAVA_STRING, ctx);
         } catch (ClassFileNotFoundException e) {
             throw new ClasspathException(e);
         } catch (ClassFileIllFormedException e) {
@@ -769,7 +736,7 @@ public class Util {
      *        that wants to obtain the {@link Instance} of {@code java.lang.Class}. 
      * @param className a {@link String}, the name of the class reified
      *        by the {@link Instance} of {@code java.lang.Class}.
-     * @param dec a {@link DecisionProcedure}.
+     * @param ctx an {@link ExecutionContext}.
      * @throws DecisionException if {@code dec} fails in determining
      *         whether {@code java.lang.String} is or is not initialized.
      * @throws ClassFileIllFormedException if the {@code java.lang.String} classfile 
@@ -783,7 +750,7 @@ public class Util {
      *         execution of the current bytecode and run the 
      *         {@code <clinit>} method for {@code java.lang.String}.
      */
-    public static void ensureInstance_JAVA_CLASS(State state, String accessor, String className, DecisionProcedure dec) 
+    public static void ensureInstance_JAVA_CLASS(State state, String accessor, String className, ExecutionContext ctx) 
     throws DecisionException, ClassFileIllFormedException, ClassFileNotAccessibleException, 
     ClasspathException, InterruptException {
         //we store locally the interrupt and throw it at the end
@@ -794,7 +761,7 @@ public class Util {
 
         //possibly creates and initializes java.lang.Class
         try {
-            ensureClassCreatedAndInitialized(state, JAVA_CLASS, dec);
+            ensureClassCreatedAndInitialized(state, JAVA_CLASS, ctx);
         } catch (InterruptException e) {
             exc = e;
         } catch (ClassFileNotFoundException e) {
@@ -810,7 +777,7 @@ public class Util {
         final String classNameBinary = binaryClassName(className);
         //TODO is it ok to treat the class name String as a string literal?
         try {
-            ensureStringLiteral(state, classNameBinary, dec);
+            ensureStringLiteral(state, classNameBinary, ctx);
         } catch (InterruptException e) {
             exc = e;
         }
