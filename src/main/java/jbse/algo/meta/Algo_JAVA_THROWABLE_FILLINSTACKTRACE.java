@@ -24,7 +24,7 @@ import jbse.val.Reference;
 public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE extends Algo_INVOKEMETA_Nonbranching {
     @Override
     protected Supplier<Integer> numOperands() {
-        return () -> 1;
+        return () -> 2;
     }
     
     @Override

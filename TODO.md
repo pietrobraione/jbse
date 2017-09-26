@@ -5,8 +5,9 @@ Not in priority order.
 
 * Produce a user manual.
 * Produce a developer manual.
-* Fix reasoning on class initialization.
+* Branch on class initialization (do we really want that?).
 * Improve abstract support to strings and maps.
+* Invokedynamic, lambda.
 * Merge Algo\_GETX and Algo\_PUTX (and consequently merge Algo\_GETFIELD and Algo\_PUTFIELD and merge Algo\_GETSTATIC and Algo\_PUTSTATIC).
 * Add division-by-zero case in Algo\_XDIV and Algo\_XREM.
 * Support SMTLIB bitvector + FP standards (when they will be consolidated).

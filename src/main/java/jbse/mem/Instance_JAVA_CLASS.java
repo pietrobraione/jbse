@@ -1,10 +1,12 @@
 package jbse.mem;
 
 import static jbse.bc.Signatures.JAVA_CLASS;
+import static jbse.bc.Signatures.JAVA_CLASS_CLASSLOADER;
 
 import jbse.bc.Signature;
 import jbse.val.Calculator;
 import jbse.val.MemoryPath;
+import jbse.val.Null;
 
 /**
  * Class that represent an instance of an object with class {@code java.lang.Class} 
@@ -17,6 +19,7 @@ public final class Instance_JAVA_CLASS extends Instance {
     protected Instance_JAVA_CLASS(Calculator calc, MemoryPath origin, Epoch epoch, String representedClass, Signature... fieldSignatures) {
         super(calc, JAVA_CLASS, origin, epoch, fieldSignatures);
         this.representedClass = representedClass;
+        setFieldValue(JAVA_CLASS_CLASSLOADER, Null.getInstance()); //possibly pleonastic
     }
     
     /**

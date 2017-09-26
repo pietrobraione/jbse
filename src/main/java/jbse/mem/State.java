@@ -2,9 +2,7 @@ package jbse.mem;
 
 import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_STRING;
-import static jbse.bc.Signatures.JAVA_STRING_COUNT;
 import static jbse.bc.Signatures.JAVA_STRING_HASH;
-import static jbse.bc.Signatures.JAVA_STRING_OFFSET;
 import static jbse.bc.Signatures.JAVA_STRING_VALUE;
 import static jbse.common.Type.isPrimitiveBinaryClassName;
 
@@ -736,15 +734,11 @@ public final class State implements Cloneable {
 	    }
 		final ReferenceConcrete value = createArrayOfChars(stringLit);
 		final Simplex hash = this.calc.valInt(stringLit.hashCode());
-		final Simplex zero = this.calc.valInt(0);
-		final Simplex length = this.calc.valInt(stringLit.length());
 		
 		final ReferenceConcrete retVal = createInstance(JAVA_STRING);
 		final Instance i = (Instance) this.getObject(retVal);
 		i.setFieldValue(JAVA_STRING_VALUE,  value);
 		i.setFieldValue(JAVA_STRING_HASH,   hash);
-		i.setFieldValue(JAVA_STRING_OFFSET, zero);
-		i.setFieldValue(JAVA_STRING_COUNT,  length);
 		
         this.stringLiterals.put(stringLit, retVal);
 	}

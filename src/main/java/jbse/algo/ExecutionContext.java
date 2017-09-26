@@ -1,9 +1,9 @@
 package jbse.algo;
 
+import static jbse.bc.Signatures.JAVA_ARRAYLIST;
 import static jbse.bc.Signatures.JAVA_BOOLEAN;
 import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_CLASS_DESIREDASSERTIONSTATUS0;
-import static jbse.bc.Signatures.JAVA_CLASS_GETCLASSLOADER0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETCOMPONENTTYPE;
 import static jbse.bc.Signatures.JAVA_CLASS_GETPRIMITIVECLASS;
 import static jbse.bc.Signatures.JAVA_CLASS_ISINSTANCE;
@@ -25,9 +25,11 @@ import static jbse.bc.Signatures.JAVA_STRING_HASHCODE;
 import static jbse.bc.Signatures.JAVA_STRING_INTERN;
 import static jbse.bc.Signatures.JAVA_SYSTEM_ARRAYCOPY;
 import static jbse.bc.Signatures.JAVA_SYSTEM_IDENTITYHASHCODE;
+import static jbse.bc.Signatures.JAVA_THROWABLE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_FILLINSTACKTRACE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEDEPTH;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEELEMENT;
+import static jbse.bc.Signatures.JAVA_THROWABLE_SENTINELHOLDER;
 import static jbse.bc.Signatures.JAVA_TREESET;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ANY;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED;
@@ -37,6 +39,7 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_IGNORE;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRESOLVED;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRUNBYJBSE;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SUCCEED;
+import static jbse.bc.Signatures.SUN_VM;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -181,7 +184,6 @@ public final class ExecutionContext {
         try {
             //JRE methods
             addMetaOverridden(JAVA_CLASS_DESIREDASSERTIONSTATUS0,       "jbse/algo/meta/Algo_JAVA_CLASS_DESIREDASSERTIONSTATUS0");
-            addMetaOverridden(JAVA_CLASS_GETCLASSLOADER0,               "jbse/algo/meta/Algo_JAVA_CLASS_GETCLASSLOADER0");
             addMetaOverridden(JAVA_CLASS_GETCOMPONENTTYPE,              "jbse/algo/meta/Algo_JAVA_CLASS_GETCOMPONENTTYPE");
             addMetaOverridden(JAVA_CLASS_GETPRIMITIVECLASS,             "jbse/algo/meta/Algo_JAVA_CLASS_GETPRIMITIVECLASS");
             addMetaOverridden(JAVA_CLASS_ISINSTANCE,                    "jbse/algo/meta/Algo_JAVA_CLASS_ISINSTANCE");
@@ -290,13 +292,15 @@ public final class ExecutionContext {
      */
 	public boolean hasClassAPureInitializer(ClassHierarchy hier, String className) {
         return 
-         	(className.equals(JAVA_CLASS)      ||
-             className.equals(JAVA_HASHSET)    || className.equals(JAVA_IDENTITYHASHMAP)      || 
-             className.equals(JAVA_INTEGER)    || className.equals(JAVA_INTEGER_INTEGERCACHE) || 
-             className.equals(JAVA_LINKEDLIST) || className.equals(JAVA_LINKEDLIST_ENTRY)     ||
-             className.equals(JAVA_NUMBER)     || className.equals(JAVA_OBJECT)               ||
-             className.equals(JAVA_STRING)     || className.equals(JAVA_STRING_CASEINSCOMP)   ||
-             className.equals(JAVA_BOOLEAN)    || className.equals(JAVA_TREESET)   ||
+         	(className.equals(JAVA_CLASS)      || className.equals(JAVA_ARRAYLIST)                ||
+             className.equals(JAVA_HASHSET)    || className.equals(JAVA_IDENTITYHASHMAP)          || 
+             className.equals(JAVA_INTEGER)    || className.equals(JAVA_INTEGER_INTEGERCACHE)     || 
+             className.equals(JAVA_LINKEDLIST) || className.equals(JAVA_LINKEDLIST_ENTRY)         ||
+             className.equals(JAVA_NUMBER)     || className.equals(JAVA_OBJECT)                   ||
+             className.equals(JAVA_STRING)     || className.equals(JAVA_STRING_CASEINSCOMP)       ||
+             className.equals(JAVA_BOOLEAN)    || className.equals(JAVA_TREESET)                  ||
+             className.equals(JAVA_THROWABLE)  || className.equals(JAVA_THROWABLE_SENTINELHOLDER) ||
+             className.equals(SUN_VM)          ||
              hier.isSubclass(className, JAVA_ENUM));
 	}
 
