@@ -1,17 +1,21 @@
 package jbse.algo;
 
 import static jbse.algo.Util.ensureClassCreatedAndInitialized;
+import static jbse.bc.Signatures.JAVA_SYSTEM_INITIALIZESYSTEMCLASS;
 
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
+import jbse.bc.exc.NullMethodReceiverException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.InvalidInputException;
 import jbse.jvm.exc.InitializationException;
 import jbse.mem.State;
+import jbse.mem.exc.InvalidProgramCounterException;
+import jbse.mem.exc.InvalidSlotException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XLOAD_GETX_Expands;
 import jbse.val.ReferenceSymbolic;
@@ -42,7 +46,7 @@ public final class Algo_INIT {
     DecisionException, ClasspathException {
         final State state = new State(ctx.classpath, ctx.classFileFactoryClass, ctx.expansionBackdoor, ctx.calc);
 
-        //adds a method frame for the initial method invocation
+        //adds a method frame for the initial method invocation (and possibly triggers)
         try {
             //TODO resolve rootMethodSignature and lookup implementation
             //TODO instead of assuming that {ROOT}:this exists and create the frame, use lazy initialization also on {ROOT}:this, for homogeneity and to explore a wider range of alternatives  
@@ -67,7 +71,17 @@ public final class Algo_INIT {
             //this should not happen after push frame
             throw new UnexpectedInternalException(e);
         }
-
+        
+        //pushes a frame for java.lang.System.initializeSystemClass
+        try {
+			state.pushFrame(JAVA_SYSTEM_INITIALIZESYSTEMCLASS, false, 0);
+		} catch (NullMethodReceiverException | BadClassFileException | MethodNotFoundException | 
+				MethodCodeNotFoundException | InvalidSlotException | InvalidProgramCounterException | 
+				ThreadStackEmptyException e) {
+            //this should not happen now
+            throw new UnexpectedInternalException(e);
+		}
+        
         //saves a copy of the created state
         ctx.setInitialState(state);
 

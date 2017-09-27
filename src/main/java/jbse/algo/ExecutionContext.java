@@ -1,5 +1,29 @@
 package jbse.algo;
 
+import static jbse.algo.Overrides.ALGO_JAVA_CLASS_DESIREDASSERTIONSTATUS0;
+import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETCOMPONENTTYPE;
+import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETPRIMITIVECLASS;
+import static jbse.algo.Overrides.ALGO_JAVA_CLASS_ISINSTANCE;
+import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_GETCLASS;
+import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_HASHCODE;
+import static jbse.algo.Overrides.ALGO_JAVA_REFLECT_ARRAY_NEWARRAY;
+import static jbse.algo.Overrides.ALGO_JAVA_STRING_HASHCODE;
+import static jbse.algo.Overrides.ALGO_JAVA_STRING_INTERN;
+import static jbse.algo.Overrides.ALGO_JAVA_SYSTEM_ARRAYCOPY;
+import static jbse.algo.Overrides.ALGO_JAVA_SYSTEM_IDENTITYHASHCODE;
+import static jbse.algo.Overrides.ALGO_JAVA_THROWABLE_FILLINSTACKTRACE;
+import static jbse.algo.Overrides.ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH;
+import static jbse.algo.Overrides.ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT;
+import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ANY;
+import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ENDGUIDANCE;
+import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_FAIL;
+import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_IGNORE;
+import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ISRESOLVED;
+import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ISRUNBYJBSE;
+import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_SUCCEED;
+import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED;
+import static jbse.algo.Overrides.BASE_JAVA_SYSTEM_INITPROPERTIES;
+
 import static jbse.bc.Signatures.JAVA_ARRAYLIST;
 import static jbse.bc.Signatures.JAVA_BOOLEAN;
 import static jbse.bc.Signatures.JAVA_CLASS;
@@ -25,6 +49,7 @@ import static jbse.bc.Signatures.JAVA_STRING_HASHCODE;
 import static jbse.bc.Signatures.JAVA_STRING_INTERN;
 import static jbse.bc.Signatures.JAVA_SYSTEM_ARRAYCOPY;
 import static jbse.bc.Signatures.JAVA_SYSTEM_IDENTITYHASHCODE;
+import static jbse.bc.Signatures.JAVA_SYSTEM_INITPROPERTIES;
 import static jbse.bc.Signatures.JAVA_THROWABLE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_FILLINSTACKTRACE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEDEPTH;
@@ -48,6 +73,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import jbse.algo.exc.BaseUnsupportedException;
 import jbse.algo.exc.MetaUnsupportedException;
 import jbse.bc.ClassFileFactory;
 import jbse.bc.ClassHierarchy;
@@ -109,6 +135,9 @@ public final class ExecutionContext {
 	 * meta-level implementation. 
 	 */
 	public final DispatcherMeta dispatcherMeta = new DispatcherMeta();
+	
+	/** Maps method signatures to their base-level overrides. */
+	public final HashMap<Signature, Signature> baseOverrides = new HashMap<>();
 
 	/** The symbolic execution's {@link DecisionProcedureAlgorithms}. */
 	public final DecisionProcedureAlgorithms decisionProcedure;
@@ -180,34 +209,36 @@ public final class ExecutionContext {
 		this.triggerManager = new TriggerManager(rulesTrigger.clone()); //safety copy
 		this.comparators = comparators;
 		this.nativeInvoker = nativeInvoker;
+		
 	    //defaults
         try {
             //JRE methods
-            addMetaOverridden(JAVA_CLASS_DESIREDASSERTIONSTATUS0,       "jbse/algo/meta/Algo_JAVA_CLASS_DESIREDASSERTIONSTATUS0");
-            addMetaOverridden(JAVA_CLASS_GETCOMPONENTTYPE,              "jbse/algo/meta/Algo_JAVA_CLASS_GETCOMPONENTTYPE");
-            addMetaOverridden(JAVA_CLASS_GETPRIMITIVECLASS,             "jbse/algo/meta/Algo_JAVA_CLASS_GETPRIMITIVECLASS");
-            addMetaOverridden(JAVA_CLASS_ISINSTANCE,                    "jbse/algo/meta/Algo_JAVA_CLASS_ISINSTANCE");
-            addMetaOverridden(JAVA_OBJECT_GETCLASS,                     "jbse/algo/meta/Algo_JAVA_OBJECT_GETCLASS");
-            addMetaOverridden(JAVA_OBJECT_HASHCODE,                     "jbse/algo/meta/Algo_JAVA_OBJECT_HASHCODE");
-            addMetaOverridden(JAVA_REFLECT_ARRAY_NEWARRAY,              "jbse/algo/meta/Algo_JAVA_REFLECT_ARRAY_NEWARRAY");
-            addMetaOverridden(JAVA_STRING_HASHCODE,                     "jbse/algo/meta/Algo_JAVA_STRING_HASHCODE");
-            addMetaOverridden(JAVA_STRING_INTERN,                       "jbse/algo/meta/Algo_JAVA_STRING_INTERN");
-            addMetaOverridden(JAVA_SYSTEM_ARRAYCOPY,                    "jbse/algo/meta/Algo_JAVA_SYSTEM_ARRAYCOPY");
-            addMetaOverridden(JAVA_SYSTEM_IDENTITYHASHCODE,             "jbse/algo/meta/Algo_JAVA_SYSTEM_IDENTITYHASHCODE");
-            addMetaOverridden(JAVA_THROWABLE_FILLINSTACKTRACE,          "jbse/algo/meta/Algo_JAVA_THROWABLE_FILLINSTACKTRACE");
-            addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEDEPTH,        "jbse/algo/meta/Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH");
-            addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEELEMENT,      "jbse/algo/meta/Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT");
+            addMetaOverridden(JAVA_CLASS_DESIREDASSERTIONSTATUS0,       ALGO_JAVA_CLASS_DESIREDASSERTIONSTATUS0);
+            addMetaOverridden(JAVA_CLASS_GETCOMPONENTTYPE,              ALGO_JAVA_CLASS_GETCOMPONENTTYPE);
+            addMetaOverridden(JAVA_CLASS_GETPRIMITIVECLASS,             ALGO_JAVA_CLASS_GETPRIMITIVECLASS);
+            addMetaOverridden(JAVA_CLASS_ISINSTANCE,                    ALGO_JAVA_CLASS_ISINSTANCE);
+            addMetaOverridden(JAVA_OBJECT_GETCLASS,                     ALGO_JAVA_OBJECT_GETCLASS);
+            addMetaOverridden(JAVA_OBJECT_HASHCODE,                     ALGO_JAVA_OBJECT_HASHCODE);
+            addMetaOverridden(JAVA_REFLECT_ARRAY_NEWARRAY,              ALGO_JAVA_REFLECT_ARRAY_NEWARRAY);
+            addMetaOverridden(JAVA_STRING_HASHCODE,                     ALGO_JAVA_STRING_HASHCODE);
+            addMetaOverridden(JAVA_STRING_INTERN,                       ALGO_JAVA_STRING_INTERN);
+            addMetaOverridden(JAVA_SYSTEM_ARRAYCOPY,                    ALGO_JAVA_SYSTEM_ARRAYCOPY);
+            addMetaOverridden(JAVA_SYSTEM_IDENTITYHASHCODE,             ALGO_JAVA_SYSTEM_IDENTITYHASHCODE);
+            addMetaOverridden(JAVA_THROWABLE_FILLINSTACKTRACE,          ALGO_JAVA_THROWABLE_FILLINSTACKTRACE);
+            addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEDEPTH,        ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH);
+            addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEELEMENT,      ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT);
+            addBaseOverridden(JAVA_SYSTEM_INITPROPERTIES,               BASE_JAVA_SYSTEM_INITPROPERTIES);
 
             //jbse.meta.Analysis methods
-            addMetaOverridden(JBSE_ANALYSIS_ANY,                        "jbse/algo/meta/Algo_JBSE_ANALYSIS_ANY");
-            addMetaOverridden(JBSE_ANALYSIS_ENDGUIDANCE,                "jbse/algo/meta/Algo_JBSE_ANALYSIS_ENDGUIDANCE");
-            addMetaOverridden(JBSE_ANALYSIS_FAIL,                       "jbse/algo/meta/Algo_JBSE_ANALYSIS_FAIL");
-            addMetaOverridden(JBSE_ANALYSIS_IGNORE,                     "jbse/algo/meta/Algo_JBSE_ANALYSIS_IGNORE");
-            addMetaOverridden(JBSE_ANALYSIS_ISRESOLVED,                 "jbse/algo/meta/Algo_JBSE_ANALYSIS_ISRESOLVED");
-            addMetaOverridden(JBSE_ANALYSIS_ISRUNBYJBSE,                "jbse/algo/meta/Algo_JBSE_ANALYSIS_ISRUNBYJBSE");
-            addMetaOverridden(JBSE_ANALYSIS_SUCCEED,                    "jbse/algo/meta/Algo_JBSE_ANALYSIS_SUCCEED");
-            addMetaOverridden(JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED,  "jbse/algo/meta/Algo_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED");
-        } catch (MetaUnsupportedException e) {
+            addMetaOverridden(JBSE_ANALYSIS_ANY,                        ALGO_JBSE_ANALYSIS_ANY);
+            addMetaOverridden(JBSE_ANALYSIS_ENDGUIDANCE,                ALGO_JBSE_ANALYSIS_ENDGUIDANCE);
+            addMetaOverridden(JBSE_ANALYSIS_FAIL,                       ALGO_JBSE_ANALYSIS_FAIL);
+            addMetaOverridden(JBSE_ANALYSIS_IGNORE,                     ALGO_JBSE_ANALYSIS_IGNORE);
+            addMetaOverridden(JBSE_ANALYSIS_ISRESOLVED,                 ALGO_JBSE_ANALYSIS_ISRESOLVED);
+            addMetaOverridden(JBSE_ANALYSIS_ISRUNBYJBSE,                ALGO_JBSE_ANALYSIS_ISRUNBYJBSE);
+            addMetaOverridden(JBSE_ANALYSIS_SUCCEED,                    ALGO_JBSE_ANALYSIS_SUCCEED);
+            addMetaOverridden(JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED,  ALGO_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED);
+        } catch (BaseUnsupportedException | MetaUnsupportedException e) {
             throw new UnexpectedInternalException(e);
         }
 	}
@@ -233,7 +264,51 @@ public final class ExecutionContext {
 	 */
 	public State getInitialState() {
 		return (this.initialState == null ? null : this.initialState.clone());
-	}    
+	}
+	
+	/**
+	 * Allows to customize the behavior of the invocations to a method 
+	 * by specifying another method that implements it.
+	 * 
+	 * @param methodSignature the {@link Signature} of a method.
+	 * @param delegateMethodSignature the {@link Signature} of another method
+	 *        that will be executed in place of the method with signature
+	 *        {@code methodSignature}.
+	 * @throws BaseUnsupportedException if {@code delegateMethodSignature} is
+	 *         incompatible with (has different descriptor from) {@code methodSignature}.
+	 */
+	public void addBaseOverridden(Signature methodSignature, Signature delegateMethodSignature) 
+	throws BaseUnsupportedException {
+		if (methodSignature.getDescriptor().equals(delegateMethodSignature.getDescriptor())) {
+			this.baseOverrides.put(methodSignature, delegateMethodSignature);
+		} else {
+			throw new BaseUnsupportedException("Method " + delegateMethodSignature + " cannot override method " + methodSignature + " (incompatible signatures)");
+		}	
+	}
+	
+	/**
+	 * Determines whether a method has a base-level overriding implementation.
+	 * 
+	 * @param methodSignature the {@link Signature} of a method.
+	 * @return {@code true} iff an overriding base-level method for it was added
+	 *         by invoking {@link #addBaseOverridden(Signature, Signature)}.
+	 */
+	public boolean isMethodBaseLevelOverridden(Signature methodSignature) {
+		return this.baseOverrides.containsKey(methodSignature);
+	}
+	
+	/**
+	 * Returns the signature of a base-level override implementation 
+	 * of a method. 
+	 * 
+	 * @param methodSignature the {@link Signature} of a method.
+	 * @return  the {@link Signature} of the method that overrides
+	 *          the one with signature {@code methodSignature} and
+	 *          that was previously set by invoking {@link #addBaseOverridden(Signature, Signature)}..
+	 */
+	public Signature getBaseOverride(Signature methodSignature) {
+		return this.baseOverrides.get(methodSignature);
+	}
 
 	/**
 	 * Allows to customize the behavior of the invocations to a method 
@@ -260,7 +335,7 @@ public final class ExecutionContext {
 				ClassLoader.getSystemClassLoader().loadClass(metaDelegateClassName.replace('/', '.')).asSubclass(Algo_INVOKEMETA.class);
 			this.dispatcherMeta.loadAlgoMetaOverridden(methodSignature, metaDelegateClass);
 		} catch (ClassNotFoundException e) {
-			throw new MetaUnsupportedException("meta-level implementation class " + metaDelegateClassName + " not found.");
+			throw new MetaUnsupportedException("meta-level implementation class " + metaDelegateClassName + " not found");
 		} catch (ClassCastException e) {
 			throw new MetaUnsupportedException("meta-level implementation class " + metaDelegateClassName + " does not implement " + Algorithm.class);
 		}

@@ -14,8 +14,11 @@ import static jbse.bc.Signatures.NO_SUCH_METHOD_ERROR;
 
 import java.util.function.Supplier;
 
+import jbse.algo.exc.BaseUnsupportedException;
 import jbse.algo.exc.MetaUnsupportedException;
+import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
+import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
@@ -95,9 +98,30 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
                 exitFromAlgorithm();
             }
 
+            final ClassHierarchy hier = state.getClassHierarchy();
+            
+            //looks for a base-level implementation, and in case 
+            //executes it instead
+            if (this.ctx.isMethodBaseLevelOverridden(this.methodSignatureImpl)) {
+            		final Signature methodSignatureOverriding = this.ctx.getBaseOverride(this.methodSignatureImpl);
+            		try {
+            			final ClassFile cfOverridden = hier.getClassFile(this.methodSignatureImpl.getClassName());
+            			final ClassFile cfOverriding = hier.getClassFile(methodSignatureOverriding.getClassName());
+            			if (cfOverriding.hasMethodImplementation(methodSignatureOverriding) && 
+            				cfOverridden.isMethodStatic(this.methodSignatureImpl) == cfOverriding.isMethodStatic(methodSignatureOverriding)) {
+            				this.methodSignatureImpl = methodSignatureOverriding;
+            			} else {
+                			throw new BaseUnsupportedException("The overriding method " + methodSignatureOverriding + " has no implementation in its class, or differs from the overridden " + this.methodSignatureImpl + " because one is static and the other is not");
+            			}
+            		} catch (MethodNotFoundException e) {
+            			throw new BaseUnsupportedException("The overriding method " + methodSignatureOverriding + " does not exist (but the class seems to exist)");
+            		} catch (BadClassFileException e) {
+            			throw new BaseUnsupportedException("The overriding method " + methodSignatureOverriding + " does not exist because its class does not exist");
+            		}
+            }
+            
             //looks for a meta-level implementation, and in case 
             //delegates the responsibility to the dispatcherMeta
-            final ClassHierarchy hier = state.getClassHierarchy();
             try {
                 if (this.ctx.dispatcherMeta.isMeta(hier, this.methodSignatureImpl)) {
                     final Algo_INVOKEMETA<?, ?, ?, ?> algo = 

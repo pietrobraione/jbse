@@ -1,7 +1,7 @@
 package jbse.algo.exc;
 
 /**
- * Exception raised whenever the meta-overriding of 
+ * Exception raised whenever the meta-level overriding of 
  * a method fails. 
  *  
  * @author Pietro Braione

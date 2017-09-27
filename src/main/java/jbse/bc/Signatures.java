@@ -33,6 +33,7 @@ public final class Signatures {
     public static final String JAVA_LINKEDLIST_ENTRY         = "java/util/LinkedList$Entry";
     public static final String JAVA_NUMBER                   = "java/lang/Number";
     public static final String JAVA_OBJECT                   = "java/lang/Object";
+    public static final String JAVA_PROPERTIES               = "java/util/Properties";
     public static final String JAVA_SERIALIZABLE             = "java/io/Serializable";
     public static final String JAVA_STACK_TRACE_ELEMENT      = "java/lang/StackTraceElement";
     public static final String JAVA_STRING                   = "java/lang/String";
@@ -90,6 +91,11 @@ public final class Signatures {
                       "arraycopy");
     public static final Signature JAVA_SYSTEM_IDENTITYHASHCODE =
         new Signature(JAVA_SYSTEM, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + INT, "identityHashCode");
+    public static final Signature JAVA_SYSTEM_INITIALIZESYSTEMCLASS =
+            new Signature(JAVA_SYSTEM, "()" + VOID, "initializeSystemClass");
+    public static final Signature JAVA_SYSTEM_INITPROPERTIES =
+            new Signature(JAVA_SYSTEM, "(" + REFERENCE + JAVA_PROPERTIES + TYPEEND + ")" + 
+                                       REFERENCE + JAVA_PROPERTIES + TYPEEND, "initProperties");
     public static final Signature JAVA_THROWABLE_FILLINSTACKTRACE =
         new Signature(JAVA_THROWABLE, "(" + INT + ")" + REFERENCE + JAVA_THROWABLE + TYPEEND, "fillInStackTrace");
     public static final Signature JAVA_THROWABLE_GETSTACKTRACEDEPTH = 
