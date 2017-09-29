@@ -401,7 +401,7 @@ public class ClassHierarchy {
             if (c instanceof ClassFileBad) {
                 throw ((ClassFileBad) c).getException();
             }
-            Signature[] fields = c.getFieldsNonStatic();
+            final Signature[] fields = c.getDeclaredFieldsNonStatic();
             signatures.addAll(Arrays.asList(fields));
         }
         

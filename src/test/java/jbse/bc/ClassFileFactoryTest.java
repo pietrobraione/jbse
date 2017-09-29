@@ -695,7 +695,7 @@ public class ClassFileFactoryTest {
 		HashSet<String> fldsExp = new HashSet<String>();
 		fldsExp.add("java/lang/Boolean:Z:value");
 
-		Signature[] flds = c.getFieldsNonStatic();
+		Signature[] flds = c.getDeclaredFieldsNonStatic();
 		HashSet<String> fldsAct = new HashSet<String>();
 		for (Signature sig: flds) fldsAct.add(sig.toString());
 
@@ -715,7 +715,7 @@ public class ClassFileFactoryTest {
 		fldsExp.add("java/lang/Boolean:Ljava/lang/Class;:TYPE");
 		fldsExp.add("java/lang/Boolean:J:serialVersionUID");
 
-		Signature[] flds = c.getFieldsStatic();
+		Signature[] flds = c.getDeclaredFieldsStatic();
 		HashSet<String> fldsAct = new HashSet<String>();
 		for (Signature sig: flds) fldsAct.add(sig.toString());
 

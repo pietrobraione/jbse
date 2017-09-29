@@ -1,5 +1,6 @@
 package jbse.mem;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -57,6 +58,12 @@ public abstract class Objekt implements Cloneable {
      * mutable). 
      */
     protected HashMap<String, Variable> fields;
+    
+    /**
+     * Maps an int (slot number) to a field signature;
+     * used to support sun.misc.Unsafe.
+     */
+    private final ArrayList<Signature> slotToSignatures;
 	
     /**
      * Constructor.
@@ -73,8 +80,10 @@ public abstract class Objekt implements Cloneable {
     protected Objekt(Calculator calc, String type, MemoryPath origin, Epoch epoch, Signature... fieldSignatures) {
         this.fields = new HashMap<>();
         this.fieldSignatures = Arrays.asList(fieldSignatures.clone()); //safety copy
+        this.slotToSignatures = new ArrayList<>();
         for (Signature s : this.fieldSignatures) {
             this.fields.put(s.toString(), new Variable(calc, s.getDescriptor(), s.getName()));
+            this.slotToSignatures.add(s);
         }
     	this.type = type;
     	this.origin = origin;
@@ -163,7 +172,38 @@ public abstract class Objekt implements Cloneable {
             return null;
         }
     }
-
+    
+    /**
+     * Gets the value in a field of the {@link Instance}.
+     * 
+     * @param slot an {@code int} signifying a slot number
+     * of a field.
+     * @return a {@link Value} object which is the value 
+     * stored in the field of the {@link Instance}, or 
+     * {@code null} if {@code slot} is not the slot number
+     * of a field. 
+     */
+    public final Value getFieldValue(int slot) {
+    		try {
+    			return getFieldValue(this.slotToSignatures.get(slot));
+    		} catch (IndexOutOfBoundsException e) {
+    			return null;
+    		}
+    }
+    
+    /**
+     * Returns the slot number of a field.
+     * 
+     * @param sig the {@link Signature} of the field.
+     * @return an {@code int} greater or equal to zero, 
+     *         signifying the slot number of the field
+     *         with signature {@code sig}, or {@code -1}
+     *         if such field does not exist.
+     */
+    public final int getFieldSlot(Signature sig) {
+    		return this.slotToSignatures.indexOf(sig); //not very efficient but we don't care
+    }
+    
     /**
      * Sets the value of a field. Throws a runtime exception 
      * in the case the field does not exist or is immutable.
@@ -173,7 +213,7 @@ public abstract class Objekt implements Cloneable {
      *             the field.
      */
     //TODO throw a better exception in the case a field does not exist or is immutable
-    public void setFieldValue(Signature field, Value item) {
+    public final void setFieldValue(Signature field, Value item) {
         this.fields.get(field.toString()).setValue(item); //toString() is necessary, type erasure doesn't play well
     }
     
@@ -185,7 +225,7 @@ public abstract class Objekt implements Cloneable {
      *         {@link Map}{@code <}{@link String}{@code , }{@link Variable}{@code <}
      *         backed by this {@link Objekt}'s fields map.
      */
-    public Map<String, Variable> fields() {
+    public final Map<String, Variable> fields() {
         return Collections.unmodifiableMap(this.fields);
     }
    

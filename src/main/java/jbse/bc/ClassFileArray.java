@@ -90,12 +90,17 @@ public class ClassFileArray extends ClassFile {
 	}
 
 	@Override
-	public Signature[] getFieldsNonStatic() {
+	public Signature[] getDeclaredFieldsNonStatic() {
 		return new Signature[0];
 	}
 
 	@Override
-	public Signature[] getFieldsStatic() {
+	public Signature[] getDeclaredFieldsStatic() {
+		return new Signature[0];
+	}
+	
+	@Override
+	public Signature[] getDeclaredFields() {
 		return new Signature[0];
 	}
 
@@ -326,6 +331,16 @@ public class ClassFileArray extends ClassFile {
 
 	@Override
 	public boolean isFieldStatic(Signature fieldSignature) throws FieldNotFoundException {
+		throw new FieldNotFoundException(fieldSignature.toString());
+	}
+
+	@Override
+	public String getFieldGenericSignatureType(Signature fieldSignature) throws FieldNotFoundException {
+		throw new FieldNotFoundException(fieldSignature.toString());
+	}
+	
+	@Override
+	public int getFieldModifiers(Signature fieldSignature) throws FieldNotFoundException {
 		throw new FieldNotFoundException(fieldSignature.toString());
 	}
 

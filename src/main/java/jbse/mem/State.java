@@ -590,7 +590,7 @@ public final class State implements Cloneable {
 	        return;
 	    }
 		final ClassFile classFile = this.getClassHierarchy().getClassFile(className);
-		final Signature[] fieldsSignatures = classFile.getFieldsStatic();
+		final Signature[] fieldsSignatures = classFile.getDeclaredFieldsStatic();
 		final Klass k = new Klass(State.this.calc, null, Objekt.Epoch.EPOCH_AFTER_START, fieldsSignatures);
 		this.staticMethodArea.set(className, k);
 	}
@@ -613,7 +613,7 @@ public final class State implements Cloneable {
             return;
         }
 		final ClassFile classFile = this.getClassHierarchy().getClassFile(className);
-		final Signature[] fieldsSignatures = classFile.getFieldsStatic();
+		final Signature[] fieldsSignatures = classFile.getDeclaredFieldsStatic();
 		final Klass k = new Klass(this.calc, MemoryPath.mkStatic(className), Objekt.Epoch.EPOCH_BEFORE_START, fieldsSignatures);
 		initWithSymbolicValues(k);
 		initHashCodeSymbolic(k);
@@ -724,7 +724,10 @@ public final class State implements Cloneable {
      * circularity issues with string constant fields. Does not
      * manage the creation of the {@link Klass} for {@code java.lang.String}
      * and for the classes of the members of the created object. 
-     * If the literal already exists, does nothing.
+     * If the literal already exists, does nothing.<br /><br />
+     * 
+     * Please do NOT use it, use {@link jbse.algo.Util#ensureStringLiteral(State, String, jbse.algo.ExecutionContext)} 
+     * instead.
      * 
      * @param stringLit a {@link String} representing a string literal.
      */
@@ -838,7 +841,10 @@ public final class State implements Cloneable {
      * the instance does not exist, it resolves the class and creates 
      * it, otherwise it does nothing. Does not manage the creation 
      * of the {@link Klass}es for {@code java.lang.Class} and for 
-     * the classes of the members of the created object.
+     * the classes of the members of the created object.<br /><br />
+     * 
+     * Please do NOT use it, use {@link jbse.algo.Util#ensureInstance_JAVA_CLASS(State, String, String, jbse.algo.ExecutionContext)} 
+     * instead.
      * 
      * @param accessor a {@link String} representing the name of 
      *        the class acceding to the instance.
@@ -861,9 +867,9 @@ public final class State implements Cloneable {
     
     /**
      * Ensures an {@link Instance} of class {@code java.lang.Class} 
-     * corresponding to a class name exists in the {@link Heap}. If
-     * the instance does not exist, it resolves the class and creates 
-     * it, otherwise it does nothing.
+     * corresponding to a primitive type exists in the {@link Heap}. If
+     * the instance does not exist, it creates it, otherwise it does 
+     * nothing.
      * 
      * @param typeName a {@link String} representing a primitive type
      *        binary name (see Java Language Specification 13.1).

@@ -1,8 +1,10 @@
 package jbse.bc;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import javassist.ClassPool;
 import javassist.CtBehavior;
@@ -30,11 +32,14 @@ import jbse.bc.exc.MethodNotFoundException;
 public class ClassFileJavassist extends ClassFile {
 	private CtClass cls;
 	private ConstPool cp;
+	private ArrayList<Signature> fieldsStatic;
+	private ArrayList<Signature> fieldsObject;
 	
 	ClassFileJavassist(String className, ClassPool cpool) throws BadClassFileException {
 		try {
 			this.cls = cpool.get(className.replace("/", "."));
 			this.cp = this.cls.getClassFile().getConstPool();
+			this.fieldsStatic = this.fieldsObject = null;
 		} catch (NotFoundException e) {
 			throw new ClassFileNotFoundException(className);
 		} catch (RuntimeException e) {
@@ -109,33 +114,47 @@ public class ClassFileJavassist extends ClassFile {
         final String name = this.cp.getFieldrefName(fieldIndex);
         return new Signature(containerClass, descriptor, name);
 	}
+	
+	private ArrayList<Signature> getDeclaredFields(boolean areStatic) {
+		if ((areStatic ? this.fieldsStatic : this.fieldsObject) == null) {
+			final ArrayList<Signature> fields = new ArrayList<Signature>();
+			final CtField[] fieldsJA = this.cls.getDeclaredFields();
+			for (CtField fld : fieldsJA) {
+				if (Modifier.isStatic(fld.getModifiers()) == areStatic) {
+					final Signature sig = new Signature(this.getClassName(), fld.getSignature(), fld.getName());
+					fields.add(sig);
+				}
+			}
+			if (areStatic) {
+				this.fieldsStatic = fields;
+			} else {
+				this.fieldsObject = fields;
+			}
+		}
+		return (areStatic ? this.fieldsStatic : this.fieldsObject);
+	}
 
-	private List<Signature> getFields(boolean areStatic) {
-    	List<Signature> fields = new LinkedList<Signature>();
-    	CtField[] fieldsJA = this.cls.getDeclaredFields();
-    	for (CtField fld : fieldsJA) {
-    		if (Modifier.isStatic(fld.getModifiers()) == areStatic) {
-    			Signature sig = new Signature(this.getClassName(), fld.getSignature(), fld.getName());
-    			fields.add(sig);
-    		}
-    	}
-    	return fields;
+	@Override
+	public Signature[] getDeclaredFieldsNonStatic() {
+		final ArrayList<Signature> fieldsList = getDeclaredFields(false);
+		final Signature[] retval = new Signature[fieldsList.size()];
+		fieldsList.toArray(retval);
+		return retval;
+	}
+
+	@Override
+	public Signature[] getDeclaredFieldsStatic() {
+		final ArrayList<Signature> fieldsList = getDeclaredFields(true);
+		final Signature[] retval = new Signature[fieldsList.size()];
+		fieldsList.toArray(retval);
+		return retval;
 	}
 	
 	@Override
-	public Signature[] getFieldsNonStatic() {
-    	List<Signature> fieldsList = this.getFields(false);
-    	Signature[] retval = new Signature[fieldsList.size()];
-    	fieldsList.<Signature>toArray(retval);
-    	return retval;
-	}
-
-	@Override
-	public Signature[] getFieldsStatic() {
-    	List<Signature> fieldsList = this.getFields(true);
-    	Signature[] retval = new Signature[fieldsList.size()];
-    	fieldsList.<Signature>toArray(retval);
-    	return retval;
+	public Signature[] getDeclaredFields() {
+		return Stream
+                .concat(Arrays.stream(getDeclaredFieldsStatic()), Arrays.stream(getDeclaredFieldsNonStatic()))
+		        .toArray(Signature[]::new);
 	}
 
 	@Override
@@ -164,8 +183,9 @@ public class ClassFileJavassist extends ClassFile {
 	 */
 	private CtBehavior findMethod(Signature methodSignature) {
 		CtConstructor cc = this.cls.getClassInitializer();
-		if (methodSignature.getName().equals("<clinit>"))
+		if (methodSignature.getName().equals("<clinit>")) {
 			return cc;
+		}
 		
 		CtBehavior[] bs = this.cls.getDeclaredBehaviors();
 		for (CtBehavior b : bs) {
@@ -183,7 +203,7 @@ public class ClassFileJavassist extends ClassFile {
 	
 	private CodeAttribute getMethodCodeAttribute(Signature methodSignature) 
 	throws MethodNotFoundException, MethodCodeNotFoundException {
-		CtBehavior b = this.findMethod(methodSignature);
+		CtBehavior b = findMethod(methodSignature);
 		if (b == null) { 
 			throw new MethodNotFoundException(methodSignature.toString());
 		}
@@ -271,7 +291,7 @@ public class ClassFileJavassist extends ClassFile {
 
 	@Override
 	public List<String> getSuperInterfaceNames() {
-		final LinkedList<String> superinterfaces = new LinkedList<>();
+		final ArrayList<String> superinterfaces = new ArrayList<>();
 		final String[] ifs = this.cls.getClassFile().getInterfaces();
 		
 		for (String s : ifs) {
@@ -501,6 +521,26 @@ public class ClassFileJavassist extends ClassFile {
 		return Modifier.isStatic(fld.getModifiers());
 	}
 
+	@Override
+	public String getFieldGenericSignatureType(Signature fieldSignature) 
+	throws FieldNotFoundException {
+		final CtField fld = findField(fieldSignature);
+		if (fld == null) {
+			throw new FieldNotFoundException(fieldSignature.toString());
+		}
+		return fld.getGenericSignature();
+	}
+	
+	@Override
+	public int getFieldModifiers(Signature fieldSignature) 
+	throws FieldNotFoundException {
+		final CtField fld = findField(fieldSignature);
+		if (fld == null) {
+			throw new FieldNotFoundException(fieldSignature.toString());
+		}
+		return fld.getModifiers();
+	}
+	
 	private CtField findField(Signature fieldSignature) {
 		final CtField[] fieldsJA = this.cls.getDeclaredFields();
     	for (CtField fld : fieldsJA) {

@@ -383,6 +383,24 @@ public abstract class ClassFile {
 		return isFieldFinal(fieldSignature) && hasFieldConstantValue(fieldSignature);
 	}
 
+	/**
+	 * Returns the generic signature (type) of a field.
+	 * 
+	 * @param fieldSignature the {@link Signature} of a field.
+	 * @return a {@link String} or {@code null} if the field has not a generic signature.
+	 * @throws FieldNotFoundException iff {@link #hasFieldDeclaration}{@code (fieldSignature) == false}.
+	 */
+	public abstract String getFieldGenericSignatureType(Signature fieldSignature) throws FieldNotFoundException;
+	
+	/**
+	 * Returns the encoded modifiers of a field.
+	 * 
+	 * @param fieldSignature the {@link Signature} of a field.
+	 * @return an {@code int}, the encoded modifiers.
+	 * @throws FieldNotFoundException iff {@link #hasFieldDeclaration}{@code (fieldSignature) == false}.
+	 */
+	public abstract int getFieldModifiers(Signature fieldSignature) throws FieldNotFoundException;
+	
     /**
      * Returns the value of a constant field.
      * 
@@ -419,18 +437,36 @@ public abstract class ClassFile {
      * (not by its superclasses).
      *  
      * @return an array of {@link Signature}, one for each 
-     *         nonstatic field declared in the class.
+     *         nonstatic field declared in the class. The order
+     *         of the {@link Signature}s in the returned array
+     *         does not change across multiple invocations of 
+     *         this method. 
      */
-    public abstract Signature[] getFieldsNonStatic();
+    public abstract Signature[] getDeclaredFieldsNonStatic();
     
     /**
      * Gets all the static (class) fields declared by this class 
      * (not by its superclasses).
      *  
      * @return an array of {@link Signature}s, one for each 
-     *         static field declared in the class.
+     *         static field declared in the class. The order
+     *         of the {@link Signature}s in the returned array
+     *         does not change across multiple invocations of 
+     *         this method.  
      */
-    public abstract Signature[] getFieldsStatic();
+    public abstract Signature[] getDeclaredFieldsStatic();
+    
+    /**
+     * Gets all the fields declared by this class 
+     * (not by its superclasses), both static and not.
+     *  
+     * @return an array of {@link Signature}s, one for each 
+     *         field declared in the class. The order
+     *         of the {@link Signature}s in the returned array
+     *         does not change across multiple invocations of 
+     *         this method. 
+     */
+    public abstract Signature[] getDeclaredFields();
     
     /**
      * Given an index of the constant pool of CONSTANT_FieldRef type, returns the signature of the field.
@@ -604,4 +640,5 @@ public abstract class ClassFile {
 	public int hashCode() {
 		return this.getClassName().hashCode();
 	}
+
 }
