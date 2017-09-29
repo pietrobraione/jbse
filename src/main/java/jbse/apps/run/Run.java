@@ -1045,7 +1045,8 @@ public final class Run {
                 this.runner.getTracesTotal() 
                 - this.tracesSafe 
                 - this.tracesUnsafe
-                - this.runner.getTracesOutOfScope();
+                - this.runner.getTracesOutOfScope()
+                - this.tracesUnmanageable;
         log(MSG_END_STATES + this.engine.getAnalyzedStates() + ", "
             + MSG_END_TRACES_TOT + this.runner.getTracesTotal() + ", "
             + MSG_END_TRACES_SAFE + this.tracesSafe 
@@ -1230,16 +1231,16 @@ public final class Run {
 	private static final String WARNING_SCOPE_EXHAUSTED_COUNT = " trace exhausted count scope.";
 
 	/** Warning: cannot manage a native method invocation. */
-	private static final String WARNING_CANNOT_INVOKE_NATIVE = "Met an unmanageable native method invocation.";
+	private static final String WARNING_CANNOT_INVOKE_NATIVE = " met an unmanageable native method invocation.";
 
 	/** Warning: cannot handle a bytecode. */
-	private static final String WARNING_NOT_IMPLEMENTED_BYTECODE = "Met a bytecode that it is not yet implemented.";
+	private static final String WARNING_NOT_IMPLEMENTED_BYTECODE = " met a bytecode that it is not yet implemented.";
 
 	/** Warning: the meta-level implementation is unsupported. */
-	private static final String WARNING_META_UNSUPPORTED = "Meta-level implementation of a method cannot be executed: ";
+	private static final String WARNING_META_UNSUPPORTED = " meta-level implementation of a method cannot be executed: ";
 
 	/** Warning: a method call cannot be treated as returning an uninterpreted function value. */
-	private static final String WARNING_UNINTERPRETED_UNSUPPORTED = "Method call cannot be treated as returning an uninterpreted function symbolic value: ";
+	private static final String WARNING_UNINTERPRETED_UNSUPPORTED = " method call cannot be treated as returning an uninterpreted function symbolic value: ";
 
 	/** Error: unable to open dump file. */
 	private static final String ERROR_DUMP_FILE_OPEN = "Could not open the dump file. The session will be displayed on console only.";
