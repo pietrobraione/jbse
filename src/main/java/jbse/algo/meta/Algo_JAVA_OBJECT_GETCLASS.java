@@ -22,7 +22,7 @@ import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 
 public final class Algo_JAVA_OBJECT_GETCLASS extends Algo_INVOKEMETA_Nonbranching {
-    String className; //set by cookMore
+    private String className; //set by cookMore
     
     @Override
     protected Supplier<Integer> numOperands() {

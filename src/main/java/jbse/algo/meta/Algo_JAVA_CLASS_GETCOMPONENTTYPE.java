@@ -30,6 +30,12 @@ import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Null;
 import jbse.val.Reference;
 
+/**
+ * Meta-level implementation of {@link java.lang.Class#getComponentType()}.
+ *  
+ * @author Pietro Braione
+ *
+ */
 public final class Algo_JAVA_CLASS_GETCOMPONENTTYPE extends Algo_INVOKEMETA_Nonbranching {
     private Reference componentClassRef;  //set by cookMore
     

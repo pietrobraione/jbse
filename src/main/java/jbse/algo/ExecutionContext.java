@@ -2,6 +2,7 @@ package jbse.algo;
 
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_DESIREDASSERTIONSTATUS0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETCOMPONENTTYPE;
+import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETDECLAREDFIELDS0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETPRIMITIVECLASS;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_ISINSTANCE;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_GETCLASS;
@@ -22,31 +23,86 @@ import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ISRESOLVED;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ISRUNBYJBSE;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_SUCCEED;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED;
+import static jbse.algo.Overrides.ALGO_SUN_REFLECTION_GETCALLERCLASS;
+import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET;
+import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION;
+import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION;
 import static jbse.algo.Overrides.BASE_JAVA_SYSTEM_INITPROPERTIES;
+import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ADDRESSSIZE;
+import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ARRAYBASEOFFSET;
+import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ARRAYINDEXSCALE;
 
+import static jbse.bc.Signatures.JAVA_ABSTRACTCOLLECTION;
+import static jbse.bc.Signatures.JAVA_ABSTRACTLIST;
+import static jbse.bc.Signatures.JAVA_ABSTRACTMAP;
+import static jbse.bc.Signatures.JAVA_ABSTRACTSET;
+import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER;
+import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION;
+import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION;
 import static jbse.bc.Signatures.JAVA_ARRAYLIST;
+import static jbse.bc.Signatures.JAVA_ATOMICREFERENCEFIELDUPDATER;
+import static jbse.bc.Signatures.JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL;
+import static jbse.bc.Signatures.JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL_1;
 import static jbse.bc.Signatures.JAVA_BOOLEAN;
+import static jbse.bc.Signatures.JAVA_BUFFEREDINPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_CLASS;
+import static jbse.bc.Signatures.JAVA_CLASS_ATOMIC;
 import static jbse.bc.Signatures.JAVA_CLASS_DESIREDASSERTIONSTATUS0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETCOMPONENTTYPE;
+import static jbse.bc.Signatures.JAVA_CLASS_GETDECLAREDFIELDS0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETPRIMITIVECLASS;
 import static jbse.bc.Signatures.JAVA_CLASS_ISINSTANCE;
+import static jbse.bc.Signatures.JAVA_COLLECTIONS;
+import static jbse.bc.Signatures.JAVA_COLLECTIONS_EMPTYLIST;
+import static jbse.bc.Signatures.JAVA_COLLECTIONS_EMPTYMAP;
+import static jbse.bc.Signatures.JAVA_COLLECTIONS_EMPTYSET;
+import static jbse.bc.Signatures.JAVA_COLLECTIONS_SYNCHRONIZEDCOLLECTION;
+import static jbse.bc.Signatures.JAVA_COLLECTIONS_SYNCHRONIZEDSET;
+import static jbse.bc.Signatures.JAVA_COLLECTIONS_UNMODIFIABLECOLLECTION;
+import static jbse.bc.Signatures.JAVA_COLLECTIONS_UNMODIFIABLELIST;
+import static jbse.bc.Signatures.JAVA_COLLECTIONS_UNMODIFIABLERANDOMACCESSLIST;
+import static jbse.bc.Signatures.JAVA_DICTIONARY;
+import static jbse.bc.Signatures.JAVA_DOUBLE;
 import static jbse.bc.Signatures.JAVA_ENUM;
+import static jbse.bc.Signatures.JAVA_EXCEPTION;
+import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR;
+import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR_1;
+import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM;
+import static jbse.bc.Signatures.JAVA_FILEOUTPUTSTREAM;
+import static jbse.bc.Signatures.JAVA_FILTERINPUTSTREAM;
+import static jbse.bc.Signatures.JAVA_FLOAT;
+import static jbse.bc.Signatures.JAVA_HASHMAP;
+import static jbse.bc.Signatures.JAVA_HASHMAP_NODE;
 import static jbse.bc.Signatures.JAVA_HASHSET;
+import static jbse.bc.Signatures.JAVA_HASHTABLE;
+import static jbse.bc.Signatures.JAVA_HASHTABLE_ENTRY;
+import static jbse.bc.Signatures.JAVA_HASHTABLE_ENTRYSET;
+import static jbse.bc.Signatures.JAVA_HASHTABLE_ENUMERATOR;
 import static jbse.bc.Signatures.JAVA_IDENTITYHASHMAP;
+import static jbse.bc.Signatures.JAVA_INPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_INTEGER;
 import static jbse.bc.Signatures.JAVA_INTEGER_INTEGERCACHE;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
+import static jbse.bc.Signatures.JAVA_MATH;
+import static jbse.bc.Signatures.JAVA_MODIFIER;
 import static jbse.bc.Signatures.JAVA_NUMBER;
 import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_OBJECT_GETCLASS;
 import static jbse.bc.Signatures.JAVA_OBJECT_HASHCODE;
+import static jbse.bc.Signatures.JAVA_OBJECTS;
+import static jbse.bc.Signatures.JAVA_OUTPUTSTREAM;
+import static jbse.bc.Signatures.JAVA_PROPERTIES;
+import static jbse.bc.Signatures.JAVA_REFERENCEQUEUE;
+import static jbse.bc.Signatures.JAVA_REFERENCEQUEUE_LOCK;
+import static jbse.bc.Signatures.JAVA_REFERENCEQUEUE_NULL;
 import static jbse.bc.Signatures.JAVA_REFLECT_ARRAY_NEWARRAY;
+import static jbse.bc.Signatures.JAVA_RUNTIMEEXCEPTION;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_STRING_CASEINSCOMP;
 import static jbse.bc.Signatures.JAVA_STRING_HASHCODE;
 import static jbse.bc.Signatures.JAVA_STRING_INTERN;
+import static jbse.bc.Signatures.JAVA_SYSTEM;
 import static jbse.bc.Signatures.JAVA_SYSTEM_ARRAYCOPY;
 import static jbse.bc.Signatures.JAVA_SYSTEM_IDENTITYHASHCODE;
 import static jbse.bc.Signatures.JAVA_SYSTEM_INITPROPERTIES;
@@ -64,6 +120,17 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_IGNORE;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRESOLVED;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRUNBYJBSE;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SUCCEED;
+import static jbse.bc.Signatures.SUN_REFLECTION;
+import static jbse.bc.Signatures.SUN_REFLECTIONFACTORY;
+import static jbse.bc.Signatures.SUN_REFLECTIONFACTORY_GETREFLECTIONFACTORYACTION;
+import static jbse.bc.Signatures.SUN_REFLECTION_GETCALLERCLASS;
+import static jbse.bc.Signatures.SUN_SHAREDSECRETS;
+import static jbse.bc.Signatures.SUN_UNSAFE;
+import static jbse.bc.Signatures.SUN_UNSAFE_ADDRESSSIZE;
+import static jbse.bc.Signatures.SUN_UNSAFE_ARRAYBASEOFFSET;
+import static jbse.bc.Signatures.SUN_UNSAFE_ARRAYINDEXSCALE;
+import static jbse.bc.Signatures.SUN_UNSAFE_OBJECTFIELDOFFSET;
+import static jbse.bc.Signatures.SUN_VERSION;
 import static jbse.bc.Signatures.SUN_VM;
 
 import java.util.Comparator;
@@ -73,7 +140,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import jbse.algo.exc.BaseUnsupportedException;
 import jbse.algo.exc.MetaUnsupportedException;
 import jbse.bc.ClassFileFactory;
 import jbse.bc.ClassHierarchy;
@@ -213,32 +279,40 @@ public final class ExecutionContext {
 	    //defaults
         try {
             //JRE methods
-            addMetaOverridden(JAVA_CLASS_DESIREDASSERTIONSTATUS0,       ALGO_JAVA_CLASS_DESIREDASSERTIONSTATUS0);
-            addMetaOverridden(JAVA_CLASS_GETCOMPONENTTYPE,              ALGO_JAVA_CLASS_GETCOMPONENTTYPE);
-            addMetaOverridden(JAVA_CLASS_GETPRIMITIVECLASS,             ALGO_JAVA_CLASS_GETPRIMITIVECLASS);
-            addMetaOverridden(JAVA_CLASS_ISINSTANCE,                    ALGO_JAVA_CLASS_ISINSTANCE);
-            addMetaOverridden(JAVA_OBJECT_GETCLASS,                     ALGO_JAVA_OBJECT_GETCLASS);
-            addMetaOverridden(JAVA_OBJECT_HASHCODE,                     ALGO_JAVA_OBJECT_HASHCODE);
-            addMetaOverridden(JAVA_REFLECT_ARRAY_NEWARRAY,              ALGO_JAVA_REFLECT_ARRAY_NEWARRAY);
-            addMetaOverridden(JAVA_STRING_HASHCODE,                     ALGO_JAVA_STRING_HASHCODE);
-            addMetaOverridden(JAVA_STRING_INTERN,                       ALGO_JAVA_STRING_INTERN);
-            addMetaOverridden(JAVA_SYSTEM_ARRAYCOPY,                    ALGO_JAVA_SYSTEM_ARRAYCOPY);
-            addMetaOverridden(JAVA_SYSTEM_IDENTITYHASHCODE,             ALGO_JAVA_SYSTEM_IDENTITYHASHCODE);
-            addMetaOverridden(JAVA_THROWABLE_FILLINSTACKTRACE,          ALGO_JAVA_THROWABLE_FILLINSTACKTRACE);
-            addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEDEPTH,        ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH);
-            addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEELEMENT,      ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT);
-            addBaseOverridden(JAVA_SYSTEM_INITPROPERTIES,               BASE_JAVA_SYSTEM_INITPROPERTIES);
+            addBaseOverridden(JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION,   BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION);
+            addBaseOverridden(JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION, BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION);
+            addMetaOverridden(JAVA_CLASS_DESIREDASSERTIONSTATUS0,             ALGO_JAVA_CLASS_DESIREDASSERTIONSTATUS0);
+            addMetaOverridden(JAVA_CLASS_GETCOMPONENTTYPE,                    ALGO_JAVA_CLASS_GETCOMPONENTTYPE);
+            addMetaOverridden(JAVA_CLASS_GETDECLAREDFIELDS0,                  ALGO_JAVA_CLASS_GETDECLAREDFIELDS0);
+            addMetaOverridden(JAVA_CLASS_GETPRIMITIVECLASS,                   ALGO_JAVA_CLASS_GETPRIMITIVECLASS);
+            addMetaOverridden(JAVA_CLASS_ISINSTANCE,                          ALGO_JAVA_CLASS_ISINSTANCE);
+            addMetaOverridden(JAVA_OBJECT_GETCLASS,                           ALGO_JAVA_OBJECT_GETCLASS);
+            addMetaOverridden(JAVA_OBJECT_HASHCODE,                           ALGO_JAVA_OBJECT_HASHCODE);
+            addMetaOverridden(JAVA_REFLECT_ARRAY_NEWARRAY,                    ALGO_JAVA_REFLECT_ARRAY_NEWARRAY);
+            addMetaOverridden(JAVA_STRING_HASHCODE,                           ALGO_JAVA_STRING_HASHCODE);
+            addMetaOverridden(JAVA_STRING_INTERN,                             ALGO_JAVA_STRING_INTERN);
+            addMetaOverridden(JAVA_SYSTEM_ARRAYCOPY,                          ALGO_JAVA_SYSTEM_ARRAYCOPY);
+            addBaseOverridden(JAVA_SYSTEM_INITPROPERTIES,                     BASE_JAVA_SYSTEM_INITPROPERTIES);
+            addMetaOverridden(JAVA_SYSTEM_IDENTITYHASHCODE,                   ALGO_JAVA_SYSTEM_IDENTITYHASHCODE);
+            addMetaOverridden(JAVA_THROWABLE_FILLINSTACKTRACE,                ALGO_JAVA_THROWABLE_FILLINSTACKTRACE);
+            addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEDEPTH,              ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH);
+            addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEELEMENT,            ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT);
+            addMetaOverridden(SUN_REFLECTION_GETCALLERCLASS,                  ALGO_SUN_REFLECTION_GETCALLERCLASS);
+            addBaseOverridden(SUN_UNSAFE_ADDRESSSIZE,                         BASE_SUN_UNSAFE_ADDRESSSIZE);
+            addBaseOverridden(SUN_UNSAFE_ARRAYBASEOFFSET,                     BASE_SUN_UNSAFE_ARRAYBASEOFFSET);
+            addBaseOverridden(SUN_UNSAFE_ARRAYINDEXSCALE,                     BASE_SUN_UNSAFE_ARRAYINDEXSCALE);
+            addMetaOverridden(SUN_UNSAFE_OBJECTFIELDOFFSET,                   ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET);
 
             //jbse.meta.Analysis methods
-            addMetaOverridden(JBSE_ANALYSIS_ANY,                        ALGO_JBSE_ANALYSIS_ANY);
-            addMetaOverridden(JBSE_ANALYSIS_ENDGUIDANCE,                ALGO_JBSE_ANALYSIS_ENDGUIDANCE);
-            addMetaOverridden(JBSE_ANALYSIS_FAIL,                       ALGO_JBSE_ANALYSIS_FAIL);
-            addMetaOverridden(JBSE_ANALYSIS_IGNORE,                     ALGO_JBSE_ANALYSIS_IGNORE);
-            addMetaOverridden(JBSE_ANALYSIS_ISRESOLVED,                 ALGO_JBSE_ANALYSIS_ISRESOLVED);
-            addMetaOverridden(JBSE_ANALYSIS_ISRUNBYJBSE,                ALGO_JBSE_ANALYSIS_ISRUNBYJBSE);
-            addMetaOverridden(JBSE_ANALYSIS_SUCCEED,                    ALGO_JBSE_ANALYSIS_SUCCEED);
-            addMetaOverridden(JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED,  ALGO_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED);
-        } catch (BaseUnsupportedException | MetaUnsupportedException e) {
+            addMetaOverridden(JBSE_ANALYSIS_ANY,                       ALGO_JBSE_ANALYSIS_ANY);
+            addMetaOverridden(JBSE_ANALYSIS_ENDGUIDANCE,               ALGO_JBSE_ANALYSIS_ENDGUIDANCE);
+            addMetaOverridden(JBSE_ANALYSIS_FAIL,                      ALGO_JBSE_ANALYSIS_FAIL);
+            addMetaOverridden(JBSE_ANALYSIS_IGNORE,                    ALGO_JBSE_ANALYSIS_IGNORE);
+            addMetaOverridden(JBSE_ANALYSIS_ISRESOLVED,                ALGO_JBSE_ANALYSIS_ISRESOLVED);
+            addMetaOverridden(JBSE_ANALYSIS_ISRUNBYJBSE,               ALGO_JBSE_ANALYSIS_ISRUNBYJBSE);
+            addMetaOverridden(JBSE_ANALYSIS_SUCCEED,                   ALGO_JBSE_ANALYSIS_SUCCEED);
+            addMetaOverridden(JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED, ALGO_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED);
+        } catch (MetaUnsupportedException e) {
             throw new UnexpectedInternalException(e);
         }
 	}
@@ -274,16 +348,9 @@ public final class ExecutionContext {
 	 * @param delegateMethodSignature the {@link Signature} of another method
 	 *        that will be executed in place of the method with signature
 	 *        {@code methodSignature}.
-	 * @throws BaseUnsupportedException if {@code delegateMethodSignature} is
-	 *         incompatible with (has different descriptor from) {@code methodSignature}.
 	 */
-	public void addBaseOverridden(Signature methodSignature, Signature delegateMethodSignature) 
-	throws BaseUnsupportedException {
-		if (methodSignature.getDescriptor().equals(delegateMethodSignature.getDescriptor())) {
-			this.baseOverrides.put(methodSignature, delegateMethodSignature);
-		} else {
-			throw new BaseUnsupportedException("Method " + delegateMethodSignature + " cannot override method " + methodSignature + " (incompatible signatures)");
-		}	
+	public void addBaseOverridden(Signature methodSignature, Signature delegateMethodSignature) {
+		this.baseOverrides.put(methodSignature, delegateMethodSignature);
 	}
 	
 	/**
@@ -367,15 +434,74 @@ public final class ExecutionContext {
      */
 	public boolean hasClassAPureInitializer(ClassHierarchy hier, String className) {
         return 
-         	(className.equals(JAVA_CLASS)      || className.equals(JAVA_ARRAYLIST)                ||
-             className.equals(JAVA_HASHSET)    || className.equals(JAVA_IDENTITYHASHMAP)          || 
-             className.equals(JAVA_INTEGER)    || className.equals(JAVA_INTEGER_INTEGERCACHE)     || 
-             className.equals(JAVA_LINKEDLIST) || className.equals(JAVA_LINKEDLIST_ENTRY)         ||
-             className.equals(JAVA_NUMBER)     || className.equals(JAVA_OBJECT)                   ||
-             className.equals(JAVA_STRING)     || className.equals(JAVA_STRING_CASEINSCOMP)       ||
-             className.equals(JAVA_BOOLEAN)    || className.equals(JAVA_TREESET)                  ||
-             className.equals(JAVA_THROWABLE)  || className.equals(JAVA_THROWABLE_SENTINELHOLDER) ||
-             className.equals(SUN_VM)          ||
+            (className.equals(JAVA_ABSTRACTCOLLECTION) ||
+             className.equals(JAVA_ABSTRACTLIST) ||
+             className.equals(JAVA_ABSTRACTMAP) ||
+             className.equals(JAVA_ABSTRACTSET) ||
+             className.equals(JAVA_ACCESSCONTROLLER) || 
+             className.equals(JAVA_ARRAYLIST) || 
+             className.equals(JAVA_ATOMICREFERENCEFIELDUPDATER) || 
+             className.equals(JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL) || 
+             className.equals(JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL_1) || 
+             className.equals(JAVA_BOOLEAN) ||
+             className.equals(JAVA_BUFFEREDINPUTSTREAM) ||
+             className.equals(JAVA_CLASS) || 
+             className.equals(JAVA_CLASS_ATOMIC) || 
+             className.equals(JAVA_COLLECTIONS) ||
+             className.equals(JAVA_COLLECTIONS_EMPTYLIST) ||
+             className.equals(JAVA_COLLECTIONS_EMPTYMAP) ||
+             className.equals(JAVA_COLLECTIONS_EMPTYSET) ||
+             className.equals(JAVA_COLLECTIONS_SYNCHRONIZEDCOLLECTION) || 
+             className.equals(JAVA_COLLECTIONS_SYNCHRONIZEDSET) ||
+             className.equals(JAVA_COLLECTIONS_UNMODIFIABLECOLLECTION) ||
+             className.equals(JAVA_COLLECTIONS_UNMODIFIABLELIST) ||
+             className.equals(JAVA_COLLECTIONS_UNMODIFIABLERANDOMACCESSLIST) ||
+             className.equals(JAVA_DICTIONARY) ||
+             className.equals(JAVA_DOUBLE) ||
+             className.equals(JAVA_EXCEPTION) ||
+             className.equals(JAVA_FILEDESCRIPTOR) || 
+             className.equals(JAVA_FILEDESCRIPTOR_1) || 
+             className.equals(JAVA_FILEINPUTSTREAM) || 
+             className.equals(JAVA_FILEOUTPUTSTREAM) || 
+             className.equals(JAVA_FILTERINPUTSTREAM) || 
+             className.equals(JAVA_FLOAT) || 
+             className.equals(JAVA_HASHMAP) || 
+             className.equals(JAVA_HASHMAP_NODE) || 
+             className.equals(JAVA_HASHSET) || 
+             className.equals(JAVA_HASHTABLE) || 
+             className.equals(JAVA_HASHTABLE_ENTRY) || 
+             className.equals(JAVA_HASHTABLE_ENTRYSET) ||
+             className.equals(JAVA_HASHTABLE_ENUMERATOR) || 
+             className.equals(JAVA_IDENTITYHASHMAP) || 
+             className.equals(JAVA_INPUTSTREAM) ||
+             className.equals(JAVA_INTEGER) || 
+             className.equals(JAVA_INTEGER_INTEGERCACHE) || 
+             className.equals(JAVA_LINKEDLIST) || 
+             className.equals(JAVA_LINKEDLIST_ENTRY) ||
+             className.equals(JAVA_MATH) || 
+             className.equals(JAVA_MODIFIER) || //not really, but used as it were (it bootstraps sun.misc.SharedSecrets on init)
+             className.equals(JAVA_NUMBER) || 
+             className.equals(JAVA_OBJECT) ||
+             className.equals(JAVA_OBJECTS) ||
+             className.equals(JAVA_OUTPUTSTREAM) ||
+             className.equals(JAVA_PROPERTIES) ||
+             className.equals(JAVA_REFERENCEQUEUE) ||  //not really, but used as it were
+             className.equals(JAVA_REFERENCEQUEUE_LOCK) ||
+             className.equals(JAVA_REFERENCEQUEUE_NULL) ||
+             className.equals(JAVA_RUNTIMEEXCEPTION) ||
+             className.equals(JAVA_STRING) || 
+             className.equals(JAVA_STRING_CASEINSCOMP) ||
+             className.equals(JAVA_SYSTEM) || 
+             className.equals(JAVA_TREESET) ||
+             className.equals(JAVA_THROWABLE) || 
+             className.equals(JAVA_THROWABLE_SENTINELHOLDER) ||
+             className.equals(SUN_REFLECTION) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
+             className.equals(SUN_REFLECTIONFACTORY) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
+             className.equals(SUN_REFLECTIONFACTORY_GETREFLECTIONFACTORYACTION) ||
+             className.equals(SUN_SHAREDSECRETS) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
+             className.equals(SUN_UNSAFE) ||
+             className.equals(SUN_VERSION) ||
+             className.equals(SUN_VM) ||
              hier.isSubclass(className, JAVA_ENUM));
 	}
 

@@ -6,6 +6,12 @@ import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 
+/**
+ * Meta-level implementation of {@link java.lang.Class#desiredAssertionStatus0(java.lang.Class)}.
+ * 
+ * @author Pietro Braione
+ *
+ */
 public final class Algo_JAVA_CLASS_DESIREDASSERTIONSTATUS0 extends Algo_INVOKEMETA_Nonbranching {
     @Override
     protected Supplier<Integer> numOperands() {
