@@ -363,7 +363,7 @@ public final class Array extends Objekt {
 	 */
 	public Array(Calculator calc, boolean initSymbolic, Value initValue, Primitive length, String type, MemoryPath origin, Epoch epoch) 
 	throws InvalidTypeException {
-		super(calc, type, origin, epoch, new Signature(type, "" + Type.INT, "length"));
+		super(calc, type, origin, epoch, false, 0, new Signature(type, "" + Type.INT, "length"));
 		this.lengthSignature = new Signature(type, "" + Type.INT, "length");
 		boolean illFormed = false;
 		if (type == null || type.charAt(0) != Type.ARRAYOF || type.length() < 2) {

@@ -445,5 +445,7 @@ public final class Type {
 	/**
 	 * Do not instantiate it!
 	 */
-	private Type() { }
+	private Type() {
+		throw new AssertionError();
+	}
 }

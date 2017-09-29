@@ -105,7 +105,7 @@ public class StateFormatterGraphviz implements Formatter {
 	
 	private String formatObject(State s, Objekt o) {
 		if (o instanceof Instance || o instanceof Klass) {
-			for (Signature sig : o.getFieldSignatures()) {
+			for (Signature sig : o.getStoredFieldSignatures()) {
 				if (Type.isArray(sig.getDescriptor()) ||
 					Type.isReference(sig.getDescriptor())) {
 					Reference r = (Reference) o.getFieldValue(sig);

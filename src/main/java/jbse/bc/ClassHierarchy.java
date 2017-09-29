@@ -6,6 +6,7 @@ import static jbse.bc.Signatures.JAVA_SERIALIZABLE;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -40,6 +41,7 @@ public class ClassHierarchy {
 	private final Classpath cp;
 	private final ClassFileStore cfs;
 	private final Map<String, Set<String>> expansionBackdoor;
+	private final HashMap<String, ArrayList<Signature>> allFieldsOf;
 
 	/**
 	 * Constructor.
@@ -61,6 +63,7 @@ public class ClassHierarchy {
 		this.cp = cp.clone(); //safety copy
 		this.cfs = new ClassFileStore(cp, fClass);
 		this.expansionBackdoor = expansionBackdoor;
+		this.allFieldsOf = new HashMap<>();
 	}
 	
 	/**
@@ -386,28 +389,52 @@ public class ClassHierarchy {
 	private static final Signature[] SIGNATURE_ARRAY = new Signature[0];
 	
 	/**
-	 * Returns all the nonstatic fields of a class by
-	 * iterating over its superclass hierarchy.
+	 * Returns all the fields known to an object of a given class.
 	 * 
 	 * @param className a {@link String}, the name of the class.
-	 * @return a {@link Signature}{@code []}.
+	 * @return a {@link Signature}{@code []}. It will contain all the 
+	 *         {@link Signature}s of the class' static fields, followed
+	 *         by all the {@link Signature}s of the class' object (nonstatic) 
+	 *         fields, followed by all the {@link Signature}s of the object 
+	 *         fields of all the superclasses of the class.
      * @throws BadClassFileException if the classfile for the class 
      *         {@code className}, or for one of its superclasses, 
      *         does not exist in the classpath or is ill-formed.
 	 */	
-	public Signature[] getAllFieldsInstance(String className) throws BadClassFileException {
-        final ArrayList<Signature> signatures = new ArrayList<Signature>(0);
-        for (ClassFile c : superclasses(className)) {
-            if (c instanceof ClassFileBad) {
-                throw ((ClassFileBad) c).getException();
+	public Signature[] getAllFields(String className) throws BadClassFileException {
+		ArrayList<Signature> signatures = this.allFieldsOf.get(className);
+		if (signatures == null) {
+            signatures = new ArrayList<Signature>(0);
+            this.allFieldsOf.put(className, signatures);
+            boolean isStartClass = true;
+            for (ClassFile c : superclasses(className)) {
+                if (c instanceof ClassFileBad) {
+                    throw ((ClassFileBad) c).getException();
+                }
+                if (isStartClass) {
+                    signatures.addAll(Arrays.asList(c.getDeclaredFieldsStatic()));
+                    isStartClass = false;
+                }
+                final Signature[] fields = c.getDeclaredFieldsNonStatic();
+                signatures.addAll(Arrays.asList(fields));
             }
-            final Signature[] fields = c.getDeclaredFieldsNonStatic();
-            signatures.addAll(Arrays.asList(fields));
-        }
-        
-        //flattens myVector into mySgnArray
+		}
         final Signature[] retVal = signatures.toArray(SIGNATURE_ARRAY);
         return retVal;
+	}
+	
+	/**
+	 * Returns the number of static fields of a given class.
+	 * 
+	 * @param className a {@link String}, the name of the class.
+	 * @return an {@code int}.
+     * @throws BadClassFileException if the classfile for the class 
+     *         {@code className} does not exist in the classpath 
+     *         or is ill-formed.
+	 */
+	public int numOfStaticFields(String className) throws BadClassFileException {
+		final ClassFile c = getClassFile(className);
+		return c.getDeclaredFieldsStatic().length;
 	}
 	
 	/**

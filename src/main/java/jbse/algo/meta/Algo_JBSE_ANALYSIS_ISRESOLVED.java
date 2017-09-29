@@ -59,7 +59,7 @@ public final class Algo_JBSE_ANALYSIS_ISRESOLVED extends Algo_INVOKEMETA_Nonbran
 
         //looks for the signature of the field
         Signature sig = null;
-        for (Signature s : objectInstance.getFieldSignatures()) {
+        for (Signature s : objectInstance.getStoredFieldSignatures()) {
             if (s.getName().equals(fieldName)) {
                 sig = s;
                 break;

@@ -24,6 +24,7 @@ import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ISRUNBYJBSE;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_SUCCEED;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED;
 import static jbse.algo.Overrides.ALGO_SUN_REFLECTION_GETCALLERCLASS;
+import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION;
@@ -129,6 +130,7 @@ import static jbse.bc.Signatures.SUN_UNSAFE;
 import static jbse.bc.Signatures.SUN_UNSAFE_ADDRESSSIZE;
 import static jbse.bc.Signatures.SUN_UNSAFE_ARRAYBASEOFFSET;
 import static jbse.bc.Signatures.SUN_UNSAFE_ARRAYINDEXSCALE;
+import static jbse.bc.Signatures.SUN_UNSAFE_COMPAREANDSWAPOBJECT;
 import static jbse.bc.Signatures.SUN_UNSAFE_OBJECTFIELDOFFSET;
 import static jbse.bc.Signatures.SUN_VERSION;
 import static jbse.bc.Signatures.SUN_VM;
@@ -301,6 +303,7 @@ public final class ExecutionContext {
             addBaseOverridden(SUN_UNSAFE_ADDRESSSIZE,                         BASE_SUN_UNSAFE_ADDRESSSIZE);
             addBaseOverridden(SUN_UNSAFE_ARRAYBASEOFFSET,                     BASE_SUN_UNSAFE_ARRAYBASEOFFSET);
             addBaseOverridden(SUN_UNSAFE_ARRAYINDEXSCALE,                     BASE_SUN_UNSAFE_ARRAYINDEXSCALE);
+            addMetaOverridden(SUN_UNSAFE_COMPAREANDSWAPOBJECT,                ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT);
             addMetaOverridden(SUN_UNSAFE_OBJECTFIELDOFFSET,                   ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET);
 
             //jbse.meta.Analysis methods

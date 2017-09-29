@@ -5,8 +5,8 @@ import jbse.val.Calculator;
 import jbse.val.MemoryPath;
 
 /**
- * Class that represents a Java class in the static
- * method area, i.e., its static fields.
+ * Class that represents the shared portion of an object 
+ * in the static method area, i.e., its static fields.
  */
 public final class Klass extends Objekt {
     /**
@@ -18,10 +18,12 @@ public final class Klass extends Objekt {
      *        the object for the first time. It can be null when
      *        {@code epoch == }{@link Epoch#EPOCH_AFTER_START}.
      * @param epoch the creation {@link Epoch} of this {@link Klass}.
-     * @param fieldSignatures varargs of field {@link Signature}s.
+     * @param numOfStaticFields an {@code int}, the number of static fields.
+     * @param fieldSignatures varargs of field {@link Signature}s, all the
+     *        fields this object knows.
      */
-    Klass(Calculator calc, MemoryPath origin, Epoch epoch, Signature... fieldSignatures) {
-    	super(calc, "KLASS", origin, epoch, fieldSignatures);
+    Klass(Calculator calc, MemoryPath origin, Epoch epoch, int numOfStaticFields, Signature... fieldSignatures) {
+    	    super(calc, "KLASS", origin, epoch, true, numOfStaticFields, fieldSignatures);
     }
     
     @Override

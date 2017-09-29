@@ -21,10 +21,12 @@ public class Instance extends Objekt {
      * @param epoch the creation {@link Epoch} of this {@link Instance}. 
      *        It can be null when
      *        {@code epoch == }{@link Epoch#EPOCH_AFTER_START}.
-     * @param fieldSignatures varargs of field {@link Signature}s.
+     * @param numOfStaticFields an {@code int}, the number of static fields.
+     * @param fieldSignatures varargs of field {@link Signature}s, all the
+     *        fields this instance knows.
      */
-    protected Instance(Calculator calc, String className, MemoryPath origin, Epoch epoch, Signature... fieldSignatures) {
-    	super(calc, className, origin, epoch, fieldSignatures);
+    protected Instance(Calculator calc, String className, MemoryPath origin, Epoch epoch, int numOfStaticFields, Signature... fieldSignatures) {
+        super(calc, className, origin, epoch, false, numOfStaticFields, fieldSignatures);
     }
     
     @Override

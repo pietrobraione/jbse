@@ -41,6 +41,15 @@ public abstract class Objekt implements Cloneable {
     /** The creation epoch of this {@link Objekt}. Immutable. */
     private final Epoch epoch;
     
+    /** 
+     * {@code true} if the object must store the static fields,
+     * {@code false} if it must store the object (nonstatic) fields.
+     */
+    private final boolean staticFields;
+    
+    /** The number of static fields. Immutable. */
+    private final int numOfStaticFields;
+    
     /** All the signatures of all the fields. Immutable. */
     private final List<Signature> fieldSignatures;
     
@@ -63,6 +72,7 @@ public abstract class Objekt implements Cloneable {
      * Maps an int (slot number) to a field signature;
      * used to support sun.misc.Unsafe.
      */
+    //TODO share across objects of same class, possibly by moving it into ClassFile
     private final ArrayList<Signature> slotToSignatures;
 	
     /**
@@ -75,20 +85,32 @@ public abstract class Objekt implements Cloneable {
      *        the object for the first time. It can be null when
      *        {@code epoch == }{@link Epoch#EPOCH_AFTER_START}.
      * @param epoch the creation {@link Epoch} of this object.
-     * @param fieldSignatures an array of field {@link Signature}s.
+     * @param staticFields {@code true} if this object stores
+     *        the static fields, {@code false} if this object stores
+     *        the object (nonstatic) fields.
+     * @param numOfStaticFields an {@code int}, the number of static fields.
+     * @param fieldSignatures varargs of field {@link Signature}s, all the
+     *        fields this object knows.
      */
-    protected Objekt(Calculator calc, String type, MemoryPath origin, Epoch epoch, Signature... fieldSignatures) {
+    protected Objekt(Calculator calc, String type, MemoryPath origin, Epoch epoch, boolean staticFields, int numOfStaticFields, Signature... fieldSignatures) {
         this.fields = new HashMap<>();
+        this.staticFields = staticFields;
+        this.numOfStaticFields = numOfStaticFields;
         this.fieldSignatures = Arrays.asList(fieldSignatures.clone()); //safety copy
         this.slotToSignatures = new ArrayList<>();
+        int curSlot = 0;
         for (Signature s : this.fieldSignatures) {
-            this.fields.put(s.toString(), new Variable(calc, s.getDescriptor(), s.getName()));
+        	    if ((staticFields && curSlot < numOfStaticFields) ||
+        	    		(!staticFields && curSlot >= numOfStaticFields)) {
+                this.fields.put(s.toString(), new Variable(calc, s.getDescriptor(), s.getName()));
+        	    }
             this.slotToSignatures.add(s);
+            ++curSlot;
         }
-    	this.type = type;
-    	this.origin = origin;
-    	this.epoch = epoch;
-    	this.hashCode = calc.valInt(hashCode()); //TODO calc.valInt(hashCode()) is a VERY POOR choice! Use a suitable symbol also when the Objekt is concrete.
+        this.type = type;
+        this.origin = origin;
+        this.epoch = epoch;
+        this.hashCode = calc.valInt(hashCode()); //TODO calc.valInt(hashCode()) is a VERY POOR choice! Use a suitable symbol also when the Objekt is concrete.
     }
     
 	/**
@@ -146,13 +168,17 @@ public abstract class Objekt implements Cloneable {
     
     /**
      * Returns the {@link Signature}s of all the fields
-     * declared in this {@link Instance}.
+     * this {@link Objekt} stores.
      * 
      * @return an immutable 
      *         {@link Collection}{@code <}{@link Signature}{@code >}.
      */
-    public final Collection<Signature> getFieldSignatures() {
-    	return Collections.unmodifiableCollection(this.fieldSignatures);
+    public final Collection<Signature> getStoredFieldSignatures() {
+    	    if (this.staticFields) {
+            return Collections.unmodifiableCollection(this.fieldSignatures.subList(0, this.numOfStaticFields));
+    	    } else {
+            return Collections.unmodifiableCollection(this.fieldSignatures.subList(this.numOfStaticFields, this.fieldSignatures.size()));
+    	    }
     }
     
     /**
@@ -194,14 +220,14 @@ public abstract class Objekt implements Cloneable {
     /**
      * Returns the slot number of a field.
      * 
-     * @param sig the {@link Signature} of the field.
+     * @param field the {@link Signature} of the field.
      * @return an {@code int} greater or equal to zero, 
      *         signifying the slot number of the field
-     *         with signature {@code sig}, or {@code -1}
+     *         with signature {@code field}, or {@code -1}
      *         if such field does not exist.
      */
-    public final int getFieldSlot(Signature sig) {
-    		return this.slotToSignatures.indexOf(sig); //not very efficient but we don't care
+    public final int getFieldSlot(Signature field) {
+    		return this.slotToSignatures.indexOf(field); //not very efficient but we don't care
     }
     
     /**
@@ -210,11 +236,25 @@ public abstract class Objekt implements Cloneable {
      * 
      * @param field the {@link Signature} of the field.
      * @param item the new {@link Value} that must be assigned to
-     *             the field.
+     *        the field.
      */
     //TODO throw a better exception in the case a field does not exist or is immutable
     public final void setFieldValue(Signature field, Value item) {
         this.fields.get(field.toString()).setValue(item); //toString() is necessary, type erasure doesn't play well
+    }
+    
+    /**
+     * Sets the value of a field. Throws a runtime exception 
+     * in the case the field does not exist or is immutable.
+     * 
+     * @param slot an {@code int} signifying a slot number
+     *        of a field.
+     * @param item the new {@link Value} that must be assigned to
+     *        the field.
+     */
+    //TODO throw a better exception in the case a field does not exist or is immutable
+    public final void setFieldValue(int slot, Value item) {
+        setFieldValue(this.slotToSignatures.get(slot), item);
     }
     
     /**
@@ -259,14 +299,15 @@ public abstract class Objekt implements Cloneable {
     
 	@Override
     public Objekt clone() {
-    	try {
-    		return (Objekt) super.clone();
-    	} catch (CloneNotSupportedException e) {
-    		throw new InternalError(e);
-    	}
-    	//note that we do not clone this.fields because
-    	//it is immutable for arrays and mutable for instances;
-    	//note also that the clone will have same
-    	//hash code as the original.
+        try {
+            return (Objekt) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new InternalError(e);
+        }
+        //note that we do not clone this.fields because
+        //it is immutable for arrays and mutable for instances
+        //so the two subclasses may either deep-copy it or share;
+        //note also that the clone will have same
+        //hash code as the original.
     }
 }

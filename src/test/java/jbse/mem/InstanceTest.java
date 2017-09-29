@@ -34,8 +34,9 @@ public class InstanceTest {
 	@Test
 	public void testInstanceGetFieldValue1() throws BadClassFileException {
 		final String className = "tsafe/main/SimpleCalculator";
-		final Signature[] fieldsSignatures = this.hier.getAllFieldsInstance(className);
-		final Instance i = new Instance(this.calc, className, null, Epoch.EPOCH_AFTER_START, fieldsSignatures);
+		final int numOfStaticFields = this.hier.numOfStaticFields(className);
+		final Signature[] fieldsSignatures = this.hier.getAllFields(className);
+		final Instance i = new Instance(this.calc, className, null, Epoch.EPOCH_AFTER_START, numOfStaticFields, fieldsSignatures);
 		final Signature sigMinLat = new Signature(className, "D", "minLat");
 		final Value valMinLat = i.getFieldValue(sigMinLat);
 		assertEquals(valMinLat, this.calc.valDouble(0));
@@ -44,8 +45,9 @@ public class InstanceTest {
 	@Test
 	public void testInstanceGetFieldValue2() throws BadClassFileException {
 		final String className = "tsafe/main/SimpleCalculator";
-		final Signature[] fieldsSignatures = this.hier.getAllFieldsInstance(className);
-		final Instance i = new Instance(this.calc, className, null, Epoch.EPOCH_AFTER_START, fieldsSignatures);
+		final int numOfStaticFields = this.hier.numOfStaticFields(className);
+		final Signature[] fieldsSignatures = this.hier.getAllFields(className);
+		final Instance i = new Instance(this.calc, className, null, Epoch.EPOCH_AFTER_START, numOfStaticFields, fieldsSignatures);
 		final Signature sigMinLat = new Signature(className, "D", "minLat");
 		final Value valMinLat = i.getFieldValue(sigMinLat);
 		final Value valMinLat2 = i.getFieldValue("minLat");
@@ -56,8 +58,9 @@ public class InstanceTest {
 	@Test
 	public void testInstanceSetFieldValue() throws BadClassFileException {
 		final String className = "tsafe/main/SimpleCalculator";
-		final Signature[] fieldsSignatures = this.hier.getAllFieldsInstance(className);
-		final Instance i = new Instance(this.calc, className, null, Epoch.EPOCH_AFTER_START, fieldsSignatures);
+		final int numOfStaticFields = this.hier.numOfStaticFields(className);
+		final Signature[] fieldsSignatures = this.hier.getAllFields(className);
+		final Instance i = new Instance(this.calc, className, null, Epoch.EPOCH_AFTER_START, numOfStaticFields, fieldsSignatures);
 		final Signature sigMinLat = new Signature(className, "D", "minLat");
 		i.setFieldValue(sigMinLat, this.calc.valDouble(1.0d));
 		final Value valMinLat = i.getFieldValue("minLat");
@@ -67,8 +70,9 @@ public class InstanceTest {
 	@Test
 	public void testInstanceClone() throws BadClassFileException {
 		final String className = "tsafe/main/SimpleCalculator";
-		final Signature[] fieldsSignatures = this.hier.getAllFieldsInstance(className);
-		final Instance i = new Instance(this.calc, className, null, Epoch.EPOCH_AFTER_START, fieldsSignatures);
+		final int numOfStaticFields = this.hier.numOfStaticFields(className);
+		final Signature[] fieldsSignatures = this.hier.getAllFields(className);
+		final Instance i = new Instance(this.calc, className, null, Epoch.EPOCH_AFTER_START, numOfStaticFields, fieldsSignatures);
 		final Instance iClone = i.clone();
 		final Signature sigMinLat = new Signature(className, "D", "minLat");
 		i.setFieldValue(sigMinLat, this.calc.valDouble(1.0d));

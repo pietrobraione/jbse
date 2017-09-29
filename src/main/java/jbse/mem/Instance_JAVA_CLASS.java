@@ -16,8 +16,8 @@ public final class Instance_JAVA_CLASS extends Instance {
     /** The java class it represents. Immutable. */
     private final String representedClass;
 
-    protected Instance_JAVA_CLASS(Calculator calc, MemoryPath origin, Epoch epoch, String representedClass, Signature... fieldSignatures) {
-        super(calc, JAVA_CLASS, origin, epoch, fieldSignatures);
+    protected Instance_JAVA_CLASS(Calculator calc, MemoryPath origin, Epoch epoch, String representedClass, int numOfStaticFields, Signature... fieldSignatures) {
+        super(calc, JAVA_CLASS, origin, epoch, numOfStaticFields, fieldSignatures);
         this.representedClass = representedClass;
         setFieldValue(JAVA_CLASS_CLASSLOADER, Null.getInstance()); //possibly pleonastic
     }

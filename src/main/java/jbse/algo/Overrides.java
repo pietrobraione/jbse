@@ -40,6 +40,7 @@ public final class Overrides {
     public static final String ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT = jbse.algo.meta.Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_SUN_REFLECTION_GETCALLERCLASS       = jbse.algo.meta.Algo_SUN_REFLECTION_GETCALLERCLASS.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET        = jbse.algo.meta.Algo_SUN_UNSAFE_OBJECTFIELDOFFSET.class.getCanonicalName().replace('.', '/');
+    public static final String ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT     = jbse.algo.meta.Algo_SUN_UNSAFE_COMPAREANDSWAPOBJECT.class.getCanonicalName().replace('.', '/');
     
 	//Overriding meta-level implementations of jbse.meta.Analysis methods
     public static final String ALGO_JBSE_ANALYSIS_ANY                       = jbse.algo.meta.Algo_JBSE_ANALYSIS_ANY.class.getCanonicalName().replace('.', '/');

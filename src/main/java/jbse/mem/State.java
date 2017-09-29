@@ -542,12 +542,14 @@ public final class State implements Cloneable {
 	        throw new RuntimeException(); //TODO better exception
 	    }
 		final Signature[] fieldsSignatures;
+		final int numOfStaticFields;
         try {
-            fieldsSignatures = this.classHierarchy.getAllFieldsInstance(className);
+            numOfStaticFields = this.classHierarchy.numOfStaticFields(className);
+            fieldsSignatures = this.classHierarchy.getAllFields(className);
         } catch (BadClassFileException e) {
             throw new UnexpectedInternalException(e); //TODO do something better
         }
-		final Instance myObj = new Instance(this.calc, className, null, Epoch.EPOCH_AFTER_START, fieldsSignatures);
+		final Instance myObj = new Instance(this.calc, className, null, Epoch.EPOCH_AFTER_START, numOfStaticFields, fieldsSignatures);
 		return new ReferenceConcrete(this.heap.addNew(myObj));
 	}
 	
@@ -562,13 +564,15 @@ public final class State implements Cloneable {
      * @return a {@link ReferenceConcrete} to the newly created object.
      */
     private ReferenceConcrete createInstance_JAVA_CLASS(String representedClass) {
-        Signature[] fieldsSignatures;
+        final int numOfStaticFields;
+        final Signature[] fieldsSignatures;
         try {
-            fieldsSignatures = this.classHierarchy.getAllFieldsInstance(JAVA_CLASS);
+            numOfStaticFields = this.classHierarchy.numOfStaticFields(JAVA_CLASS);
+            fieldsSignatures = this.classHierarchy.getAllFields(JAVA_CLASS);
         } catch (BadClassFileException e) {
             throw new UnexpectedInternalException(e); //TODO do something better
         }
-        final Instance myObj = new Instance_JAVA_CLASS(this.calc, null, Epoch.EPOCH_AFTER_START, representedClass, fieldsSignatures);
+        final Instance myObj = new Instance_JAVA_CLASS(this.calc, null, Epoch.EPOCH_AFTER_START, representedClass, numOfStaticFields, fieldsSignatures);
         return new ReferenceConcrete(this.heap.addNew(myObj));
     }
     
@@ -589,9 +593,9 @@ public final class State implements Cloneable {
 	    if (existsKlass(className)) {
 	        return;
 	    }
-		final ClassFile classFile = this.getClassHierarchy().getClassFile(className);
-		final Signature[] fieldsSignatures = classFile.getDeclaredFieldsStatic();
-		final Klass k = new Klass(State.this.calc, null, Objekt.Epoch.EPOCH_AFTER_START, fieldsSignatures);
+	    final int numOfStaticFields = this.classHierarchy.numOfStaticFields(className);
+		final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(className);
+		final Klass k = new Klass(State.this.calc, null, Objekt.Epoch.EPOCH_AFTER_START, numOfStaticFields, fieldsSignatures);
 		this.staticMethodArea.set(className, k);
 	}
 
@@ -612,9 +616,9 @@ public final class State implements Cloneable {
         if (existsKlass(className)) {
             return;
         }
-		final ClassFile classFile = this.getClassHierarchy().getClassFile(className);
-		final Signature[] fieldsSignatures = classFile.getDeclaredFieldsStatic();
-		final Klass k = new Klass(this.calc, MemoryPath.mkStatic(className), Objekt.Epoch.EPOCH_BEFORE_START, fieldsSignatures);
+	    final int numOfStaticFields = this.classHierarchy.numOfStaticFields(className);
+		final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(className);
+		final Klass k = new Klass(this.calc, MemoryPath.mkStatic(className), Objekt.Epoch.EPOCH_BEFORE_START, numOfStaticFields, fieldsSignatures);
 		initWithSymbolicValues(k);
 		initHashCodeSymbolic(k);
         this.staticMethodArea.set(className, k);
@@ -652,13 +656,15 @@ public final class State implements Cloneable {
 	}
 
 	private Instance newInstanceSymbolic(String className, MemoryPath origin) {
+		final int numOfStaticFields;
 		final Signature[] fieldsSignatures;
         try {
-            fieldsSignatures = this.classHierarchy.getAllFieldsInstance(className);
+            numOfStaticFields = this.classHierarchy.numOfStaticFields(className);
+            fieldsSignatures = this.classHierarchy.getAllFields(className);
         } catch (BadClassFileException e) {
             throw new UnexpectedInternalException(e); //TODO do something better
         }
-		final Instance obj = new Instance(this.calc, className, origin, Epoch.EPOCH_BEFORE_START, fieldsSignatures);
+		final Instance obj = new Instance(this.calc, className, origin, Epoch.EPOCH_BEFORE_START, numOfStaticFields, fieldsSignatures);
 		initWithSymbolicValues(obj);
 		initHashCodeSymbolic(obj);
 		return obj;
@@ -671,7 +677,7 @@ public final class State implements Cloneable {
 	 *              symbolic values.
 	 */
 	private void initWithSymbolicValues(Objekt myObj) {
-		for (final Signature fieldSignature : myObj.getFieldSignatures()) {
+		for (final Signature fieldSignature : myObj.getStoredFieldSignatures()) {
 			//gets the field signature and name
 			final String fieldType = fieldSignature.getDescriptor();
 			final String fieldName = fieldSignature.getName();

@@ -191,6 +191,9 @@ public final class Signatures {
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + INT, "arrayBaseOffset");
     public static final Signature SUN_UNSAFE_ARRAYINDEXSCALE = 
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + INT, "arrayIndexScale");
+    public static final Signature SUN_UNSAFE_COMPAREANDSWAPOBJECT = 
+            new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + BOOLEAN, 
+                          "compareAndSwapObject");
     public static final Signature SUN_UNSAFE_OBJECTFIELDOFFSET = 
             new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_FIELD + TYPEEND + ")" + LONG, "objectFieldOffset");
     

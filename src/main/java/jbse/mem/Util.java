@@ -71,25 +71,55 @@ public class Util {
 	}
 	
 	/**
-	 * Checks whether two {@link Reference}s are alias. 
+	 * Checks whether two {@link Reference}s are surely alias. 
 	 * 
 	 * @param s a {@link State}. It must not be {@code null}.
 	 * @param r1 a {@link Reference}. It must not be {@code null}.
 	 * @param r2 a {@link Reference}. It must not be {@code null}.
 	 * @return {@code true} if {@code r1} and {@code r2} denote 
-	 *         the same heap position, {@code false} if they do not, 
-	 *         or if at least one is an unresolved symbolic reference.
+	 *         the same heap position (i.e. either {@code r1 == r2}
+	 *         or they are both resolved to the same heap position), 
+	 *         {@code false} otherwise.
 	 */
 	public static boolean areAlias(State s, Reference r1, Reference r2) {
 		final long r1Pos = heapPosition(s, r1);
 		final long r2Pos = heapPosition(s, r2);
 		if (r1Pos == POS_UNKNOWN || r2Pos == POS_UNKNOWN) {
-			return false;
+			return (r1 == r2);
 		} else {
 			return (r1Pos == r2Pos);
 		}
 	}
 	
+	/**
+	 * Checks whether two {@link Reference}s are surely not alias. 
+	 * 
+	 * @param s a {@link State}. It must not be {@code null}.
+	 * @param r1 a {@link Reference}. It must not be {@code null}.
+	 * @param r2 a {@link Reference}. It must not be {@code null}.
+	 * @return {@code true} if {@code r1} and {@code r2} denote 
+	 *         different heap position (i.e. they are both resolved 
+	 *         to different heap position), {@code false} otherwise.
+	 */
+	public static boolean areNotAlias(State s, Reference r1, Reference r2) {
+		final long r1Pos = heapPosition(s, r1);
+		final long r2Pos = heapPosition(s, r2);
+		if (r1Pos == POS_UNKNOWN || r2Pos == POS_UNKNOWN) {
+			return false;
+		} else {
+			return (r1Pos != r2Pos);
+		}
+	}
+	
+	/**
+	 * Returns the position in the heap a {@link Reference} points to
+	 * 
+	 * @param s a {@link State}.
+	 * @param r a {@link Reference}.
+	 * @return a {@code long}, the position in the heap of {@code s} to
+	 *         which {@code r} points, or {@link #POS_UNKNOWN} if
+	 *         {@code r} is not resolved.
+	 */
 	public static long heapPosition(State s, Reference r) {
 		if (isResolved(s, r)) {
 	        return (r.isSymbolic() ? s.getResolution((ReferenceSymbolic) r) : ((ReferenceConcrete) r).getHeapPosition());
