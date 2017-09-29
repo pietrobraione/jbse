@@ -66,14 +66,6 @@ import jbse.val.exc.InvalidTypeException;
 
 public class Util {
     /**
-     * Cleanly interrupts the execution of an {@link Algorithm}.
-     */
-    public static void exitFromAlgorithm() throws InterruptException {
-        assert false;
-        throw InterruptException.mk();
-    }
-
-    /**
      * Abruptly interrupts the execution of JBSE
      * in the case of an unexpected internal error.
      * 
@@ -93,6 +85,14 @@ public class Util {
      */
     public static void failExecution(String s) {
         throw new UnexpectedInternalException(s);
+    }
+
+    /**
+     * Cleanly interrupts the execution of an {@link Algorithm}.
+     */
+    public static void exitFromAlgorithm() throws InterruptException {
+        assert false;
+        throw InterruptException.mk();
     }
 
     /**
@@ -545,7 +545,7 @@ public class Util {
                 final String className = it.next();
                 final Klass k = this.s.getKlass(className);
                 final ClassFile classFile = this.s.getClassHierarchy().getClassFile(className);
-                final Signature[] flds = classFile.getFieldsStatic();
+                final Signature[] flds = classFile.getDeclaredFieldsStatic();
                 for (final Signature sig : flds) {
                     try {
                         if (classFile.isFieldConstant(sig)) {
