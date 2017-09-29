@@ -5,6 +5,8 @@ Not in priority order.
 
 * Produce a user manual.
 * Produce a developer manual.
+* Review the javadocs and fix them; add javadoc for each package.
+* Fix symbolic arrays.
 * Branch on class initialization (do we really want that?).
 * Improve abstract support to strings and maps.
 * Invokedynamic, lambda.
@@ -13,11 +15,11 @@ Not in priority order.
 * Support SMTLIB bitvector + FP standards (when they will be consolidated).
 * Use logging for output.
 * Change configuration files format and make all parameters configurable through file.
+* Many, many more unit/integration/system tests.
 * Multithreaded analysis.
 * Use full classpath scanning for reference resolution.
 * Add license and copyright at the beginning of each source file.
 * Fix all the remaining TODOs in the source.
 * Run Findbugs, Checkstyle, PMD and improve the quality of code.
 * Run Structure101 and improve the architecture of the code.
-* Review the javadocs and fix them; add javadoc for each package.
 * Possibly add interface to [PTC-solver](https://github.com/echancrure/PTC-Solver.git).

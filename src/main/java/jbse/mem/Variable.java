@@ -17,17 +17,6 @@ public class Variable implements Cloneable {
     /** {@link Value} stored in the variable. */
     private Value value;
 
-    @Override
-    public Variable clone() {
-        final Variable o;
-        try {
-            o = (Variable) super.clone();
-        } catch (CloneNotSupportedException e) {
-			throw new InternalError(e);
-        }
-        return o;
-    }
-
     /**
      * Constructor setting the variable to its default value.
      * 
@@ -93,6 +82,18 @@ public class Variable implements Cloneable {
         return this.type;
     }
 
+    @Override
+    public Variable clone() {
+        final Variable o;
+        try {
+            o = (Variable) super.clone();
+        } catch (CloneNotSupportedException e) {
+			throw new InternalError(e);
+        }
+        return o;
+    }
+
+    @Override
     public String toString() {
         String tmp;
         if (this.value == null)
