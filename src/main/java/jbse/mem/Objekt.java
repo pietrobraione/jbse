@@ -1,6 +1,5 @@
 package jbse.mem;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -50,7 +49,12 @@ public abstract class Objekt implements Cloneable {
     /** The number of static fields. Immutable. */
     private final int numOfStaticFields;
     
-    /** All the signatures of all the fields. Immutable. */
+    /** 
+     * All the signatures of all the fields declared by 
+     * this {@link Objekt}'s class (static and nonstatic)
+     * or superclasses (nonstatic). The position of a field
+     * signature in this list is its slot number,
+     * used to support sun.misc.Unsafe. Immutable. */
     private final List<Signature> fieldSignatures;
     
     /** 
@@ -68,13 +72,6 @@ public abstract class Objekt implements Cloneable {
      */
     protected HashMap<String, Variable> fields;
     
-    /**
-     * Maps an int (slot number) to a field signature;
-     * used to support sun.misc.Unsafe.
-     */
-    //TODO share across objects of same class, possibly by moving it into ClassFile
-    private final ArrayList<Signature> slotToSignatures;
-	
     /**
      * Constructor.
      * 
@@ -97,14 +94,12 @@ public abstract class Objekt implements Cloneable {
         this.staticFields = staticFields;
         this.numOfStaticFields = numOfStaticFields;
         this.fieldSignatures = Arrays.asList(fieldSignatures.clone()); //safety copy
-        this.slotToSignatures = new ArrayList<>();
         int curSlot = 0;
         for (Signature s : this.fieldSignatures) {
         	    if ((staticFields && curSlot < numOfStaticFields) ||
         	    		(!staticFields && curSlot >= numOfStaticFields)) {
                 this.fields.put(s.toString(), new Variable(calc, s.getDescriptor(), s.getName()));
         	    }
-            this.slotToSignatures.add(s);
             ++curSlot;
         }
         this.type = type;
@@ -211,7 +206,7 @@ public abstract class Objekt implements Cloneable {
      */
     public final Value getFieldValue(int slot) {
     		try {
-    			return getFieldValue(this.slotToSignatures.get(slot));
+    			return getFieldValue(this.fieldSignatures.get(slot));
     		} catch (IndexOutOfBoundsException e) {
     			return null;
     		}
@@ -227,7 +222,7 @@ public abstract class Objekt implements Cloneable {
      *         if such field does not exist.
      */
     public final int getFieldSlot(Signature field) {
-    		return this.slotToSignatures.indexOf(field); //not very efficient but we don't care
+    		return this.fieldSignatures.indexOf(field); //not very efficient but we don't care
     }
     
     /**
@@ -254,7 +249,7 @@ public abstract class Objekt implements Cloneable {
      */
     //TODO throw a better exception in the case a field does not exist or is immutable
     public final void setFieldValue(int slot, Value item) {
-        setFieldValue(this.slotToSignatures.get(slot), item);
+        setFieldValue(this.fieldSignatures.get(slot), item);
     }
     
     /**
