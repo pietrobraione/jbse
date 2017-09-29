@@ -21,6 +21,11 @@ import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 
+/**
+ * Meta-level implementation of {@link java.lang.Throwable#fillInStackTrace(int)}.
+ * 
+ * @author Pietro Braione
+ */
 public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE extends Algo_INVOKEMETA_Nonbranching {
     @Override
     protected Supplier<Integer> numOperands() {

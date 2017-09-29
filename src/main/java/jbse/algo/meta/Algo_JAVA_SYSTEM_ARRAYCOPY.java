@@ -32,6 +32,11 @@ import jbse.val.Reference;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
+/**
+ * Meta-level implementation of {@link java.lang.System#arraycopy(Object, int, Object, int, int)}.
+ * 
+ * @author Pietro Braione
+ */
 public final class Algo_JAVA_SYSTEM_ARRAYCOPY extends Algo_INVOKEMETA<
 DecisionAlternative_XASTORE,
 StrategyDecide<DecisionAlternative_XASTORE>, 

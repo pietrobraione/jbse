@@ -13,6 +13,11 @@ import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 
+/**
+ * Meta-level implementation of {@link java.lang.System#identityHashCode(Object)}.
+ * 
+ * @author Pietro Braione
+ */
 public final class Algo_JAVA_SYSTEM_IDENTITYHASHCODE extends Algo_INVOKEMETA_Nonbranching {
     @Override
     protected Supplier<Integer> numOperands() {

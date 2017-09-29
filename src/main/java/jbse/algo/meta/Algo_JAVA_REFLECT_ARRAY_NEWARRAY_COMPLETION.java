@@ -16,6 +16,7 @@ import static jbse.common.Type.isPrimitiveBinaryClassName;
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_XNEWARRAY;
+import jbse.algo.Algorithm;
 import jbse.algo.BytecodeData_1ZME;
 import jbse.algo.InterruptException;
 import jbse.mem.Instance_JAVA_CLASS;
@@ -23,6 +24,12 @@ import jbse.mem.State;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 
+/**
+ * Meta-level implementation of {@link java.lang.reflect.Array#newArray(Class, int)}.
+ * This {@link Algorithm} completes the execution.
+ * 
+ * @author Pietro Braione
+ */
 public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEWARRAY<BytecodeData_1ZME> {
     @Override
     protected Supplier<Integer> numOperands() {

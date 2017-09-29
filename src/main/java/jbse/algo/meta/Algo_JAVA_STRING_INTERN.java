@@ -17,6 +17,11 @@ import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 
+/**
+ * Meta-level implementation of {@link java.lang.String#intern()}.
+ * 
+ * @author Pietro Braione
+ */
 public final class Algo_JAVA_STRING_INTERN extends Algo_INVOKEMETA_Nonbranching {
     private String valueString; //set by cookMore
     

@@ -21,6 +21,11 @@ import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 
+/**
+ * Meta-level implementation of {@link java.lang.Object#getClass()}.
+ * 
+ * @author Pietro Braione
+ */
 public final class Algo_JAVA_OBJECT_GETCLASS extends Algo_INVOKEMETA_Nonbranching {
     String className; //set by cookMore
     

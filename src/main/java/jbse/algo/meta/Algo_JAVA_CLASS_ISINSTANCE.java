@@ -17,6 +17,11 @@ import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 import jbse.val.Simplex;
 
+/**
+ * Meta-level implementation of {@link java.lang.Class#isInstance(Object)}.
+ * 
+ * @author Pietro Braione
+ */
 public final class Algo_JAVA_CLASS_ISINSTANCE extends Algo_INVOKEMETA_Nonbranching {
     private String representedClass; //set by cookMore
     private Reference tmpValue; //set by cookMore

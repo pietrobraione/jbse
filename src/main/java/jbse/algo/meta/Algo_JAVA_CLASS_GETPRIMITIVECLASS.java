@@ -16,6 +16,11 @@ import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 
+/**
+ * Meta-level implementation of {@link java.lang.Class#getPrimitiveClass(String)}.
+ * 
+ * @author Pietro Braione
+ */
 public final class Algo_JAVA_CLASS_GETPRIMITIVECLASS extends Algo_INVOKEMETA_Nonbranching {
     @Override
     protected Supplier<Integer> numOperands() {
