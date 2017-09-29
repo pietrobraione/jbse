@@ -8,6 +8,7 @@ import static jbse.common.Type.isArray;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isPrimitiveOpStack;
 
+import jbse.algo.exc.MissingTriggerParameterException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
@@ -90,7 +91,7 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
     }
 
     protected final void update(State state, DecisionAlternative_XYLOAD_GETX_Loads altLoads) 
-    throws DecisionException, InterruptException {
+    throws DecisionException, InterruptException, MissingTriggerParameterException {
         //possibly materializes the value
         final Value val = altLoads.getValueToLoad();
         final Value valMaterialized = possiblyMaterialize(state, val);

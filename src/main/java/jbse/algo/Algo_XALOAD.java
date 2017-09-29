@@ -13,6 +13,7 @@ import static jbse.common.Type.getArrayMemberType;
 import java.util.Collection;
 import java.util.function.Supplier;
 
+import jbse.algo.exc.MissingTriggerParameterException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
@@ -257,13 +258,13 @@ StrategyUpdate_XALOAD> {
         return new StrategyUpdate_XALOAD() {
             @Override
             public void updateResolved(State s, DecisionAlternative_XALOAD_Resolved dav) 
-            throws DecisionException, InterruptException {
+            throws DecisionException, InterruptException, MissingTriggerParameterException {
                 Algo_XALOAD.this.update(s, dav); //implemented in Algo_XYLOAD_GETX
             }
 
             @Override
             public void updateReference(State s, DecisionAlternative_XALOAD_Unresolved dar) 
-            throws DecisionException, InterruptException {
+            throws DecisionException, InterruptException, MissingTriggerParameterException {
                 Algo_XALOAD.this.update(s, dar); //implemented in Algo_XYLOAD_GETX
             }
 
