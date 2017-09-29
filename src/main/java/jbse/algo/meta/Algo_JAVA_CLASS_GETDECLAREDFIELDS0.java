@@ -55,7 +55,6 @@ import jbse.val.exc.InvalidTypeException;
  * Meta-level implementation of {@link java.lang.Class#getDeclaredFields0(boolean)}.
  * 
  * @author Pietro Braione
- *
  */
 public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_Nonbranching {
     private ClassFile cf; //set by cookMore

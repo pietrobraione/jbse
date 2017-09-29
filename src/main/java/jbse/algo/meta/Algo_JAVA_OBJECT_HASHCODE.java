@@ -13,6 +13,11 @@ import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 
+/**
+ * Meta-level implementation of {@link java.lang.Object#hashCode()}.
+ * 
+ * @author Pietro Braione
+ */
 public final class Algo_JAVA_OBJECT_HASHCODE extends Algo_INVOKEMETA_Nonbranching {
     @Override
     protected Supplier<Integer> numOperands() {
