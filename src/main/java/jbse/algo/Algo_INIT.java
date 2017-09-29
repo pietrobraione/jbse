@@ -1,8 +1,10 @@
 package jbse.algo;
 
 import static jbse.algo.Util.ensureClassCreatedAndInitialized;
+import static jbse.bc.Signatures.JAVA_SYSTEM;
 import static jbse.bc.Signatures.JAVA_SYSTEM_INITIALIZESYSTEMCLASS;
 
+import jbse.algo.exc.MissingTriggerParameterException;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodCodeNotFoundException;
@@ -56,9 +58,30 @@ public final class Algo_INIT {
                 final DecisionAlternative_XLOAD_GETX_Expands rootExpansion = ctx.decisionProcedure.getRootDecisionAlternative(rootThis, className);
                 ctx.triggerManager.loadTriggerFramesRoot(state, rootExpansion);
             }
-        } catch (BadClassFileException | MethodNotFoundException | MethodCodeNotFoundException e) {
+        } catch (BadClassFileException | MethodNotFoundException | 
+        		     MethodCodeNotFoundException | MissingTriggerParameterException e) {
             throw new InitializationException(e);
         } catch (ThreadStackEmptyException e) {
+            throw new UnexpectedInternalException(e);
+        }
+        
+        //pushes a frame for java.lang.System.initializeSystemClass
+        try {
+			state.pushFrame(JAVA_SYSTEM_INITIALIZESYSTEMCLASS, false, 0);
+		} catch (NullMethodReceiverException | BadClassFileException | MethodNotFoundException | 
+				MethodCodeNotFoundException | InvalidSlotException | InvalidProgramCounterException | 
+				ThreadStackEmptyException e) {
+            //this should not happen now
+            throw new UnexpectedInternalException(e);
+		}        
+
+        //creates and initializes java.lang.System
+        try {
+            ensureClassCreatedAndInitialized(state, JAVA_SYSTEM, ctx);
+        } catch (InterruptException e) {
+            //nothing to do: fall through
+        } catch (InvalidInputException | BadClassFileException e) {
+            //this should not happen
             throw new UnexpectedInternalException(e);
         }
 
@@ -71,16 +94,6 @@ public final class Algo_INIT {
             //this should not happen after push frame
             throw new UnexpectedInternalException(e);
         }
-        
-        //pushes a frame for java.lang.System.initializeSystemClass
-        try {
-			state.pushFrame(JAVA_SYSTEM_INITIALIZESYSTEMCLASS, false, 0);
-		} catch (NullMethodReceiverException | BadClassFileException | MethodNotFoundException | 
-				MethodCodeNotFoundException | InvalidSlotException | InvalidProgramCounterException | 
-				ThreadStackEmptyException e) {
-            //this should not happen now
-            throw new UnexpectedInternalException(e);
-		}
         
         //saves a copy of the created state
         ctx.setInitialState(state);

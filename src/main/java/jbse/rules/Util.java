@@ -51,8 +51,11 @@ public final class Util {
 	private static String translateToOriginPattern(String s) {
 		String retVal = s.replace(ANY, "(.*)");
 		retVal = retVal.replace("/", "\\."); 
+		retVal = retVal.replace("$", "\\."); 
 		retVal = retVal.replace("{", "\\{"); //this is for {ROOT}
 		retVal = retVal.replace("}", "\\}"); //this also is for {ROOT}
+		retVal = retVal.replace("[", "\\["); //this is for [<className>]
+		retVal = retVal.replace("]", "\\]"); //this also is for [<className>]
 		return retVal;
 	}
 

@@ -4,6 +4,7 @@ import static jbse.rules.Util.getTriggerMethodParameterObject;
 
 import java.util.ArrayList;
 
+import jbse.algo.exc.MissingTriggerParameterException;
 import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.MethodCodeNotFoundException;
@@ -55,9 +56,11 @@ public class TriggerManager {
      * @param rootExpansion a {@link DecisionAlternative_XLOAD_GETX_Expands}
      *        for the initial expansion of the {ROOT}:this reference.
      * @throws ThreadStackEmptyException if {@code state}'s thread stack is empty.
+     * @throws MissingTriggerParameterException  if the parameter of a trigger cannot be find
+	 *         in {@code State}.
      */
     public void loadTriggerFramesRoot(State state, DecisionAlternative_XLOAD_GETX_Expands rootExpansion) 
-    throws ThreadStackEmptyException {
+    throws ThreadStackEmptyException, MissingTriggerParameterException {
         try {
             loadTriggerFrames(state, rootExpansion, 0);
         } catch (InvalidProgramCounterException e) {
@@ -80,9 +83,11 @@ public class TriggerManager {
 	 * @throws InvalidProgramCounterException when {@code pcOffset} is not a valid
 	 *         return offset.
 	 * @throws ThreadStackEmptyException if {@code state}'s thread stack is empty.
+	 * @throws MissingTriggerParameterException if the parameter of a trigger cannot be find
+	 *         in {@code State}.
 	 */
 	public boolean loadTriggerFrames(State state, DecisionAlternative_XYLOAD_GETX_Loads da, int pcOffset) 
-	throws InvalidProgramCounterException, ThreadStackEmptyException {
+	throws InvalidProgramCounterException, ThreadStackEmptyException, MissingTriggerParameterException {
 		if (!(da instanceof DecisionAlternative_XYLOAD_GETX_Unresolved)) {
 			return false;
 		}
@@ -99,6 +104,9 @@ public class TriggerManager {
 			if (Type.splitReturnValueDescriptor(triggerSig.getDescriptor()).equals("" + Type.VOID) &&
 				Type.splitParametersDescriptors(triggerSig.getDescriptor()).length <= 1) {
 				final ReferenceConcrete triggerArg = getTriggerMethodParameterObject(rule, ref, state);
+				if (triggerArg == null) {
+					throw new MissingTriggerParameterException("No heap object matches the parameter part in the trigger rule " + rule);
+				}
 				try {
 				    //TODO resolution? lookup of implementation?
 					state.pushFrame(triggerSig, false, pcOffset, triggerArg);

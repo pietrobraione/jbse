@@ -13,7 +13,7 @@ public final class AccessStatic extends AccessRoot {
 
     public AccessStatic(String className) {
         this.className = className;
-        this.toString = "[" + className + "]";
+        this.toString = "[" + className.replace('/', '.').replace('$', '.') + "]";
         final int prime = 7331;
         this.hashCode = prime + ((this.className == null) ? 0 : this.className.hashCode());
     }
