@@ -23,10 +23,10 @@ import jbse.tree.DecisionAlternative;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Interface for all the Strategies for executing a bytecode.
+ * Abstract class for all the Strategies for executing a symbolic
+ * execution step.
  * 
  * @author Pietro Braione
- *
  */
 public abstract class Algorithm<
 D extends BytecodeData, 
@@ -36,7 +36,7 @@ RE extends StrategyRefine<R>,
 UP extends StrategyUpdate<R>> {
     /**
      * The number of operands in the operand stack
-     * consumed by the bytecode.
+     * consumed by the {@link Algorithm}.
      * 
      * @return a {@link Supplier}{@code <}{@link Integer}{@code >}
      *         that, when evaluated, returns the number of 
