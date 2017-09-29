@@ -2,16 +2,13 @@ package jbse.algo;
 
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
-import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKEDYNAMICINTERFACE_OFFSET;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
-import static jbse.bc.Signatures.ABSTRACT_METHOD_ERROR;
 
 import java.util.function.Supplier;
 
-import jbse.algo.exc.CannotInvokeNativeException;
-import jbse.bc.Signature;
+import jbse.algo.exc.BaseUnsupportedException;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.MethodAbstractException;
@@ -54,30 +51,30 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
                 failExecution(e);
             }
 
-            //looks for the method implementation, and determines
-            //whether the implementation is native
+            //looks for a base-level overriding implementation, and in case 
+            //considers it instead
             try {
-                findImplAndCalcNative(state);
-            } catch (IncompatibleClassFileException | 
-                     NullPointerException | 
-                     BadClassFileException e) {
-                //this should never happen
+                findOverridingBaseLevelImpl(state);
+            } catch (BaseUnsupportedException e) {
+            	    //this should never happen (Algo_INVOKEX already checked this)
                 failExecution(e);
             }
 
-            //builds a signature for the method implementation;
-            //falls back to the signature of the resolved method
-            //if there is no base-level implementation
-            this.methodSignatureImpl = (this.classFileMethodImpl == null ? this.methodSignatureResolved : 
-                new Signature(this.classFileMethodImpl.getClassName(), 
-                              this.methodSignatureResolved.getDescriptor(), 
-                              this.methodSignatureResolved.getName()));
-
-            //if the method has no implementation, raises AbstractMethodError
+            //looks for the method implementation with ordinary lookup
+            try {
+        	        if (this.methodSignatureImpl == null) {
+                    findImpl(state);
+            	    }
+            } catch (IncompatibleClassFileException | 
+                     BadClassFileException e) {
+                //this should never happen (Algo_INVOKEX already checked them)
+                failExecution(e);
+            }
+            
+            //paranoid check that the method has an implementation
             try {
                 if (this.classFileMethodImpl == null || this.classFileMethodImpl.isMethodAbstract(this.methodSignatureImpl)) {
-                    throwNew(state, ABSTRACT_METHOD_ERROR);
-                    exitFromAlgorithm();
+                    failExecution("Unexpected missing method implementation");
                 }
             } catch (MethodNotFoundException e) {
                 //this should never happen after resolution 
@@ -115,11 +112,7 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
             //if the method is native, delegates the responsibility 
             //to the native invoker
             if (this.isNative) {
-                try {
-                    this.ctx.nativeInvoker.doInvokeNative(state, this.methodSignatureResolved, this.data.operands(), this.pcOffsetReturn);
-                } catch (CannotInvokeNativeException e) {
-                    failExecution(e);
-                }
+                this.ctx.nativeInvoker.doInvokeNative(state, this.methodSignatureResolved, this.data.operands(), this.pcOffsetReturn);
                 exitFromAlgorithm();
             }
 

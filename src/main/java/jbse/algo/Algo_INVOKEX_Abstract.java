@@ -1,15 +1,20 @@
 package jbse.algo;
 
+import static jbse.algo.Util.continueWith;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.lookupClassfileMethodImpl;
 import static jbse.algo.Util.throwNew;
 import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
+import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.splitParametersDescriptors;
+import static jbse.common.Type.TYPEEND;
 
 import java.util.function.Supplier;
 
+import jbse.algo.exc.BaseUnsupportedException;
+import jbse.algo.exc.MetaUnsupportedException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
@@ -47,9 +52,9 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         this.isStatic = isStatic;
     }
 
-    protected ClassFile classFileMethodImpl; //set by cooking methods
     protected boolean isNative; //set by cooking methods
     protected Signature methodSignatureResolved; //set by cooking methods
+    protected ClassFile classFileMethodImpl; //set by cooking methods
     protected Signature methodSignatureImpl; //set by cooking methods
 
     @Override
@@ -95,8 +100,73 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             failExecution(e);
         }
     }
+    
+    protected final void findOverridingBaseLevelImpl(State state)
+    throws BaseUnsupportedException {
+        if (this.ctx.isMethodBaseLevelOverridden(this.methodSignatureResolved)) {
+            final Signature methodSignatureOverriding = this.ctx.getBaseOverride(this.methodSignatureResolved);
+            try {
+                final ClassFile classFileMethodOverriding = state.getClassHierarchy().getClassFile(methodSignatureOverriding.getClassName());
+                checkOverridingMethodFits(state, methodSignatureOverriding, classFileMethodOverriding);
+                this.classFileMethodImpl = classFileMethodOverriding;
+                this.methodSignatureImpl = methodSignatureOverriding;
+                this.isNative = this.classFileMethodImpl.isMethodNative(this.methodSignatureImpl);
+            } catch (MethodNotFoundException e) {
+                throw new BaseUnsupportedException("The overriding method " + methodSignatureOverriding + " does not exist (but the class seems to exist)");
+            } catch (BadClassFileException e) {
+                throw new BaseUnsupportedException("The overriding method " + methodSignatureOverriding + " does not exist because its class does not exist");
+            }
+        } else {
+            this.classFileMethodImpl = null;
+            this.methodSignatureImpl = null;
+            this.isNative = false;
+        }
+    }
+    
+    private void checkOverridingMethodFits(State state, Signature methodSignatureOverriding, ClassFile classFileMethodOverriding) 
+    throws BaseUnsupportedException, BadClassFileException, MethodNotFoundException {
+        final ClassFile classFileMethodResolved = state.getClassHierarchy().getClassFile(this.methodSignatureResolved.getClassName());
+        if (!classFileMethodOverriding.hasMethodImplementation(methodSignatureOverriding)) {
+            throw new BaseUnsupportedException("The overriding method " + methodSignatureOverriding + " is abstract.");
+        }
+        final boolean resolvedStatic = classFileMethodResolved.isMethodStatic(this.methodSignatureResolved);
+        final boolean overridingStatic = classFileMethodOverriding.isMethodStatic(methodSignatureOverriding);
+        if (resolvedStatic == overridingStatic) {
+            if (this.methodSignatureResolved.getDescriptor().equals(methodSignatureOverriding.getDescriptor())) {
+                return;
+            }
+        } else if (!resolvedStatic && overridingStatic) {
+            if (descriptorAsStatic(this.methodSignatureResolved).equals(methodSignatureOverriding.getDescriptor())) {
+                return;
+            }
+        } else { //(resolvedStatic && !overridingStatic)
+            if (this.methodSignatureResolved.getDescriptor().equals(descriptorAsStatic(methodSignatureOverriding))) {
+                return;
+            }
+        }
+        throw new BaseUnsupportedException("The overriding method " + methodSignatureOverriding + " has signature incompatible with overridden " + this.methodSignatureImpl);
+    }
+    
+    private static String descriptorAsStatic(Signature sig) {
+        return "(" + REFERENCE + sig.getClassName() + TYPEEND + sig.getDescriptor().substring(1);
+    }
+    
+    protected final void findOverridingMetaLevelImpl(State state) 
+    throws InterruptException, MetaUnsupportedException {
+        try {
+            if (this.ctx.dispatcherMeta.isMeta(state.getClassHierarchy(), this.methodSignatureResolved)) {
+                final Algo_INVOKEMETA<?, ?, ?, ?> algo = 
+                    this.ctx.dispatcherMeta.select(this.methodSignatureResolved);
+                algo.setFeatures(this.isInterface, this.isSpecial, this.isStatic);
+                continueWith(algo);
+            }
+        } catch (BadClassFileException | MethodNotFoundException e) {
+            //this should never happen after resolution 
+            failExecution(e);
+        }
+    }
 
-    protected final void findImplAndCalcNative(State state) 
+    protected final void findImpl(State state) 
     throws BadClassFileException, IncompatibleClassFileException, 
     InterruptException {
         try {
@@ -114,23 +184,17 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             }
             this.classFileMethodImpl = 
                 lookupClassfileMethodImpl(state, this.methodSignatureResolved, this.isStatic, this.isSpecial, receiverClassName);
-            this.isNative = classFileMethodImpl.isMethodNative(this.methodSignatureResolved);
+            this.methodSignatureImpl = new Signature(this.classFileMethodImpl.getClassName(), 
+                    this.methodSignatureResolved.getDescriptor(), 
+                    this.methodSignatureResolved.getName());
+            this.isNative = this.classFileMethodImpl.isMethodNative(this.methodSignatureResolved);
         } catch (MethodNotFoundException e) {
-            //it is still possible that the method
-            //has a meta-level implementation
             this.classFileMethodImpl = null;
+            this.methodSignatureImpl = null;
             this.isNative = false;
         } catch (ThreadStackEmptyException e) {
             //this should never happen
             failExecution(e);
         }
-
-        //builds a signature for the method implementation;
-        //falls back to the signature of the resolved method
-        //if there is no base-level implementation
-        this.methodSignatureImpl = (this.classFileMethodImpl == null ? this.methodSignatureResolved : 
-            new Signature(this.classFileMethodImpl.getClassName(), 
-                          this.methodSignatureResolved.getDescriptor(), 
-                          this.methodSignatureResolved.getName()));
     }
 }
