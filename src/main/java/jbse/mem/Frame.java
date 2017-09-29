@@ -345,7 +345,7 @@ public class Frame implements Cloneable {
      * Initializes the local variables by an array 
      * of {@link Value}s.
      * 
-     * @param args a {@link Value}{@code []}; The 
+     * @param args a varargs of {@link Value}; The 
      *        local variables are initialized in sequence 
      *        with these values. 
      *        If there are less values in {@code args} than 
@@ -365,7 +365,7 @@ public class Frame implements Cloneable {
      *         too many {@code arg}s or some of their types are 
      *         incompatible with their respective slots types.
      */
-	public void setArgs(Value[] args) throws InvalidSlotException {
+	public void setArgs(Value... args) throws InvalidSlotException {
 		this.localVariables.setArgs(args);
 	}
 

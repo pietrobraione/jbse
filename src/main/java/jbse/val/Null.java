@@ -9,7 +9,7 @@ import jbse.mem.Util;
  * @author Pietro Braione
  */
 public final class Null extends ReferenceConcrete {
-	private static Reference instance = new Null();
+	private static ReferenceConcrete instance = new Null();
     
     /**
      * Constructor.
@@ -18,7 +18,7 @@ public final class Null extends ReferenceConcrete {
     	super(Type.NULLREF, Util.POS_NULL);
     }
 
-    public static Reference getInstance() {
+    public static ReferenceConcrete getInstance() {
         return instance;
     }
     
