@@ -28,6 +28,7 @@ public final class Overrides {
     public static final String ALGO_JAVA_CLASS_GETDECLAREDFIELDS0       = jbse.algo.meta.Algo_JAVA_CLASS_GETDECLAREDFIELDS0.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_CLASS_GETPRIMITIVECLASS        = jbse.algo.meta.Algo_JAVA_CLASS_GETPRIMITIVECLASS.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_CLASS_ISINSTANCE               = jbse.algo.meta.Algo_JAVA_CLASS_ISINSTANCE.class.getCanonicalName().replace('.', '/');
+    public static final String ALGO_JAVA_CLASS_ISPRIMITIVE              = jbse.algo.meta.Algo_JAVA_CLASS_ISPRIMITIVE.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_OBJECT_GETCLASS                = jbse.algo.meta.Algo_JAVA_OBJECT_GETCLASS.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_OBJECT_HASHCODE                = jbse.algo.meta.Algo_JAVA_OBJECT_HASHCODE.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_REFLECT_ARRAY_NEWARRAY         = jbse.algo.meta.Algo_JAVA_REFLECT_ARRAY_NEWARRAY.class.getCanonicalName().replace('.', '/');

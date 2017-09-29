@@ -134,6 +134,8 @@ public final class Signatures {
                       REFERENCE + JAVA_CLASS + TYPEEND, "getPrimitiveClass");
     public static final Signature JAVA_CLASS_ISINSTANCE =
         new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + BOOLEAN, "isInstance");
+    public static final Signature JAVA_CLASS_ISPRIMITIVE =
+            new Signature(JAVA_CLASS, "()" + BOOLEAN, "isPrimitive");
     public static final Signature JAVA_METHOD_INVOKE =
             new Signature(JAVA_METHOD, 
                          "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, 

@@ -561,9 +561,11 @@ public final class State implements Cloneable {
      * 
      * @param representedClass the name of the class the created {@code Instance_JAVA_CLASS}
      *        represents.
+     * @param isPrimitive {@code true} iff it represents the class of a primitive type 
+     *        or {@code void}. 
      * @return a {@link ReferenceConcrete} to the newly created object.
      */
-    private ReferenceConcrete createInstance_JAVA_CLASS(String representedClass) {
+    private ReferenceConcrete createInstance_JAVA_CLASS(String representedClass, boolean isPrimitive) {
         final int numOfStaticFields;
         final Signature[] fieldsSignatures;
         try {
@@ -572,7 +574,7 @@ public final class State implements Cloneable {
         } catch (BadClassFileException e) {
             throw new UnexpectedInternalException(e); //TODO do something better
         }
-        final Instance myObj = new Instance_JAVA_CLASS(this.calc, null, Epoch.EPOCH_AFTER_START, representedClass, numOfStaticFields, fieldsSignatures);
+        final Instance myObj = new Instance_JAVA_CLASS(this.calc, null, Epoch.EPOCH_AFTER_START, representedClass, isPrimitive, numOfStaticFields, fieldsSignatures);
         return new ReferenceConcrete(this.heap.addNew(myObj));
     }
     
@@ -867,7 +869,7 @@ public final class State implements Cloneable {
         }
         this.classHierarchy.resolveClass(accessor, className);
         //TODO resolve JAVA_CLASS
-        final ReferenceConcrete retVal = createInstance_JAVA_CLASS(className);
+        final ReferenceConcrete retVal = createInstance_JAVA_CLASS(className, false);
         this.classes.put(className, retVal);
     }
     
@@ -888,7 +890,7 @@ public final class State implements Cloneable {
             return;
         }
         if (isPrimitiveBinaryClassName(typeName)) {
-            final ReferenceConcrete retVal = createInstance_JAVA_CLASS(typeName);
+            final ReferenceConcrete retVal = createInstance_JAVA_CLASS(typeName, true);
             this.classesPrimitive.put(typeName, retVal);
         } else {
             throw new ClassFileNotFoundException(typeName + " is not the binary name of a primitive type or void");
