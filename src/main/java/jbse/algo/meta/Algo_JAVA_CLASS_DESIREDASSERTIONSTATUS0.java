@@ -9,7 +9,7 @@ import jbse.mem.exc.ThreadStackEmptyException;
 public final class Algo_JAVA_CLASS_DESIREDASSERTIONSTATUS0 extends Algo_INVOKEMETA_Nonbranching {
     @Override
     protected Supplier<Integer> numOperands() {
-        return () -> 0;
+        return () -> 1;
     }
 
     @Override
