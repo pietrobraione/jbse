@@ -27,6 +27,7 @@ public final class Overrides {
     public static final String ALGO_JAVA_CLASS_GETCOMPONENTTYPE         = jbse.algo.meta.Algo_JAVA_CLASS_GETCOMPONENTTYPE.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_CLASS_GETDECLAREDFIELDS0       = jbse.algo.meta.Algo_JAVA_CLASS_GETDECLAREDFIELDS0.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_CLASS_GETPRIMITIVECLASS        = jbse.algo.meta.Algo_JAVA_CLASS_GETPRIMITIVECLASS.class.getCanonicalName().replace('.', '/');
+    public static final String ALGO_JAVA_CLASS_ISASSIGNABLEFROM         = jbse.algo.meta.Algo_JAVA_CLASS_ISASSIGNABLEFROM.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_CLASS_ISINSTANCE               = jbse.algo.meta.Algo_JAVA_CLASS_ISINSTANCE.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_CLASS_ISPRIMITIVE              = jbse.algo.meta.Algo_JAVA_CLASS_ISPRIMITIVE.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_OBJECT_GETCLASS                = jbse.algo.meta.Algo_JAVA_OBJECT_GETCLASS.class.getCanonicalName().replace('.', '/');
@@ -41,7 +42,9 @@ public final class Overrides {
     public static final String ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT = jbse.algo.meta.Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_SUN_REFLECTION_GETCALLERCLASS       = jbse.algo.meta.Algo_SUN_REFLECTION_GETCALLERCLASS.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET        = jbse.algo.meta.Algo_SUN_UNSAFE_OBJECTFIELDOFFSET.class.getCanonicalName().replace('.', '/');
+    public static final String ALGO_SUN_UNSAFE_COMPAREANDSWAPINT        = jbse.algo.meta.Algo_SUN_UNSAFE_COMPAREANDSWAPINT.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT     = jbse.algo.meta.Algo_SUN_UNSAFE_COMPAREANDSWAPOBJECT.class.getCanonicalName().replace('.', '/');
+    public static final String ALGO_SUN_UNSAFE_GETINTVOLATILE           = jbse.algo.meta.Algo_SUN_UNSAFE_GETINTVOLATILE.class.getCanonicalName().replace('.', '/');
     
 	//Overriding meta-level implementations of jbse.meta.Analysis methods
     public static final String ALGO_JBSE_ANALYSIS_ANY                       = jbse.algo.meta.Algo_JBSE_ANALYSIS_ANY.class.getCanonicalName().replace('.', '/');

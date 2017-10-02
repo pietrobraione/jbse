@@ -181,7 +181,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		}
 
 		/**
-		 * Has the reference been expanded (is a reference resolution partial)?
+		 * Is a reference resolution partial (because it has not been expanded)?
 		 * 
 		 * @return {@code true} iff a reference resolution is suspect because
 		 *         <em>partial</em>, i.e., because the reference is not resolved

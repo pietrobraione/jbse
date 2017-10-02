@@ -177,6 +177,21 @@ public abstract class Objekt implements Cloneable {
     }
     
     /**
+     * Checks whether an object has a slot with a given number.
+     * 
+     * @param slot an {@code int}.
+     * @return {@code true} iff the object has a field with slot
+     *         number {@code slot}.
+     */
+    public final boolean hasSlot(int slot) {
+        if (this.staticFields) {
+            return (0 <= slot && slot < this.numOfStaticFields);
+        } else {
+            return (this.numOfStaticFields <= slot && slot < this.fieldSignatures.size());
+        }
+    }
+    
+    /**
      * Gets the value in a field of the {@link Instance}.
      * 
      * @param sig the {@link Signature} of the field.

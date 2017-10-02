@@ -95,7 +95,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                     final Objekt o = state.getObject(valueToStoreRef);
                     final ClassHierarchy hier = state.getClassHierarchy();
                     if (state.isNull(valueToStoreRef) ||
-                    hier.isAssignmentCompatible(o.getType(), className(arrayMemberType))) {
+                        hier.isAssignmentCompatible(o.getType(), className(arrayMemberType))) {
                         this.valueToStore = value;
                     } else {
                         throwNew(state, ARRAY_STORE_EXCEPTION);
@@ -115,7 +115,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                     }
                 }
             } catch (InvalidOperandException | InvalidTypeException | 
-            ClassCastException | BadClassFileException e) {
+                     ClassCastException | BadClassFileException e) {
                 //index is bad or the reference does not point to an array
                 //or the class/superclasses of the array component, or of 
                 //the value to store, is not in the classpath or are incompatible

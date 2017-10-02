@@ -18,9 +18,29 @@ public final class Base {
 	 * @see java.lang.System#initProperties(Properties)
 	 */
 	public static final Properties base_JAVA_SYSTEM_INITPROPERTIES(Properties p) {
+		//properties taken from src/share/native/java/lang/System.c
+		p.put("java.specification.version", "1.8");
+		p.put("java.specification.name", "Java Platform API Specification");
+		p.put("java.specification.vendor", "Oracle Corporation");
+		p.put("java.version", "1.8.0_144");
 		p.put("java.vendor", "JBSE project");
 		p.put("java.vendor.url", "http://pietrobraione.github.io/jbse/");
-		//TODO more properties
+		p.put("java.vendor.url.bug", "https://github.com/pietrobraione/jbse/issues");
+		p.put("java.class.version", "52.0");
+		/* TODO take the values metacircularly (how?)
+		p.put("os.name", ...);
+		p.put("os.version", ...);
+		p.put("os.arch", ...);
+		p.put("file.separator", ...);
+		p.put("path.separator", ...);
+		p.put("line.separator", ...);
+		p.put("user.language", ...);
+		p.put("file.encoding", ...);
+		p.put("sun.jnu.encoding", ...);
+		*/
+		p.put("file.encoding", "UTF-8"); //TODO take the value metacircularly (how?)
+		p.put("file.encoding.pkg", "sun.io"); //TODO take the value metacircularly (how?)
+		//TODO more properties?
 		return p;
 	}
 	

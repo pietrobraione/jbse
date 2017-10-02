@@ -14,7 +14,6 @@ import static jbse.common.Type.VOID;
  * standard JRE classes, interfaces, fields and methods.
  * 
  * @author Pietro Braione
- *
  */
 public final class Signatures {
     //classes and interfaces
@@ -24,11 +23,13 @@ public final class Signatures {
     public static final String JAVA_ABSTRACTSET              = "java/util/AbstractSet";
     public static final String JAVA_ACCESSCONTROLLER         = "java/security/AccessController";
     public static final String JAVA_ARRAYLIST                = "java/util/ArrayList";
+    public static final String JAVA_ATOMICINTEGER            = "java/util/concurrent/atomic/AtomicInteger";
     public static final String JAVA_ATOMICREFERENCEFIELDUPDATER        = "java/util/concurrent/atomic/AtomicReferenceFieldUpdater";
     public static final String JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL   = "java/util/concurrent/atomic/AtomicReferenceFieldUpdater$AtomicReferenceFieldUpdaterImpl";
     public static final String JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL_1 = "java/util/concurrent/atomic/AtomicReferenceFieldUpdater$AtomicReferenceFieldUpdaterImpl$1";
     public static final String JAVA_BOOLEAN                  = "java/lang/Boolean";
     public static final String JAVA_BUFFEREDINPUTSTREAM      = "java/io/BufferedInputStream";
+    public static final String JAVA_CHARSET                  = "java/nio/charset/Charset";
     public static final String JAVA_CLASS                    = "java/lang/Class";
     public static final String JAVA_CLASS_ATOMIC             = "java/lang/Class$Atomic";
     public static final String JAVA_CLASSLOADER              = "java/lang/ClassLoader";
@@ -86,6 +87,7 @@ public final class Signatures {
     public static final String JAVA_STRING                   = "java/lang/String";
     public static final String JAVA_STRING_CASEINSCOMP       = "java/lang/String$CaseInsensitiveComparator";
     public static final String JAVA_SYSTEM                   = "java/lang/System";
+    public static final String JAVA_THREADLOCAL              = "java/lang/ThreadLocal";
     public static final String JAVA_THROWABLE                = "java/lang/Throwable";
     public static final String JAVA_THROWABLE_SENTINELHOLDER = "java/lang/Throwable$SentinelHolder";
     public static final String JAVA_TREESET                  = "java/util/TreeSet";
@@ -132,6 +134,8 @@ public final class Signatures {
     public static final Signature JAVA_CLASS_GETPRIMITIVECLASS =
         new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + 
                       REFERENCE + JAVA_CLASS + TYPEEND, "getPrimitiveClass");
+    public static final Signature JAVA_CLASS_ISASSIGNABLEFROM =
+            new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + BOOLEAN, "isAssignableFrom");
     public static final Signature JAVA_CLASS_ISINSTANCE =
         new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + BOOLEAN, "isInstance");
     public static final Signature JAVA_CLASS_ISPRIMITIVE =
@@ -193,9 +197,14 @@ public final class Signatures {
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + INT, "arrayBaseOffset");
     public static final Signature SUN_UNSAFE_ARRAYINDEXSCALE = 
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + INT, "arrayIndexScale");
+    public static final Signature SUN_UNSAFE_COMPAREANDSWAPINT = 
+            new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + INT + INT + ")" + BOOLEAN, 
+                          "compareAndSwapInt");
     public static final Signature SUN_UNSAFE_COMPAREANDSWAPOBJECT = 
             new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + BOOLEAN, 
                           "compareAndSwapObject");
+    public static final Signature SUN_UNSAFE_GETINTVOLATILE = 
+            new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + ")" + INT, "getIntVolatile");
     public static final Signature SUN_UNSAFE_OBJECTFIELDOFFSET = 
             new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_FIELD + TYPEEND + ")" + LONG, "objectFieldOffset");
     
