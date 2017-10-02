@@ -143,10 +143,10 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 			private int hitCount = 0;
 			
 			@Override
-			public boolean atStepPre() {
+			public boolean atMethodPre() {
 				try {
 				    final State currentState = getEngine().getCurrentState();
-				    if (currentState.getCurrentMethodSignature().equals(stopSignature)) {
+				    if (currentState.getCurrentMethodSignature().equals(stopSignature) && currentState.getPC() == 0) {
 				    		++this.hitCount;
 				    }
 					return (this.hitCount == numberOfHits);
