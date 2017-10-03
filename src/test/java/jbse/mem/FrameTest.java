@@ -22,22 +22,21 @@ import jbse.val.ReferenceConcrete;
 import jbse.val.Value;
 
 public class FrameTest {
-	private ClassHierarchy hier;
+	private static ClassHierarchy hier;
 
 	@BeforeClass
-	public void setUpClass() throws InvalidClassFileFactoryClassException {
+	public static void setUpClass() throws InvalidClassFileFactoryClassException {
 		//environment
 		final Classpath env = new Classpath("src/test/resources/jbse/bc/testdata/rt.jar", "src/test/resources/jbse/bc/testdata");
 
 		//Javassist
-		this.hier = new ClassHierarchy(env, ClassFileFactoryJavassist.class, new HashMap<>());
-
+		hier = new ClassHierarchy(env, ClassFileFactoryJavassist.class, new HashMap<>());
 	}
 	
 	@Test
 	public void testFrameCurrentMethodSignature() throws BadClassFileException, MethodNotFoundException, MethodCodeNotFoundException {
 		final String className = "tsafe/engine/TsafeEngine";
-		final ClassFile cf = this.hier.getClassFile(className);
+		final ClassFile cf = hier.getClassFile(className);
 		final Signature sigMethod = new Signature(className, "()V", "start");
 		final Frame f = new Frame(sigMethod, cf);
 		assertEquals(f.getCurrentMethodSignature(), sigMethod);
@@ -46,7 +45,7 @@ public class FrameTest {
 	@Test
 	public void testFrameLocalVariables1() throws BadClassFileException, MethodNotFoundException, MethodCodeNotFoundException, InvalidSlotException {
 		final String className = "tsafe/engine/TsafeEngine";
-		final ClassFile cf = this.hier.getClassFile(className);
+		final ClassFile cf = hier.getClassFile(className);
 		final Signature sigMethod = new Signature(className, "()V", "start");
 		final Frame f = new Frame(sigMethod, cf);
 		f.setArgs(Null.getInstance());
@@ -57,7 +56,7 @@ public class FrameTest {
 	@Test
 	public void testFrameLocalVariables2() throws BadClassFileException, MethodNotFoundException, MethodCodeNotFoundException, InvalidSlotException {
 		final String className = "tsafe/engine/TsafeEngine";
-		final ClassFile cf = this.hier.getClassFile(className);
+		final ClassFile cf = hier.getClassFile(className);
 		final Signature sigMethod = new Signature(className, "()V", "start");
 		final Frame f = new Frame(sigMethod, cf);
 		f.setArgs(Null.getInstance());
@@ -68,7 +67,7 @@ public class FrameTest {
 	@Test
 	public void testFrameClone() throws BadClassFileException, MethodNotFoundException, MethodCodeNotFoundException, InvalidSlotException {
 		final String className = "tsafe/engine/TsafeEngine";
-		final ClassFile cf = this.hier.getClassFile(className);
+		final ClassFile cf = hier.getClassFile(className);
 		final Signature sigMethod = new Signature(className, "()V", "start");
 		final Frame f = new Frame(sigMethod, cf);
 		f.setArgs(Null.getInstance());
