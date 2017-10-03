@@ -80,21 +80,9 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
                 }
             }
 
-            //looks for a base-level overriding implementation, and in case 
-            //considers it instead
-            findOverridingBaseLevelImpl(state);
-            
-            //looks for a meta-level overriding implementation, and in case 
-            //delegates the responsibility to it
-            if (this.methodSignatureImpl == null) {
-                findOverridingMetaLevelImpl(state);
-            }
-            
-            //looks for the method implementation with ordinary lookup
+            //looks for the method implementation with standard lookup
             try {
-            	    if (this.methodSignatureImpl == null) {
-                    findImpl(state);
-            	    }
+                findImpl(state);
             } catch (IncompatibleClassFileException e) {
                 //TODO is it ok?
                 throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
@@ -103,6 +91,10 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
                 throwVerifyError(state);
                 exitFromAlgorithm();
             }
+            
+            //looks for a base-level or meta-level overriding implementation, 
+            //and in case considers it instead
+            findOverridingImpl(state);
             
             //if the method has no implementation, raises AbstractMethodError
             try {
@@ -116,6 +108,7 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
             }     
 
             //otherwise, concludes the execution of the bytecode algorithm
+            this.algo_INVOKEX_Completion.setImplementation(this.classFileMethodImpl, this.methodSignatureImpl, this.isNative);
             continueWith(this.algo_INVOKEX_Completion);
         };
     }

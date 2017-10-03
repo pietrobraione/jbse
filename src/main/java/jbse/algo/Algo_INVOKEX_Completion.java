@@ -2,13 +2,16 @@ package jbse.algo;
 
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKEDYNAMICINTERFACE_OFFSET;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
+import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 
 import java.util.function.Supplier;
 
-import jbse.algo.exc.BaseUnsupportedException;
+import jbse.bc.ClassFile;
+import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.MethodAbstractException;
@@ -29,9 +32,21 @@ import jbse.tree.DecisionAlternative_NONE;
  * @author Pietro Braione
  */
 final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
-
     public Algo_INVOKEX_Completion(boolean isInterface, boolean isSpecial, boolean isStatic) {
         super(isInterface, isSpecial, isStatic);
+    }
+    
+    private boolean shouldFindImplementation; //set by methods
+    
+    public void setImplementation(ClassFile classFileMethodImpl, Signature methodSignatureImpl, boolean isNative) {
+        this.shouldFindImplementation = false;
+        this.classFileMethodImpl = classFileMethodImpl;
+        this.methodSignatureImpl = methodSignatureImpl;
+        this.isNative = isNative;
+    }
+    
+    public void shouldFindImplementation() {
+        this.shouldFindImplementation = true;
     }
 
     private int pcOffsetReturn; //set by cooker
@@ -39,7 +54,7 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
-            //performs method resolution
+            //performs method resolution again (this info is still necessary)
             try {
                 resolveMethod(state);
             } catch (IncompatibleClassFileException | 
@@ -50,30 +65,26 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
                 //this should never happen (Algo_INVOKEX already checked them)
                 failExecution(e);
             }
+            
+            if (this.shouldFindImplementation) {
 
-            //looks for a base-level overriding implementation, and in case 
-            //considers it instead
-            try {
-                findOverridingBaseLevelImpl(state);
-            } catch (BaseUnsupportedException e) {
-            	    //this should never happen (Algo_INVOKEX already checked this)
-                failExecution(e);
-            }
-
-            //looks for the method implementation with ordinary lookup
-            try {
-        	        if (this.methodSignatureImpl == null) {
+                //looks for the method implementation with standard lookup
+                try {
                     findImpl(state);
-            	    }
-            } catch (IncompatibleClassFileException | 
-                     BadClassFileException e) {
-                //this should never happen (Algo_INVOKEX already checked them)
-                failExecution(e);
+                } catch (IncompatibleClassFileException e) {
+                    //TODO is it ok?
+                    throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                    exitFromAlgorithm();
+                } catch (BadClassFileException e) {
+                    throwVerifyError(state);
+                    exitFromAlgorithm();
+                }
             }
             
-            //paranoid check that the method has an implementation
+            //check that the method has an implementation
             try {
                 if (this.classFileMethodImpl == null || this.classFileMethodImpl.isMethodAbstract(this.methodSignatureImpl)) {
+                    //Algo_INVOKEX found a standard implementation, so this should never happen
                     failExecution("Unexpected missing method implementation");
                 }
             } catch (MethodNotFoundException e) {

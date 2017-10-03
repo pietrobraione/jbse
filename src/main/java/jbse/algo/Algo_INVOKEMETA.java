@@ -4,6 +4,7 @@ import static jbse.algo.Util.continueWith;
 
 import java.util.function.Supplier;
 
+import jbse.mem.State;
 import jbse.tree.DecisionAlternative;
 
 /**
@@ -40,10 +41,11 @@ extends Algorithm<BytecodeData_1ZME, R, DE, RE, UP> {
      * the base-level implementation of the method
      * for execution. 
      */
-    protected final void continueWithBaseLevelImpl() 
+    protected final void continueWithBaseLevelImpl(State state) 
     throws InterruptException {
         final Algo_INVOKEX_Completion continuation = 
         new Algo_INVOKEX_Completion(this.isInterface, this.isSpecial, this.isStatic);
+        continuation.shouldFindImplementation();
         continueWith(continuation);
     }    
 }
