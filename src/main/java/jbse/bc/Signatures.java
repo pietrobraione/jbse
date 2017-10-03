@@ -30,6 +30,7 @@ public final class Signatures {
     public static final String JAVA_BOOLEAN                  = "java/lang/Boolean";
     public static final String JAVA_BUFFEREDINPUTSTREAM      = "java/io/BufferedInputStream";
     public static final String JAVA_CHARSET                  = "java/nio/charset/Charset";
+    public static final String JAVA_CHARSET_EXTENDEDPROVIDERHOLDER = "java/nio/charset/Charset$ExtendedProviderHolder";
     public static final String JAVA_CLASS                    = "java/lang/Class";
     public static final String JAVA_CLASS_ATOMIC             = "java/lang/Class$Atomic";
     public static final String JAVA_CLASSLOADER              = "java/lang/ClassLoader";
@@ -127,6 +128,8 @@ public final class Signatures {
             new Signature(JAVA_ACCESSCONTROLLER, "(" + REFERENCE + JAVA_PRIVILEGEDACTION + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "doPrivileged");
     public static final Signature JAVA_CLASS_DESIREDASSERTIONSTATUS0 =
         new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + BOOLEAN, "desiredAssertionStatus0");
+    public static final Signature JAVA_CLASS_FORNAME0 =
+            new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_STRING + TYPEEND + BOOLEAN + REFERENCE + JAVA_CLASSLOADER + TYPEEND + REFERENCE + JAVA_CLASS + TYPEEND + ")" + REFERENCE + JAVA_CLASS + TYPEEND, "forName0");
     public static final Signature JAVA_CLASS_GETCOMPONENTTYPE =
         new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getComponentType");
     public static final Signature JAVA_CLASS_GETDECLAREDFIELDS0 =

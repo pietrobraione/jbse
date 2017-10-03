@@ -24,6 +24,7 @@ import jbse.bc.Signature;
 public final class Overrides {
 	//Overriding meta-level implementations of standard methods
     public static final String ALGO_JAVA_CLASS_DESIREDASSERTIONSTATUS0  = jbse.algo.meta.Algo_JAVA_CLASS_DESIREDASSERTIONSTATUS0.class.getCanonicalName().replace('.', '/');
+    public static final String ALGO_JAVA_CLASS_FORNAME0                 = jbse.algo.meta.Algo_JAVA_CLASS_FORNAME0.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_CLASS_GETCOMPONENTTYPE         = jbse.algo.meta.Algo_JAVA_CLASS_GETCOMPONENTTYPE.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_CLASS_GETDECLAREDFIELDS0       = jbse.algo.meta.Algo_JAVA_CLASS_GETDECLAREDFIELDS0.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_CLASS_GETPRIMITIVECLASS        = jbse.algo.meta.Algo_JAVA_CLASS_GETPRIMITIVECLASS.class.getCanonicalName().replace('.', '/');

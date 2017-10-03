@@ -2,6 +2,7 @@ package jbse.algo;
 
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_DESIREDASSERTIONSTATUS0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETCOMPONENTTYPE;
+import static jbse.algo.Overrides.ALGO_JAVA_CLASS_FORNAME0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETDECLAREDFIELDS0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETPRIMITIVECLASS;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_ISASSIGNABLEFROM;
@@ -52,9 +53,11 @@ import static jbse.bc.Signatures.JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL_1;
 import static jbse.bc.Signatures.JAVA_BOOLEAN;
 import static jbse.bc.Signatures.JAVA_BUFFEREDINPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_CHARSET;
+import static jbse.bc.Signatures.JAVA_CHARSET_EXTENDEDPROVIDERHOLDER;
 import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_CLASS_ATOMIC;
 import static jbse.bc.Signatures.JAVA_CLASS_DESIREDASSERTIONSTATUS0;
+import static jbse.bc.Signatures.JAVA_CLASS_FORNAME0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETCOMPONENTTYPE;
 import static jbse.bc.Signatures.JAVA_CLASS_GETDECLAREDFIELDS0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETPRIMITIVECLASS;
@@ -295,6 +298,7 @@ public final class ExecutionContext {
             addBaseOverridden(JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION,   BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION);
             addBaseOverridden(JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION, BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION);
             addMetaOverridden(JAVA_CLASS_DESIREDASSERTIONSTATUS0,             ALGO_JAVA_CLASS_DESIREDASSERTIONSTATUS0);
+            addMetaOverridden(JAVA_CLASS_FORNAME0,                            ALGO_JAVA_CLASS_FORNAME0);
             addMetaOverridden(JAVA_CLASS_GETCOMPONENTTYPE,                    ALGO_JAVA_CLASS_GETCOMPONENTTYPE);
             addMetaOverridden(JAVA_CLASS_GETDECLAREDFIELDS0,                  ALGO_JAVA_CLASS_GETDECLAREDFIELDS0);
             addMetaOverridden(JAVA_CLASS_GETPRIMITIVECLASS,                   ALGO_JAVA_CLASS_GETPRIMITIVECLASS);
@@ -465,6 +469,7 @@ public final class ExecutionContext {
              className.equals(JAVA_BOOLEAN) ||
              className.equals(JAVA_BUFFEREDINPUTSTREAM) ||
              className.equals(JAVA_CHARSET) ||  //not really, but most static values seem to be just caches, so we treat it as it were
+             className.equals(JAVA_CHARSET_EXTENDEDPROVIDERHOLDER) ||
              className.equals(JAVA_CLASS) || 
              className.equals(JAVA_CLASS_ATOMIC) || 
              className.equals(JAVA_COLLECTIONS) ||
