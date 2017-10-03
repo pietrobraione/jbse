@@ -39,7 +39,7 @@ public final class Algo_JAVA_STRING_INTERN extends Algo_INVOKEMETA_Nonbranching 
             this.valueString = valueString(state, (Reference) this.data.operand(0));
             if (this.valueString == null) {
                 //TODO remove this limitation
-                throw new SymbolicValueNotAllowedException("Cannot intern a symbolic String object.");
+                throw new SymbolicValueNotAllowedException("Cannot intern a symbolic String object");
             }
             if (state.hasStringLiteral(this.valueString)) {
                 //nothing to do
