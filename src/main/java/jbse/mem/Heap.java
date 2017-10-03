@@ -31,9 +31,9 @@ final class Heap implements Cloneable {
      *         where {@code item} is stored.
      */
     long addNew(Objekt item) {
-        objects.put(this.nextIndex, item);
+        this.objects.put(this.nextIndex, item);
         long retVal = this.nextIndex;
-        while (objects.containsKey(this.nextIndex)) {
+        while (this.objects.containsKey(this.nextIndex)) {
         	++this.nextIndex;
         }
         return retVal;
