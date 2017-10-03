@@ -167,6 +167,28 @@ public final class RunnerParameters implements Cloneable {
 	public State getInitialState() {
 		return this.engineParameters.getInitialState();
 	}
+	
+	
+	/**
+	 * Sets the JRE path.
+	 * 
+	 * @param jrePath a {@link String}.
+	 * @throws NullPointerException if {@code jrePath == null}.
+	 */
+	public void setJREPath(String jrePath) {
+		this.engineParameters.setJREPath(jrePath);
+	}
+
+	/**
+	 * Gets the JRE path.
+	 * 
+	 * @return a {@link String}, the path to the JRE.
+	 * @throws NullPointerException if {@code jrePath == null}.
+	 */
+	public String getJREPath() {
+		return this.engineParameters.getJREPath();
+	}
+
 
 	/**
 	 * Sets the symbolic execution's classpath; the 

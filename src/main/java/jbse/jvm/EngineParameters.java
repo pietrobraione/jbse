@@ -1,12 +1,15 @@
 package jbse.jvm;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import jbse.bc.Classpath;
 import jbse.bc.Signature;
@@ -144,6 +147,9 @@ public final class EngineParameters implements Cloneable {
 	
 	/** The breadth mode. */
 	private BreadthMode breadthMode = BreadthMode.MORE_THAN_ONE;
+	
+	/** The path to the JRE. */
+	private String jrePath = "";
 
 	/** 
 	 * The initial {@link State} of the symbolic execution, or
@@ -354,6 +360,29 @@ public final class EngineParameters implements Cloneable {
 	}
 
 	/**
+	 * Sets the JRE path.
+	 * 
+	 * @param jrePath a {@link String}.
+	 * @throws NullPointerException if {@code jrePath == null}.
+	 */
+	public void setJREPath(String jrePath) {
+		if (jrePath == null) {
+			throw new NullPointerException();
+		}
+		this.jrePath = jrePath;
+	}
+
+	/**
+	 * Gets the JRE path.
+	 * 
+	 * @return a {@link String}, the path to the JRE.
+	 * @throws NullPointerException if {@code jrePath == null}.
+	 */
+	public String getJREPath() {
+		return this.jrePath;
+	}
+
+	/**
 	 * Sets the symbolic execution's classpath, and cancels the effect of any 
 	 * previous call to {@link #setInitialState(State)}; the 
 	 * default classpath is {@code "."}.
@@ -380,7 +409,14 @@ public final class EngineParameters implements Cloneable {
 	 */
 	public Classpath getClasspath() {
 		if (this.initialState == null) {
-			return new Classpath(this.paths.toArray(ARRAY_OF_STRING)); //safety copy
+			final String[] classpathJRE = new String[] {
+				Paths.get(this.jrePath, "rt.jar").toString(),
+				Paths.get(this.jrePath, "charset.jar").toString()
+				//TODO more?
+			};
+			final String[] classpathUser = this.paths.toArray(ARRAY_OF_STRING);
+			final String[] classpath = Stream.concat(Arrays.stream(classpathJRE), Arrays.stream(classpathUser)).toArray(String[]::new);
+			return new Classpath(classpath); //safety copy
 		} else {
 			return this.initialState.getClasspath();
 		}

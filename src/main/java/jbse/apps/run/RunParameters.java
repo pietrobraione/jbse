@@ -447,6 +447,26 @@ public final class RunParameters implements Cloneable {
 	public void setBreadthMode(BreadthMode breadthMode) {
 		this.runnerParameters.setBreadthMode(breadthMode);
 	}
+	
+	/**
+	 * Sets the JRE path.
+	 * 
+	 * @param jrePath a {@link String}.
+	 * @throws NullPointerException if {@code jrePath == null}.
+	 */
+	public void setJREPath(String jrePath) {
+		this.runnerParameters.setJREPath(jrePath);
+	}
+
+	/**
+	 * Gets the JRE path.
+	 * 
+	 * @return a {@link String}, the path to the JRE.
+	 * @throws NullPointerException if {@code jrePath == null}.
+	 */
+	public String getJREPath() {
+		return this.runnerParameters.getJREPath();
+	}
 
 	/**
 	 * Sets the symbolic execution's classpath; the 
