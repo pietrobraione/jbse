@@ -14,7 +14,7 @@ import java.util.function.Supplier;
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
 import jbse.algo.exc.CannotManageStateException;
-import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
@@ -59,7 +59,7 @@ public final class Algo_SUN_REFLECTION_GETCALLERCLASS extends Algo_INVOKEMETA_No
 		} catch (ClassFileNotAccessibleException e) {
             throwNew(state, ILLEGAL_ACCESS_ERROR);
             exitFromAlgorithm();
-		} catch (ClassFileIllFormedException e) {
+		} catch (BadClassFileException e) {
             //this should never happen
             failExecution(e);
 		}

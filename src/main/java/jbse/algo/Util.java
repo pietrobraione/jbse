@@ -738,8 +738,8 @@ public class Util {
      * @param ctx an {@link ExecutionContext}.
      * @throws DecisionException if {@code dec} fails in determining
      *         whether {@code java.lang.String} is or is not initialized.
-     * @throws ClassFileIllFormedException if the {@code java.lang.String} classfile 
-     *         is ill-formed.
+     * @throws BadClassFileException if the classfile is ill-formed or 
+     *         does not exist.
      * @throws ClassFileNotAccessibleException if {@code className} is not
      *         accessible from {@code accessor}.
      * @throws ClasspathException if the {@code java.lang.String} class is 
@@ -750,7 +750,7 @@ public class Util {
      *         {@code <clinit>} method for {@code java.lang.String}.
      */
     public static void ensureInstance_JAVA_CLASS(State state, String accessor, String className, ExecutionContext ctx) 
-    throws DecisionException, ClassFileIllFormedException, ClassFileNotAccessibleException, 
+    throws DecisionException, BadClassFileException, ClassFileNotAccessibleException,
     ClasspathException, InterruptException {
         //we store locally the interrupt and throw it at the end
         //to ensure the invariant that, at the end of the invocation, 
@@ -783,14 +783,7 @@ public class Util {
 
         //possibly creates and initializes the java.lang.Class Instance
         final boolean mustInit = (!state.hasInstance_JAVA_CLASS(className));
-        try {
-            state.ensureInstance_JAVA_CLASS(accessor, className);
-        } catch (ClassFileIllFormedException e) {
-            throw e;
-        } catch (BadClassFileException e) {
-            //this should never happen
-            failExecution(e);
-        }
+        state.ensureInstance_JAVA_CLASS(accessor, className);
         if (mustInit) {
             final Reference r = state.referenceToInstance_JAVA_CLASS(className);
             final Instance i = (Instance) state.getObject(r);

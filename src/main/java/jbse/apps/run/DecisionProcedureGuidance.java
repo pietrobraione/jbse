@@ -562,7 +562,7 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
                 if (o == null) {
                     throw new GuidanceException(ERROR_BAD_PATH);
                 }
-                fieldValue = o.getObjektHashCode();
+                fieldValue = o.getObjektDefaultHashCode();
 	        }
             if (fieldValue instanceof Reference) {
                 o = state.getObject((Reference) fieldValue);

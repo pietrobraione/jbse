@@ -525,7 +525,9 @@ public final class State implements Cloneable {
 	public ReferenceConcrete createArray(Value initValue, Primitive length, String arraySignature) 
 	throws InvalidTypeException {
 		final Array a = new Array(this.calc, false, initValue, length, arraySignature, null, Epoch.EPOCH_AFTER_START);
-		return new ReferenceConcrete(this.heap.addNew(a));
+		final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(a));
+		initDefaultHashCodeConcrete(a, retVal);
+		return retVal;
 	}
 
 	/**
@@ -550,7 +552,9 @@ public final class State implements Cloneable {
             throw new UnexpectedInternalException(e); //TODO do something better
         }
 		final Instance myObj = new Instance(this.calc, className, null, Epoch.EPOCH_AFTER_START, numOfStaticFields, fieldsSignatures);
-		return new ReferenceConcrete(this.heap.addNew(myObj));
+		final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(myObj));
+		initDefaultHashCodeConcrete(myObj, retVal);
+		return retVal;
 	}
 	
     /**
@@ -575,7 +579,9 @@ public final class State implements Cloneable {
             throw new UnexpectedInternalException(e); //TODO do something better
         }
         final Instance myObj = new Instance_JAVA_CLASS(this.calc, null, Epoch.EPOCH_AFTER_START, representedClass, isPrimitive, numOfStaticFields, fieldsSignatures);
-        return new ReferenceConcrete(this.heap.addNew(myObj));
+        final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(myObj));
+        initDefaultHashCodeConcrete(myObj, retVal);
+        return retVal;
     }
     
 	/**
@@ -598,6 +604,7 @@ public final class State implements Cloneable {
 	    final int numOfStaticFields = this.classHierarchy.numOfStaticFields(className);
 		final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(className);
 		final Klass k = new Klass(State.this.calc, null, Objekt.Epoch.EPOCH_AFTER_START, numOfStaticFields, fieldsSignatures);
+		k.setObjektDefaultHashCode(this.calc.valInt(0)); //doesn't care because it is not used
 		this.staticMethodArea.set(className, k);
 	}
 
@@ -622,7 +629,7 @@ public final class State implements Cloneable {
 		final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(className);
 		final Klass k = new Klass(this.calc, MemoryPath.mkStatic(className), Objekt.Epoch.EPOCH_BEFORE_START, numOfStaticFields, fieldsSignatures);
 		initWithSymbolicValues(k);
-		initHashCodeSymbolic(k);
+		k.setObjektDefaultHashCode(this.calc.valInt(0)); //doesn't care because it is not used
         this.staticMethodArea.set(className, k);
 	}
 
@@ -653,7 +660,7 @@ public final class State implements Cloneable {
 	throws InvalidTypeException {
 		final Primitive length = (Primitive) createSymbol("" + Type.INT, origin.thenArrayLength());
 		final Array obj = new Array(this.calc, true, null, length, arraySignature, origin, Epoch.EPOCH_BEFORE_START);
-		initHashCodeSymbolic(obj);
+		initDefaultHashCodeSymbolic(obj);
 		return obj;
 	}
 
@@ -668,7 +675,7 @@ public final class State implements Cloneable {
         }
 		final Instance obj = new Instance(this.calc, className, origin, Epoch.EPOCH_BEFORE_START, numOfStaticFields, fieldsSignatures);
 		initWithSymbolicValues(obj);
-		initHashCodeSymbolic(obj);
+		initDefaultHashCodeSymbolic(obj);
 		return obj;
 	}
 
@@ -692,12 +699,22 @@ public final class State implements Cloneable {
 	}
 	
     /**
+     * Initializes the hash code of an {@link Objekt} with a concrete value, 
+     * the heap position of the object.
+     * 
+     * @param myObj the {@link Objekt} whose hash code will be initialized.
+     * @param myRef a {@link ReferenceConcrete} to {@code myObj}.
+     */
+	private void initDefaultHashCodeConcrete(Objekt myObj, ReferenceConcrete myRef) {
+	    myObj.setObjektDefaultHashCode(this.calc.valInt((int) myRef.getHeapPosition()));
+	}
+    /**
      * Initializes the hash code of an {@link Objekt} with a symbolic value.
      * 
      * @param myObj the {@link Objekt} whose hash code will be initialized.
      */
-	private void initHashCodeSymbolic(Objekt myObj) {
-	    myObj.setObjektHashCode((PrimitiveSymbolic) createSymbol("" + Type.INT, myObj.getOrigin().thenHashCode()));
+	private void initDefaultHashCodeSymbolic(Objekt myObj) {
+	    myObj.setObjektDefaultHashCode((PrimitiveSymbolic) createSymbol("" + Type.INT, myObj.getOrigin().thenHashCode()));
 	}
 	
 	/**

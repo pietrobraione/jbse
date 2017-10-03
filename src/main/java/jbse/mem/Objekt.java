@@ -62,7 +62,7 @@ public abstract class Objekt implements Cloneable {
      * because it must be set after creation, but should not
      * be changed after its initialization.
      */
-    private Primitive hashCode;
+    private Primitive defaultHashCode;
 
     /** 
      * The fields as a map of signatures (as strings) to variables.
@@ -105,7 +105,7 @@ public abstract class Objekt implements Cloneable {
         this.type = type;
         this.origin = origin;
         this.epoch = epoch;
-        this.hashCode = calc.valInt(hashCode()); //TODO calc.valInt(hashCode()) is a VERY POOR choice! Use a suitable symbol also when the Objekt is concrete.
+        //this.hashCode must be initialized by means of setters
     }
     
 	/**
@@ -139,26 +139,26 @@ public abstract class Objekt implements Cloneable {
     }
     
     /**
-     * Sets the hash code of this {@link Objekt}.
+     * Sets the default hash code of this {@link Objekt}.
      * 
-     * @param hashCode a {@link Primitive} for the hash code
+     * @param defaultHashCode a {@link Primitive} for the default hash code
      *        of this {@link Objekt}. It must be set when 
      *        {@code epoch == }{@link Epoch#EPOCH_BEFORE_START}.
      *        When {@code epoch == }{@link Epoch#EPOCH_AFTER_START}
      *        the hash code of this {@link Objekt} from the underlying
      *        JVM is used.
      */
-    public final void setObjektHashCode(Primitive hashCode) {
-        this.hashCode = hashCode;
+    public final void setObjektDefaultHashCode(Primitive defaultHashCode) {
+        this.defaultHashCode = defaultHashCode;
     }
     
     /**
-     * Returns the hash code of this {@code Objekt}.
+     * Returns the default hash code of this {@code Objekt}.
      * 
      * @return a {@code Primitive}.
      */
-    public final Primitive getObjektHashCode() {
-        return this.hashCode;
+    public final Primitive getObjektDefaultHashCode() {
+        return this.defaultHashCode;
     }
     
     /**
