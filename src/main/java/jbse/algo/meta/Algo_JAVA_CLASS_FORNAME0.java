@@ -28,7 +28,7 @@ import jbse.val.Reference;
 import jbse.val.Simplex;
 
 /**
- * Meta-level implementation of {@link java.lang.Object#getClass()}.
+ * Meta-level implementation of {@link java.lang.Class#forName0(String, boolean, ClassLoader, Class)}.
  * 
  * @author Pietro Braione
  */
