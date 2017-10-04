@@ -7,6 +7,7 @@ import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETDECLAREDFIELDS0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETPRIMITIVECLASS;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_ISASSIGNABLEFROM;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_ISINSTANCE;
+import static jbse.algo.Overrides.ALGO_JAVA_CLASS_ISINTERFACE;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_ISPRIMITIVE;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_GETCLASS;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_HASHCODE;
@@ -63,6 +64,7 @@ import static jbse.bc.Signatures.JAVA_CLASS_GETDECLAREDFIELDS0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETPRIMITIVECLASS;
 import static jbse.bc.Signatures.JAVA_CLASS_ISASSIGNABLEFROM;
 import static jbse.bc.Signatures.JAVA_CLASS_ISINSTANCE;
+import static jbse.bc.Signatures.JAVA_CLASS_ISINTERFACE;
 import static jbse.bc.Signatures.JAVA_CLASS_ISPRIMITIVE;
 import static jbse.bc.Signatures.JAVA_COLLECTIONS;
 import static jbse.bc.Signatures.JAVA_COLLECTIONS_EMPTYLIST;
@@ -133,6 +135,7 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_IGNORE;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRESOLVED;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRUNBYJBSE;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SUCCEED;
+import static jbse.bc.Signatures.JBSE_BASE;
 import static jbse.bc.Signatures.SUN_REFLECTION;
 import static jbse.bc.Signatures.SUN_REFLECTIONFACTORY;
 import static jbse.bc.Signatures.SUN_REFLECTIONFACTORY_GETREFLECTIONFACTORYACTION;
@@ -304,6 +307,7 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_CLASS_GETPRIMITIVECLASS,                   ALGO_JAVA_CLASS_GETPRIMITIVECLASS);
             addMetaOverridden(JAVA_CLASS_ISASSIGNABLEFROM,                    ALGO_JAVA_CLASS_ISASSIGNABLEFROM);
             addMetaOverridden(JAVA_CLASS_ISINSTANCE,                          ALGO_JAVA_CLASS_ISINSTANCE);
+            addMetaOverridden(JAVA_CLASS_ISINTERFACE,                         ALGO_JAVA_CLASS_ISINTERFACE);
             addMetaOverridden(JAVA_CLASS_ISPRIMITIVE,                         ALGO_JAVA_CLASS_ISPRIMITIVE);
             addMetaOverridden(JAVA_OBJECT_GETCLASS,                           ALGO_JAVA_OBJECT_GETCLASS);
             addMetaOverridden(JAVA_OBJECT_HASHCODE,                           ALGO_JAVA_OBJECT_HASHCODE);
@@ -334,6 +338,7 @@ public final class ExecutionContext {
             addMetaOverridden(JBSE_ANALYSIS_ISRUNBYJBSE,               ALGO_JBSE_ANALYSIS_ISRUNBYJBSE);
             addMetaOverridden(JBSE_ANALYSIS_SUCCEED,                   ALGO_JBSE_ANALYSIS_SUCCEED);
             addMetaOverridden(JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED, ALGO_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED);
+
         } catch (MetaUnsupportedException e) {
             throw new UnexpectedInternalException(e);
         }
@@ -521,6 +526,7 @@ public final class ExecutionContext {
              className.equals(JAVA_THREADLOCAL) || //not really, but the only static member generates sequences of hash codes, so it can be treated as it were
              className.equals(JAVA_THROWABLE) || 
              className.equals(JAVA_THROWABLE_SENTINELHOLDER) ||
+             className.equals(JBSE_BASE) ||
              className.equals(SUN_REFLECTION) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
              className.equals(SUN_REFLECTIONFACTORY) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
              className.equals(SUN_REFLECTIONFACTORY_GETREFLECTIONFACTORYACTION) ||

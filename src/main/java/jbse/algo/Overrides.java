@@ -30,6 +30,7 @@ public final class Overrides {
     public static final String ALGO_JAVA_CLASS_GETPRIMITIVECLASS        = jbse.algo.meta.Algo_JAVA_CLASS_GETPRIMITIVECLASS.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_CLASS_ISASSIGNABLEFROM         = jbse.algo.meta.Algo_JAVA_CLASS_ISASSIGNABLEFROM.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_CLASS_ISINSTANCE               = jbse.algo.meta.Algo_JAVA_CLASS_ISINSTANCE.class.getCanonicalName().replace('.', '/');
+    public static final String ALGO_JAVA_CLASS_ISINTERFACE              = jbse.algo.meta.Algo_JAVA_CLASS_ISINTERFACE.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_CLASS_ISPRIMITIVE              = jbse.algo.meta.Algo_JAVA_CLASS_ISPRIMITIVE.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_OBJECT_GETCLASS                = jbse.algo.meta.Algo_JAVA_OBJECT_GETCLASS.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_OBJECT_HASHCODE                = jbse.algo.meta.Algo_JAVA_OBJECT_HASHCODE.class.getCanonicalName().replace('.', '/');
@@ -56,7 +57,7 @@ public final class Overrides {
     public static final String ALGO_JBSE_ANALYSIS_ISRUNBYJBSE               = jbse.algo.meta.Algo_JBSE_ANALYSIS_ISRUNBYJBSE.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JBSE_ANALYSIS_SUCCEED                   = jbse.algo.meta.Algo_JBSE_ANALYSIS_SUCCEED.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED = jbse.algo.meta.Algo_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED.class.getCanonicalName().replace('.', '/');
-    
+
     //Overriding base-level implementation of standard methods
     private static final String JBSE_BASE = jbse.base.Base.class.getCanonicalName().replace('.', '/');
     public static final Signature BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION = 

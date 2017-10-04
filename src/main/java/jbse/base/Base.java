@@ -4,6 +4,9 @@ import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 import java.util.Properties;
+
+import jbse.algo.meta.Algo_JBSE_BASE_CLINIT;
+import jbse.meta.annotations.MetaOverriddenBy;
 import sun.misc.Unsafe;
 
 /**
@@ -13,35 +16,99 @@ import sun.misc.Unsafe;
  *
  */
 public final class Base {
+	//These are set metacircularly
+	private static final String OS_NAME                 = null;
+	private static final String OS_VERSION              = null;
+	private static final String OS_ARCH                 = null;
+	private static final String FILE_SEPARATOR          = null;
+	private static final String PATH_SEPARATOR          = null;
+	private static final String LINE_SEPARATOR          = null;
+	private static final String USER_LANGUAGE           = null;
+	private static final String USER_SCRIPT             = null;
+	private static final String USER_COUNTRY            = null;
+	private static final String USER_VARIANT            = null;
+	private static final String FILE_ENCODING           = null;
+	private static final String SUN_JNU_ENCODING        = null;
+	private static final String SUN_STDOUT_ENCODING     = null;
+	private static final String SUN_STDERR_ENCODING     = null;
+	private static final String SUN_IO_UNICODE_ENCODING = null;
+	private static final String SUN_CPU_ISALIST         = null;
+	private static final String SUN_CPU_ENDIAN          = null;
+	private static final String HTTP_PROXYHOST          = null;
+	private static final String HTTP_PROXYPORT          = null;
+	private static final String HTTPS_PROXYHOST         = null;
+	private static final String HTTPS_PROXYPORT         = null;
+	private static final String FTP_PROXYHOST           = null;
+	private static final String FTP_PROXYPORT           = null;
+	private static final String SOCKSPROXYHOST          = null;
+	private static final String SOCKSPROXYPORT          = null;
+	private static final String GOPHERPROXYSET          = null;
+	private static final String GOPHERPROXYHOST         = null;
+	private static final String GOPHERPROXYPORT         = null;
+	
+	static {
+		clinit();
+	}
+	
+	/**
+	 * Sets the {@code private static final String} fields
+	 * of this class to the values (if exist) of the 
+	 * corresponding properties at the meta-level.
+	 */
+	@MetaOverriddenBy(Algo_JBSE_BASE_CLINIT.class)
+	private static native void clinit();
+	
 	/**
 	 * Overriding implementation of {@link java.lang.System#initProperties(Properties)}.
 	 * @see java.lang.System#initProperties(Properties)
 	 */
 	public static final Properties base_JAVA_SYSTEM_INITPROPERTIES(Properties p) {
-		//properties taken from src/share/native/java/lang/System.c
-		p.put("java.specification.version", "1.8");
-		p.put("java.specification.name", "Java Platform API Specification");
-		p.put("java.specification.vendor", "Oracle Corporation");
-		p.put("java.version", "1.8.0_144");
-		p.put("java.vendor", "JBSE project");
-		p.put("java.vendor.url", "http://pietrobraione.github.io/jbse/");
-		p.put("java.vendor.url.bug", "https://github.com/pietrobraione/jbse/issues");
-		p.put("java.class.version", "52.0");
-		/* TODO take the values metacircularly (how?)
-		p.put("os.name", ...);
-		p.put("os.version", ...);
-		p.put("os.arch", ...);
-		p.put("file.separator", ...);
-		p.put("path.separator", ...);
-		p.put("line.separator", ...);
-		p.put("user.language", ...);
-		p.put("file.encoding", ...);
-		p.put("sun.jnu.encoding", ...);
-		*/
-		p.put("file.encoding", "UTF-8"); //TODO take the value metacircularly (how?)
-		p.put("file.encoding.pkg", "sun.io"); //TODO take the value metacircularly (how?)
+		//properties taken from openjdk jdk project, file src/share/native/java/lang/System.c
+		putSafe(p, "java.specification.version", "1.8");
+		putSafe(p, "java.specification.name",    "Java Platform API Specification");
+		putSafe(p, "java.specification.vendor",  "Oracle Corporation");
+		putSafe(p, "java.version",               "1.8.0_144");
+		putSafe(p, "java.vendor",                "JBSE project");
+		putSafe(p, "java.vendor.url",            "http://pietrobraione.github.io/jbse/");
+		putSafe(p, "java.vendor.url.bug",        "https://github.com/pietrobraione/jbse/issues");
+		putSafe(p, "java.class.version",         "52.0");
+		putSafe(p, "os.name",                    OS_NAME);
+		putSafe(p, "os.version",                 OS_VERSION);
+		putSafe(p, "os.arch",                    OS_ARCH);
+		putSafe(p, "file.separator",             FILE_SEPARATOR);
+		putSafe(p, "path.separator",             PATH_SEPARATOR);
+		putSafe(p, "line.separator",             LINE_SEPARATOR);
+		putSafe(p, "user.language",              USER_LANGUAGE);
+		putSafe(p, "user.script",                USER_SCRIPT);
+		putSafe(p, "user.country",               USER_COUNTRY);
+		putSafe(p, "user.variant",               USER_VARIANT);
+		putSafe(p, "file.encoding",              FILE_ENCODING);
+		putSafe(p, "sun.jnu.encoding",           SUN_JNU_ENCODING);
+		putSafe(p, "sun.stdout.encoding",        SUN_STDOUT_ENCODING);
+		putSafe(p, "sun.stderr.encoding",        SUN_STDERR_ENCODING);
+		putSafe(p, "file.encoding.pkg",          "sun.io");
+		putSafe(p, "sun.io.unicode.encoding",    SUN_IO_UNICODE_ENCODING);
+		putSafe(p, "sun.cpu.isalist",            SUN_CPU_ISALIST);
+		putSafe(p, "sun.cpu.endian",             SUN_CPU_ENDIAN);
+		putSafe(p, "http.proxyHost",             HTTP_PROXYHOST);
+		putSafe(p, "http.proxyPort",             HTTP_PROXYPORT);
+		putSafe(p, "https.proxyHost",            HTTPS_PROXYHOST);
+		putSafe(p, "https.proxyPort",            HTTPS_PROXYPORT);
+		putSafe(p, "ftp.proxyHost",              FTP_PROXYHOST);
+		putSafe(p, "ftp.proxyPort",              FTP_PROXYPORT);
+		putSafe(p, "socksProxyHost",             SOCKSPROXYHOST);
+		putSafe(p, "socksProxyPort",             SOCKSPROXYPORT);
+		putSafe(p, "gopherProxySet",             GOPHERPROXYSET);
+		putSafe(p, "gopherProxyHost",            GOPHERPROXYHOST);
+		putSafe(p, "gopherProxyPort",            GOPHERPROXYPORT);
 		//TODO more properties?
 		return p;
+	}
+	
+	private static final void putSafe(Properties p, String key, String value) {
+		if (value != null) {
+			p.put(key, value);
+		}
 	}
 	
 	/**

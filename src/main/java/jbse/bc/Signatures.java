@@ -92,7 +92,8 @@ public final class Signatures {
     public static final String JAVA_THROWABLE                = "java/lang/Throwable";
     public static final String JAVA_THROWABLE_SENTINELHOLDER = "java/lang/Throwable$SentinelHolder";
     public static final String JAVA_TREESET                  = "java/util/TreeSet";
-    public static final String JBSE_ANALYSIS                 = "jbse/meta/Analysis";
+    public static final String JBSE_ANALYSIS                 = jbse.meta.Analysis.class.getCanonicalName().replace('.', '/');
+    public static final String JBSE_BASE                     = jbse.base.Base.class.getCanonicalName().replace('.', '/');
     public static final String SUN_REFLECTION                = "sun/reflect/Reflection";
     public static final String SUN_REFLECTIONFACTORY         = "sun/reflect/ReflectionFactory";
     public static final String SUN_REFLECTIONFACTORY_GETREFLECTIONFACTORYACTION = "sun/reflect/ReflectionFactory$GetReflectionFactoryAction";
@@ -141,6 +142,8 @@ public final class Signatures {
             new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + BOOLEAN, "isAssignableFrom");
     public static final Signature JAVA_CLASS_ISINSTANCE =
         new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + BOOLEAN, "isInstance");
+    public static final Signature JAVA_CLASS_ISINTERFACE =
+            new Signature(JAVA_CLASS, "()" + BOOLEAN, "isInterface");
     public static final Signature JAVA_CLASS_ISPRIMITIVE =
             new Signature(JAVA_CLASS, "()" + BOOLEAN, "isPrimitive");
     public static final Signature JAVA_METHOD_INVOKE =
@@ -244,6 +247,62 @@ public final class Signatures {
         new Signature(JAVA_STACK_TRACE_ELEMENT, "" + INT, "lineNumber");
     public static final Signature JAVA_STACK_TRACE_ELEMENT_METHODNAME = 
         new Signature(JAVA_STACK_TRACE_ELEMENT, "" + REFERENCE + JAVA_STRING + TYPEEND, "methodName");
+    public static final Signature JBSE_BASE_FILE_ENCODING = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "FILE_ENCODING");
+    public static final Signature JBSE_BASE_FILE_SEPARATOR = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "FILE_SEPARATOR");
+    public static final Signature JBSE_BASE_FTP_PROXYHOST = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "FTP_PROXYHOST");
+    public static final Signature JBSE_BASE_FTP_PROXYPORT = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "FTP_PROXYPORT");
+    public static final Signature JBSE_BASE_GOPHERPROXYHOST = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "GOPHERPROXYHOST");
+    public static final Signature JBSE_BASE_GOPHERPROXYPORT = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "GOPHERPROXYPORT");
+    public static final Signature JBSE_BASE_GOPHERPROXYSET = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "GOPHERPROXYSET");
+    public static final Signature JBSE_BASE_HTTP_PROXYHOST = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "HTTP_PROXYHOST");
+    public static final Signature JBSE_BASE_HTTP_PROXYPORT = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "HTTP_PROXYPORT");
+    public static final Signature JBSE_BASE_HTTPS_PROXYHOST = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "HTTPS_PROXYHOST");
+    public static final Signature JBSE_BASE_HTTPS_PROXYPORT = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "HTTPS_PROXYPORT");
+    public static final Signature JBSE_BASE_LINE_SEPARATOR = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "LINE_SEPARATOR");
+    public static final Signature JBSE_BASE_OS_ARCH = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "OS_ARCH");
+    public static final Signature JBSE_BASE_OS_NAME = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "OS_NAME");
+    public static final Signature JBSE_BASE_OS_VERSION = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "OS_VERSION");
+    public static final Signature JBSE_BASE_PATH_SEPARATOR = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "PATH_SEPARATOR");
+    public static final Signature JBSE_BASE_SOCKSPROXYHOST = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SOCKSPROXYHOST");
+    public static final Signature JBSE_BASE_SOCKSPROXYPORT = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SOCKSPROXYPORT");
+    public static final Signature JBSE_BASE_USER_COUNTRY = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "USER_COUNTRY");
+    public static final Signature JBSE_BASE_SUN_CPU_ENDIAN = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SUN_CPU_ENDIAN");
+    public static final Signature JBSE_BASE_SUN_CPU_ISALIST = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SUN_CPU_ISALIST");
+    public static final Signature JBSE_BASE_SUN_IO_UNICODE_ENCODING = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SUN_IO_UNICODE_ENCODING");
+    public static final Signature JBSE_BASE_SUN_JNU_ENCODING = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SUN_JNU_ENCODING");
+    public static final Signature JBSE_BASE_SUN_STDERR_ENCODING = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SUN_STDERR_ENCODING");
+    public static final Signature JBSE_BASE_SUN_STDOUT_ENCODING = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SUN_STDOUT_ENCODING");
+    public static final Signature JBSE_BASE_USER_LANGUAGE = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "USER_LANGUAGE");
+    public static final Signature JBSE_BASE_USER_SCRIPT = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "USER_SCRIPT");
+    public static final Signature JBSE_BASE_USER_VARIANT = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "USER_VARIANT");
 
     /**
      * Do not instantiate it! 
