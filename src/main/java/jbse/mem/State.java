@@ -751,7 +751,7 @@ public final class State implements Cloneable {
      * and for the classes of the members of the created object. 
      * If the literal already exists, does nothing.<br /><br />
      * 
-     * Please do NOT use it, use {@link jbse.algo.Util#ensureStringLiteral(State, String, jbse.algo.ExecutionContext)} 
+     * Please do NOT use it, use {@link jbse.algo.Util#ensureStringLiteral(State, jbse.algo.ExecutionContext, String)} 
      * instead.
      * 
      * @param stringLit a {@link String} representing a string literal.

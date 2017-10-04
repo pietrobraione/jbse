@@ -153,7 +153,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
 
 				//sets name
 				try {
-					ensureStringLiteral(state, sigField.getName(), this.ctx);
+					ensureStringLiteral(state, this.ctx, sigField.getName());
 				} catch (ClassFileIllFormedException | DecisionException | ClasspathException e) {
 					//this should never happen
 					failExecution(e);
@@ -176,7 +176,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
 					if (sigType == null) {
 						refSigType = Null.getInstance();
 					} else {
-						ensureStringLiteral(state, sigType, this.ctx);
+						ensureStringLiteral(state, this.ctx, sigType);
 						refSigType = state.referenceToStringLiteral(sigType);
 					}
 					field.setFieldValue(JAVA_FIELD_SIGNATURE, refSigType);

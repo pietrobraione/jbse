@@ -317,9 +317,6 @@ public class Util {
      * @param state a {@link State}. It must have a current frame.
      * @param className a {@link String}, the name of a class.
      * @param ctx an {@link ExecutionContext}.
-     * @return {@code true} iff it is necessary to run the 
-     *         {@code <clinit>} methods for the initialized 
-     *         class(es).
      * @throws InvalidInputException if {@code className} or {@code state} 
      *         is null.
      * @throws DecisionException if {@code dec} fails in determining
@@ -694,8 +691,10 @@ public class Util {
      * exists in the {@link State}'s heap, does nothing.
      * 
      * @param state the {@link State} on which this method will operate.
-     * @param stringLit a {@link String} representing a string literal.
      * @param ctx an {@link ExecutionContext}.
+     * @param stringLit a {@link String} representing a string literal.
+     * @throws NullPointerException if {@code state == null}, or 
+     *         {@code ctx == null}, or {@code stringLit == null}.
      * @throws DecisionException if {@code dec} fails in determining
      *         whether {@code java.lang.String} is or is not initialized.
      * @throws ClassFileIllFormedException if the {@code java.lang.String} classfile 
@@ -707,8 +706,11 @@ public class Util {
      *         execution of the current bytecode and run the 
      *         {@code <clinit>} method for {@code java.lang.String}.
      */
-    public static void ensureStringLiteral(State state, String stringLit, ExecutionContext ctx) 
+    public static void ensureStringLiteral(State state, ExecutionContext ctx, String stringLit) 
     throws DecisionException, ClassFileIllFormedException, ClasspathException, InterruptException {
+        if (state == null || ctx == null || stringLit == null) {
+            throw new NullPointerException("null parameter passed to " + Util.class.getName() + ".ensureStringLiteral");
+        }
         state.ensureStringLiteral(stringLit);
         try {
             ensureClassCreatedAndInitialized(state, JAVA_STRING, ctx);
@@ -776,7 +778,7 @@ public class Util {
         final String classNameBinary = binaryClassName(className);
         //TODO is it ok to treat the class name String as a string literal?
         try {
-            ensureStringLiteral(state, classNameBinary, ctx);
+            ensureStringLiteral(state, ctx, classNameBinary);
         } catch (InterruptException e) {
             exc = e;
         }
