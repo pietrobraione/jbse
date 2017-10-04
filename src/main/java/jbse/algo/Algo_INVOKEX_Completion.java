@@ -1,5 +1,6 @@
 package jbse.algo;
 
+import static jbse.algo.Util.ensureClassCreatedAndInitialized;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
@@ -20,6 +21,7 @@ import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
 import jbse.dec.DecisionProcedureAlgorithms;
+import jbse.dec.exc.InvalidInputException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.tree.DecisionAlternative_NONE;
@@ -66,8 +68,10 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
                 failExecution(e);
             }
             
+	        //since a method can be base-level overridden by a static method, we need to know
+	        //whether the implementation is or is not static
+            boolean isStaticImpl = this.isStatic;
             if (this.shouldFindImplementation) {
-
                 //looks for the method implementation with standard lookup
                 try {
                     findImpl(state);
@@ -79,9 +83,31 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
                     throwVerifyError(state);
                     exitFromAlgorithm();
                 }
+            } else {
+        	        //since a method can be base-level overridden by a static method, we need to know
+        	        //whether the implementation is or is not static
+                try {
+	                isStaticImpl = this.classFileMethodImpl.isMethodStatic(this.methodSignatureImpl) ? true : this.isStatic;
+				} catch (MethodNotFoundException e) {
+	                //this should never happen 
+	                failExecution(e);
+				}
             }
             
-            //check that the method has an implementation
+            //creates and initializes the class of the implementation method; this is necessary for
+            //static base-level overriding methods; note that in the ordinary invokestatic case the
+            //class of the method implementation is the class of the resolved method, so this just 
+            //repeats what was already done in Algo_INVOKEX
+            if (isStaticImpl) { 
+                try {
+                    ensureClassCreatedAndInitialized(state, this.methodSignatureImpl.getClassName(), this.ctx);
+                } catch (InvalidInputException | BadClassFileException e) {
+                    //this should never happen after resolution 
+                    failExecution(e);
+                }
+            }
+
+            //checks that the method has an implementation
             try {
                 if (this.classFileMethodImpl == null || this.classFileMethodImpl.isMethodAbstract(this.methodSignatureImpl)) {
                     //Algo_INVOKEX found a standard implementation, so this should never happen

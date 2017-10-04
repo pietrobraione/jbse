@@ -69,8 +69,7 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
             //are done later when the frame is pushed
             check(state);
 
-            //possibly creates and initializes the class of the resolved method
-            //TODO should we do it in the invoke[interface/special/virtual] cases? If so, isn't the same doing on methodSignatureImpl?
+            //creates and initializes the class of the resolved method in the invokestatic case
             if (this.isStatic) { 
                 try {
                     ensureClassCreatedAndInitialized(state, this.methodSignatureResolved.getClassName(), this.ctx);
@@ -105,11 +104,12 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
             } catch (MethodNotFoundException e) {
                 //this should never happen after resolution 
                 failExecution(e);
-            }     
+            }
 
             //otherwise, concludes the execution of the bytecode algorithm
             this.algo_INVOKEX_Completion.setImplementation(this.classFileMethodImpl, this.methodSignatureImpl, this.isNative);
             continueWith(this.algo_INVOKEX_Completion);
+
         };
     }
 
