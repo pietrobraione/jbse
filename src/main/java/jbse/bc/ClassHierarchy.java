@@ -85,14 +85,14 @@ public class ClassHierarchy {
      * @throws BadClassFileException when the class file does not 
      *         exist or is ill-formed.
      */
-    public ClassFile getClassFile(String className) 
-    throws BadClassFileException {
-    	final ClassFile retval = this.cfs.getClassFile(className);
-    	if (retval instanceof ClassFileBad) {
-    	    throw ((ClassFileBad) retval).getException();
-    	}
-    	return retval;
-    }
+	public ClassFile getClassFile(String className) 
+	throws BadClassFileException {
+		final ClassFile retval = this.cfs.getClassFile(className);
+		if (retval instanceof ClassFileBad) {
+			throw ((ClassFileBad) retval).getException();
+		}
+		return retval;
+	}
     
     /**
      * Given the name of a primitive type returns the correspondent 

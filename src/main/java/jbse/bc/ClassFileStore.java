@@ -71,7 +71,6 @@ class ClassFileStore {
         return this.cache.get(className);
     }
     
-    
     /**
      * Given the name of a primitive type returns the corresponding 
      * {@link ClassFile}.
@@ -81,27 +80,27 @@ class ClassFileStore {
      *         possibly a {@link ClassFileBad}.
      */
     ClassFile getClassFilePrimitive(String typeName) {
-    	switch (typeName.charAt(0)) {
-    	case Type.BOOLEAN:
-    		return this.primitiveClassBoolean;
-    	case Type.BYTE:
-    		return this.primitiveClassByte;
-    	case Type.CHAR:
-    		return this.primitiveClassCharacter;
-    	case Type.SHORT:
-    		return this.primitiveClassShort;
-    	case Type.INT:
-    		return this.primitiveClassInteger;
-    	case Type.LONG:
-    		return this.primitiveClassLong;
-    	case Type.FLOAT:
-    		return this.primitiveClassFloat;
-    	case Type.DOUBLE:
-    		return this.primitiveClassDouble;
-    	case Type.VOID:
-    		return this.primitiveClassVoid;
-    	default:
-    		return new ClassFileBad(typeName, new ClassFileNotFoundException(typeName));
-    	}
+        switch (typeName.charAt(0)) {
+        case Type.BOOLEAN:
+            return this.primitiveClassBoolean;
+        case Type.BYTE:
+            return this.primitiveClassByte;
+        case Type.CHAR:
+            return this.primitiveClassCharacter;
+        case Type.SHORT:
+            return this.primitiveClassShort;
+        case Type.INT:
+            return this.primitiveClassInteger;
+        case Type.LONG:
+            return this.primitiveClassLong;
+        case Type.FLOAT:
+            return this.primitiveClassFloat;
+        case Type.DOUBLE:
+            return this.primitiveClassDouble;
+        case Type.VOID:
+            return this.primitiveClassVoid;
+        default:
+            return new ClassFileBad(typeName, new ClassFileNotFoundException(typeName));
+        }
     }
 }
