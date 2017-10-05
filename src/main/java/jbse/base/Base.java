@@ -45,6 +45,9 @@ public final class Base {
 	private static final String GOPHERPROXYSET          = null;
 	private static final String GOPHERPROXYHOST         = null;
 	private static final String GOPHERPROXYPORT         = null;
+	private static final String HTTP_NONPROXYHOSTS      = null;
+	private static final String FTP_NONPROXYHOSTS       = null;
+	private static final String SOCKSNONPROXYHOSTS      = null;
 	
 	static {
 		clinit();
@@ -101,6 +104,9 @@ public final class Base {
 		putSafe(p, "gopherProxySet",             GOPHERPROXYSET);
 		putSafe(p, "gopherProxyHost",            GOPHERPROXYHOST);
 		putSafe(p, "gopherProxyPort",            GOPHERPROXYPORT);
+		putSafe(p, "http.nonProxyHosts",         HTTP_NONPROXYHOSTS);
+		putSafe(p, "ftp.nonProxyHosts",          FTP_NONPROXYHOSTS);
+		putSafe(p, "socksNonProxyHosts",         SOCKSNONPROXYHOSTS);
 		//TODO more properties?
 		return p;
 	}

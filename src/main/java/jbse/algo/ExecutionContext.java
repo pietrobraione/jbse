@@ -46,7 +46,9 @@ import static jbse.bc.Signatures.JAVA_ABSTRACTSET;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION;
+import static jbse.bc.Signatures.JAVA_ACCESSIBLEOBJECT;
 import static jbse.bc.Signatures.JAVA_ARRAYLIST;
+import static jbse.bc.Signatures.JAVA_ARRAYS;
 import static jbse.bc.Signatures.JAVA_ATOMICINTEGER;
 import static jbse.bc.Signatures.JAVA_ATOMICREFERENCEFIELDUPDATER;
 import static jbse.bc.Signatures.JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL;
@@ -116,6 +118,7 @@ import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_STRING_CASEINSCOMP;
 import static jbse.bc.Signatures.JAVA_STRING_HASHCODE;
 import static jbse.bc.Signatures.JAVA_STRING_INTERN;
+import static jbse.bc.Signatures.JAVA_STRINGBUILDER;
 import static jbse.bc.Signatures.JAVA_SYSTEM;
 import static jbse.bc.Signatures.JAVA_SYSTEM_ARRAYCOPY;
 import static jbse.bc.Signatures.JAVA_SYSTEM_IDENTITYHASHCODE;
@@ -127,6 +130,7 @@ import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEDEPTH;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEELEMENT;
 import static jbse.bc.Signatures.JAVA_THROWABLE_SENTINELHOLDER;
 import static jbse.bc.Signatures.JAVA_TREESET;
+import static jbse.bc.Signatures.JAVA_WRITER;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ANY;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ENDGUIDANCE;
@@ -140,7 +144,11 @@ import static jbse.bc.Signatures.SUN_REFLECTION;
 import static jbse.bc.Signatures.SUN_REFLECTIONFACTORY;
 import static jbse.bc.Signatures.SUN_REFLECTIONFACTORY_GETREFLECTIONFACTORYACTION;
 import static jbse.bc.Signatures.SUN_REFLECTION_GETCALLERCLASS;
+import static jbse.bc.Signatures.SUN_REFLECTUTIL;
 import static jbse.bc.Signatures.SUN_SHAREDSECRETS;
+import static jbse.bc.Signatures.SUN_STANDARDCHARSETS_CACHE;
+import static jbse.bc.Signatures.SUN_STANDARDCHARSETS_CLASSES;
+import static jbse.bc.Signatures.SUN_STREAMENCODER;
 import static jbse.bc.Signatures.SUN_UNSAFE;
 import static jbse.bc.Signatures.SUN_UNSAFE_ADDRESSSIZE;
 import static jbse.bc.Signatures.SUN_UNSAFE_ARRAYBASEOFFSET;
@@ -466,7 +474,9 @@ public final class ExecutionContext {
              className.equals(JAVA_ABSTRACTMAP) ||
              className.equals(JAVA_ABSTRACTSET) ||
              className.equals(JAVA_ACCESSCONTROLLER) || 
+             className.equals(JAVA_ACCESSIBLEOBJECT) || 
              className.equals(JAVA_ARRAYLIST) || 
+             className.equals(JAVA_ARRAYS) || 
              className.equals(JAVA_ATOMICINTEGER) || 
              className.equals(JAVA_ATOMICREFERENCEFIELDUPDATER) || 
              className.equals(JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL) || 
@@ -521,16 +531,22 @@ public final class ExecutionContext {
              className.equals(JAVA_RUNTIMEEXCEPTION) ||
              className.equals(JAVA_STRING) || 
              className.equals(JAVA_STRING_CASEINSCOMP) ||
+             className.equals(JAVA_STRINGBUILDER) || 
              className.equals(JAVA_SYSTEM) || 
              className.equals(JAVA_TREESET) ||
              className.equals(JAVA_THREADLOCAL) || //not really, but the only static member generates sequences of hash codes, so it can be treated as it were
              className.equals(JAVA_THROWABLE) || 
              className.equals(JAVA_THROWABLE_SENTINELHOLDER) ||
+             className.equals(JAVA_WRITER) || 
              className.equals(JBSE_BASE) ||
              className.equals(SUN_REFLECTION) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
              className.equals(SUN_REFLECTIONFACTORY) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
              className.equals(SUN_REFLECTIONFACTORY_GETREFLECTIONFACTORYACTION) ||
+             className.equals(SUN_REFLECTUTIL) ||
              className.equals(SUN_SHAREDSECRETS) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
+             className.equals(SUN_STANDARDCHARSETS_CACHE) ||
+             className.equals(SUN_STANDARDCHARSETS_CLASSES) ||
+             className.equals(SUN_STREAMENCODER) ||
              className.equals(SUN_UNSAFE) ||
              className.equals(SUN_VERSION) ||
              className.equals(SUN_VM) ||

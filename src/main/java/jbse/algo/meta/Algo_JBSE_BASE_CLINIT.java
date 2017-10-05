@@ -5,11 +5,13 @@ import static jbse.algo.Util.failExecution;
 import static jbse.bc.Signatures.JBSE_BASE;
 import static jbse.bc.Signatures.JBSE_BASE_FILE_ENCODING;
 import static jbse.bc.Signatures.JBSE_BASE_FILE_SEPARATOR;
+import static jbse.bc.Signatures.JBSE_BASE_FTP_NONPROXYHOSTS;
 import static jbse.bc.Signatures.JBSE_BASE_FTP_PROXYHOST;
 import static jbse.bc.Signatures.JBSE_BASE_FTP_PROXYPORT;
 import static jbse.bc.Signatures.JBSE_BASE_GOPHERPROXYHOST;
 import static jbse.bc.Signatures.JBSE_BASE_GOPHERPROXYPORT;
 import static jbse.bc.Signatures.JBSE_BASE_GOPHERPROXYSET;
+import static jbse.bc.Signatures.JBSE_BASE_HTTP_NONPROXYHOSTS;
 import static jbse.bc.Signatures.JBSE_BASE_HTTP_PROXYHOST;
 import static jbse.bc.Signatures.JBSE_BASE_HTTP_PROXYPORT;
 import static jbse.bc.Signatures.JBSE_BASE_HTTPS_PROXYHOST;
@@ -19,6 +21,7 @@ import static jbse.bc.Signatures.JBSE_BASE_OS_ARCH;
 import static jbse.bc.Signatures.JBSE_BASE_OS_NAME;
 import static jbse.bc.Signatures.JBSE_BASE_OS_VERSION;
 import static jbse.bc.Signatures.JBSE_BASE_PATH_SEPARATOR;
+import static jbse.bc.Signatures.JBSE_BASE_SOCKSNONPROXYHOSTS;
 import static jbse.bc.Signatures.JBSE_BASE_SOCKSPROXYHOST;
 import static jbse.bc.Signatures.JBSE_BASE_SOCKSPROXYPORT;
 import static jbse.bc.Signatures.JBSE_BASE_SUN_CPU_ENDIAN;
@@ -84,6 +87,9 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
 	private static final String GOPHERPROXYSET          = System.getProperty("gopherProxySet");
 	private static final String GOPHERPROXYHOST         = System.getProperty("gopherProxyHost");
 	private static final String GOPHERPROXYPORT         = System.getProperty("gopherProxyPort");
+	private static final String HTTP_NONPROXYHOSTS      = System.getProperty("http.nonProxyHosts");
+	private static final String FTP_NONPROXYHOSTS       = System.getProperty("ftp.nonProxyHosts");
+	private static final String SOCKSNONPROXYHOSTS      = System.getProperty("socksNonProxyHosts");
 	
     @Override
     protected Supplier<Integer> numOperands() {
@@ -122,6 +128,9 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
 			safeEnsureStringLiteral(state, this.ctx, GOPHERPROXYSET);
 			safeEnsureStringLiteral(state, this.ctx, GOPHERPROXYHOST);
 			safeEnsureStringLiteral(state, this.ctx, GOPHERPROXYPORT);
+			safeEnsureStringLiteral(state, this.ctx, HTTP_NONPROXYHOSTS);
+			safeEnsureStringLiteral(state, this.ctx, FTP_NONPROXYHOSTS);
+			safeEnsureStringLiteral(state, this.ctx, SOCKSNONPROXYHOSTS);
 		} catch (ClassFileIllFormedException e) {
             throw new ClasspathException(e);
 		}
@@ -171,6 +180,9 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
         safeSetStringValue(state, klassBase, JBSE_BASE_GOPHERPROXYSET,          GOPHERPROXYSET);
         safeSetStringValue(state, klassBase, JBSE_BASE_GOPHERPROXYHOST,         GOPHERPROXYHOST);
         safeSetStringValue(state, klassBase, JBSE_BASE_GOPHERPROXYPORT,         GOPHERPROXYPORT);
+        safeSetStringValue(state, klassBase, JBSE_BASE_HTTP_NONPROXYHOSTS,      HTTP_NONPROXYHOSTS);
+        safeSetStringValue(state, klassBase, JBSE_BASE_FTP_NONPROXYHOSTS,       FTP_NONPROXYHOSTS);
+        safeSetStringValue(state, klassBase, JBSE_BASE_SOCKSNONPROXYHOSTS,      SOCKSNONPROXYHOSTS);
     }
     
     private static void safeSetStringValue(State state, Klass k, Signature field, String property) {

@@ -22,7 +22,9 @@ public final class Signatures {
     public static final String JAVA_ABSTRACTMAP              = "java/util/AbstractMap";
     public static final String JAVA_ABSTRACTSET              = "java/util/AbstractSet";
     public static final String JAVA_ACCESSCONTROLLER         = "java/security/AccessController";
+    public static final String JAVA_ACCESSIBLEOBJECT         = "java/lang/reflect/AccessibleObject";
     public static final String JAVA_ARRAYLIST                = "java/util/ArrayList";
+    public static final String JAVA_ARRAYS                   = "java/util/Arrays";
     public static final String JAVA_ATOMICINTEGER            = "java/util/concurrent/atomic/AtomicInteger";
     public static final String JAVA_ATOMICREFERENCEFIELDUPDATER        = "java/util/concurrent/atomic/AtomicReferenceFieldUpdater";
     public static final String JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL   = "java/util/concurrent/atomic/AtomicReferenceFieldUpdater$AtomicReferenceFieldUpdaterImpl";
@@ -87,17 +89,23 @@ public final class Signatures {
     public static final String JAVA_STACK_TRACE_ELEMENT      = "java/lang/StackTraceElement";
     public static final String JAVA_STRING                   = "java/lang/String";
     public static final String JAVA_STRING_CASEINSCOMP       = "java/lang/String$CaseInsensitiveComparator";
+    public static final String JAVA_STRINGBUILDER             = "java/lang/StringBuilder";
     public static final String JAVA_SYSTEM                   = "java/lang/System";
     public static final String JAVA_THREADLOCAL              = "java/lang/ThreadLocal";
     public static final String JAVA_THROWABLE                = "java/lang/Throwable";
     public static final String JAVA_THROWABLE_SENTINELHOLDER = "java/lang/Throwable$SentinelHolder";
     public static final String JAVA_TREESET                  = "java/util/TreeSet";
+    public static final String JAVA_WRITER                   = "java/io/Writer";
     public static final String JBSE_ANALYSIS                 = jbse.meta.Analysis.class.getCanonicalName().replace('.', '/');
     public static final String JBSE_BASE                     = jbse.base.Base.class.getCanonicalName().replace('.', '/');
     public static final String SUN_REFLECTION                = "sun/reflect/Reflection";
     public static final String SUN_REFLECTIONFACTORY         = "sun/reflect/ReflectionFactory";
     public static final String SUN_REFLECTIONFACTORY_GETREFLECTIONFACTORYACTION = "sun/reflect/ReflectionFactory$GetReflectionFactoryAction";
+    public static final String SUN_REFLECTUTIL               = "sun/reflect/misc/ReflectUtil";
     public static final String SUN_SHAREDSECRETS             = "sun/misc/SharedSecrets";
+    public static final String SUN_STANDARDCHARSETS_CACHE    = "sun/nio/cs/StandardCharsets$Cache";
+    public static final String SUN_STANDARDCHARSETS_CLASSES  = "sun/nio/cs/StandardCharsets$Classes";
+    public static final String SUN_STREAMENCODER             = "sun/nio/cs/StreamEncoder";
     public static final String SUN_UNSAFE                    = "sun/misc/Unsafe";
     public static final String SUN_VERSION                   = "sun/misc/Version";
     public static final String SUN_VM                        = "sun/misc/VM";
@@ -251,6 +259,8 @@ public final class Signatures {
             new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "FILE_ENCODING");
     public static final Signature JBSE_BASE_FILE_SEPARATOR = 
             new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "FILE_SEPARATOR");
+    public static final Signature JBSE_BASE_FTP_NONPROXYHOSTS = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "FTP_NONPROXYHOSTS");
     public static final Signature JBSE_BASE_FTP_PROXYHOST = 
             new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "FTP_PROXYHOST");
     public static final Signature JBSE_BASE_FTP_PROXYPORT = 
@@ -261,6 +271,8 @@ public final class Signatures {
             new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "GOPHERPROXYPORT");
     public static final Signature JBSE_BASE_GOPHERPROXYSET = 
             new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "GOPHERPROXYSET");
+    public static final Signature JBSE_BASE_HTTP_NONPROXYHOSTS = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "HTTP_NONPROXYHOSTS");
     public static final Signature JBSE_BASE_HTTP_PROXYHOST = 
             new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "HTTP_PROXYHOST");
     public static final Signature JBSE_BASE_HTTP_PROXYPORT = 
@@ -279,6 +291,8 @@ public final class Signatures {
             new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "OS_VERSION");
     public static final Signature JBSE_BASE_PATH_SEPARATOR = 
             new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "PATH_SEPARATOR");
+    public static final Signature JBSE_BASE_SOCKSNONPROXYHOSTS = 
+            new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SOCKSNONPROXYHOSTS");
     public static final Signature JBSE_BASE_SOCKSPROXYHOST = 
             new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SOCKSPROXYHOST");
     public static final Signature JBSE_BASE_SOCKSPROXYPORT = 
