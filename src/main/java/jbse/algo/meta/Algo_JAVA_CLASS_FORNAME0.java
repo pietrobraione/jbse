@@ -52,11 +52,10 @@ public final class Algo_JAVA_CLASS_FORNAME0 extends Algo_INVOKEMETA_Nonbranching
                 throwNew(state, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
-            final String className = valueString(state, (Reference) this.data.operand(0));
+            this.className = valueString(state, (Reference) this.data.operand(0)).replace('.', '/');
             if (className == null) {
                 throw new SymbolicValueNotAllowedException("The className parameter to java.lang.Class.forName0 cannot be a symbolic String");
             }
-            this.className = state.getClassHierarchy().getClassFileFromBinaryName(className).getClassName();
             if (!(this.data.operand(1) instanceof Primitive)) {
                 throwVerifyError(state);
                 exitFromAlgorithm();
