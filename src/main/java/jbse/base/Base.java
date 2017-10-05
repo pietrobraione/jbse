@@ -16,7 +16,7 @@ import sun.misc.Unsafe;
  *
  */
 public final class Base {
-	//These are set metacircularly
+	//Properties to be set metacircularly
 	private static final String OS_NAME                 = null;
 	private static final String OS_VERSION              = null;
 	private static final String OS_ARCH                 = null;

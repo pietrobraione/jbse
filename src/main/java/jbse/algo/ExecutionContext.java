@@ -53,11 +53,13 @@ import static jbse.bc.Signatures.JAVA_ATOMICINTEGER;
 import static jbse.bc.Signatures.JAVA_ATOMICREFERENCEFIELDUPDATER;
 import static jbse.bc.Signatures.JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL;
 import static jbse.bc.Signatures.JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL_1;
+import static jbse.bc.Signatures.JAVA_BASICPERMISSION;
 import static jbse.bc.Signatures.JAVA_BOOLEAN;
 import static jbse.bc.Signatures.JAVA_BUFFEREDINPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_CHARSET;
 import static jbse.bc.Signatures.JAVA_CHARSET_EXTENDEDPROVIDERHOLDER;
 import static jbse.bc.Signatures.JAVA_CLASS;
+import static jbse.bc.Signatures.JAVA_CLASS_3;
 import static jbse.bc.Signatures.JAVA_CLASS_ATOMIC;
 import static jbse.bc.Signatures.JAVA_CLASS_DESIREDASSERTIONSTATUS0;
 import static jbse.bc.Signatures.JAVA_CLASS_FORNAME0;
@@ -109,10 +111,12 @@ import static jbse.bc.Signatures.JAVA_OBJECT_HASHCODE;
 import static jbse.bc.Signatures.JAVA_OBJECTS;
 import static jbse.bc.Signatures.JAVA_OUTPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_PROPERTIES;
+import static jbse.bc.Signatures.JAVA_REFERENCE;
 import static jbse.bc.Signatures.JAVA_REFERENCEQUEUE;
 import static jbse.bc.Signatures.JAVA_REFERENCEQUEUE_LOCK;
 import static jbse.bc.Signatures.JAVA_REFERENCEQUEUE_NULL;
 import static jbse.bc.Signatures.JAVA_REFLECT_ARRAY_NEWARRAY;
+import static jbse.bc.Signatures.JAVA_REFLECTPERMISSION;
 import static jbse.bc.Signatures.JAVA_RUNTIMEEXCEPTION;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_STRING_CASEINSCOMP;
@@ -481,11 +485,13 @@ public final class ExecutionContext {
              className.equals(JAVA_ATOMICREFERENCEFIELDUPDATER) || 
              className.equals(JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL) || 
              className.equals(JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL_1) || 
+             className.equals(JAVA_BASICPERMISSION) ||
              className.equals(JAVA_BOOLEAN) ||
              className.equals(JAVA_BUFFEREDINPUTSTREAM) ||
              className.equals(JAVA_CHARSET) ||  //not really, but most static values seem to be just caches, so we treat it as it were
              className.equals(JAVA_CHARSET_EXTENDEDPROVIDERHOLDER) ||
              className.equals(JAVA_CLASS) || 
+             className.equals(JAVA_CLASS_3) || 
              className.equals(JAVA_CLASS_ATOMIC) || 
              className.equals(JAVA_COLLECTIONS) ||
              className.equals(JAVA_COLLECTIONS_EMPTYLIST) ||
@@ -525,9 +531,11 @@ public final class ExecutionContext {
              className.equals(JAVA_OBJECTS) ||
              className.equals(JAVA_OUTPUTSTREAM) ||
              className.equals(JAVA_PROPERTIES) ||
+             className.equals(JAVA_REFERENCE) ||  //not really, but the lock field is effectively final and the discovered field is managed by the garbage collector, that JBSE has not
              className.equals(JAVA_REFERENCEQUEUE) ||  //not really, but used as it were
              className.equals(JAVA_REFERENCEQUEUE_LOCK) ||
              className.equals(JAVA_REFERENCEQUEUE_NULL) ||
+             className.equals(JAVA_REFLECTPERMISSION) ||
              className.equals(JAVA_RUNTIMEEXCEPTION) ||
              className.equals(JAVA_STRING) || 
              className.equals(JAVA_STRING_CASEINSCOMP) ||

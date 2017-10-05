@@ -231,7 +231,7 @@ public class StateFormatterText implements Formatter {
         boolean doneFirst = false;
         for (Map.Entry<String, Klass> ee : a.entrySet()) {
             final Klass k = ee.getValue();
-            if (k.getStoredFieldSignatures().size() > 0) {
+            if (k.getStoredFieldSignatures().size() > 0) { //only klasses with fields will be printed
                 if (doneFirst) {
                     retVal += lineSep + indentCurrent;
                 }
@@ -240,7 +240,7 @@ public class StateFormatterText implements Formatter {
                 retVal += "Class[" + c + "]: " + "{" + lineSep;
                 retVal += formatObject(state, k, breakLines, indentTxt, indentCurrent + indentTxt) + lineSep;
                 retVal += indentCurrent + "}";
-        	}
+            }
         }
         return retVal;
 	}
