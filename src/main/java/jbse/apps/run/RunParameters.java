@@ -4,6 +4,7 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -11,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import jbse.bc.Classpath;
 import jbse.bc.Signature;
@@ -1725,13 +1728,22 @@ public final class RunParameters implements Cloneable {
 	    this.srcPath.clear();
 	}
 	
+	private static final String[] ARRAY_OF_STRING = { };
+	
 	/**
 	 * Gets the paths of the source files.
 	 * 
 	 * @return a {@link List}{@code <}{@link String}{@code >}
 	 */
 	public List<String> getSourcePath() {
-	    return new ArrayList<>(this.srcPath);
+		final String[] sourcePathJRE = new String[] {
+			Paths.get(getJREPath(), "src.zip").toString()
+			//TODO more?
+		};
+		final String[] sourcePathUser = this.srcPath.toArray(ARRAY_OF_STRING);
+		final List<String> sourcePath = Stream.concat(Arrays.stream(sourcePathJRE), Arrays.stream(sourcePathUser)).collect(Collectors.toList());
+
+	    return sourcePath;
 	}
 
     /**
