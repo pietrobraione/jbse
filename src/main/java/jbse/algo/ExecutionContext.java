@@ -70,6 +70,7 @@ import static jbse.bc.Signatures.JAVA_CLASS_ISASSIGNABLEFROM;
 import static jbse.bc.Signatures.JAVA_CLASS_ISINSTANCE;
 import static jbse.bc.Signatures.JAVA_CLASS_ISINTERFACE;
 import static jbse.bc.Signatures.JAVA_CLASS_ISPRIMITIVE;
+import static jbse.bc.Signatures.JAVA_CLASS_REFLECTIONDATA;
 import static jbse.bc.Signatures.JAVA_COLLECTIONS;
 import static jbse.bc.Signatures.JAVA_COLLECTIONS_EMPTYLIST;
 import static jbse.bc.Signatures.JAVA_COLLECTIONS_EMPTYMAP;
@@ -110,14 +111,17 @@ import static jbse.bc.Signatures.JAVA_OBJECT_GETCLASS;
 import static jbse.bc.Signatures.JAVA_OBJECT_HASHCODE;
 import static jbse.bc.Signatures.JAVA_OBJECTS;
 import static jbse.bc.Signatures.JAVA_OUTPUTSTREAM;
+import static jbse.bc.Signatures.JAVA_PERMISSION;
 import static jbse.bc.Signatures.JAVA_PROPERTIES;
 import static jbse.bc.Signatures.JAVA_REFERENCE;
+import static jbse.bc.Signatures.JAVA_REFERENCE_LOCK;
 import static jbse.bc.Signatures.JAVA_REFERENCEQUEUE;
 import static jbse.bc.Signatures.JAVA_REFERENCEQUEUE_LOCK;
 import static jbse.bc.Signatures.JAVA_REFERENCEQUEUE_NULL;
 import static jbse.bc.Signatures.JAVA_REFLECT_ARRAY_NEWARRAY;
 import static jbse.bc.Signatures.JAVA_REFLECTPERMISSION;
 import static jbse.bc.Signatures.JAVA_RUNTIMEEXCEPTION;
+import static jbse.bc.Signatures.JAVA_RUNTIMEPERMISSION;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_STRING_CASEINSCOMP;
 import static jbse.bc.Signatures.JAVA_STRING_HASHCODE;
@@ -127,6 +131,7 @@ import static jbse.bc.Signatures.JAVA_SYSTEM;
 import static jbse.bc.Signatures.JAVA_SYSTEM_ARRAYCOPY;
 import static jbse.bc.Signatures.JAVA_SYSTEM_IDENTITYHASHCODE;
 import static jbse.bc.Signatures.JAVA_SYSTEM_INITPROPERTIES;
+import static jbse.bc.Signatures.JAVA_THREAD;
 import static jbse.bc.Signatures.JAVA_THREADLOCAL;
 import static jbse.bc.Signatures.JAVA_THROWABLE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_FILLINSTACKTRACE;
@@ -493,6 +498,7 @@ public final class ExecutionContext {
              className.equals(JAVA_CLASS) || 
              className.equals(JAVA_CLASS_3) || 
              className.equals(JAVA_CLASS_ATOMIC) || 
+             className.equals(JAVA_CLASS_REFLECTIONDATA) || 
              className.equals(JAVA_COLLECTIONS) ||
              className.equals(JAVA_COLLECTIONS_EMPTYLIST) ||
              className.equals(JAVA_COLLECTIONS_EMPTYMAP) ||
@@ -530,18 +536,22 @@ public final class ExecutionContext {
              className.equals(JAVA_OBJECT) ||
              className.equals(JAVA_OBJECTS) ||
              className.equals(JAVA_OUTPUTSTREAM) ||
+             className.equals(JAVA_PERMISSION) ||
              className.equals(JAVA_PROPERTIES) ||
              className.equals(JAVA_REFERENCE) ||  //not really, but the lock field is effectively final and the discovered field is managed by the garbage collector, that JBSE has not
+             className.equals(JAVA_REFERENCE_LOCK) ||
              className.equals(JAVA_REFERENCEQUEUE) ||  //not really, but used as it were
              className.equals(JAVA_REFERENCEQUEUE_LOCK) ||
              className.equals(JAVA_REFERENCEQUEUE_NULL) ||
              className.equals(JAVA_REFLECTPERMISSION) ||
              className.equals(JAVA_RUNTIMEEXCEPTION) ||
+             className.equals(JAVA_RUNTIMEPERMISSION) ||
              className.equals(JAVA_STRING) || 
              className.equals(JAVA_STRING_CASEINSCOMP) ||
              className.equals(JAVA_STRINGBUILDER) || 
              className.equals(JAVA_SYSTEM) || 
              className.equals(JAVA_TREESET) ||
+             className.equals(JAVA_THREAD) || //not really, but it's not a terrible approximation considering it as it were (and also initializes many static final members)
              className.equals(JAVA_THREADLOCAL) || //not really, but the only static member generates sequences of hash codes, so it can be treated as it were
              className.equals(JAVA_THROWABLE) || 
              className.equals(JAVA_THROWABLE_SENTINELHOLDER) ||
