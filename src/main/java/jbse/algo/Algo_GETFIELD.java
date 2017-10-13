@@ -35,7 +35,7 @@ final class Algo_GETFIELD extends Algo_GETX {
         final ClassFile fieldClassFile = state.getClassHierarchy().getClassFile(fieldClassName);
 
         //checks that the field is not static
-        if (fieldClassFile.isFieldStatic(fieldSignatureResolved)) {
+        if (fieldClassFile.isFieldStatic(this.fieldSignatureResolved)) {
             throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
             exitFromAlgorithm();
         }

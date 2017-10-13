@@ -11,6 +11,7 @@ import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isPrimitiveOpStack;
 
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA;
@@ -30,12 +31,14 @@ import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XALOAD;
 import jbse.tree.DecisionAlternative_XALOAD_Out;
 import jbse.tree.DecisionAlternative_XALOAD_Resolved;
+import jbse.val.Expression;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.ReferenceArrayImmaterial;
 import jbse.val.ReferenceConcrete;
 import jbse.val.Simplex;
 import jbse.val.Value;
+import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -53,8 +56,6 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
 
     private Reference myObjectRef; //set by cooker
     private Primitive index; //set by cooker
-    private Array arrayObj; //set by cooker
-    private Collection<Array.AccessOutcome> entries; //set by cooker
 	
     @Override
     protected Supplier<Integer> numOperands() {
@@ -93,32 +94,84 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
     
     @Override
     protected StrategyDecide<DecisionAlternative_XALOAD> decider() {
+        //copied from Algo_XALOAD
         return (state, result) -> { 
             boolean shouldRefine = false;
             boolean branchingDecision = false;
-            for (Array.AccessOutcome e : this.entries) {
-                //puts in val the value of the current entry, or a fresh symbol, 
-                //or null if the index is out of bounds
-                Value val;
-                boolean fresh = false;  //true iff val is a fresh symbol
-                if (e instanceof Array.AccessOutcomeIn) {
-                    val = ((Array.AccessOutcomeIn) e).getValue();
-                    if (val == null) {
-                        val = state.createSymbol(getArrayMemberType(this.arrayObj.getType()), 
-                                                 this.arrayObj.getOrigin().thenArrayMember(this.index));
-                        fresh = true;
-                    }
-                } else { //e instanceof AccessOutcomeOut
-                    val = null;
+            final LinkedList<Reference> refToArraysToProcess = new LinkedList<>();
+            final LinkedList<Expression> accessConditions = new LinkedList<>();
+            final LinkedList<Primitive> offsets = new LinkedList<>();
+            refToArraysToProcess.add(this.myObjectRef);
+            accessConditions.add(null);
+            offsets.add(state.getCalculator().valInt(0));
+            while (!refToArraysToProcess.isEmpty()) {
+                final Reference refToArrayToProcess = refToArraysToProcess.remove();
+                final Primitive arrayAccessCondition = accessConditions.remove();
+                final Primitive arrayOffset = offsets.remove();
+                Array arrayToProcess = null; //to keep the compiler happy
+                try {
+                    arrayToProcess = (Array) state.getObject(refToArrayToProcess);
+                } catch (ClassCastException exc) {
+                    //this should never happen
+                    failExecution(exc);
                 }
+                if (arrayToProcess == null) {
+                    //this should never happen
+                    failExecution("an initial array that backs another array is null");
+                }
+                Collection<Array.AccessOutcome> entries = null; //to keep the compiler happy
+                try {
+                    entries = arrayToProcess.get(this.index.add(arrayOffset));
+                } catch (InvalidOperandException | InvalidTypeException e) {
+                                    //this should never happen
+                                    failExecution(e);
+                            }
+                for (Array.AccessOutcome e : entries) {
+                    if (e instanceof Array.AccessOutcomeInInitialArray) {
+                        final Array.AccessOutcomeInInitialArray eCast = (Array.AccessOutcomeInInitialArray) e;
+                        refToArraysToProcess.add(eCast.getInitialArray());
+                        accessConditions.add(e.getAccessCondition());
+                        offsets.add(eCast.getOffset());
+                    } else { 
+                        //puts in val the value of the current entry, or a fresh symbol, 
+                        //or null if the index is out of bounds
+                        Value val;
+                        boolean fresh = false;  //true iff val is a fresh symbol
+                        if (e instanceof Array.AccessOutcomeInValue) {
+                            val = ((Array.AccessOutcomeInValue) e).getValue();
+                            if (val == null) {
+                                try {
+                                    val = state.createSymbol(getArrayMemberType(arrayToProcess.getType()), 
+                                    arrayToProcess.getOrigin().thenArrayMember(this.index.add(arrayOffset)));
+                                } catch (InvalidOperandException | InvalidTypeException exc) {
+                                    //this should never happen
+                                    failExecution(exc);
+                                }
+                                fresh = true;
+                            }
+                        } else { //e instanceof Array.AccessOutcomeOut
+                            val = null;
+                        }
 
-                final Outcome o = this.ctx.decisionProcedure.resolve_XALOAD(state, e.getAccessCondition(), val, fresh, result);
+                        Outcome o = null; //to keep the compiler happy
+                        try {
+                            final Expression accessCondition = (arrayAccessCondition == null ? e.getAccessCondition() : (Expression) arrayAccessCondition.and(e.getAccessCondition()));
+                            o = this.ctx.decisionProcedure.resolve_XALOAD(state, accessCondition, val, fresh, refToArrayToProcess, result);
+                        } catch (InvalidOperandException | InvalidTypeException exc) {
+                            //this should never happen
+                            failExecution(exc);
+                        }
 
-                //if at least one reference should be refined, then it should be refined
-                shouldRefine = shouldRefine || o.shouldRefine();
+                        //here reference expansion check was omitted because
+                        //we are getting integers, not references
 
-                //if at least one decision is branching, then it is branching
-                branchingDecision = branchingDecision || o.branchingDecision();
+                        //if at least one read requires refinement, then it should be refined
+                        shouldRefine = shouldRefine || o.shouldRefine();
+
+                        //if at least one decision is branching, then it is branching
+                        branchingDecision = branchingDecision || o.branchingDecision();
+                    }
+                }
             }
 
             //also the size of the result matters to whether refine or not 
@@ -130,8 +183,8 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             //be 1. Note that branchingDecision must be invariant
             //on the used decision procedure, so we cannot make it dependent
             //on result.size().
-            return Outcome.val(shouldRefine, branchingDecision);
-        };
+            return Outcome.val(shouldRefine, /*omitted this.someRefNotExpanded,*/ branchingDecision);
+          };
     }
     
     private void writeBackToSource(State state, Value valueToStore) 

@@ -213,7 +213,7 @@ public class StateFormatterText implements Formatter {
         int j = 0;
         for (Map.Entry<Long, Objekt> e : h.entrySet()) {
         	Objekt o = e.getValue();
-            tmpRet += "Object[" + e.getKey() + "]: " + "{" + lineSep;
+            tmpRet += "Object[" + e.getKey() + "]: " + "{";
             tmpRet += formatObject(s, o, breakLines, indentTxt, indentCurrent + indentTxt) + lineSep;
             tmpRet += indentCurrent + "}";
             if (j < heapSize - 1) {
@@ -237,7 +237,7 @@ public class StateFormatterText implements Formatter {
                 }
                 doneFirst = true;
                 final String c = ee.getKey();
-                retVal += "Class[" + c + "]: " + "{" + lineSep;
+                retVal += "Class[" + c + "]: " + "{";
                 retVal += formatObject(state, k, breakLines, indentTxt, indentCurrent + indentTxt) + lineSep;
                 retVal += indentCurrent + "}";
             }
@@ -249,7 +249,7 @@ public class StateFormatterText implements Formatter {
 		final String lineSep = (breakLines ? LINE_SEP : "");
 		String str = "";
 		if (o.getOrigin() != null) {
-			str = indentCurrent + "Origin: " + o.getOrigin() + lineSep;
+			str = lineSep + indentCurrent + "Origin: " + o.getOrigin();
 		}
 		//explicit dispatch on type
 		if (o instanceof Array) {
@@ -267,7 +267,7 @@ public class StateFormatterText implements Formatter {
 	
 	private static String formatArray(State s, Array a, boolean breakLines, String indentTxt, String indentCurrent) {
 		final String lineSep = (breakLines ? LINE_SEP : "");
-		String str = "";
+		String str = (a.isSymbolic() && a.isInitial() ? " (initial)" : "") + lineSep;
 		str += indentCurrent + "Type: " + a.getType();
 		str += lineSep + indentCurrent + "Length: " + a.getLength(); 
 		str += lineSep + indentCurrent + "Items: {";
@@ -279,7 +279,7 @@ public class StateFormatterText implements Formatter {
 		boolean printAsString = (Type.getArrayMemberType(a.getType()).equals("" + Type.CHAR));
 		if (printAsString) {
 			for (Array.AccessOutcomeIn e : a.values()) {
-				printAsString = printAsString && (e.getValue() instanceof Simplex);
+				printAsString = printAsString && (e instanceof Array.AccessOutcomeInValue) && (((Array.AccessOutcomeInValue) e).getValue() instanceof Simplex);
 			}
 		}
 		if (printAsString) {
@@ -287,9 +287,11 @@ public class StateFormatterText implements Formatter {
 		}
 		boolean skipComma = true;
 		boolean hasUnknownValues = false;
+		boolean hasKnownValues = false;
 		final StringBuilder buf = new StringBuilder();
 		for (Array.AccessOutcomeIn e : a.values()) {
 			if (a.hasSimpleRep()) {
+				hasKnownValues = true; //the entries will surely have values
 			    buf.append(skipComma ? "" : ", ");
 			    buf.append(formatArrayEntry(s, e, false));
 				if (!printAsString) {
@@ -300,6 +302,7 @@ public class StateFormatterText implements Formatter {
 				if (entryFormatted == null) {
 					hasUnknownValues = true;
 				} else {
+					hasKnownValues = true;
 				    buf.append(lineSep);
 				    buf.append(indentCurrent);
 				    buf.append(entryFormatted);
@@ -312,7 +315,7 @@ public class StateFormatterText implements Formatter {
 		}
 		if (!a.hasSimpleRep()) {
 			if (hasUnknownValues) {
-				str += lineSep + indentCurrent + "(no assumption on other values)";
+				str += lineSep + indentCurrent + "(no assumption on " + (hasKnownValues ? "other " : "") + "values)";
 			}
 			str += lineSep;
 			indentCurrent = indentOld;
@@ -323,26 +326,28 @@ public class StateFormatterText implements Formatter {
 	}
 	
 	private static String formatArrayEntry(State s, Array.AccessOutcomeIn e, boolean showExpression) {
-		if (e.getValue() == null) {
-			return null;
-		}
-		final String exp;
-		if (e.getAccessCondition() == null) {
-			exp = "true";
+		final String exp = formatValue(s, e.getAccessCondition());
+		final String val;
+		if (e instanceof Array.AccessOutcomeInValue) {
+			final Array.AccessOutcomeInValue eCast = (Array.AccessOutcomeInValue) e; 
+			if (eCast.getValue() == null) {
+				return null;
+			}
+			val = formatValue(s, eCast.getValue());
 		} else {
-			exp = formatValue(s, e.getAccessCondition());
+			final Array.AccessOutcomeInInitialArray eCast = (Array.AccessOutcomeInInitialArray) e;
+			val = eCast.getInitialArray().toString() + "[_ + " + eCast.getOffset() + "]";
 		}
-		final String val = formatValue(s, e.getValue());
-		return (showExpression ? (exp + " -> ") : "") + val;	
+		return (showExpression ? (exp + " -> ") : "") + val;
 	}
 	
 	private static String formatInstance(State s, Instance i, boolean breakLines, String indentTxt, String indentCurrent) {
-		final StringBuilder buf = new StringBuilder();
+		final String lineSep = (breakLines ? LINE_SEP : "");
+		final StringBuilder buf = new StringBuilder(lineSep);
 		buf.append(indentCurrent);
 		buf.append("Class: ");
 		buf.append(i.getType());
         int z = 0;
-		final String lineSep = (breakLines ? LINE_SEP : "");
         for (Map.Entry<String, Variable> e : i.fields().entrySet()) {
             buf.append(lineSep);
             buf.append(indentCurrent);
@@ -356,9 +361,9 @@ public class StateFormatterText implements Formatter {
 	}
     
     private static String formatKlass(State s, Klass k, boolean breakLines, String indentTxt, String indentCurrent) {
-        final StringBuilder buf = new StringBuilder();
-        int z = 0;
         final String lineSep = (breakLines ? LINE_SEP : "");
+        final StringBuilder buf = new StringBuilder(lineSep);
+        int z = 0;
         for (Map.Entry<String, Variable> e : k.fields().entrySet()) {
             if (z > 0) {
                 buf.append(lineSep);

@@ -1,6 +1,7 @@
 package jbse.tree;
 
 import jbse.val.Expression;
+import jbse.val.Reference;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -15,8 +16,8 @@ extends DecisionAlternative_XALOAD_In implements DecisionAlternative_XYLOAD_GETX
 	private final ReferenceSymbolic valueToLoad;
 	private final int hashCode;
 
-	public DecisionAlternative_XALOAD_Unresolved(String branchId, Expression arrayAccessExpression, ReferenceSymbolic valueToLoad, int branchNumber) {
-		super(branchId, arrayAccessExpression, branchNumber);
+	public DecisionAlternative_XALOAD_Unresolved(String branchId, boolean fresh, Reference arrayToWriteBack, Expression arrayAccessExpression, ReferenceSymbolic valueToLoad, int branchNumber) {
+		super(branchId, arrayAccessExpression, fresh, arrayToWriteBack, branchNumber);
 		this.valueToLoad = valueToLoad;
         final int prime = 683;
         int result = super.hashCode();

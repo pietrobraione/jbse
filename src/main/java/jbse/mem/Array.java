@@ -52,6 +52,14 @@ public final class Array extends Objekt {
 	private static final int T_LONG    = 11;
 
 	/*Fields*/
+	
+	/** 
+	 * {@code true} iff this array is an initial array, i.e., 
+	 * if it is the (immutable) initial array with its origin
+	 * that just stores its refinement and backs the array 
+	 * with same origin that is mutated by symbolic execution. 
+	 */
+	private final boolean isInitial;
     
     /** 
      * The conventional term used for indicating the array's index.
@@ -137,7 +145,7 @@ public final class Array extends Objekt {
 		 * @throws InvalidOperandException if {@code condition} is {@code null}. 
 		 * @throws InvalidTypeException if {@code condition} has not boolean type.
 		 */
-		void constrainAccessCondition(Expression condition) 
+		void strengthenAccessCondition(Expression condition) 
 		throws InvalidOperandException, InvalidTypeException {
 			if (this.accessCondition == null) {
 				this.accessCondition = condition;
@@ -157,14 +165,14 @@ public final class Array extends Objekt {
          * @throws InvalidOperandException if {@code val} is {@code null}. 
          * @throws InvalidTypeException if {@code val} has not int type.
          */
-		public void constrainAccessCondition(Primitive val)
+		public void excludeIndexFromAccessCondition(Primitive val)
 		throws InvalidOperandException, InvalidTypeException {
             if (val.getType() != Type.INT) {
                 throw new InvalidTypeException("attempted array access with index of type " + val.getType());
             }
             final Expression indexIsDifferentFromVal = (Expression) INDEX.eq(val).not();
             try {
-                constrainAccessCondition(indexIsDifferentFromVal);
+                strengthenAccessCondition(indexIsDifferentFromVal);
             } catch (InvalidTypeException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
@@ -190,15 +198,122 @@ public final class Array extends Objekt {
 			return this.accessCondition.replace(INDEX, accessIndex); 
 		}
 	}
-
+	
 	/**
 	 * The outcome of an access by means of an index 
-	 * in the range 0..array.length (its result is 
-	 * a value stored in the array).
+	 * in the range 0..array.length.
 	 * 
 	 * @author Pietro Braione
 	 */
-	public class AccessOutcomeIn extends AccessOutcome implements Cloneable {
+	public abstract class AccessOutcomeIn extends AccessOutcome implements Cloneable { 
+		/**
+		 * Constructor (outcome returned by a concrete get).
+		 */
+		private AccessOutcomeIn() {
+			super();
+		}
+
+		/** 
+		 * Constructor (outcome returned by a nonconcrete get or
+		 * stored in array entries).
+		 * 
+		 * @param accessCondition An {@link Expression} denoting a  
+		 *        condition over the array index. When {@code null} 
+		 *        denotes {@code true}.
+		 */
+		private AccessOutcomeIn(Expression accessCondition) { 
+			super(accessCondition);  
+		}
+		
+		protected AccessOutcomeIn clone() {
+			try {
+				return (AccessOutcomeIn) super.clone();
+			} catch (CloneNotSupportedException e) {
+			    throw new InternalError(e);
+			}
+		}
+	}
+	
+	/**
+	 * The outcome of an access by means of an index 
+	 * in the range 0..array.length. Its result is 
+	 * obtained by accessing another (symbolic) array
+	 * that was initially in the heap, and that backs
+	 * this array.
+	 * 
+	 * @author Pietro Braione
+	 */
+	public final class AccessOutcomeInInitialArray extends AccessOutcomeIn implements Cloneable {
+		/**
+		 * A reference to the other (symbolic) {@link Array} that backs 
+		 * this array.
+		 */
+		private Reference initialArray;
+		
+		/**
+		 * The offset through which {@code initialArray}
+		 * should be accessed.
+		 */
+		private Primitive offset;
+		
+		private AccessOutcomeInInitialArray(Reference initialArray) 
+		throws InvalidOperandException {
+			this(initialArray, Array.this.calc.valInt(0));
+		}
+		
+		private AccessOutcomeInInitialArray(Expression accessCondition, Reference initialArray) 
+		throws InvalidOperandException {
+			this(accessCondition, initialArray, Array.this.calc.valInt(0));
+		}
+		
+		private AccessOutcomeInInitialArray(Reference initialArray, Primitive offset) 
+		throws InvalidOperandException {
+			super();
+			if (initialArray == null || offset == null) {
+				throw new InvalidOperandException("tried to create an AccessOutcomeInitialArray with null initial array origin or null offset");
+			}
+			this.initialArray = initialArray;
+			this.offset = offset;
+		}
+		
+		private AccessOutcomeInInitialArray(Expression accessCondition, Reference initialArray, Primitive offset) 
+		throws InvalidOperandException {
+			super(accessCondition);
+			if (initialArray == null || offset == null) {
+				throw new InvalidOperandException("tried to create an AccessOutcomeInitialArray with null initial array origin or null offset");
+			}
+			this.initialArray = initialArray;
+			this.offset = offset;
+		}
+		
+		public Reference getInitialArray() {
+			return this.initialArray;
+		}
+		
+		public Primitive getOffset() {
+			return this.offset;
+		}
+		
+		@Override
+		protected AccessOutcomeInInitialArray clone() {
+			return (AccessOutcomeInInitialArray) super.clone();
+		}
+		
+		@Override
+		public String toString() {
+		    return (this.accessCondition == null ? "true" : this.accessCondition.toString()) + 
+		    " -> " + (this.initialArray.toString() + "[_ + " + this.offset.toString() + "]");
+		}
+	}
+	
+	/**
+	 * The outcome of an access by means of an index 
+	 * in the range 0..array.length. Its result is 
+	 * a value stored in the array.
+	 * 
+	 * @author Pietro Braione
+	 */
+	public final class AccessOutcomeInValue extends AccessOutcomeIn implements Cloneable {
 		/**
 		 * A {@link Value} denoting the value returned  
          * by the array access. It can be either a 
@@ -206,7 +321,9 @@ public final class Array extends Objekt {
          * or the special {@link ReferenceArrayImmaterial} 
          * value denoting a reference to another array 
          * not yet available in the state's heap, or 
-         * {@code null} if the value is unknown.
+         * {@code null} if the array is an initial symbolic
+         * array and no assumption is yet made on the value
+         * returned by the access.
 		 */
 	    protected Value returnedValue;
 
@@ -220,7 +337,7 @@ public final class Array extends Objekt {
 		 *        a reference to another array not yet available in the state's heap,
 		 *        or {@code null} if the value is unknown.
 		 */
-		private AccessOutcomeIn(Value returnedValue) {
+		private AccessOutcomeInValue(Value returnedValue) {
 			super();
 			this.returnedValue = returnedValue;
 		}
@@ -239,7 +356,7 @@ public final class Array extends Objekt {
 		 *        a reference to another array not yet available in the state's heap,
 		 *        or {@code null} if the value is unknown.
 		 */
-		private AccessOutcomeIn(Expression accessCondition, Value returnedValue) {
+		private AccessOutcomeInValue(Expression accessCondition, Value returnedValue) {
 			super(accessCondition);
 			this.returnedValue = returnedValue;
 		}
@@ -255,18 +372,14 @@ public final class Array extends Objekt {
 		public Value getValue() { return this.returnedValue; }
 
 		@Override
-		public AccessOutcomeIn clone() {
-			try {
-				return (AccessOutcomeIn) super.clone();
-			} catch (CloneNotSupportedException e) {
-			    throw new InternalError(e);
-			}
+		public AccessOutcomeInValue clone() {
+			return (AccessOutcomeInValue) super.clone();
 		}
 		
 		@Override
 		public String toString() {
 		    return (this.accessCondition == null ? "true" : this.accessCondition.toString()) + 
-		    " -> " + (this.returnedValue == null ? "*" : this.returnedValue.toString());
+		    " -> " + (this.returnedValue == null ? "?" : this.returnedValue.toString());
 		}
 	}
 
@@ -276,7 +389,7 @@ public final class Array extends Objekt {
 	 * 
 	 * @author Pietro Braione
 	 */
-	public class AccessOutcomeOut extends AccessOutcome { 
+	public final class AccessOutcomeOut extends AccessOutcome { 
 	    /**
 	     * Constructor (outcome returned by a concrete get).
 	     */
@@ -359,12 +472,74 @@ public final class Array extends Objekt {
      *        the {@link Array} for the first time. It can be null when
      *        {@code epoch == }{@link Epoch#EPOCH_AFTER_START}.
 	 * @param epoch the creation {@link Epoch} of the {@link Array}.
+	 * @param isInitial {@code true} iff this array is not an array of the 
+	 *        current state, but a copy of an (immutable) symbolic array in
+	 *        the initial state. Used only if {@code epoch == }{@link Epoch#EPOCH_AFTER_START}.
 	 * @throws InvalidTypeException iff {@code type} is invalid. 
 	 */
-	public Array(Calculator calc, boolean initSymbolic, Value initValue, Primitive length, String type, MemoryPath origin, Epoch epoch) 
+	public Array(Calculator calc, boolean initSymbolic, Value initValue, Primitive length, String type, MemoryPath origin, Epoch epoch, boolean isInitial) 
 	throws InvalidTypeException {
 		super(calc, type, origin, epoch, false, 0, new Signature(type, "" + Type.INT, "length"));
+		if (isIllFormed(type)) {
+			throw new InvalidTypeException("attempted creation of an array with type " + type);
+		}
+		this.isInitial = isInitial;
 		this.lengthSignature = new Signature(type, "" + Type.INT, "length");
+		this.calc = calc;
+		try {
+			this.INDEX = this.calc.valTerm(Type.INT, INDEX_ID);
+		} catch (InvalidTypeException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
+		this.fields.get(this.lengthSignature.toString()).setValue(length);  //toString() is necessary, type erasure doesn't play well
+		try {
+			final Expression indexGreaterThanZero = (Expression) INDEX.ge(this.calc.valInt(0));
+			final Expression indexLessThanLength = (Expression) INDEX.lt(length);
+			this.indexInRange  = (Expression) indexGreaterThanZero.and(indexLessThanLength);		
+		} catch (InvalidOperandException | InvalidTypeException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
+		this.entries = new LinkedList<AccessOutcomeIn>();
+		this.simpleRep = (length instanceof Simplex);
+		setEntriesInit(initSymbolic, initValue);
+	}
+	
+	/**
+	 * Constructor.
+	 * 
+	 * @param referenceToOtherArray a {@link Reference} to an {@link Array} that backs this array.
+	 * @param otherArray the {@link Array} that backs this array.
+	 * @throws InvalidOperandException if {@code referenceToOtherArray == null}.
+	 * @throws NullPointerException if {@code otherArray == null}.
+	 */
+	public Array(Reference referenceToOtherArray, Array otherArray) throws InvalidOperandException {
+		super(otherArray.calc, otherArray.type, otherArray.getOrigin(), Epoch.EPOCH_BEFORE_START, false, 0, new Signature(otherArray.type, "" + Type.INT, "length"));
+		//TODO assert other is an initial symbolic array
+		this.isInitial = false;
+		this.lengthSignature = new Signature(this.type, "" + Type.INT, "length");
+		this.calc = otherArray.calc;
+		try {
+			this.INDEX = this.calc.valTerm(Type.INT, INDEX_ID);
+		} catch (InvalidTypeException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
+		this.fields.get(this.lengthSignature.toString()).setValue(otherArray.getLength());  //toString() is necessary, type erasure doesn't play well
+		try {
+			final Expression indexGreaterThanZero = (Expression) INDEX.ge(this.calc.valInt(0));
+			final Expression indexLessThanLength = (Expression) INDEX.lt(getLength());
+			this.indexInRange  = (Expression) indexGreaterThanZero.and(indexLessThanLength);		
+		} catch (InvalidOperandException | InvalidTypeException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
+		this.entries = new LinkedList<AccessOutcomeIn>();
+		this.entries.add(new AccessOutcomeInInitialArray(this.indexInRange, referenceToOtherArray));
+	}
+	
+	private static boolean isIllFormed(String type) {
 		boolean illFormed = false;
 		if (type == null || type.charAt(0) != Type.ARRAYOF || type.length() < 2) {
 			illFormed = true;
@@ -385,23 +560,7 @@ public final class Array extends Objekt {
 				illFormed = true;
 			}
 		}
-		if (illFormed) {
-			throw new InvalidTypeException("attempted creation of an array with type " + type);
-		}
-		this.calc = calc;
-		this.INDEX = this.calc.valTerm(Type.INT, INDEX_ID);
-		this.fields.get(this.lengthSignature.toString()).setValue(length);  //toString() is necessary, type erasure doesn't play well
-		try {
-			final Expression indexGreaterThanZero = (Expression) INDEX.ge(this.calc.valInt(0));
-			final Expression indexLessThanLength = (Expression) INDEX.lt(length);
-			this.indexInRange  = (Expression) indexGreaterThanZero.and(indexLessThanLength);		
-		} catch (InvalidOperandException | InvalidTypeException e) {
-			//this should never happen
-			throw new UnexpectedInternalException(e);
-		}
-		this.entries = new LinkedList<AccessOutcomeIn>();
-		this.simpleRep = (length instanceof Simplex);
-		this.setEntriesInit(initSymbolic, initValue);
+		return illFormed;
 	}
 
 	private void setEntriesInit(boolean initSymbolic, Value initValue) {
@@ -424,7 +583,7 @@ public final class Array extends Objekt {
 			int ln = (Integer) ((Simplex) this.getLength()).getActualValue();
 			for (int i = 0; i < ln; i++) {
 				try {
-					this.entries.add(new AccessOutcomeIn((Expression) INDEX.eq(this.calc.valInt(i)),
+					this.entries.add(new AccessOutcomeInValue((Expression) INDEX.eq(this.calc.valInt(i)),
 														entryValue));
 				} catch (InvalidOperandException | InvalidTypeException e) {
 					//this should never happen
@@ -432,7 +591,7 @@ public final class Array extends Objekt {
 				}
 			}			
 		} else {
-			this.entries.add(new AccessOutcomeIn(this.indexInRange, entryValue));
+			this.entries.add(new AccessOutcomeInValue(this.indexInRange, entryValue));
 		}
 	}
 	
@@ -457,21 +616,30 @@ public final class Array extends Objekt {
 	}
 	
 	/**
-	 * Checks whether the array is concrete, i.e., has concrete length
-	 * and all its elements are concrete.
+	 * Checks whether the array is simple.
 	 * 
-	 * @return {@code true} iff the array is concrete.
+	 * @return {@code true} iff the array is simple, i.e. {@link #hasSimpleRep()}
+	 *         and all its elements are concrete values.
 	 */
-	public boolean isConcrete() {
+	public boolean isSimple() {
 		if (hasSimpleRep()) {
 			for (AccessOutcomeIn e : this.entries) {
-				if (e.returnedValue.isSymbolic()) {
+				if (!(e instanceof AccessOutcomeInValue) || ((AccessOutcomeInValue) e).returnedValue.isSymbolic()) {
 					return false;
 				}
 			}
 			return true;
 		}
 		return false;
+	}
+	
+	/**
+	 * Checks whether the array is initial.
+	 * 
+	 * @return {@code true} iff the array is initial, as set via the constructor.
+	 */
+	public boolean isInitial() {
+		return this.isInitial;
 	}
 	
 	/**
@@ -491,11 +659,17 @@ public final class Array extends Objekt {
 		final Primitive inRange = inRange(index);
 
 		//builds the answer
-		if (this.simpleRep && index instanceof Simplex) { //the fast case, access this.values directly by index			
+		if (hasSimpleRep() && index instanceof Simplex) { 
+			//the fast case, access this.values directly by index			
 			if (inRange.surelyTrue()) {
 				final int indexInt = (Integer) ((Simplex) index).getActualValue();
 				final AccessOutcomeIn e = this.entries.get(indexInt);
-				retVal.add(new AccessOutcomeIn(e.returnedValue));
+				if (e instanceof AccessOutcomeInValue) {
+					retVal.add(new AccessOutcomeInValue(((AccessOutcomeInValue) e).returnedValue));
+				} else { //e instanceof AccessOutcomeInInitialArray
+					final AccessOutcomeInInitialArray eCast = (AccessOutcomeInInitialArray) e;
+					retVal.add(new AccessOutcomeInInitialArray(eCast.initialArray, eCast.offset));
+				}
 			} else {
 				retVal.add(new AccessOutcomeOut()); 
 			}
@@ -505,11 +679,21 @@ public final class Array extends Objekt {
 			for (AccessOutcomeIn e : this.entries) {
 				final Primitive inRangeEntry = e.inRange(index);
 				if (inRangeEntry.surelyTrue()) { //this may only happen when index is Simplex
-					retVal.add(new AccessOutcomeIn(e.returnedValue));
+					if (e instanceof AccessOutcomeInValue) {
+						retVal.add(new AccessOutcomeInValue(((AccessOutcomeInValue) e).returnedValue));
+					} else { //e instanceof AccessOutcomeInInitialArray
+						final AccessOutcomeInInitialArray eCast = (AccessOutcomeInInitialArray) e;
+						retVal.add(new AccessOutcomeInInitialArray(eCast.initialArray, eCast.offset));						
+					}
 				} else if (inRangeEntry.surelyFalse()) {
 					//do nothing
 				} else { //inRangeEntry is possibly satisfiable
-					retVal.add(new AccessOutcomeIn((Expression) inRangeEntry, e.returnedValue));
+					if (e instanceof AccessOutcomeInValue) {
+						retVal.add(new AccessOutcomeInValue((Expression) inRangeEntry, ((AccessOutcomeInValue) e).returnedValue));
+					} else { //e instanceof AccessOutcomeInInitialArray
+						final AccessOutcomeInInitialArray eCast = (AccessOutcomeInInitialArray) e;
+						retVal.add(new AccessOutcomeInInitialArray((Expression) inRangeEntry, eCast.initialArray, eCast.offset));						
+					}
 				}
 			}
 
@@ -553,7 +737,13 @@ public final class Array extends Objekt {
 		final int actualIndex = (Integer) index.getActualValue();
 		final int actualLength = (Integer) ((Simplex) this.getLength()).getActualValue();
 		if (actualIndex >= 0 && actualIndex < actualLength) {
-			this.entries.get(actualIndex).returnedValue = item;
+			final AccessOutcomeIn e = this.entries.get(actualIndex);
+			if (e instanceof AccessOutcomeInValue) {
+				((AccessOutcomeInValue) e).returnedValue = item;
+			} else {
+				final AccessOutcomeInValue eNew = new AccessOutcomeInValue(e.accessCondition, item);
+				this.entries.set(actualIndex, eNew);
+			}
 		} 	//TODO else throw an exception???
 	}
 	
@@ -589,7 +779,7 @@ public final class Array extends Objekt {
 	    this.simpleRep = false;
 	    final Expression formalIndexIsSetIndex = (Expression) INDEX.eq(index);
 	    final Expression accessExpression = (Expression) this.indexInRange.and(formalIndexIsSetIndex); //if we assume that index may be in range, this is an Expression
-	    this.entries.add(new AccessOutcomeIn(accessExpression, valToSet));
+	    this.entries.add(new AccessOutcomeInValue(accessExpression, valToSet));
 	}
 	
 	/**
@@ -602,7 +792,11 @@ public final class Array extends Objekt {
      * @return an {@link Iterator}{@code <}{@link AccessOutcomeIn}{@code >}
      *         to the entries of this {@link Array} that are possibly 
      *         modified by the update; the caller must decide whether 
-     *         constrain and possibly delete them.
+     *         constrain and possibly delete them. The returned entries 
+     *         are those for which it is not a contradiction that {@code index}
+     *         falls in their range, and either are {@link AccessOutcomeInInitialArray}s, 
+     *         or are {@link AccessOutcomeInValue} with unknown value, or 
+     *         are {@link AccessOutcomeInValue} with value different from {@code valToSet}.
 	 */
 	public Iterator<Array.AccessOutcomeIn> entriesPossiblyAffectedByAccess(final Primitive index, final Value valToSet) {
 	    return new Iterator<Array.AccessOutcomeIn>() {
@@ -624,7 +818,7 @@ public final class Array extends Objekt {
 	                boolean entryAffected;
 	                try {
 	                    entryAffected = !e.inRange(index).surelyFalse() && 
-	                    (e.returnedValue == null || !e.returnedValue.equals(valToSet));
+	                    (e instanceof AccessOutcomeInInitialArray || ((AccessOutcomeInValue) e).returnedValue == null || !((AccessOutcomeInValue) e).returnedValue.equals(valToSet));
 	                } catch (InvalidOperandException | InvalidTypeException exc) {
 	                    //this should never happen because index was already checked
 	                    throw new UnexpectedInternalException(exc);
@@ -681,7 +875,7 @@ public final class Array extends Objekt {
 	}
 	
 	/**
-	 * Implements {@code java.System.arraycopy}, where this array is
+	 * Implements {@code java.lang.System.arraycopy}, where this array is
 	 * the destination. It <em>assumes</em> that the preconditions of
 	 * a successful copy (source and destination copy ranges are 
 	 * within the bounds of the respective arrays, the arrays are 
@@ -708,44 +902,61 @@ public final class Array extends Objekt {
             srcPos instanceof Simplex && destPos instanceof Simplex && 
             length instanceof Simplex) {
             //fast operation
-            int srcPosInt = (Integer) ((Simplex) srcPos).getActualValue();
-            int destPosInt = (Integer) ((Simplex) destPos).getActualValue();
-            int lengthInt = (Integer) ((Simplex) length).getActualValue();
+            int srcPosInt = ((Integer) ((Simplex) srcPos).getActualValue()).intValue();
+            int destPosInt = ((Integer) ((Simplex) destPos).getActualValue()).intValue();
+            int lengthInt = ((Integer) ((Simplex) length).getActualValue()).intValue();
             for (int ofst = 0; ofst < lengthInt; ++ofst) {
-                final Value srcValue = src.entries.get(srcPosInt + ofst).returnedValue;
-                if (!isPrimitive(srcTypeComponent) && !isPrimitive(destTypeComponent)) { 
-                    checkOk.accept((Reference) srcValue);
+                final AccessOutcomeIn srcEntry = src.entries.get(srcPosInt + ofst);
+                final AccessOutcomeIn destEntry;
+                if (srcEntry instanceof AccessOutcomeInValue) {
+                    final Value srcValue = ((AccessOutcomeInValue) srcEntry).returnedValue;
+                    if (!isPrimitive(srcTypeComponent) && !isPrimitive(destTypeComponent)) { 
+                        checkOk.accept((Reference) srcValue);
+                    }
+                    destEntry = new AccessOutcomeInValue(srcEntry.accessCondition, srcValue);
+                } else { //srcEntry instanceof AccessOutcomeInInitialArray
+                    final Reference initialArray = ((AccessOutcomeInInitialArray) srcEntry).initialArray;
+                    final Primitive offset = ((AccessOutcomeInInitialArray) srcEntry).offset;
+                    //TODO find a way to perform assignment compatibility check
+                    destEntry = new AccessOutcomeInInitialArray(srcEntry.accessCondition, initialArray, offset.sub(destPos).add(srcPos));
                 }
-                this.entries.get(destPosInt + ofst).returnedValue = srcValue;
+                this.entries.set(destPosInt + ofst, destEntry);
             }
             return EMPTY_ITERATOR;
         } else {
             this.simpleRep = false;
-
             final Expression indexInDestRange = (Expression) INDEX.ge(destPos).and(INDEX.lt(destPos.add(length)));
             final Expression indexNotInDestRange = (Expression) indexInDestRange.not();
 
-            //constrains the entries
+            //constrains the entries of the destination array
             for (AccessOutcomeIn destEntry : this.entries) {
-                destEntry.constrainAccessCondition(indexNotInDestRange);
+                destEntry.strengthenAccessCondition(indexNotInDestRange);
             }
 
-            //adds new entries for the source array entries
+            //adds new entries corresponding to the source array entries
             final Primitive srcIndex = INDEX.sub(destPos).add(srcPos);
             for (AccessOutcomeIn srcEntry : src.entries) {
-                final Value srcValue = srcEntry.returnedValue;
-                if (!isPrimitive(srcTypeComponent) && !isPrimitive(destTypeComponent)) { 
-                    checkOk.accept((Reference) srcValue);
+                final Expression accessCondition = (Expression) this.indexInRange.and(srcEntry.inRange(srcIndex)).and(indexInDestRange);
+                final AccessOutcomeIn destEntry;
+                if (srcEntry instanceof AccessOutcomeInValue) {
+                    final Value srcValue = ((AccessOutcomeInValue) srcEntry).returnedValue;
+                    if (!isPrimitive(srcTypeComponent) && !isPrimitive(destTypeComponent)) { 
+                        checkOk.accept((Reference) srcValue);
+                    }
+                    destEntry = new AccessOutcomeInValue(accessCondition, srcValue);
+                } else { //srcEntry instanceof AccessOutcomeInInitialArray
+                    final Reference initialArray = ((AccessOutcomeInInitialArray) srcEntry).initialArray;
+                    final Primitive offset = ((AccessOutcomeInInitialArray) srcEntry).offset;
+                    //TODO find a way to perform assignment compatibility check
+                    destEntry = new AccessOutcomeInInitialArray(accessCondition, initialArray, offset.sub(destPos).add(srcPos));
                 }
-                final Expression accessCondition = (Expression) srcEntry.inRange(srcIndex).and(indexInDestRange);
-                this.entries.add(new AccessOutcomeIn(accessCondition, srcValue));
+                this.entries.add(destEntry);
             }
 
             //returns the iterator
             return Array.this.entries.iterator(); //for sake of simplicity all the entries are considered potentially affected
         }
     }
-
 	
 	/**
 	 * Returns a {@link Primitive} denoting the fact that an index 
@@ -802,10 +1013,10 @@ public final class Array extends Objekt {
 	 * is the content of this array.
 	 */
 	public String valueString() {
-		if (this.type.equals("" + Type.ARRAYOF + Type.CHAR) && isConcrete()) {
+		if (this.type.equals("" + Type.ARRAYOF + Type.CHAR) && isSimple()) {
 		    final StringBuilder buf = new StringBuilder();
 			for (AccessOutcomeIn e : this.entries) {
-				buf.append(e.returnedValue.toString());
+				buf.append(((AccessOutcomeInValue) e).returnedValue.toString());
 			}
 			return buf.toString();
 		} else {
@@ -824,9 +1035,7 @@ public final class Array extends Objekt {
 			} else {
 				firstEntryPassed = true;
 			}
-			buf.append(e.accessCondition == null ? "true" : e.accessCondition.toString()); 
-			buf.append(" -> "); 
-			buf.append(e.returnedValue == null ? "unknown" : e.returnedValue.toString()); 
+			buf.append(e.toString()); 
 		}
 		str += buf.toString() + "}]";
 		return str;

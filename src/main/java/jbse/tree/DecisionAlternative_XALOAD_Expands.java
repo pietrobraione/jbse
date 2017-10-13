@@ -1,6 +1,7 @@
 package jbse.tree;
 
 import jbse.val.Expression;
+import jbse.val.Reference;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -14,8 +15,8 @@ public final class DecisionAlternative_XALOAD_Expands extends DecisionAlternativ
 	private final String classNameOfTargetObject;
 	private final int hashCode;
 
-	public DecisionAlternative_XALOAD_Expands(Expression arrayAccessExpression, ReferenceSymbolic referenceToResolve, String classNameOfTargetObject, int branchNumber) {
-		super(ALT_CODE + "_Expands:" + arrayAccessExpression + ":" + classNameOfTargetObject, arrayAccessExpression, referenceToResolve, branchNumber);
+	public DecisionAlternative_XALOAD_Expands(Expression arrayAccessExpression, boolean fresh, Reference arrayToWriteBack, ReferenceSymbolic referenceToResolve, String classNameOfTargetObject, int branchNumber) {
+		super(ALT_CODE + "_Expands:" + arrayAccessExpression + ":" + classNameOfTargetObject, fresh, arrayToWriteBack, arrayAccessExpression, referenceToResolve, branchNumber);
 		this.classNameOfTargetObject = classNameOfTargetObject;
         final int prime = 829;
         int result = super.hashCode();

@@ -15,7 +15,7 @@ import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
-import jbse.mem.Array.AccessOutcomeIn;
+import jbse.mem.Array.AccessOutcomeInValue;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Primitive;
@@ -62,10 +62,10 @@ public final class Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT extends Algo_INVOKEM
     throws InterruptException, SymbolicValueNotAllowedException, ClasspathException, 
     DecisionException {
         try {
-            final AccessOutcomeIn outcome = (AccessOutcomeIn) this.backtrace.get(this.index).iterator().next();
+            final AccessOutcomeInValue outcome = (AccessOutcomeInValue) this.backtrace.get(this.index).iterator().next();
             state.pushOperand(outcome.getValue());
-        } catch (InvalidOperandException | InvalidTypeException | ThreadStackEmptyException e) {
-            //this should not happen
+        } catch (InvalidOperandException | InvalidTypeException | ThreadStackEmptyException | ClassCastException e) {
+            //this should never happen
             failExecution(e);
         }
     }

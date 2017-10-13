@@ -42,6 +42,7 @@ import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.Operator;
 import jbse.val.Primitive;
+import jbse.val.Reference;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
 import jbse.val.Value;
@@ -678,6 +679,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
 	 *        its existence was assumed during the array access and thus it 
 	 *        is not yet stored in the {@link Array} it originates from.
+	 * @param arrayToWriteBack when {@code fresh == true} is a {@link Reference} to the array 
+	 *        where {@code valToLoad} originates from.
 	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
 	 *        where the method will put all the 
 	 *        {@link DecisionAlternative_XALOAD}s representing all the 
@@ -691,7 +694,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *         ill-formed for JBSE.
 	 */
 	//TODO should be final?
-	public Outcome resolve_XALOAD(State state, Expression accessExpression, Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
+	public Outcome resolve_XALOAD(State state, Expression accessExpression, Value valToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result)
 	throws InvalidInputException, DecisionException, BadClassFileException {
 		if (state == null || result == null) {
 			throw new InvalidInputException("resolve_XALOAD invoked with a null parameter.");
@@ -700,11 +703,11 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		final boolean accessOutOfBounds = (valToLoad == null);
 		final boolean valToLoadResolved = accessOutOfBounds || Util.isResolved(state, valToLoad);
 		if (valToLoadResolved && accessConcrete) {
-		    return resolve_XALOAD_ResolvedConcrete(valToLoad, fresh, result);
+		    return resolve_XALOAD_ResolvedConcrete(valToLoad, fresh, arrayToWriteBack, result);
 		} else if (valToLoadResolved && !accessConcrete) {
-		    return resolve_XALOAD_ResolvedNonconcrete(state.getClassHierarchy(), accessExpression, valToLoad, fresh, result);
+		    return resolve_XALOAD_ResolvedNonconcrete(state.getClassHierarchy(), accessExpression, valToLoad, fresh, arrayToWriteBack, result);
 		} else {
-		    return resolve_XALOAD_Unresolved(state, accessExpression, (ReferenceSymbolic) valToLoad, fresh, result);
+		    return resolve_XALOAD_Unresolved(state, accessExpression, (ReferenceSymbolic) valToLoad, fresh, arrayToWriteBack, result);
 		}
 	}
 	
@@ -721,6 +724,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
 	 *        its existence was assumed during the array access and thus it 
 	 *        is not yet stored in the {@link Array} it originates from.
+	 * @param arrayToWriteBack when {@code fresh == true} is a {@link Reference} to the array 
+	 *        where {@code valToLoad} originates from.
 	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
 	 *        where the method will put all the 
 	 *        {@link DecisionAlternative_XALOAD}s representing all the 
@@ -728,15 +733,15 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @return an {@link Outcome}.
 	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet)}.
 	 */
-	private Outcome resolve_XALOAD_ResolvedConcrete(Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result) {
+	private Outcome resolve_XALOAD_ResolvedConcrete(Value valToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result) {
 	    final boolean accessOutOfBounds = (valToLoad == null);
 	    final int branchNumber = result.size() + 1;
 	    if (accessOutOfBounds) {
 	        result.add(new DecisionAlternative_XALOAD_Out(branchNumber));
 	    } else {
-	        result.add(new DecisionAlternative_XALOAD_Resolved(valToLoad, fresh, branchNumber));
+	        result.add(new DecisionAlternative_XALOAD_Resolved(valToLoad, fresh, arrayToWriteBack, branchNumber));
 	    }
-	    return Outcome.val(fresh, false, false); //a fresh value to load always requires a refinement action
+	    return Outcome.val(fresh, false, false); //a fresh value to load requires refinement of the source array
 	}
 
 	/**
@@ -756,6 +761,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
 	 *        its existence was assumed during the array access and thus it 
 	 *        is not yet stored in the {@link Array} it originates from.
+	 * @param arrayToWriteBack when {@code fresh == true} is a {@link Reference} to the array 
+	 *        where {@code valToLoad} originates from.
 	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
 	 *        where the method will put all the 
 	 *        {@link DecisionAlternative_XALOAD}s representing all the 
@@ -763,18 +770,18 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @return an {@link Outcome}.
 	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet) resolve_XALOAD}.
 	 */
-	protected Outcome resolve_XALOAD_ResolvedNonconcrete(ClassHierarchy hier, Expression accessExpression, Value valToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
+	protected Outcome resolve_XALOAD_ResolvedNonconcrete(ClassHierarchy hier, Expression accessExpression, Value valToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result)
 	throws DecisionException {
 	    try {
 	        final boolean shouldRefine;
 	        if (isSat(hier, accessExpression)) {
-	            shouldRefine = fresh; //a fresh value to load always requires a refinement action
+	            shouldRefine = fresh; //a fresh value to load requires refinement of the source array
 	            final boolean accessOutOfBounds = (valToLoad == null);
 	            final int branchNumber = result.size() + 1;
 	            if (accessOutOfBounds) {
 	                result.add(new DecisionAlternative_XALOAD_Out(accessExpression, branchNumber));
 	            } else {
-	                result.add(new DecisionAlternative_XALOAD_Resolved(accessExpression, valToLoad, fresh, branchNumber));
+	                result.add(new DecisionAlternative_XALOAD_Resolved(accessExpression, valToLoad, fresh, arrayToWriteBack, branchNumber));
 	            }
 	        } else {
 	            //accessExpression is unsatisfiable: nothing to do
@@ -802,6 +809,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
 	 *        its existence was assumed during the array access and thus it 
 	 *        is not yet stored in the {@link Array} it originates from.
+	 * @param arrayToWriteBack when {@code fresh == true} is the array 
+	 *        where {@code valToLoad} originates from.
 	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
 	 *        where the method will put all the 
 	 *        {@link DecisionAlternative_XALOAD}s representing all the 
@@ -809,7 +818,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @return an {@link Outcome}.
 	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet) resolve_XALOAD}.
 	 */
-	protected Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
+	protected Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result)
 	throws DecisionException, BadClassFileException {
 	    try {
 	        final boolean accessConcrete = (accessExpression == null);
@@ -818,7 +827,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	        if (accessConcrete || isSat(state.getClassHierarchy(), accessExpression)) {
 	            shouldRefine = true; //unresolved symbolic references always require a refinement action
 	            noReferenceExpansion =
-	              doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFactory_XALOAD(accessExpression), result);
+	              doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFactory_XALOAD(accessExpression, fresh, arrayToWriteBack), result);
 	        } else {
 	            //accessExpression is unsatisfiable: nothing to do
 	            shouldRefine = false;
@@ -1033,7 +1042,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 
 	            //if the entry is affected, it is constrained and possibly removed
 	            if (entryAffected) {
-	                e.constrainAccessCondition(index); //TODO possibly move this back to Array?
+	                e.excludeIndexFromAccessCondition(index); //TODO possibly move this back to Array?
 	                final Expression accessCondition = e.getAccessCondition();
 	                if (isSat(hier, accessCondition)) {
 	                    //do nothing

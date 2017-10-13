@@ -524,7 +524,7 @@ public final class State implements Cloneable {
 	 */
 	public ReferenceConcrete createArray(Value initValue, Primitive length, String arraySignature) 
 	throws InvalidTypeException {
-		final Array a = new Array(this.calc, false, initValue, length, arraySignature, null, Epoch.EPOCH_AFTER_START);
+		final Array a = new Array(this.calc, false, initValue, length, arraySignature, null, Epoch.EPOCH_AFTER_START, false);
 		final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(a));
 		initDefaultHashCodeConcrete(a, retVal);
 		return retVal;
@@ -650,16 +650,29 @@ public final class State implements Cloneable {
 		if (origin == null) {
 			throw new NullPointerException(); //TODO improve?
 		}
-		final Objekt myObj = 
-				(Type.isArray(type) ? newArraySymbolic(type, origin) : newInstanceSymbolic(type, origin));
+		final Objekt myObj;
+		if (Type.isArray(type)) {
+			final Array backingArray = newArraySymbolic(type, origin, true);
+			final long posBackingArray = this.heap.addNew(backingArray);
+			final ReferenceConcrete refToBackingArray = new ReferenceConcrete(posBackingArray);
+			try {
+				myObj = new Array(refToBackingArray, backingArray);
+			} catch (InvalidOperandException | NullPointerException e) {
+				//this should never happen
+				throw new UnexpectedInternalException(e);
+			}
+			initDefaultHashCodeSymbolic(myObj);
+		} else {
+			myObj = newInstanceSymbolic(type, origin);
+		}
 		final long pos = this.heap.addNew(myObj);
 		return pos;
 	}
 
-	private Array newArraySymbolic(String arraySignature, MemoryPath origin) 
+	private Array newArraySymbolic(String arraySignature, MemoryPath origin, boolean isInitial) 
 	throws InvalidTypeException {
 		final Primitive length = (Primitive) createSymbol("" + Type.INT, origin.thenArrayLength());
-		final Array obj = new Array(this.calc, true, null, length, arraySignature, origin, Epoch.EPOCH_BEFORE_START);
+		final Array obj = new Array(this.calc, true, null, length, arraySignature, origin, Epoch.EPOCH_BEFORE_START, isInitial);
 		initDefaultHashCodeSymbolic(obj);
 		return obj;
 	}
@@ -1825,6 +1838,7 @@ public final class State implements Cloneable {
 	 *         {@code this}.
 	 */
 	public void refine(State stateRefining) throws CannotRefineException {
+		//TODO this method doesn't work with arrays!!!
 		final String refiningIdentifier = stateRefining.identifier;
 		final PathCondition refiningPathCondition = stateRefining.pathCondition;
 		

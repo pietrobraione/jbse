@@ -21,7 +21,6 @@ import jbse.val.exc.InvalidTypeException;
  * with enough {@link Simplex} operands to calculate a result.
  * 
  * @author Pietro Braione
- *
  */
 public class RewriterOperationOnSimplex extends Rewriter {
 	public RewriterOperationOnSimplex() { }
@@ -85,20 +84,20 @@ public class RewriterOperationOnSimplex extends Rewriter {
         //3- one operand is an additive/multiplicative zero and the operator
         //is additive/multiplicative: rewrite to the other operand
         if (!unary && (firstOp instanceof Simplex || secondOp instanceof Simplex)) {
-        	boolean firstIsSimplex = (firstOp instanceof Simplex);
-        	Simplex simplexOp = (Simplex) (firstIsSimplex ? firstOp : secondOp);
-        	Primitive otherOp = (firstIsSimplex ? secondOp : firstOp);
+            final boolean firstIsSimplex = (firstOp instanceof Simplex);
+            final Simplex simplexOp = (Simplex) (firstIsSimplex ? firstOp : secondOp);
+            final Primitive otherOp = (firstIsSimplex ? secondOp : firstOp);
         	
-        	//x && true -> x, x && false -> false, true && x -> x, false && x -> false
-        	if (x.getOperator() == Operator.AND) {
-        		if ((Boolean) simplexOp.getActualValue()) {
-        			setResult(otherOp);
-        			return;
-        		} else {
-        			setResult(simplexOp);
-        			return;
-        		}
-        	} 
+            //x && true -> x, x && false -> false, true && x -> x, false && x -> false
+            if (x.getOperator() == Operator.AND) {
+                if ((Boolean) simplexOp.getActualValue()) {
+                    setResult(otherOp);
+                    return;
+                } else {
+                    setResult(simplexOp);
+                    return;
+                }
+            } 
         	
         	//x || true -> true, x || false -> x, true || x -> true, false || x -> x
         	if (x.getOperator() == Operator.OR) {
@@ -158,6 +157,21 @@ public class RewriterOperationOnSimplex extends Rewriter {
         }
         
         //TODO should we rewrite the result before setting it with setResult????
+        
+        //4- the expression is the application of an operator to operand(s) for which
+        //the operator is idempotent: return the operand
+        
+        //x && x -> x
+        if (x.getOperator() == Operator.AND && x.getFirstOperand().equals(x.getSecondOperand())) {
+            setResult(x.getFirstOperand());
+            return;
+        }
+        
+        //x || x -> x
+        if (x.getOperator() == Operator.OR && x.getFirstOperand().equals(x.getSecondOperand())) {
+            setResult(x.getFirstOperand());
+            return;
+        }
         
         //4- the expression is a negation: eliminate it and propagate innerwards
         if (unary && x.getOperator() == Operator.NOT && secondOp instanceof Expression) {

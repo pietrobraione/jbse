@@ -11,9 +11,11 @@ import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.common.Type.getArrayMemberType;
 
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.function.Supplier;
 
 import jbse.algo.exc.MissingTriggerParameterException;
+import jbse.common.Type;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
@@ -26,6 +28,7 @@ import jbse.tree.DecisionAlternative_XALOAD_Aliases;
 import jbse.tree.DecisionAlternative_XALOAD_Null;
 import jbse.tree.DecisionAlternative_XALOAD_Expands;
 import jbse.tree.DecisionAlternative_XALOAD_Resolved;
+import jbse.val.Expression;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.ReferenceArrayImmaterial;
@@ -56,8 +59,6 @@ StrategyUpdate_XALOAD> {
 
     private Reference myObjectRef; //set by cooker
     private Primitive index; //set by cooker
-    private Array arrayObj; //set by cooker
-    private Collection<Array.AccessOutcome> entries; //set by cooker
 
     @Override
     protected Supplier<Integer> numOperands() {
@@ -85,17 +86,18 @@ StrategyUpdate_XALOAD> {
                 throwNew(state, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
-
-            //reads the array and its entries
-            try {
-                this.arrayObj = (Array) state.getObject(this.myObjectRef);
-                this.entries = this.arrayObj.get(this.index);
-            } catch (InvalidOperandException | InvalidTypeException | 
-                     ClassCastException e) {
+            
+            //index check
+            if (this.index == null || this.index.getType() != Type.INT) {
                 throwVerifyError(state);
                 exitFromAlgorithm();
             }
 
+            //object check
+            if (!(state.getObject(this.myObjectRef) instanceof Array)) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            }
         };
     }
 
@@ -110,40 +112,88 @@ StrategyUpdate_XALOAD> {
             boolean shouldRefine = false;
             boolean branchingDecision = false;
             boolean first = true; //just for formatting
-            for (Array.AccessOutcome e : this.entries) {
-                //puts in val the value of the current entry, or a fresh symbol, 
-                //or null if the index is out of bounds
-                Value val;
-                boolean fresh = false;  //true iff val is a fresh symbol
-                if (e instanceof Array.AccessOutcomeIn) {
-                    val = ((Array.AccessOutcomeIn) e).getValue();
-                    if (val == null) {
-                        val = state.createSymbol(getArrayMemberType(this.arrayObj.getType()), 
-                                                 this.arrayObj.getOrigin().thenArrayMember(this.index));
-                        fresh = true;
+            final LinkedList<Reference> refToArraysToProcess = new LinkedList<>();
+            final LinkedList<Expression> accessConditions = new LinkedList<>();
+            final LinkedList<Primitive> offsets = new LinkedList<>();
+            refToArraysToProcess.add(this.myObjectRef);
+            accessConditions.add(null);
+            offsets.add(state.getCalculator().valInt(0));
+            while (!refToArraysToProcess.isEmpty()) {
+                final Reference refToArrayToProcess = refToArraysToProcess.remove();
+                final Primitive arrayAccessCondition = accessConditions.remove();
+                final Primitive arrayOffset = offsets.remove();
+                Array arrayToProcess = null; //to keep the compiler happy
+                try {
+                    arrayToProcess = (Array) state.getObject(refToArrayToProcess);
+                } catch (ClassCastException exc) {
+                    //this should never happen
+                    failExecution(exc);
+                }
+                if (arrayToProcess == null) {
+                    //this should never happen
+                    failExecution("an initial array that backs another array is null");
+                }
+                Collection<Array.AccessOutcome> entries = null; //to keep the compiler happy
+                try {
+                    entries = arrayToProcess.get(this.index.add(arrayOffset));
+                } catch (InvalidOperandException | InvalidTypeException e) {
+    				    //this should never happen
+    				    failExecution(e);
+    			    }
+                for (Array.AccessOutcome e : entries) {
+                    if (e instanceof Array.AccessOutcomeInInitialArray) {
+                        final Array.AccessOutcomeInInitialArray eCast = (Array.AccessOutcomeInInitialArray) e;
+                        refToArraysToProcess.add(eCast.getInitialArray());
+                        accessConditions.add(e.getAccessCondition());
+                        offsets.add(eCast.getOffset());
+                    } else { 
+                        //puts in val the value of the current entry, or a fresh symbol, 
+                        //or null if the index is out of bounds
+                        Value val;
+                        boolean fresh = false;  //true iff val is a fresh symbol
+                        if (e instanceof Array.AccessOutcomeInValue) {
+                            val = ((Array.AccessOutcomeInValue) e).getValue();
+                            if (val == null) {
+                                try {
+                                    val = state.createSymbol(getArrayMemberType(arrayToProcess.getType()), 
+                                    arrayToProcess.getOrigin().thenArrayMember(this.index.add(arrayOffset)));
+                                } catch (InvalidOperandException | InvalidTypeException exc) {
+                                    //this should never happen
+                                    failExecution(exc);
+                                }
+                                fresh = true;
+                            }
+                        } else { //e instanceof Array.AccessOutcomeOut
+                            val = null;
+                        }
+
+                        Outcome o = null; //to keep the compiler happy
+                        try {
+                            final Expression accessCondition = (arrayAccessCondition == null ? e.getAccessCondition() : (Expression) arrayAccessCondition.and(e.getAccessCondition()));
+                            o = this.ctx.decisionProcedure.resolve_XALOAD(state, accessCondition, val, fresh, refToArrayToProcess, result);
+                        } catch (InvalidOperandException | InvalidTypeException exc) {
+                            //this should never happen
+                            failExecution(exc);
+                        }
+
+                        //if at least one reference has not been expanded, 
+                        //sets someRefNotExpanded to true and stores data
+                        //about the reference
+                        this.someRefNotExpanded = this.someRefNotExpanded || o.noReferenceExpansion();
+                        if (o.noReferenceExpansion()) {
+                            final ReferenceSymbolic refToLoad = (ReferenceSymbolic) val;
+                            this.nonExpandedRefTypes += (first ? "" : ", ") + refToLoad.getStaticType();
+                            this.nonExpandedRefOrigins += (first ? "" : ", ") + refToLoad.getOrigin();
+                            first = false;
+                        }
+
+                        //if at least one read requires refinement, then it should be refined
+                        shouldRefine = shouldRefine || o.shouldRefine();
+
+                        //if at least one decision is branching, then it is branching
+                        branchingDecision = branchingDecision || o.branchingDecision();
                     }
-                } else { //e instanceof AccessOutcomeOut
-                    val = null;
                 }
-
-                final Outcome o = this.ctx.decisionProcedure.resolve_XALOAD(state, e.getAccessCondition(), val, fresh, result);
-
-                //if at least one reference has not been expanded, 
-                //sets someRefNotExpanded to true and stores data
-                //about the reference
-                this.someRefNotExpanded = this.someRefNotExpanded || o.noReferenceExpansion();
-                if (o.noReferenceExpansion()) {
-                    final ReferenceSymbolic refToLoad = (ReferenceSymbolic) val;
-                    this.nonExpandedRefTypes += (first ? "" : ", ") + refToLoad.getStaticType();
-                    this.nonExpandedRefOrigins += (first ? "" : ", ") + refToLoad.getOrigin();
-                    first = false;
-                }
-
-                //if at least one reference should be refined, then it should be refined
-                shouldRefine = shouldRefine || o.shouldRefine();
-
-                //if at least one decision is branching, then it is branching
-                branchingDecision = branchingDecision || o.branchingDecision();
             }
 
             //also the size of the result matters to whether refine or not 
@@ -159,9 +209,9 @@ StrategyUpdate_XALOAD> {
         };
     }
 
-    private void writeBackToSource(State state, Value valueToStore) 
+    private void writeBackToSource(State state, Reference refToSource, Value valueToStore) 
     throws DecisionException {
-        storeInArray(state, this.ctx, this.myObjectRef, this.index, valueToStore);
+        storeInArray(state, this.ctx, refToSource, this.index, valueToStore);
     }
 
     @Override   
@@ -175,7 +225,7 @@ StrategyUpdate_XALOAD> {
                 final ReferenceArrayImmaterial valRef = (ReferenceArrayImmaterial) val;
                 final ReferenceConcrete valMaterialized = 
                     state.createArray(valRef.getMember(), valRef.getLength(), valRef.getArrayType());
-                writeBackToSource(state, valMaterialized);
+                writeBackToSource(state, this.myObjectRef, valMaterialized); //TODO is the parameter this.myObjectRef correct?????
                 return valMaterialized;
             } catch (InvalidTypeException e) {
                 //this should never happen
@@ -194,44 +244,53 @@ StrategyUpdate_XALOAD> {
             public void refineRefExpands(State state, DecisionAlternative_XALOAD_Expands altExpands) 
             throws DecisionException, ContradictionException, InvalidTypeException {
                 //handles all the assumptions for reference resolution by expansion
-                Algo_XALOAD.this.refineRefExpands(state, altExpands); //implemented in MultipleStateGenerator_XYLOAD_GETX
+                Algo_XALOAD.this.refineRefExpands(state, altExpands); //implemented in Algo_XYLOAD_GETX
 
                 //assumes the array access expression (index in range)
                 final Primitive accessExpression = altExpands.getArrayAccessExpression();
                 state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
 
-                //updates the array with the resolved reference
-                final ReferenceSymbolic referenceToExpand = altExpands.getValueToLoad();
-                writeBackToSource(state, referenceToExpand);                    
+                //if the value is fresh, writes it back in the array
+                if (altExpands.isValueFresh()) { //pleonastic: all unresolved symbolic references from an array are fresh
+                    final ReferenceSymbolic referenceToExpand = altExpands.getValueToLoad();
+                    final Reference source = altExpands.getArrayToWriteBack();
+                    writeBackToSource(state, source, referenceToExpand);
+                }
             }
 
             @Override
             public void refineRefAliases(State state, DecisionAlternative_XALOAD_Aliases altAliases)
             throws DecisionException, ContradictionException {
                 //handles all the assumptions for reference resolution by aliasing
-                Algo_XALOAD.this.refineRefAliases(state, altAliases); //implemented in MultipleStateGenerator_XYLOAD_GETX
+                Algo_XALOAD.this.refineRefAliases(state, altAliases); //implemented in Algo_XYLOAD_GETX
 
                 //assumes the array access expression (index in range)
                 final Primitive accessExpression = altAliases.getArrayAccessExpression();
                 state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));             
 
-                //updates the array with the resolved reference
-                final ReferenceSymbolic referenceToResolve = altAliases.getValueToLoad();
-                writeBackToSource(state, referenceToResolve);
+                //if the value is fresh, writes it back in the array
+                if (altAliases.isValueFresh()) { //pleonastic: all unresolved symbolic references from an array are fresh
+                    final ReferenceSymbolic referenceToResolve = altAliases.getValueToLoad();
+                    final Reference source = altAliases.getArrayToWriteBack();
+                    writeBackToSource(state, source, referenceToResolve);
+                }
             }
 
             @Override
             public void refineRefNull(State state, DecisionAlternative_XALOAD_Null altNull) 
             throws DecisionException, ContradictionException {
-                Algo_XALOAD.this.refineRefNull(state, altNull); //implemented in MultipleStateGenerator_XYLOAD_GETX
+                Algo_XALOAD.this.refineRefNull(state, altNull); //implemented in Algo_XYLOAD_GETX
 
                 //further augments the path condition 
                 final Primitive accessExpression = altNull.getArrayAccessExpression();
                 state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
 
-                //updates the array with the resolved reference
-                final ReferenceSymbolic referenceToResolve = altNull.getValueToLoad();
-                writeBackToSource(state, referenceToResolve);
+                //if the value is fresh, writes it back in the array
+                if (altNull.isValueFresh()) { //pleonastic: all unresolved symbolic references from an array are fresh
+                    final ReferenceSymbolic referenceToResolve = altNull.getValueToLoad();
+                    final Reference source = altNull.getArrayToWriteBack();
+                    writeBackToSource(state, source, referenceToResolve);
+                }
             }
 
             @Override
@@ -240,9 +299,11 @@ StrategyUpdate_XALOAD> {
                 //augments the path condition
                 state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(altResolved.getArrayAccessExpression()));
 
-                //if the value is fresh, it writes it back in the array
+                //if the value is fresh, writes it back in the array
                 if (altResolved.isValueFresh()) {
-                    writeBackToSource(state, altResolved.getValueToLoad());
+                    final Value valueToLoad = altResolved.getValueToLoad();
+                    final Reference source = altResolved.getArrayToWriteBack();
+                    writeBackToSource(state, source, valueToLoad);
                 }
             }
 

@@ -29,7 +29,7 @@ import jbse.jvm.exc.NonexistingObservedVariablesException;
 import jbse.jvm.RunnerParameters;
 import jbse.mem.Array;
 import jbse.mem.Array.AccessOutcome;
-import jbse.mem.Array.AccessOutcomeIn;
+import jbse.mem.Array.AccessOutcomeInValue;
 import jbse.mem.Frame;
 import jbse.mem.Objekt;
 import jbse.mem.State;
@@ -430,12 +430,12 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 	}
 	
 	@Override
-	protected Outcome resolve_XALOAD_ResolvedNonconcrete(ClassHierarchy hier, Expression accessExpression, Value valueToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
+	protected Outcome resolve_XALOAD_ResolvedNonconcrete(ClassHierarchy hier, Expression accessExpression, Value valueToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result)
 	throws DecisionException {
 		if (this.failedConcrete) {
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
 		}
-		final Outcome retVal = super.resolve_XALOAD_ResolvedNonconcrete(hier, accessExpression, valueToLoad, fresh, result);
+		final Outcome retVal = super.resolve_XALOAD_ResolvedNonconcrete(hier, accessExpression, valueToLoad, fresh, arrayToWriteBack, result);
 		if (!this.ended) {
 			final Iterator<DecisionAlternative_XALOAD> it = result.iterator();
 			while (it.hasNext()) {
@@ -451,13 +451,13 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 	}
 
 	@Override
-	protected Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
+	protected Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result)
 	throws DecisionException, BadClassFileException {
 		if (this.failedConcrete) {
 			throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
 		}
         updateExpansionBackdoor(state, refToLoad);
-		final Outcome retVal = super.resolve_XALOAD_Unresolved(state, accessExpression, refToLoad, fresh, result);
+		final Outcome retVal = super.resolve_XALOAD_Unresolved(state, accessExpression, refToLoad, fresh, arrayToWriteBack, result);
 		if (!this.ended) {
 			final Iterator<DecisionAlternative_XALOAD> it = result.iterator();
 			while (it.hasNext()) {
@@ -549,9 +549,10 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
                 final AccessArrayMember aa = (AccessArrayMember) a;
                 try {
                     for (AccessOutcome ao : ((Array) o).get(eval(state, rootFrame, aa.index()))) {
-                        if (ao instanceof AccessOutcomeIn) {
-                            final AccessOutcomeIn aoi = (AccessOutcomeIn) ao;
-                            fieldValue = aoi.getValue();
+                        //takes the first inbound value access outcome, this of course is imprecise
+                        if (ao instanceof AccessOutcomeInValue) {
+                            final AccessOutcomeInValue aoiv = (AccessOutcomeInValue) ao;
+                            fieldValue = aoiv.getValue();
                             break;
                         }
                     }

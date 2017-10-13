@@ -2,6 +2,7 @@ package jbse.tree;
 
 import jbse.mem.Util;
 import jbse.val.Expression;
+import jbse.val.Reference;
 import jbse.val.Value;
 
 /**
@@ -15,7 +16,6 @@ import jbse.val.Value;
 public final class DecisionAlternative_XALOAD_Resolved 
 extends DecisionAlternative_XALOAD_In implements DecisionAlternative_XYLOAD_GETX_Resolved {
 	private final Value valueToLoad;
-	private final boolean fresh;
     private final boolean isTrivial;
 	private final boolean isConcrete;
 	private final int hashCode;
@@ -28,12 +28,13 @@ extends DecisionAlternative_XALOAD_In implements DecisionAlternative_XYLOAD_GETX
 	 * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
 	 *        is not stored in the array and, therefore, must be written
 	 *        back to the array.
+	 * @param arrayToWriteBack when {@code fresh == true} is a {@link Reference} to the array 
+	 *        where {@code valueToLoad} originates from.
 	 * @param branchNumber an {@code int}, the branch number.
 	 */
-	public DecisionAlternative_XALOAD_Resolved(Expression arrayAccessExpression, Value valueToLoad, boolean fresh, int branchNumber) {
-		super(ALT_CODE + "_Resolved:" + arrayAccessExpression, arrayAccessExpression, branchNumber);
+	public DecisionAlternative_XALOAD_Resolved(Expression arrayAccessExpression, Value valueToLoad, boolean fresh, Reference arrayToWriteBack, int branchNumber) {
+		super(ALT_CODE + "_Resolved:" + arrayAccessExpression, arrayAccessExpression, fresh, arrayToWriteBack, branchNumber);
 		this.valueToLoad = valueToLoad;
-		this.fresh = fresh;
         this.isTrivial = (arrayAccessExpression == null);
 		this.isConcrete = this.isTrivial && !Util.isSymbolicReference(valueToLoad);
         final int prime = 131;
@@ -52,12 +53,8 @@ extends DecisionAlternative_XALOAD_In implements DecisionAlternative_XYLOAD_GETX
 	 *        back to the array.
      * @param branchNumber an {@code int}, the branch number.
 	 */
-	public DecisionAlternative_XALOAD_Resolved(Value valueToLoad, boolean fresh, int branchNumber) {
-		this(null, valueToLoad, fresh, branchNumber);
-	}
-	
-	public boolean isValueFresh() {
-		return this.fresh;
+	public DecisionAlternative_XALOAD_Resolved(Value valueToLoad, boolean fresh, Reference arrayToWriteBack, int branchNumber) {
+		this(null, valueToLoad, fresh, arrayToWriteBack, branchNumber);
 	}
 	
 	@Override

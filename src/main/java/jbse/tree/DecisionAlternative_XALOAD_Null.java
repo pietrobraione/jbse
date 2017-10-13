@@ -1,6 +1,7 @@
 package jbse.tree;
 
 import jbse.val.Expression;
+import jbse.val.Reference;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -12,8 +13,8 @@ import jbse.val.ReferenceSymbolic;
 public final class DecisionAlternative_XALOAD_Null extends DecisionAlternative_XALOAD_Unresolved implements DecisionAlternative_XYLOAD_GETX_Null {
     private final int hashCode;
     
-	public DecisionAlternative_XALOAD_Null(Expression arrayAccessExpression, ReferenceSymbolic referenceToResolve, int branchNumber) {
-		super(ALT_CODE + "_Null:" + arrayAccessExpression, arrayAccessExpression, referenceToResolve, branchNumber);
+	public DecisionAlternative_XALOAD_Null(Expression arrayAccessExpression, boolean fresh, Reference arrayToWriteBack, ReferenceSymbolic referenceToResolve, int branchNumber) {
+		super(ALT_CODE + "_Null:" + arrayAccessExpression, fresh, arrayToWriteBack, arrayAccessExpression, referenceToResolve, branchNumber);
         final int prime = 3331;
         int result = super.hashCode();
         result = prime * result;
