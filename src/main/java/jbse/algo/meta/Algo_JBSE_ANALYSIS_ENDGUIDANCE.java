@@ -11,7 +11,7 @@ public final class Algo_JBSE_ANALYSIS_ENDGUIDANCE extends Algo_INVOKEMETA_Nonbra
     protected Supplier<Integer> numOperands() {
         return () -> 0;
     }
-    
+
     @Override
     protected void update(State state) {
         if (this.ctx.decisionProcedure instanceof DecisionProcedureGuidance) {

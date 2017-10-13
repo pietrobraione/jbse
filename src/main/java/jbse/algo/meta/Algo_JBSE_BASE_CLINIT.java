@@ -59,91 +59,91 @@ import jbse.val.ReferenceConcrete;
  *
  */
 public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
-	private static final String OS_NAME                 = System.getProperty("os.name");
-	private static final String OS_VERSION              = System.getProperty("os.version");
-	private static final String OS_ARCH                 = System.getProperty("os.arch");
-	private static final String FILE_SEPARATOR          = System.getProperty("file.separator");
-	private static final String PATH_SEPARATOR          = System.getProperty("path.separator");
-	private static final String LINE_SEPARATOR          = System.getProperty("line.separator");
-	private static final String USER_LANGUAGE           = System.getProperty("user.language");
-	private static final String USER_SCRIPT             = System.getProperty("user.script");
-	private static final String USER_COUNTRY            = System.getProperty("user.country");
-	private static final String USER_VARIANT            = System.getProperty("user.variant");
-	private static final String FILE_ENCODING           = System.getProperty("file.encoding");
-	private static final String SUN_JNU_ENCODING        = System.getProperty("sun.jnu.encoding");
-	private static final String SUN_STDOUT_ENCODING     = System.getProperty("sun.stdout.encoding");
-	private static final String SUN_STDERR_ENCODING     = System.getProperty("sun.stderr.encoding");
-	private static final String SUN_IO_UNICODE_ENCODING = System.getProperty("sun.io.unicode.encoding");
-	private static final String SUN_CPU_ISALIST         = System.getProperty("sun.cpu.isalist");
-	private static final String SUN_CPU_ENDIAN          = System.getProperty("sun.cpu.endian");
-	private static final String HTTP_PROXYHOST          = System.getProperty("http.proxyHost");
-	private static final String HTTP_PROXYPORT          = System.getProperty("http.proxyPort");
-	private static final String HTTPS_PROXYHOST         = System.getProperty("https.proxyHost");
-	private static final String HTTPS_PROXYPORT         = System.getProperty("https.proxyPort");
-	private static final String FTP_PROXYHOST           = System.getProperty("ftp.proxyHost");
-	private static final String FTP_PROXYPORT           = System.getProperty("ftp.proxyPort");
-	private static final String SOCKSPROXYHOST          = System.getProperty("socksProxyHost");
-	private static final String SOCKSPROXYPORT          = System.getProperty("socksProxyPort");
-	private static final String GOPHERPROXYSET          = System.getProperty("gopherProxySet");
-	private static final String GOPHERPROXYHOST         = System.getProperty("gopherProxyHost");
-	private static final String GOPHERPROXYPORT         = System.getProperty("gopherProxyPort");
-	private static final String HTTP_NONPROXYHOSTS      = System.getProperty("http.nonProxyHosts");
-	private static final String FTP_NONPROXYHOSTS       = System.getProperty("ftp.nonProxyHosts");
-	private static final String SOCKSNONPROXYHOSTS      = System.getProperty("socksNonProxyHosts");
-	
+    private static final String OS_NAME                 = System.getProperty("os.name");
+    private static final String OS_VERSION              = System.getProperty("os.version");
+    private static final String OS_ARCH                 = System.getProperty("os.arch");
+    private static final String FILE_SEPARATOR          = System.getProperty("file.separator");
+    private static final String PATH_SEPARATOR          = System.getProperty("path.separator");
+    private static final String LINE_SEPARATOR          = System.getProperty("line.separator");
+    private static final String USER_LANGUAGE           = System.getProperty("user.language");
+    private static final String USER_SCRIPT             = System.getProperty("user.script");
+    private static final String USER_COUNTRY            = System.getProperty("user.country");
+    private static final String USER_VARIANT            = System.getProperty("user.variant");
+    private static final String FILE_ENCODING           = System.getProperty("file.encoding");
+    private static final String SUN_JNU_ENCODING        = System.getProperty("sun.jnu.encoding");
+    private static final String SUN_STDOUT_ENCODING     = System.getProperty("sun.stdout.encoding");
+    private static final String SUN_STDERR_ENCODING     = System.getProperty("sun.stderr.encoding");
+    private static final String SUN_IO_UNICODE_ENCODING = System.getProperty("sun.io.unicode.encoding");
+    private static final String SUN_CPU_ISALIST         = System.getProperty("sun.cpu.isalist");
+    private static final String SUN_CPU_ENDIAN          = System.getProperty("sun.cpu.endian");
+    private static final String HTTP_PROXYHOST          = System.getProperty("http.proxyHost");
+    private static final String HTTP_PROXYPORT          = System.getProperty("http.proxyPort");
+    private static final String HTTPS_PROXYHOST         = System.getProperty("https.proxyHost");
+    private static final String HTTPS_PROXYPORT         = System.getProperty("https.proxyPort");
+    private static final String FTP_PROXYHOST           = System.getProperty("ftp.proxyHost");
+    private static final String FTP_PROXYPORT           = System.getProperty("ftp.proxyPort");
+    private static final String SOCKSPROXYHOST          = System.getProperty("socksProxyHost");
+    private static final String SOCKSPROXYPORT          = System.getProperty("socksProxyPort");
+    private static final String GOPHERPROXYSET          = System.getProperty("gopherProxySet");
+    private static final String GOPHERPROXYHOST         = System.getProperty("gopherProxyHost");
+    private static final String GOPHERPROXYPORT         = System.getProperty("gopherProxyPort");
+    private static final String HTTP_NONPROXYHOSTS      = System.getProperty("http.nonProxyHosts");
+    private static final String FTP_NONPROXYHOSTS       = System.getProperty("ftp.nonProxyHosts");
+    private static final String SOCKSNONPROXYHOSTS      = System.getProperty("socksNonProxyHosts");
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 0;
     }
-    
+
     @Override
     protected void cookMore(State state) throws ThreadStackEmptyException, DecisionException, ClasspathException,
     CannotManageStateException, InterruptException {
         try {
-			safeEnsureStringLiteral(state, this.ctx, OS_NAME);
-			safeEnsureStringLiteral(state, this.ctx, OS_VERSION);
-			safeEnsureStringLiteral(state, this.ctx, OS_ARCH);
-			safeEnsureStringLiteral(state, this.ctx, FILE_SEPARATOR);
-			safeEnsureStringLiteral(state, this.ctx, PATH_SEPARATOR);
-			safeEnsureStringLiteral(state, this.ctx, LINE_SEPARATOR);
-			safeEnsureStringLiteral(state, this.ctx, USER_LANGUAGE);
-			safeEnsureStringLiteral(state, this.ctx, USER_SCRIPT);
-			safeEnsureStringLiteral(state, this.ctx, USER_COUNTRY);
-			safeEnsureStringLiteral(state, this.ctx, USER_VARIANT);
-			safeEnsureStringLiteral(state, this.ctx, FILE_ENCODING);
-			safeEnsureStringLiteral(state, this.ctx, SUN_JNU_ENCODING);
-			safeEnsureStringLiteral(state, this.ctx, SUN_STDOUT_ENCODING);
-			safeEnsureStringLiteral(state, this.ctx, SUN_STDERR_ENCODING);
-			safeEnsureStringLiteral(state, this.ctx, SUN_IO_UNICODE_ENCODING);
-			safeEnsureStringLiteral(state, this.ctx, SUN_CPU_ISALIST);
-			safeEnsureStringLiteral(state, this.ctx, SUN_CPU_ENDIAN);
-			safeEnsureStringLiteral(state, this.ctx, HTTP_PROXYHOST);
-			safeEnsureStringLiteral(state, this.ctx, HTTP_PROXYPORT);
-			safeEnsureStringLiteral(state, this.ctx, HTTPS_PROXYHOST);
-			safeEnsureStringLiteral(state, this.ctx, HTTPS_PROXYPORT);
-			safeEnsureStringLiteral(state, this.ctx, FTP_PROXYHOST);
-			safeEnsureStringLiteral(state, this.ctx, FTP_PROXYPORT);
-			safeEnsureStringLiteral(state, this.ctx, SOCKSPROXYHOST);
-			safeEnsureStringLiteral(state, this.ctx, SOCKSPROXYPORT);
-			safeEnsureStringLiteral(state, this.ctx, GOPHERPROXYSET);
-			safeEnsureStringLiteral(state, this.ctx, GOPHERPROXYHOST);
-			safeEnsureStringLiteral(state, this.ctx, GOPHERPROXYPORT);
-			safeEnsureStringLiteral(state, this.ctx, HTTP_NONPROXYHOSTS);
-			safeEnsureStringLiteral(state, this.ctx, FTP_NONPROXYHOSTS);
-			safeEnsureStringLiteral(state, this.ctx, SOCKSNONPROXYHOSTS);
-		} catch (ClassFileIllFormedException e) {
+            safeEnsureStringLiteral(state, this.ctx, OS_NAME);
+            safeEnsureStringLiteral(state, this.ctx, OS_VERSION);
+            safeEnsureStringLiteral(state, this.ctx, OS_ARCH);
+            safeEnsureStringLiteral(state, this.ctx, FILE_SEPARATOR);
+            safeEnsureStringLiteral(state, this.ctx, PATH_SEPARATOR);
+            safeEnsureStringLiteral(state, this.ctx, LINE_SEPARATOR);
+            safeEnsureStringLiteral(state, this.ctx, USER_LANGUAGE);
+            safeEnsureStringLiteral(state, this.ctx, USER_SCRIPT);
+            safeEnsureStringLiteral(state, this.ctx, USER_COUNTRY);
+            safeEnsureStringLiteral(state, this.ctx, USER_VARIANT);
+            safeEnsureStringLiteral(state, this.ctx, FILE_ENCODING);
+            safeEnsureStringLiteral(state, this.ctx, SUN_JNU_ENCODING);
+            safeEnsureStringLiteral(state, this.ctx, SUN_STDOUT_ENCODING);
+            safeEnsureStringLiteral(state, this.ctx, SUN_STDERR_ENCODING);
+            safeEnsureStringLiteral(state, this.ctx, SUN_IO_UNICODE_ENCODING);
+            safeEnsureStringLiteral(state, this.ctx, SUN_CPU_ISALIST);
+            safeEnsureStringLiteral(state, this.ctx, SUN_CPU_ENDIAN);
+            safeEnsureStringLiteral(state, this.ctx, HTTP_PROXYHOST);
+            safeEnsureStringLiteral(state, this.ctx, HTTP_PROXYPORT);
+            safeEnsureStringLiteral(state, this.ctx, HTTPS_PROXYHOST);
+            safeEnsureStringLiteral(state, this.ctx, HTTPS_PROXYPORT);
+            safeEnsureStringLiteral(state, this.ctx, FTP_PROXYHOST);
+            safeEnsureStringLiteral(state, this.ctx, FTP_PROXYPORT);
+            safeEnsureStringLiteral(state, this.ctx, SOCKSPROXYHOST);
+            safeEnsureStringLiteral(state, this.ctx, SOCKSPROXYPORT);
+            safeEnsureStringLiteral(state, this.ctx, GOPHERPROXYSET);
+            safeEnsureStringLiteral(state, this.ctx, GOPHERPROXYHOST);
+            safeEnsureStringLiteral(state, this.ctx, GOPHERPROXYPORT);
+            safeEnsureStringLiteral(state, this.ctx, HTTP_NONPROXYHOSTS);
+            safeEnsureStringLiteral(state, this.ctx, FTP_NONPROXYHOSTS);
+            safeEnsureStringLiteral(state, this.ctx, SOCKSNONPROXYHOSTS);
+        } catch (ClassFileIllFormedException e) {
             throw new ClasspathException(e);
-		}
-    }
-    
-    private static void safeEnsureStringLiteral(State state, ExecutionContext ctx, String stringLit) 
-    throws ClassFileIllFormedException, DecisionException, ClasspathException, InterruptException {
-       if (stringLit != null) {
-    	       ensureStringLiteral(state, ctx, stringLit);
-       }
+        }
     }
 
-    
+    private static void safeEnsureStringLiteral(State state, ExecutionContext ctx, String stringLit) 
+    throws ClassFileIllFormedException, DecisionException, ClasspathException, InterruptException {
+        if (stringLit != null) {
+            ensureStringLiteral(state, ctx, stringLit);
+        }
+    }
+
+
     @Override
     protected void update(State state) throws ThreadStackEmptyException {
         final Klass klassBase = state.getKlass(JBSE_BASE);
@@ -151,7 +151,7 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
             //this should never happen
             failExecution("Found no klass " + JBSE_BASE);
         }
-        
+
         safeSetStringValue(state, klassBase, JBSE_BASE_OS_NAME,                 OS_NAME);
         safeSetStringValue(state, klassBase, JBSE_BASE_OS_VERSION,              OS_VERSION);
         safeSetStringValue(state, klassBase, JBSE_BASE_OS_ARCH,                 OS_ARCH);
@@ -184,7 +184,7 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
         safeSetStringValue(state, klassBase, JBSE_BASE_FTP_NONPROXYHOSTS,       FTP_NONPROXYHOSTS);
         safeSetStringValue(state, klassBase, JBSE_BASE_SOCKSNONPROXYHOSTS,      SOCKSNONPROXYHOSTS);
     }
-    
+
     private static void safeSetStringValue(State state, Klass k, Signature field, String property) {
         if (property != null) {
             final ReferenceConcrete refPropertyValue = state.referenceToStringLiteral(property);

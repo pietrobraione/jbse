@@ -301,8 +301,8 @@ public class Util {
                 theArray.setFast(calc.valInt(i++), steReference);
             }
         } catch (BadClassFileException | ClassCastException | 
-        InvalidTypeException | InvalidOperandException | 
-        FastArrayAccessNotAllowedException e) {
+                 InvalidTypeException | InvalidOperandException | 
+                 FastArrayAccessNotAllowedException e) {
             //this should not happen (and if happens there is not much we can do)
             failExecution(e);
         }
@@ -482,19 +482,19 @@ public class Util {
                 //invokes the decision procedure, adds the returned 
                 //assumption to the state's path condition and creates 
                 //a Klass
-            		final ClassHierarchy hier = this.s.getClassHierarchy();
-            		final boolean pure = this.ctx.hasClassAPureInitializer(hier, className);
-            		final boolean createKlass;
-            		if (pure) {
-            			createKlass = true;
-            		} else if (this.ctx.decisionProcedure.isSatInitialized(hier, className)) { 
+                final ClassHierarchy hier = this.s.getClassHierarchy();
+                final boolean pure = this.ctx.hasClassAPureInitializer(hier, className);
+                final boolean createKlass;
+                if (pure) {
+                    createKlass = true;
+                } else if (this.ctx.decisionProcedure.isSatInitialized(hier, className)) { 
                     this.s.assumeClassInitialized(className);
                     createKlass = false;
                 } else {
                     this.s.assumeClassNotInitialized(className);
                     createKlass = true;
                 }
-            		if (createKlass) {
+                if (createKlass) {
                     //creates the Klass and schedules it for phase 3
                     this.s.ensureKlass(className);
                     if (className.equals(JAVA_OBJECT)) {

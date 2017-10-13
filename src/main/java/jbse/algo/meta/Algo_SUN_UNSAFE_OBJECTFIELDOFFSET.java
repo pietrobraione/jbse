@@ -22,12 +22,12 @@ import jbse.val.exc.InvalidTypeException;
 
 public final class Algo_SUN_UNSAFE_OBJECTFIELDOFFSET extends Algo_INVOKEMETA_Nonbranching {
     private Simplex ofst; //set by cookMore
-    
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 2;
     }
-    
+
     @Override
     protected void cookMore(State state)
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
@@ -52,8 +52,7 @@ public final class Algo_SUN_UNSAFE_OBJECTFIELDOFFSET extends Algo_INVOKEMETA_Non
         }
         //TODO check that operands are concrete and kill trace if they are not
     }
-    
-    
+
     @Override
     protected void update(State state) throws ThreadStackEmptyException {
         state.pushOperand(this.ofst);

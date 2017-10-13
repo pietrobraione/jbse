@@ -34,12 +34,12 @@ import jbse.val.Simplex;
  */
 public final class Algo_JAVA_CLASS_FORNAME0 extends Algo_INVOKEMETA_Nonbranching {
     private String className; //set by cookMore
-    
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 4;
     }
-    
+
     @Override
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, DecisionException, 
@@ -76,9 +76,9 @@ public final class Algo_JAVA_CLASS_FORNAME0 extends Algo_INVOKEMETA_Nonbranching
         } catch (ClassFileNotAccessibleException | BadClassFileException | InvalidInputException e) {
             //this should never happen
             failExecution(e);
-		}
+        }
     }
-    
+
     @Override
     protected void update(State state) throws ThreadStackEmptyException {
         //gets the instance of the class of the "this" object

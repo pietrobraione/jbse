@@ -20,13 +20,13 @@ import jbse.val.Simplex;
  * @author Pietro Braione
  */
 public final class Algo_JAVA_CLASS_ISPRIMITIVE extends Algo_INVOKEMETA_Nonbranching {
-	private Simplex isPrimitive; //set by cookMore
-	
+    private Simplex isPrimitive; //set by cookMore
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 1;
     }
-    
+
     @Override
     protected void cookMore(State state) throws InterruptException {
         try {

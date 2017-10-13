@@ -23,9 +23,9 @@ public final class Algo_JAVA_STRING_HASHCODE extends Algo_INVOKEMETA_Nonbranchin
     protected Supplier<Integer> numOperands() {
         return () -> 1;
     }
-    
+
     private Primitive hash; //set by cookMore
-    
+
     @Override
     protected void cookMore(State state) throws ThreadStackEmptyException, InterruptException {
         try {
@@ -43,7 +43,7 @@ public final class Algo_JAVA_STRING_HASHCODE extends Algo_INVOKEMETA_Nonbranchin
             exitFromAlgorithm();
         }
     }
-    
+
     @Override
     protected void update(State state) throws ThreadStackEmptyException {
         state.pushOperand(this.hash);

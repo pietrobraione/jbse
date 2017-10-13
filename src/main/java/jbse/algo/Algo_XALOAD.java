@@ -86,7 +86,7 @@ StrategyUpdate_XALOAD> {
                 throwNew(state, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
-            
+
             //index check
             if (this.index == null || this.index.getType() != Type.INT) {
                 throwVerifyError(state);
@@ -137,9 +137,9 @@ StrategyUpdate_XALOAD> {
                 try {
                     entries = arrayToProcess.get(this.index.add(arrayOffset));
                 } catch (InvalidOperandException | InvalidTypeException e) {
-    				    //this should never happen
-    				    failExecution(e);
-    			    }
+                    //this should never happen
+                    failExecution(e);
+                }
                 for (Array.AccessOutcome e : entries) {
                     if (e instanceof Array.AccessOutcomeInInitialArray) {
                         final Array.AccessOutcomeInInitialArray eCast = (Array.AccessOutcomeInInitialArray) e;
@@ -156,7 +156,7 @@ StrategyUpdate_XALOAD> {
                             if (val == null) {
                                 try {
                                     val = state.createSymbol(getArrayMemberType(arrayToProcess.getType()), 
-                                    arrayToProcess.getOrigin().thenArrayMember(this.index.add(arrayOffset)));
+                                                             arrayToProcess.getOrigin().thenArrayMember(this.index.add(arrayOffset)));
                                 } catch (InvalidOperandException | InvalidTypeException exc) {
                                     //this should never happen
                                     failExecution(exc);
@@ -169,7 +169,9 @@ StrategyUpdate_XALOAD> {
 
                         Outcome o = null; //to keep the compiler happy
                         try {
-                            final Expression accessCondition = (arrayAccessCondition == null ? e.getAccessCondition() : (Expression) arrayAccessCondition.and(e.getAccessCondition()));
+                            final Expression accessCondition = (arrayAccessCondition == null ? 
+                                                                e.getAccessCondition() : 
+                                                                (Expression) arrayAccessCondition.and(e.getAccessCondition()));
                             o = this.ctx.decisionProcedure.resolve_XALOAD(state, accessCondition, val, fresh, refToArrayToProcess, result);
                         } catch (InvalidOperandException | InvalidTypeException exc) {
                             //this should never happen
@@ -223,8 +225,9 @@ StrategyUpdate_XALOAD> {
         if (val instanceof ReferenceArrayImmaterial) { //TODO eliminate manual dispatch
             try {
                 final ReferenceArrayImmaterial valRef = (ReferenceArrayImmaterial) val;
-                final ReferenceConcrete valMaterialized = 
-                    state.createArray(valRef.getMember(), valRef.getLength(), valRef.getArrayType());
+                final ReferenceConcrete valMaterialized = state.createArray(valRef.getMember(), 
+                                                                            valRef.getLength(), 
+                                                                            valRef.getArrayType());
                 writeBackToSource(state, this.myObjectRef, valMaterialized); //TODO is the parameter this.myObjectRef correct?????
                 return valMaterialized;
             } catch (InvalidTypeException e) {

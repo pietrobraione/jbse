@@ -23,54 +23,54 @@ import jbse.val.exc.InvalidTypeException;
  *
  */
 abstract class StrategyRefine_XLOAD_GETX implements StrategyRefine<DecisionAlternative_XLOAD_GETX> {
-	abstract public void refineRefExpands(State s, DecisionAlternative_XLOAD_GETX_Expands drc)
-	throws ContradictionException, InvalidTypeException;
+    abstract public void refineRefExpands(State s, DecisionAlternative_XLOAD_GETX_Expands drc)
+    throws ContradictionException, InvalidTypeException;
 
-	abstract public void refineRefAliases(State s, DecisionAlternative_XLOAD_GETX_Aliases dro) 
-	throws ContradictionException;
+    abstract public void refineRefAliases(State s, DecisionAlternative_XLOAD_GETX_Aliases dro) 
+    throws ContradictionException;
 
-	abstract public void refineRefNull(State s, DecisionAlternative_XLOAD_GETX_Null drn)
-	throws ContradictionException;
+    abstract public void refineRefNull(State s, DecisionAlternative_XLOAD_GETX_Null drn)
+    throws ContradictionException;
 
-	abstract public void refineResolved(State s, DecisionAlternative_XLOAD_GETX_Resolved drr);
+    abstract public void refineResolved(State s, DecisionAlternative_XLOAD_GETX_Resolved drr);
 
-	@Override
-	public final void refine(final State s, DecisionAlternative_XLOAD_GETX r)
-	throws ContradictionException, InvalidTypeException {
-		//a visitor redispatching to the methods which specialize this.refine
-		final VisitorDecisionAlternative_XLOAD_GETX visitorRefine = 
-		new VisitorDecisionAlternative_XLOAD_GETX() {
-			@Override
-			public void visitDecisionAlternative_XLOAD_GETX_Expands(DecisionAlternative_XLOAD_GETX_Expands drc) 
-			throws ContradictionException, InvalidTypeException {
-				StrategyRefine_XLOAD_GETX.this.refineRefExpands(s, drc);
-			}
+    @Override
+    public final void refine(final State s, DecisionAlternative_XLOAD_GETX r)
+    throws ContradictionException, InvalidTypeException {
+        //a visitor redispatching to the methods which specialize this.refine
+        final VisitorDecisionAlternative_XLOAD_GETX visitorRefine = 
+            new VisitorDecisionAlternative_XLOAD_GETX() {
+                @Override
+                public void visitDecisionAlternative_XLOAD_GETX_Expands(DecisionAlternative_XLOAD_GETX_Expands drc) 
+                throws ContradictionException, InvalidTypeException {
+                    StrategyRefine_XLOAD_GETX.this.refineRefExpands(s, drc);
+                }
+    
+                @Override
+                public void visitDecisionAlternative_XLOAD_GETX_Aliases(DecisionAlternative_XLOAD_GETX_Aliases dro) 
+                throws ContradictionException {
+                    StrategyRefine_XLOAD_GETX.this.refineRefAliases(s, dro);
+                }
+    
+                @Override
+                public void visitDecisionAlternative_XLOAD_GETX_Null(DecisionAlternative_XLOAD_GETX_Null drn) 
+                throws ContradictionException {
+                    StrategyRefine_XLOAD_GETX.this.refineRefNull(s, drn);
+                }
+    
+                @Override
+                public void visitDecisionAlternative_XLOAD_GETX_Resolved(DecisionAlternative_XLOAD_GETX_Resolved drr) {
+                    StrategyRefine_XLOAD_GETX.this.refineResolved(s, drr);
+                }
+            };
 
-			@Override
-			public void visitDecisionAlternative_XLOAD_GETX_Aliases(DecisionAlternative_XLOAD_GETX_Aliases dro) 
-			throws ContradictionException {
-				StrategyRefine_XLOAD_GETX.this.refineRefAliases(s, dro);
-			}
-
-			@Override
-			public void visitDecisionAlternative_XLOAD_GETX_Null(DecisionAlternative_XLOAD_GETX_Null drn) 
-			throws ContradictionException {
-				StrategyRefine_XLOAD_GETX.this.refineRefNull(s, drn);
-			}
-
-			@Override
-			public void visitDecisionAlternative_XLOAD_GETX_Resolved(DecisionAlternative_XLOAD_GETX_Resolved drr) {
-				StrategyRefine_XLOAD_GETX.this.refineResolved(s, drr);
-			}
-		};
-
-		//redispatches and manages exceptions
-		try {
-			r.accept(visitorRefine);
-		} catch (ContradictionException | InvalidTypeException | RuntimeException e) {
-			throw e;
-		} catch (Exception e) {
-			throw new UnexpectedInternalException(e);
-		}
-	}
+        //redispatches and manages exceptions
+        try {
+            r.accept(visitorRefine);
+        } catch (ContradictionException | InvalidTypeException | RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new UnexpectedInternalException(e);
+        }
+    }
 }

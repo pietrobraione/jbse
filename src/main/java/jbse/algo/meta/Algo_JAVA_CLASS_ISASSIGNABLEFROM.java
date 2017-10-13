@@ -25,12 +25,12 @@ import jbse.val.Simplex;
 public final class Algo_JAVA_CLASS_ISASSIGNABLEFROM extends Algo_INVOKEMETA_Nonbranching {
     private String classThis; //set by cookMore
     private String classOther; //set by cookMore
-    
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 2;
     }
-    
+
     @Override
     protected void cookMore(State state)
     throws ThreadStackEmptyException, InterruptException {
@@ -49,7 +49,7 @@ public final class Algo_JAVA_CLASS_ISASSIGNABLEFROM extends Algo_INVOKEMETA_Nonb
                 failExecution("The 'this' parameter to java.lang.Class.isInstance method is symbolic and unresolved.");
             }
             this.classThis = javaClassThis.representedClass();
-            
+
             //gets the reference to the class to be checked
             final Reference javaClassRefOther = (Reference) this.data.operand(1);
             if (state.isNull(javaClassRefOther)) {
@@ -68,7 +68,7 @@ public final class Algo_JAVA_CLASS_ISASSIGNABLEFROM extends Algo_INVOKEMETA_Nonb
             exitFromAlgorithm();
         }
     }
-    
+
     @Override
     protected void update(State state) throws ThreadStackEmptyException {
         final ClassHierarchy hier = state.getClassHierarchy();

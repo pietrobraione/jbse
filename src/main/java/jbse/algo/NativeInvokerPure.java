@@ -40,58 +40,58 @@ import jbse.val.exc.ValueDoesNotSupportNativeException;
  */
 public class NativeInvokerPure implements NativeInvoker {
     final NativeInvokerReflect delegate = new NativeInvokerReflect();
-	@Override
-	public void doInvokeNative(State state, Signature methodSignatureResolved, Value[] args, int pcOffset) 
-	throws CannotInvokeNativeException, ThreadStackEmptyException {
-		//determines the return value
-		final String returnType = Type.splitReturnValueDescriptor(methodSignatureResolved.getDescriptor());
-		final Value returnValue;
-		if (Type.isVoid(returnType)) {
-			returnValue = null;
-		} else if (Type.isPrimitive(returnType)) {
-			//requires all arguments are primitive
-			final Primitive[] argsPrim = new Primitive[args.length];
-			boolean someSymbolic = false;
-			for (int i = 0; i < args.length; ++i) {
-				if (args[i] instanceof Primitive) {
-					argsPrim[i] = (Primitive) args[i];
-					someSymbolic = someSymbolic || (argsPrim[i].isSymbolic());
-				} else { 
-					throw new ValueDoesNotSupportNativeException("invoked method " + methodSignatureResolved + " with args " + Arrays.toString(args));
-				}
-			}
-			if (someSymbolic) {
-				try {
-					returnValue = state.getCalculator().applyFunction(returnType.charAt(0), methodSignatureResolved.getName(), argsPrim);
-				} catch (InvalidOperandException | InvalidTypeException e) {
-					//this should never happen
-					throw new UnexpectedInternalException(e);
-				}
-			} else {
-				this.delegate.doInvokeNative(state, methodSignatureResolved, argsPrim, pcOffset);
-				return;
-			}
-		} else {
+    @Override
+    public void doInvokeNative(State state, Signature methodSignatureResolved, Value[] args, int pcOffset) 
+    throws CannotInvokeNativeException, ThreadStackEmptyException {
+        //determines the return value
+        final String returnType = Type.splitReturnValueDescriptor(methodSignatureResolved.getDescriptor());
+        final Value returnValue;
+        if (Type.isVoid(returnType)) {
+            returnValue = null;
+        } else if (Type.isPrimitive(returnType)) {
+            //requires all arguments are primitive
+            final Primitive[] argsPrim = new Primitive[args.length];
+            boolean someSymbolic = false;
+            for (int i = 0; i < args.length; ++i) {
+                if (args[i] instanceof Primitive) {
+                    argsPrim[i] = (Primitive) args[i];
+                    someSymbolic = someSymbolic || (argsPrim[i].isSymbolic());
+                } else { 
+                    throw new ValueDoesNotSupportNativeException("invoked method " + methodSignatureResolved + " with args " + Arrays.toString(args));
+                }
+            }
+            if (someSymbolic) {
+                try {
+                    returnValue = state.getCalculator().applyFunction(returnType.charAt(0), methodSignatureResolved.getName(), argsPrim);
+                } catch (InvalidOperandException | InvalidTypeException e) {
+                    //this should never happen
+                    throw new UnexpectedInternalException(e);
+                }
+            } else {
+                this.delegate.doInvokeNative(state, methodSignatureResolved, argsPrim, pcOffset);
+                return;
+            }
+        } else {
             throw new ValueDoesNotSupportNativeException("invoked method " + methodSignatureResolved + " with args " + Arrays.toString(args));
-			//TODO put reference resolution here or in the invoke* bytecodes and assign returnValue = state.createSymbol(returnType, "__NATIVE[" + state.getIdentifier() + "[" + state.getSequenceNumber() + "]");
-		}
-		
-		//pushes the return value (if present) on the operand stack, 
-		//or sets the state to stuck if no current frame exists
-		try {
-			if (returnValue != null) {
-				state.pushOperand(returnValue);
-			}
-		} catch (ThreadStackEmptyException e) {
-			state.setStuckReturn(returnValue);
-			return;
-		}		
+            //TODO put reference resolution here or in the invoke* bytecodes and assign returnValue = state.createSymbol(returnType, "__NATIVE[" + state.getIdentifier() + "[" + state.getSequenceNumber() + "]");
+        }
 
-		//increments the program counter
-		try {
-			state.incProgramCounter(pcOffset);
-		} catch (InvalidProgramCounterException e) {
-		    throwVerifyError(state);
-		}
-	}
+        //pushes the return value (if present) on the operand stack, 
+        //or sets the state to stuck if no current frame exists
+        try {
+            if (returnValue != null) {
+                state.pushOperand(returnValue);
+            }
+        } catch (ThreadStackEmptyException e) {
+            state.setStuckReturn(returnValue);
+            return;
+        }		
+
+        //increments the program counter
+        try {
+            state.incProgramCounter(pcOffset);
+        } catch (InvalidProgramCounterException e) {
+            throwVerifyError(state);
+        }
+    }
 }

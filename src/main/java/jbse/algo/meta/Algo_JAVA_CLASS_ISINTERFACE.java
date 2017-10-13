@@ -23,13 +23,13 @@ import jbse.val.Simplex;
  * @author Pietro Braione
  */
 public final class Algo_JAVA_CLASS_ISINTERFACE extends Algo_INVOKEMETA_Nonbranching {
-	private Simplex isInterface; //set by cookMore
-	
+    private Simplex isInterface; //set by cookMore
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 1;
     }
-    
+
     @Override
     protected void cookMore(State state) throws InterruptException {
         try {
@@ -45,9 +45,9 @@ public final class Algo_JAVA_CLASS_ISINTERFACE extends Algo_INVOKEMETA_Nonbranch
             throwVerifyError(state);
             exitFromAlgorithm();
         } catch (BadClassFileException e) {
-			//this should never happen
-			failExecution(e);
-		}
+            //this should never happen
+            failExecution(e);
+        }
     }
 
     @Override

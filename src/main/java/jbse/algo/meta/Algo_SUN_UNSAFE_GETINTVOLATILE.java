@@ -28,14 +28,14 @@ import jbse.val.Simplex;
  * @author Pietro Braione
  */
 public final class Algo_SUN_UNSAFE_GETINTVOLATILE extends Algo_INVOKEMETA_Nonbranching {
-	private final Algo_SUN_UNSAFE_GETINTVOLATILE_Array algoArray = new Algo_SUN_UNSAFE_GETINTVOLATILE_Array();
-	private Primitive read; //set by cookMore
-    
+    private final Algo_SUN_UNSAFE_GETINTVOLATILE_Array algoArray = new Algo_SUN_UNSAFE_GETINTVOLATILE_Array();
+    private Primitive read; //set by cookMore
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 3;
     }
-    
+
     @Override
     protected void cookMore(State state)
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
@@ -52,7 +52,7 @@ public final class Algo_SUN_UNSAFE_GETINTVOLATILE extends Algo_INVOKEMETA_Nonbra
             if (obj instanceof Array) {
                 continueWith(this.algoArray);
             }
-            
+
             //gets and checks the offset parameter
             final Primitive ofstPrimitive = (Primitive) this.data.operand(2);
             final int ofst;
@@ -76,8 +76,7 @@ public final class Algo_SUN_UNSAFE_GETINTVOLATILE extends Algo_INVOKEMETA_Nonbra
             exitFromAlgorithm();
         }
     }
-    
-    
+
     @Override
     protected void update(State state) throws ThreadStackEmptyException {
         state.pushOperand(this.read);

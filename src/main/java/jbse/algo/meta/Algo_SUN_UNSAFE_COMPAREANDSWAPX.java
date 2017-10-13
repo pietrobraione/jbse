@@ -22,23 +22,23 @@ import jbse.val.Simplex;
 import jbse.val.Value;
 
 public abstract class Algo_SUN_UNSAFE_COMPAREANDSWAPX extends Algo_INVOKEMETA_Nonbranching {
-	private final String what;  //set by constructor
+    private final String what;  //set by constructor
     private Objekt objectToSet; //set by cookMore
     private int fieldSlotToSet; //set by cookMore
     private Value toWrite; //set by cookMore
-    
+
     protected Algo_SUN_UNSAFE_COMPAREANDSWAPX(String what) {
         this.what = what;
     }
-    
+
     @Override
     protected final Supplier<Integer> numOperands() {
         return () -> 5;
     }
-    
+
     protected abstract boolean checkCompare(State state, Value current, Value toCompare) 
     throws CannotManageStateException, InterruptException;
-    
+
     @Override
     protected final void cookMore(State state)
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
@@ -72,8 +72,8 @@ public abstract class Algo_SUN_UNSAFE_COMPAREANDSWAPX extends Algo_INVOKEMETA_No
             exitFromAlgorithm();
         }        
     }
-    
-    
+
+
     @Override
     protected final void update(State state) throws ThreadStackEmptyException {
         if (this.objectToSet == null) {

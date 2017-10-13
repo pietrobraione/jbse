@@ -23,7 +23,7 @@ public final class Algo_JAVA_OBJECT_HASHCODE extends Algo_INVOKEMETA_Nonbranchin
     protected Supplier<Integer> numOperands() {
         return () -> 1;
     }
-    
+
     @Override
     protected void update(State state) 
     throws ThreadStackEmptyException, InterruptException {

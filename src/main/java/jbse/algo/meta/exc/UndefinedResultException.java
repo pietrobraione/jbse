@@ -8,30 +8,30 @@ import jbse.algo.exc.CannotManageStateException;
  * @author Pietro Braione
  */
 public class UndefinedResultException extends CannotManageStateException {
-	public UndefinedResultException() { 
-		super(); 
-	}
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -4352182698283195143L;
+
+    public UndefinedResultException() { 
+        super(); 
+    }
 
     public UndefinedResultException(String s) { 
         super(s); 
     }
 
-	public UndefinedResultException(Throwable e) { 
-		super(e); 
-	}
+    public UndefinedResultException(Throwable e) { 
+        super(e); 
+    }
 
     public UndefinedResultException(String message, Throwable cause) {
         super(message, cause);
     }
 
     public UndefinedResultException(String message, Throwable cause,
-            boolean enableSuppression, boolean writableStackTrace) {
+                                    boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
-
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = -4352182698283195143L;
 
 }

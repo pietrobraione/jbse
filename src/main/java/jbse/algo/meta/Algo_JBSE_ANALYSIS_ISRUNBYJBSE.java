@@ -19,7 +19,7 @@ public final class Algo_JBSE_ANALYSIS_ISRUNBYJBSE extends Algo_INVOKEMETA_Nonbra
     protected Supplier<Integer> numOperands() {
         return () -> 0;
     }
-    
+
     @Override
     protected void update(State state) throws ThreadStackEmptyException {
         state.pushOperand(state.getCalculator().valInt(1)); //means true

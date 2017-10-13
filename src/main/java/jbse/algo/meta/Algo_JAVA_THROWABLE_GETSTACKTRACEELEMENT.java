@@ -28,12 +28,12 @@ public final class Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT extends Algo_INVOKEM
     private Reference thisObject; //set by cookMore
     private Primitive index; //set by cookMore
     private Array backtrace; //set by cookMore
-    
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 2;
     }
-    
+
     @Override
     protected void cookMore(State state)
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
@@ -56,7 +56,7 @@ public final class Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT extends Algo_INVOKEM
             failExecution(e);
         }
     }
-    
+
     @Override
     protected void update(State state) 
     throws InterruptException, SymbolicValueNotAllowedException, ClasspathException, 

@@ -28,7 +28,7 @@ public final class BytecodeData_2LVSX extends BytecodeData {
     private BytecodeData_2LVSX() {
         //nothing to do
     }    
-    
+
     /**
      * Factory method.
      * 

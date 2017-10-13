@@ -73,13 +73,12 @@ StrategyUpdate<DecisionAlternative_XCMPY>> {
 
                 //check 
                 final int nextBytecode = state.getInstruction(1);
-                final boolean fast = 
-                   (nextBytecode == OP_IFEQ ||
-                    nextBytecode == OP_IFGE ||
-                    nextBytecode == OP_IFGT ||
-                    nextBytecode == OP_IFLE ||
-                    nextBytecode == OP_IFLT ||
-                    nextBytecode == OP_IFNE);
+                final boolean fast = (nextBytecode == OP_IFEQ ||
+                                      nextBytecode == OP_IFGE || 
+                                      nextBytecode == OP_IFGT ||
+                                      nextBytecode == OP_IFLE ||
+                                      nextBytecode == OP_IFLT ||
+                                      nextBytecode == OP_IFNE);
                 if (fast) {
                     continueWith(this.algo_XCMPY_FAST);
                     exitFromAlgorithm();
@@ -112,8 +111,8 @@ StrategyUpdate<DecisionAlternative_XCMPY>> {
         return (state, alt) -> {
             try {
                 state.assume(ctx.decisionProcedure.simplify(state.getCalculator().applyBinary(this.val1, alt.operator(), this.val2)));
-            } catch (InvalidOperatorException | InvalidOperandException
-            | InvalidTypeException e) {
+            } catch (InvalidOperatorException | InvalidOperandException |
+                     InvalidTypeException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
             }

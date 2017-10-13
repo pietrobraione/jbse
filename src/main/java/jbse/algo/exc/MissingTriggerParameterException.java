@@ -9,12 +9,12 @@ package jbse.algo.exc;
  */
 public class MissingTriggerParameterException extends CannotManageStateException {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -5478561178707984607L;
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -5478561178707984607L;
 
-	public MissingTriggerParameterException(String param) {
-		super(param);
-	}
+    public MissingTriggerParameterException(String param) {
+        super(param);
+    }
 }

@@ -1,6 +1,5 @@
 package jbse.algo;
 
-
 /**
  * Exception raised whenever an algorithm requires 
  * the engine to execute another algorithm.
@@ -13,7 +12,7 @@ public final class ContinuationException extends Exception {
      * 
      */
     private static final long serialVersionUID = 1986437767183635494L;
-    
+
     private final Algorithm<?, ?, ?, ?, ?> continuation;
 
     public ContinuationException(Algorithm<?, ?, ?, ?, ?> continuation) {
