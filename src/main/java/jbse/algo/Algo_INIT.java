@@ -13,6 +13,8 @@ import static jbse.bc.Signatures.JAVA_THREADGROUP_INIT_1;
 import static jbse.bc.Signatures.JAVA_THREADGROUP_INIT_2;
 import static jbse.bc.Signatures.JAVA_SYSTEM_INITIALIZESYSTEMCLASS;
 
+import static java.lang.Thread.NORM_PRIORITY;
+
 import jbse.algo.exc.MissingTriggerParameterException;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileIllFormedException;
@@ -131,8 +133,7 @@ public final class Algo_INIT {
         final ReferenceConcrete systemThreadGroup = state.createInstance(JAVA_THREADGROUP);
         final ReferenceConcrete mainThreadGroup = state.createInstance(JAVA_THREADGROUP);
         final ReferenceConcrete mainThread = state.createInstance(JAVA_THREAD);
-        final Objekt mainThreadObjekt = state.getObject(mainThread);
-        mainThreadObjekt.setFieldValue(JAVA_THREAD_PRIORITY, ctx.calc.valInt(5)); //necessary to avoid circularity issues; 5 stands for normal priority
+        state.getObject(mainThread).setFieldValue(JAVA_THREAD_PRIORITY, ctx.calc.valInt(NORM_PRIORITY)); //necessary to avoid circularity issues
         try {
             ensureStringLiteral(state, ctx, "main");
         } catch (ClassFileIllFormedException e) {
