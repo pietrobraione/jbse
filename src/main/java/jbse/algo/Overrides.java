@@ -1,5 +1,6 @@
 package jbse.algo;
 
+import static jbse.bc.Signatures.JAVA_ACCESSCONTROLCONTEXT;
 import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_FIELD;
 import static jbse.bc.Signatures.JAVA_OBJECT;
@@ -39,6 +40,7 @@ public final class Overrides {
     public static final String ALGO_JAVA_STRING_INTERN                  = jbse.algo.meta.Algo_JAVA_STRING_INTERN.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_SYSTEM_ARRAYCOPY               = jbse.algo.meta.Algo_JAVA_SYSTEM_ARRAYCOPY.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_SYSTEM_IDENTITYHASHCODE        = jbse.algo.meta.Algo_JAVA_SYSTEM_IDENTITYHASHCODE.class.getCanonicalName().replace('.', '/');
+    public static final String ALGO_JAVA_THREAD_CURRENTTHREAD           = jbse.algo.meta.Algo_JAVA_THREAD_CURRENTTHREAD.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_THROWABLE_FILLINSTACKTRACE     = jbse.algo.meta.Algo_JAVA_THROWABLE_FILLINSTACKTRACE.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH   = jbse.algo.meta.Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH.class.getCanonicalName().replace('.', '/');
     public static final String ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT = jbse.algo.meta.Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT.class.getCanonicalName().replace('.', '/');
@@ -68,6 +70,10 @@ public final class Overrides {
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + JAVA_PRIVILEGEDACTION + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, 
                       "base_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION");
+    public static final Signature BASE_JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT = 
+        new Signature(JBSE_BASE, 
+                      "()" + REFERENCE + JAVA_ACCESSCONTROLCONTEXT + TYPEEND, 
+                      "base_JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT");
     public static final Signature BASE_JAVA_SYSTEM_INITPROPERTIES =
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + JAVA_PROPERTIES + TYPEEND + ")" + REFERENCE + JAVA_PROPERTIES + TYPEEND, 

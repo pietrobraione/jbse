@@ -16,6 +16,7 @@ import static jbse.algo.Overrides.ALGO_JAVA_STRING_HASHCODE;
 import static jbse.algo.Overrides.ALGO_JAVA_STRING_INTERN;
 import static jbse.algo.Overrides.ALGO_JAVA_SYSTEM_ARRAYCOPY;
 import static jbse.algo.Overrides.ALGO_JAVA_SYSTEM_IDENTITYHASHCODE;
+import static jbse.algo.Overrides.ALGO_JAVA_THREAD_CURRENTTHREAD;
 import static jbse.algo.Overrides.ALGO_JAVA_THROWABLE_FILLINSTACKTRACE;
 import static jbse.algo.Overrides.ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH;
 import static jbse.algo.Overrides.ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT;
@@ -34,6 +35,7 @@ import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_GETINTVOLATILE;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION;
+import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT;
 import static jbse.algo.Overrides.BASE_JAVA_SYSTEM_INITPROPERTIES;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ADDRESSSIZE;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ARRAYBASEOFFSET;
@@ -46,6 +48,7 @@ import static jbse.bc.Signatures.JAVA_ABSTRACTSET;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION;
+import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT;
 import static jbse.bc.Signatures.JAVA_ACCESSIBLEOBJECT;
 import static jbse.bc.Signatures.JAVA_ARRAYLIST;
 import static jbse.bc.Signatures.JAVA_ARRAYS;
@@ -132,6 +135,7 @@ import static jbse.bc.Signatures.JAVA_SYSTEM_ARRAYCOPY;
 import static jbse.bc.Signatures.JAVA_SYSTEM_IDENTITYHASHCODE;
 import static jbse.bc.Signatures.JAVA_SYSTEM_INITPROPERTIES;
 import static jbse.bc.Signatures.JAVA_THREAD;
+import static jbse.bc.Signatures.JAVA_THREAD_CURRENTTHREAD;
 import static jbse.bc.Signatures.JAVA_THREADLOCAL;
 import static jbse.bc.Signatures.JAVA_THROWABLE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_FILLINSTACKTRACE;
@@ -191,6 +195,7 @@ import jbse.tree.StateTree;
 import jbse.tree.StateTree.BreadthMode;
 import jbse.tree.StateTree.StateIdentificationMode;
 import jbse.val.Calculator;
+import jbse.val.ReferenceConcrete;
 
 /**
  * Class containing an execution context, i.e., everything 
@@ -255,6 +260,12 @@ public final class ExecutionContext {
      * and executes triggers. 
      */
     public final TriggerManager triggerManager;
+    
+    /** A {@link ReferenceConcrete} to the main thread group created at init time. */
+    private ReferenceConcrete mainThreadGroup;
+    
+    /** A {@link ReferenceConcrete} to the main thread created at init time. */
+    private ReferenceConcrete mainThread;
 
     /**
      * Constructor.
@@ -314,36 +325,38 @@ public final class ExecutionContext {
         //defaults
         try {
             //JRE methods
-            addBaseOverridden(JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION,   BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION);
-            addBaseOverridden(JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION, BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION);
-            addMetaOverridden(JAVA_CLASS_DESIREDASSERTIONSTATUS0,             ALGO_JAVA_CLASS_DESIREDASSERTIONSTATUS0);
-            addMetaOverridden(JAVA_CLASS_FORNAME0,                            ALGO_JAVA_CLASS_FORNAME0);
-            addMetaOverridden(JAVA_CLASS_GETCOMPONENTTYPE,                    ALGO_JAVA_CLASS_GETCOMPONENTTYPE);
-            addMetaOverridden(JAVA_CLASS_GETDECLAREDFIELDS0,                  ALGO_JAVA_CLASS_GETDECLAREDFIELDS0);
-            addMetaOverridden(JAVA_CLASS_GETPRIMITIVECLASS,                   ALGO_JAVA_CLASS_GETPRIMITIVECLASS);
-            addMetaOverridden(JAVA_CLASS_ISASSIGNABLEFROM,                    ALGO_JAVA_CLASS_ISASSIGNABLEFROM);
-            addMetaOverridden(JAVA_CLASS_ISINSTANCE,                          ALGO_JAVA_CLASS_ISINSTANCE);
-            addMetaOverridden(JAVA_CLASS_ISINTERFACE,                         ALGO_JAVA_CLASS_ISINTERFACE);
-            addMetaOverridden(JAVA_CLASS_ISPRIMITIVE,                         ALGO_JAVA_CLASS_ISPRIMITIVE);
-            addMetaOverridden(JAVA_OBJECT_GETCLASS,                           ALGO_JAVA_OBJECT_GETCLASS);
-            addMetaOverridden(JAVA_OBJECT_HASHCODE,                           ALGO_JAVA_OBJECT_HASHCODE);
-            addMetaOverridden(JAVA_REFLECT_ARRAY_NEWARRAY,                    ALGO_JAVA_REFLECT_ARRAY_NEWARRAY);
-            addMetaOverridden(JAVA_STRING_HASHCODE,                           ALGO_JAVA_STRING_HASHCODE);
-            addMetaOverridden(JAVA_STRING_INTERN,                             ALGO_JAVA_STRING_INTERN);
-            addMetaOverridden(JAVA_SYSTEM_ARRAYCOPY,                          ALGO_JAVA_SYSTEM_ARRAYCOPY);
-            addBaseOverridden(JAVA_SYSTEM_INITPROPERTIES,                     BASE_JAVA_SYSTEM_INITPROPERTIES);
-            addMetaOverridden(JAVA_SYSTEM_IDENTITYHASHCODE,                   ALGO_JAVA_SYSTEM_IDENTITYHASHCODE);
-            addMetaOverridden(JAVA_THROWABLE_FILLINSTACKTRACE,                ALGO_JAVA_THROWABLE_FILLINSTACKTRACE);
-            addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEDEPTH,              ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH);
-            addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEELEMENT,            ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT);
-            addMetaOverridden(SUN_REFLECTION_GETCALLERCLASS,                  ALGO_SUN_REFLECTION_GETCALLERCLASS);
-            addBaseOverridden(SUN_UNSAFE_ADDRESSSIZE,                         BASE_SUN_UNSAFE_ADDRESSSIZE);
-            addBaseOverridden(SUN_UNSAFE_ARRAYBASEOFFSET,                     BASE_SUN_UNSAFE_ARRAYBASEOFFSET);
-            addBaseOverridden(SUN_UNSAFE_ARRAYINDEXSCALE,                     BASE_SUN_UNSAFE_ARRAYINDEXSCALE);
-            addMetaOverridden(SUN_UNSAFE_COMPAREANDSWAPINT,                   ALGO_SUN_UNSAFE_COMPAREANDSWAPINT);
-            addMetaOverridden(SUN_UNSAFE_COMPAREANDSWAPOBJECT,                ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT);
-            addMetaOverridden(SUN_UNSAFE_GETINTVOLATILE,                      ALGO_SUN_UNSAFE_GETINTVOLATILE);
-            addMetaOverridden(SUN_UNSAFE_OBJECTFIELDOFFSET,                   ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET);
+            addBaseOverridden(JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION,       BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION);
+            addBaseOverridden(JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION,     BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION);
+            addBaseOverridden(JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT, BASE_JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT);
+            addMetaOverridden(JAVA_CLASS_DESIREDASSERTIONSTATUS0,                 ALGO_JAVA_CLASS_DESIREDASSERTIONSTATUS0);
+            addMetaOverridden(JAVA_CLASS_FORNAME0,                                ALGO_JAVA_CLASS_FORNAME0);
+            addMetaOverridden(JAVA_CLASS_GETCOMPONENTTYPE,                        ALGO_JAVA_CLASS_GETCOMPONENTTYPE);
+            addMetaOverridden(JAVA_CLASS_GETDECLAREDFIELDS0,                      ALGO_JAVA_CLASS_GETDECLAREDFIELDS0);
+            addMetaOverridden(JAVA_CLASS_GETPRIMITIVECLASS,                       ALGO_JAVA_CLASS_GETPRIMITIVECLASS);
+            addMetaOverridden(JAVA_CLASS_ISASSIGNABLEFROM,                        ALGO_JAVA_CLASS_ISASSIGNABLEFROM);
+            addMetaOverridden(JAVA_CLASS_ISINSTANCE,                              ALGO_JAVA_CLASS_ISINSTANCE);
+            addMetaOverridden(JAVA_CLASS_ISINTERFACE,                             ALGO_JAVA_CLASS_ISINTERFACE);
+            addMetaOverridden(JAVA_CLASS_ISPRIMITIVE,                             ALGO_JAVA_CLASS_ISPRIMITIVE);
+            addMetaOverridden(JAVA_OBJECT_GETCLASS,                               ALGO_JAVA_OBJECT_GETCLASS);
+            addMetaOverridden(JAVA_OBJECT_HASHCODE,                               ALGO_JAVA_OBJECT_HASHCODE);
+            addMetaOverridden(JAVA_REFLECT_ARRAY_NEWARRAY,                        ALGO_JAVA_REFLECT_ARRAY_NEWARRAY);
+            addMetaOverridden(JAVA_STRING_HASHCODE,                               ALGO_JAVA_STRING_HASHCODE);
+            addMetaOverridden(JAVA_STRING_INTERN,                                 ALGO_JAVA_STRING_INTERN);
+            addMetaOverridden(JAVA_SYSTEM_ARRAYCOPY,                              ALGO_JAVA_SYSTEM_ARRAYCOPY);
+            addBaseOverridden(JAVA_SYSTEM_INITPROPERTIES,                         BASE_JAVA_SYSTEM_INITPROPERTIES);
+            addMetaOverridden(JAVA_SYSTEM_IDENTITYHASHCODE,                       ALGO_JAVA_SYSTEM_IDENTITYHASHCODE);
+            addMetaOverridden(JAVA_THREAD_CURRENTTHREAD,                          ALGO_JAVA_THREAD_CURRENTTHREAD);
+            addMetaOverridden(JAVA_THROWABLE_FILLINSTACKTRACE,                    ALGO_JAVA_THROWABLE_FILLINSTACKTRACE);
+            addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEDEPTH,                  ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH);
+            addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEELEMENT,                ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT);
+            addMetaOverridden(SUN_REFLECTION_GETCALLERCLASS,                      ALGO_SUN_REFLECTION_GETCALLERCLASS);
+            addBaseOverridden(SUN_UNSAFE_ADDRESSSIZE,                             BASE_SUN_UNSAFE_ADDRESSSIZE);
+            addBaseOverridden(SUN_UNSAFE_ARRAYBASEOFFSET,                         BASE_SUN_UNSAFE_ARRAYBASEOFFSET);
+            addBaseOverridden(SUN_UNSAFE_ARRAYINDEXSCALE,                         BASE_SUN_UNSAFE_ARRAYINDEXSCALE);
+            addMetaOverridden(SUN_UNSAFE_COMPAREANDSWAPINT,                       ALGO_SUN_UNSAFE_COMPAREANDSWAPINT);
+            addMetaOverridden(SUN_UNSAFE_COMPAREANDSWAPOBJECT,                    ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT);
+            addMetaOverridden(SUN_UNSAFE_GETINTVOLATILE,                          ALGO_SUN_UNSAFE_GETINTVOLATILE);
+            addMetaOverridden(SUN_UNSAFE_OBJECTFIELDOFFSET,                       ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET);
 
             //jbse.meta.Analysis methods
             addMetaOverridden(JBSE_ANALYSIS_ANY,                       ALGO_JBSE_ANALYSIS_ANY);
@@ -575,5 +588,21 @@ public final class ExecutionContext {
         final Comparator<R> comparator = this.comparators.get(superclassDecisionAlternatives);
         final TreeSet<R> retVal = new TreeSet<>(comparator);
         return retVal;
+    }
+    
+    public void setMainThreadGroup(ReferenceConcrete mainThreadGroup) {
+        this.mainThreadGroup = mainThreadGroup;
+    }
+    
+    public ReferenceConcrete getMainThreadGroup() {
+        return this.mainThreadGroup;
+    }
+    
+    public void setMainThread(ReferenceConcrete mainThread) {
+        this.mainThread = mainThread;
+    }
+    
+    public ReferenceConcrete getMainThread() {
+        return this.mainThread;
     }
 }
