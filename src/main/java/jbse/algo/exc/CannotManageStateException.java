@@ -8,29 +8,29 @@ package jbse.algo.exc;
  */
 public abstract class CannotManageStateException extends Exception {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 48445177324954673L;
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 48445177324954673L;
 
-	public CannotManageStateException(String param) {
-		super(param);
-	}
+    public CannotManageStateException(String param) {
+        super(param);
+    }
 
-	public CannotManageStateException() {
-		super();
-	}
-	
-	public CannotManageStateException(Throwable e) {
-		super(e);
-	}
+    public CannotManageStateException() {
+        super();
+    }
+
+    public CannotManageStateException(Throwable e) {
+        super(e);
+    }
 
     public CannotManageStateException(String message, Throwable cause) {
         super(message, cause);
     }
 
     public CannotManageStateException(String message, Throwable cause,
-            boolean enableSuppression, boolean writableStackTrace) {
+                                      boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }

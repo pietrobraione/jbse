@@ -20,66 +20,66 @@ import jbse.val.ReferenceSymbolic;
  *
  */
 public class StateFormatterGraphviz implements Formatter {
-	private static final String nullStyle = "[shape=invtriangle,label=\"null\",regular=true]";
+    private static final String nullStyle = "[shape=invtriangle,label=\"null\",regular=true]";
 
-	private int nextFreshNode;
-	private boolean hasNull;
-	private String currentNodePrefix;
-	private String currentNodeName;
-	private String currentNode;
-	private String nullNodeName;
-	private String nodes;
-	private String edges;
+    private int nextFreshNode;
+    private boolean hasNull;
+    private String currentNodePrefix;
+    private String currentNodeName;
+    private String currentNode;
+    private String nullNodeName;
+    private String nodes;
+    private String edges;
 
-	protected String output = "";
-	
-	public StateFormatterGraphviz() { }
+    protected String output = "";
 
-	@Override
-	public void formatState(State s) {
-		this.output = "";
-		this.output += "digraph \"" + s.getIdentifier() + "[" + s.getSequenceNumber() + "]\"" + " { ";
-		this.output += this.formatHeap(s);
-		//this.formatOutput += this.formatStaticMethodArea(s);
-		this.output += "}\n";
-	}
-	
-	@Override
-	public final String emit() {
-	    return this.output;
-	}
+    public StateFormatterGraphviz() { }
 
-	@Override
-	public final void cleanup() {
-		this.output = "";
-	}
+    @Override
+    public void formatState(State s) {
+        this.output = "";
+        this.output += "digraph \"" + s.getIdentifier() + "[" + s.getSequenceNumber() + "]\"" + " { ";
+        this.output += this.formatHeap(s);
+        //this.formatOutput += this.formatStaticMethodArea(s);
+        this.output += "}\n";
+    }
 
-	private String formatHeap(State s) {
-		final Map<Long, Objekt> h = s.getHeap();
-		String retVal = ""; //= "subgraph cluster_heap { label=\"heap\" labeljust=l ";
-		this.currentNodePrefix = "H";
-		this.nodes = "";
-		this.edges = "";
-		this.nextFreshNode = 0;
-		
-		for (Map.Entry<Long, Objekt> e : h.entrySet()) {
-			this.hasNull = false;
-			this.nullNodeName = "";
-			this.currentNodeName = this.currentNodePrefix + e.getKey(); 
-			this.currentNode = this.currentNodeName + "[shape=box,label=\"" + e.getKey() + ":";
-			this.currentNode += e.getValue().getType();
-			this.formatObject(s, e.getValue());
-			this.currentNode += "\"]";
-			this.nodes += currentNode;
-		}
-		if (this.nodes.equals("")) {
-			this.nodes += this.currentNodePrefix + "H[style=invis]"; //to force visualization of subgraph without nodes
-		}
-		retVal += this.nodes + this.edges; //+ "}";
-		return retVal;
-	}
+    @Override
+    public final String emit() {
+        return this.output;
+    }
 
-	/*
+    @Override
+    public final void cleanup() {
+        this.output = "";
+    }
+
+    private String formatHeap(State s) {
+        final Map<Long, Objekt> h = s.getHeap();
+        String retVal = ""; //= "subgraph cluster_heap { label=\"heap\" labeljust=l ";
+        this.currentNodePrefix = "H";
+        this.nodes = "";
+        this.edges = "";
+        this.nextFreshNode = 0;
+
+        for (Map.Entry<Long, Objekt> e : h.entrySet()) {
+            this.hasNull = false;
+            this.nullNodeName = "";
+            this.currentNodeName = this.currentNodePrefix + e.getKey(); 
+            this.currentNode = this.currentNodeName + "[shape=box,label=\"" + e.getKey() + ":";
+            this.currentNode += e.getValue().getType();
+            this.formatObject(s, e.getValue());
+            this.currentNode += "\"]";
+            this.nodes += currentNode;
+        }
+        if (this.nodes.equals("")) {
+            this.nodes += this.currentNodePrefix + "H[style=invis]"; //to force visualization of subgraph without nodes
+        }
+        retVal += this.nodes + this.edges; //+ "}";
+        return retVal;
+    }
+
+    /*
 	private String formatStaticMethodArea(State s) {
 		final Map<String, Klass> a = s.getStaticMethodArea();
 		String retVal = "subgraph cluster_staticstore { label=\"static store\" labeljust=l ";
@@ -102,56 +102,56 @@ public class StateFormatterGraphviz implements Formatter {
 		retVal += this.nodes + this.edges + "}";
 		return retVal;
 	}*/
-	
-	private String formatObject(State s, Objekt o) {
-		if (o instanceof Instance || o instanceof Klass) {
-			for (Signature sig : o.getStoredFieldSignatures()) {
-				if (Type.isArray(sig.getDescriptor()) ||
-					Type.isReference(sig.getDescriptor())) {
-					Reference r = (Reference) o.getFieldValue(sig);
-					ReferenceSymbolic sr = null;
-					if (r instanceof ReferenceSymbolic) {
-						sr = (ReferenceSymbolic) r;
-					}
-					if (s.isNull(r)) {
-						if (!this.hasNull) { 
-							this.hasNull = true;
-							this.nullNodeName = this.currentNodePrefix + "N" + this.nextFreshNode; 
-							this.nodes += this.nullNodeName + nullStyle;
-							this.nextFreshNode++;
-						}
-						edges += currentNodeName + "->" + nullNodeName;  
-					} else if (sr == null) {
-						edges += currentNodeName + "->" + "H" + ((ReferenceConcrete) r).getHeapPosition();
-					} else if (s.resolved(sr)) {
-						edges += currentNodeName + "->" + "H" + s.getResolution(sr);
-					} else {
-						String dummyNodeName = this.currentNodePrefix + "I" + this.nextFreshNode;
-						nodes += dummyNodeName + "[label=\"?\" style=invis]";
-						edges += this.currentNodeName + "->" + dummyNodeName;
-						this.nextFreshNode++;
-					}
-					this.edges += "[label=\"" + sig.getName(); 
-					if (sr != null) { 
-						this.edges += " " + sr.getValue();
-					}
-					this.edges += "\"]";
-				} else if (sig.getDescriptor().charAt(0) == Type.NULLREF) {
-					if (!this.hasNull) { 
-						this.hasNull = true;
-						this.nullNodeName = this.currentNodePrefix + "N" + this.nextFreshNode; 
-						this.nodes += this.nullNodeName + nullStyle;
-						this.nextFreshNode++;
-					}
-					this.edges += this.currentNodeName + "->" + this.nullNodeName;
-					this.edges += "[label=\"" + sig.getName() + "\"]";
-				/*} else {
+
+    private String formatObject(State s, Objekt o) {
+        if (o instanceof Instance || o instanceof Klass) {
+            for (Signature sig : o.getStoredFieldSignatures()) {
+                if (Type.isArray(sig.getDescriptor()) ||
+                Type.isReference(sig.getDescriptor())) {
+                    Reference r = (Reference) o.getFieldValue(sig);
+                    ReferenceSymbolic sr = null;
+                    if (r instanceof ReferenceSymbolic) {
+                        sr = (ReferenceSymbolic) r;
+                    }
+                    if (s.isNull(r)) {
+                        if (!this.hasNull) { 
+                            this.hasNull = true;
+                            this.nullNodeName = this.currentNodePrefix + "N" + this.nextFreshNode; 
+                            this.nodes += this.nullNodeName + nullStyle;
+                            this.nextFreshNode++;
+                        }
+                        edges += currentNodeName + "->" + nullNodeName;  
+                    } else if (sr == null) {
+                        edges += currentNodeName + "->" + "H" + ((ReferenceConcrete) r).getHeapPosition();
+                    } else if (s.resolved(sr)) {
+                        edges += currentNodeName + "->" + "H" + s.getResolution(sr);
+                    } else {
+                        String dummyNodeName = this.currentNodePrefix + "I" + this.nextFreshNode;
+                        nodes += dummyNodeName + "[label=\"?\" style=invis]";
+                        edges += this.currentNodeName + "->" + dummyNodeName;
+                        this.nextFreshNode++;
+                    }
+                    this.edges += "[label=\"" + sig.getName(); 
+                    if (sr != null) { 
+                        this.edges += " " + sr.getValue();
+                    }
+                    this.edges += "\"]";
+                } else if (sig.getDescriptor().charAt(0) == Type.NULLREF) {
+                    if (!this.hasNull) { 
+                        this.hasNull = true;
+                        this.nullNodeName = this.currentNodePrefix + "N" + this.nextFreshNode; 
+                        this.nodes += this.nullNodeName + nullStyle;
+                        this.nextFreshNode++;
+                    }
+                    this.edges += this.currentNodeName + "->" + this.nullNodeName;
+                    this.edges += "[label=\"" + sig.getName() + "\"]";
+                    /*} else {
 					this.currentNode += "\\n" + sig.getName() + " = " + o.getFieldValue(sig);*/
-				}
-			}
-		} else { //is an array
-			//TODO
-		}
-		return ""; //TODO
-	}
+                }
+            }
+        } else { //is an array
+            //TODO
+        }
+        return ""; //TODO
+    }
 }

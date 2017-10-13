@@ -24,12 +24,12 @@ import jbse.val.Reference;
  */
 public final class Algo_JAVA_STRING_INTERN extends Algo_INVOKEMETA_Nonbranching {
     private String valueString; //set by cookMore
-    
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 1;
     }
-    
+
     @Override
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, DecisionException, 
@@ -51,7 +51,7 @@ public final class Algo_JAVA_STRING_INTERN extends Algo_INVOKEMETA_Nonbranching 
             exitFromAlgorithm();
         }
     }
-    
+
     @Override
     protected void update(State state) throws ThreadStackEmptyException {
         state.pushOperand(state.referenceToStringLiteral(this.valueString));

@@ -90,11 +90,11 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
                 throwVerifyError(state);
                 exitFromAlgorithm();
             }
-            
+
             //looks for a base-level or meta-level overriding implementation, 
             //and in case considers it instead
             findOverridingImpl(state);
-            
+
             //if the method has no implementation, raises AbstractMethodError
             try {
                 if (this.classFileMethodImpl == null || this.classFileMethodImpl.isMethodAbstract(this.methodSignatureImpl)) {

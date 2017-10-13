@@ -18,7 +18,6 @@ import static jbse.val.Operator.NE;
 import jbse.bc.Dispatcher;
 import jbse.common.exc.UnexpectedInternalException;
 
-
 /**
  * A {@link Dispatcher} returning the {@link Algorithm}s to process 
  * every bytecode of the symbolic execution. 
@@ -145,9 +144,9 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm<?, ?
     private final Algo_XUSHR          algo_XUSHR           = new Algo_XUSHR();
     private final Algo_XXOR           algo_XXOR            = new Algo_XXOR();
 
-	public DispatcherBytecodeAlgorithm() {
-		//implemented bytecodes (sometimes with limited support)
-		setCase(OP_NOP,             () -> this.algo_NOP);
+    public DispatcherBytecodeAlgorithm() {
+        //implemented bytecodes (sometimes with limited support)
+        setCase(OP_NOP,             () -> this.algo_NOP);
         setCase(OP_ACONST_NULL,     () -> this.algo_ACONST_NULL);
         setCase(OP_ICONST_M1,       () -> this.algo_ICONST_M1);
         setCase(OP_ICONST_0,        () -> this.algo_ICONST_0);
@@ -168,8 +167,8 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm<?, ?
         setCase(OP_LDC,             () -> this.algo_LDC);
         setCase(OP_LDC_W,           () -> this.algo_LDC_W);
         setCase(OP_LDC2_W,          () -> this.algo_LDC2_W);
-		setCase(OP_ILOAD,           () -> this.algo_XLOAD);
-		setCase(OP_LLOAD,           () -> this.algo_XLOAD);
+        setCase(OP_ILOAD,           () -> this.algo_XLOAD);
+        setCase(OP_LLOAD,           () -> this.algo_XLOAD);
         setCase(OP_FLOAD,           () -> this.algo_XLOAD);
         setCase(OP_DLOAD,           () -> this.algo_XLOAD);
         setCase(OP_ALOAD,           () -> this.algo_XLOAD);
@@ -181,18 +180,18 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm<?, ?
         setCase(OP_LLOAD_1,         () -> this.algo_XLOAD_1);
         setCase(OP_LLOAD_2,         () -> this.algo_XLOAD_2);
         setCase(OP_LLOAD_3,         () -> this.algo_XLOAD_3);
-		setCase(OP_FLOAD_0,         () -> this.algo_XLOAD_0);
+        setCase(OP_FLOAD_0,         () -> this.algo_XLOAD_0);
         setCase(OP_FLOAD_1,         () -> this.algo_XLOAD_1);
         setCase(OP_FLOAD_2,         () -> this.algo_XLOAD_2);
         setCase(OP_FLOAD_3,         () -> this.algo_XLOAD_3);
         setCase(OP_DLOAD_0,         () -> this.algo_XLOAD_0);
-		setCase(OP_DLOAD_1,         () -> this.algo_XLOAD_1);
-		setCase(OP_DLOAD_2,         () -> this.algo_XLOAD_2);
+        setCase(OP_DLOAD_1,         () -> this.algo_XLOAD_1);
+        setCase(OP_DLOAD_2,         () -> this.algo_XLOAD_2);
         setCase(OP_DLOAD_3,         () -> this.algo_XLOAD_3);
         setCase(OP_ALOAD_0,         () -> this.algo_XLOAD_0);
         setCase(OP_ALOAD_1,         () -> this.algo_XLOAD_1);
         setCase(OP_ALOAD_2,         () -> this.algo_XLOAD_2);
-		setCase(OP_ALOAD_3,         () -> this.algo_XLOAD_3);
+        setCase(OP_ALOAD_3,         () -> this.algo_XLOAD_3);
         setCase(OP_IALOAD,          () -> this.algo_XALOAD);
         setCase(OP_LALOAD,          () -> this.algo_XALOAD);
         setCase(OP_FALOAD,          () -> this.algo_XALOAD);
@@ -204,13 +203,13 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm<?, ?
         setCase(OP_ISTORE,          () -> this.algo_XSTORE);
         setCase(OP_LSTORE,          () -> this.algo_XSTORE);
         setCase(OP_FSTORE,          () -> this.algo_XSTORE);
-		setCase(OP_DSTORE,          () -> this.algo_XSTORE);
+        setCase(OP_DSTORE,          () -> this.algo_XSTORE);
         setCase(OP_ASTORE,          () -> this.algo_XSTORE);
         setCase(OP_ISTORE_0,        () -> this.algo_XSTORE_0);
         setCase(OP_ISTORE_1,        () -> this.algo_XSTORE_1);
         setCase(OP_ISTORE_2,        () -> this.algo_XSTORE_2);
         setCase(OP_ISTORE_3,        () -> this.algo_XSTORE_3);
-		setCase(OP_LSTORE_0,        () -> this.algo_XSTORE_0);
+        setCase(OP_LSTORE_0,        () -> this.algo_XSTORE_0);
         setCase(OP_LSTORE_1,        () -> this.algo_XSTORE_1);
         setCase(OP_LSTORE_2,        () -> this.algo_XSTORE_2);
         setCase(OP_LSTORE_3,        () -> this.algo_XSTORE_3);
@@ -223,9 +222,9 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm<?, ?
         setCase(OP_DSTORE_2,        () -> this.algo_XSTORE_2);
         setCase(OP_DSTORE_3,        () -> this.algo_XSTORE_3);
         setCase(OP_ASTORE_0,        () -> this.algo_XSTORE_0);
-		setCase(OP_ASTORE_1,        () -> this.algo_XSTORE_1);
-		setCase(OP_ASTORE_2,        () -> this.algo_XSTORE_2);
-		setCase(OP_ASTORE_3,        () -> this.algo_XSTORE_3);
+        setCase(OP_ASTORE_1,        () -> this.algo_XSTORE_1);
+        setCase(OP_ASTORE_2,        () -> this.algo_XSTORE_2);
+        setCase(OP_ASTORE_3,        () -> this.algo_XSTORE_3);
         setCase(OP_IASTORE,         () -> this.algo_XASTORE);
         setCase(OP_LASTORE,         () -> this.algo_XASTORE);
         setCase(OP_FASTORE,         () -> this.algo_XASTORE);
@@ -246,84 +245,84 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm<?, ?
         setCase(OP_IADD,            () -> this.algo_XADD);
         setCase(OP_LADD,            () -> this.algo_XADD);
         setCase(OP_FADD,            () -> this.algo_XADD);
-		setCase(OP_DADD,            () -> this.algo_XADD);
+        setCase(OP_DADD,            () -> this.algo_XADD);
         setCase(OP_ISUB,            () -> this.algo_XSUB);
         setCase(OP_LSUB,            () -> this.algo_XSUB);
         setCase(OP_FSUB,            () -> this.algo_XSUB);
-		setCase(OP_DSUB,            () -> this.algo_XSUB);
+        setCase(OP_DSUB,            () -> this.algo_XSUB);
         setCase(OP_IMUL,            () -> this.algo_XMUL);
         setCase(OP_LMUL,            () -> this.algo_XMUL);
-		setCase(OP_FMUL,            () -> this.algo_XMUL);
+        setCase(OP_FMUL,            () -> this.algo_XMUL);
         setCase(OP_DMUL,            () -> this.algo_XMUL);
         setCase(OP_IDIV,            () -> this.algo_XDIV);
         setCase(OP_LDIV,            () -> this.algo_XDIV);
-		setCase(OP_FDIV,            () -> this.algo_XDIV);
+        setCase(OP_FDIV,            () -> this.algo_XDIV);
         setCase(OP_DDIV,            () -> this.algo_XDIV);
         setCase(OP_IREM,            () -> this.algo_XREM);
         setCase(OP_LREM,            () -> this.algo_XREM);
         setCase(OP_FREM,            () -> this.algo_XREM);
-		setCase(OP_DREM,            () -> this.algo_XREM);
-		setCase(OP_INEG,            () -> this.algo_XNEG);
+        setCase(OP_DREM,            () -> this.algo_XREM);
+        setCase(OP_INEG,            () -> this.algo_XNEG);
         setCase(OP_LNEG,            () -> this.algo_XNEG);
         setCase(OP_FNEG,            () -> this.algo_XNEG);
-		setCase(OP_DNEG,            () -> this.algo_XNEG);
+        setCase(OP_DNEG,            () -> this.algo_XNEG);
         setCase(OP_ISHL,            () -> this.algo_XSHL);
-		setCase(OP_LSHL,            () -> this.algo_XSHL);
-		setCase(OP_ISHR,            () -> this.algo_XSHR);
-		setCase(OP_LSHR,            () -> this.algo_XSHR);
-		setCase(OP_IUSHR,           () -> this.algo_XUSHR);
-		setCase(OP_LUSHR,           () -> this.algo_XUSHR);
+        setCase(OP_LSHL,            () -> this.algo_XSHL);
+        setCase(OP_ISHR,            () -> this.algo_XSHR);
+        setCase(OP_LSHR,            () -> this.algo_XSHR);
+        setCase(OP_IUSHR,           () -> this.algo_XUSHR);
+        setCase(OP_LUSHR,           () -> this.algo_XUSHR);
         setCase(OP_IAND,            () -> this.algo_XAND);
         setCase(OP_LAND,            () -> this.algo_XAND);
-		setCase(OP_IOR,             () -> this.algo_XOR);
-		setCase(OP_LOR,             () -> this.algo_XOR);
-		setCase(OP_IXOR,            () -> this.algo_XXOR);
-		setCase(OP_LXOR,            () -> this.algo_XXOR);
-		setCase(OP_IINC,            () -> this.algo_IINC);
+        setCase(OP_IOR,             () -> this.algo_XOR);
+        setCase(OP_LOR,             () -> this.algo_XOR);
+        setCase(OP_IXOR,            () -> this.algo_XXOR);
+        setCase(OP_LXOR,            () -> this.algo_XXOR);
+        setCase(OP_IINC,            () -> this.algo_IINC);
         setCase(OP_I2L,             () -> this.algo_I2L);
         setCase(OP_I2F,             () -> this.algo_I2F);
-		setCase(OP_I2D,             () -> this.algo_I2D);
+        setCase(OP_I2D,             () -> this.algo_I2D);
         setCase(OP_L2I,             () -> this.algo_L2I);
-		setCase(OP_L2F,             () -> this.algo_L2F);
+        setCase(OP_L2F,             () -> this.algo_L2F);
         setCase(OP_L2D,             () -> this.algo_L2D);
         setCase(OP_F2I,             () -> this.algo_F2I);
         setCase(OP_F2L,             () -> this.algo_F2L);
-		setCase(OP_F2D,             () -> this.algo_F2D);
+        setCase(OP_F2D,             () -> this.algo_F2D);
         setCase(OP_D2I,             () -> this.algo_D2I);
         setCase(OP_D2L,             () -> this.algo_D2L);
-		setCase(OP_D2F,             () -> this.algo_D2F);
-		setCase(OP_I2B,             () -> this.algo_I2B);
-		setCase(OP_I2C,             () -> this.algo_I2C);
-		setCase(OP_I2S,             () -> this.algo_I2S);
+        setCase(OP_D2F,             () -> this.algo_D2F);
+        setCase(OP_I2B,             () -> this.algo_I2B);
+        setCase(OP_I2C,             () -> this.algo_I2C);
+        setCase(OP_I2S,             () -> this.algo_I2S);
         setCase(OP_LCMP,            () -> this.algo_XCMPY);
         setCase(OP_FCMPL,           () -> this.algo_XCMPY);
         setCase(OP_FCMPG,           () -> this.algo_XCMPY);
         setCase(OP_DCMPL,           () -> this.algo_XCMPY);
         setCase(OP_DCMPG,           () -> this.algo_XCMPY);
-		setCase(OP_IFEQ,            () -> this.algo_IFEQ);
+        setCase(OP_IFEQ,            () -> this.algo_IFEQ);
         setCase(OP_IFNE,            () -> this.algo_IFNE);
         setCase(OP_IFLT,            () -> this.algo_IFLT);
-		setCase(OP_IFGE,            () -> this.algo_IFGE);
-		setCase(OP_IFGT,            () -> this.algo_IFGT);
+        setCase(OP_IFGE,            () -> this.algo_IFGE);
+        setCase(OP_IFGT,            () -> this.algo_IFGT);
         setCase(OP_IFLE,            () -> this.algo_IFLE);
-		setCase(OP_IF_ICMPEQ,       () -> this.algo_IF_ICMPEQ);
+        setCase(OP_IF_ICMPEQ,       () -> this.algo_IF_ICMPEQ);
         setCase(OP_IF_ICMPNE,       () -> this.algo_IF_ICMPNE);
         setCase(OP_IF_ICMPLT,       () -> this.algo_IF_ICMPLT);
-		setCase(OP_IF_ICMPGE,       () -> this.algo_IF_ICMPGE);
-		setCase(OP_IF_ICMPGT,       () -> this.algo_IF_ICMPGT);
-		setCase(OP_IF_ICMPLE,       () -> this.algo_IF_ICMPLE);
-		setCase(OP_IF_ACMPEQ,       () -> this.algo_IF_ACMPEQ);
-		setCase(OP_IF_ACMPNE,       () -> this.algo_IF_ACMPNE);
-		setCase(OP_GOTO,            () -> this.algo_GOTO);
-		setCase(OP_JSR,             () -> this.algo_JSR);
-		setCase(OP_RET,             () -> this.algo_RET);
+        setCase(OP_IF_ICMPGE,       () -> this.algo_IF_ICMPGE);
+        setCase(OP_IF_ICMPGT,       () -> this.algo_IF_ICMPGT);
+        setCase(OP_IF_ICMPLE,       () -> this.algo_IF_ICMPLE);
+        setCase(OP_IF_ACMPEQ,       () -> this.algo_IF_ACMPEQ);
+        setCase(OP_IF_ACMPNE,       () -> this.algo_IF_ACMPNE);
+        setCase(OP_GOTO,            () -> this.algo_GOTO);
+        setCase(OP_JSR,             () -> this.algo_JSR);
+        setCase(OP_RET,             () -> this.algo_RET);
         setCase(OP_TABLESWITCH,     () -> this.algo_TABLESWITCH);
         setCase(OP_LOOKUPSWITCH,    () -> this.algo_LOOKUPSWITCH);
         setCase(OP_IRETURN,         () -> this.algo_XRETURN);
         setCase(OP_LRETURN,         () -> this.algo_XRETURN);
         setCase(OP_FRETURN,         () -> this.algo_XRETURN);
         setCase(OP_DRETURN,         () -> this.algo_XRETURN);
-		setCase(OP_ARETURN,         () -> this.algo_XRETURN);
+        setCase(OP_ARETURN,         () -> this.algo_XRETURN);
         setCase(OP_RETURN,          () -> this.algo_RETURN);
         setCase(OP_GETSTATIC,       () -> this.algo_GETSTATIC);
         setCase(OP_PUTSTATIC,       () -> this.algo_PUTSTATIC);
@@ -343,27 +342,27 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm<?, ?
         setCase(OP_INSTANCEOF,      () -> this.algo_INSTANCEOF);
         setCase(OP_MONITORENTER,    () -> this.algo_MONITORX);
         setCase(OP_MONITOREXIT,     () -> this.algo_MONITORX);
-		setCase(OP_WIDE,            () -> this.algo_WIDE);
+        setCase(OP_WIDE,            () -> this.algo_WIDE);
         setCase(OP_MULTIANEWARRAY,  () -> this.algo_MULTIANEWARRAY);
         setCase(OP_IFNULL,          () -> this.algo_IFNULL);
         setCase(OP_IFNONNULL,       () -> this.algo_IFNONNULL);
         setCase(OP_GOTO_W,          () -> this.algo_GOTO_W);
         setCase(OP_JSR_W,           () -> this.algo_JSR_W);
         setCase(OP_BREAKPOINT,      () -> this.algo_NOP);
-		setCase(OP_IMPDEP1,         () -> this.algo_NOP);
-		setCase(OP_IMPDEP2,         () -> this.algo_NOP);
-	
+        setCase(OP_IMPDEP1,         () -> this.algo_NOP);
+        setCase(OP_IMPDEP2,         () -> this.algo_NOP);
+
         //the remaining bytecodes should never appear in a classfile
         setDefault(() -> this.algo_NOTALLOWED);
     }
-	
+
     public Algo_INIT select() {
-		return this.algo_INIT;
+        return this.algo_INIT;
     }
-		
-	@Override
-	public Algorithm<?, ?, ?, ?, ?> select(Byte bytecode) {
-		final Algorithm<?, ?, ?, ?, ?> retVal;
+
+    @Override
+    public Algorithm<?, ?, ?, ?, ?> select(Byte bytecode) {
+        final Algorithm<?, ?, ?, ?, ?> retVal;
         try {
             retVal = super.select(bytecode);
         } catch (RuntimeException e) {
@@ -372,6 +371,6 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm<?, ?
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-		return retVal;
-	}
+        return retVal;
+    }
 }

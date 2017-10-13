@@ -100,7 +100,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             failExecution(e);
         }
     }
-    
+
     protected final void findImpl(State state) 
     throws BadClassFileException, IncompatibleClassFileException, 
     InterruptException {
@@ -117,11 +117,14 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             } else {
                 receiverClassName = null;
             }
-            this.classFileMethodImpl = 
-                lookupClassfileMethodImpl(state, this.methodSignatureResolved, this.isStatic, this.isSpecial, receiverClassName);
+            this.classFileMethodImpl = lookupClassfileMethodImpl(state, 
+                                                                 this.methodSignatureResolved, 
+                                                                 this.isStatic, 
+                                                                 this.isSpecial, 
+                                                                 receiverClassName);
             this.methodSignatureImpl = new Signature(this.classFileMethodImpl.getClassName(), 
-                    this.methodSignatureResolved.getDescriptor(), 
-                    this.methodSignatureResolved.getName());
+                                                     this.methodSignatureResolved.getDescriptor(), 
+                                                     this.methodSignatureResolved.getName());
             this.isNative = this.classFileMethodImpl.isMethodNative(this.methodSignatureResolved);
         } catch (MethodNotFoundException e) {
             this.classFileMethodImpl = null;
@@ -132,7 +135,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             failExecution(e);
         }
     }
-    
+
     protected final void findOverridingImpl(State state)
     throws BaseUnsupportedException, MetaUnsupportedException, InterruptException {
         if (this.methodSignatureImpl == null) {
@@ -154,8 +157,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         } else {
             try {
                 if (this.ctx.dispatcherMeta.isMeta(state.getClassHierarchy(), this.methodSignatureImpl)) {
-                    final Algo_INVOKEMETA<?, ?, ?, ?> algo = 
-                        this.ctx.dispatcherMeta.select(this.methodSignatureImpl);
+                    final Algo_INVOKEMETA<?, ?, ?, ?> algo = this.ctx.dispatcherMeta.select(this.methodSignatureImpl);
                     algo.setFeatures(this.isInterface, this.isSpecial, this.isStatic);
                     continueWith(algo);
                 }
@@ -165,7 +167,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             }
         }
     }
-    
+
     private void checkOverridingMethodFits(State state, Signature methodSignatureOverriding, ClassFile classFileMethodOverriding) 
     throws BaseUnsupportedException, BadClassFileException, MethodNotFoundException {
         final ClassFile classFileMethodResolved = state.getClassHierarchy().getClassFile(this.methodSignatureResolved.getClassName());
@@ -189,7 +191,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         }
         throw new BaseUnsupportedException("The overriding method " + methodSignatureOverriding + " has signature incompatible with overridden " + this.methodSignatureImpl);
     }
-    
+
     private static String descriptorAsStatic(Signature sig) {
         return "(" + REFERENCE + sig.getClassName() + TYPEEND + sig.getDescriptor().substring(1);
     }

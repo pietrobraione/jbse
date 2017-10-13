@@ -200,119 +200,118 @@ import jbse.val.Calculator;
  * @author Pietro Braione
  */
 public final class ExecutionContext {
-	/** The {@link Classpath}. Used during initialization. */
-	public final Classpath classpath;
+    /** The {@link Classpath}. Used during initialization. */
+    public final Classpath classpath;
 
-	/** The {@link Signature} of the root (initial) method. Used during initialization. */
-	public final Signature rootMethodSignature;
+    /** The {@link Signature} of the root (initial) method. Used during initialization. */
+    public final Signature rootMethodSignature;
 
-	/** The {@link Calculator}. Used during initialization. */
-	public final Calculator calc;
+    /** The {@link Calculator}. Used during initialization. */
+    public final Calculator calc;
 
-	/** The class for the symbolic execution's {@link ClassFileFactory} 
-	 * (injected dependency). Used during initialization.
-	 */
-	public final Class<? extends ClassFileFactory> classFileFactoryClass;
+    /** The class for the symbolic execution's {@link ClassFileFactory} 
+     * (injected dependency). Used during initialization.
+     */
+    public final Class<? extends ClassFileFactory> classFileFactoryClass;
 
-	/** 
-	 * Maps class names to the names of the subclasses that may be 
-	 * used to expand references. Used during initialization.
-	 */
-	public final Map<String, Set<String>> expansionBackdoor;
+    /** 
+     * Maps class names to the names of the subclasses that may be 
+     * used to expand references. Used during initialization.
+     */
+    public final Map<String, Set<String>> expansionBackdoor;
 
-	/** 
-	 * The initial {@link State} of symbolic execution. It is a prototype 
-	 * that will be cloned by its getter. 
-	 */
-	private State initialState;
+    /** 
+     * The initial {@link State} of symbolic execution. It is a prototype 
+     * that will be cloned by its getter. 
+     */
+    private State initialState;
 
-	/** The symbolic execution's {@link DecisionAlternativeComparators}. */
-	private final DecisionAlternativeComparators comparators;
+    /** The symbolic execution's {@link DecisionAlternativeComparators}. */
+    private final DecisionAlternativeComparators comparators;
 
-	/** The {@link DispatcherBytecodeAlgorithm}. */
-	public final DispatcherBytecodeAlgorithm dispatcher = new DispatcherBytecodeAlgorithm();
+    /** The {@link DispatcherBytecodeAlgorithm}. */
+    public final DispatcherBytecodeAlgorithm dispatcher = new DispatcherBytecodeAlgorithm();
 
-	/** 
-	 * The {@link DispatcherMeta} for handling methods with 
-	 * meta-level implementation. 
-	 */
-	public final DispatcherMeta dispatcherMeta = new DispatcherMeta();
-	
-	/** Maps method signatures to their base-level overrides. */
-	public final HashMap<Signature, Signature> baseOverrides = new HashMap<>();
+    /** 
+     * The {@link DispatcherMeta} for handling methods with 
+     * meta-level implementation. 
+     */
+    public final DispatcherMeta dispatcherMeta = new DispatcherMeta();
 
-	/** The symbolic execution's {@link DecisionProcedureAlgorithms}. */
-	public final DecisionProcedureAlgorithms decisionProcedure;
+    /** Maps method signatures to their base-level overrides. */
+    public final HashMap<Signature, Signature> baseOverrides = new HashMap<>();
 
-	/** The symbolic execution's {@link StateTree}. */
-	public final StateTree stateTree;
+    /** The symbolic execution's {@link DecisionProcedureAlgorithms}. */
+    public final DecisionProcedureAlgorithms decisionProcedure;
 
-	/** The symbolic execution's {@link NativeInvoker}. */
-	public final NativeInvoker nativeInvoker;
+    /** The symbolic execution's {@link StateTree}. */
+    public final StateTree stateTree;
 
-	/** 
-	 * The {@link TriggerManager} that handles reference resolution events
-	 * and executes triggers. 
-	 */
-	public final TriggerManager triggerManager;
+    /** The symbolic execution's {@link NativeInvoker}. */
+    public final NativeInvoker nativeInvoker;
 
-	/**
-	 * Constructor.
-	 * 
-	 * @param the initial {@code State}, or {@code null} if no
-	 *        initial state. Warning: all the remaining parameters
-	 *        must be coherent with it, if not {@code null} (e.g., 
-	 *        {@code calc} must be the calculator used to create  
-	 *        {@code initialState}). It will not be modified, but
-	 *        it shall not be modified externally.
-	 * @param classpath a {@link Classpath} object, containing 
-	 *        information about the classpath of the symbolic execution.
-	 * @param rootMethodSignature the {@link Signature} of the root method
-	 *        of the symbolic execution.
-	 * @param calc a {@link Calculator}.
-	 * @param decisionProcedure a {@link DecisionProcedureAlgorithms}.
-	 * @param stateIdentificationMode a {@link StateIdentificationMode}.
-	 * @param breadthMode a {@link BreadthMode}.
-	 * @param classFileFactoryClass a {@link Class}{@code <? extends }{@link ClassFileFactory}{@code >}
-	 *        that will be instantiated by the engine to retrieve classfiles. It must 
-	 *        provide a parameterless public constructor.
-	 * @param expansionBackdoor a 
-	 *        {@link Map}{@code <}{@link String}{@code , }{@link Set}{@code <}{@link String}{@code >>}
-	 *        associating class names to sets of names of their subclasses. It 
-	 *        is used in place of the class hierarchy to perform reference expansion.
-	 * @param rulesTrigger a {@link TriggerRulesRepo}.
-	 * @param comparators a {@link DecisionAlternativeComparators} which
-	 *        will be used to establish the order of exploration
-	 *        for sibling branches.
-	 * @param nativeInvoker a {@link NativeInvoker} which will be used
-	 *        to execute native methods.
-	 */
-	public ExecutionContext(
-			State initialState,
-			Classpath classpath,
-			Signature rootMethodSignature,
-			Calculator calc, 
-			DecisionProcedureAlgorithms decisionProcedure,
-			StateIdentificationMode stateIdentificationMode,
-			BreadthMode breadthMode,
-			Class<? extends ClassFileFactory> classFileFactoryClass, 
-			Map<String, Set<String>> expansionBackdoor,
-			TriggerRulesRepo rulesTrigger,
-			DecisionAlternativeComparators comparators, 
-			NativeInvoker nativeInvoker) {
-		this.initialState = initialState;
-		this.classpath = classpath;
-		this.rootMethodSignature = rootMethodSignature;
-		this.calc = calc;
-		this.decisionProcedure = decisionProcedure;
-		this.stateTree = new StateTree(stateIdentificationMode, breadthMode);
-		this.classFileFactoryClass = classFileFactoryClass;
-		this.expansionBackdoor = new HashMap<>(expansionBackdoor);      //safety copy
-		this.triggerManager = new TriggerManager(rulesTrigger.clone()); //safety copy
-		this.comparators = comparators;
-		this.nativeInvoker = nativeInvoker;
-		
-	    //defaults
+    /** 
+     * The {@link TriggerManager} that handles reference resolution events
+     * and executes triggers. 
+     */
+    public final TriggerManager triggerManager;
+
+    /**
+     * Constructor.
+     * 
+     * @param the initial {@code State}, or {@code null} if no
+     *        initial state. Warning: all the remaining parameters
+     *        must be coherent with it, if not {@code null} (e.g., 
+     *        {@code calc} must be the calculator used to create  
+     *        {@code initialState}). It will not be modified, but
+     *        it shall not be modified externally.
+     * @param classpath a {@link Classpath} object, containing 
+     *        information about the classpath of the symbolic execution.
+     * @param rootMethodSignature the {@link Signature} of the root method
+     *        of the symbolic execution.
+     * @param calc a {@link Calculator}.
+     * @param decisionProcedure a {@link DecisionProcedureAlgorithms}.
+     * @param stateIdentificationMode a {@link StateIdentificationMode}.
+     * @param breadthMode a {@link BreadthMode}.
+     * @param classFileFactoryClass a {@link Class}{@code <? extends }{@link ClassFileFactory}{@code >}
+     *        that will be instantiated by the engine to retrieve classfiles. It must 
+     *        provide a parameterless public constructor.
+     * @param expansionBackdoor a 
+     *        {@link Map}{@code <}{@link String}{@code , }{@link Set}{@code <}{@link String}{@code >>}
+     *        associating class names to sets of names of their subclasses. It 
+     *        is used in place of the class hierarchy to perform reference expansion.
+     * @param rulesTrigger a {@link TriggerRulesRepo}.
+     * @param comparators a {@link DecisionAlternativeComparators} which
+     *        will be used to establish the order of exploration
+     *        for sibling branches.
+     * @param nativeInvoker a {@link NativeInvoker} which will be used
+     *        to execute native methods.
+     */
+    public ExecutionContext(State initialState,
+                            Classpath classpath,
+                            Signature rootMethodSignature,
+                            Calculator calc, 
+                            DecisionProcedureAlgorithms decisionProcedure,
+                            StateIdentificationMode stateIdentificationMode,
+                            BreadthMode breadthMode,
+                            Class<? extends ClassFileFactory> classFileFactoryClass, 
+                            Map<String, Set<String>> expansionBackdoor,
+                            TriggerRulesRepo rulesTrigger,
+                            DecisionAlternativeComparators comparators, 
+                            NativeInvoker nativeInvoker) {
+        this.initialState = initialState;
+        this.classpath = classpath;
+        this.rootMethodSignature = rootMethodSignature;
+        this.calc = calc;
+        this.decisionProcedure = decisionProcedure;
+        this.stateTree = new StateTree(stateIdentificationMode, breadthMode);
+        this.classFileFactoryClass = classFileFactoryClass;
+        this.expansionBackdoor = new HashMap<>(expansionBackdoor);      //safety copy
+        this.triggerManager = new TriggerManager(rulesTrigger.clone()); //safety copy
+        this.comparators = comparators;
+        this.nativeInvoker = nativeInvoker;
+
+        //defaults
         try {
             //JRE methods
             addBaseOverridden(JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION,   BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION);
@@ -359,114 +358,114 @@ public final class ExecutionContext {
         } catch (MetaUnsupportedException e) {
             throw new UnexpectedInternalException(e);
         }
-	}
+    }
 
-	/**
-	 * Sets the initial state. To be invoked whenever 
-	 * the engine parameters object provided through the 
-	 * constructor does not have an initial state.
-	 * 
-	 * @param initialState a {@link State}. The method
-	 *        stores in this execution contest a safety 
-	 *        copy of it.
-	 */
-	public void setInitialState(State initialState) {
-		this.initialState = initialState.clone();
-	}
+    /**
+     * Sets the initial state. To be invoked whenever 
+     * the engine parameters object provided through the 
+     * constructor does not have an initial state.
+     * 
+     * @param initialState a {@link State}. The method
+     *        stores in this execution contest a safety 
+     *        copy of it.
+     */
+    public void setInitialState(State initialState) {
+        this.initialState = initialState.clone();
+    }
 
-	/**
-	 * Returns the initial state.
-	 * 
-	 * @return a {@link State}, a clone of the initial state
-	 *         of the symbolic execution.
-	 */
-	public State getInitialState() {
-		return (this.initialState == null ? null : this.initialState.clone());
-	}
-	
-	/**
-	 * Allows to customize the behavior of the invocations to a method 
-	 * by specifying another method that implements it.
-	 * 
-	 * @param methodSignature the {@link Signature} of a method.
-	 * @param delegateMethodSignature the {@link Signature} of another method
-	 *        that will be executed in place of the method with signature
-	 *        {@code methodSignature}.
-	 */
-	public void addBaseOverridden(Signature methodSignature, Signature delegateMethodSignature) {
-		this.baseOverrides.put(methodSignature, delegateMethodSignature);
-	}
-	
-	/**
-	 * Determines whether a method has a base-level overriding implementation.
-	 * 
-	 * @param methodSignature the {@link Signature} of a method.
-	 * @return {@code true} iff an overriding base-level method for it was added
-	 *         by invoking {@link #addBaseOverridden(Signature, Signature)}.
-	 */
-	public boolean isMethodBaseLevelOverridden(Signature methodSignature) {
-		return this.baseOverrides.containsKey(methodSignature);
-	}
-	
-	/**
-	 * Returns the signature of a base-level override implementation 
-	 * of a method. 
-	 * 
-	 * @param methodSignature the {@link Signature} of a method.
-	 * @return  the {@link Signature} of the method that overrides
-	 *          the one with signature {@code methodSignature} and
-	 *          that was previously set by invoking {@link #addBaseOverridden(Signature, Signature)}..
-	 */
-	public Signature getBaseOverride(Signature methodSignature) {
-		return this.baseOverrides.get(methodSignature);
-	}
+    /**
+     * Returns the initial state.
+     * 
+     * @return a {@link State}, a clone of the initial state
+     *         of the symbolic execution.
+     */
+    public State getInitialState() {
+        return (this.initialState == null ? null : this.initialState.clone());
+    }
 
-	/**
-	 * Allows to customize the behavior of the invocations to a method 
-	 * by specifying an {@link Algorithm} that implements its semantics.
-	 * 
-	 * @param methodSignature the {@link Signature} of a method. 
-	 * @param metaDelegateClassName a class name as a {@link String}, 
-	 *        indicating a class (that must be in the meta-level classpath, 
-	 *        must have a default constructor, must implement {@link Algorithm})
-	 *        of an algorithm that implements at the meta-level the 
-	 *        semantics of the invocations to the method with signature 
-	 *        {@code methodSignature}. 
-	 * @throws MetaUnsupportedException if the class indicated in 
-	 *         {@code metaDelegateClassName} does not exist, or cannot be loaded 
-	 *         or instantiated for any reason (misses from the meta-level classpath, 
-	 *         has insufficient visibility, does not extend {@link Algorithm}...).
-	 */
-	public void addMetaOverridden(Signature methodSignature, String metaDelegateClassName) 
-	throws MetaUnsupportedException {
-		try {
-			@SuppressWarnings("unchecked")
-			final Class<? extends Algo_INVOKEMETA<?, ?, ?, ?>> metaDelegateClass = 
-				(Class<? extends Algo_INVOKEMETA<?, ?, ?, ?>>) 
-				ClassLoader.getSystemClassLoader().loadClass(metaDelegateClassName.replace('/', '.')).asSubclass(Algo_INVOKEMETA.class);
-			this.dispatcherMeta.loadAlgoMetaOverridden(methodSignature, metaDelegateClass);
-		} catch (ClassNotFoundException e) {
-			throw new MetaUnsupportedException("meta-level implementation class " + metaDelegateClassName + " not found");
-		} catch (ClassCastException e) {
-			throw new MetaUnsupportedException("meta-level implementation class " + metaDelegateClassName + " does not implement " + Algorithm.class);
-		}
-	}
+    /**
+     * Allows to customize the behavior of the invocations to a method 
+     * by specifying another method that implements it.
+     * 
+     * @param methodSignature the {@link Signature} of a method.
+     * @param delegateMethodSignature the {@link Signature} of another method
+     *        that will be executed in place of the method with signature
+     *        {@code methodSignature}.
+     */
+    public void addBaseOverridden(Signature methodSignature, Signature delegateMethodSignature) {
+        this.baseOverrides.put(methodSignature, delegateMethodSignature);
+    }
 
-	/**
-	 * Allows to customize the behavior of the invocations to a method 
-	 * by treating all the invocations of a given method as returning 
-	 * the application of an uninterpreted symbolic function
-	 * with no side effect.
-	 * 
-	 * @param methodSignature the {@link Signature} of a method. 
-	 * @param functionName the name of the uninterpreted symbolic function
-	 *        whose application to the invocation parameter is 
-	 *        the result of all the invocations to {@code className.methodName}.
-	 */
-	public void addUninterpreted(Signature methodSignature, String functionName) { 
-		this.dispatcherMeta.loadAlgoUninterpreted(methodSignature, functionName);
-	}
-	
+    /**
+     * Determines whether a method has a base-level overriding implementation.
+     * 
+     * @param methodSignature the {@link Signature} of a method.
+     * @return {@code true} iff an overriding base-level method for it was added
+     *         by invoking {@link #addBaseOverridden(Signature, Signature)}.
+     */
+    public boolean isMethodBaseLevelOverridden(Signature methodSignature) {
+        return this.baseOverrides.containsKey(methodSignature);
+    }
+
+    /**
+     * Returns the signature of a base-level override implementation 
+     * of a method. 
+     * 
+     * @param methodSignature the {@link Signature} of a method.
+     * @return  the {@link Signature} of the method that overrides
+     *          the one with signature {@code methodSignature} and
+     *          that was previously set by invoking {@link #addBaseOverridden(Signature, Signature)}..
+     */
+    public Signature getBaseOverride(Signature methodSignature) {
+        return this.baseOverrides.get(methodSignature);
+    }
+
+    /**
+     * Allows to customize the behavior of the invocations to a method 
+     * by specifying an {@link Algorithm} that implements its semantics.
+     * 
+     * @param methodSignature the {@link Signature} of a method. 
+     * @param metaDelegateClassName a class name as a {@link String}, 
+     *        indicating a class (that must be in the meta-level classpath, 
+     *        must have a default constructor, must implement {@link Algorithm})
+     *        of an algorithm that implements at the meta-level the 
+     *        semantics of the invocations to the method with signature 
+     *        {@code methodSignature}. 
+     * @throws MetaUnsupportedException if the class indicated in 
+     *         {@code metaDelegateClassName} does not exist, or cannot be loaded 
+     *         or instantiated for any reason (misses from the meta-level classpath, 
+     *         has insufficient visibility, does not extend {@link Algorithm}...).
+     */
+    public void addMetaOverridden(Signature methodSignature, String metaDelegateClassName) 
+    throws MetaUnsupportedException {
+        try {
+            @SuppressWarnings("unchecked")
+            final Class<? extends Algo_INVOKEMETA<?, ?, ?, ?>> metaDelegateClass = 
+                (Class<? extends Algo_INVOKEMETA<?, ?, ?, ?>>) 
+                ClassLoader.getSystemClassLoader().loadClass(metaDelegateClassName.replace('/', '.')).asSubclass(Algo_INVOKEMETA.class);
+            this.dispatcherMeta.loadAlgoMetaOverridden(methodSignature, metaDelegateClass);
+        } catch (ClassNotFoundException e) {
+            throw new MetaUnsupportedException("meta-level implementation class " + metaDelegateClassName + " not found");
+        } catch (ClassCastException e) {
+            throw new MetaUnsupportedException("meta-level implementation class " + metaDelegateClassName + " does not implement " + Algorithm.class);
+        }
+    }
+
+    /**
+     * Allows to customize the behavior of the invocations to a method 
+     * by treating all the invocations of a given method as returning 
+     * the application of an uninterpreted symbolic function
+     * with no side effect.
+     * 
+     * @param methodSignature the {@link Signature} of a method. 
+     * @param functionName the name of the uninterpreted symbolic function
+     *        whose application to the invocation parameter is 
+     *        the result of all the invocations to {@code className.methodName}.
+     */
+    public void addUninterpreted(Signature methodSignature, String functionName) { 
+        this.dispatcherMeta.loadAlgoUninterpreted(methodSignature, functionName);
+    }
+
     /**
      * Determines whether a class has a pure static initializer, where with
      * "pure" we mean that its effect is independent on when the initializer
@@ -476,105 +475,105 @@ public final class ExecutionContext {
      * @param className the name of the class.
      * @return {@code true} iff the class has a pure static initializer.
      */
-	public boolean hasClassAPureInitializer(ClassHierarchy hier, String className) {
+    public boolean hasClassAPureInitializer(ClassHierarchy hier, String className) {
         return 
-            (className.equals(JAVA_ABSTRACTCOLLECTION) ||
-             className.equals(JAVA_ABSTRACTLIST) ||
-             className.equals(JAVA_ABSTRACTMAP) ||
-             className.equals(JAVA_ABSTRACTSET) ||
-             className.equals(JAVA_ACCESSCONTROLLER) || 
-             className.equals(JAVA_ACCESSIBLEOBJECT) || 
-             className.equals(JAVA_ARRAYLIST) || 
-             className.equals(JAVA_ARRAYS) || 
-             className.equals(JAVA_ATOMICINTEGER) || 
-             className.equals(JAVA_ATOMICREFERENCEFIELDUPDATER) || 
-             className.equals(JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL) || 
-             className.equals(JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL_1) || 
-             className.equals(JAVA_BASICPERMISSION) ||
-             className.equals(JAVA_BOOLEAN) ||
-             className.equals(JAVA_BUFFEREDINPUTSTREAM) ||
-             className.equals(JAVA_CHARSET) ||  //not really, but most static values seem to be just caches, so we treat it as it were
-             className.equals(JAVA_CHARSET_EXTENDEDPROVIDERHOLDER) ||
-             className.equals(JAVA_CLASS) || 
-             className.equals(JAVA_CLASS_3) || 
-             className.equals(JAVA_CLASS_ATOMIC) || 
-             className.equals(JAVA_CLASS_REFLECTIONDATA) || 
-             className.equals(JAVA_COLLECTIONS) ||
-             className.equals(JAVA_COLLECTIONS_EMPTYLIST) ||
-             className.equals(JAVA_COLLECTIONS_EMPTYMAP) ||
-             className.equals(JAVA_COLLECTIONS_EMPTYSET) ||
-             className.equals(JAVA_COLLECTIONS_SYNCHRONIZEDCOLLECTION) || 
-             className.equals(JAVA_COLLECTIONS_SYNCHRONIZEDSET) ||
-             className.equals(JAVA_COLLECTIONS_UNMODIFIABLECOLLECTION) ||
-             className.equals(JAVA_COLLECTIONS_UNMODIFIABLELIST) ||
-             className.equals(JAVA_COLLECTIONS_UNMODIFIABLERANDOMACCESSLIST) ||
-             className.equals(JAVA_DICTIONARY) ||
-             className.equals(JAVA_DOUBLE) ||
-             className.equals(JAVA_EXCEPTION) ||
-             className.equals(JAVA_FILEDESCRIPTOR) || 
-             className.equals(JAVA_FILEDESCRIPTOR_1) || 
-             className.equals(JAVA_FILEINPUTSTREAM) || 
-             className.equals(JAVA_FILEOUTPUTSTREAM) || 
-             className.equals(JAVA_FILTERINPUTSTREAM) || 
-             className.equals(JAVA_FLOAT) || 
-             className.equals(JAVA_HASHMAP) || 
-             className.equals(JAVA_HASHMAP_NODE) || 
-             className.equals(JAVA_HASHSET) || 
-             className.equals(JAVA_HASHTABLE) || 
-             className.equals(JAVA_HASHTABLE_ENTRY) || 
-             className.equals(JAVA_HASHTABLE_ENTRYSET) ||
-             className.equals(JAVA_HASHTABLE_ENUMERATOR) || 
-             className.equals(JAVA_IDENTITYHASHMAP) || 
-             className.equals(JAVA_INPUTSTREAM) ||
-             className.equals(JAVA_INTEGER) || 
-             className.equals(JAVA_INTEGER_INTEGERCACHE) || 
-             className.equals(JAVA_LINKEDLIST) || 
-             className.equals(JAVA_LINKEDLIST_ENTRY) ||
-             className.equals(JAVA_MATH) || 
-             className.equals(JAVA_MODIFIER) || //not really, but used as it were (it bootstraps sun.misc.SharedSecrets on init)
-             className.equals(JAVA_NUMBER) || 
-             className.equals(JAVA_OBJECT) ||
-             className.equals(JAVA_OBJECTS) ||
-             className.equals(JAVA_OUTPUTSTREAM) ||
-             className.equals(JAVA_PERMISSION) ||
-             className.equals(JAVA_PROPERTIES) ||
-             className.equals(JAVA_REFERENCE) ||  //not really, but the lock field is effectively final and the discovered field is managed by the garbage collector, that JBSE has not
-             className.equals(JAVA_REFERENCE_LOCK) ||
-             className.equals(JAVA_REFERENCEQUEUE) ||  //not really, but used as it were
-             className.equals(JAVA_REFERENCEQUEUE_LOCK) ||
-             className.equals(JAVA_REFERENCEQUEUE_NULL) ||
-             className.equals(JAVA_REFLECTPERMISSION) ||
-             className.equals(JAVA_RUNTIMEEXCEPTION) ||
-             className.equals(JAVA_RUNTIMEPERMISSION) ||
-             className.equals(JAVA_STRING) || 
-             className.equals(JAVA_STRING_CASEINSCOMP) ||
-             className.equals(JAVA_STRINGBUILDER) || 
-             className.equals(JAVA_SYSTEM) || 
-             className.equals(JAVA_TREESET) ||
-             className.equals(JAVA_THREAD) || //not really, but it's not a terrible approximation considering it as it were (and also initializes many static final members)
-             className.equals(JAVA_THREADLOCAL) || //not really, but the only static member generates sequences of hash codes, so it can be treated as it were
-             className.equals(JAVA_THROWABLE) || 
-             className.equals(JAVA_THROWABLE_SENTINELHOLDER) ||
-             className.equals(JAVA_WRITER) || 
-             className.equals(JBSE_BASE) ||
-             className.equals(SUN_REFLECTION) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
-             className.equals(SUN_REFLECTIONFACTORY) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
-             className.equals(SUN_REFLECTIONFACTORY_GETREFLECTIONFACTORYACTION) ||
-             className.equals(SUN_REFLECTUTIL) ||
-             className.equals(SUN_SHAREDSECRETS) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
-             className.equals(SUN_STANDARDCHARSETS_CACHE) ||
-             className.equals(SUN_STANDARDCHARSETS_CLASSES) ||
-             className.equals(SUN_STREAMENCODER) ||
-             className.equals(SUN_UNSAFE) ||
-             className.equals(SUN_VERSION) ||
-             className.equals(SUN_VM) ||
-             hier.isSubclass(className, JAVA_ENUM));
-	}
+        (className.equals(JAVA_ABSTRACTCOLLECTION) ||
+        className.equals(JAVA_ABSTRACTLIST) ||
+        className.equals(JAVA_ABSTRACTMAP) ||
+        className.equals(JAVA_ABSTRACTSET) ||
+        className.equals(JAVA_ACCESSCONTROLLER) || 
+        className.equals(JAVA_ACCESSIBLEOBJECT) || 
+        className.equals(JAVA_ARRAYLIST) || 
+        className.equals(JAVA_ARRAYS) || 
+        className.equals(JAVA_ATOMICINTEGER) || 
+        className.equals(JAVA_ATOMICREFERENCEFIELDUPDATER) || 
+        className.equals(JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL) || 
+        className.equals(JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL_1) || 
+        className.equals(JAVA_BASICPERMISSION) ||
+        className.equals(JAVA_BOOLEAN) ||
+        className.equals(JAVA_BUFFEREDINPUTSTREAM) ||
+        className.equals(JAVA_CHARSET) ||  //not really, but most static values seem to be just caches, so we treat it as it were
+        className.equals(JAVA_CHARSET_EXTENDEDPROVIDERHOLDER) ||
+        className.equals(JAVA_CLASS) || 
+        className.equals(JAVA_CLASS_3) || 
+        className.equals(JAVA_CLASS_ATOMIC) || 
+        className.equals(JAVA_CLASS_REFLECTIONDATA) || 
+        className.equals(JAVA_COLLECTIONS) ||
+        className.equals(JAVA_COLLECTIONS_EMPTYLIST) ||
+        className.equals(JAVA_COLLECTIONS_EMPTYMAP) ||
+        className.equals(JAVA_COLLECTIONS_EMPTYSET) ||
+        className.equals(JAVA_COLLECTIONS_SYNCHRONIZEDCOLLECTION) || 
+        className.equals(JAVA_COLLECTIONS_SYNCHRONIZEDSET) ||
+        className.equals(JAVA_COLLECTIONS_UNMODIFIABLECOLLECTION) ||
+        className.equals(JAVA_COLLECTIONS_UNMODIFIABLELIST) ||
+        className.equals(JAVA_COLLECTIONS_UNMODIFIABLERANDOMACCESSLIST) ||
+        className.equals(JAVA_DICTIONARY) ||
+        className.equals(JAVA_DOUBLE) ||
+        className.equals(JAVA_EXCEPTION) ||
+        className.equals(JAVA_FILEDESCRIPTOR) || 
+        className.equals(JAVA_FILEDESCRIPTOR_1) || 
+        className.equals(JAVA_FILEINPUTSTREAM) || 
+        className.equals(JAVA_FILEOUTPUTSTREAM) || 
+        className.equals(JAVA_FILTERINPUTSTREAM) || 
+        className.equals(JAVA_FLOAT) || 
+        className.equals(JAVA_HASHMAP) || 
+        className.equals(JAVA_HASHMAP_NODE) || 
+        className.equals(JAVA_HASHSET) || 
+        className.equals(JAVA_HASHTABLE) || 
+        className.equals(JAVA_HASHTABLE_ENTRY) || 
+        className.equals(JAVA_HASHTABLE_ENTRYSET) ||
+        className.equals(JAVA_HASHTABLE_ENUMERATOR) || 
+        className.equals(JAVA_IDENTITYHASHMAP) || 
+        className.equals(JAVA_INPUTSTREAM) ||
+        className.equals(JAVA_INTEGER) || 
+        className.equals(JAVA_INTEGER_INTEGERCACHE) || 
+        className.equals(JAVA_LINKEDLIST) || 
+        className.equals(JAVA_LINKEDLIST_ENTRY) ||
+        className.equals(JAVA_MATH) || 
+        className.equals(JAVA_MODIFIER) || //not really, but used as it were (it bootstraps sun.misc.SharedSecrets on init)
+        className.equals(JAVA_NUMBER) || 
+        className.equals(JAVA_OBJECT) ||
+        className.equals(JAVA_OBJECTS) ||
+        className.equals(JAVA_OUTPUTSTREAM) ||
+        className.equals(JAVA_PERMISSION) ||
+        className.equals(JAVA_PROPERTIES) ||
+        className.equals(JAVA_REFERENCE) ||  //not really, but the lock field is effectively final and the discovered field is managed by the garbage collector, that JBSE has not
+        className.equals(JAVA_REFERENCE_LOCK) ||
+        className.equals(JAVA_REFERENCEQUEUE) ||  //not really, but used as it were
+        className.equals(JAVA_REFERENCEQUEUE_LOCK) ||
+        className.equals(JAVA_REFERENCEQUEUE_NULL) ||
+        className.equals(JAVA_REFLECTPERMISSION) ||
+        className.equals(JAVA_RUNTIMEEXCEPTION) ||
+        className.equals(JAVA_RUNTIMEPERMISSION) ||
+        className.equals(JAVA_STRING) || 
+        className.equals(JAVA_STRING_CASEINSCOMP) ||
+        className.equals(JAVA_STRINGBUILDER) || 
+        className.equals(JAVA_SYSTEM) || 
+        className.equals(JAVA_TREESET) ||
+        className.equals(JAVA_THREAD) || //not really, but it's not a terrible approximation considering it as it were (and also initializes many static final members)
+        className.equals(JAVA_THREADLOCAL) || //not really, but the only static member generates sequences of hash codes, so it can be treated as it were
+        className.equals(JAVA_THROWABLE) || 
+        className.equals(JAVA_THROWABLE_SENTINELHOLDER) ||
+        className.equals(JAVA_WRITER) || 
+        className.equals(JBSE_BASE) ||
+        className.equals(SUN_REFLECTION) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
+        className.equals(SUN_REFLECTIONFACTORY) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
+        className.equals(SUN_REFLECTIONFACTORY_GETREFLECTIONFACTORYACTION) ||
+        className.equals(SUN_REFLECTUTIL) ||
+        className.equals(SUN_SHAREDSECRETS) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
+        className.equals(SUN_STANDARDCHARSETS_CACHE) ||
+        className.equals(SUN_STANDARDCHARSETS_CLASSES) ||
+        className.equals(SUN_STREAMENCODER) ||
+        className.equals(SUN_UNSAFE) ||
+        className.equals(SUN_VERSION) ||
+        className.equals(SUN_VM) ||
+        hier.isSubclass(className, JAVA_ENUM));
+    }
 
-	public <R extends DecisionAlternative> 
-	SortedSet<R> mkDecisionResultSet(Class<R> superclassDecisionAlternatives) {
-		final Comparator<R> comparator = this.comparators.get(superclassDecisionAlternatives);
-		final TreeSet<R> retVal = new TreeSet<>(comparator);
-		return retVal;
-	}
+    public <R extends DecisionAlternative> 
+    SortedSet<R> mkDecisionResultSet(Class<R> superclassDecisionAlternatives) {
+        final Comparator<R> comparator = this.comparators.get(superclassDecisionAlternatives);
+        final TreeSet<R> retVal = new TreeSet<>(comparator);
+        return retVal;
+    }
 }

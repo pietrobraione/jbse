@@ -28,7 +28,7 @@ final class Algo_GETSTATIC extends Algo_GETX {
     protected Supplier<Integer> numOperands() {
         return () -> 0;
     }
-    
+
     @Override
     protected void check(State state, String currentClassName)
     throws FieldNotFoundException, BadClassFileException, InterruptException {
@@ -37,17 +37,17 @@ final class Algo_GETSTATIC extends Algo_GETX {
 
         //checks that the field is static or belongs to an interface
         if (!fieldClassFile.isInterface() && 
-            !fieldClassFile.isFieldStatic(this.fieldSignatureResolved)) {
+        !fieldClassFile.isFieldStatic(this.fieldSignatureResolved)) {
             throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
             exitFromAlgorithm();
         }
     }
-    
+
     @Override
     protected void get(State state)
     throws DecisionException, ClasspathException, InterruptException {
         final String fieldClassName = this.fieldSignatureResolved.getClassName();
-        
+
         //possibly creates and initializes the class of the field
         try {
             ensureClassCreatedAndInitialized(state, fieldClassName, this.ctx);
@@ -56,7 +56,7 @@ final class Algo_GETSTATIC extends Algo_GETX {
             //TODO really?
             failExecution(e);
         }
-        
+
         //gets the field's value 
         this.valToLoad = state.getKlass(fieldClassName).getFieldValue(this.fieldSignatureResolved);
     }

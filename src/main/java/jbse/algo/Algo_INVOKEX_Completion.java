@@ -37,16 +37,16 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
     public Algo_INVOKEX_Completion(boolean isInterface, boolean isSpecial, boolean isStatic) {
         super(isInterface, isSpecial, isStatic);
     }
-    
+
     private boolean shouldFindImplementation; //set by methods
-    
+
     public void setImplementation(ClassFile classFileMethodImpl, Signature methodSignatureImpl, boolean isNative) {
         this.shouldFindImplementation = false;
         this.classFileMethodImpl = classFileMethodImpl;
         this.methodSignatureImpl = methodSignatureImpl;
         this.isNative = isNative;
     }
-    
+
     public void shouldFindImplementation() {
         this.shouldFindImplementation = true;
     }
@@ -67,9 +67,9 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
                 //this should never happen (Algo_INVOKEX already checked them)
                 failExecution(e);
             }
-            
-	        //since a method can be base-level overridden by a static method, we need to know
-	        //whether the implementation is or is not static
+
+            //since a method can be base-level overridden by a static method, we need to know
+            //whether the implementation is or is not static
             boolean isStaticImpl = this.isStatic;
             if (this.shouldFindImplementation) {
                 //looks for the method implementation with standard lookup
@@ -84,16 +84,16 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
                     exitFromAlgorithm();
                 }
             } else {
-        	        //since a method can be base-level overridden by a static method, we need to know
-        	        //whether the implementation is or is not static
+                //since a method can be base-level overridden by a static method, we need to know
+                //whether the implementation is or is not static
                 try {
-	                isStaticImpl = this.classFileMethodImpl.isMethodStatic(this.methodSignatureImpl) ? true : this.isStatic;
-				} catch (MethodNotFoundException e) {
-	                //this should never happen 
-	                failExecution(e);
-				}
+                    isStaticImpl = this.classFileMethodImpl.isMethodStatic(this.methodSignatureImpl) ? true : this.isStatic;
+                } catch (MethodNotFoundException e) {
+                    //this should never happen 
+                    failExecution(e);
+                }
             }
-            
+
             //creates and initializes the class of the implementation method; this is necessary for
             //static base-level overriding methods; note that in the ordinary invokestatic case the
             //class of the method implementation is the class of the resolved method, so this just 
@@ -120,8 +120,8 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
 
             //sets the program counter offset for the return point
             this.pcOffsetReturn = (this.isInterface ? 
-                INVOKEDYNAMICINTERFACE_OFFSET : 
-                INVOKESPECIALSTATICVIRTUAL_OFFSET);
+                                   INVOKEDYNAMICINTERFACE_OFFSET : 
+                                   INVOKESPECIALSTATICVIRTUAL_OFFSET);
         };
     }
 

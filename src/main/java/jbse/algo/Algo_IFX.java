@@ -31,28 +31,28 @@ DecisionAlternative_IFX,
 StrategyDecide<DecisionAlternative_IFX>,
 StrategyRefine<DecisionAlternative_IFX>,
 StrategyUpdate<DecisionAlternative_IFX>> {
-    
+
     private final boolean compareWithZero; //set by the constructor
     private final Operator operator; //set by the constructor
-    
+
     public Algo_IFX(boolean compareWithZero, Operator operator) {
         this.compareWithZero = compareWithZero;
         this.operator = operator;
-   }
-    
+    }
+
     private Primitive comparison; //produced by cooker
     private boolean doJump; //produced by updater
-    
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> (this.compareWithZero ? 1 : 2);
     }
-    
+
     @Override
     protected Supplier<BytecodeData_1ON> bytecodeData() {
         return BytecodeData_1ON::get;
     }
-    
+
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> { 
@@ -80,7 +80,7 @@ StrategyUpdate<DecisionAlternative_IFX>> {
                 //this should never happen
                 failExecution(e);
             }
-            
+
             //builds the comparison condition
             try {
                 this.comparison = state.getCalculator().applyBinary(val1, this.operator, val2);
@@ -92,12 +92,12 @@ StrategyUpdate<DecisionAlternative_IFX>> {
             }
         };
     }
-    
+
     @Override
     protected Class<DecisionAlternative_IFX> classDecisionAlternative() {
         return DecisionAlternative_IFX.class;
     }
-    
+
     @Override
     protected StrategyDecide<DecisionAlternative_IFX> decider() {
         return (state, result) -> {
@@ -105,7 +105,7 @@ StrategyUpdate<DecisionAlternative_IFX>> {
             return o;
         };
     }
-    
+
     @Override
     protected StrategyRefine<DecisionAlternative_IFX> refiner() {
         return (state, alt) -> {
@@ -113,19 +113,19 @@ StrategyUpdate<DecisionAlternative_IFX>> {
             state.assume(this.ctx.decisionProcedure.simplify(assumption));
         };
     }
-    
+
     @Override
     protected StrategyUpdate<DecisionAlternative_IFX> updater() {
         return (state, alt) -> {
             this.doJump = alt.value();
         };
     }
-    
+
     @Override
     protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> (this.doJump ? this.data.jumpOffset() : IFX_OFFSET);

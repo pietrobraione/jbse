@@ -38,12 +38,12 @@ import jbse.val.Reference;
  */
 public final class Algo_JAVA_CLASS_GETCOMPONENTTYPE extends Algo_INVOKEMETA_Nonbranching {
     private Reference componentClassRef;  //set by cookMore
-    
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 1;
     }
-    
+
     @Override
     protected void cookMore(State state)
     throws ThreadStackEmptyException, DecisionException, ClasspathException,

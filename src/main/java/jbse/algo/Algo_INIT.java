@@ -59,21 +59,21 @@ public final class Algo_INIT {
                 ctx.triggerManager.loadTriggerFramesRoot(state, rootExpansion);
             }
         } catch (BadClassFileException | MethodNotFoundException | 
-        		     MethodCodeNotFoundException | MissingTriggerParameterException e) {
+                 MethodCodeNotFoundException | MissingTriggerParameterException e) {
             throw new InitializationException(e);
         } catch (ThreadStackEmptyException e) {
             throw new UnexpectedInternalException(e);
         }
-        
+
         //pushes a frame for java.lang.System.initializeSystemClass
         try {
-			state.pushFrame(JAVA_SYSTEM_INITIALIZESYSTEMCLASS, false, 0);
-		} catch (NullMethodReceiverException | BadClassFileException | MethodNotFoundException | 
-				MethodCodeNotFoundException | InvalidSlotException | InvalidProgramCounterException | 
-				ThreadStackEmptyException e) {
+            state.pushFrame(JAVA_SYSTEM_INITIALIZESYSTEMCLASS, false, 0);
+        } catch (NullMethodReceiverException | BadClassFileException | MethodNotFoundException | 
+                 MethodCodeNotFoundException | InvalidSlotException | InvalidProgramCounterException | 
+                 ThreadStackEmptyException e) {
             //this should not happen now
             throw new UnexpectedInternalException(e);
-		}        
+        }       
 
         //creates and initializes java.lang.System
         try {
@@ -94,7 +94,7 @@ public final class Algo_INIT {
             //this should not happen after push frame
             throw new UnexpectedInternalException(e);
         }
-        
+
         //saves a copy of the created state
         ctx.setInitialState(state);
 

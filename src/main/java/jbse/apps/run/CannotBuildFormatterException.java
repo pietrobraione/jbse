@@ -4,7 +4,7 @@ import jbse.jvm.exc.CannotBuildEngineException;
 
 public class CannotBuildFormatterException extends CannotBuildEngineException {
 
-	/**
+    /**
      * 
      */
     private static final long serialVersionUID = 6120408566753870075L;

@@ -8,12 +8,12 @@ package jbse.algo.exc;
  *
  */
 public class MetaUnsupportedException extends CannotManageStateException {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1826801410249226491L;
-	
-	public MetaUnsupportedException(String param) {
-		super(param);
-	}
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1826801410249226491L;
+
+    public MetaUnsupportedException(String param) {
+        super(param);
+    }
 }

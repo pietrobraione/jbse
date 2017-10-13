@@ -12,7 +12,7 @@ import jbse.mem.State;
  */
 public final class BytecodeData_1ZME extends BytecodeData {
     private final boolean isInterfaceMethod;
-    
+
     @Override
     protected void readImmediates(State state) throws InterruptException {
         readImmediateUnsignedWord(state, 1);
@@ -29,7 +29,7 @@ public final class BytecodeData_1ZME extends BytecodeData {
     private BytecodeData_1ZME(boolean isInterfaceMethod) {
         this.isInterfaceMethod = isInterfaceMethod;
     }    
-    
+
     /**
      * Factory (with fluent interface).
      * 

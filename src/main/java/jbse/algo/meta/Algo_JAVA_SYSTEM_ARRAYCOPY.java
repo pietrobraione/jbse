@@ -49,7 +49,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
     protected Supplier<Integer> numOperands() {
         return () -> 5;
     }
-    
+
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
@@ -77,7 +77,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                 throwNew(state, ARRAY_STORE_EXCEPTION);
                 exitFromAlgorithm();
             }
-            
+
             final String srcTypeComponent = getArrayMemberType(srcArray.getType());
             final String destTypeComponent = getArrayMemberType(destArray.getType());
             if (isPrimitive(srcTypeComponent) && 
@@ -90,26 +90,26 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                 throwNew(state, ARRAY_STORE_EXCEPTION);
                 exitFromAlgorithm();
             }
-            
+
             final Primitive zero = this.ctx.calc.valInt(0);
             try {
                 this.inRange = this.srcPos.ge(zero)
-                               .and(this.destPos.ge(zero))
-                               .and(this.length.ge(zero))
-                               .and(this.srcPos.add(this.length).le(srcArray.getLength()))
-                               .and(this.destPos.add(this.length).le(destArray.getLength()));
+                .and(this.destPos.ge(zero))
+                .and(this.length.ge(zero))
+                .and(this.srcPos.add(this.length).le(srcArray.getLength()))
+                .and(this.destPos.add(this.length).le(destArray.getLength()));
             } catch (InvalidOperandException | InvalidTypeException e) {
                 throwVerifyError(state);
                 exitFromAlgorithm();
             }
         };
     } 
-    
+
     @Override
     protected Class<DecisionAlternative_XASTORE> classDecisionAlternative() {
         return DecisionAlternative_XASTORE.class;
     }
-    
+
     @Override
     protected StrategyDecide<DecisionAlternative_XASTORE> decider() {
         return (state, result) -> {
@@ -117,18 +117,18 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
             return o;
         };
     }
-    
+
     @Override
     protected StrategyRefine<DecisionAlternative_XASTORE> refiner() {
         return (state, alt) -> {
             state.assume(this.ctx.decisionProcedure.simplify(alt.isInRange() ? this.inRange : this.inRange.not()));
         };
     }
-    
+
     private static class ExitFromAlgorithmException extends RuntimeException {
         private static final long serialVersionUID = 7040464752195180704L;        
     }
-    
+
     @Override
     protected StrategyUpdate<DecisionAlternative_XASTORE> updater() {
         return (state, alt) -> {
@@ -139,25 +139,25 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                     destArray = (Array) state.getObject(this.dest);
                     final String destTypeComponent = getArrayMemberType(destArray.getType());
                     final Iterator<Array.AccessOutcomeIn> entries = 
-                        destArray.arraycopy(srcArray, this.srcPos, this.destPos, this.length,  
-                                            (Reference ref) -> {
-                                                if (ref instanceof Null) {
-                                                    return;
-                                                }
-                                                final Objekt srcElement = state.getObject(ref);
-                                                try {
-                                                    if (!state.getClassHierarchy().isAssignmentCompatible(srcElement.getType(), className(destTypeComponent))) {
-                                                        throwNew(state, ARRAY_STORE_EXCEPTION);
-                                                        throw new ExitFromAlgorithmException();
-                                                    }
-                                                } catch (BadClassFileException exc) {
-                                                    throwVerifyError(state);
+                    destArray.arraycopy(srcArray, this.srcPos, this.destPos, this.length,  
+                                        (Reference ref) -> {
+                                            if (ref instanceof Null) {
+                                                return;
+                                            }
+                                            final Objekt srcElement = state.getObject(ref);
+                                            try {
+                                                if (!state.getClassHierarchy().isAssignmentCompatible(srcElement.getType(), className(destTypeComponent))) {
+                                                    throwNew(state, ARRAY_STORE_EXCEPTION);
                                                     throw new ExitFromAlgorithmException();
                                                 }
-                                            });
+                                            } catch (BadClassFileException exc) {
+                                                throwVerifyError(state);
+                                                throw new ExitFromAlgorithmException();
+                                            }
+                                        });
                     this.ctx.decisionProcedure.completeArraycopy(state.getClassHierarchy(), entries, this.srcPos, this.destPos, this.length);
                 } catch (InvalidOperandException | InvalidTypeException | 
-                         InvalidInputException | ClassCastException e) {
+                InvalidInputException | ClassCastException e) {
                     //this should never happen
                     failExecution(e);
                 } catch (ExitFromAlgorithmException e) {
@@ -169,12 +169,12 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
             }
         };
     }
-    
+
     @Override
     protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> INVOKESPECIALSTATICVIRTUAL_OFFSET;

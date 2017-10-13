@@ -24,7 +24,7 @@ public final class Algo_JBSE_ANALYSIS_ISRESOLVED extends Algo_INVOKEMETA_Nonbran
     protected Supplier<Integer> numOperands() {
         return () -> 2;
     }
-    
+
     @Override
     protected void update(State state) 
     throws ThreadStackEmptyException, SymbolicValueNotAllowedException, 

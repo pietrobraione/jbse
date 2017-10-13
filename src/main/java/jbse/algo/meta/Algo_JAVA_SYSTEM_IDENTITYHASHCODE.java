@@ -23,7 +23,7 @@ public final class Algo_JAVA_SYSTEM_IDENTITYHASHCODE extends Algo_INVOKEMETA_Non
     protected Supplier<Integer> numOperands() {
         return () -> 1;
     }
-    
+
     @Override
     protected void update(State state) throws ThreadStackEmptyException, InterruptException {
         try {

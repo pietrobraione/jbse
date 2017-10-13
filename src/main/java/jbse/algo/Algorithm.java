@@ -70,7 +70,6 @@ UP extends StrategyUpdate<R>> {
      *         object that this algorithm uses.
      */
     protected abstract Class<R> classDecisionAlternative();
-    
 
     /** 
      * The decider.
@@ -79,7 +78,6 @@ UP extends StrategyUpdate<R>> {
      *         object that this algorithm must use.
      */
     protected abstract DE decider();
-    
 
     /** 
      * The refiner.
@@ -88,7 +86,6 @@ UP extends StrategyUpdate<R>> {
      *         object that this algorithm must use.
      */
     protected abstract RE refiner();
-    
 
     /** 
      * The updater.
@@ -97,7 +94,7 @@ UP extends StrategyUpdate<R>> {
      *         object that this algorithm must use.
      */
     protected abstract UP updater();
-    
+
     /**
      * How the value returned by {@link #programCounterUpdate()} 
      * should be interpreted.
@@ -109,7 +106,7 @@ UP extends StrategyUpdate<R>> {
      *         returns a new, absolute program counter.
      */
     protected abstract Supplier<Boolean> isProgramCounterUpdateAnOffset();
-    
+
     /**
      * Either the program counter offset or the 
      * program counter value, after the execution 
@@ -118,7 +115,7 @@ UP extends StrategyUpdate<R>> {
      * @return a {@link Supplier}{@code <}{@link Integer}{@code >}.
      */
     protected abstract Supplier<Integer> programCounterUpdate();
-    
+
     /**
      * Override this method to perform cleanup of 
      * the algorithm's state whenever it has some state. 
@@ -126,7 +123,7 @@ UP extends StrategyUpdate<R>> {
      * to set the {@link Algorithm} to its virgin state.
      */
     protected void cleanup() { }
-    
+
     private final Supplier<Integer> numOperands; //just caches
     protected D data; //just caches
     private final BytecodeCooker cooker;  //just caches
@@ -135,7 +132,7 @@ UP extends StrategyUpdate<R>> {
     private final UP updater; //just caches
     protected final Supplier<Integer> programCounterUpdate; //just caches
     protected final Supplier<Boolean> isProgramCounterUpdateAnOffset; //just caches
-    
+
     public Algorithm() {
         this.numOperands = numOperands();
         this.data = null; //to be initialized lazily
@@ -146,7 +143,7 @@ UP extends StrategyUpdate<R>> {
         this.programCounterUpdate = programCounterUpdate();
         this.isProgramCounterUpdateAnOffset = isProgramCounterUpdateAnOffset();
     }
-    
+
     /**
      * What to do in case of {@link InvalidInputException}.
      * By default the execution fails
@@ -170,7 +167,7 @@ UP extends StrategyUpdate<R>> {
     protected void onBadClassFileException(State state, BadClassFileException e) {
         failExecution(e);
     }
-    
+
     /** 
      * Checks whether some reference was not 
      * expanded by resolution during {@link #exec}.
@@ -183,7 +180,7 @@ UP extends StrategyUpdate<R>> {
     public boolean someReferenceNotExpanded() { 
         return false; 
     }
-    
+
     //TODO improve the two methods that follow (possibly return a java.util.List of the References)
 
     /**
@@ -195,7 +192,7 @@ UP extends StrategyUpdate<R>> {
     public String nonExpandedReferencesOrigins() { 
         return null; 
     }
-    
+
     /**
      * Returns a list of the origins of the nonexpanded
      * references types.
@@ -205,7 +202,7 @@ UP extends StrategyUpdate<R>> {
     public String nonExpandedReferencesTypes() { 
         return null; 
     }
-    
+
     protected ExecutionContext ctx; //just caches across a call of exec (note that this makes Algorithms nonreentrant!)
 
     /**
@@ -329,7 +326,7 @@ UP extends StrategyUpdate<R>> {
             ++cur;
         }
     }
-    
+
     private boolean possiblyAddBranchPoint(Collection<R> decisionResults) {
         final boolean moreThanOneResult = (decisionResults.size() > 1);
         final DecisionAlternative d = decisionResults.iterator().next();

@@ -7,10 +7,10 @@ package jbse.apps;
  *
  */
 public interface Timer {
-	/**
-	 * Returns the measured time.
-	 * 
-	 * @return time in milliseconds.
-	 */
-	long getTime();
+    /**
+     * Returns the measured time.
+     * 
+     * @return time in milliseconds.
+     */
+    long getTime();
 }

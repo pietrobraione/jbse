@@ -19,7 +19,7 @@ public final class Algo_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED extends Algo_INV
     protected Supplier<Integer> numOperands() {
         return () -> 1;
     }
-    
+
     @Override
     protected void update(State state) 
     throws ThreadStackEmptyException, SymbolicValueNotAllowedException, 

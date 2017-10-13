@@ -2,6 +2,10 @@ package jbse.apps.run;
 
 import static java.lang.annotation.ElementType.METHOD;
 
+import static jbse.common.Type.BOOLEAN;
+import static jbse.common.Type.splitParametersDescriptors;
+import static jbse.common.Type.splitReturnValueDescriptor;
+
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Target;
 import java.util.Arrays;
@@ -17,7 +21,6 @@ import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
-import jbse.common.Type;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
@@ -48,27 +51,27 @@ public final class InitialHeapChecker {
     private final CheckMethodTable checkMethodTable;
     private Supplier<State> initialStateSupplier = null;
     private Supplier<State> currentStateSupplier = null;
-    
+
     public InitialHeapChecker(RunnerParameters runnerParameters, 
                               Class<? extends Annotation> methodAnnotationClass,
                               Map<String, String> checkMethods) {
         this.runnerParameters = runnerParameters;
         this.checkMethodTable = new CheckMethodTable(methodAnnotationClass, checkMethods);
     }
-    
+
     public void setInitialStateSupplier(Supplier<State> initialStateSupplier) {
         this.initialStateSupplier = initialStateSupplier;
     }
-    
+
     public void setCurrentStateSupplier(Supplier<State> currentStateSupplier) {
         this.currentStateSupplier = currentStateSupplier;
     }   
-    
+
     public boolean checkHeap(boolean scopeExhaustionMeansSuccess) {
         final State sIni = makeInitialState();
         return checkHeap(sIni, scopeExhaustionMeansSuccess);
     }
-        
+
     public boolean checkHeap(State sIni, boolean scopeExhaustionMeansSuccess) {
         //runs the check methods on all the instances in the heap 
         for (long heapPos : sIni.getHeap().keySet()) {
@@ -88,14 +91,14 @@ public final class InitialHeapChecker {
                         }
                     }
                 } catch (DecisionException | 
-                InitializationException | InvalidClassFileFactoryClassException | 
-                NonexistingObservedVariablesException |  
-                CannotBacktrackException | EngineStuckException | CannotManageStateException | 
-                ClasspathException | ContradictionException | FailureException | 
-                UnexpectedInternalException | CannotBuildEngineException | 
-                BadClassFileException | MethodNotFoundException | MethodCodeNotFoundException |
-                ThreadStackEmptyException | InvalidProgramCounterException | 
-                NullMethodReceiverException | InvalidSlotException exc) {
+                         InitializationException | InvalidClassFileFactoryClassException | 
+                         NonexistingObservedVariablesException |  
+                         CannotBacktrackException | EngineStuckException | CannotManageStateException | 
+                         ClasspathException | ContradictionException | FailureException | 
+                         UnexpectedInternalException | CannotBuildEngineException | 
+                         BadClassFileException | MethodNotFoundException | MethodCodeNotFoundException |
+                         ThreadStackEmptyException | InvalidProgramCounterException | 
+                         NullMethodReceiverException | InvalidSlotException exc) {
                     //TODO check and filter exceptions and blame caller when necessary
                     throw new UnexpectedInternalException(exc);
                 }
@@ -103,7 +106,7 @@ public final class InitialHeapChecker {
         }
         return true;
     }
-    
+
     public State makeInitialState() {
         //takes a copy of the initial state and refines it
         final State sIni =  this.initialStateSupplier.get();
@@ -131,23 +134,23 @@ public final class InitialHeapChecker {
          * be invoked to check the objects of that class.
          */
         private final HashMap<String, Signature> checkMethods = new HashMap<String, Signature>();
-        
+
         /**
          * The annotation that is attached to the check methods, 
          * possibly {@code null}.
          */
         private final Class<? extends Annotation> methodAnnotationClass;
-        
+
         CheckMethodTable(Class<? extends Annotation> methodAnnotationClass, 
                          Map<String, String> checkMethods) {
             this.methodAnnotationClass = isMethodAnnotationClass(methodAnnotationClass) ? methodAnnotationClass : null;
             for (Map.Entry<String, String> e : checkMethods.entrySet()) {
                 final String methodClass = e.getKey();
-                final Signature methodSignature =  new Signature(methodClass, "()" + Type.BOOLEAN, e.getValue());
+                final Signature methodSignature =  new Signature(methodClass, "()" + BOOLEAN, e.getValue());
                 this.checkMethods.put(methodClass, methodSignature);
             }
         }
-        
+
         private static final boolean isMethodAnnotationClass(Class<? extends Annotation> annotationClass) {
             return (annotationClass.isAnnotation() &&
             Arrays.asList(annotationClass.getAnnotation(Target.class).value()).contains(METHOD));
@@ -188,12 +191,12 @@ public final class InitialHeapChecker {
             }
             return methodSignature;
         }
-        
+
         private static boolean isMethodCheck(ClassFile cf, Signature sig)
         throws MethodNotFoundException {
             final String methodDescriptor = sig.getDescriptor();
-            if (!Type.splitReturnValueDescriptor(methodDescriptor).equals("" + Type.BOOLEAN) ||
-                Type.splitParametersDescriptors(methodDescriptor).length > 0) {
+            if (!splitReturnValueDescriptor(methodDescriptor).equals("" + BOOLEAN) ||
+                splitParametersDescriptors(methodDescriptor).length > 0) {
                 return false;
             }
             if (cf.isMethodAbstract(sig) || cf.isMethodNative(sig) || cf.isMethodStatic(sig)) {
@@ -288,7 +291,7 @@ public final class InitialHeapChecker {
         }
 
         //TODO log differently!
-/*
+        /*
         @Override
         public boolean atStepPost() {
             final StateFormatterTrace f = new StateFormatterTrace();
@@ -304,7 +307,7 @@ public final class InitialHeapChecker {
             System.out.println("==> " + f.emit());
             return super.atBacktrackPost(bp);
         }
-*/
+         */
         @Override
         public boolean atTraceEnd() {
             final Value retVal = this.getEngine().getCurrentState().getStuckReturn();
@@ -312,7 +315,7 @@ public final class InitialHeapChecker {
                 final Simplex retValSimplex = (Simplex) retVal;
                 this.repOk = (((Integer) retValSimplex.getActualValue()) == 1);
             }
-            return repOk; //interrupts symbolic execution if exists a successful trace that returns true
+            return this.repOk; //interrupts symbolic execution if exists a successful trace that returns true
         }
 
         @Override

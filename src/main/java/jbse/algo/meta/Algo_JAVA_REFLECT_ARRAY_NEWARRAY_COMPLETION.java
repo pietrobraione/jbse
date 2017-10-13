@@ -35,7 +35,7 @@ public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEW
     protected Supplier<Integer> numOperands() {
         return () -> 2;
     }
-    
+
     @Override
     protected final Supplier<BytecodeData_1ZME> bytecodeData() {
         return () -> BytecodeData_1ZME.withInterfaceMethod(false).get();
@@ -82,7 +82,7 @@ public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEW
             exitFromAlgorithm();
         }
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> INVOKESPECIALSTATICVIRTUAL_OFFSET;

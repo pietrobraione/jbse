@@ -31,7 +31,7 @@ public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE extends Algo_INVOKEMETA_
     protected Supplier<Integer> numOperands() {
         return () -> 2;
     }
-    
+
     @Override
     protected void cookMore(State state)
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
@@ -46,7 +46,7 @@ public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE extends Algo_INVOKEMETA_
             failExecution(e);
         }
     }
-    
+
     @Override
     protected void update(State state) throws ThreadStackEmptyException, InterruptException {
         try {

@@ -25,65 +25,65 @@ import jbse.val.exc.InvalidTypeException;
  *
  */
 abstract class StrategyRefine_XALOAD implements StrategyRefine<DecisionAlternative_XALOAD> {
-	abstract public void refineRefExpands(State s, DecisionAlternative_XALOAD_Expands dac) 
-	throws DecisionException, ContradictionException, InvalidTypeException;
+    abstract public void refineRefExpands(State s, DecisionAlternative_XALOAD_Expands dac) 
+    throws DecisionException, ContradictionException, InvalidTypeException;
 
-	abstract public void refineRefAliases(State s, DecisionAlternative_XALOAD_Aliases dai) 
-	throws DecisionException, ContradictionException;
+    abstract public void refineRefAliases(State s, DecisionAlternative_XALOAD_Aliases dai) 
+    throws DecisionException, ContradictionException;
 
-	abstract public void refineRefNull(State s, DecisionAlternative_XALOAD_Null dan) 
-	throws DecisionException, ContradictionException;
+    abstract public void refineRefNull(State s, DecisionAlternative_XALOAD_Null dan) 
+    throws DecisionException, ContradictionException;
 
-	abstract public void refineResolved(State s, DecisionAlternative_XALOAD_Resolved dav) 
-	throws DecisionException;
+    abstract public void refineResolved(State s, DecisionAlternative_XALOAD_Resolved dav) 
+    throws DecisionException;
 
-	abstract public void refineOut(State s, DecisionAlternative_XALOAD_Out dao);
+    abstract public void refineOut(State s, DecisionAlternative_XALOAD_Out dao);
 
-	@Override
-	public final void refine(final State s, DecisionAlternative_XALOAD r)
-	throws DecisionException, ContradictionException, InvalidTypeException {
-		//a visitor redispatching to the methods which specialize this.refine
-		final VisitorDecisionAlternative_XALOAD visitorRefine = 
-		new VisitorDecisionAlternative_XALOAD() {
-			@Override
-			public void visitDecisionAlternative_XALOAD_Expands(DecisionAlternative_XALOAD_Expands dac)
-			throws DecisionException, ContradictionException, InvalidTypeException {
-				StrategyRefine_XALOAD.this.refineRefExpands(s, dac);
-			}
+    @Override
+    public final void refine(final State s, DecisionAlternative_XALOAD r)
+    throws DecisionException, ContradictionException, InvalidTypeException {
+        //a visitor redispatching to the methods which specialize this.refine
+        final VisitorDecisionAlternative_XALOAD visitorRefine = 
+            new VisitorDecisionAlternative_XALOAD() {
+                @Override
+                public void visitDecisionAlternative_XALOAD_Expands(DecisionAlternative_XALOAD_Expands dac)
+                throws DecisionException, ContradictionException, InvalidTypeException {
+                    StrategyRefine_XALOAD.this.refineRefExpands(s, dac);
+                }
+    
+                @Override
+                public void visitDecisionAlternative_XALOAD_Aliases(DecisionAlternative_XALOAD_Aliases dai)
+                throws DecisionException, ContradictionException {
+                    StrategyRefine_XALOAD.this.refineRefAliases(s, dai);
+                }
+    
+                @Override
+                public void visitDecisionAlternative_XALOAD_Null(DecisionAlternative_XALOAD_Null dan)
+                throws DecisionException, ContradictionException {
+                    StrategyRefine_XALOAD.this.refineRefNull(s, dan);
+                }
+    
+                @Override
+                public void visitDecisionAlternative_XALOAD_Resolved(DecisionAlternative_XALOAD_Resolved dav)
+                throws DecisionException {
+                    StrategyRefine_XALOAD.this.refineResolved(s, dav);
+                }
+    
+                @Override
+                public void visitDecisionAlternative_XALOAD_Out(DecisionAlternative_XALOAD_Out dao) {
+                    StrategyRefine_XALOAD.this.refineOut(s, dao);
+                }
+            };
 
-			@Override
-			public void visitDecisionAlternative_XALOAD_Aliases(DecisionAlternative_XALOAD_Aliases dai)
-			throws DecisionException, ContradictionException {
-				StrategyRefine_XALOAD.this.refineRefAliases(s, dai);
-			}
-
-			@Override
-			public void visitDecisionAlternative_XALOAD_Null(DecisionAlternative_XALOAD_Null dan)
-			throws DecisionException, ContradictionException {
-				StrategyRefine_XALOAD.this.refineRefNull(s, dan);
-			}
-
-			@Override
-			public void visitDecisionAlternative_XALOAD_Resolved(DecisionAlternative_XALOAD_Resolved dav)
-			throws DecisionException {
-				StrategyRefine_XALOAD.this.refineResolved(s, dav);
-			}
-
-			@Override
-			public void visitDecisionAlternative_XALOAD_Out(DecisionAlternative_XALOAD_Out dao) {
-				StrategyRefine_XALOAD.this.refineOut(s, dao);
-			}
-		};
-
-		//redispatches and manages exceptions
-		try {
-			r.accept(visitorRefine);
-		} catch (DecisionException | ContradictionException | 
-				InvalidTypeException | RuntimeException e) {
-			throw e;
-		} catch (Exception e) {
-			//this should never happen
-			throw new UnexpectedInternalException(e);
-		}
-	}
+        //redispatches and manages exceptions
+        try {
+            r.accept(visitorRefine);
+        } catch (DecisionException | ContradictionException | 
+                 InvalidTypeException | RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
+    }
 }

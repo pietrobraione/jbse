@@ -57,7 +57,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
     private final Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier;
     private StringBuilder output = new StringBuilder();
     private int testCounter = 0;
-    
+
     public StateFormatterJUnitTestSuite(Supplier<State> initialStateSupplier, 
                                         Supplier<Map<PrimitiveSymbolic, Simplex>> modelSupplier) {
         this.initialStateSupplier = initialStateSupplier;
@@ -73,12 +73,12 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
     public void formatState(State state) {
         new JUnitTestCase(this.output, this.initialStateSupplier.get(), state, this.modelSupplier.get(), this.testCounter++);
     }
-    
+
     @Override
     public void formatEpilogue() {
         this.output.append("}\n");
     }
-    
+
     @Override
     public String emit() {
         return this.output.toString();
@@ -88,7 +88,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
     public void cleanup() {
         this.output = new StringBuilder();
     }
-    
+
     private static final String PROLOGUE =
         "import static java.lang.System.identityHashCode;\n" +
         "import static org.junit.Assert.*;\n" +
@@ -224,7 +224,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
         private final HashMap<String, String> symbolsToVariables = new HashMap<>();
         private boolean panic = false;
         private ClauseAssume clauseLength = null;
-        
+
         JUnitTestCase(StringBuilder s, State initialState, State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) {
             this.s = s;
             appendMethodDeclaration(finalState, testCounter);
@@ -233,7 +233,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             appendAssert(initialState, finalState);
             appendMethodEnd(finalState, testCounter);
         }
-        
+
         private void appendMethodDeclaration(State finalState, int testCounter) {
             if (this.panic) {
                 return;
@@ -255,7 +255,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             this.s.append(finalState.getSequenceNumber());
             this.s.append("]\n");
         }
-        
+
         private void appendInputsInitialization(State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) {
             if (this.panic) {
                 return;
@@ -301,7 +301,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 this.s.append('\n');
             }
         }
-        
+
         private void appendInvocationOfMethodUnderTest(State initialState, State finalState) {
             if (this.panic) {
                 return;
@@ -372,14 +372,14 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 throw new UnexpectedInternalException(e);
             }
         }
-        
+
         private void appendAssert(State initialState, State finalState) {
             if (this.panic) {
                 return;
             }
             final Value returnedValue = finalState.getStuckReturn();
             final boolean mustCheckReturnedValue = 
-                (returnedValue != null)  && (isPrimitive(returnedValue.getType()) || returnedValue instanceof Symbolic);
+            (returnedValue != null)  && (isPrimitive(returnedValue.getType()) || returnedValue instanceof Symbolic);
             if (mustCheckReturnedValue) {
                 this.s.append(INDENT);
                 this.s.append("assertTrue(__returnedValue == ");
@@ -424,7 +424,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 this.s.append(");\n");
             }
         }
-        
+
         private void appendMethodEnd(State finalState, int testCounter) {
             if (this.panic) {
                 this.s.delete(0, s.length());
@@ -439,7 +439,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 this.s.append("    }\n");
             }
         }
-        
+
         private void setWithNewObject(State finalState, Symbolic symbol, long heapPosition, 
                                       Iterator<Clause> iterator, Map<PrimitiveSymbolic, Simplex> model) {        
             makeVariableFor(symbol);
@@ -475,7 +475,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 this.s.append(";");
             }
         }
-        
+
         private void setWithNull(ReferenceSymbolic symbol) {
             makeVariableFor(symbol);
             final String var = getVariableFor(symbol);
@@ -500,7 +500,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 this.s.append("\"));");
             }
         }
-        
+
         private void setWithAlias(State finalState, Symbolic symbol, long heapPosition) {
             makeVariableFor(symbol);
             final String var = getVariableFor(symbol);
@@ -522,7 +522,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 this.s.append(';'); 
             }
         }
-        
+
         private Simplex arrayLength(ClauseAssume clause, Map<PrimitiveSymbolic, Simplex> model) {
             //the clause has shape {length} >= 0 - i.e., it has just
             //one symbol, the length
@@ -567,11 +567,11 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             }
             return retVal.toString();
         }
-                
+
         private String generateName(String name) {
             return name.replace("{ROOT}:", "__ROOT_");
         }
-        
+
         private void makeVariableFor(Symbolic symbol) {
             final String value = symbol.getValue(); 
             final String origin = symbol.getOrigin().toString();
@@ -579,18 +579,18 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 this.symbolsToVariables.put(value, generateName(origin));
             }
         }
-        
+
         private String getVariableFor(Symbolic symbol) {
             final String value = symbol.getValue(); 
             return this.symbolsToVariables.get(value);
         }
-        
+
         private static String getTypeOfObjectInHeap(State finalState, long num) {
             final Map<Long, Objekt> heap = finalState.getHeap();
             final Objekt o = heap.get(num);
             return o.getType();
         }
-        
+
         private String getOriginOfObjectInHeap(State finalState, long heapPos){
             final Collection<Clause> path = finalState.getPathCondition();
             for (Clause clause : path) {
@@ -604,7 +604,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             }
             return null;
         }
-        
+
         private boolean hasMemberAccessor(String s) {
             return (s.indexOf('.') != -1);
         }
@@ -634,7 +634,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             }
             return a;
         }
-        
+
         private String getValue(String accessExpression) {
             if (hasMemberAccessor(accessExpression)) {
                 final String container = "new AccessibleObject(" + accessExpression.substring(0, accessExpression.indexOf('.')) + ")";
@@ -644,7 +644,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 return accessExpression;
             }
         }
-        
+
         private void setByReflection(String accessExpression, String value) {
             final String container = "new AccessibleObject(" + accessExpression.substring(0, accessExpression.indexOf('.')) + ")";
             final String accessExpressionWithGetters = replaceAccessorsWithGetters(container, accessExpression.substring(0, accessExpression.lastIndexOf('.')));
@@ -656,7 +656,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             this.s.append(value);
             this.s.append(");");
         }
-        
+
         private String primitiveSymbolAssignments(Primitive e, Map<PrimitiveSymbolic, Simplex> model) {
             final Set<PrimitiveSymbolic> symbols = symbolsIn(e);
             final StringBuilder s = new StringBuilder();
@@ -673,39 +673,39 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             }
             return s.toString();
         }
-        
+
         private Set<PrimitiveSymbolic> symbolsIn(Primitive e) {
             final HashSet<PrimitiveSymbolic> symbols = new HashSet<>();
             PrimitiveVisitor v = new PrimitiveVisitor() {
-                
+
                 @Override
                 public void visitWideningConversion(WideningConversion x) throws Exception {
                     x.getArg().accept(this);
                 }
-                
+
                 @Override
                 public void visitTerm(Term x) throws Exception { }
-                
+
                 @Override
                 public void visitSimplex(Simplex x) throws Exception { }
-                
+
                 @Override
                 public void visitPrimitiveSymbolic(PrimitiveSymbolic s) {
                     symbols.add(s);
                 }
-                
+
                 @Override
                 public void visitNarrowingConversion(NarrowingConversion x) throws Exception {
                     x.getArg().accept(this);
                 }
-                
+
                 @Override
                 public void visitFunctionApplication(FunctionApplication x) throws Exception {
                     for (Primitive p : x.getArgs()) {
                         p.accept(this);
                     }
                 }
-                
+
                 @Override
                 public void visitExpression(Expression e) throws Exception {
                     if (e.isUnary()) {
@@ -715,11 +715,11 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                         e.getSecondOperand().accept(this);
                     }
                 }
-                
+
                 @Override
                 public void visitAny(Any x) { }
             };
-            
+
             try {
                 e.accept(v);
             } catch (Exception exc) {
@@ -728,7 +728,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             }
             return symbols;
         }
-        
+
         private void setWithNumericValue(PrimitiveSymbolic symbol, Simplex value) {
             final boolean variableNotYetCreated = (getVariableFor(symbol) == null);
             if (variableNotYetCreated) {

@@ -46,7 +46,7 @@ final class Algo_PUTSTATIC extends Algo_PUTX {
 
         //checks that if the field is final is declared in the current class
         if (fieldClassFile.isFieldFinal(this.fieldSignatureResolved) &&
-        !fieldClassName.equals(currentClassName)) {
+            !fieldClassName.equals(currentClassName)) {
             throwNew(state, ILLEGAL_ACCESS_ERROR);
             exitFromAlgorithm();
         }

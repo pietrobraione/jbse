@@ -19,7 +19,7 @@ import jbse.mem.exc.ThreadStackEmptyException;
  */
 public final class BytecodeData_1ZSWITCH extends BytecodeData {
     final boolean isTableSwitch;
-    
+
     @Override
     public void readImmediates(State state) throws InterruptException {
         try {
@@ -38,7 +38,7 @@ public final class BytecodeData_1ZSWITCH extends BytecodeData {
     private BytecodeData_1ZSWITCH(boolean isTableSwitch) {
         this.isTableSwitch = isTableSwitch;
     }
-    
+
     /**
      * Factory (with fluent interface).
      * 

@@ -10,12 +10,11 @@ public class NotYetImplementedException extends CannotManageStateException {
      * 
      */
     private static final long serialVersionUID = -4415922270426991464L;
-    
+
     /**
      * Constructor
      */
-    public NotYetImplementedException(String param)
-    {
+    public NotYetImplementedException(String param) {
         super(param);
     }
 }

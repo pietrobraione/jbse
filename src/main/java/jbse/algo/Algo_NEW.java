@@ -32,17 +32,17 @@ DecisionAlternative_NONE,
 StrategyDecide<DecisionAlternative_NONE>, 
 StrategyRefine<DecisionAlternative_NONE>, 
 StrategyUpdate<DecisionAlternative_NONE>> {
-    
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 0;
     }
-    
+
     @Override
     protected Supplier<BytecodeData_1CL> bytecodeData() {
         return BytecodeData_1CL::get;
     }
-    
+
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
@@ -63,7 +63,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 //this should never happen
                 failExecution(e);
             }
-            
+
             //possibly creates and initializes the class
             try {
                 ensureClassCreatedAndInitialized(state, this.data.className(), this.ctx);
@@ -73,12 +73,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             }
         };
     }
-    
+
     @Override
     protected Class<DecisionAlternative_NONE> classDecisionAlternative() {
         return DecisionAlternative_NONE.class;
     }
-    
+
     @Override
     protected StrategyDecide<DecisionAlternative_NONE> decider() {
         return (state, result) -> {
@@ -91,7 +91,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected StrategyRefine<DecisionAlternative_NONE> refiner() {
         return (state, alt) -> { };
     }
-    
+
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
@@ -99,12 +99,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             state.pushOperand(state.createInstance(this.data.className()));
         };
     }
-    
+
     @Override
     protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> NEW_OFFSET;

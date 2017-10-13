@@ -14,32 +14,32 @@ public class InterruptException extends Exception {
     public static InterruptException mk() { 
         return new InterruptException(); 
     }
-    
+
     public static InterruptException mk(Algorithm<?, ?, ?, ?, ?> continuation) { 
         return new InterruptException(continuation); 
     }
-    
+
     private Algorithm<?, ?, ?, ?, ?> continuation = null;
-    
+
     public boolean hasContinuation() {
         return (this.continuation != null);
     }
-    
+
     public Algorithm<?, ?, ?, ?, ?> getContinuation() {
         return this.continuation;
     }
-    
+
     /**
      * Do not instantiate!
      */
     private InterruptException() { 
         this.continuation = null;
     }
-    
+
     private InterruptException(Algorithm<?, ?, ?, ?, ?> continuation) { 
         this.continuation = continuation;
     }
-    
+
     /**
      * 
      */

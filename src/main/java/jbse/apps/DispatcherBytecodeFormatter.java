@@ -61,11 +61,11 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
      */
     private static class DispatchStrategyFormat0 implements DispatchStrategyFormat {
         private final String text;
-        
+
         public DispatchStrategyFormat0(String text) { 
             this.text = text;
         }
-        
+
         public TextGenerator doIt() {
             return (f, hier) -> DispatchStrategyFormat0.this.text; 
         }
@@ -80,12 +80,12 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
     private static class DispatchStrategyFormat0LV implements DispatchStrategyFormat {
         private final String text;
         private final int slot;
-        
+
         public DispatchStrategyFormat0LV(String text, int slot) { 
             this.text = text; 
             this.slot = slot; 
         }
-        
+
         public TextGenerator doIt() {
             return (Frame f, ClassHierarchy hier) -> { 
                 final String varName = f.getLocalVariableDeclaredName(DispatchStrategyFormat0LV.this.slot);
@@ -102,11 +102,11 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
      */
     private static class DispatchStrategyFormat1AT implements DispatchStrategyFormat {
         private final String text;
-        
+
         public DispatchStrategyFormat1AT(String text) {
             this.text = text;
         }
-        
+
         public TextGenerator doIt() {
             return (Frame f, ClassHierarchy hier) -> { 
                 String retVal = DispatchStrategyFormat1AT.this.text + " ";
@@ -248,11 +248,11 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
      */
     private static class DispatchStrategyFormat1ON implements DispatchStrategyFormat {
         private final String text;
-        
+
         public DispatchStrategyFormat1ON(String text) { 
             this.text = text; 
         }
-        
+
         public TextGenerator doIt() {
             return (Frame f, ClassHierarchy hier) -> {
                 String retVal = DispatchStrategyFormat1ON.this.text + " ";
@@ -277,11 +277,11 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
      */
     private static class DispatchStrategyFormat1OF implements DispatchStrategyFormat {
         private final String text;
-        
+
         public DispatchStrategyFormat1OF(String text) {
             this.text = text;
         }
-        
+
         public TextGenerator doIt() {
             return (Frame f, ClassHierarchy hier) -> {
                 String retVal = DispatchStrategyFormat1OF.this.text + " ";
@@ -307,12 +307,12 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
     private static class DispatchStrategyFormat1CO implements DispatchStrategyFormat {
         private final String text;
         private final boolean wide;
-        
+
         public DispatchStrategyFormat1CO(String text, boolean wide) { 
             this.text = text; 
             this.wide = wide;
         }
-        
+
         public TextGenerator doIt() {
             return (Frame f, ClassHierarchy hier) -> {
                 String retVal = DispatchStrategyFormat1CO.this.text + " ";
@@ -343,7 +343,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                         retVal += UNRECOGNIZED_BYTECODE;
                     }
                 } catch (InvalidProgramCounterException | InvalidIndexException |
-                         BadClassFileException | UnexpectedInternalException e) {
+                BadClassFileException | UnexpectedInternalException e) {
                     //unrecognized bytecode
                     retVal += UNRECOGNIZED_BYTECODE;
                 }
@@ -361,11 +361,11 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
      */
     private static class DispatchStrategyFormat1CL implements DispatchStrategyFormat {
         private final String text;
-        
+
         public DispatchStrategyFormat1CL(String text) {
             this.text = text;
         }
-        
+
         public TextGenerator doIt() {
             return (Frame f, ClassHierarchy hier) -> { 
                 String retVal = DispatchStrategyFormat1CL.this.text + " ";
@@ -374,7 +374,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                     final String sig = hier.getClassFile(f.getCurrentMethodSignature().getClassName()).getClassSignature(UW);
                     retVal += sig;
                 } catch (InvalidProgramCounterException | InvalidIndexException |
-                         BadClassFileException | UnexpectedInternalException e) {
+                BadClassFileException | UnexpectedInternalException e) {
                     //unrecognized bytecode
                     retVal += UNRECOGNIZED_BYTECODE;
                 }
@@ -391,11 +391,11 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
      */
     private static class DispatchStrategyFormat1FI implements DispatchStrategyFormat {
         private final String text;
-        
+
         public DispatchStrategyFormat1FI(String text) {
             this.text = text;
         }
-        
+
         public TextGenerator doIt() {
             return (Frame f, ClassHierarchy hier) -> {
                 String retVal = DispatchStrategyFormat1FI.this.text + " ";
@@ -404,7 +404,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                     final Signature sig = hier.getClassFile(f.getCurrentMethodSignature().getClassName()).getFieldSignature(UW);
                     retVal += sig.getClassName() + Signature.SIGNATURE_SEPARATOR + sig.getName() + " [" + UW + "]";
                 } catch (InvalidProgramCounterException | InvalidIndexException |
-                         BadClassFileException | UnexpectedInternalException e) {
+                BadClassFileException | UnexpectedInternalException e) {
                     //unrecognized bytecode
                     retVal += UNRECOGNIZED_BYTECODE;
                 }
@@ -441,7 +441,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                     }
                     retVal += sig + " [" + UW + "]";
                 } catch (InvalidProgramCounterException | InvalidIndexException |
-                         BadClassFileException | UnexpectedInternalException e) {
+                BadClassFileException | UnexpectedInternalException e) {
                     //unrecognized bytecode
                     retVal += UNRECOGNIZED_BYTECODE;
                 }
@@ -473,7 +473,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                     final String sig = hier.getClassFile(f.getCurrentMethodSignature().getClassName()).getClassSignature(UW);
                     retVal += sig + " " + UB + " [" + UW + "]";
                 } catch (InvalidProgramCounterException | InvalidIndexException |
-                         BadClassFileException | UnexpectedInternalException e) {
+                BadClassFileException | UnexpectedInternalException e) {
                     //unrecognized bytecode
                     retVal += UNRECOGNIZED_BYTECODE;
                 }

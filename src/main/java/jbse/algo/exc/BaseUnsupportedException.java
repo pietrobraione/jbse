@@ -9,12 +9,12 @@ package jbse.algo.exc;
  */
 public class BaseUnsupportedException extends CannotManageStateException {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 9181624209704832999L;
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 9181624209704832999L;
 
-	public BaseUnsupportedException(String param) {
-		super(param);
-	}
+    public BaseUnsupportedException(String param) {
+        super(param);
+    }
 }

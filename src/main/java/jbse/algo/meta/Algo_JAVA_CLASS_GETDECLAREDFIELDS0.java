@@ -58,12 +58,12 @@ import jbse.val.exc.InvalidTypeException;
  */
 public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_Nonbranching {
     private ClassFile cf; //set by cookMore
-    
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 2;
     }
-    
+
     @Override
     protected void cookMore(State state)
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
@@ -88,23 +88,23 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
     protected void update(State state) 
     throws SymbolicValueNotAllowedException, ThreadStackEmptyException, InterruptException {
         //gets the signatures of the fields to emit; the position of the signature
-    	    //in sigFields indicates its slot
+        //in sigFields indicates its slot
         final boolean onlyPublic = ((Simplex) this.data.operand(1)).surelyTrue();
         final List<Signature> sigFields;
         try {
             sigFields = Arrays.stream(this.cf.getDeclaredFields())
-                .map(sig -> {
-                    try {
-					    if (onlyPublic && !this.cf.isFieldPublic(sig)) {
-					        return null;
-					    } else {
-					        return sig;
-					    }
-				    } catch (FieldNotFoundException e) {
-					    throw new RuntimeException(e);
-				    }
-			    })
-		        .collect(Collectors.toList());
+            .map(sig -> {
+                try {
+                    if (onlyPublic && !this.cf.isFieldPublic(sig)) {
+                        return null;
+                    } else {
+                        return sig;
+                    }
+                } catch (FieldNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+            })
+            .collect(Collectors.toList());
         } catch (RuntimeException e) {
             if (e.getCause() instanceof FieldNotFoundException) {
                 //this should never happen
@@ -112,121 +112,121 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
             }
             throw e;
         }
-        
+
         final int numFields = sigFields.stream()
-        		.map(s -> (s == null ? 0 : 1))
-        		.reduce(0, (a, b) -> a + b);
-        		
-        
+        .map(s -> (s == null ? 0 : 1))
+        .reduce(0, (a, b) -> a + b);
+
+
         //builds the array to return
         ReferenceConcrete result = null; //to keep the compiler happy
-		try {
-			result = state.createArray(null, state.getCalculator().valInt(numFields), "" + ARRAYOF + REFERENCE + JAVA_FIELD + TYPEEND);
-		} catch (InvalidTypeException e) {
-			//this should never happen
-			failExecution(e);
-		}
-		
-		//constructs the java.lang.reflect.Field objects and fills the array
+        try {
+            result = state.createArray(null, state.getCalculator().valInt(numFields), "" + ARRAYOF + REFERENCE + JAVA_FIELD + TYPEEND);
+        } catch (InvalidTypeException e) {
+            //this should never happen
+            failExecution(e);
+        }
+
+        //constructs the java.lang.reflect.Field objects and fills the array
         final Reference classRef = (Reference) this.data.operand(0);
-		final Array resultArray = (Array) state.getObject(result);
-		final Calculator calc = state.getCalculator();
-		int index = 0;
-		int slot = 0;
-		for (Signature sigField : sigFields) {
-			if (sigField != null) {
-				//creates an instance of java.lang.reflect.Field and 
-				//puts it in the return array
-				final ReferenceConcrete fieldRef = state.createInstance(JAVA_FIELD);
-				try {
-					resultArray.setFast(calc.valInt(index) , fieldRef);
-				} catch (InvalidOperandException | InvalidTypeException | FastArrayAccessNotAllowedException e) {
-					//this should never happen
-					failExecution(e);
-				}
+        final Array resultArray = (Array) state.getObject(result);
+        final Calculator calc = state.getCalculator();
+        int index = 0;
+        int slot = 0;
+        for (Signature sigField : sigFields) {
+            if (sigField != null) {
+                //creates an instance of java.lang.reflect.Field and 
+                //puts it in the return array
+                final ReferenceConcrete fieldRef = state.createInstance(JAVA_FIELD);
+                try {
+                    resultArray.setFast(calc.valInt(index) , fieldRef);
+                } catch (InvalidOperandException | InvalidTypeException | FastArrayAccessNotAllowedException e) {
+                    //this should never happen
+                    failExecution(e);
+                }
 
-				//from here initializes the java.lang.reflect.Field instance
-				final Instance field = (Instance) state.getObject(fieldRef);
+                //from here initializes the java.lang.reflect.Field instance
+                final Instance field = (Instance) state.getObject(fieldRef);
 
-				//sets clazz
-				field.setFieldValue(JAVA_FIELD_CLAZZ, classRef);
+                //sets clazz
+                field.setFieldValue(JAVA_FIELD_CLAZZ, classRef);
 
-				//sets name
-				try {
-					ensureStringLiteral(state, this.ctx, sigField.getName());
-				} catch (ClassFileIllFormedException | DecisionException | ClasspathException e) {
-					//this should never happen
-					failExecution(e);
-				}
-				final ReferenceConcrete refSigName = state.referenceToStringLiteral(sigField.getName());
-				field.setFieldValue(JAVA_FIELD_NAME, refSigName);
+                //sets name
+                try {
+                    ensureStringLiteral(state, this.ctx, sigField.getName());
+                } catch (ClassFileIllFormedException | DecisionException | ClasspathException e) {
+                    //this should never happen
+                    failExecution(e);
+                }
+                final ReferenceConcrete refSigName = state.referenceToStringLiteral(sigField.getName());
+                field.setFieldValue(JAVA_FIELD_NAME, refSigName);
 
-				//sets modifiers
-				try {
-					field.setFieldValue(JAVA_FIELD_MODIFIERS, calc.valInt(this.cf.getFieldModifiers(sigField)));
-				} catch (FieldNotFoundException e) {
-					//this should never happen
-					failExecution(e);
-				}
+                //sets modifiers
+                try {
+                    field.setFieldValue(JAVA_FIELD_MODIFIERS, calc.valInt(this.cf.getFieldModifiers(sigField)));
+                } catch (FieldNotFoundException e) {
+                    //this should never happen
+                    failExecution(e);
+                }
 
-				//sets signature
-				try {
-					final String sigType = this.cf.getFieldGenericSignatureType(sigField);
-					final ReferenceConcrete refSigType;
-					if (sigType == null) {
-						refSigType = Null.getInstance();
-					} else {
-						ensureStringLiteral(state, this.ctx, sigType);
-						refSigType = state.referenceToStringLiteral(sigType);
-					}
-					field.setFieldValue(JAVA_FIELD_SIGNATURE, refSigType);
-				} catch (ClassFileIllFormedException | ClasspathException | 
-						DecisionException | FieldNotFoundException e) {
-					//this should never happen
-					failExecution(e);
-				}
+                //sets signature
+                try {
+                    final String sigType = this.cf.getFieldGenericSignatureType(sigField);
+                    final ReferenceConcrete refSigType;
+                    if (sigType == null) {
+                        refSigType = Null.getInstance();
+                    } else {
+                        ensureStringLiteral(state, this.ctx, sigType);
+                        refSigType = state.referenceToStringLiteral(sigType);
+                    }
+                    field.setFieldValue(JAVA_FIELD_SIGNATURE, refSigType);
+                } catch (ClassFileIllFormedException | ClasspathException | 
+                DecisionException | FieldNotFoundException e) {
+                    //this should never happen
+                    failExecution(e);
+                }
 
-				//sets slot
-				field.setFieldValue(JAVA_FIELD_SLOT, calc.valInt(slot));
+                //sets slot
+                field.setFieldValue(JAVA_FIELD_SLOT, calc.valInt(slot));
 
-				//sets type
-				ReferenceConcrete typeClassRef = null; //to keep the compiler happy
-				final String fieldType = sigField.getDescriptor();
-				if (isPrimitive(fieldType)) {
-					try {
-						final String fieldTypeNameBinary = toPrimitiveBinaryClassName(fieldType);
-						state.ensureInstance_JAVA_CLASS_primitive(fieldTypeNameBinary);
-						typeClassRef = state.referenceToInstance_JAVA_CLASS_primitive(fieldTypeNameBinary);
-					} catch (ClassFileNotFoundException e) {
-						//this should never happen
-						failExecution(e);
-					}
-				} else {
-					final String fieldTypeClass = className(fieldType);
-					try {
-						ensureInstance_JAVA_CLASS(state, fieldTypeClass, fieldTypeClass, this.ctx);
-						typeClassRef = state.referenceToInstance_JAVA_CLASS(fieldTypeClass);
-					} catch (BadClassFileException e) {
-						//TODO is it ok?
-						throwVerifyError(state);
-						exitFromAlgorithm();
-					} catch (ClassFileNotAccessibleException | ClasspathException | 
-							DecisionException e) {
-						//this should never happen
-						failExecution(e);
-					}
-				}
-				field.setFieldValue(JAVA_FIELD_TYPE, typeClassRef);
-				
-				//TODO set more fields?
-				
-				++index;
-			}
-			++slot;
-		}
-		
-		
-		//returns the array
+                //sets type
+                ReferenceConcrete typeClassRef = null; //to keep the compiler happy
+                final String fieldType = sigField.getDescriptor();
+                if (isPrimitive(fieldType)) {
+                    try {
+                        final String fieldTypeNameBinary = toPrimitiveBinaryClassName(fieldType);
+                        state.ensureInstance_JAVA_CLASS_primitive(fieldTypeNameBinary);
+                        typeClassRef = state.referenceToInstance_JAVA_CLASS_primitive(fieldTypeNameBinary);
+                    } catch (ClassFileNotFoundException e) {
+                        //this should never happen
+                        failExecution(e);
+                    }
+                } else {
+                    final String fieldTypeClass = className(fieldType);
+                    try {
+                        ensureInstance_JAVA_CLASS(state, fieldTypeClass, fieldTypeClass, this.ctx);
+                        typeClassRef = state.referenceToInstance_JAVA_CLASS(fieldTypeClass);
+                    } catch (BadClassFileException e) {
+                        //TODO is it ok?
+                        throwVerifyError(state);
+                        exitFromAlgorithm();
+                    } catch (ClassFileNotAccessibleException | ClasspathException | 
+                    DecisionException e) {
+                        //this should never happen
+                        failExecution(e);
+                    }
+                }
+                field.setFieldValue(JAVA_FIELD_TYPE, typeClassRef);
+
+                //TODO set more fields?
+
+                ++index;
+            }
+            ++slot;
+        }
+
+
+        //returns the array
         state.pushOperand(result);
     }
 }

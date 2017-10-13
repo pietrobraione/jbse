@@ -19,7 +19,7 @@ public final class Algo_JBSE_ANALYSIS_ANY extends Algo_INVOKEMETA_Nonbranching {
     protected Supplier<Integer> numOperands() {
         return () -> 0;
     }
-    
+
     @Override
     protected void update(State state) throws ThreadStackEmptyException {
         state.pushOperand(state.getCalculator().valAny());

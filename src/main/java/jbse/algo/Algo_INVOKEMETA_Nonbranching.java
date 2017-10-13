@@ -37,8 +37,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         return (state) -> { 
             //sets the program counter offset for the return point
             this.pcOffset = (this.isInterface ? 
-                INVOKEDYNAMICINTERFACE_OFFSET : 
-                INVOKESPECIALSTATICVIRTUAL_OFFSET);
+                             INVOKEDYNAMICINTERFACE_OFFSET : 
+                             INVOKESPECIALSTATICVIRTUAL_OFFSET);
             try {
                 cookMore(state);
             } catch (ThreadStackEmptyException e) {

@@ -79,7 +79,7 @@ StrategyUpdate<DecisionAlternative_IFX>> {
             //val2 (note that both are resolved as they come
             //from the operand stack)
             this.doJump = 
-               (this.compareForEquality ? areAlias(state, val1, val2) :  //also true when both are null
+            (this.compareForEquality ? areAlias(state, val1, val2) :  //also true when both are null
                 !areAlias(state, val1, val2));
         };
     }

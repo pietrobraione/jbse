@@ -56,12 +56,12 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
 
     private Reference myObjectRef; //set by cooker
     private Primitive index; //set by cooker
-	
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 3;
     }
-    
+
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
@@ -86,12 +86,12 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             }
         };
     } 
-    
+
     @Override
     protected Class<DecisionAlternative_XALOAD> classDecisionAlternative() {
         return DecisionAlternative_XALOAD.class;
     }
-    
+
     @Override
     protected StrategyDecide<DecisionAlternative_XALOAD> decider() {
         //copied from Algo_XALOAD
@@ -123,9 +123,9 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 try {
                     entries = arrayToProcess.get(this.index.add(arrayOffset));
                 } catch (InvalidOperandException | InvalidTypeException e) {
-                                    //this should never happen
-                                    failExecution(e);
-                            }
+                    //this should never happen
+                    failExecution(e);
+                }
                 for (Array.AccessOutcome e : entries) {
                     if (e instanceof Array.AccessOutcomeInInitialArray) {
                         final Array.AccessOutcomeInInitialArray eCast = (Array.AccessOutcomeInInitialArray) e;
@@ -142,7 +142,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                             if (val == null) {
                                 try {
                                     val = state.createSymbol(getArrayMemberType(arrayToProcess.getType()), 
-                                    arrayToProcess.getOrigin().thenArrayMember(this.index.add(arrayOffset)));
+                                                             arrayToProcess.getOrigin().thenArrayMember(this.index.add(arrayOffset)));
                                 } catch (InvalidOperandException | InvalidTypeException exc) {
                                     //this should never happen
                                     failExecution(exc);
@@ -184,9 +184,9 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             //on the used decision procedure, so we cannot make it dependent
             //on result.size().
             return Outcome.val(shouldRefine, /*omitted this.someRefNotExpanded,*/ branchingDecision);
-          };
+        };
     }
-    
+
     private void writeBackToSource(State state, Value valueToStore) 
     throws DecisionException {
         storeInArray(state, this.ctx, this.myObjectRef, this.index, valueToStore);
@@ -257,7 +257,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                     }
                     state.pushOperand(valToPush);
                 } catch (ClassCastException | InvalidTypeException | 
-                         ThreadStackEmptyException e) {
+                ThreadStackEmptyException e) {
                     //this should not happen
                     failExecution(e);
                 }
@@ -265,7 +265,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 //manages triggers
                 try {
                     final boolean someTriggerFrameLoaded = 
-                    		Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.ctx.triggerManager.loadTriggerFrames(state, altResolved, Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.programCounterUpdate.get());
+                    Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.ctx.triggerManager.loadTriggerFrames(state, altResolved, Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.programCounterUpdate.get());
                     if (someTriggerFrameLoaded) {
                         exitFromAlgorithm();
                     }
@@ -290,7 +290,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
     protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
-    
+
     @Override
     protected Supplier<Integer> programCounterUpdate() {
         return () -> INVOKESPECIALSTATICVIRTUAL_OFFSET;

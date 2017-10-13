@@ -25,12 +25,12 @@ import jbse.val.Simplex;
 public final class Algo_JAVA_CLASS_ISINSTANCE extends Algo_INVOKEMETA_Nonbranching {
     private String representedClass; //set by cookMore
     private Reference tmpValue; //set by cookMore
-    
+
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 2;
     }
-    
+
     @Override
     protected void cookMore(State state)
     throws ThreadStackEmptyException, InterruptException {
@@ -49,7 +49,7 @@ public final class Algo_JAVA_CLASS_ISINSTANCE extends Algo_INVOKEMETA_Nonbranchi
                 failExecution("The 'this' parameter to java.lang.Class.isInstance method is symbolic and unresolved.");
             }
             this.representedClass = javaClassObject.representedClass();
-            
+
             //gets the reference to the object to be checked
             this.tmpValue = (Reference) this.data.operand(1);
         } catch (ClassCastException e) {
@@ -57,7 +57,7 @@ public final class Algo_JAVA_CLASS_ISINSTANCE extends Algo_INVOKEMETA_Nonbranchi
             exitFromAlgorithm();
         }
     }
-    
+
     @Override
     protected void update(State state) throws ThreadStackEmptyException {
         //determines which value to push on the operand stack

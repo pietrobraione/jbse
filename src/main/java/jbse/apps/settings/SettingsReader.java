@@ -26,31 +26,31 @@ import jbse.rules.TriggerRulesRepo;
  */
 //TODO format and many other settings
 public class SettingsReader {
-	private SettingsParser parser;
+    private SettingsParser parser;
 
-	/**
-	 * Constructor.
-	 * 
-	 * @param fname the name of the file containing the settings. The
-	 *        constructor will read the file.
-	 * @throws FileNotFoundException if the file does not exist.
-	 * @throws ParseException if the content of the file is not correct.
-	 * @throws IOException (other than {@link FileNotFoundException}) 
-	 *         if some error occurs while closing the file.
-	 */
-	public SettingsReader(String fname) throws IOException, FileNotFoundException, ParseException {
-		try (final BufferedReader reader = new BufferedReader(new FileReader(fname))) {
-			this.parser = new SettingsParser(reader);
-			this.parser.start();
-		}
-	}
-	
-	public void fillRulesClassInit(ClassInitRulesRepo repo) {
+    /**
+     * Constructor.
+     * 
+     * @param fname the name of the file containing the settings. The
+     *        constructor will read the file.
+     * @throws FileNotFoundException if the file does not exist.
+     * @throws ParseException if the content of the file is not correct.
+     * @throws IOException (other than {@link FileNotFoundException}) 
+     *         if some error occurs while closing the file.
+     */
+    public SettingsReader(String fname) throws IOException, FileNotFoundException, ParseException {
+        try (final BufferedReader reader = new BufferedReader(new FileReader(fname))) {
+            this.parser = new SettingsParser(reader);
+            this.parser.start();
+        }
+    }
+
+    public void fillRulesClassInit(ClassInitRulesRepo repo) {
         for (String cname : this.parser.notInitializedClasses) {
             repo.addNotInitializedClass(cname);
         }
-	}
-		   
+    }
+
     public void fillRulesLICS(LICSRulesRepo repo) {
         for (String[] rule : this.parser.expandToLICS) {
             repo.addExpandTo(rule[0], rule[1], rule[2]);
@@ -83,7 +83,7 @@ public class SettingsReader {
             repo.addResolveNull(rule[0], rule[1], new Signature(rule[2], rule[3], rule[4]), rule[5]);
         }
     }
-    
+
     public void fillExpansionBackdoor(Map<String, Set<String>> expansionBackdoor) {
         for (String[] rule : this.parser.expansionBackdoor) {
             final String toExpand = rule[0];
@@ -96,41 +96,41 @@ public class SettingsReader {
             classesAllowed.add(classAllowed);
         }        
     }
-	
-	/**
-	 * Fills an {@link EngineParameters} object with the data read 
-	 * from the settings file.
-	 * 
-	 * @param params the object to be filled. Note that the operation
-	 *        will add, rather than replace, to previous data in it.
-	 */
-	public void fillEngineParameters(EngineParameters params) {
-	    fillRulesTrigger(params.getTriggerRulesRepo());
-	    fillExpansionBackdoor(params.getExpansionBackdoor());
-	}
-	
-	/**
-	 * Fills a {@link RunnerParameters} object with the data read 
-	 * from the settings file.
-	 * 
-	 * @param params the object to be filled. Note that the operation
-	 *        will add, rather than replace, to previous data in it.
-	 */
-	public void fillRunnerParameters(RunnerParameters params) {
-		fillEngineParameters(params.getEngineParameters());
+
+    /**
+     * Fills an {@link EngineParameters} object with the data read 
+     * from the settings file.
+     * 
+     * @param params the object to be filled. Note that the operation
+     *        will add, rather than replace, to previous data in it.
+     */
+    public void fillEngineParameters(EngineParameters params) {
+        fillRulesTrigger(params.getTriggerRulesRepo());
+        fillExpansionBackdoor(params.getExpansionBackdoor());
+    }
+
+    /**
+     * Fills a {@link RunnerParameters} object with the data read 
+     * from the settings file.
+     * 
+     * @param params the object to be filled. Note that the operation
+     *        will add, rather than replace, to previous data in it.
+     */
+    public void fillRunnerParameters(RunnerParameters params) {
+        fillEngineParameters(params.getEngineParameters());
         //TODO specific parameters
-	}
-	
-	/**
-	 * Fills a {@link RunParameters} object with the data read 
-	 * from the settings file.
-	 * 
-	 * @param params the object to be filled. Note that the operation
-	 *        will add, rather than replace, to previous data in it.
-	 */
-	public void fillRunParameters(RunParameters params) {
-		fillRunnerParameters(params.getRunnerParameters());
-		fillRulesLICS(params.getLICSRulesRepo());
+    }
+
+    /**
+     * Fills a {@link RunParameters} object with the data read 
+     * from the settings file.
+     * 
+     * @param params the object to be filled. Note that the operation
+     *        will add, rather than replace, to previous data in it.
+     */
+    public void fillRunParameters(RunParameters params) {
+        fillRunnerParameters(params.getRunnerParameters());
+        fillRulesLICS(params.getLICSRulesRepo());
         fillRulesClassInit(params.getClassInitRulesRepo());
-	}
+    }
 }

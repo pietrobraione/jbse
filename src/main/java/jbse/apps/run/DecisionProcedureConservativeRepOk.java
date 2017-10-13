@@ -26,61 +26,60 @@ import jbse.val.exc.InvalidTypeException;
  * in the initial state's heap.  
  * 
  * @author Pietro Braione
- *
  */
 public final class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOfResponsibility {
     private final InitialHeapChecker checker;
-    
+
     public DecisionProcedureConservativeRepOk(DecisionProcedure next, CalculatorRewriting calc, 
-    RunnerParameters checkerParameters, Map<String, String> checkMethods) {
+                                              RunnerParameters checkerParameters, Map<String, String> checkMethods) {
         super(next, calc);
         this.checker = new InitialHeapChecker(checkerParameters, ConservativeRepOk.class, checkMethods);
     }
-    
+
     public void setInitialStateSupplier(Supplier<State> initialStateSupplier) {
         this.checker.setInitialStateSupplier(initialStateSupplier);
     }
-    
+
     public void setCurrentStateSupplier(Supplier<State> currentStateSupplier) {
         this.checker.setCurrentStateSupplier(currentStateSupplier);
     }
-    
+
     @Override
-	protected boolean isSatExpandsLocal(ClassHierarchy hier, ReferenceSymbolic r, String className)
-	throws DecisionException {
-		final State sIni = this.checker.makeInitialState();
-		try {
-			sIni.assumeExpands(r, className);
-		} catch (InvalidTypeException | ContradictionException e) {
-			//this should not happen
-			throw new UnexpectedInternalException(e);
-		}
+    protected boolean isSatExpandsLocal(ClassHierarchy hier, ReferenceSymbolic r, String className)
+    throws DecisionException {
+        final State sIni = this.checker.makeInitialState();
+        try {
+            sIni.assumeExpands(r, className);
+        } catch (InvalidTypeException | ContradictionException e) {
+            //this should not happen
+            throw new UnexpectedInternalException(e);
+        }
         return this.checker.checkHeap(sIni, true);
-	}
-	
-	@Override
-	protected boolean isSatAliasesLocal(ClassHierarchy hier, ReferenceSymbolic r, long heapPosition, Objekt o) 
-	throws DecisionException {
-		final State sIni = this.checker.makeInitialState();
-		try {
-			sIni.assumeAliases(r, heapPosition, o);
-		} catch (ContradictionException e) {
-			//this should not happen
-			throw new UnexpectedInternalException(e);
-		}
+    }
+
+    @Override
+    protected boolean isSatAliasesLocal(ClassHierarchy hier, ReferenceSymbolic r, long heapPosition, Objekt o) 
+    throws DecisionException {
+        final State sIni = this.checker.makeInitialState();
+        try {
+            sIni.assumeAliases(r, heapPosition, o);
+        } catch (ContradictionException e) {
+            //this should not happen
+            throw new UnexpectedInternalException(e);
+        }
         return this.checker.checkHeap(sIni, true);
-	}
-	
-	@Override
-	protected boolean isSatNullLocal(ClassHierarchy hier, ReferenceSymbolic r)
-	throws DecisionException {
-		final State sIni = this.checker.makeInitialState();
-		try {
-			sIni.assumeNull(r);
-		} catch (ContradictionException e) {
-			//this should not happen
-			throw new UnexpectedInternalException(e);
-		}
+    }
+
+    @Override
+    protected boolean isSatNullLocal(ClassHierarchy hier, ReferenceSymbolic r)
+    throws DecisionException {
+        final State sIni = this.checker.makeInitialState();
+        try {
+            sIni.assumeNull(r);
+        } catch (ContradictionException e) {
+            //this should not happen
+            throw new UnexpectedInternalException(e);
+        }
         return this.checker.checkHeap(sIni, true);
-	}
+    }
 }
