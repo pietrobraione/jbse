@@ -1,10 +1,7 @@
 package jbse.algo.meta;
 
 import static jbse.algo.Util.ensureInstance_JAVA_CLASS;
-import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
-import static jbse.algo.Util.throwNew;
-import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.JAVA_METHOD_INVOKE;
 
 import java.util.List;
@@ -56,10 +53,7 @@ public final class Algo_SUN_REFLECTION_GETCALLERCLASS extends Algo_INVOKEMETA_No
 
         try {
             ensureInstance_JAVA_CLASS(state, this.className, this.className, this.ctx);
-        } catch (ClassFileNotAccessibleException e) {
-            throwNew(state, ILLEGAL_ACCESS_ERROR);
-            exitFromAlgorithm();
-        } catch (BadClassFileException e) {
+        } catch (ClassFileNotAccessibleException | BadClassFileException e) {
             //this should never happen
             failExecution(e);
         }

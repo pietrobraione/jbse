@@ -39,6 +39,11 @@ public class ClassFileArray extends ClassFile {
     public String getPackageName() {
         return this.packageName;
     }
+    
+    @Override
+    public int getAccessFlags() {
+        return 0; //no access flags set, checked against implementation
+    }
 
     @Override
     public boolean isArray() {

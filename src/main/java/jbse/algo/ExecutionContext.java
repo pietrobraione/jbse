@@ -31,6 +31,7 @@ import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ISRUNBYJBSE;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_SUCCEED;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED;
 import static jbse.algo.Overrides.ALGO_SUN_REFLECTION_GETCALLERCLASS;
+import static jbse.algo.Overrides.ALGO_SUN_REFLECTION_GETCLASSACCESSFLAGS;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_COMPAREANDSWAPINT;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_GETINTVOLATILE;
@@ -91,6 +92,7 @@ import static jbse.bc.Signatures.JAVA_COLLECTIONS_SYNCHRONIZEDSET;
 import static jbse.bc.Signatures.JAVA_COLLECTIONS_UNMODIFIABLECOLLECTION;
 import static jbse.bc.Signatures.JAVA_COLLECTIONS_UNMODIFIABLELIST;
 import static jbse.bc.Signatures.JAVA_COLLECTIONS_UNMODIFIABLERANDOMACCESSLIST;
+import static jbse.bc.Signatures.JAVA_CONSTRUCTOR;
 import static jbse.bc.Signatures.JAVA_DICTIONARY;
 import static jbse.bc.Signatures.JAVA_DOUBLE;
 import static jbse.bc.Signatures.JAVA_ENUM;
@@ -181,6 +183,7 @@ import static jbse.bc.Signatures.SUN_REFLECTION;
 import static jbse.bc.Signatures.SUN_REFLECTIONFACTORY;
 import static jbse.bc.Signatures.SUN_REFLECTIONFACTORY_GETREFLECTIONFACTORYACTION;
 import static jbse.bc.Signatures.SUN_REFLECTION_GETCALLERCLASS;
+import static jbse.bc.Signatures.SUN_REFLECTION_GETCLASSACCESSFLAGS;
 import static jbse.bc.Signatures.SUN_REFLECTUTIL;
 import static jbse.bc.Signatures.SUN_SHAREDSECRETS;
 import static jbse.bc.Signatures.SUN_STANDARDCHARSETS;
@@ -381,6 +384,7 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEDEPTH,                  ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH);
             addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEELEMENT,                ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT);
             addMetaOverridden(SUN_REFLECTION_GETCALLERCLASS,                      ALGO_SUN_REFLECTION_GETCALLERCLASS);
+            addMetaOverridden(SUN_REFLECTION_GETCLASSACCESSFLAGS,                 ALGO_SUN_REFLECTION_GETCLASSACCESSFLAGS);
             addBaseOverridden(SUN_UNSAFE_ADDRESSSIZE,                             BASE_SUN_UNSAFE_ADDRESSSIZE);
             addBaseOverridden(SUN_UNSAFE_ARRAYBASEOFFSET,                         BASE_SUN_UNSAFE_ARRAYBASEOFFSET);
             addBaseOverridden(SUN_UNSAFE_ARRAYINDEXSCALE,                         BASE_SUN_UNSAFE_ARRAYINDEXSCALE);
@@ -555,6 +559,7 @@ public final class ExecutionContext {
         className.equals(JAVA_COLLECTIONS_UNMODIFIABLECOLLECTION) ||
         className.equals(JAVA_COLLECTIONS_UNMODIFIABLELIST) ||
         className.equals(JAVA_COLLECTIONS_UNMODIFIABLERANDOMACCESSLIST) ||
+        className.equals(JAVA_CONSTRUCTOR) ||
         className.equals(JAVA_DICTIONARY) ||
         className.equals(JAVA_DOUBLE) ||
         className.equals(JAVA_EXCEPTION) ||

@@ -50,6 +50,7 @@ public final class Overrides {
     public static final String ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH   = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH.class.getCanonicalName());
     public static final String ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT.class.getCanonicalName());
     public static final String ALGO_SUN_REFLECTION_GETCALLERCLASS       = internalClassName(jbse.algo.meta.Algo_SUN_REFLECTION_GETCALLERCLASS.class.getCanonicalName());
+    public static final String ALGO_SUN_REFLECTION_GETCLASSACCESSFLAGS  = internalClassName(jbse.algo.meta.Algo_SUN_REFLECTION_GETCLASSACCESSFLAGS.class.getCanonicalName());
     public static final String ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET        = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_OBJECTFIELDOFFSET.class.getCanonicalName());
     public static final String ALGO_SUN_UNSAFE_COMPAREANDSWAPINT        = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_COMPAREANDSWAPINT.class.getCanonicalName());
     public static final String ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT     = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_COMPAREANDSWAPOBJECT.class.getCanonicalName());

@@ -79,6 +79,11 @@ public class ClassFileJavassist extends ClassFile {
         }
         return internalClassName(this.cp.getClassInfo(classIndex));
     }
+    
+    @Override
+    public int getAccessFlags() {
+        return this.cls.getClassFile2().getAccessFlags();
+    }
 
     @Override
     public boolean isPublic() {

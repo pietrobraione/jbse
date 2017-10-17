@@ -252,6 +252,8 @@ public final class Signatures {
         new Signature(JBSE_ANALYSIS, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + VOID, "assumeClassNotInitialized");
     public static final Signature SUN_REFLECTION_GETCALLERCLASS = 
         new Signature(SUN_REFLECTION, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getCallerClass");
+    public static final Signature SUN_REFLECTION_GETCLASSACCESSFLAGS = 
+        new Signature(SUN_REFLECTION, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + INT, "getClassAccessFlags");
     public static final Signature SUN_UNSAFE_ADDRESSSIZE = 
         new Signature(SUN_UNSAFE, "()" + INT, "addressSize");
     public static final Signature SUN_UNSAFE_ARRAYBASEOFFSET = 

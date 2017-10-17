@@ -32,6 +32,11 @@ public final class ClassFileBad extends ClassFile {
     public String getClassName() {
         return this.className;
     }
+    
+    @Override
+    public int getAccessFlags() {
+        return 0; //any value suits
+    }
 
     @Override
     public boolean isArray() {

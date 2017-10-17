@@ -1,5 +1,6 @@
 package jbse.bc;
 
+import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.List;
 
@@ -72,6 +73,11 @@ abstract class ClassFilePrimitive extends ClassFile {
     @Override
     public String getClassName() {
         return this.className;
+    }
+    
+    @Override
+    public int getAccessFlags() {
+        return Modifier.ABSTRACT | Modifier.FINAL | Modifier.PUBLIC; //see openjdk 8, hotspot source code, src/share/vm/prims/jvm.cpp function JVM_GetClassAccessFlags
     }
 
     @Override

@@ -62,12 +62,54 @@ public final class Base {
     @MetaOverriddenBy(Algo_JBSE_BASE_CLINIT.class)
     private static native void clinit();
 
+    private static final void putSafe(Properties p, String key, String value) {
+        if (value != null) {
+            p.put(key, value);
+        }
+    }
+
+    /**
+     * Overriding implementation of {@link java.security.AccessController#doPrivileged(PrivilegedExceptionAction)}.
+     * @see java.security.AccessController#doPrivileged(PrivilegedExceptionAction)
+     */
+    public static Object base_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION(PrivilegedExceptionAction<?> action)
+    throws PrivilegedActionException {
+        //since JBSE does not enforce access control we just execute the action
+        try {
+            return action.run();
+        } catch (RuntimeException e) {
+            throw e; //runtime exceptions propagate
+        } catch (Exception e) {
+            throw new PrivilegedActionException(e); //not explicitly told, but this is the only sensible behavior
+        }
+    }
+
+    /**
+     * Overriding implementation of {@link java.security.AccessController#doPrivileged(PrivilegedAction)}.
+     * @see java.security.AccessController#doPrivileged(PrivilegedAction)
+     */
+    public static Object base_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION(PrivilegedAction<?> action)
+    throws PrivilegedActionException {
+        //since JBSE does not enforce access control we just execute the action
+        return action.run();
+    }
+    
+    /**
+     * Overriding implementation of {@link java.security.AccessController#getStackAccessControlContext()}.
+     * @see java.security.AccessController#getStackAccessControlContext()
+     */
+    public static AccessControlContext base_JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT() {
+        //JBSE does not (yet) check access control, so a dummy null context is returned signifying
+        //privileged access (or so it seems).
+        return null;
+    }
+
     /**
      * Overriding implementation of {@link java.lang.System#initProperties(Properties)}.
      * @see java.lang.System#initProperties(Properties)
      */
     public static final Properties base_JAVA_SYSTEM_INITPROPERTIES(Properties p) {
-        //properties taken from openjdk jdk project v8, file src/share/native/java/lang/System.c
+        //properties taken from openjdk 8, jdk project, file src/share/native/java/lang/System.c
         putSafe(p, "java.specification.version", "1.8");
         putSafe(p, "java.specification.name",    "Java Platform API Specification");
         putSafe(p, "java.specification.vendor",  "Oracle Corporation");
@@ -111,56 +153,13 @@ public final class Base {
         //TODO more properties?
         return p;
     }
-
-    private static final void putSafe(Properties p, String key, String value) {
-        if (value != null) {
-            p.put(key, value);
-        }
-    }
-
-    /**
-     * Overriding implementation of {@link java.security.AccessController#doPrivileged(PrivilegedExceptionAction)}.
-     * @see java.security.AccessController#doPrivileged(PrivilegedExceptionAction)
-     */
-    public static Object base_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION(PrivilegedExceptionAction<?> action)
-    throws PrivilegedActionException {
-        //since JBSE does not enforce access control we just execute the action
-        try {
-            return action.run();
-        } catch (RuntimeException e) {
-            throw e; //runtime exceptions propagate
-        } catch (Exception e) {
-            throw new PrivilegedActionException(e); //not explicitly told, but this is the only sensible behavior
-        }
-    }
-
-    /**
-     * Overriding implementation of {@link java.security.AccessController#doPrivileged(PrivilegedAction)}.
-     * @see java.security.AccessController#doPrivileged(PrivilegedAction)
-     */
-    public static Object base_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION(PrivilegedAction<?> action)
-    throws PrivilegedActionException {
-        //since JBSE does not enforce access control we just execute the action
-        return action.run();
-    }
-    
-    /**
-     * Overriding implementation of {@link java.security.AccessController#getStackAccessControlContext()}.
-     * @see java.security.AccessController#getStackAccessControlContext()
-     */
-    public static AccessControlContext base_JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT() {
-        //JBSE does not (yet) check access control, so a dummy null context is returned signifying
-        //privileged access (or so it seems).
-        return null;
-    }
     
     /**
      * Overriding implementation of {@link java.lang.Thread#isAlive()}.
      * @see java.lang.Thread#isAlive()
      */
     public static boolean base_JAVA_THREAD_ISALIVE(Thread _this) {
-        //since there is only one thread alive, we check if _this is the
-        //current thread
+        //in JBSE there is only one thread alive, the current thread
         return (_this == Thread.currentThread());
     }
 
@@ -178,7 +177,7 @@ public final class Base {
      * @see sun.misc.Unsafe#arrayBaseOffset(Class)
      */
     public static int base_SUN_UNSAFE_ARRAYBASEOFFSET(Unsafe _this, Class<?> arrayClass) {
-        //JBSE uses array indices as raw offsets into arrays, so base is zero
+        //JBSE raw array offsets are plain array indices, so base is zero
         return 0; 
     }
 
@@ -187,7 +186,7 @@ public final class Base {
      * @see sun.misc.Unsafe#arrayIndexScale(Class)
      */
     public static int base_SUN_UNSAFE_ARRAYINDEXSCALE(Unsafe _this, Class<?> arrayClass) {
-        //JBSE uses array indices as raw offsets into arrays, so scale is one
+        //JBSE raw array offsets are plain array indices, so scale is one
         return 1; 
     }
 

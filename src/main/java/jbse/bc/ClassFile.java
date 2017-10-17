@@ -32,6 +32,16 @@ public abstract class ClassFile {
             return className.substring(0, lastSlash);
         }
     }
+    
+    /**
+     * Returns the access flags stored in the classfile. 
+     * Note that for inner classes these flags may differ
+     * from those returned by {@link java.lang.Class#getModifiers()}, 
+     * but rather correspond to those returned by {@link sun.reflect.Reflection#getClassAccessFlags(Class)}.
+     *  
+     * @return an {@code int} codifying the access flags.
+     */
+    public abstract int getAccessFlags();
 
     /**
      * Test whether the class is an array.
