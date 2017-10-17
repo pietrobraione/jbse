@@ -18,37 +18,37 @@ import jbse.val.Value;
  * i.e., either a class, or an instance of a class, or an array.
  */
 public abstract class Objekt implements Cloneable {
-	/** 
-	 * The creation epoch of an {@link Objekt}.
-	 * 
-	 * @author Pietro Braione
-	 *
-	 */
-	protected enum Epoch { 
-		EPOCH_BEFORE_START, EPOCH_AFTER_START
-	}
-	
-    /** Static type identifier. Immutable. */
-	protected final String type;
+    /** 
+     * The creation epoch of an {@link Objekt}.
+     * 
+     * @author Pietro Braione
+     *
+     */
+    protected enum Epoch { 
+        EPOCH_BEFORE_START, EPOCH_AFTER_START
+    }
 
-	/**
-	 * The origin of the object in the case it is created by 
-	 * lazy initialization. Immutable.
-	 */
-	private final MemoryPath origin;
+    /** Static type identifier. Immutable. */
+    protected final String type;
+
+    /**
+     * The origin of the object in the case it is created by 
+     * lazy initialization. Immutable.
+     */
+    private final MemoryPath origin;
 
     /** The creation epoch of this {@link Objekt}. Immutable. */
     private final Epoch epoch;
-    
+
     /** 
      * {@code true} if the object must store the static fields,
      * {@code false} if it must store the object (nonstatic) fields.
      */
     private final boolean staticFields;
-    
+
     /** The number of static fields. Immutable. */
     private final int numOfStaticFields;
-    
+
     /** 
      * All the signatures of all the fields declared by 
      * this {@link Objekt}'s class (static and nonstatic)
@@ -56,7 +56,7 @@ public abstract class Objekt implements Cloneable {
      * signature in this list is its slot number,
      * used to support sun.misc.Unsafe. Immutable. */
     private final List<Signature> fieldSignatures;
-    
+
     /** 
      * The hash code of this {@link Objekt}. Mutable only
      * because it must be set after creation, but should not
@@ -71,7 +71,7 @@ public abstract class Objekt implements Cloneable {
      * mutable). 
      */
     protected HashMap<String, Variable> fields;
-    
+
     /**
      * Constructor.
      * 
@@ -96,10 +96,10 @@ public abstract class Objekt implements Cloneable {
         this.fieldSignatures = Arrays.asList(fieldSignatures.clone()); //safety copy
         int curSlot = 0;
         for (Signature s : this.fieldSignatures) {
-        	    if ((staticFields && curSlot < numOfStaticFields) ||
-        	    		(!staticFields && curSlot >= numOfStaticFields)) {
+            if ((staticFields && curSlot < numOfStaticFields) ||
+                (!staticFields && curSlot >= numOfStaticFields)) {
                 this.fields.put(s.toString(), new Variable(calc, s.getDescriptor(), s.getName()));
-        	    }
+            }
             ++curSlot;
         }
         this.type = type;
@@ -107,26 +107,26 @@ public abstract class Objekt implements Cloneable {
         this.epoch = epoch;
         //this.hashCode must be initialized by means of setters
     }
-    
-	/**
+
+    /**
      * Returns the class name of this {@link Objekt} (i.e., 
      * {@code "java/lang/Object"} or {@code "[[I"}).
      * 
      * @return a {@link String}.
      */
-	public final String getType() {
-		return this.type;
-	}
-    
+    public final String getType() {
+        return this.type;
+    }
+
     /**
      * Returns the object's origin.
      * 
      * @return a {@link String}
      */
     public final MemoryPath getOrigin() {
-    	return this.origin;
+        return this.origin;
     }
-    
+
     /**
      * Checks the epoch of this {@link Objekt}.
      *  
@@ -135,9 +135,9 @@ public abstract class Objekt implements Cloneable {
      *         before the start of the symbolic execution.
      */
     public final boolean isSymbolic() {
-    	return (this.epoch == Epoch.EPOCH_BEFORE_START); 
+        return (this.epoch == Epoch.EPOCH_BEFORE_START); 
     }
-    
+
     /**
      * Sets the default hash code of this {@link Objekt}.
      * 
@@ -151,7 +151,7 @@ public abstract class Objekt implements Cloneable {
     public final void setObjektDefaultHashCode(Primitive defaultHashCode) {
         this.defaultHashCode = defaultHashCode;
     }
-    
+
     /**
      * Returns the default hash code of this {@code Objekt}.
      * 
@@ -160,7 +160,7 @@ public abstract class Objekt implements Cloneable {
     public final Primitive getObjektDefaultHashCode() {
         return this.defaultHashCode;
     }
-    
+
     /**
      * Returns the {@link Signature}s of all the fields
      * this {@link Objekt} stores.
@@ -169,13 +169,13 @@ public abstract class Objekt implements Cloneable {
      *         {@link Collection}{@code <}{@link Signature}{@code >}.
      */
     public final Collection<Signature> getStoredFieldSignatures() {
-    	    if (this.staticFields) {
+        if (this.staticFields) {
             return Collections.unmodifiableCollection(this.fieldSignatures.subList(0, this.numOfStaticFields));
-    	    } else {
+        } else {
             return Collections.unmodifiableCollection(this.fieldSignatures.subList(this.numOfStaticFields, this.fieldSignatures.size()));
-    	    }
+        }
     }
-    
+
     /**
      * Checks whether an object has a slot with a given number.
      * 
@@ -190,7 +190,7 @@ public abstract class Objekt implements Cloneable {
             return (this.numOfStaticFields <= slot && slot < this.fieldSignatures.size());
         }
     }
-    
+
     /**
      * Gets the value in a field of the {@link Instance}.
      * 
@@ -201,14 +201,14 @@ public abstract class Objekt implements Cloneable {
      * field with that {@code name}. 
      */
     public final Value getFieldValue(Signature sig) {
-    	//TODO does it work with visibility modifiers???
+        //TODO does it work with visibility modifiers???
         try {
             return this.fields.get(sig.toString()).getValue();  //toString() is necessary, type erasure doesn't play well
         } catch (Exception e) {
             return null;
         }
     }
-    
+
     /**
      * Gets the value in a field of the {@link Instance}.
      * 
@@ -220,13 +220,13 @@ public abstract class Objekt implements Cloneable {
      * of a field. 
      */
     public final Value getFieldValue(int slot) {
-    		try {
-    			return getFieldValue(this.fieldSignatures.get(slot));
-    		} catch (IndexOutOfBoundsException e) {
-    			return null;
-    		}
+        try {
+            return getFieldValue(this.fieldSignatures.get(slot));
+        } catch (IndexOutOfBoundsException e) {
+            return null;
+        }
     }
-    
+
     /**
      * Returns the slot number of a field.
      * 
@@ -237,9 +237,9 @@ public abstract class Objekt implements Cloneable {
      *         if such field does not exist.
      */
     public final int getFieldSlot(Signature field) {
-    		return this.fieldSignatures.indexOf(field); //not very efficient but we don't care
+        return this.fieldSignatures.indexOf(field); //not very efficient but we don't care
     }
-    
+
     /**
      * Sets the value of a field. Throws a runtime exception 
      * in the case the field does not exist or is immutable.
@@ -252,7 +252,7 @@ public abstract class Objekt implements Cloneable {
     public final void setFieldValue(Signature field, Value item) {
         this.fields.get(field.toString()).setValue(item); //toString() is necessary, type erasure doesn't play well
     }
-    
+
     /**
      * Sets the value of a field. Throws a runtime exception 
      * in the case the field does not exist or is immutable.
@@ -266,7 +266,7 @@ public abstract class Objekt implements Cloneable {
     public final void setFieldValue(int slot, Value item) {
         setFieldValue(this.fieldSignatures.get(slot), item);
     }
-    
+
     /**
      * Returns an immutable view of this 
      * {@link Objekt}'s fields.
@@ -278,7 +278,7 @@ public abstract class Objekt implements Cloneable {
     public final Map<String, Variable> fields() {
         return Collections.unmodifiableMap(this.fields);
     }
-   
+
     /**
      * Gets the value in a field of the {@link Instance}.
      * 
@@ -289,7 +289,7 @@ public abstract class Objekt implements Cloneable {
      * field with that {@code name}. 
      */
     public final Value getFieldValue(String fieldName) {
-    	//TODO does it work with visibility modifiers???
+        //TODO does it work with visibility modifiers???
         for (Signature sig: this.fieldSignatures) {
             if (sig.getName().equals(fieldName)) {
                 return getFieldValue(sig);
@@ -297,7 +297,7 @@ public abstract class Objekt implements Cloneable {
         }
         return null;
     }
-    
+
     protected final HashMap<String, Variable> fieldsDeepCopy() {
         final HashMap<String, Variable> retVal = new HashMap<>();
         for (String key : this.fields.keySet()) {
@@ -306,8 +306,8 @@ public abstract class Objekt implements Cloneable {
         }
         return retVal;
     }
-    
-	@Override
+
+    @Override
     public Objekt clone() {
         try {
             return (Objekt) super.clone();

@@ -27,7 +27,6 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.InvalidInputException;
 import jbse.jvm.exc.InitializationException;
-import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;

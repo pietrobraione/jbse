@@ -2,6 +2,7 @@ package jbse.bc;
 
 import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.BOOLEAN;
+import static jbse.common.Type.BYTE;
 import static jbse.common.Type.CHAR;
 import static jbse.common.Type.INT;
 import static jbse.common.Type.LONG;
@@ -21,6 +22,7 @@ public final class Signatures {
     public static final String JAVA_ABSTRACTLIST             = "java/util/AbstractList";
     public static final String JAVA_ABSTRACTMAP              = "java/util/AbstractMap";
     public static final String JAVA_ABSTRACTSET              = "java/util/AbstractSet";
+    public static final String JAVA_ABSTRACTSTRINGBUILDER    = "java/lang/AbstractStringBuilder";
     public static final String JAVA_ACCESSCONTROLCONTEXT     = "java/security/AccessControlContext";
     public static final String JAVA_ACCESSCONTROLLER         = "java/security/AccessController";
     public static final String JAVA_ACCESSIBLEOBJECT         = "java/lang/reflect/AccessibleObject";
@@ -33,8 +35,10 @@ public final class Signatures {
     public static final String JAVA_BASICPERMISSION          = "java/security/BasicPermission";
     public static final String JAVA_BOOLEAN                  = "java/lang/Boolean";
     public static final String JAVA_BUFFEREDINPUTSTREAM      = "java/io/BufferedInputStream";
+    public static final String JAVA_BUFFEREDOUTPUTSTREAM     = "java/io/BufferedOutputStream";
     public static final String JAVA_CHARSET                  = "java/nio/charset/Charset";
     public static final String JAVA_CHARSET_EXTENDEDPROVIDERHOLDER = "java/nio/charset/Charset$ExtendedProviderHolder";
+    public static final String JAVA_CHARSETPROVIDER          = "java/nio/charset/spi/CharsetProvider";
     public static final String JAVA_CLASS                    = "java/lang/Class";
     public static final String JAVA_CLASS_3                  = "java/lang/Class$3";
     public static final String JAVA_CLASS_ATOMIC             = "java/lang/Class$Atomic";
@@ -50,6 +54,7 @@ public final class Signatures {
     public static final String JAVA_COLLECTIONS_UNMODIFIABLECOLLECTION       = "java/util/Collections$UnmodifiableCollection";
     public static final String JAVA_COLLECTIONS_UNMODIFIABLELIST             = "java/util/Collections$UnmodifiableList";
     public static final String JAVA_COLLECTIONS_UNMODIFIABLERANDOMACCESSLIST = "java/util/Collections$UnmodifiableRandomAccessList";
+    public static final String JAVA_CONSTRUCTOR              = "java/lang/reflect/Constructor";
     public static final String JAVA_DICTIONARY               = "java/util/Dictionary";
     public static final String JAVA_DOUBLE                   = "java/lang/Double";
     public static final String JAVA_ENUM                     = "java/lang/Enum";
@@ -60,6 +65,7 @@ public final class Signatures {
     public static final String JAVA_FILEINPUTSTREAM          = "java/io/FileInputStream";
     public static final String JAVA_FILEOUTPUTSTREAM         = "java/io/FileOutputStream";
     public static final String JAVA_FILTERINPUTSTREAM        = "java/io/FilterInputStream";
+    public static final String JAVA_FILTEROUTPUTSTREAM       = "java/io/FilterOutputStream";
     public static final String JAVA_FLOAT                    = "java/lang/Float";
     public static final String JAVA_IDENTITYHASHMAP          = "java/util/IdentityHashMap";
     public static final String JAVA_INPUTSTREAM              = "java/io/InputStream";
@@ -74,6 +80,7 @@ public final class Signatures {
     public static final String JAVA_HASHTABLE_ENUMERATOR     = "java/util/Hashtable$Enumerator";
     public static final String JAVA_INTEGER                  = "java/lang/Integer";
     public static final String JAVA_INTEGER_INTEGERCACHE     = "java/lang/Integer$IntegerCache";
+    public static final String JAVA_INTERRUPTEDEXCEPTION     = "java/lang/InterruptedException";
     public static final String JAVA_LINKEDLIST               = "java/util/LinkedList";
     public static final String JAVA_LINKEDLIST_ENTRY         = "java/util/LinkedList$Entry";
     public static final String JAVA_MATH                     = "java/lang/Math";
@@ -81,16 +88,22 @@ public final class Signatures {
     public static final String JAVA_OBJECT                   = "java/lang/Object";
     public static final String JAVA_OBJECTS                  = "java/util/Objects";
     public static final String JAVA_OUTPUTSTREAM             = "java/io/OutputStream";
+    public static final String JAVA_OUTPUTSTREAMWRITER       = "java/io/OutputStreamWriter";
     public static final String JAVA_PERMISSION               = "java/security/Permission";
+    public static final String JAVA_PHANTOMREFERENCE         = "java/lang/ref/PhantomReference";
+    public static final String JAVA_PRINTSTREAM              = "java/io/PrintStream";
     public static final String JAVA_PRIVILEGEDACTION         = "java/security/PrivilegedAction";
     public static final String JAVA_PRIVILEGEDEXCEPTIONACTION = "java/security/PrivilegedExceptionAction";
     public static final String JAVA_PROPERTIES               = "java/util/Properties";
     public static final String JAVA_REFERENCE                = "java/lang/ref/Reference";
+    public static final String JAVA_REFERENCE_1              = "java/lang/ref/Reference$1";
     public static final String JAVA_REFERENCE_LOCK           = "java/lang/ref/Reference$Lock";
+    public static final String JAVA_REFERENCE_REFERENCEHANDLER = "java/lang/ref/Reference$ReferenceHandler";
     public static final String JAVA_REFERENCEQUEUE           = "java/lang/ref/ReferenceQueue";
     public static final String JAVA_REFERENCEQUEUE_LOCK      = "java/lang/ref/ReferenceQueue$Lock";
     public static final String JAVA_REFERENCEQUEUE_NULL      = "java/lang/ref/ReferenceQueue$Null";
     public static final String JAVA_REFLECT_ARRAY            = "java/lang/reflect/Array";
+    public static final String JAVA_REFLECTACCESS            = "java/lang/reflect/ReflectAccess";
     public static final String JAVA_REFLECTPERMISSION        = "java/lang/reflect/ReflectPermission";
     public static final String JAVA_RUNTIMEEXCEPTION         = "java/lang/RuntimeException";
     public static final String JAVA_RUNTIMEPERMISSION        = "java/lang/RuntimePermission";
@@ -109,15 +122,23 @@ public final class Signatures {
     public static final String JAVA_WRITER                   = "java/io/Writer";
     public static final String JBSE_ANALYSIS                 = jbse.meta.Analysis.class.getCanonicalName().replace('.', '/');
     public static final String JBSE_BASE                     = jbse.base.Base.class.getCanonicalName().replace('.', '/');
+    public static final String SUN_CLEANER                   = "sun/misc/Cleaner";
+    public static final String SUN_FASTCHARSETPROVIDER       = "sun/nio/cs/FastCharsetProvider";
+    public static final String SUN_GETPROPERTYACTION         = "sun/security/action/GetPropertyAction";
+    public static final String SUN_PREHASHEDMAP              = "sun/util/PreHashedMap";
     public static final String SUN_REFLECTION                = "sun/reflect/Reflection";
     public static final String SUN_REFLECTIONFACTORY         = "sun/reflect/ReflectionFactory";
     public static final String SUN_REFLECTIONFACTORY_GETREFLECTIONFACTORYACTION = "sun/reflect/ReflectionFactory$GetReflectionFactoryAction";
     public static final String SUN_REFLECTUTIL               = "sun/reflect/misc/ReflectUtil";
     public static final String SUN_SHAREDSECRETS             = "sun/misc/SharedSecrets";
+    public static final String SUN_STANDARDCHARSETS          = "sun/nio/cs/StandardCharsets";
+    public static final String SUN_STANDARDCHARSETS_ALIASES  = "sun/nio/cs/StandardCharsets$Aliases";
     public static final String SUN_STANDARDCHARSETS_CACHE    = "sun/nio/cs/StandardCharsets$Cache";
     public static final String SUN_STANDARDCHARSETS_CLASSES  = "sun/nio/cs/StandardCharsets$Classes";
     public static final String SUN_STREAMENCODER             = "sun/nio/cs/StreamEncoder";
+    public static final String SUN_UNICODE                   = "sun/nio/cs/Unicode";
     public static final String SUN_UNSAFE                    = "sun/misc/Unsafe";
+    public static final String SUN_UTF_8                     = "sun/nio/cs/UTF_8";
     public static final String SUN_VERSION                   = "sun/misc/Version";
     public static final String SUN_VM                        = "sun/misc/VM";
 
@@ -127,6 +148,7 @@ public final class Signatures {
     public static final String ARRAY_STORE_EXCEPTION               = "java/lang/ArrayStoreException";
     public static final String CLASS_CAST_EXCEPTION                = "java/lang/ClassCastException";
     public static final String CLASS_NOT_FOUND_EXCEPTION           = "java/lang/ClassNotFoundException";
+    public static final String CLONE_NOT_SUPPORTED_EXCEPTION       = "java/lang/CloneNotSupportedException";
     public static final String ILLEGAL_ARGUMENT_EXCEPTION          = "java/lang/IllegalArgumentException";
     public static final String INDEX_OUT_OF_BOUNDS_EXCEPTION       = "java/lang/IndexOutOfBoundsException";
     public static final String NEGATIVE_ARRAY_SIZE_EXCEPTION       = "java/lang/NegativeArraySizeException";
@@ -154,6 +176,8 @@ public final class Signatures {
         new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_STRING + TYPEEND + BOOLEAN + REFERENCE + JAVA_CLASSLOADER + TYPEEND + REFERENCE + JAVA_CLASS + TYPEEND + ")" + REFERENCE + JAVA_CLASS + TYPEEND, "forName0");
     public static final Signature JAVA_CLASS_GETCOMPONENTTYPE =
         new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getComponentType");
+    public static final Signature JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 =
+        new Signature(JAVA_CLASS, "(" + BOOLEAN + ")" + ARRAYOF + REFERENCE + JAVA_CONSTRUCTOR + TYPEEND, "getDeclaredConstructors0");
     public static final Signature JAVA_CLASS_GETDECLAREDFIELDS0 =
         new Signature(JAVA_CLASS, "(" + BOOLEAN + ")" + ARRAYOF + REFERENCE + JAVA_FIELD + TYPEEND, "getDeclaredFields0");
     public static final Signature JAVA_CLASS_GETPRIMITIVECLASS =
@@ -171,6 +195,8 @@ public final class Signatures {
         new Signature(JAVA_METHOD, 
                      "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, 
                      "invoke");
+    public static final Signature JAVA_OBJECT_CLONE =
+        new Signature(JAVA_OBJECT, "()" + REFERENCE + JAVA_OBJECT + TYPEEND, "clone");
     public static final Signature JAVA_OBJECT_GETCLASS =
         new Signature(JAVA_OBJECT, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getClass");
     public static final Signature JAVA_OBJECT_HASHCODE =
@@ -196,6 +222,8 @@ public final class Signatures {
         new Signature(JAVA_THREAD, "()" + REFERENCE + JAVA_THREAD + TYPEEND, "currentThread");
     public static final Signature JAVA_THREAD_INIT =
         new Signature(JAVA_THREAD, "(" + REFERENCE + JAVA_THREADGROUP + TYPEEND + REFERENCE + JAVA_STRING + TYPEEND + ")" + VOID, "<init>");
+    public static final Signature JAVA_THREAD_ISALIVE =
+        new Signature(JAVA_THREAD, "()" + BOOLEAN, "isAlive");
     public static final Signature JAVA_THREADGROUP_INIT_1 =
         new Signature(JAVA_THREADGROUP, "()" + VOID, "<init>");
     public static final Signature JAVA_THREADGROUP_INIT_2 =
@@ -242,10 +270,28 @@ public final class Signatures {
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_FIELD + TYPEEND + ")" + LONG, "objectFieldOffset");
     
     //fields
+    public static final Signature JAVA_ACCESSIBLEOBJECT_OVERRIDE = 
+        new Signature(JAVA_ACCESSIBLEOBJECT, "" + BOOLEAN, "override");
     public static final Signature JAVA_CLASS_CLASSLOADER = 
         new Signature(JAVA_CLASS, "" + REFERENCE + JAVA_CLASSLOADER + TYPEEND, "classLoader");
     public static final Signature JAVA_CLASS_NAME = 
         new Signature(JAVA_CLASS, "" + REFERENCE + JAVA_STRING + TYPEEND, "name");
+    public static final Signature JAVA_CONSTRUCTOR_ANNOTATIONS = 
+        new Signature(JAVA_CONSTRUCTOR, "" + ARRAYOF + BYTE, "annotations");
+    public static final Signature JAVA_CONSTRUCTOR_CLAZZ = 
+        new Signature(JAVA_CONSTRUCTOR, "" + REFERENCE + JAVA_CLASS + TYPEEND, "clazz");
+    public static final Signature JAVA_CONSTRUCTOR_EXCEPTIONTYPES = 
+        new Signature(JAVA_CONSTRUCTOR, "" + ARRAYOF + REFERENCE + JAVA_CLASS + TYPEEND, "exceptionTypes");
+    public static final Signature JAVA_CONSTRUCTOR_MODIFIERS = 
+        new Signature(JAVA_CONSTRUCTOR, "" + INT, "modifiers");
+    public static final Signature JAVA_CONSTRUCTOR_PARAMETERTYPES = 
+        new Signature(JAVA_CONSTRUCTOR, "" + ARRAYOF + REFERENCE + JAVA_CLASS + TYPEEND, "parameterTypes");
+    public static final Signature JAVA_CONSTRUCTOR_SIGNATURE = 
+        new Signature(JAVA_CONSTRUCTOR, "" + REFERENCE + JAVA_STRING + TYPEEND, "signature");
+    public static final Signature JAVA_CONSTRUCTOR_SLOT = 
+        new Signature(JAVA_CONSTRUCTOR, "" + INT, "slot");
+    public static final Signature JAVA_FIELD_ANNOTATIONS = 
+        new Signature(JAVA_FIELD, "" + ARRAYOF + BYTE, "annotations");
     public static final Signature JAVA_FIELD_CLAZZ = 
         new Signature(JAVA_FIELD, "" + REFERENCE + JAVA_CLASS + TYPEEND, "clazz");
     public static final Signature JAVA_FIELD_MODIFIERS = 

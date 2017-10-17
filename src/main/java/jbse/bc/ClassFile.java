@@ -14,16 +14,16 @@ import jbse.common.Type;
  * class file.
  */
 public abstract class ClassFile {
-	protected static final String JAR_FILE_EXTENSION = ".jar";
-	
-	public abstract String getSourceFile();
-	
+    protected static final String JAR_FILE_EXTENSION = ".jar";
+
+    public abstract String getSourceFile();
+
     /**
      * Returns the name of the package where this class has been declared.
      * 
      * @return the package name of this class as a {@link String}.
      */
-	public String getPackageName() {
+    public String getPackageName() {
         final String className = getClassName();
         int lastSlash = className.lastIndexOf('/');
         if (lastSlash == -1) {
@@ -31,15 +31,15 @@ public abstract class ClassFile {
         } else {
             return className.substring(0, lastSlash);
         }
-	}
-	
+    }
+
     /**
      * Test whether the class is an array.
      * 
      * @return {@code true} iff the class is an interface.
      */
     public abstract boolean isArray();
-    
+
     /**
      * Tests whether the class is primitive.
      * 
@@ -47,13 +47,13 @@ public abstract class ClassFile {
      */
     public abstract boolean isPrimitive();
 
-	/**
+    /**
      * Test whether the class is an interface.
      * 
      * @return {@code true} iff the class is an interface.
      */
     public abstract boolean isInterface();
-    
+
     /**
      * Tests whether the class is abstract.
      * 
@@ -74,7 +74,7 @@ public abstract class ClassFile {
      * @return {@code true} iff the class has package visibility.
      */
     public abstract boolean isPackage();
-    
+
     /**
      * Tests the {@code invokespecial} bytecode semantics required
      * for this class.
@@ -91,41 +91,41 @@ public abstract class ClassFile {
      * 
      * @return {@code true} iff this class is nested.
      */
-	public abstract boolean isNested();
-	
-	/**
-	 * Tests whether this class is inner to another one.
-	 * 
-	 * @param external another {@code ClassFile}.
-	 * @return {@code true} iff this class is an inner class
-	 *         of {@code external}.
-	 */
-	public final boolean isInner(ClassFile external) {
-		/*
-		 * TODO this implementation is very partial (a nested class can be declared 
-		 * inside another one, nested class may also be anonymous, ...).
-		 */
-		return (this.isNested() && 
-				!this.isStatic() && 
-				this.classContainer().equals(external.getClassName()));
-	}
-	
-	/**
-	 * Returns the name of the class containing this class.
-	 * 
-	 * @return A {@link String}, the name of the class containing
-	 *         this class; it has an unspecified effect in case
-	 *         this class is not nested.
-	 */
-	public abstract String classContainer();
+    public abstract boolean isNested();
 
-	/**
+    /**
+     * Tests whether this class is inner to another one.
+     * 
+     * @param external another {@code ClassFile}.
+     * @return {@code true} iff this class is an inner class
+     *         of {@code external}.
+     */
+    public final boolean isInner(ClassFile external) {
+        /*
+         * TODO this implementation is very partial (a nested class can be declared 
+         * inside another one, nested class may also be anonymous, ...).
+         */
+        return (this.isNested() && 
+        !this.isStatic() && 
+        this.classContainer().equals(external.getClassName()));
+    }
+
+    /**
+     * Returns the name of the class containing this class.
+     * 
+     * @return A {@link String}, the name of the class containing
+     *         this class; it has an unspecified effect in case
+     *         this class is not nested.
+     */
+    public abstract String classContainer();
+
+    /**
      * Tests whether the class is static.
      * 
      * @return {@code true} iff the class is static.
      */
-	public abstract boolean isStatic();
-	
+    public abstract boolean isStatic();
+
     /**
      * Tests whether the class has an implementation (i.e., a declaration 
      * plus bytecode) for a method with a given signature. 
@@ -139,7 +139,7 @@ public abstract class ClassFile {
      *         {@code false} otherwise.
      */
     public abstract boolean hasMethodImplementation(Signature methodSignature);
-    
+
     /**
      * Tests whether the class has a declaration for a method with a given 
      * signature. 
@@ -152,7 +152,7 @@ public abstract class ClassFile {
      *         method with signature {@code methodSignature}.
      */
     public abstract boolean hasMethodDeclaration(Signature methodSignature);
-    
+
     /**
      * Tests whether a method in the class is declared abstract.
      * 
@@ -161,7 +161,7 @@ public abstract class ClassFile {
      * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
      */
     public abstract boolean isMethodAbstract(Signature methodSignature) throws MethodNotFoundException;
-    
+
     /**
      * Tests whether a method in the class is declared static.
      * 
@@ -170,7 +170,7 @@ public abstract class ClassFile {
      * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
      */
     public abstract boolean isMethodStatic(Signature methodSignature) throws MethodNotFoundException;
-    
+
     /**
      * Tests whether a method in the class is declared public.
      * 
@@ -179,7 +179,7 @@ public abstract class ClassFile {
      * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
      */
     public abstract boolean isMethodPublic(Signature methodSignature) throws MethodNotFoundException;
-    
+
     /**
      * Tests whether a method in the class is declared protected.
      * 
@@ -188,7 +188,7 @@ public abstract class ClassFile {
      * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
      */
     public abstract boolean isMethodProtected(Signature methodSignature) throws MethodNotFoundException;
-    
+
     /**
      * Tests whether a method in the class is declared with package visibility.
      * 
@@ -197,7 +197,7 @@ public abstract class ClassFile {
      * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
      */
     public abstract boolean isMethodPackage(Signature methodSignature) throws MethodNotFoundException;
-    
+
     /**
      * Tests whether a method in the class is declared private.
      * 
@@ -206,7 +206,7 @@ public abstract class ClassFile {
      * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
      */
     public abstract boolean isMethodPrivate(Signature methodSignature) throws MethodNotFoundException;
-    
+
     /**
      * Tests whether a method in the class is declared native.
      * 
@@ -215,6 +215,36 @@ public abstract class ClassFile {
      * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
      */
     public abstract boolean isMethodNative(Signature methodSignature) throws MethodNotFoundException;
+
+    /**
+     * Returns the generic signature (type) of a method.
+     * 
+     * @param methodSignature the {@link Signature} of a method.
+     * @return a {@link String} or {@code null} if the method has not a generic signature.
+     * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
+     */
+    public abstract String getMethodGenericSignatureType(Signature methodSignature) 
+    throws MethodNotFoundException;
+    
+    /**
+     * Returns the encoded modifiers of a method.
+     * 
+     * @param methodSignature the {@link Signature} of a method.
+     * @return an {@code int}, the encoded modifiers.
+     * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
+     */
+    public abstract int getMethodModifiers(Signature methodSignature)
+    throws MethodNotFoundException;
+
+    /**
+     * Returns all the annotations of a method (raw classfile format).
+     * 
+     * @param methodSignature the {@link Signature} of a method.
+     * @return a {@link byte}{@code []} containing all the annotations of the method.
+     * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
+     */
+    public abstract byte[] getMethodAnnotationsRaw(Signature methodSignature) 
+    throws MethodNotFoundException;
     
     /**
      * Returns all the annotations of a method that are available on the current classpath.
@@ -226,6 +256,17 @@ public abstract class ClassFile {
     public abstract Object[] getMethodAvailableAnnotations(Signature methodSignature) 
     throws MethodNotFoundException;
     
+    /**
+     * Returns the list of the exception that a method declares to throw.
+     * 
+     * @param methodSignature the {@link Signature} of a method.
+     * @return a {@link String}{@code []} containing the class names of the exceptions that the 
+     *         method declares to throw.
+     * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
+     */
+    public abstract String[] getMethodThrownExceptions(Signature methodSignature)
+    throws MethodNotFoundException;
+
     /**
      * Given the signature of a method, returns its exception table.
      * 
@@ -239,7 +280,7 @@ public abstract class ClassFile {
      */
     public abstract ExceptionTable getExceptionTable(Signature methodSignature) 
     throws MethodNotFoundException, MethodCodeNotFoundException, InvalidIndexException;
-    
+
     /**
      * Given the signature of a method, returns a local variable table for that method.
      * 
@@ -285,7 +326,7 @@ public abstract class ClassFile {
     throws InvalidIndexException, MethodNotFoundException, MethodCodeNotFoundException {
         return getMethodCodeBySignature(getMethodSignature(methodRef));
     }
-    
+
     /**
      * Given the signature of a method, returns the bytecode of 
      * the method. 
@@ -297,17 +338,17 @@ public abstract class ClassFile {
      */
     public abstract byte[] getMethodCodeBySignature(Signature methodSignature) 
     throws MethodNotFoundException, MethodCodeNotFoundException;
-    
+
     /**
      * Checks whether the class declares a field.
      * 
-     * @param fieldSignature the {@link Signature} of a method. The 
+     * @param fieldSignature the {@link Signature} of a field. The 
      * class of the signature is ignored.
      * @return {@code true} iff the class declares a field with  
      * {@code fieldSignature}'s name and type.
      */
     public abstract boolean hasFieldDeclaration(Signature fieldSignature);
-    
+
     /**
      * Tests whether a field in the class is declared final.
      * 
@@ -316,8 +357,7 @@ public abstract class ClassFile {
      * @throws FieldNotFoundException iff {@link #hasFieldDeclaration}{@code (fieldSignature) == false}.
      */
     public abstract boolean isFieldFinal(Signature fieldSignature) throws FieldNotFoundException;
-    
-    
+
     /**
      * Tests whether a field in the class is declared public.
      * 
@@ -325,8 +365,8 @@ public abstract class ClassFile {
      * @return {@code true} iff the field is public.
      * @throws FieldNotFoundException iff {@link #hasFieldDeclaration}{@code (fieldSignature) == false}.
      */
-	public abstract boolean isFieldPublic(Signature fieldSignature) throws FieldNotFoundException;
-    
+    public abstract boolean isFieldPublic(Signature fieldSignature) throws FieldNotFoundException;
+
     /**
      * Tests whether a field in the class is declared protected.
      * 
@@ -334,8 +374,8 @@ public abstract class ClassFile {
      * @return {@code true} iff the field is protected.
      * @throws FieldNotFoundException iff {@link #hasFieldDeclaration}{@code (fieldSignature) == false}.
      */
-	public abstract boolean isFieldProtected(Signature fieldSignature) throws FieldNotFoundException;	
-    
+    public abstract boolean isFieldProtected(Signature fieldSignature) throws FieldNotFoundException;	
+
     /**
      * Tests whether a field in the class is declared with package visibility.
      * 
@@ -343,8 +383,8 @@ public abstract class ClassFile {
      * @return {@code true} iff the field has package visibility.
      * @throws FieldNotFoundException iff {@link #hasFieldDeclaration}{@code (fieldSignature) == false}.
      */
-	public abstract boolean isFieldPackage(Signature fieldSignature) throws FieldNotFoundException;
-	
+    public abstract boolean isFieldPackage(Signature fieldSignature) throws FieldNotFoundException;
+
     /**
      * Tests whether a field in the class is declared private.
      * 
@@ -352,8 +392,8 @@ public abstract class ClassFile {
      * @return {@code true} iff the field is private.
      * @throws FieldNotFoundException iff {@link #hasFieldDeclaration}{@code (fieldSignature) == false}.
      */
-	public abstract boolean isFieldPrivate(Signature fieldSignature) throws FieldNotFoundException;
-	
+    public abstract boolean isFieldPrivate(Signature fieldSignature) throws FieldNotFoundException;
+
     /**
      * Tests whether a field in the class is declared static.
      * 
@@ -361,7 +401,7 @@ public abstract class ClassFile {
      * @return {@code true} iff the field is static.
      * @throws FieldNotFoundException iff {@link #hasFieldDeclaration}{@code (fieldSignature) == false}.
      */
-	public abstract boolean isFieldStatic(Signature fieldSignature) throws FieldNotFoundException;
+    public abstract boolean isFieldStatic(Signature fieldSignature) throws FieldNotFoundException;
 
     /**
      * Tests whether a field in the class has a ConstantValue attribute.
@@ -370,8 +410,8 @@ public abstract class ClassFile {
      * @return {@code true} iff the field is constant.
      * @throws FieldNotFoundException iff {@link #hasFieldDeclaration}{@code (fieldSignature) == false}.
      */
-	public abstract boolean hasFieldConstantValue(Signature fieldSignature) throws FieldNotFoundException;
-	
+    public abstract boolean hasFieldConstantValue(Signature fieldSignature) throws FieldNotFoundException;
+
     /**
      * Tests whether a field in the class is both final and has a ConstantValue attribute.
      * 
@@ -379,28 +419,41 @@ public abstract class ClassFile {
      * @return {@code true} iff the field is both final and constant.
      * @throws FieldNotFoundException iff {@link #hasFieldDeclaration}{@code (fieldSignature) == false}.
      */
-	public final boolean isFieldConstant(Signature fieldSignature) throws FieldNotFoundException {
-		return isFieldFinal(fieldSignature) && hasFieldConstantValue(fieldSignature);
-	}
+    public final boolean isFieldConstant(Signature fieldSignature) 
+    throws FieldNotFoundException {
+        return isFieldFinal(fieldSignature) && hasFieldConstantValue(fieldSignature);
+    }
 
-	/**
-	 * Returns the generic signature (type) of a field.
-	 * 
-	 * @param fieldSignature the {@link Signature} of a field.
-	 * @return a {@link String} or {@code null} if the field has not a generic signature.
-	 * @throws FieldNotFoundException iff {@link #hasFieldDeclaration}{@code (fieldSignature) == false}.
-	 */
-	public abstract String getFieldGenericSignatureType(Signature fieldSignature) throws FieldNotFoundException;
-	
-	/**
-	 * Returns the encoded modifiers of a field.
-	 * 
-	 * @param fieldSignature the {@link Signature} of a field.
-	 * @return an {@code int}, the encoded modifiers.
-	 * @throws FieldNotFoundException iff {@link #hasFieldDeclaration}{@code (fieldSignature) == false}.
-	 */
-	public abstract int getFieldModifiers(Signature fieldSignature) throws FieldNotFoundException;
-	
+    /**
+     * Returns the generic signature (type) of a field.
+     * 
+     * @param fieldSignature the {@link Signature} of a field.
+     * @return a {@link String} or {@code null} if the field has not a generic signature.
+     * @throws FieldNotFoundException iff {@link #hasFieldDeclaration}{@code (fieldSignature) == false}.
+     */
+    public abstract String getFieldGenericSignatureType(Signature fieldSignature) 
+    throws FieldNotFoundException;
+
+    /**
+     * Returns the encoded modifiers of a field.
+     * 
+     * @param fieldSignature the {@link Signature} of a field.
+     * @return an {@code int}, the encoded modifiers.
+     * @throws FieldNotFoundException iff {@link #hasFieldDeclaration}{@code (fieldSignature) == false}.
+     */
+    public abstract int getFieldModifiers(Signature fieldSignature) 
+    throws FieldNotFoundException;
+
+    /**
+     * Returns all the annotations of a field (raw classfile format).
+     * 
+     * @param fieldSignature the {@link Signature} of a field.
+     * @return a {@link byte}{@code []} containing all the annotations of the field.
+     * @throws FieldNotFoundException iff {@link #hasFieldDeclaration}{@code (fieldSignature) == false}.
+     */
+    public abstract byte[] getFieldAnnotationsRaw(Signature fieldSignature) 
+    throws FieldNotFoundException;
+    
     /**
      * Returns the value of a constant field.
      * 
@@ -410,15 +463,15 @@ public abstract class ClassFile {
      * @throws AttributeNotFoundException iff {@link #hasFieldConstantValue}{@code (fieldSignature) == false}.
      * @throws InvalidIndexException iff the access to the constant pool fails.
      */
-	public final ConstantPoolValue fieldConstantValue(Signature fieldSignature) 
-	throws FieldNotFoundException, AttributeNotFoundException, InvalidIndexException {
-	    final int index = fieldConstantValueIndex(fieldSignature);
-		final ConstantPoolValue retVal = getValueFromConstantPool(index);
-		if (retVal instanceof ConstantPoolClass) {
-		    throw new InvalidIndexException(entryInvalidMessage(index));
-		}
-		return retVal;
-	}
+    public final ConstantPoolValue fieldConstantValue(Signature fieldSignature) 
+    throws FieldNotFoundException, AttributeNotFoundException, InvalidIndexException {
+        final int index = fieldConstantValueIndex(fieldSignature);
+        final ConstantPoolValue retVal = getValueFromConstantPool(index);
+        if (retVal instanceof ConstantPoolClass) {
+            throw new InvalidIndexException(entryInvalidMessage(index));
+        }
+        return retVal;
+    }
 
 
     /**
@@ -429,10 +482,10 @@ public abstract class ClassFile {
      * @throws FieldNotFoundException iff {@link #hasFieldDeclaration}{@code (fieldSignature) == false}.
      * @throws AttributeNotFoundException iff {@link #hasFieldConstantValue}{@code (fieldSignature) == false}.
      */
-	public abstract int fieldConstantValueIndex(Signature fieldSignature) 
-	throws FieldNotFoundException, AttributeNotFoundException;
+    public abstract int fieldConstantValueIndex(Signature fieldSignature) 
+    throws FieldNotFoundException, AttributeNotFoundException;
 
-	/**
+    /**
      * Gets all the nonstatic (instance) fields declared by this class 
      * (not by its superclasses).
      *  
@@ -443,7 +496,7 @@ public abstract class ClassFile {
      *         this method. 
      */
     public abstract Signature[] getDeclaredFieldsNonStatic();
-    
+
     /**
      * Gets all the static (class) fields declared by this class 
      * (not by its superclasses).
@@ -455,7 +508,7 @@ public abstract class ClassFile {
      *         this method.  
      */
     public abstract Signature[] getDeclaredFieldsStatic();
-    
+
     /**
      * Gets all the fields declared by this class 
      * (not by its superclasses), both static and not.
@@ -467,7 +520,7 @@ public abstract class ClassFile {
      *         this method. 
      */
     public abstract Signature[] getDeclaredFields();
-    
+
     /**
      * Given an index of the constant pool of CONSTANT_FieldRef type, returns the signature of the field.
      * 
@@ -477,7 +530,18 @@ public abstract class ClassFile {
      *         in the class constant pool.
      */
     public abstract Signature getFieldSignature(int fieldRef) throws InvalidIndexException;
-    
+
+    /**
+     * Gets all the constructors declared by this class.
+     *  
+     * @return an array of {@link Signature}s, one for each 
+     *         constructor declared in the class. The order
+     *         of the {@link Signature}s in the returned array
+     *         does not change across multiple invocations of 
+     *         this method. 
+     */
+    public abstract Signature[] getDeclaredConstructors();
+
     /**
      * Given an index of the constant pool of CONSTANT_MethodRef type, returns the signature of the Method
      * @param methodRef a CONSTANT_Methodref of searched field
@@ -486,14 +550,13 @@ public abstract class ClassFile {
      *         in the class constant pool.
      */
     public abstract Signature getMethodSignature(int methodRef) throws InvalidIndexException;
-    
-    
+
     /**
      * Returns all the signatures of the methods declared in the class.
      * 
      * @return a {@link Signature}{@code []}.
      */
-	public abstract Signature[] getMethodSignatures();
+    public abstract Signature[] getMethodSignatures();
 
     /**
      * Given an index of the constant pool of CONSTANT_InterfaceMethodRef type, returns the signature of the Method
@@ -503,7 +566,7 @@ public abstract class ClassFile {
      *         in the class constant pool.
      */
     public abstract Signature getInterfaceMethodSignature(int methodRef) throws InvalidIndexException;
-    
+
     /**
      * Given an index of the constant table of CONSTANT_ClassRef type, returns the signature 
      * of the class.
@@ -514,7 +577,7 @@ public abstract class ClassFile {
      *         in the class constant pool.
      */
     public abstract String getClassSignature(int classRef) throws InvalidIndexException;
-    
+
     /**
      * Returns the name of the superclass.
      * 
@@ -523,7 +586,7 @@ public abstract class ClassFile {
      * primitive classes, bad classfiles).
      */
     public abstract String getSuperClassName();
-    
+
     /**
      * Returns the list of the names of the superinterfaces.
      * 
@@ -532,7 +595,7 @@ public abstract class ClassFile {
      *         class (empty if none).
      */
     public abstract List<String> getSuperInterfaceNames();
-    
+
     /**
      * Returns the name of the class.
      * 
@@ -554,7 +617,7 @@ public abstract class ClassFile {
      */
     public abstract int getLocalVariableLength(Signature methodSignature) 
     throws MethodNotFoundException, MethodCodeNotFoundException;
-    
+
     /**
      * Returns the length of the bytecode of a method.
      * 
@@ -569,7 +632,7 @@ public abstract class ClassFile {
      */
     public abstract int getCodeLength(Signature methodSignature) 
     throws MethodNotFoundException, MethodCodeNotFoundException;
-    
+
     /**
      * Creates a default local variable table from a method's signature.
      * 
@@ -583,27 +646,27 @@ public abstract class ClassFile {
     throws MethodNotFoundException, MethodCodeNotFoundException {
         //if no LocalVariableTable attribute is found, tries to create the local 
         //variable table from information on the method's signature
-    	boolean isStatic = isMethodStatic(methodSignature);
-    	final String[] parDescList = Type.splitParametersDescriptors(methodSignature.getDescriptor());
-    	final LocalVariableTable lvt = new LocalVariableTable(getLocalVariableLength(methodSignature));
-    	int i = 0;
-    	short slot = 0;
-    	if (!isStatic) {
-        	lvt.setEntry(slot, Type.REFERENCE + this.getClassName() + Type.TYPEEND, 
-        			     "this", 0, this.getCodeLength(methodSignature));
-    		++i; ++slot;
-    	}
-    	for (String descriptor : parDescList) {
-    		lvt.setEntry(slot, descriptor, 
-    				     "__PARAM[" + i + "]", 0, this.getCodeLength(methodSignature));
-    		++i; ++slot;
-    		if (!Type.isCat_1(descriptor.charAt(0))) {
-    			++slot;
-    		}
-    	}
-    	return lvt;
+        boolean isStatic = isMethodStatic(methodSignature);
+        final String[] parDescList = Type.splitParametersDescriptors(methodSignature.getDescriptor());
+        final LocalVariableTable lvt = new LocalVariableTable(getLocalVariableLength(methodSignature));
+        int i = 0;
+        short slot = 0;
+        if (!isStatic) {
+            lvt.setEntry(slot, Type.REFERENCE + this.getClassName() + Type.TYPEEND, 
+                         "this", 0, this.getCodeLength(methodSignature));
+            ++i; ++slot;
+        }
+        for (String descriptor : parDescList) {
+            lvt.setEntry(slot, descriptor, 
+                         "__PARAM[" + i + "]", 0, this.getCodeLength(methodSignature));
+            ++i; ++slot;
+            if (!Type.isCat_1(descriptor.charAt(0))) {
+                ++slot;
+            }
+        }
+        return lvt;
     }
-    
+
     /**
      * Creates the default line number table to be returned in 
      * the case a method has not the LineNumberTable attribute.
@@ -611,34 +674,34 @@ public abstract class ClassFile {
      * @return the default (empty) {@link LineNumberTable}.
      */
     protected final LineNumberTable defaultLineNumberTable() {
-    	return new LineNumberTable(0);
+        return new LineNumberTable(0);
     }
-    
+
     protected final String indexOutOfRangeMessage(int index) {
         return "index " + index + " not in constant pool of class " + getClassName();
     }
-    
+
     protected final String entryInvalidMessage(int index) {
         return "index " + index + " did not correspond to a valid CONST_value entry in the constant pool of class " + getClassName();
     }
 
     @Override
     public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (o == null) {
-			return false;
-		}
-    	if (this.getClass() != o.getClass()) {
-    		return false; 
-    	}
-		return this.getClassName().equals(((ClassFile) o).getClassName());
+        if (this == o) {
+            return true;
+        }
+        if (o == null) {
+            return false;
+        }
+        if (this.getClass() != o.getClass()) {
+            return false; 
+        }
+        return this.getClassName().equals(((ClassFile) o).getClassName());
     }
-    
-	@Override
-	public int hashCode() {
-		return this.getClassName().hashCode();
-	}
+
+    @Override
+    public int hashCode() {
+        return this.getClassName().hashCode();
+    }
 
 }

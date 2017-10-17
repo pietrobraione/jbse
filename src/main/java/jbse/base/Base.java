@@ -143,6 +143,26 @@ public final class Base {
         //since JBSE does not enforce access control we just execute the action
         return action.run();
     }
+    
+    /**
+     * Overriding implementation of {@link java.security.AccessController#getStackAccessControlContext()}.
+     * @see java.security.AccessController#getStackAccessControlContext()
+     */
+    public static AccessControlContext base_JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT() {
+        //JBSE does not (yet) check access control, so a dummy null context is returned signifying
+        //privileged access (or so it seems).
+        return null;
+    }
+    
+    /**
+     * Overriding implementation of {@link java.lang.Thread#isAlive()}.
+     * @see java.lang.Thread#isAlive()
+     */
+    public static boolean base_JAVA_THREAD_ISALIVE(Thread _this) {
+        //since there is only one thread alive, we check if _this is the
+        //current thread
+        return (_this == Thread.currentThread());
+    }
 
     /**
      * Overriding implementation of {@link sun.misc.Unsafe#addressSize()}.
@@ -169,16 +189,6 @@ public final class Base {
     public static int base_SUN_UNSAFE_ARRAYINDEXSCALE(Unsafe _this, Class<?> arrayClass) {
         //JBSE uses array indices as raw offsets into arrays, so scale is one
         return 1; 
-    }
-    
-    /**
-     * Overriding implementation of {@link java.security.AccessController#getStackAccessControlContext()}.
-     * @see java.security.AccessController#getStackAccessControlContext()
-     */
-    public static AccessControlContext base_JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT() {
-        //JBSE does not (yet) check access control, so a dummy null context is returned signifying
-        //privileged access (or so it seems).
-        return null;
     }
 
     private Base() {

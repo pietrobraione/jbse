@@ -539,6 +539,7 @@ public final class State implements Cloneable {
 	 * @param className the name of the class of the new object.
 	 * @return a {@link ReferenceConcrete} to the newly created object.
 	 */
+	//TODO throw InvalidTypeException if className is the name of an array class
 	public ReferenceConcrete createInstance(String className) {
 	    if (className.equals(JAVA_CLASS)) {
 	        throw new RuntimeException(); //TODO better exception

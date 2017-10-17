@@ -5,7 +5,9 @@ import static jbse.algo.Util.ensureStringLiteral;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Signatures.JAVA_ACCESSIBLEOBJECT_OVERRIDE;
 import static jbse.bc.Signatures.JAVA_FIELD;
+import static jbse.bc.Signatures.JAVA_FIELD_ANNOTATIONS;
 import static jbse.bc.Signatures.JAVA_FIELD_CLAZZ;
 import static jbse.bc.Signatures.JAVA_FIELD_MODIFIERS;
 import static jbse.bc.Signatures.JAVA_FIELD_NAME;
@@ -13,6 +15,7 @@ import static jbse.bc.Signatures.JAVA_FIELD_SIGNATURE;
 import static jbse.bc.Signatures.JAVA_FIELD_SLOT;
 import static jbse.bc.Signatures.JAVA_FIELD_TYPE;
 import static jbse.common.Type.ARRAYOF;
+import static jbse.common.Type.BYTE;
 import static jbse.common.Type.className;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.toPrimitiveBinaryClassName;
@@ -181,7 +184,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                     }
                     field.setFieldValue(JAVA_FIELD_SIGNATURE, refSigType);
                 } catch (ClassFileIllFormedException | ClasspathException | 
-                DecisionException | FieldNotFoundException e) {
+                         DecisionException | FieldNotFoundException e) {
                     //this should never happen
                     failExecution(e);
                 }
@@ -190,8 +193,8 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                 field.setFieldValue(JAVA_FIELD_SLOT, calc.valInt(slot));
 
                 //sets type
-                ReferenceConcrete typeClassRef = null; //to keep the compiler happy
                 final String fieldType = sigField.getDescriptor();
+                ReferenceConcrete typeClassRef = null; //to keep the compiler happy
                 if (isPrimitive(fieldType)) {
                     try {
                         final String fieldTypeNameBinary = toPrimitiveBinaryClassName(fieldType);
@@ -211,15 +214,31 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                         throwVerifyError(state);
                         exitFromAlgorithm();
                     } catch (ClassFileNotAccessibleException | ClasspathException | 
-                    DecisionException e) {
+                             DecisionException e) {
                         //this should never happen
                         failExecution(e);
                     }
                 }
                 field.setFieldValue(JAVA_FIELD_TYPE, typeClassRef);
 
-                //TODO set more fields?
+                //sets override
+                field.setFieldValue(JAVA_ACCESSIBLEOBJECT_OVERRIDE, calc.valBoolean(false));
 
+                //sets annotations
+                try {
+                    final byte[] annotations = this.cf.getFieldAnnotationsRaw(sigField);
+                    final ReferenceConcrete annotationsRef = state.createArray(null, calc.valInt(annotations.length), "" + ARRAYOF + BYTE);
+                    field.setFieldValue(JAVA_FIELD_ANNOTATIONS, annotationsRef);
+                    final Array annotationsArray = (Array) state.getObject(annotationsRef);
+                    for (int i = 0; i < annotations.length; ++i) {
+                        annotationsArray.setFast(calc.valInt(i), calc.valByte(annotations[i]));
+                    }
+                } catch (FieldNotFoundException | InvalidTypeException | 
+                         InvalidOperandException | FastArrayAccessNotAllowedException e) {
+                    //this should never happen
+                    failExecution(e);
+                }
+                
                 ++index;
             }
             ++slot;

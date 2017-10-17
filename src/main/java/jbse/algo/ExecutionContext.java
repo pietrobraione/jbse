@@ -3,12 +3,14 @@ package jbse.algo;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_DESIREDASSERTIONSTATUS0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETCOMPONENTTYPE;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_FORNAME0;
+import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETDECLAREDFIELDS0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETPRIMITIVECLASS;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_ISASSIGNABLEFROM;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_ISINSTANCE;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_ISINTERFACE;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_ISPRIMITIVE;
+import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_CLONE;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_GETCLASS;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_HASHCODE;
 import static jbse.algo.Overrides.ALGO_JAVA_REFLECT_ARRAY_NEWARRAY;
@@ -37,6 +39,7 @@ import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPT
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT;
 import static jbse.algo.Overrides.BASE_JAVA_SYSTEM_INITPROPERTIES;
+import static jbse.algo.Overrides.BASE_JAVA_THREAD_ISALIVE;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ADDRESSSIZE;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ARRAYBASEOFFSET;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ARRAYINDEXSCALE;
@@ -45,6 +48,8 @@ import static jbse.bc.Signatures.JAVA_ABSTRACTCOLLECTION;
 import static jbse.bc.Signatures.JAVA_ABSTRACTLIST;
 import static jbse.bc.Signatures.JAVA_ABSTRACTMAP;
 import static jbse.bc.Signatures.JAVA_ABSTRACTSET;
+import static jbse.bc.Signatures.JAVA_ABSTRACTSTRINGBUILDER;
+import static jbse.bc.Signatures.JAVA_ACCESSCONTROLCONTEXT;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION;
@@ -59,14 +64,17 @@ import static jbse.bc.Signatures.JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL_1;
 import static jbse.bc.Signatures.JAVA_BASICPERMISSION;
 import static jbse.bc.Signatures.JAVA_BOOLEAN;
 import static jbse.bc.Signatures.JAVA_BUFFEREDINPUTSTREAM;
+import static jbse.bc.Signatures.JAVA_BUFFEREDOUTPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_CHARSET;
 import static jbse.bc.Signatures.JAVA_CHARSET_EXTENDEDPROVIDERHOLDER;
+import static jbse.bc.Signatures.JAVA_CHARSETPROVIDER;
 import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_CLASS_3;
 import static jbse.bc.Signatures.JAVA_CLASS_ATOMIC;
 import static jbse.bc.Signatures.JAVA_CLASS_DESIREDASSERTIONSTATUS0;
 import static jbse.bc.Signatures.JAVA_CLASS_FORNAME0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETCOMPONENTTYPE;
+import static jbse.bc.Signatures.JAVA_CLASS_GETDECLAREDCONSTRUCTORS0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETDECLAREDFIELDS0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETPRIMITIVECLASS;
 import static jbse.bc.Signatures.JAVA_CLASS_ISASSIGNABLEFROM;
@@ -87,11 +95,13 @@ import static jbse.bc.Signatures.JAVA_DICTIONARY;
 import static jbse.bc.Signatures.JAVA_DOUBLE;
 import static jbse.bc.Signatures.JAVA_ENUM;
 import static jbse.bc.Signatures.JAVA_EXCEPTION;
+import static jbse.bc.Signatures.JAVA_FIELD;
 import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR;
 import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR_1;
 import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_FILEOUTPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_FILTERINPUTSTREAM;
+import static jbse.bc.Signatures.JAVA_FILTEROUTPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_FLOAT;
 import static jbse.bc.Signatures.JAVA_HASHMAP;
 import static jbse.bc.Signatures.JAVA_HASHMAP_NODE;
@@ -104,24 +114,32 @@ import static jbse.bc.Signatures.JAVA_IDENTITYHASHMAP;
 import static jbse.bc.Signatures.JAVA_INPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_INTEGER;
 import static jbse.bc.Signatures.JAVA_INTEGER_INTEGERCACHE;
+import static jbse.bc.Signatures.JAVA_INTERRUPTEDEXCEPTION;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
 import static jbse.bc.Signatures.JAVA_MATH;
 import static jbse.bc.Signatures.JAVA_MODIFIER;
 import static jbse.bc.Signatures.JAVA_NUMBER;
 import static jbse.bc.Signatures.JAVA_OBJECT;
+import static jbse.bc.Signatures.JAVA_OBJECT_CLONE;
 import static jbse.bc.Signatures.JAVA_OBJECT_GETCLASS;
 import static jbse.bc.Signatures.JAVA_OBJECT_HASHCODE;
 import static jbse.bc.Signatures.JAVA_OBJECTS;
 import static jbse.bc.Signatures.JAVA_OUTPUTSTREAM;
+import static jbse.bc.Signatures.JAVA_OUTPUTSTREAMWRITER;
 import static jbse.bc.Signatures.JAVA_PERMISSION;
+import static jbse.bc.Signatures.JAVA_PHANTOMREFERENCE;
+import static jbse.bc.Signatures.JAVA_PRINTSTREAM;
 import static jbse.bc.Signatures.JAVA_PROPERTIES;
 import static jbse.bc.Signatures.JAVA_REFERENCE;
+import static jbse.bc.Signatures.JAVA_REFERENCE_1;
 import static jbse.bc.Signatures.JAVA_REFERENCE_LOCK;
+import static jbse.bc.Signatures.JAVA_REFERENCE_REFERENCEHANDLER;
 import static jbse.bc.Signatures.JAVA_REFERENCEQUEUE;
 import static jbse.bc.Signatures.JAVA_REFERENCEQUEUE_LOCK;
 import static jbse.bc.Signatures.JAVA_REFERENCEQUEUE_NULL;
 import static jbse.bc.Signatures.JAVA_REFLECT_ARRAY_NEWARRAY;
+import static jbse.bc.Signatures.JAVA_REFLECTACCESS;
 import static jbse.bc.Signatures.JAVA_REFLECTPERMISSION;
 import static jbse.bc.Signatures.JAVA_RUNTIMEEXCEPTION;
 import static jbse.bc.Signatures.JAVA_RUNTIMEPERMISSION;
@@ -136,6 +154,8 @@ import static jbse.bc.Signatures.JAVA_SYSTEM_IDENTITYHASHCODE;
 import static jbse.bc.Signatures.JAVA_SYSTEM_INITPROPERTIES;
 import static jbse.bc.Signatures.JAVA_THREAD;
 import static jbse.bc.Signatures.JAVA_THREAD_CURRENTTHREAD;
+import static jbse.bc.Signatures.JAVA_THREAD_ISALIVE;
+import static jbse.bc.Signatures.JAVA_THREADGROUP;
 import static jbse.bc.Signatures.JAVA_THREADLOCAL;
 import static jbse.bc.Signatures.JAVA_THROWABLE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_FILLINSTACKTRACE;
@@ -153,15 +173,22 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRESOLVED;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRUNBYJBSE;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SUCCEED;
 import static jbse.bc.Signatures.JBSE_BASE;
+import static jbse.bc.Signatures.SUN_CLEANER;
+import static jbse.bc.Signatures.SUN_FASTCHARSETPROVIDER;
+import static jbse.bc.Signatures.SUN_GETPROPERTYACTION;
+import static jbse.bc.Signatures.SUN_PREHASHEDMAP;
 import static jbse.bc.Signatures.SUN_REFLECTION;
 import static jbse.bc.Signatures.SUN_REFLECTIONFACTORY;
 import static jbse.bc.Signatures.SUN_REFLECTIONFACTORY_GETREFLECTIONFACTORYACTION;
 import static jbse.bc.Signatures.SUN_REFLECTION_GETCALLERCLASS;
 import static jbse.bc.Signatures.SUN_REFLECTUTIL;
 import static jbse.bc.Signatures.SUN_SHAREDSECRETS;
+import static jbse.bc.Signatures.SUN_STANDARDCHARSETS;
+import static jbse.bc.Signatures.SUN_STANDARDCHARSETS_ALIASES;
 import static jbse.bc.Signatures.SUN_STANDARDCHARSETS_CACHE;
 import static jbse.bc.Signatures.SUN_STANDARDCHARSETS_CLASSES;
 import static jbse.bc.Signatures.SUN_STREAMENCODER;
+import static jbse.bc.Signatures.SUN_UNICODE;
 import static jbse.bc.Signatures.SUN_UNSAFE;
 import static jbse.bc.Signatures.SUN_UNSAFE_ADDRESSSIZE;
 import static jbse.bc.Signatures.SUN_UNSAFE_ARRAYBASEOFFSET;
@@ -170,6 +197,7 @@ import static jbse.bc.Signatures.SUN_UNSAFE_COMPAREANDSWAPINT;
 import static jbse.bc.Signatures.SUN_UNSAFE_COMPAREANDSWAPOBJECT;
 import static jbse.bc.Signatures.SUN_UNSAFE_GETINTVOLATILE;
 import static jbse.bc.Signatures.SUN_UNSAFE_OBJECTFIELDOFFSET;
+import static jbse.bc.Signatures.SUN_UTF_8;
 import static jbse.bc.Signatures.SUN_VERSION;
 import static jbse.bc.Signatures.SUN_VM;
 
@@ -331,12 +359,14 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_CLASS_DESIREDASSERTIONSTATUS0,                 ALGO_JAVA_CLASS_DESIREDASSERTIONSTATUS0);
             addMetaOverridden(JAVA_CLASS_FORNAME0,                                ALGO_JAVA_CLASS_FORNAME0);
             addMetaOverridden(JAVA_CLASS_GETCOMPONENTTYPE,                        ALGO_JAVA_CLASS_GETCOMPONENTTYPE);
+            addMetaOverridden(JAVA_CLASS_GETDECLAREDCONSTRUCTORS0,                ALGO_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0);
             addMetaOverridden(JAVA_CLASS_GETDECLAREDFIELDS0,                      ALGO_JAVA_CLASS_GETDECLAREDFIELDS0);
             addMetaOverridden(JAVA_CLASS_GETPRIMITIVECLASS,                       ALGO_JAVA_CLASS_GETPRIMITIVECLASS);
             addMetaOverridden(JAVA_CLASS_ISASSIGNABLEFROM,                        ALGO_JAVA_CLASS_ISASSIGNABLEFROM);
             addMetaOverridden(JAVA_CLASS_ISINSTANCE,                              ALGO_JAVA_CLASS_ISINSTANCE);
             addMetaOverridden(JAVA_CLASS_ISINTERFACE,                             ALGO_JAVA_CLASS_ISINTERFACE);
             addMetaOverridden(JAVA_CLASS_ISPRIMITIVE,                             ALGO_JAVA_CLASS_ISPRIMITIVE);
+            addMetaOverridden(JAVA_OBJECT_CLONE,                                  ALGO_JAVA_OBJECT_CLONE);
             addMetaOverridden(JAVA_OBJECT_GETCLASS,                               ALGO_JAVA_OBJECT_GETCLASS);
             addMetaOverridden(JAVA_OBJECT_HASHCODE,                               ALGO_JAVA_OBJECT_HASHCODE);
             addMetaOverridden(JAVA_REFLECT_ARRAY_NEWARRAY,                        ALGO_JAVA_REFLECT_ARRAY_NEWARRAY);
@@ -346,6 +376,7 @@ public final class ExecutionContext {
             addBaseOverridden(JAVA_SYSTEM_INITPROPERTIES,                         BASE_JAVA_SYSTEM_INITPROPERTIES);
             addMetaOverridden(JAVA_SYSTEM_IDENTITYHASHCODE,                       ALGO_JAVA_SYSTEM_IDENTITYHASHCODE);
             addMetaOverridden(JAVA_THREAD_CURRENTTHREAD,                          ALGO_JAVA_THREAD_CURRENTTHREAD);
+            addBaseOverridden(JAVA_THREAD_ISALIVE,                                BASE_JAVA_THREAD_ISALIVE);
             addMetaOverridden(JAVA_THROWABLE_FILLINSTACKTRACE,                    ALGO_JAVA_THROWABLE_FILLINSTACKTRACE);
             addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEDEPTH,                  ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH);
             addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEELEMENT,                ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT);
@@ -494,6 +525,8 @@ public final class ExecutionContext {
         className.equals(JAVA_ABSTRACTLIST) ||
         className.equals(JAVA_ABSTRACTMAP) ||
         className.equals(JAVA_ABSTRACTSET) ||
+        className.equals(JAVA_ABSTRACTSTRINGBUILDER) ||
+        className.equals(JAVA_ACCESSCONTROLCONTEXT) || //not really, but its static fields are lazily initialized so it is as it were
         className.equals(JAVA_ACCESSCONTROLLER) || 
         className.equals(JAVA_ACCESSIBLEOBJECT) || 
         className.equals(JAVA_ARRAYLIST) || 
@@ -505,8 +538,10 @@ public final class ExecutionContext {
         className.equals(JAVA_BASICPERMISSION) ||
         className.equals(JAVA_BOOLEAN) ||
         className.equals(JAVA_BUFFEREDINPUTSTREAM) ||
-        className.equals(JAVA_CHARSET) ||  //not really, but most static values seem to be just caches, so we treat it as it were
+        className.equals(JAVA_BUFFEREDOUTPUTSTREAM) ||
+        className.equals(JAVA_CHARSET) || //not really, but most static values seem to be just caches, so we treat it as it were
         className.equals(JAVA_CHARSET_EXTENDEDPROVIDERHOLDER) ||
+        className.equals(JAVA_CHARSETPROVIDER) ||
         className.equals(JAVA_CLASS) || 
         className.equals(JAVA_CLASS_3) || 
         className.equals(JAVA_CLASS_ATOMIC) || 
@@ -523,11 +558,13 @@ public final class ExecutionContext {
         className.equals(JAVA_DICTIONARY) ||
         className.equals(JAVA_DOUBLE) ||
         className.equals(JAVA_EXCEPTION) ||
+        className.equals(JAVA_FIELD) ||
         className.equals(JAVA_FILEDESCRIPTOR) || 
         className.equals(JAVA_FILEDESCRIPTOR_1) || 
         className.equals(JAVA_FILEINPUTSTREAM) || 
         className.equals(JAVA_FILEOUTPUTSTREAM) || 
         className.equals(JAVA_FILTERINPUTSTREAM) || 
+        className.equals(JAVA_FILTEROUTPUTSTREAM) || 
         className.equals(JAVA_FLOAT) || 
         className.equals(JAVA_HASHMAP) || 
         className.equals(JAVA_HASHMAP_NODE) || 
@@ -540,6 +577,7 @@ public final class ExecutionContext {
         className.equals(JAVA_INPUTSTREAM) ||
         className.equals(JAVA_INTEGER) || 
         className.equals(JAVA_INTEGER_INTEGERCACHE) || 
+        className.equals(JAVA_INTERRUPTEDEXCEPTION) || 
         className.equals(JAVA_LINKEDLIST) || 
         className.equals(JAVA_LINKEDLIST_ENTRY) ||
         className.equals(JAVA_MATH) || 
@@ -548,13 +586,19 @@ public final class ExecutionContext {
         className.equals(JAVA_OBJECT) ||
         className.equals(JAVA_OBJECTS) ||
         className.equals(JAVA_OUTPUTSTREAM) ||
+        className.equals(JAVA_OUTPUTSTREAMWRITER) ||
         className.equals(JAVA_PERMISSION) ||
+        className.equals(JAVA_PHANTOMREFERENCE) ||
+        className.equals(JAVA_PRINTSTREAM) ||
         className.equals(JAVA_PROPERTIES) ||
         className.equals(JAVA_REFERENCE) ||  //not really, but the lock field is effectively final and the discovered field is managed by the garbage collector, that JBSE has not
+        className.equals(JAVA_REFERENCE_1) ||
         className.equals(JAVA_REFERENCE_LOCK) ||
+        className.equals(JAVA_REFERENCE_REFERENCEHANDLER) ||
         className.equals(JAVA_REFERENCEQUEUE) ||  //not really, but used as it were
         className.equals(JAVA_REFERENCEQUEUE_LOCK) ||
         className.equals(JAVA_REFERENCEQUEUE_NULL) ||
+        className.equals(JAVA_REFLECTACCESS) ||
         className.equals(JAVA_REFLECTPERMISSION) ||
         className.equals(JAVA_RUNTIMEEXCEPTION) ||
         className.equals(JAVA_RUNTIMEPERMISSION) ||
@@ -564,20 +608,29 @@ public final class ExecutionContext {
         className.equals(JAVA_SYSTEM) || 
         className.equals(JAVA_TREESET) ||
         className.equals(JAVA_THREAD) || //not really, but it's not a terrible approximation considering it as it were (and also initializes many static final members)
+        className.equals(JAVA_THREADGROUP) ||
         className.equals(JAVA_THREADLOCAL) || //not really, but the only static member generates sequences of hash codes, so it can be treated as it were
         className.equals(JAVA_THROWABLE) || 
         className.equals(JAVA_THROWABLE_SENTINELHOLDER) ||
         className.equals(JAVA_WRITER) || 
         className.equals(JBSE_BASE) ||
+        className.equals(SUN_CLEANER) ||  //not really, but we don't care very much about finalization since JBSE never garbage-collects, thus we treat it as it were
+        className.equals(SUN_FASTCHARSETPROVIDER) ||        
+        className.equals(SUN_GETPROPERTYACTION) ||        
+        className.equals(SUN_PREHASHEDMAP) ||
         className.equals(SUN_REFLECTION) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
         className.equals(SUN_REFLECTIONFACTORY) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
         className.equals(SUN_REFLECTIONFACTORY_GETREFLECTIONFACTORYACTION) ||
         className.equals(SUN_REFLECTUTIL) ||
         className.equals(SUN_SHAREDSECRETS) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
+        className.equals(SUN_STANDARDCHARSETS) ||
+        className.equals(SUN_STANDARDCHARSETS_ALIASES) ||
         className.equals(SUN_STANDARDCHARSETS_CACHE) ||
         className.equals(SUN_STANDARDCHARSETS_CLASSES) ||
         className.equals(SUN_STREAMENCODER) ||
+        className.equals(SUN_UNICODE) ||
         className.equals(SUN_UNSAFE) ||
+        className.equals(SUN_UTF_8) ||
         className.equals(SUN_VERSION) ||
         className.equals(SUN_VM) ||
         hier.isSubclass(className, JAVA_ENUM));

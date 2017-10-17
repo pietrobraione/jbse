@@ -18,11 +18,11 @@ public final class ClassFileBad extends ClassFile {
         this.className = className;
         this.e = e;
     }
-    
+
     BadClassFileException getException() {
         return this.e;
     }
-    
+
     @Override
     public String getSourceFile() {
         return "";
@@ -32,7 +32,7 @@ public final class ClassFileBad extends ClassFile {
     public String getClassName() {
         return this.className;
     }
-    
+
     @Override
     public boolean isArray() {
         return false;
@@ -136,7 +136,29 @@ public final class ClassFileBad extends ClassFile {
     }
 
     @Override
+    public String getMethodGenericSignatureType(Signature methodSignature) throws MethodNotFoundException {
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
+    
+    @Override
+    public int getMethodModifiers(Signature methodSignature) throws MethodNotFoundException {
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
+
+    @Override
+    public byte[] getMethodAnnotationsRaw(Signature methodSignature) 
+    throws MethodNotFoundException {
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
+
+    @Override
     public Object[] getMethodAvailableAnnotations(Signature methodSignature)
+    throws MethodNotFoundException {
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
+
+    @Override
+    public String[] getMethodThrownExceptions(Signature methodSignature) 
     throws MethodNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
     }
@@ -237,17 +259,23 @@ public final class ClassFileBad extends ClassFile {
         throw new FieldNotFoundException(fieldSignature.toString());
     }
 
-	@Override
-	public String getFieldGenericSignatureType(Signature fieldSignature) 
-	throws FieldNotFoundException {
-		throw new FieldNotFoundException(fieldSignature.toString());
-	}
-	
-	@Override
-	public int getFieldModifiers(Signature fieldSignature) 
-	throws FieldNotFoundException {
-		throw new FieldNotFoundException(fieldSignature.toString());
-	}
+    @Override
+    public String getFieldGenericSignatureType(Signature fieldSignature) 
+    throws FieldNotFoundException {
+        throw new FieldNotFoundException(fieldSignature.toString());
+    }
+
+    @Override
+    public int getFieldModifiers(Signature fieldSignature) 
+    throws FieldNotFoundException {
+        throw new FieldNotFoundException(fieldSignature.toString());
+    }
+    
+    @Override
+    public byte[] getFieldAnnotationsRaw(Signature fieldSignature) 
+    throws FieldNotFoundException {
+        throw new FieldNotFoundException(fieldSignature.toString());
+    }
 
     @Override
     public Signature[] getDeclaredFieldsNonStatic() {
@@ -268,6 +296,11 @@ public final class ClassFileBad extends ClassFile {
     public Signature getFieldSignature(int fieldRef)
     throws InvalidIndexException {
         throw new InvalidIndexException(this.className + ":" + fieldRef);
+    }
+    
+    @Override
+    public Signature[] getDeclaredConstructors() {
+        return new Signature[0];
     }
 
     @Override

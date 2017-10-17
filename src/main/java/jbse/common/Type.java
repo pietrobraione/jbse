@@ -212,6 +212,10 @@ public final class Type {
         return className.replace('/', '.');
     }
     
+    public static String internalClassName(String className) {
+        return className.replace('.', '/');
+    }
+    
     public static String toPrimitiveBinaryClassName(char primitiveType) {
         if (primitiveType == BYTE) {
             return "byte";

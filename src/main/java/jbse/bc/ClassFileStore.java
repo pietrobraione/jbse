@@ -14,7 +14,7 @@ import jbse.common.Type;
  * multiple class loaders, nor dynamic class loading.
  */ 
 class ClassFileStore {
-	private final ClassFileFactory f;
+    private final ClassFileFactory f;
     private final HashMap<String, ClassFile> cache = new HashMap<>();
     private final ClassFileBoolean primitiveClassBoolean = new ClassFileBoolean(); 
     private final ClassFileByte primitiveClassByte = new ClassFileByte();   
@@ -25,30 +25,30 @@ class ClassFileStore {
     private final ClassFileFloat primitiveClassFloat = new ClassFileFloat();    
     private final ClassFileDouble primitiveClassDouble = new ClassFileDouble(); 
     private final ClassFileVoid primitiveClassVoid = new ClassFileVoid();   
-    
-	/**
-	 * Constructor.
-	 * 
-	 * @param cp a {@link Classpath}.
-	 * @param fClass the {@link Class} of some subclass of {@link ClassFileFactory}.
-	 *        The class must have an accessible constructor with two parameters, the first a 
-	 *        {@link ClassFileStore}, the second a {@link Classpath}.
-	 * @throws InvalidClassFileFactoryClassException in the case {@link fClass}
-	 *         has not the expected features (missing constructor, unaccessible 
-	 *         constructor...).
-	 */
+
+    /**
+     * Constructor.
+     * 
+     * @param cp a {@link Classpath}.
+     * @param fClass the {@link Class} of some subclass of {@link ClassFileFactory}.
+     *        The class must have an accessible constructor with two parameters, the first a 
+     *        {@link ClassFileStore}, the second a {@link Classpath}.
+     * @throws InvalidClassFileFactoryClassException in the case {@link fClass}
+     *         has not the expected features (missing constructor, unaccessible 
+     *         constructor...).
+     */
     ClassFileStore(Classpath cp, Class<? extends ClassFileFactory> fClass) 
     throws InvalidClassFileFactoryClassException {
-    	final Constructor<? extends ClassFileFactory> c;
-		try {
-			c = fClass.getConstructor(ClassFileStore.class, Classpath.class);
-	    	this.f = c.newInstance(this, cp);
-		} catch (SecurityException | NoSuchMethodException | IllegalArgumentException | 
-				InstantiationException | IllegalAccessException | InvocationTargetException e) {
-			throw new InvalidClassFileFactoryClassException(e);
-		}
+        final Constructor<? extends ClassFileFactory> c;
+        try {
+            c = fClass.getConstructor(ClassFileStore.class, Classpath.class);
+            this.f = c.newInstance(this, cp);
+        } catch (SecurityException | NoSuchMethodException | IllegalArgumentException | 
+                 InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            throw new InvalidClassFileFactoryClassException(e);
+        }
     }
-    
+
     /**
      * Given a class name returns the corresponding {@link ClassFile}.
      * To avoid name clashes it does not manage primitive classes.
@@ -60,17 +60,17 @@ class ClassFileStore {
     ClassFile getClassFile(String className) {
         //if the class file is not already in cache, adds it
         if (!this.cache.containsKey(className)) {        
-	        ClassFile tempCF;
-	        try {
-				tempCF = this.f.newClassFile(className);
-			} catch (BadClassFileException e) {
-				tempCF = new ClassFileBad(className, e);
-			}
-	        this.cache.put(className, tempCF);
+            ClassFile tempCF;
+            try {
+                tempCF = this.f.newClassFile(className);
+            } catch (BadClassFileException e) {
+                tempCF = new ClassFileBad(className, e);
+            }
+            this.cache.put(className, tempCF);
         }
         return this.cache.get(className);
     }
-    
+
     /**
      * Given the name of a primitive type returns the corresponding 
      * {@link ClassFile}.
