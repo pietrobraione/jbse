@@ -10,6 +10,12 @@ import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 
+/**
+ * Fictuous {@link ClassFile} returned during iteration to signify that
+ * something went wrong and a {@link BadClassFileException} should be thrown.
+ * 
+ * @author Pietro Braione
+ */
 public final class ClassFileBad extends ClassFile {
     private final String className;
     private final BadClassFileException e;
@@ -32,7 +38,7 @@ public final class ClassFileBad extends ClassFile {
     public String getClassName() {
         return this.className;
     }
-    
+
     @Override
     public int getAccessFlags() {
         return 0; //any value suits
@@ -144,7 +150,7 @@ public final class ClassFileBad extends ClassFile {
     public String getMethodGenericSignatureType(Signature methodSignature) throws MethodNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
     }
-    
+
     @Override
     public int getMethodModifiers(Signature methodSignature) throws MethodNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
@@ -275,7 +281,7 @@ public final class ClassFileBad extends ClassFile {
     throws FieldNotFoundException {
         throw new FieldNotFoundException(fieldSignature.toString());
     }
-    
+
     @Override
     public byte[] getFieldAnnotationsRaw(Signature fieldSignature) 
     throws FieldNotFoundException {
@@ -302,7 +308,7 @@ public final class ClassFileBad extends ClassFile {
     throws InvalidIndexException {
         throw new InvalidIndexException(this.className + ":" + fieldRef);
     }
-    
+
     @Override
     public Signature[] getDeclaredConstructors() {
         return new Signature[0];

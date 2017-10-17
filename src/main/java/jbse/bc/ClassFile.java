@@ -32,7 +32,7 @@ public abstract class ClassFile {
             return className.substring(0, lastSlash);
         }
     }
-    
+
     /**
      * Returns the access flags stored in the classfile. 
      * Note that for inner classes these flags may differ
@@ -235,7 +235,7 @@ public abstract class ClassFile {
      */
     public abstract String getMethodGenericSignatureType(Signature methodSignature) 
     throws MethodNotFoundException;
-    
+
     /**
      * Returns the encoded modifiers of a method.
      * 
@@ -255,7 +255,7 @@ public abstract class ClassFile {
      */
     public abstract byte[] getMethodAnnotationsRaw(Signature methodSignature) 
     throws MethodNotFoundException;
-    
+
     /**
      * Returns all the annotations of a method that are available on the current classpath.
      * 
@@ -265,7 +265,7 @@ public abstract class ClassFile {
      */
     public abstract Object[] getMethodAvailableAnnotations(Signature methodSignature) 
     throws MethodNotFoundException;
-    
+
     /**
      * Returns the list of the exception that a method declares to throw.
      * 
@@ -463,7 +463,7 @@ public abstract class ClassFile {
      */
     public abstract byte[] getFieldAnnotationsRaw(Signature fieldSignature) 
     throws FieldNotFoundException;
-    
+
     /**
      * Returns the value of a constant field.
      * 

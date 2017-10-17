@@ -49,7 +49,6 @@ class ClassFileVoid extends ClassFilePrimitive {
  * A {@link ClassFile} for the primitive classes.
  * 
  * @author Pietro Braione
- *
  */
 abstract class ClassFilePrimitive extends ClassFile {
     private static final String NO_CONSTANT_POOL = "Primitive classes have no constant pool.";
@@ -74,7 +73,7 @@ abstract class ClassFilePrimitive extends ClassFile {
     public String getClassName() {
         return this.className;
     }
-    
+
     @Override
     public int getAccessFlags() {
         return Modifier.ABSTRACT | Modifier.FINAL | Modifier.PUBLIC; //see openjdk 8, hotspot source code, src/share/vm/prims/jvm.cpp function JVM_GetClassAccessFlags
@@ -186,7 +185,7 @@ abstract class ClassFilePrimitive extends ClassFile {
     public String getMethodGenericSignatureType(Signature methodSignature) throws MethodNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
     }
-    
+
     @Override
     public int getMethodModifiers(Signature methodSignature) throws MethodNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
@@ -203,7 +202,7 @@ abstract class ClassFilePrimitive extends ClassFile {
     throws MethodNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
     }
-    
+
     @Override
     public String[] getMethodThrownExceptions(Signature methodSignature) 
     throws MethodNotFoundException {
@@ -304,7 +303,7 @@ abstract class ClassFilePrimitive extends ClassFile {
     throws FieldNotFoundException {
         throw new FieldNotFoundException(fieldSignature.toString());
     }
-    
+
     @Override
     public byte[] getFieldAnnotationsRaw(Signature fieldSignature) 
     throws FieldNotFoundException {
@@ -331,7 +330,7 @@ abstract class ClassFilePrimitive extends ClassFile {
     throws InvalidIndexException {
         throw new InvalidIndexException(NO_CONSTANT_POOL);
     }
-    
+
     @Override
     public Signature[] getDeclaredConstructors() {
         return new Signature[0];

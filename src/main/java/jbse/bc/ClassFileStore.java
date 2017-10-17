@@ -44,7 +44,7 @@ class ClassFileStore {
             c = fClass.getConstructor(ClassFileStore.class, Classpath.class);
             this.f = c.newInstance(this, cp);
         } catch (SecurityException | NoSuchMethodException | IllegalArgumentException | 
-                 InstantiationException | IllegalAccessException | InvocationTargetException e) {
+        InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new InvalidClassFileFactoryClassException(e);
         }
     }

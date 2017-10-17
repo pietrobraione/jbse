@@ -26,7 +26,7 @@ public final class Offsets {
     public static final int MONITORX_OFFSET = 1;
     public static final int MULTIANEWARRAY_OFFSET = 4;
     public static final int NEW_OFFSET = 3;
-	public static final int NEWARRAY_OFFSET = 2;
+    public static final int NEWARRAY_OFFSET = 2;
     public static final int NOP_OFFSET = 1;
     public static final int POP_OFFSET = 1;
     public static final int SIPUSH_OFFSET = 3;
@@ -39,9 +39,11 @@ public final class Offsets {
     public static final int XLOADSTORE_IMMEDIATE_OFFSET = 2;
     public static final int XLOADSTORE_IMMEDIATE_WIDE_OFFSET = 3;
     public static final int XLOADSTORE_IMPLICIT_OFFSET = 1;
-    
-	/**
-	 * Do not instantiate it!
-	 */
-	private Offsets() { }
+
+    /**
+     * Do not instantiate it!
+     */
+    private Offsets() { 
+        throw new AssertionError();
+    }
 }

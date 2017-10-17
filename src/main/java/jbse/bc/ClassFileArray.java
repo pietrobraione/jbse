@@ -14,6 +14,11 @@ import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 
+/**
+ * {@link ClassFile} for array classes.
+ * 
+ * @author Pietro Braione
+ */
 public class ClassFileArray extends ClassFile {
     //TODO by now clone is treated as a native method; implement it.
     private static final String NO_CONSTANT_POOL = "Array classes have no constant pool.";	
@@ -39,7 +44,7 @@ public class ClassFileArray extends ClassFile {
     public String getPackageName() {
         return this.packageName;
     }
-    
+
     @Override
     public int getAccessFlags() {
         return 0; //no access flags set, checked against implementation
@@ -97,7 +102,7 @@ public class ClassFileArray extends ClassFile {
     public Signature[] getDeclaredFields() {
         return new Signature[0];
     }
-    
+
     @Override
     public Signature[] getDeclaredConstructors() {
         return new Signature[0];
@@ -188,19 +193,19 @@ public class ClassFileArray extends ClassFile {
     public Signature[] getMethodSignatures() {
         return new Signature[0];
     }
-    
+
     @Override
     public String getMethodGenericSignatureType(Signature methodSignature) 
     throws MethodNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
     }
-    
+
     @Override
     public int getMethodModifiers(Signature methodSignature) 
     throws MethodNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
     }
-    
+
     @Override
     public byte[] getMethodAnnotationsRaw(Signature methodSignature) 
     throws MethodNotFoundException {
@@ -320,7 +325,7 @@ public class ClassFileArray extends ClassFile {
     public int getFieldModifiers(Signature fieldSignature) throws FieldNotFoundException {
         throw new FieldNotFoundException(fieldSignature.toString());
     }
-    
+
     @Override
     public byte[] getFieldAnnotationsRaw(Signature fieldSignature) throws FieldNotFoundException {
         throw new FieldNotFoundException(fieldSignature.toString());

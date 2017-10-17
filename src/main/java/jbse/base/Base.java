@@ -93,7 +93,7 @@ public final class Base {
         //since JBSE does not enforce access control we just execute the action
         return action.run();
     }
-    
+
     /**
      * Overriding implementation of {@link java.security.AccessController#getStackAccessControlContext()}.
      * @see java.security.AccessController#getStackAccessControlContext()
@@ -153,7 +153,7 @@ public final class Base {
         //TODO more properties?
         return p;
     }
-    
+
     /**
      * Overriding implementation of {@link java.lang.Thread#isAlive()}.
      * @see java.lang.Thread#isAlive()

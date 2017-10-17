@@ -1,9 +1,16 @@
 package jbse.bc;
 
+/**
+ * A {@link ConstantPoolValue} representing a primitive value
+ * from the constant pool.
+ * 
+ * @author Pietro Braione
+ *
+ */
 public final class ConstantPoolPrimitive extends ConstantPoolValue {
     private final Number number;
     private final int hashCode;
-    
+
     private ConstantPoolPrimitive(Number number) {
         this.number = number;
         final int prime = 11;
@@ -11,11 +18,11 @@ public final class ConstantPoolPrimitive extends ConstantPoolValue {
         result = prime * result + ((number == null) ? 0 : number.hashCode());
         this.hashCode = result;
     }
-    
+
     public ConstantPoolPrimitive(int number) {
         this(Integer.valueOf(number));
     }
-    
+
     public ConstantPoolPrimitive(float number) {
         this(Float.valueOf(number));
     }
@@ -32,7 +39,7 @@ public final class ConstantPoolPrimitive extends ConstantPoolValue {
     public final Number getValue() {
         return this.number;
     }
-    
+
     @Override
     public final int hashCode() {
         return this.hashCode;
@@ -59,7 +66,7 @@ public final class ConstantPoolPrimitive extends ConstantPoolValue {
         }
         return true;
     }
-    
+
     @Override
     public String toString() {
         return this.number.toString();

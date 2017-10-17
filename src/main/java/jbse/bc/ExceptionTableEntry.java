@@ -1,82 +1,68 @@
 package jbse.bc;
 
 /**
- *Class that represent an entry of the exception table
+ * Class that represent an entry in the exception table. An entry
+ * memorizes the fact that, when an exception of some class is raised 
+ * by an instruction in a given program counter range (the try block), 
+ * then the control must be transferred to a given instruction (the catch
+ * block). 
  */
 public class ExceptionTableEntry {
     private int[] exEntry;
     private String exType;
 
-    public ExceptionTableEntry(int startPC, int endPC, int PCHandle, String type)
-	{
-		exEntry=new int[3];
-		exEntry[0]=startPC;
-		exEntry[1]=endPC;
-		exEntry[2]=PCHandle;
-		exType=type;
-	}
-	/**
-	 *Return the Program Counter of the start of try
-	 *@return int The Program Counter of the start of try
-	 */ 
-	public int getStartPC()
-	{
-		return(exEntry[0]);
-	}
-	/**
-	 *Return the Program Counter of the end of try
-	 *@return int The Program Counter of the end of try
-	 */ 
-	public int getEndPC()
-	{
-		return(exEntry[1]);
-	}
-	/**
-	 *Return the Program Counter of the start of catch
-	 *@return int The Program Counter of the start of catch
-	 */ 
-	public int getPCHandle()
-	{
-		return(exEntry[2]);
-	}
-	/**
-	 *Return the type of exception
-	 *@return String The type of exception
-	 */ 
-	public String getType()
-	{
-		return(exType);
-	}
-	/**
-	 *Set the Program Counter of the start of try
-	 *@param startPc The Program Counter of the start of try
-	 */ 
-	public void setStartPC(int startPC)
-	{
-		exEntry[0]=startPC;
-	}
-	/**
-	 *Set the Program Counter of the end of try
-	 *@param endPC The Program Counter of the end of try
-	 */ 
-	public void setEndPC(int endPC)
-	{
-		exEntry[1]=endPC;
-	}
-	/**
-	 *Set the Program Counter of the start of catch
-	 *@param pcHandle The Program Counter of the start of catch
-	 */ 
-	public void setPCHandle(int pcHandle)
-	{
-		exEntry[2]=pcHandle;
-	}
-	/**
-	 *Set the type of exception
-	 *@param String The type of exception
-	 */ 
-	public void setType(String type)
-	{
-		exType=type;
-	}
+    /**
+     * Constructor.
+     * 
+     * @param start an {@code int}, the start of the try block.
+     * @param end an {@code int}, the end of the try block.
+     * @param handle an {@code int}, the entry point of the catch block.
+     * @param type a {@link String}, the class name of a throwable class.
+     */
+    public ExceptionTableEntry(int start, int end, int handle, String type) {
+        this.exEntry = new int[3];
+        this.exEntry[0] = start;
+        this.exEntry[1] = end;
+        this.exEntry[2] = handle;
+        this.exType = type;
+    }
+    
+    /**
+     * Returns the program counter of the start of the try block
+     * referred by this entry.
+     * 
+     * @return an {@code int}.
+     */ 
+    public int getStartPC() {
+        return this.exEntry[0];
+    }
+    
+    /**
+     * Returns the program counter of the end of the try block
+     * referred by this entry.
+     * 
+     * @return an {@code int}.
+     */ 
+    public int getEndPC() {
+        return this.exEntry[1];
+    }
+    
+    /**
+     * Returns the program counter of the start of the catch block
+     * referred by this entry.
+     * 
+     * @return an {@code int}.
+     */ 
+    public int getPCHandle() {
+        return this.exEntry[2];
+    }
+    
+    /**
+     * Returns the type of the throwable this entry refers to.
+     * 
+     * @return a {@link String}, the name of a throwable class.
+     */ 
+    public String getType() {
+        return this.exType;
+    }
 }

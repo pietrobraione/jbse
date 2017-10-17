@@ -34,6 +34,11 @@ import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 
+/**
+ * A {@link ClassFile} produced by a {@link ClassFileFactoryJavassist}.
+ * 
+ * @author Pietro Braione
+ */
 public class ClassFileJavassist extends ClassFile {
     private CtClass cls;
     private ConstPool cp;
@@ -79,7 +84,7 @@ public class ClassFileJavassist extends ClassFile {
         }
         return internalClassName(this.cp.getClassInfo(classIndex));
     }
-    
+
     @Override
     public int getAccessFlags() {
         return this.cls.getClassFile2().getAccessFlags();
@@ -200,11 +205,11 @@ public class ClassFileJavassist extends ClassFile {
         CtBehavior[] bs = this.cls.getDeclaredBehaviors();
         for (CtBehavior b : bs) {
             String internalName = 
-                (((b instanceof CtConstructor) && (!((CtConstructor) b).isClassInitializer())) ? 
-                "<init>" : 
-                b.getName());
+            (((b instanceof CtConstructor) && (!((CtConstructor) b).isClassInitializer())) ? 
+                                                                                            "<init>" : 
+                                                                                                b.getName());
             if (internalName.equals(methodSignature.getName()) &&
-                b.getSignature().equals(methodSignature.getDescriptor())) {
+            b.getSignature().equals(methodSignature.getDescriptor())) {
                 return b;
             }
         }
@@ -379,7 +384,7 @@ public class ClassFileJavassist extends ClassFile {
         }
         return retVal;
     }
-    
+
     @Override
     public String getMethodGenericSignatureType(Signature methodSignature) throws MethodNotFoundException {
         final CtBehavior b = findMethod(methodSignature);
@@ -388,7 +393,7 @@ public class ClassFileJavassist extends ClassFile {
         }
         return b.getGenericSignature();
     }
-    
+
     @Override
     public int getMethodModifiers(Signature methodSignature) 
     throws MethodNotFoundException {
@@ -398,7 +403,7 @@ public class ClassFileJavassist extends ClassFile {
         }
         return b.getModifiers();
     }
-    
+
     private byte[] mergeVisibleAndInvisibleAttributes(AttributeInfo attrVisible, AttributeInfo attrInvisible) {
         final byte[] visible = (attrVisible == null ? new byte[0] : attrVisible.get());
         final byte[] invisible = (attrInvisible == null ? new byte[0] : attrInvisible.get());
@@ -407,7 +412,7 @@ public class ClassFileJavassist extends ClassFile {
         System.arraycopy(invisible, 0, retVal, visible.length, invisible.length);
         return retVal;
     }
-    
+
     @Override
     public byte[] getMethodAnnotationsRaw(Signature methodSignature) 
     throws MethodNotFoundException {
@@ -429,7 +434,7 @@ public class ClassFileJavassist extends ClassFile {
         }
         return b.getAvailableAnnotations();
     }
-    
+
     @Override
     public String[] getMethodThrownExceptions(Signature methodSignature) 
     throws MethodNotFoundException {
@@ -437,7 +442,7 @@ public class ClassFileJavassist extends ClassFile {
         if (b == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
-        
+
         CtClass[] exc;
         try {
             exc = b.getExceptionTypes();
@@ -609,7 +614,7 @@ public class ClassFileJavassist extends ClassFile {
         }
         return fld.getModifiers();
     }
-    
+
     @Override
     public byte[] getFieldAnnotationsRaw(Signature fieldSignature) 
     throws FieldNotFoundException {
@@ -626,7 +631,7 @@ public class ClassFileJavassist extends ClassFile {
         final CtField[] fieldsJA = this.cls.getDeclaredFields();
         for (CtField fld : fieldsJA) {
             if (fld.getSignature().equals(fieldSignature.getDescriptor()) && 
-                fld.getName().equals(fieldSignature.getName())) {
+            fld.getName().equals(fieldSignature.getName())) {
                 return fld;
             }
         }
@@ -648,7 +653,7 @@ public class ClassFileJavassist extends ClassFile {
         this.constructors.toArray(retVal);
         return retVal;
     }
-    
+
     @Override
     public String classContainer() {
         return this.cls.getName().substring(0, this.cls.getName().lastIndexOf('$'));
