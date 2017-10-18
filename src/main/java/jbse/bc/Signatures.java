@@ -5,6 +5,7 @@ import static jbse.common.Type.BOOLEAN;
 import static jbse.common.Type.BYTE;
 import static jbse.common.Type.CHAR;
 import static jbse.common.Type.INT;
+import static jbse.common.Type.internalClassName;
 import static jbse.common.Type.LONG;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
@@ -120,8 +121,8 @@ public final class Signatures {
     public static final String JAVA_THROWABLE_SENTINELHOLDER = "java/lang/Throwable$SentinelHolder";
     public static final String JAVA_TREESET                  = "java/util/TreeSet";
     public static final String JAVA_WRITER                   = "java/io/Writer";
-    public static final String JBSE_ANALYSIS                 = jbse.meta.Analysis.class.getCanonicalName().replace('.', '/');
-    public static final String JBSE_BASE                     = jbse.base.Base.class.getCanonicalName().replace('.', '/');
+    public static final String JBSE_ANALYSIS                 = internalClassName(jbse.meta.Analysis.class.getCanonicalName());
+    public static final String JBSE_BASE                     = internalClassName(jbse.base.Base.class.getCanonicalName());
     public static final String SUN_CLEANER                   = "sun/misc/Cleaner";
     public static final String SUN_FASTCHARSETPROVIDER       = "sun/nio/cs/FastCharsetProvider";
     public static final String SUN_GETPROPERTYACTION         = "sun/security/action/GetPropertyAction";
