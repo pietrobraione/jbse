@@ -2,7 +2,6 @@ package jbse.bc;
 
 import jbse.bc.ClassFileArray.Visibility;
 import jbse.bc.exc.BadClassFileException;
-import jbse.bc.exc.ArrayMemberVisibilityException;
 import jbse.common.Type;
 
 /**
@@ -51,9 +50,10 @@ public abstract class ClassFileFactory {
                 visibility = ClassFileArray.Visibility.PUBLIC;
             } else if (classFileMember.isPackage()) {
                 visibility = ClassFileArray.Visibility.PACKAGE;
-            } else {
-                //TODO is this branch reachable for nested classes?
-                throw new ArrayMemberVisibilityException();
+            } else if (classFileMember.isProtected()) {
+                visibility = ClassFileArray.Visibility.PROTECTED;
+            } else { //private
+                visibility = ClassFileArray.Visibility.PRIVATE;
             }
             return new ClassFileArray(className, packageName, visibility);
         } else {

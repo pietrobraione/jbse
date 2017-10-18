@@ -40,6 +40,11 @@ public final class ClassFileBad extends ClassFile {
     }
 
     @Override
+    public int getModifiers() {
+        return 0; //any value suits
+    }
+
+    @Override
     public int getAccessFlags() {
         return 0; //any value suits
     }
@@ -63,9 +68,19 @@ public final class ClassFileBad extends ClassFile {
     public boolean isPublic() {
         return false;
     }
+    
+    @Override
+    public boolean isProtected() {
+        return false;
+    }
 
     @Override
     public boolean isPackage() {
+        return false;
+    }
+    
+    @Override
+    public boolean isPrivate() {
         return false;
     }
 

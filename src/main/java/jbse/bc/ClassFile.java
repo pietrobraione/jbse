@@ -32,6 +32,15 @@ public abstract class ClassFile {
             return className.substring(0, lastSlash);
         }
     }
+    
+    /**
+     * Returns the modifiers of the class.
+     * The result must be equal to that returned
+     * by {@link java.lang.Class#getModifiers()}.
+     * 
+     * @return an {@code int} codifying the modifiers.
+     */
+    public abstract int getModifiers();
 
     /**
      * Returns the access flags stored in the classfile. 
@@ -79,11 +88,25 @@ public abstract class ClassFile {
     public abstract boolean isPublic();
 
     /**
+     * Tests whether the class has protected visibility.
+     * 
+     * @return {@code true} iff the class has protected visibility.
+     */
+    public abstract boolean isProtected();
+
+    /**
      * Tests whether the class has package visibility.
      * 
      * @return {@code true} iff the class has package visibility.
      */
     public abstract boolean isPackage();
+
+    /**
+     * Tests whether the class has private visibility.
+     * 
+     * @return {@code true} iff the class has protected visibility.
+     */
+    public abstract boolean isPrivate();
 
     /**
      * Tests the {@code invokespecial} bytecode semantics required

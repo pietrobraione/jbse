@@ -1,5 +1,12 @@
 package jbse.bc;
 
+import static javassist.bytecode.AccessFlag.clear;
+import static javassist.bytecode.AccessFlag.setPackage;
+import static javassist.bytecode.AccessFlag.setPrivate;
+import static javassist.bytecode.AccessFlag.setProtected;
+import static javassist.bytecode.AccessFlag.setPublic;
+import static javassist.bytecode.AccessFlag.STATIC;
+import static javassist.bytecode.AccessFlag.SUPER;
 import static jbse.common.Type.binaryClassName;
 import static jbse.common.Type.internalClassName;
 
@@ -84,20 +91,56 @@ public class ClassFileJavassist extends ClassFile {
         }
         return internalClassName(this.cp.getClassInfo(classIndex));
     }
+    
+    @Override
+    public int getModifiers() {
+        //this code reimplements CtClassType.getModifiers() to circumvent a bug
+        javassist.bytecode.ClassFile cf = this.cls.getClassFile2();
+        int acc = cf.getAccessFlags();
+        acc = clear(acc, SUPER);
+        int inner = cf.getInnerAccessFlags();
+        if (inner != -1) {
+            if ((inner & STATIC) != 0) {
+                acc |= STATIC;
+            }
+            if (AccessFlag.isPublic(inner)) {
+                //seems that public nested classes already have the PUBLIC modifier set
+                //but we are paranoid and we set it again
+                acc = setPublic(acc);
+            } else if (AccessFlag.isProtected(inner)) {
+                acc = setProtected(acc);
+            } else if (AccessFlag.isPrivate(inner)) {
+                acc = setPrivate(acc);
+            } else { //package visibility
+                acc = setPackage(acc); //clear the PUBLIC modifier in case it is set
+            }
+        }
+        return AccessFlag.toModifier(acc);
+    }
 
     @Override
     public int getAccessFlags() {
-        return this.cls.getClassFile2().getAccessFlags();
+        return this.cls.getClassFile().getAccessFlags();
     }
 
     @Override
     public boolean isPublic() {
-        return Modifier.isPublic(this.cls.getModifiers());
+        return Modifier.isPublic(getModifiers());
     }
-
+    
+    @Override
+    public boolean isProtected() {
+        return Modifier.isProtected(getModifiers());
+    }
+    
     @Override
     public boolean isPackage() {
-        return Modifier.isPackage(this.cls.getModifiers());
+        return Modifier.isPackage(getModifiers());
+    }
+    
+    @Override
+    public boolean isPrivate() {
+        return Modifier.isPrivate(getModifiers());
     }
 
     @Override

@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javassist.Modifier;
+
 import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
@@ -20,10 +22,16 @@ import jbse.bc.exc.MethodNotFoundException;
  * @author Pietro Braione
  */
 public class ClassFileArray extends ClassFile {
-    //TODO by now clone is treated as a native method; implement it.
     private static final String NO_CONSTANT_POOL = "Array classes have no constant pool.";	
-
-    public static enum Visibility {PUBLIC, PACKAGE};
+    public static enum Visibility {
+        PUBLIC(Modifier.PUBLIC), 
+        PROTECTED(Modifier.PROTECTED), 
+        PACKAGE(0), 
+        PRIVATE(Modifier.PRIVATE);
+        
+        private final int modifier;
+        private Visibility(int modifier) { this.modifier = modifier; }
+    };
 
     private final String className;
     private final String packageName;
@@ -43,6 +51,11 @@ public class ClassFileArray extends ClassFile {
     @Override
     public String getPackageName() {
         return this.packageName;
+    }
+
+    @Override
+    public int getModifiers() {
+        return Modifier.FINAL | this.visibility.modifier;
     }
 
     @Override
@@ -253,10 +266,20 @@ public class ClassFileArray extends ClassFile {
     public boolean isPublic() {
         return this.visibility == Visibility.PUBLIC;
     }
+    
+    @Override
+    public boolean isProtected() {
+        return this.visibility == Visibility.PROTECTED;
+    }
 
     @Override
     public boolean isPackage() {
         return this.visibility == Visibility.PACKAGE;
+    }
+    
+    @Override
+    public boolean isPrivate() {
+        return this.visibility == Visibility.PRIVATE;
     }
 
     @Override

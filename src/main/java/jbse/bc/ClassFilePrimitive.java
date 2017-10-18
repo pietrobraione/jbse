@@ -73,6 +73,11 @@ abstract class ClassFilePrimitive extends ClassFile {
     public String getClassName() {
         return this.className;
     }
+    
+    @Override
+    public int getModifiers() {
+        return getAccessFlags();
+    }
 
     @Override
     public int getAccessFlags() {
@@ -98,11 +103,22 @@ abstract class ClassFilePrimitive extends ClassFile {
     public boolean isPublic() {
         return true;
     }
+    
+    @Override
+    public boolean isProtected() {
+        return false;
+    }
 
     @Override
     public boolean isPackage() {
         return false;
     }
+    
+    @Override
+    public boolean isPrivate() {
+        return false;
+    }
+
 
     @Override
     public boolean isPrimitive() {
