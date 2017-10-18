@@ -110,14 +110,15 @@ public class RunIf {
 
 Well, that's not *exactly* all. Which parameters should we set, and how?
 
-First, JBSE is a Java Virtual Machine. As with any Java Virtual Machine, be it symbolic or not, we must specify the classpath where JBSE will find the binaries. In this case the classpath will contain three paths, one for the target `smalldemos.ifx.IfExample` class, one for the `jbse.meta.Analysis` class that contains the `ass3rt` method invoked by `m`, and one for the Java standard library, containing the indispensable classes of the kind of `java.lang.Object`. A version of the latter that JBSE is able to use is under the `data` directory of the `jbse` project. For the other paths, note that under Eclipse all the binaries are emitted to a hidden `bin` project directory, and that the implicit execution directory of an Eclipse project is the project root directory. This means that, if the current directory is the home of the `example` project, and if the `jbse` git repository clone is at `/home/guest/jbse`, the required paths should be approximately as follows:
+First, JBSE is a Java Virtual Machine. As with any Java Virtual Machine, be it symbolic or not, we must specify the classpath where JBSE will find the binaries. In this case the classpath will contain three paths, one for the JRE, i.e., the Java standard library containing the indispensable classes of the kind of `java.lang.Object`, one for the target `smalldemos.ifx.IfExample` class, and one for the `jbse.meta.Analysis` class that contains the `ass3rt` method invoked by `m`. For what concerns the Java standard library, you will find a version of it that JBSE is able to use under the `data` directory of the `jbse` project. For the other paths, note that under Eclipse all the binaries are emitted to a hidden `bin` project directory, and that the implicit execution directory of an Eclipse project is the project root directory. This means that, if the current directory is the home of the `example` project, and if the `jbse` git repository clone is at `/home/guest/jbse`, the required paths should be approximately as follows:
 
 ```Java
 ...
 public class RunIf {
     ...
     private static void set(RunParameters p) {
-        p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar", "/home/guest/jbse/data/rt.jar");
+        p.setJREPath("/home/guest/jbse/data");
+        p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar");
         ...
     }
 }
@@ -130,7 +131,8 @@ Note that `addClasspath` is a varargs method, so you can list as many path strin
 public class RunIf {
     ...
     private static void set(RunParameters p) {
-        p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar", "/home/guest/jbse/data/rt.jar");
+        p.setJREPath("/home/guest/jbse/data");
+        p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
         ...
     }
@@ -148,7 +150,8 @@ import jbse.apps.run.RunParameters.DecisionProcedureType;
 public class RunIf {
     ...
     private static void set(RunParameters p) {
-        p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar", "/home/guest/jbse/data/rt.jar");
+        p.setJREPath("/home/guest/jbse/data");
+        p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
         p.setDecisionProcedureType(DecisionProcedureType.Z3);
         p.setExternalDecisionProcedurePath("/usr/bin/z3");
@@ -166,7 +169,8 @@ import jbse.apps.run.RunParameters.DecisionProcedureType;
 public class RunIf {
     ...
     private static void set(RunParameters p) {
-        p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar", "/home/guest/jbse/data/rt.jar");
+        p.setJREPath("/home/guest/jbse/data");
+        p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
         p.setDecisionProcedureType(DecisionProcedureType.Z3);
         p.setExternalDecisionProcedurePath("/usr/bin/z3");
@@ -186,7 +190,8 @@ import jbse.apps.run.RunParameters.StepShowMode;
 public class RunIf {
     ...
     private static void set(RunParameters p) {
-        p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar", "/home/guest/jbse/data/rt.jar");
+        p.setJREPath("/home/guest/jbse/data");
+        p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
         p.setDecisionProcedureType(DecisionProcedureType.Z3);
         p.setExternalDecisionProcedurePath("/usr/bin/z3");
