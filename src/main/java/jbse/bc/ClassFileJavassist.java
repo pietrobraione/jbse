@@ -339,12 +339,16 @@ public class ClassFileJavassist extends ClassFile {
     }
 
     @Override
-    public String getSuperClassName() {
-        String name = this.cls.getClassFile().getSuperclass();
-        if (name != null) {
-            name = name.replace(".", "/");
+    public String getSuperclassName() {
+        if (isInterface()) {
+            return null;
+        } else {
+            String name = this.cls.getClassFile().getSuperclass();
+            if (name != null) {
+                name = name.replace(".", "/");
+            }
+            return name;
         }
-        return name;
     }
 
     @Override

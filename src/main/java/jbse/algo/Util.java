@@ -514,7 +514,7 @@ public class Util {
             //on its superclass(es)
             final ClassFile classFile = this.s.getClassHierarchy().getClassFile(className);
             if (!classFile.isInterface()) {
-                final String superName = classFile.getSuperClassName();
+                final String superName = classFile.getSuperclassName();
                 if (superName != null) {
                     phase1(superName, it);
                 }

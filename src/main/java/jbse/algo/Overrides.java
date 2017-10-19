@@ -32,7 +32,9 @@ public final class Overrides {
     public static final String ALGO_JAVA_CLASS_GETCOMPONENTTYPE         = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETCOMPONENTTYPE.class.getCanonicalName());
     public static final String ALGO_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0.class.getCanonicalName());
     public static final String ALGO_JAVA_CLASS_GETDECLAREDFIELDS0       = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETDECLAREDFIELDS0.class.getCanonicalName());
+    public static final String ALGO_JAVA_CLASS_GETMODIFIERS             = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETMODIFIERS.class.getCanonicalName());
     public static final String ALGO_JAVA_CLASS_GETPRIMITIVECLASS        = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETPRIMITIVECLASS.class.getCanonicalName());
+    public static final String ALGO_JAVA_CLASS_GETSUPERCLASS            = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETSUPERCLASS.class.getCanonicalName());
     public static final String ALGO_JAVA_CLASS_ISASSIGNABLEFROM         = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISASSIGNABLEFROM.class.getCanonicalName());
     public static final String ALGO_JAVA_CLASS_ISINSTANCE               = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISINSTANCE.class.getCanonicalName());
     public static final String ALGO_JAVA_CLASS_ISINTERFACE              = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISINTERFACE.class.getCanonicalName());

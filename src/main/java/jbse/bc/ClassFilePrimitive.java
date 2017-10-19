@@ -376,7 +376,7 @@ abstract class ClassFilePrimitive extends ClassFile {
     }
 
     @Override
-    public String getSuperClassName() {
+    public String getSuperclassName() {
         return null;
     }
 

@@ -276,12 +276,12 @@ public class ClassHierarchy {
                 final ClassFile retval = this.nextClassFile;
 
                 //gets the classfile of the superclass
-                final String superClassName = retval.getSuperClassName();
-                if (superClassName == null) {
+                final String superclassName = retval.getSuperclassName();
+                if (superclassName == null) {
                     //no superclass
                     this.nextClassFile = null;
                 } else {
-                    this.nextClassFile = ClassHierarchy.this.cfs.getClassFile(superClassName);
+                    this.nextClassFile = ClassHierarchy.this.cfs.getClassFile(superclassName);
                 } 
 
                 //returns

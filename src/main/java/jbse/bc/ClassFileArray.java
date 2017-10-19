@@ -152,7 +152,7 @@ public class ClassFileArray extends ClassFile {
     }
 
     @Override
-    public String getSuperClassName() {
+    public String getSuperclassName() {
         return JAVA_OBJECT;
     }
 

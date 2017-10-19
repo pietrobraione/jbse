@@ -615,10 +615,10 @@ public abstract class ClassFile {
      * Returns the name of the superclass.
      * 
      * @return the name of the superclass as a {@link String}, or {@code null}
-     * in the case the class has no superclass (e.g., {@code java.lang.Object}, 
-     * primitive classes, bad classfiles).
+     * in the case the class has no superclass ({@code java.lang.Object}, 
+     * interfaces, primitive classes, bad classfiles).
      */
-    public abstract String getSuperClassName();
+    public abstract String getSuperclassName();
 
     /**
      * Returns the list of the names of the superinterfaces.

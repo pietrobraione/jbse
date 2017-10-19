@@ -352,7 +352,7 @@ public final class ClassFileBad extends ClassFile {
     }
 
     @Override
-    public String getSuperClassName() {
+    public String getSuperclassName() {
         return null;
     }
 

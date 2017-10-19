@@ -64,21 +64,21 @@ public class ClassFileFactoryTest {
 	public void testGetSuperClassName1() throws BadClassFileException {
 		String className = "tsafe/main/SimpleCalculator";
 		ClassFile c = f.newClassFile(className);
-		assertEquals("tsafe/engine/EngineCalculator", c.getSuperClassName());
+		assertEquals("tsafe/engine/EngineCalculator", c.getSuperclassName());
 	}
 
 	@Test
 	public void testGetSuperClassName2() throws BadClassFileException {
 		String className = "jsymba/jvm/Engine";
 		ClassFile c = f.newClassFile(className);
-		assertEquals("java/lang/Object", c.getSuperClassName());
+		assertEquals("java/lang/Object", c.getSuperclassName());
 	}
 
 	@Test
 	public void testGetSuperClassName3() throws BadClassFileException {
 		String className = "java/lang/Object";
 		ClassFile c = f.newClassFile(className);
-		assertNull(c.getSuperClassName());
+		assertNull(c.getSuperclassName());
 	}
 
 	@Test

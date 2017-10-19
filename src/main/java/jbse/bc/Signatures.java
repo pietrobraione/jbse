@@ -181,9 +181,13 @@ public final class Signatures {
         new Signature(JAVA_CLASS, "(" + BOOLEAN + ")" + ARRAYOF + REFERENCE + JAVA_CONSTRUCTOR + TYPEEND, "getDeclaredConstructors0");
     public static final Signature JAVA_CLASS_GETDECLAREDFIELDS0 =
         new Signature(JAVA_CLASS, "(" + BOOLEAN + ")" + ARRAYOF + REFERENCE + JAVA_FIELD + TYPEEND, "getDeclaredFields0");
+    public static final Signature JAVA_CLASS_GETMODIFIERS =
+        new Signature(JAVA_CLASS, "()" + INT, "getModifiers");
     public static final Signature JAVA_CLASS_GETPRIMITIVECLASS =
         new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + 
                       REFERENCE + JAVA_CLASS + TYPEEND, "getPrimitiveClass");
+    public static final Signature JAVA_CLASS_GETSUPERCLASS =
+        new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getSuperclass");
     public static final Signature JAVA_CLASS_ISASSIGNABLEFROM =
         new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + BOOLEAN, "isAssignableFrom");
     public static final Signature JAVA_CLASS_ISINSTANCE =
