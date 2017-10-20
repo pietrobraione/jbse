@@ -1,0 +1,8 @@
+title: JBSE
+description: A symbolic Java virtual machine for program analysis, verification and test generation.
+google_analytics: UA-33854666-2
+show_downloads: true
+theme: jekyll-theme-minimal
+
+gems:
+  - jekyll-mentions
