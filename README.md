@@ -117,7 +117,7 @@ First, JBSE is a Java Virtual Machine. As with any Java Virtual Machine, be it s
 public class RunIf {
     ...
     private static void set(RunParameters p) {
-        p.setJREPath("/home/guest/jbse/data");
+        p.setJREPath("/home/guest/jbse/data/jre1.8.0");
         p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar");
         ...
     }
@@ -131,7 +131,7 @@ Note that `addClasspath` is a varargs method, so you can list as many path strin
 public class RunIf {
     ...
     private static void set(RunParameters p) {
-        p.setJREPath("/home/guest/jbse/data");
+        p.setJREPath("/home/guest/jbse/data/jre1.8.0");
         p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
         ...
@@ -150,7 +150,7 @@ import jbse.apps.run.RunParameters.DecisionProcedureType;
 public class RunIf {
     ...
     private static void set(RunParameters p) {
-        p.setJREPath("/home/guest/jbse/data");
+        p.setJREPath("/home/guest/jbse/data/jre1.8.0");
         p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
         p.setDecisionProcedureType(DecisionProcedureType.Z3);
@@ -169,7 +169,7 @@ import jbse.apps.run.RunParameters.DecisionProcedureType;
 public class RunIf {
     ...
     private static void set(RunParameters p) {
-        p.setJREPath("/home/guest/jbse/data");
+        p.setJREPath("/home/guest/jbse/data/jre1.8.0");
         p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
         p.setDecisionProcedureType(DecisionProcedureType.Z3);
@@ -190,7 +190,7 @@ import jbse.apps.run.RunParameters.StepShowMode;
 public class RunIf {
     ...
     private static void set(RunParameters p) {
-        p.setJREPath("/home/guest/jbse/data");
+        p.setJREPath("/home/guest/jbse/data/jre1.8.0");
         p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
         p.setDecisionProcedureType(DecisionProcedureType.Z3);
