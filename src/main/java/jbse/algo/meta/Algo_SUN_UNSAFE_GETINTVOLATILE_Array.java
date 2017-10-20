@@ -3,8 +3,10 @@ package jbse.algo.meta;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.storeInArray;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.common.Type.getArrayMemberType;
 import static jbse.common.Type.INT;
 import static jbse.common.Type.isPrimitive;
@@ -26,6 +28,7 @@ import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.State;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XALOAD;
@@ -193,7 +196,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
     }
 
     protected Value possiblyMaterialize(State state, Value val) 
-    throws DecisionException {
+    throws DecisionException, InterruptException {
         //calculates the actual value to push by materializing 
         //a member array, if it is the case, and then pushes it
         //on the operand stack
@@ -204,6 +207,10 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                     state.createArray(valRef.getMember(), valRef.getLength(), valRef.getArrayType());
                 writeBackToSource(state, valMaterialized);
                 return valMaterialized;
+            } catch (HeapMemoryExhaustedException e) {
+                throwNew(state, OUT_OF_MEMORY_ERROR);
+                exitFromAlgorithm();
+                return null; //to keep the compiler happy
             } catch (InvalidTypeException e) {
                 //this should never happen
                 failExecution(e);

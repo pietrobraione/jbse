@@ -11,6 +11,7 @@ import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.NO_SUCH_METHOD_ERROR;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
 import java.util.function.Supplier;
 
@@ -21,6 +22,7 @@ import jbse.bc.exc.MethodAbstractException;
 import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.dec.exc.InvalidInputException;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 
 /**
@@ -73,6 +75,9 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
             if (this.isStatic) { 
                 try {
                     ensureClassCreatedAndInitialized(state, this.methodSignatureResolved.getClassName(), this.ctx);
+                } catch (HeapMemoryExhaustedException e) {
+                    throwNew(state, OUT_OF_MEMORY_ERROR);
+                    exitFromAlgorithm();
                 } catch (InvalidInputException | BadClassFileException e) {
                     //this should never happen after resolution 
                     failExecution(e);

@@ -5,6 +5,7 @@ import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.NEGATIVE_ARRAY_SIZE_EXCEPTION;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
 import java.util.function.Supplier;
 
@@ -16,6 +17,7 @@ import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_XNEWARRAY;
 import jbse.val.Calculator;
 import jbse.val.Expression;
@@ -159,6 +161,9 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
                     //pushes the reference
                     toPush = createArrayMultilayer(state, initValue);
                     state.pushOperand(toPush);
+                } catch (HeapMemoryExhaustedException e) {
+                    throwNew(state, OUT_OF_MEMORY_ERROR);
+                    exitFromAlgorithm();
                 } catch (InvalidTypeException e) {
                     throwVerifyError(state);
                     exitFromAlgorithm();
@@ -172,7 +177,7 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
     }
 
     private ReferenceConcrete createArrayMultilayer(State state, Value initValue) 
-    throws DecisionException, InvalidTypeException {
+    throws DecisionException, InvalidTypeException, HeapMemoryExhaustedException {
         //the reference to be pushed on the operand stack at the end of the
         //creation; note that it is initialized to null, but this is just 
         //to make the compiler happy. It will be initialized during the loop, 

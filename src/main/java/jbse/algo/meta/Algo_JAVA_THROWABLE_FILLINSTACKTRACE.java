@@ -4,9 +4,11 @@ import static jbse.algo.Util.ensureClassCreatedAndInitialized;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.fillExceptionBacktrace;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_THROWABLE;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
 import java.util.function.Supplier;
 
@@ -18,6 +20,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.InvalidInputException;
 import jbse.mem.State;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 
@@ -39,6 +42,9 @@ public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE extends Algo_INVOKEMETA_
         try {
             ensureClassCreatedAndInitialized(state, JAVA_STRING, this.ctx);
             ensureClassCreatedAndInitialized(state, JAVA_THROWABLE, this.ctx);
+        } catch (HeapMemoryExhaustedException e) {
+            throwNew(state, OUT_OF_MEMORY_ERROR);
+            exitFromAlgorithm();
         } catch (BadClassFileException e) {
             throw new ClasspathException(e);
         } catch (InvalidInputException e) {

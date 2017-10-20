@@ -8,6 +8,7 @@ import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKEDYNAMICINTERFACE_OFFSET;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
 import java.util.function.Supplier;
 
@@ -22,6 +23,7 @@ import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.exc.InvalidInputException;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.tree.DecisionAlternative_NONE;
@@ -101,6 +103,9 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
             if (isStaticImpl) { 
                 try {
                     ensureClassCreatedAndInitialized(state, this.methodSignatureImpl.getClassName(), this.ctx);
+                } catch (HeapMemoryExhaustedException e) {
+                    throwNew(state, OUT_OF_MEMORY_ERROR);
+                    exitFromAlgorithm();
                 } catch (InvalidInputException | BadClassFileException e) {
                     //this should never happen after resolution 
                     failExecution(e);

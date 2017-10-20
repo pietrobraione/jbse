@@ -30,12 +30,13 @@ public interface BytecodeCooker {
      * @throws DecisionException possibly raised when performing
      *         class creation and initialization.
      * @throws ClasspathException possibly raised if some core 
-     *         standard class is missing from the classpath.
+     *         standard class is missing from the classpath of ill-formed.
      * @throws CannotManageStateException possibly raised if the 
      *         bytecode cannot be executed due to limitations of JBSE.
      * @throws InterruptException possibly raised if the execution 
      *         of the bytecode semantics must be interrupted, e.g., 
-     *         if some correctness check fails.
+     *         if some correctness check fails or if heap memory
+     *         is exhausted.
      */
     void cook(State state) 
     throws DecisionException, ClasspathException, 

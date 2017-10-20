@@ -48,23 +48,23 @@ import jbse.val.Calculator;
  *
  */
 public final class EngineParameters implements Cloneable {
-	/**
-	 * Enumeration of the different kinds of state identifiers.
-	 * 
-	 * @author Pietro Braione
-	 */
-	public static enum StateIdentificationMode { 
-		/** 
-		 * Each branch is identified by a number
-		 * which represents the extraction order 
-		 * from this tree. This identification is highly dependent
-		 * on the decision procedure, which may prune some branches,
-		 * but it is compact and exec-faithful (i.e., the  
-		 * lexicographic order of branch identifiers reflects the
-		 * visiting order of the symbolic execution).
-		 */
-		COMPACT(StateTree.StateIdentificationMode.COMPACT), 
-		
+    /**
+     * Enumeration of the different kinds of state identifiers.
+     * 
+     * @author Pietro Braione
+     */
+    public static enum StateIdentificationMode { 
+        /** 
+         * Each branch is identified by a number
+         * which represents the extraction order 
+         * from this tree. This identification is highly dependent
+         * on the decision procedure, which may prune some branches,
+         * but it is compact and exec-faithful (i.e., the  
+         * lexicographic order of branch identifiers reflects the
+         * visiting order of the symbolic execution).
+         */
+        COMPACT(StateTree.StateIdentificationMode.COMPACT), 
+
         /** 
          * Each branch is identified by a number
          * statically assigned according to the type of the branch. 
@@ -72,357 +72,363 @@ public final class EngineParameters implements Cloneable {
          * and is fragile on the number of siblings, that might
          * depend on the decision procedure and on the preconditions.
          */
-		REPLICABLE(StateTree.StateIdentificationMode.REPLICABLE),
+        REPLICABLE(StateTree.StateIdentificationMode.REPLICABLE),
 
-		/**
-		 * Each branch is identified by a complex string 
-		 * identifier reflecting the decision which generated it.
-		 * This identification may be complex and not exec-faithful, 
-		 * but gives an unique identifier to symbolic execution
-		 * traces up to target code recompilation.
-		 */
-		LONG(StateTree.StateIdentificationMode.LONG);
+        /**
+         * Each branch is identified by a complex string 
+         * identifier reflecting the decision which generated it.
+         * This identification may be complex and not exec-faithful, 
+         * but gives an unique identifier to symbolic execution
+         * traces up to target code recompilation.
+         */
+        LONG(StateTree.StateIdentificationMode.LONG);
 
-		private final StateTree.StateIdentificationMode internal;
-		
-		private StateIdentificationMode(StateTree.StateIdentificationMode internal) {
-			this.internal = internal;
-		}
-		
-		public final StateTree.StateIdentificationMode toInternal() {
-			return this.internal;
-		}
-	};
-	
-	/**
-	 * Enumeration indicating how many branches will be created.
-	 * 
-	 * @author Pietro Braione
-	 */
-	public static enum BreadthMode {
-		/**
-		 * Create a branch only when a decision produces
-		 * at least two different results. If the execution
-		 * is guided, it will not produce any branch. 
-		 * This yields the most breadth-compact tree. 
-		 */
-		MORE_THAN_ONE(StateTree.BreadthMode.MORE_THAN_ONE),
-		
-		/**
-		 * Creates a branch only when a decision involving
-		 * symbolic values is taken, filtering out all the
-		 * symbolic decisions that have been resolved before
-		 * (just on references).
-		 */
-		ALL_DECISIONS_NONTRIVIAL(StateTree.BreadthMode.ALL_DECISIONS_NONTRIVIAL),
-		
-		/**
-		 * Create a branch whenever a decision involving 
-		 * symbolic values is taken, independently on 
-		 * the number of possible outcomes.
-		 */
-		ALL_DECISIONS_SYMBOLIC(StateTree.BreadthMode.ALL_DECISIONS_SYMBOLIC),
-		
-		/**
-		 * Create a branch whenever we hit a bytecode that
-		 * may invoke a decision procedure, independently
-		 * on whether all the involved values are concrete
-		 * or not.
-		 */
-		ALL_DECISIONS(StateTree.BreadthMode.ALL_DECISIONS);
-	    
-	    private final StateTree.BreadthMode internal;
-	    
-	    private BreadthMode(StateTree.BreadthMode internal) {
-	        this.internal = internal;
-	    }
+        private final StateTree.StateIdentificationMode internal;
 
-		public final StateTree.BreadthMode toInternal() {
-		    return this.internal;
-		}
-	}
-	
-	/** The state identification mode. */
-	private StateIdentificationMode stateIdMode = StateIdentificationMode.COMPACT;
-	
-	/** The breadth mode. */
-	private BreadthMode breadthMode = BreadthMode.MORE_THAN_ONE;
-	
-	/** The path to the JRE. */
-	private String jrePath = "";
+        private StateIdentificationMode(StateTree.StateIdentificationMode internal) {
+            this.internal = internal;
+        }
 
-	/** 
-	 * The initial {@link State} of the symbolic execution, or
-	 * {@code null} iff an initial state for a method invocation 
-	 * must be created by the runner; by default it is {@code null}.
-	 */
-	private State initialState = null;
-	
-	/**  
-	 * The classpath; overridden by {@code initialState}'s classpath
-	 * when {@code initialState != null}.
-	 */
-	private ArrayList<String> paths = new ArrayList<>();
+        public final StateTree.StateIdentificationMode toInternal() {
+            return this.internal;
+        }
+    };
 
-	/** 
-	 * The {@link Calculator}; overridden by {@code initialState}'s 
-	 * calculator when {@code initialState != null}. 
-	 */
-	private Calculator calc = null;
-	
-	/** The decision procedure. */
-	private DecisionProcedureAlgorithms decisionProcedure = null;
-	
-	/** The signatures of the variables observed by {@code this.observers}. */
-	private ArrayList<Signature> observedVars = new ArrayList<>();
+    /**
+     * Enumeration indicating how many branches will be created.
+     * 
+     * @author Pietro Braione
+     */
+    public static enum BreadthMode {
+        /**
+         * Create a branch only when a decision produces
+         * at least two different results. If the execution
+         * is guided, it will not produce any branch. 
+         * This yields the most breadth-compact tree. 
+         */
+        MORE_THAN_ONE(StateTree.BreadthMode.MORE_THAN_ONE),
 
-	/** The {@code ExecutionObserver}s. */
-	private ArrayList<ExecutionObserver> observers = new ArrayList<>();
-	
-	/** The {@link TriggerRulesRepo}, containing all the trigger rules. */
-	private TriggerRulesRepo repoTrigger = new TriggerRulesRepo();
-	
-	/** The expansion backdoor. */
-	private HashMap<String, Set<String>> expansionBackdoor = new HashMap<>();
+        /**
+         * Creates a branch only when a decision involving
+         * symbolic values is taken, filtering out all the
+         * symbolic decisions that have been resolved before
+         * (just on references).
+         */
+        ALL_DECISIONS_NONTRIVIAL(StateTree.BreadthMode.ALL_DECISIONS_NONTRIVIAL),
 
-	/** The methods overridden at the meta-level. */
-	private ArrayList<String[]> metaOverridden = new ArrayList<>();
+        /**
+         * Create a branch whenever a decision involving 
+         * symbolic values is taken, independently on 
+         * the number of possible outcomes.
+         */
+        ALL_DECISIONS_SYMBOLIC(StateTree.BreadthMode.ALL_DECISIONS_SYMBOLIC),
+
+        /**
+         * Create a branch whenever we hit a bytecode that
+         * may invoke a decision procedure, independently
+         * on whether all the involved values are concrete
+         * or not.
+         */
+        ALL_DECISIONS(StateTree.BreadthMode.ALL_DECISIONS);
+
+        private final StateTree.BreadthMode internal;
+
+        private BreadthMode(StateTree.BreadthMode internal) {
+            this.internal = internal;
+        }
+
+        public final StateTree.BreadthMode toInternal() {
+            return this.internal;
+        }
+    }
+
+    /** The state identification mode. */
+    private StateIdentificationMode stateIdMode = StateIdentificationMode.COMPACT;
+
+    /** The breadth mode. */
+    private BreadthMode breadthMode = BreadthMode.MORE_THAN_ONE;
+
+    /** The path to the JRE. */
+    private String jrePath = "";
+
+    /** 
+     * The initial {@link State} of the symbolic execution, or
+     * {@code null} iff an initial state for a method invocation 
+     * must be created by the runner; by default it is {@code null}.
+     */
+    private State initialState = null;
+
+    /**  
+     * The classpath; overridden by {@code initialState}'s classpath
+     * when {@code initialState != null}.
+     */
+    private ArrayList<String> paths = new ArrayList<>();
+
+    /** 
+     * The {@link Calculator}; overridden by {@code initialState}'s 
+     * calculator when {@code initialState != null}. 
+     */
+    private Calculator calc = null;
+
+    /** The decision procedure. */
+    private DecisionProcedureAlgorithms decisionProcedure = null;
+
+    /** The signatures of the variables observed by {@code this.observers}. */
+    private ArrayList<Signature> observedVars = new ArrayList<>();
+
+    /** The {@code ExecutionObserver}s. */
+    private ArrayList<ExecutionObserver> observers = new ArrayList<>();
+
+    /** The {@link TriggerRulesRepo}, containing all the trigger rules. */
+    private TriggerRulesRepo repoTrigger = new TriggerRulesRepo();
+
+    /** The expansion backdoor. */
+    private HashMap<String, Set<String>> expansionBackdoor = new HashMap<>();
+
+    /** The methods overridden at the meta-level. */
+    private ArrayList<String[]> metaOverridden = new ArrayList<>();
 
     /** The methods to be handled as uninterpreted functions. */
-	private ArrayList<String[]> uninterpreted = new ArrayList<>();
+    private ArrayList<String[]> uninterpreted = new ArrayList<>();
 
-	/**  
-	 * The signature of the method to be executed; overridden by {@code initialState}'s 
-	 * current method when {@code initialState != null}.
-	 */
-	private Signature methodSignature = null;
+    /**  
+     * The signature of the method to be executed; overridden by {@code initialState}'s 
+     * current method when {@code initialState != null}.
+     */
+    private Signature methodSignature = null;
+    
+    /** The maximum size for an array to have simple representation. */
+    private int maxSimpleArrayLength = 100_000;
+    
+    /** The maximum size of the heap (number of objects). */
+    private long maxHeapSize = 1_000_000;
 
-	/**
-	 * Constructor.
-	 */
-	public EngineParameters() { }
+    /**
+     * Constructor.
+     */
+    public EngineParameters() { }
 
-	/**
-	 * Sets the decision procedure to be used during symbolic execution.
-	 * 
-	 * @param decisionProcedure a {@link DecisionProcedureAlgorithms}.
-	 */
-	public void setDecisionProcedure(DecisionProcedureAlgorithms decisionProcedure) {
-		this.decisionProcedure = decisionProcedure;
-	}
-	
-	/**
-	 * Gets the decision procedure.
-	 * 
-	 * @return a {@link DecisionProcedureAlgorithms}.
-	 */
-	public DecisionProcedureAlgorithms getDecisionProcedure() {
-		return this.decisionProcedure;
-	}
+    /**
+     * Sets the decision procedure to be used during symbolic execution.
+     * 
+     * @param decisionProcedure a {@link DecisionProcedureAlgorithms}.
+     */
+    public void setDecisionProcedure(DecisionProcedureAlgorithms decisionProcedure) {
+        this.decisionProcedure = decisionProcedure;
+    }
 
-	/**
-	 * Sets the state identification mode, i.e., how a state will be
-	 * identified.
-	 * 
-	 * @param stateIdMode a {@link StateIdentificationMode}.
-	 * @throws NullPointerException if {@code stateIdMode == null}.
-	 */
-	public void setStateIdentificationMode(StateIdentificationMode stateIdMode) {
-		if (stateIdMode == null) {
-			throw new NullPointerException();
-		}
-		this.stateIdMode = stateIdMode;
-	}
-	
-	/**
-	 * Gets the state identification mode.
-	 * 
-	 * @return the {@link StateIdentificationMode} set by the
-	 *         last call to {@link #setStateIdentificationMode(StateIdentificationMode)}.
-	 */
-	public StateIdentificationMode getStateIdentificationMode() {
-		return this.stateIdMode;
-	}
-	
-	/**
-	 * Sets the breadth mode, i.e., how many branches 
-	 * will be created during execution.
-	 * 
-	 * @param breadthMode a {@link BreadthMode}.
-	 * @throws NullPointerException if {@code breadthMode == null}.
-	 */
-	public void setBreadthMode(BreadthMode breadthMode) {
-		if (breadthMode == null) {
-			throw new NullPointerException();
-		}
-		this.breadthMode = breadthMode;
-	}
-	
-	/**
-	 * Gets the breadth mode.
-	 * 
-	 * @return the {@link BreadthMode} set by the
-	 *         last call to {@link #setBreadthMode(BreadthMode)}.
-	 */
-	public BreadthMode getBreadthMode() {
-		return this.breadthMode;
-	}
+    /**
+     * Gets the decision procedure.
+     * 
+     * @return a {@link DecisionProcedureAlgorithms}.
+     */
+    public DecisionProcedureAlgorithms getDecisionProcedure() {
+        return this.decisionProcedure;
+    }
 
-	/** 
-	 * Adds an {@link ExecutionObserver} performing additional
-	 * actions when a field changes its value.
-	 * 
-	 * @param fldClassName the name of the class where the field
-	 *        resides.
-	 * @param fldType the type of the field.
-	 * @param fldName the name of the field.
-	 * @param observer an {@link ExecutionObserver}. It will be 
-	 *        notified whenever the field {@code observedVar} of 
-	 *        any instance of {@code className} is modified.
-	 */ 
-	public void addExecutionObserver(String fldClassName, String fldType, String fldName, ExecutionObserver observer) {
-		final Signature sig = new Signature(fldClassName, fldType, fldName);
-		this.observedVars.add(sig);
-		this.observers.add(observer);
-	}
-	
-	/**
-	 * Clears the {@link ExecutionObserver}s.
-	 */
-	public void clearExecutionObservers() {
-	    this.observedVars.clear();
-	    this.observers.clear();
-	}
-	
-	/**
-	 * Returns the {@link Signature}s of the fields
-	 * observed by some {@link ExecutionObserver}.
-	 * 
-	 * @return a {@link List}{@code <}{@link Signature}{@code >},
+    /**
+     * Sets the state identification mode, i.e., how a state will be
+     * identified.
+     * 
+     * @param stateIdMode a {@link StateIdentificationMode}.
+     * @throws NullPointerException if {@code stateIdMode == null}.
+     */
+    public void setStateIdentificationMode(StateIdentificationMode stateIdMode) {
+        if (stateIdMode == null) {
+            throw new NullPointerException();
+        }
+        this.stateIdMode = stateIdMode;
+    }
+
+    /**
+     * Gets the state identification mode.
+     * 
+     * @return the {@link StateIdentificationMode} set by the
+     *         last call to {@link #setStateIdentificationMode(StateIdentificationMode)}.
+     */
+    public StateIdentificationMode getStateIdentificationMode() {
+        return this.stateIdMode;
+    }
+
+    /**
+     * Sets the breadth mode, i.e., how many branches 
+     * will be created during execution.
+     * 
+     * @param breadthMode a {@link BreadthMode}.
+     * @throws NullPointerException if {@code breadthMode == null}.
+     */
+    public void setBreadthMode(BreadthMode breadthMode) {
+        if (breadthMode == null) {
+            throw new NullPointerException();
+        }
+        this.breadthMode = breadthMode;
+    }
+
+    /**
+     * Gets the breadth mode.
+     * 
+     * @return the {@link BreadthMode} set by the
+     *         last call to {@link #setBreadthMode(BreadthMode)}.
+     */
+    public BreadthMode getBreadthMode() {
+        return this.breadthMode;
+    }
+
+    /** 
+     * Adds an {@link ExecutionObserver} performing additional
+     * actions when a field changes its value.
+     * 
+     * @param fldClassName the name of the class where the field
+     *        resides.
+     * @param fldType the type of the field.
+     * @param fldName the name of the field.
+     * @param observer an {@link ExecutionObserver}. It will be 
+     *        notified whenever the field {@code observedVar} of 
+     *        any instance of {@code className} is modified.
+     */ 
+    public void addExecutionObserver(String fldClassName, String fldType, String fldName, ExecutionObserver observer) {
+        final Signature sig = new Signature(fldClassName, fldType, fldName);
+        this.observedVars.add(sig);
+        this.observers.add(observer);
+    }
+
+    /**
+     * Clears the {@link ExecutionObserver}s.
+     */
+    public void clearExecutionObservers() {
+        this.observedVars.clear();
+        this.observers.clear();
+    }
+
+    /**
+     * Returns the {@link Signature}s of the fields
+     * observed by some {@link ExecutionObserver}.
+     * 
+     * @return a {@link List}{@code <}{@link Signature}{@code >},
      *         in the order matching that of the return value 
      *         of {@link #getObservers()}.
-	 */
-	public List<Signature> getObservedFields() {
-	    return new ArrayList<>(this.observedVars);
-	}
-	
-	/**
+     */
+    public List<Signature> getObservedFields() {
+        return new ArrayList<>(this.observedVars);
+    }
+
+    /**
      * Returns the {@link Signature}s of the fields
      * observed by some {@link ExecutionObserver}.
      * 
      * @return a {@link List}{@code <}{@link Signature}{@code >},
      *         in the order matching that of the return value 
      *         of {@link #getObservedFields()}.
-	 */
-	public List<ExecutionObserver> getObservers() {
-	    return new ArrayList<>(this.observers);
-	}
+     */
+    public List<ExecutionObserver> getObservers() {
+        return new ArrayList<>(this.observers);
+    }
 
-	/**
-	 * Sets the initial state of the symbolic execution, and cancels the 
-	 * effect of any previous call to {@link #addClasspath(String...)},
-	 * {@link #setMethodSignature(String)}.
-	 *  
-	 * @param s a {@link State}.
-	 */
-	public void setInitialState(State s) { 
-		this.initialState = s; 
-		this.paths.clear();
-		this.methodSignature = null;
-		this.calc = null;
-	}
-	
-	/**
-	 * Gets the initial state of the symbolic execution (a safety copy).
-	 * 
-	 * @return the {@link State} set by the last call to 
-	 *         {@link #setInitialState(State)} (possibly {@code null}).
-	 */
-	public State getInitialState() {
-		if (this.initialState == null) {
-			return null;
-		} else {
-			return this.initialState.clone();
-		}
-	}
-	
-	public void setCalculator(Calculator calc) {
-		this.calc = calc;
-		this.initialState = null;
-	}
+    /**
+     * Sets the initial state of the symbolic execution, and cancels the 
+     * effect of any previous call to {@link #addClasspath(String...)},
+     * {@link #setMethodSignature(String)}.
+     *  
+     * @param s a {@link State}.
+     */
+    public void setInitialState(State s) { 
+        this.initialState = s; 
+        this.paths.clear();
+        this.methodSignature = null;
+        this.calc = null;
+    }
 
-	public Calculator getCalculator() {
-		if (this.initialState == null) {
-			return this.calc;
-		} else {
-			return this.initialState.getCalculator();
-		}
-	}
+    /**
+     * Gets the initial state of the symbolic execution (a safety copy).
+     * 
+     * @return the {@link State} set by the last call to 
+     *         {@link #setInitialState(State)} (possibly {@code null}).
+     */
+    public State getInitialState() {
+        if (this.initialState == null) {
+            return null;
+        } else {
+            return this.initialState.clone();
+        }
+    }
 
-	/**
-	 * Sets the JRE path.
-	 * 
-	 * @param jrePath a {@link String}.
-	 * @throws NullPointerException if {@code jrePath == null}.
-	 */
-	public void setJREPath(String jrePath) {
-		if (jrePath == null) {
-			throw new NullPointerException();
-		}
-		this.jrePath = jrePath;
-	}
+    public void setCalculator(Calculator calc) {
+        this.calc = calc;
+        this.initialState = null;
+    }
 
-	/**
-	 * Gets the JRE path.
-	 * 
-	 * @return a {@link String}, the path to the JRE.
-	 * @throws NullPointerException if {@code jrePath == null}.
-	 */
-	public String getJREPath() {
-		return this.jrePath;
-	}
+    public Calculator getCalculator() {
+        if (this.initialState == null) {
+            return this.calc;
+        } else {
+            return this.initialState.getCalculator();
+        }
+    }
 
-	/**
-	 * Sets the symbolic execution's classpath, and cancels the effect of any 
-	 * previous call to {@link #setInitialState(State)}; the 
-	 * default classpath is {@code "."}.
-	 * 
-	 * @param paths a varargs of {@link String}, 
-	 *        the paths to be added to the classpath.
-	 */
-	public void addClasspath(String... paths) { 
-		this.initialState = null; 
-		Collections.addAll(this.paths, paths); 
-	}
-	
-	/**
-	 * Clears the symbolic execution's classpath.
-	 */
-	public void clearClasspath() {
-	    this.paths.clear();
-	}
+    /**
+     * Sets the JRE path.
+     * 
+     * @param jrePath a {@link String}.
+     * @throws NullPointerException if {@code jrePath == null}.
+     */
+    public void setJREPath(String jrePath) {
+        if (jrePath == null) {
+            throw new NullPointerException();
+        }
+        this.jrePath = jrePath;
+    }
 
-	/**
-	 * Returns the symbolic execution's classpath (a safety copy).
-	 * 
-	 * @return a {@link Classpath} object. 
-	 */
-	public Classpath getClasspath() {
-		if (this.initialState == null) {
-			final String[] classpathJRE = new String[] {
-				Paths.get(this.jrePath, "rt.jar").toString(),
-				Paths.get(this.jrePath, "charset.jar").toString()
-				//TODO more?
-			};
-			final String[] classpathUser = this.paths.toArray(ARRAY_OF_STRING);
-			final String[] classpath = Stream.concat(Arrays.stream(classpathJRE), Arrays.stream(classpathUser)).toArray(String[]::new);
-			return new Classpath(classpath); //safety copy
-		} else {
-			return this.initialState.getClasspath();
-		}
-	}
-	private static final String[] ARRAY_OF_STRING = { };
-	    
+    /**
+     * Gets the JRE path.
+     * 
+     * @return a {@link String}, the path to the JRE.
+     * @throws NullPointerException if {@code jrePath == null}.
+     */
+    public String getJREPath() {
+        return this.jrePath;
+    }
+
+    /**
+     * Sets the symbolic execution's classpath, and cancels the effect of any 
+     * previous call to {@link #setInitialState(State)}; the 
+     * default classpath is {@code "."}.
+     * 
+     * @param paths a varargs of {@link String}, 
+     *        the paths to be added to the classpath.
+     */
+    public void addClasspath(String... paths) { 
+        this.initialState = null; 
+        Collections.addAll(this.paths, paths); 
+    }
+
+    /**
+     * Clears the symbolic execution's classpath.
+     */
+    public void clearClasspath() {
+        this.paths.clear();
+    }
+
+    /**
+     * Returns the symbolic execution's classpath (a safety copy).
+     * 
+     * @return a {@link Classpath} object. 
+     */
+    public Classpath getClasspath() {
+        if (this.initialState == null) {
+            final String[] classpathJRE = new String[] {
+                                                        Paths.get(this.jrePath, "rt.jar").toString(),
+                                                        Paths.get(this.jrePath, "charset.jar").toString()
+                                                        //TODO more?
+            };
+            final String[] classpathUser = this.paths.toArray(ARRAY_OF_STRING);
+            final String[] classpath = Stream.concat(Arrays.stream(classpathJRE), Arrays.stream(classpathUser)).toArray(String[]::new);
+            return new Classpath(classpath); //safety copy
+        } else {
+            return this.initialState.getClasspath();
+        }
+    }
+    private static final String[] ARRAY_OF_STRING = { };
+
     /**
      * Returns the {@link TriggerRulesRepo} 
      * containing all the trigger rules that
@@ -436,7 +442,7 @@ public final class EngineParameters implements Cloneable {
     public TriggerRulesRepo getTriggerRulesRepo() {
         return this.repoTrigger;
     }
-	
+
     /**
      * Returns the expansion backdoor.
      * 
@@ -447,10 +453,10 @@ public final class EngineParameters implements Cloneable {
      *         {@link EngineParameters}, not a
      *         safety copy.
      */
-	public Map<String, Set<String>> getExpansionBackdoor() {
-	    return this.expansionBackdoor;
-	}
-	
+    public Map<String, Set<String>> getExpansionBackdoor() {
+        return this.expansionBackdoor;
+    }
+
     /**
      * Adds a trigger method that fires when some references are resolved by
      * expansion. Also adds a class to the expansion backdoor.
@@ -483,23 +489,23 @@ public final class EngineParameters implements Cloneable {
      * @param triggerParameter
      *                     the parameter to be passed to the trigger method. 
      */
-	public void addExpandToTrigger(String toExpand, String originExp, String classAllowed, 
-			String triggerClassName, String triggerParametersSignature, String triggerMethodName,
-			String triggerParameter) {
-	    if (triggerClassName != null && triggerParametersSignature != null && triggerMethodName == null) {
-	        this.repoTrigger.addExpandTo(toExpand, originExp, classAllowed, 
-		            new Signature(triggerClassName, triggerParametersSignature, triggerMethodName), triggerParameter);
-	    }
-		
-		//updates expansion backdoor
-	    Set<String> classesAllowed = this.expansionBackdoor.get(toExpand);
-	    if (classesAllowed == null) {
-	        classesAllowed = new HashSet<>();
-	        this.expansionBackdoor.put(toExpand, classesAllowed);
-	    }
-	    classesAllowed.add(classAllowed);	
-	}
-	
+    public void addExpandToTrigger(String toExpand, String originExp, String classAllowed, 
+                                   String triggerClassName, String triggerParametersSignature, String triggerMethodName,
+                                   String triggerParameter) {
+        if (triggerClassName != null && triggerParametersSignature != null && triggerMethodName == null) {
+            this.repoTrigger.addExpandTo(toExpand, originExp, classAllowed, 
+                                         new Signature(triggerClassName, triggerParametersSignature, triggerMethodName), triggerParameter);
+        }
+
+        //updates expansion backdoor
+        Set<String> classesAllowed = this.expansionBackdoor.get(toExpand);
+        if (classesAllowed == null) {
+            classesAllowed = new HashSet<>();
+            this.expansionBackdoor.put(toExpand, classesAllowed);
+        }
+        classesAllowed.add(classAllowed);	
+    }
+
     /**
      * Adds a trigger method that fires when some references are resolved by
      * alias.
@@ -540,12 +546,12 @@ public final class EngineParameters implements Cloneable {
      * @param triggerParameter
      *                       the parameter to be passed to the trigger method. 
      */
-	public void addResolveAliasOriginTrigger(String toResolve, String originExp, String pathAllowedExp, 
-			String triggerClassName, String triggerParametersSignature, String triggerMethodName,
-			String triggerParameter) {
+    public void addResolveAliasOriginTrigger(String toResolve, String originExp, String pathAllowedExp, 
+                                             String triggerClassName, String triggerParametersSignature, String triggerMethodName,
+                                             String triggerParameter) {
         this.repoTrigger.addResolveAliasOrigin(toResolve, originExp, pathAllowedExp, 
-                new Signature(triggerClassName, triggerParametersSignature, triggerMethodName), triggerParameter);
-	}
+                                               new Signature(triggerClassName, triggerParametersSignature, triggerMethodName), triggerParameter);
+    }
 
     /**
      * Adds a trigger method that fires when some references are resolved by
@@ -573,12 +579,12 @@ public final class EngineParameters implements Cloneable {
      * @param triggerParameter
      *                     the parameter to be passed to the trigger method. 
      */
-	public void addResolveAliasInstanceofTrigger(String toResolve, String originExp, String classAllowed, 
-			String triggerClassName, String triggerParametersSignature, String triggerMethodName,
-			String triggerParameter) {
-	    this.repoTrigger.addResolveAliasInstanceof(toResolve, originExp, classAllowed,
-	            new Signature(triggerClassName, triggerParametersSignature, triggerMethodName), triggerParameter);
-	}
+    public void addResolveAliasInstanceofTrigger(String toResolve, String originExp, String classAllowed, 
+                                                 String triggerClassName, String triggerParametersSignature, String triggerMethodName,
+                                                 String triggerParameter) {
+        this.repoTrigger.addResolveAliasInstanceof(toResolve, originExp, classAllowed,
+                                                   new Signature(triggerClassName, triggerParametersSignature, triggerMethodName), triggerParameter);
+    }
 
     /**
      * Adds a trigger method that fires when some references are resolved by
@@ -604,151 +610,194 @@ public final class EngineParameters implements Cloneable {
      * @param triggerParameter
      *                  the parameter to be passed to the trigger method. 
      */ 
-	public void addResolveNullTrigger(String toResolve, String originExp, 
-			String triggerClassName, String triggerParametersSignature, String triggerMethodName,
-			String triggerParameter) {
-	    this.repoTrigger.addResolveNull(toResolve, originExp,
-	            new Signature(triggerClassName, triggerParametersSignature, triggerMethodName), triggerParameter);
-	}
+    public void addResolveNullTrigger(String toResolve, String originExp, 
+                                      String triggerClassName, String triggerParametersSignature, String triggerMethodName,
+                                      String triggerParameter) {
+        this.repoTrigger.addResolveNull(toResolve, originExp,
+                                        new Signature(triggerClassName, triggerParametersSignature, triggerMethodName), triggerParameter);
+    }
 
-	/**
-	 * Specifies an alternative, meta-level implementation of a method 
-	 * that must override the standard one. 
-	 * 
-	 * @param className the name of the class containing the overridden method.
-	 * @param parametersSignature the types of the method parameters.
-	 * @param methodName the name of the method.
-	 * @param metaDelegateClassName the name of a {@link Class} that implements
-	 *        the semantics of calls to the {@code methodName} method.
-	 * @throws NullPointerException if any of the above parameters is {@code null}.
-	 */
-	public void addMetaOverridden(String className, String parametersSignature, String methodName, String metaDelegateClassName) {
-		if (className == null || parametersSignature == null || methodName == null || metaDelegateClassName == null) {
-			throw new NullPointerException();
-		}
-		this.metaOverridden.add(new String[] { className, parametersSignature, methodName, metaDelegateClassName });
-	}
-	
-	/**
-	 * Clears the specifications of the meta-level implementations 
+    /**
+     * Specifies an alternative, meta-level implementation of a method 
+     * that must override the standard one. 
+     * 
+     * @param className the name of the class containing the overridden method.
+     * @param parametersSignature the types of the method parameters.
+     * @param methodName the name of the method.
+     * @param metaDelegateClassName the name of a {@link Class} that implements
+     *        the semantics of calls to the {@code methodName} method.
+     * @throws NullPointerException if any of the above parameters is {@code null}.
+     */
+    public void addMetaOverridden(String className, String parametersSignature, String methodName, String metaDelegateClassName) {
+        if (className == null || parametersSignature == null || methodName == null || metaDelegateClassName == null) {
+            throw new NullPointerException();
+        }
+        this.metaOverridden.add(new String[] { className, parametersSignature, methodName, metaDelegateClassName });
+    }
+
+    /**
+     * Clears the specifications of the meta-level implementations 
      * of methods.
-	 */
-	public void clearMetaOverridden() {
-	    this.metaOverridden.clear();
-	}
-	
-	/**
-	 * Returns the specifications of the meta-level implementations 
-	 * of methods.
-	 * 
-	 * @return A {@link List}{@code <}{@link String}{@code []>}, 
+     */
+    public void clearMetaOverridden() {
+        this.metaOverridden.clear();
+    }
+
+    /**
+     * Returns the specifications of the meta-level implementations 
+     * of methods.
+     * 
+     * @return A {@link List}{@code <}{@link String}{@code []>}, 
      *         where each array is a 4-ple (method class name, 
      *         method parameters, method name, meta delegate
      *         class name).
-	 */
-	public ArrayList<String[]> getMetaOverridden() {
-	    return new ArrayList<>(this.metaOverridden);
-	}
+     */
+    public ArrayList<String[]> getMetaOverridden() {
+        return new ArrayList<>(this.metaOverridden);
+    }
 
-	/**
-	 * Specifies that a method must be treated as an uninterpreted pure
-	 * function, rather than executed. 
-	 * 
-	 * @param className the name of the class containing the method not to be
-	 *        interpreted.
-	 * @param parametersSignature the types of the method parameters.
-	 * @param methodName the name of the method.
-	 * @param functionName a {@link String}, the name that will be given to 
-	 *        the uninterpreted function.
-	 * @throws NullPointerException if any of the above parameters is {@code null}.
-	 */
-	public void addUninterpreted(String className, String parametersSignature, String methodName, String functionName) {
-		if (className == null || parametersSignature == null || methodName == null || functionName == null) {
-			throw new NullPointerException();
-		}
-		this.uninterpreted.add(new String[] { className, parametersSignature, methodName, functionName });
-	}
-	
-	/**
-	 * Clears the methods that must be treated as
+    /**
+     * Specifies that a method must be treated as an uninterpreted pure
+     * function, rather than executed. 
+     * 
+     * @param className the name of the class containing the method not to be
+     *        interpreted.
+     * @param parametersSignature the types of the method parameters.
+     * @param methodName the name of the method.
+     * @param functionName a {@link String}, the name that will be given to 
+     *        the uninterpreted function.
+     * @throws NullPointerException if any of the above parameters is {@code null}.
+     */
+    public void addUninterpreted(String className, String parametersSignature, String methodName, String functionName) {
+        if (className == null || parametersSignature == null || methodName == null || functionName == null) {
+            throw new NullPointerException();
+        }
+        this.uninterpreted.add(new String[] { className, parametersSignature, methodName, functionName });
+    }
+
+    /**
+     * Clears the methods that must be treated as
      * uninterpreted pure functions.
-	 */
-	public void clearUninterpreted() {
-	    this.uninterpreted.clear();
-	}
-	
-	/**
-	 * Returns the methods that must be treated as
-	 * uninterpreted pure functions.
-	 * 
-	 * @return A {@link List}{@code <}{@link String}{@code []>}, 
-	 *         where each array is a 4-ple (method class name, 
-	 *         method parameters, method name, uninterpreted 
-	 *         function name).
-	 */
-	public List<String[]> getUninterpreted() {
-	    return new ArrayList<>(this.uninterpreted);
-	}
-	
-	/**
-	 * Sets the signature of the method which must be symbolically executed, 
-	 * and cancels the effect of any previous call to {@link #setInitialState(State)}.
-	 * 
-	 * @param className the name of the class containing the method.
-	 * @param parametersSignature the types of the method parameters.
-	 * @param methodName the name of the method. 
-	 * @throws NullPointerException if any of the above parameters is {@code null}.
-	 */
-	public void setMethodSignature(String className, String parametersSignature, String methodName) { 
-		if (className == null || parametersSignature == null || methodName == null) {
-			throw new NullPointerException();
-		}
-		this.initialState = null; 
-		this.methodSignature = new Signature(className, parametersSignature, methodName); 
-	}
-	
-	/**
-	 * Gets the signature of the method which must be symbolically executed.
-	 * 
-	 * @return a {@link Signature}, or {@code null} if no method signature
-	 *         has been provided.
-	 */
-	public Signature getMethodSignature() {
-		if (this.methodSignature == null && this.initialState == null) {
-			return null;
-		}
-		if (this.methodSignature == null) {
-			try {
-				return this.initialState.getCurrentMethodSignature();
-			} catch (ThreadStackEmptyException e) {
-				return null;
-			}
-		}
-		return this.methodSignature;
-	}
-	
-	@SuppressWarnings("unchecked")
-	@Override
-	public EngineParameters clone() {
-		final EngineParameters o;
-		try {
-			o = (EngineParameters) super.clone();
-		} catch (CloneNotSupportedException e) {
-			throw new InternalError(e);
-		}
-		if (this.initialState != null) {
-			o.initialState = this.initialState.clone();
-		}
-		o.paths = (ArrayList<String>) this.paths.clone();
-		//calc and decisionProcedure are *not* cloned
-		o.observedVars = (ArrayList<Signature>) this.observedVars.clone();
-		o.repoTrigger = this.repoTrigger.clone();
-		o.expansionBackdoor = new HashMap<>();
-		for (Map.Entry<String, Set<String>> e : o.expansionBackdoor.entrySet()) {
-		    o.expansionBackdoor.put(e.getKey(), new HashSet<>(e.getValue()));
-		}
-		o.metaOverridden = (ArrayList<String[]>) this.metaOverridden.clone();
-		o.uninterpreted = (ArrayList<String[]>) this.uninterpreted.clone();
-		return o;
-	}
+     */
+    public void clearUninterpreted() {
+        this.uninterpreted.clear();
+    }
+
+    /**
+     * Returns the methods that must be treated as
+     * uninterpreted pure functions.
+     * 
+     * @return A {@link List}{@code <}{@link String}{@code []>}, 
+     *         where each array is a 4-ple (method class name, 
+     *         method parameters, method name, uninterpreted 
+     *         function name).
+     */
+    public List<String[]> getUninterpreted() {
+        return new ArrayList<>(this.uninterpreted);
+    }
+
+    /**
+     * Sets the signature of the method which must be symbolically executed, 
+     * and cancels the effect of any previous call to {@link #setInitialState(State)}.
+     * 
+     * @param className the name of the class containing the method.
+     * @param parametersSignature the types of the method parameters.
+     * @param methodName the name of the method. 
+     * @throws NullPointerException if any of the above parameters is {@code null}.
+     */
+    public void setMethodSignature(String className, String parametersSignature, String methodName) { 
+        if (className == null || parametersSignature == null || methodName == null) {
+            throw new NullPointerException();
+        }
+        this.initialState = null; 
+        this.methodSignature = new Signature(className, parametersSignature, methodName); 
+    }
+
+    /**
+     * Gets the signature of the method which must be symbolically executed.
+     * 
+     * @return a {@link Signature}, or {@code null} if no method signature
+     *         has been provided.
+     */
+    public Signature getMethodSignature() {
+        if (this.methodSignature == null && this.initialState == null) {
+            return null;
+        }
+        if (this.methodSignature == null) {
+            try {
+                return this.initialState.getCurrentMethodSignature();
+            } catch (ThreadStackEmptyException e) {
+                return null;
+            }
+        }
+        return this.methodSignature;
+    }
+    
+    /**
+     * Sets the maximum length an array must have to be 
+     * granted simple representation.
+     * 
+     * @param maxSimpleArrayLength an {@code int}.
+     */
+    public void setMaxSimpleArrayLength(int maxSimpleArrayLength) {
+        this.maxSimpleArrayLength = maxSimpleArrayLength;
+    }
+
+    /**
+     * Returns the maximum length an array must have to be 
+     * granted simple representation.
+     * 
+     * @param maxSimpleArrayLength an {@code int}.
+     */
+    public int getMaxSimpleArrayLength() {
+        return this.maxSimpleArrayLength;
+    }
+    
+    /**
+     * Sets the maximum heap size, expressed as the 
+     * maximum number of objects in the heap. If 
+     * during symbolic execution the heap becomes
+     * bigger than this treshold, JBSE raises 
+     * an {@link OutOfMemoryError}.
+     * 
+     * @param maxHeapSize a {@code long}.
+     */
+    public void setMaxHeapSize(long maxHeapSize) {
+        this.maxHeapSize = maxHeapSize;
+    }
+    
+    /**
+     * Returns the maximum heap size, expressed
+     * as the maximum number of objects in the heap.
+     * 
+     * @return a {@code long}.
+     */
+    public long getMaxHeapSize() {
+        return this.maxHeapSize;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public EngineParameters clone() {
+        final EngineParameters o;
+        try {
+            o = (EngineParameters) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new InternalError(e);
+        }
+        if (this.initialState != null) {
+            o.initialState = this.initialState.clone();
+        }
+        o.paths = (ArrayList<String>) this.paths.clone();
+        //calc and decisionProcedure are *not* cloned
+        o.observedVars = (ArrayList<Signature>) this.observedVars.clone();
+        o.repoTrigger = this.repoTrigger.clone();
+        o.expansionBackdoor = new HashMap<>();
+        for (Map.Entry<String, Set<String>> e : o.expansionBackdoor.entrySet()) {
+            o.expansionBackdoor.put(e.getKey(), new HashSet<>(e.getValue()));
+        }
+        o.metaOverridden = (ArrayList<String[]>) this.metaOverridden.clone();
+        o.uninterpreted = (ArrayList<String[]>) this.uninterpreted.clone();
+        return o;
+    }
 }

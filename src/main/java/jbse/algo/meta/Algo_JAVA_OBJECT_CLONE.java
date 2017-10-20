@@ -5,6 +5,7 @@ import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.JAVA_CLONEABLE;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.CLONE_NOT_SUPPORTED_EXCEPTION;
 import static jbse.common.Type.isArray;
 
@@ -13,15 +14,13 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
-import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileException;
-import jbse.common.exc.ClasspathException;
-import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.Instance;
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 import jbse.val.Value;
@@ -41,10 +40,7 @@ public final class Algo_JAVA_OBJECT_CLONE extends Algo_INVOKEMETA_Nonbranching {
     }
 
     @Override
-    protected void cookMore(State state) 
-    throws ThreadStackEmptyException, DecisionException, 
-    ClasspathException, SymbolicValueNotAllowedException, 
-    InterruptException {
+    protected void cookMore(State state) throws InterruptException {
         try {
             //gets the "this" object and the name of its class
             final Reference thisRef = (Reference) this.data.operand(0);
@@ -73,7 +69,7 @@ public final class Algo_JAVA_OBJECT_CLONE extends Algo_INVOKEMETA_Nonbranching {
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
+    protected void update(State state) throws ThreadStackEmptyException, InterruptException {
         try {
             final Reference thisRef = (Reference) this.data.operand(0);
             final Objekt thisObj = state.getObject(thisRef);
@@ -99,6 +95,9 @@ public final class Algo_JAVA_OBJECT_CLONE extends Algo_INVOKEMETA_Nonbranching {
             
             //pushes the reference to the clone
             state.pushOperand(cloneRef);
+        } catch (HeapMemoryExhaustedException e) {
+            throwNew(state, OUT_OF_MEMORY_ERROR);
+            exitFromAlgorithm();
         } catch (InvalidTypeException | ClassCastException e) {
             //this should never happen
             failExecution(e);

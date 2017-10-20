@@ -30,7 +30,7 @@ public class InterruptException extends Exception {
     }
 
     /**
-     * Do not instantiate!
+     * Do not instantiate! Use the static methods instead
      */
     private InterruptException() { 
         this.continuation = null;

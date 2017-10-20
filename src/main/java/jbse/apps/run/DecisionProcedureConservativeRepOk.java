@@ -13,6 +13,7 @@ import jbse.jvm.RunnerParameters;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.meta.annotations.ConservativeRepOk;
 import jbse.rewr.CalculatorRewriting;
 import jbse.val.ReferenceSymbolic;
@@ -50,7 +51,7 @@ public final class DecisionProcedureConservativeRepOk extends DecisionProcedureC
         final State sIni = this.checker.makeInitialState();
         try {
             sIni.assumeExpands(r, className);
-        } catch (InvalidTypeException | ContradictionException e) {
+        } catch (InvalidTypeException | ContradictionException | HeapMemoryExhaustedException e) {
             //this should not happen
             throw new UnexpectedInternalException(e);
         }

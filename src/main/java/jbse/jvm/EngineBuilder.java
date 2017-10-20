@@ -66,8 +66,11 @@ public class EngineBuilder {
 	
 	private static Engine bootEngineArchitecture(EngineParameters parameters) 
 	throws CannotBuildEngineException {
-		final ExecutionContext ctx = new ExecutionContext(
+		final ExecutionContext ctx = 
+		    new ExecutionContext(
 				parameters.getInitialState(),
+				parameters.getMaxSimpleArrayLength(),
+                                parameters.getMaxHeapSize(),
 				parameters.getClasspath(),
 				parameters.getMethodSignature(),
 				parameters.getCalculator(),

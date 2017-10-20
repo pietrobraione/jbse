@@ -8,6 +8,7 @@ import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.XALOADSTORE_OFFSET;
 import static jbse.bc.Signatures.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.common.Type.getArrayMemberType;
 
 import java.util.Collection;
@@ -21,6 +22,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_XALOAD;
 import jbse.tree.DecisionAlternative_XALOAD_Out;
 import jbse.tree.DecisionAlternative_XALOAD_Unresolved;
@@ -218,7 +220,7 @@ StrategyUpdate_XALOAD> {
 
     @Override   
     protected Value possiblyMaterialize(State state, Value val) 
-    throws DecisionException {
+    throws DecisionException, InterruptException {
         //calculates the actual value to push by materializing 
         //a member array, if it is the case, and then pushes it
         //on the operand stack
@@ -230,6 +232,10 @@ StrategyUpdate_XALOAD> {
                                                                             valRef.getArrayType());
                 writeBackToSource(state, this.myObjectRef, valMaterialized); //TODO is the parameter this.myObjectRef correct?????
                 return valMaterialized;
+            } catch (HeapMemoryExhaustedException e) {
+                throwNew(state, OUT_OF_MEMORY_ERROR);
+                exitFromAlgorithm();
+                return null; //to keep the compiler happy
             } catch (InvalidTypeException e) {
                 //this should never happen
                 failExecution(e);
@@ -245,7 +251,7 @@ StrategyUpdate_XALOAD> {
         return new StrategyRefine_XALOAD() {
             @Override
             public void refineRefExpands(State state, DecisionAlternative_XALOAD_Expands altExpands) 
-            throws DecisionException, ContradictionException, InvalidTypeException {
+            throws DecisionException, ContradictionException, InvalidTypeException, InterruptException {
                 //handles all the assumptions for reference resolution by expansion
                 Algo_XALOAD.this.refineRefExpands(state, altExpands); //implemented in Algo_XYLOAD_GETX
 

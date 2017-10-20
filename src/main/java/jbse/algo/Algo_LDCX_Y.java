@@ -10,6 +10,7 @@ import static jbse.bc.Offsets.LDC_OFFSET;
 import static jbse.bc.Offsets.LDC_W_OFFSET;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.common.Type.isCat_1;
 
 import java.util.function.Supplier;
@@ -24,6 +25,7 @@ import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.DecisionProcedureAlgorithms;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Value;
@@ -103,6 +105,9 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 exitFromAlgorithm();
             } catch (ClassFileNotAccessibleException e) {
                 throwNew(state, ILLEGAL_ACCESS_ERROR);
+                exitFromAlgorithm();
+            } catch (HeapMemoryExhaustedException e) {
+                throwNew(state, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
             } catch (InvalidIndexException | BadClassFileException e) {
                 throwVerifyError(state);

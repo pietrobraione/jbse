@@ -4,6 +4,7 @@ import static jbse.algo.Util.ensureInstance_JAVA_CLASS;
 import static jbse.algo.Util.ensureStringLiteral;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.JAVA_ACCESSIBLEOBJECT_OVERRIDE;
 import static jbse.bc.Signatures.JAVA_CLASS;
@@ -15,6 +16,7 @@ import static jbse.bc.Signatures.JAVA_CONSTRUCTOR_MODIFIERS;
 import static jbse.bc.Signatures.JAVA_CONSTRUCTOR_PARAMETERTYPES;
 import static jbse.bc.Signatures.JAVA_CONSTRUCTOR_SIGNATURE;
 import static jbse.bc.Signatures.JAVA_CONSTRUCTOR_SLOT;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.BYTE;
 import static jbse.common.Type.getReferenceClassName;
@@ -48,6 +50,7 @@ import jbse.mem.Instance;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Calculator;
 import jbse.val.Null;
@@ -92,7 +95,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
 
     @Override
     protected void update(State state) 
-    throws SymbolicValueNotAllowedException, ThreadStackEmptyException, InterruptException {
+    throws SymbolicValueNotAllowedException, InterruptException, ThreadStackEmptyException {
         //gets the signatures of the fields to emit; the position of the signature
         //in sigFields indicates its slot
         final boolean onlyPublic = ((Simplex) this.data.operand(1)).surelyTrue();
@@ -128,6 +131,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
         ReferenceConcrete result = null; //to keep the compiler happy
         try {
             result = state.createArray(null, state.getCalculator().valInt(numConstructors), "" + ARRAYOF + REFERENCE + JAVA_CONSTRUCTOR + TYPEEND);
+        } catch (HeapMemoryExhaustedException e) {
+            throwNew(state, OUT_OF_MEMORY_ERROR);
+            exitFromAlgorithm();
         } catch (InvalidTypeException e) {
             //this should never happen
             failExecution(e);
@@ -143,9 +149,13 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
             if (sigConstructor != null) {
                 //creates an instance of java.lang.reflect.Constructor and 
                 //puts it in the return array
-                final ReferenceConcrete constructorRef = state.createInstance(JAVA_CONSTRUCTOR);
+                ReferenceConcrete constructorRef = null; //to keep the compiler happy
                 try {
+                    constructorRef = state.createInstance(JAVA_CONSTRUCTOR);
                     resultArray.setFast(calc.valInt(index) , constructorRef);
+                } catch (HeapMemoryExhaustedException e) {
+                    throwNew(state, OUT_OF_MEMORY_ERROR);
+                    exitFromAlgorithm();
                 } catch (InvalidOperandException | InvalidTypeException | FastArrayAccessNotAllowedException e) {
                     //this should never happen
                     failExecution(e);
@@ -165,6 +175,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                 ReferenceConcrete arrayParamClassesRef = null; //to keep the compiler happy
                 try {
                     arrayParamClassesRef = state.createArray(null, calc.valInt(params.length), "" + ARRAYOF + REFERENCE + JAVA_CLASS + TYPEEND);
+                } catch (HeapMemoryExhaustedException e) {
+                    throwNew(state, OUT_OF_MEMORY_ERROR);
+                    exitFromAlgorithm();
                 } catch (InvalidTypeException exc) {
                     //this should never happen
                     failExecution(exc);
@@ -180,6 +193,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                             final String primType = toPrimitiveBinaryClassName(paramType);
                             try {
                                 state.ensureInstance_JAVA_CLASS_primitive(primType);
+                            } catch (HeapMemoryExhaustedException e) {
+                                throwNew(state, OUT_OF_MEMORY_ERROR);
+                                exitFromAlgorithm();
                             } catch (ClassFileNotFoundException e) {
                                 //this should never happen
                                 failExecution(e);
@@ -193,6 +209,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                         arrayParamClasses.setFast(calc.valInt(i), paramClazz);
                         ++i;
                     }
+                } catch (HeapMemoryExhaustedException e) {
+                    throwNew(state, OUT_OF_MEMORY_ERROR);
+                    exitFromAlgorithm();
                 } catch (BadClassFileException e) {
                     //TODO is it ok?
                     throwVerifyError(state);
@@ -218,6 +237,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                         arrayParamClasses.setFast(calc.valInt(i), excClazz);
                         ++i;
                     }
+                } catch (HeapMemoryExhaustedException e) {
+                    throwNew(state, OUT_OF_MEMORY_ERROR);
+                    exitFromAlgorithm();
                 } catch (BadClassFileException e) {
                     //TODO is it ok?
                     throwVerifyError(state);
@@ -250,6 +272,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                         refSigType = state.referenceToStringLiteral(sigType);
                     }
                     constructor.setFieldValue(JAVA_CONSTRUCTOR_SIGNATURE, refSigType);
+                } catch (HeapMemoryExhaustedException e) {
+                    throwNew(state, OUT_OF_MEMORY_ERROR);
+                    exitFromAlgorithm();
                 } catch (ClassFileIllFormedException | ClasspathException | 
                          DecisionException | MethodNotFoundException e) {
                     //this should never happen
@@ -267,6 +292,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                     for (int i = 0; i < annotations.length; ++i) {
                         annotationsArray.setFast(calc.valInt(i), calc.valByte(annotations[i]));
                     }
+                } catch (HeapMemoryExhaustedException e) {
+                    throwNew(state, OUT_OF_MEMORY_ERROR);
+                    exitFromAlgorithm();
                 } catch (MethodNotFoundException | InvalidTypeException | 
                          InvalidOperandException | FastArrayAccessNotAllowedException e) {
                     //this should never happen

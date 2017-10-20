@@ -1,8 +1,11 @@
 package jbse.algo.meta;
 
 import static jbse.algo.Util.ensureInstance_JAVA_CLASS;
+import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.throwNew;
 import static jbse.bc.Signatures.JAVA_METHOD_INVOKE;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
 import java.util.List;
 import java.util.ListIterator;
@@ -17,6 +20,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Frame;
 import jbse.mem.State;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 
@@ -53,6 +57,9 @@ public final class Algo_SUN_REFLECTION_GETCALLERCLASS extends Algo_INVOKEMETA_No
 
         try {
             ensureInstance_JAVA_CLASS(state, this.className, this.className, this.ctx);
+        } catch (HeapMemoryExhaustedException e) {
+            throwNew(state, OUT_OF_MEMORY_ERROR);
+            exitFromAlgorithm();
         } catch (ClassFileNotAccessibleException | BadClassFileException e) {
             //this should never happen
             failExecution(e);

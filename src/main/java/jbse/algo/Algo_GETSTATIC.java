@@ -5,6 +5,7 @@ import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
 import java.util.function.Supplier;
 
@@ -15,6 +16,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.InvalidInputException;
 import jbse.mem.State;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 
 /**
  * {@link Algorithm} managing the getstatic bytecode. It decides over the value 
@@ -51,6 +53,9 @@ final class Algo_GETSTATIC extends Algo_GETX {
         //possibly creates and initializes the class of the field
         try {
             ensureClassCreatedAndInitialized(state, fieldClassName, this.ctx);
+        } catch (HeapMemoryExhaustedException e) {
+            throwNew(state, OUT_OF_MEMORY_ERROR);
+            exitFromAlgorithm();
         } catch (InvalidInputException | BadClassFileException e) {
             //this should never happen
             //TODO really?

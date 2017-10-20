@@ -1,7 +1,9 @@
 package jbse.algo.meta;
 
 import static jbse.algo.Util.ensureStringLiteral;
+import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.throwNew;
 import static jbse.bc.Signatures.JBSE_BASE;
 import static jbse.bc.Signatures.JBSE_BASE_FILE_ENCODING;
 import static jbse.bc.Signatures.JBSE_BASE_FILE_SEPARATOR;
@@ -34,6 +36,7 @@ import static jbse.bc.Signatures.JBSE_BASE_USER_COUNTRY;
 import static jbse.bc.Signatures.JBSE_BASE_USER_LANGUAGE;
 import static jbse.bc.Signatures.JBSE_BASE_USER_SCRIPT;
 import static jbse.bc.Signatures.JBSE_BASE_USER_VARIANT;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
 import java.util.function.Supplier;
 
@@ -48,6 +51,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Klass;
 import jbse.mem.State;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.ReferenceConcrete;
 
@@ -139,7 +143,12 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
     private static void safeEnsureStringLiteral(State state, ExecutionContext ctx, String stringLit) 
     throws ClassFileIllFormedException, DecisionException, ClasspathException, InterruptException {
         if (stringLit != null) {
-            ensureStringLiteral(state, ctx, stringLit);
+            try {
+                ensureStringLiteral(state, ctx, stringLit);
+            } catch (HeapMemoryExhaustedException e) {
+                throwNew(state, OUT_OF_MEMORY_ERROR);
+                exitFromAlgorithm();
+            }
         }
     }
 

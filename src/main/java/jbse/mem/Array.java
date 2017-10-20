@@ -474,9 +474,11 @@ public final class Array extends Objekt {
      * @param isInitial {@code true} iff this array is not an array of the 
      *        current state, but a copy of an (immutable) symbolic array in
      *        the initial state. Used only if {@code epoch == }{@link Epoch#EPOCH_AFTER_START}.
+     * @param maxSimpleArrayLength an {@code int}, the maximum length an array may have
+     *        to be granted simple representation.
      * @throws InvalidTypeException iff {@code type} is invalid. 
      */
-    public Array(Calculator calc, boolean initSymbolic, Value initValue, Primitive length, String type, MemoryPath origin, Epoch epoch, boolean isInitial) 
+    public Array(Calculator calc, boolean initSymbolic, Value initValue, Primitive length, String type, MemoryPath origin, Epoch epoch, boolean isInitial, int maxSimpleArrayLength) 
     throws InvalidTypeException {
         super(calc, type, origin, epoch, false, 0, new Signature(type, "" + Type.INT, "length"));
         if (isIllFormed(type)) {
@@ -491,7 +493,7 @@ public final class Array extends Objekt {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-        this.fields.get(this.lengthSignature.toString()).setValue(length);  //toString() is necessary, type erasure doesn't play well
+        setFieldValue(this.lengthSignature, length);
         try {
             final Expression indexGreaterThanZero = (Expression) INDEX.ge(this.calc.valInt(0));
             final Expression indexLessThanLength = (Expression) INDEX.lt(length);
@@ -500,9 +502,7 @@ public final class Array extends Objekt {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-        this.entries = new LinkedList<AccessOutcomeIn>();
-        this.simpleRep = (length instanceof Simplex);
-        setEntriesInit(initSymbolic, initValue);
+        setEntriesInit(initSymbolic, initValue, maxSimpleArrayLength);
     }
 
     /**
@@ -562,7 +562,7 @@ public final class Array extends Objekt {
         return illFormed;
     }
 
-    private void setEntriesInit(boolean initSymbolic, Value initValue) {
+    private void setEntriesInit(boolean initSymbolic, Value initValue, int maxSimpleArrayLength) {
         final Value entryValue;
         if (initSymbolic) {
             entryValue = null;
@@ -572,26 +572,32 @@ public final class Array extends Objekt {
             entryValue = initValue;
         }
 
-        //in the case length is not symbolic, creates an entry for each 
-        //possible value in the range; the rationale is, it is better having 
-        //more, restrictive entries than less, liberal entries, since the 
-        //most workload is on the theorem prover side, and with 
-        //restrictive entries we may hope that normalization will succeed 
-        //upon array access, thus reducing the calls to the prover.
-        if (this.simpleRep) {
-            int ln = (Integer) ((Simplex) this.getLength()).getActualValue();
-            for (int i = 0; i < ln; i++) {
-                try {
-                    this.entries.add(new AccessOutcomeInValue((Expression) INDEX.eq(this.calc.valInt(i)),
-                                                              entryValue));
-                } catch (InvalidOperandException | InvalidTypeException e) {
-                    //this should never happen
-                    throw new UnexpectedInternalException(e);
+        //in the case length is concrete and not too high, creates an entry for each 
+        //possible value in the range (simple representation); the rationale is, it 
+        //is better having more, restrictive entries than less, liberal entries, since 
+        //most workload is on the theorem prover side, and with restrictive entries 
+        //we may hope that normalization will succeed upon array access, thus reducing 
+        //the calls to the prover.
+        this.entries = new LinkedList<AccessOutcomeIn>();
+        if (getLength() instanceof Simplex) {
+            final int ln = ((Integer) ((Simplex) getLength()).getActualValue()).intValue();
+            if (ln <= maxSimpleArrayLength) {
+                this.simpleRep = true;
+                for (int i = 0; i < ln; i++) {
+                    try {
+                        this.entries.add(new AccessOutcomeInValue((Expression) INDEX.eq(this.calc.valInt(i)),
+                                                                  entryValue));
+                    } catch (InvalidOperandException | InvalidTypeException e) {
+                        //this should never happen
+                        throw new UnexpectedInternalException(e);
+                    }
                 }
-            }			
-        } else {
-            this.entries.add(new AccessOutcomeInValue(this.indexInRange, entryValue));
+                return;
+            }
         }
+        //otherwise, do not use simple representation
+        this.simpleRep = false;
+        this.entries.add(new AccessOutcomeInValue(this.indexInRange, entryValue));
     }
 
     /**

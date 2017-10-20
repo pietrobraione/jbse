@@ -51,6 +51,7 @@ import jbse.mem.Instance;
 import jbse.mem.Klass;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -185,7 +186,7 @@ public class Util {
      */
     public static void throwVerifyError(State state) {
         try {
-            final ReferenceConcrete excReference = state.createInstance(VERIFY_ERROR);
+            final ReferenceConcrete excReference = state.createInstanceSurely(VERIFY_ERROR);
             fillExceptionBacktrace(state, excReference);
             state.unwindStack(excReference);
         } catch (InvalidIndexException | InvalidProgramCounterException e) {
@@ -211,7 +212,7 @@ public class Util {
             throwVerifyError(state);
             return;
         }
-        final ReferenceConcrete excReference = state.createInstance(exceptionClassName);
+        final ReferenceConcrete excReference = state.createInstanceSurely(exceptionClassName);
         fillExceptionBacktrace(state, excReference);
         throwObject(state, excReference);
     }
@@ -265,7 +266,7 @@ public class Util {
                 ++stackDepth;
             }
             final ReferenceConcrete refToArray = 
-            state.createArray(null, state.getCalculator().valInt(stackDepth), "" + ARRAYOF + REFERENCE + JAVA_STACK_TRACE_ELEMENT + TYPEEND);
+                state.createArray(null, state.getCalculator().valInt(stackDepth), "" + ARRAYOF + REFERENCE + JAVA_STACK_TRACE_ELEMENT + TYPEEND);
             final Array theArray = (Array) state.getObject(refToArray);
             exc.setFieldValue(JAVA_THROWABLE_BACKTRACE, refToArray);
             int i = 0;
@@ -300,6 +301,9 @@ public class Util {
                 //sets the array
                 theArray.setFast(calc.valInt(i++), steReference);
             }
+        } catch (HeapMemoryExhaustedException e) {
+            //just gives up
+            return;
         } catch (BadClassFileException | ClassCastException | 
                  InvalidTypeException | InvalidOperandException | 
                  FastArrayAccessNotAllowedException e) {
@@ -327,21 +331,23 @@ public class Util {
      * @throws ClasspathException if some standard JRE class is missing
      *         from {@code state}'s classpath or is incompatible with the
      *         current version of JBSE. 
+     * @throws HeapMemoryExhaustedException if during class creation
+     *         and initialization the heap memory ends.
      * @throws InterruptException iff it is necessary to interrupt the
-     *         execution of the bytecode and run the 
+     *         execution of the bytecode, to run the 
      *         {@code <clinit>} method(s) for the initialized 
-     *         class(es).
+     *         class(es) or because of heap memory exhaustion.
      */
     public static void ensureClassCreatedAndInitialized(State state, String className, ExecutionContext ctx) 
     throws InvalidInputException, DecisionException, BadClassFileException, 
-    ClasspathException, InterruptException {
+    ClasspathException, HeapMemoryExhaustedException, InterruptException {
         final ClassInitializer ci = new ClassInitializer(state, ctx);
         final boolean failed = ci.initialize(className);
         if (failed) {
             return;
         }
         if (ci.createdFrames > 0) {
-            exitFromAlgorithm();
+            exitFromAlgorithm(); //time to execute <clinit>s
         }
     }
 
@@ -414,9 +420,12 @@ public class Util {
          * @throws ClasspathException if the classfile for some JRE class
          *         is not in the classpath or is incompatible with the
          *         current version of JBSE.
+         * @throws HeapMemoryExhaustedException if heap memory ends while
+         *         performing class initialization
          */
         private boolean initialize(String className)
-        throws InvalidInputException, DecisionException, BadClassFileException, ClasspathException {
+        throws InvalidInputException, DecisionException, BadClassFileException, 
+        ClasspathException, HeapMemoryExhaustedException {
             phase1(className);
             if (this.failed) {
                 handleFailure();
@@ -533,9 +542,11 @@ public class Util {
          * @throws ClasspathException if the classfile for some JRE class
          *         is not in the classpath or is incompatible with the
          *         current version of JBSE.
+         * @throws HeapMemoryExhaustedException if during phase 2 heap memory ends.
          */
         private void phase2() 
-        throws DecisionException, BadClassFileException, ClasspathException {
+        throws DecisionException, BadClassFileException, 
+        ClasspathException, HeapMemoryExhaustedException {
             final ListIterator<String> it = this.classesCreated.listIterator();
             while (it.hasNext()) {
                 final String className = it.next();
@@ -702,17 +713,21 @@ public class Util {
      * @throws ClasspathException if the {@code java.lang.String} class is 
      *         missing from {@code state}'s classpath or is incompatible with the
      *         current version of JBSE.
+     * @throws HeapMemoryExhaustedException if during creation of the
+     *         string literal the heap memory ends.
      * @throws InterruptException  iff it is necessary to interrupt the
      *         execution of the current bytecode and run the 
      *         {@code <clinit>} method for {@code java.lang.String}.
      */
+    //TODO remove and put everything back into state.ensureStringLiteral, as now Algo_INIT initializes java.lang.String 
     public static void ensureStringLiteral(State state, ExecutionContext ctx, String stringLit) 
-    throws DecisionException, ClassFileIllFormedException, ClasspathException, InterruptException {
+    throws DecisionException, ClassFileIllFormedException, ClasspathException, 
+    HeapMemoryExhaustedException, InterruptException {
         if (state == null || ctx == null || stringLit == null) {
             throw new NullPointerException("null parameter passed to " + Util.class.getName() + ".ensureStringLiteral");
         }
-        state.ensureStringLiteral(stringLit);
         try {
+            state.ensureStringLiteral(stringLit);
             ensureClassCreatedAndInitialized(state, JAVA_STRING, ctx);
         } catch (ClassFileNotFoundException e) {
             throw new ClasspathException(e);
@@ -753,7 +768,7 @@ public class Util {
      */
     public static void ensureInstance_JAVA_CLASS(State state, String accessor, String className, ExecutionContext ctx) 
     throws DecisionException, BadClassFileException, ClassFileNotAccessibleException,
-    ClasspathException, InterruptException {
+    ClasspathException, HeapMemoryExhaustedException, InterruptException {
         //we store locally the interrupt and throw it at the end
         //to ensure the invariant that, at the end of the invocation, 
         //everything is created so the second time this method is 

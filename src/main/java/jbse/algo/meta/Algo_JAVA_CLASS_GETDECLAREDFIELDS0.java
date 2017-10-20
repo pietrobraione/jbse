@@ -4,6 +4,7 @@ import static jbse.algo.Util.ensureInstance_JAVA_CLASS;
 import static jbse.algo.Util.ensureStringLiteral;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.JAVA_ACCESSIBLEOBJECT_OVERRIDE;
 import static jbse.bc.Signatures.JAVA_FIELD;
@@ -14,6 +15,7 @@ import static jbse.bc.Signatures.JAVA_FIELD_NAME;
 import static jbse.bc.Signatures.JAVA_FIELD_SIGNATURE;
 import static jbse.bc.Signatures.JAVA_FIELD_SLOT;
 import static jbse.bc.Signatures.JAVA_FIELD_TYPE;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.BYTE;
 import static jbse.common.Type.className;
@@ -45,6 +47,7 @@ import jbse.mem.Instance;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Calculator;
 import jbse.val.Null;
@@ -125,6 +128,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
         ReferenceConcrete result = null; //to keep the compiler happy
         try {
             result = state.createArray(null, state.getCalculator().valInt(numFields), "" + ARRAYOF + REFERENCE + JAVA_FIELD + TYPEEND);
+        } catch (HeapMemoryExhaustedException e) {
+            throwNew(state, OUT_OF_MEMORY_ERROR);
+            exitFromAlgorithm();
         } catch (InvalidTypeException e) {
             //this should never happen
             failExecution(e);
@@ -140,9 +146,13 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
             if (sigField != null) {
                 //creates an instance of java.lang.reflect.Field and 
                 //puts it in the return array
-                final ReferenceConcrete fieldRef = state.createInstance(JAVA_FIELD);
+                ReferenceConcrete fieldRef = null; //to keep the compiler happy
                 try {
+                    fieldRef = state.createInstance(JAVA_FIELD);
                     resultArray.setFast(calc.valInt(index) , fieldRef);
+                } catch (HeapMemoryExhaustedException e) {
+                    throwNew(state, OUT_OF_MEMORY_ERROR);
+                    exitFromAlgorithm();
                 } catch (InvalidOperandException | InvalidTypeException | FastArrayAccessNotAllowedException e) {
                     //this should never happen
                     failExecution(e);
@@ -157,6 +167,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                 //sets name
                 try {
                     ensureStringLiteral(state, this.ctx, sigField.getName());
+                } catch (HeapMemoryExhaustedException e) {
+                    throwNew(state, OUT_OF_MEMORY_ERROR);
+                    exitFromAlgorithm();
                 } catch (ClassFileIllFormedException | DecisionException | ClasspathException e) {
                     //this should never happen
                     failExecution(e);
@@ -183,6 +196,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                         refSigType = state.referenceToStringLiteral(sigType);
                     }
                     field.setFieldValue(JAVA_FIELD_SIGNATURE, refSigType);
+                } catch (HeapMemoryExhaustedException e) {
+                    throwNew(state, OUT_OF_MEMORY_ERROR);
+                    exitFromAlgorithm();
                 } catch (ClassFileIllFormedException | ClasspathException | 
                          DecisionException | FieldNotFoundException e) {
                     //this should never happen
@@ -200,6 +216,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                         final String fieldTypeNameBinary = toPrimitiveBinaryClassName(fieldType);
                         state.ensureInstance_JAVA_CLASS_primitive(fieldTypeNameBinary);
                         typeClassRef = state.referenceToInstance_JAVA_CLASS_primitive(fieldTypeNameBinary);
+                    } catch (HeapMemoryExhaustedException e) {
+                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                        exitFromAlgorithm();
                     } catch (ClassFileNotFoundException e) {
                         //this should never happen
                         failExecution(e);
@@ -209,6 +228,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                     try {
                         ensureInstance_JAVA_CLASS(state, fieldTypeClass, fieldTypeClass, this.ctx);
                         typeClassRef = state.referenceToInstance_JAVA_CLASS(fieldTypeClass);
+                    } catch (HeapMemoryExhaustedException e) {
+                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                        exitFromAlgorithm();
                     } catch (BadClassFileException e) {
                         //TODO is it ok?
                         throwVerifyError(state);
@@ -233,6 +255,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                     for (int i = 0; i < annotations.length; ++i) {
                         annotationsArray.setFast(calc.valInt(i), calc.valByte(annotations[i]));
                     }
+                } catch (HeapMemoryExhaustedException e) {
+                    throwNew(state, OUT_OF_MEMORY_ERROR);
+                    exitFromAlgorithm();
                 } catch (FieldNotFoundException | InvalidTypeException | 
                          InvalidOperandException | FastArrayAccessNotAllowedException e) {
                     //this should never happen

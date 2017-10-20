@@ -5,7 +5,7 @@ import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.ensureInstance_JAVA_CLASS;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
-import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
 import java.util.function.Supplier;
 
@@ -18,6 +18,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 
@@ -53,13 +54,13 @@ public final class Algo_JAVA_OBJECT_GETCLASS extends Algo_INVOKEMETA_Nonbranchin
             }
             this.className = thisObj.getType();
             ensureInstance_JAVA_CLASS(state, this.className, this.className, this.ctx);
-        } catch (ClassFileNotAccessibleException e) {
-            throwNew(state, ILLEGAL_ACCESS_ERROR);
+        } catch (HeapMemoryExhaustedException e) {
+            throwNew(state, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (BadClassFileException e) {
+        } catch (ClassFileNotAccessibleException | BadClassFileException e) {
             //this should never happen
             failExecution(e);
         }

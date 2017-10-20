@@ -26,7 +26,7 @@ import jbse.val.exc.InvalidTypeException;
  */
 abstract class StrategyRefine_XALOAD implements StrategyRefine<DecisionAlternative_XALOAD> {
     abstract public void refineRefExpands(State s, DecisionAlternative_XALOAD_Expands dac) 
-    throws DecisionException, ContradictionException, InvalidTypeException;
+    throws DecisionException, ContradictionException, InvalidTypeException, InterruptException;
 
     abstract public void refineRefAliases(State s, DecisionAlternative_XALOAD_Aliases dai) 
     throws DecisionException, ContradictionException;
@@ -41,13 +41,13 @@ abstract class StrategyRefine_XALOAD implements StrategyRefine<DecisionAlternati
 
     @Override
     public final void refine(final State s, DecisionAlternative_XALOAD r)
-    throws DecisionException, ContradictionException, InvalidTypeException {
+    throws DecisionException, ContradictionException, InvalidTypeException, InterruptException {
         //a visitor redispatching to the methods which specialize this.refine
         final VisitorDecisionAlternative_XALOAD visitorRefine = 
             new VisitorDecisionAlternative_XALOAD() {
                 @Override
                 public void visitDecisionAlternative_XALOAD_Expands(DecisionAlternative_XALOAD_Expands dac)
-                throws DecisionException, ContradictionException, InvalidTypeException {
+                throws DecisionException, ContradictionException, InvalidTypeException, InterruptException {
                     StrategyRefine_XALOAD.this.refineRefExpands(s, dac);
                 }
     
@@ -79,7 +79,8 @@ abstract class StrategyRefine_XALOAD implements StrategyRefine<DecisionAlternati
         try {
             r.accept(visitorRefine);
         } catch (DecisionException | ContradictionException | 
-                 InvalidTypeException | RuntimeException e) {
+                 InvalidTypeException | InterruptException | 
+                 RuntimeException e) {
             throw e;
         } catch (Exception e) {
             //this should never happen

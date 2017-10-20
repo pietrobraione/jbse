@@ -24,7 +24,7 @@ import jbse.val.exc.InvalidTypeException;
  */
 abstract class StrategyRefine_XLOAD_GETX implements StrategyRefine<DecisionAlternative_XLOAD_GETX> {
     abstract public void refineRefExpands(State s, DecisionAlternative_XLOAD_GETX_Expands drc)
-    throws ContradictionException, InvalidTypeException;
+    throws ContradictionException, InvalidTypeException, InterruptException;
 
     abstract public void refineRefAliases(State s, DecisionAlternative_XLOAD_GETX_Aliases dro) 
     throws ContradictionException;
@@ -36,13 +36,13 @@ abstract class StrategyRefine_XLOAD_GETX implements StrategyRefine<DecisionAlter
 
     @Override
     public final void refine(final State s, DecisionAlternative_XLOAD_GETX r)
-    throws ContradictionException, InvalidTypeException {
+    throws ContradictionException, InvalidTypeException, InterruptException {
         //a visitor redispatching to the methods which specialize this.refine
         final VisitorDecisionAlternative_XLOAD_GETX visitorRefine = 
             new VisitorDecisionAlternative_XLOAD_GETX() {
                 @Override
                 public void visitDecisionAlternative_XLOAD_GETX_Expands(DecisionAlternative_XLOAD_GETX_Expands drc) 
-                throws ContradictionException, InvalidTypeException {
+                throws ContradictionException, InvalidTypeException, InterruptException {
                     StrategyRefine_XLOAD_GETX.this.refineRefExpands(s, drc);
                 }
     
@@ -67,7 +67,7 @@ abstract class StrategyRefine_XLOAD_GETX implements StrategyRefine<DecisionAlter
         //redispatches and manages exceptions
         try {
             r.accept(visitorRefine);
-        } catch (ContradictionException | InvalidTypeException | RuntimeException e) {
+        } catch (ContradictionException | InvalidTypeException | InterruptException | RuntimeException e) {
             throw e;
         } catch (Exception e) {
             throw new UnexpectedInternalException(e);

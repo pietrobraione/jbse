@@ -65,7 +65,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
         return new StrategyRefine_XLOAD_GETX() {
             @Override
             public void refineRefExpands(State s, DecisionAlternative_XLOAD_GETX_Expands alt) 
-            throws ContradictionException, InvalidTypeException {
+            throws ContradictionException, InvalidTypeException, InterruptException {
                 Algo_XLOAD_GETX.this.refineRefExpands(s, alt); //implemented in Algo_XYLOAD_GETX
             }
 

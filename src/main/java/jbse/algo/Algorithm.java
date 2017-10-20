@@ -210,13 +210,20 @@ UP extends StrategyUpdate<R>> {
      * 
      * @param state the {@link State} on which the algorithm must operate.
      * @param ctx the {@link ExecutionContext}.
-     * @throws DecisionException
-     * @throws ContradictionException
-     * @throws ThreadStackEmptyException
-     * @throws ClasspathException
-     * @throws CannotManageStateException
+     * @throws DecisionException possibly raised if the algorithm uses a 
+     *         decision procedure and the decision procedure fails.
+     * @throws ContradictionException possibly raised if the algorithm execution
+     *         results in no successor states, which happens whenever all the 
+     *         candidate successors (and thus {@code state}) fail to satisfy 
+     *         the execution assumptions. 
+     * @throws ClasspathException possibly raised if some core 
+     *         standard class is missing from the classpath of ill-formed.
+     * @throws CannotManageStateException possibly raised if the 
+     *         algorithm cannot be executed due to limitations of JBSE.
      * @throws FailureException
-     * @throws ContinuationException
+     * @throws ContinuationException if the execution of this algorithm must
+     *         be interrupted, and possibly followed by the execution of another
+     *         algorithm.
      */
     public final void exec(State state, ExecutionContext ctx) 
     throws DecisionException, ContradictionException, 
@@ -236,8 +243,7 @@ UP extends StrategyUpdate<R>> {
 
     private void doExec(State state) 
     throws DecisionException, ContradictionException, 
-    ThreadStackEmptyException, ClasspathException, 
-    InvalidInputException, BadClassFileException, 
+    ClasspathException, InvalidInputException, BadClassFileException, 
     CannotManageStateException, FailureException, 
     ContinuationException {
         if (this.data == null) {
@@ -252,6 +258,9 @@ UP extends StrategyUpdate<R>> {
             } else {
                 return;
             }
+        } catch (ThreadStackEmptyException e) {
+            //this should never happen
+            failExecution(e);
         }
 
         //decides the satisfiability of the different alternatives
@@ -275,26 +284,23 @@ UP extends StrategyUpdate<R>> {
             //pops the operands from the operand stack
             try {
                 stateCurrent.popOperands(this.numOperands.get());
-            } catch (InvalidNumberOfOperandsException e) {
+            } catch (ThreadStackEmptyException | InvalidNumberOfOperandsException e) {
+                //this should never happen
                 failExecution(e);
             }
 
-            //possibly refines the state
+            InterruptException interrupt = null;
             try {
+                //possibly refines the state
                 if (shouldRefine) {
                     this.refiner.refine(stateCurrent, result);
                 }
-            } catch (InvalidTypeException e) {
-                failExecution(e);
-            }
 
-            //completes the bytecode semantics
-            InterruptException interrupt = null;
-            try {
+                //completes the bytecode semantics
                 this.updater.update(stateCurrent, result);
             } catch (InterruptException e) {
                 interrupt = e;
-            } catch (ThreadStackEmptyException e) {
+            } catch (InvalidTypeException | ThreadStackEmptyException e) {
                 failExecution(e);
             }
 
@@ -313,6 +319,9 @@ UP extends StrategyUpdate<R>> {
                 } //else, nothing to do
             } catch (InvalidProgramCounterException e) {
                 throwVerifyError(stateCurrent);
+            } catch (ThreadStackEmptyException e) {
+                //this should never happen
+                failExecution(e);
             }
 
             //is the state the result of a branching decision?

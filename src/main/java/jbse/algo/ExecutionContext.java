@@ -240,6 +240,12 @@ import jbse.val.ReferenceConcrete;
  * @author Pietro Braione
  */
 public final class ExecutionContext {
+    /** The maximum length of an array to be granted simple representation. Used during initialization. */
+    public final int maxSimpleArrayLength;
+    
+    /** The maximum heap size expressed as maximum number of objects. Used during initialization. */
+    public final long maxHeapSize;
+    
     /** The {@link Classpath}. Used during initialization. */
     public final Classpath classpath;
 
@@ -305,12 +311,16 @@ public final class ExecutionContext {
     /**
      * Constructor.
      * 
-     * @param the initial {@code State}, or {@code null} if no
+     * @param initialState the initial {@code State}, or {@code null} if no
      *        initial state. Warning: all the remaining parameters
      *        must be coherent with it, if not {@code null} (e.g., 
      *        {@code calc} must be the calculator used to create  
      *        {@code initialState}). It will not be modified, but
      *        it shall not be modified externally.
+     * @param maxSimpleArrayLength the maximum length an array may have
+     *        to be granted simple representation.
+     * @param maxHeapSize a {@code long}, the maximum size of the
+     *        heap expressed as maximum number of objects it can store.
      * @param classpath a {@link Classpath} object, containing 
      *        information about the classpath of the symbolic execution.
      * @param rootMethodSignature the {@link Signature} of the root method
@@ -334,6 +344,8 @@ public final class ExecutionContext {
      *        to execute native methods.
      */
     public ExecutionContext(State initialState,
+                            int maxSimpleArrayLength,
+                            long maxHeapSize,
                             Classpath classpath,
                             Signature rootMethodSignature,
                             Calculator calc, 
@@ -346,6 +358,8 @@ public final class ExecutionContext {
                             DecisionAlternativeComparators comparators, 
                             NativeInvoker nativeInvoker) {
         this.initialState = initialState;
+        this.maxSimpleArrayLength = maxSimpleArrayLength;
+        this.maxHeapSize = maxHeapSize;
         this.classpath = classpath;
         this.rootMethodSignature = rootMethodSignature;
         this.calc = calc;

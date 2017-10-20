@@ -3,7 +3,9 @@ package jbse.algo.meta;
 import static jbse.algo.Util.ensureInstance_JAVA_CLASS;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
 import java.util.function.Supplier;
 
@@ -17,6 +19,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Null;
 import jbse.val.Reference;
@@ -52,6 +55,9 @@ public final class Algo_JAVA_CLASS_GETSUPERCLASS extends Algo_INVOKEMETA_Nonbran
                 ensureInstance_JAVA_CLASS(state, superclassName, superclassName, this.ctx);
                 this.refSuper = state.referenceToInstance_JAVA_CLASS(superclassName);
             }
+        } catch (HeapMemoryExhaustedException e) {
+            throwNew(state, OUT_OF_MEMORY_ERROR);
+            exitFromAlgorithm();
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();

@@ -2,7 +2,9 @@ package jbse.algo;
 
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.common.Type.INT;
 import static jbse.common.Type.isArray;
 import static jbse.common.Type.isPrimitive;
@@ -14,6 +16,7 @@ import jbse.mem.Array;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative;
@@ -58,10 +61,16 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
     }
 
     protected final void refineRefExpands(State state, DecisionAlternative_XYLOAD_GETX_Expands drc) 
-    throws ContradictionException, InvalidTypeException {
+    throws ContradictionException, InvalidTypeException, InterruptException {
         final ReferenceSymbolic referenceToExpand = drc.getValueToLoad();
         final String classNameOfTargetObject = drc.getClassNameOfTargetObject();
-        state.assumeExpands(referenceToExpand, classNameOfTargetObject);
+        try {
+            state.assumeExpands(referenceToExpand, classNameOfTargetObject);
+        } catch (HeapMemoryExhaustedException e) {
+            throwNew(state, OUT_OF_MEMORY_ERROR);
+            exitFromAlgorithm();
+        }
+        
         //in the case the expansion object is an array, we assume it 
         //to have nonnegative length
         if (isArray(classNameOfTargetObject)) {
@@ -134,10 +143,11 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
      * @param s a {@link State}
      * @param val the {@link Value} to be materialized.
      * @return a materialized {@link Value}.
-     * @throws DecisionException if 
+     * @throws DecisionException
+     * @throws InterruptException 
      */
     protected abstract Value possiblyMaterialize(State s, Value val) 
-    throws DecisionException;
+    throws DecisionException, InterruptException;
 
     @Override
     public final boolean someReferenceNotExpanded() { 

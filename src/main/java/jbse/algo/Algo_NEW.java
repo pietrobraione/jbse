@@ -8,6 +8,7 @@ import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.NEW_OFFSET;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
 import java.util.function.Supplier;
 
@@ -16,6 +17,7 @@ import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.exc.InvalidInputException;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 
@@ -67,6 +69,9 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             //possibly creates and initializes the class
             try {
                 ensureClassCreatedAndInitialized(state, this.data.className(), this.ctx);
+            } catch (HeapMemoryExhaustedException e) {
+                throwNew(state, OUT_OF_MEMORY_ERROR);
+                exitFromAlgorithm();
             } catch (InvalidInputException | BadClassFileException e) {
                 //this should never happen
                 failExecution(e);
@@ -96,7 +101,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
             //creates the new object in the heap
-            state.pushOperand(state.createInstance(this.data.className()));
+            try {
+                state.pushOperand(state.createInstance(this.data.className()));
+            } catch (HeapMemoryExhaustedException e) {
+                throwNew(state, OUT_OF_MEMORY_ERROR);
+                exitFromAlgorithm();
+            }
         };
     }
 

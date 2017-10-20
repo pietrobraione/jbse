@@ -162,6 +162,7 @@ public final class Signatures {
     public static final String NO_CLASS_DEFINITION_FOUND_ERROR     = "java/lang/NoClassDefFoundError";
     public static final String NO_SUCH_FIELD_ERROR                 = "java/lang/NoSuchFieldError";
     public static final String NO_SUCH_METHOD_ERROR                = "java/lang/NoSuchMethodError";
+    public static final String OUT_OF_MEMORY_ERROR                 = "java/lang/OutOfMemoryError";
     public static final String VERIFY_ERROR                        = "java/lang/VerifyError";
     
     //methods

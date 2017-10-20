@@ -29,7 +29,10 @@ public interface StrategyRefine<R> {
      *         action leads to a contradiction in the path condition.
      * @throws InvalidTypeException possibly raised when using a value 
      *         with the wrong type in the refinement action.
+     * @throws InterruptException  possibly raised if the execution 
+     *         of the bytecode semantics must be interrupted, in this
+     *         case only because of heap memory exhaustion.
      */
     public void refine(State s, R r) 
-    throws DecisionException, ContradictionException, InvalidTypeException;
+    throws DecisionException, ContradictionException, InvalidTypeException, InterruptException;
 }
