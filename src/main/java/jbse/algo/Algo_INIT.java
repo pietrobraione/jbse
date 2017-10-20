@@ -17,7 +17,6 @@ import static java.lang.Thread.NORM_PRIORITY;
 
 import jbse.algo.exc.MissingTriggerParameterException;
 import jbse.bc.exc.BadClassFileException;
-import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
@@ -28,6 +27,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.InvalidInputException;
 import jbse.jvm.exc.InitializationException;
 import jbse.mem.State;
+import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -59,7 +59,7 @@ public final class Algo_INIT {
     private State createInitialState(ExecutionContext ctx) 
     throws InvalidClassFileFactoryClassException, InitializationException, 
     DecisionException, ClasspathException {
-        final State state = new State(ctx.classpath, ctx.classFileFactoryClass, ctx.expansionBackdoor, ctx.calc);
+        final State state = new State(ctx.maxSimpleArrayLength, ctx.maxHeapSize, ctx.classpath, ctx.classFileFactoryClass, ctx.expansionBackdoor, ctx.calc);
 
         //adds a method frame for the initial method invocation (and possibly triggers)
         try {
@@ -71,8 +71,9 @@ public final class Algo_INIT {
                 final DecisionAlternative_XLOAD_GETX_Expands rootExpansion = ctx.decisionProcedure.getRootDecisionAlternative(rootThis, className);
                 ctx.triggerManager.loadTriggerFramesRoot(state, rootExpansion);
             }
-        } catch (BadClassFileException | MethodNotFoundException | 
-                 MethodCodeNotFoundException | MissingTriggerParameterException e) {
+        } catch (BadClassFileException | MethodNotFoundException | MethodCodeNotFoundException e) {
+            throw new ClasspathException(e);
+        } catch (MissingTriggerParameterException | HeapMemoryExhaustedException e) {
             throw new InitializationException(e);
         } catch (ThreadStackEmptyException e) {
             throw new UnexpectedInternalException(e);
@@ -123,40 +124,40 @@ public final class Algo_INIT {
             } catch (InterruptException e) {
                 //nothing to do: fall through
             }
-        } catch (InvalidInputException | BadClassFileException e) {
+        } catch (HeapMemoryExhaustedException e) {
+            throw new InitializationException(e);
+        } catch (BadClassFileException e) {
+            throw new ClasspathException(e);
+        } catch (InvalidInputException e) {
             //this should not happen at this point
             throw new UnexpectedInternalException(e);
         }
 
-        //creates the initial thread and thread group
-        final ReferenceConcrete systemThreadGroup = state.createInstance(JAVA_THREADGROUP);
-        final ReferenceConcrete mainThreadGroup = state.createInstance(JAVA_THREADGROUP);
-        final ReferenceConcrete mainThread = state.createInstance(JAVA_THREAD);
-        state.getObject(mainThread).setFieldValue(JAVA_THREAD_PRIORITY, ctx.calc.valInt(NORM_PRIORITY)); //necessary to avoid circularity issues
         try {
+            //creates the initial thread and thread group
+            final ReferenceConcrete systemThreadGroup = state.createInstance(JAVA_THREADGROUP);
+            final ReferenceConcrete mainThreadGroup = state.createInstance(JAVA_THREADGROUP);
+            final ReferenceConcrete mainThread = state.createInstance(JAVA_THREAD);
+            state.getObject(mainThread).setFieldValue(JAVA_THREAD_PRIORITY, ctx.calc.valInt(NORM_PRIORITY)); //necessary to avoid circularity issues
             ensureStringLiteral(state, ctx, "main");
-        } catch (ClassFileIllFormedException e) {
-            throw new ClasspathException(e);
-        } catch (InterruptException e) {
-            //should not be raised now, anyways fall through is ok
-        }
-        final ReferenceConcrete mainString = state.referenceToStringLiteral("main");
-        try {
+            final ReferenceConcrete mainString = state.referenceToStringLiteral("main");
             state.pushFrame(JAVA_THREAD_INIT, false, 0, mainThread, mainThreadGroup, mainString);
             state.pushFrame(JAVA_THREADGROUP_INIT_2, false, 0, mainThreadGroup, systemThreadGroup, mainString);
             state.pushFrame(JAVA_THREADGROUP_INIT_1, false, 0, systemThreadGroup);
+
+            //saves a copy of the created state, thread and thread group
+            ctx.setMainThreadGroup(mainThreadGroup);
+            ctx.setMainThread(mainThread);
+            ctx.setInitialState(state);
+        } catch (HeapMemoryExhaustedException e) {
+            throw new InitializationException(e);
         } catch (BadClassFileException | MethodNotFoundException | MethodCodeNotFoundException e) {
             throw new ClasspathException(e);
         } catch (NullMethodReceiverException | InvalidSlotException | InvalidProgramCounterException |
-                 ThreadStackEmptyException e) {
+                 ThreadStackEmptyException | InterruptException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-
-        //saves a copy of the created state, thread and thread group
-        ctx.setMainThreadGroup(mainThreadGroup);
-        ctx.setMainThread(mainThread);
-        ctx.setInitialState(state);
 
         return state;
     }
