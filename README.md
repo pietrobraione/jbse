@@ -141,7 +141,7 @@ public class RunIf {
 
 A method signature has three parts: The name in [internal classfile format](http://docs.oracle.com/javase/specs/jvms/se6/html/ClassFile.doc.html#14757) (`"smalldemos/ifx/IfExample"`) of the class that contains the method, a [method descriptor](http://docs.oracle.com/javase/specs/jvms/se6/html/ClassFile.doc.html#1169) listing the types of the parameters and of the return value (`"(I)V"`), and finally the name of the method (`"m"`). You can use the `javap` command, included with every JDK setup, to obtain the internal format signatures of methods: `javap -s my.Class` prints the list of all the methods in `my.Class` with their signatures in internal format.
 
-Another essential parameter is the specification of which decision procedure JBSE must interface with in order to detect unfeasible paths. Without a decision procedure JBSE conservatively assumes that all paths are feasible, and thus report that every assertion you put in your code can be violated, be it possible or not.
+Another essential parameter is the specification of which decision procedure JBSE must interface with in order to detect unfeasible paths. Without a decision procedure JBSE conservatively assumes that all paths are feasible, and thus report that every assertion you put in your code can be violated, be it possible or not. Supposing that you want to use Z3 and that the binary of Z3 is located at `/opt/local/bin/z3`, you must add the following lines:
 
 ```Java
 ...
@@ -154,7 +154,7 @@ public class RunIf {
         p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
         p.setDecisionProcedureType(DecisionProcedureType.Z3);
-        p.setExternalDecisionProcedurePath("/usr/bin/z3");
+        p.setExternalDecisionProcedurePath("/opt/local/bin/z3");
         ...
     }
 }
@@ -173,7 +173,7 @@ public class RunIf {
         p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
         p.setDecisionProcedureType(DecisionProcedureType.Z3);
-        p.setExternalDecisionProcedurePath("/usr/bin/z3");
+        p.setExternalDecisionProcedurePath("/opt/local/bin/z3");
         p.setOutputFileName("out/runIf_z3.txt");
         ...
     }
@@ -194,7 +194,7 @@ public class RunIf {
         p.addClasspath("./bin", "/home/guest/jbse/target/jbse-0.8.0-SNAPSHOT.jar");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
         p.setDecisionProcedureType(DecisionProcedureType.Z3);
-        p.setExternalDecisionProcedurePath("/usr/bin/z3");
+        p.setExternalDecisionProcedurePath("/opt/local/bin/z3");
         p.setOutputFileName("out/runIf_z3.txt");
         p.setStepShowMode(StepShowMode.LEAVES);
     }
