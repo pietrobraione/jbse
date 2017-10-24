@@ -30,7 +30,7 @@ StrategyDecide<DecisionAlternative_NONE>,
 StrategyRefine<DecisionAlternative_NONE>, 
 StrategyUpdate<DecisionAlternative_NONE>> {
 
-    private int pcOffset; //set by cooker
+    protected int pcOffset; //set by cooker
 
     @Override
     protected final BytecodeCooker bytecodeCooker() {
@@ -92,12 +92,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     ContradictionException, FailureException, InterruptException;
 
     @Override
-    protected final Supplier<Boolean> isProgramCounterUpdateAnOffset() {
+    protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {
         return () -> true;
     }
 
     @Override
-    protected final Supplier<Integer> programCounterUpdate() {
+    protected Supplier<Integer> programCounterUpdate() {
         return () -> this.pcOffset;
     }
 }

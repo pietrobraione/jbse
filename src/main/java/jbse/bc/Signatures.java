@@ -40,6 +40,8 @@ public final class Signatures {
     public static final String JAVA_BOOLEAN                  = "java/lang/Boolean";
     public static final String JAVA_BUFFEREDINPUTSTREAM      = "java/io/BufferedInputStream";
     public static final String JAVA_BUFFEREDOUTPUTSTREAM     = "java/io/BufferedOutputStream";
+    public static final String JAVA_BYTE                     = "java/lang/Byte";
+    public static final String JAVA_CHARACTER                = "java/lang/Character";
     public static final String JAVA_CHARSET                  = "java/nio/charset/Charset";
     public static final String JAVA_CHARSET_EXTENDEDPROVIDERHOLDER = "java/nio/charset/Charset$ExtendedProviderHolder";
     public static final String JAVA_CHARSETPROVIDER          = "java/nio/charset/spi/CharsetProvider";
@@ -87,6 +89,7 @@ public final class Signatures {
     public static final String JAVA_INTERRUPTEDEXCEPTION     = "java/lang/InterruptedException";
     public static final String JAVA_LINKEDLIST               = "java/util/LinkedList";
     public static final String JAVA_LINKEDLIST_ENTRY         = "java/util/LinkedList$Entry";
+    public static final String JAVA_LONG                     = "java/lang/Long";
     public static final String JAVA_MATH                     = "java/lang/Math";
     public static final String JAVA_NUMBER                   = "java/lang/Number";
     public static final String JAVA_OBJECT                   = "java/lang/Object";
@@ -112,6 +115,7 @@ public final class Signatures {
     public static final String JAVA_RUNTIMEEXCEPTION         = "java/lang/RuntimeException";
     public static final String JAVA_RUNTIMEPERMISSION        = "java/lang/RuntimePermission";
     public static final String JAVA_SERIALIZABLE             = "java/io/Serializable";
+    public static final String JAVA_SHORT                    = "java/lang/Short";
     public static final String JAVA_STACK_TRACE_ELEMENT      = "java/lang/StackTraceElement";
     public static final String JAVA_STRING                   = "java/lang/String";
     public static final String JAVA_STRING_CASEINSCOMP       = "java/lang/String$CaseInsensitiveComparator";
@@ -123,6 +127,7 @@ public final class Signatures {
     public static final String JAVA_THROWABLE                = "java/lang/Throwable";
     public static final String JAVA_THROWABLE_SENTINELHOLDER = "java/lang/Throwable$SentinelHolder";
     public static final String JAVA_TREESET                  = "java/util/TreeSet";
+    public static final String JAVA_VOID                     = "java/lang/Void";
     public static final String JAVA_WRITER                   = "java/io/Writer";
     public static final String JBSE_ANALYSIS                 = internalClassName(jbse.meta.Analysis.class.getCanonicalName());
     public static final String JBSE_BASE                     = internalClassName(jbse.base.Base.class.getCanonicalName());
@@ -305,6 +310,8 @@ public final class Signatures {
         new Signature(JBSE_ANALYSIS, "(" + LONG + ")" + REFERENCE + JAVA_STRING + TYPEEND, "symbolName");
     public static final Signature JBSE_ANALYSIS_SYMBOLNAME_SHORT = 
         new Signature(JBSE_ANALYSIS, "(" + SHORT + ")" + REFERENCE + JAVA_STRING + TYPEEND, "symbolName");
+    public static final Signature JBSE_BASE_BOXINVOCATIONTARGETEXCEPTION = 
+        new Signature(JBSE_BASE, "()" + VOID, "boxInvocationTargetException");
     public static final Signature SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 = 
         new Signature(SUN_NATIVECONSTRUCTORACCESSORIMPL, 
                       "(" + REFERENCE + JAVA_CONSTRUCTOR + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, 
@@ -333,6 +340,12 @@ public final class Signatures {
     //fields
     public static final Signature JAVA_ACCESSIBLEOBJECT_OVERRIDE = 
         new Signature(JAVA_ACCESSIBLEOBJECT, "" + BOOLEAN, "override");
+    public static final Signature JAVA_BOOLEAN_VALUE = 
+        new Signature(JAVA_BOOLEAN, "" + BOOLEAN, "value");
+    public static final Signature JAVA_BYTE_VALUE = 
+        new Signature(JAVA_BYTE, "" + BYTE, "value");
+    public static final Signature JAVA_CHARACTER_VALUE = 
+        new Signature(JAVA_CHARACTER, "" + CHAR, "value");
     public static final Signature JAVA_CLASS_CLASSLOADER = 
         new Signature(JAVA_CLASS, "" + REFERENCE + JAVA_CLASSLOADER + TYPEEND, "classLoader");
     public static final Signature JAVA_CLASS_NAME = 
@@ -351,6 +364,8 @@ public final class Signatures {
         new Signature(JAVA_CONSTRUCTOR, "" + REFERENCE + JAVA_STRING + TYPEEND, "signature");
     public static final Signature JAVA_CONSTRUCTOR_SLOT = 
         new Signature(JAVA_CONSTRUCTOR, "" + INT, "slot");
+    public static final Signature JAVA_DOUBLE_VALUE = 
+        new Signature(JAVA_DOUBLE, "" + DOUBLE, "value");
     public static final Signature JAVA_FIELD_ANNOTATIONS = 
         new Signature(JAVA_FIELD, "" + ARRAYOF + BYTE, "annotations");
     public static final Signature JAVA_FIELD_CLAZZ = 
@@ -365,6 +380,14 @@ public final class Signatures {
         new Signature(JAVA_FIELD, "" + INT, "slot");
     public static final Signature JAVA_FIELD_TYPE = 
         new Signature(JAVA_FIELD, "" + REFERENCE + JAVA_CLASS + TYPEEND, "type");
+    public static final Signature JAVA_FLOAT_VALUE = 
+        new Signature(JAVA_FLOAT, "" + FLOAT, "value");
+    public static final Signature JAVA_INTEGER_VALUE = 
+        new Signature(JAVA_INTEGER, "" + INT, "value");
+    public static final Signature JAVA_LONG_VALUE = 
+        new Signature(JAVA_LONG, "" + LONG, "value");
+    public static final Signature JAVA_SHORT_VALUE = 
+        new Signature(JAVA_SHORT, "" + SHORT, "value");
     public static final Signature JAVA_STRING_HASH = 
         new Signature(JAVA_STRING, "" + INT, "hash");
     public static final Signature JAVA_STRING_VALUE = 

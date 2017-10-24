@@ -77,6 +77,8 @@ import static jbse.bc.Signatures.JAVA_BASICPERMISSION;
 import static jbse.bc.Signatures.JAVA_BOOLEAN;
 import static jbse.bc.Signatures.JAVA_BUFFEREDINPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_BUFFEREDOUTPUTSTREAM;
+import static jbse.bc.Signatures.JAVA_BYTE;
+import static jbse.bc.Signatures.JAVA_CHARACTER;
 import static jbse.bc.Signatures.JAVA_CHARSET;
 import static jbse.bc.Signatures.JAVA_CHARSET_EXTENDEDPROVIDERHOLDER;
 import static jbse.bc.Signatures.JAVA_CHARSETPROVIDER;
@@ -132,6 +134,7 @@ import static jbse.bc.Signatures.JAVA_INTEGER_INTEGERCACHE;
 import static jbse.bc.Signatures.JAVA_INTERRUPTEDEXCEPTION;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
+import static jbse.bc.Signatures.JAVA_LONG;
 import static jbse.bc.Signatures.JAVA_MATH;
 import static jbse.bc.Signatures.JAVA_MODIFIER;
 import static jbse.bc.Signatures.JAVA_NUMBER;
@@ -158,6 +161,7 @@ import static jbse.bc.Signatures.JAVA_REFLECTACCESS;
 import static jbse.bc.Signatures.JAVA_REFLECTPERMISSION;
 import static jbse.bc.Signatures.JAVA_RUNTIMEEXCEPTION;
 import static jbse.bc.Signatures.JAVA_RUNTIMEPERMISSION;
+import static jbse.bc.Signatures.JAVA_SHORT;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_STRING_CASEINSCOMP;
 import static jbse.bc.Signatures.JAVA_STRING_HASHCODE;
@@ -184,6 +188,7 @@ import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEDEPTH;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEELEMENT;
 import static jbse.bc.Signatures.JAVA_THROWABLE_SENTINELHOLDER;
 import static jbse.bc.Signatures.JAVA_TREESET;
+import static jbse.bc.Signatures.JAVA_VOID;
 import static jbse.bc.Signatures.JAVA_WRITER;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ANY;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED;
@@ -619,6 +624,8 @@ public final class ExecutionContext {
         className.equals(JAVA_BOOLEAN) ||
         className.equals(JAVA_BUFFEREDINPUTSTREAM) ||
         className.equals(JAVA_BUFFEREDOUTPUTSTREAM) ||
+        className.equals(JAVA_BYTE) ||
+        className.equals(JAVA_CHARACTER) ||
         className.equals(JAVA_CHARSET) || //not really, but most static values seem to be just caches, so we treat it as it were
         className.equals(JAVA_CHARSET_EXTENDEDPROVIDERHOLDER) ||
         className.equals(JAVA_CHARSETPROVIDER) ||
@@ -661,6 +668,7 @@ public final class ExecutionContext {
         className.equals(JAVA_INTERRUPTEDEXCEPTION) || 
         className.equals(JAVA_LINKEDLIST) || 
         className.equals(JAVA_LINKEDLIST_ENTRY) ||
+        className.equals(JAVA_LONG) || 
         className.equals(JAVA_MATH) || 
         className.equals(JAVA_MODIFIER) || //not really, but used as it were (it bootstraps sun.misc.SharedSecrets on init)
         className.equals(JAVA_NUMBER) || 
@@ -683,6 +691,7 @@ public final class ExecutionContext {
         className.equals(JAVA_REFLECTPERMISSION) ||
         className.equals(JAVA_RUNTIMEEXCEPTION) ||
         className.equals(JAVA_RUNTIMEPERMISSION) ||
+        className.equals(JAVA_SHORT) || 
         className.equals(JAVA_STRING) || 
         className.equals(JAVA_STRING_CASEINSCOMP) ||
         className.equals(JAVA_STRINGBUILDER) || 
@@ -693,6 +702,7 @@ public final class ExecutionContext {
         className.equals(JAVA_THREADLOCAL) || //not really, but the only static member generates sequences of hash codes, so it can be treated as it were
         className.equals(JAVA_THROWABLE) || 
         className.equals(JAVA_THROWABLE_SENTINELHOLDER) ||
+        className.equals(JAVA_VOID) || 
         className.equals(JAVA_WRITER) || 
         className.equals(JBSE_BASE) ||
         className.equals(SUN_CLEANER) ||  //not really, but we don't care very much about finalization since JBSE never garbage-collects, thus we treat it as it were
