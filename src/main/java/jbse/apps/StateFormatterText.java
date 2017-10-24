@@ -276,12 +276,7 @@ public class StateFormatterText implements Formatter {
             indentCurrent += indentTxt;
         }
         //if it is an array of chars, then it prints it in a string style
-        boolean printAsString = (Type.getArrayMemberType(a.getType()).equals("" + Type.CHAR));
-        if (printAsString) {
-            for (Array.AccessOutcomeIn e : a.values()) {
-                printAsString = printAsString && (e instanceof Array.AccessOutcomeInValue) && (((Array.AccessOutcomeInValue) e).getValue() instanceof Simplex);
-            }
-        }
+        final boolean printAsString = a.isSimple() && (Type.getArrayMemberType(a.getType()).equals("" + Type.CHAR));
         if (printAsString) {
             str += "\"";
         }
@@ -391,7 +386,33 @@ public class StateFormatterText implements Formatter {
     }
 
     private static String formatValue(State s, Value val) {
-        String tmp = val.toString();
+        String tmp;
+        if (val.getType() == Type.CHAR && val instanceof Simplex) {
+            char c = ((Character) ((Simplex) val).getActualValue()).charValue();
+            if (c == '\t') {
+                tmp = "\\t";
+            } else if (c == '\b') {
+                tmp = "\\b";
+            } else if (c == '\n') {
+                tmp = "\\n";
+            } else if (c == '\f') {
+                tmp = "\\f";
+            } else if (c == '\r') {
+                tmp = "\\r";
+            } else if (c == '\"') {
+                tmp = "\\\"";
+            } else if (c == '\'') {
+                tmp = "\\\'";
+            } else if (c == '\\') {
+                tmp = "\\\\";
+            } else if (c == '\u0000') {
+                tmp = "\\u0000";
+            } else {
+                tmp = "" + c;
+            }
+        } else {
+            tmp = val.toString();
+        } 
         if (val instanceof ReferenceSymbolic) {
             ReferenceSymbolic ref = (ReferenceSymbolic) val;
             if (s.resolved(ref)) {
