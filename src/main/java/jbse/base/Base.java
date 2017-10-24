@@ -1,5 +1,10 @@
 package jbse.base;
 
+import static jbse.meta.Analysis.isSymbolic;
+import static jbse.meta.Analysis.symbolName;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.security.AccessControlContext;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
@@ -61,10 +66,82 @@ public final class Base {
      */
     @MetaOverriddenBy(Algo_JBSE_BASE_CLINIT.class)
     private static native void clinit();
+    
+    /**
+     * Overriding implementation of {@link java.lang.StringBuilder#append(boolean)}.
+     * @see java.lang.StringBuilder#append(boolean)
+     */
+    private static StringBuilder base_JAVA_STRINGBUILDER_APPEND_BOOLEAN(StringBuilder _this, boolean z) {
+        if (isSymbolic(z)) {
+            final String symbolName = symbolName(z);
+            return _this.append(symbolName);
+        } else {
+            return _this.append(z);
+        }
+    }
 
-    private static final void putSafe(Properties p, String key, String value) {
-        if (value != null) {
-            p.put(key, value);
+    /**
+     * Overriding implementation of {@link java.lang.StringBuilder#append(char)}.
+     * @see java.lang.StringBuilder#append(char)
+     */
+    private static StringBuilder base_JAVA_STRINGBUILDER_APPEND_CHAR(StringBuilder _this, char c) {
+        if (isSymbolic(c)) {
+            final String symbolName = symbolName(c);
+            return _this.append(symbolName);
+        } else {
+            return _this.append(c);
+        }
+    }
+
+    /**
+     * Overriding implementation of {@link java.lang.StringBuilder#append(double)}.
+     * @see java.lang.StringBuilder#append(double)
+     */
+    private static StringBuilder base_JAVA_STRINGBUILDER_APPEND_DOUBLE(StringBuilder _this, double d) {
+        if (isSymbolic(d)) {
+            final String symbolName = symbolName(d);
+            return _this.append(symbolName);
+        } else {
+            return _this.append(d);
+        }
+    }
+
+    /**
+     * Overriding implementation of {@link java.lang.StringBuilder#append(float)}.
+     * @see java.lang.StringBuilder#append(float)
+     */
+    private static StringBuilder base_JAVA_STRINGBUILDER_APPEND_FLOAT(StringBuilder _this, float f) {
+        if (isSymbolic(f)) {
+            final String symbolName = symbolName(f);
+            return _this.append(symbolName);
+        } else {
+            return _this.append(f);
+        }
+    }
+
+    /**
+     * Overriding implementation of {@link java.lang.StringBuilder#append(int)}.
+     * @see java.lang.StringBuilder#append(int)
+     */
+    private static StringBuilder base_JAVA_STRINGBUILDER_APPEND_INT(StringBuilder _this, int i) {
+        if (isSymbolic(i)) {
+            final String symbolName = symbolName(i);
+            return _this.append(symbolName);
+        } else {
+            return _this.append(i);
+        }
+    }
+
+    /**
+     * Overriding implementation of {@link java.lang.StringBuilder#append(long)}.
+     * @see java.lang.StringBuilder#append(long)
+     */
+    private static StringBuilder base_JAVA_STRINGBUILDER_APPEND_LONG(StringBuilder _this, long l) {
+        if (isSymbolic(l)) {
+            final String symbolName = symbolName(l);
+            return _this.append(symbolName);
+        } else {
+            return _this.append(l);
         }
     }
 
@@ -72,7 +149,7 @@ public final class Base {
      * Overriding implementation of {@link java.security.AccessController#doPrivileged(PrivilegedExceptionAction)}.
      * @see java.security.AccessController#doPrivileged(PrivilegedExceptionAction)
      */
-    public static Object base_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION(PrivilegedExceptionAction<?> action)
+    private static Object base_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION(PrivilegedExceptionAction<?> action)
     throws PrivilegedActionException {
         //since JBSE does not enforce access control we just execute the action
         try {
@@ -88,7 +165,7 @@ public final class Base {
      * Overriding implementation of {@link java.security.AccessController#doPrivileged(PrivilegedAction)}.
      * @see java.security.AccessController#doPrivileged(PrivilegedAction)
      */
-    public static Object base_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION(PrivilegedAction<?> action)
+    private static Object base_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION(PrivilegedAction<?> action)
     throws PrivilegedActionException {
         //since JBSE does not enforce access control we just execute the action
         return action.run();
@@ -98,17 +175,31 @@ public final class Base {
      * Overriding implementation of {@link java.security.AccessController#getStackAccessControlContext()}.
      * @see java.security.AccessController#getStackAccessControlContext()
      */
-    public static AccessControlContext base_JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT() {
+    private static AccessControlContext base_JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT() {
         //JBSE does not (yet) check access control, so a dummy null context is returned signifying
         //privileged access (or so it seems).
         return null;
     }
 
     /**
+     * Puts a key-value pair in a {@link Properties} object, 
+     * if the value is not null, otherwise does nothing.
+     * 
+     * @param p the {@link Properties}.
+     * @param key a {@link String}, the key.
+     * @param value a {@link String}, the value.
+     */
+    private static final void putSafe(Properties p, String key, String value) {
+        if (value != null) {
+            p.put(key, value);
+        }
+    }
+
+    /**
      * Overriding implementation of {@link java.lang.System#initProperties(Properties)}.
      * @see java.lang.System#initProperties(Properties)
      */
-    public static final Properties base_JAVA_SYSTEM_INITPROPERTIES(Properties p) {
+    private static final Properties base_JAVA_SYSTEM_INITPROPERTIES(Properties p) {
         //properties taken from openjdk 8, jdk project, file src/share/native/java/lang/System.c
         putSafe(p, "java.specification.version", "1.8");
         putSafe(p, "java.specification.name",    "Java Platform API Specification");
@@ -158,16 +249,41 @@ public final class Base {
      * Overriding implementation of {@link java.lang.Thread#isAlive()}.
      * @see java.lang.Thread#isAlive()
      */
-    public static boolean base_JAVA_THREAD_ISALIVE(Thread _this) {
+    private static boolean base_JAVA_THREAD_ISALIVE(Thread _this) {
         //in JBSE there is only one thread alive, the current thread
         return (_this == Thread.currentThread());
+    }
+    
+    private static void foo() throws Exception { }
+    
+    /**
+     * Helper method for {@link sun.reflect.NativeConstructorAccessorImpl#newInstanceFromConstructor(Constructor, Object[])}.
+     * Just boxes the exceptions that are raised by the execution of a constructor 
+     * into an {@link InvocationTargetException} and rethrows them
+     */
+    private static void boxInvocationTargetException() 
+    throws InvocationTargetException {
+        //the implementation of this method just boxes exceptions and rethrows them
+        try {
+            foo(); //does nothing, it's just to force the compiler to generate the catch block
+        } catch (Exception e) {
+            throw new InvocationTargetException(e);
+        }
+    }
+    
+    /**
+     * Overriding implementation of {@link jbse.meta.Analysis#isRunByJBSE()}.
+     * @see jbse.meta.Analysis#isRunByJBSE()
+     */
+    private static boolean base_JBSE_ANALYSIS_ISRUNBYJBSE() {
+        return true;
     }
 
     /**
      * Overriding implementation of {@link sun.misc.Unsafe#addressSize()}.
      * @see sun.misc.Unsafe#addressSize()
      */
-    public static int base_SUN_UNSAFE_ADDRESSSIZE(Unsafe _this) {
+    private static int base_SUN_UNSAFE_ADDRESSSIZE(Unsafe _this) {
         //JBSE offers no raw access to its data structures, so we return a dummy value
         return 8; //can be either 4 or 8, we choose 8 
     }
@@ -176,7 +292,7 @@ public final class Base {
      * Overriding implementation of {@link sun.misc.Unsafe#arrayBaseOffset(Class)}.
      * @see sun.misc.Unsafe#arrayBaseOffset(Class)
      */
-    public static int base_SUN_UNSAFE_ARRAYBASEOFFSET(Unsafe _this, Class<?> arrayClass) {
+    private static int base_SUN_UNSAFE_ARRAYBASEOFFSET(Unsafe _this, Class<?> arrayClass) {
         //JBSE raw array offsets are plain array indices, so base is zero
         return 0; 
     }
@@ -185,7 +301,7 @@ public final class Base {
      * Overriding implementation of {@link sun.misc.Unsafe#arrayIndexScale(Class)}.
      * @see sun.misc.Unsafe#arrayIndexScale(Class)
      */
-    public static int base_SUN_UNSAFE_ARRAYINDEXSCALE(Unsafe _this, Class<?> arrayClass) {
+    private static int base_SUN_UNSAFE_ARRAYINDEXSCALE(Unsafe _this, Class<?> arrayClass) {
         //JBSE raw array offsets are plain array indices, so scale is one
         return 1; 
     }

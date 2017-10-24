@@ -4,10 +4,13 @@ import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.BOOLEAN;
 import static jbse.common.Type.BYTE;
 import static jbse.common.Type.CHAR;
+import static jbse.common.Type.DOUBLE;
+import static jbse.common.Type.FLOAT;
 import static jbse.common.Type.INT;
 import static jbse.common.Type.internalClassName;
 import static jbse.common.Type.LONG;
 import static jbse.common.Type.REFERENCE;
+import static jbse.common.Type.SHORT;
 import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.VOID;
 
@@ -126,6 +129,7 @@ public final class Signatures {
     public static final String SUN_CLEANER                   = "sun/misc/Cleaner";
     public static final String SUN_FASTCHARSETPROVIDER       = "sun/nio/cs/FastCharsetProvider";
     public static final String SUN_GETPROPERTYACTION         = "sun/security/action/GetPropertyAction";
+    public static final String SUN_NATIVECONSTRUCTORACCESSORIMPL = "sun/reflect/NativeConstructorAccessorImpl";
     public static final String SUN_PREHASHEDMAP              = "sun/util/PreHashedMap";
     public static final String SUN_REFLECTION                = "sun/reflect/Reflection";
     public static final String SUN_REFLECTIONFACTORY         = "sun/reflect/ReflectionFactory";
@@ -152,6 +156,7 @@ public final class Signatures {
     public static final String CLONE_NOT_SUPPORTED_EXCEPTION       = "java/lang/CloneNotSupportedException";
     public static final String ILLEGAL_ARGUMENT_EXCEPTION          = "java/lang/IllegalArgumentException";
     public static final String INDEX_OUT_OF_BOUNDS_EXCEPTION       = "java/lang/IndexOutOfBoundsException";
+    public static final String INSTANTIATION_EXCEPTION             = "java/lang/InstantiationException";
     public static final String NEGATIVE_ARRAY_SIZE_EXCEPTION       = "java/lang/NegativeArraySizeException";
     public static final String NULL_POINTER_EXCEPTION              = "java/lang/NullPointerException";
     
@@ -213,6 +218,18 @@ public final class Signatures {
         new Signature(JAVA_STRING, "()" + INT, "hashCode");
     public static final Signature JAVA_STRING_INTERN =
         new Signature(JAVA_STRING, "()" + REFERENCE + JAVA_STRING + TYPEEND, "intern");
+    public static final Signature JAVA_STRINGBUILDER_APPEND_BOOLEAN =
+        new Signature(JAVA_STRINGBUILDER, "(" + BOOLEAN + ")" + REFERENCE + JAVA_STRINGBUILDER + TYPEEND, "append");
+    public static final Signature JAVA_STRINGBUILDER_APPEND_CHAR =
+        new Signature(JAVA_STRINGBUILDER, "(" + CHAR + ")" + REFERENCE + JAVA_STRINGBUILDER + TYPEEND, "append");
+    public static final Signature JAVA_STRINGBUILDER_APPEND_DOUBLE =
+        new Signature(JAVA_STRINGBUILDER, "(" + DOUBLE + ")" + REFERENCE + JAVA_STRINGBUILDER + TYPEEND, "append");
+    public static final Signature JAVA_STRINGBUILDER_APPEND_FLOAT =
+        new Signature(JAVA_STRINGBUILDER, "(" + FLOAT + ")" + REFERENCE + JAVA_STRINGBUILDER + TYPEEND, "append");
+    public static final Signature JAVA_STRINGBUILDER_APPEND_INT =
+        new Signature(JAVA_STRINGBUILDER, "(" + INT + ")" + REFERENCE + JAVA_STRINGBUILDER + TYPEEND, "append");
+    public static final Signature JAVA_STRINGBUILDER_APPEND_LONG =
+        new Signature(JAVA_STRINGBUILDER, "(" + LONG + ")" + REFERENCE + JAVA_STRINGBUILDER + TYPEEND, "append");
     public static final Signature JAVA_SYSTEM_ARRAYCOPY =
         new Signature(JAVA_SYSTEM, 
                       "(" + REFERENCE + JAVA_OBJECT + TYPEEND + INT + REFERENCE + JAVA_OBJECT + TYPEEND + INT + INT + ")" + VOID, 
@@ -242,6 +259,8 @@ public final class Signatures {
         new Signature(JAVA_THROWABLE, "(" + INT + ")" + REFERENCE + JAVA_STACK_TRACE_ELEMENT + TYPEEND, "getStackTraceElement");
     public static final Signature JBSE_ANALYSIS_ANY = 
         new Signature(JBSE_ANALYSIS, "()" + BOOLEAN, "any");
+    public static final Signature JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED = 
+        new Signature(JBSE_ANALYSIS, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + VOID, "assumeClassNotInitialized");
     public static final Signature JBSE_ANALYSIS_ENDGUIDANCE = 
         new Signature(JBSE_ANALYSIS, "()" + VOID, "endGuidance");
     public static final Signature JBSE_ANALYSIS_FAIL = 
@@ -252,10 +271,44 @@ public final class Signatures {
         new Signature(JBSE_ANALYSIS, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_STRING + TYPEEND + ")" + BOOLEAN, "isResolved");
     public static final Signature JBSE_ANALYSIS_ISRUNBYJBSE = 
         new Signature(JBSE_ANALYSIS, "()" + BOOLEAN, "isRunByJBSE");
+    public static final Signature JBSE_ANALYSIS_ISSYMBOLIC_BOOLEAN = 
+        new Signature(JBSE_ANALYSIS, "(" + BOOLEAN + ")" + BOOLEAN, "isSymbolic");
+    public static final Signature JBSE_ANALYSIS_ISSYMBOLIC_BYTE = 
+        new Signature(JBSE_ANALYSIS, "(" + BYTE + ")" + BOOLEAN, "isSymbolic");
+    public static final Signature JBSE_ANALYSIS_ISSYMBOLIC_CHAR = 
+        new Signature(JBSE_ANALYSIS, "(" + CHAR + ")" + BOOLEAN, "isSymbolic");
+    public static final Signature JBSE_ANALYSIS_ISSYMBOLIC_DOUBLE = 
+        new Signature(JBSE_ANALYSIS, "(" + DOUBLE + ")" + BOOLEAN, "isSymbolic");
+    public static final Signature JBSE_ANALYSIS_ISSYMBOLIC_FLOAT = 
+        new Signature(JBSE_ANALYSIS, "(" + FLOAT + ")" + BOOLEAN, "isSymbolic");
+    public static final Signature JBSE_ANALYSIS_ISSYMBOLIC_INT = 
+        new Signature(JBSE_ANALYSIS, "(" + INT + ")" + BOOLEAN, "isSymbolic");
+    public static final Signature JBSE_ANALYSIS_ISSYMBOLIC_LONG = 
+        new Signature(JBSE_ANALYSIS, "(" + LONG + ")" + BOOLEAN, "isSymbolic");
+    public static final Signature JBSE_ANALYSIS_ISSYMBOLIC_SHORT = 
+        new Signature(JBSE_ANALYSIS, "(" + SHORT + ")" + BOOLEAN, "isSymbolic");
     public static final Signature JBSE_ANALYSIS_SUCCEED = 
         new Signature(JBSE_ANALYSIS, "()" + VOID, "succeed");
-    public static final Signature JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED = 
-        new Signature(JBSE_ANALYSIS, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + VOID, "assumeClassNotInitialized");
+    public static final Signature JBSE_ANALYSIS_SYMBOLNAME_BOOLEAN = 
+        new Signature(JBSE_ANALYSIS, "(" + BOOLEAN + ")" + REFERENCE + JAVA_STRING + TYPEEND, "symbolName");
+    public static final Signature JBSE_ANALYSIS_SYMBOLNAME_BYTE = 
+        new Signature(JBSE_ANALYSIS, "(" + BYTE + ")" + REFERENCE + JAVA_STRING + TYPEEND, "symbolName");
+    public static final Signature JBSE_ANALYSIS_SYMBOLNAME_CHAR = 
+        new Signature(JBSE_ANALYSIS, "(" + CHAR + ")" + REFERENCE + JAVA_STRING + TYPEEND, "symbolName");
+    public static final Signature JBSE_ANALYSIS_SYMBOLNAME_DOUBLE = 
+        new Signature(JBSE_ANALYSIS, "(" + DOUBLE + ")" + REFERENCE + JAVA_STRING + TYPEEND, "symbolName");
+    public static final Signature JBSE_ANALYSIS_SYMBOLNAME_FLOAT = 
+        new Signature(JBSE_ANALYSIS, "(" + FLOAT + ")" + REFERENCE + JAVA_STRING + TYPEEND, "symbolName");
+    public static final Signature JBSE_ANALYSIS_SYMBOLNAME_INT = 
+        new Signature(JBSE_ANALYSIS, "(" + INT + ")" + REFERENCE + JAVA_STRING + TYPEEND, "symbolName");
+    public static final Signature JBSE_ANALYSIS_SYMBOLNAME_LONG = 
+        new Signature(JBSE_ANALYSIS, "(" + LONG + ")" + REFERENCE + JAVA_STRING + TYPEEND, "symbolName");
+    public static final Signature JBSE_ANALYSIS_SYMBOLNAME_SHORT = 
+        new Signature(JBSE_ANALYSIS, "(" + SHORT + ")" + REFERENCE + JAVA_STRING + TYPEEND, "symbolName");
+    public static final Signature SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 = 
+        new Signature(SUN_NATIVECONSTRUCTORACCESSORIMPL, 
+                      "(" + REFERENCE + JAVA_CONSTRUCTOR + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, 
+                      "newInstance0");
     public static final Signature SUN_REFLECTION_GETCALLERCLASS = 
         new Signature(SUN_REFLECTION, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getCallerClass");
     public static final Signature SUN_REFLECTION_GETCLASSACCESSFLAGS = 

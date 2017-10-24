@@ -7,9 +7,13 @@ import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_PRIVILEGEDACTION;
 import static jbse.bc.Signatures.JAVA_PRIVILEGEDEXCEPTIONACTION;
 import static jbse.bc.Signatures.JAVA_PROPERTIES;
+import static jbse.bc.Signatures.JAVA_STRINGBUILDER;
 import static jbse.bc.Signatures.JAVA_THREAD;
 import static jbse.bc.Signatures.SUN_UNSAFE;
 import static jbse.common.Type.BOOLEAN;
+import static jbse.common.Type.CHAR;
+import static jbse.common.Type.DOUBLE;
+import static jbse.common.Type.FLOAT;
 import static jbse.common.Type.INT;
 import static jbse.common.Type.internalClassName;
 import static jbse.common.Type.LONG;
@@ -51,6 +55,7 @@ public final class Overrides {
     public static final String ALGO_JAVA_THROWABLE_FILLINSTACKTRACE     = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_FILLINSTACKTRACE.class.getCanonicalName());
     public static final String ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH   = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH.class.getCanonicalName());
     public static final String ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT.class.getCanonicalName());
+    public static final String ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 = internalClassName(jbse.algo.meta.Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0.class.getCanonicalName());
     public static final String ALGO_SUN_REFLECTION_GETCALLERCLASS       = internalClassName(jbse.algo.meta.Algo_SUN_REFLECTION_GETCALLERCLASS.class.getCanonicalName());
     public static final String ALGO_SUN_REFLECTION_GETCLASSACCESSFLAGS  = internalClassName(jbse.algo.meta.Algo_SUN_REFLECTION_GETCLASSACCESSFLAGS.class.getCanonicalName());
     public static final String ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET        = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_OBJECTFIELDOFFSET.class.getCanonicalName());
@@ -60,13 +65,14 @@ public final class Overrides {
 
     //Overriding meta-level implementations of jbse.meta.Analysis methods
     public static final String ALGO_JBSE_ANALYSIS_ANY                       = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ANY.class.getCanonicalName());
+    public static final String ALGO_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED.class.getCanonicalName());
     public static final String ALGO_JBSE_ANALYSIS_ENDGUIDANCE               = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ENDGUIDANCE.class.getCanonicalName());
     public static final String ALGO_JBSE_ANALYSIS_FAIL                      = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_FAIL.class.getCanonicalName());
     public static final String ALGO_JBSE_ANALYSIS_IGNORE                    = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_IGNORE.class.getCanonicalName());
     public static final String ALGO_JBSE_ANALYSIS_ISRESOLVED                = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ISRESOLVED.class.getCanonicalName());
-    public static final String ALGO_JBSE_ANALYSIS_ISRUNBYJBSE               = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ISRUNBYJBSE.class.getCanonicalName());
+    public static final String ALGO_JBSE_ANALYSIS_ISSYMBOLIC                = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ISSYMBOLIC.class.getCanonicalName());
     public static final String ALGO_JBSE_ANALYSIS_SUCCEED                   = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_SUCCEED.class.getCanonicalName());
-    public static final String ALGO_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED.class.getCanonicalName());
+    public static final String ALGO_JBSE_ANALYSIS_SYMBOLNAME                = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_SYMBOLNAME.class.getCanonicalName());
 
     //Overriding base-level implementation of standard methods
     private static final String JBSE_BASE = internalClassName(jbse.base.Base.class.getCanonicalName());
@@ -86,10 +92,38 @@ public final class Overrides {
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + JAVA_PROPERTIES + TYPEEND + ")" + REFERENCE + JAVA_PROPERTIES + TYPEEND, 
                       "base_JAVA_SYSTEM_INITPROPERTIES");
+    public static final Signature BASE_JAVA_STRINGBUILDER_APPEND_BOOLEAN =
+        new Signature(JBSE_BASE, 
+                      "(" + REFERENCE + JAVA_STRINGBUILDER + TYPEEND + BOOLEAN + ")" + REFERENCE + JAVA_STRINGBUILDER + TYPEEND, 
+                      "base_JAVA_STRINGBUILDER_APPEND_BOOLEAN");
+    public static final Signature BASE_JAVA_STRINGBUILDER_APPEND_CHAR =
+        new Signature(JBSE_BASE, 
+                      "(" + REFERENCE + JAVA_STRINGBUILDER + TYPEEND + CHAR + ")" + REFERENCE + JAVA_STRINGBUILDER + TYPEEND, 
+                      "base_JAVA_STRINGBUILDER_APPEND_CHAR");
+    public static final Signature BASE_JAVA_STRINGBUILDER_APPEND_DOUBLE =
+        new Signature(JBSE_BASE, 
+                      "(" + REFERENCE + JAVA_STRINGBUILDER + TYPEEND + DOUBLE + ")" + REFERENCE + JAVA_STRINGBUILDER + TYPEEND, 
+                      "base_JAVA_STRINGBUILDER_APPEND_DOUBLE");
+    public static final Signature BASE_JAVA_STRINGBUILDER_APPEND_FLOAT =
+        new Signature(JBSE_BASE, 
+                      "(" + REFERENCE + JAVA_STRINGBUILDER + TYPEEND + FLOAT + ")" + REFERENCE + JAVA_STRINGBUILDER + TYPEEND, 
+                      "base_JAVA_STRINGBUILDER_APPEND_FLOAT");
+    public static final Signature BASE_JAVA_STRINGBUILDER_APPEND_INT =
+        new Signature(JBSE_BASE, 
+                      "(" + REFERENCE + JAVA_STRINGBUILDER + TYPEEND + INT + ")" + REFERENCE + JAVA_STRINGBUILDER + TYPEEND, 
+                      "base_JAVA_STRINGBUILDER_APPEND_INT");
+    public static final Signature BASE_JAVA_STRINGBUILDER_APPEND_LONG =
+        new Signature(JBSE_BASE, 
+                      "(" + REFERENCE + JAVA_STRINGBUILDER + TYPEEND + LONG + ")" + REFERENCE + JAVA_STRINGBUILDER + TYPEEND, 
+                      "base_JAVA_STRINGBUILDER_APPEND_LONG");
     public static final Signature BASE_JAVA_THREAD_ISALIVE =
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + JAVA_THREAD + TYPEEND + ")" + BOOLEAN, 
                       "base_JAVA_THREAD_ISALIVE");
+    public static final Signature BASE_JBSE_ANALYSIS_ISRUNBYJBSE =
+        new Signature(JBSE_BASE, 
+                      "()" + BOOLEAN, 
+                      "base_JBSE_ANALYSIS_ISRUNBYJBSE");
     public static final Signature BASE_SUN_UNSAFE_ADDRESSSIZE =
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + SUN_UNSAFE + TYPEEND + ")" + INT, 

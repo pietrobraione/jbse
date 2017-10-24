@@ -671,17 +671,44 @@ public final class Array extends Objekt {
     public boolean isInitial() {
         return this.isInitial;
     }
+    
+    /**
+     * Returns the outcome of an access to the array when the
+     * index is a {@link Simplex} and the array has simple representation.
+     * 
+     * @param index the index of the element in the array, a {@link Simplex}
+     *        with type {@code int}.
+     * @return an {@link AccessOutcome} whose {@link AccessOutcome#getExpression}s 
+     *         is specialized on {@code index}.
+     * @throws InvalidOperandException if {@code index} is {@code null}.
+     * @throws InvalidTypeException if {@code index} has not {@code int} type.
+     * @throws FastArrayAccessNotAllowedException if the array has not
+     *         a simple representation.
+     */
+    public AccessOutcome getFast(Simplex index)
+    throws InvalidOperandException, InvalidTypeException, FastArrayAccessNotAllowedException {
+        if (index == null) {
+            throw new InvalidOperandException("attempted array access with null index");
+        }
+        if (index.getType() != Type.INT) {
+            throw new InvalidTypeException("attempted array access with an index with type " + index.getType());
+        }
+        if (!this.simpleRep) {
+            throw new FastArrayAccessNotAllowedException();
+        }
+        return get(index).iterator().next();
+    }
 
     /**
      * Returns the outcomes of an access to the array.
      * 
      * @param index the index of the element in the array, a {@code Primitive}
-     *        with type int.
+     *        with type {@code int}.
      * @return a {@link Collection}{@code <}{@link AccessOutcome}{@code >}, 
      *         whose {@link AccessOutcome#getExpression}s are specialized on 
      *         {@code index} but are possibly not satisfiable.
      * @throws InvalidOperandException if {@code index} is {@code null}.
-     * @throws InvalidTypeException if {@code index} is not an int.
+     * @throws InvalidTypeException if {@code index} has not {@code int} type.
      */
     public Collection<AccessOutcome> get(Primitive index) 
     throws InvalidOperandException, InvalidTypeException {

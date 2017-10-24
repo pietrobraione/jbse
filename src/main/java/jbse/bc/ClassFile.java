@@ -58,6 +58,13 @@ public abstract class ClassFile {
      * @return {@code true} iff the class is an interface.
      */
     public abstract boolean isArray();
+    
+    /**
+     * Test whether the class is an enum class.
+     * 
+     * @return {@code true} iff the class is an enum class.
+     */
+    public abstract boolean isEnum();
 
     /**
      * Tests whether the class is primitive.

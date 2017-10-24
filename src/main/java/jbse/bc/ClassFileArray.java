@@ -21,7 +21,7 @@ import jbse.bc.exc.MethodNotFoundException;
  * 
  * @author Pietro Braione
  */
-public class ClassFileArray extends ClassFile {
+public final class ClassFileArray extends ClassFile {
     private static final String NO_CONSTANT_POOL = "Array classes have no constant pool.";	
     public static enum Visibility {
         PUBLIC(Modifier.PUBLIC), 
@@ -66,6 +66,11 @@ public class ClassFileArray extends ClassFile {
     @Override
     public boolean isArray() {
         return true;
+    }
+    
+    @Override
+    public boolean isEnum() {
+        return false;
     }
 
     @Override

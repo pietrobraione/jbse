@@ -147,6 +147,11 @@ public class ClassFileJavassist extends ClassFile {
     public boolean isArray() {
         return false;
     }
+    
+    @Override
+    public boolean isEnum() {
+        return Modifier.isEnum(getModifiers());
+    }
 
     @Override
     public boolean isPrimitive() {

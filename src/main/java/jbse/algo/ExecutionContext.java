@@ -25,13 +25,15 @@ import static jbse.algo.Overrides.ALGO_JAVA_THROWABLE_FILLINSTACKTRACE;
 import static jbse.algo.Overrides.ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH;
 import static jbse.algo.Overrides.ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ANY;
+import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ENDGUIDANCE;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_FAIL;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_IGNORE;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ISRESOLVED;
-import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ISRUNBYJBSE;
+import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ISSYMBOLIC;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_SUCCEED;
-import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED;
+import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_SYMBOLNAME;
+import static jbse.algo.Overrides.ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
 import static jbse.algo.Overrides.ALGO_SUN_REFLECTION_GETCALLERCLASS;
 import static jbse.algo.Overrides.ALGO_SUN_REFLECTION_GETCLASSACCESSFLAGS;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_COMPAREANDSWAPINT;
@@ -41,8 +43,15 @@ import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT;
+import static jbse.algo.Overrides.BASE_JAVA_STRINGBUILDER_APPEND_BOOLEAN;
+import static jbse.algo.Overrides.BASE_JAVA_STRINGBUILDER_APPEND_CHAR;
+import static jbse.algo.Overrides.BASE_JAVA_STRINGBUILDER_APPEND_DOUBLE;
+import static jbse.algo.Overrides.BASE_JAVA_STRINGBUILDER_APPEND_FLOAT;
+import static jbse.algo.Overrides.BASE_JAVA_STRINGBUILDER_APPEND_INT;
+import static jbse.algo.Overrides.BASE_JAVA_STRINGBUILDER_APPEND_LONG;
 import static jbse.algo.Overrides.BASE_JAVA_SYSTEM_INITPROPERTIES;
 import static jbse.algo.Overrides.BASE_JAVA_THREAD_ISALIVE;
+import static jbse.algo.Overrides.BASE_JBSE_ANALYSIS_ISRUNBYJBSE;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ADDRESSSIZE;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ARRAYBASEOFFSET;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ARRAYINDEXSCALE;
@@ -154,6 +163,12 @@ import static jbse.bc.Signatures.JAVA_STRING_CASEINSCOMP;
 import static jbse.bc.Signatures.JAVA_STRING_HASHCODE;
 import static jbse.bc.Signatures.JAVA_STRING_INTERN;
 import static jbse.bc.Signatures.JAVA_STRINGBUILDER;
+import static jbse.bc.Signatures.JAVA_STRINGBUILDER_APPEND_BOOLEAN;
+import static jbse.bc.Signatures.JAVA_STRINGBUILDER_APPEND_CHAR;
+import static jbse.bc.Signatures.JAVA_STRINGBUILDER_APPEND_DOUBLE;
+import static jbse.bc.Signatures.JAVA_STRINGBUILDER_APPEND_FLOAT;
+import static jbse.bc.Signatures.JAVA_STRINGBUILDER_APPEND_INT;
+import static jbse.bc.Signatures.JAVA_STRINGBUILDER_APPEND_LONG;
 import static jbse.bc.Signatures.JAVA_SYSTEM;
 import static jbse.bc.Signatures.JAVA_SYSTEM_ARRAYCOPY;
 import static jbse.bc.Signatures.JAVA_SYSTEM_IDENTITYHASHCODE;
@@ -177,11 +192,28 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_FAIL;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_IGNORE;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRESOLVED;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRUNBYJBSE;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_ISSYMBOLIC_BOOLEAN;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_ISSYMBOLIC_BYTE;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_ISSYMBOLIC_CHAR;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_ISSYMBOLIC_DOUBLE;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_ISSYMBOLIC_FLOAT;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_ISSYMBOLIC_INT;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_ISSYMBOLIC_LONG;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_ISSYMBOLIC_SHORT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SUCCEED;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_BOOLEAN;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_BYTE;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_CHAR;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_DOUBLE;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_FLOAT;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_INT;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_LONG;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_SHORT;
 import static jbse.bc.Signatures.JBSE_BASE;
 import static jbse.bc.Signatures.SUN_CLEANER;
 import static jbse.bc.Signatures.SUN_FASTCHARSETPROVIDER;
 import static jbse.bc.Signatures.SUN_GETPROPERTYACTION;
+import static jbse.bc.Signatures.SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
 import static jbse.bc.Signatures.SUN_PREHASHEDMAP;
 import static jbse.bc.Signatures.SUN_REFLECTION;
 import static jbse.bc.Signatures.SUN_REFLECTIONFACTORY;
@@ -207,6 +239,8 @@ import static jbse.bc.Signatures.SUN_UNSAFE_OBJECTFIELDOFFSET;
 import static jbse.bc.Signatures.SUN_UTF_8;
 import static jbse.bc.Signatures.SUN_VERSION;
 import static jbse.bc.Signatures.SUN_VM;
+
+import static jbse.common.Type.binaryClassName;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -395,6 +429,12 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_REFLECT_ARRAY_NEWARRAY,                        ALGO_JAVA_REFLECT_ARRAY_NEWARRAY);
             addMetaOverridden(JAVA_STRING_HASHCODE,                               ALGO_JAVA_STRING_HASHCODE);
             addMetaOverridden(JAVA_STRING_INTERN,                                 ALGO_JAVA_STRING_INTERN);
+            addBaseOverridden(JAVA_STRINGBUILDER_APPEND_BOOLEAN,                  BASE_JAVA_STRINGBUILDER_APPEND_BOOLEAN);
+            addBaseOverridden(JAVA_STRINGBUILDER_APPEND_CHAR,                     BASE_JAVA_STRINGBUILDER_APPEND_CHAR);
+            addBaseOverridden(JAVA_STRINGBUILDER_APPEND_DOUBLE,                   BASE_JAVA_STRINGBUILDER_APPEND_DOUBLE);
+            addBaseOverridden(JAVA_STRINGBUILDER_APPEND_FLOAT,                    BASE_JAVA_STRINGBUILDER_APPEND_FLOAT);
+            addBaseOverridden(JAVA_STRINGBUILDER_APPEND_INT,                      BASE_JAVA_STRINGBUILDER_APPEND_INT);
+            addBaseOverridden(JAVA_STRINGBUILDER_APPEND_LONG,                     BASE_JAVA_STRINGBUILDER_APPEND_LONG);
             addMetaOverridden(JAVA_SYSTEM_ARRAYCOPY,                              ALGO_JAVA_SYSTEM_ARRAYCOPY);
             addBaseOverridden(JAVA_SYSTEM_INITPROPERTIES,                         BASE_JAVA_SYSTEM_INITPROPERTIES);
             addMetaOverridden(JAVA_SYSTEM_IDENTITYHASHCODE,                       ALGO_JAVA_SYSTEM_IDENTITYHASHCODE);
@@ -403,6 +443,7 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_THROWABLE_FILLINSTACKTRACE,                    ALGO_JAVA_THROWABLE_FILLINSTACKTRACE);
             addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEDEPTH,                  ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH);
             addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEELEMENT,                ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT);
+            addMetaOverridden(SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0,     ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0);
             addMetaOverridden(SUN_REFLECTION_GETCALLERCLASS,                      ALGO_SUN_REFLECTION_GETCALLERCLASS);
             addMetaOverridden(SUN_REFLECTION_GETCLASSACCESSFLAGS,                 ALGO_SUN_REFLECTION_GETCLASSACCESSFLAGS);
             addBaseOverridden(SUN_UNSAFE_ADDRESSSIZE,                             BASE_SUN_UNSAFE_ADDRESSSIZE);
@@ -415,14 +456,29 @@ public final class ExecutionContext {
 
             //jbse.meta.Analysis methods
             addMetaOverridden(JBSE_ANALYSIS_ANY,                       ALGO_JBSE_ANALYSIS_ANY);
+            addMetaOverridden(JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED, ALGO_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED);
             addMetaOverridden(JBSE_ANALYSIS_ENDGUIDANCE,               ALGO_JBSE_ANALYSIS_ENDGUIDANCE);
             addMetaOverridden(JBSE_ANALYSIS_FAIL,                      ALGO_JBSE_ANALYSIS_FAIL);
             addMetaOverridden(JBSE_ANALYSIS_IGNORE,                    ALGO_JBSE_ANALYSIS_IGNORE);
             addMetaOverridden(JBSE_ANALYSIS_ISRESOLVED,                ALGO_JBSE_ANALYSIS_ISRESOLVED);
-            addMetaOverridden(JBSE_ANALYSIS_ISRUNBYJBSE,               ALGO_JBSE_ANALYSIS_ISRUNBYJBSE);
+            addBaseOverridden(JBSE_ANALYSIS_ISRUNBYJBSE,               BASE_JBSE_ANALYSIS_ISRUNBYJBSE);
+            addMetaOverridden(JBSE_ANALYSIS_ISSYMBOLIC_BOOLEAN,        ALGO_JBSE_ANALYSIS_ISSYMBOLIC);
+            addMetaOverridden(JBSE_ANALYSIS_ISSYMBOLIC_BYTE,           ALGO_JBSE_ANALYSIS_ISSYMBOLIC);
+            addMetaOverridden(JBSE_ANALYSIS_ISSYMBOLIC_CHAR,           ALGO_JBSE_ANALYSIS_ISSYMBOLIC);
+            addMetaOverridden(JBSE_ANALYSIS_ISSYMBOLIC_DOUBLE,         ALGO_JBSE_ANALYSIS_ISSYMBOLIC);
+            addMetaOverridden(JBSE_ANALYSIS_ISSYMBOLIC_FLOAT,          ALGO_JBSE_ANALYSIS_ISSYMBOLIC);
+            addMetaOverridden(JBSE_ANALYSIS_ISSYMBOLIC_INT,            ALGO_JBSE_ANALYSIS_ISSYMBOLIC);
+            addMetaOverridden(JBSE_ANALYSIS_ISSYMBOLIC_LONG,           ALGO_JBSE_ANALYSIS_ISSYMBOLIC);
+            addMetaOverridden(JBSE_ANALYSIS_ISSYMBOLIC_SHORT,          ALGO_JBSE_ANALYSIS_ISSYMBOLIC);
             addMetaOverridden(JBSE_ANALYSIS_SUCCEED,                   ALGO_JBSE_ANALYSIS_SUCCEED);
-            addMetaOverridden(JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED, ALGO_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED);
-
+            addMetaOverridden(JBSE_ANALYSIS_SYMBOLNAME_BOOLEAN,        ALGO_JBSE_ANALYSIS_SYMBOLNAME);
+            addMetaOverridden(JBSE_ANALYSIS_SYMBOLNAME_BYTE,           ALGO_JBSE_ANALYSIS_SYMBOLNAME);
+            addMetaOverridden(JBSE_ANALYSIS_SYMBOLNAME_CHAR,           ALGO_JBSE_ANALYSIS_SYMBOLNAME);
+            addMetaOverridden(JBSE_ANALYSIS_SYMBOLNAME_DOUBLE,         ALGO_JBSE_ANALYSIS_SYMBOLNAME);
+            addMetaOverridden(JBSE_ANALYSIS_SYMBOLNAME_FLOAT,          ALGO_JBSE_ANALYSIS_SYMBOLNAME);
+            addMetaOverridden(JBSE_ANALYSIS_SYMBOLNAME_INT,            ALGO_JBSE_ANALYSIS_SYMBOLNAME);
+            addMetaOverridden(JBSE_ANALYSIS_SYMBOLNAME_LONG,           ALGO_JBSE_ANALYSIS_SYMBOLNAME);
+            addMetaOverridden(JBSE_ANALYSIS_SYMBOLNAME_SHORT,          ALGO_JBSE_ANALYSIS_SYMBOLNAME);
         } catch (MetaUnsupportedException e) {
             throw new UnexpectedInternalException(e);
         }
@@ -482,7 +538,7 @@ public final class ExecutionContext {
      * @param methodSignature the {@link Signature} of a method.
      * @return  the {@link Signature} of the method that overrides
      *          the one with signature {@code methodSignature} and
-     *          that was previously set by invoking {@link #addBaseOverridden(Signature, Signature)}..
+     *          that was previously set by invoking {@link #addBaseOverridden(Signature, Signature)}.
      */
     public Signature getBaseOverride(Signature methodSignature) {
         return this.baseOverrides.get(methodSignature);
@@ -510,7 +566,7 @@ public final class ExecutionContext {
             @SuppressWarnings("unchecked")
             final Class<? extends Algo_INVOKEMETA<?, ?, ?, ?>> metaDelegateClass = 
                 (Class<? extends Algo_INVOKEMETA<?, ?, ?, ?>>) 
-                ClassLoader.getSystemClassLoader().loadClass(metaDelegateClassName.replace('/', '.')).asSubclass(Algo_INVOKEMETA.class);
+                ClassLoader.getSystemClassLoader().loadClass(binaryClassName(metaDelegateClassName)).asSubclass(Algo_INVOKEMETA.class);
             this.dispatcherMeta.loadAlgoMetaOverridden(methodSignature, metaDelegateClass);
         } catch (ClassNotFoundException e) {
             throw new MetaUnsupportedException("meta-level implementation class " + metaDelegateClassName + " not found");

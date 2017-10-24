@@ -41,7 +41,7 @@ public final class Algo_JBSE_ANALYSIS_ISRESOLVED extends Algo_INVOKEMETA_Nonbran
         //gets the name of the field and converts it to a string
         final String fieldName = valueString(state, fieldNameRef);
         if (fieldName == null) {
-            throw new SymbolicValueNotAllowedException("The method needs a concrete String as name of the field to check.");
+            throw new SymbolicValueNotAllowedException("the jbse.meta.Analysis.isResolved method needs a concrete String as name of the field to check");
         }
 
         //TODO improve error detection
@@ -51,10 +51,10 @@ public final class Algo_JBSE_ANALYSIS_ISRESOLVED extends Algo_INVOKEMETA_Nonbran
         try {
             objectInstance = (Instance) (state.getObject(objRef));
             if (objectInstance == null) {
-                throw new SymbolicValueNotAllowedException("Null has no fields."); //TODO this is not really a limitation of JBSE, rather an invalid input
+                throw new SymbolicValueNotAllowedException("null has no fields"); //TODO this is not really a limitation of JBSE, rather an invalid input
             }
         } catch (ClassCastException e) {
-            throw new SymbolicValueNotAllowedException("The object is not an Instance and thus has no fields."); //TODO this is not really a limitation of JBSE, rather an invalid input
+            throw new SymbolicValueNotAllowedException("the object is not an Instance and thus has no fields"); //TODO this is not really a limitation of JBSE, rather an invalid input
         }
 
         //looks for the signature of the field
@@ -66,7 +66,7 @@ public final class Algo_JBSE_ANALYSIS_ISRESOLVED extends Algo_INVOKEMETA_Nonbran
             }
         }
         if (sig == null) {
-            throw new SymbolicValueNotAllowedException("The specified object does not contain the specified field.");
+            throw new SymbolicValueNotAllowedException("the specified object does not contain the specified field");
         }
 
         //analyzes the field and calculates the return value

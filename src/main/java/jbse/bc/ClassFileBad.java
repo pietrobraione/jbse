@@ -53,6 +53,11 @@ public final class ClassFileBad extends ClassFile {
     public boolean isArray() {
         return false;
     }
+    
+    @Override
+    public boolean isEnum() {
+        return false;
+    }
 
     @Override
     public boolean isInterface() {
