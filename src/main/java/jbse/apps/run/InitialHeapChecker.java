@@ -45,6 +45,7 @@ import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.Simplex;
 import jbse.val.Value;
+import jbse.val.exc.InvalidTypeException;
 
 public final class InitialHeapChecker {
     private final RunnerParameters runnerParameters;
@@ -268,7 +269,7 @@ public final class InitialHeapChecker {
     BadClassFileException, MethodNotFoundException, MethodCodeNotFoundException, ThreadStackEmptyException {
         try {
             s.pushFrame(methodSignatureImpl, true, 0, r);
-        } catch (MethodNotFoundException | MethodCodeNotFoundException e) {
+        } catch (MethodNotFoundException | MethodCodeNotFoundException | InvalidTypeException e) {
             return true; //TODO ugly way to cope with nonexistent methods; possibly handle the situation in the constructor of CheckMethodTable
         }
         p.setInitialState(s);

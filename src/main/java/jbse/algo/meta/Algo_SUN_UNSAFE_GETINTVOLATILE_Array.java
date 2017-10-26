@@ -258,13 +258,13 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 try {
                     final Value valToPush;
                     if (isPrimitive(valMaterializedType) && !isPrimitiveOpStack(valMaterializedType)) {
-                        valToPush = ((Primitive) valMaterialized).to(INT);
+                        valToPush = ((Primitive) valMaterialized).widen(INT);
                     } else {
                         valToPush = valMaterialized;
                     }
                     state.pushOperand(valToPush);
                 } catch (ClassCastException | InvalidTypeException | 
-                ThreadStackEmptyException e) {
+                         ThreadStackEmptyException e) {
                     //this should not happen
                     failExecution(e);
                 }

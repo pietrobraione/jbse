@@ -15,6 +15,7 @@ import jbse.bc.exc.FieldNotFoundException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.InvalidInputException;
+import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 
@@ -46,7 +47,7 @@ final class Algo_GETSTATIC extends Algo_GETX {
     }
 
     @Override
-    protected void get(State state)
+    protected Objekt source(State state)
     throws DecisionException, ClasspathException, InterruptException {
         final String fieldClassName = this.fieldSignatureResolved.getClassName();
 
@@ -62,7 +63,6 @@ final class Algo_GETSTATIC extends Algo_GETX {
             failExecution(e);
         }
 
-        //gets the field's value 
-        this.valToLoad = state.getKlass(fieldClassName).getFieldValue(this.fieldSignatureResolved);
+        return state.getKlass(fieldClassName);
     }
 }

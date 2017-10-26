@@ -253,8 +253,10 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
             throwNew(state, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (NullMethodReceiverException | BadClassFileException | MethodNotFoundException | 
-                 MethodCodeNotFoundException | InvalidSlotException | InvalidProgramCounterException e) {
+                 MethodCodeNotFoundException | InvalidSlotException | InvalidProgramCounterException | 
+                 InvalidTypeException e) {
             //this should never happen
+            //TODO really?
             failExecution(e);
         }
     }

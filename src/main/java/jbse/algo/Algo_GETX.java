@@ -20,6 +20,7 @@ import jbse.bc.exc.FieldNotAccessibleException;
 import jbse.bc.exc.FieldNotFoundException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
+import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 
@@ -76,8 +77,8 @@ abstract class Algo_GETX extends Algo_XLOAD_GETX<BytecodeData_1FI> {
                 failExecution(e);
             }
 
-            //reads the field
-            get(state);
+            //reads the field value
+            this.valToLoad = source(state).getFieldValue(this.fieldSignatureResolved);
         };
     }
 
@@ -85,7 +86,7 @@ abstract class Algo_GETX extends Algo_XLOAD_GETX<BytecodeData_1FI> {
     throws FieldNotFoundException, BadClassFileException, 
     InterruptException;
 
-    protected abstract void get(State state)
+    protected abstract Objekt source(State state)
     throws DecisionException, ClasspathException, InterruptException;
 
     @Override

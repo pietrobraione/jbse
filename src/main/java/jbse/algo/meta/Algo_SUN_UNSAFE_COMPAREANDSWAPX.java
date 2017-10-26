@@ -77,10 +77,10 @@ public abstract class Algo_SUN_UNSAFE_COMPAREANDSWAPX extends Algo_INVOKEMETA_No
     @Override
     protected final void update(State state) throws ThreadStackEmptyException {
         if (this.objectToSet == null) {
-            state.pushOperand(state.getCalculator().valBoolean(false));
+            state.pushOperand(state.getCalculator().valInt(0)); //false
         } else {
             this.objectToSet.setFieldValue(this.fieldSlotToSet, this.toWrite);
-            state.pushOperand(state.getCalculator().valBoolean(true));
+            state.pushOperand(state.getCalculator().valInt(1)); //true
         }
     }
 }

@@ -1,5 +1,15 @@
 package jbse.mem;
 
+import static jbse.bc.Signatures.JAVA_CLONEABLE;
+import static jbse.bc.Signatures.JAVA_OBJECT;
+import static jbse.bc.Signatures.JAVA_SERIALIZABLE;
+import static jbse.common.Type.ARRAYOF;
+import static jbse.common.Type.isCat_1;
+import static jbse.common.Type.REFERENCE;
+import static jbse.common.Type.NULLREF;
+import static jbse.common.Type.TYPEEND;
+import static jbse.common.Type.UNKNOWN;
+
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
@@ -7,7 +17,6 @@ import java.util.TreeMap;
 
 import jbse.bc.LocalVariableTable;
 import jbse.bc.LocalVariableTable.Row;
-import jbse.common.Type;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.val.DefaultValue;
 import jbse.val.Value;
@@ -16,11 +25,11 @@ import jbse.val.Value;
  * Class representing a local variable memory area.
  */
 class LocalVariablesArea implements Cloneable {
-	/** The local variable table for the method. */
-	private final LocalVariableTable lvt;
-	
-	/** Values in the memory area, accessible by slot. */
-	private SortedMap<Integer, Value> values = new TreeMap<Integer, Value>();
+    /** The local variable table for the method. */
+    private final LocalVariableTable lvt;
+
+    /** Values in the memory area, accessible by slot. */
+    private SortedMap<Integer, Value> values = new TreeMap<Integer, Value>();
 
     /**
      * Constructor.
@@ -28,11 +37,11 @@ class LocalVariablesArea implements Cloneable {
      * @param lvt a {@link LocalVariableTable}.
      */
     LocalVariablesArea(LocalVariableTable lvt) {
-    	this.lvt = lvt;
-		//initializes all the local variables by using args
+        this.lvt = lvt;
+        //initializes all the local variables by using args
         //until exhaustion, then DefaultValue
     }
-   
+
     /**
      * Initializes the local variables by an array 
      * of {@link Value}s.
@@ -49,25 +58,25 @@ class LocalVariablesArea implements Cloneable {
      * incompatible with their respective slots types.
      */
     void setArgs(Value[] args) throws InvalidSlotException {
-		int nargs = (args == null ? 0 : args.length);
-		int j = 0;
-		int slot = 0;
-		while (slot < this.lvt.getSlots()) {
-			final Value val;
+        int nargs = (args == null ? 0 : args.length);
+        int j = 0;
+        int slot = 0;
+        while (slot < this.lvt.getSlots()) {
+            final Value val;
             if (j < nargs) {
-            	val = args[j];
-            	++j;
+                val = args[j];
+                ++j;
             } else {
-            	val = DefaultValue.getInstance();
+                val = DefaultValue.getInstance();
             }
-            this.set(slot, 0, val);
-            
+            set(slot, 0, val);
+
             //next slot
             ++slot;
-            if (!Type.isCat_1(val.getType())) {
-            	++slot;
+            if (!isCat_1(val.getType())) {
+                ++slot;
             }
-		}
+        }
     }
 
     /**
@@ -82,38 +91,43 @@ class LocalVariablesArea implements Cloneable {
      *         {@code val}'s type is incompatible with the slot's type.
      */
     void set(int slot, int currentPC, Value val) throws InvalidSlotException {
-    	final int nslots = (Type.isCat_1(val.getType()) ? 1 : 2);
-    	if (slot < 0 || slot > this.lvt.getSlots() - nslots) {
-    		throw new InvalidSlotException("slot number " + slot + " is out of range");
-    	}
-    	
-    	final Row r = this.lvt.row(slot, currentPC);
-    	if (!slotMayReceive(r, val)) {
-    		throw new InvalidSlotException("slot number " + slot + " has wrong type");
-    	}
-    	
-    	if (nslots == 2) {
-    		this.values.remove(slot + 1);
-    	}
+        final int nslots = (isCat_1(val.getType()) ? 1 : 2);
+        if (slot < 0 || slot > this.lvt.getSlots() - nslots) {
+            throw new InvalidSlotException("slot number " + slot + " is out of range");
+        }
 
-   		//stores val at slot
+        final Row r = this.lvt.row(slot, currentPC);
+        if (!slotMayReceive(r, val)) {
+            throw new InvalidSlotException("slot number " + slot + " has wrong type");
+        }
+
+        if (nslots == 2) {
+            this.values.remove(slot + 1);
+        }
+
+        //stores val at slot
         this.values.put(slot, val);
     }
     
+    private static final String REFERENCE_JAVA_OBJECT       = "" + REFERENCE + JAVA_OBJECT + TYPEEND;
+    private static final String REFERENCE_JAVA_CLONEABLE    = "" + REFERENCE + JAVA_CLONEABLE + TYPEEND;
+    private static final String REFERENCE_JAVA_SERIALIZABLE = "" + REFERENCE + JAVA_SERIALIZABLE + TYPEEND;
+
     private boolean slotMayReceive(Row r, Value val) {
-    	if (r == null) {
-    		return true;
-    	} else {
-	    	char slotType = r.descriptor.charAt(0);
-	    	char valueType = val.getType();
-	    	return (slotType == valueType || 
-	    			(slotType == Type.INT && valueType == Type.BOOLEAN) ||
-	    			(slotType == Type.BOOLEAN && valueType == Type.INT) ||
-	    			((slotType == Type.REFERENCE || slotType == Type.ARRAYOF) && 
-	    				(valueType == Type.REFERENCE || valueType == Type.ARRAYOF || valueType == Type.NULLREF)));
-    	}
+        if (r == null) {
+            return true;
+        } else {
+            char slotType = r.descriptor.charAt(0);
+            char valueType = val.getType();
+            return (slotType == valueType || 
+                   ((slotType == REFERENCE || slotType == ARRAYOF) && (valueType == REFERENCE || valueType == NULLREF)) || //note that references to arrays may have type REFERENCE!!!! 
+                   ((r.descriptor.equals(REFERENCE_JAVA_OBJECT) ||
+                     r.descriptor.equals(REFERENCE_JAVA_CLONEABLE) ||
+                     r.descriptor.equals(REFERENCE_JAVA_SERIALIZABLE)) && valueType == ARRAYOF));
+            //TODO should we allow slots with UNKNOWN type to receive values?
+        }
     }
-    
+
     /**
      * Returns the value of a local variable.
      * 
@@ -123,18 +137,18 @@ class LocalVariablesArea implements Cloneable {
      */
     Value get(int slot) throws InvalidSlotException {
         Value retVal = this.values.get(slot);
-        
+
         //the next case denotes, e.g., we wrote a cat2 value at slot x
         //and we try to read at slot x+1. 
         // TODO investigate the JVM spec and decide what to do.
         if (retVal == null) {
-        	throw new InvalidSlotException("slot " + slot + " was not written");
+            throw new InvalidSlotException("slot " + slot + " was not written");
         }
 
         //the next case should never happen in verified code, however 
         //the JVM specification does not explicitly exclude it. 
         if (DefaultValue.getInstance().equals(retVal))
-        	;
+            ;
         /* TODO Should we throw InvalidSlotException, or rather return 
          * the true default value instead, which can be inferred from the 
          * bytecode??? Note that the latter case would require deep changes 
@@ -144,10 +158,10 @@ class LocalVariablesArea implements Cloneable {
          * is implemented, but it shouldn't permeate with well-behaving 
          * code so this can be added to the todo list without much concern.
          */
-        
+
         return retVal;
     }
-    
+
     /**
      * Returns all the slots of the local variable area.
      * 
@@ -156,9 +170,9 @@ class LocalVariablesArea implements Cloneable {
      *         area.
      */
     Set<Integer> slots() {
-    	return this.values.keySet();
+        return this.values.keySet();
     }
-    
+
     /**
      * Returns the name of a local variable as declared in the 
      * debug information of the class.
@@ -174,7 +188,7 @@ class LocalVariablesArea implements Cloneable {
         final LocalVariableTable.Row r = this.lvt.row(slot, curPC);
         return (r == null ? null : r.name);
     }
-    
+
     /**
      * Builds a (read-only) local variable.
      * 
@@ -185,20 +199,20 @@ class LocalVariablesArea implements Cloneable {
      * is invalid.
      */
     Variable buildLocalVariable(int slot, int curPC) throws InvalidSlotException {
-    	//gets the value
+        //gets the value
         final Value val = get(slot);
-                
+
         //finds static information
         final LocalVariableTable.Row r = this.lvt.row(slot, curPC);
         final Variable retVal;
         if (r == null) {
-        	retVal = new Variable("" + Type.UNKNOWN, "__LOCAL[" + slot + "]", val);
+            retVal = new Variable("" + UNKNOWN, "__LOCAL[" + slot + "]", val);
         } else {
-    		retVal = new Variable(r.descriptor, r.name, val);
+            retVal = new Variable(r.descriptor, r.name, val);
         }
         return retVal;
     }
-    
+
     @Override
     public LocalVariablesArea clone() {
         final LocalVariablesArea o;
@@ -207,12 +221,12 @@ class LocalVariablesArea implements Cloneable {
         } catch (CloneNotSupportedException e) {
             throw new InternalError(e);
         }
-        
+
         final SortedMap<Integer, Value> valuesCopy = new TreeMap<>(this.values);        
         o.values = valuesCopy;
         return o;
     }
-    
+
     /**
      * Returns a {@code String} representation for the local variable area
      */

@@ -110,7 +110,7 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
         try {
             final Value valToPush;
             if (isPrimitive(valMaterializedType) && !isPrimitiveOpStack(valMaterializedType)) {
-                valToPush = ((Primitive) valMaterialized).to(INT);
+                valToPush = ((Primitive) valMaterialized).widen(INT);
             } else {
                 valToPush = valMaterialized;
             }

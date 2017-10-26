@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 import jbse.bc.ClassFile;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.FieldNotFoundException;
-import jbse.mem.Instance;
+import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.val.Reference;
 
@@ -42,18 +42,18 @@ final class Algo_GETFIELD extends Algo_GETX {
     }
 
     @Override
-    protected void get(State state) throws InterruptException {
+    protected Objekt source(State state) throws InterruptException {
         try {
             final Reference myObjectRef = (Reference) this.data.operand(0);
             if (state.isNull(myObjectRef)) {
                 throwNew(state, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
-            final Instance myObject = (Instance) state.getObject(myObjectRef); 
-            this.valToLoad = myObject.getFieldValue(this.fieldSignatureResolved);
+            return state.getObject(myObjectRef); 
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
         }
+        return null; //to keep the compiler happy
     }    
 }

@@ -34,6 +34,7 @@ import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XLOAD_GETX_Expands;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * {@link Algorithm} for the first execution step.
@@ -87,7 +88,7 @@ public final class Algo_INIT {
             state.pushFrame(JAVA_SYSTEM_INITIALIZESYSTEMCLASS, false, 0);
         } catch (NullMethodReceiverException | BadClassFileException | MethodNotFoundException | 
                  MethodCodeNotFoundException | InvalidSlotException | InvalidProgramCounterException | 
-                 ThreadStackEmptyException e) {
+                 InvalidTypeException | ThreadStackEmptyException e) {
             //this should not happen now
             throw new UnexpectedInternalException(e);
         }
@@ -154,7 +155,7 @@ public final class Algo_INIT {
         } catch (BadClassFileException | MethodNotFoundException | MethodCodeNotFoundException e) {
             throw new ClasspathException(e);
         } catch (NullMethodReceiverException | InvalidSlotException | InvalidProgramCounterException |
-                 ThreadStackEmptyException | InterruptException e) {
+                 InvalidTypeException | ThreadStackEmptyException | InterruptException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }

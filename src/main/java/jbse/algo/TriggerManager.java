@@ -32,6 +32,7 @@ import jbse.tree.DecisionAlternative_XYLOAD_GETX_Expands;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Null;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * A {@link TriggerManager} detects whether a reference resolution
@@ -115,10 +116,10 @@ public class TriggerManager {
                     retVal = true;
                     pcOffset = 0; //the offset of the second, third... frames
                 } catch (MethodNotFoundException | MethodCodeNotFoundException | 
-                         InvalidSlotException e) {
+                         InvalidSlotException | InvalidTypeException e) {
                     //does nothing, falls through to skip 
                     //the nonexistent/nonstatic/native method
-                    //TODO should we throw an exception? are we sure that they are all not internal exceptions?
+                    //TODO very ugly! should we throw an exception? are we sure that they are all not internal exceptions?
                 } catch (BadClassFileException | NullMethodReceiverException e) {
                     //this should never happen
                     throw new UnexpectedInternalException(e);

@@ -65,6 +65,7 @@ public class Variable implements Cloneable {
      * Set the value of variable
      */
     public void setValue(Value value) {
+        //TODO check type of value
     	this.value = value;
     }
 

@@ -40,7 +40,7 @@ public final class Algo_JAVA_CLASS_ISINTERFACE extends Algo_INVOKEMETA_Nonbranch
             }
             final ClassHierarchy hier = state.getClassHierarchy();
             final ClassFile cf = hier.getClassFile(thisObject.representedClass());
-            this.isInterface = state.getCalculator().valBoolean(cf.isInterface());
+            this.isInterface = state.getCalculator().valInt(cf.isInterface() ? 1 : 0);
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();

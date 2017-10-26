@@ -252,6 +252,7 @@ public final class State implements Cloneable {
      * operand stack.
      * @throws ThreadStackEmptyException if the thread stack is empty. 
      */
+    //TODO check that only operand stack types (int, long, float, double, reference) can be pushed, or convert smaller values automatically
     public void pushOperand(Value val) throws ThreadStackEmptyException {
         this.stack.currentFrame().push(val);		
     }
@@ -1063,6 +1064,8 @@ public final class State implements Cloneable {
      * @throws InvalidSlotException when there are 
      *         too many {@code arg}s or some of their types are 
      *         incompatible with their respective slots types.
+     * @throws InvalidTypeException when narrowing of an argument (performed to match
+     *         the method's signature) fails.
      * @throws ThreadStackEmptyException when {@code isRoot == false} and the 
      *         state's thread stack is empty.
      * @throws InvalidProgramCounterException when {@code isRoot == false} and
@@ -1070,25 +1073,23 @@ public final class State implements Cloneable {
      *         state's current frame.
      */
     public void pushFrame(Signature methodSignatureImpl, boolean isRoot, int returnPCOffset, Value... args) 
-    throws NullMethodReceiverException, BadClassFileException, 
-    MethodNotFoundException, MethodCodeNotFoundException, 
-    InvalidSlotException, InvalidProgramCounterException, 
-    ThreadStackEmptyException {
+    throws NullMethodReceiverException, BadClassFileException, MethodNotFoundException, 
+    MethodCodeNotFoundException, InvalidSlotException, InvalidProgramCounterException, 
+    InvalidTypeException, ThreadStackEmptyException {
         final ClassFile classMethodImpl = this.classHierarchy.getClassFile(methodSignatureImpl.getClassName());
         final boolean isStatic = classMethodImpl.isMethodStatic(methodSignatureImpl);
         //checks the "this" parameter (invocation receiver) if necessary
-        final Reference thisObjectRef;
-        if (isStatic) {
-            thisObjectRef = null;
-        } else {
+        if (!isStatic) {
             if (args.length == 0 || !(args[0] instanceof Reference)) {
                 throw new UnexpectedInternalException("Args for method invocation do not correspond to method signature."); //TODO better exception
             }
-            thisObjectRef = (Reference) args[0];
-            if (isNull(thisObjectRef)) {
+            if (isNull((Reference) args[0])) {
                 throw new NullMethodReceiverException();
             }
         }
+        
+        //narrows the int args if the method signature requires a narrower type
+        narrowArgs(args, methodSignatureImpl, isStatic);
 
         //creates the frame and sets its args
         final Frame f = new Frame(methodSignatureImpl, classMethodImpl);
@@ -1103,6 +1104,16 @@ public final class State implements Cloneable {
 
         //pushes the frame on the thread stack
         this.stack.push(f);
+    }
+    
+    private void narrowArgs(Value[] args, Signature methodSignatureImpl, boolean isStatic) throws InvalidTypeException {
+        final String[] paramsDescriptor = Type.splitParametersDescriptors(methodSignatureImpl.getDescriptor());
+        for (int i = 0; i < paramsDescriptor.length; ++i) {
+            if (Type.isPrimitive(paramsDescriptor[i]) && ! Type.isPrimitiveOpStack(paramsDescriptor[i].charAt(0))) {
+                final int indexArg = (isStatic ? i : i + 1);
+                args[indexArg] = ((Primitive) args[indexArg]).narrow(paramsDescriptor[i].charAt(0));
+            }
+        }
     }
 
     /**
