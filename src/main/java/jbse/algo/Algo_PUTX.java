@@ -102,6 +102,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     exitFromAlgorithm();
                 }
 
+                //TODO this code is duplicated in Algo_XRETURN: refactor! 
                 //checks/converts the type of the value to be put
                 final String fieldType = this.fieldSignatureResolved.getDescriptor();
                 final char valueType = this.valueToPut.getType();
@@ -124,10 +125,13 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                         exitFromAlgorithm();
                     }
                 } else if (isReference(valueType)) {
-                    final String valueObjectType = state.getObject((Reference) this.valueToPut).getType();
-                    if (!state.getClassHierarchy().isAssignmentCompatible(valueObjectType, className(fieldType))) {
-                        throwVerifyError(state);
-                        exitFromAlgorithm();
+                    final Reference refToPut = (Reference) this.valueToPut;
+                    if (!state.isNull(refToPut)) {
+                        final String valueObjectType = state.getObject(refToPut).getType();
+                        if (!state.getClassHierarchy().isAssignmentCompatible(valueObjectType, className(fieldType))) {
+                            throwVerifyError(state);
+                            exitFromAlgorithm();
+                        }
                     }
                 } else if (valueType == NULLREF) {
                     //nothing to do

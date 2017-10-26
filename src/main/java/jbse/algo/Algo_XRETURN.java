@@ -93,10 +93,13 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                         exitFromAlgorithm();
                     }
                 } else if (isReference(valueType)) {
-                    final String valueObjectType = state.getObject((Reference) this.valueToReturn).getType();
-                    if (!state.getClassHierarchy().isAssignmentCompatible(valueObjectType, className(destinationType))) {
-                        throwVerifyError(state);
-                        exitFromAlgorithm();
+                    final Reference refToReturn = (Reference) this.valueToReturn;
+                    if (!state.isNull(refToReturn)) {
+                        final String valueObjectType = state.getObject(refToReturn).getType();
+                        if (!state.getClassHierarchy().isAssignmentCompatible(valueObjectType, className(destinationType))) {
+                            throwVerifyError(state);
+                            exitFromAlgorithm();
+                        }
                     }
                 } else if (valueType == NULLREF) {
                     //nothing to do
