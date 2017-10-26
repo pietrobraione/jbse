@@ -30,6 +30,6 @@ public final class Algo_JBSE_ANALYSIS_ISSYMBOLIC extends Algo_INVOKEMETA_Nonbran
     @Override
     protected void update(State state) throws ThreadStackEmptyException {
         final Value arg = this.data.operand(0);
-        state.pushOperand(state.getCalculator().valInt((arg.isSymbolic() ? 1 : 0)));
+        state.pushOperand(state.getCalculator().valInt(arg.isSymbolic() ? 1 : 0));
     }
 }

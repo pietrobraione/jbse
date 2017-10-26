@@ -628,7 +628,8 @@ public final class Array extends Objekt {
     /**
      * Returns the length of the array.
      * 
-     * @return a {@link Primitive}.
+     * @return a {@link Primitive} with {@code int} type, the length
+     *         of the array.
      */
     public Primitive getLength() {
         return (Primitive) getFieldValue(this.lengthSignature);

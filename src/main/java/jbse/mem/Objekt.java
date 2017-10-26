@@ -141,14 +141,11 @@ public abstract class Objekt implements Cloneable {
     /**
      * Sets the default hash code of this {@link Objekt}.
      * 
-     * @param defaultHashCode a {@link Primitive} for the default hash code
-     *        of this {@link Objekt}. It must be set when 
-     *        {@code epoch == }{@link Epoch#EPOCH_BEFORE_START}.
-     *        When {@code epoch == }{@link Epoch#EPOCH_AFTER_START}
-     *        the hash code of this {@link Objekt} from the underlying
-     *        JVM is used.
+     * @param defaultHashCode a {@link Primitive} with type {@code int} 
+     *        for the default hash code of this {@link Objekt}.
      */
     public final void setObjektDefaultHashCode(Primitive defaultHashCode) {
+        //TODO check that the type of defaultHashCode is INT.
         this.defaultHashCode = defaultHashCode;
     }
 
@@ -158,6 +155,7 @@ public abstract class Objekt implements Cloneable {
      * @return a {@code Primitive}.
      */
     public final Primitive getObjektDefaultHashCode() {
+        //TODO check that this.defaultHashCode is not null.
         return this.defaultHashCode;
     }
 

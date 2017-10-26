@@ -38,7 +38,7 @@ public final class Algo_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED extends Algo_INV
             throw new SymbolicValueNotAllowedException("The method needs a concrete String as name of the class to check.");
         }
 
-        //pushes it
+        //pushes the assumption on the path condition
         try {
             state.assumeClassNotInitialized(className);
         } catch (BadClassFileException e) {

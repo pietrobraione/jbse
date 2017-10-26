@@ -17,7 +17,6 @@ public final class Algo_JBSE_ANALYSIS_ENDGUIDANCE extends Algo_INVOKEMETA_Nonbra
         if (this.ctx.decisionProcedure instanceof DecisionProcedureGuidance) {
             final DecisionProcedureGuidance dec = (DecisionProcedureGuidance) this.ctx.decisionProcedure;
             dec.endGuidance();
-            //System.out.println("***** END GUIDANCE *****"); //TODO log differently!
         }
     }
 }

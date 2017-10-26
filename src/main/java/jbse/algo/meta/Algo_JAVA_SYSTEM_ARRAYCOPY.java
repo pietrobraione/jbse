@@ -157,7 +157,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                                         });
                     this.ctx.decisionProcedure.completeArraycopy(state.getClassHierarchy(), entries, this.srcPos, this.destPos, this.length);
                 } catch (InvalidOperandException | InvalidTypeException | 
-                InvalidInputException | ClassCastException e) {
+                         InvalidInputException | ClassCastException e) {
                     //this should never happen
                     failExecution(e);
                 } catch (ExitFromAlgorithmException e) {

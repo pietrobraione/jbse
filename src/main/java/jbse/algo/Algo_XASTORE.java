@@ -115,7 +115,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                     }
                 }
             } catch (InvalidOperandException | InvalidTypeException | 
-            ClassCastException | BadClassFileException e) {
+                     ClassCastException | BadClassFileException e) {
                 //index is bad or the reference does not point to an array
                 //or the class/superclasses of the array component, or of 
                 //the value to store, is not in the classpath or are incompatible

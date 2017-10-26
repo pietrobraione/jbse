@@ -1,6 +1,7 @@
 package jbse.algo;
 
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.common.Type.binaryClassName;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -42,7 +43,7 @@ public class NativeInvokerReflect implements NativeInvoker {
             }
 
             //gets the method and invokes it
-            final Class<?> c = Class.forName(methodSignatureResolved.getClassName().replace('/', '.'));
+            final Class<?> c = Class.forName(binaryClassName(methodSignatureResolved.getClassName()));
             final Method m = c.getMethod(methodSignatureResolved.getName(), argsClass);
             final Object retValRefl;
             if (Modifier.isStatic(m.getModifiers())) {
