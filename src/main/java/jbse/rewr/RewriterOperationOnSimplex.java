@@ -227,13 +227,7 @@ public class RewriterOperationOnSimplex extends Rewriter {
             return;
         }
 
-        //3- widening applied to Any
-        if (arg instanceof Any) {
-            setResult(arg);
-            return;
-        }
-
-        //4- none of the above cases
+        //3- none of the above cases
         super.rewriteWideningConversion(x);
     }
 
@@ -255,13 +249,7 @@ public class RewriterOperationOnSimplex extends Rewriter {
             return;
         }
 
-        //3- narrowing applied to Any
-        if (arg instanceof Any) {
-            setResult(arg);
-            return;
-        }
-
-        //4- none of the above cases
+        //3- none of the above cases
         super.rewriteNarrowingConversion(x);
     }
 

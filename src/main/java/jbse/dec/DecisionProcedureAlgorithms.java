@@ -46,6 +46,7 @@ import jbse.val.Reference;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
 import jbse.val.Value;
+import jbse.val.WideningConversion;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
@@ -257,6 +258,11 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		final boolean conditionBoolean = (Boolean) condition.getActualValue();
 		result.add(DecisionAlternative_IFX.toConcrete(conditionBoolean));
 	}
+	
+	private boolean isAny(Primitive p) {
+	    return (p instanceof Any || 
+	            (p instanceof WideningConversion && ((WideningConversion) p).getArg() instanceof Any));
+	}
 
 	protected Outcome decide_IFX_Nonconcrete(ClassHierarchy hier, Primitive condition, SortedSet<DecisionAlternative_IFX> result) 
 	throws DecisionException {	
@@ -264,32 +270,31 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		final DecisionAlternative_IFX T = DecisionAlternative_IFX.toNonconcrete(true);
 		final DecisionAlternative_IFX F = DecisionAlternative_IFX.toNonconcrete(false);
 
-		if (condition instanceof Any) {
-			result.add(T);
-			result.add(F);
-			shouldRefine = false; //"don't care" does not require refinement
-		} else {
-			//TODO what if condition is neither Simplex, nor Any, nor Expression (i.e., FunctionApplication, Widening/NarrowingConversion, PrimitiveSymbolic, Term)?
-			try {
-				final Expression exp = (Expression) condition; 
-				//this implementation saves one sat check in 50% cases
-				//(it exploits the fact that if exp is unsat 
-				//exp.not() is valid)
-				if (isSat(hier, exp)) {
-					result.add(T);
-					final Expression expNot = (Expression) condition.not(); 
-					if (isSat(hier, expNot)) {
-						result.add(F);
-					}
-				} else {
-					//exp is unsat, thus its negation is valid
-					result.add(F);
-				}
-				shouldRefine = (result.size() > 1);
-			} catch (InvalidTypeException | InvalidInputException e) {
-				//this should never happen as arguments have been checked by the caller
-				throw new UnexpectedInternalException(e);
-			}
+		//TODO what if condition is neither Simplex, nor Any, nor Expression (i.e., FunctionApplication, Widening/NarrowingConversion, PrimitiveSymbolic, Term)?
+		try {
+		    final Expression exp = (Expression) condition; 
+		    //this implementation saves one sat check in 50% cases
+		    //(it exploits the fact that if exp is unsat 
+		    //exp.not() is valid)
+		    if (isAny(exp.getFirstOperand()) || isAny(exp.getSecondOperand())) {
+		        result.add(T);
+		        result.add(F);
+		        shouldRefine = false; //"don't care" does not require refinement
+		    } else if (isSat(hier, exp)) {
+		        result.add(T);
+		        final Expression expNot = (Expression) condition.not(); 
+		        if (isSat(hier, expNot)) {
+		            result.add(F);
+		        }
+		        shouldRefine = (result.size() > 1);
+		    } else {
+		        //exp is unsat, thus its negation is valid
+		        result.add(F);
+		        shouldRefine = false;
+		    }
+		} catch (InvalidTypeException | InvalidInputException e) {
+		    //this should never happen as arguments have been checked by the caller
+		    throw new UnexpectedInternalException(e);
 		}
 		return Outcome.val(shouldRefine, true);
 	}
@@ -360,7 +365,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	    final DecisionAlternative_XCMPY EQ = DecisionAlternative_XCMPY.toNonconcrete(Values.EQ);
 	    final DecisionAlternative_XCMPY LT = DecisionAlternative_XCMPY.toNonconcrete(Values.LT);
 
-	    if ((val1 instanceof Any) || (val2 instanceof Any)) {
+	    if (isAny(val1) || isAny(val2)) {
 	        //1 - condition involving "don't care" values
 	        result.add(GT);
 	        result.add(EQ);
@@ -450,7 +455,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	protected Outcome decide_XSWITCH_Nonconcrete(ClassHierarchy hier, Primitive selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result) 
 	throws DecisionException {
 		try {
-	        final boolean isAny = (selector instanceof Any);
+	        final boolean isAny = isAny(selector);
 	        int branchCounter = 1;
 	        boolean noEntryIsSat = true; //allows to skip the last sat check
 			for (int i : tab) {
