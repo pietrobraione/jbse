@@ -27,6 +27,7 @@ import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * Algorithm for completing the semantics of the 
@@ -35,7 +36,7 @@ import jbse.tree.DecisionAlternative_NONE;
  *  
  * @author Pietro Braione
  */
-final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
+final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract<BytecodeData_1ZME> {
     public Algo_INVOKEX_Completion(boolean isInterface, boolean isSpecial, boolean isStatic) {
         super(isInterface, isSpecial, isStatic);
     }
@@ -54,6 +55,11 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
     }
 
     private int pcOffsetReturn; //set by cooker
+
+    @Override
+    protected Supplier<BytecodeData_1ZME> bytecodeData() {
+        return () -> BytecodeData_1ZME.withInterfaceMethod(this.isInterface).get();
+    }
 
     @Override
     protected BytecodeCooker bytecodeCooker() {
@@ -161,7 +167,7 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
             //otherwise, pushes a new frame for the method
             try {
                 state.pushFrame(this.methodSignatureImpl, false, this.pcOffsetReturn, this.data.operands());
-            } catch (InvalidProgramCounterException | InvalidSlotException e) {
+            } catch (InvalidProgramCounterException | InvalidSlotException | InvalidTypeException e) {
                 //TODO is it ok?
                 throwVerifyError(state);
             } catch (NullMethodReceiverException | BadClassFileException | 

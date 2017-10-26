@@ -322,6 +322,17 @@ public abstract class BytecodeData {
     }
 
     /**
+     * Sets a method signature. Used only when
+     * we want to dispatch manually a method invocation 
+     * so we want to force the content of the data object.
+     * 
+     * @param signature a {@link Signature}.
+     */
+    protected final void setMethodSignature(Signature signature) {
+        this.signature = signature;
+    }
+
+    /**
      * Stores a primitive type.
      * 
      * @param state a {@link State}.

@@ -35,8 +35,7 @@ import jbse.val.Reference;
  * @author Pietro Braione
  *
  */
-abstract class Algo_INVOKEX_Abstract extends Algorithm<
-BytecodeData_1ZME,
+abstract class Algo_INVOKEX_Abstract<D extends BytecodeData> extends Algorithm<D,
 DecisionAlternative_NONE,
 StrategyDecide<DecisionAlternative_NONE>, 
 StrategyRefine<DecisionAlternative_NONE>, 
@@ -63,11 +62,6 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             final String[] paramsDescriptors = splitParametersDescriptors(this.data.signature().getDescriptor());
             return (this.isStatic ? paramsDescriptors.length : paramsDescriptors.length + 1);
         };
-    }
-
-    @Override
-    protected final Supplier<BytecodeData_1ZME> bytecodeData() {
-        return () -> BytecodeData_1ZME.withInterfaceMethod(this.isInterface).get();
     }
 
     protected final void resolveMethod(State state) 

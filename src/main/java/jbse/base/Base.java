@@ -1,8 +1,5 @@
 package jbse.base;
 
-import static jbse.meta.Analysis.isSymbolic;
-import static jbse.meta.Analysis.symbolName;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.security.AccessControlContext;
@@ -68,84 +65,6 @@ public final class Base {
     private static native void clinit();
     
     /**
-     * Overriding implementation of {@link java.lang.StringBuilder#append(boolean)}.
-     * @see java.lang.StringBuilder#append(boolean)
-     */
-    private static StringBuilder base_JAVA_STRINGBUILDER_APPEND_BOOLEAN(StringBuilder _this, boolean z) {
-        if (isSymbolic(z)) {
-            final String symbolName = symbolName(z);
-            return _this.append(symbolName);
-        } else {
-            return _this.append(z);
-        }
-    }
-
-    /**
-     * Overriding implementation of {@link java.lang.StringBuilder#append(char)}.
-     * @see java.lang.StringBuilder#append(char)
-     */
-    private static StringBuilder base_JAVA_STRINGBUILDER_APPEND_CHAR(StringBuilder _this, char c) {
-        if (isSymbolic(c)) {
-            final String symbolName = symbolName(c);
-            return _this.append(symbolName);
-        } else {
-            return _this.append(c);
-        }
-    }
-
-    /**
-     * Overriding implementation of {@link java.lang.StringBuilder#append(double)}.
-     * @see java.lang.StringBuilder#append(double)
-     */
-    private static StringBuilder base_JAVA_STRINGBUILDER_APPEND_DOUBLE(StringBuilder _this, double d) {
-        if (isSymbolic(d)) {
-            final String symbolName = symbolName(d);
-            return _this.append(symbolName);
-        } else {
-            return _this.append(d);
-        }
-    }
-
-    /**
-     * Overriding implementation of {@link java.lang.StringBuilder#append(float)}.
-     * @see java.lang.StringBuilder#append(float)
-     */
-    private static StringBuilder base_JAVA_STRINGBUILDER_APPEND_FLOAT(StringBuilder _this, float f) {
-        if (isSymbolic(f)) {
-            final String symbolName = symbolName(f);
-            return _this.append(symbolName);
-        } else {
-            return _this.append(f);
-        }
-    }
-
-    /**
-     * Overriding implementation of {@link java.lang.StringBuilder#append(int)}.
-     * @see java.lang.StringBuilder#append(int)
-     */
-    private static StringBuilder base_JAVA_STRINGBUILDER_APPEND_INT(StringBuilder _this, int i) {
-        if (isSymbolic(i)) {
-            final String symbolName = symbolName(i);
-            return _this.append(symbolName);
-        } else {
-            return _this.append(i);
-        }
-    }
-
-    /**
-     * Overriding implementation of {@link java.lang.StringBuilder#append(long)}.
-     * @see java.lang.StringBuilder#append(long)
-     */
-    private static StringBuilder base_JAVA_STRINGBUILDER_APPEND_LONG(StringBuilder _this, long l) {
-        if (isSymbolic(l)) {
-            final String symbolName = symbolName(l);
-            return _this.append(symbolName);
-        } else {
-            return _this.append(l);
-        }
-    }
-
-    /**
      * Overriding implementation of {@link java.security.AccessController#doPrivileged(PrivilegedExceptionAction)}.
      * @see java.security.AccessController#doPrivileged(PrivilegedExceptionAction)
      */
@@ -180,6 +99,25 @@ public final class Base {
         //privileged access (or so it seems).
         return null;
     }
+    
+    /**
+     * Overriding implementation of {@link java.util.concurrent.atomic.AtomicLong#VMSupportsCS8()}.
+     * @see java.util.concurrent.atomic.AtomicLong#VMSupportsCS8()
+     */
+    private static boolean base_JAVA_ATOMICLONG_VMSUPPORTSCS8() {
+        //JBSE trivially supports atomic compare-and-swap for
+        //all data types
+        return true;
+    }
+
+    /**
+     * Overriding implementation of {@link java.lang.Class#desiredAssertionStatus0(Class)}.
+     * @see java.lang.Class#desiredAssertionStatus0(Class)
+     */
+    private static final boolean base_JAVA_CLASS_DESIREDASSERTIONSTATUS0(Class<?> clazz) {
+        return false; //no assertions, sorry
+        //TODO should we give a way to control the assertion status, possibly handling Java assertions as jbse assertions?
+    }
 
     /**
      * Puts a key-value pair in a {@link Properties} object, 
@@ -194,7 +132,7 @@ public final class Base {
             p.put(key, value);
         }
     }
-
+    
     /**
      * Overriding implementation of {@link java.lang.System#initProperties(Properties)}.
      * @see java.lang.System#initProperties(Properties)

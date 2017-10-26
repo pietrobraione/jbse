@@ -1,6 +1,5 @@
 package jbse.algo;
 
-import static jbse.algo.Overrides.ALGO_JAVA_CLASS_DESIREDASSERTIONSTATUS0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETCOMPONENTTYPE;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_FORNAME0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0;
@@ -18,6 +17,7 @@ import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_HASHCODE;
 import static jbse.algo.Overrides.ALGO_JAVA_REFLECT_ARRAY_NEWARRAY;
 import static jbse.algo.Overrides.ALGO_JAVA_STRING_HASHCODE;
 import static jbse.algo.Overrides.ALGO_JAVA_STRING_INTERN;
+import static jbse.algo.Overrides.ALGO_JAVA_STRINGBUILDER_APPEND;
 import static jbse.algo.Overrides.ALGO_JAVA_SYSTEM_ARRAYCOPY;
 import static jbse.algo.Overrides.ALGO_JAVA_SYSTEM_IDENTITYHASHCODE;
 import static jbse.algo.Overrides.ALGO_JAVA_THREAD_CURRENTTHREAD;
@@ -36,19 +36,20 @@ import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_SYMBOLNAME;
 import static jbse.algo.Overrides.ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
 import static jbse.algo.Overrides.ALGO_SUN_REFLECTION_GETCALLERCLASS;
 import static jbse.algo.Overrides.ALGO_SUN_REFLECTION_GETCLASSACCESSFLAGS;
+import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_ALLOCATEMEMORY;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_COMPAREANDSWAPINT;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT;
+import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_FREEMEMORY;
+import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_GETBYTE;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_GETINTVOLATILE;
+import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_GETLONG;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET;
+import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_PUTLONG;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT;
-import static jbse.algo.Overrides.BASE_JAVA_STRINGBUILDER_APPEND_BOOLEAN;
-import static jbse.algo.Overrides.BASE_JAVA_STRINGBUILDER_APPEND_CHAR;
-import static jbse.algo.Overrides.BASE_JAVA_STRINGBUILDER_APPEND_DOUBLE;
-import static jbse.algo.Overrides.BASE_JAVA_STRINGBUILDER_APPEND_FLOAT;
-import static jbse.algo.Overrides.BASE_JAVA_STRINGBUILDER_APPEND_INT;
-import static jbse.algo.Overrides.BASE_JAVA_STRINGBUILDER_APPEND_LONG;
+import static jbse.algo.Overrides.BASE_JAVA_ATOMICLONG_VMSUPPORTSCS8;
+import static jbse.algo.Overrides.BASE_JAVA_CLASS_DESIREDASSERTIONSTATUS0;
 import static jbse.algo.Overrides.BASE_JAVA_SYSTEM_INITPROPERTIES;
 import static jbse.algo.Overrides.BASE_JAVA_THREAD_ISALIVE;
 import static jbse.algo.Overrides.BASE_JBSE_ANALYSIS_ISRUNBYJBSE;
@@ -70,19 +71,29 @@ import static jbse.bc.Signatures.JAVA_ACCESSIBLEOBJECT;
 import static jbse.bc.Signatures.JAVA_ARRAYLIST;
 import static jbse.bc.Signatures.JAVA_ARRAYS;
 import static jbse.bc.Signatures.JAVA_ATOMICINTEGER;
+import static jbse.bc.Signatures.JAVA_ATOMICLONG;
+import static jbse.bc.Signatures.JAVA_ATOMICLONG_VMSUPPORTSCS8;
 import static jbse.bc.Signatures.JAVA_ATOMICREFERENCEFIELDUPDATER;
 import static jbse.bc.Signatures.JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL;
 import static jbse.bc.Signatures.JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL_1;
 import static jbse.bc.Signatures.JAVA_BASICPERMISSION;
+import static jbse.bc.Signatures.JAVA_BITS;
+import static jbse.bc.Signatures.JAVA_BITS_1;
 import static jbse.bc.Signatures.JAVA_BOOLEAN;
+import static jbse.bc.Signatures.JAVA_BUFFER;
 import static jbse.bc.Signatures.JAVA_BUFFEREDINPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_BUFFEREDOUTPUTSTREAM;
+import static jbse.bc.Signatures.JAVA_BUFFEREDWRITER;
 import static jbse.bc.Signatures.JAVA_BYTE;
+import static jbse.bc.Signatures.JAVA_BYTEBUFFER;
+import static jbse.bc.Signatures.JAVA_BYTEORDER;
 import static jbse.bc.Signatures.JAVA_CHARACTER;
 import static jbse.bc.Signatures.JAVA_CHARSET;
 import static jbse.bc.Signatures.JAVA_CHARSET_EXTENDEDPROVIDERHOLDER;
+import static jbse.bc.Signatures.JAVA_CHARSETENCODER;
 import static jbse.bc.Signatures.JAVA_CHARSETPROVIDER;
 import static jbse.bc.Signatures.JAVA_CLASS;
+import static jbse.bc.Signatures.JAVA_CLASS_1;
 import static jbse.bc.Signatures.JAVA_CLASS_3;
 import static jbse.bc.Signatures.JAVA_CLASS_ATOMIC;
 import static jbse.bc.Signatures.JAVA_CLASS_DESIREDASSERTIONSTATUS0;
@@ -98,6 +109,7 @@ import static jbse.bc.Signatures.JAVA_CLASS_ISINSTANCE;
 import static jbse.bc.Signatures.JAVA_CLASS_ISINTERFACE;
 import static jbse.bc.Signatures.JAVA_CLASS_ISPRIMITIVE;
 import static jbse.bc.Signatures.JAVA_CLASS_REFLECTIONDATA;
+import static jbse.bc.Signatures.JAVA_CODINGERRORACTION;
 import static jbse.bc.Signatures.JAVA_COLLECTIONS;
 import static jbse.bc.Signatures.JAVA_COLLECTIONS_EMPTYLIST;
 import static jbse.bc.Signatures.JAVA_COLLECTIONS_EMPTYMAP;
@@ -108,15 +120,21 @@ import static jbse.bc.Signatures.JAVA_COLLECTIONS_UNMODIFIABLECOLLECTION;
 import static jbse.bc.Signatures.JAVA_COLLECTIONS_UNMODIFIABLELIST;
 import static jbse.bc.Signatures.JAVA_COLLECTIONS_UNMODIFIABLERANDOMACCESSLIST;
 import static jbse.bc.Signatures.JAVA_CONSTRUCTOR;
+import static jbse.bc.Signatures.JAVA_DEFAULTFILESYSTEM;
 import static jbse.bc.Signatures.JAVA_DICTIONARY;
 import static jbse.bc.Signatures.JAVA_DOUBLE;
 import static jbse.bc.Signatures.JAVA_ENUM;
 import static jbse.bc.Signatures.JAVA_EXCEPTION;
+import static jbse.bc.Signatures.JAVA_EXECUTABLE;
+import static jbse.bc.Signatures.JAVA_EXPIRINGCACHE;
+import static jbse.bc.Signatures.JAVA_EXPIRINGCACHE_1;
 import static jbse.bc.Signatures.JAVA_FIELD;
+import static jbse.bc.Signatures.JAVA_FILE;
 import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR;
 import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR_1;
 import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_FILEOUTPUTSTREAM;
+import static jbse.bc.Signatures.JAVA_FILESYSTEM;
 import static jbse.bc.Signatures.JAVA_FILTERINPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_FILTEROUTPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_FLOAT;
@@ -127,11 +145,13 @@ import static jbse.bc.Signatures.JAVA_HASHTABLE;
 import static jbse.bc.Signatures.JAVA_HASHTABLE_ENTRY;
 import static jbse.bc.Signatures.JAVA_HASHTABLE_ENTRYSET;
 import static jbse.bc.Signatures.JAVA_HASHTABLE_ENUMERATOR;
+import static jbse.bc.Signatures.JAVA_HEAPBYTEBUFFER;
 import static jbse.bc.Signatures.JAVA_IDENTITYHASHMAP;
 import static jbse.bc.Signatures.JAVA_INPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_INTEGER;
 import static jbse.bc.Signatures.JAVA_INTEGER_INTEGERCACHE;
 import static jbse.bc.Signatures.JAVA_INTERRUPTEDEXCEPTION;
+import static jbse.bc.Signatures.JAVA_LINKEDHASHMAP;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
 import static jbse.bc.Signatures.JAVA_LONG;
@@ -159,6 +179,7 @@ import static jbse.bc.Signatures.JAVA_REFERENCEQUEUE_NULL;
 import static jbse.bc.Signatures.JAVA_REFLECT_ARRAY_NEWARRAY;
 import static jbse.bc.Signatures.JAVA_REFLECTACCESS;
 import static jbse.bc.Signatures.JAVA_REFLECTPERMISSION;
+import static jbse.bc.Signatures.JAVA_RUNTIME;
 import static jbse.bc.Signatures.JAVA_RUNTIMEEXCEPTION;
 import static jbse.bc.Signatures.JAVA_RUNTIMEPERMISSION;
 import static jbse.bc.Signatures.JAVA_SHORT;
@@ -188,6 +209,7 @@ import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEDEPTH;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEELEMENT;
 import static jbse.bc.Signatures.JAVA_THROWABLE_SENTINELHOLDER;
 import static jbse.bc.Signatures.JAVA_TREESET;
+import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM;
 import static jbse.bc.Signatures.JAVA_VOID;
 import static jbse.bc.Signatures.JAVA_WRITER;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ANY;
@@ -216,12 +238,17 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_LONG;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_SHORT;
 import static jbse.bc.Signatures.JBSE_BASE;
 import static jbse.bc.Signatures.SUN_CLEANER;
+import static jbse.bc.Signatures.SUN_CONSTRUCTORACCESSORIMPL;
+import static jbse.bc.Signatures.SUN_DELEGATINGCONSTRUCTORACCESSORIMPL;
 import static jbse.bc.Signatures.SUN_FASTCHARSETPROVIDER;
 import static jbse.bc.Signatures.SUN_GETPROPERTYACTION;
+import static jbse.bc.Signatures.SUN_MAGICACCESSORIMPL;
+import static jbse.bc.Signatures.SUN_NATIVECONSTRUCTORACCESSORIMPL;
 import static jbse.bc.Signatures.SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
 import static jbse.bc.Signatures.SUN_PREHASHEDMAP;
 import static jbse.bc.Signatures.SUN_REFLECTION;
 import static jbse.bc.Signatures.SUN_REFLECTIONFACTORY;
+import static jbse.bc.Signatures.SUN_REFLECTIONFACTORY_1;
 import static jbse.bc.Signatures.SUN_REFLECTIONFACTORY_GETREFLECTIONFACTORYACTION;
 import static jbse.bc.Signatures.SUN_REFLECTION_GETCALLERCLASS;
 import static jbse.bc.Signatures.SUN_REFLECTION_GETCLASSACCESSFLAGS;
@@ -235,13 +262,19 @@ import static jbse.bc.Signatures.SUN_STREAMENCODER;
 import static jbse.bc.Signatures.SUN_UNICODE;
 import static jbse.bc.Signatures.SUN_UNSAFE;
 import static jbse.bc.Signatures.SUN_UNSAFE_ADDRESSSIZE;
+import static jbse.bc.Signatures.SUN_UNSAFE_ALLOCATEMEMORY;
 import static jbse.bc.Signatures.SUN_UNSAFE_ARRAYBASEOFFSET;
 import static jbse.bc.Signatures.SUN_UNSAFE_ARRAYINDEXSCALE;
 import static jbse.bc.Signatures.SUN_UNSAFE_COMPAREANDSWAPINT;
 import static jbse.bc.Signatures.SUN_UNSAFE_COMPAREANDSWAPOBJECT;
+import static jbse.bc.Signatures.SUN_UNSAFE_FREEMEMORY;
+import static jbse.bc.Signatures.SUN_UNSAFE_GETBYTE;
 import static jbse.bc.Signatures.SUN_UNSAFE_GETINTVOLATILE;
+import static jbse.bc.Signatures.SUN_UNSAFE_GETLONG;
 import static jbse.bc.Signatures.SUN_UNSAFE_OBJECTFIELDOFFSET;
+import static jbse.bc.Signatures.SUN_UNSAFE_PUTLONG;
 import static jbse.bc.Signatures.SUN_UTF_8;
+import static jbse.bc.Signatures.SUN_UTF_8_ENCODER;
 import static jbse.bc.Signatures.SUN_VERSION;
 import static jbse.bc.Signatures.SUN_VM;
 
@@ -416,7 +449,8 @@ public final class ExecutionContext {
             addBaseOverridden(JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION,       BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION);
             addBaseOverridden(JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION,     BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION);
             addBaseOverridden(JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT, BASE_JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT);
-            addMetaOverridden(JAVA_CLASS_DESIREDASSERTIONSTATUS0,                 ALGO_JAVA_CLASS_DESIREDASSERTIONSTATUS0);
+            addBaseOverridden(JAVA_ATOMICLONG_VMSUPPORTSCS8,                      BASE_JAVA_ATOMICLONG_VMSUPPORTSCS8);
+            addBaseOverridden(JAVA_CLASS_DESIREDASSERTIONSTATUS0,                 BASE_JAVA_CLASS_DESIREDASSERTIONSTATUS0);
             addMetaOverridden(JAVA_CLASS_FORNAME0,                                ALGO_JAVA_CLASS_FORNAME0);
             addMetaOverridden(JAVA_CLASS_GETCOMPONENTTYPE,                        ALGO_JAVA_CLASS_GETCOMPONENTTYPE);
             addMetaOverridden(JAVA_CLASS_GETDECLAREDCONSTRUCTORS0,                ALGO_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0);
@@ -434,12 +468,12 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_REFLECT_ARRAY_NEWARRAY,                        ALGO_JAVA_REFLECT_ARRAY_NEWARRAY);
             addMetaOverridden(JAVA_STRING_HASHCODE,                               ALGO_JAVA_STRING_HASHCODE);
             addMetaOverridden(JAVA_STRING_INTERN,                                 ALGO_JAVA_STRING_INTERN);
-            addBaseOverridden(JAVA_STRINGBUILDER_APPEND_BOOLEAN,                  BASE_JAVA_STRINGBUILDER_APPEND_BOOLEAN);
-            addBaseOverridden(JAVA_STRINGBUILDER_APPEND_CHAR,                     BASE_JAVA_STRINGBUILDER_APPEND_CHAR);
-            addBaseOverridden(JAVA_STRINGBUILDER_APPEND_DOUBLE,                   BASE_JAVA_STRINGBUILDER_APPEND_DOUBLE);
-            addBaseOverridden(JAVA_STRINGBUILDER_APPEND_FLOAT,                    BASE_JAVA_STRINGBUILDER_APPEND_FLOAT);
-            addBaseOverridden(JAVA_STRINGBUILDER_APPEND_INT,                      BASE_JAVA_STRINGBUILDER_APPEND_INT);
-            addBaseOverridden(JAVA_STRINGBUILDER_APPEND_LONG,                     BASE_JAVA_STRINGBUILDER_APPEND_LONG);
+            addMetaOverridden(JAVA_STRINGBUILDER_APPEND_BOOLEAN,                  ALGO_JAVA_STRINGBUILDER_APPEND);
+            addMetaOverridden(JAVA_STRINGBUILDER_APPEND_CHAR,                     ALGO_JAVA_STRINGBUILDER_APPEND);
+            addMetaOverridden(JAVA_STRINGBUILDER_APPEND_DOUBLE,                   ALGO_JAVA_STRINGBUILDER_APPEND);
+            addMetaOverridden(JAVA_STRINGBUILDER_APPEND_FLOAT,                    ALGO_JAVA_STRINGBUILDER_APPEND);
+            addMetaOverridden(JAVA_STRINGBUILDER_APPEND_INT,                      ALGO_JAVA_STRINGBUILDER_APPEND);
+            addMetaOverridden(JAVA_STRINGBUILDER_APPEND_LONG,                     ALGO_JAVA_STRINGBUILDER_APPEND);
             addMetaOverridden(JAVA_SYSTEM_ARRAYCOPY,                              ALGO_JAVA_SYSTEM_ARRAYCOPY);
             addBaseOverridden(JAVA_SYSTEM_INITPROPERTIES,                         BASE_JAVA_SYSTEM_INITPROPERTIES);
             addMetaOverridden(JAVA_SYSTEM_IDENTITYHASHCODE,                       ALGO_JAVA_SYSTEM_IDENTITYHASHCODE);
@@ -452,12 +486,17 @@ public final class ExecutionContext {
             addMetaOverridden(SUN_REFLECTION_GETCALLERCLASS,                      ALGO_SUN_REFLECTION_GETCALLERCLASS);
             addMetaOverridden(SUN_REFLECTION_GETCLASSACCESSFLAGS,                 ALGO_SUN_REFLECTION_GETCLASSACCESSFLAGS);
             addBaseOverridden(SUN_UNSAFE_ADDRESSSIZE,                             BASE_SUN_UNSAFE_ADDRESSSIZE);
+            addMetaOverridden(SUN_UNSAFE_ALLOCATEMEMORY,                          ALGO_SUN_UNSAFE_ALLOCATEMEMORY);
             addBaseOverridden(SUN_UNSAFE_ARRAYBASEOFFSET,                         BASE_SUN_UNSAFE_ARRAYBASEOFFSET);
             addBaseOverridden(SUN_UNSAFE_ARRAYINDEXSCALE,                         BASE_SUN_UNSAFE_ARRAYINDEXSCALE);
             addMetaOverridden(SUN_UNSAFE_COMPAREANDSWAPINT,                       ALGO_SUN_UNSAFE_COMPAREANDSWAPINT);
             addMetaOverridden(SUN_UNSAFE_COMPAREANDSWAPOBJECT,                    ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT);
+            addMetaOverridden(SUN_UNSAFE_FREEMEMORY,                              ALGO_SUN_UNSAFE_FREEMEMORY);
+            addMetaOverridden(SUN_UNSAFE_GETBYTE,                                 ALGO_SUN_UNSAFE_GETBYTE);
             addMetaOverridden(SUN_UNSAFE_GETINTVOLATILE,                          ALGO_SUN_UNSAFE_GETINTVOLATILE);
+            addMetaOverridden(SUN_UNSAFE_GETLONG,                                 ALGO_SUN_UNSAFE_GETLONG);
             addMetaOverridden(SUN_UNSAFE_OBJECTFIELDOFFSET,                       ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET);
+            addMetaOverridden(SUN_UNSAFE_PUTLONG,                                 ALGO_SUN_UNSAFE_PUTLONG);
 
             //jbse.meta.Analysis methods
             addMetaOverridden(JBSE_ANALYSIS_ANY,                       ALGO_JBSE_ANALYSIS_ANY);
@@ -617,22 +656,32 @@ public final class ExecutionContext {
         className.equals(JAVA_ARRAYLIST) || 
         className.equals(JAVA_ARRAYS) || 
         className.equals(JAVA_ATOMICINTEGER) || 
+        className.equals(JAVA_ATOMICLONG) || 
         className.equals(JAVA_ATOMICREFERENCEFIELDUPDATER) || 
         className.equals(JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL) || 
         className.equals(JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL_1) || 
         className.equals(JAVA_BASICPERMISSION) ||
+        className.equals(JAVA_BITS) || //not for maxMemory and memoryLimitSet, all the others seem to be ok (final or lazily intialized)
+        className.equals(JAVA_BITS_1) ||
         className.equals(JAVA_BOOLEAN) ||
+        className.equals(JAVA_BUFFER) ||
         className.equals(JAVA_BUFFEREDINPUTSTREAM) ||
         className.equals(JAVA_BUFFEREDOUTPUTSTREAM) ||
+        className.equals(JAVA_BUFFEREDWRITER) ||
         className.equals(JAVA_BYTE) ||
+        className.equals(JAVA_BYTEBUFFER) ||
+        className.equals(JAVA_BYTEORDER) ||
         className.equals(JAVA_CHARACTER) ||
         className.equals(JAVA_CHARSET) || //not really, but most static values seem to be just caches, so we treat it as it were
         className.equals(JAVA_CHARSET_EXTENDEDPROVIDERHOLDER) ||
+        className.equals(JAVA_CHARSETENCODER) || //one field is not final, but it is never reassigned
         className.equals(JAVA_CHARSETPROVIDER) ||
         className.equals(JAVA_CLASS) || 
+        className.equals(JAVA_CLASS_1) || 
         className.equals(JAVA_CLASS_3) || 
         className.equals(JAVA_CLASS_ATOMIC) || 
         className.equals(JAVA_CLASS_REFLECTIONDATA) || 
+        className.equals(JAVA_CODINGERRORACTION) ||
         className.equals(JAVA_COLLECTIONS) ||
         className.equals(JAVA_COLLECTIONS_EMPTYLIST) ||
         className.equals(JAVA_COLLECTIONS_EMPTYMAP) ||
@@ -643,14 +692,20 @@ public final class ExecutionContext {
         className.equals(JAVA_COLLECTIONS_UNMODIFIABLELIST) ||
         className.equals(JAVA_COLLECTIONS_UNMODIFIABLERANDOMACCESSLIST) ||
         className.equals(JAVA_CONSTRUCTOR) ||
+        className.equals(JAVA_DEFAULTFILESYSTEM) ||
         className.equals(JAVA_DICTIONARY) ||
         className.equals(JAVA_DOUBLE) ||
         className.equals(JAVA_EXCEPTION) ||
+        className.equals(JAVA_EXECUTABLE) ||
+        className.equals(JAVA_EXPIRINGCACHE) ||
+        className.equals(JAVA_EXPIRINGCACHE_1) ||
         className.equals(JAVA_FIELD) ||
+        className.equals(JAVA_FILE) || 
         className.equals(JAVA_FILEDESCRIPTOR) || 
         className.equals(JAVA_FILEDESCRIPTOR_1) || 
         className.equals(JAVA_FILEINPUTSTREAM) || 
         className.equals(JAVA_FILEOUTPUTSTREAM) || 
+        className.equals(JAVA_FILESYSTEM) || // the useCanonCaches and useCanonPrefixCache are not final but are never overwritten after initialization (note that they are not private)
         className.equals(JAVA_FILTERINPUTSTREAM) || 
         className.equals(JAVA_FILTEROUTPUTSTREAM) || 
         className.equals(JAVA_FLOAT) || 
@@ -661,11 +716,13 @@ public final class ExecutionContext {
         className.equals(JAVA_HASHTABLE_ENTRY) || 
         className.equals(JAVA_HASHTABLE_ENTRYSET) ||
         className.equals(JAVA_HASHTABLE_ENUMERATOR) || 
+        className.equals(JAVA_HEAPBYTEBUFFER) || 
         className.equals(JAVA_IDENTITYHASHMAP) || 
         className.equals(JAVA_INPUTSTREAM) ||
         className.equals(JAVA_INTEGER) || 
         className.equals(JAVA_INTEGER_INTEGERCACHE) || 
         className.equals(JAVA_INTERRUPTEDEXCEPTION) || 
+        className.equals(JAVA_LINKEDHASHMAP) || 
         className.equals(JAVA_LINKEDLIST) || 
         className.equals(JAVA_LINKEDLIST_ENTRY) ||
         className.equals(JAVA_LONG) || 
@@ -689,6 +746,7 @@ public final class ExecutionContext {
         className.equals(JAVA_REFERENCEQUEUE_NULL) ||
         className.equals(JAVA_REFLECTACCESS) ||
         className.equals(JAVA_REFLECTPERMISSION) ||
+        className.equals(JAVA_RUNTIME) ||
         className.equals(JAVA_RUNTIMEEXCEPTION) ||
         className.equals(JAVA_RUNTIMEPERMISSION) ||
         className.equals(JAVA_SHORT) || 
@@ -702,15 +760,21 @@ public final class ExecutionContext {
         className.equals(JAVA_THREADLOCAL) || //not really, but the only static member generates sequences of hash codes, so it can be treated as it were
         className.equals(JAVA_THROWABLE) || 
         className.equals(JAVA_THROWABLE_SENTINELHOLDER) ||
+        className.equals(JAVA_UNIXFILESYSTEM) || 
         className.equals(JAVA_VOID) || 
         className.equals(JAVA_WRITER) || 
         className.equals(JBSE_BASE) ||
         className.equals(SUN_CLEANER) ||  //not really, but we don't care very much about finalization since JBSE never garbage-collects, thus we treat it as it were
+        className.equals(SUN_CONSTRUCTORACCESSORIMPL) ||        
+        className.equals(SUN_DELEGATINGCONSTRUCTORACCESSORIMPL) ||        
         className.equals(SUN_FASTCHARSETPROVIDER) ||        
         className.equals(SUN_GETPROPERTYACTION) ||        
+        className.equals(SUN_MAGICACCESSORIMPL) ||
+        className.equals(SUN_NATIVECONSTRUCTORACCESSORIMPL) ||
         className.equals(SUN_PREHASHEDMAP) ||
         className.equals(SUN_REFLECTION) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
         className.equals(SUN_REFLECTIONFACTORY) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
+        className.equals(SUN_REFLECTIONFACTORY_1) ||
         className.equals(SUN_REFLECTIONFACTORY_GETREFLECTIONFACTORYACTION) ||
         className.equals(SUN_REFLECTUTIL) ||
         className.equals(SUN_SHAREDSECRETS) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
@@ -722,6 +786,7 @@ public final class ExecutionContext {
         className.equals(SUN_UNICODE) ||
         className.equals(SUN_UNSAFE) ||
         className.equals(SUN_UTF_8) ||
+        className.equals(SUN_UTF_8_ENCODER) ||
         className.equals(SUN_VERSION) ||
         className.equals(SUN_VM) ||
         hier.isSubclass(className, JAVA_ENUM));
