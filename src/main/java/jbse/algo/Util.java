@@ -18,10 +18,13 @@ import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.binaryClassName;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+
+import sun.misc.Unsafe;
 
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
@@ -621,20 +624,20 @@ public class Util {
                 }
             } catch (MethodNotFoundException | MethodCodeNotFoundException e) {
                 /* TODO Here I am in doubt about how I should manage exceptional
-                 * situations. The JVM spec v2 (4.6, access_flags field discussion)
+                 * situations. The JVMS v8 (4.6, access_flags field discussion)
                  * states that the access flags of <clinit> should be ignored except for 
-                 * strictfp. But it also says that if a method is either native 
+                 * ACC_STRICT. But it also says that if a method is either native 
                  * or abstract (from its access_flags field) it must have no code.
                  * What if a <clinit> is marked to be abstract or native? In such 
                  * case it should have no code. However, this shall not happen for 
-                 * <clinit> methods - all <clinit>s I have seen are not by themselves
+                 * <clinit> methods - all <clinit>s I have seen are not 
                  * native, rather they invoke a static native method. I will assume 
                  * that in this case a verification error should be raised.
                  */
                 this.failed = true;
                 this.failure = VERIFY_ERROR;
             } catch (InvalidProgramCounterException | NullMethodReceiverException | 
-            ThreadStackEmptyException | InvalidSlotException e) {
+                     ThreadStackEmptyException | InvalidSlotException | InvalidTypeException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
             } 
@@ -845,6 +848,18 @@ public class Util {
             //this should never happen
             failExecution(e);
         }
+    }
+    
+    public static Unsafe unsafe() {
+        try {
+            final Field fieldUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
+            fieldUnsafe.setAccessible(true);
+            return (Unsafe) fieldUnsafe.get(null);
+        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+            //this should never happen
+            failExecution(e);
+        }
+        return null; //to keep the compiler happy
     }
 
     /** 
