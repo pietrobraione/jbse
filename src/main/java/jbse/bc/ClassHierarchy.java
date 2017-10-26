@@ -3,6 +3,7 @@ package jbse.bc;
 import static jbse.bc.Signatures.JAVA_CLONEABLE;
 import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_SERIALIZABLE;
+import static jbse.common.Type.className;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -879,7 +880,7 @@ public class ClassHierarchy {
 
     /**
      * Checks assignment compatibility for references 
-     * (see JVM spec v2 2.6.7 and chapter 6, aaload bytecode).
+     * (see JVMS v8 4.9.2 and JLS v8 5.2).
      * 
      * @param source the name of the class of the source of the 
      *        assignment.
@@ -912,7 +913,7 @@ public class ClassHierarchy {
                     return sourceComponent.equals(targetComponent);
                 } else if ((Type.isReference(sourceComponent) && Type.isReference(targetComponent)) ||
                 (Type.isArray(sourceComponent) && Type.isArray(targetComponent))) {
-                    return isAssignmentCompatible(sourceComponent, targetComponent);
+                    return isAssignmentCompatible(className(sourceComponent), className(targetComponent));
                 } else {
                     return false;
                 }
