@@ -3,11 +3,11 @@ package jbse.algo;
 import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_CLASS_NAME;
 import static jbse.bc.Signatures.JAVA_OBJECT;
-import static jbse.bc.Signatures.JAVA_STACK_TRACE_ELEMENT;
-import static jbse.bc.Signatures.JAVA_STACK_TRACE_ELEMENT_DECLARINGCLASS;
-import static jbse.bc.Signatures.JAVA_STACK_TRACE_ELEMENT_FILENAME;
-import static jbse.bc.Signatures.JAVA_STACK_TRACE_ELEMENT_LINENUMBER;
-import static jbse.bc.Signatures.JAVA_STACK_TRACE_ELEMENT_METHODNAME;
+import static jbse.bc.Signatures.JAVA_STACKTRACEELEMENT;
+import static jbse.bc.Signatures.JAVA_STACKTRACEELEMENT_DECLARINGCLASS;
+import static jbse.bc.Signatures.JAVA_STACKTRACEELEMENT_FILENAME;
+import static jbse.bc.Signatures.JAVA_STACKTRACEELEMENT_LINENUMBER;
+import static jbse.bc.Signatures.JAVA_STACKTRACEELEMENT_METHODNAME;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_STRING_VALUE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_BACKTRACE;
@@ -269,7 +269,7 @@ public class Util {
                 ++stackDepth;
             }
             final ReferenceConcrete refToArray = 
-                state.createArray(null, state.getCalculator().valInt(stackDepth), "" + ARRAYOF + REFERENCE + JAVA_STACK_TRACE_ELEMENT + TYPEEND);
+                state.createArray(null, state.getCalculator().valInt(stackDepth), "" + ARRAYOF + REFERENCE + JAVA_STACKTRACEELEMENT + TYPEEND);
             final Array theArray = (Array) state.getObject(refToArray);
             exc.setFieldValue(JAVA_THROWABLE_BACKTRACE, refToArray);
             int i = 0;
@@ -294,12 +294,12 @@ public class Util {
                 state.ensureStringLiteral(methodName);
 
                 //creates the java.lang.StackTraceElement object and fills it
-                final ReferenceConcrete steReference = state.createInstance(JAVA_STACK_TRACE_ELEMENT);
+                final ReferenceConcrete steReference = state.createInstance(JAVA_STACKTRACEELEMENT);
                 final Instance stackTraceElement = (Instance) state.getObject(steReference);
-                stackTraceElement.setFieldValue(JAVA_STACK_TRACE_ELEMENT_DECLARINGCLASS, state.referenceToStringLiteral(declaringClass));
-                stackTraceElement.setFieldValue(JAVA_STACK_TRACE_ELEMENT_FILENAME,       state.referenceToStringLiteral(fileName));
-                stackTraceElement.setFieldValue(JAVA_STACK_TRACE_ELEMENT_LINENUMBER,     calc.valInt(lineNumber));
-                stackTraceElement.setFieldValue(JAVA_STACK_TRACE_ELEMENT_METHODNAME,     state.referenceToStringLiteral(methodName));
+                stackTraceElement.setFieldValue(JAVA_STACKTRACEELEMENT_DECLARINGCLASS, state.referenceToStringLiteral(declaringClass));
+                stackTraceElement.setFieldValue(JAVA_STACKTRACEELEMENT_FILENAME,       state.referenceToStringLiteral(fileName));
+                stackTraceElement.setFieldValue(JAVA_STACKTRACEELEMENT_LINENUMBER,     calc.valInt(lineNumber));
+                stackTraceElement.setFieldValue(JAVA_STACKTRACEELEMENT_METHODNAME,     state.referenceToStringLiteral(methodName));
 
                 //sets the array
                 theArray.setFast(calc.valInt(i++), steReference);

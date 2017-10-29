@@ -7,6 +7,7 @@ import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_PRIVILEGEDACTION;
 import static jbse.bc.Signatures.JAVA_PRIVILEGEDEXCEPTIONACTION;
 import static jbse.bc.Signatures.JAVA_PROPERTIES;
+import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_THREAD;
 import static jbse.bc.Signatures.SUN_UNSAFE;
 import static jbse.common.Type.BOOLEAN;
@@ -38,6 +39,7 @@ public final class Overrides {
     public static final String ALGO_JAVA_CLASS_ISINSTANCE               = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISINSTANCE.class.getCanonicalName());
     public static final String ALGO_JAVA_CLASS_ISINTERFACE              = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISINTERFACE.class.getCanonicalName());
     public static final String ALGO_JAVA_CLASS_ISPRIMITIVE              = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISPRIMITIVE.class.getCanonicalName());
+    public static final String ALGO_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD = internalClassName(jbse.algo.meta.Algo_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD.class.getCanonicalName());
     public static final String ALGO_JAVA_OBJECT_CLONE                   = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_CLONE.class.getCanonicalName());
     public static final String ALGO_JAVA_OBJECT_GETCLASS                = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_GETCLASS.class.getCanonicalName());
     public static final String ALGO_JAVA_OBJECT_HASHCODE                = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_HASHCODE.class.getCanonicalName());
@@ -47,6 +49,7 @@ public final class Overrides {
     public static final String ALGO_JAVA_STRINGBUILDER_APPEND           = internalClassName(jbse.algo.meta.Algo_JAVA_STRINGBUILDER_APPEND.class.getCanonicalName());
     public static final String ALGO_JAVA_SYSTEM_ARRAYCOPY               = internalClassName(jbse.algo.meta.Algo_JAVA_SYSTEM_ARRAYCOPY.class.getCanonicalName());
     public static final String ALGO_JAVA_SYSTEM_IDENTITYHASHCODE        = internalClassName(jbse.algo.meta.Algo_JAVA_SYSTEM_IDENTITYHASHCODE.class.getCanonicalName());
+    public static final String ALGO_JAVA_SYSTEM_MAPLIBRARYNAME          = internalClassName(jbse.algo.meta.Algo_JAVA_SYSTEM_MAPLIBRARYNAME.class.getCanonicalName());
     public static final String ALGO_JAVA_THREAD_CURRENTTHREAD           = internalClassName(jbse.algo.meta.Algo_JAVA_THREAD_CURRENTTHREAD.class.getCanonicalName());
     public static final String ALGO_JAVA_THROWABLE_FILLINSTACKTRACE     = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_FILLINSTACKTRACE.class.getCanonicalName());
     public static final String ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH   = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH.class.getCanonicalName());
@@ -97,6 +100,10 @@ public final class Overrides {
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + BOOLEAN, 
                       "base_JAVA_CLASS_DESIREDASSERTIONSTATUS0");
+    public static final Signature BASE_JAVA_CLASSLOADER_FINDBUILTINLIB = 
+        new Signature(JBSE_BASE, 
+                      "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_STRING + TYPEEND, 
+                      "base_JAVA_CLASSLOADER_FINDBUILTINLIB");
     public static final Signature BASE_JAVA_SYSTEM_INITPROPERTIES =
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + JAVA_PROPERTIES + TYPEEND + ")" + REFERENCE + JAVA_PROPERTIES + TYPEEND, 
@@ -109,6 +116,14 @@ public final class Overrides {
         new Signature(JBSE_BASE, 
                       "()" + BOOLEAN, 
                       "base_JBSE_ANALYSIS_ISRUNBYJBSE");
+    public static final Signature BASE_SUN_SIGNAL_FINDSIGNAL =
+        new Signature(JBSE_BASE, 
+                      "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + INT, 
+                      "base_SUN_SIGNAL_FINDSIGNAL");
+    public static final Signature BASE_SUN_SIGNAL_HANDLE0 =
+        new Signature(JBSE_BASE, 
+                      "(" + INT + LONG + ")" + LONG, 
+                      "base_SUN_SIGNAL_HANDLE0");
     public static final Signature BASE_SUN_UNSAFE_ADDRESSSIZE =
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + SUN_UNSAFE + TYPEEND + ")" + INT, 

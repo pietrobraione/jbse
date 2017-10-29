@@ -1,0 +1,70 @@
+package jbse.algo.meta;
+
+import static jbse.algo.Util.ensureStringLiteral;
+import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.throwNew;
+import static jbse.algo.Util.throwVerifyError;
+import static jbse.algo.Util.valueString;
+import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
+
+import java.util.function.Supplier;
+
+import jbse.algo.Algo_INVOKEMETA_Nonbranching;
+import jbse.algo.InterruptException;
+import jbse.algo.exc.SymbolicValueNotAllowedException;
+import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.common.exc.ClasspathException;
+import jbse.dec.exc.DecisionException;
+import jbse.mem.State;
+import jbse.mem.exc.HeapMemoryExhaustedException;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Reference;
+
+/**
+ * Meta-level implementation of {@link java.lang.System#mapLibraryName(String)}.
+ * 
+ * @author Pietro Braione
+ */
+public final class Algo_JAVA_SYSTEM_MAPLIBRARYNAME extends Algo_INVOKEMETA_Nonbranching {
+    private Reference retVal; //set by cookMore
+    
+    @Override
+    protected Supplier<Integer> numOperands() {
+        return () -> 1;
+    }
+    
+    @Override
+    protected void cookMore(State state) throws InterruptException, SymbolicValueNotAllowedException {
+        try {
+            final Reference refString = (Reference) this.data.operand(0);
+            if (state.isNull(refString)) {
+                throwNew(state, NULL_POINTER_EXCEPTION);
+            }
+            final String theString = valueString(state, refString);
+            if (theString == null) {
+                throw new SymbolicValueNotAllowedException("the parameter to java.lang.System.mapLibraryName was not a concrete string of characters");
+            }
+            final String theResult = System.mapLibraryName(theString);
+            try {
+                ensureStringLiteral(state, this.ctx, theResult);
+            } catch (HeapMemoryExhaustedException e) {
+                throwNew(state, OUT_OF_MEMORY_ERROR);
+                exitFromAlgorithm();
+            } catch (ClassFileIllFormedException | DecisionException | ClasspathException e) {
+                //this should not happen
+                failExecution(e);
+            }
+            this.retVal = state.referenceToStringLiteral(theResult);
+        } catch (ClassCastException e) {
+            throwVerifyError(state);
+            exitFromAlgorithm();
+        }
+    }
+
+    @Override
+    protected void update(State state) throws ThreadStackEmptyException {
+        state.pushOperand(this.retVal);
+    }
+}

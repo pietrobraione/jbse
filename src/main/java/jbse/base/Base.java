@@ -6,6 +6,7 @@ import java.security.AccessControlContext;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+import java.util.HashMap;
 import java.util.Properties;
 
 import jbse.algo.meta.Algo_JBSE_BASE_CLINIT;
@@ -114,9 +115,19 @@ public final class Base {
      * Overriding implementation of {@link java.lang.Class#desiredAssertionStatus0(Class)}.
      * @see java.lang.Class#desiredAssertionStatus0(Class)
      */
-    private static final boolean base_JAVA_CLASS_DESIREDASSERTIONSTATUS0(Class<?> clazz) {
+    private static boolean base_JAVA_CLASS_DESIREDASSERTIONSTATUS0(Class<?> clazz) {
         return false; //no assertions, sorry
         //TODO should we give a way to control the assertion status, possibly handling Java assertions as jbse assertions?
+    }
+    
+    /**
+     * Overriding implementation of {@link java.lang.ClassLoader#findBuiltinLib(String)}.
+     * @see java.lang.ClassLoader#findBuiltinLib(String)
+     */
+    private static String base_JAVA_CLASSLOADER_FINDBUILTINLIB(String file) {
+        //we assume that all the libraries are builtin and at the same path!!!
+        return "/usr/lib/" + file;
+        //TODO if the platform is Windows, then return a Windows path
     }
 
     /**
@@ -127,7 +138,7 @@ public final class Base {
      * @param key a {@link String}, the key.
      * @param value a {@link String}, the value.
      */
-    private static final void putSafe(Properties p, String key, String value) {
+    private static void putSafe(Properties p, String key, String value) {
         if (value != null) {
             p.put(key, value);
         }
@@ -137,7 +148,7 @@ public final class Base {
      * Overriding implementation of {@link java.lang.System#initProperties(Properties)}.
      * @see java.lang.System#initProperties(Properties)
      */
-    private static final Properties base_JAVA_SYSTEM_INITPROPERTIES(Properties p) {
+    private static Properties base_JAVA_SYSTEM_INITPROPERTIES(Properties p) {
         //properties taken from openjdk 8, jdk project, file src/share/native/java/lang/System.c
         putSafe(p, "java.specification.version", "1.8");
         putSafe(p, "java.specification.name",    "Java Platform API Specification");
@@ -182,7 +193,7 @@ public final class Base {
         //TODO more properties?
         return p;
     }
-
+    
     /**
      * Overriding implementation of {@link java.lang.Thread#isAlive()}.
      * @see java.lang.Thread#isAlive()
@@ -215,6 +226,42 @@ public final class Base {
      */
     private static boolean base_JBSE_ANALYSIS_ISRUNBYJBSE() {
         return true;
+    }
+
+    /**
+     * Overriding implementation of {@link sun.misc.Signal#findSignal(String)}.
+     * @see sun.misc.Signal#findSignal(String)
+     */
+    private static int base_SUN_SIGNAL_FINDSIGNAL(String signal) {
+        //we use the standard POSIX signal numbers for the three
+        //signals used in the standard library
+        switch (signal) {
+        case "HUP":
+            return 1;
+        case "INT":
+            return 2;
+        case "TERM":
+            return 15;
+        default:
+            return -1;
+        }
+        //TODO more signals?
+    }
+    
+    private static final HashMap<Integer, Long> SIG_HANDLERS = new HashMap<>();
+    
+    /**
+     * Overriding implementation of {@link sun.misc.Signal#handle0(int, long)}.
+     * @see sun.misc.Signal#handle0(int, long)
+     */
+    private static long base_SUN_SIGNAL_HANDLE0(int signal, long nativeHandler) {
+        //does nothing: JBSE does not handle signals!
+        final Long oldHandler = SIG_HANDLERS.put(signal, nativeHandler);
+        if (oldHandler == null) {
+            return 1; //handler 1 == ignore the signal
+        } else {
+            return oldHandler.longValue();
+        }
     }
 
     /**
