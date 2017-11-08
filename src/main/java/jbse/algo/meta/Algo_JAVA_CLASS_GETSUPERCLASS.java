@@ -15,8 +15,6 @@ import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
-import jbse.common.exc.ClasspathException;
-import jbse.dec.exc.DecisionException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
 import jbse.mem.exc.HeapMemoryExhaustedException;
@@ -61,8 +59,7 @@ public final class Algo_JAVA_CLASS_GETSUPERCLASS extends Algo_INVOKEMETA_Nonbran
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (BadClassFileException | DecisionException | ClassFileNotAccessibleException | 
-                 ClasspathException e) {
+        } catch (BadClassFileException | ClassFileNotAccessibleException e) {
             //this should never happen
             failExecution(e);
         }

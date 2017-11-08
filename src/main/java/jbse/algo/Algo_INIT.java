@@ -1,7 +1,6 @@
 package jbse.algo;
 
 import static jbse.algo.Util.ensureClassCreatedAndInitialized;
-import static jbse.algo.Util.ensureStringLiteral;
 import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_SYSTEM;
@@ -140,7 +139,7 @@ public final class Algo_INIT {
             final ReferenceConcrete mainThreadGroup = state.createInstance(JAVA_THREADGROUP);
             final ReferenceConcrete mainThread = state.createInstance(JAVA_THREAD);
             state.getObject(mainThread).setFieldValue(JAVA_THREAD_PRIORITY, ctx.calc.valInt(NORM_PRIORITY)); //necessary to avoid circularity issues
-            ensureStringLiteral(state, ctx, "main");
+            state.ensureStringLiteral("main");
             final ReferenceConcrete mainString = state.referenceToStringLiteral("main");
             state.pushFrame(JAVA_THREAD_INIT, false, 0, mainThread, mainThreadGroup, mainString);
             state.pushFrame(JAVA_THREADGROUP_INIT_2, false, 0, mainThreadGroup, systemThreadGroup, mainString);
@@ -155,7 +154,7 @@ public final class Algo_INIT {
         } catch (BadClassFileException | MethodNotFoundException | MethodCodeNotFoundException e) {
             throw new ClasspathException(e);
         } catch (NullMethodReceiverException | InvalidSlotException | InvalidProgramCounterException |
-                 InvalidTypeException | ThreadStackEmptyException | InterruptException e) {
+                 InvalidTypeException | ThreadStackEmptyException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }

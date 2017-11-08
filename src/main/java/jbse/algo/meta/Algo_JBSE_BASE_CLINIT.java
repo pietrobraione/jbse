@@ -1,6 +1,5 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.ensureStringLiteral;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
@@ -44,11 +43,7 @@ import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.Algorithm;
 import jbse.algo.ExecutionContext;
 import jbse.algo.InterruptException;
-import jbse.algo.exc.CannotManageStateException;
 import jbse.bc.Signature;
-import jbse.bc.exc.ClassFileIllFormedException;
-import jbse.common.exc.ClasspathException;
-import jbse.dec.exc.DecisionException;
 import jbse.mem.Klass;
 import jbse.mem.State;
 import jbse.mem.exc.HeapMemoryExhaustedException;
@@ -101,50 +96,45 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
     }
 
     @Override
-    protected void cookMore(State state) throws ThreadStackEmptyException, DecisionException, ClasspathException,
-    CannotManageStateException, InterruptException {
-        try {
-            safeEnsureStringLiteral(state, this.ctx, OS_NAME);
-            safeEnsureStringLiteral(state, this.ctx, OS_VERSION);
-            safeEnsureStringLiteral(state, this.ctx, OS_ARCH);
-            safeEnsureStringLiteral(state, this.ctx, FILE_SEPARATOR);
-            safeEnsureStringLiteral(state, this.ctx, PATH_SEPARATOR);
-            safeEnsureStringLiteral(state, this.ctx, LINE_SEPARATOR);
-            safeEnsureStringLiteral(state, this.ctx, USER_LANGUAGE);
-            safeEnsureStringLiteral(state, this.ctx, USER_SCRIPT);
-            safeEnsureStringLiteral(state, this.ctx, USER_COUNTRY);
-            safeEnsureStringLiteral(state, this.ctx, USER_VARIANT);
-            safeEnsureStringLiteral(state, this.ctx, FILE_ENCODING);
-            safeEnsureStringLiteral(state, this.ctx, SUN_JNU_ENCODING);
-            safeEnsureStringLiteral(state, this.ctx, SUN_STDOUT_ENCODING);
-            safeEnsureStringLiteral(state, this.ctx, SUN_STDERR_ENCODING);
-            safeEnsureStringLiteral(state, this.ctx, SUN_IO_UNICODE_ENCODING);
-            safeEnsureStringLiteral(state, this.ctx, SUN_CPU_ISALIST);
-            safeEnsureStringLiteral(state, this.ctx, SUN_CPU_ENDIAN);
-            safeEnsureStringLiteral(state, this.ctx, HTTP_PROXYHOST);
-            safeEnsureStringLiteral(state, this.ctx, HTTP_PROXYPORT);
-            safeEnsureStringLiteral(state, this.ctx, HTTPS_PROXYHOST);
-            safeEnsureStringLiteral(state, this.ctx, HTTPS_PROXYPORT);
-            safeEnsureStringLiteral(state, this.ctx, FTP_PROXYHOST);
-            safeEnsureStringLiteral(state, this.ctx, FTP_PROXYPORT);
-            safeEnsureStringLiteral(state, this.ctx, SOCKSPROXYHOST);
-            safeEnsureStringLiteral(state, this.ctx, SOCKSPROXYPORT);
-            safeEnsureStringLiteral(state, this.ctx, GOPHERPROXYSET);
-            safeEnsureStringLiteral(state, this.ctx, GOPHERPROXYHOST);
-            safeEnsureStringLiteral(state, this.ctx, GOPHERPROXYPORT);
-            safeEnsureStringLiteral(state, this.ctx, HTTP_NONPROXYHOSTS);
-            safeEnsureStringLiteral(state, this.ctx, FTP_NONPROXYHOSTS);
-            safeEnsureStringLiteral(state, this.ctx, SOCKSNONPROXYHOSTS);
-        } catch (ClassFileIllFormedException e) {
-            throw new ClasspathException(e);
-        }
+    protected void cookMore(State state) throws InterruptException {
+        safeEnsureStringLiteral(state, this.ctx, OS_NAME);
+        safeEnsureStringLiteral(state, this.ctx, OS_VERSION);
+        safeEnsureStringLiteral(state, this.ctx, OS_ARCH);
+        safeEnsureStringLiteral(state, this.ctx, FILE_SEPARATOR);
+        safeEnsureStringLiteral(state, this.ctx, PATH_SEPARATOR);
+        safeEnsureStringLiteral(state, this.ctx, LINE_SEPARATOR);
+        safeEnsureStringLiteral(state, this.ctx, USER_LANGUAGE);
+        safeEnsureStringLiteral(state, this.ctx, USER_SCRIPT);
+        safeEnsureStringLiteral(state, this.ctx, USER_COUNTRY);
+        safeEnsureStringLiteral(state, this.ctx, USER_VARIANT);
+        safeEnsureStringLiteral(state, this.ctx, FILE_ENCODING);
+        safeEnsureStringLiteral(state, this.ctx, SUN_JNU_ENCODING);
+        safeEnsureStringLiteral(state, this.ctx, SUN_STDOUT_ENCODING);
+        safeEnsureStringLiteral(state, this.ctx, SUN_STDERR_ENCODING);
+        safeEnsureStringLiteral(state, this.ctx, SUN_IO_UNICODE_ENCODING);
+        safeEnsureStringLiteral(state, this.ctx, SUN_CPU_ISALIST);
+        safeEnsureStringLiteral(state, this.ctx, SUN_CPU_ENDIAN);
+        safeEnsureStringLiteral(state, this.ctx, HTTP_PROXYHOST);
+        safeEnsureStringLiteral(state, this.ctx, HTTP_PROXYPORT);
+        safeEnsureStringLiteral(state, this.ctx, HTTPS_PROXYHOST);
+        safeEnsureStringLiteral(state, this.ctx, HTTPS_PROXYPORT);
+        safeEnsureStringLiteral(state, this.ctx, FTP_PROXYHOST);
+        safeEnsureStringLiteral(state, this.ctx, FTP_PROXYPORT);
+        safeEnsureStringLiteral(state, this.ctx, SOCKSPROXYHOST);
+        safeEnsureStringLiteral(state, this.ctx, SOCKSPROXYPORT);
+        safeEnsureStringLiteral(state, this.ctx, GOPHERPROXYSET);
+        safeEnsureStringLiteral(state, this.ctx, GOPHERPROXYHOST);
+        safeEnsureStringLiteral(state, this.ctx, GOPHERPROXYPORT);
+        safeEnsureStringLiteral(state, this.ctx, HTTP_NONPROXYHOSTS);
+        safeEnsureStringLiteral(state, this.ctx, FTP_NONPROXYHOSTS);
+        safeEnsureStringLiteral(state, this.ctx, SOCKSNONPROXYHOSTS);
     }
 
     private static void safeEnsureStringLiteral(State state, ExecutionContext ctx, String stringLit) 
-    throws ClassFileIllFormedException, DecisionException, ClasspathException, InterruptException {
+    throws InterruptException {
         if (stringLit != null) {
             try {
-                ensureStringLiteral(state, ctx, stringLit);
+                state.ensureStringLiteral(stringLit);
             } catch (HeapMemoryExhaustedException e) {
                 throwNew(state, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();

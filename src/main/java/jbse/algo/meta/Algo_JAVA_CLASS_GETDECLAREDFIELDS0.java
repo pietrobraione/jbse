@@ -1,7 +1,6 @@
 package jbse.algo.meta;
 
 import static jbse.algo.Util.ensureInstance_JAVA_CLASS;
-import static jbse.algo.Util.ensureStringLiteral;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
@@ -36,7 +35,6 @@ import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileException;
-import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotFoundException;
@@ -166,13 +164,10 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
 
                 //sets name
                 try {
-                    ensureStringLiteral(state, this.ctx, sigField.getName());
+                    state.ensureStringLiteral(sigField.getName());
                 } catch (HeapMemoryExhaustedException e) {
                     throwNew(state, OUT_OF_MEMORY_ERROR);
                     exitFromAlgorithm();
-                } catch (ClassFileIllFormedException | DecisionException | ClasspathException e) {
-                    //this should never happen
-                    failExecution(e);
                 }
                 final ReferenceConcrete refSigName = state.referenceToStringLiteral(sigField.getName());
                 field.setFieldValue(JAVA_FIELD_NAME, refSigName);
@@ -192,15 +187,14 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                     if (sigType == null) {
                         refSigType = Null.getInstance();
                     } else {
-                        ensureStringLiteral(state, this.ctx, sigType);
+                        state.ensureStringLiteral(sigType);
                         refSigType = state.referenceToStringLiteral(sigType);
                     }
                     field.setFieldValue(JAVA_FIELD_SIGNATURE, refSigType);
                 } catch (HeapMemoryExhaustedException e) {
                     throwNew(state, OUT_OF_MEMORY_ERROR);
                     exitFromAlgorithm();
-                } catch (ClassFileIllFormedException | ClasspathException | 
-                         DecisionException | FieldNotFoundException e) {
+                } catch (FieldNotFoundException e) {
                     //this should never happen
                     failExecution(e);
                 }
@@ -235,8 +229,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                         //TODO is it ok?
                         throwVerifyError(state);
                         exitFromAlgorithm();
-                    } catch (ClassFileNotAccessibleException | ClasspathException | 
-                             DecisionException e) {
+                    } catch (ClassFileNotAccessibleException e) {
                         //this should never happen
                         failExecution(e);
                     }

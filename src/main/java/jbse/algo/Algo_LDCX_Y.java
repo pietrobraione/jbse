@@ -4,12 +4,10 @@ import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.ensureInstance_JAVA_CLASS;
-import static jbse.algo.Util.ensureStringLiteral;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.LDC_OFFSET;
 import static jbse.bc.Offsets.LDC_W_OFFSET;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
-import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.common.Type.isCat_1;
 
@@ -23,7 +21,6 @@ import jbse.bc.ConstantPoolValue;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.InvalidIndexException;
-import jbse.common.exc.ClasspathException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -93,16 +90,13 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     }
                 } else if (cpv instanceof ConstantPoolString) {
                     final String stringLit = ((ConstantPoolString) cpv).getValue();
-                    ensureStringLiteral(state, this.ctx, stringLit);
+                    state.ensureStringLiteral(stringLit);
                     this.val = state.referenceToStringLiteral(stringLit);
                 } else { // cpv instanceof ConstantPoolClass
                     final String classSignature = ((ConstantPoolClass) cpv).getValue();
                     ensureInstance_JAVA_CLASS(state, currentClassName, classSignature, this.ctx);
                     this.val = state.referenceToInstance_JAVA_CLASS(classSignature);
                 }
-            } catch (ClasspathException e) {
-                throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR); //TODO is it right? This is when java.lang.Class is missing, what if ((ConstantPoolClass) cpv).getValue() is missing?
-                exitFromAlgorithm();
             } catch (ClassFileNotAccessibleException e) {
                 throwNew(state, ILLEGAL_ACCESS_ERROR);
                 exitFromAlgorithm();

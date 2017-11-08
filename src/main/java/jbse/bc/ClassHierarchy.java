@@ -438,7 +438,7 @@ public class ClassHierarchy {
 
     /**
      * Performs class (including array class) and interface resolution 
-     * (see JVM Specification, sec. 5.4.3.1).
+     * (see JVMS 2nd edition, sec. 5.4.3.1).
      * 
      * @param accessor a {@link String}, the signature of the accessor's class.
      * @param classSignature a {@link String}, the signature of the class to be resolved.
@@ -450,7 +450,7 @@ public class ClassHierarchy {
      */
     public void resolveClass(String accessor, String classSignature) 
     throws BadClassFileException, ClassFileNotAccessibleException {
-        //TODO implement complete class creation as in JVM Specification, sec. 5.3
+        //TODO implement complete class creation as in JVMS 2nd ed, sec. 5.3
 
         final ClassFile cf = getClassFile(classSignature);
         if (cf instanceof ClassFileBad) {
@@ -466,7 +466,7 @@ public class ClassHierarchy {
     }
 
     /**
-     * Performs field resolution (see JVM Specification, sec. 5.4.3.2).
+     * Performs field resolution (see JVMS v8. section 5.4.3.2).
      * 
      * @param accessor a {@link String}, the signature of the accessor's class.
      * @param fieldSignature the {@link Signature} of the field to be resolved.
@@ -485,44 +485,10 @@ public class ClassHierarchy {
         //first resolves the class
         resolveClass(accessor, fieldSignature.getClassName());
 
-        //searches a declaration for the field in the field's
-        //signature class (lookup starts from there)
-        Signature fieldSignatureResolved = null;
-        final ClassFile classFile = getClassFile(fieldSignature.getClassName());
-        if (classFile.hasFieldDeclaration(fieldSignature)) {
-            fieldSignatureResolved = fieldSignature;
-        }
+        //then performs field lookup
+        final Signature fieldSignatureResolved = resolveFieldLookup(fieldSignature);
 
-        //if nothing has been found, searches in the superinterfaces
-        /* TODO this procedure differs from JVM Specification 5.4.3.2 because
-         * the specification requires to search in the *immediate* superinterfaces, 
-         * then recursively in the superclass, immediate superinterfaces of the
-         * superclass, etc. 
-         */
-        if (fieldSignatureResolved == null) {
-            for (ClassFile cf : superinterfaces(fieldSignature.getClassName())) {
-                if (cf.hasFieldDeclaration(fieldSignature)) {
-                    fieldSignatureResolved = 
-                    new Signature(cf.getClassName(), fieldSignature.getDescriptor(), fieldSignature.getName());
-                    break;
-                }
-            }
-        }
-
-        //if still nothing has been found, searches in the superclasses
-        if (fieldSignatureResolved == null) {
-            for (ClassFile cf : superclasses(fieldSignature.getClassName())) {
-                if (cf instanceof ClassFileBad) {
-                    throw ((ClassFileBad) cf).getException();
-                } else if (cf.hasFieldDeclaration(fieldSignature)) {
-                    fieldSignatureResolved = 
-                    new Signature(cf.getClassName(), fieldSignature.getDescriptor(), fieldSignature.getName());
-                    break;
-                }
-            }
-        }
-
-        //if still nothing has been found, raises an exception
+        //if nothing has been found, raises an exception
         if (fieldSignatureResolved == null) {
             throw new FieldNotFoundException(fieldSignature.toString());
         }
@@ -539,6 +505,47 @@ public class ClassHierarchy {
         } catch (FieldNotFoundException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
+        }
+    }
+    
+    /**
+     * Searches a field declaration in the class or superclasses/superinterfaces
+     * of the field signature. The lookup procedure is the recursive procedure
+     * described in the JVMS v8, section 5.4.3.2.
+     * 
+     * @param fieldSignature a field {@link Signature}.
+     * @return the {@link Signature} of the declaration for {@code fieldSignature}, 
+     *         or {@code null} if such declaration does not exist. 
+     */
+    private Signature resolveFieldLookup(Signature fieldSignature) throws BadClassFileException {
+        final ClassFile classFile = getClassFile(fieldSignature.getClassName());
+        
+        //if the field is declared in its signature's class,
+        //just return the input signature
+        if (classFile.hasFieldDeclaration(fieldSignature)) {
+            return fieldSignature;
+        }
+
+        //otherwise, lookup recursively in all the immediate superinterfaces
+        for (String superinterfaceName : classFile.getSuperInterfaceNames()) {
+            final ClassFile classFileSuperinterface = getClassFile(superinterfaceName);
+            final Signature fieldSignatureSuperinterface = new Signature(classFileSuperinterface.getClassName(), fieldSignature.getDescriptor(), fieldSignature.getName());
+            final Signature fieldSignatureResolved = resolveFieldLookup(fieldSignatureSuperinterface);
+            if (fieldSignatureResolved != null) {
+                return fieldSignatureResolved;
+            }
+        }
+
+        //otherwise, lookup recursively in the superclass (if any)
+        final String superclassName = classFile.getSuperclassName();
+        if (superclassName == null) {
+            //no superclass: lookup failed
+            return null;
+        } else {
+            final ClassFile classFileSuperclass = getClassFile(superclassName);
+            final Signature fieldSignatureSuperclass = new Signature(classFileSuperclass.getClassName(), fieldSignature.getDescriptor(), fieldSignature.getName());
+            final Signature fieldSignatureResolved = resolveFieldLookup(fieldSignatureSuperclass);
+            return fieldSignatureResolved;
         }
     }
 

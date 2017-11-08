@@ -1,8 +1,6 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.ensureStringLiteral;
 import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.JAVA_STRINGBUILDER_APPEND_STRING;
@@ -12,9 +10,6 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
-import jbse.bc.exc.ClassFileIllFormedException;
-import jbse.common.exc.ClasspathException;
-import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -40,20 +35,14 @@ public final class Algo_JAVA_STRINGBUILDER_APPEND extends Algo_INVOKEMETA_Nonbra
             final Primitive toAppend = (Primitive) this.data.operand(1);
             if (toAppend.isSymbolic()) {
                 final String stringifiedSymbol = toAppend.toString();
-                try {
-                    ensureStringLiteral(state, this.ctx, stringifiedSymbol);
-                } catch (HeapMemoryExhaustedException e) {
-                    throwNew(state, OUT_OF_MEMORY_ERROR);
-                    exitFromAlgorithm();
-                } catch (ClassFileIllFormedException | DecisionException | 
-                         ClasspathException e) {
-                    //this should not happen
-                    failExecution(e);
-                }
+                state.ensureStringLiteral(stringifiedSymbol);
                 this.refStringifiedSymbol = state.referenceToStringLiteral(stringifiedSymbol);
             } else {
                 continueWithBaseLevelImpl(state); //executes the original StringBuilder.append implementation
             }
+        } catch (HeapMemoryExhaustedException e) {
+            throwNew(state, OUT_OF_MEMORY_ERROR);
+            exitFromAlgorithm();
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
@@ -62,7 +51,6 @@ public final class Algo_JAVA_STRINGBUILDER_APPEND extends Algo_INVOKEMETA_Nonbra
 
     @Override
     protected void update(State state) throws ThreadStackEmptyException, InterruptException {
-        //TODO is this the right order of the operands?
         state.pushOperand(this.data.operand(0)); //this
         state.pushOperand(this.refStringifiedSymbol);
         continueWithAnotherMethod(state, JAVA_STRINGBUILDER_APPEND_STRING, false, false, false);

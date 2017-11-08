@@ -1,6 +1,5 @@
 package jbse.algo;
 
-import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_CLASS_NAME;
 import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_STACKTRACEELEMENT;
@@ -34,7 +33,6 @@ import jbse.bc.ConstantPoolValue;
 import jbse.bc.Signature;
 import jbse.bc.exc.AttributeNotFoundException;
 import jbse.bc.exc.BadClassFileException;
-import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotFoundException;
@@ -158,7 +156,6 @@ public class Util {
      *         {@link Instance#getType() type} is not 
      *         {@code "java/lang/String"}, or its {@code value}
      *         is not a concrete array of {@code char}s.
-     *         
      */
     public static String valueString(State s, Reference ref) {
         final Instance i;
@@ -696,59 +693,12 @@ public class Util {
     }
 
     /**
-     * Creates an {@link Instance} of class {@code java.lang.String} 
-     * in a {@link State}'s heap corresponding to a string literal sidestepping 
-     * the constructors of {@code java.lang.String} to avoid incredible 
-     * circularity issues with string constant fields. Also 
-     * manages the creation and initialization of the {@link Klass} for 
-     * {@code java.lang.String} and its members. If the literal already 
-     * exists in the {@link State}'s heap, does nothing.
-     * 
-     * @param state the {@link State} on which this method will operate.
-     * @param ctx an {@link ExecutionContext}.
-     * @param stringLit a {@link String} representing a string literal.
-     * @throws NullPointerException if {@code state == null}, or 
-     *         {@code ctx == null}, or {@code stringLit == null}.
-     * @throws DecisionException if {@code dec} fails in determining
-     *         whether {@code java.lang.String} is or is not initialized.
-     * @throws ClassFileIllFormedException if the {@code java.lang.String} classfile 
-     *         is ill-formed.
-     * @throws ClasspathException if the {@code java.lang.String} class is 
-     *         missing from {@code state}'s classpath or is incompatible with the
-     *         current version of JBSE.
-     * @throws HeapMemoryExhaustedException if during creation of the
-     *         string literal the heap memory ends.
-     * @throws InterruptException  iff it is necessary to interrupt the
-     *         execution of the current bytecode and run the 
-     *         {@code <clinit>} method for {@code java.lang.String}.
-     */
-    //TODO remove and put everything back into state.ensureStringLiteral, as now Algo_INIT initializes java.lang.String 
-    public static void ensureStringLiteral(State state, ExecutionContext ctx, String stringLit) 
-    throws DecisionException, ClassFileIllFormedException, ClasspathException, 
-    HeapMemoryExhaustedException, InterruptException {
-        if (state == null || ctx == null || stringLit == null) {
-            throw new NullPointerException("null parameter passed to " + Util.class.getName() + ".ensureStringLiteral");
-        }
-        try {
-            state.ensureStringLiteral(stringLit);
-            ensureClassCreatedAndInitialized(state, JAVA_STRING, ctx);
-        } catch (ClassFileNotFoundException e) {
-            throw new ClasspathException(e);
-        } catch (ClassFileIllFormedException e) {
-            throw e;
-        } catch (InvalidInputException | BadClassFileException e) {
-            //this should never happen
-            failExecution(e);
-        }
-    }
-
-    /**
      * Ensures an {@link Instance} of class {@code java.lang.Class} 
      * corresponding to a class name exists in the {@link Heap}. If
      * the instance does not exist, it resolves the class and creates 
      * it, otherwise it does nothing. Also manages the creation 
-     * of the {@link Klass}es for {@code java.lang.Class} and for 
-     * the classes of the members of the created object.
+     * of the {@link Klass}es for the classes of the members of the 
+     * created object.
      * 
      * @param state the {@link State} on which this method will operate.
      * @param accessor a {@link String}, the name of the class of the accessor 
@@ -756,64 +706,27 @@ public class Util {
      * @param className a {@link String}, the name of the class reified
      *        by the {@link Instance} of {@code java.lang.Class}.
      * @param ctx an {@link ExecutionContext}.
-     * @throws DecisionException if {@code dec} fails in determining
-     *         whether {@code java.lang.String} is or is not initialized.
      * @throws BadClassFileException if the classfile is ill-formed or 
      *         does not exist.
      * @throws ClassFileNotAccessibleException if {@code className} is not
      *         accessible from {@code accessor}.
-     * @throws ClasspathException if the {@code java.lang.String} class is 
-     *         missing from {@code state}'s classpath or is incompatible with the
-     *         current version of JBSE.
-     * @throws InterruptException  iff it is necessary to interrupt the
-     *         execution of the current bytecode and run the 
-     *         {@code <clinit>} method for {@code java.lang.String}.
+     * @throws HeapMemoryExhaustedException if the {@code state}'s heap memory
+     *         ends.
      */
     public static void ensureInstance_JAVA_CLASS(State state, String accessor, String className, ExecutionContext ctx) 
-    throws DecisionException, BadClassFileException, ClassFileNotAccessibleException,
-    ClasspathException, HeapMemoryExhaustedException, InterruptException {
-        //we store locally the interrupt and throw it at the end
-        //to ensure the invariant that, at the end of the invocation, 
-        //everything is created so the second time this method is 
-        //invoked because of interruption nothing remains to do 
-        InterruptException exc = null;  
-
-        //possibly creates and initializes java.lang.Class
-        try {
-            ensureClassCreatedAndInitialized(state, JAVA_CLASS, ctx);
-        } catch (InterruptException e) {
-            exc = e;
-        } catch (ClassFileNotFoundException e) {
-            throw new ClasspathException(e);
-        } catch (ClassFileIllFormedException e) {
-            throw e;
-        } catch (InvalidInputException | BadClassFileException e) {
-            //this should never happen
-            failExecution(e);
-        }
-
-        //creates a String object for the binary class name
-        final String classNameBinary = binaryClassName(className);
-        //TODO is it ok to treat the class name String as a string literal?
-        try {
-            ensureStringLiteral(state, ctx, classNameBinary);
-        } catch (InterruptException e) {
-            exc = e;
-        }
-
-        //possibly creates and initializes the java.lang.Class Instance
-        final boolean mustInit = (!state.hasInstance_JAVA_CLASS(className));
-        state.ensureInstance_JAVA_CLASS(accessor, className);
-        if (mustInit) {
+    throws BadClassFileException, ClassFileNotAccessibleException, HeapMemoryExhaustedException {
+        if (!state.hasInstance_JAVA_CLASS(className)) {
+            state.ensureInstance_JAVA_CLASS(accessor, className);
             final Reference r = state.referenceToInstance_JAVA_CLASS(className);
             final Instance i = (Instance) state.getObject(r);
+
+            //sets the fields
+            //name
+            final String classNameBinary = binaryClassName(className);
+            state.ensureStringLiteral(classNameBinary);
             final ReferenceConcrete classNameString = state.referenceToStringLiteral(classNameBinary);
             i.setFieldValue(JAVA_CLASS_NAME, classNameString);
-        }
-
-        //throws the interrupt, if any
-        if (exc != null) {
-            throw exc;
+            //TODO more fields
         }
     }
 

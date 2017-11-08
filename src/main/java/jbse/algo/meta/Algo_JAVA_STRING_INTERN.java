@@ -2,7 +2,6 @@ package jbse.algo.meta;
 
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.throwNew;
-import static jbse.algo.Util.ensureStringLiteral;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
@@ -12,7 +11,6 @@ import java.util.function.Supplier;
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
-import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
@@ -46,12 +44,12 @@ public final class Algo_JAVA_STRING_INTERN extends Algo_INVOKEMETA_Nonbranching 
             if (state.hasStringLiteral(this.valueString)) {
                 //nothing to do
             } else {
-                ensureStringLiteral(state, this.ctx, this.valueString);
+                state.ensureStringLiteral(this.valueString);
             }
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
-        } catch (ClassCastException | ClassFileIllFormedException e) {
+        } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
         }

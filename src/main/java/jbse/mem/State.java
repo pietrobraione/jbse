@@ -809,15 +809,15 @@ public final class State implements Cloneable {
      * circularity issues with string constant fields. Does not
      * manage the creation of the {@link Klass} for {@code java.lang.String}
      * and for the classes of the members of the created object. 
-     * If the literal already exists, does nothing.<br /><br />
-     * 
-     * Please do NOT use it, use {@link jbse.algo.Util#ensureStringLiteral(State, jbse.algo.ExecutionContext, String)} 
-     * instead.
+     * If the literal already exists, does nothing.
      * 
      * @param stringLit a {@link String} representing a string literal.
      * @throws HeapMemoryExhaustedException if the heap is full.
      */
     public void ensureStringLiteral(String stringLit) throws HeapMemoryExhaustedException {
+        if (stringLit == null) {
+            throw new NullPointerException("null parameter passed to " + State.class.getName() + ".ensureStringLiteral");
+        }
         if (hasStringLiteral(stringLit)) {
             return;
         }

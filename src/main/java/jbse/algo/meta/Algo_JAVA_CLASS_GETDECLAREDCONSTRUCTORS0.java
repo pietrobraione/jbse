@@ -1,7 +1,6 @@
 package jbse.algo.meta;
 
 import static jbse.algo.Util.ensureInstance_JAVA_CLASS;
-import static jbse.algo.Util.ensureStringLiteral;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
@@ -38,7 +37,6 @@ import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileException;
-import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotFoundException;
@@ -216,8 +214,8 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                     //TODO is it ok?
                     throwVerifyError(state);
                     exitFromAlgorithm();
-                } catch (ClassFileNotAccessibleException | ClasspathException | InvalidTypeException |
-                         InvalidOperandException | FastArrayAccessNotAllowedException | DecisionException e) {
+                } catch (ClassFileNotAccessibleException | InvalidTypeException |
+                         InvalidOperandException | FastArrayAccessNotAllowedException e) {
                     //this should never happen
                     failExecution(e);
                 }
@@ -244,8 +242,8 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                     //TODO is it ok?
                     throwVerifyError(state);
                     exitFromAlgorithm();
-                } catch (MethodNotFoundException | ClassFileNotAccessibleException | ClasspathException | InvalidTypeException |
-                         InvalidOperandException | FastArrayAccessNotAllowedException | DecisionException e) {
+                } catch (MethodNotFoundException | ClassFileNotAccessibleException | InvalidTypeException |
+                         InvalidOperandException | FastArrayAccessNotAllowedException e) {
                     //this should never happen
                     failExecution(e);
                 }
@@ -268,15 +266,14 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                     if (sigType == null) {
                         refSigType = Null.getInstance();
                     } else {
-                        ensureStringLiteral(state, this.ctx, sigType);
+                        state.ensureStringLiteral(sigType);
                         refSigType = state.referenceToStringLiteral(sigType);
                     }
                     constructor.setFieldValue(JAVA_CONSTRUCTOR_SIGNATURE, refSigType);
                 } catch (HeapMemoryExhaustedException e) {
                     throwNew(state, OUT_OF_MEMORY_ERROR);
                     exitFromAlgorithm();
-                } catch (ClassFileIllFormedException | ClasspathException | 
-                         DecisionException | MethodNotFoundException e) {
+                } catch (MethodNotFoundException e) {
                     //this should never happen
                     failExecution(e);
                 }
