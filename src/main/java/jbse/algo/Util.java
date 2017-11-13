@@ -38,7 +38,9 @@ import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidIndexException;
+import jbse.bc.exc.MethodAbstractException;
 import jbse.bc.exc.MethodCodeNotFoundException;
+import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
 import jbse.common.Type;
@@ -114,31 +116,35 @@ public class Util {
      * @param state a {@link State}
      * @param methodSignatureResolved the {@link Signature} of the resolved method
      *        to lookup.
-     * @param isStatic {@code true} iff the method is declared static.
+     * @param isInterface {@code true} iff the method is declared interface.
      * @param isSpecial {@code true} iff the method is declared special.
+     * @param isStatic {@code true} iff the method is declared static.
      * @param receiverClassName a {@link String}, the class name of the receiver
      *        of the method invocation.
      * @return the {@link ClassFile} of the class which contains the method implementation.
      * @throws BadClassFileException  when the class file 
      *         with name {@code methodSignature.}{@link Signature#getClassName() getClassName()}
      *         does not exist or is ill-formed.
-     * @throws MethodNotFoundException if lookup fails in finding the method implementation.
-     * @throws IncompatibleClassFileException when the resolved method is not compatible
-     *         with {@code isStatic} or {@code isSpecial}.
+     * @throws MethodNotFoundException if lookup fails and {@link java.lang.NoSuchMethodError} should be thrown.
+     * @throws MethodNotAccessibleException  if lookup fails and {@link java.lang.IllegalAccessError} should be thrown.
+     * @throws MethodAbstractException if lookup fails and {@link java.lang.AbstractMethodError} should be thrown.
+     * @throws IncompatibleClassFileException if lookup fails and {@link java.lang.IncompatibleClassChangeError} should be thrown.
      * @throws ThreadStackEmptyException if {@code state} has an empty stack (i.e., no
      *         current method).
      */
-    public static ClassFile lookupClassfileMethodImpl(State state, Signature methodSignatureResolved, boolean isStatic, boolean isSpecial, String receiverClassName) 
-    throws BadClassFileException, MethodNotFoundException, IncompatibleClassFileException, ThreadStackEmptyException {
+    public static ClassFile lookupClassfileMethodImpl(State state, Signature methodSignatureResolved, boolean isInterface, boolean isSpecial, boolean isStatic, String receiverClassName) 
+    throws BadClassFileException, MethodNotFoundException, MethodNotAccessibleException, IncompatibleClassFileException, MethodAbstractException, ThreadStackEmptyException {
         final ClassFile retVal;
         final ClassHierarchy hier = state.getClassHierarchy();
-        if (isStatic) {
-            retVal = hier.lookupMethodImplStatic(methodSignatureResolved);
+        if (isInterface) { 
+            retVal = hier.lookupMethodImplInterface(receiverClassName, methodSignatureResolved);
         } else if (isSpecial) {
             final String currentClassName = state.getCurrentMethodSignature().getClassName();
             retVal = hier.lookupMethodImplSpecial(currentClassName, methodSignatureResolved);
-        } else { //invokevirtual and invokeinterface 
-            retVal = hier.lookupMethodImplVirtualInterface(receiverClassName, methodSignatureResolved);
+        } else if (isStatic) {
+            retVal = hier.lookupMethodImplStatic(methodSignatureResolved);
+        } else { //invokevirtual
+            retVal = hier.lookupMethodImplVirtual(receiverClassName, methodSignatureResolved);
         }
         //TODO invokedynamic
         return retVal;

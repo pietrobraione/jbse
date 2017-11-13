@@ -1,7 +1,12 @@
 package jbse.bc.exc;
 
-//throw new JavaReifyException("java/lang/IllegalAccessError");
-
+/**
+ * Exception thrown in all the situations (e.g., method resolution and lookup)
+ * where a {@link java.lang.IllegalAccessError} must be raised.
+ * 
+ * @author Pietro Braione
+ *
+ */
 public class MethodNotAccessibleException extends Exception {
 	/**
 	 * 

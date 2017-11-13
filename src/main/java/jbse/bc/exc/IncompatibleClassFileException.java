@@ -1,5 +1,12 @@
 package jbse.bc.exc;
 
+/**
+ * Exception thrown in all the situations (e.g., method resolution and lookup)
+ * where a {@link java.lang.IncompatibleClassChangeError} must be raised.
+ * 
+ * @author Pietro Braione
+ *
+ */
 public class IncompatibleClassFileException extends Exception {
 	/**
 	 * 

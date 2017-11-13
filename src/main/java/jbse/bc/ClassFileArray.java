@@ -179,6 +179,11 @@ public final class ClassFileArray extends ClassFile {
     public boolean hasMethodDeclaration(Signature methodSignature) {
         return false;
     }
+    
+    @Override
+    public boolean hasOneSignaturePolymorphicMethodDeclaration(String methodName) {
+        return false;
+    }
 
     @Override
     public boolean hasMethodImplementation(Signature methodSignature) {
@@ -208,7 +213,19 @@ public final class ClassFileArray extends ClassFile {
     }
 
     @Override
-    public Signature[] getMethodSignatures() {
+    public boolean isMethodVarargs(Signature methodSignature)
+    throws MethodNotFoundException {
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
+    
+    @Override
+    public boolean isMethodSignaturePolymorphic(Signature methodSignature) 
+    throws MethodNotFoundException {
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
+
+    @Override
+    public Signature[] getDeclaredMethods() {
         return new Signature[0];
     }
 

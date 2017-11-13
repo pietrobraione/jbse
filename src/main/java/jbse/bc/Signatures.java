@@ -110,6 +110,7 @@ public final class Signatures {
     public static final String JAVA_LONG_LONGCACHE           = "java/lang/Long$LongCache";
     public static final String JAVA_MATH                     = "java/lang/Math";
     public static final String JAVA_METHOD                   = "java/lang/reflect/Method";
+    public static final String JAVA_METHODHANDLE             = "java/lang/invoke/MethodHandle";
     public static final String JAVA_MODIFIER                 = "java/lang/reflect/Modifier";
     public static final String JAVA_NUMBER                   = "java/lang/Number";
     public static final String JAVA_OBJECT                   = "java/lang/Object";
@@ -206,6 +207,11 @@ public final class Signatures {
     public static final String NO_SUCH_METHOD_ERROR                = "java/lang/NoSuchMethodError";
     public static final String OUT_OF_MEMORY_ERROR                 = "java/lang/OutOfMemoryError";
     public static final String VERIFY_ERROR                        = "java/lang/VerifyError";
+    
+    //descriptors
+    
+    /** The descriptor of a signature polymorphic method. */
+    public static final String SIGNATURE_POLYMORPHIC_DESCRIPTOR = "(" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND;
     
     //methods
     public static final Signature JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION =

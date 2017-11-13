@@ -177,7 +177,7 @@ public final class InitialHeapChecker {
             Signature methodSignature = this.checkMethods.get(className);
             if (methodSignature == null && this.methodAnnotationClass != null) {
                 final ClassFile cf = s.getClassHierarchy().getClassFile(className);
-                for (Signature sig : cf.getMethodSignatures()) {
+                for (Signature sig : cf.getDeclaredMethods()) {
                     try {
                         if (isMethodCheck(cf, sig) && isMethodAnnotated(cf, sig)) {
                             methodSignature = sig;

@@ -320,6 +320,34 @@ public abstract class BytecodeData {
             failExecution(e);
         }
     }
+    
+    /**
+     * Reads a method signature that might be either interface or noninterface.
+     * 
+     * @param state a {@link State}.
+     * @param methodRefIndex an {@code int}, the index in the constant table
+     *        of the current class' classfile where the method signature is. 
+     *        Usually it is itself an immediate.
+     * @throws InterruptException if the execution of the container
+     *         {@link Algorithm} must be interrupted.
+     */
+    protected final void readMethodSignature(State state, int methodRefIndex)
+    throws InterruptException {
+        try {
+            this.signature = state.getClassHierarchy().getClassFile(state.getCurrentMethodSignature().getClassName()).getMethodSignature(methodRefIndex);
+        } catch (InvalidIndexException e1) {
+            try {
+                this.signature = state.getClassHierarchy().getClassFile(state.getCurrentMethodSignature().getClassName()).getInterfaceMethodSignature(methodRefIndex);
+            } catch (InvalidIndexException e2) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            } catch (BadClassFileException | ThreadStackEmptyException e) {
+                failExecution(e);
+            }
+        } catch (BadClassFileException | ThreadStackEmptyException e) {
+            failExecution(e);
+        }
+    }
 
     /**
      * Sets a method signature. Used only when

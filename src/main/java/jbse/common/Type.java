@@ -74,11 +74,10 @@ public final class Type {
      * 
      * @param type a {@code char}.
      * @return {@code true} iff {@code 
-     *           type == Type.FLOAT || type == Type.DOUBLE}.
+     *           type ==  }{@link #FLOAT}{@code  || type ==  }{@link #DOUBLE}.
      */
     public static boolean isPrimitiveFloating(char type) {
-        return (type == Type.FLOAT ||
-        type == Type.DOUBLE);
+        return (type == Type.FLOAT || type == Type.DOUBLE);
     }
 
     /**
@@ -87,11 +86,10 @@ public final class Type {
      * 
      * @param type a {@code char}.
      * @return {@code true} iff {@code 
-     *           type == Type.INT || type == Type.LONG}.
+     *           type ==  }{@link #INT}{@code  || type ==  }{@link #LONG}.
      */
     public static boolean isPrimitiveIntegralOpStack(char type) {
-        return (type == Type.INT ||
-        type == Type.LONG);
+        return (type == Type.INT || type == Type.LONG);
     }
 
     /**
@@ -100,8 +98,8 @@ public final class Type {
      * 
      * @param type a {@code char}.
      * @return {@code true} iff {@code 
-     *           type == Type.INT || type == Type.LONG ||      
-     *           type == Type.FLOAT || type == Type.DOUBLE}.
+     *           type ==  }{@link #INT}{@code  || type ==  }{@link #LONG}{@code  ||
+     *           type ==  }{@link #FLOAT}{@code  || type ==  }{@link #DOUBLE}.
      */
     public static boolean isPrimitiveOpStack(char type) {
         return (isPrimitiveFloating(type) || isPrimitiveIntegralOpStack(type));
@@ -111,10 +109,10 @@ public final class Type {
      * Checks whether a type is a primitive integral type.
      * 
      * @param type a {@code char}.
-     * @return {@code true} iff {@code type == Type.BYTE ||
-     *           type == Type.INT || type == Type.LONG ||      
-     *           type == Type.SHORT || type == Type.CHAR ||
-     *           type == Type.BOOLEAN}.
+     * @return {@code true} iff {@code type ==  }{@link #BYTE}{@code  ||
+     *           type ==  }{@link #INT}{@code  || type ==  }{@link #LONG}{@code  ||
+     *           type ==  }{@link #SHORT}{@code  || type ==  }{@link #CHAR}{@code  ||
+     *           type ==  }{@link #BOOLEAN}.
      */
     public static boolean isPrimitiveIntegral(char type) {
         return (isPrimitiveIntegralOpStack(type) ||
@@ -128,11 +126,11 @@ public final class Type {
      * Checks whether a type is a primitive type.
      * 
      * @param type a {@code char}.
-     * @return {@code true} iff {@code type == Type.BYTE ||
-     *           type == Type.INT || type == Type.LONG ||      
-     *           type == Type.SHORT || type == Type.CHAR ||
-     *           type == Type.BOOLEAN || type == Type.FLOAT || 
-     *           type == Type.DOUBLE}.
+     * @return {@code true} iff {@code type ==  }{@link #BYTE}{@code  ||
+     *           type ==  }{@link #INT}{@code  || type ==  }{@link #LONG}{@code  ||
+     *           type ==  }{@link #SHORT}{@code  || type ==  }{@link #CHAR}{@code  ||
+     *           type ==  }{@link #BOOLEAN}{@code  ||
+     *           type ==  }{@link #FLOAT}{@code  || type ==  }{@link #DOUBLE}.
      */
     public static boolean isPrimitive(char type) {
         return (isPrimitiveFloating(type) || isPrimitiveIntegral(type));

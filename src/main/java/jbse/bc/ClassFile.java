@@ -145,9 +145,8 @@ public abstract class ClassFile {
          * TODO this implementation is very partial (a nested class can be declared 
          * inside another one, nested class may also be anonymous, ...).
          */
-        return (this.isNested() && 
-        !this.isStatic() && 
-        this.classContainer().equals(external.getClassName()));
+        return (isNested() && !isStatic() && 
+                this.classContainer().equals(external.getClassName()));
     }
 
     /**
@@ -192,6 +191,18 @@ public abstract class ClassFile {
      *         method with signature {@code methodSignature}.
      */
     public abstract boolean hasMethodDeclaration(Signature methodSignature);
+    
+    /**
+     * Tests whether the class has exactly one declaration for a signature polymorphic 
+     * method with a given name. The check that the method is signature polymorphic is
+     * done according to JVMS v8, section 2.9.
+     * 
+     * @param methodName a {@code String}, the method name
+     * @return {@code true} iff the class declares exactly one
+     *         method with name {@code methodName}, and the method
+     *         is signature polymorphic.
+     */
+    public abstract boolean hasOneSignaturePolymorphicMethodDeclaration(String methodName);
 
     /**
      * Tests whether a method in the class is declared abstract.
@@ -256,6 +267,24 @@ public abstract class ClassFile {
      */
     public abstract boolean isMethodNative(Signature methodSignature) throws MethodNotFoundException;
 
+    /**
+     * Tests whether a method in the class is declared varargs.
+     * 
+     * @param methodSignature the {@link Signature} of the method to be checked.
+     * @return {@code true} iff the method is varargs.
+     * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
+     */
+    public abstract boolean isMethodVarargs(Signature methodSignature) throws MethodNotFoundException;
+
+    /**
+     * Tests whether a method in the class is signature polymorphic.
+     * 
+     * @param methodSignature the {@link Signature} of the method to be checked.
+     * @return {@code true} iff the method is signature polymorphic.
+     * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
+     */
+    public abstract boolean isMethodSignaturePolymorphic(Signature methodSignature) throws MethodNotFoundException;
+    
     /**
      * Returns the generic signature (type) of a method.
      * 
@@ -583,6 +612,13 @@ public abstract class ClassFile {
     public abstract Signature[] getDeclaredConstructors();
 
     /**
+     * Returns all the signatures of the methods declared in the class.
+     * 
+     * @return a {@link Signature}{@code []}.
+     */
+    public abstract Signature[] getDeclaredMethods();
+
+    /**
      * Given an index of the constant pool of CONSTANT_MethodRef type, returns the signature of the Method
      * @param methodRef a CONSTANT_Methodref of searched field
      * @return the {@link Signature} of a method.
@@ -590,13 +626,6 @@ public abstract class ClassFile {
      *         in the class constant pool.
      */
     public abstract Signature getMethodSignature(int methodRef) throws InvalidIndexException;
-
-    /**
-     * Returns all the signatures of the methods declared in the class.
-     * 
-     * @return a {@link Signature}{@code []}.
-     */
-    public abstract Signature[] getMethodSignatures();
 
     /**
      * Given an index of the constant pool of CONSTANT_InterfaceMethodRef type, returns the signature of the Method

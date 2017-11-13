@@ -1,5 +1,6 @@
 package jbse.algo;
 
+import static jbse.algo.BytecodeData_1ZME.Kind.kind;
 import static jbse.algo.Util.ensureClassCreatedAndInitialized;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
@@ -7,6 +8,8 @@ import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKEDYNAMICINTERFACE_OFFSET;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
+import static jbse.bc.Signatures.ABSTRACT_METHOD_ERROR;
+import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
@@ -58,7 +61,7 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract<BytecodeData_1
 
     @Override
     protected Supplier<BytecodeData_1ZME> bytecodeData() {
-        return () -> BytecodeData_1ZME.withInterfaceMethod(this.isInterface).get();
+        return () -> BytecodeData_1ZME.withInterfaceMethod(kind(this.isInterface, this.isSpecial, this.isStatic)).get();
     }
 
     @Override
@@ -68,7 +71,6 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract<BytecodeData_1
             try {
                 resolveMethod(state);
             } catch (IncompatibleClassFileException | 
-                     MethodAbstractException | 
                      MethodNotFoundException | 
                      MethodNotAccessibleException | 
                      BadClassFileException e) {
@@ -83,8 +85,13 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract<BytecodeData_1
                 //looks for the method implementation with standard lookup
                 try {
                     findImpl(state);
+                } catch (MethodNotAccessibleException e) {
+                    throwNew(state, ILLEGAL_ACCESS_ERROR);
+                    exitFromAlgorithm();
+                } catch (MethodAbstractException e) {
+                    throwNew(state, ABSTRACT_METHOD_ERROR);
+                    exitFromAlgorithm();
                 } catch (IncompatibleClassFileException e) {
-                    //TODO is it ok?
                     throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
                     exitFromAlgorithm();
                 } catch (BadClassFileException e) {

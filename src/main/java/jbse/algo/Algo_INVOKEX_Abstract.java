@@ -5,7 +5,9 @@ import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.lookupClassfileMethodImpl;
 import static jbse.algo.Util.throwNew;
+import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
+import static jbse.bc.Signatures.NO_SUCH_METHOD_ERROR;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.splitParametersDescriptors;
@@ -14,7 +16,9 @@ import static jbse.common.Type.TYPEEND;
 import java.util.function.Supplier;
 
 import jbse.algo.exc.BaseUnsupportedException;
+import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.MetaUnsupportedException;
+import jbse.algo.exc.NotYetImplementedException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
@@ -35,6 +39,7 @@ import jbse.val.Reference;
  * @author Pietro Braione
  *
  */
+//TODO this class was born when (JVMS 2nd edition) the four invoke bytecodes were not much different, and sharing the implementation made sense; now it should be split in four subclasses. 
 abstract class Algo_INVOKEX_Abstract<D extends BytecodeData> extends Algorithm<D,
 DecisionAlternative_NONE,
 StrategyDecide<DecisionAlternative_NONE>, 
@@ -55,7 +60,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected Signature methodSignatureResolved; //set by cooking methods
     protected ClassFile classFileMethodImpl; //set by cooking methods
     protected Signature methodSignatureImpl; //set by cooking methods
-
+    
     @Override
     protected final Supplier<Integer> numOperands() {
         return () -> {
@@ -65,7 +70,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     protected final void resolveMethod(State state) 
-    throws BadClassFileException, IncompatibleClassFileException, MethodAbstractException, 
+    throws BadClassFileException, IncompatibleClassFileException,  
     MethodNotFoundException, MethodNotAccessibleException {
         try {
             //performs method resolution
@@ -78,18 +83,130 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         }
     }
 
-    protected final void check(State state) throws InterruptException {
-        //checks the resolved method; note that more checks 
-        //are done later, by the last call to state.pushFrame
+    protected final void check(State state) throws InterruptException, CannotManageStateException {
         try {
             final ClassHierarchy hier = state.getClassHierarchy();
             final ClassFile classFileResolved = hier.getClassFile(this.methodSignatureResolved.getClassName());
-            if (classFileResolved.isMethodStatic(this.methodSignatureResolved) != this.isStatic) {
-                throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
-                exitFromAlgorithm();
-                //TODO this check is ok for invoke[interface/static/virtual], which checks should we do for invokespecial, if any?
-            }
-        } catch (BadClassFileException | MethodNotFoundException e) {
+            
+            if (this.isInterface) {
+                //checks for invokeinterface
+                
+                //the first linking exception pertains to method resolution
+                
+                //second linking exception
+                if (classFileResolved.isMethodStatic(this.methodSignatureResolved) || classFileResolved.isMethodPrivate(this.methodSignatureResolved)) {
+                    throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                    exitFromAlgorithm();
+                }
+                
+                //first run-time exception
+                final Reference receiver = state.peekReceiverArg(this.methodSignatureResolved);
+                if (state.isNull(receiver)) {
+                    throwNew(state, NULL_POINTER_EXCEPTION);
+                    exitFromAlgorithm();
+                }
+                
+                //second run-time exception
+                if (!hier.isSubclass(state.getObject(receiver).getType(), this.methodSignatureResolved.getClassName())) {
+                    throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                    exitFromAlgorithm();
+                }
+                
+                //the third, fourth, fifth, sixth and seventh run-time exception pertain to lookup of method implementation
+            } else if (this.isSpecial) {
+                //checks for invokespecial
+                
+                //the first linking exception pertains to method resolution
+                
+                //second linking exception
+                if ("<init>".equals(this.methodSignatureResolved.getName()) &&
+                    !this.methodSignatureResolved.getClassName().equals(this.data.signature().getClassName())) {
+                    throwNew(state, NO_SUCH_METHOD_ERROR);
+                    exitFromAlgorithm();
+                }
+                
+                //third linking exception
+                if (classFileResolved.isMethodStatic(this.methodSignatureResolved)) {
+                    throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                    exitFromAlgorithm();
+                }
+                
+                //first run-time exception
+                final Reference receiver = state.peekReceiverArg(this.methodSignatureResolved);
+                if (state.isNull(receiver)) {
+                    throwNew(state, NULL_POINTER_EXCEPTION);
+                    exitFromAlgorithm();
+                }
+                
+                //second run-time exception (identical to second run-time exception of invokevirtual case)
+                final String currentClass = state.getCurrentMethodSignature().getClassName();
+                if (classFileResolved.isMethodProtected(this.methodSignatureResolved) &&
+                    hier.isSubclass(currentClass, this.methodSignatureResolved.getClassName())) {
+                    final ClassFile classFileCurrent = hier.getClassFile(currentClass);
+                    final boolean samePackage = classFileCurrent.getPackageName().equals(classFileResolved.getPackageName());
+                    final String receiverClass = state.getObject(receiver).getType();                    
+                    if (!samePackage && !hier.isSubclass(receiverClass, currentClass)) {
+                        throwNew(state, ILLEGAL_ACCESS_ERROR);
+                        exitFromAlgorithm();
+                    }
+                }
+                
+                //the third, fifth and sixth run-time exceptions pertain to lookup of method implementation                
+                //the fourth run-time exception is not raised by JBSE (natives)
+            } else if (this.isStatic) {
+                //checks for invokestatic
+                
+                //the first linking exception pertains to method resolution
+                
+                //second linking exception
+                if (!classFileResolved.isMethodStatic(this.methodSignatureResolved)) {
+                    throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                    exitFromAlgorithm();
+                }
+                
+                //the first run-time exception pertains to class/interface initialization
+                //the second run-time exception is not raised by JBSE (natives)
+            } else {            
+                //checks for invokevirtual
+                
+                //the first linking exception pertains to method resolution
+                
+                //second linking exception
+                if (classFileResolved.isMethodStatic(this.methodSignatureResolved)) {
+                    throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                    exitFromAlgorithm();
+                }
+                
+                //the third linking exception pertains to method type resolution
+                
+                //first run-time exception
+                final Reference receiver = state.peekReceiverArg(this.methodSignatureResolved);
+                if (state.isNull(receiver)) {
+                    throwNew(state, NULL_POINTER_EXCEPTION);
+                    exitFromAlgorithm();
+                }
+                
+                //second run-time exception (identical to second run-time exception of invokespecial case)
+                final String currentClass = state.getCurrentMethodSignature().getClassName();
+                if (classFileResolved.isMethodProtected(this.methodSignatureResolved) &&
+                    hier.isSubclass(currentClass, this.methodSignatureResolved.getClassName())) {
+                    final ClassFile classFileCurrent = hier.getClassFile(currentClass);
+                    final boolean samePackage = classFileCurrent.getPackageName().equals(classFileResolved.getPackageName());
+                    final String receiverClass = state.getObject(receiver).getType();                    
+                    if (!samePackage && !hier.isSubclass(receiverClass, currentClass)) {
+                        throwNew(state, ILLEGAL_ACCESS_ERROR);
+                        exitFromAlgorithm();
+                    }
+                }
+                
+                //the third, fourth, fifth and sixth run-time exception pertain to lookup of method implementation
+                
+                if (classFileResolved.isMethodSignaturePolymorphic(this.methodSignatureResolved)) {
+                    //TODO seventh and eighth run-time exceptions
+                    throw new NotYetImplementedException("invocation of signature-polymorphic method " + this.methodSignatureResolved);
+                }
+            }            
+        } catch (BadClassFileException | MethodNotFoundException | ThreadStackEmptyException e) {
             //this should never happen after resolution
             failExecution(e);
         }
@@ -97,24 +214,21 @@ StrategyUpdate<DecisionAlternative_NONE>> {
 
     protected final void findImpl(State state) 
     throws BadClassFileException, IncompatibleClassFileException, 
-    InterruptException {
+    MethodNotAccessibleException, MethodAbstractException, InterruptException {
         try {
             final boolean isVirtualInterface = !this.isStatic && !this.isSpecial;
             final String receiverClassName;
             if (isVirtualInterface) {
                 final Reference thisRef = state.peekReceiverArg(this.methodSignatureResolved);
-                if (state.isNull(thisRef)) {
-                    throwNew(state, NULL_POINTER_EXCEPTION);
-                    exitFromAlgorithm();
-                }
                 receiverClassName = state.getObject(thisRef).getType();
             } else {
                 receiverClassName = null;
             }
             this.classFileMethodImpl = lookupClassfileMethodImpl(state, 
                                                                  this.methodSignatureResolved, 
-                                                                 this.isStatic, 
+                                                                 this.isInterface, 
                                                                  this.isSpecial, 
+                                                                 this.isStatic,
                                                                  receiverClassName);
             this.methodSignatureImpl = new Signature(this.classFileMethodImpl.getClassName(), 
                                                      this.methodSignatureResolved.getDescriptor(), 

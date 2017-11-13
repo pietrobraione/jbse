@@ -1066,16 +1066,16 @@ public final class State implements Cloneable {
      *         incompatible with their respective slots types.
      * @throws InvalidTypeException when narrowing of an argument (performed to match
      *         the method's signature) fails.
-     * @throws ThreadStackEmptyException when {@code isRoot == false} and the 
-     *         state's thread stack is empty.
      * @throws InvalidProgramCounterException when {@code isRoot == false} and
      *         {@code returnPCOffset} is not a valid program count offset for the
      *         state's current frame.
+     * @throws ThreadStackEmptyException when {@code isRoot == false} and the 
+     *         state's thread stack is empty.
      */
     public void pushFrame(Signature methodSignatureImpl, boolean isRoot, int returnPCOffset, Value... args) 
     throws NullMethodReceiverException, BadClassFileException, MethodNotFoundException, 
-    MethodCodeNotFoundException, InvalidSlotException, InvalidProgramCounterException, 
-    InvalidTypeException, ThreadStackEmptyException {
+    MethodCodeNotFoundException, InvalidSlotException, InvalidTypeException, InvalidProgramCounterException, 
+    ThreadStackEmptyException {
         final ClassFile classMethodImpl = this.classHierarchy.getClassFile(methodSignatureImpl.getClassName());
         final boolean isStatic = classMethodImpl.isMethodStatic(methodSignatureImpl);
         //checks the "this" parameter (invocation receiver) if necessary
@@ -1211,7 +1211,7 @@ public final class State implements Cloneable {
 
     /**
      * Parses the signature of a method, and returns the
-     * "this" parameter as found on the operand stack. 
+     * {@code this} parameter as found on the operand stack. 
      * 
      * @param methodSignature
      *        the {@link Signature} of a method. It is <em>not</em>

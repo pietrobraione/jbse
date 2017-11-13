@@ -3,6 +3,7 @@ package jbse.bc;
 import static jbse.bc.Signatures.JAVA_CLONEABLE;
 import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_SERIALIZABLE;
+import static jbse.bc.Signatures.SIGNATURE_POLYMORPHIC_DESCRIPTOR;
 import static jbse.common.Type.className;
 
 import java.util.ArrayList;
@@ -16,6 +17,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
@@ -514,7 +517,7 @@ public class ClassHierarchy {
      * described in the JVMS v8, section 5.4.3.2.
      * 
      * @param fieldSignature a field {@link Signature}.
-     * @return the {@link Signature} of the declaration for {@code fieldSignature}, 
+     * @return the {@link Signature} for the declaration for {@code fieldSignature}, 
      *         or {@code null} if such declaration does not exist. 
      */
     private Signature resolveFieldLookup(Signature fieldSignature) throws BadClassFileException {
@@ -548,9 +551,10 @@ public class ClassHierarchy {
             return fieldSignatureResolved;
         }
     }
-
+    
     /**
-     * Performs both method and interface method resolution (see JVM Specification, sec. 5.4.3.3 and 5.4.3.4).
+     * Performs both method and interface method resolution 
+     * (see JVMS v8, section 5.4.3.3 and 5.4.3.4).
      * 
      * @param accessor a {@link String}, the signature of the accessor's class.
      * @param methodSignature the {@link Signature} of the method to be resolved.
@@ -564,19 +568,18 @@ public class ClassHierarchy {
      *         {@code methodSignature.}{@link Signature#getClassName() getClassName()}
      *         to the method disagrees with {@code isInterface}.
      * @throws MethodNotFoundException if resolution fails.
-     * @throws MethodAbstractException if resolution yields an abstract method.
      * @throws MethodNotAccessibleException if the resolved method is not accessible 
      *         by {@code accessor}.
      */
     public Signature resolveMethod(String accessor, Signature methodSignature, boolean isInterface) 
-    throws BadClassFileException, IncompatibleClassFileException, MethodAbstractException, 
+    throws BadClassFileException, IncompatibleClassFileException,  
     MethodNotFoundException, MethodNotAccessibleException {
         //gets the classfile for class mentioned in the method's *invocation*
         //TODO implement class resolution and loading!
         final ClassFile classFile = getClassFile(methodSignature.getClassName());
 
         //checks if the symbolic reference to the method class 
-        //is an interface (JVM spec 5.4.3.3(1) and 5.4.3.4(1))
+        //is an interface (JVMS v8, section 5.4.3.3 step 1 and section 5.4.3.4 step 1)
         if (isInterface != classFile.isInterface()) {
             throw new IncompatibleClassFileException(methodSignature.getClassName());
         }
@@ -584,71 +587,68 @@ public class ClassHierarchy {
         //attempts to find a superclass or superinterface containing 
         //a declaration for the method
         Signature methodSignatureResolved = null;
-        ClassFile classFileResolve = null;
 
-        //searches for the method declaration in the superclasses 
-        //(only method resolution, JVM spec 2, 5.4.3.3(2))
-        if (!isInterface) {
-            for (ClassFile cf : superclasses(methodSignature.getClassName())) {
-                if (cf instanceof ClassFileBad) {
-                    throw ((ClassFileBad) cf).getException();
-                } else if (cf.hasMethodDeclaration(methodSignature)) {
-                    classFileResolve = cf;
-                    methodSignatureResolved = 
+        //searches for the method declaration in the superclasses; for
+        //interfaces this means searching only in the interface
+        //(JVMS v8, section 5.4.3.3 step 2 and section 5.4.3.4 step 2)
+        for (ClassFile cf : superclasses(methodSignature.getClassName())) {
+            if (cf instanceof ClassFileBad) {
+                throw ((ClassFileBad) cf).getException();
+            } else if (!isInterface && cf.hasOneSignaturePolymorphicMethodDeclaration(methodSignature.getName())) {
+                methodSignatureResolved = 
+                    new Signature(cf.getClassName(), SIGNATURE_POLYMORPHIC_DESCRIPTOR, methodSignature.getName());
+                //TODO resolve all the class names in methodSignature.getDescriptor()
+                break;
+            } else if (cf.hasMethodDeclaration(methodSignature)) {
+                methodSignatureResolved = 
                     new Signature(cf.getClassName(), methodSignature.getDescriptor(), methodSignature.getName());
-                    break;
-                }
+                break;
+            }
+        }
+        
+        //searches for the method declaration in java.lang.Object, thing that
+        //the previous code does not do in the case of interfaces
+        //(JVMS v8, section 5.4.3.4 step 3)
+        if (methodSignatureResolved == null && isInterface) {
+            final ClassFile cfJAVA_OBJECT = getClassFile(JAVA_OBJECT);
+            if (cfJAVA_OBJECT.hasMethodDeclaration(methodSignature)) {
+                methodSignatureResolved = 
+                    new Signature(JAVA_OBJECT, methodSignature.getDescriptor(), methodSignature.getName());
+            }
+        }
+
+        //searches for a single, non-abstract, maximally specific superinterface method 
+        //(JVMS v8, section 5.4.3.3 step 3a and section 5.4.3.4 step 4)
+        if (methodSignatureResolved == null) {
+            final Set<Signature> nonabstractMaxSpecMethods = maximallySpecificSuperinterfaceMethods(methodSignature, true);
+            if (nonabstractMaxSpecMethods.size() == 1) {
+                methodSignatureResolved = nonabstractMaxSpecMethods.iterator().next();
             }
         }
 
         //searches in the superinterfaces
-        //(JVM spec 2, 5.4.3.3(3) and 5.4.3.4(2))
+        //(JVMS v8, section 5.4.3.3 step 3b and 5.4.3.4 step 5)
         if (methodSignatureResolved == null) {
             for (ClassFile cf : superinterfaces(methodSignature.getClassName())) {
                 if (cf instanceof ClassFileBad) {
                     throw ((ClassFileBad) cf).getException();
-                } else if (cf.hasMethodDeclaration(methodSignature)) {
-                    classFileResolve = cf;
+                } else if (cf.hasMethodDeclaration(methodSignature) && 
+                          !cf.isMethodPrivate(methodSignature) && 
+                          !cf.isMethodStatic(methodSignature)) {
                     methodSignatureResolved = 
-                    new Signature(cf.getClassName(), methodSignature.getDescriptor(), methodSignature.getName());
+                        new Signature(cf.getClassName(), methodSignature.getDescriptor(), methodSignature.getName());
                     break;
                 }
             }
         }
 
-        //searches in the java.lang.Object class 
-        //(only interface method resolution, JVM spec 2, 5.4.3.4(2))
-        if (methodSignatureResolved == null && isInterface) {
-            final ClassFile cf = getClassFile(JAVA_OBJECT);
-            if (cf.hasMethodDeclaration(methodSignature)) {
-                classFileResolve = cf;
-                methodSignatureResolved = 
-                new Signature(cf.getClassName(), methodSignature.getDescriptor(), methodSignature.getName());
-            }
-        }
-
-        //exits if no method has been found
+        //exits if lookup failed
         if (methodSignatureResolved == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
 
-        //additional checks for noninterface methods
-        if (!isInterface) {
-            //checks the resolved method is not abstract in the case 
-            //the class where we started is not an abstract class
-            try {
-                if (!classFile.isAbstract() && classFileResolve.isMethodAbstract(methodSignatureResolved)) {
-                    throw new MethodAbstractException(methodSignature.toString());
-                }
-            } catch (MethodNotFoundException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
-            }
-        }
-
         //if a declaration has found, then it checks accessibility and, in case, 
-        //raises IllegalAccessError; otherwise, returns the resolved method signature;
-        //note that this check is not required by the JVM spec 2, but later specs do 
+        //raises IllegalAccessError; otherwise, returns the resolved method signature
         try {
             if (isMethodAccessible(accessor, methodSignatureResolved)) {
                 //everything went ok
@@ -661,10 +661,98 @@ public class ClassHierarchy {
             throw new UnexpectedInternalException(e);
         }
     }
+    
+    /**
+     * Returns the maximally specific superinterface methods
+     * of a given method signature.
+     * 
+     * @param methodSignature a method {@link Signature}.
+     * @param nonAbstract a {@code boolean}
+     * @return a {@link Set}{@code <}{@link Signature}{@code >} containing maximally-specific 
+     *         superinterface methods of {@code methodSignature.}{@link Signature#getClassName() getClassName()}
+     *         for {@code methodSignature.}{@link Signature#getDescriptor() getDescriptor()}
+     *         and {@code methodSignature.}{@link Signature#getName() getName()}, 
+     *         as for JVMS v8, section 5.4.3.3. If {@code nonAbstract == true}, such set
+     *         contains all and only the maximally-specific superinterface methods that are 
+     *         not abstract. If {@code nonAbstract == false}, it contains exactly all the 
+     *         maximally-specific superinterface methods.
+     * @throws BadClassFileException if the classfile for {@code methodSignature.}{@link Signature#getClassName() getClassName()}
+     *         or any of its superinterfaces does not exist on the classpath or is ill-formed.
+     */
+    private Set<Signature> maximallySpecificSuperinterfaceMethods(Signature methodSignature, boolean nonAbstract) 
+    throws BadClassFileException {
+        final HashSet<String> maximalSet = new HashSet<>();
+        final HashSet<String> nextSet = new HashSet<>();
+        final HashSet<String> dominatedSet = new HashSet<>();
+        
+        //initializes next with all the superinterfaces of methodSignature's class
+        nextSet.addAll(getClassFile(methodSignature.getClassName()).getSuperInterfaceNames());
+        
+        while (!nextSet.isEmpty()) {
+            //picks a superinterface from the next set
+            final String superinterface = nextSet.iterator().next();
+            final ClassFile cfSuperinterface = getClassFile(superinterface);
+            nextSet.remove(superinterface);
+
+            //determine all the (strict) superinterfaces of the superinterface
+            final Iterable<ClassFile> cfSuperinterfaceSuperinterfaces = superinterfaces(cfSuperinterface.getClassName());
+            final Set<String> superinterfaceSuperinterfaces = 
+                stream(cfSuperinterfaceSuperinterfaces)
+                .map(ClassFile::getClassName)
+                .collect(Collectors.toSet());
+            superinterfaceSuperinterfaces.remove(superinterface);            
+            
+            //look for a method declaration of methodSignature in the superinterface 
+            try {
+                if (cfSuperinterface.hasMethodDeclaration(methodSignature) &&  !cfSuperinterface.isMethodPrivate(methodSignature) && !cfSuperinterface.isMethodStatic(methodSignature)) {
+                    //method declaration found: add the superinterface 
+                    //to maximalSet...
+                    maximalSet.add(cfSuperinterface.getClassName());
+                    
+                    //...remove the superinterface's strict superinterfaces
+                    //from maximalSet, and add them to dominatedSet
+                    maximalSet.removeAll(superinterfaceSuperinterfaces);
+                    dominatedSet.addAll(superinterfaceSuperinterfaces);
+                } else if (!dominatedSet.contains(superinterface)) {
+                    //no method declaration: add to nextSet all the direct 
+                    //superinterfaces of the superinterface that are not 
+                    //dominated; skips this step if the superinterface is 
+                    //itself dominated
+                    nextSet.addAll(cfSuperinterface.getSuperInterfaceNames());
+                    nextSet.removeAll(dominatedSet);
+                }
+            } catch (MethodNotFoundException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            }
+        }
+        
+        return maximalSet.stream()
+            .map(s -> new Signature(s, methodSignature.getDescriptor(), methodSignature.getName()))
+            .filter(s -> {
+                try {
+                    return (nonAbstract ? !(getClassFile(s.getClassName()).isMethodAbstract(s)) : true);
+                } catch (MethodNotFoundException | BadClassFileException e) {
+                    //this should never happen
+                    throw new UnexpectedInternalException(e);
+                }
+            })
+            .collect(Collectors.toSet());
+    }
+    
+    /**
+     * Converts an iterable to a stream.
+     * See <a href="https://stackoverflow.com/a/23177907/450589">https://stackoverflow.com/a/23177907/450589</a>.
+     * @param it
+     * @return
+     */
+    private static <T> Stream<T> stream(Iterable<T> it) {
+        return StreamSupport.stream(it.spliterator(), false);
+    }
 
     /**
      * Checks whether a class/interface is accessible to another class/interface
-     * according to JVM specification sec. 5.4.4.
+     * according to JVMS v8, section 5.4.4.
      * 
      * @param accessor a {@link String}, the signature of a class or interface.
      * @param accessed a {@link String}, the signature of a class or interface.
@@ -688,10 +776,10 @@ public class ClassHierarchy {
 
     /**
      * Checks whether a field is accessible to a class/interface
-     * according to JVM specification sec. 5.4.4.
+     * according to JVMS v8, section. 5.4.4.
      * 
      * @param accessor a {@link String}, the name of a class or interface.
-     * @param accessed a {@link Signature}, the signature of a field.
+     * @param accessed a {@link Signature}, the signature of a field declaration.
      * @return {@code true} iff {@code accessed} is accessible to 
      *         {@code accessor}.
      * @throws BadClassFileException if the classfiles for {@code accessor}
@@ -704,14 +792,31 @@ public class ClassHierarchy {
     throws BadClassFileException, FieldNotFoundException {
         final ClassFile cfAccessed = getClassFile(accessed.getClassName());
         final ClassFile cfAccessor = getClassFile(accessor);
-        boolean samePackage = cfAccessed.getPackageName().equals(cfAccessor.getPackageName());
+        final boolean samePackage = cfAccessed.getPackageName().equals(cfAccessor.getPackageName());
         if (cfAccessed.isFieldPublic(accessed)) {
             return true;
         } else if (cfAccessed.isFieldProtected(accessed)) {
             if (samePackage) {
                 return true;
+            } else if (!isSubclass(accessor, accessed.getClassName())) {
+                return false;
+            } else if (cfAccessed.isFieldStatic(accessed)) {
+                return true;
             } else {
-                return isSubclass(accessor, accessed.getClassName());
+                //gets the fields declarations in the accessed classfile
+                final Signature[] declaredFields = cfAccessed.getDeclaredFieldsNonStatic();
+                
+                //looks for the class of the declared field and checks it
+                for (Signature decl : declaredFields) {
+                    if (decl.getDescriptor().equals(accessed.getDescriptor()) && decl.getName().equals(accessed.getName())) {
+                        return isSubclass(accessor, decl.getClassName()) || isSubclass(decl.getClassName(), accessor);
+                    }
+                }
+                
+                //if we reach here, the previous for loop did not find
+                //the field in the declarations of cfAccessed, which 
+                //should never happen
+                throw new UnexpectedInternalException("did not find in class " + accessed.getClassName() + " a declaration for field " + accessed.getDescriptor() + ":" + accessed.getName());
             }
         } else if (cfAccessed.isFieldPackage(accessed)) {
             return samePackage; 
@@ -723,7 +828,7 @@ public class ClassHierarchy {
 
     /**
      * Checks whether a method is accessible to a class/interface
-     * according to JVM specification sec. 5.4.4.
+     * according to JVMS v8, section 5.4.4.
      * 
      * @param accessor a {@link String}, the signature of a class or interface.
      * @param accessed a {@link Signature}, the signature of a method.
@@ -745,8 +850,28 @@ public class ClassHierarchy {
         } else if (cfAccessed.isMethodProtected(accessed)) {
             if (samePackage) {
                 return true;
+            } else if (!isSubclass(accessor, accessed.getClassName())) {
+                return false;
+            } else if (cfAccessed.isMethodStatic(accessed)) {
+                return true;
             } else {
-                return isSubclass(accessor, accessed.getClassName());
+                //gets the method declarations in the accessed classfile
+                final Signature[] declaredMethods = 
+                    Stream.concat(Arrays.stream(cfAccessed.getDeclaredMethods()), 
+                                  Arrays.stream(cfAccessed.getDeclaredConstructors()))
+                    .toArray(Signature[]::new);
+                
+                //looks for the class of the declared method and checks it
+                for (Signature decl : declaredMethods) {
+                    if (decl.getDescriptor().equals(accessed.getDescriptor()) && decl.getName().equals(accessed.getName())) {
+                        return isSubclass(accessor, decl.getClassName()) || isSubclass(decl.getClassName(), accessor);
+                    }
+                }
+                
+                //if we reach here, the previous for loop did not find
+                //the field in the declarations of cfAccessed, which 
+                //should never happen
+                throw new UnexpectedInternalException("did not find in class " + accessed.getClassName() + " a declaration for method " + accessed.getDescriptor() + ":" + accessed.getName());
             }
         } else if (cfAccessed.isMethodPackage(accessed)) {
             return samePackage;
@@ -757,134 +882,253 @@ public class ClassHierarchy {
     }
 
     /**
-     * Performs method lookup according to the semantics of the 
-     * INVOKESTATIC bytecode.
-     * 	 
-     * @param methodSignature the signature of the resolved method 
-     *        which must be looked up.
-     * @return the {@link ClassFile} of the class which 
-     *         contains the method implementation.
-     * @throws BadClassFileException when the class file 
-     *         with name {@code methodSignature.}{@link Signature#getClassName() getClassName()} 
-     *         does not exist or is ill-formed.
-     * @throws MethodNotFoundException when method lookup fails.
-     * @throws IncompatibleClassFileException when a method with signature 
-     *         {@code methodSignature} exists but it is not static.
-     */
-    public ClassFile lookupMethodImplStatic(Signature methodSignature) 
-    throws BadClassFileException, MethodNotFoundException, 
-    IncompatibleClassFileException {
-        //the method must be in the class of the method signature
-        final ClassFile retVal = getClassFile(methodSignature.getClassName());
-        if (!retVal.isMethodStatic(methodSignature)) {
-            throw new IncompatibleClassFileException(retVal.getClassName());
-        }
-        return retVal;
-    }
-
-    /**
-     * Performs method lookup according to the semantics of the 
-     * INVOKEVIRTUAL bytecode.
+     * Performs method implementation lookup according to the semantics of the 
+     * INVOKEINTERFACE bytecode.
      * 
      * @param receiverClassName the name of the class of the 
      *        method invocation's receiver.
-     * @param methodSignature the {@link Signature} of the resolved method 
+     * @param methodSignatureResolved the {@link Signature} of the resolved method 
      *        which must be looked up.
-     * @return the {@link ClassFile} of the superclass of
-     *         {@code methodSignature.getClassName()} which 
-     *         contains the method implementation.
+     * @return the {@link ClassFile} which contains the method implementation of 
+     *         {@code methodSignatureResolved}.
      * @throws BadClassFileException when the class file 
-     *         with name {@code methodSignature.}{@link Signature#getClassName() getClassName()} 
+     *         with name {@code methodSignatureResolved.}{@link Signature#getClassName() getClassName()} 
      *         or that of one of its superclasses does not exist or is ill-formed.
-     * @throws MethodNotFoundException when method lookup fails.
-     * @throws IncompatibleClassFileException when method lookup succeeds, but the
-     *         found method is static.
+     * @throws MethodNotAccessibleException  if lookup fails and {@link java.lang.IllegalAccessError} should be thrown.
+     * @throws MethodAbstractException if lookup fails and {@link java.lang.AbstractMethodError} should be thrown.
+     * @throws IncompatibleClassFileException if lookup fails and {@link java.lang.IncompatibleClassChangeError} should be thrown.
      */
-    public ClassFile lookupMethodImplVirtualInterface(String receiverClassName, Signature methodSignature) 
-    throws BadClassFileException, MethodNotFoundException, IncompatibleClassFileException {
-        for (ClassFile f : superclasses(receiverClassName)) {
-            if (f instanceof ClassFileBad) {
-                throw ((ClassFileBad) f).getException();
-            } else if (f.hasMethodImplementation(methodSignature)) {
-                if (f.isMethodStatic(methodSignature)) {
-                    throw new IncompatibleClassFileException(f.getClassName());
+    public ClassFile lookupMethodImplInterface(String receiverClassName, Signature methodSignatureResolved) 
+    throws BadClassFileException, MethodNotAccessibleException, MethodAbstractException, IncompatibleClassFileException {
+        ClassFile retVal = null;
+        
+        try {
+            //step 1 and 2
+            for (ClassFile f : superclasses(receiverClassName)) {
+                if (f instanceof ClassFileBad) {
+                    throw ((ClassFileBad) f).getException();
+                } else if (f.hasMethodDeclaration(methodSignatureResolved) && !f.isMethodStatic(methodSignatureResolved)) {
+                    retVal = f;
+                    
+                    //third run-time exception
+                    if (!retVal.isMethodPublic(methodSignatureResolved)) {
+                        throw new MethodNotAccessibleException(methodSignatureResolved.toString());
+                    }
+
+                    //fourth run-time exception
+                    if (retVal.isMethodAbstract(methodSignatureResolved)) {
+                        throw new MethodAbstractException(methodSignatureResolved.toString());
+                    }
+                    
+                    break;
                 }
-                return f;
             }
+
+            //step 3
+            if (retVal == null) {
+                final Set<Signature> nonabstractMaxSpecMethods = 
+                maximallySpecificSuperinterfaceMethods(methodSignatureResolved, true);
+                if (nonabstractMaxSpecMethods.size() == 0) {
+                    //sixth run-time exception
+                    throw new MethodAbstractException(methodSignatureResolved.toString());
+                } else if (nonabstractMaxSpecMethods.size() == 1) {
+                    retVal = getClassFile(nonabstractMaxSpecMethods.iterator().next().getClassName());
+                } else { //nonabstractMaxSpecMethods.size() > 1
+                    //fifth run-time exception
+                    throw new IncompatibleClassFileException(methodSignatureResolved.toString());
+                }
+            }
+        } catch (MethodNotFoundException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
         }
-        throw new MethodNotFoundException(methodSignature.toString());
+        
+        return retVal;
     }
 
     /**
-     * Performs method lookup according to the semantics of the 
+     * Performs method implementation lookup according to the semantics of the 
      * INVOKESPECIAL bytecode.
      * 
      * @param currentClassName the name of the class of the invoker.
-     * @param methodSignature the signature of the resolved method 
+     * @param methodSignatureResolved the signature of the resolved method 
      *        which must be looked up.
      * @return the {@link ClassFile} of the class which 
-     *         contains the method implementation.
+     *         contains the method implementation of 
+     *         {@code methodSignatureResolved}.
      * @throws BadClassFileException when the class file 
-     *         with name {@code methodSignature.}{@link Signature#getClassName() getClassName()} 
+     *         with name {@code methodSignatureResolved.}{@link Signature#getClassName() getClassName()} 
      *         does not exist or is ill-formed.
-     * @throws MethodNotFoundException when method lookup fails, or it is a {@code <init>}
-     *         method but it is not declared in 
-     *         {@code methodSignature.}{@link Signature#getClassName() getClassName()}.
-     * @throws IncompatibleClassFileException when method lookup succeeds, but the
-     *         found method is static.
+     * @throws MethodAbstractException if lookup fails and {@link java.lang.AbstractMethodError} should be thrown.
+     * @throws IncompatibleClassFileException if lookup fails and {@link java.lang.IncompatibleClassChangeError} should be thrown.
      */
-    public ClassFile lookupMethodImplSpecial(String currentClassName, Signature methodSignature) 
-    throws BadClassFileException, MethodNotFoundException, IncompatibleClassFileException {
-        ClassFile retVal = null;
-        boolean useNonVirtual = true;
-
-        //determines whether should look for the implementation in 
-        //the current class superclasses (super() virtual semantics) or in 
-        //the method's signature class (nonvirtual semantics) and 
-        //at the same time calculates the superclass for virtual semantics
+    public ClassFile lookupMethodImplSpecial(String currentClassName, Signature methodSignatureResolved) 
+    throws BadClassFileException, MethodAbstractException, IncompatibleClassFileException {
+        final String resolutionClassName = methodSignatureResolved.getClassName();
         final ClassFile currentClass = getClassFile(currentClassName);
-        if (currentClass.isSuperInvoke() &&
-        isSubclass(currentClass.getClassName(), methodSignature.getClassName()) &&
-        !methodSignature.getName().equals("<init>")) {
-            boolean skippedFirst = false;
+        final ClassFile resolutionClass = getClassFile(resolutionClassName);
 
-            for (ClassFile f : superclasses(currentClassName)) {
-                if (f instanceof ClassFileBad) {
-                    throw ((ClassFileBad) f).getException();
-                } else if (skippedFirst) { 
-                    if (f.hasMethodImplementation(methodSignature))
+        //determines whether should start looking for the implementation in 
+        //the superclass of the current class (virtual semantics, for super 
+        //calls) or in the class of the resolved method (nonvirtual semantics, 
+        //for <init> and private methods)
+        final boolean useVirtualSemantics = 
+            (!"<init>".equals(methodSignatureResolved.getName()) &&
+             (resolutionClass.isInterface() || isSubclass(currentClass.getSuperclassName(), resolutionClassName)) && 
+             currentClass.isSuperInvoke());
+        final ClassFile c = (useVirtualSemantics ? 
+                             getClassFile(currentClass.getSuperclassName()) : 
+                             getClassFile(resolutionClassName));
+        
+        //applies lookup
+        ClassFile retVal = null;
+        try {
+            //step 1
+            if (c.hasMethodDeclaration(methodSignatureResolved) && 
+                !c.isMethodStatic(methodSignatureResolved)) {
+                retVal = c;
+                //third run-time exception
+                if (retVal.isMethodAbstract(methodSignatureResolved)) {
+                    throw new MethodAbstractException(methodSignatureResolved.toString());
+                }
+            } 
+
+            //step 2
+            if (retVal == null && !c.isInterface() && c.getSuperclassName() != null) {
+                for (ClassFile f : superclasses(c.getSuperclassName())) {
+                    if (f instanceof ClassFileBad) {
+                        throw ((ClassFileBad) f).getException();
+                    } else if (f.hasMethodDeclaration(methodSignatureResolved)) {
                         retVal = f;
-                    if (f.getClassName().equals(methodSignature.getClassName())) {
-                        useNonVirtual = false;
+                        //third run-time exception
+                        if (retVal.isMethodAbstract(methodSignatureResolved)) {
+                            throw new MethodAbstractException(methodSignatureResolved.toString());
+                        }
                         break;
                     }
                 }
-                skippedFirst = true;
             }
-        }
 
-        //nonvirtual case: gets the method implementation
-        //from the resolved method's class
-        if (useNonVirtual) {
-            final ClassFile resolvedClass = getClassFile(methodSignature.getClassName());
-            if (resolvedClass.hasMethodImplementation(methodSignature)) {
-                retVal = resolvedClass;
-            } else {
-                retVal = null;
+            //step 3
+            if (retVal == null && c.isInterface()) {
+                final ClassFile cfJAVA_OBJECT = getClassFile(JAVA_OBJECT);
+                if (c.hasMethodDeclaration(methodSignatureResolved) && 
+                    !c.isMethodStatic(methodSignatureResolved) && 
+                    c.isMethodPublic(methodSignatureResolved)) {
+                    retVal = cfJAVA_OBJECT;
+                    //third run-time exception
+                    if (retVal.isMethodAbstract(methodSignatureResolved)) {
+                        throw new MethodAbstractException(methodSignatureResolved.toString());
+                    }
+                }
             }
-        }
 
-        if (retVal == null) {
-            throw new MethodNotFoundException(methodSignature.toString());
-        }
-
-        if (retVal.isMethodStatic(methodSignature)) {
-            throw new IncompatibleClassFileException(retVal.getClassName());
+            //step 4
+            if (retVal == null) {
+                final Set<Signature> nonabstractMaxSpecMethods = 
+                    maximallySpecificSuperinterfaceMethods(methodSignatureResolved, true);
+                if (nonabstractMaxSpecMethods.size() == 0) {
+                    //sixth run-time exception
+                    throw new MethodAbstractException(methodSignatureResolved.toString());
+                } else if (nonabstractMaxSpecMethods.size() == 1) {
+                    retVal = getClassFile(nonabstractMaxSpecMethods.iterator().next().getClassName());
+                } else { //nonabstractMaxSpecMethods.size() > 1
+                    //fifth run-time exception
+                    throw new IncompatibleClassFileException(methodSignatureResolved.toString());
+                }
+            }
+        } catch (MethodNotFoundException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
         }
 
         return retVal;
     }
 
+    /**
+     * Performs method implementation lookup according to the semantics of the 
+     * INVOKESTATIC bytecode.
+     *   
+     * @param methodSignatureResolved the signature of the resolved method 
+     *        which must be looked up.
+     * @return the {@link ClassFile} of the class which contains the method 
+     *         implementation of {@code methodSignatureResolved}. 
+     *         Trivially, this is the {@link ClassFile} of
+     *         {@code methodSignatureResolved.}{@link Signature#getClassName() getClassName()}.
+     * @throws BadClassFileException when the classfile 
+     *         for {@code methodSignatureResolved.}{@link Signature#getClassName() getClassName()} 
+     *         does not exist or is ill-formed.
+     */
+    public ClassFile lookupMethodImplStatic(Signature methodSignatureResolved) 
+    throws BadClassFileException {
+        final ClassFile retVal = getClassFile(methodSignatureResolved.getClassName());
+        return retVal;
+    }
+
+    /**
+     * Performs method implementation lookup according to the semantics of the 
+     * INVOKEVIRTUAL bytecode.
+     *   
+     * @param receiverClassName the name of the class of the 
+     *        method invocation's receiver.
+     * @param methodSignatureResolved the signature of the resolved method 
+     *        which must be looked up.
+     * @return the {@link ClassFile} of the class which contains the method 
+     *         implementation of {@code methodSignatureResolved}. 
+     * @throws BadClassFileException when the classfile 
+     *         for {@code methodSignatureResolved.}{@link Signature#getClassName() getClassName()} 
+     *         does not exist or is ill-formed.
+     * @throws MethodNotFoundException if no declaration of {@code methodSignatureResolved} is found in 
+     *         {@code methodSignatureResolved.}{@link Signature#getClassName() getClassName()}. 
+     * @throws MethodAbstractException if lookup fails and {@link java.lang.AbstractMethodError} should be thrown.
+     * @throws IncompatibleClassFileException if lookup fails and {@link java.lang.IncompatibleClassChangeError} should be thrown.
+     */
+    public ClassFile lookupMethodImplVirtual(String receiverClassName, Signature methodSignatureResolved) 
+    throws BadClassFileException, MethodNotFoundException, MethodAbstractException, IncompatibleClassFileException {
+        final ClassFile cfMethod = getClassFile(methodSignatureResolved.getClassName());
+        if (cfMethod.isMethodSignaturePolymorphic(methodSignatureResolved)) {
+            return null; //TODO
+        } else {
+            ClassFile retVal = null;
+            
+            //step 1 and 2
+            for (ClassFile f : superclasses(receiverClassName)) {
+                if (f instanceof ClassFileBad) {
+                    throw ((ClassFileBad) f).getException();
+                } else if (f.hasMethodDeclaration(methodSignatureResolved) && !f.isMethodStatic(methodSignatureResolved)) {
+                    final Signature fMethodSignature = new Signature(f.getClassName(), methodSignatureResolved.getDescriptor(), methodSignatureResolved.getName());
+                    if (overrides(fMethodSignature, methodSignatureResolved)) {
+                        retVal = f;
+
+                        //third run-time exception
+                        if (retVal.isMethodAbstract(methodSignatureResolved)) {
+                            throw new MethodAbstractException(methodSignatureResolved.toString());
+                        }
+
+                        break;
+                    }
+                }
+            }
+
+            //step 3
+            if (retVal == null) {
+                final Set<Signature> nonabstractMaxSpecMethods = 
+                    maximallySpecificSuperinterfaceMethods(methodSignatureResolved, true);
+                if (nonabstractMaxSpecMethods.size() == 0) {
+                    //sixth run-time exception
+                    throw new MethodAbstractException(methodSignatureResolved.toString());
+                } else if (nonabstractMaxSpecMethods.size() == 1) {
+                    retVal = getClassFile(nonabstractMaxSpecMethods.iterator().next().getClassName());
+                } else { //nonabstractMaxSpecMethods.size() > 1
+                    //fifth run-time exception
+                    throw new IncompatibleClassFileException(methodSignatureResolved.toString());
+                }
+            }
+            
+            return retVal;
+        }
+    }
+    
     /**
      * Checks assignment compatibility for references 
      * (see JVMS v8 4.9.2 and JLS v8 5.2).
@@ -934,5 +1178,78 @@ public class ClassHierarchy {
                 return isSubclass(source, target);
             }
         }
+    }
+    
+    /**
+     * Checks if a method overrides another one, according to
+     * JVMS v8, section 5.4.5. 
+     * 
+     * @param subMethod a method {@link Signature}.
+     * @param supMethod a method {@link Signature}.
+     * @return {@code true} iff {@code subMethod} overrides 
+     *         {@code supMethod}.
+     * @throws BadClassFileException when the classfile 
+     *         for {@code subMethod.}{@link Signature#getClassName() getClassName()} 
+     *         or {@code supMethod.}{@link Signature#getClassName() getClassName()} 
+     *         does not exist or is ill-formed.
+     * @throws MethodNotFoundException if {@code subMethod} or {@code supMethod}
+     *         do not exist in their respective classfiles (note that 
+     *         the exception is not always raised in this case).
+     */
+    public boolean overrides(Signature subMethod, Signature supMethod) 
+    throws BadClassFileException, MethodNotFoundException {
+        //first case: same method
+        if (subMethod.equals(supMethod)) {
+            return true;
+        }
+        
+        //second case: all of the following must be true
+        //1- subMethod's class is a subclass of supMethod's class 
+        final ClassFile cfSub = getClassFile(subMethod.getClassName());
+        if (!isSubclass(cfSub.getSuperclassName(), supMethod.getClassName())) {
+            return false;
+        }
+        
+        //2- subMethod has same name and descriptor of supMethod
+        if (!subMethod.getName().equals(supMethod.getName())) {
+            return false;
+        }
+        if (!subMethod.getDescriptor().equals(supMethod.getDescriptor())) {
+            return false;
+        }
+        
+        //3- subMethod is not private
+        if (cfSub.isMethodPrivate(subMethod)) {
+            return false;
+        }
+        
+        //4- one of the following is true:
+        //4a- supMethod is public, or protected, or (package in the same runtime package of subMethod)
+        final ClassFile cfSup = getClassFile(supMethod.getClassName());
+        if (cfSup.isMethodPublic(supMethod)) {
+            return true;
+        }
+        if (cfSup.isMethodProtected(supMethod)) {
+            return true;
+        }
+        if (cfSup.isMethodPackage(supMethod) && cfSup.getPackageName().equals(cfSub.getPackageName())) {
+            return true;
+        }
+        
+        //4b- there is another method m such that subMethod overrides 
+        //m and m overrides supMethod; we look for such m in subMethod's 
+        //superclasses up to supMethods
+        for (ClassFile cf : superclasses(cfSub.getSuperclassName())) {
+            if (cf.getClassName().equals(supMethod.getClassName())) {
+                break;
+            }
+            if (cf.hasMethodDeclaration(subMethod)) {
+                final Signature m = new Signature(cf.getClassName(), subMethod.getDescriptor(), subMethod.getName());
+                if (overrides(subMethod, m) && overrides (m, supMethod)) {
+                    return true;
+                }
+            }
+        }
+        return false; //no such m was found
     }
 }

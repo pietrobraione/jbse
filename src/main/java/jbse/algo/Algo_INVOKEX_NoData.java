@@ -57,9 +57,6 @@ abstract class Algo_INVOKEX_NoData<D extends BytecodeData> extends Algo_INVOKEX_
             } catch (IncompatibleClassFileException e) {
                 throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
                 exitFromAlgorithm();
-            } catch (MethodAbstractException e) {
-                throwNew(state, ABSTRACT_METHOD_ERROR);
-                exitFromAlgorithm();
             } catch (MethodNotFoundException e) {
                 throwNew(state, NO_SUCH_METHOD_ERROR);
                 exitFromAlgorithm();
@@ -91,8 +88,13 @@ abstract class Algo_INVOKEX_NoData<D extends BytecodeData> extends Algo_INVOKEX_
             //looks for the method implementation with standard lookup
             try {
                 findImpl(state);
+            } catch (MethodNotAccessibleException e) {
+                throwNew(state, ILLEGAL_ACCESS_ERROR);
+                exitFromAlgorithm();
+            } catch (MethodAbstractException e) {
+                throwNew(state, ABSTRACT_METHOD_ERROR);
+                exitFromAlgorithm();
             } catch (IncompatibleClassFileException e) {
-                //TODO is it ok?
                 throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
                 exitFromAlgorithm();
             } catch (BadClassFileException e) {
@@ -104,15 +106,10 @@ abstract class Algo_INVOKEX_NoData<D extends BytecodeData> extends Algo_INVOKEX_
             //and in case considers it instead
             findOverridingImpl(state);
 
-            //if the method has no implementation, raises AbstractMethodError
-            try {
-                if (this.classFileMethodImpl == null || this.classFileMethodImpl.isMethodAbstract(this.methodSignatureImpl)) {
-                    throwNew(state, ABSTRACT_METHOD_ERROR);
-                    exitFromAlgorithm();
-                }
-            } catch (MethodNotFoundException e) {
-                //this should never happen after resolution 
-                failExecution(e);
+            //if the method has no implementation, raises NoSuchMethodError
+            if (this.classFileMethodImpl == null) {
+                throwNew(state, NO_SUCH_METHOD_ERROR);
+                exitFromAlgorithm();
             }
 
             //otherwise, concludes the execution of the bytecode algorithm

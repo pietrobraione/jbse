@@ -1,6 +1,12 @@
 package jbse.bc.exc;
 
-// ("java/lang/NoSuchMethodError");
+/**
+ * Exception thrown in all the situations (e.g., method resolution and lookup)
+ * where a {@link java.lang.NoSuchMethodError} must be raised.
+ * 
+ * @author Pietro Braione
+ *
+ */
 public class MethodNotFoundException extends Exception {
 
 	/**

@@ -1,5 +1,6 @@
 package jbse.algo;
 
+import static jbse.algo.BytecodeData_1ZME.Kind.kind;
 
 import java.util.function.Supplier;
 
@@ -16,6 +17,6 @@ final class Algo_INVOKEX extends Algo_INVOKEX_NoData<BytecodeData_1ZME> {
 
     @Override
     protected Supplier<BytecodeData_1ZME> bytecodeData() {
-        return () -> BytecodeData_1ZME.withInterfaceMethod(this.isInterface).get();
+        return () -> BytecodeData_1ZME.withInterfaceMethod(kind(this.isInterface, this.isSpecial, this.isStatic)).get();
     }
 }

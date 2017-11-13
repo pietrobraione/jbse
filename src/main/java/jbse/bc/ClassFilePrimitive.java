@@ -161,6 +161,11 @@ abstract class ClassFilePrimitive extends ClassFile {
     }
 
     @Override
+    public boolean hasOneSignaturePolymorphicMethodDeclaration(String methodName) {
+        return false;
+    }
+
+    @Override
     public boolean isMethodAbstract(Signature methodSignature)
     throws MethodNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
@@ -198,6 +203,18 @@ abstract class ClassFilePrimitive extends ClassFile {
 
     @Override
     public boolean isMethodNative(Signature methodSignature)
+    throws MethodNotFoundException {
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
+
+    @Override
+    public boolean isMethodVarargs(Signature methodSignature)
+    throws MethodNotFoundException {
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
+
+    @Override
+    public boolean isMethodSignaturePolymorphic(Signature methodSignature) 
     throws MethodNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
     }
@@ -358,7 +375,7 @@ abstract class ClassFilePrimitive extends ClassFile {
     }
 
     @Override
-    public Signature[] getMethodSignatures() {
+    public Signature[] getDeclaredMethods() {
         return new Signature[0];
     }
 

@@ -4,6 +4,7 @@ import static jbse.algo.Util.continueWith;
 
 import java.util.function.Supplier;
 
+import jbse.algo.BytecodeData_1ZME.Kind;
 import jbse.bc.Signature;
 import jbse.mem.State;
 import jbse.tree.DecisionAlternative;
@@ -34,7 +35,7 @@ extends Algorithm<BytecodeData_1ZME, R, DE, RE, UP> {
 
     @Override
     protected final Supplier<BytecodeData_1ZME> bytecodeData() {
-        return () -> BytecodeData_1ZME.withInterfaceMethod(this.isInterface).get();
+        return () -> BytecodeData_1ZME.withInterfaceMethod(Kind.kind(this.isInterface, this.isSpecial, this.isStatic)).get();
     }
 
     /**

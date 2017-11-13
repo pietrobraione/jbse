@@ -1,5 +1,6 @@
 package jbse.algo.meta;
 
+import static jbse.algo.BytecodeData_1ZME.Kind.kind;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
@@ -38,7 +39,7 @@ public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEW
 
     @Override
     protected final Supplier<BytecodeData_1ZME> bytecodeData() {
-        return () -> BytecodeData_1ZME.withInterfaceMethod(false).get();
+        return () -> BytecodeData_1ZME.withInterfaceMethod(kind(false, false, true)).get();
     }
 
     @Override

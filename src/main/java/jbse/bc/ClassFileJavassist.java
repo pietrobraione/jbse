@@ -7,6 +7,8 @@ import static javassist.bytecode.AccessFlag.setProtected;
 import static javassist.bytecode.AccessFlag.setPublic;
 import static javassist.bytecode.AccessFlag.STATIC;
 import static javassist.bytecode.AccessFlag.SUPER;
+import static jbse.bc.Signatures.JAVA_METHODHANDLE;
+import static jbse.bc.Signatures.SIGNATURE_POLYMORPHIC_DESCRIPTOR;
 import static jbse.common.Type.binaryClassName;
 import static jbse.common.Type.internalClassName;
 
@@ -173,7 +175,7 @@ public class ClassFileJavassist extends ClassFile {
         if (this.cp.getTag(fieldIndex) != ConstPool.CONST_Fieldref) {
             throw new InvalidIndexException(entryInvalidMessage(fieldIndex));
         }
-        final String containerClass = this.cp.getFieldrefClassName(fieldIndex).replace('.', '/');
+        final String containerClass = internalClassName(this.cp.getFieldrefClassName(fieldIndex));
         final String descriptor = this.cp.getFieldrefType(fieldIndex);
         final String name = this.cp.getFieldrefName(fieldIndex);
         return new Signature(containerClass, descriptor, name);
@@ -229,7 +231,7 @@ public class ClassFileJavassist extends ClassFile {
         if (this.cp.getTag(methodIndex) != ConstPool.CONST_InterfaceMethodref) {
             throw new InvalidIndexException(entryInvalidMessage(methodIndex));
         }
-        final String containerClass = this.cp.getInterfaceMethodrefClassName(methodIndex).replace('.', '/');
+        final String containerClass = internalClassName(this.cp.getInterfaceMethodrefClassName(methodIndex));
         final String descriptor = this.cp.getInterfaceMethodrefType(methodIndex);
         final String name = this.cp.getInterfaceMethodrefName(methodIndex);
         return new Signature(containerClass, descriptor, name); 
@@ -244,20 +246,19 @@ public class ClassFileJavassist extends ClassFile {
      *         {@link CtBehavior} for it; the class name in {@code methodSignature}
      *         is ignored.
      */
-    private CtBehavior findMethod(Signature methodSignature) {
-        CtConstructor cc = this.cls.getClassInitializer();
-        if (methodSignature.getName().equals("<clinit>")) {
+    private CtBehavior findMethodDeclaration(Signature methodSignature) {
+        final CtConstructor cc = this.cls.getClassInitializer();
+        if ("<clinit>".equals(methodSignature.getName())) {
             return cc;
         }
 
-        CtBehavior[] bs = this.cls.getDeclaredBehaviors();
+        final CtBehavior[] bs = this.cls.getDeclaredBehaviors();
         for (CtBehavior b : bs) {
-            String internalName = 
-            (((b instanceof CtConstructor) && (!((CtConstructor) b).isClassInitializer())) ? 
-                                                                                            "<init>" : 
-                                                                                                b.getName());
+            final String internalName = 
+                (((b instanceof CtConstructor) && (!((CtConstructor) b).isClassInitializer())) ? 
+                                                  "<init>" : b.getName());
             if (internalName.equals(methodSignature.getName()) &&
-            b.getSignature().equals(methodSignature.getDescriptor())) {
+                b.getSignature().equals(methodSignature.getDescriptor())) {
                 return b;
             }
         }
@@ -266,11 +267,11 @@ public class ClassFileJavassist extends ClassFile {
 
     private CodeAttribute getMethodCodeAttribute(Signature methodSignature) 
     throws MethodNotFoundException, MethodCodeNotFoundException {
-        CtBehavior b = findMethod(methodSignature);
+        final CtBehavior b = findMethodDeclaration(methodSignature);
         if (b == null) { 
             throw new MethodNotFoundException(methodSignature.toString());
         }
-        CodeAttribute ca = b.getMethodInfo().getCodeAttribute();
+        final CodeAttribute ca = b.getMethodInfo().getCodeAttribute();
         if (ca == null) {
             throw new MethodCodeNotFoundException(methodSignature.toString()); 
         }
@@ -280,7 +281,7 @@ public class ClassFileJavassist extends ClassFile {
     @Override
     public ExceptionTable getExceptionTable(Signature methodSignature)
     throws MethodNotFoundException, MethodCodeNotFoundException, InvalidIndexException {
-        javassist.bytecode.ExceptionTable et = getMethodCodeAttribute(methodSignature).getExceptionTable();
+        final javassist.bytecode.ExceptionTable et = getMethodCodeAttribute(methodSignature).getExceptionTable();
 
         final ExceptionTable retVal = new ExceptionTable(et.size());
         for (int i = 0; i < et.size(); ++i) {
@@ -306,8 +307,8 @@ public class ClassFileJavassist extends ClassFile {
     @Override
     public LocalVariableTable getLocalVariableTable(Signature methodSignature) 
     throws MethodNotFoundException, MethodCodeNotFoundException  {
-        CodeAttribute ca = getMethodCodeAttribute(methodSignature);
-        LocalVariableAttribute lvtJA = (LocalVariableAttribute) ca.getAttribute("LocalVariableTable");
+        final CodeAttribute ca = getMethodCodeAttribute(methodSignature);
+        final LocalVariableAttribute lvtJA = (LocalVariableAttribute) ca.getAttribute("LocalVariableTable");
 
         if (lvtJA == null) {
             return this.defaultLocalVariableTable(methodSignature);
@@ -337,7 +338,7 @@ public class ClassFileJavassist extends ClassFile {
         if (this.cp.getTag(methodIndex) != ConstPool.CONST_Methodref) {
             throw new InvalidIndexException(entryInvalidMessage(methodIndex));
         }
-        final String containerClass = this.cp.getMethodrefClassName(methodIndex).replace('.', '/');
+        final String containerClass = internalClassName(this.cp.getMethodrefClassName(methodIndex));
         final String descriptor = this.cp.getMethodrefType(methodIndex);
         final String name = this.cp.getMethodrefName(methodIndex);
         return new Signature(containerClass, descriptor, name); 
@@ -350,7 +351,7 @@ public class ClassFileJavassist extends ClassFile {
         } else {
             String name = this.cls.getClassFile().getSuperclass();
             if (name != null) {
-                name = name.replace(".", "/");
+                name = internalClassName(name);
             }
             return name;
         }
@@ -362,7 +363,7 @@ public class ClassFileJavassist extends ClassFile {
         final String[] ifs = this.cls.getClassFile().getInterfaces();
 
         for (String s : ifs) {
-            superinterfaces.add(s.replace(".", "/"));
+            superinterfaces.add(internalClassName(s));
         }
         return Collections.unmodifiableList(superinterfaces);
     }
@@ -385,19 +386,65 @@ public class ClassFileJavassist extends ClassFile {
         case ConstPool.CONST_String:
             return new ConstantPoolString(this.cp.getStringInfo(index));
         case ConstPool.CONST_Class:
-            return new ConstantPoolClass(this.cp.getClassInfo(index).replace(".", "/"));
+            return new ConstantPoolClass(internalClassName(this.cp.getClassInfo(index)));
         }
         throw new InvalidIndexException(entryInvalidMessage(index));
     }
 
     @Override
     public boolean hasMethodDeclaration(Signature methodSignature) {
-        return (findMethod(methodSignature) != null);
+        return (findMethodDeclaration(methodSignature) != null);
+    }
+    
+    private CtBehavior findUniqueMethodDeclarationWithName(String methodName) {
+        final CtBehavior[] bs = this.cls.getDeclaredBehaviors();
+        CtBehavior retVal = null;
+        for (CtBehavior b : bs) {
+            final String internalName = 
+                (((b instanceof CtConstructor) && (!((CtConstructor) b).isClassInitializer())) ? 
+                 "<init>" : b.getName());
+            if (internalName.equals(methodName)) {
+                if (retVal == null) {
+                    retVal = b;
+                } else {
+                    //two methods with same name - not unique
+                    return null;
+                }
+            }
+        }
+        return retVal;
+    }
+
+    @Override
+    public boolean hasOneSignaturePolymorphicMethodDeclaration(String methodName) {
+        //cannot be signature polymorphic if it is not in JAVA_METHODHANDLE
+        if (!JAVA_METHODHANDLE.equals(getClassName())) {
+            return false;
+        }
+        
+        //the method declaration must be unique
+        final CtBehavior uniqueMethod = findUniqueMethodDeclarationWithName(methodName);
+        if (uniqueMethod == null) {
+            return false;
+        }
+        
+        //cannot be signature polymorphic if it has wrong descriptor
+        if (!SIGNATURE_POLYMORPHIC_DESCRIPTOR.equals(uniqueMethod.getSignature())) {
+            return false;
+        }
+        
+        //cannot be signature polymorphic if it not native or if it is not varargs
+        if (!Modifier.isNative(uniqueMethod.getModifiers()) || (uniqueMethod.getModifiers() & Modifier.VARARGS) == 0) {
+            return false;
+        }
+
+        //all checks passed
+        return true;
     }
 
     @Override
     public boolean hasMethodImplementation(Signature methodSignature) {
-        final CtBehavior b = findMethod(methodSignature);
+        final CtBehavior b = findMethodDeclaration(methodSignature);
         return (b != null && (b.getMethodInfo().getCodeAttribute() != null || Modifier.isNative(b.getModifiers())));
     }
 
@@ -413,33 +460,61 @@ public class ClassFileJavassist extends ClassFile {
 
     @Override
     public boolean isMethodAbstract(Signature methodSignature) throws MethodNotFoundException {
-        final CtBehavior b = this.findMethod(methodSignature);
+        final CtBehavior b = findMethodDeclaration(methodSignature);
         if (b == null) throw new MethodNotFoundException(methodSignature.toString());
         return Modifier.isAbstract(b.getModifiers());
     }
 
     @Override
     public boolean isMethodNative(Signature methodSignature) throws MethodNotFoundException {
-        final CtBehavior b = this.findMethod(methodSignature);
+        final CtBehavior b = findMethodDeclaration(methodSignature);
         if (b == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
         return Modifier.isNative(b.getModifiers());
     }
+    
+    @Override
+    public boolean isMethodVarargs(Signature methodSignature) throws MethodNotFoundException {
+        final CtBehavior b = findMethodDeclaration(methodSignature);
+        if (b == null) {
+            throw new MethodNotFoundException(methodSignature.toString());
+        }
+        return (b.getModifiers() & Modifier.VARARGS) != 0;
+    }
+    
+    @Override
+    public boolean isMethodSignaturePolymorphic(Signature methodSignature) throws MethodNotFoundException {
+        //cannot be signature polymorphic if it is not in JAVA_METHODHANDLE
+        if (!JAVA_METHODHANDLE.equals(getClassName())) {
+            return false;
+        }
+        
+        //cannot be signature polymorphic if it has wrong descriptor
+        if (!SIGNATURE_POLYMORPHIC_DESCRIPTOR.equals(methodSignature.getDescriptor())) {
+            return false;
+        }
+        
+        if (!isMethodNative(methodSignature) || !isMethodVarargs(methodSignature)) {
+            return false;
+        }
+        
+        return true;
+    }
 
     @Override
-    public Signature[] getMethodSignatures() {
+    public Signature[] getDeclaredMethods() {
         final CtBehavior[] methods = cls.getDeclaredMethods();
         final Signature[] retVal = new Signature[methods.length];
         for (int i = 0; i < methods.length; ++i) {
-            retVal[i] = new Signature(this.getClassName(), methods[i].getSignature(), methods[i].getName());
+            retVal[i] = new Signature(getClassName(), methods[i].getSignature(), methods[i].getName());
         }
         return retVal;
     }
 
     @Override
     public String getMethodGenericSignatureType(Signature methodSignature) throws MethodNotFoundException {
-        final CtBehavior b = findMethod(methodSignature);
+        final CtBehavior b = findMethodDeclaration(methodSignature);
         if (b == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
@@ -449,7 +524,7 @@ public class ClassFileJavassist extends ClassFile {
     @Override
     public int getMethodModifiers(Signature methodSignature) 
     throws MethodNotFoundException {
-        final CtBehavior b = findMethod(methodSignature);
+        final CtBehavior b = findMethodDeclaration(methodSignature);
         if (b == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
@@ -468,7 +543,7 @@ public class ClassFileJavassist extends ClassFile {
     @Override
     public byte[] getMethodAnnotationsRaw(Signature methodSignature) 
     throws MethodNotFoundException {
-        final CtBehavior b = findMethod(methodSignature);
+        final CtBehavior b = findMethodDeclaration(methodSignature);
         if (b == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
@@ -480,7 +555,7 @@ public class ClassFileJavassist extends ClassFile {
     @Override
     public Object[] getMethodAvailableAnnotations(Signature methodSignature)
     throws MethodNotFoundException {
-        final CtBehavior b = findMethod(methodSignature);
+        final CtBehavior b = findMethodDeclaration(methodSignature);
         if (b == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
@@ -490,7 +565,7 @@ public class ClassFileJavassist extends ClassFile {
     @Override
     public String[] getMethodThrownExceptions(Signature methodSignature) 
     throws MethodNotFoundException {
-        final CtBehavior b = findMethod(methodSignature);
+        final CtBehavior b = findMethodDeclaration(methodSignature);
         if (b == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
@@ -508,7 +583,7 @@ public class ClassFileJavassist extends ClassFile {
 
     @Override
     public boolean isMethodStatic(Signature methodSignature) throws MethodNotFoundException {
-        final CtBehavior b = findMethod(methodSignature);
+        final CtBehavior b = findMethodDeclaration(methodSignature);
         if (b == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
@@ -517,7 +592,7 @@ public class ClassFileJavassist extends ClassFile {
 
     @Override
     public boolean isMethodPublic(Signature methodSignature) throws MethodNotFoundException {
-        final CtBehavior b = findMethod(methodSignature);
+        final CtBehavior b = findMethodDeclaration(methodSignature);
         if (b == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
@@ -526,7 +601,7 @@ public class ClassFileJavassist extends ClassFile {
 
     @Override
     public boolean isMethodProtected(Signature methodSignature) throws MethodNotFoundException {
-        final CtBehavior b = findMethod(methodSignature);
+        final CtBehavior b = findMethodDeclaration(methodSignature);
         if (b == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
@@ -535,7 +610,7 @@ public class ClassFileJavassist extends ClassFile {
 
     @Override
     public boolean isMethodPackage(Signature methodSignature) throws MethodNotFoundException {
-        final CtBehavior b = findMethod(methodSignature);
+        final CtBehavior b = findMethodDeclaration(methodSignature);
         if (b == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
@@ -544,7 +619,7 @@ public class ClassFileJavassist extends ClassFile {
 
     @Override
     public boolean isMethodPrivate(Signature methodSignature) throws MethodNotFoundException {
-        final CtBehavior b = findMethod(methodSignature);
+        final CtBehavior b = findMethodDeclaration(methodSignature);
         if (b == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
