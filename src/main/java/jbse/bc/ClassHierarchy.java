@@ -441,7 +441,7 @@ public class ClassHierarchy {
 
     /**
      * Performs class (including array class) and interface resolution 
-     * (see JVMS 2nd edition, sec. 5.4.3.1).
+     * (see JVMS v8, section 5.4.3.1).
      * 
      * @param accessor a {@link String}, the signature of the accessor's class.
      * @param classSignature a {@link String}, the signature of the class to be resolved.
