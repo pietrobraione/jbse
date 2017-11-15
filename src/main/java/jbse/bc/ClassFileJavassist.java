@@ -638,7 +638,7 @@ public class ClassFileJavassist extends ClassFile {
         final LineNumberAttribute lnJA = (LineNumberAttribute) ca.getAttribute("LineNumberTable");
 
         if (lnJA == null)
-            return this.defaultLineNumberTable();
+            return defaultLineNumberTable();
         final LineNumberTable LN = new LineNumberTable(lnJA.tableLength());
         for (int i = 0; i < lnJA.tableLength(); ++i) {
             LN.addRow(lnJA.startPc(i), lnJA.lineNumber(i));

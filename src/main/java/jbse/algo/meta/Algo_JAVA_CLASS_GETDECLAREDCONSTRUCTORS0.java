@@ -18,7 +18,7 @@ import static jbse.bc.Signatures.JAVA_CONSTRUCTOR_SLOT;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.BYTE;
-import static jbse.common.Type.getReferenceClassName;
+import static jbse.common.Type.className;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.toPrimitiveBinaryClassName;
 import static jbse.common.Type.REFERENCE;
@@ -200,7 +200,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                             }
                             paramClazz = state.referenceToInstance_JAVA_CLASS_primitive(primType);
                         } else {
-                            final String paramTypeClass = getReferenceClassName(paramType);
+                            final String paramTypeClass = className(paramType);
                             ensureInstance_JAVA_CLASS(state, paramTypeClass, paramTypeClass, this.ctx);
                             paramClazz = state.referenceToInstance_JAVA_CLASS(paramTypeClass);
                         }
@@ -229,7 +229,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                     //populates exceptionTypes
                     int i = 0;
                     for (String excType : exceptions) {
-                        final String excClassName = getReferenceClassName(excType);
+                        final String excClassName = className(excType);
                         ensureInstance_JAVA_CLASS(state, excClassName, excClassName, this.ctx);
                         final ReferenceConcrete excClazz = state.referenceToInstance_JAVA_CLASS(excClassName);
                         arrayParamClasses.setFast(calc.valInt(i), excClazz);

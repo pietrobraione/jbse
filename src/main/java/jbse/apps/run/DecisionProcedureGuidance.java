@@ -475,7 +475,7 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
     }
 
     private void updateExpansionBackdoor(State state, ReferenceSymbolic refToLoad) throws GuidanceException {
-        final String refType = Type.getReferenceClassName(refToLoad.getStaticType());
+        final String refType = Type.className(refToLoad.getStaticType());
         final ReferenceConcrete refInConcreteState = (ReferenceConcrete) getValue(this.initialStateConcrete, this.rootFrameConcrete, refToLoad.getOrigin());
         if (refInConcreteState.isNull()) {
             return;

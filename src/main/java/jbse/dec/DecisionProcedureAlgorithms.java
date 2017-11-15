@@ -1012,7 +1012,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	        retVal = new HashSet<>();
 	        retVal.add(type);
 	    } else {
-	        final String className = Type.getReferenceClassName(type);
+	        final String className = Type.className(type);
 	        retVal = state.getClassHierarchy().getAllConcreteSubclasses(className);
 	    }
 

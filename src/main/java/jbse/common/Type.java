@@ -171,6 +171,14 @@ public final class Type {
         return (isReference(c) && cc == Type.TYPEEND);
     }
 
+    private static String getReferenceClassName(String type) {
+        if (isReference(type)) {
+            return type.substring(1, type.length() - 1);
+        } else {
+            return null;
+        }
+    }
+
     public static String className(String type) {
         //if reference, remove REFERENCE and TYPEEND; 
         //if array, just return it
@@ -360,14 +368,6 @@ public final class Type {
             return null;
         } else {
             return methodDescriptor.substring(index);
-        }
-    }
-
-    public static String getReferenceClassName(String type) {
-        if (isReference(type)) {
-            return type.substring(1, type.length() - 1);
-        } else {
-            return null;
         }
     }
 

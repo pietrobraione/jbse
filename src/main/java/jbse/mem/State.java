@@ -88,10 +88,10 @@ public final class State implements Cloneable {
     /** The string literals. */
     private HashMap<String, ReferenceConcrete> stringLiterals = new HashMap<>();
 
-    /** The class objects for nonprimitive types. */
+    /** The {@link java.lang.Class} objects for nonprimitive types. */
     private HashMap<String, ReferenceConcrete> classes = new HashMap<>();
 
-    /** The class objects for primitive types. */
+    /** The {@link java.lang.Class} objects for primitive types. */
     private HashMap<String, ReferenceConcrete> classesPrimitive = new HashMap<>();
 
     /** The JVM stack of the current execution thread. */
@@ -977,7 +977,7 @@ public final class State implements Cloneable {
             throw new ClassFileNotFoundException(typeName + " is not the binary name of a primitive type or void");
         }
     }
-
+    
     /**
      * Unwinds the stack of this state until it finds an exception 
      * handler for an object. If the thread stack is empty after 

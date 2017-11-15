@@ -16,6 +16,14 @@ import jbse.common.Type;
 public abstract class ClassFile {
     protected static final String JAR_FILE_EXTENSION = ".jar";
 
+    /**
+     * Returns the name of the source code file where this 
+     * class has been declared.
+     * 
+     * @return the name of the source code file as a {@link String}, 
+     *         or the empty {@link String} in case it has none
+     *         (array classes, primitive classes, bad classfiles).
+     */
     public abstract String getSourceFile();
 
     /**

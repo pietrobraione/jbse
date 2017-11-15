@@ -5,6 +5,10 @@ import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_SERIALIZABLE;
 import static jbse.bc.Signatures.SIGNATURE_POLYMORPHIC_DESCRIPTOR;
 import static jbse.common.Type.className;
+import static jbse.common.Type.isArray;
+import static jbse.common.Type.isReference;
+import static jbse.common.Type.splitParametersDescriptors;
+import static jbse.common.Type.splitReturnValueDescriptor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -205,8 +209,8 @@ public class ClassHierarchy {
             if (Type.isPrimitive(subMember) && Type.isPrimitive(supMember)) {
                 return subMember.equals(supMember);
             } else if (Type.isReference(subMember) && Type.isReference(supMember)) {
-                final String subMemberClass = Type.getReferenceClassName(subMember);
-                final String supMemberClass = Type.getReferenceClassName(supMember);
+                final String subMemberClass = Type.className(subMember);
+                final String supMemberClass = Type.className(supMember);
                 return isSubclass(subMemberClass, supMemberClass);
             } else if (Type.isArray(subMember) && Type.isArray(supMember)) {
                 return isSubclass(subMember, supMember);
@@ -749,6 +753,33 @@ public class ClassHierarchy {
     private static <T> Stream<T> stream(Iterable<T> it) {
         return StreamSupport.stream(it.spliterator(), false);
     }
+    
+    /**
+     * Performs method type resolution (JVMS v8, section 5.4.3.5) without 
+     * creating the {@link java.lang.invoke.MethodType} instance.
+     * 
+     * @param accessor a {@link String}, the signature of the accessor's class.
+     * @param descriptor a {@link String}, the descriptor of a method. 
+     * @throws BadClassFileException if the classfile for one of the classes 
+     *         in {@code methodSignature}'s descriptor does not exist in the 
+     *         classpath or is ill-formed.
+     * @throws ClassFileNotAccessibleException if one of the classes 
+     *         in {@code methodSignature}'s descriptor is not accessible
+     *         from {@code accessor}.
+     */
+    public void resolveMethodType(String accessor, String descriptor) 
+    throws BadClassFileException, ClassFileNotAccessibleException {
+        final String[] paramsTypes = splitParametersDescriptors(descriptor);
+        for (String paramType: paramsTypes) {
+            if (isArray(paramType) || isReference(paramType)) {
+                resolveClass(accessor, className(paramType));
+            }
+        }
+        final String returnType = splitReturnValueDescriptor(descriptor);
+        if (isArray(returnType) || isReference(returnType)) {
+            resolveClass(accessor, className(returnType));
+        }
+    }
 
     /**
      * Checks whether a class/interface is accessible to another class/interface
@@ -1074,7 +1105,9 @@ public class ClassHierarchy {
      * @param methodSignatureResolved the signature of the resolved method 
      *        which must be looked up.
      * @return the {@link ClassFile} of the class which contains the method 
-     *         implementation of {@code methodSignatureResolved}. 
+     *         implementation of {@code methodSignatureResolved}; In the case
+     *         {@code methodSignatureResolved} is signature polymorphic returns
+     *         the classfile for {@code methodSignatureResolved.}{@link Signature#getClassName() getClassName()}.
      * @throws BadClassFileException when the classfile 
      *         for {@code methodSignatureResolved.}{@link Signature#getClassName() getClassName()} 
      *         does not exist or is ill-formed.
@@ -1087,7 +1120,7 @@ public class ClassHierarchy {
     throws BadClassFileException, MethodNotFoundException, MethodAbstractException, IncompatibleClassFileException {
         final ClassFile cfMethod = getClassFile(methodSignatureResolved.getClassName());
         if (cfMethod.isMethodSignaturePolymorphic(methodSignatureResolved)) {
-            return null; //TODO
+            return cfMethod;
         } else {
             ClassFile retVal = null;
             

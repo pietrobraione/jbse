@@ -111,6 +111,7 @@ public final class Signatures {
     public static final String JAVA_MATH                     = "java/lang/Math";
     public static final String JAVA_METHOD                   = "java/lang/reflect/Method";
     public static final String JAVA_METHODHANDLE             = "java/lang/invoke/MethodHandle";
+    public static final String JAVA_METHODTYPE               = "java/lang/invoke/MethodType";
     public static final String JAVA_MODIFIER                 = "java/lang/reflect/Modifier";
     public static final String JAVA_NUMBER                   = "java/lang/Number";
     public static final String JAVA_OBJECT                   = "java/lang/Object";
