@@ -3,6 +3,8 @@ package jbse.algo;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.X2Y_OFFSET;
+import static jbse.common.Type.INT;
+import static jbse.common.Type.isPrimitiveOpStack;
 
 import java.util.function.Supplier;
 
@@ -54,7 +56,13 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     throwVerifyError(state);
                     exitFromAlgorithm();
                 }
-                this.primitiveTo = primitiveFrom.to(this.toType);
+                if (isPrimitiveOpStack(this.toType)) {
+                    this.primitiveTo = primitiveFrom.to(this.toType);
+                } else {
+                    //i2b, i2s, i2c case:
+                    //must widen to an operand stack type
+                    this.primitiveTo = primitiveFrom.to(this.toType).widen(INT);
+                }
             } catch (ClassCastException | InvalidTypeException e) {
                 throwVerifyError(state);
                 exitFromAlgorithm();
