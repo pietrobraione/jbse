@@ -9,8 +9,10 @@ import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.common.Type.getArrayMemberType;
 import static jbse.common.Type.INT;
+import static jbse.common.Type.isArray;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isPrimitiveOpStack;
+import static jbse.common.Type.isReference;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -45,14 +47,14 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Meta-level implementation of {@link sun.misc.Unsafe#getIntVolatile(Object, long)} in 
+ * Meta-level implementation of {@link sun.misc.Unsafe#getObjectVolatile(Object, long)} in 
  * the case the object to read into is an array.
  * 
  * @author Pietro Braione
  */
 //TODO heavily copied from Algo_XALOAD and Algo_XYLOAD_GETX: Refactor and merge 
-//TODO refactor together with Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array
-public final class Algo_SUN_UNSAFE_GETINTVOLATILE_Array extends Algo_INVOKEMETA<
+//TODO refactor together with Algo_SUN_UNSAFE_GETINTVOLATILE_Array
+public final class Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array extends Algo_INVOKEMETA<
 DecisionAlternative_XALOAD,
 StrategyDecide<DecisionAlternative_XALOAD>, 
 StrategyRefine<DecisionAlternative_XALOAD>, 
@@ -80,9 +82,9 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             Array array = null;
             try {
                 array = (Array) state.getObject(this.myObjectRef);
-                final String arrayType = array.getType();
-                if (!getArrayMemberType(arrayType).equals("" + INT)) {
-                    throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.getIntVolatile was an array whose member type is not int");
+                final String arrayMemberType = getArrayMemberType(array.getType());
+                if (!isReference(arrayMemberType) && !isArray(arrayMemberType)) {
+                    throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.getObjectVolatile was an array whose member type is not a reference type");
                 }
             } catch (ClassCastException e) {
                 //this should never happen now
@@ -229,7 +231,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             public void refineResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved)
             throws DecisionException {
                 //augments the path condition
-                state.assume(Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.ctx.decisionProcedure.simplify(altResolved.getArrayAccessExpression()));
+                state.assume(Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.ctx.decisionProcedure.simplify(altResolved.getArrayAccessExpression()));
 
                 //if the value is fresh, it writes it back in the array
                 if (altResolved.isValueFresh()) {
@@ -240,7 +242,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             @Override
             public void refineOut(State state, DecisionAlternative_XALOAD_Out altOut) {
                 //augments the path condition
-                state.assume(Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.ctx.decisionProcedure.simplify(altOut.getArrayAccessExpression()));
+                state.assume(Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.ctx.decisionProcedure.simplify(altOut.getArrayAccessExpression()));
             }
         };
     }
@@ -258,6 +260,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 //pushes the value
                 try {
                     final Value valToPush;
+                    //in the next if only the else branch is taken, but we keep it to highlight the fact that it can be refactored together with other Algo_SUN_UNSAFE_GETX_Array 
                     if (isPrimitive(valMaterializedType) && !isPrimitiveOpStack(valMaterializedType)) {
                         valToPush = ((Primitive) valMaterialized).widen(INT);
                     } else {
@@ -273,7 +276,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 //manages triggers
                 try {
                     final boolean someTriggerFrameLoaded = 
-                    Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.ctx.triggerManager.loadTriggerFrames(state, altResolved, Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.programCounterUpdate.get());
+                    Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.ctx.triggerManager.loadTriggerFrames(state, altResolved, Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.programCounterUpdate.get());
                     if (someTriggerFrameLoaded) {
                         exitFromAlgorithm();
                     }
@@ -289,7 +292,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             @Override
             public void updateOut(State s, DecisionAlternative_XALOAD_Out dao) 
             throws UndefinedResultException {
-                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.getIntVolatile was not a correct index for the object (array) parameter");
+                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.getObjectVolatile was not a correct index for the object (array) parameter");
             }
         };
     }
