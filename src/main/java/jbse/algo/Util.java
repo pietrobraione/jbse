@@ -104,9 +104,9 @@ public class Util {
      * 
      * @param algo the next {@link Algorithm} to be executed.
      */
-    public static void continueWith(Algorithm<?, ?, ?, ?, ?> algo)
+    public static void continueWith(Action... act)
     throws InterruptException {
-        throw InterruptException.mk(algo);
+        throw InterruptException.mk(act);
     }
 
     /**

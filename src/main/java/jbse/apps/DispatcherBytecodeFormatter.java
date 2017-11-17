@@ -775,31 +775,8 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
 
         final DispatchStrategyFormat0 s = new DispatchStrategyFormat0(RESERVED_BYTECODE);
         setCase(OP_INVOKEDYNAMIC,             s);
-        setCase(OP_ANEWARRAY_QUICK,           s);
-        setCase(OP_CHECKCAST_QUICK,           s);
-        setCase(OP_GETSTATIC_QUICK,           s);
-        setCase(OP_GETSTATIC2_QUICK,          s);
-        setCase(OP_GETFIELD_QUICK,            s);
-        setCase(OP_GETFIELD_QUICK_W,          s);
-        setCase(OP_GETFIELD2_QUICK,           s);
-        setCase(OP_INSTANCEOF_QUICK,          s);
-        setCase(OP_INVOKEINTERFACE_QUICK,     s);
-        setCase(OP_INVOKENONVIRTUAL_QUICK,    s);
-        setCase(OP_INVOKESTATIC_QUICK,        s);
-        setCase(OP_INVOKESUPER_QUICK,         s);
-        setCase(OP_INVOKEVIRTUAL_QUICK,       s);
-        setCase(OP_INVOKEVIRTUAL_QUICK_W,     s);
-        setCase(OP_INVOKEVIRTUALOBJECT_QUICK, s);
-        setCase(OP_LDC_QUICK,                 s);
-        setCase(OP_LDC_W_QUICK,               s);
-        setCase(OP_LDC2_W_QUICK,              s);
-        setCase(OP_MULTIANEWARRAY_QUICK,      s);
-        setCase(OP_NEW_QUICK,                 s);
-        setCase(OP_PUTFIELD_QUICK,            s);
-        setCase(OP_PUTFIELD_QUICK_W,          s);
-        setCase(OP_PUTFIELD2_QUICK,           s);
-        setCase(OP_PUTSTATIC_QUICK,           s);
-        setCase(OP_PUTSTATIC2_QUICK,          s);
+        setCase(OP_INVOKEVIRTUAL_SIGNATUREPOLYMORPHIC_PHASE2,      s); //TODO
+        setCase(OP_INVOKEVIRTUAL_PHASE3,      s); //TODO
     }
 
     @Override

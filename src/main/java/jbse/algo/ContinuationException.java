@@ -1,8 +1,8 @@
 package jbse.algo;
 
 /**
- * Exception raised whenever an algorithm requires 
- * the engine to execute another algorithm.
+ * Exception raised whenever an {@link Action} requires 
+ * the engine to execute another (sequence of) {@link Action}s.
  * 
  * @author Pietro Braione
  *
@@ -13,13 +13,13 @@ public final class ContinuationException extends Exception {
      */
     private static final long serialVersionUID = 1986437767183635494L;
 
-    private final Algorithm<?, ?, ?, ?, ?> continuation;
+    private final Action[] continuation;
 
-    public ContinuationException(Algorithm<?, ?, ?, ?, ?> continuation) {
-        this.continuation = continuation;
+    public ContinuationException(Action... continuation) {
+        this.continuation = continuation.clone(); //safety copy
     }
 
-    public Algorithm<?, ?, ?, ?, ?> getContinuation() {
+    public Action[] getContinuation() {
         return this.continuation;
     }
 }

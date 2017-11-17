@@ -20,7 +20,7 @@ import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.BYTE;
 import static jbse.common.Type.className;
 import static jbse.common.Type.isPrimitive;
-import static jbse.common.Type.toPrimitiveBinaryClassName;
+import static jbse.common.Type.toPrimitiveCanonicalName;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.splitParametersDescriptors;
 import static jbse.common.Type.TYPEEND;
@@ -76,11 +76,13 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
     CannotManageStateException, InterruptException {
         try {           
-            //gets the binary name of the primitive type and converts it to a string
+            //gets the classfile for the class represented by 'this'
             final Reference classRef = (Reference) this.data.operand(0);
             final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject(classRef);
             final String className = clazz.representedClass();
-            this.cf = state.getClassHierarchy().getClassFile(className);
+            this.cf = (clazz.isPrimitive() ? 
+                       state.getClassHierarchy().getClassFilePrimitive(className) :
+                       state.getClassHierarchy().getClassFile(className));
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
@@ -188,7 +190,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                     for (String paramType : params) {
                         final ReferenceConcrete paramClazz;
                         if (isPrimitive(paramType)) {
-                            final String primType = toPrimitiveBinaryClassName(paramType);
+                            final String primType = toPrimitiveCanonicalName(paramType);
                             try {
                                 state.ensureInstance_JAVA_CLASS_primitive(primType);
                             } catch (HeapMemoryExhaustedException e) {

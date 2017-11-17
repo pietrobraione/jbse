@@ -4,7 +4,7 @@ import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_STRING_HASH;
 import static jbse.bc.Signatures.JAVA_STRING_VALUE;
-import static jbse.common.Type.isPrimitiveBinaryClassName;
+import static jbse.common.Type.isPrimitiveCanonicalName;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -881,7 +881,7 @@ public final class State implements Cloneable {
      * in this state's heap for some primitive type.
      * 
      * @param typeName a {@link String} representing a primitive type
-     *        binary name (see Java Language Specification 13.1).
+     *        canonical name (see JLS v8, section 6.7).
      * @return {@code true} iff there is a {@link Instance} of {@code java.lang.Class} in 
      *         this state's {@link Heap} corresponding to {@code typeName}.
      */
@@ -894,8 +894,6 @@ public final class State implements Cloneable {
      * from the heap corresponding to a class name. 
      * 
      * @param className a {@link String} representing the name of a class.
-     *        Classes of primitive types must be provided as their binary
-     *        names (see Java Language Specification 13.1)
      * @return a {@link ReferenceConcrete} to the {@link Instance} in 
      *         {@code state}'s {@link Heap} of the class with name
      *         {@code className}, or {@code null} if such instance does not
@@ -910,8 +908,8 @@ public final class State implements Cloneable {
      * Returns a {@link ReferenceConcrete} to an instance of 
      * {@code java.lang.Class} representing a primitive type. 
      * 
-     * @param typeName a {@link String}, a primitive type
-     *        binary name (see Java Language Specification 13.1).
+     * @param typeName a {@link String} representing a primitive type
+     *        canonical name (see JLS v8, section 6.7).
      * @return a {@link ReferenceConcrete} to the {@link Instance_JAVA_CLASS} 
      *         in this state's {@link Heap}, representing the class of 
      *         the primitive type {@code typeName}, or {@code null} if 
@@ -960,9 +958,9 @@ public final class State implements Cloneable {
      * nothing.
      * 
      * @param typeName a {@link String} representing a primitive type
-     *        binary name (see Java Language Specification 13.1).
+     *        canonical name (see JLS v8, section 6.7).
      * @throws ClassFileNotFoundException if {@code typeName} is not
-     *         the binary name of a primitive type.
+     *         the canonical name of a primitive type.
      * @throws HeapMemoryExhaustedException if the heap is full.
      */
     public void ensureInstance_JAVA_CLASS_primitive(String typeName) 
@@ -970,11 +968,11 @@ public final class State implements Cloneable {
         if (hasInstance_JAVA_CLASS_primitive(typeName)) {
             return;
         }
-        if (isPrimitiveBinaryClassName(typeName)) {
+        if (isPrimitiveCanonicalName(typeName)) {
             final ReferenceConcrete retVal = createInstance_JAVA_CLASS(typeName, true);
             this.classesPrimitive.put(typeName, retVal);
         } else {
-            throw new ClassFileNotFoundException(typeName + " is not the binary name of a primitive type or void");
+            throw new ClassFileNotFoundException(typeName + " is not the canonical name of a primitive type or void");
         }
     }
     

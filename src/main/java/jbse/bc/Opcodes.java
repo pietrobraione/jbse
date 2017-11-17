@@ -213,32 +213,9 @@ public final class Opcodes {
     public static final byte OP_JSR_W = -55;
     public static final byte OP_BREAKPOINT = -54;
 
-    //internally used in java v.1
-    public static final byte OP_LDC_QUICK = -53;
-    public static final byte OP_LDC_W_QUICK = -52;
-    public static final byte OP_LDC2_W_QUICK = -51;
-    public static final byte OP_GETFIELD_QUICK = -50;
-    public static final byte OP_PUTFIELD_QUICK = -49;
-    public static final byte OP_GETFIELD2_QUICK = -48;
-    public static final byte OP_PUTFIELD2_QUICK = -47;
-    public static final byte OP_GETSTATIC_QUICK = -46;
-    public static final byte OP_PUTSTATIC_QUICK = -45;
-    public static final byte OP_GETSTATIC2_QUICK = -44;
-    public static final byte OP_PUTSTATIC2_QUICK = -43;
-    public static final byte OP_INVOKEVIRTUAL_QUICK = -42;
-    public static final byte OP_INVOKENONVIRTUAL_QUICK = -41;
-    public static final byte OP_INVOKESUPER_QUICK = -40;
-    public static final byte OP_INVOKESTATIC_QUICK = -39;
-    public static final byte OP_INVOKEINTERFACE_QUICK = -38;
-    public static final byte OP_INVOKEVIRTUALOBJECT_QUICK = -37;
-    public static final byte OP_NEW_QUICK = -35;
-    public static final byte OP_ANEWARRAY_QUICK = -34;
-    public static final byte OP_MULTIANEWARRAY_QUICK = -33;
-    public static final byte OP_CHECKCAST_QUICK = -32;
-    public static final byte OP_INSTANCEOF_QUICK = -31;
-    public static final byte OP_INVOKEVIRTUAL_QUICK_W = -30;
-    public static final byte OP_GETFIELD_QUICK_W = -29;
-    public static final byte OP_PUTFIELD_QUICK_W = -28;
+    //internally used by JBSE
+    public static final byte OP_INVOKEVIRTUAL_SIGNATUREPOLYMORPHIC_PHASE2 = -53;
+    public static final byte OP_INVOKEVIRTUAL_PHASE3 = -52;
 
     //implementation-dependent
     public static final byte OP_IMPDEP1 = -2;
@@ -247,5 +224,7 @@ public final class Opcodes {
     /**
      * Do not instantiate it!
      */
-    private Opcodes() { }
+    private Opcodes() { 
+        throw new AssertionError();
+    }
 }

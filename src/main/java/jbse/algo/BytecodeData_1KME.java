@@ -5,12 +5,12 @@ import java.util.function.Supplier;
 import jbse.mem.State;
 
 /**
- * One implicit (boolean, is interface method?), 
+ * One implicit (kind, where is the method declared?), 
  * one immediate (method signature).
  * 
  * @author Pietro Braione
  */
-public final class BytecodeData_1ZME extends BytecodeData {
+public final class BytecodeData_1KME extends BytecodeData {
     public enum Kind { NONINTERFACE, INTERFACE, BOTH; 
         public static Kind kind(boolean isInterface, boolean isSpecial, boolean isStatic) {
             return (isInterface ? Kind.INTERFACE : (isSpecial || isStatic) ? Kind.BOTH : Kind.NONINTERFACE);
@@ -36,20 +36,20 @@ public final class BytecodeData_1ZME extends BytecodeData {
     /**
      * Do not instantiate!
      */
-    private BytecodeData_1ZME(Kind kind) {
+    private BytecodeData_1KME(Kind kind) {
         this.kind = kind;
     }    
 
     /**
      * Factory (with fluent interface).
      * 
-     * @param kind a {@link Kind}, whether the method should be find
-     *        among the noninterface methods, interface methods, or both.
+     * @param kind a {@link Kind}, whether the method is declared
+     *        among the noninterface methods, interface methods, or either.
      *        It is the value of the implicit of the created object.
-     * @return a {@link Supplier}{@code <}{@link BytecodeData_1ZME}{@code >},
-     *         the actual factory for {@link BytecodeData_1ZME} objects.
+     * @return a {@link Supplier}{@code <}{@link BytecodeData_1KME}{@code >},
+     *         the actual factory for {@link BytecodeData_1KME} objects.
      */
-    public static Supplier<BytecodeData_1ZME> withInterfaceMethod(Kind kind) {
-        return () -> new BytecodeData_1ZME(kind);
+    public static Supplier<BytecodeData_1KME> withMethod(Kind kind) {
+        return () -> new BytecodeData_1KME(kind);
     }
 }

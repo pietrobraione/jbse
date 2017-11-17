@@ -96,11 +96,16 @@ public final class ClassFileBad extends ClassFile {
 
     @Override
     public boolean isSuperInvoke() {
-        return false;
+        return false; //no meaning since objects of bad classfile have no methods (and cannot be instantiated, subclassed...)
     }
 
     @Override
-    public boolean isNested() {
+    public boolean isLocal() {
+        return false;
+    }
+    
+    @Override
+    public boolean isAnonymous() {
         return false;
     }
 
@@ -109,6 +114,11 @@ public final class ClassFileBad extends ClassFile {
         return null;
     }
 
+    @Override
+    public Signature getEnclosingMethodOrConstructor() {
+        return null;
+    }
+    
     @Override
     public boolean isStatic() {
         return false;

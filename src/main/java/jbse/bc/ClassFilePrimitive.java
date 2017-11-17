@@ -136,7 +136,12 @@ abstract class ClassFilePrimitive extends ClassFile {
     }
 
     @Override
-    public boolean isNested() {
+    public boolean isLocal() {
+        return false;
+    }
+    
+    @Override
+    public boolean isAnonymous() {
         return false;
     }
 
@@ -145,6 +150,11 @@ abstract class ClassFilePrimitive extends ClassFile {
         return null;
     }
 
+    @Override
+    public Signature getEnclosingMethodOrConstructor() {
+        return null;
+    }
+    
     @Override
     public boolean isStatic() {
         return false;

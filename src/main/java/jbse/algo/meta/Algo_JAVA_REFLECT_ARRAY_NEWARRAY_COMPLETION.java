@@ -1,6 +1,6 @@
 package jbse.algo.meta;
 
-import static jbse.algo.BytecodeData_1ZME.Kind.kind;
+import static jbse.algo.BytecodeData_1KME.Kind.kind;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
@@ -11,14 +11,13 @@ import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
-import static jbse.common.Type.binaryPrimitiveClassNameToInternal;
-import static jbse.common.Type.isPrimitiveBinaryClassName;
+import static jbse.common.Type.toPrimitiveInternalName;
 
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_XNEWARRAY;
 import jbse.algo.Algorithm;
-import jbse.algo.BytecodeData_1ZME;
+import jbse.algo.BytecodeData_1KME;
 import jbse.algo.InterruptException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
@@ -31,15 +30,15 @@ import jbse.val.Reference;
  * 
  * @author Pietro Braione
  */
-public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEWARRAY<BytecodeData_1ZME> {
+public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEWARRAY<BytecodeData_1KME> {
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 2;
     }
 
     @Override
-    protected final Supplier<BytecodeData_1ZME> bytecodeData() {
-        return () -> BytecodeData_1ZME.withInterfaceMethod(kind(false, false, true)).get();
+    protected final Supplier<BytecodeData_1KME> bytecodeData() {
+        return () -> BytecodeData_1KME.withMethod(kind(false, false, true)).get();
     }
 
     @Override
@@ -63,7 +62,7 @@ public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEW
             final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject(refToClass);
             if (clazz == null) {
                 //this should never happen
-                failExecution("The first parameter to java.lang.reflect.Array.newArray method is symbolic and unresolved.");
+                failExecution("the first parameter to java.lang.reflect.Array.newArray method is symbolic and unresolved");
             }
             final Reference refToVoidClass = state.referenceToInstance_JAVA_CLASS_primitive("void");
             if (refToVoidClass != null) {
@@ -73,10 +72,11 @@ public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEW
                     exitFromAlgorithm();
                 }
             }
-            if (isPrimitiveBinaryClassName(clazz.representedClass())) {
-                this.arrayType = "" + ARRAYOF + binaryPrimitiveClassNameToInternal(clazz.representedClass());
+            final String representedClass = clazz.representedClass();
+            if (clazz.isPrimitive()) {
+                this.arrayType = "" + ARRAYOF + toPrimitiveInternalName(representedClass);
             } else {
-                this.arrayType = "" + ARRAYOF + REFERENCE + clazz.representedClass() + TYPEEND;
+                this.arrayType = "" + ARRAYOF + REFERENCE + representedClass + TYPEEND;
             }
         } catch (ClassCastException e) {
             throwVerifyError(state);

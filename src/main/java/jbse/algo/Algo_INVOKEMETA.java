@@ -1,11 +1,11 @@
 package jbse.algo;
 
 import static jbse.algo.Util.continueWith;
+import static jbse.bc.Offsets.invokeDefaultOffset;
 
 import java.util.function.Supplier;
 
-import jbse.algo.BytecodeData_1ZME.Kind;
-import jbse.bc.Signature;
+import jbse.algo.BytecodeData_1KME.Kind;
 import jbse.mem.State;
 import jbse.tree.DecisionAlternative;
 
@@ -21,7 +21,7 @@ R extends DecisionAlternative,
 DE extends StrategyDecide<R>, 
 RE extends StrategyRefine<R>, 
 UP extends StrategyUpdate<R>> 
-extends Algorithm<BytecodeData_1ZME, R, DE, RE, UP> {
+extends Algorithm<BytecodeData_1KME, R, DE, RE, UP> {
 
     protected boolean isInterface; //set by setter (called by Algo_INVOKEX_Abstract)
     protected boolean isSpecial; //set by setter (called by Algo_INVOKEX_Abstract)
@@ -34,8 +34,8 @@ extends Algorithm<BytecodeData_1ZME, R, DE, RE, UP> {
     }
 
     @Override
-    protected final Supplier<BytecodeData_1ZME> bytecodeData() {
-        return () -> BytecodeData_1ZME.withInterfaceMethod(Kind.kind(this.isInterface, this.isSpecial, this.isStatic)).get();
+    protected final Supplier<BytecodeData_1KME> bytecodeData() {
+        return () -> BytecodeData_1KME.withMethod(Kind.kind(this.isInterface, this.isSpecial, this.isStatic)).get();
     }
 
     /**
@@ -45,26 +45,10 @@ extends Algorithm<BytecodeData_1ZME, R, DE, RE, UP> {
      */
     protected final void continueWithBaseLevelImpl(State state) 
     throws InterruptException {
-        final Algo_INVOKEX_Completion continuation = 
-            new Algo_INVOKEX_Completion(this.isInterface, this.isSpecial, this.isStatic);
+        final Algo_INVOKEX_CompletionNonSignaturePolymorphic<BytecodeData_1KME> continuation = 
+            new Algo_INVOKEX_CompletionNonSignaturePolymorphic<BytecodeData_1KME>(this.isInterface, this.isSpecial, this.isStatic, bytecodeData());
+        continuation.setPcOffset(invokeDefaultOffset(this.isInterface));
         continuation.shouldFindImplementation();
         continueWith(continuation);
-    }
-    
-    protected final void continueWithAnotherMethod(State state, Signature methodSignature, boolean isInterface, boolean isSpecial, boolean isStatic)
-    throws InterruptException {
-        final Algo_INVOKEX_NoData<?> continuation =
-        new Algo_INVOKEX_NoData<BytecodeData>(isInterface, isSpecial, isStatic) {
-            @Override
-            protected Supplier<BytecodeData> bytecodeData() {
-                return () -> new BytecodeData() {
-                    @Override
-                    protected void readImmediates(State state) {
-                        setMethodSignature(methodSignature);
-                    }
-                };
-            }
-        };
-        continueWith(continuation);
-    }
+    }    
 }

@@ -18,7 +18,6 @@ import java.util.function.Supplier;
 import jbse.algo.exc.BaseUnsupportedException;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.MetaUnsupportedException;
-import jbse.algo.exc.NotYetImplementedException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
@@ -40,7 +39,7 @@ import jbse.val.Reference;
  *
  */
 //TODO this class was born when (JVMS 2nd edition) the four invoke bytecodes were not much different, and sharing the implementation made sense; now it should be split in four subclasses. 
-abstract class Algo_INVOKEX_Abstract<D extends BytecodeData> extends Algorithm<D,
+public abstract class Algo_INVOKEX_Abstract<D extends BytecodeData> extends Algorithm<D,
 DecisionAlternative_NONE,
 StrategyDecide<DecisionAlternative_NONE>, 
 StrategyRefine<DecisionAlternative_NONE>, 
@@ -56,10 +55,11 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         this.isStatic = isStatic;
     }
 
-    protected boolean isNative; //set by cooking methods
-    protected Signature methodSignatureResolved; //set by cooking methods
-    protected ClassFile classFileMethodImpl; //set by cooking methods
+    protected Signature methodSignatureResolved; //set by cooking methods (resolveMethod)
+    protected ClassFile classFileMethodImpl; //set by cooking methods (findImpl / findOverridingImpl)
     protected Signature methodSignatureImpl; //set by cooking methods
+    protected boolean isNative; //set by cooking methods
+    protected boolean isSignaturePolymorphic; //set by cooking methods
     
     @Override
     protected final Supplier<Integer> numOperands() {
@@ -82,7 +82,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             failExecution(e);
         }
     }
-
+    
     protected final void check(State state) throws InterruptException, CannotManageStateException {
         try {
             final ClassHierarchy hier = state.getClassHierarchy();
@@ -90,6 +90,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             
             if (this.isInterface) {
                 //checks for invokeinterface
+                
+                //TODO the resolved method must not be an instance initialization method, or the class or interface initialization method: what should we do if it is???
                 
                 //the first linking exception pertains to method resolution
                 
@@ -156,6 +158,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             } else if (this.isStatic) {
                 //checks for invokestatic
                 
+                //TODO the resolved method must not be an instance initialization method, or the class or interface initialization method: what should we do if it is???
+                
                 //the first linking exception pertains to method resolution
                 
                 //second linking exception
@@ -168,6 +172,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 //the second run-time exception is not raised by JBSE (natives)
             } else {            
                 //checks for invokevirtual
+                
+                //TODO the resolved method must not be an instance initialization method, or the class or interface initialization method: what should we do if it is???
                 
                 //the first linking exception pertains to method resolution
                 
@@ -201,10 +207,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 
                 //the third, fourth, fifth and sixth run-time exception pertain to lookup of method implementation
                 
-                if (classFileResolved.isMethodSignaturePolymorphic(this.methodSignatureResolved)) {
-                    //TODO seventh and eighth run-time exceptions
-                    throw new NotYetImplementedException("invocation of signature-polymorphic method " + this.methodSignatureResolved);
-                }
+                //the seventh and eighth run-time exceptions pertain to the code after method type resolution
             }            
         } catch (BadClassFileException | MethodNotFoundException | ThreadStackEmptyException e) {
             //this should never happen after resolution
@@ -233,11 +236,13 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             this.methodSignatureImpl = new Signature(this.classFileMethodImpl.getClassName(), 
                                                      this.methodSignatureResolved.getDescriptor(), 
                                                      this.methodSignatureResolved.getName());
-            this.isNative = this.classFileMethodImpl.isMethodNative(this.methodSignatureResolved);
+            this.isNative = this.classFileMethodImpl.isMethodNative(this.methodSignatureImpl);
+            this.isSignaturePolymorphic = this.classFileMethodImpl.isMethodSignaturePolymorphic(this.methodSignatureImpl);
         } catch (MethodNotFoundException e) {
             this.classFileMethodImpl = null;
             this.methodSignatureImpl = null;
             this.isNative = false;
+            this.isSignaturePolymorphic = false;
         } catch (ThreadStackEmptyException e) {
             //this should never happen
             failExecution(e);
@@ -246,8 +251,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
 
     protected final void findOverridingImpl(State state)
     throws BaseUnsupportedException, MetaUnsupportedException, InterruptException {
-        if (this.methodSignatureImpl == null) {
-            return; //no implementation to override
+        if (this.methodSignatureImpl == null || this.isSignaturePolymorphic) {
+            return; //no implementation to override, or method is signature polymorphic (cannot be overridden!)
         }
         if (this.ctx.isMethodBaseLevelOverridden(this.methodSignatureImpl)) {
             final Signature methodSignatureOverriding = this.ctx.getBaseOverride(this.methodSignatureImpl);
@@ -257,6 +262,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 this.classFileMethodImpl = classFileMethodOverriding;
                 this.methodSignatureImpl = methodSignatureOverriding;
                 this.isNative = this.classFileMethodImpl.isMethodNative(this.methodSignatureImpl);
+                this.isSignaturePolymorphic = this.classFileMethodImpl.isMethodSignaturePolymorphic(this.methodSignatureImpl);
             } catch (MethodNotFoundException e) {
                 throw new BaseUnsupportedException("The overriding method " + methodSignatureOverriding + " does not exist (but the class seems to exist)");
             } catch (BadClassFileException e) {

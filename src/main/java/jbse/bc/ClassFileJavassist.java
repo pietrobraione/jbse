@@ -28,12 +28,13 @@ import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
 import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.AttributeInfo;
+//also uses javassist.bytecode.ClassFile, not imported to avoid name clash
 import javassist.bytecode.CodeAttribute;
 import javassist.bytecode.ConstPool;
+import javassist.bytecode.EnclosingMethodAttribute;
 import javassist.bytecode.LineNumberAttribute;
 import javassist.bytecode.LocalVariableAttribute;
 //also uses javassist.bytecode.ExceptionTable, not imported to avoid name clash
-
 import jbse.bc.exc.AttributeNotFoundException;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileIllFormedException;
@@ -166,6 +167,35 @@ public class ClassFileJavassist extends ClassFile {
         //getModifiers() does not provide the ACC_SUPER flag
         return ((this.cls.getClassFile().getAccessFlags() & AccessFlag.SUPER) != 0);
     }
+    
+    @Override
+    public boolean isLocal() {
+        final String className = getClassName();
+        final int lastDollarSignIndex = className.lastIndexOf('$');
+        if (lastDollarSignIndex == -1) {
+            return false; //not a nested class
+        }
+        return isAsciiDigit(className.charAt(lastDollarSignIndex + 1));
+    }
+    
+    private static boolean isAsciiDigit(char c) {
+        return '0' <= c && c <= '9';
+    }
+    
+    @Override
+    public boolean isAnonymous() {
+        final String className = getClassName();
+        final int lastDollarSignIndex = className.lastIndexOf('$');
+        if (lastDollarSignIndex == -1) {
+            return false; //not a nested class
+        }
+        for (int i = lastDollarSignIndex + 1; i < className.length(); ++i) {
+            if (!isAsciiDigit(className.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     @Override
     public Signature getFieldSignature(int fieldIndex) throws InvalidIndexException {
@@ -247,16 +277,13 @@ public class ClassFileJavassist extends ClassFile {
      *         is ignored.
      */
     private CtBehavior findMethodDeclaration(Signature methodSignature) {
-        final CtConstructor cc = this.cls.getClassInitializer();
         if ("<clinit>".equals(methodSignature.getName())) {
-            return cc;
+            return this.cls.getClassInitializer();
         }
 
         final CtBehavior[] bs = this.cls.getDeclaredBehaviors();
         for (CtBehavior b : bs) {
-            final String internalName = 
-                (((b instanceof CtConstructor) && (!((CtConstructor) b).isClassInitializer())) ? 
-                                                  "<init>" : b.getName());
+            final String internalName = ctBehaviorInternalName(b);
             if (internalName.equals(methodSignature.getName()) &&
                 b.getSignature().equals(methodSignature.getDescriptor())) {
                 return b;
@@ -396,13 +423,20 @@ public class ClassFileJavassist extends ClassFile {
         return (findMethodDeclaration(methodSignature) != null);
     }
     
+    private final String ctBehaviorInternalName(CtBehavior b) {
+        if (b instanceof CtConstructor) {
+            final CtConstructor bc = (CtConstructor) b;
+            return (bc.isClassInitializer() ? "<clinit>" : "<init>"); 
+        } else {
+            return b.getName();
+        }
+    }
+    
     private CtBehavior findUniqueMethodDeclarationWithName(String methodName) {
         final CtBehavior[] bs = this.cls.getDeclaredBehaviors();
         CtBehavior retVal = null;
         for (CtBehavior b : bs) {
-            final String internalName = 
-                (((b instanceof CtConstructor) && (!((CtConstructor) b).isClassInitializer())) ? 
-                 "<init>" : b.getName());
+            final String internalName = ctBehaviorInternalName(b);
             if (internalName.equals(methodName)) {
                 if (retVal == null) {
                     retVal = b;
@@ -507,7 +541,7 @@ public class ClassFileJavassist extends ClassFile {
         final CtBehavior[] methods = cls.getDeclaredMethods();
         final Signature[] retVal = new Signature[methods.length];
         for (int i = 0; i < methods.length; ++i) {
-            retVal[i] = new Signature(getClassName(), methods[i].getSignature(), methods[i].getName());
+            retVal[i] = new Signature(getClassName(), methods[i].getSignature(), ctBehaviorInternalName(methods[i]));
         }
         return retVal;
     }
@@ -771,7 +805,7 @@ public class ClassFileJavassist extends ClassFile {
             final ArrayList<Signature> constructors = new ArrayList<Signature>();
             final CtConstructor[] constrJA = this.cls.getDeclaredConstructors();
             for (CtConstructor constr : constrJA) {
-                final Signature sig = new Signature(getClassName(), constr.getSignature(), constr.getMethodInfo().getName());
+                final Signature sig = new Signature(getClassName(), constr.getSignature(), ctBehaviorInternalName(constr));
                 constructors.add(sig);
             }
             this.constructors = constructors;
@@ -782,13 +816,30 @@ public class ClassFileJavassist extends ClassFile {
     }
 
     @Override
-    public String classContainer() {
-        return this.cls.getName().substring(0, this.cls.getName().lastIndexOf('$'));
+    public String classContainer() throws ClassFileNotFoundException {
+        try {
+            if (this.cls.getDeclaringClass() == null) {
+                return null;
+            }
+            return (this.cls.getDeclaringClass().getName());
+        } catch (NotFoundException e) {
+            throw new ClassFileNotFoundException(e.getMessage());
+        }
     }
-
+    
     @Override
-    public boolean isNested() {
-        return this.cls.getName().contains("$");
+    public Signature getEnclosingMethodOrConstructor() {
+        //we do not use this.cls.getEnclosingBehavior because this
+        //method does not handle the case of local and anonymous classes
+        //that are not immediately enclosed by a method or constructor.
+        //This code is copied from CtClassType#getEnclosingBehavior.
+        final javassist.bytecode.ClassFile cf = this.cls.getClassFile2();
+        final EnclosingMethodAttribute ema = 
+            (EnclosingMethodAttribute) cf.getAttribute(EnclosingMethodAttribute.tag);
+        if (ema == null) {
+            return null;
+        }
+        return new Signature(internalClassName(ema.className()), ema.methodDescriptor(), ema.methodName());
     }
 
     @Override

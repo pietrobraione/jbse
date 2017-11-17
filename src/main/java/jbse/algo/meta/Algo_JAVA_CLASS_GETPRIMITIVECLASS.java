@@ -33,7 +33,7 @@ public final class Algo_JAVA_CLASS_GETPRIMITIVECLASS extends Algo_INVOKEMETA_Non
     protected void update(State state) 
     throws SymbolicValueNotAllowedException, ThreadStackEmptyException, InterruptException {
         try {           
-            //gets the binary name of the primitive type and converts it to a string
+            //gets the canonical name of the primitive type and converts it to a string
             final Reference typeNameRef = (Reference) this.data.operand(0);
             final String typeName = valueString(state, typeNameRef);
             if (typeName == null) {

@@ -12,7 +12,6 @@ import java.util.function.Supplier;
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
 import jbse.bc.ClassFile;
-import jbse.bc.ClassHierarchy;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.mem.Instance_JAVA_CLASS;
@@ -39,14 +38,16 @@ public final class Algo_JAVA_CLASS_GETSUPERCLASS extends Algo_INVOKEMETA_Nonbran
     @Override
     protected void cookMore(State state) throws InterruptException {
         try {
-            final Instance_JAVA_CLASS thisObject = (Instance_JAVA_CLASS) state.getObject((Reference) this.data.operand(0));
-            if (thisObject == null) {
+            final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject((Reference) this.data.operand(0));
+            if (clazz == null) {
                 //this should never happen
                 failExecution("violated invariant (unexpected heap access with symbolic unresolved reference)");
             }
-            final ClassHierarchy hier = state.getClassHierarchy();
-            final ClassFile thisClassFile = hier.getClassFile(thisObject.representedClass());
-            final String superclassName = thisClassFile.getSuperclassName();
+            final String className = clazz.representedClass();
+            final ClassFile cf = (clazz.isPrimitive() ? 
+                                  state.getClassHierarchy().getClassFilePrimitive(className) :
+                                  state.getClassHierarchy().getClassFile(className));
+            final String superclassName = cf.getSuperclassName();
             if (superclassName == null) {
                 this.refSuper = Null.getInstance();
             } else {

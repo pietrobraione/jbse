@@ -408,6 +408,16 @@ public final class ClassFileArray extends ClassFile {
         //TODO check this!
         return false;
     }
+    
+    @Override
+    public boolean isLocal() {
+        return false;
+    }
+    
+    @Override
+    public boolean isAnonymous() {
+        return false;
+    }
 
     @Override
     public boolean hasFieldDeclaration(Signature fieldSignature) {
@@ -479,12 +489,12 @@ public final class ClassFileArray extends ClassFile {
     }
 
     @Override
-    public boolean isNested() {
-        return false;
-    }
-
-    @Override
     public String classContainer() {
+        return null;
+    }
+    
+    @Override
+    public Signature getEnclosingMethodOrConstructor() {
         return null;
     }
 

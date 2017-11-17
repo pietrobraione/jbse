@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
 import jbse.algo.exc.CannotManageStateException;
+import jbse.bc.ClassFile;
 import jbse.bc.exc.BadClassFileException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
@@ -31,7 +32,10 @@ public final class Algo_SUN_REFLECTION_GETCLASSACCESSFLAGS extends Algo_INVOKEME
             final Reference refParam = (Reference) this.data.operand(0);
             final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject(refParam);
             final String className = clazz.representedClass();
-            this.flags = state.getClassHierarchy().getClassFile(className).getAccessFlags();
+            final ClassFile cf = (clazz.isPrimitive() ? 
+                                  state.getClassHierarchy().getClassFilePrimitive(className) :
+                                  state.getClassHierarchy().getClassFile(className));
+            this.flags = cf.getAccessFlags();
         } catch (ClassCastException | BadClassFileException e) {
             //this should never happen
             failExecution(e);

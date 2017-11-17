@@ -129,6 +129,14 @@ public final class Base {
         return "/usr/lib/" + file;
         //TODO if the platform is Windows, then return a Windows path
     }
+    
+    /**
+     * Overriding implementation of {@link java.lang.Runtime#availableProcessors()}.
+     * @see java.lang.Runtime#availableProcessors()
+     */
+    private static int base_JAVA_RUNTIME_AVAILABLEPROCESSORS(Runtime _this) {
+        return 1; //just one processor for JBSE, sorry
+    }
 
     /**
      * Puts a key-value pair in a {@link Properties} object, 

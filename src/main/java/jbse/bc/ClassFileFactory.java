@@ -43,7 +43,7 @@ public abstract class ClassFileFactory {
             //TODO couldn't find any specification for calculating this! Does it work for nested classes?
             final String packageName = classFileMember.getPackageName();
 
-            //calculates visibility (JVMS v8, section 5.3.3, this
+            //calculates visibility (JVMS v8, section 5.3.3 last line, this
             //implementation also works with primitive classfile members)
             final Visibility visibility;
             if (classFileMember.isPublic()) {

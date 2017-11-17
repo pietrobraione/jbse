@@ -8,7 +8,7 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
-import jbse.bc.ClassHierarchy;
+import jbse.bc.ClassFile;
 import jbse.bc.exc.BadClassFileException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
@@ -32,13 +32,16 @@ public final class Algo_JAVA_CLASS_GETMODIFIERS extends Algo_INVOKEMETA_Nonbranc
     @Override
     protected void cookMore(State state) throws InterruptException {
         try {
-            final Instance_JAVA_CLASS thisObject = (Instance_JAVA_CLASS) state.getObject((Reference) this.data.operand(0));
-            if (thisObject == null) {
+            final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject((Reference) this.data.operand(0));
+            if (clazz == null) {
                 //this should never happen
                 failExecution("violated invariant (unexpected heap access with symbolic unresolved reference)");
             }
-            final ClassHierarchy hier = state.getClassHierarchy();
-            this.modifiers = state.getCalculator().valInt(hier.getClassFile(thisObject.representedClass()).getModifiers());
+            final String className = clazz.representedClass();
+            final ClassFile cf = (clazz.isPrimitive() ? 
+                                  state.getClassHierarchy().getClassFilePrimitive(className) :
+                                  state.getClassHierarchy().getClassFile(className));
+            this.modifiers = state.getCalculator().valInt(cf.getModifiers());
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();

@@ -12,7 +12,7 @@ import static jbse.common.Type.className;
 import static jbse.common.Type.getArrayMemberType;
 import static jbse.common.Type.isArray;
 import static jbse.common.Type.isPrimitive;
-import static jbse.common.Type.toPrimitiveBinaryClassName;
+import static jbse.common.Type.toPrimitiveCanonicalName;
 
 import java.util.function.Supplier;
 
@@ -51,16 +51,16 @@ public final class Algo_JAVA_CLASS_GETCOMPONENTTYPE extends Algo_INVOKEMETA_Nonb
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
     CannotManageStateException, InterruptException {
         try {           
-            //gets the binary name of the primitive type and converts it to a string
+            //gets the canonical name of the primitive type and converts it to a string
             final Reference classRef = (Reference) this.data.operand(0);
             final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject(classRef);
             final String className = clazz.representedClass();
             if (isArray(className)) {
                 final String componentTypeName = getArrayMemberType(className);
                 if (isPrimitive(componentTypeName)) {
-                    final String componentTypeNameBinary = toPrimitiveBinaryClassName(componentTypeName);
-                    state.ensureInstance_JAVA_CLASS_primitive(componentTypeNameBinary);
-                    this.componentClassRef = state.referenceToInstance_JAVA_CLASS_primitive(componentTypeNameBinary);
+                    final String componentTypeNameCanonical = toPrimitiveCanonicalName(componentTypeName);
+                    state.ensureInstance_JAVA_CLASS_primitive(componentTypeNameCanonical);
+                    this.componentClassRef = state.referenceToInstance_JAVA_CLASS_primitive(componentTypeNameCanonical);
                 } else {
                     final String componentClassName = className(componentTypeName);
                     ensureInstance_JAVA_CLASS(state, componentClassName, componentClassName, this.ctx);

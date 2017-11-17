@@ -136,6 +136,14 @@ public final class Type {
         return (isPrimitiveFloating(type) || isPrimitiveIntegral(type));
     }
 
+    /**
+     * Checks whether a type is a primitive type.
+     * 
+     * @param type a {@code char}.
+     * @return same as {@link #isPrimitive(char) isPrimitive}{@code (type.charAt(0))}
+     *         when {@code type.}{@link String#length() length()}{@code  == 1},
+     *         otherwise {@code false}.
+     */
     public static boolean isPrimitive(String type) {
         if (type == null || type.length() != 1) {
             return false;
@@ -187,7 +195,7 @@ public final class Type {
     }
 
     /**
-     * Checks whether its parameter is the binary name
+     * Checks whether its parameter is the canonical name
      * of a primitive class (including {@link java.lang.Void#TYPE})
      * 
      * @param type a {@link String}.
@@ -202,16 +210,16 @@ public final class Type {
      * {@code "double"}, or
      * {@code "void"}.
      */
-    public static boolean isPrimitiveBinaryClassName(String type) {
+    public static boolean isPrimitiveCanonicalName(String type) {
         return ("byte".equals(type) ||
-        "short".equals(type) ||
-        "int".equals(type) ||
-        "long".equals(type) ||
-        "boolean".equals(type) ||
-        "char".equals(type) ||
-        "float".equals(type) ||
-        "double".equals(type) ||
-        "void".equals(type));
+                "short".equals(type) ||
+                "int".equals(type) ||
+                "long".equals(type) ||
+                "boolean".equals(type) ||
+                "char".equals(type) ||
+                "float".equals(type) ||
+                "double".equals(type) ||
+                "void".equals(type));
     }
 
     public static String binaryClassName(String className) {
@@ -222,53 +230,86 @@ public final class Type {
         return className.replace('.', '/');
     }
 
-    public static String toPrimitiveBinaryClassName(char primitiveType) {
-        if (primitiveType == BYTE) {
+    /**
+     * Converts the internal name of a primitive type  
+     * to its corresponding canonical name.
+     * 
+     * @param primitiveTypeInternal a {@code char}.
+     * @return a {@link String}, the canonical name for
+     *        {@code primitiveTypeInternal}, or {@code null}
+     *        if {@code primitiveTypeInternal} is not the
+     *        internal name of a primitive type.
+     */
+    public static String toPrimitiveCanonicalName(char primitiveTypeInternal) {
+        if (primitiveTypeInternal == BYTE) {
             return "byte";
-        } else if (primitiveType == SHORT) {
+        } else if (primitiveTypeInternal == SHORT) {
             return "short";
-        } else if (primitiveType == INT) {
+        } else if (primitiveTypeInternal == INT) {
             return "int";   
-        } else if (primitiveType == LONG) {
+        } else if (primitiveTypeInternal == LONG) {
             return "long";
-        } else if (primitiveType == BOOLEAN) {
+        } else if (primitiveTypeInternal == BOOLEAN) {
             return "boolean";
-        } else if (primitiveType == CHAR) {
+        } else if (primitiveTypeInternal == CHAR) {
             return "char";
-        } else if (primitiveType == FLOAT) {
+        } else if (primitiveTypeInternal == FLOAT) {
             return "float";
-        } else if (primitiveType == DOUBLE) {
+        } else if (primitiveTypeInternal == DOUBLE) {
             return "double";
         } else {
             return null;
         }
     }
 
-    public static String toPrimitiveBinaryClassName(String primitiveType) {
-        if (isPrimitive(primitiveType)) {
-            return toPrimitiveBinaryClassName(primitiveType.charAt(0));
+    /**
+     * Converts the internal name of a primitive type  
+     * to its corresponding canonical name.
+     * 
+     * @param primitiveTypeInternal a {@link String}.
+     * @return same as 
+     *         {@link #toPrimitiveCanonicalName(char) toPrimitiveCanonicalName}{@code (primitiveTypeInternal.}
+     *         {@link String#charAt(int) charAt}{@code (0))} if 
+     *         {@link #isPrimitive(String) isPrimitive}{@code (primitiveTypeInternal)},
+     *         otherwise {@code null}.
+     */
+    public static String toPrimitiveCanonicalName(String primitiveTypeInternal) {
+        if (isPrimitive(primitiveTypeInternal)) {
+            return toPrimitiveCanonicalName(primitiveTypeInternal.charAt(0));
         } else {
             return null;
         }
     }
 
-    public static char binaryPrimitiveClassNameToInternal(String primitiveType) {
-        if ("byte".equals(primitiveType)) {
+    /**
+     * Converts the internal name of a primitive type  
+     * to its corresponding canonical name.
+     * 
+     * @param primitiveTypeCanonical a {@link String}.
+     * @return a {@code char}, the internal name for
+     *         {@code primitiveTypeCanonical}, or
+     *         {@link #ERROR} if {@code primitiveTypeCanonical} is not the
+     *         canonical name of a primitive type.
+     */
+    public static char toPrimitiveInternalName(String primitiveTypeCanonical) {
+        if ("byte".equals(primitiveTypeCanonical)) {
             return BYTE;
-        } else if ("short".equals(primitiveType)) {
+        } else if ("short".equals(primitiveTypeCanonical)) {
             return SHORT;
-        } else if ("int".equals(primitiveType)) {
+        } else if ("int".equals(primitiveTypeCanonical)) {
             return INT;   
-        } else if ("long".equals(primitiveType)) {
+        } else if ("long".equals(primitiveTypeCanonical)) {
             return LONG;
-        } else if ("boolean".equals(primitiveType)) {
+        } else if ("boolean".equals(primitiveTypeCanonical)) {
             return BOOLEAN;
-        } else if ("char".equals(primitiveType)) {
+        } else if ("char".equals(primitiveTypeCanonical)) {
             return CHAR;
-        } else if ("float".equals(primitiveType)) {
+        } else if ("float".equals(primitiveTypeCanonical)) {
             return FLOAT;
-        } else if ("double".equals(primitiveType)) {
+        } else if ("double".equals(primitiveTypeCanonical)) {
             return DOUBLE;
+        } else if ("void".equals(primitiveTypeCanonical)) {
+            return VOID;
         } else {
             return ERROR;
         }
@@ -326,13 +367,13 @@ public final class Type {
         ArrayList<String> myVector = new ArrayList<String>();
         for (int j = 1; j < methodDescriptor.lastIndexOf(')'); j++) {
             if (methodDescriptor.charAt(j) == REFERENCE) {
-                int z = j;
+                final int z = j;
                 while (methodDescriptor.charAt(j) != TYPEEND) {
                     j++;
                 }
                 myVector.add(methodDescriptor.substring(z, j + 1));
             } else if (methodDescriptor.charAt(j) == ARRAYOF) {
-                int z = j;
+                final int z = j;
                 while (methodDescriptor.charAt(j) == ARRAYOF) {
                     j++;
                 }
@@ -346,7 +387,7 @@ public final class Type {
                 myVector.add("" + methodDescriptor.charAt(j));
             }
         }
-        String[] retString = new String[myVector.size()];
+        final String[] retString = new String[myVector.size()];
         for (int b = 0; b < myVector.size(); b++) {
             retString[b] = myVector.get(b);
         }
@@ -359,8 +400,7 @@ public final class Type {
      * or {@code null} if the input is not the descriptor of a method.
      * 
      * @param methodDescriptor a {@link String}, the descriptor of a method.
-     * @return a {@link String}, the descriptor of the method's 
-     *         return value.
+     * @return a {@link String}.
      */
     public static String splitReturnValueDescriptor(String methodDescriptor) {
         int index = methodDescriptor.lastIndexOf(')') + 1;
@@ -391,7 +431,8 @@ public final class Type {
     /**
      * Given the type of an array, it returns the (declared) 
      * number of dimensions (e.g., fed by {@code [[[Z} it returns
-     * 3),
+     * 3).
+     * 
      * @param arrayType a {@link String}, the type of the array.
      * @return the number of dimension as declared in {@code arrayType}, 
      *         or an unspecified number if {@code arrayType} is not

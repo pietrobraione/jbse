@@ -4,8 +4,10 @@ import static jbse.bc.Signatures.JAVA_CLONEABLE;
 import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_SERIALIZABLE;
 import static jbse.bc.Signatures.SIGNATURE_POLYMORPHIC_DESCRIPTOR;
+import static jbse.common.Type.toPrimitiveInternalName;
 import static jbse.common.Type.className;
 import static jbse.common.Type.isArray;
+import static jbse.common.Type.isPrimitiveCanonicalName;
 import static jbse.common.Type.isReference;
 import static jbse.common.Type.splitParametersDescriptors;
 import static jbse.common.Type.splitReturnValueDescriptor;
@@ -104,7 +106,8 @@ public class ClassHierarchy {
      * Given the name of a primitive type returns the correspondent 
      * {@link ClassFile}.
      * 
-     * @param typeName the name of a primitive type (see the class {@link Type}).
+     * @param typeName the canonical name of a primitive type 
+     *        (see JLS v8, section 6.7).
      * @return the {@link ClassFile} of the correspondent class.
      * @throws BadClassFileException when the class file does not 
      *         exist or is ill-formed (happens when {@code typeName}
@@ -112,7 +115,8 @@ public class ClassHierarchy {
      */
     public ClassFile getClassFilePrimitive(String typeName)
     throws BadClassFileException {
-        final ClassFile retval = this.cfs.getClassFilePrimitive(typeName);
+        final ClassFile retval = 
+            this.cfs.getClassFilePrimitive(toPrimitiveInternalName(typeName));
         if (retval instanceof ClassFileBad) {
             throw ((ClassFileBad) retval).getException();
         }
@@ -172,9 +176,13 @@ public class ClassHierarchy {
      * Produces all the superclasses of a given class.
      * 
      * @param startClassName the name of the class whose superclasses 
-     *                       are returned.
+     *        are returned. Nonprimitive classes should be indicated by their
+     *        internal names and primitive classes should be indicated by their
+     *        canonical names (see JLS v8, section 6.7).
      * @return an {@link Iterable}{@code <}{@link ClassFile}{@code >} containing 
-     *         all the superclasses of {@code startClassName} (included).
+     *         all the superclasses of {@code startClassName} (included). If
+     *         {@code startClassName == null} an empty {@link Iterable} is
+     *         returned.
      */
     public Iterable<ClassFile> superclasses(String startClassName) {
         return new IterableSuperclasses(startClassName);
@@ -184,10 +192,14 @@ public class ClassHierarchy {
      * Produces all the superinterfaces of a given class.
      * 
      * @param startClassName the name of the class whose superinterfaces 
-     *                       are returned.
+     *        are returned. Nonprimitive classes should be indicated by their
+     *        internal names and primitive classes should be indicated by their
+     *        canonical names (see JLS v8, section 6.7).
      * @return an {@link Iterable}{@code <}{@link ClassFile}{@code >} containing 
      *         all the superinterfaces of {@code startClassName} (included if
-     *         it is an interface).
+     *         it is an interface). If {@code startClassName == null} an empty 
+     *         {@link Iterable} is returned. A same superinterface is not iterated
+     *         more than once even if the class inherits it more than once. 
      */
     public Iterable<ClassFile> superinterfaces(String startClassName) {
         return new IterableSuperinterfaces(startClassName);
@@ -217,7 +229,7 @@ public class ClassHierarchy {
             } else {
                 return false;
             }
-        } else if (!Type.isArray(sub) && !Type.isArray(sup)) {
+        } else {
             for (ClassFile f : superclasses(sub)) { 
                 if (f.getClassName().equals(sup)) {
                     return true;
@@ -228,8 +240,6 @@ public class ClassHierarchy {
                     return true;
                 }
             }
-            return false;
-        } else {
             return false;
         }
     }
@@ -267,7 +277,14 @@ public class ClassHierarchy {
             private ClassFile nextClassFile;
 
             public MyIterator(String startClassName) {
-                this.nextClassFile = ClassHierarchy.this.cfs.getClassFile(startClassName);
+                if (startClassName == null) {
+                    this.nextClassFile = null;
+                } else if (isPrimitiveCanonicalName(startClassName)) {
+                    this.nextClassFile = 
+                        ClassHierarchy.this.cfs.getClassFilePrimitive(toPrimitiveInternalName(startClassName));
+                } else {
+                    this.nextClassFile = ClassHierarchy.this.cfs.getClassFile(startClassName);
+                }
             }
 
             public boolean hasNext() {
@@ -276,7 +293,7 @@ public class ClassHierarchy {
 
             public ClassFile next() {
                 //ensures the method precondition
-                if (!this.hasNext()) {
+                if (!hasNext()) {
                     throw new NoSuchElementException();
                 }
 
@@ -345,7 +362,15 @@ public class ClassHierarchy {
             public MyIterator(String startClassName) {
                 this.visitedClassFiles = new HashSet<>();
                 this.nextClassFiles = new LinkedList<>();
-                final ClassFile cf = ClassHierarchy.this.cfs.getClassFile(startClassName);
+                if (startClassName == null) {
+                    return; //keeps the iterator empty
+                }
+                final ClassFile cf;
+                if (isPrimitiveCanonicalName(startClassName)) {
+                    cf = ClassHierarchy.this.cfs.getClassFilePrimitive(toPrimitiveInternalName(startClassName));
+                } else {
+                    cf = ClassHierarchy.this.cfs.getClassFile(startClassName);
+                }
                 if (cf instanceof ClassFileBad || cf.isInterface()) {
                     this.nextClassFiles.add(cf);
                 } else { //is not interface and is not ClassFileBad
@@ -361,7 +386,7 @@ public class ClassHierarchy {
 
             public ClassFile next() {
                 //ensures the method precondition
-                if (!this.hasNext()) {
+                if (!hasNext()) {
                     throw new NoSuchElementException();
                 }
 
@@ -385,9 +410,9 @@ public class ClassHierarchy {
 
             private List<ClassFile> superinterfacesImmediateFiltered(ClassFile base) {
                 return base.getSuperInterfaceNames().stream()
-                .map((s) -> ClassHierarchy.this.cfs.getClassFile(s))
-                .filter((cf) -> !this.visitedClassFiles.contains(cf))
-                .collect(Collectors.toList());
+                       .map(s -> ClassHierarchy.this.cfs.getClassFile(s))
+                       .filter(cf -> !this.visitedClassFiles.contains(cf))
+                       .collect(Collectors.toList());
             }
         }
     }

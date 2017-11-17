@@ -46,9 +46,11 @@ public final class Signatures {
     public static final String JAVA_BUFFEREDOUTPUTSTREAM     = "java/io/BufferedOutputStream";
     public static final String JAVA_BUFFEREDWRITER           = "java/io/BufferedWriter";
     public static final String JAVA_BYTE                     = "java/lang/Byte";
+    public static final String JAVA_BYTE_BYTECACHE           = "java/lang/Byte$ByteCache";
     public static final String JAVA_BYTEBUFFER               = "java/nio/ByteBuffer";
     public static final String JAVA_BYTEORDER                = "java/nio/ByteOrder";
     public static final String JAVA_CHARACTER                = "java/lang/Character";
+    public static final String JAVA_CHARACTER_CHARACTERCACHE = "java/lang/Character$CharacterCache";
     public static final String JAVA_CHARSET                  = "java/nio/charset/Charset";
     public static final String JAVA_CHARSET_EXTENDEDPROVIDERHOLDER = "java/nio/charset/Charset$ExtendedProviderHolder";
     public static final String JAVA_CHARSETENCODER           = "java/nio/charset/CharsetEncoder";
@@ -60,6 +62,7 @@ public final class Signatures {
     public static final String JAVA_CLASS_REFLECTIONDATA     = "java/lang/Class$ReflectionData";
     public static final String JAVA_CLASSLOADER              = "java/lang/ClassLoader";
     public static final String JAVA_CLASSLOADER_NATIVELIBRARY = "java/lang/ClassLoader$NativeLibrary";
+    public static final String JAVA_CLASSVALUE               = "java/lang/ClassValue";
     public static final String JAVA_CLONEABLE                = "java/lang/Cloneable";
     public static final String JAVA_CODINGERRORACTION        = "java/nio/charset/CodingErrorAction";
     public static final String JAVA_COLLECTIONS              = "java/util/Collections";
@@ -71,6 +74,7 @@ public final class Signatures {
     public static final String JAVA_COLLECTIONS_UNMODIFIABLECOLLECTION       = "java/util/Collections$UnmodifiableCollection";
     public static final String JAVA_COLLECTIONS_UNMODIFIABLELIST             = "java/util/Collections$UnmodifiableList";
     public static final String JAVA_COLLECTIONS_UNMODIFIABLERANDOMACCESSLIST = "java/util/Collections$UnmodifiableRandomAccessList";
+    public static final String JAVA_CONCURRENTHASHMAP        = "java/util/concurrent/ConcurrentHashMap";
     public static final String JAVA_CONSTRUCTOR              = "java/lang/reflect/Constructor";
     public static final String JAVA_DEFAULTFILESYSTEM        = "java/io/DefaultFileSystem";
     public static final String JAVA_DICTIONARY               = "java/util/Dictionary";
@@ -109,9 +113,16 @@ public final class Signatures {
     public static final String JAVA_LONG                     = "java/lang/Long";
     public static final String JAVA_LONG_LONGCACHE           = "java/lang/Long$LongCache";
     public static final String JAVA_MATH                     = "java/lang/Math";
+    public static final String JAVA_MEMBERNAME               = "java/lang/invoke/MemberName";
+    public static final String JAVA_MEMBERNAME_FACTORY       = "java/lang/invoke/MemberName$Factory";
     public static final String JAVA_METHOD                   = "java/lang/reflect/Method";
     public static final String JAVA_METHODHANDLE             = "java/lang/invoke/MethodHandle";
+    public static final String JAVA_METHODHANDLEIMPL         = "java/lang/invoke/MethodHandleImpl";
+    public static final String JAVA_METHODHANDLES            = "java/lang/invoke/MethodHandles";
+    public static final String JAVA_METHODHANDLES_LOOKUP     = "java/lang/invoke/MethodHandles$Lookup";
+    public static final String JAVA_METHODHANDLESTATICS      = "java/lang/invoke/MethodHandleStatics";
     public static final String JAVA_METHODTYPE               = "java/lang/invoke/MethodType";
+    public static final String JAVA_METHODTYPEFORM           = "java/lang/invoke/MethodTypeForm";
     public static final String JAVA_MODIFIER                 = "java/lang/reflect/Modifier";
     public static final String JAVA_NUMBER                   = "java/lang/Number";
     public static final String JAVA_OBJECT                   = "java/lang/Object";
@@ -139,6 +150,7 @@ public final class Signatures {
     public static final String JAVA_RUNTIMEPERMISSION        = "java/lang/RuntimePermission";
     public static final String JAVA_SERIALIZABLE             = "java/io/Serializable";
     public static final String JAVA_SHORT                    = "java/lang/Short";
+    public static final String JAVA_SHORT_SHORTCACHE         = "java/lang/Short$ShortCache";
     public static final String JAVA_STACK                    = "java/util/Stack";
     public static final String JAVA_STACKTRACEELEMENT        = "java/lang/StackTraceElement";
     public static final String JAVA_STRING                   = "java/lang/String";
@@ -185,6 +197,7 @@ public final class Signatures {
     public static final String SUN_UTF_8_ENCODER             = "sun/nio/cs/UTF_8$Encoder";
     public static final String SUN_VERSION                   = "sun/misc/Version";
     public static final String SUN_VM                        = "sun/misc/VM";
+    public static final String SUN_WRAPPER_FORMAT            = "sun/invoke/util/Wrapper$Format";
 
     //exceptions
     public static final String ARITHMETIC_EXCEPTION                = "java/lang/ArithmeticException";
@@ -233,13 +246,21 @@ public final class Signatures {
         new Signature(JAVA_CLASS, "(" + BOOLEAN + ")" + ARRAYOF + REFERENCE + JAVA_CONSTRUCTOR + TYPEEND, "getDeclaredConstructors0");
     public static final Signature JAVA_CLASS_GETDECLAREDFIELDS0 =
         new Signature(JAVA_CLASS, "(" + BOOLEAN + ")" + ARRAYOF + REFERENCE + JAVA_FIELD + TYPEEND, "getDeclaredFields0");
+    public static final Signature JAVA_CLASS_GETDECLARINGCLASS0 =
+        new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getDeclaringClass0");
+    public static final Signature JAVA_CLASS_GETENCLOSINGMETHOD0 =
+        new Signature(JAVA_CLASS, "()" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND, "getEnclosingMethod0");
     public static final Signature JAVA_CLASS_GETMODIFIERS =
         new Signature(JAVA_CLASS, "()" + INT, "getModifiers");
+    public static final Signature JAVA_CLASS_GETNAME0 =
+        new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_STRING + TYPEEND, "getName0");
     public static final Signature JAVA_CLASS_GETPRIMITIVECLASS =
         new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + 
                       REFERENCE + JAVA_CLASS + TYPEEND, "getPrimitiveClass");
     public static final Signature JAVA_CLASS_GETSUPERCLASS =
         new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getSuperclass");
+    public static final Signature JAVA_CLASS_ISARRAY =
+        new Signature(JAVA_CLASS, "()" + BOOLEAN, "isArray");
     public static final Signature JAVA_CLASS_ISASSIGNABLEFROM =
         new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + BOOLEAN, "isAssignableFrom");
     public static final Signature JAVA_CLASS_ISINSTANCE =
@@ -256,6 +277,10 @@ public final class Signatures {
         new Signature(JAVA_METHOD, 
                      "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, 
                      "invoke");
+    public static final Signature JAVA_METHODTYPE_FROMMETHODDESCRIPTORSTRING =
+        new Signature(JAVA_METHODTYPE, 
+                      "(" + REFERENCE + JAVA_STRING + TYPEEND + REFERENCE + JAVA_CLASSLOADER + TYPEEND + ")" + REFERENCE + JAVA_METHODTYPE + TYPEEND, 
+                      "fromMethodDescriptorString");
     public static final Signature JAVA_OBJECT_CLONE =
         new Signature(JAVA_OBJECT, "()" + REFERENCE + JAVA_OBJECT + TYPEEND, "clone");
     public static final Signature JAVA_OBJECT_GETCLASS =
@@ -264,7 +289,9 @@ public final class Signatures {
         new Signature(JAVA_OBJECT, "()" + INT, "hashCode");
     public static final Signature JAVA_REFLECT_ARRAY_NEWARRAY =
         new Signature(JAVA_REFLECT_ARRAY, "(" + REFERENCE + JAVA_CLASS + TYPEEND + INT + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "newArray");
-    public static final Signature JAVA_STRING_HASHCODE =
+    public static final Signature JAVA_RUNTIME_AVAILABLEPROCESSORS = 
+        new Signature(JAVA_RUNTIME, "()" + INT, "availableProcessors");
+    public static final Signature JAVA_STRING_HASHCODE = 
         new Signature(JAVA_STRING, "()" + INT, "hashCode");
     public static final Signature JAVA_STRING_INTERN =
         new Signature(JAVA_STRING, "()" + REFERENCE + JAVA_STRING + TYPEEND, "intern");
@@ -286,7 +313,8 @@ public final class Signatures {
         new Signature(JAVA_SYSTEM, 
                       "(" + REFERENCE + JAVA_OBJECT + TYPEEND + INT + REFERENCE + JAVA_OBJECT + TYPEEND + INT + INT + ")" + VOID, 
                       "arraycopy");
-    public static final Signature JAVA_SYSTEM_CLINIT = new Signature(JAVA_SYSTEM, "()" + VOID, "<clinit>");
+    public static final Signature JAVA_SYSTEM_CLINIT = 
+        new Signature(JAVA_SYSTEM, "()" + VOID, "<clinit>");
     public static final Signature JAVA_SYSTEM_IDENTITYHASHCODE =
         new Signature(JAVA_SYSTEM, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + INT, "identityHashCode");
     public static final Signature JAVA_SYSTEM_INITIALIZESYSTEMCLASS =
@@ -383,6 +411,8 @@ public final class Signatures {
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + INT, "arrayIndexScale");
     public static final Signature SUN_UNSAFE_COMPAREANDSWAPINT = 
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + INT + INT + ")" + BOOLEAN, "compareAndSwapInt");
+    public static final Signature SUN_UNSAFE_COMPAREANDSWAPLONG = 
+        new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + LONG + LONG + ")" + BOOLEAN, "compareAndSwapLong");
     public static final Signature SUN_UNSAFE_COMPAREANDSWAPOBJECT = 
         new Signature(SUN_UNSAFE, 
                       "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + BOOLEAN, 
@@ -395,6 +425,8 @@ public final class Signatures {
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + ")" + INT, "getIntVolatile");
     public static final Signature SUN_UNSAFE_GETLONG = 
         new Signature(SUN_UNSAFE, "(" + LONG + ")" + LONG, "getLong");
+    public static final Signature SUN_UNSAFE_GETOBJECTVOLATILE = 
+        new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "getObjectVolatile");
     public static final Signature SUN_UNSAFE_OBJECTFIELDOFFSET = 
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_FIELD + TYPEEND + ")" + LONG, "objectFieldOffset");
     public static final Signature SUN_UNSAFE_PUTLONG = 

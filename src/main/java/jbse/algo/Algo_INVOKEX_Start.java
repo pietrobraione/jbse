@@ -6,6 +6,7 @@ import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Offsets.invokeDefaultOffset;
 import static jbse.bc.Signatures.ABSTRACT_METHOD_ERROR;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
@@ -16,6 +17,7 @@ import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import java.util.function.Supplier;
 
 import jbse.bc.exc.BadClassFileException;
+import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.MethodAbstractException;
@@ -26,23 +28,25 @@ import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 
 /**
- * Algorithm for the invoke* bytecodes
+ * Algorithm for starting the invoke* bytecodes
  * (invoke[interface/special/static/virtual]).
  * Should be followed by the execution of 
- * {@link Algo_INVOKEX_Completion}.
- * It is almost complete, but we leave it 
- * abstract on the BytecodeData so it can
+ * {@link Algo_INVOKEX_CompletionNonSignaturePolymorphic} or
+ * {@link Algo_INVOKEVIRTUAL_CompletionSignaturePolymorphic_Phase1}.
+ * It abstracts on the BytecodeData so it can
  * be base for an algorithm that performs 
  * manual method dispatch.
  *  
  * @author Pietro Braione
  */
-abstract class Algo_INVOKEX_NoData<D extends BytecodeData> extends Algo_INVOKEX_Abstract<D> {
-    private final Algo_INVOKEX_Completion algo_INVOKEX_Completion;
+abstract class Algo_INVOKEX_Start<D extends BytecodeData> extends Algo_INVOKEX_Abstract<D> {
+    private final Algo_INVOKEX_CompletionNonSignaturePolymorphic<D> algo_INVOKEX_CompletionNonSignaturePolymorphic;
+    private final Algo_INVOKEVIRTUAL_CompletionSignaturePolymorphic_Phase1<D> algo_INVOKEX_CompletionSignaturePolymorphic_Phase1;
 
-    public Algo_INVOKEX_NoData(boolean isInterface, boolean isSpecial, boolean isStatic) {
+    public Algo_INVOKEX_Start(boolean isInterface, boolean isSpecial, boolean isStatic) {
         super(isInterface, isSpecial, isStatic);
-        this.algo_INVOKEX_Completion = new Algo_INVOKEX_Completion(isInterface, isSpecial, isStatic);
+        this.algo_INVOKEX_CompletionNonSignaturePolymorphic = new Algo_INVOKEX_CompletionNonSignaturePolymorphic<D>(isInterface, isSpecial, isStatic, bytecodeData());
+        this.algo_INVOKEX_CompletionSignaturePolymorphic_Phase1  = new Algo_INVOKEVIRTUAL_CompletionSignaturePolymorphic_Phase1<D>(bytecodeData());
     }
 
     @Override
@@ -52,7 +56,12 @@ abstract class Algo_INVOKEX_NoData<D extends BytecodeData> extends Algo_INVOKEX_
             try {
                 resolveMethod(state);
             } catch (ClassFileNotFoundException e) {
+                //TODO is it ok?
                 throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                exitFromAlgorithm();
+            } catch (ClassFileIllFormedException e) {
+                //TODO is it ok?
+                throwVerifyError(state);
                 exitFromAlgorithm();
             } catch (IncompatibleClassFileException e) {
                 throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
@@ -64,8 +73,8 @@ abstract class Algo_INVOKEX_NoData<D extends BytecodeData> extends Algo_INVOKEX_
                 throwNew(state, ILLEGAL_ACCESS_ERROR);
                 exitFromAlgorithm();
             } catch (BadClassFileException e) {
-                throwVerifyError(state);
-                exitFromAlgorithm();
+                //this should never happen since we already caught both its subclasses
+                failExecution(e);
             }
 
             //checks the resolved method; note that more checks 
@@ -84,7 +93,7 @@ abstract class Algo_INVOKEX_NoData<D extends BytecodeData> extends Algo_INVOKEX_
                     failExecution(e);
                 }
             }
-
+            
             //looks for the method implementation with standard lookup
             try {
                 findImpl(state);
@@ -113,10 +122,25 @@ abstract class Algo_INVOKEX_NoData<D extends BytecodeData> extends Algo_INVOKEX_
             }
 
             //otherwise, concludes the execution of the bytecode algorithm
-            this.algo_INVOKEX_Completion.setImplementation(this.classFileMethodImpl, this.methodSignatureImpl, this.isNative);
-            continueWith(this.algo_INVOKEX_Completion);
-
+            if (this.isSignaturePolymorphic) {
+                this.algo_INVOKEX_CompletionSignaturePolymorphic_Phase1.setPcOffset(returnPcOffset());
+                continueWith(this.algo_INVOKEX_CompletionSignaturePolymorphic_Phase1);
+            } else {
+                this.algo_INVOKEX_CompletionNonSignaturePolymorphic.setImplementation(this.classFileMethodImpl, this.methodSignatureImpl, this.isNative);
+                this.algo_INVOKEX_CompletionNonSignaturePolymorphic.setPcOffset(returnPcOffset());                
+                continueWith(this.algo_INVOKEX_CompletionNonSignaturePolymorphic);
+            }
         };
+    }
+    
+    /**
+     * Override to change the default policy for calculating the PC
+     * offset after returning from the invoked method.
+     * 
+     * @return an {@code int}, the PC offset.
+     */
+    protected int returnPcOffset() {
+        return invokeDefaultOffset(this.isInterface);
     }
 
     @Override

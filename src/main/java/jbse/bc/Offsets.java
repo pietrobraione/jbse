@@ -39,6 +39,10 @@ public final class Offsets {
     public static final int XLOADSTORE_IMMEDIATE_OFFSET = 2;
     public static final int XLOADSTORE_IMMEDIATE_WIDE_OFFSET = 3;
     public static final int XLOADSTORE_IMPLICIT_OFFSET = 1;
+    
+    public static int invokeDefaultOffset(boolean isInterface) {
+        return isInterface ? INVOKEDYNAMICINTERFACE_OFFSET : INVOKESPECIALSTATICVIRTUAL_OFFSET;
+    }
 
     /**
      * Do not instantiate it!

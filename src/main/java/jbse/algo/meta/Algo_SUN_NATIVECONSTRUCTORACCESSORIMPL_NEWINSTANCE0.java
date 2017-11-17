@@ -26,8 +26,7 @@ import static jbse.bc.Signatures.JAVA_SHORT;
 import static jbse.bc.Signatures.JAVA_SHORT_VALUE;
 import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTION;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
-import static jbse.common.Type.binaryPrimitiveClassNameToInternal;
-import static jbse.common.Type.isPrimitiveBinaryClassName;
+import static jbse.common.Type.toPrimitiveInternalName;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.VOID;
@@ -87,7 +86,7 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
             final Instance constructor = (Instance) state.getObject(refConstructor);
             final Instance_JAVA_CLASS constructorJavaClass = (Instance_JAVA_CLASS) state.getObject((Reference) constructor.getFieldValue(JAVA_CONSTRUCTOR_CLAZZ));
             this.className = constructorJavaClass.representedClass();
-            final ClassFile constructorClassFile = state.getClassHierarchy().getClassFile(this.className);
+            final ClassFile constructorClassFile = state.getClassHierarchy().getClassFile(this.className); //primitive classes have no constructors, so it is safe to use getClassFile
             if (constructorClassFile.isAbstract()) {
                 throwNew(state, INSTANTIATION_EXCEPTION);
                 exitFromAlgorithm();
@@ -114,8 +113,8 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
                 final AccessOutcomeInValue typeFormalAccess = (AccessOutcomeInValue) constructorParameterTypes.getFast(calc.valInt(i));
                 final Instance_JAVA_CLASS typeFormalJavaClass = (Instance_JAVA_CLASS) state.getObject((Reference) typeFormalAccess.getValue());
                 final String typeFormal = typeFormalJavaClass.representedClass();
-                if (isPrimitiveBinaryClassName(typeFormal)) {
-                    sbDescriptor.append(binaryPrimitiveClassNameToInternal(typeFormal));
+                if (typeFormalJavaClass.isPrimitive()) {
+                    sbDescriptor.append(toPrimitiveInternalName(typeFormal));
                 } else {
                     sbDescriptor.append(REFERENCE);
                     sbDescriptor.append(typeFormal);
@@ -170,7 +169,7 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
             final String typeFormal = typeFormalJavaClass.representedClass();
             final Objekt actual = state.getObject(refValActual);
             final String typeActual = actual.getType();
-            if (isPrimitiveBinaryClassName(typeFormal)) {
+            if (typeFormalJavaClass.isPrimitive()) {
                 //unboxes the parameter
                 final Primitive actualValue;
                 switch (typeActual) {
@@ -205,7 +204,7 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
                 }
                 
                 //possibly widens the unboxed value and returns it
-                final char typeFormalPrimitive = binaryPrimitiveClassNameToInternal(typeFormal);
+                final char typeFormalPrimitive = toPrimitiveInternalName(typeFormal);
                 final char typeActualValue = actualValue.getType();
                 if (typeFormalPrimitive == typeActualValue) {
                     return actualValue;

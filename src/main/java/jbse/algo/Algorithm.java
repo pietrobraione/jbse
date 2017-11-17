@@ -33,7 +33,7 @@ D extends BytecodeData,
 R extends DecisionAlternative, 
 DE extends StrategyDecide<R>, 
 RE extends StrategyRefine<R>, 
-UP extends StrategyUpdate<R>> {
+UP extends StrategyUpdate<R>> implements Action {
     /**
      * The number of operands in the operand stack
      * consumed by the {@link Algorithm}.
@@ -206,25 +206,9 @@ UP extends StrategyUpdate<R>> {
     protected ExecutionContext ctx; //just caches across a call of exec (note that this makes Algorithms nonreentrant!)
 
     /**
-     * Executes the algorithm.
-     * 
-     * @param state the {@link State} on which the algorithm must operate.
-     * @param ctx the {@link ExecutionContext}.
-     * @throws DecisionException possibly raised if the algorithm uses a 
-     *         decision procedure and the decision procedure fails.
-     * @throws ContradictionException possibly raised if the algorithm execution
-     *         results in no successor states, which happens whenever all the 
-     *         candidate successors (and thus {@code state}) fail to satisfy 
-     *         the execution assumptions. 
-     * @throws ClasspathException possibly raised if some core 
-     *         standard class is missing from the classpath of ill-formed.
-     * @throws CannotManageStateException possibly raised if the 
-     *         algorithm cannot be executed due to limitations of JBSE.
-     * @throws FailureException
-     * @throws ContinuationException if the execution of this algorithm must
-     *         be interrupted, and possibly followed by the execution of another
-     *         algorithm.
+     * {@inheritDoc}
      */
+    @Override
     public final void exec(State state, ExecutionContext ctx) 
     throws DecisionException, ContradictionException, 
     ThreadStackEmptyException, ClasspathException, 

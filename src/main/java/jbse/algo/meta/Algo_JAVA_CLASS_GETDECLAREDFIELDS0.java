@@ -19,7 +19,7 @@ import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.BYTE;
 import static jbse.common.Type.className;
 import static jbse.common.Type.isPrimitive;
-import static jbse.common.Type.toPrimitiveBinaryClassName;
+import static jbse.common.Type.toPrimitiveCanonicalName;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
 
@@ -73,11 +73,13 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
     CannotManageStateException, InterruptException {
         try {           
-            //gets the binary name of the primitive type and converts it to a string
+            //gets the classfile represented by the "this" parameter
             final Reference classRef = (Reference) this.data.operand(0);
-            final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject(classRef);
+            final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject(classRef); //TODO check that operand is concrete and not null
             final String className = clazz.representedClass();
-            this.cf = state.getClassHierarchy().getClassFile(className);
+            this.cf = (clazz.isPrimitive() ? 
+                       state.getClassHierarchy().getClassFilePrimitive(className) :
+                       state.getClassHierarchy().getClassFile(className));
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
@@ -85,7 +87,6 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
             //this should never happen
             failExecution(e);
         }
-        //TODO check that operands are concrete and kill trace if they are not
     }
 
     @Override
@@ -207,9 +208,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                 ReferenceConcrete typeClassRef = null; //to keep the compiler happy
                 if (isPrimitive(fieldType)) {
                     try {
-                        final String fieldTypeNameBinary = toPrimitiveBinaryClassName(fieldType);
-                        state.ensureInstance_JAVA_CLASS_primitive(fieldTypeNameBinary);
-                        typeClassRef = state.referenceToInstance_JAVA_CLASS_primitive(fieldTypeNameBinary);
+                        final String fieldTypeNameCanonical = toPrimitiveCanonicalName(fieldType);
+                        state.ensureInstance_JAVA_CLASS_primitive(fieldTypeNameCanonical);
+                        typeClassRef = state.referenceToInstance_JAVA_CLASS_primitive(fieldTypeNameCanonical);
                     } catch (HeapMemoryExhaustedException e) {
                         throwNew(state, OUT_OF_MEMORY_ERROR);
                         exitFromAlgorithm();

@@ -75,12 +75,25 @@ class ClassFileStore {
      * Given the name of a primitive type returns the corresponding 
      * {@link ClassFile}.
      * 
-     * @param typeName the name of a primitive type (see the class {@link Type}).
+     * @param typeName a {@code String}, the internal name of a primitive type 
+     *        (see the class {@link Type}).
+     * @return same as {@link #getClassFilePrimitive(char) getClassFilePrimitive}{@code (typeName.charAt(0))}.
+     */
+    ClassFile getClassFilePrimitive(String typeName) {
+        return getClassFilePrimitive(typeName.charAt(0));
+    }
+    
+    /**
+     * Given the name of a primitive type returns the corresponding 
+     * {@link ClassFile}.
+     * 
+     * @param type a {@code char}, the internal name of a primitive type 
+     *        (see the class {@link Type}).
      * @return the {@link ClassFile} of the corresponding primitive class,
      *         possibly a {@link ClassFileBad}.
      */
-    ClassFile getClassFilePrimitive(String typeName) {
-        switch (typeName.charAt(0)) {
+    ClassFile getClassFilePrimitive(char type) {
+        switch (type) {
         case Type.BOOLEAN:
             return this.primitiveClassBoolean;
         case Type.BYTE:
@@ -100,7 +113,7 @@ class ClassFileStore {
         case Type.VOID:
             return this.primitiveClassVoid;
         default:
-            return new ClassFileBad(typeName, new ClassFileNotFoundException(typeName));
+            return new ClassFileBad("" + type, new ClassFileNotFoundException("" + type));
         }
     }
 }

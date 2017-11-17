@@ -3,6 +3,7 @@ package jbse.bc;
 import java.util.List;
 
 import jbse.bc.exc.AttributeNotFoundException;
+import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
@@ -133,38 +134,49 @@ public abstract class ClassFile {
      * semantics.  
      */
     public abstract boolean isSuperInvoke();
-
+    
     /**
-     * Tests whether this class is nested.
+     * Tests whether the class is local (JLS v8, section 14.3).
      * 
-     * @return {@code true} iff this class is nested.
+     * @return {@code true} iff the class is local.
      */
-    public abstract boolean isNested();
-
+    public abstract boolean isLocal();
+    
     /**
-     * Tests whether this class is inner to another one.
+     * Tests whether the class is anonymous (JLS v8, section 15.9.5).
      * 
-     * @param external another {@code ClassFile}.
-     * @return {@code true} iff this class is an inner class
-     *         of {@code external}.
+     * @return {@code true} iff the class is local.
      */
-    public final boolean isInner(ClassFile external) {
-        /*
-         * TODO this implementation is very partial (a nested class can be declared 
-         * inside another one, nested class may also be anonymous, ...).
-         */
-        return (isNested() && !isStatic() && 
-                this.classContainer().equals(external.getClassName()));
-    }
+    public abstract boolean isAnonymous();
 
     /**
-     * Returns the name of the class containing this class.
+     * If this class is nested (statically nested, inner, anonymous 
+     * or local), returns the name of the class containing this class.
      * 
      * @return A {@link String}, the name of the class containing
-     *         this class; it has an unspecified effect in case
+     *         this class, or {@code null} in case
      *         this class is not nested.
+     * @throws ClassFileNotFoundException iff the container class
+     *         of this class is not in the classpath.
      */
-    public abstract String classContainer();
+    public abstract String classContainer() throws ClassFileNotFoundException;
+    
+    /**
+     * If this class is local or anonymous returns the {@link Signature} of the
+     * enclosing method or constructor where the class is declared.
+     *  
+     * @return The {@link Signature} of the enclosing method or
+     *         constructor, or {@code null} if this class is neither
+     *         local nor anonymous. In the (quite unlikely) case the 
+     *         class is local or anonymous, and it is not immediately 
+     *         enclosed (JVMS v8, section 4.7.7) by a method or constructor,
+     *         it will return a {@link Signature} {@code retVal} such that
+     *         {@code retVal.}{@link Signature#getDescriptor() getDescriptor()}{@code == null}
+     *         and {@code retVal.}{@link Signature#getName() getName()}{@code == null}.
+     * @throws ClassFileNotFoundException if the enclosing class does not 
+     *         exist in the classpath.
+     */
+    public abstract Signature getEnclosingMethodOrConstructor() throws ClassFileNotFoundException;
 
     /**
      * Tests whether the class is static.

@@ -15,29 +15,29 @@ public class InterruptException extends Exception {
         return new InterruptException(); 
     }
 
-    public static InterruptException mk(Algorithm<?, ?, ?, ?, ?> continuation) { 
+    public static InterruptException mk(Action... continuation) { 
         return new InterruptException(continuation); 
     }
 
-    private Algorithm<?, ?, ?, ?, ?> continuation = null;
+    private Action[] continuation = null;
 
     public boolean hasContinuation() {
         return (this.continuation != null);
     }
 
-    public Algorithm<?, ?, ?, ?, ?> getContinuation() {
+    public Action[] getContinuation() {
         return this.continuation;
     }
 
     /**
-     * Do not instantiate! Use the static methods instead
+     * Do not instantiate directly, use the static methods instead.
      */
     private InterruptException() { 
         this.continuation = null;
     }
 
-    private InterruptException(Algorithm<?, ?, ?, ?, ?> continuation) { 
-        this.continuation = continuation;
+    private InterruptException(Action... continuation) { 
+        this.continuation = continuation.clone(); //safety copy
     }
 
     /**

@@ -1,10 +1,12 @@
 package jbse.jvm;
 
+import java.util.ArrayDeque;
 import java.util.Collection;
 
 import jbse.algo.Algorithm;
 import jbse.algo.ContinuationException;
 import jbse.algo.ExecutionContext;
+import jbse.algo.Action;
 import jbse.algo.Algo_INIT;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.bc.Opcodes;
@@ -235,16 +237,24 @@ public class Engine implements AutoCloseable {
         this.preStepStackSize = this.currentState.getStackSize();
 
         //steps
-        Algorithm<?, ?, ?, ?, ?> algo, continuation = null;
+        Action action;
+        int continuationCounter = 0;
+        final ArrayDeque<Action[]> continuations = new ArrayDeque<>();
+        final ArrayDeque<Integer> continuationCounters = new ArrayDeque<>();
         do {
-            algo = (continuation == null ? 
-                    this.ctx.dispatcher.select(this.currentState.getInstruction()) : 
-                    continuation);
-            continuation = null;
+            action = (continuations.isEmpty() ? 
+                     this.ctx.dispatcher.select(this.currentState.getInstruction()) : 
+                     continuations.peek()[continuationCounter++]);
+            if (!continuations.isEmpty() && continuationCounter == continuations.peek().length) {
+                continuations.pop();
+                continuationCounter = continuationCounters.pop();
+            }
             try {
-                algo.exec(this.currentState, this.ctx);
+                action.exec(this.currentState, this.ctx);
             } catch (ContinuationException e) {
-                continuation = e.getContinuation();
+                continuations.push(e.getContinuation());
+                continuationCounters.push(continuationCounter);
+                continuationCounter = 0;
             } catch (ClasspathException | CannotManageStateException | 
                      ThreadStackEmptyException |  ContradictionException | 
                      DecisionException | FailureException | 
@@ -252,11 +262,15 @@ public class Engine implements AutoCloseable {
                 this.stopCurrentTrace();
                 throw e;
             } 
-        } while (continuation != null);
-        this.someReferenceNotExpanded = algo.someReferenceNotExpanded();
-        this.nonExpandedReferencesOrigins = algo.nonExpandedReferencesOrigins();
-        this.nonExpandedReferencesTypes = algo.nonExpandedReferencesTypes();
+        } while (!continuations.isEmpty() && continuationCounter < continuations.peek().length);
 
+        if (action instanceof Algorithm<?, ?, ?, ?, ?>) {
+            final Algorithm<?, ?, ?, ?, ?> algo = (Algorithm<?, ?, ?, ?, ?>) action;
+            this.someReferenceNotExpanded = algo.someReferenceNotExpanded();
+            this.nonExpandedReferencesOrigins = algo.nonExpandedReferencesOrigins();
+            this.nonExpandedReferencesTypes = algo.nonExpandedReferencesTypes();
+        }
+        
         //updates the current state and calculates return value
         final BranchPoint retVal;
         if (this.ctx.stateTree.createdBranch()) {
