@@ -214,7 +214,7 @@ public class RewriterOperationOnSimplex extends Rewriter {
     throws NoResultException {
         final Primitive arg = x.getArg();
 
-        //1- unitary widening
+        //1- unitary widening (should never happen)
         if (x.getType() == arg.getType()) {
             setResult(arg);
             return;

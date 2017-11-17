@@ -33,7 +33,6 @@ public final class Algo_SUN_UNSAFE_OBJECTFIELDOFFSET extends Algo_INVOKEMETA_Non
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
     CannotManageStateException, InterruptException {
         try {           
-            //gets the binary name of the primitive type and converts it to a string
             final Reference fldRef = (Reference) this.data.operand(1);
             final Instance fldInstance = (Instance) state.getObject(fldRef);
             final Simplex ofst = (Simplex) fldInstance.getFieldValue(JAVA_FIELD_SLOT); //we return the slot number of the field as its offset
