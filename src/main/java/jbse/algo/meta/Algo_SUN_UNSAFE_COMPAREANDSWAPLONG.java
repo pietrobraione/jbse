@@ -15,14 +15,14 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Meta-level implementation of {@link sun.misc.Unsafe#compareAndSwapInt(Object, long, int, int)}.
+ * Meta-level implementation of {@link sun.misc.Unsafe#compareAndSwapLong(Object, long, long, long)}.
  * 
  * @author Pietro Braione
  */
-//TODO merge with Algo_SUN_UNSAFE_COMPAREANDSWAPLONG
-public final class Algo_SUN_UNSAFE_COMPAREANDSWAPINT extends Algo_SUN_UNSAFE_COMPAREANDSWAPX {
-    public Algo_SUN_UNSAFE_COMPAREANDSWAPINT() {
-        super("Int");
+//TODO merge with Algo_SUN_UNSAFE_COMPAREANDSWAPINT
+public final class Algo_SUN_UNSAFE_COMPAREANDSWAPLONG extends Algo_SUN_UNSAFE_COMPAREANDSWAPX {
+    public Algo_SUN_UNSAFE_COMPAREANDSWAPLONG() {
+        super("Long");
     }
 
     @Override
@@ -32,10 +32,10 @@ public final class Algo_SUN_UNSAFE_COMPAREANDSWAPINT extends Algo_SUN_UNSAFE_COM
             final Primitive primCurrent = (Primitive) current;
             final Primitive primToCompare = (Primitive) toCompare;
             if (primCurrent instanceof Simplex && primToCompare instanceof Simplex) {
-                //TODO check they are ints, or at least that they are of the same type?
+                //TODO check they are longs, or at least that they are of the same type?
                 return ((Simplex) primCurrent.eq(primToCompare)).surelyTrue();
             } else {
-                throw new SymbolicValueNotAllowedException("The ints to be compared during an invocation to sun.misc.Unsafe.CompareAndSwapInt must be concrete (branching currently not implemented)");
+                throw new SymbolicValueNotAllowedException("The longs to be compared during an invocation to sun.misc.Unsafe.CompareAndSwapLong must be concrete (branching currently not implemented)");
             }
         } catch (ClassCastException | InvalidTypeException e) {
             throwVerifyError(state);

@@ -1,17 +1,22 @@
 package jbse.algo.meta;
 
 import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.mem.Util.areAlias;
 import static jbse.mem.Util.areNotAlias;
 
 import jbse.algo.InterruptException;
 import jbse.algo.exc.CannotManageStateException;
-import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.mem.State;
 import jbse.val.Reference;
 import jbse.val.Value;
 
+/**
+ * Meta-level implementation of {@link sun.misc.Unsafe#compareAndSwapObject(Object, long, Object, Object)}.
+ * 
+ * @author Pietro Braione
+ */
 public final class Algo_SUN_UNSAFE_COMPAREANDSWAPOBJECT extends Algo_SUN_UNSAFE_COMPAREANDSWAPX {
     public Algo_SUN_UNSAFE_COMPAREANDSWAPOBJECT() {
         super("Object");
@@ -26,7 +31,8 @@ public final class Algo_SUN_UNSAFE_COMPAREANDSWAPOBJECT extends Algo_SUN_UNSAFE_
             if (areNotAlias(state, refCurrent, refToCompare)) {
                 return false;
             } else if (!areAlias(state, refCurrent, refToCompare)) {
-                throw new SymbolicValueNotAllowedException("The references to be compared during an invocation to sun.misc.Unsafe.CompareAndSwapObject must be concrete or resolved symbolic");
+                //this should never happen
+                failExecution("Unexpected unresolved symbolic references as parameters of sun.misc.Unsafe.compareAndSwapObject invocation");
             }
             return true;
         } catch (ClassCastException e) {

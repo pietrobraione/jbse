@@ -1,6 +1,7 @@
 package jbse.algo.meta;
 
 import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwVerifyError;
 
 import java.util.function.Supplier;
@@ -8,19 +9,27 @@ import java.util.function.Supplier;
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
 import jbse.algo.exc.CannotManageStateException;
-import jbse.algo.exc.NotYetImplementedException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
+import jbse.mem.Array.AccessOutcomeInValue;
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 import jbse.val.Simplex;
 import jbse.val.Value;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
+/**
+ * Abstract meta-level implementation of many {@link sun.misc.Unsafe} {@code compareAndSwap} methods.
+ * 
+ * @author Pietro Braione
+ */
 public abstract class Algo_SUN_UNSAFE_COMPAREANDSWAPX extends Algo_INVOKEMETA_Nonbranching {
     private final String what;  //set by constructor
     private Objekt objectToSet; //set by cookMore
@@ -47,29 +56,40 @@ public abstract class Algo_SUN_UNSAFE_COMPAREANDSWAPX extends Algo_INVOKEMETA_No
             final Reference refObjectToSet = (Reference) this.data.operand(1);
             this.objectToSet = state.getObject(refObjectToSet);
             if (this.objectToSet == null) {
-                throw new SymbolicValueNotAllowedException("The object to be set parameter to sun.misc.Unsafe.CompareAndSwap" + this.what + " must be concrete or resolved symbolic");
+                //this should never happen
+                failExecution("Unexpected unresolved symbolic references as object to be set parameter of sun.misc.Unsafe.compareAndSwap" + this.what + " invocation");
             }
-            if (this.objectToSet instanceof Array) {
-                throw new NotYetImplementedException("Unclear whether sun.misc.Unsafe.CompareAndSwap" + this.what + " can be applied to an array");
+            if (this.objectToSet instanceof Array && !((Array) this.objectToSet).hasSimpleRep()) {
+                throw new SymbolicValueNotAllowedException("The object to be set parameter to sun.misc.Unsafe.compareAndSwap" + this.what + " is an array that has not simple representation");
             }
             if (this.data.operand(2) instanceof Simplex) {
                 this.fieldSlotToSet = ((Long) ((Simplex) this.data.operand(2)).getActualValue()).intValue();
             } else {
-                throw new SymbolicValueNotAllowedException("The slot parameter to sun.misc.Unsafe.CompareAndSwap" + this.what + " must be concrete or resolved symbolic");
+                throw new SymbolicValueNotAllowedException("The slot parameter to sun.misc.Unsafe.compareAndSwap" + this.what + " must be concrete or resolved symbolic");
             }
             final Value toCompare = this.data.operand(3);
             this.toWrite = this.data.operand(4);
             if (this.objectToSet.hasSlot(this.fieldSlotToSet)) {
-                final Value current = this.objectToSet.getFieldValue(this.fieldSlotToSet);
-                if (!checkCompare(state, current, toCompare)) {
-                    this.objectToSet = null;
-                }
+                try {
+                    final Value current = (this.objectToSet instanceof Array) ? 
+                                          ((AccessOutcomeInValue) ((Array) this.objectToSet).getFast(state.getCalculator().valInt(this.fieldSlotToSet))).getValue() :
+                                          this.objectToSet.getFieldValue(this.fieldSlotToSet);
+                    if (!checkCompare(state, current, toCompare)) {
+                        this.objectToSet = null;
+                    }
+                } catch (ClassCastException e) {
+                    //this should never happen
+                    failExecution(e);
+                }        
             } else {
-                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.CompareAndSwap" + this.what + " was not a slot number of the object parameter");
+                throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.compareAndSwap" + this.what + " was not a slot number of the object parameter");
             }
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
+        } catch (InvalidOperandException | InvalidTypeException | FastArrayAccessNotAllowedException e) {
+            //this should never happen
+            failExecution(e);
         }        
     }
 
@@ -79,7 +99,16 @@ public abstract class Algo_SUN_UNSAFE_COMPAREANDSWAPX extends Algo_INVOKEMETA_No
         if (this.objectToSet == null) {
             state.pushOperand(state.getCalculator().valInt(0)); //false
         } else {
-            this.objectToSet.setFieldValue(this.fieldSlotToSet, this.toWrite);
+            if (this.objectToSet instanceof Array) {
+                try {
+                    ((Array) this.objectToSet).setFast(state.getCalculator().valInt(this.fieldSlotToSet), this.toWrite);
+                } catch (InvalidOperandException | InvalidTypeException | FastArrayAccessNotAllowedException e) {
+                    //this should never happen
+                    failExecution(e);
+                }
+            } else {
+                this.objectToSet.setFieldValue(this.fieldSlotToSet, this.toWrite);
+            }
             state.pushOperand(state.getCalculator().valInt(1)); //true
         }
     }

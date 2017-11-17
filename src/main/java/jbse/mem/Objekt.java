@@ -179,9 +179,12 @@ public abstract class Objekt implements Cloneable {
      * 
      * @param slot an {@code int}.
      * @return {@code true} iff the object has a field with slot
-     *         number {@code slot}.
+     *         number {@code slot}. For arrays it is {@code true}
+     *         iff the array's length is concrete and {@code slot}
+     *         is in range.
      */
-    public final boolean hasSlot(int slot) {
+    //TODO overridden by array, refactor to avoid this
+    public boolean hasSlot(int slot) {
         if (this.staticFields) {
             return (0 <= slot && slot < this.numOfStaticFields);
         } else {

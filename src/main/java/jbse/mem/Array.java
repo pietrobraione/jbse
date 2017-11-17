@@ -1049,7 +1049,7 @@ public final class Array extends Objekt {
      */
     public Primitive outOfRange(Primitive index) 
     throws InvalidOperandException, InvalidTypeException {
-        final Primitive retVal = this.inRange(index).not();
+        final Primitive retVal = inRange(index).not();
         return retVal;
     }
 
@@ -1080,6 +1080,11 @@ public final class Array extends Objekt {
         } else {
             return null;
         }
+    }
+    
+    @Override
+    public boolean hasSlot(int slot) {
+        return (hasSimpleRep() ? 0 <= slot && slot <= ((Integer) ((Simplex) getLength()).getActualValue()).intValue() : false);
     }
 
     @Override
