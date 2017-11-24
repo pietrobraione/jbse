@@ -252,17 +252,6 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
     }
 
     /**
-     * Returns the {@link Signature} of the  
-     * guiding engine's current method.
-     * 
-     * @return a {@link Signature}.
-     * @throws ThreadStackEmptyException if the stack is empty.
-     */
-    public Signature getCurrentMethodSignature() throws ThreadStackEmptyException {
-        return this.engine.getCurrentState().getCurrentMethodSignature();
-    }
-
-    /**
      * Ends guidance decision, and falls back on the 
      * component decision procedure.
      */
@@ -345,7 +334,7 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
                     final Primitive conditionToCheck;
                     conditionToCheck = (da.isDefault() ?
                                         tab.getDefaultClause(selector) :
-                                        selector.eq(this.initialStateConcrete.getCalculator().valInt(da.value())));
+                                        selector.eq(this.calc.valInt(da.value())));
                     final Primitive valueInConcreteState = eval(this.initialStateConcrete, this.rootFrameConcrete, conditionToCheck);
                     if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
                         it.remove();
@@ -516,6 +505,18 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
         this.failedConcrete = this.engine.canBacktrack();
     }
 
+    /**
+     * Looks up a value in a {@link State}.
+     * 
+     * @param state a {@link State}.
+     * @param rootFrame a {@link Frame} containing all the roots for
+     *        all the symbols in {@code toEval}.
+     * @param origin a {@link MemoryPath}.
+     * @return the value of {@code origin} in {@code state}.
+     * @throws GuidanceException if {@code origin} does not
+     *         refer to a valid field or variable in {@code state}, 
+     *         starting from the roots in {@code rootFrame}.
+     */
     private static Value getValue(State state, Frame rootFrame, MemoryPath origin) 
     throws GuidanceException {
         Value fieldValue = null;
@@ -577,6 +578,18 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
         return fieldValue;
     }
 
+    /**
+     * Evaluates a {@link Primitive} in a {@link State}.
+     * 
+     * @param state a {@link State}.
+     * @param rootFrame a {@link Frame} containing all the roots for
+     *        all the symbols in {@code toEval}.
+     * @param toEval a {@link Primitive}.
+     * @return the value of {@code toEval} in {@code state}.
+     * @throws GuidanceException if any symbol in {@code toEval} does not
+     *         refer to a valid field or variable in {@code state}, 
+     *         starting from the roots in {@code rootFrame}.
+     */
     private static Primitive eval(State state, Frame rootFrame, Primitive toEval) 
     throws GuidanceException {
         final Evaluator evaluator = new Evaluator(state, rootFrame);
@@ -651,8 +664,8 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
         }
 
         @Override
-        public void visitPrimitiveSymbolic(PrimitiveSymbolic s) throws GuidanceException {
-            final Value fieldValue = getValue(this.state, this.rootFrame, s.getOrigin());
+        public void visitPrimitiveSymbolic(PrimitiveSymbolic symbol) throws GuidanceException {
+            final Value fieldValue = getValue(this.state, this.rootFrame, symbol.getOrigin());
             if (fieldValue instanceof Primitive) {
                 this.value = (Primitive) fieldValue;
             } else {
@@ -682,7 +695,7 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
             this.value = (x.getType() == this.value.getType() ? this.value : this.calc.widen(x.getType(), this.value));
             //note that the concrete this.value could already be widened
             //because of conversion of actual types to computational types
-            //through operand stack, see JVMSpec 2.11.1, tab. 2.3
+            //through operand stack, see JVMS v8, section 2.11.1, tab. 2.11.1-B
         }
 
     }
