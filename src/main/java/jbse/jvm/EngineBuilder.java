@@ -3,7 +3,6 @@ package jbse.jvm;
 import java.util.List;
 
 import jbse.algo.ExecutionContext;
-import jbse.algo.NativeInvokerPure;
 import jbse.algo.exc.MetaUnsupportedException;
 import jbse.bc.ClassFileFactoryJavassist;
 import jbse.bc.Signature;
@@ -80,8 +79,7 @@ public class EngineBuilder {
 				ClassFileFactoryJavassist.class,          //default
 				parameters.getExpansionBackdoor(), 
 				parameters.getTriggerRulesRepo(),
-				new DecisionAlternativeComparators(),     //default 
-				new NativeInvokerPure()                   //default
+				new DecisionAlternativeComparators()     //default 
 				);
 		
 		//sets the meta-level directives

@@ -20,9 +20,9 @@ public class ValueDoesNotSupportNativeException extends CannotInvokeNativeExcept
         super(s);
     }
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -3772182382542414429L;
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -3772182382542414429L;
 
 }

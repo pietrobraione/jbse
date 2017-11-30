@@ -1,7 +1,7 @@
 package jbse.algo.exc;
 
 /**
- * Exception for an undefined bytecode.
+ * Exception for an feature of JBSE that is not yet implemented.
  * 
  * @author Pietro Braione
  */

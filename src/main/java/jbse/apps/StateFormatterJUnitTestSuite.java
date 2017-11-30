@@ -341,14 +341,14 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 this.s.append('(');
                 final Map<Integer, Variable> lva = initialState.getRootFrame().localVariables();
                 final TreeSet<Integer> slots = new TreeSet<>(lva.keySet());
-                final int numParams = splitParametersDescriptors(initialState.getRootMethodSignature().getDescriptor()).length;
+                final int numParamsExcludedThis = splitParametersDescriptors(initialState.getRootMethodSignature().getDescriptor()).length;
                 int currentParam = 1;
                 for (int slot : slots) {
                     final Variable lv = lva.get(slot);
                     if ("this".equals(lv.getName())) {
                         continue;
                     }
-                    if (currentParam > numParams) {
+                    if (currentParam > numParamsExcludedThis) {
                         break;
                     }
                     if (currentParam > 1) {

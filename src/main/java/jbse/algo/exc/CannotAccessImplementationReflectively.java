@@ -2,7 +2,7 @@ package jbse.algo.exc;
 
 /**
  * Exception thrown whenever a native method invocation fails because it is not possible to 
- * access reflectively to a method implementation.
+ * access reflectively to a method and perform a metacircular method invocation.
  * 
  * @author Pietro Braione
  *

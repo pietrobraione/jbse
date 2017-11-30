@@ -346,6 +346,9 @@ public final class RunParameters implements Cloneable {
     /** The step show mode. */
     private StepShowMode stepShowMode = StepShowMode.ALL;
 
+    /** Whether it should show the steps for initialization of system classes. */
+    private boolean showSystemClassesInitialization;
+    
     /** The traces to show. */
     private EnumSet<TraceTypes> tracesToShow = EnumSet.allOf(TraceTypes.class);
 
@@ -1526,6 +1529,28 @@ public final class RunParameters implements Cloneable {
      */
     public StepShowMode getStepShowMode() {
         return this.stepShowMode;
+    }
+    
+    /**
+     * Sets whether the execution steps relative to 
+     * initialization of system classes should be shown
+     * (warning: they are many!)
+     * 
+     * @param showSystemClassesInitialization {@code true} iff
+     *        initialization of system classes should be shown.
+     */
+    public void setShowSystemClassesInitialization(boolean showSystemClassesInitialization) {
+        this.showSystemClassesInitialization = showSystemClassesInitialization;
+    }
+    
+    /**
+     * Gets whether the execution steps relative to 
+     * initialization of system classes should be shown.
+     * 
+     * @return a {@code boolean}.
+     */
+    public boolean getShowSystemClassesInitialization() {
+        return this.showSystemClassesInitialization;
     }
 
     /**

@@ -153,6 +153,7 @@ public final class Signatures {
     public static final String JAVA_SHORT_SHORTCACHE         = "java/lang/Short$ShortCache";
     public static final String JAVA_STACK                    = "java/util/Stack";
     public static final String JAVA_STACKTRACEELEMENT        = "java/lang/StackTraceElement";
+    public static final String JAVA_STRICTMATH               = "java/lang/StrictMath";
     public static final String JAVA_STRING                   = "java/lang/String";
     public static final String JAVA_STRING_CASEINSCOMP       = "java/lang/String$CaseInsensitiveComparator";
     public static final String JAVA_STRINGBUILDER            = "java/lang/StringBuilder";
@@ -167,6 +168,7 @@ public final class Signatures {
     public static final String JAVA_UNIXFILESYSTEM           = "java/io/UnixFileSystem";
     public static final String JAVA_VECTOR                   = "java/util/Vector";
     public static final String JAVA_VOID                     = "java/lang/Void";
+    public static final String JAVA_WINNTFILESYSTEM          = "java/io/WinNTFileSystem";
     public static final String JAVA_WRITER                   = "java/io/Writer";
     public static final String JBSE_ANALYSIS                 = internalClassName(jbse.meta.Analysis.class.getCanonicalName());
     public static final String JBSE_BASE                     = internalClassName(jbse.base.Base.class.getCanonicalName());
@@ -269,10 +271,26 @@ public final class Signatures {
         new Signature(JAVA_CLASS, "()" + BOOLEAN, "isInterface");
     public static final Signature JAVA_CLASS_ISPRIMITIVE =
         new Signature(JAVA_CLASS, "()" + BOOLEAN, "isPrimitive");
+    public static final Signature JAVA_CLASS_REGISTERNATIVES =
+        new Signature(JAVA_CLASS, "()" + VOID, "registerNatives");
     public static final Signature JAVA_CLASSLOADER_FINDBUILTINLIB =
         new Signature(JAVA_CLASSLOADER, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_STRING + TYPEEND, "findBuiltinLib");
     public static final Signature JAVA_CLASSLOADER_NATIVELIBRARY_LOAD =
         new Signature(JAVA_CLASSLOADER_NATIVELIBRARY, "(" + REFERENCE + JAVA_STRING + TYPEEND + BOOLEAN + ")" + VOID, "load");
+    public static final Signature JAVA_CLASSLOADER_REGISTERNATIVES =
+        new Signature(JAVA_CLASSLOADER, "()" + VOID, "registerNatives");
+    public static final Signature JAVA_DOUBLE_DOUBLETORAWLONGBITS =
+        new Signature(JAVA_DOUBLE, "(" + DOUBLE + ")" + LONG, "doubleToRawLongBits");
+    public static final Signature JAVA_DOUBLE_LONGBITSTODOUBLE =
+        new Signature(JAVA_DOUBLE, "(" + LONG + ")" + DOUBLE, "longBitsToDouble");
+    public static final Signature JAVA_FILEDESCRIPTOR_INITIDS =
+        new Signature(JAVA_FILEDESCRIPTOR, "()" + VOID, "initIDs");
+    public static final Signature JAVA_FILEINPUTSTREAM_INITIDS =
+        new Signature(JAVA_FILEINPUTSTREAM, "()" + VOID, "initIDs");
+    public static final Signature JAVA_FILEOUTPUTSTREAM_INITIDS =
+        new Signature(JAVA_FILEOUTPUTSTREAM, "()" + VOID, "initIDs");
+    public static final Signature JAVA_FLOAT_FLOATTORAWINTBITS =
+        new Signature(JAVA_FLOAT, "(" + FLOAT + ")" + INT, "floatToRawIntBits");
     public static final Signature JAVA_METHOD_INVOKE =
         new Signature(JAVA_METHOD, 
                      "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, 
@@ -287,10 +305,56 @@ public final class Signatures {
         new Signature(JAVA_OBJECT, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getClass");
     public static final Signature JAVA_OBJECT_HASHCODE =
         new Signature(JAVA_OBJECT, "()" + INT, "hashCode");
+    public static final Signature JAVA_OBJECT_NOTIFYALL =
+        new Signature(JAVA_OBJECT, "()" + VOID, "notifyAll");
+    public static final Signature JAVA_OBJECT_REGISTERNATIVES =
+        new Signature(JAVA_OBJECT, "()" + VOID, "registerNatives");
     public static final Signature JAVA_REFLECT_ARRAY_NEWARRAY =
         new Signature(JAVA_REFLECT_ARRAY, "(" + REFERENCE + JAVA_CLASS + TYPEEND + INT + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "newArray");
     public static final Signature JAVA_RUNTIME_AVAILABLEPROCESSORS = 
         new Signature(JAVA_RUNTIME, "()" + INT, "availableProcessors");
+
+    public static final Signature JAVA_STRICTMATH_ACOS = 
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "acos");
+    public static final Signature JAVA_STRICTMATH_ASIN = 
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "asin");
+    public static final Signature JAVA_STRICTMATH_ATAN = 
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "atan");
+    public static final Signature JAVA_STRICTMATH_ATAN2 = 
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + DOUBLE + ")" + DOUBLE, "atan");
+    public static final Signature JAVA_STRICTMATH_CBRT = 
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "cbrt");
+    public static final Signature JAVA_STRICTMATH_COS = 
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "cos");
+    public static final Signature JAVA_STRICTMATH_COSH = 
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "cosh");
+    public static final Signature JAVA_STRICTMATH_EXP = 
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "exp");
+    public static final Signature JAVA_STRICTMATH_EXPM1 = 
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "expm1");
+    public static final Signature JAVA_STRICTMATH_HYPOT = 
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + DOUBLE + ")" + DOUBLE, "hypot");
+    public static final Signature JAVA_STRICTMATH_IEEEREMAINDER = 
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + DOUBLE + ")" + DOUBLE, "IEEEremainder");
+    public static final Signature JAVA_STRICTMATH_LOG = 
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "log");
+    public static final Signature JAVA_STRICTMATH_LOG10 = 
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "log10");
+    public static final Signature JAVA_STRICTMATH_LOG1P = 
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "log1p");
+    public static final Signature JAVA_STRICTMATH_POW = 
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + DOUBLE + ")" + DOUBLE, "pow");
+    public static final Signature JAVA_STRICTMATH_SIN = 
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "sin");
+    public static final Signature JAVA_STRICTMATH_SINH = 
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "sinh");
+    public static final Signature JAVA_STRICTMATH_SQRT = 
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "sqrt");
+    public static final Signature JAVA_STRICTMATH_TAN = 
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "tan");
+    public static final Signature JAVA_STRICTMATH_TANH = 
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "tanh");
+
     public static final Signature JAVA_STRING_HASHCODE = 
         new Signature(JAVA_STRING, "()" + INT, "hashCode");
     public static final Signature JAVA_STRING_INTERN =
@@ -323,12 +387,26 @@ public final class Signatures {
         new Signature(JAVA_SYSTEM, "(" + REFERENCE + JAVA_PROPERTIES + TYPEEND + ")" + REFERENCE + JAVA_PROPERTIES + TYPEEND, "initProperties");
     public static final Signature JAVA_SYSTEM_MAPLIBRARYNAME =
         new Signature(JAVA_SYSTEM, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_STRING + TYPEEND, "mapLibraryName");
+    public static final Signature JAVA_SYSTEM_REGISTERNATIVES =
+        new Signature(JAVA_SYSTEM, "()" + VOID, "registerNatives");
+    public static final Signature JAVA_SYSTEM_SETERR0 =
+    new Signature(JAVA_SYSTEM, "(" + REFERENCE + JAVA_PRINTSTREAM + TYPEEND + ")" + VOID, "setErr0");
+    public static final Signature JAVA_SYSTEM_SETIN0 =
+        new Signature(JAVA_SYSTEM, "(" + REFERENCE + JAVA_INPUTSTREAM + TYPEEND + ")" + VOID, "setIn0");
+    public static final Signature JAVA_SYSTEM_SETOUT0 =
+        new Signature(JAVA_SYSTEM, "(" + REFERENCE + JAVA_PRINTSTREAM + TYPEEND + ")" + VOID, "setOut0");
     public static final Signature JAVA_THREAD_CURRENTTHREAD =
         new Signature(JAVA_THREAD, "()" + REFERENCE + JAVA_THREAD + TYPEEND, "currentThread");
     public static final Signature JAVA_THREAD_INIT =
         new Signature(JAVA_THREAD, "(" + REFERENCE + JAVA_THREADGROUP + TYPEEND + REFERENCE + JAVA_STRING + TYPEEND + ")" + VOID, "<init>");
     public static final Signature JAVA_THREAD_ISALIVE =
         new Signature(JAVA_THREAD, "()" + BOOLEAN, "isAlive");
+    public static final Signature JAVA_THREAD_REGISTERNATIVES =
+        new Signature(JAVA_THREAD, "()" + VOID, "registerNatives");
+    public static final Signature JAVA_THREAD_SETPRIORITY0 =
+        new Signature(JAVA_THREAD, "(" + INT + ")" + VOID, "setPriority0");
+    public static final Signature JAVA_THREAD_START0 =
+        new Signature(JAVA_THREAD, "()" + VOID, "start0");
     public static final Signature JAVA_THREADGROUP_INIT_1 =
         new Signature(JAVA_THREADGROUP, "()" + VOID, "<init>");
     public static final Signature JAVA_THREADGROUP_INIT_2 =
@@ -339,6 +417,10 @@ public final class Signatures {
         new Signature(JAVA_THROWABLE, "()" + INT, "getStackTraceDepth");
     public static final Signature JAVA_THROWABLE_GETSTACKTRACEELEMENT = 
         new Signature(JAVA_THROWABLE, "(" + INT + ")" + REFERENCE + JAVA_STACKTRACEELEMENT + TYPEEND, "getStackTraceElement");
+    public static final Signature JAVA_UNIXFILESYSTEM_INITIDS = 
+        new Signature(JAVA_UNIXFILESYSTEM, "()" + VOID, "initIDs");
+    public static final Signature JAVA_WINNTFILESYSTEM_INITIDS = 
+        new Signature(JAVA_WINNTFILESYSTEM, "()" + VOID, "initIDs");
     public static final Signature JBSE_ANALYSIS_ANY = 
         new Signature(JBSE_ANALYSIS, "()" + BOOLEAN, "any");
     public static final Signature JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED = 
@@ -431,6 +513,10 @@ public final class Signatures {
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_FIELD + TYPEEND + ")" + LONG, "objectFieldOffset");
     public static final Signature SUN_UNSAFE_PUTLONG = 
         new Signature(SUN_UNSAFE, "(" + LONG + LONG + ")" + VOID, "putLong");
+    public static final Signature SUN_UNSAFE_REGISTERNATIVES =
+        new Signature(SUN_UNSAFE, "()" + VOID, "registerNatives");
+    public static final Signature SUN_VM_INITIALIZE = 
+        new Signature(SUN_VM, "()" + VOID, "initialize");
     
     //fields
     public static final Signature JAVA_ACCESSIBLEOBJECT_OVERRIDE = 
@@ -489,16 +575,6 @@ public final class Signatures {
         new Signature(JAVA_LONG, "" + LONG, "value");
     public static final Signature JAVA_SHORT_VALUE = 
         new Signature(JAVA_SHORT, "" + SHORT, "value");
-    public static final Signature JAVA_STRING_HASH = 
-        new Signature(JAVA_STRING, "" + INT, "hash");
-    public static final Signature JAVA_STRING_VALUE = 
-        new Signature(JAVA_STRING, "" + ARRAYOF + CHAR, "value");
-    public static final Signature JAVA_THREAD_PRIORITY = 
-        new Signature(JAVA_THREAD, "" + INT, "priority");
-    public static final Signature JAVA_THROWABLE_BACKTRACE = 
-        new Signature(JAVA_THROWABLE, "" + REFERENCE + JAVA_OBJECT + TYPEEND, "backtrace");
-    public static final Signature JAVA_THROWABLE_STACKTRACE = 
-        new Signature(JAVA_THROWABLE, "" + ARRAYOF + REFERENCE + JAVA_STACKTRACEELEMENT + TYPEEND, "stackTrace");
     public static final Signature JAVA_STACKTRACEELEMENT_DECLARINGCLASS = 
         new Signature(JAVA_STACKTRACEELEMENT, "" + REFERENCE + JAVA_STRING + TYPEEND, "declaringClass");
     public static final Signature JAVA_STACKTRACEELEMENT_FILENAME = 
@@ -507,6 +583,22 @@ public final class Signatures {
         new Signature(JAVA_STACKTRACEELEMENT, "" + INT, "lineNumber");
     public static final Signature JAVA_STACKTRACEELEMENT_METHODNAME = 
         new Signature(JAVA_STACKTRACEELEMENT, "" + REFERENCE + JAVA_STRING + TYPEEND, "methodName");
+    public static final Signature JAVA_STRING_HASH = 
+        new Signature(JAVA_STRING, "" + INT, "hash");
+    public static final Signature JAVA_STRING_VALUE = 
+        new Signature(JAVA_STRING, "" + ARRAYOF + CHAR, "value");
+    public static final Signature JAVA_SYSTEM_ERR = 
+        new Signature(JAVA_SYSTEM, "" + REFERENCE + JAVA_PRINTSTREAM + TYPEEND, "err");
+    public static final Signature JAVA_SYSTEM_IN = 
+        new Signature(JAVA_SYSTEM, "" + REFERENCE + JAVA_INPUTSTREAM + TYPEEND, "in");
+    public static final Signature JAVA_SYSTEM_OUT = 
+        new Signature(JAVA_SYSTEM, "" + REFERENCE + JAVA_PRINTSTREAM + TYPEEND, "out");
+    public static final Signature JAVA_THREAD_PRIORITY = 
+        new Signature(JAVA_THREAD, "" + INT, "priority");
+    public static final Signature JAVA_THROWABLE_BACKTRACE = 
+        new Signature(JAVA_THROWABLE, "" + REFERENCE + JAVA_OBJECT + TYPEEND, "backtrace");
+    public static final Signature JAVA_THROWABLE_STACKTRACE = 
+        new Signature(JAVA_THROWABLE, "" + ARRAYOF + REFERENCE + JAVA_STACKTRACEELEMENT + TYPEEND, "stackTrace");
     public static final Signature JBSE_BASE_FILE_ENCODING = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "FILE_ENCODING");
     public static final Signature JBSE_BASE_FILE_SEPARATOR = 

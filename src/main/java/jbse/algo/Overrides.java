@@ -29,6 +29,7 @@ import jbse.bc.Signature;
  */
 public final class Overrides {
     //Overriding meta-level implementations of standard methods
+    public static final String ALGO_INVOKEMETA_PURE                     = internalClassName(jbse.algo.Algo_INVOKEMETA_Pure.class.getCanonicalName());
     public static final String ALGO_JAVA_CLASS_FORNAME0                 = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_FORNAME0.class.getCanonicalName());
     public static final String ALGO_JAVA_CLASS_GETCOMPONENTTYPE         = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETCOMPONENTTYPE.class.getCanonicalName());
     public static final String ALGO_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0.class.getCanonicalName());
@@ -55,6 +56,9 @@ public final class Overrides {
     public static final String ALGO_JAVA_SYSTEM_ARRAYCOPY               = internalClassName(jbse.algo.meta.Algo_JAVA_SYSTEM_ARRAYCOPY.class.getCanonicalName());
     public static final String ALGO_JAVA_SYSTEM_IDENTITYHASHCODE        = internalClassName(jbse.algo.meta.Algo_JAVA_SYSTEM_IDENTITYHASHCODE.class.getCanonicalName());
     public static final String ALGO_JAVA_SYSTEM_MAPLIBRARYNAME          = internalClassName(jbse.algo.meta.Algo_JAVA_SYSTEM_MAPLIBRARYNAME.class.getCanonicalName());
+    public static final String ALGO_JAVA_SYSTEM_SETERR0                 = internalClassName(jbse.algo.meta.Algo_JAVA_SYSTEM_SETERR0.class.getCanonicalName());
+    public static final String ALGO_JAVA_SYSTEM_SETIN0                  = internalClassName(jbse.algo.meta.Algo_JAVA_SYSTEM_SETIN0.class.getCanonicalName());
+    public static final String ALGO_JAVA_SYSTEM_SETOUT0                 = internalClassName(jbse.algo.meta.Algo_JAVA_SYSTEM_SETOUT0.class.getCanonicalName());
     public static final String ALGO_JAVA_THREAD_CURRENTTHREAD           = internalClassName(jbse.algo.meta.Algo_JAVA_THREAD_CURRENTTHREAD.class.getCanonicalName());
     public static final String ALGO_JAVA_THROWABLE_FILLINSTACKTRACE     = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_FILLINSTACKTRACE.class.getCanonicalName());
     public static final String ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH   = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH.class.getCanonicalName());

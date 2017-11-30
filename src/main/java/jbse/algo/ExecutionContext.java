@@ -1,5 +1,6 @@
 package jbse.algo;
 
+import static jbse.algo.Overrides.ALGO_INVOKEMETA_PURE;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETCOMPONENTTYPE;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_FORNAME0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0;
@@ -26,6 +27,9 @@ import static jbse.algo.Overrides.ALGO_JAVA_STRINGBUILDER_APPEND;
 import static jbse.algo.Overrides.ALGO_JAVA_SYSTEM_ARRAYCOPY;
 import static jbse.algo.Overrides.ALGO_JAVA_SYSTEM_IDENTITYHASHCODE;
 import static jbse.algo.Overrides.ALGO_JAVA_SYSTEM_MAPLIBRARYNAME;
+import static jbse.algo.Overrides.ALGO_JAVA_SYSTEM_SETERR0;
+import static jbse.algo.Overrides.ALGO_JAVA_SYSTEM_SETIN0;
+import static jbse.algo.Overrides.ALGO_JAVA_SYSTEM_SETOUT0;
 import static jbse.algo.Overrides.ALGO_JAVA_THREAD_CURRENTTHREAD;
 import static jbse.algo.Overrides.ALGO_JAVA_THROWABLE_FILLINSTACKTRACE;
 import static jbse.algo.Overrides.ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH;
@@ -127,10 +131,12 @@ import static jbse.bc.Signatures.JAVA_CLASS_ISINSTANCE;
 import static jbse.bc.Signatures.JAVA_CLASS_ISINTERFACE;
 import static jbse.bc.Signatures.JAVA_CLASS_ISPRIMITIVE;
 import static jbse.bc.Signatures.JAVA_CLASS_REFLECTIONDATA;
+import static jbse.bc.Signatures.JAVA_CLASS_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_FINDBUILTINLIB;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_NATIVELIBRARY;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_NATIVELIBRARY_LOAD;
+import static jbse.bc.Signatures.JAVA_CLASSLOADER_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_CLASSVALUE;
 import static jbse.bc.Signatures.JAVA_CODINGERRORACTION;
 import static jbse.bc.Signatures.JAVA_COLLECTIONS;
@@ -147,6 +153,8 @@ import static jbse.bc.Signatures.JAVA_CONSTRUCTOR;
 import static jbse.bc.Signatures.JAVA_DEFAULTFILESYSTEM;
 import static jbse.bc.Signatures.JAVA_DICTIONARY;
 import static jbse.bc.Signatures.JAVA_DOUBLE;
+import static jbse.bc.Signatures.JAVA_DOUBLE_DOUBLETORAWLONGBITS;
+import static jbse.bc.Signatures.JAVA_DOUBLE_LONGBITSTODOUBLE;
 import static jbse.bc.Signatures.JAVA_ENUM;
 import static jbse.bc.Signatures.JAVA_EXCEPTION;
 import static jbse.bc.Signatures.JAVA_EXECUTABLE;
@@ -155,13 +163,17 @@ import static jbse.bc.Signatures.JAVA_EXPIRINGCACHE_1;
 import static jbse.bc.Signatures.JAVA_FIELD;
 import static jbse.bc.Signatures.JAVA_FILE;
 import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR;
+import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR_INITIDS;
 import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR_1;
 import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM;
+import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM_INITIDS;
 import static jbse.bc.Signatures.JAVA_FILEOUTPUTSTREAM;
+import static jbse.bc.Signatures.JAVA_FILEOUTPUTSTREAM_INITIDS;
 import static jbse.bc.Signatures.JAVA_FILESYSTEM;
 import static jbse.bc.Signatures.JAVA_FILTERINPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_FILTEROUTPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_FLOAT;
+import static jbse.bc.Signatures.JAVA_FLOAT_FLOATTORAWINTBITS;
 import static jbse.bc.Signatures.JAVA_HASHMAP;
 import static jbse.bc.Signatures.JAVA_HASHMAP_NODE;
 import static jbse.bc.Signatures.JAVA_HASHSET;
@@ -195,6 +207,8 @@ import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_OBJECT_CLONE;
 import static jbse.bc.Signatures.JAVA_OBJECT_GETCLASS;
 import static jbse.bc.Signatures.JAVA_OBJECT_HASHCODE;
+import static jbse.bc.Signatures.JAVA_OBJECT_NOTIFYALL;
+import static jbse.bc.Signatures.JAVA_OBJECT_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_OBJECTS;
 import static jbse.bc.Signatures.JAVA_OUTPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_OUTPUTSTREAMWRITER;
@@ -219,6 +233,26 @@ import static jbse.bc.Signatures.JAVA_RUNTIMEPERMISSION;
 import static jbse.bc.Signatures.JAVA_SHORT;
 import static jbse.bc.Signatures.JAVA_SHORT_SHORTCACHE;
 import static jbse.bc.Signatures.JAVA_STACK;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_ACOS;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_ASIN;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_ATAN;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_ATAN2;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_CBRT;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_COS;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_COSH;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_EXP;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_EXPM1;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_HYPOT;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_IEEEREMAINDER;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_LOG;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_LOG10;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_LOG1P;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_POW;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_SIN;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_SINH;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_SQRT;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_TAN;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_TANH;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_STRING_CASEINSCOMP;
 import static jbse.bc.Signatures.JAVA_STRING_HASHCODE;
@@ -235,10 +269,17 @@ import static jbse.bc.Signatures.JAVA_SYSTEM_ARRAYCOPY;
 import static jbse.bc.Signatures.JAVA_SYSTEM_IDENTITYHASHCODE;
 import static jbse.bc.Signatures.JAVA_SYSTEM_INITPROPERTIES;
 import static jbse.bc.Signatures.JAVA_SYSTEM_MAPLIBRARYNAME;
+import static jbse.bc.Signatures.JAVA_SYSTEM_REGISTERNATIVES;
+import static jbse.bc.Signatures.JAVA_SYSTEM_SETERR0;
+import static jbse.bc.Signatures.JAVA_SYSTEM_SETIN0;
+import static jbse.bc.Signatures.JAVA_SYSTEM_SETOUT0;
 import static jbse.bc.Signatures.JAVA_TERMINATOR;
 import static jbse.bc.Signatures.JAVA_THREAD;
 import static jbse.bc.Signatures.JAVA_THREAD_CURRENTTHREAD;
 import static jbse.bc.Signatures.JAVA_THREAD_ISALIVE;
+import static jbse.bc.Signatures.JAVA_THREAD_REGISTERNATIVES;
+import static jbse.bc.Signatures.JAVA_THREAD_SETPRIORITY0;
+import static jbse.bc.Signatures.JAVA_THREAD_START0;
 import static jbse.bc.Signatures.JAVA_THREADGROUP;
 import static jbse.bc.Signatures.JAVA_THREADLOCAL;
 import static jbse.bc.Signatures.JAVA_THROWABLE;
@@ -248,8 +289,11 @@ import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEELEMENT;
 import static jbse.bc.Signatures.JAVA_THROWABLE_SENTINELHOLDER;
 import static jbse.bc.Signatures.JAVA_TREESET;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM;
+import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_INITIDS;
 import static jbse.bc.Signatures.JAVA_VECTOR;
 import static jbse.bc.Signatures.JAVA_VOID;
+import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM;
+import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM_INITIDS;
 import static jbse.bc.Signatures.JAVA_WRITER;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ANY;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED;
@@ -318,10 +362,12 @@ import static jbse.bc.Signatures.SUN_UNSAFE_GETLONG;
 import static jbse.bc.Signatures.SUN_UNSAFE_GETOBJECTVOLATILE;
 import static jbse.bc.Signatures.SUN_UNSAFE_OBJECTFIELDOFFSET;
 import static jbse.bc.Signatures.SUN_UNSAFE_PUTLONG;
+import static jbse.bc.Signatures.SUN_UNSAFE_REGISTERNATIVES;
 import static jbse.bc.Signatures.SUN_UTF_8;
 import static jbse.bc.Signatures.SUN_UTF_8_ENCODER;
 import static jbse.bc.Signatures.SUN_VERSION;
 import static jbse.bc.Signatures.SUN_VM;
+import static jbse.bc.Signatures.SUN_VM_INITIALIZE;
 import static jbse.bc.Signatures.SUN_WRAPPER_FORMAT;
 import static jbse.common.Type.binaryClassName;
 
@@ -410,9 +456,6 @@ public final class ExecutionContext {
     /** The symbolic execution's {@link StateTree}. */
     public final StateTree stateTree;
 
-    /** The symbolic execution's {@link NativeInvoker}. */
-    public final NativeInvoker nativeInvoker;
-
     /** 
      * The {@link TriggerManager} that handles reference resolution events
      * and executes triggers. 
@@ -472,8 +515,7 @@ public final class ExecutionContext {
                             Class<? extends ClassFileFactory> classFileFactoryClass, 
                             Map<String, Set<String>> expansionBackdoor,
                             TriggerRulesRepo rulesTrigger,
-                            DecisionAlternativeComparators comparators, 
-                            NativeInvoker nativeInvoker) {
+                            DecisionAlternativeComparators comparators) {
         this.initialState = initialState;
         this.maxSimpleArrayLength = maxSimpleArrayLength;
         this.maxHeapSize = maxHeapSize;
@@ -486,7 +528,6 @@ public final class ExecutionContext {
         this.expansionBackdoor = new HashMap<>(expansionBackdoor);      //safety copy
         this.triggerManager = new TriggerManager(rulesTrigger.clone()); //safety copy
         this.comparators = comparators;
-        this.nativeInvoker = nativeInvoker;
 
         //defaults
         try {
@@ -511,13 +552,43 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_CLASS_ISINSTANCE,                              ALGO_JAVA_CLASS_ISINSTANCE);
             addMetaOverridden(JAVA_CLASS_ISINTERFACE,                             ALGO_JAVA_CLASS_ISINTERFACE);
             addMetaOverridden(JAVA_CLASS_ISPRIMITIVE,                             ALGO_JAVA_CLASS_ISPRIMITIVE);
+            addMetaOverridden(JAVA_CLASS_REGISTERNATIVES,                         ALGO_INVOKEMETA_PURE);
             addBaseOverridden(JAVA_CLASSLOADER_FINDBUILTINLIB,                    BASE_JAVA_CLASSLOADER_FINDBUILTINLIB);
             addMetaOverridden(JAVA_CLASSLOADER_NATIVELIBRARY_LOAD,                ALGO_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD);
+            addMetaOverridden(JAVA_CLASSLOADER_REGISTERNATIVES,                   ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_DOUBLE_DOUBLETORAWLONGBITS,                    ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_DOUBLE_LONGBITSTODOUBLE,                       ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_FILEDESCRIPTOR_INITIDS,                        ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_FILEINPUTSTREAM_INITIDS,                       ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_FILEOUTPUTSTREAM_INITIDS,                      ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_FLOAT_FLOATTORAWINTBITS,                       ALGO_INVOKEMETA_PURE);
             addMetaOverridden(JAVA_OBJECT_CLONE,                                  ALGO_JAVA_OBJECT_CLONE);
             addMetaOverridden(JAVA_OBJECT_GETCLASS,                               ALGO_JAVA_OBJECT_GETCLASS);
             addMetaOverridden(JAVA_OBJECT_HASHCODE,                               ALGO_JAVA_OBJECT_HASHCODE);
+            addMetaOverridden(JAVA_OBJECT_NOTIFYALL,                              ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_OBJECT_REGISTERNATIVES,                        ALGO_INVOKEMETA_PURE);
             addMetaOverridden(JAVA_REFLECT_ARRAY_NEWARRAY,                        ALGO_JAVA_REFLECT_ARRAY_NEWARRAY);
             addBaseOverridden(JAVA_RUNTIME_AVAILABLEPROCESSORS,                   BASE_JAVA_RUNTIME_AVAILABLEPROCESSORS);
+            addMetaOverridden(JAVA_STRICTMATH_ACOS,                               ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_STRICTMATH_ASIN,                               ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_STRICTMATH_ATAN,                               ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_STRICTMATH_ATAN2,                              ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_STRICTMATH_CBRT,                               ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_STRICTMATH_COS,                                ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_STRICTMATH_COSH,                               ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_STRICTMATH_EXP,                                ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_STRICTMATH_EXPM1,                              ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_STRICTMATH_HYPOT,                              ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_STRICTMATH_IEEEREMAINDER,                      ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_STRICTMATH_LOG,                                ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_STRICTMATH_LOG10,                              ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_STRICTMATH_LOG1P,                              ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_STRICTMATH_POW,                                ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_STRICTMATH_SIN,                                ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_STRICTMATH_SINH,                               ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_STRICTMATH_SQRT,                               ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_STRICTMATH_TAN,                                ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_STRICTMATH_TANH,                               ALGO_INVOKEMETA_PURE);
             addMetaOverridden(JAVA_STRING_HASHCODE,                               ALGO_JAVA_STRING_HASHCODE);
             addMetaOverridden(JAVA_STRING_INTERN,                                 ALGO_JAVA_STRING_INTERN);
             addMetaOverridden(JAVA_STRINGBUILDER_APPEND_BOOLEAN,                  ALGO_JAVA_STRINGBUILDER_APPEND);
@@ -530,11 +601,20 @@ public final class ExecutionContext {
             addBaseOverridden(JAVA_SYSTEM_INITPROPERTIES,                         BASE_JAVA_SYSTEM_INITPROPERTIES);
             addMetaOverridden(JAVA_SYSTEM_IDENTITYHASHCODE,                       ALGO_JAVA_SYSTEM_IDENTITYHASHCODE);
             addMetaOverridden(JAVA_SYSTEM_MAPLIBRARYNAME,                         ALGO_JAVA_SYSTEM_MAPLIBRARYNAME);
+            addMetaOverridden(JAVA_SYSTEM_REGISTERNATIVES,                        ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_SYSTEM_SETERR0,                                ALGO_JAVA_SYSTEM_SETERR0);
+            addMetaOverridden(JAVA_SYSTEM_SETIN0,                                 ALGO_JAVA_SYSTEM_SETIN0);
+            addMetaOverridden(JAVA_SYSTEM_SETOUT0,                                ALGO_JAVA_SYSTEM_SETOUT0);
             addMetaOverridden(JAVA_THREAD_CURRENTTHREAD,                          ALGO_JAVA_THREAD_CURRENTTHREAD);
             addBaseOverridden(JAVA_THREAD_ISALIVE,                                BASE_JAVA_THREAD_ISALIVE);
+            addMetaOverridden(JAVA_THREAD_REGISTERNATIVES,                        ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_THREAD_SETPRIORITY0,                           ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_THREAD_START0,                                 ALGO_INVOKEMETA_PURE);
             addMetaOverridden(JAVA_THROWABLE_FILLINSTACKTRACE,                    ALGO_JAVA_THROWABLE_FILLINSTACKTRACE);
             addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEDEPTH,                  ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH);
             addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEELEMENT,                ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT);
+            addMetaOverridden(JAVA_UNIXFILESYSTEM_INITIDS,                        ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_WINNTFILESYSTEM_INITIDS,                       ALGO_INVOKEMETA_PURE);
             addMetaOverridden(SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0,     ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0);
             addMetaOverridden(SUN_REFLECTION_GETCALLERCLASS,                      ALGO_SUN_REFLECTION_GETCALLERCLASS);
             addMetaOverridden(SUN_REFLECTION_GETCLASSACCESSFLAGS,                 ALGO_SUN_REFLECTION_GETCLASSACCESSFLAGS);
@@ -554,6 +634,8 @@ public final class ExecutionContext {
             addMetaOverridden(SUN_UNSAFE_GETOBJECTVOLATILE,                       ALGO_SUN_UNSAFE_GETOBJECTVOLATILE);
             addMetaOverridden(SUN_UNSAFE_OBJECTFIELDOFFSET,                       ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET);
             addMetaOverridden(SUN_UNSAFE_PUTLONG,                                 ALGO_SUN_UNSAFE_PUTLONG);
+            addMetaOverridden(SUN_UNSAFE_REGISTERNATIVES,                         ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(SUN_VM_INITIALIZE,                                  ALGO_INVOKEMETA_PURE);
 
             //jbse.meta.Analysis methods
             addMetaOverridden(JBSE_ANALYSIS_ANY,                       ALGO_JBSE_ANALYSIS_ANY);
@@ -838,6 +920,7 @@ public final class ExecutionContext {
         className.equals(JAVA_UNIXFILESYSTEM) || 
         className.equals(JAVA_VECTOR) || 
         className.equals(JAVA_VOID) || 
+        className.equals(JAVA_WINNTFILESYSTEM) || //not really, but the only static member driveDirCache is a cache
         className.equals(JAVA_WRITER) || 
         className.equals(JBSE_BASE) ||
         className.equals(SUN_CLEANER) ||  //not really, but we don't care very much about finalization since JBSE never garbage-collects, thus we treat it as it were

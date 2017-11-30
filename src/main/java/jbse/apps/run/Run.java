@@ -180,6 +180,7 @@ public final class Run {
         private String endOfTraceMessage;
         private TraceTypes traceKind;
         private boolean isBranch;
+        private boolean mayPrint;
 
         /**
          * Determines whether the stack size of the current state 
@@ -200,7 +201,7 @@ public final class Run {
          * @return {@code true} iff the user told to stop execution.
          */
         private boolean printAndAsk() {
-            if (this.endOfTraceMessage == null && this.traceKind != TraceTypes.CONTRADICTORY && this.stackSizeAcceptable()) {
+            if (this.endOfTraceMessage == null && this.traceKind != TraceTypes.CONTRADICTORY && this.stackSizeAcceptable() && mayPrint) {
                 try {
                     final State currentState = Run.this.getCurrentState();
                     Run.this.emitState(currentState, this.isBranch);
@@ -226,11 +227,14 @@ public final class Run {
         @Override
         public boolean atRoot() {
             Run.this.emitPrologue();
+            
+            //enables or disables printing
+            this.mayPrint = Run.this.parameters.getShowSystemClassesInitialization();
 
             //prints the state (all+bytecode and branches)
             boolean stop = false;
             if (Run.this.parameters.getStepShowMode() == StepShowMode.METHOD || 
-            Run.this.parameters.getStepShowMode() == StepShowMode.SOURCE) {
+                Run.this.parameters.getStepShowMode() == StepShowMode.SOURCE) {
                 stop = printAndAsk();
             } 
             return stop;
@@ -318,7 +322,7 @@ public final class Run {
                 return false;
             } else if (e instanceof NotYetImplementedException) {
                 this.traceKind = TraceTypes.UNMANAGEABLE;
-                this.endOfTraceMessage = WARNING_NOT_IMPLEMENTED_BYTECODE;
+                this.endOfTraceMessage = WARNING_NOT_IMPLEMENTED_FEATURE + e.getMessage();
                 return false;
             } else if (e instanceof MetaUnsupportedException) {
                 this.traceKind = TraceTypes.UNMANAGEABLE;
@@ -337,13 +341,19 @@ public final class Run {
 
         @Override
         public boolean atStepPost() {
+            final State currentState = Run.this.engine.getCurrentState();
+            
             //if a resolved reference has not been expanded, prints a warning
             if (Run.this.parameters.getShowWarnings() && 
                 getEngine().someReferenceNotExpanded()) {
-                final State currentState = Run.this.engine.getCurrentState();
                 Run.this.log(currentState.getIdentifier() + " " +
                              getEngine().getNonExpandedReferencesOrigins() +
                              WARNING_PARTIAL_REFERENCE_RESOLUTION);
+            }
+            
+            //enables printing if we hit the root method execution
+            if (currentState.getStackSize() == 1) {
+                this.mayPrint = true;
             }
 
             //prints/asks (all+bytecode and branches)
@@ -1223,8 +1233,8 @@ public final class Run {
     /** Warning: cannot manage a native method invocation. */
     private static final String WARNING_CANNOT_INVOKE_NATIVE = " met an unmanageable native method invocation.";
 
-    /** Warning: cannot handle a bytecode. */
-    private static final String WARNING_NOT_IMPLEMENTED_BYTECODE = " met a bytecode that it is not yet implemented.";
+    /** Warning: cannot handle something. */
+    private static final String WARNING_NOT_IMPLEMENTED_FEATURE = " met an unimplemented feature: ";
 
     /** Warning: the meta-level implementation is unsupported. */
     private static final String WARNING_META_UNSUPPORTED = " meta-level implementation of a method cannot be executed: ";
