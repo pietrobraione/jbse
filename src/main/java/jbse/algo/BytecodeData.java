@@ -396,7 +396,8 @@ public abstract class BytecodeData {
      *        operands 
      * @throws ThreadStackEmptyException if {@code state}
      *         has an empty stack.
-     * @throws InterruptException if the execution of the
+     * @throws InterruptException if the execution of the container
+     *         {@link Algorithm} must be interrupted.
      */
     private void readOperands(State state, int numOperands) 
     throws ThreadStackEmptyException, InterruptException {

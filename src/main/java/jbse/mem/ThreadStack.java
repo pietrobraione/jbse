@@ -10,9 +10,10 @@ import jbse.mem.exc.ThreadStackEmptyException;
  * Class representing JVM thread stacks.
  */
 class ThreadStack implements Cloneable {
-	/** The stack position of the root frame. */
-	private static final int ROOT_FRAME = 0;
+    /** The stack position of the root frame. */
+    private static final int ROOT_FRAME = 0;
 
+    /** The actual stack of {@link Frame}s. */
     private ArrayList<Frame> frameStack;
 
     /**
@@ -21,32 +22,33 @@ class ThreadStack implements Cloneable {
     ThreadStack() {
         this.frameStack = new ArrayList<Frame>();
     }
-    
+
     /**
      * Puts a frame on the top of the stack.
      * 
-     * @param item {@link Frame} that must be put on the top of the stack, 
-     *        and that will become the current frame.
+     * @param item the {@link Frame} that must be put 
+     *        on the top of the stack, and that will become the 
+     *        current frame.
      */
-    void push(Frame item){
-    	this.frameStack.add(item);
+    void push(Frame item) {
+        this.frameStack.add(item);
     }
-    
+
     /**
      * Return the current frame and deletes it
      * from the stack.
      * 
      * @return the current (topmost) {@link Frame} 
-     * before the call.
+     *         before the call.
      * @throws ThreadStackEmptyException 
      */
     Frame pop() throws ThreadStackEmptyException {
-        if (this.isEmpty()) {
+        if (isEmpty()) {
             throw new ThreadStackEmptyException();
         }
         return this.frameStack.remove(this.frameStack.size() - 1);
     }
-    
+
     /**
      * Tests if the stack is empty.
      * 
@@ -55,14 +57,14 @@ class ThreadStack implements Cloneable {
     boolean isEmpty() {
         return this.frameStack.isEmpty();
     }
-    
+
     /**
      * Remove all the elements from the stack.
      */
     void clear() {
         this.frameStack.clear();
     }
-    
+
     /**
      * Returns the current frame.
      * 
@@ -77,12 +79,12 @@ class ThreadStack implements Cloneable {
         }
         return this.frameStack.get(this.frameStack.size() - 1);
     }
-    
+
     /**
      * Returns the root frame.
      * 
      * @return the current {@link Frame}, i.e., the 
-     *         {@link Frame} on the bottom of the stack.
+     *         one on the bottom of the stack.
      * @throws ThreadStackEmptyException if the stack
      *         is empty.
      */
@@ -92,7 +94,7 @@ class ThreadStack implements Cloneable {
         }
         return this.frameStack.get(ROOT_FRAME);
     }
-    
+
     /**
      * Returns an unmodifiable list of all the frames
      * in the stack.
@@ -101,13 +103,13 @@ class ThreadStack implements Cloneable {
      *         of the frames in the stack, in their push order.
      */
     List<Frame> frames() {
-    	return Collections.unmodifiableList(this.frameStack);
+        return Collections.unmodifiableList(this.frameStack);
     }
-    
+
     @Override
     public String toString() {
-    	final StringBuilder buf = new StringBuilder();
-    	buf.append("[");
+        final StringBuilder buf = new StringBuilder();
+        buf.append("[");
         int j = 0;
         final int last = this.frameStack.size() - 1;
         for (Frame f : this.frameStack) {
@@ -122,7 +124,7 @@ class ThreadStack implements Cloneable {
         buf.append("]");
         return buf.toString();
     }
-    
+
     @Override
     public ThreadStack clone() {
         final ThreadStack o;
@@ -131,13 +133,12 @@ class ThreadStack implements Cloneable {
         } catch (CloneNotSupportedException e) {
             throw new InternalError(e);
         }
-        
+
         final ArrayList<Frame> frameStackClone = new ArrayList<Frame>();
         for (int i = 0; i < this.frameStack.size(); ++i) {
             frameStackClone.add(this.frameStack.get(i).clone());
         }
         o.frameStack = frameStackClone;
-        //TODO is it just the same as o.frameStack = (ArrayList) o.frameStack.clone()?
         return o;
     }   
 }

@@ -61,7 +61,7 @@ public class SwitchTable implements Iterable<Integer> {
         this.code = f.getCode();
 
         //skips the alignment bytes
-        byte[] ops = (this.ts ? new byte[12] : new byte[8]);
+        final byte[] ops = (this.ts ? new byte[12] : new byte[8]);
         int ofst = 0;
         do {
             ofst++;
