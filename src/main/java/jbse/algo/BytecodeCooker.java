@@ -4,6 +4,7 @@ import jbse.algo.exc.CannotManageStateException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
+import jbse.mem.exc.ThreadStackEmptyException;
 
 /**
  * Strategy that extracts or calculates additional 
@@ -31,6 +32,8 @@ public interface BytecodeCooker {
      *         class creation and initialization.
      * @throws ClasspathException possibly raised if some core 
      *         standard class is missing from the classpath of ill-formed.
+     * @throws ThreadStackEmptyException possibly raised if the
+     *         thread stack is empty.
      * @throws CannotManageStateException possibly raised if the 
      *         bytecode cannot be executed due to limitations of JBSE.
      * @throws InterruptException possibly raised if the execution 
@@ -39,6 +42,6 @@ public interface BytecodeCooker {
      *         is exhausted.
      */
     void cook(State state) 
-    throws DecisionException, ClasspathException, 
+    throws DecisionException, ClasspathException, ThreadStackEmptyException,
     CannotManageStateException, InterruptException;
 }

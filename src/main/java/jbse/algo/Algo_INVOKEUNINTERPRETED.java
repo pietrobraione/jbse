@@ -1,8 +1,8 @@
 package jbse.algo;
 
 import static jbse.algo.Util.failExecution;
-import static jbse.common.Type.splitParametersDescriptors;
 import static jbse.mem.Util.toPrimitive;
+import static jbse.common.Type.parametersNumber;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.splitReturnValueDescriptor;
 
@@ -19,7 +19,7 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * {@link Algorithm} implementing the effect of a method call that
+ * {@link Algo_INVOKEMETA_Nonbranching} implementing the effect of a method call that
  * produces as result a symbolic uninterpreted function application
  * on its arguments. Works only for methods that accept as parameters
  * (except possibly the {@code this} parameter) and produce as return
@@ -43,8 +43,7 @@ public final class Algo_INVOKEUNINTERPRETED extends Algo_INVOKEMETA_Nonbranching
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> {
-            final String[] paramsDescriptors = splitParametersDescriptors(this.data.signature().getDescriptor());
-            return (this.isStatic ? paramsDescriptors.length : paramsDescriptors.length + 1);
+            return parametersNumber(this.data.signature().getDescriptor(), this.isStatic);
         };
     }
 

@@ -1,12 +1,8 @@
 package jbse.algo;
 
-import static jbse.algo.Util.continueWith;
-import static jbse.bc.Offsets.invokeDefaultOffset;
-
 import java.util.function.Supplier;
 
 import jbse.algo.BytecodeData_1KME.Kind;
-import jbse.mem.State;
 import jbse.tree.DecisionAlternative;
 
 /**
@@ -37,18 +33,4 @@ extends Algorithm<BytecodeData_1KME, R, DE, RE, UP> {
     protected final Supplier<BytecodeData_1KME> bytecodeData() {
         return () -> BytecodeData_1KME.withMethod(Kind.kind(this.isInterface, this.isSpecial, this.isStatic)).get();
     }
-
-    /**
-     * Cleanly interrupts the execution and schedules 
-     * the base-level implementation of the method
-     * for execution. 
-     */
-    protected final void continueWithBaseLevelImpl(State state) 
-    throws InterruptException {
-        final Algo_INVOKEX_CompletionNonSignaturePolymorphic<BytecodeData_1KME> continuation = 
-            new Algo_INVOKEX_CompletionNonSignaturePolymorphic<BytecodeData_1KME>(this.isInterface, this.isSpecial, this.isStatic, bytecodeData());
-        continuation.setPcOffset(invokeDefaultOffset(this.isInterface));
-        continuation.shouldFindImplementation();
-        continueWith(continuation);
-    }    
 }

@@ -1,5 +1,6 @@
 package jbse.algo;
 
+import static jbse.algo.BytecodeData_1KME.Kind.kind;
 import static jbse.algo.Util.continueWith;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
@@ -10,8 +11,8 @@ import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.NO_SUCH_METHOD_ERROR;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.common.Type.REFERENCE;
-import static jbse.common.Type.splitParametersDescriptors;
 import static jbse.common.Type.TYPEEND;
+import static jbse.common.Type.parametersNumber;
 
 import java.util.function.Supplier;
 
@@ -39,7 +40,8 @@ import jbse.val.Reference;
  *
  */
 //TODO this class was born when (JVMS 2nd edition) the four invoke bytecodes were not much different, and sharing the implementation made sense; now it should be split in four subclasses. 
-public abstract class Algo_INVOKEX_Abstract<D extends BytecodeData> extends Algorithm<D,
+public abstract class Algo_INVOKEX_Abstract extends Algorithm<
+BytecodeData_1KME,
 DecisionAlternative_NONE,
 StrategyDecide<DecisionAlternative_NONE>, 
 StrategyRefine<DecisionAlternative_NONE>, 
@@ -57,15 +59,18 @@ StrategyUpdate<DecisionAlternative_NONE>> {
 
     protected Signature methodSignatureResolved; //set by cooking methods (resolveMethod)
     protected ClassFile classFileMethodImpl; //set by cooking methods (findImpl / findOverridingImpl)
-    protected Signature methodSignatureImpl; //set by cooking methods
-    protected boolean isNative; //set by cooking methods
-    protected boolean isSignaturePolymorphic; //set by cooking methods
+    protected Signature methodSignatureImpl; //set by cooking methods (findImpl / findOverridingImpl)
+    protected boolean isSignaturePolymorphic; //set by cooking methods (findImpl / findOverridingImpl)
+
+    @Override
+    protected final Supplier<BytecodeData_1KME> bytecodeData() {
+        return () -> BytecodeData_1KME.withMethod(kind(this.isInterface, this.isSpecial, this.isStatic)).get();
+    }
     
     @Override
     protected final Supplier<Integer> numOperands() {
         return () -> {
-            final String[] paramsDescriptors = splitParametersDescriptors(this.data.signature().getDescriptor());
-            return (this.isStatic ? paramsDescriptors.length : paramsDescriptors.length + 1);
+            return parametersNumber(this.data.signature().getDescriptor(), this.isStatic);
         };
     }
 
@@ -236,12 +241,10 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             this.methodSignatureImpl = new Signature(this.classFileMethodImpl.getClassName(), 
                                                      this.methodSignatureResolved.getDescriptor(), 
                                                      this.methodSignatureResolved.getName());
-            this.isNative = this.classFileMethodImpl.isMethodNative(this.methodSignatureImpl);
             this.isSignaturePolymorphic = this.classFileMethodImpl.isMethodSignaturePolymorphic(this.methodSignatureImpl);
         } catch (MethodNotFoundException e) {
             this.classFileMethodImpl = null;
             this.methodSignatureImpl = null;
-            this.isNative = false;
             this.isSignaturePolymorphic = false;
         } catch (ThreadStackEmptyException e) {
             //this should never happen
@@ -261,7 +264,6 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 checkOverridingMethodFits(state, methodSignatureOverriding, classFileMethodOverriding);
                 this.classFileMethodImpl = classFileMethodOverriding;
                 this.methodSignatureImpl = methodSignatureOverriding;
-                this.isNative = this.classFileMethodImpl.isMethodNative(this.methodSignatureImpl);
                 this.isSignaturePolymorphic = this.classFileMethodImpl.isMethodSignaturePolymorphic(this.methodSignatureImpl);
             } catch (MethodNotFoundException e) {
                 throw new BaseUnsupportedException("The overriding method " + methodSignatureOverriding + " does not exist (but the class seems to exist)");

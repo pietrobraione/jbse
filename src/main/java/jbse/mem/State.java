@@ -4,6 +4,7 @@ import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_STRING_HASH;
 import static jbse.bc.Signatures.JAVA_STRING_VALUE;
+import static jbse.common.Type.parametersNumber;
 import static jbse.common.Type.isPrimitiveCanonicalName;
 
 import java.util.ArrayList;
@@ -24,6 +25,8 @@ import jbse.bc.Classpath;
 import jbse.bc.ExceptionTable;
 import jbse.bc.ExceptionTableEntry;
 import jbse.bc.Signature;
+import jbse.bc.Snippet;
+import jbse.bc.SnippetFactory;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
@@ -126,21 +129,21 @@ public final class State implements Cloneable {
 
     /** {@code true} iff the next bytecode must be executed in its WIDE variant. */
     private boolean wide = false;
-    
-    /** The maximum length an array may have to be granted simple representation. */
-    private final int maxSimpleArrayLength;
 
     /** The JVM heap. */
     private Heap heap;
-
-    /** The {@link Calculator}. */
-    private final Calculator calc;
 
     /** 
      * The object that fetches classfiles from the classpath, stores them, 
      * and allows visiting the whole class/interface hierarchy. 
      */
-    private final ClassHierarchy classHierarchy;
+    private ClassHierarchy classHierarchy;
+    
+    /** The maximum length an array may have to be granted simple representation. */
+    private final int maxSimpleArrayLength;
+
+    /** The {@link Calculator}. */
+    private final Calculator calc;
 
     /** 
      * The generator for unambiguous symbol identifiers; mutable
@@ -1013,7 +1016,7 @@ public final class State implements Cloneable {
                 final ExceptionTable myExTable = this.classHierarchy.getClassFile(currentClassName).getExceptionTable(currentMethodSignature);
                 final ExceptionTableEntry tmpEntry = myExTable.getEntry(excTypes, getPC());
                 if (tmpEntry == null) {
-                    this.stack.pop();
+                    popCurrentFrame();
                 } else {
                     clearOperands();
                     setProgramCounter(tmpEntry.getPCHandle());
@@ -1076,6 +1079,7 @@ public final class State implements Cloneable {
     ThreadStackEmptyException {
         final ClassFile classMethodImpl = this.classHierarchy.getClassFile(methodSignatureImpl.getClassName());
         final boolean isStatic = classMethodImpl.isMethodStatic(methodSignatureImpl);
+        
         //checks the "this" parameter (invocation receiver) if necessary
         if (!isStatic) {
             if (args.length == 0 || !(args[0] instanceof Reference)) {
@@ -1086,21 +1090,71 @@ public final class State implements Cloneable {
             }
         }
         
-        //narrows the int args if the method signature requires a narrower type
-        narrowArgs(args, methodSignatureImpl, isStatic);
-
-        //creates the frame and sets its args
-        final Frame f = new Frame(methodSignatureImpl, classMethodImpl);
-        f.setArgs(args);
-
-        //sets the frame's return program counter
+        //sets the return program counter
         if (isRoot) {
             //do nothing, after creation the frame has already a dummy return program counter
         } else {
             setReturnProgramCounter(returnPCOffset);
         }
 
-        //pushes the frame on the thread stack
+        //narrows the int args if the method signature requires a narrower type
+        narrowArgs(args, methodSignatureImpl, isStatic);
+
+        //creates the new frame and sets its args
+        final MethodFrame f = new MethodFrame(methodSignatureImpl, classMethodImpl);
+        f.setArgs(args);
+
+        //pushes the new frame on the thread stack
+        this.stack.push(f);
+    }
+    
+    /**
+     * Creates a {@link SnippetFactory} for snippets
+     * that can be pushed on the current stack with
+     * {@link #pushSnippetFrame(Snippet, int) pushSnippetFrame}.
+     * 
+     * @return a {@link SnippetFactory}.
+     * @throws BadClassFileException when the classfile for the 
+     *         state's current class does not exist in the classpath 
+     *         or is ill-formed.
+     * @throws ThreadStackEmptyException if the 
+     *         state's thread stack is empty.
+     */
+    public SnippetFactory snippetFactory() 
+    throws BadClassFileException, ThreadStackEmptyException {
+        final ClassFile currentClass = 
+            this.classHierarchy.getClassFile(getCurrentMethodSignature().getClassName());
+        return new SnippetFactory(currentClass);
+    }
+    
+    /**
+     * Creates a new {@link SnippetFrame} for a {@link Snippet} and
+     * pushes it on this state's stack.
+     * 
+     * @param snippet a {@link Snippet}.
+     * @param returnPCOffset the offset from the current 
+     *        program counter of the return program counter.
+     * @throws ThreadStackEmptyException if the 
+     *         state's thread stack is empty.
+     * @throws InvalidProgramCounterException if {@code returnPCOffset} 
+     *         is not a valid program count offset for the state's current frame.
+     */
+    public void pushSnippetFrame(Snippet snippet, int returnPCOffset) 
+    throws ThreadStackEmptyException, InvalidProgramCounterException {
+        //adds to the current class' classfile the
+        //constants necessary to the snippet execution
+        this.classHierarchy.wrapClassFile(getCurrentMethodSignature().getClassName(), 
+                                          snippet.getConstants(), snippet.getSignatures(), snippet.getClasses());
+        
+        //sets the return program counter
+        setReturnProgramCounter(returnPCOffset);
+
+        //creates the new frame
+        final SnippetFrame f = new SnippetFrame(getCurrentFrame(), snippet.getBytecode());
+
+        //pops the topmost frame (that is wrapped by the snippet frame) and 
+        //pushes the new snippet frame on the thread stack
+        this.stack.pop();
         this.stack.push(f);
     }
     
@@ -1117,7 +1171,7 @@ public final class State implements Cloneable {
     /**
      * Makes symbolic arguments for the root method invocation. This includes the
      * root object.
-     * @param f the root {@link Frame}.
+     * @param f the root {@link MethodFrame}.
      * @param methodSignature the {@link Signature} of the root object method
      *        to be invoked. It will be used both to create the root object
      *        in the heap (the concrete class is the one specified in the 
@@ -1131,11 +1185,10 @@ public final class State implements Cloneable {
      *         is a {@link ReferenceSymbolic}.
      * @throws HeapMemoryExhaustedException if the heap is full.
      */
-    private Value[] makeArgsSymbolic(Frame f, Signature methodSignature, boolean isStatic) 
+    private Value[] makeArgsSymbolic(MethodFrame f, Signature methodSignature, boolean isStatic) 
     throws HeapMemoryExhaustedException {
-        //gets the method's signature
-        final String[] paramsDescriptor = Type.splitParametersDescriptors(methodSignature.getDescriptor());
-        final int numArgs = paramsDescriptor.length + (isStatic ? 0 : 1);
+        final String[] paramsDescriptors = Type.splitParametersDescriptors(methodSignature.getDescriptor());
+        final int numArgs = parametersNumber(methodSignature.getDescriptor(), isStatic);
 
         //produces the args as symbolic values from the method's signature
         final String rootClassName = methodSignature.getClassName(); //TODO check that the root class has the method!!!
@@ -1153,7 +1206,7 @@ public final class State implements Cloneable {
                     throw new UnexpectedInternalException(e);
                 }
             } else {
-                args[i] = createSymbol(paramsDescriptor[(isStatic ? i : i - 1)], origin);
+                args[i] = createSymbol(paramsDescriptors[(isStatic ? i : i - 1)], origin);
             }
 
             //next slot
@@ -1195,7 +1248,7 @@ public final class State implements Cloneable {
     HeapMemoryExhaustedException {
         final ClassFile classMethodImpl = this.classHierarchy.getClassFile(methodSignatureImpl.getClassName());
         final boolean isStatic = classMethodImpl.isMethodStatic(methodSignatureImpl);
-        final Frame f = new Frame(methodSignatureImpl, classMethodImpl);
+        final MethodFrame f = new MethodFrame(methodSignatureImpl, classMethodImpl);
         final Value[] args = makeArgsSymbolic(f, methodSignatureImpl, isStatic);
         try {
             f.setArgs(args);
@@ -1259,7 +1312,11 @@ public final class State implements Cloneable {
      * @throws ThreadStackEmptyException if the thread stack is empty.
      */
     public void popCurrentFrame() throws ThreadStackEmptyException {
-        this.stack.pop();
+        final Frame popped = this.stack.pop();
+        if (popped instanceof SnippetFrame) {
+            this.stack.push(((SnippetFrame) popped).getContextFrame());
+            this.classHierarchy.unwrapClassFile(getCurrentMethodSignature().getClassName());
+        }
     }
 
     /**
@@ -1272,15 +1329,15 @@ public final class State implements Cloneable {
     /**
      * Returns the root frame.
      * 
-     * @return a {@link Frame}, the root (first  
+     * @return a {@link MethodFrame}, the root (first  
      *         pushed) one.
      * @throws ThreadStackEmptyException if the 
      *         thread stack is empty.
      */
-    public Frame getRootFrame() throws ThreadStackEmptyException {
+    public MethodFrame getRootFrame() throws ThreadStackEmptyException {
         final List<Frame> frames = this.stack.frames();
         try {
-            return frames.get(0);
+            return (MethodFrame) frames.get(0);
         } catch (IndexOutOfBoundsException e) {
             throw new ThreadStackEmptyException();
         }
@@ -1289,7 +1346,7 @@ public final class State implements Cloneable {
     /**
      * Returns the current frame.
      * 
-     * @return a {@link Frame}, the current (last 
+     * @return an {@link Frame}, the current (last 
      * pushed) one.
      * @throws ThreadStackEmptyException if the 
      *         thread stack is empty.
@@ -2024,6 +2081,9 @@ public final class State implements Cloneable {
 
         //heap
         o.heap = o.heap.clone();
+        
+        //classHierarchy
+        o.classHierarchy = o.classHierarchy.clone();
 
         //staticStore
         o.staticMethodArea = o.staticMethodArea.clone();

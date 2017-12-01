@@ -2,7 +2,7 @@ package jbse.algo;
 
 import static jbse.algo.Util.failExecution;
 import static jbse.common.Type.binaryClassName;
-import static jbse.common.Type.defaultParametersNumber;
+import static jbse.common.Type.parametersNumber;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -59,7 +59,7 @@ public class Algo_INVOKEMETA_Pure extends Algo_INVOKEMETA_Nonbranching {
     @Override
     protected final Supplier<Integer> numOperands() {
         return () -> {
-            return defaultParametersNumber(this.data.signature().getDescriptor(), this.isStatic);
+            return parametersNumber(this.data.signature().getDescriptor(), this.isStatic);
         };
     }
     

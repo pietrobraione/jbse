@@ -88,6 +88,7 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm<?, ?
     private final Algo_IINC           algo_IINC            = new Algo_IINC();
     private final Algo_INSTANCEOF     algo_INSTANCEOF      = new Algo_INSTANCEOF();
     private final Algo_UNSUPPORTED    algo_INVOKEDYNAMIC   = new Algo_UNSUPPORTED("INVOKEDYNAMIC"); 
+    //private final Algo_INVOKEHANDLE   algo_INVOKEHANDLE    = new Algo_INVOKEHANDLE();
     private final Algo_INVOKEX        algo_INVOKEINTERFACE = new Algo_INVOKEX(true, false, false);
     private final Algo_INVOKEX        algo_INVOKESPECIAL   = new Algo_INVOKEX(false, true, false);
     private final Algo_INVOKEX        algo_INVOKESTATIC    = new Algo_INVOKEX(false, false, true);
@@ -354,6 +355,7 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm<?, ?
         setCase(OP_GOTO_W,          () -> this.algo_GOTO_W);
         setCase(OP_JSR_W,           () -> this.algo_JSR_W);
         setCase(OP_BREAKPOINT,      () -> this.algo_NOP);
+        //setCase(OP_INVOKEHANDLE,    () -> this.algo_INVOKEHANDLE);
         setCase(OP_IMPDEP1,         () -> this.algo_NOP);
         setCase(OP_IMPDEP2,         () -> this.algo_NOP);
 

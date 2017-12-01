@@ -1,5 +1,6 @@
 package jbse.algo;
 
+import static jbse.bc.Offsets.offsetInvoke;
 import static jbse.bc.Signatures.JAVA_CLASS_NAME;
 import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_STACKTRACEELEMENT;
@@ -107,6 +108,20 @@ public class Util {
     public static void continueWith(Action... act)
     throws InterruptException {
         throw InterruptException.mk(act);
+    }
+
+    /**
+     * Cleanly interrupts the execution of an invoke* 
+     * bytecode and schedules the base-level 
+     * implementation of the method for execution. 
+     */
+    public static void continueWithBaseLevelImpl(State state, boolean isInterface, boolean isSpecial, boolean isStatic) 
+    throws InterruptException {
+        final Algo_INVOKEX_Completion continuation = 
+            new Algo_INVOKEX_Completion(isInterface, isSpecial, isStatic);
+        continuation.setProgramCounterOffset(offsetInvoke(isInterface));
+        continuation.shouldFindImplementation();
+        continueWith(continuation);
     }
 
     /**
@@ -762,8 +777,8 @@ public class Util {
                 array.set(index, valueToStore);
             }
         } catch (InvalidInputException | InvalidOperandException | 
-        InvalidTypeException | ClassCastException | 
-        FastArrayAccessNotAllowedException e) {
+                 InvalidTypeException | ClassCastException | 
+                 FastArrayAccessNotAllowedException e) {
             //this should never happen
             failExecution(e);
         }
@@ -780,10 +795,9 @@ public class Util {
         }
         return null; //to keep the compiler happy
     }
-
+    
     /** 
      * Do not instantiate it!
      */
     private Util() { }
-
 }

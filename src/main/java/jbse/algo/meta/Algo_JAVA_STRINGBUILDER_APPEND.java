@@ -1,8 +1,8 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Continuations.invokevirtual;
-import static jbse.algo.Util.continueWith;
+import static jbse.algo.Util.continueWithBaseLevelImpl;
 import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
@@ -12,10 +12,12 @@ import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
-import jbse.algo.Algo_INVOKEX_Abstract;
 import jbse.algo.InterruptException;
+import jbse.bc.Snippet;
+import jbse.bc.exc.BadClassFileException;
 import jbse.mem.State;
 import jbse.mem.exc.HeapMemoryExhaustedException;
+import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Primitive;
 import jbse.val.ReferenceConcrete;
@@ -26,8 +28,6 @@ import jbse.val.ReferenceConcrete;
  * @author Pietro Braione
  */
 public final class Algo_JAVA_STRINGBUILDER_APPEND extends Algo_INVOKEMETA_Nonbranching {
-    private ReferenceConcrete refStringifiedSymbol; //set by cookMore
-    
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 2;
@@ -40,9 +40,17 @@ public final class Algo_JAVA_STRINGBUILDER_APPEND extends Algo_INVOKEMETA_Nonbra
             if (toAppend.isSymbolic()) {
                 final String stringifiedSymbol = toAppend.toString();
                 state.ensureStringLiteral(stringifiedSymbol);
-                this.refStringifiedSymbol = state.referenceToStringLiteral(stringifiedSymbol);
+                final ReferenceConcrete refStringifiedSymbol = state.referenceToStringLiteral(stringifiedSymbol);
+                state.pushOperand(this.data.operand(0)); //this
+                state.pushOperand(refStringifiedSymbol);
+                final Snippet snippet = state.snippetFactory()
+                    .op_invokevirtual(JAVA_STRINGBUILDER_APPEND_STRING)
+                    .op_return()
+                    .mk();
+                state.pushSnippetFrame(snippet, INVOKESPECIALSTATICVIRTUAL_OFFSET);
+                exitFromAlgorithm();
             } else {
-                continueWithBaseLevelImpl(state); //executes the original StringBuilder.append implementation
+                continueWithBaseLevelImpl(state, this.isInterface, this.isSpecial, this.isStatic); //executes the original StringBuilder.append implementation
             }
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, OUT_OF_MEMORY_ERROR);
@@ -50,14 +58,14 @@ public final class Algo_JAVA_STRINGBUILDER_APPEND extends Algo_INVOKEMETA_Nonbra
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
+        } catch (BadClassFileException | InvalidProgramCounterException e) {
+            //this should never happen
+            failExecution(e);
         }
     }
 
     @Override
     protected void update(State state) throws ThreadStackEmptyException, InterruptException {
-        state.pushOperand(this.data.operand(0)); //this
-        state.pushOperand(this.refStringifiedSymbol);
-        final Algo_INVOKEX_Abstract<?> continuation = invokevirtual(JAVA_STRINGBUILDER_APPEND_STRING, INVOKESPECIALSTATICVIRTUAL_OFFSET);
-        continueWith(continuation);
+        //never used
     }
 }

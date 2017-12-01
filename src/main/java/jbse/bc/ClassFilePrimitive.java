@@ -161,6 +161,11 @@ abstract class ClassFilePrimitive extends ClassFile {
     }
 
     @Override
+    public int constantPoolSize() {
+        return 1;  //empty constant pool
+    }
+
+    @Override
     public boolean hasMethodImplementation(Signature methodSignature) {
         return false;
     }

@@ -45,11 +45,11 @@ import jbse.common.exc.UnexpectedInternalException;
  *  
  * @author Pietro Braione
  */
-public class ClassHierarchy {
+public final class ClassHierarchy implements Cloneable {
     private final Classpath cp;
-    private final ClassFileStore cfs;
     private final Map<String, Set<String>> expansionBackdoor;
     private final HashMap<String, ArrayList<Signature>> allFieldsOf;
+    private ClassFileStore cfs; //not final because of clone
 
     /**
      * Constructor.
@@ -88,7 +88,7 @@ public class ClassHierarchy {
      * Given a class name returns the correspondent {@link ClassFile}.
      * To avoid name clashes it does not manage primitive classes.
      * 
-     * @param className the searched class.
+     * @param className a {@link String}, the name of the searched class.
      * @return the {@link ClassFile} of the correspondent class.
      * @throws BadClassFileException when the class file does not 
      *         exist or is ill-formed.
@@ -100,6 +100,39 @@ public class ClassHierarchy {
             throw ((ClassFileBad) retval).getException();
         }
         return retval;
+    }
+    
+    /**
+     * Wraps a {@link ClassFile} to (temporarily) add
+     * some constants to its constant pool.
+     * 
+     * @param classToWrap a {@link String}, 
+     *        the name of the class to wrap.
+     * @param constants a {@link Map}{@code <}{@link Integer}{@code , }{@link ConstantPoolValue}{@code >}, 
+     *        mapping indices to corresponding constant 
+     *        values in the expanded constant pool.
+     * @param signatures a {@link Map}{@code <}{@link Integer}{@code , }{@link Signature}{@code >}, 
+     *        mapping indices to corresponding {@link Signature}s 
+     *        in the expanded constant pool.
+     * @param classes a {@link Map}{@code <}{@link Integer}{@code , }{@link String}{@code >}, 
+     *        mapping indices to corresponding class names 
+     *        in the expanded constant pool.
+     */
+    public void wrapClassFile(String classToWrap,
+                     Map<Integer, ConstantPoolValue> constants, 
+                     Map<Integer, Signature> signatures,
+                     Map<Integer, String> classes) {
+        this.cfs.wrapClassFile(classToWrap, constants, signatures, classes);
+    }
+    
+    /**
+     * Unwraps a previously wrapped {@link ClassFile}.
+     * 
+     * @param classToUnwrap classToWrap a {@link String}, 
+     *        the name of the class to unwrap.
+     */
+    public void unwrapClassFile(String classToUnwrap) {
+        this.cfs.unwrapClassFile(classToUnwrap);
     }
 
     /**
@@ -1309,5 +1342,22 @@ public class ClassHierarchy {
             }
         }
         return false; //no such m was found
+    }
+    
+    @Override
+    public ClassHierarchy clone() {
+        final ClassHierarchy o;
+        try {
+            o = (ClassHierarchy) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new InternalError(e);
+        }
+        
+        //cp, expansionBackdoor and allFieldsOf may be shared;
+        //in a future, expansionBackdoor may possibly be cloned
+        
+        o.cfs = o.cfs.clone();
+        
+        return o;
     }
 }

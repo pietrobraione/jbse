@@ -214,8 +214,7 @@ public final class Opcodes {
     public static final byte OP_BREAKPOINT = -54;
 
     //internally used by JBSE
-    public static final byte OP_INVOKEVIRTUAL_SIGNATUREPOLYMORPHIC_PHASE2 = -53;
-    public static final byte OP_INVOKEVIRTUAL_PHASE3 = -52;
+    public static final byte OP_INVOKEHANDLE = -53;
 
     //implementation-dependent
     public static final byte OP_IMPDEP1 = -2;

@@ -123,6 +123,11 @@ public final class ClassFileBad extends ClassFile {
     public boolean isStatic() {
         return false;
     }
+    
+    @Override
+    public int constantPoolSize() {
+        return 1;  //empty constant pool
+    }
 
     @Override
     public boolean hasMethodImplementation(Signature methodSignature) {

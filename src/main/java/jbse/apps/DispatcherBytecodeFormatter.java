@@ -775,8 +775,6 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
 
         final DispatchStrategyFormat0 s = new DispatchStrategyFormat0(RESERVED_BYTECODE);
         setCase(OP_INVOKEDYNAMIC,             s);
-        setCase(OP_INVOKEVIRTUAL_SIGNATUREPOLYMORPHIC_PHASE2,      s); //TODO
-        setCase(OP_INVOKEVIRTUAL_PHASE3,      s); //TODO
     }
 
     @Override

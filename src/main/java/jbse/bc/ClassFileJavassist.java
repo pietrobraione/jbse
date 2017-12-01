@@ -196,6 +196,11 @@ public class ClassFileJavassist extends ClassFile {
         }
         return true;
     }
+    
+    @Override
+    public int constantPoolSize() {
+        return this.cp.getSize();
+    }
 
     @Override
     public Signature getFieldSignature(int fieldIndex) throws InvalidIndexException {
@@ -529,6 +534,7 @@ public class ClassFileJavassist extends ClassFile {
             return false;
         }
         
+        //cannot be signature polymorphic if is not (native | varargs)
         if (!isMethodNative(methodSignature) || !isMethodVarargs(methodSignature)) {
             return false;
         }

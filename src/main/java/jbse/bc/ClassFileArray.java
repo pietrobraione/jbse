@@ -75,7 +75,7 @@ public final class ClassFileArray extends ClassFile {
     private boolean isMethodClone(Signature methodSignature) {
         return (JAVA_OBJECT_CLONE.getName().equals(methodSignature.getName()) &&
                 JAVA_OBJECT_CLONE.getDescriptor().equals(methodSignature.getDescriptor()));
-}
+    }
 
     @Override
     public String getSourceFile() {
@@ -110,6 +110,11 @@ public final class ClassFileArray extends ClassFile {
     @Override
     public boolean isPrimitive() {
         return false;
+    }
+    
+    @Override
+    public int constantPoolSize() {
+        return 1;  //empty constant pool
     }
 
     @Override

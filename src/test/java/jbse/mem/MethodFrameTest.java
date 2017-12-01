@@ -21,7 +21,7 @@ import jbse.val.Null;
 import jbse.val.ReferenceConcrete;
 import jbse.val.Value;
 
-public class FrameTest {
+public class MethodFrameTest {
 	private static ClassHierarchy hier;
 
 	@BeforeClass
@@ -38,7 +38,7 @@ public class FrameTest {
 		final String className = "tsafe/engine/TsafeEngine";
 		final ClassFile cf = hier.getClassFile(className);
 		final Signature sigMethod = new Signature(className, "()V", "start");
-		final Frame f = new Frame(sigMethod, cf);
+		final MethodFrame f = new MethodFrame(sigMethod, cf);
 		assertEquals(f.getCurrentMethodSignature(), sigMethod);
 	}
 	
@@ -47,7 +47,7 @@ public class FrameTest {
 		final String className = "tsafe/engine/TsafeEngine";
 		final ClassFile cf = hier.getClassFile(className);
 		final Signature sigMethod = new Signature(className, "()V", "start");
-		final Frame f = new Frame(sigMethod, cf);
+		final MethodFrame f = new MethodFrame(sigMethod, cf);
 		f.setArgs(Null.getInstance());
 		final Value valThis = f.getLocalVariableValue(0);
 		assertEquals(valThis, Null.getInstance());
@@ -58,7 +58,7 @@ public class FrameTest {
 		final String className = "tsafe/engine/TsafeEngine";
 		final ClassFile cf = hier.getClassFile(className);
 		final Signature sigMethod = new Signature(className, "()V", "start");
-		final Frame f = new Frame(sigMethod, cf);
+		final MethodFrame f = new MethodFrame(sigMethod, cf);
 		f.setArgs(Null.getInstance());
 		final Value valThis = f.getLocalVariableValue("this");
 		assertEquals(valThis, Null.getInstance());
@@ -69,9 +69,9 @@ public class FrameTest {
 		final String className = "tsafe/engine/TsafeEngine";
 		final ClassFile cf = hier.getClassFile(className);
 		final Signature sigMethod = new Signature(className, "()V", "start");
-		final Frame f = new Frame(sigMethod, cf);
+		final MethodFrame f = new MethodFrame(sigMethod, cf);
 		f.setArgs(Null.getInstance());
-		final Frame fClone = f.clone();
+		final MethodFrame fClone = f.clone();
 		f.setLocalVariableValue(0, 0, new ReferenceConcrete(5));
 		final Value valThisClone = fClone.getLocalVariableValue(0);
 		assertEquals(valThisClone, Null.getInstance());

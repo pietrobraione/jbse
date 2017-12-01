@@ -129,9 +129,9 @@ public abstract class ClassFile {
      * for this class.
      *  
      * @return {@code true} if the ACC_SUPER flag of the class 
-     * is set, i.e., if the class requires modern semantics,
+     * is set, i.e., if the class requires post-Java 1.1 semantics,
      * {@code false} if the class requires backward-compatible 
-     * semantics.  
+     * semantics (Java 1.0.2 and previous).
      */
     public abstract boolean isSuperInvoke();
     
@@ -171,8 +171,10 @@ public abstract class ClassFile {
      *         class is local or anonymous, and it is not immediately 
      *         enclosed (JVMS v8, section 4.7.7) by a method or constructor,
      *         it will return a {@link Signature} {@code retVal} such that
-     *         {@code retVal.}{@link Signature#getDescriptor() getDescriptor()}{@code == null}
-     *         and {@code retVal.}{@link Signature#getName() getName()}{@code == null}.
+     *         {@code retVal.}{@link Signature#getDescriptor() getDescriptor()}{@code == null},
+     *         {@code retVal.}{@link Signature#getName() getName()}{@code == null}, and
+     *         {@code retVal.}{@link Signature#getClassName() getClassName()} is the name
+     *         of the enclosing class.
      * @throws ClassFileNotFoundException if the enclosing class does not 
      *         exist in the classpath.
      */
@@ -184,6 +186,16 @@ public abstract class ClassFile {
      * @return {@code true} iff the class is static.
      */
     public abstract boolean isStatic();
+    
+    /**
+     * Returns the size of the constant pool.
+     * Indices to the constant pool must range
+     * from {@code 1} to {@code constantPoolSize() - 1}
+     * inclusive.
+     * 
+     * @return a {@code int}.
+     */
+    public abstract int constantPoolSize();
 
     /**
      * Tests whether the class has an implementation (i.e., a declaration 
@@ -297,7 +309,8 @@ public abstract class ClassFile {
     public abstract boolean isMethodVarargs(Signature methodSignature) throws MethodNotFoundException;
 
     /**
-     * Tests whether a method in the class is signature polymorphic.
+     * Tests whether a method in the class is signature polymorphic
+     * (see JVMS v8, section 2.9).
      * 
      * @param methodSignature the {@link Signature} of the method to be checked.
      * @return {@code true} iff the method is signature polymorphic.

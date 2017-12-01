@@ -1,8 +1,7 @@
 package jbse.algo;
 
 import static jbse.algo.Util.failExecution;
-import static jbse.bc.Offsets.INVOKEDYNAMICINTERFACE_OFFSET;
-import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
+import static jbse.bc.Offsets.offsetInvoke;
 
 import java.util.function.Supplier;
 
@@ -36,15 +35,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected final BytecodeCooker bytecodeCooker() {
         return (state) -> { 
             //sets the program counter offset for the return point
-            this.pcOffset = (this.isInterface ? 
-                             INVOKEDYNAMICINTERFACE_OFFSET : 
-                             INVOKESPECIALSTATICVIRTUAL_OFFSET);
-            try {
-                cookMore(state);
-            } catch (ThreadStackEmptyException e) {
-                //this should never happen
-                failExecution(e);
-            }
+            this.pcOffset = offsetInvoke(this.isInterface);
+            cookMore(state);
         };
     }
 

@@ -1,5 +1,6 @@
 package jbse.algo.meta;
 
+import static jbse.algo.Util.continueWithBaseLevelImpl;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.throwVerifyError;
 
@@ -36,7 +37,7 @@ public final class Algo_JAVA_STRING_HASHCODE extends Algo_INVOKEMETA_Nonbranchin
                 this.hash = thisObject.getObjektDefaultHashCode();
                 //TODO possibly refine the state to ensure hash code semantics for strings based on potential equality
             } else {
-                continueWithBaseLevelImpl(state); //executes the original String.hashCode implementation
+                continueWithBaseLevelImpl(state, this.isInterface, this.isSpecial, this.isStatic); //executes the original String.hashCode implementation
             }
         } catch (ClassCastException e) {
             throwVerifyError(state);

@@ -19,6 +19,7 @@ import jbse.mem.Frame;
 import jbse.mem.Instance;
 import jbse.mem.Klass;
 import jbse.mem.Objekt;
+import jbse.mem.SnippetFrame;
 import jbse.mem.State;
 import jbse.mem.Variable;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -449,7 +450,11 @@ public class StateFormatterText implements Formatter {
     private static String formatFrame(State s, Frame f, List<String> srcPath, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
         String tmp = "";
-        tmp += indentCurrent + "Method signature: " + f.getCurrentMethodSignature().toString() + lineSep;
+        tmp += indentCurrent + "Method signature: " + f.getCurrentMethodSignature().toString();
+        if (f instanceof SnippetFrame) {
+            tmp += " (executing snippet, will resume with program counter " + ((SnippetFrame) f).getContextFrame().getReturnProgramCounter() + ")";
+        }
+        tmp +=  lineSep;
         tmp += indentCurrent + "Program counter: " + f.getProgramCounter() + lineSep;
         tmp += indentCurrent + "Program counter after return: "; 
         tmp += ((f.getReturnProgramCounter() == Frame.UNKNOWN_PC) ? "<UNKNOWN>" : f.getReturnProgramCounter()) + lineSep;

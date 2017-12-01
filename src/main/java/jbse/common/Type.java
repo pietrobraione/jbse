@@ -393,6 +393,18 @@ public final class Type {
         }
         return (retString);
     }
+    
+    /**
+     * Returns the number of effective parameters of a method.
+     * 
+     * @param methodDescriptor a {@link String}, the descriptor of a method.
+     * @param isStatic a {@code boolean}, {@code true} iff the method is static.
+     * @return an {@code int}.
+     */
+    public static int parametersNumber(String methodDescriptor, boolean isStatic) {
+        final String[] paramsDescriptors = splitParametersDescriptors(methodDescriptor);
+        return (isStatic ? paramsDescriptors.length : paramsDescriptors.length + 1);
+    }
 
     /**
      * Given a descriptor of a method returns a 
