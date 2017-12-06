@@ -27,6 +27,11 @@ public class SnippetFactory {
         addIndex();
     }
     
+    public SnippetFactory op_dup() {
+        this.bytecode.add(OP_DUP);
+        return this;
+    }
+    
     private void op_invoke(byte bytecode, Signature methodSignature) {
         this.bytecode.add(bytecode);
         addSignature(methodSignature);
@@ -49,13 +54,18 @@ public class SnippetFactory {
         return this;
     }
     
-    public SnippetFactory invokestatic(Signature methodSignature) {
+    public SnippetFactory op_invokestatic(Signature methodSignature) {
         op_invoke(OP_INVOKESTATIC, methodSignature);
         return this;
     }
     
     public SnippetFactory op_invokevirtual(Signature methodSignature) {
         op_invoke(OP_INVOKEVIRTUAL, methodSignature);
+        return this;
+    }
+    
+    public SnippetFactory op_pop() {
+        this.bytecode.add(OP_POP);
         return this;
     }
     

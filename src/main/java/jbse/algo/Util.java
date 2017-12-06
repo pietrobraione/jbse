@@ -170,7 +170,7 @@ public class Util {
      * into a (meta-level) string.
      * 
      * @param s a {@link State}.
-     * @param ref {@code a Reference}.
+     * @param ref a {@link Reference}.
      * @return a {@link String} corresponding to the {@code value} of 
      *         the {@link Instance} referred by {@code ref}, 
      *         or {@code null} if such {@link Instance}'s 
@@ -185,6 +185,23 @@ public class Util {
         } catch (ClassCastException e) {
             return null;
         }
+        return valueString(s, i);
+    }
+    
+    /**
+     * Converts a {@code java.lang.String} {@link Instance}
+     * into a (meta-level) string.
+     * 
+     * @param s a {@link State}.
+     * @param i an {@link Instance}.
+     * @return a {@link String} corresponding to the {@code value} of 
+     *         the {@code i}, 
+     *         or {@code null} if such {@link Instance}'s 
+     *         {@link Instance#getType() type} is not 
+     *         {@code "java/lang/String"}, or its {@code value}
+     *         is not a concrete array of {@code char}s.
+     */
+    public static String valueString(State s, Instance i) {
         if (i.getType().equals(JAVA_STRING)) {
             final Reference valueRef = (Reference) i.getFieldValue(JAVA_STRING_VALUE);
             final Array value = (Array) s.getObject(valueRef);

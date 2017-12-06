@@ -91,14 +91,26 @@ public final class State implements Cloneable {
     /** The string literals. */
     private HashMap<String, ReferenceConcrete> stringLiterals = new HashMap<>();
 
-    /** The {@link java.lang.Class} objects for nonprimitive types. */
+    /** The {@link ReferenceConcrete}s to {@link Instance_JAVA_CLASS}es for nonprimitive types. */
     private HashMap<String, ReferenceConcrete> classes = new HashMap<>();
 
-    /** The {@link java.lang.Class} objects for primitive types. */
+    /** The {@link ReferenceConcrete}s to {@link Instance_JAVA_CLASS}es for primitive types. */
     private HashMap<String, ReferenceConcrete> classesPrimitive = new HashMap<>();
+    
+    /** The {@link ReferenceConcrete}s to {@link Instance}s of {@code java.lang.invoke.MethodType}s. */
+    private HashMap<String, ReferenceConcrete> methodTypes = new HashMap<>();
 
     /** The JVM stack of the current execution thread. */
     private ThreadStack stack = new ThreadStack();
+
+    /** The JVM heap. */
+    private Heap heap;
+
+    /** 
+     * The object that fetches classfiles from the classpath, stores them, 
+     * and allows visiting the whole class/interface hierarchy. 
+     */
+    private ClassHierarchy classHierarchy;
 
     /** The JVM static method area. */
     private StaticMethodArea staticMethodArea = new StaticMethodArea();
@@ -129,15 +141,20 @@ public final class State implements Cloneable {
 
     /** {@code true} iff the next bytecode must be executed in its WIDE variant. */
     private boolean wide = false;
-
-    /** The JVM heap. */
-    private Heap heap;
-
+    
     /** 
-     * The object that fetches classfiles from the classpath, stores them, 
-     * and allows visiting the whole class/interface hierarchy. 
+     * Links signature polymorphic methods that have nonintrinsic
+     * (type checking) semantics to their adapter methods, indicated
+     * as {@link ReferenceConcrete}s to their respective {@code java.lang.invoke.MemberName}s.
      */
-    private ClassHierarchy classHierarchy;
+    private HashMap<Signature, ReferenceConcrete> linkInvokers = new HashMap<>();
+    
+    /** 
+     * Links signature polymorphic methods that have nonintrinsic
+     * (type checking) semantics to their invocation appendices, indicated
+     * as {@link ReferenceConcrete}s to {@code Object[]}s.
+     */
+    private HashMap<Signature, ReferenceConcrete> linkAppendices = new HashMap<>();
     
     /** The maximum length an array may have to be granted simple representation. */
     private final int maxSimpleArrayLength;
@@ -180,10 +197,10 @@ public final class State implements Cloneable {
                  Map<String, Set<String>> expansionBackdoor, 
                  Calculator calc) 
                  throws InvalidClassFileFactoryClassException {
-        this.maxSimpleArrayLength = maxSimpleArrayLength;
         this.heap = new Heap(maxHeapSize);
-        this.calc = calc;
         this.classHierarchy = new ClassHierarchy(cp, fClass, expansionBackdoor);
+        this.maxSimpleArrayLength = maxSimpleArrayLength;
+        this.calc = calc;
         this.symbolFactory = new SymbolFactory(this.calc);
     }
 
@@ -531,6 +548,69 @@ public final class State implements Cloneable {
     public Klass getKlass(String className) {
         return this.staticMethodArea.get(className);
     }
+    
+    /**
+     * Checks whether a {@link Signature} is linked to an 
+     * adapter method. 
+     * 
+     * @param signature a {@link Signature}.
+     * @return {@code true} iff {@code signature} is the
+     *         signature of a method that has been previously
+     *         linked to an adapter method.
+     */
+    public boolean isMethodLinked(Signature signature) {
+        return this.linkInvokers.containsKey(signature);
+    }
+
+    /**
+     * Links a signature polymorphic nonintrinsic method
+     * to an adapter method, represented as a reference to
+     * a {@link java.lang.invoke.MemberName}.
+     * 
+     * @param signature a {@link Signature}. It should be 
+     *        the signature of a signature polymorphic
+     *        nonintrinsic method, but this is not checked.
+     * @param invoker a {@link ReferenceConcrete}. It should
+     *        refer an {@link Instance} of a {@link java.lang.invoke.MemberName},
+     *        but this is not checked.
+     * @param appendix a {@link ReferenceConcrete}. It should
+     *        refer an {@link Instance} of a {@link java.lang.Object[]},
+     *        but this is not checked.
+     * @throws NullPointerException if {@code signature == null || invoker == null || appendix == null}.
+     */
+    public void link(Signature signature, ReferenceConcrete invoker, ReferenceConcrete appendix) {
+        if (signature == null || invoker == null || appendix == null) {
+            throw new NullPointerException(); //TODO throw better exception
+        }
+        this.linkInvokers.put(signature, invoker);
+        this.linkAppendices.put(signature, appendix);
+    }
+    
+    /**
+     * Returns the adapter method for a linked signature 
+     * polymorphic nonintrinsic method.
+     * 
+     * @param signature a {@link Signature}.
+     * @return a {@link ReferenceConcrete} to a {@code java.lang.invoke.MemberName}
+     *         set with a previous call to {@link #link(Signature, ReferenceConcrete, ReferenceConcrete) link}, 
+     *         or {@code null} if {@code signature} was not previously linked.
+     */
+    public ReferenceConcrete getAdapter(Signature signature) {
+        return this.linkInvokers.get(signature);
+    }
+    
+    /**
+     * Returns the appendix for a linked signature 
+     * polymorphic nonintrinsic method.
+     * 
+     * @param signature a {@link Signature}.
+     * @return a {@link ReferenceConcrete} to an {@code Object[]}
+     *         set with a previous call to {@link #link(Signature, ReferenceConcrete, ReferenceConcrete) link}, 
+     *         or {@code null} if {@code signature} was not previously linked.
+     */
+    public ReferenceConcrete getAppendix(Signature signature) {
+        return this.linkAppendices.get(signature);
+    }
 
     /**
      * Creates a new {@link Array} of a given class in the heap of 
@@ -567,6 +647,10 @@ public final class State implements Cloneable {
      */
     //TODO throw InvalidTypeException if className is the name of an array class
     public ReferenceConcrete createInstance(String className) throws HeapMemoryExhaustedException {
+        if (className.equals(JAVA_CLASS)) {
+            //use createInstance_JAVA_CLASS or createInstance_JAVA_METHODTYPE instead
+            throw new RuntimeException(); //TODO better exception
+        }
         final Instance myObj = doCreateInstance(className);
         final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(myObj));
         initDefaultHashCodeConcrete(myObj, retVal);
@@ -583,6 +667,10 @@ public final class State implements Cloneable {
      * @return a {@link ReferenceConcrete} to the newly created object.
      */
     public ReferenceConcrete createInstanceSurely(String className) {
+        if (className.equals(JAVA_CLASS)) {
+            //cannot be used for that
+            throw new RuntimeException(); //TODO better exception
+        }
         final Instance myObj = doCreateInstance(className);
         final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNewSurely(myObj));
         initDefaultHashCodeConcrete(myObj, retVal);
@@ -591,6 +679,7 @@ public final class State implements Cloneable {
     
     private Instance doCreateInstance(String className) {
         if (className.equals(JAVA_CLASS)) {
+            //use createInstance_JAVA_CLASS instead
             throw new RuntimeException(); //TODO better exception
         }
         final Signature[] fieldsSignatures;
@@ -893,23 +982,22 @@ public final class State implements Cloneable {
     }
 
     /**
-     * Returns an {@link Instance} of class {@code java.lang.Class} 
-     * from the heap corresponding to a class name. 
+     * Returns a {@link ReferenceConcrete} to an {@link Instance_JAVA_CLASS} 
+     * representing a class. 
      * 
      * @param className a {@link String} representing the name of a class.
-     * @return a {@link ReferenceConcrete} to the {@link Instance} in 
-     *         {@code state}'s {@link Heap} of the class with name
+     * @return a {@link ReferenceConcrete} to the {@link Instance_JAVA_CLASS} in 
+     *         this state's {@link Heap}, representing the class with name
      *         {@code className}, or {@code null} if such instance does not
      *         exist. 
      */
     public ReferenceConcrete referenceToInstance_JAVA_CLASS(String className) {
-        final ReferenceConcrete retVal = this.classes.get(className);
-        return retVal;
+        return this.classes.get(className);
     }
 
     /**
-     * Returns a {@link ReferenceConcrete} to an instance of 
-     * {@code java.lang.Class} representing a primitive type. 
+     * Returns a {@link ReferenceConcrete} to an {@link Instance_JAVA_CLASS} 
+     * representing a primitive type. 
      * 
      * @param typeName a {@link String} representing a primitive type
      *        canonical name (see JLS v8, section 6.7).
@@ -919,12 +1007,11 @@ public final class State implements Cloneable {
      *         such instance does not exist in the heap. 
      */
     public ReferenceConcrete referenceToInstance_JAVA_CLASS_primitive(String typeName) {
-        final ReferenceConcrete retVal = this.classesPrimitive.get(typeName);
-        return retVal;
+        return this.classesPrimitive.get(typeName);
     }
 
     /**
-     * Ensures an {@link Instance} of class {@code java.lang.Class} 
+     * Ensures an {@link Instance_JAVA_CLASS} 
      * corresponding to a class name exists in the {@link Heap}. If
      * the instance does not exist, it resolves the class and creates 
      * it, otherwise it does nothing. Does not manage the creation 
@@ -955,7 +1042,7 @@ public final class State implements Cloneable {
     }
 
     /**
-     * Ensures an {@link Instance} of class {@code java.lang.Class} 
+     * Ensures an {@link Instance_JAVA_CLASS} 
      * corresponding to a primitive type exists in the {@link Heap}. If
      * the instance does not exist, it creates it, otherwise it does 
      * nothing.
@@ -979,6 +1066,48 @@ public final class State implements Cloneable {
         }
     }
     
+    /**
+     * Checks if there is an {@link Instance} of {@code java.lang.invoke.MethodHandle} 
+     * in this state's heap for some descriptor.
+     * 
+     * @param descriptor a {@link String} representing a descriptor. It is
+     *        not checked.
+     * @return {@code true} iff there is a {@link Instance} in this state's {@link Heap} associated to {@code descriptor}
+     *         by a previous call to {@link #setReferenceToInstance_JAVA_METHODTYPE(String, ReferenceConcrete)}.
+     */
+    public boolean hasInstance_JAVA_METHODTYPE(String descriptor) {
+        return this.methodTypes.containsKey(descriptor);
+    }
+    
+    /**
+     * Returns a {@link ReferenceConcrete} to an {@link Instance} 
+     * of {@code java.lang.invoke.MethodHandle} representing a descriptor. 
+     * 
+     * @param descriptor a {@link String} representing a descriptor. It is
+     *        not checked.
+     * @return a {@link ReferenceConcrete} to the {@link Instance} 
+     *         in this state's {@link Heap} associated to {@code descriptor}
+     *         by a previous call to {@link #setReferenceToInstance_JAVA_METHODTYPE(String, ReferenceConcrete)},
+     *         or {@code null} if there is not.
+     */
+    public ReferenceConcrete referenceToInstance_JAVA_METHODTYPE(String descriptor) {
+        return this.methodTypes.get(descriptor);
+    }
+    
+    /**
+     * Associates a descriptor to a {@link ReferenceConcrete} to an {@link Instance} 
+     * of {@code java.lang.invoke.MethodHandle} representing it. 
+     * 
+     * @param descriptor a {@link String} representing a descriptor. It is
+     *        not checked.
+     * @return a {@link ReferenceConcrete}. It should refer an {@link Instance} 
+     *         in this state's {@link Heap} that is semantically equivalent to
+     *         {@code descriptor}, but this is not checked.
+     */
+    public void setReferenceToInstance_JAVA_METHODTYPE(String descriptor, ReferenceConcrete ref) {
+        this.methodTypes.put(descriptor, ref);
+    }
+
     /**
      * Unwinds the stack of this state until it finds an exception 
      * handler for an object. If the thread stack is empty after 
@@ -2075,6 +2204,9 @@ public final class State implements Cloneable {
 
         //classesPrimitive
         o.classesPrimitive = new HashMap<>(o.classesPrimitive);
+        
+        //methodTypes
+        o.methodTypes = new HashMap<>(o.methodTypes);
 
         //stack
         o.stack = o.stack.clone();
@@ -2095,6 +2227,14 @@ public final class State implements Cloneable {
 
         //symbolFactory
         o.symbolFactory = o.symbolFactory.clone();
+        
+        //linkInvokers
+        o.linkInvokers = new HashMap<>(o.linkInvokers);
+        
+        //linkAppendices
+        o.linkAppendices = new HashMap<>(o.linkAppendices);
+        
+        //all other members are immutable
 
         return o;
     }

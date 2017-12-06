@@ -46,6 +46,7 @@ public final class Overrides {
     public static final String ALGO_JAVA_CLASS_ISINTERFACE              = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISINTERFACE.class.getCanonicalName());
     public static final String ALGO_JAVA_CLASS_ISPRIMITIVE              = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISPRIMITIVE.class.getCanonicalName());
     public static final String ALGO_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD = internalClassName(jbse.algo.meta.Algo_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD.class.getCanonicalName());
+    public static final String ALGO_JAVA_METHODHANDLENATIVES_RESOLVE    = internalClassName(jbse.algo.meta.Algo_JAVA_METHODHANDLENATIVES_RESOLVE.class.getCanonicalName());
     public static final String ALGO_JAVA_OBJECT_CLONE                   = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_CLONE.class.getCanonicalName());
     public static final String ALGO_JAVA_OBJECT_GETCLASS                = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_GETCLASS.class.getCanonicalName());
     public static final String ALGO_JAVA_OBJECT_HASHCODE                = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_HASHCODE.class.getCanonicalName());
@@ -89,6 +90,10 @@ public final class Overrides {
     public static final String ALGO_JBSE_ANALYSIS_SUCCEED                   = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_SUCCEED.class.getCanonicalName());
     public static final String ALGO_JBSE_ANALYSIS_SYMBOLNAME                = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_SYMBOLNAME.class.getCanonicalName());
 
+    //Overriding meta-level implementations of JBSE classless (pseudo)methods
+    public static final String ALGO_noclass_REGISTERMETHODTYPE           = internalClassName(jbse.algo.meta.Algo_noclass_REGISTERMETHODTYPE.class.getCanonicalName());
+    public static final String ALGO_noclass_STORELINKEDMETHODANDAPPENDIX = internalClassName(jbse.algo.meta.Algo_noclass_STORELINKEDMETHODANDAPPENDIX.class.getCanonicalName());
+    
     //Overriding base-level implementation of standard methods
     private static final String JBSE_BASE = internalClassName(jbse.base.Base.class.getCanonicalName());
     public static final Signature BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION = 

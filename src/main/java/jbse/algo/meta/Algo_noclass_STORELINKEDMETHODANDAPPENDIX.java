@@ -1,0 +1,63 @@
+package jbse.algo.meta;
+
+import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.valueString;
+import static jbse.bc.Signatures.JAVA_METHODHANDLE;
+import static jbse.bc.Signatures.JAVA_METHODTYPE_METHODDESCRIPTOR;
+
+import java.util.function.Supplier;
+
+import jbse.algo.Algo_INVOKEMETA_Nonbranching;
+import jbse.algo.Algorithm;
+import jbse.algo.InterruptException;
+import jbse.algo.exc.CannotManageStateException;
+import jbse.bc.Signature;
+import jbse.common.exc.ClasspathException;
+import jbse.dec.exc.DecisionException;
+import jbse.mem.Instance;
+import jbse.mem.State;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Reference;
+import jbse.val.ReferenceConcrete;
+
+/**
+ * An {@link Algorithm} for completing the semantics of
+ * {@link Algo_JAVA_METHODHANDLENATIVES_RESOLVE} in the case 
+ * where the resolved method is signature polymorphic 
+ * and not intrinsic (usually from an invokehandle bytecode).
+ * The first parameter is a {@link ReferenceConcrete} to a {@code String} with 
+ * the name of the method (either {@code invoke} or {@code invokeExact}), 
+ * the second parameter is a {@link ReferenceConcrete} to a 
+ * {@code java.lang.invoke.MethodType} for the resolved method, 
+ * the third parameter is a {@link ReferenceConcrete} to the appendix, 
+ * the fourth parameter is a {@link ReferenceConcrete} to the {@code java.lang.invoke.MemberName}
+ * returned by the upcall to {@code java.lang.invoke.MethodHandleNatives.linkMethod}.
+ * 
+ * @author Pietro Braione
+ */
+public final class Algo_noclass_STORELINKEDMETHODANDAPPENDIX extends Algo_INVOKEMETA_Nonbranching {
+    private Signature methodSignature; //set by cookMore
+    
+    @Override
+    protected Supplier<Integer> numOperands() {
+        return () -> 4;
+    }
+    
+    @Override
+    protected void cookMore(State state) throws ThreadStackEmptyException, DecisionException, ClasspathException,
+    CannotManageStateException, InterruptException {
+        final String methodName = valueString(state, (ReferenceConcrete) this.data.operand(0));
+        final Instance methodType = (Instance) state.getObject((ReferenceConcrete) this.data.operand(1));
+        final String methodDescriptor = valueString(state, (Reference) methodType.getFieldValue(JAVA_METHODTYPE_METHODDESCRIPTOR));
+        if (methodName == null || methodDescriptor == null) {
+            //this should never happen
+            failExecution("Unexpected null value while trying to store in the state the linked invoker/appendix for a signature polymorphic method.");
+        }
+        this.methodSignature = new Signature(JAVA_METHODHANDLE, methodDescriptor, methodName);
+    }
+    
+    @Override
+    protected void update(State state) throws ThreadStackEmptyException {
+        state.link(this.methodSignature, (ReferenceConcrete) this.data.operand(3), (ReferenceConcrete) this.data.operand(2));
+    }
+}

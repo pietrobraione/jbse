@@ -17,6 +17,7 @@ import static jbse.algo.Overrides.ALGO_JAVA_CLASS_ISINSTANCE;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_ISINTERFACE;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_ISPRIMITIVE;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD;
+import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_RESOLVE;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_CLONE;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_GETCLASS;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_HASHCODE;
@@ -43,6 +44,8 @@ import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ISRESOLVED;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ISSYMBOLIC;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_SUCCEED;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_SYMBOLNAME;
+import static jbse.algo.Overrides.ALGO_noclass_REGISTERMETHODTYPE;
+import static jbse.algo.Overrides.ALGO_noclass_STORELINKEDMETHODANDAPPENDIX;
 import static jbse.algo.Overrides.ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
 import static jbse.algo.Overrides.ALGO_SUN_REFLECTION_GETCALLERCLASS;
 import static jbse.algo.Overrides.ALGO_SUN_REFLECTION_GETCLASSACCESSFLAGS;
@@ -196,6 +199,7 @@ import static jbse.bc.Signatures.JAVA_MATH;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME_FACTORY;
 import static jbse.bc.Signatures.JAVA_METHODHANDLEIMPL;
+import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_RESOLVE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLES;
 import static jbse.bc.Signatures.JAVA_METHODHANDLES_LOOKUP;
 import static jbse.bc.Signatures.JAVA_METHODHANDLESTATICS;
@@ -320,6 +324,8 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_INT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_LONG;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_SHORT;
 import static jbse.bc.Signatures.JBSE_BASE;
+import static jbse.bc.Signatures.noclass_REGISTERMETHODTYPE;
+import static jbse.bc.Signatures.noclass_STORELINKEDMETHODANDAPPENDIX;
 import static jbse.bc.Signatures.SUN_CLEANER;
 import static jbse.bc.Signatures.SUN_CONSTRUCTORACCESSORIMPL;
 import static jbse.bc.Signatures.SUN_DELEGATINGCONSTRUCTORACCESSORIMPL;
@@ -562,6 +568,7 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_FILEINPUTSTREAM_INITIDS,                       ALGO_INVOKEMETA_PURE);
             addMetaOverridden(JAVA_FILEOUTPUTSTREAM_INITIDS,                      ALGO_INVOKEMETA_PURE);
             addMetaOverridden(JAVA_FLOAT_FLOATTORAWINTBITS,                       ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_METHODHANDLENATIVES_RESOLVE,                   ALGO_JAVA_METHODHANDLENATIVES_RESOLVE);
             addMetaOverridden(JAVA_OBJECT_CLONE,                                  ALGO_JAVA_OBJECT_CLONE);
             addMetaOverridden(JAVA_OBJECT_GETCLASS,                               ALGO_JAVA_OBJECT_GETCLASS);
             addMetaOverridden(JAVA_OBJECT_HASHCODE,                               ALGO_JAVA_OBJECT_HASHCODE);
@@ -662,6 +669,10 @@ public final class ExecutionContext {
             addMetaOverridden(JBSE_ANALYSIS_SYMBOLNAME_INT,            ALGO_JBSE_ANALYSIS_SYMBOLNAME);
             addMetaOverridden(JBSE_ANALYSIS_SYMBOLNAME_LONG,           ALGO_JBSE_ANALYSIS_SYMBOLNAME);
             addMetaOverridden(JBSE_ANALYSIS_SYMBOLNAME_SHORT,          ALGO_JBSE_ANALYSIS_SYMBOLNAME);
+            
+            //jbse classless (pseudo)methods
+            addMetaOverridden(noclass_REGISTERMETHODTYPE,           ALGO_noclass_REGISTERMETHODTYPE);
+            addMetaOverridden(noclass_STORELINKEDMETHODANDAPPENDIX, ALGO_noclass_STORELINKEDMETHODANDAPPENDIX);
         } catch (MetaUnsupportedException e) {
             throw new UnexpectedInternalException(e);
         }

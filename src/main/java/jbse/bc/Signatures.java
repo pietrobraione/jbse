@@ -118,6 +118,7 @@ public final class Signatures {
     public static final String JAVA_METHOD                   = "java/lang/reflect/Method";
     public static final String JAVA_METHODHANDLE             = "java/lang/invoke/MethodHandle";
     public static final String JAVA_METHODHANDLEIMPL         = "java/lang/invoke/MethodHandleImpl";
+    public static final String JAVA_METHODHANDLENATIVES      = "java/lang/invoke/MethodHandleNatives";
     public static final String JAVA_METHODHANDLES            = "java/lang/invoke/MethodHandles";
     public static final String JAVA_METHODHANDLES_LOOKUP     = "java/lang/invoke/MethodHandles$Lookup";
     public static final String JAVA_METHODHANDLESTATICS      = "java/lang/invoke/MethodHandleStatics";
@@ -211,6 +212,7 @@ public final class Signatures {
     public static final String ILLEGAL_ARGUMENT_EXCEPTION          = "java/lang/IllegalArgumentException";
     public static final String INDEX_OUT_OF_BOUNDS_EXCEPTION       = "java/lang/IndexOutOfBoundsException";
     public static final String INSTANTIATION_EXCEPTION             = "java/lang/InstantiationException";
+    public static final String INTERNAL_ERROR                      = "java/lang/InternalError";
     public static final String NEGATIVE_ARRAY_SIZE_EXCEPTION       = "java/lang/NegativeArraySizeException";
     public static final String NULL_POINTER_EXCEPTION              = "java/lang/NullPointerException";
     
@@ -224,10 +226,18 @@ public final class Signatures {
     public static final String OUT_OF_MEMORY_ERROR                 = "java/lang/OutOfMemoryError";
     public static final String VERIFY_ERROR                        = "java/lang/VerifyError";
     
-    //descriptors
-    
-    /** The descriptor of a signature polymorphic method. */
+    //descriptors (for signature polymorphic methods)
     public static final String SIGNATURE_POLYMORPHIC_DESCRIPTOR = "(" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND;
+    
+    //methods (signature polymorphic)
+    public static final Signature JAVA_METHODHANDLE_INVOKE          = new Signature(JAVA_METHODHANDLE, null, "invoke");
+    public static final Signature JAVA_METHODHANDLE_INVOKEBASIC     = new Signature(JAVA_METHODHANDLE, null, "invokeBasic");
+    public static final Signature JAVA_METHODHANDLE_INVOKEEXACT     = new Signature(JAVA_METHODHANDLE, null, "invokeExact");
+    public static final Signature JAVA_METHODHANDLE_LINKTOINTERFACE = new Signature(JAVA_METHODHANDLE, null, "linkToInterface");
+    public static final Signature JAVA_METHODHANDLE_LINKTOSPECIAL   = new Signature(JAVA_METHODHANDLE, null, "linkToSpecial");
+    public static final Signature JAVA_METHODHANDLE_LINKTOSTATIC    = new Signature(JAVA_METHODHANDLE, null, "linkToStatic");
+    public static final Signature JAVA_METHODHANDLE_LINKTOVIRTUAL   = new Signature(JAVA_METHODHANDLE, null, "linkToVirtual");
+    
     
     //methods
     public static final Signature JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION =
@@ -291,14 +301,27 @@ public final class Signatures {
         new Signature(JAVA_FILEOUTPUTSTREAM, "()" + VOID, "initIDs");
     public static final Signature JAVA_FLOAT_FLOATTORAWINTBITS =
         new Signature(JAVA_FLOAT, "(" + FLOAT + ")" + INT, "floatToRawIntBits");
+    public static final Signature JAVA_MEMBERNAME_GETTYPE =
+        new Signature(JAVA_MEMBERNAME, "()" + REFERENCE + JAVA_OBJECT + TYPEEND, "getType");
     public static final Signature JAVA_METHOD_INVOKE =
         new Signature(JAVA_METHOD, 
                      "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, 
                      "invoke");
-    public static final Signature JAVA_METHODTYPE_FROMMETHODDESCRIPTORSTRING =
-        new Signature(JAVA_METHODTYPE, 
-                      "(" + REFERENCE + JAVA_STRING + TYPEEND + REFERENCE + JAVA_CLASSLOADER + TYPEEND + ")" + REFERENCE + JAVA_METHODTYPE + TYPEEND, 
-                      "fromMethodDescriptorString");
+    public static final Signature JAVA_METHODHANDLENATIVES_FINDMETHODHANDLETYPE =
+        new Signature(JAVA_METHODHANDLENATIVES, 
+                      "(" + REFERENCE + JAVA_CLASS + TYPEEND + ARRAYOF + REFERENCE + JAVA_CLASS + TYPEEND + ")" + REFERENCE + JAVA_METHODTYPE + TYPEEND, 
+                      "findMethodHandleType");
+    public static final Signature JAVA_METHODHANDLENATIVES_LINKMETHOD =
+        new Signature(JAVA_METHODHANDLENATIVES, 
+                      "(" + REFERENCE + JAVA_CLASS + TYPEEND + INT + REFERENCE + JAVA_CLASS + TYPEEND + REFERENCE + JAVA_STRING + TYPEEND + 
+                          REFERENCE + JAVA_OBJECT + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_MEMBERNAME + TYPEEND,
+                      "linkMethod");
+    public static final Signature JAVA_METHODHANDLENATIVES_RESOLVE =
+        new Signature(JAVA_METHODHANDLENATIVES, 
+                 "(" + REFERENCE + JAVA_MEMBERNAME + TYPEEND + REFERENCE + JAVA_CLASS + TYPEEND + ")" + REFERENCE + JAVA_MEMBERNAME + TYPEEND, 
+                 "resolve");
+    public static final Signature JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING =
+        new Signature(JAVA_METHODTYPE, "()" + REFERENCE + JAVA_STRING + TYPEEND, "toMethodDescriptorString");
     public static final Signature JAVA_OBJECT_CLONE =
         new Signature(JAVA_OBJECT, "()" + REFERENCE + JAVA_OBJECT + TYPEEND, "clone");
     public static final Signature JAVA_OBJECT_GETCLASS =
@@ -313,7 +336,6 @@ public final class Signatures {
         new Signature(JAVA_REFLECT_ARRAY, "(" + REFERENCE + JAVA_CLASS + TYPEEND + INT + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "newArray");
     public static final Signature JAVA_RUNTIME_AVAILABLEPROCESSORS = 
         new Signature(JAVA_RUNTIME, "()" + INT, "availableProcessors");
-
     public static final Signature JAVA_STRICTMATH_ACOS = 
         new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "acos");
     public static final Signature JAVA_STRICTMATH_ASIN = 
@@ -354,7 +376,6 @@ public final class Signatures {
         new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "tan");
     public static final Signature JAVA_STRICTMATH_TANH = 
         new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "tanh");
-
     public static final Signature JAVA_STRING_HASHCODE = 
         new Signature(JAVA_STRING, "()" + INT, "hashCode");
     public static final Signature JAVA_STRING_INTERN =
@@ -471,6 +492,10 @@ public final class Signatures {
         new Signature(JBSE_ANALYSIS, "(" + SHORT + ")" + REFERENCE + JAVA_STRING + TYPEEND, "symbolName");
     public static final Signature JBSE_BASE_BOXINVOCATIONTARGETEXCEPTION = 
         new Signature(JBSE_BASE, "()" + VOID, "boxInvocationTargetException");
+    public static final Signature noclass_REGISTERMETHODTYPE =
+        new Signature(null, "(" + REFERENCE + JAVA_STRING + TYPEEND + REFERENCE + JAVA_METHODTYPE + TYPEEND + ")" + VOID, "registerMethodType");
+    public static final Signature noclass_STORELINKEDMETHODANDAPPENDIX =
+        new Signature(null, "(" + REFERENCE + JAVA_STRING + TYPEEND + REFERENCE + JAVA_METHODTYPE + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_MEMBERNAME + TYPEEND + ")" + VOID, "storeLinkedMethodAndAppendix");
     public static final Signature SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 = 
         new Signature(SUN_NATIVECONSTRUCTORACCESSORIMPL, 
                       "(" + REFERENCE + JAVA_CONSTRUCTOR + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, 
@@ -573,6 +598,16 @@ public final class Signatures {
         new Signature(JAVA_INTEGER, "" + INT, "value");
     public static final Signature JAVA_LONG_VALUE = 
         new Signature(JAVA_LONG, "" + LONG, "value");
+    public static final Signature JAVA_MEMBERNAME_CLAZZ = 
+        new Signature(JAVA_MEMBERNAME, "" + REFERENCE + JAVA_CLASS + TYPEEND, "clazz");
+    public static final Signature JAVA_MEMBERNAME_FLAGS = 
+        new Signature(JAVA_MEMBERNAME, "" + INT, "flags");
+    public static final Signature JAVA_MEMBERNAME_NAME = 
+        new Signature(JAVA_MEMBERNAME, "" + REFERENCE + JAVA_STRING + TYPEEND, "name");
+    public static final Signature JAVA_MEMBERNAME_TYPE = 
+        new Signature(JAVA_MEMBERNAME, "" + REFERENCE + JAVA_OBJECT + TYPEEND, "type");
+    public static final Signature JAVA_METHODTYPE_METHODDESCRIPTOR = 
+        new Signature(JAVA_METHODTYPE, "" + REFERENCE + JAVA_STRING + TYPEEND, "methodDescriptor");
     public static final Signature JAVA_SHORT_VALUE = 
         new Signature(JAVA_SHORT, "" + SHORT, "value");
     public static final Signature JAVA_STACKTRACEELEMENT_DECLARINGCLASS = 
