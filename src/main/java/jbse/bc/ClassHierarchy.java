@@ -515,7 +515,7 @@ public final class ClassHierarchy implements Cloneable {
      */
     public void resolveClass(String accessor, String classSignature) 
     throws BadClassFileException, ClassFileNotAccessibleException {
-        //TODO implement complete class creation as in JVMS 2nd ed, sec. 5.3
+        //TODO implement complete class creation and loading as in JVMS v8, section 5.3
 
         final ClassFile cf = getClassFile(classSignature);
         if (cf instanceof ClassFileBad) {
@@ -538,10 +538,11 @@ public final class ClassHierarchy implements Cloneable {
      * @return the {@link Signature} of the declaration of the resolved field.
      * @throws BadClassFileException if the classfile for {@code fieldSignature}'s 
      *         class and its superclasses does not exist in the classpath.
-     * @throws ClassFileNotAccessibleException if the resolved class is not accessible
-     *         from {@code accessor}.
-     * @throws FieldNotAccessibleException if the resolved field cannot 
-     *         be accessed by {@code accessor}.
+     * @throws ClassFileNotAccessibleException if the resolved class 
+     *         {@code fieldSignature.}{@link Signature#getClassName() getClassName}{@code ()}
+     *         is not accessible from {@code accessor}.
+     * @throws FieldNotAccessibleException if the resolved field is not 
+     *         accessible from {@code accessor}.
      * @throws FieldNotFoundException if resolution of the field fails.
      */
     public Signature resolveField(String accessor, Signature fieldSignature) 
