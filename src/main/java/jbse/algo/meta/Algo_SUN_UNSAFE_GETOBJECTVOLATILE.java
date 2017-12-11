@@ -14,6 +14,7 @@ import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
@@ -47,11 +48,12 @@ public final class Algo_SUN_UNSAFE_GETOBJECTVOLATILE extends Algo_INVOKEMETA_Non
             //gets and checks the object parameter
             final Reference objRef = (Reference) this.data.operand(1);
             if (state.isNull(objRef)) {
-                throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.getObjectVolatile was null");
-            } else if (objRef == null) {
-                throw new SymbolicValueNotAllowedException("The object parameter to sun.misc.Unsafe.getObjectVolatile cannot be a symbolic value");
+                throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.getObjectVolatile was null.");
             }
             final Objekt obj = state.getObject(objRef); //TODO objRef from getStaticFieldBase
+            if (obj == null) {
+                throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.getObjectVolatile.");
+            }
             if (obj instanceof Array) {
                 continueWith(this.algoArray);
             }
@@ -62,7 +64,7 @@ public final class Algo_SUN_UNSAFE_GETOBJECTVOLATILE extends Algo_INVOKEMETA_Non
             if (ofstPrimitive instanceof Simplex) {
                 ofst = ((Long) ((Simplex) ofstPrimitive).getActualValue()).intValue();
             } else {
-                throw new SymbolicValueNotAllowedException("The offset parameter to sun.misc.Unsafe.getObjectVolatile cannot be a symbolic value");
+                throw new SymbolicValueNotAllowedException("The offset parameter to sun.misc.Unsafe.getObjectVolatile cannot be a symbolic value.");
             }
 
             //reads the value

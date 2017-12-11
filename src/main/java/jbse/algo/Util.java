@@ -603,7 +603,7 @@ public class Util {
                             } else if (cpv instanceof ConstantPoolString) {
                                 final String stringLit = ((ConstantPoolString) cpv).getValue();
                                 try {
-                                    phase1(JAVA_STRING, it);
+                                    phase1(JAVA_STRING, it); //TODO could this be eliminated now that java.lang.String is initialized in Algo_INIT?
                                 } catch (InvalidInputException e) {
                                     //this should never happen
                                     throw new UnexpectedInternalException(e);

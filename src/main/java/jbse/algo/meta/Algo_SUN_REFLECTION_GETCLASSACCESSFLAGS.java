@@ -5,12 +5,8 @@ import static jbse.algo.Util.failExecution;
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
-import jbse.algo.InterruptException;
-import jbse.algo.exc.CannotManageStateException;
 import jbse.bc.ClassFile;
 import jbse.bc.exc.BadClassFileException;
-import jbse.common.exc.ClasspathException;
-import jbse.dec.exc.DecisionException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -25,9 +21,7 @@ public final class Algo_SUN_REFLECTION_GETCLASSACCESSFLAGS extends Algo_INVOKEME
     }
 
     @Override
-    protected void cookMore(State state)
-    throws ThreadStackEmptyException, DecisionException, ClasspathException,
-    CannotManageStateException, InterruptException {
+    protected void cookMore(State state) {
         try {
             final Reference refParam = (Reference) this.data.operand(0);
             final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject(refParam);
@@ -36,7 +30,7 @@ public final class Algo_SUN_REFLECTION_GETCLASSACCESSFLAGS extends Algo_INVOKEME
                                   state.getClassHierarchy().getClassFilePrimitive(className) :
                                   state.getClassHierarchy().getClassFile(className));
             this.flags = cf.getAccessFlags();
-        } catch (ClassCastException | BadClassFileException e) {
+        } catch (ClassCastException | NullPointerException | BadClassFileException e) {
             //this should never happen
             failExecution(e);
         }

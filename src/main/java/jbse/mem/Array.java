@@ -957,8 +957,8 @@ public final class Array extends Objekt {
         final String srcTypeComponent = getArrayMemberType(src.getType());
         final String destTypeComponent = getArrayMemberType(getType());
         if (this.simpleRep && src.simpleRep && 
-        srcPos instanceof Simplex && destPos instanceof Simplex && 
-        length instanceof Simplex) {
+            srcPos instanceof Simplex && destPos instanceof Simplex && 
+            length instanceof Simplex) {
             //fast operation
             int srcPosInt = ((Integer) ((Simplex) srcPos).getActualValue()).intValue();
             int destPosInt = ((Integer) ((Simplex) destPos).getActualValue()).intValue();

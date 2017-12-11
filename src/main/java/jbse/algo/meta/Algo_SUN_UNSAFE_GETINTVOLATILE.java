@@ -13,6 +13,7 @@ import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
@@ -46,11 +47,12 @@ public final class Algo_SUN_UNSAFE_GETINTVOLATILE extends Algo_INVOKEMETA_Nonbra
             //gets and checks the object parameter
             final Reference objRef = (Reference) this.data.operand(1);
             if (state.isNull(objRef)) {
-                throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.getIntVolatile was null");
-            } else if (objRef == null) {
-                throw new SymbolicValueNotAllowedException("The object parameter to sun.misc.Unsafe.getIntVolatile cannot be a symbolic value");
+                throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.getIntVolatile was null.");
             }
             final Objekt obj = state.getObject(objRef); //TODO objRef from getStaticFieldBase
+            if (objRef == null) {
+                throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.getIntVolatile.");
+            }
             if (obj instanceof Array) {
                 continueWith(this.algoArray);
             }

@@ -45,8 +45,8 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Meta-level implementation of {@link sun.misc.Unsafe#getIntVolatile(Object, long)} in 
- * the case the object to read into is an array.
+ * Meta-level implementation of {@link sun.misc.Unsafe#getIntVolatile(Object, long)} 
+ * in the case the object to read into is an array.
  * 
  * @author Pietro Braione
  */
@@ -71,8 +71,8 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
         return (state) -> {
             try {
                 this.myObjectRef = (Reference) this.data.operand(1);
-                this.index = (Simplex) this.data.operand(2);
-            } catch (ClassCastException e) {
+                this.index = ((Simplex) this.data.operand(2)).narrow(INT);
+            } catch (ClassCastException | InvalidTypeException e) {
                 //this should never happen now
                 failExecution(e);
             }
@@ -82,7 +82,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 array = (Array) state.getObject(this.myObjectRef);
                 final String arrayType = array.getType();
                 if (!getArrayMemberType(arrayType).equals("" + INT)) {
-                    throw new UndefinedResultException("The object parameter to sun.misc.Unsafe.getIntVolatile was an array whose member type is not int");
+                    throw new UndefinedResultException("The Object o parameter to sun.misc.Unsafe.getIntVolatile was an array whose member type is not int");
                 }
             } catch (ClassCastException e) {
                 //this should never happen now
@@ -125,7 +125,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 }
                 Collection<Array.AccessOutcome> entries = null; //to keep the compiler happy
                 try {
-                    entries = arrayToProcess.get(this.index.narrow(INT).add(arrayOffset));
+                    entries = arrayToProcess.get(this.index.add(arrayOffset));
                 } catch (InvalidOperandException | InvalidTypeException e) {
                     //this should never happen
                     failExecution(e);
