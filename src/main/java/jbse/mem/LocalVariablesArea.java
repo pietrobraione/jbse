@@ -4,7 +4,9 @@ import static jbse.bc.Signatures.JAVA_CLONEABLE;
 import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_SERIALIZABLE;
 import static jbse.common.Type.ARRAYOF;
+import static jbse.common.Type.INT;
 import static jbse.common.Type.isCat_1;
+import static jbse.common.Type.isPrimitiveIntegral;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.NULLREF;
 import static jbse.common.Type.TYPEEND;
@@ -120,6 +122,7 @@ class LocalVariablesArea implements Cloneable {
             char slotType = r.descriptor.charAt(0);
             char valueType = val.getType();
             return (slotType == valueType || 
+                   (isPrimitiveIntegral(slotType) && isCat_1(slotType) && valueType == INT) || 
                    ((slotType == REFERENCE || slotType == ARRAYOF) && (valueType == REFERENCE || valueType == NULLREF)) || //note that references to arrays may have type REFERENCE!!!! 
                    ((r.descriptor.equals(REFERENCE_JAVA_OBJECT) ||
                      r.descriptor.equals(REFERENCE_JAVA_CLONEABLE) ||
@@ -227,9 +230,6 @@ class LocalVariablesArea implements Cloneable {
         return o;
     }
 
-    /**
-     * Returns a {@code String} representation for the local variable area
-     */
     @Override
     public String toString() {
         final StringBuilder buf = new StringBuilder();
