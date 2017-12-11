@@ -197,6 +197,12 @@ public final class ClassFileBad extends ClassFile {
     throws MethodNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
     }
+    
+    @Override
+    public boolean isMethodCallerSensitive(Signature methodSignature) 
+    throws MethodNotFoundException {
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
 
     @Override
     public String getMethodGenericSignatureType(Signature methodSignature) throws MethodNotFoundException {

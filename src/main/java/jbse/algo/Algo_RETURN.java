@@ -2,7 +2,9 @@ package jbse.algo;
 
 import java.util.function.Supplier;
 
+import jbse.bc.Signature;
 import jbse.dec.DecisionProcedureAlgorithms;
+import jbse.mem.Klass;
 import jbse.tree.DecisionAlternative_NONE;
 
 /**
@@ -56,11 +58,15 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> { 
-            state.popCurrentFrame();
+            final Signature returnedMethod = state.popCurrentFrame().getCurrentMethodSignature();
             if (state.getStackSize() == 0) {
                 state.setStuckReturn();
             } else {
                 this.pcReturn = state.getReturnPC();
+            }
+            if ("<clinit>".equals(returnedMethod.getName())) {
+                final Klass k = state.getKlass(returnedMethod.getClassName());
+                k.setInitialized();
             }
         };
     }

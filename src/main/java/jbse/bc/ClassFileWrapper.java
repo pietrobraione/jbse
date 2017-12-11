@@ -192,6 +192,11 @@ public class ClassFileWrapper extends ClassFile {
     public boolean isMethodSignaturePolymorphic(Signature methodSignature) throws MethodNotFoundException {
         return this.toWrap.isMethodSignaturePolymorphic(methodSignature);
     }
+    
+    @Override
+    public boolean isMethodCallerSensitive(Signature methodSignature) throws ClassFileNotFoundException, MethodNotFoundException {
+        return this.toWrap.isMethodCallerSensitive(methodSignature);
+    }
 
     @Override
     public String getMethodGenericSignatureType(Signature methodSignature) throws MethodNotFoundException {

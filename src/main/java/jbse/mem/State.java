@@ -1436,16 +1436,18 @@ public final class State implements Cloneable {
     }
 
     /**
-     * Removes the current frame from the thread stack.
+     * Removes the current {@link Frame} from the thread stack.
      * 
+     * @return the popped {@link Frame}.
      * @throws ThreadStackEmptyException if the thread stack is empty.
      */
-    public void popCurrentFrame() throws ThreadStackEmptyException {
+    public Frame popCurrentFrame() throws ThreadStackEmptyException {
         final Frame popped = this.stack.pop();
         if (popped instanceof SnippetFrame) {
             this.stack.push(((SnippetFrame) popped).getContextFrame());
             this.classHierarchy.unwrapClassFile(getCurrentMethodSignature().getClassName());
         }
+        return popped;
     }
 
     /**

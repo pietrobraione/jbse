@@ -319,6 +319,17 @@ public abstract class ClassFile {
     public abstract boolean isMethodSignaturePolymorphic(Signature methodSignature) throws MethodNotFoundException;
     
     /**
+     * Tests whether a method in the class is caller sensitive.
+     * 
+     * @param methodSignature the {@link Signature} of the method to be checked.
+     * @return {@code true} iff the method is caller sensitive.
+     * @throws ClassFileNotFoundException iff the classfile for {@code sun.reflect.CallerSensitive} 
+     *         is not in the classpath.
+     * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
+     */
+    public abstract boolean isMethodCallerSensitive(Signature methodSignature) throws ClassFileNotFoundException, MethodNotFoundException;
+    
+    /**
      * Returns the generic signature (type) of a method.
      * 
      * @param methodSignature the {@link Signature} of a method.

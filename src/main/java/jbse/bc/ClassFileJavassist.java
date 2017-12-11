@@ -12,6 +12,7 @@ import static jbse.bc.Signatures.SIGNATURE_POLYMORPHIC_DESCRIPTOR;
 import static jbse.common.Type.binaryClassName;
 import static jbse.common.Type.internalClassName;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -541,6 +542,26 @@ public class ClassFileJavassist extends ClassFile {
         
         return true;
     }
+    
+    @Override
+    public boolean isMethodCallerSensitive(Signature methodSignature) 
+    throws ClassFileNotFoundException, MethodNotFoundException {
+        final Object[] annotations = getMethodAvailableAnnotations(methodSignature);
+        for (Object annotation : annotations) {
+            @SuppressWarnings("unchecked")
+            Class<? extends Annotation> annotationClass = (Class<? extends Annotation>) annotation.getClass();
+            final Class<?> callerSensitiveClass;
+            try {
+                callerSensitiveClass = Class.forName("sun.reflect.CallerSensitive");
+            } catch (ClassNotFoundException e) {
+                throw new ClassFileNotFoundException("sun.reflect.CallerSensitive");
+            }
+            if (callerSensitiveClass.isAssignableFrom(annotationClass)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     @Override
     public Signature[] getDeclaredMethods() {
@@ -595,6 +616,17 @@ public class ClassFileJavassist extends ClassFile {
     @Override
     public Object[] getMethodAvailableAnnotations(Signature methodSignature)
     throws MethodNotFoundException {
+        //this circumvents a bug in Javassist 3.22.0-GA
+        if (isMethodSignaturePolymorphic(methodSignature)) {
+            Class<?> ann;
+            try {
+                ann = Class.forName("java.lang.invoke.MethodHandle$PolymorphicSignature");
+            } catch (ClassNotFoundException e) {
+                return new Object[0];
+            }
+            return new Object[]{ ann };
+        }
+        
         final CtBehavior b = findMethodDeclaration(methodSignature);
         if (b == null) {
             throw new MethodNotFoundException(methodSignature.toString());

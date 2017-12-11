@@ -60,12 +60,15 @@ import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_GETLONG;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_GETOBJECTVOLATILE;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_PUTLONG;
+import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_PUTOBJECTVOLATILE;
+import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_SHOULDBEINITIALIZED;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT;
 import static jbse.algo.Overrides.BASE_JAVA_ATOMICLONG_VMSUPPORTSCS8;
 import static jbse.algo.Overrides.BASE_JAVA_CLASS_DESIREDASSERTIONSTATUS0;
 import static jbse.algo.Overrides.BASE_JAVA_CLASSLOADER_FINDBUILTINLIB;
+import static jbse.algo.Overrides.BASE_JAVA_METHODHANDLENATIVES_GETCONSTANT;
 import static jbse.algo.Overrides.BASE_JAVA_RUNTIME_AVAILABLEPROCESSORS;
 import static jbse.algo.Overrides.BASE_JAVA_SYSTEM_INITPROPERTIES;
 import static jbse.algo.Overrides.BASE_JAVA_THREAD_ISALIVE;
@@ -155,6 +158,7 @@ import static jbse.bc.Signatures.JAVA_CONCURRENTHASHMAP;
 import static jbse.bc.Signatures.JAVA_CONSTRUCTOR;
 import static jbse.bc.Signatures.JAVA_DEFAULTFILESYSTEM;
 import static jbse.bc.Signatures.JAVA_DICTIONARY;
+import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE;
 import static jbse.bc.Signatures.JAVA_DOUBLE;
 import static jbse.bc.Signatures.JAVA_DOUBLE_DOUBLETORAWLONGBITS;
 import static jbse.bc.Signatures.JAVA_DOUBLE_LONGBITSTODOUBLE;
@@ -190,6 +194,8 @@ import static jbse.bc.Signatures.JAVA_INPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_INTEGER;
 import static jbse.bc.Signatures.JAVA_INTEGER_INTEGERCACHE;
 import static jbse.bc.Signatures.JAVA_INTERRUPTEDEXCEPTION;
+import static jbse.bc.Signatures.JAVA_LAMBDAFORM;
+import static jbse.bc.Signatures.JAVA_LAMBDAFORM_NAME;
 import static jbse.bc.Signatures.JAVA_LINKEDHASHMAP;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
@@ -198,7 +204,11 @@ import static jbse.bc.Signatures.JAVA_LONG_LONGCACHE;
 import static jbse.bc.Signatures.JAVA_MATH;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME_FACTORY;
+import static jbse.bc.Signatures.JAVA_METHODHANDLE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLEIMPL;
+import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES;
+import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_GETCONSTANT;
+import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_RESOLVE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLES;
 import static jbse.bc.Signatures.JAVA_METHODHANDLES_LOOKUP;
@@ -368,9 +378,12 @@ import static jbse.bc.Signatures.SUN_UNSAFE_GETLONG;
 import static jbse.bc.Signatures.SUN_UNSAFE_GETOBJECTVOLATILE;
 import static jbse.bc.Signatures.SUN_UNSAFE_OBJECTFIELDOFFSET;
 import static jbse.bc.Signatures.SUN_UNSAFE_PUTLONG;
+import static jbse.bc.Signatures.SUN_UNSAFE_PUTOBJECTVOLATILE;
 import static jbse.bc.Signatures.SUN_UNSAFE_REGISTERNATIVES;
+import static jbse.bc.Signatures.SUN_UNSAFE_SHOULDBEINITIALIZED;
 import static jbse.bc.Signatures.SUN_UTF_8;
 import static jbse.bc.Signatures.SUN_UTF_8_ENCODER;
+import static jbse.bc.Signatures.SUN_VERIFYACCESS;
 import static jbse.bc.Signatures.SUN_VERSION;
 import static jbse.bc.Signatures.SUN_VM;
 import static jbse.bc.Signatures.SUN_VM_INITIALIZE;
@@ -568,6 +581,8 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_FILEINPUTSTREAM_INITIDS,                       ALGO_INVOKEMETA_PURE);
             addMetaOverridden(JAVA_FILEOUTPUTSTREAM_INITIDS,                      ALGO_INVOKEMETA_PURE);
             addMetaOverridden(JAVA_FLOAT_FLOATTORAWINTBITS,                       ALGO_INVOKEMETA_PURE);
+            addBaseOverridden(JAVA_METHODHANDLENATIVES_GETCONSTANT,               BASE_JAVA_METHODHANDLENATIVES_GETCONSTANT);
+            addMetaOverridden(JAVA_METHODHANDLENATIVES_REGISTERNATIVES,           ALGO_INVOKEMETA_PURE);
             addMetaOverridden(JAVA_METHODHANDLENATIVES_RESOLVE,                   ALGO_JAVA_METHODHANDLENATIVES_RESOLVE);
             addMetaOverridden(JAVA_OBJECT_CLONE,                                  ALGO_JAVA_OBJECT_CLONE);
             addMetaOverridden(JAVA_OBJECT_GETCLASS,                               ALGO_JAVA_OBJECT_GETCLASS);
@@ -641,7 +656,9 @@ public final class ExecutionContext {
             addMetaOverridden(SUN_UNSAFE_GETOBJECTVOLATILE,                       ALGO_SUN_UNSAFE_GETOBJECTVOLATILE);
             addMetaOverridden(SUN_UNSAFE_OBJECTFIELDOFFSET,                       ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET);
             addMetaOverridden(SUN_UNSAFE_PUTLONG,                                 ALGO_SUN_UNSAFE_PUTLONG);
+            addMetaOverridden(SUN_UNSAFE_PUTOBJECTVOLATILE,                       ALGO_SUN_UNSAFE_PUTOBJECTVOLATILE);
             addMetaOverridden(SUN_UNSAFE_REGISTERNATIVES,                         ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(SUN_UNSAFE_SHOULDBEINITIALIZED,                     ALGO_SUN_UNSAFE_SHOULDBEINITIALIZED);
             addMetaOverridden(SUN_VM_INITIALIZE,                                  ALGO_INVOKEMETA_PURE);
 
             //jbse.meta.Analysis methods
@@ -850,6 +867,7 @@ public final class ExecutionContext {
         className.equals(JAVA_CONSTRUCTOR) ||
         className.equals(JAVA_DEFAULTFILESYSTEM) ||
         className.equals(JAVA_DICTIONARY) ||
+        className.equals(JAVA_DIRECTMETHODHANDLE) || //wouldn't manage method handles otherwise
         className.equals(JAVA_DOUBLE) ||
         className.equals(JAVA_EXCEPTION) ||
         className.equals(JAVA_EXECUTABLE) ||
@@ -878,6 +896,8 @@ public final class ExecutionContext {
         className.equals(JAVA_INTEGER) || 
         className.equals(JAVA_INTEGER_INTEGERCACHE) || 
         className.equals(JAVA_INTERRUPTEDEXCEPTION) || 
+        className.equals(JAVA_LAMBDAFORM) || 
+        className.equals(JAVA_LAMBDAFORM_NAME) || 
         className.equals(JAVA_LINKEDHASHMAP) || 
         className.equals(JAVA_LINKEDLIST) || 
         className.equals(JAVA_LINKEDLIST_ENTRY) ||
@@ -886,7 +906,9 @@ public final class ExecutionContext {
         className.equals(JAVA_MATH) || 
         className.equals(JAVA_MEMBERNAME) || 
         className.equals(JAVA_MEMBERNAME_FACTORY) || //its only mutable static member ALLOWED_FLAGS is never changed
+        className.equals(JAVA_METHODHANDLE) ||
         className.equals(JAVA_METHODHANDLEIMPL) || //the critical members (TYPED_COLLECTORS, FILL_ARRAY_TO_RIGHT and FAKE_METHOD_HANDLE_INVOKE) are lazily initialized caches
+        className.equals(JAVA_METHODHANDLENATIVES) || 
         className.equals(JAVA_METHODHANDLES) || //not really, but can be considered as it were (all final except ZERO_MHS and IDENTITY_MHS that are caches) 
         className.equals(JAVA_METHODHANDLES_LOOKUP) || //not really, but can be considered as it were (all final including PUBLIC_LOOKUP and IMPL_LOOKUP that are instances of Lookup - that is immutable - and except LOOKASIDE_TABLE, that seems to be a sort of cache) 
         className.equals(JAVA_METHODHANDLESTATICS) || 
@@ -959,6 +981,7 @@ public final class ExecutionContext {
         className.equals(SUN_UNSAFE) ||
         className.equals(SUN_UTF_8) ||
         className.equals(SUN_UTF_8_ENCODER) ||
+        className.equals(SUN_VERIFYACCESS) ||
         className.equals(SUN_VERSION) ||
         className.equals(SUN_VM) ||
         className.equals(SUN_WRAPPER_FORMAT) ||

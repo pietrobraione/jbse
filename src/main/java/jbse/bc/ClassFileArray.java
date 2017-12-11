@@ -295,6 +295,15 @@ public final class ClassFileArray extends ClassFile {
         }
         throw new MethodNotFoundException(methodSignature.toString());
     }
+    
+    @Override
+    public boolean isMethodCallerSensitive(Signature methodSignature) 
+    throws MethodNotFoundException {
+        if (isMethodClone(methodSignature)) {
+            return false;
+        }
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
 
     @Override
     public Signature[] getDeclaredMethods() {
@@ -375,7 +384,7 @@ public final class ClassFileArray extends ClassFile {
     @Override
     public boolean isMethodPackage(Signature methodSignature) throws MethodNotFoundException {
         if (isMethodClone(methodSignature)) {
-            return false;
+            return isPackage();
         }
         throw new MethodNotFoundException(methodSignature.toString());
     }
@@ -383,7 +392,7 @@ public final class ClassFileArray extends ClassFile {
     @Override
     public boolean isMethodPrivate(Signature methodSignature) throws MethodNotFoundException {
         if (isMethodClone(methodSignature)) {
-            return false;
+            return isPrivate();
         }
         throw new MethodNotFoundException(methodSignature.toString());
     }

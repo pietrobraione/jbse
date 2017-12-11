@@ -78,6 +78,7 @@ public final class Signatures {
     public static final String JAVA_CONSTRUCTOR              = "java/lang/reflect/Constructor";
     public static final String JAVA_DEFAULTFILESYSTEM        = "java/io/DefaultFileSystem";
     public static final String JAVA_DICTIONARY               = "java/util/Dictionary";
+    public static final String JAVA_DIRECTMETHODHANDLE       = "java/lang/invoke/DirectMethodHandle";
     public static final String JAVA_DOUBLE                   = "java/lang/Double";
     public static final String JAVA_ENUM                     = "java/lang/Enum";
     public static final String JAVA_EXCEPTION                = "java/lang/Exception";
@@ -107,6 +108,8 @@ public final class Signatures {
     public static final String JAVA_INTEGER                  = "java/lang/Integer";
     public static final String JAVA_INTEGER_INTEGERCACHE     = "java/lang/Integer$IntegerCache";
     public static final String JAVA_INTERRUPTEDEXCEPTION     = "java/lang/InterruptedException";
+    public static final String JAVA_LAMBDAFORM               = "java/lang/invoke/LambdaForm";
+    public static final String JAVA_LAMBDAFORM_NAME          = "java/lang/invoke/LambdaForm$Name";
     public static final String JAVA_LINKEDHASHMAP            = "java/util/LinkedHashMap";
     public static final String JAVA_LINKEDLIST               = "java/util/LinkedList";
     public static final String JAVA_LINKEDLIST_ENTRY         = "java/util/LinkedList$Entry";
@@ -198,6 +201,7 @@ public final class Signatures {
     public static final String SUN_UNSAFE                    = "sun/misc/Unsafe";
     public static final String SUN_UTF_8                     = "sun/nio/cs/UTF_8";
     public static final String SUN_UTF_8_ENCODER             = "sun/nio/cs/UTF_8$Encoder";
+    public static final String SUN_VERIFYACCESS              = "sun/invoke/util/VerifyAccess";
     public static final String SUN_VERSION                   = "sun/misc/Version";
     public static final String SUN_VM                        = "sun/misc/VM";
     public static final String SUN_WRAPPER_FORMAT            = "sun/invoke/util/Wrapper$Format";
@@ -267,8 +271,7 @@ public final class Signatures {
     public static final Signature JAVA_CLASS_GETNAME0 =
         new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_STRING + TYPEEND, "getName0");
     public static final Signature JAVA_CLASS_GETPRIMITIVECLASS =
-        new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + 
-                      REFERENCE + JAVA_CLASS + TYPEEND, "getPrimitiveClass");
+        new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_CLASS + TYPEEND, "getPrimitiveClass");
     public static final Signature JAVA_CLASS_GETSUPERCLASS =
         new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getSuperclass");
     public static final Signature JAVA_CLASS_ISARRAY =
@@ -311,15 +314,19 @@ public final class Signatures {
         new Signature(JAVA_METHODHANDLENATIVES, 
                       "(" + REFERENCE + JAVA_CLASS + TYPEEND + ARRAYOF + REFERENCE + JAVA_CLASS + TYPEEND + ")" + REFERENCE + JAVA_METHODTYPE + TYPEEND, 
                       "findMethodHandleType");
+    public static final Signature JAVA_METHODHANDLENATIVES_GETCONSTANT =
+        new Signature(JAVA_METHODHANDLENATIVES, "(" + INT + ")" + INT, "getConstant");
     public static final Signature JAVA_METHODHANDLENATIVES_LINKMETHOD =
         new Signature(JAVA_METHODHANDLENATIVES, 
                       "(" + REFERENCE + JAVA_CLASS + TYPEEND + INT + REFERENCE + JAVA_CLASS + TYPEEND + REFERENCE + JAVA_STRING + TYPEEND + 
-                          REFERENCE + JAVA_OBJECT + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_MEMBERNAME + TYPEEND,
+                      REFERENCE + JAVA_OBJECT + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_MEMBERNAME + TYPEEND,
                       "linkMethod");
+    public static final Signature JAVA_METHODHANDLENATIVES_REGISTERNATIVES =
+        new Signature(JAVA_METHODHANDLENATIVES, "()" + VOID, "registerNatives");
     public static final Signature JAVA_METHODHANDLENATIVES_RESOLVE =
         new Signature(JAVA_METHODHANDLENATIVES, 
-                 "(" + REFERENCE + JAVA_MEMBERNAME + TYPEEND + REFERENCE + JAVA_CLASS + TYPEEND + ")" + REFERENCE + JAVA_MEMBERNAME + TYPEEND, 
-                 "resolve");
+                      "(" + REFERENCE + JAVA_MEMBERNAME + TYPEEND + REFERENCE + JAVA_CLASS + TYPEEND + ")" + REFERENCE + JAVA_MEMBERNAME + TYPEEND, 
+                      "resolve");
     public static final Signature JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING =
         new Signature(JAVA_METHODTYPE, "()" + REFERENCE + JAVA_STRING + TYPEEND, "toMethodDescriptorString");
     public static final Signature JAVA_OBJECT_CLONE =
@@ -538,8 +545,12 @@ public final class Signatures {
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_FIELD + TYPEEND + ")" + LONG, "objectFieldOffset");
     public static final Signature SUN_UNSAFE_PUTLONG = 
         new Signature(SUN_UNSAFE, "(" + LONG + LONG + ")" + VOID, "putLong");
+    public static final Signature SUN_UNSAFE_PUTOBJECTVOLATILE = 
+        new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "putObjectVolatile");
     public static final Signature SUN_UNSAFE_REGISTERNATIVES =
         new Signature(SUN_UNSAFE, "()" + VOID, "registerNatives");
+    public static final Signature SUN_UNSAFE_SHOULDBEINITIALIZED =
+        new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + BOOLEAN, "shouldBeInitialized");
     public static final Signature SUN_VM_INITIALIZE = 
         new Signature(SUN_VM, "()" + VOID, "initialize");
     

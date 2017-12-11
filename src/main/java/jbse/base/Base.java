@@ -130,6 +130,21 @@ public final class Base {
         //TODO if the platform is Windows, then return a Windows path
     }
     
+    //from java.lang.invoke.MethodHandleNatives.Constants
+    private static final int GC_COUNT_GWT = 4;
+    
+    /**
+     * Overriding implementation of {@link java.lang.invoke.MethodHandleNatives#getConstant(int)}.
+     * @see java.lang.invoke.MethodHandleNatives#getConstant(int)
+     */
+    private static int base_JAVA_METHODHANDLENATIVES_GETCONSTANT(int what) {
+        if (what == GC_COUNT_GWT) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+    
     /**
      * Overriding implementation of {@link java.lang.Runtime#availableProcessors()}.
      * @see java.lang.Runtime#availableProcessors()

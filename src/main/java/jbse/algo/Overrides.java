@@ -78,6 +78,8 @@ public final class Overrides {
     public static final String ALGO_SUN_UNSAFE_GETLONG                  = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETLONG.class.getCanonicalName());
     public static final String ALGO_SUN_UNSAFE_GETOBJECTVOLATILE        = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETOBJECTVOLATILE.class.getCanonicalName());
     public static final String ALGO_SUN_UNSAFE_PUTLONG                  = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_PUTLONG.class.getCanonicalName());
+    public static final String ALGO_SUN_UNSAFE_PUTOBJECTVOLATILE        = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_PUTOBJECTVOLATILE.class.getCanonicalName());
+    public static final String ALGO_SUN_UNSAFE_SHOULDBEINITIALIZED      = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_SHOULDBEINITIALIZED.class.getCanonicalName());
 
     //Overriding meta-level implementations of jbse.meta.Analysis methods
     public static final String ALGO_JBSE_ANALYSIS_ANY                       = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ANY.class.getCanonicalName());
@@ -120,6 +122,10 @@ public final class Overrides {
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_STRING + TYPEEND, 
                       "base_JAVA_CLASSLOADER_FINDBUILTINLIB");
+    public static final Signature BASE_JAVA_METHODHANDLENATIVES_GETCONSTANT = 
+        new Signature(JBSE_BASE, 
+                      "(" + INT + ")" + INT, 
+                      "base_JAVA_METHODHANDLENATIVES_GETCONSTANT");
     public static final Signature BASE_JAVA_RUNTIME_AVAILABLEPROCESSORS = 
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + JAVA_RUNTIME + TYPEEND + ")" + INT, 

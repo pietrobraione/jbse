@@ -23,6 +23,7 @@ import static jbse.bc.Signatures.JAVA_METHODTYPE_METHODDESCRIPTOR;
 import static jbse.bc.Signatures.JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING;
 import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_STRING;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.noclass_REGISTERMETHODTYPE;
 import static jbse.bc.Signatures.noclass_STORELINKEDMETHODANDAPPENDIX;
 import static jbse.common.Type.ARRAYOF;
@@ -32,6 +33,7 @@ import static jbse.common.Type.splitParametersDescriptors;
 import static jbse.common.Type.splitReturnValueDescriptor;
 import static jbse.common.Type.TYPEEND;
 
+import java.lang.reflect.Modifier;
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
@@ -39,6 +41,7 @@ import jbse.algo.Algorithm;
 import jbse.algo.InterruptException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
+import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.bc.Snippet;
 import jbse.bc.exc.BadClassFileException;
@@ -81,13 +84,39 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
     private static final int  IS_METHOD            = 0x00010000; // method (not constructor)
     private static final int  IS_CONSTRUCTOR       = 0x00020000; // constructor
     private static final int  IS_FIELD             = 0x00040000; // field
+    private static final int  CALLER_SENSITIVE     = 0x00100000; // @CallerSensitive annotation detected
     private static final int  REFERENCE_KIND_SHIFT = 24; // refKind
     private static final int  REFERENCE_KIND_MASK  = 0x0F000000 >> REFERENCE_KIND_SHIFT;
+    private static final byte REF_getField         = 1;
+    private static final byte REF_getStatic        = 2;
+    private static final byte REF_putField         = 3;
     private static final byte REF_invokeVirtual    = 5;
+    private static final byte REF_invokeStatic     = 6;
+    private static final byte REF_invokeSpecial    = 7;
     private static final byte REF_invokeInterface  = 9;
+
+    //taken from java.lang.reflect.Modifier
+    static final short BRIDGE    = 0x0040;
+    static final short VARARGS   = 0x0080;
+    static final short SYNTHETIC = 0x1000;
+    static final short ENUM      = 0x4000;
+
+    //taken from hotspot:/src/share/vm/prims/jvm.h, lines 1216-1237
+    private static final short JVM_RECOGNIZED_FIELD_MODIFIERS = 
+        Modifier.PUBLIC    | Modifier.PRIVATE | Modifier.PROTECTED | 
+        Modifier.STATIC    | Modifier.FINAL   | Modifier.VOLATILE  | 
+        Modifier.TRANSIENT | ENUM             | SYNTHETIC;
+
+    private static final short JVM_RECOGNIZED_METHOD_MODIFIERS =
+        Modifier.PUBLIC    | Modifier.PRIVATE | Modifier.PROTECTED     | 
+        Modifier.STATIC    | Modifier.FINAL   | Modifier.SYNCHRONIZED  | 
+        BRIDGE             | VARARGS          | Modifier.NATIVE        |
+        Modifier.ABSTRACT  | Modifier.STRICT  | SYNTHETIC;
 
     private Instance memberNameObject; //set by cookMore
     private Signature resolved; //set by cookMore
+    private boolean isMethod; //set by cookMore
+    private boolean isSetter; //set by cookMore
     
     @Override
     protected Supplier<Integer> numOperands() {
@@ -154,6 +183,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             
             //performs resolution based on memberNameFlags
             if (isMethod(memberNameFlags) || isConstructor(memberNameFlags)) {
+                this.isMethod = true;
+                
                 //memberNameDescriptorObject is an Instance of java.lang.invoke.MethodType
                 //or of java.lang.String
                 
@@ -212,6 +243,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                     this.resolved = new Signature(JAVA_METHODHANDLE, invokerDescriptor, invokerName);
                 }
             } else if (isField(memberNameFlags)) {
+                this.isMethod = false;
+                this.isSetter = isSetter(memberNameFlags); 
                 //memberNameDescriptorObject is an Instance of java.lang.Class
                 //or of java.lang.String
                 
@@ -314,6 +347,11 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
     //taken from java.lang.invoke.MemberName.getReferenceKind
     private static boolean isInvokeInterface(int flags) {
         return ((byte) ((flags >>> REFERENCE_KIND_SHIFT) & REFERENCE_KIND_MASK)) == REF_invokeInterface;
+    }
+    
+    //taken from java.lang.invoke.MemberName.getReferenceKind
+    private static boolean isSetter(int flags) {
+        return ((byte) ((flags >>> REFERENCE_KIND_SHIFT) & REFERENCE_KIND_MASK)) > REF_getStatic;
     }
     
     /**
@@ -541,9 +579,55 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        //TODO updates the MemberName
+    protected void update(State state) throws ThreadStackEmptyException, InterruptException {
+        try {
+            //updates the MemberName: first, sets the clazz field...
+            ensureInstance_JAVA_CLASS(state, this.resolved.getClassName(), this.resolved.getClassName(), this.ctx);
+            this.memberNameObject.setFieldValue(JAVA_MEMBERNAME_CLAZZ, state.referenceToInstance_JAVA_CLASS(this.resolved.getClassName()));
+            
+            //...then sets the flags field
+            final ClassFile resolvedClass = state.getClassHierarchy().getClassFile(this.resolved.getClassName());
+            final String resolvedName = this.resolved.getName();
+            int flags;
+            if (this.isMethod) {
+                //determines the flags based on the kind of invocation, 
+                //see hotspot:/src/share/vm/prims/methodHandles.cpp line 176 
+                //method MethodHandles::init_method_MemberName; note
+                //that it is always the case that info.call_kind() == CallInfo::direct_call, see
+                //hotspot:/src/share/vm/interpreter/linkResolver.cpp line 88, method
+                //CallInfo::set_handle
+                flags = (short) (((short) resolvedClass.getMethodModifiers(this.resolved)) & JVM_RECOGNIZED_METHOD_MODIFIERS);
+                if (resolvedClass.isMethodStatic(this.resolved)) {
+                    flags |= IS_METHOD      | (REF_invokeStatic  << REFERENCE_KIND_SHIFT);
+                } else if ("<init>".equals(resolvedName) || "<clinit>".equals(resolvedName)) {
+                    flags |= IS_CONSTRUCTOR | (REF_invokeSpecial << REFERENCE_KIND_SHIFT);
+                } else {
+                    flags |= IS_METHOD      | (REF_invokeSpecial << REFERENCE_KIND_SHIFT);
+                }
+                if (resolvedClass.isMethodCallerSensitive(this.resolved)) {
+                    flags |= CALLER_SENSITIVE;
+                }
+            } else {
+                //update the MemberName with field information,
+                //see hotspot:/src/share/vm/prims/methodHandles.cpp line 276 
+                //method MethodHandles::init_field_MemberName
+                flags = (short) (((short) resolvedClass.getFieldModifiers(this.resolved)) & JVM_RECOGNIZED_FIELD_MODIFIERS);
+                flags |= IS_FIELD | ((resolvedClass.isFieldStatic(this.resolved) ? REF_getStatic : REF_getField) << REFERENCE_KIND_SHIFT);
+                if (this.isSetter) {
+                    flags += ((REF_putField - REF_getField) << REFERENCE_KIND_SHIFT);
+                }
+            }
+            this.memberNameObject.setFieldValue(JAVA_MEMBERNAME_FLAGS, state.getCalculator().valInt(flags));
+        } catch (HeapMemoryExhaustedException e) {
+            throwNew(state, OUT_OF_MEMORY_ERROR);
+            exitFromAlgorithm();
+        } catch (BadClassFileException | ClassFileNotAccessibleException | 
+                 MethodNotFoundException | FieldNotFoundException e) {
+            //this should never happen
+            failExecution(e);
+        }
         
+        //pushes the reference to the MemberName
         state.pushOperand(this.data.operand(0));
     }
 }

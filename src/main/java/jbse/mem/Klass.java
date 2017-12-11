@@ -9,6 +9,8 @@ import jbse.val.MemoryPath;
  * in the static method area, i.e., its static fields.
  */
 public final class Klass extends Objekt {
+    private boolean initialized;
+    
     /**
      * Constructor.
      * 
@@ -24,6 +26,27 @@ public final class Klass extends Objekt {
      */
     Klass(Calculator calc, MemoryPath origin, Epoch epoch, int numOfStaticFields, Signature... fieldSignatures) {
     	    super(calc, "KLASS", origin, epoch, true, numOfStaticFields, fieldSignatures);
+    	    this.initialized = false;
+    }
+    
+    /**
+     * Checks whether this {@link Klass} is initialized.
+     * 
+     * @return {@code true} iff this {@link Klass} is initialized.
+     */
+    public boolean isInitialized() {
+        return this.initialized;
+    }
+    
+    /**
+     * Sets this {@link Klass} to the
+     * initialized status. After the 
+     * invocation of this method an 
+     * invocation to {@link #isInitialized()} 
+     * will return {@code true}.
+     */
+    public void setInitialized() {
+        this.initialized = true;
     }
     
     @Override
