@@ -53,9 +53,6 @@ public final class Algo_SUN_UNSAFE_GETINTVOLATILE extends Algo_INVOKEMETA_Nonbra
             if (objRef == null) {
                 throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.getIntVolatile.");
             }
-            if (obj instanceof Array) {
-                continueWith(this.algoArray);
-            }
 
             //gets and checks the offset parameter
             final Primitive ofstPrimitive = (Primitive) this.data.operand(2);
@@ -66,6 +63,10 @@ public final class Algo_SUN_UNSAFE_GETINTVOLATILE extends Algo_INVOKEMETA_Nonbra
                 throw new SymbolicValueNotAllowedException("The offset parameter to sun.misc.Unsafe.getIntVolatile cannot be a symbolic value");
             }
 
+            if (obj instanceof Array) {
+                continueWith(this.algoArray);
+            }
+            
             //reads the value
             if (obj.hasSlot(ofst)) {
                 this.read = obj.getFieldValue(ofst);

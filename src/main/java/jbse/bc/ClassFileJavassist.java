@@ -806,6 +806,8 @@ public class ClassFileJavassist extends ClassFile {
                 return new Object[0];
             }
             return new Object[]{ ann };
+        } else if (isAnonymous()) {
+            return new Object[0];
         }
         
         final CtBehavior b = findMethodDeclaration(methodSignature);

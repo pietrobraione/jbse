@@ -54,9 +54,6 @@ public final class Algo_SUN_UNSAFE_GETOBJECTVOLATILE extends Algo_INVOKEMETA_Non
             if (obj == null) {
                 throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.getObjectVolatile.");
             }
-            if (obj instanceof Array) {
-                continueWith(this.algoArray);
-            }
 
             //gets and checks the offset parameter
             final Primitive ofstPrimitive = (Primitive) this.data.operand(2);
@@ -67,6 +64,10 @@ public final class Algo_SUN_UNSAFE_GETOBJECTVOLATILE extends Algo_INVOKEMETA_Non
                 throw new SymbolicValueNotAllowedException("The offset parameter to sun.misc.Unsafe.getObjectVolatile cannot be a symbolic value.");
             }
 
+            if (obj instanceof Array) {
+                continueWith(this.algoArray);
+            }
+            
             //reads the value
             if (obj.hasSlot(ofst)) {
                 this.read = obj.getFieldValue(ofst);

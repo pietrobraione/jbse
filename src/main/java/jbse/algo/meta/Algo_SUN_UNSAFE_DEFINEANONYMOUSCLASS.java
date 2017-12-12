@@ -103,6 +103,9 @@ public final class Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS extends Algo_INVOKEMETA_
             //gets the constant pool patches
             final Reference refCpPatches = (Reference) this.data.operand(3);
             this.cpPatches = patches(state, refCpPatches);
+            
+            //let's push the right assumption
+            state.assumeClassNotInitialized(this.cfAnonymousDummy.getClassName());
         } catch (BadClassFileException e) {
             throwNew(state, CLASS_FORMAT_ERROR); //this is the behaviour of Hotspot
             exitFromAlgorithm();
