@@ -41,6 +41,9 @@ public final class Signatures {
     public static final String JAVA_BITS                     = "java/nio/Bits";
     public static final String JAVA_BITS_1                   = "java/nio/Bits$1";
     public static final String JAVA_BOOLEAN                  = "java/lang/Boolean";
+    public static final String JAVA_BOUNDMETHODHANDLE        = "java/lang/invoke/BoundMethodHandle";
+    public static final String JAVA_BOUNDMETHODHANDLE_SPECIESDATA = "java/lang/invoke/BoundMethodHandle$SpeciesData";
+    public static final String JAVA_BOUNDMETHODHANDLE_SPECIES_L   = "java/lang/invoke/BoundMethodHandle$Species_L";
     public static final String JAVA_BUFFER                   = "java/nio/Buffer";
     public static final String JAVA_BUFFEREDINPUTSTREAM      = "java/io/BufferedInputStream";
     public static final String JAVA_BUFFEREDOUTPUTSTREAM     = "java/io/BufferedOutputStream";
@@ -157,6 +160,7 @@ public final class Signatures {
     public static final String JAVA_SERIALIZABLE             = "java/io/Serializable";
     public static final String JAVA_SHORT                    = "java/lang/Short";
     public static final String JAVA_SHORT_SHORTCACHE         = "java/lang/Short$ShortCache";
+    public static final String JAVA_SIMPLEMETHODHANDLE       = "java/lang/invoke/SimpleMethodHandle";
     public static final String JAVA_STACK                    = "java/util/Stack";
     public static final String JAVA_STACKTRACEELEMENT        = "java/lang/StackTraceElement";
     public static final String JAVA_STRICTMATH               = "java/lang/StrictMath";
@@ -540,6 +544,8 @@ public final class Signatures {
                       "defineAnonymousClass");
     public static final Signature SUN_UNSAFE_FREEMEMORY = 
         new Signature(SUN_UNSAFE, "(" + LONG + ")" + VOID, "freeMemory");
+    public static final Signature SUN_UNSAFE_ENSURECLASSINITIALIZED = 
+        new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + VOID, "ensureClassInitialized");
     public static final Signature SUN_UNSAFE_GETBYTE = 
         new Signature(SUN_UNSAFE, "(" + LONG + ")" + BYTE, "getByte");
     public static final Signature SUN_UNSAFE_GETINTVOLATILE = 

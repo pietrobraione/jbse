@@ -54,6 +54,7 @@ import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_COMPAREANDSWAPINT;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_COMPAREANDSWAPLONG;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_DEFINEANONYMOUSCLASS;
+import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_ENSURECLASSINITIALIZED;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_FREEMEMORY;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_GETBYTE;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_GETINTVOLATILE;
@@ -103,6 +104,9 @@ import static jbse.bc.Signatures.JAVA_BASICPERMISSION;
 import static jbse.bc.Signatures.JAVA_BITS;
 import static jbse.bc.Signatures.JAVA_BITS_1;
 import static jbse.bc.Signatures.JAVA_BOOLEAN;
+import static jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE;
+import static jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIESDATA;
+import static jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIES_L;
 import static jbse.bc.Signatures.JAVA_BUFFER;
 import static jbse.bc.Signatures.JAVA_BUFFEREDINPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_BUFFEREDOUTPUTSTREAM;
@@ -249,6 +253,7 @@ import static jbse.bc.Signatures.JAVA_RUNTIMEEXCEPTION;
 import static jbse.bc.Signatures.JAVA_RUNTIMEPERMISSION;
 import static jbse.bc.Signatures.JAVA_SHORT;
 import static jbse.bc.Signatures.JAVA_SHORT_SHORTCACHE;
+import static jbse.bc.Signatures.JAVA_SIMPLEMETHODHANDLE;
 import static jbse.bc.Signatures.JAVA_STACK;
 import static jbse.bc.Signatures.JAVA_STRICTMATH_ACOS;
 import static jbse.bc.Signatures.JAVA_STRICTMATH_ASIN;
@@ -375,6 +380,7 @@ import static jbse.bc.Signatures.SUN_UNSAFE_COMPAREANDSWAPINT;
 import static jbse.bc.Signatures.SUN_UNSAFE_COMPAREANDSWAPLONG;
 import static jbse.bc.Signatures.SUN_UNSAFE_COMPAREANDSWAPOBJECT;
 import static jbse.bc.Signatures.SUN_UNSAFE_DEFINEANONYMOUSCLASS;
+import static jbse.bc.Signatures.SUN_UNSAFE_ENSURECLASSINITIALIZED;
 import static jbse.bc.Signatures.SUN_UNSAFE_FREEMEMORY;
 import static jbse.bc.Signatures.SUN_UNSAFE_GETBYTE;
 import static jbse.bc.Signatures.SUN_UNSAFE_GETINTVOLATILE;
@@ -654,6 +660,7 @@ public final class ExecutionContext {
             addMetaOverridden(SUN_UNSAFE_COMPAREANDSWAPLONG,                      ALGO_SUN_UNSAFE_COMPAREANDSWAPLONG);
             addMetaOverridden(SUN_UNSAFE_COMPAREANDSWAPOBJECT,                    ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT);
             addMetaOverridden(SUN_UNSAFE_DEFINEANONYMOUSCLASS,                    ALGO_SUN_UNSAFE_DEFINEANONYMOUSCLASS);
+            addMetaOverridden(SUN_UNSAFE_ENSURECLASSINITIALIZED,                  ALGO_SUN_UNSAFE_ENSURECLASSINITIALIZED);
             addMetaOverridden(SUN_UNSAFE_FREEMEMORY,                              ALGO_SUN_UNSAFE_FREEMEMORY);
             addMetaOverridden(SUN_UNSAFE_GETBYTE,                                 ALGO_SUN_UNSAFE_GETBYTE);
             addMetaOverridden(SUN_UNSAFE_GETINTVOLATILE,                          ALGO_SUN_UNSAFE_GETINTVOLATILE);
@@ -836,6 +843,9 @@ public final class ExecutionContext {
         className.equals(JAVA_BITS) || //not for maxMemory and memoryLimitSet, all the others seem to be ok (final or lazily intialized)
         className.equals(JAVA_BITS_1) ||
         className.equals(JAVA_BOOLEAN) ||
+        className.equals(JAVA_BOUNDMETHODHANDLE) || //necessary for method handles
+        className.equals(JAVA_BOUNDMETHODHANDLE_SPECIESDATA) || //necessary for method handles
+        className.equals(JAVA_BOUNDMETHODHANDLE_SPECIES_L) || //necessary for method handles
         className.equals(JAVA_BUFFER) ||
         className.equals(JAVA_BUFFEREDINPUTSTREAM) ||
         className.equals(JAVA_BUFFEREDOUTPUTSTREAM) ||
@@ -945,6 +955,7 @@ public final class ExecutionContext {
         className.equals(JAVA_RUNTIMEPERMISSION) ||
         className.equals(JAVA_SHORT) || 
         className.equals(JAVA_SHORT_SHORTCACHE) || 
+        className.equals(JAVA_SIMPLEMETHODHANDLE) || //necessary for method handles
         className.equals(JAVA_STACK) || 
         className.equals(JAVA_STRING) || 
         className.equals(JAVA_STRING_CASEINSCOMP) ||
