@@ -39,6 +39,11 @@ public class ClassFileWrapper extends ClassFile {
     }
     
     @Override
+    public byte[] getBinaryFileContent() {
+        return this.toWrap.getBinaryFileContent();
+    }
+
+    @Override
     public String getSourceFile() {
         return this.toWrap.getSourceFile();
     }
@@ -111,6 +116,11 @@ public class ClassFileWrapper extends ClassFile {
     @Override
     public boolean isAnonymous() {
         return this.toWrap.isAnonymous();
+    }
+    
+    @Override
+    public String getHostClass() {
+        return this.toWrap.getHostClass();
     }
 
     @Override

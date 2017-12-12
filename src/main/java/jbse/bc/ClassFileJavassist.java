@@ -12,7 +12,13 @@ import static jbse.bc.Signatures.SIGNATURE_POLYMORPHIC_DESCRIPTOR;
 import static jbse.common.Type.binaryClassName;
 import static jbse.common.Type.internalClassName;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,6 +50,7 @@ import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
+import jbse.common.exc.UnexpectedInternalException;
 
 /**
  * A {@link ClassFile} produced by a {@link ClassFileFactoryJavassist}.
@@ -51,16 +58,30 @@ import jbse.bc.exc.MethodNotFoundException;
  * @author Pietro Braione
  */
 public class ClassFileJavassist extends ClassFile {
-    private CtClass cls;
-    private ConstPool cp;
-    private ArrayList<Signature> fieldsStatic;
-    private ArrayList<Signature> fieldsObject;
-    private ArrayList<Signature> constructors;
+    private final CtClass cls;
+    private final ConstPool cp;
+    private final byte[] bytecode; //only for anonymous classes
+    private final ConstantPoolValue[] cpPatches;
+    private String hostClass;
+    private ArrayList<Signature> fieldsStatic; //lazily initialized
+    private ArrayList<Signature> fieldsObject; //lazily initialized
+    private ArrayList<Signature> constructors; //lazily initialized
 
-    ClassFileJavassist(String className, ClassPool cpool) throws BadClassFileException {
+    /**
+     * Constructor for nonanonymous classes.
+     * 
+     * @param cpool a {@link ClassPool} where the class must be looked for.
+     * @param className a {@code String}, the name of the class.
+     * @throws BadClassFileException if the classfile for {@code className} 
+     *         does not exist in {@code cpool} or is ill-formed.
+     */
+    ClassFileJavassist(ClassPool cpool, String className) throws BadClassFileException {
         try {
             this.cls = cpool.get(binaryClassName(className));
             this.cp = this.cls.getClassFile().getConstPool();
+            this.bytecode = null;
+            this.cpPatches = null;
+            this.hostClass = null;
             this.fieldsStatic = this.fieldsObject = this.constructors = null;
         } catch (NotFoundException e) {
             throw new ClassFileNotFoundException(className);
@@ -74,7 +95,157 @@ public class ClassFileJavassist extends ClassFile {
             }
         }
     }
-
+    
+    ClassFileJavassist(ClassPool cpool, String hostClass, byte[] bytecode, ConstantPoolValue[] cpPatches) 
+    throws ClassFileIllFormedException {
+        try {
+            final javassist.bytecode.ClassFile cf = new javassist.bytecode.ClassFile(new DataInputStream(new ByteArrayInputStream(bytecode)));
+            checkCpPatches(cf.getConstPool(), cpPatches);
+            patch(cf.getConstPool(), cpPatches);
+            
+            //modifies the class name by adding the hash
+            final String defaultName = cf.getName(); //the (possibly patched) name in the bytecode
+            final String name = defaultName + '$' + Arrays.hashCode(bytecode);
+            cf.setName(name);
+            
+            //makes the CtClass
+            this.cls = cpool.makeClass(cf);
+            this.cp = this.cls.getClassFile().getConstPool();
+            this.bytecode = (hostClass == null ? bytecode : null); //only dummy anonymous classfiles without a host class cache their bytecode
+            this.cpPatches = (cpPatches == null ? null : cpPatches.clone());
+            this.hostClass = hostClass;
+            this.fieldsStatic = this.fieldsObject = this.constructors = null;
+        } catch (IOException e) {
+            throw new ClassFileIllFormedException("anonymous");
+        }
+    }
+    
+    private void checkCpPatches(javassist.bytecode.ConstPool cp, ConstantPoolValue[] cpPatches) 
+    throws ClassFileIllFormedException {
+        if (cpPatches == null) {
+            return;
+        }
+        for (int i = 1; i < Math.min(cp.getSize(), cpPatches.length); ++i) {
+            if (cpPatches[i] == null) {
+                continue;
+            }
+            final int tag = cp.getTag(i);
+            if (tag == ConstPool.CONST_String) {
+                continue; //any will fit
+            }
+            if (tag == ConstPool.CONST_Integer && 
+                cpPatches[i] instanceof ConstantPoolPrimitive && 
+                ((ConstantPoolPrimitive) cpPatches[i]).getValue() instanceof Integer) {
+                continue;
+            }
+            if (tag == ConstPool.CONST_Long && 
+                cpPatches[i] instanceof ConstantPoolPrimitive && 
+                ((ConstantPoolPrimitive) cpPatches[i]).getValue() instanceof Long) {
+                continue;
+            }
+            if (tag == ConstPool.CONST_Float && 
+                cpPatches[i] instanceof ConstantPoolPrimitive && 
+                ((ConstantPoolPrimitive) cpPatches[i]).getValue() instanceof Float) {
+                continue;
+            }
+            if (tag == ConstPool.CONST_Double && 
+                cpPatches[i] instanceof ConstantPoolPrimitive && 
+                ((ConstantPoolPrimitive) cpPatches[i]).getValue() instanceof Double) {
+                continue;
+            }
+            if (tag == ConstPool.CONST_Utf8 && cpPatches[i] instanceof ConstantPoolString) {
+                continue;
+            }
+            if (tag == ConstPool.CONST_Class && cpPatches[i] instanceof ConstantPoolClass) {
+                continue;
+            }
+            throw new ClassFileIllFormedException("anonymous, patches");
+        }
+    }
+    
+    private void patch(javassist.bytecode.ConstPool cp, ConstantPoolValue[] cpPatches) {
+        if (cpPatches == null) {
+            return;
+        }
+        //must use reflection
+        try {
+            final Field cpItemsField = javassist.bytecode.ConstPool.class.getDeclaredField("items");
+            cpItemsField.setAccessible(true);
+            final Object cpItems = cpItemsField.get(cp);
+            final Class<?> longVectorClass = Class.forName("javassist.bytecode.LongVector");
+            final Method longVectorElementAt = longVectorClass.getDeclaredMethod("elementAt", int.class);
+            longVectorElementAt.setAccessible(true);
+            for (int i = 1; i < Math.min(cp.getSize(), cpPatches.length); ++i) {
+                if (cpPatches[i] == null) {
+                    continue;
+                }
+                final int tag = cp.getTag(i);
+                if (tag == ConstPool.CONST_String) {
+                    continue; //cannot set!
+                }
+                final Object cpItem = longVectorElementAt.invoke(cpItems, Integer.valueOf(i));
+                if (tag == ConstPool.CONST_Integer) {
+                    final Integer value = (Integer) ((ConstantPoolPrimitive) cpPatches[i]).getValue();
+                    final Class<?> integerInfoClass = Class.forName("javassist.bytecode.IntegerInfo");
+                    final Field integerInfoValueField = integerInfoClass.getDeclaredField("value");
+                    integerInfoValueField.setAccessible(true);
+                    integerInfoValueField.set(cpItem, value);
+                    continue;
+                }
+                if (tag == ConstPool.CONST_Long) {
+                    final Long value = (Long) ((ConstantPoolPrimitive) cpPatches[i]).getValue();
+                    final Class<?> longInfoClass = Class.forName("javassist.bytecode.LongInfo");
+                    final Field longInfoValueField = longInfoClass.getDeclaredField("value");
+                    longInfoValueField.setAccessible(true);
+                    longInfoValueField.set(cpItem, value);
+                    continue;
+                }
+                if (tag == ConstPool.CONST_Float) {
+                    final Float value = (Float) ((ConstantPoolPrimitive) cpPatches[i]).getValue();
+                    final Class<?> floatInfoClass = Class.forName("javassist.bytecode.FloatInfo");
+                    final Field floatInfoValueField = floatInfoClass.getDeclaredField("value");
+                    floatInfoValueField.setAccessible(true);
+                    floatInfoValueField.set(cpItem, value);
+                    continue;
+                }
+                if (tag == ConstPool.CONST_Double) {
+                    final Double value = (Double) ((ConstantPoolPrimitive) cpPatches[i]).getValue();
+                    final Class<?> doubleInfoClass = Class.forName("javassist.bytecode.DoubleInfo");
+                    final Field doubleInfoValueField = doubleInfoClass.getDeclaredField("value");
+                    doubleInfoValueField.setAccessible(true);
+                    doubleInfoValueField.set(cpItem, value);
+                    continue;
+                }
+                if (tag == ConstPool.CONST_Utf8) {
+                    final String value = ((ConstantPoolString) cpPatches[i]).getValue();
+                    final Class<?> utf8InfoClass = Class.forName("javassist.bytecode.Utf8Info");
+                    final Field utf8InfoStringField = utf8InfoClass.getDeclaredField("string");
+                    utf8InfoStringField.setAccessible(true);
+                    utf8InfoStringField.set(cpItem, value);
+                    continue;
+                }
+                if (tag == ConstPool.CONST_Class) {
+                    final int value = cp.addUtf8Info(((ConstantPoolClass) cpPatches[i]).getValue());
+                    final Class<?> classInfoClass = Class.forName("javassist.bytecode.ClassInfo");
+                    final Field classInfoNameField = classInfoClass.getDeclaredField("name");
+                    classInfoNameField.setAccessible(true);
+                    classInfoNameField.set(cpItem, Integer.valueOf(value));
+                    continue;
+                }
+            }
+        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | 
+                 IllegalAccessException | ClassNotFoundException | NoSuchMethodException | 
+                 InvocationTargetException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
+    }
+    
+    @Override
+    byte[] getBinaryFileContent() {
+        return this.bytecode;
+    }
+    
     @Override
     public String getSourceFile() {
         return this.cls.getClassFile().getSourceFile();
@@ -196,6 +367,11 @@ public class ClassFileJavassist extends ClassFile {
             }
         }
         return true;
+    }
+    
+    @Override
+    public String getHostClass() {
+        return this.hostClass;
     }
     
     @Override
@@ -417,9 +593,14 @@ public class ClassFileJavassist extends ClassFile {
         case ConstPool.CONST_Double:
             return new ConstantPoolPrimitive(this.cp.getDoubleInfo(index));
         case ConstPool.CONST_String:
+            if (this.cpPatches != null && index < this.cpPatches.length && this.cpPatches[index] != null) {
+                return this.cpPatches[index];
+            }
             return new ConstantPoolString(this.cp.getStringInfo(index));
         case ConstPool.CONST_Class:
             return new ConstantPoolClass(internalClassName(this.cp.getClassInfo(index)));
+        case ConstPool.CONST_Utf8:
+            return new ConstantPoolUtf8(this.cp.getUtf8Info(index));
         }
         throw new InvalidIndexException(entryInvalidMessage(index));
     }

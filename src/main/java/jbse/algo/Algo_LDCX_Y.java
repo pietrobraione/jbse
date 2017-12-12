@@ -92,10 +92,15 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     final String stringLit = ((ConstantPoolString) cpv).getValue();
                     state.ensureStringLiteral(stringLit);
                     this.val = state.referenceToStringLiteral(stringLit);
-                } else { // cpv instanceof ConstantPoolClass
+                } else if (cpv instanceof ConstantPoolClass) {
                     final String classSignature = ((ConstantPoolClass) cpv).getValue();
                     ensureInstance_JAVA_CLASS(state, currentClassName, classSignature, this.ctx);
                     this.val = state.referenceToInstance_JAVA_CLASS(classSignature);
+                } else if (cpv instanceof ConstantPoolObject) {
+                    this.val = ((ConstantPoolObject) cpv).getValue();
+                } else {
+                    //this should never happen
+                    failExecution("Unexpected value from the constant pool.");
                 }
             } catch (ClassFileNotAccessibleException e) {
                 throwNew(state, ILLEGAL_ACCESS_ERROR);

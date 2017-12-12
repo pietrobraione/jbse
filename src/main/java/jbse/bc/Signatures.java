@@ -108,6 +108,8 @@ public final class Signatures {
     public static final String JAVA_INTEGER                  = "java/lang/Integer";
     public static final String JAVA_INTEGER_INTEGERCACHE     = "java/lang/Integer$IntegerCache";
     public static final String JAVA_INTERRUPTEDEXCEPTION     = "java/lang/InterruptedException";
+    public static final String JAVA_INVOKERBYTECODEGENERATOR = "java/lang/invoke/InvokerBytecodeGenerator";
+    public static final String JAVA_INVOKERBYTECODEGENERATOR_2 = "java/lang/invoke/InvokerBytecodeGenerator$2";
     public static final String JAVA_LAMBDAFORM               = "java/lang/invoke/LambdaForm";
     public static final String JAVA_LAMBDAFORM_NAME          = "java/lang/invoke/LambdaForm$Name";
     public static final String JAVA_LINKEDHASHMAP            = "java/util/LinkedHashMap";
@@ -222,6 +224,7 @@ public final class Signatures {
     
     //errors
     public static final String ABSTRACT_METHOD_ERROR               = "java/lang/AbstractMethodError";
+    public static final String CLASS_FORMAT_ERROR                  = "java/lang/ClassFormatError";
     public static final String ILLEGAL_ACCESS_ERROR                = "java/lang/IllegalAccessError";
     public static final String INCOMPATIBLE_CLASS_CHANGE_ERROR     = "java/lang/IncompatibleClassChangeError";
     public static final String NO_CLASS_DEFINITION_FOUND_ERROR     = "java/lang/NoClassDefFoundError";
@@ -531,6 +534,10 @@ public final class Signatures {
         new Signature(SUN_UNSAFE, 
                       "(" + REFERENCE + JAVA_OBJECT + TYPEEND + LONG + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + BOOLEAN, 
                       "compareAndSwapObject");
+    public static final Signature SUN_UNSAFE_DEFINEANONYMOUSCLASS = 
+        new Signature(SUN_UNSAFE, 
+                      "(" + REFERENCE + JAVA_CLASS + TYPEEND + ARRAYOF + BYTE + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_CLASS + TYPEEND, 
+                      "defineAnonymousClass");
     public static final Signature SUN_UNSAFE_FREEMEMORY = 
         new Signature(SUN_UNSAFE, "(" + LONG + ")" + VOID, "freeMemory");
     public static final Signature SUN_UNSAFE_GETBYTE = 

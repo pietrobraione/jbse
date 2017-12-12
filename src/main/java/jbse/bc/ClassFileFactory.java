@@ -20,6 +20,9 @@ public abstract class ClassFileFactory {
 
     protected abstract ClassFile newClassFileClass(String className) 
     throws BadClassFileException;
+    
+    protected abstract ClassFile newClassFileAnonymous(String hostClass, byte[] bytecode, ConstantPoolValue[] cpPatches)
+    throws BadClassFileException;
 
     final ClassFile newClassFile(String className) 
     throws BadClassFileException {
@@ -59,5 +62,10 @@ public abstract class ClassFileFactory {
         } else {
             return newClassFileClass(className);
         }
-    }	
+    }
+    
+    final ClassFile newClassFile(String hostClass, byte[] bytecode, ConstantPoolValue[] cpPatches)
+    throws BadClassFileException {
+        return newClassFileAnonymous(hostClass, bytecode, cpPatches);
+    }
 }

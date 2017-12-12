@@ -72,6 +72,7 @@ public final class Overrides {
     public static final String ALGO_SUN_UNSAFE_COMPAREANDSWAPINT        = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_COMPAREANDSWAPINT.class.getCanonicalName());
     public static final String ALGO_SUN_UNSAFE_COMPAREANDSWAPLONG       = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_COMPAREANDSWAPLONG.class.getCanonicalName());
     public static final String ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT     = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_COMPAREANDSWAPOBJECT.class.getCanonicalName());
+    public static final String ALGO_SUN_UNSAFE_DEFINEANONYMOUSCLASS     = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS.class.getCanonicalName());
     public static final String ALGO_SUN_UNSAFE_FREEMEMORY               = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_FREEMEMORY.class.getCanonicalName());
     public static final String ALGO_SUN_UNSAFE_GETBYTE                  = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETBYTE.class.getCanonicalName());
     public static final String ALGO_SUN_UNSAFE_GETINTVOLATILE           = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETINTVOLATILE.class.getCanonicalName());

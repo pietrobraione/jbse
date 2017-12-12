@@ -159,6 +159,19 @@ final class ClassFileStore implements Cloneable {
             return new ClassFileBad("" + type, new ClassFileNotFoundException("" + type));
         }
     }
+
+    ClassFile createClassFileAnonymous(byte[] bytecode) 
+    throws BadClassFileException {
+        final ClassFile tempCF = this.f.newClassFile(null, bytecode, null);
+        return tempCF;
+    }
+    
+    ClassFile addClassFileAnonymous(ClassFile classFile, String hostClass, ConstantPoolValue[] cpPatches) 
+    throws BadClassFileException {
+        final ClassFile tempCF = this.f.newClassFile(hostClass, classFile.getBinaryFileContent(), cpPatches);
+        this.classFiles.put(tempCF.getClassName(), tempCF);
+        return tempCF;
+    }
     
     @Override
     protected ClassFileStore clone() {

@@ -60,6 +60,11 @@ abstract class ClassFilePrimitive extends ClassFile {
     }
 
     @Override
+    byte[] getBinaryFileContent() {
+        return null;
+    }
+
+    @Override
     public String getSourceFile() {
         return "";
     }
@@ -143,6 +148,11 @@ abstract class ClassFilePrimitive extends ClassFile {
     @Override
     public boolean isAnonymous() {
         return false;
+    }
+
+    @Override
+    public String getHostClass() {
+        return null;
     }
 
     @Override

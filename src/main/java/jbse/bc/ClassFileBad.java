@@ -28,6 +28,11 @@ public final class ClassFileBad extends ClassFile {
     BadClassFileException getException() {
         return this.e;
     }
+    
+    @Override
+    byte[] getBinaryFileContent() {
+        return null;
+    }
 
     @Override
     public String getSourceFile() {
@@ -107,6 +112,11 @@ public final class ClassFileBad extends ClassFile {
     @Override
     public boolean isAnonymous() {
         return false;
+    }
+
+    @Override
+    public String getHostClass() {
+        return null;
     }
 
     @Override

@@ -53,6 +53,7 @@ import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_ALLOCATEMEMORY;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_COMPAREANDSWAPINT;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_COMPAREANDSWAPLONG;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT;
+import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_DEFINEANONYMOUSCLASS;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_FREEMEMORY;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_GETBYTE;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_GETINTVOLATILE;
@@ -194,6 +195,8 @@ import static jbse.bc.Signatures.JAVA_INPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_INTEGER;
 import static jbse.bc.Signatures.JAVA_INTEGER_INTEGERCACHE;
 import static jbse.bc.Signatures.JAVA_INTERRUPTEDEXCEPTION;
+import static jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR;
+import static jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR_2;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM_NAME;
 import static jbse.bc.Signatures.JAVA_LINKEDHASHMAP;
@@ -371,6 +374,7 @@ import static jbse.bc.Signatures.SUN_UNSAFE_ARRAYINDEXSCALE;
 import static jbse.bc.Signatures.SUN_UNSAFE_COMPAREANDSWAPINT;
 import static jbse.bc.Signatures.SUN_UNSAFE_COMPAREANDSWAPLONG;
 import static jbse.bc.Signatures.SUN_UNSAFE_COMPAREANDSWAPOBJECT;
+import static jbse.bc.Signatures.SUN_UNSAFE_DEFINEANONYMOUSCLASS;
 import static jbse.bc.Signatures.SUN_UNSAFE_FREEMEMORY;
 import static jbse.bc.Signatures.SUN_UNSAFE_GETBYTE;
 import static jbse.bc.Signatures.SUN_UNSAFE_GETINTVOLATILE;
@@ -649,6 +653,7 @@ public final class ExecutionContext {
             addMetaOverridden(SUN_UNSAFE_COMPAREANDSWAPINT,                       ALGO_SUN_UNSAFE_COMPAREANDSWAPINT);
             addMetaOverridden(SUN_UNSAFE_COMPAREANDSWAPLONG,                      ALGO_SUN_UNSAFE_COMPAREANDSWAPLONG);
             addMetaOverridden(SUN_UNSAFE_COMPAREANDSWAPOBJECT,                    ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT);
+            addMetaOverridden(SUN_UNSAFE_DEFINEANONYMOUSCLASS,                    ALGO_SUN_UNSAFE_DEFINEANONYMOUSCLASS);
             addMetaOverridden(SUN_UNSAFE_FREEMEMORY,                              ALGO_SUN_UNSAFE_FREEMEMORY);
             addMetaOverridden(SUN_UNSAFE_GETBYTE,                                 ALGO_SUN_UNSAFE_GETBYTE);
             addMetaOverridden(SUN_UNSAFE_GETINTVOLATILE,                          ALGO_SUN_UNSAFE_GETINTVOLATILE);
@@ -896,6 +901,8 @@ public final class ExecutionContext {
         className.equals(JAVA_INTEGER) || 
         className.equals(JAVA_INTEGER_INTEGERCACHE) || 
         className.equals(JAVA_INTERRUPTEDEXCEPTION) || 
+        className.equals(JAVA_INVOKERBYTECODEGENERATOR) || //the only nonfinal static field STATICALLY_INVOCABLE_PACKAGES is never modified
+        className.equals(JAVA_INVOKERBYTECODEGENERATOR_2) ||
         className.equals(JAVA_LAMBDAFORM) || 
         className.equals(JAVA_LAMBDAFORM_NAME) || 
         className.equals(JAVA_LINKEDHASHMAP) || 

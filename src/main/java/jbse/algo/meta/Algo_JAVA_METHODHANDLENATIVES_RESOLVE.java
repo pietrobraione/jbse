@@ -305,8 +305,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (HeapMemoryExhaustedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throwNew(state, OUT_OF_MEMORY_ERROR);
+            exitFromAlgorithm();
         }
     }
     

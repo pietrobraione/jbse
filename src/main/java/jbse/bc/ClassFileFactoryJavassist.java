@@ -29,6 +29,12 @@ public class ClassFileFactoryJavassist extends ClassFileFactory {
     @Override
     protected ClassFile newClassFileClass(String className) 
     throws BadClassFileException {
-        return new ClassFileJavassist(className, this.cpool);
+        return new ClassFileJavassist(this.cpool, className);
+    }
+    
+    @Override
+    protected ClassFile newClassFileAnonymous(String hostClass, byte[] bytecode, ConstantPoolValue[] cpPatches) 
+    throws BadClassFileException {
+        return new ClassFileJavassist(this.cpool, hostClass, bytecode, cpPatches);
     }
 }

@@ -76,6 +76,11 @@ public final class ClassFileArray extends ClassFile {
         return (JAVA_OBJECT_CLONE.getName().equals(methodSignature.getName()) &&
                 JAVA_OBJECT_CLONE.getDescriptor().equals(methodSignature.getDescriptor()));
     }
+    
+    @Override
+    byte[] getBinaryFileContent() {
+        return null;
+    }
 
     @Override
     public String getSourceFile() {
@@ -431,6 +436,11 @@ public final class ClassFileArray extends ClassFile {
     @Override
     public boolean isAnonymous() {
         return false;
+    }
+    
+    @Override
+    public String getHostClass() {
+        return null;
     }
 
     @Override

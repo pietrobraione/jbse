@@ -16,6 +16,14 @@ import jbse.common.Type;
  */
 public abstract class ClassFile {
     protected static final String JAR_FILE_EXTENSION = ".jar";
+    
+    /**
+     * Returns the content of the binary file for this class.
+     * This is a backdoor only used for anonymous classfiles.
+     * 
+     * @return a {@code byte[]} or {@code null}.
+     */
+    abstract byte[] getBinaryFileContent();
 
     /**
      * Returns the name of the source code file where this 
@@ -145,10 +153,18 @@ public abstract class ClassFile {
     /**
      * Tests whether the class is anonymous (JLS v8, section 15.9.5).
      * 
-     * @return {@code true} iff the class is local.
+     * @return {@code true} iff the class is anonymous.
      */
     public abstract boolean isAnonymous();
 
+    /**
+     * Returns the host class name for an anonymous class.
+     * 
+     * @return a {@code String}, the name of the host class
+     *         for this class, or {@code null} if {@link #isAnonymous()}{@code  == false}.
+     */
+    public abstract String getHostClass();
+    
     /**
      * If this class is nested (statically nested, inner, anonymous 
      * or local), returns the name of the class containing this class.
@@ -417,9 +433,12 @@ public abstract class ClassFile {
     throws MethodNotFoundException, MethodCodeNotFoundException;    
 
     /**
-     * Returns a value for the passed index of constant pool.
+     * Returns a value for the passed index of constant pool (only for some type
+     * of constants).
      * 
-     * @throws InvalidIndexException iff the constant pool has less entries than {@code index}.
+     * @throws InvalidIndexException iff the constant pool has less entries than {@code index}, or
+     *         {@code index} does not refer to a CONSTANT_Integer, CONSTANT_Long, CONSTANT_Float,
+     *         CONSTANT_Double, CONSTANT_Utf8, CONSTANT_String, or CONSTANT_Class.
      */
     public abstract ConstantPoolValue getValueFromConstantPool(int index) throws InvalidIndexException;
 

@@ -155,7 +155,48 @@ public final class ClassHierarchy implements Cloneable {
         }
         return retval;
     }
-
+    
+    /**
+     * Creates a {@link ClassFile} for an anonymous class without
+     * adding it to the hierarchy.
+     * 
+     * @param bytecode a {@code byte[]}, the bytecode for the anonymous class.
+     * @return the {@link ClassFile} for the anonymous class.
+     * @throws BadClassFileException if {@code bytecode} is ill-formed.
+     */
+    public ClassFile createClassFileAnonymous(byte[] bytecode) 
+    throws BadClassFileException {
+        final ClassFile retval =
+            this.cfs.createClassFileAnonymous(bytecode);
+        return retval;
+    }
+    
+    /**
+     * Adds a {@link ClassFile} for an anonymous class to this hierarchy.
+     *
+     * @param classFile a {@link ClassFile} created with a previous invocation 
+     *        of {@link #createClassFileAnonymous(byte[])}.
+     * @param hostClass a {@link String}, the name of the host class for the
+     *        anonymous class.
+     * @param cpPatches a {@link ConstantPoolValue}{@code []}; The i-th element of this
+     *        array patches the i-th element in the constant pool defined
+     *        by the {@code bytecode}. Note that {@code cpPatches[0]} and all the
+     *        {@code cpPatches[i]} with {@code i} equal or greater than the size
+     *        of the constant pool in {@code classFile} are ignored.
+     * @return the {@link ClassFile} for the anonymous class (it may be different
+     *         from {@code classFile}).
+     * @throws NullPointerException if {@code classFile} has no bytecode.
+     * @throws BadClassFileException if {@code classFile}'s bytecode is ill-formed
+     *         or the values in {@code cpPatches} do not agree with the respective
+     *         constant pool entries.
+     */
+    public ClassFile addClassFileAnonymous(ClassFile classFile, String hostClass, ConstantPoolValue[] cpPatches) 
+    throws BadClassFileException {
+        final ClassFile retval =
+            this.cfs.addClassFileAnonymous(classFile, hostClass, cpPatches);
+        return retval;
+    }
+    
     /**
      * Adds a pair (supertype, subtype) to the expansion backdoor
      * provided at construction time.
@@ -806,8 +847,8 @@ public final class ClassHierarchy implements Cloneable {
     /**
      * Converts an iterable to a stream.
      * See <a href="https://stackoverflow.com/a/23177907/450589">https://stackoverflow.com/a/23177907/450589</a>.
-     * @param it
-     * @return
+     * @param it an {@link Iterable}{@code <T>}.
+     * @return a {@link Stream}{@code <T>} for {@code it}.
      */
     private static <T> Stream<T> stream(Iterable<T> it) {
         return StreamSupport.stream(it.spliterator(), false);
