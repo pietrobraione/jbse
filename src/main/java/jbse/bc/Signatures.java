@@ -97,6 +97,7 @@ public final class Signatures {
     public static final String JAVA_FILESYSTEM               = "java/io/FileSystem";
     public static final String JAVA_FILTERINPUTSTREAM        = "java/io/FilterInputStream";
     public static final String JAVA_FILTEROUTPUTSTREAM       = "java/io/FilterOutputStream";
+    public static final String JAVA_FINALIZER                = "java/lang/ref/Finalizer";
     public static final String JAVA_FLOAT                    = "java/lang/Float";
     public static final String JAVA_HASHMAP                  = "java/util/HashMap";
     public static final String JAVA_HASHMAP_NODE             = "java/util/HashMap$Node";
@@ -187,6 +188,8 @@ public final class Signatures {
     public static final String SUN_DELEGATINGCONSTRUCTORACCESSORIMPL = "sun/reflect/DelegatingConstructorAccessorImpl";
     public static final String SUN_FASTCHARSETPROVIDER       = "sun/nio/cs/FastCharsetProvider";
     public static final String SUN_GETPROPERTYACTION         = "sun/security/action/GetPropertyAction";
+    public static final String SUN_LAUNCHER                  = "sun/misc/Launcher";
+    public static final String SUN_LAUNCHERHELPER            = "sun/launcher/LauncherHelper";
     public static final String SUN_MAGICACCESSORIMPL         = "sun/reflect/MagicAccessorImpl";
     public static final String SUN_NATIVECONSTRUCTORACCESSORIMPL = "sun/reflect/NativeConstructorAccessorImpl";
     public static final String SUN_PREHASHEDMAP              = "sun/util/PreHashedMap";

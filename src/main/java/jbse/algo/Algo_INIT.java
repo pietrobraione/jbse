@@ -1,7 +1,13 @@
 package jbse.algo;
 
 import static jbse.algo.Util.ensureClassCreatedAndInitialized;
+import static jbse.algo.Util.failExecution;
 import static jbse.bc.Signatures.JAVA_CLASS;
+import static jbse.bc.Signatures.JAVA_FINALIZER;
+import static jbse.bc.Signatures.JAVA_MEMBERNAME;
+import static jbse.bc.Signatures.JAVA_METHOD;
+import static jbse.bc.Signatures.JAVA_METHODHANDLE;
+import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_SYSTEM;
 import static jbse.bc.Signatures.JAVA_THREAD;
@@ -78,9 +84,24 @@ public final class Algo_INIT {
         } catch (ThreadStackEmptyException e) {
             throw new UnexpectedInternalException(e);
         }
+
+        //creates and initializes the root class
+        initializeClass(state, ctx.rootMethodSignature.getClassName(), ctx);
+
+        //the rest of the initialization is taken from hotspot source code from openjdk v8, 
+        //see hotspot:src/share/vm/runtime/thread.cpp method Threads::create_vm, 
+        //create_initial_thread_group, and create_initial_thread,
+        //and jdk:src/share/bin/java.c function JavaMain and invoked function 
+        //LoadMainClass
         
-        //the rest of the initialization is taken from hotspot source code from openjdk v8, src/share/vm/runtime/thread.cpp, 
-        //functions create_vm, create_initial_thread_group, create_initial_thread 
+        //TODO possibly initialize sun.launcher.LauncherHelper
+        
+        //creates and initializes classes for handle invocation
+        initializeClass(state, JAVA_METHODHANDLENATIVES, ctx);
+        initializeClass(state, JAVA_MEMBERNAME, ctx);
+        initializeClass(state, JAVA_METHODHANDLE, ctx);
+        
+        //TODO invoke java.lang.ClassLoader.getSystemClassLoader
 
         //pushes a frame for java.lang.System.initializeSystemClass
         try {
@@ -89,50 +110,19 @@ public final class Algo_INIT {
                  MethodCodeNotFoundException | InvalidSlotException | InvalidProgramCounterException | 
                  InvalidTypeException | ThreadStackEmptyException e) {
             //this should not happen now
-            throw new UnexpectedInternalException(e);
+            failExecution(e);
         }
         
-        //creates and initializes a bunch of classes, including the root class
-        try {
-            try {
-                ensureClassCreatedAndInitialized(state, ctx.rootMethodSignature.getClassName(), ctx);
-            } catch (InterruptException e) {
-                //nothing to do: fall through
-            }
-            try {
-                ensureClassCreatedAndInitialized(state, JAVA_CLASS, ctx);
-            } catch (InterruptException e) {
-                //nothing to do: fall through
-            }
-            try {
-                ensureClassCreatedAndInitialized(state, JAVA_THREAD, ctx);
-            } catch (InterruptException e) {
-                //nothing to do: fall through
-            }
-            try {
-                ensureClassCreatedAndInitialized(state, JAVA_THREADGROUP, ctx);
-            } catch (InterruptException e) {
-                //nothing to do: fall through
-            }
-            try {
-                ensureClassCreatedAndInitialized(state, JAVA_SYSTEM, ctx);
-            } catch (InterruptException e) {
-                //nothing to do: fall through
-            }
-            try {
-                ensureClassCreatedAndInitialized(state, JAVA_STRING, ctx);
-            } catch (InterruptException e) {
-                //nothing to do: fall through
-            }
-        } catch (HeapMemoryExhaustedException e) {
-            throw new InitializationException(e);
-        } catch (BadClassFileException e) {
-            throw new ClasspathException(e);
-        } catch (InvalidInputException e) {
-            //this should not happen at this point
-            throw new UnexpectedInternalException(e);
-        }
+        //creates and initializes more standard classes
+        initializeClass(state, JAVA_FINALIZER, ctx);
+        initializeClass(state, JAVA_METHOD, ctx);
+        initializeClass(state, JAVA_CLASS, ctx);
+        initializeClass(state, JAVA_THREAD, ctx);
+        initializeClass(state, JAVA_THREADGROUP, ctx);
+        initializeClass(state, JAVA_SYSTEM, ctx);
+        initializeClass(state, JAVA_STRING, ctx);
 
+        //TODO put all this code in a snippet and invoke it at the right moment
         try {
             //creates the initial thread and thread group
             final ReferenceConcrete systemThreadGroup = state.createInstance(JAVA_THREADGROUP);
@@ -156,9 +146,25 @@ public final class Algo_INIT {
         } catch (NullMethodReceiverException | InvalidSlotException | InvalidProgramCounterException |
                  InvalidTypeException | ThreadStackEmptyException e) {
             //this should never happen
-            throw new UnexpectedInternalException(e);
+            failExecution(e);
         }
 
         return state;
+    }
+    
+    private void initializeClass(State state, String className, ExecutionContext ctx) 
+    throws DecisionException, ClasspathException, InitializationException {
+        try {
+            ensureClassCreatedAndInitialized(state, className, ctx);
+        } catch (InterruptException e) {
+            //nothing to do: fall through
+        } catch (HeapMemoryExhaustedException e) {
+            throw new InitializationException(e);
+        } catch (BadClassFileException e) {
+            throw new ClasspathException(e);
+        } catch (InvalidInputException e) {
+            //this should not happen at this point
+            failExecution(e);
+        }
     }
 }

@@ -349,6 +349,8 @@ import static jbse.bc.Signatures.SUN_CONSTRUCTORACCESSORIMPL;
 import static jbse.bc.Signatures.SUN_DELEGATINGCONSTRUCTORACCESSORIMPL;
 import static jbse.bc.Signatures.SUN_FASTCHARSETPROVIDER;
 import static jbse.bc.Signatures.SUN_GETPROPERTYACTION;
+import static jbse.bc.Signatures.SUN_LAUNCHER;
+import static jbse.bc.Signatures.SUN_LAUNCHERHELPER;
 import static jbse.bc.Signatures.SUN_MAGICACCESSORIMPL;
 import static jbse.bc.Signatures.SUN_NATIVECONSTRUCTORACCESSORIMPL;
 import static jbse.bc.Signatures.SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
@@ -979,6 +981,8 @@ public final class ExecutionContext {
         className.equals(SUN_DELEGATINGCONSTRUCTORACCESSORIMPL) ||        
         className.equals(SUN_FASTCHARSETPROVIDER) ||        
         className.equals(SUN_GETPROPERTYACTION) ||        
+        className.equals(SUN_LAUNCHER) || //necessary to JVM bootstrap
+        className.equals(SUN_LAUNCHERHELPER) || //necessary to JVM bootstrap (is it really?)
         className.equals(SUN_MAGICACCESSORIMPL) ||
         className.equals(SUN_NATIVECONSTRUCTORACCESSORIMPL) ||
         className.equals(SUN_PREHASHEDMAP) ||
