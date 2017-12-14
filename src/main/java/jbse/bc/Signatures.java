@@ -64,7 +64,8 @@ public final class Signatures {
     public static final String JAVA_CLASS_ATOMIC             = "java/lang/Class$Atomic";
     public static final String JAVA_CLASS_REFLECTIONDATA     = "java/lang/Class$ReflectionData";
     public static final String JAVA_CLASSLOADER              = "java/lang/ClassLoader";
-    public static final String JAVA_CLASSLOADER_NATIVELIBRARY = "java/lang/ClassLoader$NativeLibrary";
+    public static final String JAVA_CLASSLOADER_NATIVELIBRARY   = "java/lang/ClassLoader$NativeLibrary";
+    public static final String JAVA_CLASSLOADER_PARALLELLOADERS = "java/lang/ClassLoader$ParallelLoaders";
     public static final String JAVA_CLASSVALUE               = "java/lang/ClassValue";
     public static final String JAVA_CLONEABLE                = "java/lang/Cloneable";
     public static final String JAVA_CODINGERRORACTION        = "java/nio/charset/CodingErrorAction";
@@ -190,6 +191,7 @@ public final class Signatures {
     public static final String SUN_GETPROPERTYACTION         = "sun/security/action/GetPropertyAction";
     public static final String SUN_LAUNCHER                  = "sun/misc/Launcher";
     public static final String SUN_LAUNCHERHELPER            = "sun/launcher/LauncherHelper";
+    public static final String SUN_LAUNCHER_FACTORY          = "sun/misc/Launcher$Factory";
     public static final String SUN_MAGICACCESSORIMPL         = "sun/reflect/MagicAccessorImpl";
     public static final String SUN_NATIVECONSTRUCTORACCESSORIMPL = "sun/reflect/NativeConstructorAccessorImpl";
     public static final String SUN_PREHASHEDMAP              = "sun/util/PreHashedMap";
@@ -208,6 +210,7 @@ public final class Signatures {
     public static final String SUN_STREAMENCODER             = "sun/nio/cs/StreamEncoder";
     public static final String SUN_UNICODE                   = "sun/nio/cs/Unicode";
     public static final String SUN_UNSAFE                    = "sun/misc/Unsafe";
+    public static final String SUN_URLCLASSPATH              = "sun/misc/URLClassPath";
     public static final String SUN_UTF_8                     = "sun/nio/cs/UTF_8";
     public static final String SUN_UTF_8_ENCODER             = "sun/nio/cs/UTF_8$Encoder";
     public static final String SUN_VERIFYACCESS              = "sun/invoke/util/VerifyAccess";
@@ -223,6 +226,7 @@ public final class Signatures {
     public static final String CLASS_NOT_FOUND_EXCEPTION           = "java/lang/ClassNotFoundException";
     public static final String CLONE_NOT_SUPPORTED_EXCEPTION       = "java/lang/CloneNotSupportedException";
     public static final String ILLEGAL_ARGUMENT_EXCEPTION          = "java/lang/IllegalArgumentException";
+    public static final String ILLEGAL_MONITOR_STATE_EXCEPTION     = "java/lang/IllegalMonitorStateException";
     public static final String INDEX_OUT_OF_BOUNDS_EXCEPTION       = "java/lang/IndexOutOfBoundsException";
     public static final String INSTANTIATION_EXCEPTION             = "java/lang/InstantiationException";
     public static final String INTERNAL_ERROR                      = "java/lang/InternalError";
@@ -238,6 +242,7 @@ public final class Signatures {
     public static final String NO_SUCH_FIELD_ERROR                 = "java/lang/NoSuchFieldError";
     public static final String NO_SUCH_METHOD_ERROR                = "java/lang/NoSuchMethodError";
     public static final String OUT_OF_MEMORY_ERROR                 = "java/lang/OutOfMemoryError";
+    public static final String STACK_OVERFLOW_ERROR                = "java/lang/StackOverflowError";
     public static final String VERIFY_ERROR                        = "java/lang/VerifyError";
     
     //descriptors (for signature polymorphic methods)
@@ -298,6 +303,8 @@ public final class Signatures {
         new Signature(JAVA_CLASS, "()" + VOID, "registerNatives");
     public static final Signature JAVA_CLASSLOADER_FINDBUILTINLIB =
         new Signature(JAVA_CLASSLOADER, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_STRING + TYPEEND, "findBuiltinLib");
+    public static final Signature JAVA_CLASSLOADER_GETSYSTEMCLASSLOADER =
+        new Signature(JAVA_CLASSLOADER, "()" + REFERENCE + JAVA_CLASSLOADER + TYPEEND, "getSystemClassLoader");
     public static final Signature JAVA_CLASSLOADER_NATIVELIBRARY_LOAD =
         new Signature(JAVA_CLASSLOADER_NATIVELIBRARY, "(" + REFERENCE + JAVA_STRING + TYPEEND + BOOLEAN + ")" + VOID, "load");
     public static final Signature JAVA_CLASSLOADER_REGISTERNATIVES =

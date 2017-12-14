@@ -147,6 +147,7 @@ import static jbse.bc.Signatures.JAVA_CLASSLOADER;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_FINDBUILTINLIB;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_NATIVELIBRARY;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_NATIVELIBRARY_LOAD;
+import static jbse.bc.Signatures.JAVA_CLASSLOADER_PARALLELLOADERS;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_CLASSVALUE;
 import static jbse.bc.Signatures.JAVA_CODINGERRORACTION;
@@ -184,6 +185,7 @@ import static jbse.bc.Signatures.JAVA_FILEOUTPUTSTREAM_INITIDS;
 import static jbse.bc.Signatures.JAVA_FILESYSTEM;
 import static jbse.bc.Signatures.JAVA_FILTERINPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_FILTEROUTPUTSTREAM;
+import static jbse.bc.Signatures.JAVA_FINALIZER;
 import static jbse.bc.Signatures.JAVA_FLOAT;
 import static jbse.bc.Signatures.JAVA_FLOAT_FLOATTORAWINTBITS;
 import static jbse.bc.Signatures.JAVA_HASHMAP;
@@ -211,6 +213,7 @@ import static jbse.bc.Signatures.JAVA_LONG_LONGCACHE;
 import static jbse.bc.Signatures.JAVA_MATH;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME_FACTORY;
+import static jbse.bc.Signatures.JAVA_METHOD;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLEIMPL;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES;
@@ -351,6 +354,7 @@ import static jbse.bc.Signatures.SUN_FASTCHARSETPROVIDER;
 import static jbse.bc.Signatures.SUN_GETPROPERTYACTION;
 import static jbse.bc.Signatures.SUN_LAUNCHER;
 import static jbse.bc.Signatures.SUN_LAUNCHERHELPER;
+import static jbse.bc.Signatures.SUN_LAUNCHER_FACTORY;
 import static jbse.bc.Signatures.SUN_MAGICACCESSORIMPL;
 import static jbse.bc.Signatures.SUN_NATIVECONSTRUCTORACCESSORIMPL;
 import static jbse.bc.Signatures.SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
@@ -393,6 +397,7 @@ import static jbse.bc.Signatures.SUN_UNSAFE_PUTLONG;
 import static jbse.bc.Signatures.SUN_UNSAFE_PUTOBJECTVOLATILE;
 import static jbse.bc.Signatures.SUN_UNSAFE_REGISTERNATIVES;
 import static jbse.bc.Signatures.SUN_UNSAFE_SHOULDBEINITIALIZED;
+import static jbse.bc.Signatures.SUN_URLCLASSPATH;
 import static jbse.bc.Signatures.SUN_UTF_8;
 import static jbse.bc.Signatures.SUN_UTF_8_ENCODER;
 import static jbse.bc.Signatures.SUN_VERIFYACCESS;
@@ -869,6 +874,7 @@ public final class ExecutionContext {
         className.equals(JAVA_CLASS_REFLECTIONDATA) || 
         className.equals(JAVA_CLASSLOADER) || //not really, but static fields are either lazily initialized and not modified, or are not modified; plus the collections of loaded libraries etc. will be assumed to be empty at the start of symbolic execution 
         className.equals(JAVA_CLASSLOADER_NATIVELIBRARY) || 
+        className.equals(JAVA_CLASSLOADER_PARALLELLOADERS) || //necessary for initialization (although it isn't) 
         className.equals(JAVA_CLASSVALUE) || //not really, but the only critical field is nextHashCode, that is used to generate hash codes for the class instances that are later used in internal table, so it is as it were 
         className.equals(JAVA_CODINGERRORACTION) ||
         className.equals(JAVA_COLLECTIONS) ||
@@ -899,6 +905,7 @@ public final class ExecutionContext {
         className.equals(JAVA_FILESYSTEM) || // the useCanonCaches and useCanonPrefixCache are not final but are never overwritten after initialization (note that they are not private)
         className.equals(JAVA_FILTERINPUTSTREAM) || 
         className.equals(JAVA_FILTEROUTPUTSTREAM) || 
+        className.equals(JAVA_FINALIZER) || 
         className.equals(JAVA_FLOAT) || 
         className.equals(JAVA_HASHMAP) || 
         className.equals(JAVA_HASHMAP_NODE) || 
@@ -925,6 +932,7 @@ public final class ExecutionContext {
         className.equals(JAVA_MATH) || 
         className.equals(JAVA_MEMBERNAME) || 
         className.equals(JAVA_MEMBERNAME_FACTORY) || //its only mutable static member ALLOWED_FLAGS is never changed
+        className.equals(JAVA_METHOD) ||
         className.equals(JAVA_METHODHANDLE) ||
         className.equals(JAVA_METHODHANDLEIMPL) || //the critical members (TYPED_COLLECTORS, FILL_ARRAY_TO_RIGHT and FAKE_METHOD_HANDLE_INVOKE) are lazily initialized caches
         className.equals(JAVA_METHODHANDLENATIVES) || 
@@ -983,6 +991,7 @@ public final class ExecutionContext {
         className.equals(SUN_GETPROPERTYACTION) ||        
         className.equals(SUN_LAUNCHER) || //necessary to JVM bootstrap
         className.equals(SUN_LAUNCHERHELPER) || //necessary to JVM bootstrap (is it really?)
+        className.equals(SUN_LAUNCHER_FACTORY) || //not really, but its only static field is effectively final
         className.equals(SUN_MAGICACCESSORIMPL) ||
         className.equals(SUN_NATIVECONSTRUCTORACCESSORIMPL) ||
         className.equals(SUN_PREHASHEDMAP) ||
@@ -1001,6 +1010,7 @@ public final class ExecutionContext {
         className.equals(SUN_STREAMENCODER) ||
         className.equals(SUN_UNICODE) ||
         className.equals(SUN_UNSAFE) ||
+        className.equals(SUN_URLCLASSPATH) || //necessary to JVM bootstrap
         className.equals(SUN_UTF_8) ||
         className.equals(SUN_UTF_8_ENCODER) ||
         className.equals(SUN_VERIFYACCESS) ||

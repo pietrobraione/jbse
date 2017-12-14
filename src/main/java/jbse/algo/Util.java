@@ -20,9 +20,11 @@ import static jbse.common.Type.binaryClassName;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Set;
 
 import sun.misc.Unsafe;
 
@@ -354,7 +356,9 @@ public class Util {
      * Ensures that a {@link State} has a {@link Klass} in its 
      * static store, possibly by creating it together with all 
      * the necessary super{@link Klass}es and all the necessary
-     * frames for the {@code <clinit>} methods.
+     * frames for the {@code <clinit>} methods. It is equivalent
+     * to {@link #ensureClassCreatedAndInitialized(State, String, ExecutionContext, Set) ensureClassCreatedAndInitialized}
+     * {@code (state, className, ctx, null)}.
      * 
      * @param state a {@link State}. It must have a current frame.
      * @param className a {@link String}, the name of a class.
@@ -376,10 +380,47 @@ public class Util {
      *         {@code <clinit>} method(s) for the initialized 
      *         class(es) or because of heap memory exhaustion.
      */
-    public static void ensureClassCreatedAndInitialized(State state, String className, ExecutionContext ctx) 
+    public static void ensureClassCreatedAndInitialized(State state, String className, ExecutionContext ctx)
     throws InvalidInputException, DecisionException, BadClassFileException, 
     ClasspathException, HeapMemoryExhaustedException, InterruptException {
-        final ClassInitializer ci = new ClassInitializer(state, ctx);
+        ensureClassCreatedAndInitialized(state, className, ctx, null);
+    }
+    
+    /**
+     * Ensures that a {@link State} has a {@link Klass} in its 
+     * static store, possibly by creating it together with all 
+     * the necessary super{@link Klass}es and all the necessary
+     * frames for the {@code <clinit>} methods.
+     * 
+     * @param state a {@link State}. It must have a current frame.
+     * @param className a {@link String}, the name of a class.
+     * @param ctx an {@link ExecutionContext}.
+     * @param skip a {@link Set}{@code <}{@link String}{@code >}.
+     *        All the classes (and their superclasses and superinterfaces recursively) 
+     *        whose names are in this set will not be created. A {@code null} value
+     *        is equivalent to the empty set.
+     * @throws InvalidInputException if {@code className} or {@code state} 
+     *         is null.
+     * @throws DecisionException if {@code dec} fails in determining
+     *         whether {@code className} is or is not initialized.
+     * @throws BadClassFileException if {@code className} or
+     *         one of its superclasses is not in the classpath or
+     *         is ill-formed.
+     * @throws ClasspathException if some standard JRE class is missing
+     *         from {@code state}'s classpath or is incompatible with the
+     *         current version of JBSE. 
+     * @throws HeapMemoryExhaustedException if during class creation
+     *         and initialization the heap memory ends.
+     * @throws InterruptException iff it is necessary to interrupt the
+     *         execution of the bytecode, to run the 
+     *         {@code <clinit>} method(s) for the initialized 
+     *         class(es) or because of heap memory exhaustion.
+     */
+    public static void ensureClassCreatedAndInitialized(State state, String className, ExecutionContext ctx, Set<String> skip) 
+    throws InvalidInputException, DecisionException, BadClassFileException, 
+    ClasspathException, HeapMemoryExhaustedException, InterruptException {
+        final Set<String> _skip = (skip == null) ? new HashSet<>() : skip; //null safety
+        final ClassInitializer ci = new ClassInitializer(state, ctx, _skip);
         final boolean failed = ci.initialize(className);
         if (failed) {
             return;
@@ -399,6 +440,11 @@ public class Util {
          * The decision procedure.
          */
         private final ExecutionContext ctx;
+        
+        /**
+         * The classes whose creation must be skipped.
+         */
+        private final Set<String> skip;
 
         /**
          * Counts the number of frames created during class initialization. 
@@ -438,9 +484,22 @@ public class Util {
         /**
          * Constructor.
          */
-        private ClassInitializer(State s, ExecutionContext ctx) {
+        private ClassInitializer(State s, ExecutionContext ctx, Set<String> skip) {
             this.s = s;
             this.ctx = ctx;
+            
+            //closes skip w.r.t. superclasses
+            this.skip = new HashSet<>();
+            final ClassHierarchy hier = this.s.getClassHierarchy();
+            for (String className : skip) {
+                this.skip.add(className);
+                for (ClassFile superClass : hier.superclasses(className)) {
+                    this.skip.add(superClass.getClassName());
+                }
+                for (ClassFile superInterface : hier.superinterfaces(className)) {
+                    this.skip.add(superInterface.getClassName());
+                }
+            }
         }
 
         /**
@@ -501,10 +560,11 @@ public class Util {
         /**
          * Phase 1 creates all the {@link Klass} objects for a class and its
          * superclasses that can be assumed to be not initialized. It also 
-         * refines the path condition by adding all the initialization assumption.
+         * refines the path condition by adding all the initialization assumptions.
          * 
          * @param className a {@code String}, the name of the class.
-         * @param it a {@code ListIterator} to {@code this.classesCreated}.
+         * @param it a {@code ListIterator} to {@code this.classesCreated}, or
+         *        {@code null} to add to the end of {@code this.classesCreated}.
          * @throws InvalidInputException if {@code className} is null.
          * @throws DecisionException if the decision procedure fails.
          * @throws BadClassFileException if the classfile for {@code className} or
@@ -513,9 +573,10 @@ public class Util {
          */
         private void phase1(String className, ListIterator<String> it)
         throws InvalidInputException, DecisionException, BadClassFileException {
-            //if there is a Klass object for className, then 
+            //if there is a Klass object for className, 
+            //or if className is in the skip set,
             //there is nothing to do
-            if (this.s.existsKlass(className)) {
+            if (this.s.existsKlass(className) || this.skip.contains(className)) {
                 return;
             }    
 
@@ -570,8 +631,9 @@ public class Util {
 
         /**
          * Phase 2 inits the constant fields for all the {@link Klass} objects
-         * created during phase 1; in the case one of these fields is a 
-         * {@code String} constant launches phase 1 on {@code java.lang.String}.
+         * created during phase 1; Note that we do not care about the initialization  
+         * of {@code java.lang.String} if we meet some {@code String} constant, since
+         * the class is explicitly initialized by the init algorithm.
          * 
          * @throws DecisionException if the decision procedure fails.
          * @throws BadClassFileException if the classfile for any of the 
@@ -602,18 +664,11 @@ public class Util {
                                 v = s.getCalculator().val_(cpv.getValue());
                             } else if (cpv instanceof ConstantPoolString) {
                                 final String stringLit = ((ConstantPoolString) cpv).getValue();
-                                try {
-                                    phase1(JAVA_STRING, it); //TODO could this be eliminated now that java.lang.String is initialized in Algo_INIT?
-                                } catch (InvalidInputException e) {
-                                    //this should never happen
-                                    throw new UnexpectedInternalException(e);
-                                } catch (ClassFileNotFoundException e) {
-                                    throw new ClasspathException(e);
-                                }
                                 s.ensureStringLiteral(stringLit);
                                 v = s.referenceToStringLiteral(stringLit);
-                            } else { //cpv instanceof ConstantPoolClass - should never happen
-                                throw new UnexpectedInternalException("Unexpected constant from constant pool (neither primitive nor java.lang.String)"); 
+                            } else { //should never happen
+                                //TODO is it true with *all* the other constant pool values? Give another look at the JVMS for constant static fields
+                                throw new UnexpectedInternalException("Unexpected constant from constant pool (neither primitive nor java.lang.String)."); 
                                 //TODO put string in constant or throw better exception
                             }
                             k.setFieldValue(sig, v);

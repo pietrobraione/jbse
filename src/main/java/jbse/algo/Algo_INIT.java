@@ -2,7 +2,13 @@ package jbse.algo;
 
 import static jbse.algo.Util.ensureClassCreatedAndInitialized;
 import static jbse.algo.Util.failExecution;
+import static jbse.bc.Signatures.ARITHMETIC_EXCEPTION;
+import static jbse.bc.Signatures.ARRAY_STORE_EXCEPTION;
+import static jbse.bc.Signatures.CLASS_CAST_EXCEPTION;
+import static jbse.bc.Signatures.ILLEGAL_ARGUMENT_EXCEPTION;
+import static jbse.bc.Signatures.ILLEGAL_MONITOR_STATE_EXCEPTION;
 import static jbse.bc.Signatures.JAVA_CLASS;
+import static jbse.bc.Signatures.JAVA_CLASSLOADER_GETSYSTEMCLASSLOADER;
 import static jbse.bc.Signatures.JAVA_FINALIZER;
 import static jbse.bc.Signatures.JAVA_MEMBERNAME;
 import static jbse.bc.Signatures.JAVA_METHOD;
@@ -17,17 +23,22 @@ import static jbse.bc.Signatures.JAVA_THREADGROUP;
 import static jbse.bc.Signatures.JAVA_THREADGROUP_INIT_1;
 import static jbse.bc.Signatures.JAVA_THREADGROUP_INIT_2;
 import static jbse.bc.Signatures.JAVA_SYSTEM_INITIALIZESYSTEMCLASS;
+import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
+import static jbse.bc.Signatures.STACK_OVERFLOW_ERROR;
+
+import java.util.HashSet;
 
 import static java.lang.Thread.NORM_PRIORITY;
 
 import jbse.algo.exc.MissingTriggerParameterException;
+import jbse.bc.Snippet;
 import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
 import jbse.common.exc.ClasspathException;
-import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.InvalidInputException;
 import jbse.jvm.exc.InitializationException;
@@ -48,6 +59,35 @@ import jbse.val.exc.InvalidTypeException;
  *
  */
 public final class Algo_INIT {
+    /**
+     * Class load inhibit set for initial loading.
+     */
+    private HashSet<String> doNotLoad = new HashSet<>();
+    
+    /**
+     * Constructor.
+     */
+    public Algo_INIT() {
+        this.doNotLoad.add(JAVA_METHODHANDLENATIVES);
+        this.doNotLoad.add(JAVA_MEMBERNAME);
+        this.doNotLoad.add(JAVA_METHODHANDLE);
+        this.doNotLoad.add(ILLEGAL_ARGUMENT_EXCEPTION);
+        this.doNotLoad.add(ILLEGAL_MONITOR_STATE_EXCEPTION);
+        this.doNotLoad.add(STACK_OVERFLOW_ERROR);
+        this.doNotLoad.add(ARITHMETIC_EXCEPTION);
+        this.doNotLoad.add(ARRAY_STORE_EXCEPTION);
+        this.doNotLoad.add(CLASS_CAST_EXCEPTION);
+        this.doNotLoad.add(NULL_POINTER_EXCEPTION);
+        this.doNotLoad.add(OUT_OF_MEMORY_ERROR);
+        this.doNotLoad.add(JAVA_FINALIZER);
+        this.doNotLoad.add(JAVA_METHOD);
+        this.doNotLoad.add(JAVA_CLASS);
+        this.doNotLoad.add(JAVA_THREAD);
+        this.doNotLoad.add(JAVA_THREADGROUP);
+        this.doNotLoad.add(JAVA_SYSTEM);
+        this.doNotLoad.add(JAVA_STRING);
+    }
+    
     public void exec(ExecutionContext ctx) 
     throws DecisionException, InitializationException, 
     InvalidClassFileFactoryClassException, ClasspathException {
@@ -67,23 +107,8 @@ public final class Algo_INIT {
     DecisionException, ClasspathException {
         final State state = new State(ctx.maxSimpleArrayLength, ctx.maxHeapSize, ctx.classpath, ctx.classFileFactoryClass, ctx.expansionBackdoor, ctx.calc);
 
-        //adds a method frame for the initial method invocation (and possibly triggers)
-        try {
-            //TODO resolve rootMethodSignature and lookup implementation
-            //TODO instead of assuming that {ROOT}:this exists and create the frame, use lazy initialization also on {ROOT}:this, for homogeneity and to explore a wider range of alternatives  
-            final ReferenceSymbolic rootThis = state.pushFrameSymbolic(ctx.rootMethodSignature);
-            if (rootThis != null) {
-                final String className = state.getObject(rootThis).getType();
-                final DecisionAlternative_XLOAD_GETX_Expands rootExpansion = ctx.decisionProcedure.getRootDecisionAlternative(rootThis, className);
-                ctx.triggerManager.loadTriggerFramesRoot(state, rootExpansion);
-            }
-        } catch (BadClassFileException | MethodNotFoundException | MethodCodeNotFoundException e) {
-            throw new ClasspathException(e);
-        } catch (MissingTriggerParameterException | HeapMemoryExhaustedException e) {
-            throw new InitializationException(e);
-        } catch (ThreadStackEmptyException e) {
-            throw new UnexpectedInternalException(e);
-        }
+        //pushes a frame for the root method (and possibly triggers)
+        invokeRootMethod(state, ctx);
 
         //creates and initializes the root class
         initializeClass(state, ctx.rootMethodSignature.getClassName(), ctx);
@@ -101,9 +126,95 @@ public final class Algo_INIT {
         initializeClass(state, JAVA_MEMBERNAME, ctx);
         initializeClass(state, JAVA_METHODHANDLE, ctx);
         
-        //TODO invoke java.lang.ClassLoader.getSystemClassLoader
+        //pushes a frame for java.lang.ClassLoader.getSystemClassLoader
+        invokeGetSystemClassLoader(state);
+        
+        //creates and initializes some error/exception classes
+        //(actually they do not have any static initializer, but
+        //they might in the future)
+        initializeClass(state, ILLEGAL_ARGUMENT_EXCEPTION, ctx);
+        initializeClass(state, ILLEGAL_MONITOR_STATE_EXCEPTION, ctx);
+        initializeClass(state, STACK_OVERFLOW_ERROR, ctx);
+        initializeClass(state, ARITHMETIC_EXCEPTION, ctx);
+        initializeClass(state, ARRAY_STORE_EXCEPTION, ctx);
+        initializeClass(state, CLASS_CAST_EXCEPTION, ctx);
+        initializeClass(state, NULL_POINTER_EXCEPTION, ctx);
+        initializeClass(state, OUT_OF_MEMORY_ERROR, ctx);
 
         //pushes a frame for java.lang.System.initializeSystemClass
+        invokeInitializeSystemClass(state);
+        
+        //creates and initializes more standard classes
+        initializeClass(state, JAVA_FINALIZER, ctx);
+        initializeClass(state, JAVA_METHOD, ctx);
+        initializeClass(state, JAVA_CLASS, ctx);
+
+        //creates the initial thread and thread group
+        createInitialThreadAndThreadGroups(state, ctx);
+        
+        //creates and initializes more standard classes
+        initializeClass(state, JAVA_THREAD, ctx);
+        initializeClass(state, JAVA_THREADGROUP, ctx);
+        initializeClass(state, JAVA_SYSTEM, ctx);
+        initializeClass(state, JAVA_STRING, ctx);
+
+        //done
+        return state;
+    }
+    
+    private void invokeRootMethod(State state, ExecutionContext ctx) 
+    throws ClasspathException, InitializationException {
+        try {
+            //TODO resolve rootMethodSignature and lookup implementation
+            //TODO instead of assuming that {ROOT}:this exists and create the frame, use lazy initialization also on {ROOT}:this, for homogeneity and to explore a wider range of alternatives  
+            final ReferenceSymbolic rootThis = state.pushFrameSymbolic(ctx.rootMethodSignature);
+            if (rootThis != null) {
+                final String className = state.getObject(rootThis).getType();
+                final DecisionAlternative_XLOAD_GETX_Expands rootExpansion = ctx.decisionProcedure.getRootDecisionAlternative(rootThis, className);
+                ctx.triggerManager.loadTriggerFramesRoot(state, rootExpansion);
+            }
+        } catch (BadClassFileException | MethodNotFoundException | MethodCodeNotFoundException e) {
+            throw new ClasspathException(e);
+        } catch (MissingTriggerParameterException | HeapMemoryExhaustedException e) {
+            throw new InitializationException(e);
+        } catch (ThreadStackEmptyException e) {
+            //this should not happen at this point
+            failExecution(e);
+        }
+    }
+    
+    private void initializeClass(State state, String className, ExecutionContext ctx) 
+    throws DecisionException, ClasspathException, InitializationException {
+        this.doNotLoad.remove(className);
+        try {
+            ensureClassCreatedAndInitialized(state, className, ctx, this.doNotLoad);
+        } catch (InterruptException e) {
+            //nothing to do: fall through
+        } catch (HeapMemoryExhaustedException e) {
+            throw new InitializationException(e);
+        } catch (BadClassFileException e) {
+            throw new ClasspathException(e);
+        } catch (InvalidInputException e) {
+            //this should not happen at this point
+            failExecution(e);
+        }
+    }
+    
+    private void invokeGetSystemClassLoader(State state) {
+        try {
+            final Snippet snippet = state.snippetFactory()
+                .op_invokestatic(JAVA_CLASSLOADER_GETSYSTEMCLASSLOADER)
+                .op_pop() //discards the return value
+                .op_return()
+                .mk();
+            state.pushSnippetFrame(snippet, 0);
+        } catch (BadClassFileException | ThreadStackEmptyException | InvalidProgramCounterException e) {
+            //this should not happen now
+            failExecution(e);
+        }
+    }
+    
+    private void invokeInitializeSystemClass(State state) {
         try {
             state.pushFrame(JAVA_SYSTEM_INITIALIZESYSTEMCLASS, false, 0);
         } catch (NullMethodReceiverException | BadClassFileException | MethodNotFoundException | 
@@ -112,17 +223,10 @@ public final class Algo_INIT {
             //this should not happen now
             failExecution(e);
         }
-        
-        //creates and initializes more standard classes
-        initializeClass(state, JAVA_FINALIZER, ctx);
-        initializeClass(state, JAVA_METHOD, ctx);
-        initializeClass(state, JAVA_CLASS, ctx);
-        initializeClass(state, JAVA_THREAD, ctx);
-        initializeClass(state, JAVA_THREADGROUP, ctx);
-        initializeClass(state, JAVA_SYSTEM, ctx);
-        initializeClass(state, JAVA_STRING, ctx);
-
-        //TODO put all this code in a snippet and invoke it at the right moment
+    }
+    
+    private void createInitialThreadAndThreadGroups(State state, ExecutionContext ctx) 
+    throws InitializationException, ClasspathException {
         try {
             //creates the initial thread and thread group
             final ReferenceConcrete systemThreadGroup = state.createInstance(JAVA_THREADGROUP);
@@ -146,24 +250,6 @@ public final class Algo_INIT {
         } catch (NullMethodReceiverException | InvalidSlotException | InvalidProgramCounterException |
                  InvalidTypeException | ThreadStackEmptyException e) {
             //this should never happen
-            failExecution(e);
-        }
-
-        return state;
-    }
-    
-    private void initializeClass(State state, String className, ExecutionContext ctx) 
-    throws DecisionException, ClasspathException, InitializationException {
-        try {
-            ensureClassCreatedAndInitialized(state, className, ctx);
-        } catch (InterruptException e) {
-            //nothing to do: fall through
-        } catch (HeapMemoryExhaustedException e) {
-            throw new InitializationException(e);
-        } catch (BadClassFileException e) {
-            throw new ClasspathException(e);
-        } catch (InvalidInputException e) {
-            //this should not happen at this point
             failExecution(e);
         }
     }
