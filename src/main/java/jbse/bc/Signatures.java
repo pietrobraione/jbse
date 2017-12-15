@@ -68,11 +68,13 @@ public final class Signatures {
     public static final String JAVA_CLASSLOADER_PARALLELLOADERS = "java/lang/ClassLoader$ParallelLoaders";
     public static final String JAVA_CLASSVALUE               = "java/lang/ClassValue";
     public static final String JAVA_CLONEABLE                = "java/lang/Cloneable";
+    public static final String JAVA_CODESOURCE               = "java/security/CodeSource";
     public static final String JAVA_CODINGERRORACTION        = "java/nio/charset/CodingErrorAction";
     public static final String JAVA_COLLECTIONS              = "java/util/Collections";
     public static final String JAVA_COLLECTIONS_EMPTYLIST    = "java/util/Collections$EmptyList";
     public static final String JAVA_COLLECTIONS_EMPTYMAP     = "java/util/Collections$EmptyMap";
     public static final String JAVA_COLLECTIONS_EMPTYSET     = "java/util/Collections$EmptySet";
+    public static final String JAVA_COLLECTIONS_SETFROMMAP   = "java/util/Collections$SetFromMap";
     public static final String JAVA_COLLECTIONS_SYNCHRONIZEDCOLLECTION       = "java/util/Collections$SynchronizedCollection";
     public static final String JAVA_COLLECTIONS_SYNCHRONIZEDSET              = "java/util/Collections$SynchronizedSet";
     public static final String JAVA_COLLECTIONS_UNMODIFIABLECOLLECTION       = "java/util/Collections$UnmodifiableCollection";
@@ -99,6 +101,8 @@ public final class Signatures {
     public static final String JAVA_FILTERINPUTSTREAM        = "java/io/FilterInputStream";
     public static final String JAVA_FILTEROUTPUTSTREAM       = "java/io/FilterOutputStream";
     public static final String JAVA_FINALIZER                = "java/lang/ref/Finalizer";
+    public static final String JAVA_FINALIZER_FINALIZERTHREAD = "java/lang/ref/Finalizer$FinalizerThread";
+    public static final String JAVA_FINALREFERENCE           = "java/lang/ref/FinalReference";
     public static final String JAVA_FLOAT                    = "java/lang/Float";
     public static final String JAVA_HASHMAP                  = "java/util/HashMap";
     public static final String JAVA_HASHMAP_NODE             = "java/util/HashMap$Node";
@@ -146,6 +150,10 @@ public final class Signatures {
     public static final String JAVA_PRIVILEGEDACTION         = "java/security/PrivilegedAction";
     public static final String JAVA_PRIVILEGEDEXCEPTIONACTION = "java/security/PrivilegedExceptionAction";
     public static final String JAVA_PROPERTIES               = "java/util/Properties";
+    public static final String JAVA_PROTECTIONDOMAIN         = "java/security/ProtectionDomain";
+    public static final String JAVA_PROTECTIONDOMAIN_2       = "java/security/ProtectionDomain$2";
+    public static final String JAVA_PROTECTIONDOMAIN_JAVASECURITYACCESSIMPL = "java/security/ProtectionDomain$JavaSecurityAccessImpl";
+    public static final String JAVA_PROTECTIONDOMAIN_KEY     = "java/security/ProtectionDomain$Key";
     public static final String JAVA_REFERENCE                = "java/lang/ref/Reference";
     public static final String JAVA_REFERENCE_1              = "java/lang/ref/Reference$1";
     public static final String JAVA_REFERENCE_LOCK           = "java/lang/ref/Reference$Lock";
@@ -159,6 +167,7 @@ public final class Signatures {
     public static final String JAVA_RUNTIME                  = "java/lang/Runtime";
     public static final String JAVA_RUNTIMEEXCEPTION         = "java/lang/RuntimeException";
     public static final String JAVA_RUNTIMEPERMISSION        = "java/lang/RuntimePermission";
+    public static final String JAVA_SECURECLASSLOADER        = "java/security/SecureClassLoader";
     public static final String JAVA_SERIALIZABLE             = "java/io/Serializable";
     public static final String JAVA_SHORT                    = "java/lang/Short";
     public static final String JAVA_SHORT_SHORTCACHE         = "java/lang/Short$ShortCache";
@@ -170,7 +179,9 @@ public final class Signatures {
     public static final String JAVA_STRING_CASEINSCOMP       = "java/lang/String$CaseInsensitiveComparator";
     public static final String JAVA_STRINGBUILDER            = "java/lang/StringBuilder";
     public static final String JAVA_SYSTEM                   = "java/lang/System";
+    public static final String JAVA_SYSTEM_2                 = "java/lang/System$2";
     public static final String JAVA_TERMINATOR               = "java/lang/Terminator";
+    public static final String JAVA_TERMINATOR_1             = "java/lang/Terminator$1";
     public static final String JAVA_THREAD                   = "java/lang/Thread";
     public static final String JAVA_THREADGROUP              = "java/lang/ThreadGroup";
     public static final String JAVA_THREADLOCAL              = "java/lang/ThreadLocal";
@@ -178,22 +189,35 @@ public final class Signatures {
     public static final String JAVA_THROWABLE_SENTINELHOLDER = "java/lang/Throwable$SentinelHolder";
     public static final String JAVA_TREESET                  = "java/util/TreeSet";
     public static final String JAVA_UNIXFILESYSTEM           = "java/io/UnixFileSystem";
+    public static final String JAVA_URLCLASSLOADER           = "java/net/URLClassLoader";
+    public static final String JAVA_URLCLASSLOADER_7         = "java/net/URLClassLoader$7";
+    public static final String JAVA_URLSTREAMHANDLER         = "java/net/URLStreamHandler";
     public static final String JAVA_VECTOR                   = "java/util/Vector";
     public static final String JAVA_VOID                     = "java/lang/Void";
+    public static final String JAVA_WEAKHASHMAP              = "java/util/WeakHashMap";
+    public static final String JAVA_WEAKHASHMAP_ENTRY        = "java/util/WeakHashMap$Entry";
+    public static final String JAVA_WEAKHASHMAP_KEYSET       = "java/util/WeakHashMap$KeySet";
+    public static final String JAVA_WEAKREFERENCE            = "java/lang/ref/WeakReference";
     public static final String JAVA_WINNTFILESYSTEM          = "java/io/WinNTFileSystem";
     public static final String JAVA_WRITER                   = "java/io/Writer";
     public static final String JBSE_ANALYSIS                 = internalClassName(jbse.meta.Analysis.class.getCanonicalName());
     public static final String JBSE_BASE                     = internalClassName(jbse.base.Base.class.getCanonicalName());
     public static final String SUN_CLEANER                   = "sun/misc/Cleaner";
     public static final String SUN_CONSTRUCTORACCESSORIMPL   = "sun/reflect/ConstructorAccessorImpl";
+    public static final String SUN_DEBUG                     = "sun/security/util/Debug";
     public static final String SUN_DELEGATINGCONSTRUCTORACCESSORIMPL = "sun/reflect/DelegatingConstructorAccessorImpl";
     public static final String SUN_FASTCHARSETPROVIDER       = "sun/nio/cs/FastCharsetProvider";
     public static final String SUN_GETPROPERTYACTION         = "sun/security/action/GetPropertyAction";
+    public static final String SUN_HANDLER                   = "sun/net/www/protocol/jar/Handler";
     public static final String SUN_LAUNCHER                  = "sun/misc/Launcher";
     public static final String SUN_LAUNCHERHELPER            = "sun/launcher/LauncherHelper";
+    public static final String SUN_LAUNCHER_EXTCLASSLOADER   = "sun/misc/Launcher$ExtClassLoader";
+    public static final String SUN_LAUNCHER_EXTCLASSLOADER_1 = "sun/misc/Launcher$ExtClassLoader$1";
     public static final String SUN_LAUNCHER_FACTORY          = "sun/misc/Launcher$Factory";
     public static final String SUN_MAGICACCESSORIMPL         = "sun/reflect/MagicAccessorImpl";
     public static final String SUN_NATIVECONSTRUCTORACCESSORIMPL = "sun/reflect/NativeConstructorAccessorImpl";
+    public static final String SUN_NATIVESIGNALHANDLER       = "sun/misc/NativeSignalHandler";
+    public static final String SUN_OSENVIRONMENT             = "sun/misc/OSEnvironment";
     public static final String SUN_PREHASHEDMAP              = "sun/util/PreHashedMap";
     public static final String SUN_REFLECTION                = "sun/reflect/Reflection";
     public static final String SUN_REFLECTIONFACTORY         = "sun/reflect/ReflectionFactory";
@@ -236,6 +260,7 @@ public final class Signatures {
     //errors
     public static final String ABSTRACT_METHOD_ERROR               = "java/lang/AbstractMethodError";
     public static final String CLASS_FORMAT_ERROR                  = "java/lang/ClassFormatError";
+    public static final String ERROR                               = "java/lang/Error";
     public static final String ILLEGAL_ACCESS_ERROR                = "java/lang/IllegalAccessError";
     public static final String INCOMPATIBLE_CLASS_CHANGE_ERROR     = "java/lang/IncompatibleClassChangeError";
     public static final String NO_CLASS_DEFINITION_FOUND_ERROR     = "java/lang/NoClassDefFoundError";
@@ -244,6 +269,7 @@ public final class Signatures {
     public static final String OUT_OF_MEMORY_ERROR                 = "java/lang/OutOfMemoryError";
     public static final String STACK_OVERFLOW_ERROR                = "java/lang/StackOverflowError";
     public static final String VERIFY_ERROR                        = "java/lang/VerifyError";
+    public static final String VIRTUAL_MACHINE_ERROR               = "java/lang/VirtualMachineError";
     
     //descriptors (for signature polymorphic methods)
     public static final String SIGNATURE_POLYMORPHIC_DESCRIPTOR = "(" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND;
