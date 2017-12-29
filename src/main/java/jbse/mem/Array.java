@@ -567,7 +567,7 @@ public final class Array extends Objekt {
         if (initSymbolic) {
             entryValue = null;
         } else if (initValue == null) {
-            entryValue = this.calc.createDefault(Type.getArrayMemberType(this.type)); 
+            entryValue = this.calc.createDefault(Type.getArrayMemberType(this.type).charAt(0)); 
         } else {
             entryValue = initValue;
         }

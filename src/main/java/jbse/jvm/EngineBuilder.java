@@ -85,7 +85,7 @@ public class EngineBuilder {
         //sets the meta-level directives
         setMeta(ctx, parameters);
 
-        final VariableObserverManager vom = new VariableObserverManager();
+        final VariableObserverManager vom = new VariableObserverManager(parameters.getMethodSignature().getClassName());
 
         //sets the observers
         setObservers(vom, parameters);
