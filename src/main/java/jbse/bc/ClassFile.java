@@ -70,9 +70,9 @@ public abstract class ClassFile {
     public abstract int getAccessFlags();
 
     /**
-     * Test whether the class is an array.
+     * Test whether the class is an array class.
      * 
-     * @return {@code true} iff the class is an interface.
+     * @return {@code true} iff the class is an array class.
      */
     public abstract boolean isArray();
     
@@ -89,6 +89,15 @@ public abstract class ClassFile {
      * @return {@code true} iff the class is primitive.
      */
     public abstract boolean isPrimitive();
+    
+    /**
+     * Equivalent to {@code !}{@link #isPrimitive()}{@code  && }{@code !}{@link #isArray()}.
+     * 
+     * @return {@code true} iff the class is the class for an object type.
+     */
+    public final boolean isReference() {
+        return !isPrimitive() && !isArray();
+    }
 
     /**
      * Test whether the class is an interface.

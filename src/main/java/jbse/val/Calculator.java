@@ -1,6 +1,19 @@
 package jbse.val;
 
-import jbse.common.Type;
+import static jbse.common.Type.ARRAYOF;
+import static jbse.common.Type.BOOLEAN;
+import static jbse.common.Type.BYTE;
+import static jbse.common.Type.CHAR;
+import static jbse.common.Type.DOUBLE;
+import static jbse.common.Type.FLOAT;
+import static jbse.common.Type.INT;
+import static jbse.common.Type.LONG;
+import static jbse.common.Type.narrows;
+import static jbse.common.Type.NULLREF;
+import static jbse.common.Type.REFERENCE;
+import static jbse.common.Type.SHORT;
+import static jbse.common.Type.widens;
+
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidOperatorException;
@@ -270,35 +283,35 @@ public abstract class Calculator {
      * as from JVM specification (see JVMS v8, 
      * section 2.3 and section 2.4).
      *  
-     * @param type a type.
+     * @param type a {@code char}.
      * @return a new instance of {@link Value}, the default for {@code type}
      *         (either a {@link Simplex} or {@link Null#getInstance()}), 
      *         or {@code null} if {@code type} does not 
      *         indicate a primitive or reference type.
      */
-    public Value createDefault(String type) {
-        switch (type.charAt(0)) {
-        case Type.BYTE:
+    public Value createDefault(char type) {
+        switch (type) {
+        case BYTE:
             return DEFAULT_BYTE;
-        case Type.SHORT:
+        case SHORT:
             return DEFAULT_SHORT;
-        case Type.INT:
+        case INT:
             return DEFAULT_INT;
-        case Type.LONG:
+        case LONG:
             return DEFAULT_LONG;
-        case Type.FLOAT:
+        case FLOAT:
             return DEFAULT_FLOAT;
-        case Type.DOUBLE:
+        case DOUBLE:
             return DEFAULT_DOUBLE;
-        case Type.CHAR:
+        case CHAR:
             return DEFAULT_CHAR;
-        case Type.BOOLEAN:
+        case BOOLEAN:
             return DEFAULT_BOOL;
-        case Type.REFERENCE:
-        case Type.NULLREF:
-        case Type.ARRAYOF:
+        case ARRAYOF:
+        case NULLREF:
+        case REFERENCE:
             return DEFAULT_REFERENCE;
-        default:
+        default: //Type.VOID
             return null;
         }
     }
@@ -733,10 +746,10 @@ public abstract class Calculator {
         if (type == argType) {
             return arg;
         }
-        if (Type.widens(type, argType)) {
+        if (widens(type, argType)) {
             return widen(type, arg);
         }
-        if (Type.narrows(type, argType)) {
+        if (narrows(type, argType)) {
             return narrow(type, arg);
         }
         throw new InvalidTypeException("cannot convert type " + argType + " to type " + type);

@@ -2,6 +2,7 @@ package jbse.base;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
 import java.security.AccessControlContext;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
@@ -172,7 +173,7 @@ public final class Base {
      * @see java.lang.System#initProperties(Properties)
      */
     private static Properties base_JAVA_SYSTEM_INITPROPERTIES(Properties p) {
-        //properties taken from openjdk 8, jdk project, file src/share/native/java/lang/System.c
+        //properties taken from openjdk 8, jdk:src/share/native/java/lang/System.c
         putSafe(p, "java.specification.version", "1.8");
         putSafe(p, "java.specification.name",    "Java Platform API Specification");
         putSafe(p, "java.specification.vendor",  "Oracle Corporation");
@@ -231,7 +232,7 @@ public final class Base {
     /**
      * Helper method for {@link sun.reflect.NativeConstructorAccessorImpl#newInstanceFromConstructor(Constructor, Object[])}.
      * Just boxes the exceptions that are raised by the execution of a constructor 
-     * into an {@link InvocationTargetException} and rethrows them
+     * into an {@link InvocationTargetException} and rethrows them.
      */
     private static void boxInvocationTargetException() 
     throws InvocationTargetException {
@@ -312,6 +313,15 @@ public final class Base {
     private static int base_SUN_UNSAFE_ARRAYINDEXSCALE(Unsafe _this, Class<?> arrayClass) {
         //JBSE raw array offsets are plain array indices, so scale is one
         return 1; 
+    }
+    
+    /**
+     * Overriding implementation of {@link sun.misc.URLClassPath#getLookupCacheURLs(ClassLoader)}.
+     * @see sun.misc.URLClassPath#getLookupCacheURLs(ClassLoader)
+     */
+    private static URL[] base_SUN_URLCLASSPATH_GETLOOKUPCACHEURLS(ClassLoader loader) {
+        //no caches, sorry
+        return null;
     }
 
     private Base() {

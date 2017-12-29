@@ -2,6 +2,7 @@ package jbse.algo;
 
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLCONTEXT;
 import static jbse.bc.Signatures.JAVA_CLASS;
+import static jbse.bc.Signatures.JAVA_CLASSLOADER;
 import static jbse.bc.Signatures.JAVA_FIELD;
 import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_PRIVILEGEDACTION;
@@ -10,7 +11,9 @@ import static jbse.bc.Signatures.JAVA_PROPERTIES;
 import static jbse.bc.Signatures.JAVA_RUNTIME;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_THREAD;
+import static jbse.bc.Signatures.JAVA_URL;
 import static jbse.bc.Signatures.SUN_UNSAFE;
+import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.BOOLEAN;
 import static jbse.common.Type.INT;
 import static jbse.common.Type.internalClassName;
@@ -168,4 +171,8 @@ public final class Overrides {
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + SUN_UNSAFE + TYPEEND + REFERENCE + JAVA_FIELD + TYPEEND + ")" + LONG, 
                       "base_SUN_UNSAFE_OBJECTFIELDOFFSET");
+    public static final Signature BASE_SUN_URLCLASSPATH_GETLOOKUPCACHEURLS =
+        new Signature(JBSE_BASE, 
+                      "(" + REFERENCE + JAVA_CLASSLOADER + TYPEEND + ")" + ARRAYOF + REFERENCE + JAVA_URL + TYPEEND, 
+                      "base_SUN_URLCLASSPATH_GETLOOKUPCACHEURLS");
 }

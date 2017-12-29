@@ -26,21 +26,21 @@ import jbse.val.Simplex;
  * on the current assumption.
  */
 public interface DecisionProcedure extends AutoCloseable {
-	/**
-	 * Possibly delays checking that the pushed clauses 
-	 * are inconsistent with the current cumulated 
-	 * assumption ("fast and imprecise" mode). 
-	 */
-	default void goFastAndImprecise() { }
-	
-	/**
-	 * Checks that all the pushed assumption clauses are 
-	 * consistent with the current cumulated assumptions. 
-	 * This is the mode of the decision procedure after
-	 * creation. 
-	 */
-	default void stopFastAndImprecise() { }
-	
+    /**
+     * Possibly delays checking that the pushed clauses 
+     * are inconsistent with the current cumulated 
+     * assumption ("fast and imprecise" mode). 
+     */
+    default void goFastAndImprecise() { }
+
+    /**
+     * Checks that all the pushed assumption clauses are 
+     * consistent with the current cumulated assumptions. 
+     * This is the mode of the decision procedure after
+     * creation. 
+     */
+    default void stopFastAndImprecise() { }
+
     /**
      * Adds a {@link Clause} to the cumulated assumptions. This method 
      * <emph>may</emph> be faster (it needs not to be) when invoked 
@@ -58,17 +58,17 @@ public interface DecisionProcedure extends AutoCloseable {
      *         {@link #goFastAndImprecise()} the latter check 
      *         <emph>might not</emph> be performed).
      */
-	void pushAssumption(Clause c) 
-	throws InvalidInputException, DecisionException;
-    
+    void pushAssumption(Clause c) 
+    throws InvalidInputException, DecisionException;
+
     /**
      * Drops the current assumptions.
      * 
      * @throws DecisionException upon failure.
      */
-	void clearAssumptions() throws DecisionException;
-	
-	
+    void clearAssumptions() throws DecisionException;
+
+
     /**
      * Adds to the current assumptions more assumptions.  
      * 
@@ -79,15 +79,15 @@ public interface DecisionProcedure extends AutoCloseable {
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
      */	
-	default void addAssumptions(Iterable<Clause> assumptionsToAdd) 
-	throws InvalidInputException, DecisionException {
-	    if (assumptionsToAdd == null) {
-	        throw new InvalidInputException("addAssumptions invoked with a null parameter.");
-	    }
-		for (Clause c : assumptionsToAdd) {
-			pushAssumption(c);
-		}
-	}
+    default void addAssumptions(Iterable<Clause> assumptionsToAdd) 
+    throws InvalidInputException, DecisionException {
+        if (assumptionsToAdd == null) {
+            throw new InvalidInputException("addAssumptions invoked with a null parameter.");
+        }
+        for (Clause c : assumptionsToAdd) {
+            pushAssumption(c);
+        }
+    }
 
     /**
      * Changes the current assumptions.  
@@ -99,12 +99,12 @@ public interface DecisionProcedure extends AutoCloseable {
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
      */
-	default void setAssumptions(Collection<Clause> newAssumptions) 
-	throws InvalidInputException, DecisionException {
-		clearAssumptions();
-		addAssumptions(newAssumptions);
-	}
-	
+    default void setAssumptions(Collection<Clause> newAssumptions) 
+    throws InvalidInputException, DecisionException {
+        clearAssumptions();
+        addAssumptions(newAssumptions);
+    }
+
     /**
      * Gets the current assumptions.
      * 
@@ -112,8 +112,8 @@ public interface DecisionProcedure extends AutoCloseable {
      *         with all the pushed clauses, possibly simplified.
      * @throws DecisionException upon failure.
      */
-	Collection<Clause> getAssumptions() throws DecisionException;
-    
+    Collection<Clause> getAssumptions() throws DecisionException;
+
     /**
      * Determines the satisfiability of an {@link Expression} under the
      * current assumption.
@@ -127,7 +127,7 @@ public interface DecisionProcedure extends AutoCloseable {
      */
     boolean isSat(ClassHierarchy hier, Expression expression) 
     throws InvalidInputException, DecisionException;
-    
+
     /**
      * Determines the satisfiability of a resolution by null under the
      * current assumptions.
@@ -141,7 +141,7 @@ public interface DecisionProcedure extends AutoCloseable {
      */
     boolean isSatNull(ClassHierarchy hier, ReferenceSymbolic r) 
     throws InvalidInputException, DecisionException;
-	
+
     /**
      * Determines the satisfiability of a resolution by aliasing under the
      * current assumptions.
@@ -158,7 +158,7 @@ public interface DecisionProcedure extends AutoCloseable {
      */
     boolean isSatAliases(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o) 
     throws InvalidInputException, DecisionException;
-	
+
     /**
      * Determines the satisfiability of a resolution by expansion under the
      * current assumptions.
@@ -175,7 +175,7 @@ public interface DecisionProcedure extends AutoCloseable {
      */
     boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, String className) 
     throws InvalidInputException, DecisionException;
-	
+
     /**
      * Determines the satisfiability of the assumption that a class is
      * initialized when symbolic execution starts, under the current
@@ -192,7 +192,7 @@ public interface DecisionProcedure extends AutoCloseable {
      */
     boolean isSatInitialized(ClassHierarchy hier, String className) 
     throws InvalidInputException, DecisionException;
-	
+
     /**
      * Determines the satisfiability of the assumption that a class is
      * not initialized when symbolic execution starts, under the current
@@ -209,7 +209,7 @@ public interface DecisionProcedure extends AutoCloseable {
      */
     boolean isSatNotInitialized(ClassHierarchy hier, String className) 
     throws InvalidInputException, DecisionException;
-    
+
     /**
      * Returns a model of the last clause whose satisfiability
      * was checked with one of the {@code isSat}Xxx methods.
@@ -225,7 +225,7 @@ public interface DecisionProcedure extends AutoCloseable {
     throws DecisionException {
         throw new NoModelException();
     }
-    
+
     /**
      * Simplifies a {@link Primitive} under the current assumptions.
      * 
@@ -234,9 +234,9 @@ public interface DecisionProcedure extends AutoCloseable {
      *         under the current assumption (possibly {@code p} itself).
      */
     default Primitive simplify(Primitive p) {
-    	return p; //no simplification by default
+        return p; //no simplification by default
     }
-    
+
     /**
      * Releases the resources of the {@link DecisionProcedure}. After 
      * invocation of this method the {@link DecisionProcedure} cannot be
@@ -246,6 +246,6 @@ public interface DecisionProcedure extends AutoCloseable {
      */
     @Override
     default void close() throws DecisionException {
-		//does nothing
-	}
+        //does nothing
+    }
 }

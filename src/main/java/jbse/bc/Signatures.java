@@ -189,6 +189,7 @@ public final class Signatures {
     public static final String JAVA_THROWABLE_SENTINELHOLDER = "java/lang/Throwable$SentinelHolder";
     public static final String JAVA_TREESET                  = "java/util/TreeSet";
     public static final String JAVA_UNIXFILESYSTEM           = "java/io/UnixFileSystem";
+    public static final String JAVA_URL                      = "java/net/URL";
     public static final String JAVA_URLCLASSLOADER           = "java/net/URLClassLoader";
     public static final String JAVA_URLCLASSLOADER_7         = "java/net/URLClassLoader$7";
     public static final String JAVA_URLSTREAMHANDLER         = "java/net/URLStreamHandler";
@@ -600,6 +601,8 @@ public final class Signatures {
         new Signature(SUN_UNSAFE, "()" + VOID, "registerNatives");
     public static final Signature SUN_UNSAFE_SHOULDBEINITIALIZED =
         new Signature(SUN_UNSAFE, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + BOOLEAN, "shouldBeInitialized");
+    public static final Signature SUN_URLCLASSPATH_GETLOOKUPCACHEURLS =
+        new Signature(SUN_URLCLASSPATH, "(" + REFERENCE + JAVA_CLASSLOADER + TYPEEND + ")" + ARRAYOF + REFERENCE + JAVA_URL + TYPEEND, "getLookupCacheURLs");
     public static final Signature SUN_VM_INITIALIZE = 
         new Signature(SUN_VM, "()" + VOID, "initialize");
     

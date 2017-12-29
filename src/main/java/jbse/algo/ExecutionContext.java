@@ -80,6 +80,7 @@ import static jbse.algo.Overrides.BASE_SUN_SIGNAL_HANDLE0;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ADDRESSSIZE;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ARRAYBASEOFFSET;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ARRAYINDEXSCALE;
+import static jbse.algo.Overrides.BASE_SUN_URLCLASSPATH_GETLOOKUPCACHEURLS;
 
 import static jbse.bc.Signatures.ARITHMETIC_EXCEPTION;
 import static jbse.bc.Signatures.ARRAY_STORE_EXCEPTION;
@@ -431,6 +432,7 @@ import static jbse.bc.Signatures.SUN_UNSAFE_PUTOBJECTVOLATILE;
 import static jbse.bc.Signatures.SUN_UNSAFE_REGISTERNATIVES;
 import static jbse.bc.Signatures.SUN_UNSAFE_SHOULDBEINITIALIZED;
 import static jbse.bc.Signatures.SUN_URLCLASSPATH;
+import static jbse.bc.Signatures.SUN_URLCLASSPATH_GETLOOKUPCACHEURLS;
 import static jbse.bc.Signatures.SUN_UTF_8;
 import static jbse.bc.Signatures.SUN_UTF_8_ENCODER;
 import static jbse.bc.Signatures.SUN_VERIFYACCESS;
@@ -712,6 +714,7 @@ public final class ExecutionContext {
             addMetaOverridden(SUN_UNSAFE_PUTOBJECTVOLATILE,                       ALGO_SUN_UNSAFE_PUTOBJECTVOLATILE);
             addMetaOverridden(SUN_UNSAFE_REGISTERNATIVES,                         ALGO_INVOKEMETA_PURE);
             addMetaOverridden(SUN_UNSAFE_SHOULDBEINITIALIZED,                     ALGO_SUN_UNSAFE_SHOULDBEINITIALIZED);
+            addBaseOverridden(SUN_URLCLASSPATH_GETLOOKUPCACHEURLS,                BASE_SUN_URLCLASSPATH_GETLOOKUPCACHEURLS);
             addMetaOverridden(SUN_VM_INITIALIZE,                                  ALGO_INVOKEMETA_PURE);
 
             //jbse.meta.Analysis methods

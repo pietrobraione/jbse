@@ -279,10 +279,6 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                 throwNew(state, INTERNAL_ERROR);
                 exitFromAlgorithm();
             }
-        } catch (ClassCastException e) {
-            //TODO is it ok?
-            throwVerifyError(state);
-            exitFromAlgorithm();
         } catch (BadClassFileException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -306,6 +302,10 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             e.printStackTrace();
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, OUT_OF_MEMORY_ERROR);
+            exitFromAlgorithm();
+        } catch (ClassCastException e) {
+            //TODO is it ok?
+            throwVerifyError(state);
             exitFromAlgorithm();
         }
     }
