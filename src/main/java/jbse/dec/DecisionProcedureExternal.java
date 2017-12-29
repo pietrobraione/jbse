@@ -136,7 +136,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
     protected final void pushAssumptionLocal(ClauseAssumeExpands cSimpl)
     throws DecisionException { 
         try {
-            this.extIf.sendClauseAssumeExpands(cSimpl.getReference(), cSimpl.getObjekt().getType().getClassName());
+            this.extIf.sendClauseAssumeExpands(cSimpl.getReference(), cSimpl.getObjekt().getType());
         } catch (ExternalProtocolInterfaceException | IOException e) {
             throw new DecisionException(e);
         }
@@ -156,7 +156,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
     protected final void pushAssumptionLocal(ClauseAssumeClassInitialized cSimpl)
     throws DecisionException { 
         try {
-            this.extIf.sendClauseAssumeClassInitialized(cSimpl.getClassFile().getClassName());
+            this.extIf.sendClauseAssumeClassInitialized(cSimpl.getClassName());
         } catch (ExternalProtocolInterfaceException | IOException e) {
             throw new DecisionException(e);
         }
@@ -166,7 +166,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
     protected final void pushAssumptionLocal(ClauseAssumeClassNotInitialized cSimpl) 
     throws DecisionException { 
         try {
-            this.extIf.sendClauseAssumeClassNotInitialized(cSimpl.getClassFile().getClassName());
+            this.extIf.sendClauseAssumeClassNotInitialized(cSimpl.getClassName());
         } catch (ExternalProtocolInterfaceException | IOException e) {
             throw new DecisionException(e);
         }
