@@ -1,6 +1,7 @@
 package jbse.apps;
 
 import static jbse.bc.Opcodes.*;
+import static jbse.common.Util.asUnsignedByte;
 
 import java.util.function.BiFunction;
 
@@ -321,7 +322,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                     if (wide) {
                         UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
                     } else {
-                        UW = f.getInstruction(1);
+                        UW = asUnsignedByte(f.getInstruction(1));
                     }
                     final ConstantPoolValue cpVal = 
                     hier.getClassFile(f.getCurrentMethodSignature().getClassName()).getValueFromConstantPool(UW);
