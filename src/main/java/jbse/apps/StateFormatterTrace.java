@@ -46,7 +46,7 @@ public class StateFormatterTrace implements Formatter {
         } else {
             try {
                 this.output += s.getCurrentMethodSignature() + this.fieldSep + s.getSourceRow() + this.fieldSep 
-                + s.getPC() + this.fieldSep + bcf.format(s);
+                + s.getPC() + this.fieldSep + this.bcf.format(s);
             } catch (ThreadStackEmptyException e) {
                 //the state is not stuck but it has no frames:
                 //this case is not common but it can mean a state

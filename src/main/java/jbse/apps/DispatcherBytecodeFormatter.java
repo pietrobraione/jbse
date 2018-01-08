@@ -305,21 +305,21 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
      * 
      * @author Pietro Braione
      */
-    private static class DispatchStrategyFormat1CO implements DispatchStrategyFormat {
+    private static class DispatchStrategyFormat1ZUX implements DispatchStrategyFormat {
         private final String text;
         private final boolean wide;
 
-        public DispatchStrategyFormat1CO(String text, boolean wide) { 
+        public DispatchStrategyFormat1ZUX(String text, boolean wide) { 
             this.text = text; 
             this.wide = wide;
         }
 
         public TextGenerator doIt() {
             return (Frame f, ClassHierarchy hier) -> {
-                String retVal = DispatchStrategyFormat1CO.this.text + " ";
+                String retVal = DispatchStrategyFormat1ZUX.this.text + " ";
                 try {
                     final int UW;
-                    if (wide) {
+                    if (this.wide) {
                         UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
                     } else {
                         UW = asUnsignedByte(f.getInstruction(1));
@@ -491,16 +491,16 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
      * 
      * @author Pietro Braione
      */
-    private static class DispatchStrategyFormat2LVIM implements DispatchStrategyFormat {
+    private static class DispatchStrategyFormat2LVSX implements DispatchStrategyFormat {
         private final String text;
 
-        public DispatchStrategyFormat2LVIM(String text) {
+        public DispatchStrategyFormat2LVSX(String text) {
             this.text = text;
         }
 
         public TextGenerator doIt() {
             return (Frame f, ClassHierarchy hier) -> {
-                String retVal = DispatchStrategyFormat2LVIM.this.text + " ";
+                String retVal = DispatchStrategyFormat2LVSX.this.text + " ";
                 try {
                     //determines whether the operand is wide
                     boolean wide = false;
@@ -534,20 +534,20 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
      *
      * @author Pietro Braione
      */
-    private static class DispatchStrategyFormatSWITCH implements DispatchStrategyFormat {
+    private static class DispatchStrategyFormat1ZSWITCH implements DispatchStrategyFormat {
         private final String text;
         private final boolean isTableSwitch;
 
-        public DispatchStrategyFormatSWITCH(String text, boolean isTableSwitch) {
+        public DispatchStrategyFormat1ZSWITCH(String text, boolean isTableSwitch) {
             this.text = text; this.isTableSwitch = isTableSwitch;
         }
 
         public TextGenerator doIt() {
             return (Frame f, ClassHierarchy hier) -> {
-                String retVal = DispatchStrategyFormatSWITCH.this.text + " ";
+                String retVal = DispatchStrategyFormat1ZSWITCH.this.text + " ";
                 SwitchTable tab;
                 try {
-                    tab = new SwitchTable(f, null, DispatchStrategyFormatSWITCH.this.isTableSwitch);
+                    tab = new SwitchTable(f, null, DispatchStrategyFormat1ZSWITCH.this.isTableSwitch);
                     final StringBuilder buf = new StringBuilder();
                     for (int val : tab) {
                         final int target = f.getProgramCounter() + tab.jumpOffset(val);
@@ -622,9 +622,9 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
         setCase(OP_LSTORE_3,        new DispatchStrategyFormat0LV("LSTORE_3", 3));
         setCase(OP_BIPUSH,          new DispatchStrategyFormat1SB("BIPUSH"));
         setCase(OP_SIPUSH,          new DispatchStrategyFormat1SW("SIPUSH"));
-        setCase(OP_LDC,             new DispatchStrategyFormat1CO("LDC", false));
-        setCase(OP_LDC_W,           new DispatchStrategyFormat1CO("LDC_W", true));
-        setCase(OP_LDC2_W,          new DispatchStrategyFormat1CO("LDC2_W", true));
+        setCase(OP_LDC,             new DispatchStrategyFormat1ZUX("LDC", false));
+        setCase(OP_LDC_W,           new DispatchStrategyFormat1ZUX("LDC_W", true));
+        setCase(OP_LDC2_W,          new DispatchStrategyFormat1ZUX("LDC2_W", true));
         setCase(OP_ACONST_NULL,     new DispatchStrategyFormat0("ACONST_NULL"));
         setCase(OP_DCONST_0,        new DispatchStrategyFormat0("DCONST_0"));
         setCase(OP_DCONST_1,        new DispatchStrategyFormat0("DCONST_1"));
@@ -676,7 +676,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
         setCase(OP_LAND,            new DispatchStrategyFormat0("LAND"));
         setCase(OP_IXOR,            new DispatchStrategyFormat0("IXOR"));
         setCase(OP_LXOR,            new DispatchStrategyFormat0("LXOR"));
-        setCase(OP_IINC,            new DispatchStrategyFormat2LVIM("IINC"));
+        setCase(OP_IINC,            new DispatchStrategyFormat2LVSX("IINC"));
         setCase(OP_DCMPG,           new DispatchStrategyFormat0("DCMPG"));
         setCase(OP_DCMPL,           new DispatchStrategyFormat0("DCMPL"));
         setCase(OP_FCMPG,           new DispatchStrategyFormat0("FCMPG"));
@@ -749,8 +749,8 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
         setCase(OP_IF_ICMPNE,       new DispatchStrategyFormat1ON("IF_ICMPNE"));
         setCase(OP_IF_ACMPEQ,       new DispatchStrategyFormat1ON("IF_ACMPEQ"));
         setCase(OP_IF_ACMPNE,       new DispatchStrategyFormat1ON("IF_ACMPNE"));
-        setCase(OP_TABLESWITCH,     new DispatchStrategyFormatSWITCH("TABLESWITCH", true));
-        setCase(OP_LOOKUPSWITCH,    new DispatchStrategyFormatSWITCH("LOOKUPSWITCH", false));
+        setCase(OP_TABLESWITCH,     new DispatchStrategyFormat1ZSWITCH("TABLESWITCH", true));
+        setCase(OP_LOOKUPSWITCH,    new DispatchStrategyFormat1ZSWITCH("LOOKUPSWITCH", false));
         setCase(OP_GOTO,            new DispatchStrategyFormat1ON("GOTO"));
         setCase(OP_GOTO_W,          new DispatchStrategyFormat1OF("GOTO_W"));
         setCase(OP_JSR,             new DispatchStrategyFormat1ON("JSR"));
