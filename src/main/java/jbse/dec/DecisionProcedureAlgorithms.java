@@ -211,7 +211,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		}
 	}
 	
-	private final Calculator calc;
+	protected final Calculator calc;
 	
 	public DecisionProcedureAlgorithms(DecisionProcedure component, Calculator calc) {
 		super(component);

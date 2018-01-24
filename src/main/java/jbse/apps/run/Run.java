@@ -121,7 +121,7 @@ public final class Run {
 	private Timer timer = null;
 
 	/** The {@link DecisionProcedureGuidance}, whenever this method is chosen for stepping the {@link Engine}. */
-	private DecisionProcedureGuidance guidance = null;
+	private DecisionProcedureGuidanceJDI guidance = null;
 	
 	/** A purely numeric decision procedure for concretization checks. */
 	private DecisionProcedureAlgorithms decisionProcedureConcretization = null;
@@ -965,7 +965,7 @@ public final class Run {
 			    log(MSG_TRY_GUIDANCE + guidanceDriverParameters.getMethodSignature() + ".");
 			}
 			try {
-				this.guidance = new DecisionProcedureGuidance(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
+				this.guidance = new DecisionProcedureGuidanceJDI(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
 			} catch (GuidanceException | UnexpectedInternalException e) {
 				err(ERROR_GUIDANCE_FAILED + e.getMessage());
 				throw new CannotBuildDecisionProcedureException(e);
