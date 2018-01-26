@@ -58,7 +58,7 @@ public final class MethodFrame extends Frame implements Cloneable {
 
     @Override
     public int getSourceRow() {
-        int retVal = -1;
+        int retVal = UNKNOWN_SOURCE_ROW;
         for (LineNumberTable.Row r : this.lnt) {
             if (r.start > getProgramCounter()) {
                 break;

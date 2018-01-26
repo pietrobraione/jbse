@@ -1,8 +1,11 @@
 package jbse.apps;
 
 import static jbse.apps.Util.formatPrimitive;
+import static jbse.mem.Frame.UNKNOWN_PC;
+import static jbse.mem.Frame.UNKNOWN_SOURCE_ROW;
 
 import jbse.common.exc.UnexpectedInternalException;
+import jbse.mem.SnippetFrameNoContext;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Primitive;
@@ -18,35 +21,38 @@ import jbse.val.Value;
  * @author Pietro Braione
  *
  */
-public class StateFormatterTrace implements Formatter {
+public final class StateFormatterTrace implements Formatter {
     /** 
      * The {@link String} used by {@link StateFormatterTrace#formatState(State)} to
      * indicate a stuck {@link State}. 
      */
-    protected String leaf = "LEAF";
+    private static final String LEAF = "LEAF";
 
     /** The {@link String} used by {@link StateFormatterTrace#formatState(State)} to separates fields. */
-    protected String fieldSep = " ";
+    private static final String FIELD_SEP = " ";
 
     /** Here the result of {@link StateFormatterTrace#formatState(State)}. */
-    protected String output;
+    private String output;
 
     private BytecodeFormatter bcf = new BytecodeFormatter();
 
     public void formatState(State s) {
-        this.output = s.getIdentifier() + "[" + s.getSequenceNumber() + "]" + this.fieldSep 
-        + s.getDepth() + "," + s.getCount() + this.fieldSep;
+        this.output = s.getIdentifier() + "[" + s.getSequenceNumber() + "]" + FIELD_SEP + 
+                      s.getDepth() + "," + s.getCount() + FIELD_SEP;
         if (s.isStuck()) {
-            this.output += this.leaf;
+            this.output += LEAF + FIELD_SEP;
             if (s.getStuckException() != null) {
-                this.output += this.fieldSep + "exception" + this.fieldSep + formatReturn(s, s.getStuckException());
+                this.output += "exception" + FIELD_SEP + formatReturn(s, s.getStuckException());
             } else if (s.getStuckReturn() != null) {
-                this.output += this.fieldSep + "return" + this.fieldSep + formatReturn(s, s.getStuckReturn());
+                this.output += "return" + FIELD_SEP + formatReturn(s, s.getStuckReturn());
             }
         } else {
             try {
-                this.output += s.getCurrentMethodSignature() + this.fieldSep + s.getSourceRow() + this.fieldSep +
-                               s.getPC() + this.fieldSep + this.bcf.format(s);
+                final boolean snippet = (s.getCurrentFrame() instanceof SnippetFrameNoContext);
+                this.output += (snippet ? "(snippet)" : s.getCurrentMethodSignature()) + FIELD_SEP + 
+                               (s.getSourceRow() == UNKNOWN_SOURCE_ROW ? "*" : s.getSourceRow()) + FIELD_SEP +
+                               (s.getPC() == UNKNOWN_PC ? "*" : s.getPC()) + FIELD_SEP +
+                               this.bcf.format(s);
             } catch (ThreadStackEmptyException e) {
                 //the state is not stuck but it has no frames:
                 //this case is not common but it can mean a state

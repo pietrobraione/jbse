@@ -21,6 +21,12 @@ public abstract class Frame implements Cloneable {
      */
     public final static int UNKNOWN_PC = -1;
 
+    /** 
+     * The value for the source row when there is no
+     * source code information.
+     */
+    public final static int UNKNOWN_SOURCE_ROW = -1;
+
     /** the {@link ClassFile} for the current class. */
     private ClassFile currentClass;
     
