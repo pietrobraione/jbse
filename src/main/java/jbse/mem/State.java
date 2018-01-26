@@ -1,10 +1,17 @@
 package jbse.mem;
 
+import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
+import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Signatures.JAVA_CLASS;
+import static jbse.bc.Signatures.JAVA_CLASS_CLASSLOADER;
+import static jbse.bc.Signatures.JAVA_CLASS_NAME;
+import static jbse.bc.Signatures.JAVA_CLASSLOADER;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_STRING_HASH;
 import static jbse.bc.Signatures.JAVA_STRING_VALUE;
+import static jbse.bc.Signatures.JAVA_THROWABLE;
 import static jbse.common.Type.parametersNumber;
+import static jbse.common.Type.binaryClassName;
 import static jbse.common.Type.isPrimitiveCanonicalName;
 
 import java.util.ArrayList;
@@ -27,7 +34,7 @@ import jbse.bc.ExceptionTableEntry;
 import jbse.bc.Signature;
 import jbse.bc.Snippet;
 import jbse.bc.SnippetFactory;
-import jbse.bc.exc.BadClassFileException;
+import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
@@ -36,8 +43,10 @@ import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Objekt.Epoch;
+import jbse.mem.exc.CannotAssumeSymbolicObjectException;
 import jbse.mem.exc.CannotRefineException;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
@@ -92,10 +101,22 @@ public final class State implements Cloneable {
     private HashMap<String, ReferenceConcrete> stringLiterals = new HashMap<>();
 
     /** The {@link ReferenceConcrete}s to {@link Instance_JAVA_CLASS}es for nonprimitive types. */
-    private HashMap<String, ReferenceConcrete> classes = new HashMap<>();
+    private HashMap<ClassFile, ReferenceConcrete> classes = new HashMap<>();
 
     /** The {@link ReferenceConcrete}s to {@link Instance_JAVA_CLASS}es for primitive types. */
     private HashMap<String, ReferenceConcrete> classesPrimitive = new HashMap<>();
+    
+    /** The identifier of the next {@link Instance_JAVA_CLASSLOADER} to be created. */
+    private int nextClassLoaderIdentifier = 1;
+    
+    /** Maps classloader identifiers to {@link ReferenceConcrete}s to {@link Instance_JAVA_CLASSLOADER}. */
+    private ArrayList<ReferenceConcrete> classLoaders = new ArrayList<>();
+    
+    /** 
+     * Used to check whether the {@link Instance_JAVA_CLASSLOADER} for the standard (ext and app) 
+     * classloader are ready (this flag is {@code false} iff they are ready). 
+     */
+    private boolean standardClassLoadersNotReady = true;
     
     /** The {@link ReferenceConcrete}s to {@link Instance}s of {@code java.lang.invoke.MethodType}s. */
     private HashMap<String, ReferenceConcrete> methodTypes = new HashMap<>();
@@ -164,7 +185,7 @@ public final class State implements Cloneable {
 
     /** 
      * The generator for unambiguous symbol identifiers; mutable
-     * because different states at different branch may have different
+     * because different states at different branches may have different
      * generators, possibly starting from the same numbers. 
      */
     private SymbolFactory symbolFactory;
@@ -197,6 +218,7 @@ public final class State implements Cloneable {
                  Map<String, Set<String>> expansionBackdoor, 
                  Calculator calc) 
                  throws InvalidClassFileFactoryClassException {
+        this.classLoaders.add(Null.getInstance()); //classloader 0 is the bootstrap classloader
         this.heap = new Heap(maxHeapSize);
         this.classHierarchy = new ClassHierarchy(cp, fClass, expansionBackdoor);
         this.maxSimpleArrayLength = maxSimpleArrayLength;
@@ -233,7 +255,7 @@ public final class State implements Cloneable {
      *         stack is empty.
      */
     public Value popOperand() throws ThreadStackEmptyException, InvalidNumberOfOperandsException {
-        return this.stack.currentFrame().pop();
+        return getCurrentFrame().pop();
     }
 
     /**
@@ -246,7 +268,7 @@ public final class State implements Cloneable {
      *         {@code num} is negative.
      */
     public void popOperands(int num) throws ThreadStackEmptyException, InvalidNumberOfOperandsException {
-        this.stack.currentFrame().pop(num);
+        getCurrentFrame().pop(num);
     }
 
     /**
@@ -260,7 +282,7 @@ public final class State implements Cloneable {
      */
     public Value topOperand() 
     throws ThreadStackEmptyException, InvalidNumberOfOperandsException {
-        return this.stack.currentFrame().top();
+        return getCurrentFrame().top();
     }
 
     /**
@@ -274,7 +296,7 @@ public final class State implements Cloneable {
      */
     //TODO check that only operand stack types (int, long, float, double, reference) can be pushed, or convert smaller values automatically
     public void pushOperand(Value val) throws ThreadStackEmptyException {
-        this.stack.currentFrame().push(val);		
+        getCurrentFrame().push(val);		
     }
 
     /**
@@ -283,7 +305,7 @@ public final class State implements Cloneable {
      * @throws ThreadStackEmptyException if the thread stack is empty.
      */
     public void clearOperands() throws ThreadStackEmptyException {
-        this.stack.currentFrame().clear();
+        getCurrentFrame().clear();
     }
 
     /**
@@ -304,6 +326,16 @@ public final class State implements Cloneable {
     public void disableAssumptionViolation() {
         this.mayViolateAssumption = false;
     }
+    
+    /**
+     * Returns the current class.
+     * 
+     * @return a {@link ClassFile}.
+     * @throws ThreadStackEmptyException if the stack is empty.
+     */
+    public ClassFile getCurrentClass() throws ThreadStackEmptyException {
+        return getCurrentFrame().getCurrentClass();
+    }
 
     /**
      * Returns the {@link Signature} of the  
@@ -313,7 +345,17 @@ public final class State implements Cloneable {
      * @throws ThreadStackEmptyException if the stack is empty.
      */
     public Signature getCurrentMethodSignature() throws ThreadStackEmptyException {
-        return this.stack.currentFrame().getCurrentMethodSignature();
+        return getCurrentFrame().getCurrentMethodSignature();
+    }
+    
+    /**
+     * Returns the root class.
+     * 
+     * @return a {@link ClassFile}.
+     * @throws ThreadStackEmptyException if the stack is empty.
+     */
+    public ClassFile getRootClass() throws ThreadStackEmptyException {
+        return getRootFrame().getCurrentClass();
     }
 
     /**
@@ -324,7 +366,7 @@ public final class State implements Cloneable {
      * @throws ThreadStackEmptyException if the stack is empty.
      */
     public Signature getRootMethodSignature() throws ThreadStackEmptyException {
-        return this.stack.rootFrame().getCurrentMethodSignature();
+        return getRootFrame().getCurrentMethodSignature();
     }
 
     /**
@@ -336,19 +378,20 @@ public final class State implements Cloneable {
      * @throws ThreadStackEmptyException if the thread stack is empty.
      */
     public Reference getRootObjectReference() throws ThreadStackEmptyException {
-        final Signature s = getRootMethodSignature();
+        final Frame rootFrame = getRootFrame();
+        final Signature rootMethodSignature = getRootMethodSignature();
         try {
-            if (this.classHierarchy.getClassFile(s.getClassName()).isMethodStatic(s)) {
+            if (rootFrame.getCurrentClass().isMethodStatic(rootMethodSignature)) {
                 return null;
             } else {
                 try {
-                    return (Reference) this.stack.rootFrame().getLocalVariableValue(ROOT_THIS_SLOT);
+                    return (Reference) rootFrame.getLocalVariableValue(ROOT_THIS_SLOT);
                 } catch (InvalidSlotException e) {
                     //this should never happen
                     throw new UnexpectedInternalException(e);
                 }
             }
-        } catch (MethodNotFoundException | BadClassFileException e) {
+        } catch (MethodNotFoundException e) {
             throw new UnexpectedInternalException(e);
         }
     }
@@ -366,7 +409,7 @@ public final class State implements Cloneable {
      * @throws ThreadStackEmptyException if the thread stack is empty.
      */
     public String getLocalVariableDeclaredName(int slot) throws ThreadStackEmptyException {
-        return this.stack.currentFrame().getLocalVariableDeclaredName(slot);
+        return getCurrentFrame().getLocalVariableDeclaredName(slot);
     }
 
     /**
@@ -378,7 +421,7 @@ public final class State implements Cloneable {
      * @throws InvalidSlotException if {@code slot} is not a valid slot number.
      */
     public Value getLocalVariableValue(int slot) throws ThreadStackEmptyException, InvalidSlotException {
-        return this.stack.currentFrame().getLocalVariableValue(slot);
+        return getCurrentFrame().getLocalVariableValue(slot);
     }
 
     /**
@@ -391,21 +434,20 @@ public final class State implements Cloneable {
      * @throws InvalidSlotException if {@code slot} is not a valid slot number.
      */
     public void setLocalVariable(int slot, Value val) throws ThreadStackEmptyException, InvalidSlotException {
-        this.stack.currentFrame().setLocalVariableValue(slot, this.stack.currentFrame().getProgramCounter(), val);
+        getCurrentFrame().setLocalVariableValue(slot, this.stack.currentFrame().getProgramCounter(), val);
     }
 
 
     /**
      * Tests whether a class is initialized.
      * 
-     * @param className the name of the class.
-     * @return {@code true} iff the class {@code className} 
-     *         has been initialized. Note that in the positive
-     *         case the {@link State}'s static store contains
-     *         a {@link Klass} object for {@link className}.
+     * @param classFile a {@link ClassFile}.
+     * @return {@code true} iff the {@link State}'s static 
+     *         store contains a {@link Klass} object for 
+     *         {@link classFile}.
      */
-    public boolean existsKlass(String className) {
-        return this.staticMethodArea.contains(className);
+    public boolean existsKlass(ClassFile classFile) {
+        return this.staticMethodArea.contains(classFile);
     }
 
 
@@ -539,14 +581,14 @@ public final class State implements Cloneable {
      * Returns the {@link Klass} object corresponding to 
      * a given class name.
      * 
-     * @param className the name of the class.
+     * @param classFile a {@link ClassFile}.
      * @return the {@link Klass} object corresponding to 
      *         the memory representation of the class 
-     *         {@code className}, or {@code null} 
+     *         {@code classFile}, or {@code null} 
      *         if the class has not been initialized.
      */
-    public Klass getKlass(String className) {
-        return this.staticMethodArea.get(className);
+    public Klass getKlass(ClassFile classFile) {
+        return this.staticMethodArea.get(classFile);
     }
     
     /**
@@ -621,15 +663,15 @@ public final class State implements Cloneable {
      *        the default value for the array member type is used for initialization.
      * @param length
      *        the number of elements in the array.
-     * @param arraySignature
-     *        a {@link String}, the type of the array.
+     * @param arrayClass
+     *        a {@link ClassFile}, the class of the array object.
      * @return a new  {@link ReferenceConcrete} to the newly created object.
-     * @throws InvalidTypeException if {@code arraySignature} is invalid.
+     * @throws InvalidTypeException if {@code arrayClass} is invalid.
      * @throws HeapMemoryExhaustedException if the heap is full.
      */
-    public ReferenceConcrete createArray(Value initValue, Primitive length, String arraySignature) 
+    public ReferenceConcrete createArray(Value initValue, Primitive length, ClassFile arrayClass) 
     throws InvalidTypeException, HeapMemoryExhaustedException {
-        final Array a = new Array(this.calc, false, initValue, length, arraySignature, null, Epoch.EPOCH_AFTER_START, false, this.maxSimpleArrayLength);
+        final Array a = new Array(this.calc, false, initValue, length, arrayClass, null, Epoch.EPOCH_AFTER_START, false, this.maxSimpleArrayLength);
         final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(a));
         initDefaultHashCodeConcrete(a, retVal);
         return retVal;
@@ -641,18 +683,22 @@ public final class State implements Cloneable {
      * with the default values for each field's type.
      * It cannot create instances of the {@code java.lang.Class} class.
      * 
-     * @param className the name of the class of the new object.
+     * @param classFile the {@link ClassFile} for the class of the new object.
      * @return a {@link ReferenceConcrete} to the newly created object.
      * @throws HeapMemoryExhaustedException if the heap is full.
+     * @throws InvalidTypeException  if {@code classFile} is invalid.
      */
-    //TODO throw InvalidTypeException if className is the name of an array class
-    public ReferenceConcrete createInstance(String className) throws HeapMemoryExhaustedException {
-        if (className.equals(JAVA_CLASS)) {
-            //use createInstance_JAVA_CLASS or createInstance_JAVA_METHODTYPE instead
-            throw new RuntimeException(); //TODO better exception
+    public ReferenceConcrete createInstance(ClassFile classFile) 
+    throws HeapMemoryExhaustedException, InvalidTypeException {
+        if (JAVA_CLASS.equals(classFile.getClassName())) {
+            //use createInstance_JAVA_CLASS instead
+            throw new InvalidTypeException("Cannot use method " + getClass().getName() + ".createInstance to create an instance of java.lang.Class.");
         }
-        final Instance myObj = doCreateInstance(className);
+        final Instance myObj = doCreateInstance(classFile);
         final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(myObj));
+        if (myObj instanceof Instance_JAVA_CLASSLOADER) {
+            this.classLoaders.add(retVal);
+        }
         initDefaultHashCodeConcrete(myObj, retVal);
         return retVal;
     }
@@ -663,34 +709,44 @@ public final class State implements Cloneable {
      * because this method does not check whether the heap memory 
      * was exhausted. Use it only to throw critical errors.
      * 
-     * @param className the name of the class of the new object.
+     * @param classFile the {@link ClassFile} for the class of the new object.
      * @return a {@link ReferenceConcrete} to the newly created object.
+     * @throws InvalidTypeException if {@code classFile} is invalid.
      */
-    public ReferenceConcrete createInstanceSurely(String className) {
-        if (className.equals(JAVA_CLASS)) {
+    public ReferenceConcrete createInstanceSurely(ClassFile classFile) throws InvalidTypeException {
+        if (JAVA_CLASS.equals(classFile.getClassName()) || JAVA_CLASSLOADER.equals(classFile.getClassName())) {
             //cannot be used for that
-            throw new RuntimeException(); //TODO better exception
+            throw new InvalidTypeException("Cannot use method " + getClass().getName() + ".createInstanceSurely to create an instance of java.lang.Class or java.lang.Classloader.");
         }
-        final Instance myObj = doCreateInstance(className);
+        final Instance myObj = doCreateInstance(classFile);
         final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNewSurely(myObj));
         initDefaultHashCodeConcrete(myObj, retVal);
         return retVal;
     }
     
-    private Instance doCreateInstance(String className) {
-        if (className.equals(JAVA_CLASS)) {
+    private Instance doCreateInstance(ClassFile classFile) throws InvalidTypeException {
+        if (JAVA_CLASS.equals(classFile.getClassName())) {
             //use createInstance_JAVA_CLASS instead
             throw new RuntimeException(); //TODO better exception
         }
-        final Signature[] fieldsSignatures;
-        final int numOfStaticFields;
+        final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
+        final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
+        final ClassFile cf_JAVA_CLASSLOADER;
         try {
-            numOfStaticFields = this.classHierarchy.numOfStaticFields(className);
-            fieldsSignatures = this.classHierarchy.getAllFields(className);
-        } catch (BadClassFileException e) {
-            throw new UnexpectedInternalException(e); //TODO do something better
+            cf_JAVA_CLASSLOADER = this.classHierarchy.loadCreateClass(JAVA_CLASSLOADER);
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
+                 InvalidInputException | ClassFileNotAccessibleException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
         }
-        return new Instance(this.calc, className, null, Epoch.EPOCH_AFTER_START, numOfStaticFields, fieldsSignatures);
+        if (JAVA_CLASSLOADER.equals(classFile.getClassName())) {
+            System.out.println("Gotcha");
+        }
+        if (this.classHierarchy.isSubclass(classFile, cf_JAVA_CLASSLOADER)) {
+            return new Instance_JAVA_CLASSLOADER(this.calc, classFile, null, Epoch.EPOCH_AFTER_START, this.nextClassLoaderIdentifier++, numOfStaticFields, fieldsSignatures);
+        } else {
+            return new Instance(this.calc, classFile, null, Epoch.EPOCH_AFTER_START, numOfStaticFields, fieldsSignatures);
+        }
     }
 
     /**
@@ -699,27 +755,45 @@ public final class State implements Cloneable {
      * Its fields are initialized with the default values for each 
      * field's type (which should not be a problem since all the fields are transient).
      * 
-     * @param representedClass the name of the class the created {@code Instance_JAVA_CLASS}
-     *        represents.
-     * @param isPrimitive {@code true} iff it represents the class of a primitive type 
-     *        or {@code void}. 
+     * @param representedClass the {@link ClassFile} of the class the new {@code Instance_JAVA_CLASS}
+     *        must represent.
      * @return a {@link ReferenceConcrete} to the newly created object.
      * @throws HeapMemoryExhaustedException if the heap is full.
      */
-    private ReferenceConcrete createInstance_JAVA_CLASS(String representedClass, boolean isPrimitive) 
+    private ReferenceConcrete createInstance_JAVA_CLASS(ClassFile representedClass) 
     throws HeapMemoryExhaustedException {
-        final int numOfStaticFields;
-        final Signature[] fieldsSignatures;
         try {
-            numOfStaticFields = this.classHierarchy.numOfStaticFields(JAVA_CLASS);
-            fieldsSignatures = this.classHierarchy.getAllFields(JAVA_CLASS);
-        } catch (BadClassFileException e) {
-            throw new UnexpectedInternalException(e); //TODO do something better
+            final ClassFile cf_JAVA_CLASS = this.classHierarchy.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLASS);
+            if (cf_JAVA_CLASS == null) {
+                throw new UnexpectedInternalException("Could not find the classfile for java.lang.Class.");
+            }
+            final int numOfStaticFields = this.classHierarchy.numOfStaticFields(cf_JAVA_CLASS);
+            final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(cf_JAVA_CLASS);
+            final Instance myObj = new Instance_JAVA_CLASS(this.calc, cf_JAVA_CLASS, null, Epoch.EPOCH_AFTER_START, representedClass, numOfStaticFields, fieldsSignatures);
+            final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(myObj));
+            
+            //initializes the fields of the new instance
+            
+            //hash code
+            initDefaultHashCodeConcrete(myObj, retVal);
+            
+            //name
+            final String classNameBinary = binaryClassName(representedClass.getClassName());
+            ensureStringLiteral(classNameBinary);
+            final ReferenceConcrete classNameString = referenceToStringLiteral(classNameBinary);
+            myObj.setFieldValue(JAVA_CLASS_NAME, classNameString);
+            
+            //class loader
+            final int classLoader = (representedClass.isAnonymousUnregistered() ? CLASSLOADER_BOOT : representedClass.getDefiningClassLoader()); //Instance_JAVA_CLASS for anonymous classfiles have the classloader field set to null
+            myObj.setFieldValue(JAVA_CLASS_CLASSLOADER, this.classLoaders.get(classLoader));
+            
+            //TODO more fields
+            
+            return retVal;
+        } catch (InvalidTypeException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e); //TODO do something better?
         }
-        final Instance myObj = new Instance_JAVA_CLASS(this.calc, null, Epoch.EPOCH_AFTER_START, representedClass, isPrimitive, numOfStaticFields, fieldsSignatures);
-        final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(myObj));
-        initDefaultHashCodeConcrete(myObj, retVal);
-        return retVal;
     }
 
     /**
@@ -729,21 +803,19 @@ public final class State implements Cloneable {
      * {@code <clinit>} methods. It does not create {@link Klass} objects
      * for superclasses. If the {@link Klass} already exists it does nothing.
      * 
-     * @param className the name of the class to be loaded. The method 
-     *        creates and loads a {@link Klass} object only for {@code className}, 
+     * @param classFile a {@link ClassFile}. The method 
+     *        creates and loads a {@link Klass} object only for {@code classFile}, 
      *        not for its superclasses in the hierarchy.
-     * @throws BadClassFileException when the classfile for {@code className} 
-     *         cannot be found in the classpath or is ill-formed.
      */
-    public void ensureKlass(String className) throws BadClassFileException {
-        if (existsKlass(className)) {
+    public void ensureKlass(ClassFile classFile) {
+        if (existsKlass(classFile)) {
             return;
         }
-        final int numOfStaticFields = this.classHierarchy.numOfStaticFields(className);
-        final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(className);
-        final Klass k = new Klass(State.this.calc, null, Objekt.Epoch.EPOCH_AFTER_START, numOfStaticFields, fieldsSignatures);
+        final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
+        final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
+        final Klass k = new Klass(this.calc, null, Objekt.Epoch.EPOCH_AFTER_START, numOfStaticFields, fieldsSignatures);
         k.setObjektDefaultHashCode(this.calc.valInt(0)); //doesn't care because it is not used
-        this.staticMethodArea.set(className, k);
+        this.staticMethodArea.set(classFile, k);
     }
 
     /**
@@ -754,21 +826,19 @@ public final class State implements Cloneable {
      * does nothing.
      * 
      * @param className the name of the class to be loaded.
-     * @throws BadClassFileException when the classfile for {@code className} 
-     *         cannot be found in the classpath or is ill-formed.
      * @throws InvalidIndexException if the access to the class 
      *         constant pool fails.
      */
-    public void ensureKlassSymbolic(String className) throws BadClassFileException, InvalidIndexException {
-        if (existsKlass(className)) {
+    public void ensureKlassSymbolic(ClassFile classFile) throws InvalidIndexException {
+        if (existsKlass(classFile)) {
             return;
         }
-        final int numOfStaticFields = this.classHierarchy.numOfStaticFields(className);
-        final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(className);
-        final Klass k = new Klass(this.calc, MemoryPath.mkStatic(className), Objekt.Epoch.EPOCH_BEFORE_START, numOfStaticFields, fieldsSignatures);
+        final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
+        final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
+        final Klass k = new Klass(this.calc, MemoryPath.mkStatic(classFile), Objekt.Epoch.EPOCH_BEFORE_START, numOfStaticFields, fieldsSignatures);
         initWithSymbolicValues(k);
         k.setObjektDefaultHashCode(this.calc.valInt(0)); //doesn't care because it is not used
-        this.staticMethodArea.set(className, k);
+        this.staticMethodArea.set(classFile, k);
     }
 
     /**
@@ -776,56 +846,65 @@ public final class State implements Cloneable {
      * the state. The {@link Objekt}'s fields are initialized with symbolic 
      * values.
      *  
-     * @param type the name of either a class or an array type.
+     * @param classFile a {@link ClassFile} for either an object or an array class.
      * @param origin a {@link MemoryPath}, the origin of the object.
      * @return a {@code long}, the position in the heap of the newly 
      *         created object.
      * @throws NullPointerException if {@code origin} is {@code null}.
-     * @throws InvalidTypeException if {@code type} is invalid.
+     * @throws InvalidTypeException if {@code classFile} is invalid.
      * @throws HeapMemoryExhaustedException if the heap is full.
+     * @throws CannotAssumeSymbolicObjectException if {@code type} is
+     *         a class that cannot be assumed to be symbolic
+     *         (currently {@code java.lang.Class} and {@code java.lang.ClassLoader}).
      */
-    private long createObjectSymbolic(String type, MemoryPath origin) 
-    throws InvalidTypeException, HeapMemoryExhaustedException {
+    private long createObjectSymbolic(ClassFile classFile, MemoryPath origin) 
+    throws InvalidTypeException, HeapMemoryExhaustedException, 
+    CannotAssumeSymbolicObjectException {
         if (origin == null) {
             throw new NullPointerException(); //TODO improve?
         }
         final Objekt myObj;
-        if (Type.isArray(type)) {
-            final Array backingArray = newArraySymbolic(type, origin, true);
-            final long posBackingArray = this.heap.addNew(backingArray);
-            final ReferenceConcrete refToBackingArray = new ReferenceConcrete(posBackingArray);
+        if (classFile.isArray()) {
             try {
+                final Array backingArray = newArraySymbolic(classFile, origin, true);
+                final long posBackingArray = this.heap.addNew(backingArray);
+                final ReferenceConcrete refToBackingArray = new ReferenceConcrete(posBackingArray);
                 myObj = new Array(refToBackingArray, backingArray);
-            } catch (InvalidOperandException | NullPointerException e) {
+            } catch (InvalidOperandException | InvalidTypeException | NullPointerException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
             }
             initDefaultHashCodeSymbolic(myObj);
+        } else if (classFile.isReference()) {
+            try {
+                myObj = newInstanceSymbolic(classFile, origin);
+            } catch (InvalidTypeException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            }
         } else {
-            myObj = newInstanceSymbolic(type, origin);
+            throw new InvalidTypeException("Attempted to create a symbolic object with type " + classFile.getClassName() + ".");
         }
         final long pos = this.heap.addNew(myObj);
         return pos;
     }
 
-    private Array newArraySymbolic(String arraySignature, MemoryPath origin, boolean isInitial) 
+    private Array newArraySymbolic(ClassFile arrayClass, MemoryPath origin, boolean isInitial) 
     throws InvalidTypeException {
         final Primitive length = (Primitive) createSymbol("" + Type.INT, origin.thenArrayLength());
-        final Array obj = new Array(this.calc, true, null, length, arraySignature, origin, Epoch.EPOCH_BEFORE_START, isInitial, this.maxSimpleArrayLength);
+        final Array obj = new Array(this.calc, true, null, length, arrayClass, origin, Epoch.EPOCH_BEFORE_START, isInitial, this.maxSimpleArrayLength);
         initDefaultHashCodeSymbolic(obj);
         return obj;
     }
 
-    private Instance newInstanceSymbolic(String className, MemoryPath origin) {
-        final int numOfStaticFields;
-        final Signature[] fieldsSignatures;
-        try {
-            numOfStaticFields = this.classHierarchy.numOfStaticFields(className);
-            fieldsSignatures = this.classHierarchy.getAllFields(className);
-        } catch (BadClassFileException e) {
-            throw new UnexpectedInternalException(e); //TODO do something better
+    private Instance newInstanceSymbolic(ClassFile classFile, MemoryPath origin) 
+    throws CannotAssumeSymbolicObjectException, InvalidTypeException {
+        if (JAVA_CLASS.equals(classFile.getClassName()) || JAVA_CLASSLOADER.equals(classFile.getClassName())) {
+            throw new CannotAssumeSymbolicObjectException(classFile.getClassName());
         }
-        final Instance obj = new Instance(this.calc, className, origin, Epoch.EPOCH_BEFORE_START, numOfStaticFields, fieldsSignatures);
+        final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
+        final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
+        final Instance obj = new Instance(this.calc, classFile, origin, Epoch.EPOCH_BEFORE_START, numOfStaticFields, fieldsSignatures);
         initWithSymbolicValues(obj);
         initDefaultHashCodeSymbolic(obj);
         return obj;
@@ -913,15 +992,23 @@ public final class State implements Cloneable {
         if (hasStringLiteral(stringLit)) {
             return;
         }
-        final ReferenceConcrete value = createArrayOfChars(stringLit);
-        final Simplex hash = this.calc.valInt(stringLit.hashCode());
 
-        final ReferenceConcrete retVal = createInstance(JAVA_STRING);
-        final Instance i = (Instance) this.getObject(retVal);
-        i.setFieldValue(JAVA_STRING_VALUE,  value);
-        i.setFieldValue(JAVA_STRING_HASH,   hash);
-
-        this.stringLiterals.put(stringLit, retVal);
+        try {
+            final ReferenceConcrete value = createArrayOfChars(stringLit);
+            final Simplex hash = this.calc.valInt(stringLit.hashCode());
+            final ClassFile cf_JAVA_STRING = this.classHierarchy.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STRING);
+            if (cf_JAVA_STRING == null) {
+                throw new UnexpectedInternalException("Could not find classfile for type java.lang.String.");
+            }
+            final ReferenceConcrete retVal = createInstance(cf_JAVA_STRING);
+            final Instance i = (Instance) getObject(retVal);
+            i.setFieldValue(JAVA_STRING_VALUE,  value);
+            i.setFieldValue(JAVA_STRING_HASH,   hash);
+            this.stringLiterals.put(stringLit, retVal);
+        } catch (InvalidTypeException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
     }
 
     /**
@@ -936,19 +1023,16 @@ public final class State implements Cloneable {
         final Simplex stringLength = this.calc.valInt(value.length());
         final ReferenceConcrete retVal;
         try {
-            retVal = createArray(null, stringLength, "" + Type.ARRAYOF + Type.CHAR);
-        } catch (InvalidTypeException e) {
-            //this should never happen 
-            throw new UnexpectedInternalException(e);
-        }
-        try {
+            final ClassFile cf_arrayOfCHAR = this.classHierarchy.loadCreateClass("" + Type.ARRAYOF + Type.CHAR);
+            retVal = createArray(null, stringLength, cf_arrayOfCHAR);
             final Array a = (Array) this.getObject(retVal);
             for (int k = 0; k < value.length(); ++k) {
                 final char c = value.charAt(k);
                 a.setFast(this.calc.valInt(k), this.calc.valChar(c));
             }
-        } catch (ClassCastException | InvalidOperandException | 
-        InvalidTypeException | FastArrayAccessNotAllowedException e) {
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
+                 ClassFileNotAccessibleException | ClassCastException | InvalidOperandException | 
+                 InvalidTypeException | InvalidInputException | FastArrayAccessNotAllowedException e) {
             //this should never happen 
             throw new UnexpectedInternalException(e);
         }
@@ -960,12 +1044,12 @@ public final class State implements Cloneable {
      * Checks if there is an {@link Instance} of {@code java.lang.Class} 
      * in this state's heap for some class.
      * 
-     * @param className a {@link String} representing a class name.
+     * @param classFile a {@link ClassFile}.
      * @return {@code true} iff there is a {@link Instance} of {@code java.lang.Class} in 
-     *         this state's {@link Heap} corresponding to {@code className}.
+     *         this state's {@link Heap} corresponding to {@code classFile}.
      */
-    public boolean hasInstance_JAVA_CLASS(String className) {
-        return this.classes.containsKey(className);
+    public boolean hasInstance_JAVA_CLASS(ClassFile classFile) {
+        return (classFile.isPrimitive() ? hasInstance_JAVA_CLASS_primitive(classFile.getClassName()) : this.classes.containsKey(classFile));
     }
 
     /**
@@ -985,14 +1069,13 @@ public final class State implements Cloneable {
      * Returns a {@link ReferenceConcrete} to an {@link Instance_JAVA_CLASS} 
      * representing a class. 
      * 
-     * @param className a {@link String} representing the name of a class.
+     * @param classFile a {@link ClassFile}.
      * @return a {@link ReferenceConcrete} to the {@link Instance_JAVA_CLASS} in 
-     *         this state's {@link Heap}, representing the class with name
-     *         {@code className}, or {@code null} if such instance does not
-     *         exist. 
+     *         this state's {@link Heap}, representing {@code classFile}, 
+     *         or {@code null} if such instance does not exist. 
      */
-    public ReferenceConcrete referenceToInstance_JAVA_CLASS(String className) {
-        return this.classes.get(className);
+    public ReferenceConcrete referenceToInstance_JAVA_CLASS(ClassFile classFile) {
+        return (classFile.isPrimitive() ? referenceToInstance_JAVA_CLASS_primitive(classFile.getClassName()) : this.classes.get(classFile));
     }
 
     /**
@@ -1012,33 +1095,30 @@ public final class State implements Cloneable {
 
     /**
      * Ensures an {@link Instance_JAVA_CLASS} 
-     * corresponding to a class name exists in the {@link Heap}. If
-     * the instance does not exist, it resolves the class and creates 
-     * it, otherwise it does nothing. Does not manage the creation 
-     * of the {@link Klass}es for {@code java.lang.Class} and for 
-     * the classes of the members of the created object.<br /><br />
+     * corresponding to a class exists in the {@link Heap}. If
+     * the instance does not exist, it creates 
+     * it, otherwise it does nothing.
      * 
-     * Please do NOT use it, use {@link jbse.algo.Util#ensureInstance_JAVA_CLASS(State, String, String, jbse.algo.ExecutionContext)} 
-     * instead.
-     * 
-     * @param accessor a {@link String} representing the name of 
-     *        the class acceding to the instance.
-     * @param className a {@link String} representing the name of a class.
-     * @throws BadClassFileException if the classfile for {@code className}
-     *         does not exist in the classpath or is ill-formed.
-     * @throws ClassFileNotAccessibleException if the class {@code className} 
-     *         is not accessible from {@code accessor}.
+     * @param representedClass a {@link ClassFile}, the class represented
+     *        by the created {@link Instance_JAVA_CLASS}.
      * @throws HeapMemoryExhaustedException if the heap is full.
      */
-    public void ensureInstance_JAVA_CLASS(String accessor, String className) 
-    throws BadClassFileException, ClassFileNotAccessibleException, HeapMemoryExhaustedException {
-        if (hasInstance_JAVA_CLASS(className)) {
+    public void ensureInstance_JAVA_CLASS(ClassFile representedClass) 
+    throws HeapMemoryExhaustedException {
+        if (hasInstance_JAVA_CLASS(representedClass)) {
+            //nothing to do
             return;
         }
-        this.classHierarchy.resolveClass(accessor, className);
-        //TODO resolve JAVA_CLASS
-        final ReferenceConcrete retVal = createInstance_JAVA_CLASS(className, false);
-        this.classes.put(className, retVal);
+        if (representedClass.isPrimitive()) {
+            try {
+                ensureInstance_JAVA_CLASS_primitive(representedClass.getClassName());
+            } catch (ClassFileNotFoundException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            }
+        } else {
+            this.classes.put(representedClass, createInstance_JAVA_CLASS(representedClass));
+        }
     }
 
     /**
@@ -1059,11 +1139,79 @@ public final class State implements Cloneable {
             return;
         }
         if (isPrimitiveCanonicalName(typeName)) {
-            final ReferenceConcrete retVal = createInstance_JAVA_CLASS(typeName, true);
-            this.classesPrimitive.put(typeName, retVal);
+            try {
+                final ClassFile cf = this.classHierarchy.getClassFilePrimitive(typeName);
+                if (cf == null) {
+                    throw new UnexpectedInternalException("Could not find the classfile for the primitive type " + typeName + ".");
+                }
+                final ReferenceConcrete retVal = createInstance_JAVA_CLASS(cf);
+                this.classesPrimitive.put(typeName, retVal);
+            } catch (InvalidInputException e) {
+                throw new UnexpectedInternalException(e);
+            }
         } else {
             throw new ClassFileNotFoundException(typeName + " is not the canonical name of a primitive type or void");
         }
+    }
+    
+    /**
+     * Checks if there is an {@link Instance} of {@code java.lang.ClassLoader} (or subclass) 
+     * in this state's heap for some classloader identifier.
+     * 
+     * @param id a {@link int}, the identifier of a classloader.
+     * @return {@code true} iff there is a {@link Instance} of {@code java.lang.ClassLoader} 
+     *         (or subclass) in this state's {@link Heap} associated to {@code id}.
+     */
+    public boolean hasInstance_JAVA_CLASSLOADER(int id) {
+        return 0 < id && id < this.classLoaders.size();
+    }
+    
+    /**
+     * Returns a {@link ReferenceConcrete} to an {@link Instance} 
+     * of {@code java.lang.invoke.ClassLoader} (or subclass) for some classloader identifier. 
+     * 
+     * @param id a {@link int}, the identifier of a classloader.
+     * @return a {@link ReferenceConcrete} to the {@link Instance}  of {@code java.lang.ClassLoader}
+     *         (or subclass) in this state's {@link Heap} associated to {@code id},
+     *         or {@code null} if there is not.
+     */
+    public ReferenceConcrete referenceToInstance_JAVA_CLASSLOADER(int id) {
+        if (hasInstance_JAVA_CLASSLOADER(id)) {
+            return this.classLoaders.get(id);
+        } else {
+            return null;
+        }
+    }
+    
+    /**
+     * Declares that the standard (extensions and application) class loaders are ready
+     * to be used.
+     * 
+     * @throws InvalidInputException when the {@link Instance_JAVA_CLASSLOADER}s
+     *         for the standard classloaders were not created in the heap 
+     *         (note that this method does not check that the 
+     *         {@link Instance_JAVA_CLASSLOADER}s were also initialized).
+     */
+    public void setStandardClassLoadersReady() throws InvalidInputException {
+        if (!this.standardClassLoadersNotReady) {
+            return;
+        }
+        if (this.classLoaders.size() <= CLASSLOADER_APP) {
+            throw new InvalidInputException("Invoked jbse.mem.state.setStandardClassLoadersReady with true parameter, but the standard class loaders were not created yet.");
+        }
+        this.standardClassLoadersNotReady = false;
+    }
+    
+    /**
+     * Checks whether the standard class loaders are
+     * not ready to be used.
+     * 
+     * @return {@code false} iff they have been set ready
+     *         by a previous call to 
+     *         {@link #setStandardClassLoadersReady()}.
+     */
+    public boolean areStandardClassLoadersNotReady() {
+        return this.standardClassLoadersNotReady;
     }
     
     /**
@@ -1096,11 +1244,12 @@ public final class State implements Cloneable {
     
     /**
      * Associates a descriptor to a {@link ReferenceConcrete} to an {@link Instance} 
-     * of {@code java.lang.invoke.MethodHandle} representing it. 
+     * of {@code java.lang.invoke.MethodType} representing it. 
      * 
      * @param descriptor a {@link String} representing a descriptor. It is
      *        not checked.
-     * @return a {@link ReferenceConcrete}. It should refer an {@link Instance} 
+     * @return a {@link ReferenceConcrete}. It should refer an {@link Instance}
+     *         of {@code java.lang.invoke.MethodType} 
      *         in this state's {@link Heap} that is semantically equivalent to
      *         {@code descriptor}, but this is not checked.
      */
@@ -1116,16 +1265,28 @@ public final class State implements Cloneable {
      * 
      * @param exceptionToThrow a {@link Reference} to a throwable 
      *        {@link Objekt} in the state's {@link Heap}.
+     * @throws InvalidInputException if {@code exceptionToThrow} is an unresolved symbolic reference, 
+     *         or is a null reference, or is a reference to an object that does not extend {@code java.lang.Throwable}.
      * @throws InvalidIndexException if the exception type field in a row of the exception table 
      *         does not contain the index of a valid CONSTANT_Class in the class constant pool.
      * @throws InvalidProgramCounterException if the program counter handle in a row 
      *         of the exception table does not contain a valid program counter.
      */
     public void unwindStack(Reference exceptionToThrow) 
-    throws InvalidIndexException, InvalidProgramCounterException {
-        //TODO check that exceptionToThrow is resolved/concrete
+    throws InvalidInputException, InvalidIndexException, InvalidProgramCounterException {
+        //checks that exceptionToThrow is resolved to a throwable Objekt
         final Objekt myException = getObject(exceptionToThrow);
-        //TODO check that Objekt is Throwable
+        final ClassFile cf_JAVA_THROWABLE;
+        try {
+            cf_JAVA_THROWABLE = this.classHierarchy.loadCreateClass(JAVA_THROWABLE);
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
+                 InvalidInputException | ClassFileNotAccessibleException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
+        if (myException == null || !this.classHierarchy.isSubclass(myException.getType(), cf_JAVA_THROWABLE)) {
+            throw new InvalidInputException("Attempted to throw an unresolved or null reference, or a reference to an object that is not Throwable.");
+        }
 
         //fills a vector with all the superclass names of the exception
         final ArrayList<String> excTypes = new ArrayList<String>();
@@ -1140,9 +1301,13 @@ public final class State implements Cloneable {
                     setStuckException(exceptionToThrow);
                     return;
                 }
+                if (getCurrentFrame() instanceof SnippetFrameNoContext) {
+                    //cannot catch anything and has no current method either
+                    popCurrentFrame();
+                    continue; 
+                }
                 final Signature currentMethodSignature = getCurrentMethodSignature();
-                final String currentClassName = currentMethodSignature.getClassName();
-                final ExceptionTable myExTable = this.classHierarchy.getClassFile(currentClassName).getExceptionTable(currentMethodSignature);
+                final ExceptionTable myExTable = getCurrentClass().getExceptionTable(currentMethodSignature);
                 final ExceptionTableEntry tmpEntry = myExTable.getEntry(excTypes, getPC());
                 if (tmpEntry == null) {
                     popCurrentFrame();
@@ -1153,8 +1318,8 @@ public final class State implements Cloneable {
                     return;				
                 }
             }
-        } catch (ThreadStackEmptyException | BadClassFileException | 
-        MethodNotFoundException | MethodCodeNotFoundException e) {
+        } catch (ThreadStackEmptyException | MethodNotFoundException | 
+                 MethodCodeNotFoundException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
@@ -1165,11 +1330,11 @@ public final class State implements Cloneable {
      * on this state's stack. The actual parameters of the invocation are 
      * initialized with values from the invoking frame's operand stack.
      * 
+     * @param classMethodImpl
+     *        the {@link ClassFile} containing the bytecode for the method.
      * @param methodSignatureImpl
      *        the {@link Signature} of the method for which the 
-     *        frame is built. The bytecode for the method will be
-     *        looked for in 
-     *        {@code methodSignatureImpl.}{@link Signature#getClassName() getClassName()}.
+     *        frame is built.
      * @param isRoot
      *        {@code true} iff the frame is the root frame of symbolic
      *        execution (i.e., on the top of the thread stack).
@@ -1181,16 +1346,10 @@ public final class State implements Cloneable {
      *        varargs of method call arguments.
      * @throws NullMethodReceiverException when the method is not static
      *         and the first argument in {@code args} is the null reference.
-     * @throws BadClassFileException when the classfile with name 
-     *         {@code methodSignatureImpl.}{@link Signature#getClassName() getClassName()}
-     *         does not exist in the classpath or is ill-formed.
-     * @throws MethodNotFoundException when the classfile with name.
-     *         {@code methodSignatureImpl.}{@link Signature#getClassName() getClassName()}
-     *         does not contain the method (i.e., the method is abstract
-     *         or native).
-     * @throws MethodCodeNotFoundException when the classfile with name.
-     *         {@code methodSignatureImpl.}{@link Signature#getClassName() getClassName()}
-     *         does not contain bytecode for the method.
+     * @throws MethodNotFoundException when {@code classMethodImpl}
+     *         does not contain a declaration for {@code methodSignatureImpl}.
+     * @throws MethodCodeNotFoundException when {@code classMethodImpl}
+     *         does not contain bytecode for {@code methodSignatureImpl}.
      * @throws InvalidSlotException when there are 
      *         too many {@code arg}s or some of their types are 
      *         incompatible with their respective slots types.
@@ -1202,11 +1361,9 @@ public final class State implements Cloneable {
      * @throws ThreadStackEmptyException when {@code isRoot == false} and the 
      *         state's thread stack is empty.
      */
-    public void pushFrame(Signature methodSignatureImpl, boolean isRoot, int returnPCOffset, Value... args) 
-    throws NullMethodReceiverException, BadClassFileException, MethodNotFoundException, 
-    MethodCodeNotFoundException, InvalidSlotException, InvalidTypeException, InvalidProgramCounterException, 
-    ThreadStackEmptyException {
-        final ClassFile classMethodImpl = this.classHierarchy.getClassFile(methodSignatureImpl.getClassName());
+    public void pushFrame(ClassFile classMethodImpl, Signature methodSignatureImpl, boolean isRoot, int returnPCOffset, Value... args) 
+    throws NullMethodReceiverException, MethodNotFoundException, MethodCodeNotFoundException, InvalidSlotException, 
+    InvalidTypeException, InvalidProgramCounterException, ThreadStackEmptyException {
         final boolean isStatic = classMethodImpl.isMethodStatic(methodSignatureImpl);
         
         //checks the "this" parameter (invocation receiver) if necessary
@@ -1243,47 +1400,72 @@ public final class State implements Cloneable {
      * {@link #pushSnippetFrame(Snippet, int) pushSnippetFrame}.
      * 
      * @return a {@link SnippetFactory}.
-     * @throws BadClassFileException when the classfile for the 
-     *         state's current class does not exist in the classpath 
-     *         or is ill-formed.
-     * @throws ThreadStackEmptyException if the 
-     *         state's thread stack is empty.
      */
-    public SnippetFactory snippetFactory() 
-    throws BadClassFileException, ThreadStackEmptyException {
-        final ClassFile currentClass = 
-            this.classHierarchy.getClassFile(getCurrentMethodSignature().getClassName());
-        return new SnippetFactory(currentClass);
+    public SnippetFactory snippetFactory() {
+        return new SnippetFactory();
     }
     
     /**
-     * Creates a new {@link SnippetFrame} for a {@link Snippet} and
-     * pushes it on this state's stack.
+     * Creates a new frame for a {@link Snippet} and
+     * pushes it on this state's stack. The created frame 
+     * will inherit the context of the current frame, and 
+     * will operate on its operand stack and local variables.
+     * Note that it is possible to wrap only a {@link MethodFrame}, 
+     * not another snippet frame.
      * 
      * @param snippet a {@link Snippet}.
      * @param returnPCOffset the offset from the current 
      *        program counter of the return program counter.
-     * @throws ThreadStackEmptyException if the 
-     *         state's thread stack is empty.
      * @throws InvalidProgramCounterException if {@code returnPCOffset} 
      *         is not a valid program count offset for the state's current frame.
+     * @throws ThreadStackEmptyException if the state's thread stack is empty.
+     * @throws InvalidInputException if {@code wrapCurrentFrame == true} and
+     *         {@link #getCurrentFrame()} does not return a {@link MethodFrame}.
      */
-    public void pushSnippetFrame(Snippet snippet, int returnPCOffset) 
-    throws ThreadStackEmptyException, InvalidProgramCounterException {
-        //adds to the current class' classfile the
-        //constants necessary to the snippet execution
-        this.classHierarchy.wrapClassFile(getCurrentMethodSignature().getClassName(), 
-                                          snippet.getConstants(), snippet.getSignatures(), snippet.getClasses());
-        
+    public void pushSnippetFrameWrap(Snippet snippet, int returnPCOffset) 
+    throws InvalidProgramCounterException, ThreadStackEmptyException, InvalidInputException {
+        try {
+            //sets the return program counter
+            setReturnProgramCounter(returnPCOffset);
+
+            //creates the new snippet frame
+            final Frame f = new SnippetFrameContext(snippet, (MethodFrame) getCurrentFrame());
+
+            //replaces the current frame with the snippet frame
+            //that wraps it
+            this.stack.pop();
+            this.stack.push(f);
+        } catch (ClassCastException e) {
+            throw new InvalidInputException("Cannot push a snippet frame whose context is not a method frame.");
+        }
+    }
+    
+    /**
+     * Creates a new frame for a {@link Snippet} and
+     * pushes it on this state's stack. The created frame
+     * will have its own operand stack and no local variables.
+     * 
+     * @param snippet a {@link Snippet}.
+     * @param returnPCOffset the offset from the current 
+     *        program counter of the return program counter.
+     * @param definingClassLoader an {@code int}, the defining
+     *        class loader that is assumed for the current class
+     *        of the frame.
+     * @param packageName a {@code String}, the name of the
+     *        package that is assumed for the current class
+     *        of the frame.
+     * @throws InvalidProgramCounterException if {@code returnPCOffset} 
+     *         is not a valid program count offset for the state's current frame.
+     * @throws ThreadStackEmptyException if the state's thread stack is empty.
+     */
+    public void pushSnippetFrameNoWrap(Snippet snippet, int returnPCOffset, int definingClassLoader, String packageName) 
+    throws InvalidProgramCounterException, ThreadStackEmptyException {
         //sets the return program counter
         setReturnProgramCounter(returnPCOffset);
 
-        //creates the new frame
-        final SnippetFrame f = new SnippetFrame(getCurrentFrame(), snippet.getBytecode());
+        //creates the new snippet frame
+        final Frame f = new SnippetFrameNoContext(snippet, definingClassLoader, packageName);
 
-        //pops the topmost frame (that is wrapped by the snippet frame) and 
-        //pushes the new snippet frame on the thread stack
-        this.stack.pop();
         this.stack.push(f);
     }
     
@@ -1301,35 +1483,34 @@ public final class State implements Cloneable {
      * Makes symbolic arguments for the root method invocation. This includes the
      * root object.
      * @param f the root {@link MethodFrame}.
-     * @param methodSignature the {@link Signature} of the root object method
-     *        to be invoked. It will be used both to create the root object
-     *        in the heap (the concrete class is the one specified in the 
-     *        signature), and to build all the symbolic parameters.
      * @param isStatic
      *        {@code true} iff INVOKESTATIC method invocation rules 
      *        must be applied.
-     * 
      * @return a {@link Value}{@code []}, the array of the symbolic parameters
      *         for the method call. Note that the reference to the root object
      *         is a {@link ReferenceSymbolic}.
      * @throws HeapMemoryExhaustedException if the heap is full.
+     * @throws CannotAssumeSymbolicObjectException if the root object has class 
+     *         {@code java.lang.Class} or {@code java.lang.ClassLoader}.
      */
-    private Value[] makeArgsSymbolic(MethodFrame f, Signature methodSignature, boolean isStatic) 
-    throws HeapMemoryExhaustedException {
+    private Value[] makeArgsSymbolic(MethodFrame f, boolean isStatic) 
+    throws HeapMemoryExhaustedException, CannotAssumeSymbolicObjectException {
+        final Signature methodSignature = f.getCurrentMethodSignature();
         final String[] paramsDescriptors = Type.splitParametersDescriptors(methodSignature.getDescriptor());
         final int numArgs = parametersNumber(methodSignature.getDescriptor(), isStatic);
 
         //produces the args as symbolic values from the method's signature
-        final String rootClassName = methodSignature.getClassName(); //TODO check that the root class has the method!!!
+        final ClassFile currentClass = f.getCurrentClass();
+        final String currentClassName = currentClass.getClassName();
         final Value[] args = new Value[numArgs];
         for (int i = 0, slot = 0; i < numArgs; ++i) {
             //builds a symbolic value from signature and name
             final MemoryPath origin = MemoryPath.mkLocalVariable(f.getLocalVariableDeclaredName(slot));
             if (slot == ROOT_THIS_SLOT && !isStatic) {
-                args[i] = createSymbol(Type.REFERENCE + rootClassName + Type.TYPEEND, origin);
+                args[i] = createSymbol(Type.REFERENCE + currentClassName + Type.TYPEEND, origin);
                 //must assume {ROOT}:this expands to nonnull object (were it null the frame would not exist!)
                 try {
-                    assumeExpands((ReferenceSymbolic) args[i], rootClassName);
+                    assumeExpands((ReferenceSymbolic) args[i], currentClass);
                 } catch (InvalidTypeException | ContradictionException e) {
                     //this should never happen
                     throw new UnexpectedInternalException(e);
@@ -1353,6 +1534,8 @@ public final class State implements Cloneable {
      * on a state's stack. The actual parameters of the invocation are 
      * initialized with symbolic values.
      *  
+     * @param classMethodImpl
+     *        the {@link ClassFile} containing the bytecode for the method.
      * @param methodSignatureImpl 
      *        the {@link Signature} of the method for which the 
      *        frame is built. The bytecode for the method will be
@@ -1360,25 +1543,20 @@ public final class State implements Cloneable {
      *        {@code methodSignatureImpl.}{@link Signature#getClassName() getClassName()}.
      * @return a {@link ReferenceSymbolic}, the "this" (target) of the method invocation
      *         if the invocation is not static, otherwise {@code null}.
-     * @throws BadClassFileException when the classfile with name 
-     *         {@code methodSignatureImpl.}{@link Signature#getClassName() getClassName()}
-     *         does not exist in the classpath or is ill-formed.
-     * @throws MethodNotFoundException when the classfile with name.
-     *         {@code methodSignatureImpl.}{@link Signature#getClassName() getClassName()}
-     *         does not contain the method.
-     * @throws MethodCodeNotFoundException when the classfile with name.
-     *         {@code methodSignatureImpl.}{@link Signature#getClassName() getClassName()}
-     *         does not contain bytecode for the method (i.e., the method is abstract
-     *         or native).
+     * @throws MethodNotFoundException when {@code classMethodImpl}
+     *         does not contain a declaration for {@code methodSignatureImpl}.
+     * @throws MethodCodeNotFoundException when {@code classMethodImpl}
+     *         does not contain bytecode for {@code methodSignatureImpl}.
      * @throws HeapMemoryExhaustedException if the heap is full.
+     * @throws CannotAssumeSymbolicObjectException if the target of the method invocation 
+     *         has class {@code java.lang.Class} or {@code java.lang.ClassLoader}.
      */
-    public ReferenceSymbolic pushFrameSymbolic(Signature methodSignatureImpl) 
-    throws BadClassFileException, MethodNotFoundException, MethodCodeNotFoundException, 
-    HeapMemoryExhaustedException {
-        final ClassFile classMethodImpl = this.classHierarchy.getClassFile(methodSignatureImpl.getClassName());
+    public ReferenceSymbolic pushFrameSymbolic(ClassFile classMethodImpl, Signature methodSignatureImpl) 
+    throws MethodNotFoundException, MethodCodeNotFoundException, 
+    HeapMemoryExhaustedException, CannotAssumeSymbolicObjectException {
         final boolean isStatic = classMethodImpl.isMethodStatic(methodSignatureImpl);
         final MethodFrame f = new MethodFrame(methodSignatureImpl, classMethodImpl);
-        final Value[] args = makeArgsSymbolic(f, methodSignatureImpl, isStatic);
+        final Value[] args = makeArgsSymbolic(f, isStatic);
         try {
             f.setArgs(args);
         } catch (InvalidSlotException e) {
@@ -1432,7 +1610,7 @@ public final class State implements Cloneable {
      */
     public void setReturnProgramCounter(int returnPCOffset) 
     throws InvalidProgramCounterException, ThreadStackEmptyException {
-        this.stack.currentFrame().setReturnProgramCounter(returnPCOffset);
+        getCurrentFrame().setReturnProgramCounter(returnPCOffset);
     }
 
     /**
@@ -1443,9 +1621,9 @@ public final class State implements Cloneable {
      */
     public Frame popCurrentFrame() throws ThreadStackEmptyException {
         final Frame popped = this.stack.pop();
-        if (popped instanceof SnippetFrame) {
-            this.stack.push(((SnippetFrame) popped).getContextFrame());
-            this.classHierarchy.unwrapClassFile(getCurrentMethodSignature().getClassName());
+        if (popped instanceof SnippetFrameContext) {
+            //reinstates the activation context of the popped frame
+            this.stack.push(((SnippetFrameContext) popped).getContextFrame());
         }
         return popped;
     }
@@ -1466,12 +1644,7 @@ public final class State implements Cloneable {
      *         thread stack is empty.
      */
     public MethodFrame getRootFrame() throws ThreadStackEmptyException {
-        final List<Frame> frames = this.stack.frames();
-        try {
-            return (MethodFrame) frames.get(0);
-        } catch (IndexOutOfBoundsException e) {
-            throw new ThreadStackEmptyException();
-        }
+        return (MethodFrame) this.stack.rootFrame();
     }
 
     /**
@@ -1503,7 +1676,7 @@ public final class State implements Cloneable {
      * @return an {@code int}, the size.
      */
     public int getStackSize() {
-        return this.stack.frames().size();
+        return getStack().size();
     }
 
     /**
@@ -1570,9 +1743,9 @@ public final class State implements Cloneable {
      * Returns the static method area of this state.
      * 
      * @return the state's static method area as an 
-     * immutable {@link Map}{@code <}{@link String}{@code , }{@link Klass}{@code >}.
+     * immutable {@link Map}{@code <}{@link ClassFile}{@code , }{@link Klass}{@code >}.
      */
-    public Map<String, Klass> getStaticMethodArea() {
+    public Map<ClassFile, Klass> getStaticMethodArea() {
         return Collections.unmodifiableMap(this.staticMethodArea.getObjects());
     }
 
@@ -1586,7 +1759,7 @@ public final class State implements Cloneable {
      * @throws ThreadStackEmptyException if the thread stack is empty.
      */
     public byte getInstruction() throws ThreadStackEmptyException {
-        return(this.stack.currentFrame().getInstruction());
+        return getCurrentFrame().getInstruction();
     }
 
     /**
@@ -1605,7 +1778,7 @@ public final class State implements Cloneable {
      */
     public byte getInstruction(int displacement) 
     throws InvalidProgramCounterException, ThreadStackEmptyException {
-        return(this.stack.currentFrame().getInstruction(displacement));
+        return getCurrentFrame().getInstruction(displacement);
     }
 
     /**
@@ -1618,7 +1791,7 @@ public final class State implements Cloneable {
      * @throws ThreadStackEmptyException if the thread stack is empty.
      */
     public int getSourceRow() throws ThreadStackEmptyException {
-        return this.stack.currentFrame().getSourceRow();
+        return getCurrentFrame().getSourceRow();
     }
 
     /**
@@ -1629,7 +1802,7 @@ public final class State implements Cloneable {
      * @throws ThreadStackEmptyException if the thread stack is empty.
      */
     public int getPC() throws ThreadStackEmptyException {
-        return this.stack.currentFrame().getProgramCounter();
+        return getCurrentFrame().getProgramCounter();
     }
 
     /**
@@ -1640,7 +1813,7 @@ public final class State implements Cloneable {
      * @throws ThreadStackEmptyException  if the thread stack is empty.
      */
     public int getReturnPC() throws ThreadStackEmptyException {
-        return this.stack.currentFrame().getReturnProgramCounter();
+        return getCurrentFrame().getReturnProgramCounter();
     }
 
     /**
@@ -1655,7 +1828,7 @@ public final class State implements Cloneable {
      */
     public void incProgramCounter(int n) 
     throws InvalidProgramCounterException, ThreadStackEmptyException {
-        this.setProgramCounter(getPC() + n);
+        setProgramCounter(getPC() + n);
     }
 
     /**
@@ -1669,7 +1842,7 @@ public final class State implements Cloneable {
      */
     public void setProgramCounter(int newPC) 
     throws InvalidProgramCounterException, ThreadStackEmptyException {
-        this.stack.currentFrame().setProgramCounter(newPC);
+        getCurrentFrame().setProgramCounter(newPC);
     }
 
     /**
@@ -1698,24 +1871,27 @@ public final class State implements Cloneable {
      * 
      * @param r the {@link ReferenceSymbolic} which is resolved. It 
      *          must be {@code r != null}.
-     * @param className a {@code String}, the name of the class of the fresh 
-     *        object to which {@code r} must be expanded. It must be {@code className != null}.
-     * @throws NullPointerException if either {@code r} or {@code className} is
+     * @param classFile a {@code ClassFile}, the class of the fresh 
+     *        object to which {@code r} must be expanded. It must be {@code classFile != null}.
+     * @throws NullPointerException if either {@code r} or {@code classFile} is
      *         {@code null}.
-     * @throws InvalidTypeException if {@code className} is not the name of a
-     *         valid type (class or array). 
+     * @throws InvalidTypeException if {@code classFile} is invalid. 
      * @throws ContradictionException if {@code r} is already resolved.
      * @throws HeapMemoryExhaustedException if the heap is full.
+     * @throws CannotAssumeSymbolicObjectException if {@code classFile} is
+     *         a class that cannot be assumed to be symbolic
+     *         (currently {@code java.lang.Class} and {@code java.lang.ClassLoader}).
      */
-    public void assumeExpands(ReferenceSymbolic r, String className) 
-    throws InvalidTypeException, ContradictionException, HeapMemoryExhaustedException {
-        if (r == null || className == null) {
+    public void assumeExpands(ReferenceSymbolic r, ClassFile classFile) 
+    throws InvalidTypeException, ContradictionException, HeapMemoryExhaustedException, 
+    CannotAssumeSymbolicObjectException {
+        if (r == null || classFile == null) {
             throw new NullPointerException(); //TODO find a better exception
         }
         if (resolved(r)) {
             throw new ContradictionException();
         }
-        final long pos = createObjectSymbolic(className, r.getOrigin());
+        final long pos = createObjectSymbolic(classFile, r.getOrigin());
         final Objekt o = this.heap.getObject(pos);
         this.pathCondition.addClauseAssumeExpands(r, pos, o);
         ++this.nPushedClauses;
@@ -1779,25 +1955,22 @@ public final class State implements Cloneable {
      * static method area if absent (it does not 
      * create {@link Klass} objects for superclasses).
      * 
-     * @param className the corresponding concrete class 
-     *        name as a {@link String}. It must be 
-     *        {@link className != null}.
-     * @throws NullPointerException if {@code className} 
+     * @param classFile the corresponding concrete class. 
+     *        It must be 
+     *        {@link classFile != null}.
+     * @throws NullPointerException if {@code classFile} 
      *         is {@code null}.
-     * @throws BadClassFileException if the classfile with name 
-     *         {@code className} does not exist in the classpath
-     *         or is ill-formed.
      * @throws InvalidIndexException if the access to the class 
      *         constant pool fails.
      */
-    public void assumeClassInitialized(String className) 
-    throws BadClassFileException, InvalidIndexException {
-        if (className == null) {
+    public void assumeClassInitialized(ClassFile classFile) 
+    throws InvalidIndexException {
+        if (classFile == null) {
             throw new NullPointerException();
         }
-        ensureKlassSymbolic(className);
-        final Klass k = getKlass(className);
-        this.pathCondition.addClauseAssumeClassInitialized(className, k);
+        ensureKlassSymbolic(classFile);
+        final Klass k = getKlass(classFile);
+        this.pathCondition.addClauseAssumeClassInitialized(classFile, k);
         ++this.nPushedClauses;
     }
 
@@ -1805,21 +1978,15 @@ public final class State implements Cloneable {
      * Assumes that a class is not initialized before the 
      * start of symbolic execution.
      * 
-     * @param className the corresponding concrete class 
-     *        name as a {@link String}. It must be 
-     *        {@link className != null}.
-     * @throws NullPointerException if {@code className} 
+     * @param classFile a {@link ClassFile}.
+     * @throws NullPointerException if {@code classFile} 
      *         is {@code null}.
-     * @throws BadClassFileException if the classfile with name 
-     *         {@code className} does not exist in the classpath
-     *         or is ill-formed.
      */
-    public void assumeClassNotInitialized(String className) 
-    throws BadClassFileException {
-        if (className == null) {
+    public void assumeClassNotInitialized(ClassFile classFile) {
+        if (classFile == null) {
             throw new NullPointerException();
         }
-        this.pathCondition.addClauseAssumeClassNotInitialized(className);
+        this.pathCondition.addClauseAssumeClassNotInitialized(classFile);
         ++this.nPushedClauses;
     }
 
@@ -2116,9 +2283,9 @@ public final class State implements Cloneable {
                 this.heap.set(oPos, o);
             } else if (c instanceof ClauseAssumeClassInitialized) {
                 final ClauseAssumeClassInitialized cCl = (ClauseAssumeClassInitialized) c;
-                final String kName = cCl.getClassName();
+                final ClassFile cf = cCl.getClassFile();
                 final Klass k = cCl.getKlass(); //note that the getter produces a safety copy
-                this.staticMethodArea.set(kName, k);
+                this.staticMethodArea.set(cf, k);
             } //else do nothing
         }
 
@@ -2176,8 +2343,8 @@ public final class State implements Cloneable {
                 tmp += "Return:" + this.val.toString() + ", ";
         } else {
             try {
-                tmp += "CurrentMethod:" + this.stack.currentFrame().getCurrentMethodSignature() + ", ";
-                tmp += "ProgramCounter:" + this.getPC() + ", ";
+                tmp += "CurrentMethod:" + getCurrentFrame().getCurrentMethodSignature() + ", ";
+                tmp += "ProgramCounter:" + getPC() + ", ";
             } catch (ThreadStackEmptyException e) {
                 //does nothing
             }

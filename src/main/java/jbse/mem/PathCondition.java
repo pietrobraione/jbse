@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import jbse.bc.ClassFile;
 import jbse.val.Primitive;
 import jbse.val.ReferenceSymbolic;
 
@@ -16,30 +17,30 @@ import jbse.val.ReferenceSymbolic;
  * suitable {@link Collection}{@code <}{@link Clause}{@code >}. 
  */
 final class PathCondition implements Cloneable {
-	/** {@link ArrayList} of all the {@link Clause}s forming the path condition. */
-	private ArrayList<Clause> clauses;
-	
-	/** 
-	 * Maps symbolic reference identifiers to their respective heap positions.
-	 * It is just a cache of information already contained in {@code clauses}.
-	 */
-	private HashMap<Integer, Long> referenceResolutionMap;
-	
-	/**
-	 * Maps each class with the number of assumed objects in it. 
-	 * It is just a cache of information already contained in {@code clauses}.
-	 */
-	private HashMap<String, Integer> objectCounters;
+    /** {@link ArrayList} of all the {@link Clause}s forming the path condition. */
+    private ArrayList<Clause> clauses;
+
+    /** 
+     * Maps symbolic reference identifiers to their respective heap positions.
+     * It is just a cache of information already contained in {@code clauses}.
+     */
+    private HashMap<Integer, Long> referenceResolutionMap;
+
+    /**
+     * Maps each class with the number of assumed objects in it. 
+     * It is just a cache of information already contained in {@code clauses}.
+     */
+    private HashMap<String, Integer> objectCounters;
 
     /**
      * Constructor.
      */
     PathCondition() {
-    	this.clauses = new ArrayList<>();
-    	this.referenceResolutionMap = new HashMap<>();
-    	this.objectCounters = new HashMap<>();
+        this.clauses = new ArrayList<>();
+        this.referenceResolutionMap = new HashMap<>();
+        this.objectCounters = new HashMap<>();
     }
-    
+
     /**
      * Adds a clause to the path condition. The clause is a condition 
      * over primitive values.
@@ -47,7 +48,7 @@ final class PathCondition implements Cloneable {
      * @param condition the additional condition as a {@link Primitive}.
      */
     void addClauseAssume(Primitive condition) {
-		this.clauses.add(new ClauseAssume(condition));
+        this.clauses.add(new ClauseAssume(condition));
     }
 
     /**
@@ -62,15 +63,15 @@ final class PathCondition implements Cloneable {
      *        is expanded.
      */
     void addClauseAssumeExpands(ReferenceSymbolic reference, long heapPosition, Objekt object) {
-    	this.clauses.add(new ClauseAssumeExpands(reference, heapPosition, object));
-    	this.referenceResolutionMap.put(reference.getId(), heapPosition);
-    	
-    	//increments objectCounters
-    	if (!this.objectCounters.containsKey(object.getType())) {
-    		this.objectCounters.put(object.getType(), 0);
-    	}
-    	final int nobjects = this.objectCounters.get(object.getType());
-    	this.objectCounters.put(object.getType(), nobjects + 1);
+        this.clauses.add(new ClauseAssumeExpands(reference, heapPosition, object));
+        this.referenceResolutionMap.put(reference.getId(), heapPosition);
+
+        //increments objectCounters
+        if (!this.objectCounters.containsKey(object.getType().getClassName())) {
+            this.objectCounters.put(object.getType().getClassName(), 0);
+        }
+        final int nobjects = this.objectCounters.get(object.getType().getClassName());
+        this.objectCounters.put(object.getType().getClassName(), nobjects + 1);
     }
 
     /**
@@ -80,13 +81,13 @@ final class PathCondition implements Cloneable {
      * @param reference the {@link ReferenceSymbolic} which is resolved. 
      * @param heapPosition the position in the heap of the object to 
      *        which {@code reference} is resolved.
-	 * @param object the {@link Objekt} at position {@code heapPosition}
-	 *        as it was at the beginning of symbolic execution, or equivalently 
-	 *        at the time of its assumption.
+     * @param object the {@link Objekt} at position {@code heapPosition}
+     *        as it was at the beginning of symbolic execution, or equivalently 
+     *        at the time of its assumption.
      */
     void addClauseAssumeAliases(ReferenceSymbolic reference, long heapPosition, Objekt object) {
-    	this.clauses.add(new ClauseAssumeAliases(reference, heapPosition, object));
-    	this.referenceResolutionMap.put(reference.getId(), heapPosition);
+        this.clauses.add(new ClauseAssumeAliases(reference, heapPosition, object));
+        this.referenceResolutionMap.put(reference.getId(), heapPosition);
     }
 
     /**
@@ -96,58 +97,58 @@ final class PathCondition implements Cloneable {
      * @param reference the {@link ReferenceSymbolic} which is resolved. 
      */
     void addClauseAssumeNull(ReferenceSymbolic reference) {
-		this.clauses.add(new ClauseAssumeNull(reference));
-		this.referenceResolutionMap.put(reference.getId(), Util.POS_NULL);
+        this.clauses.add(new ClauseAssumeNull(reference));
+        this.referenceResolutionMap.put(reference.getId(), Util.POS_NULL);
     }
 
     /**
      * Adds a clause to the path condition. The clause is the resolution of a 
      * class by assuming it loaded and initialized.
      *   
-     * @param className the class name as a {@link String}.
-     * @param klass the symbolic {@link Klass} object to which {@code className}
-     * is resolved.
+     * @param classFile a {@link ClassFile}.
+     * @param klass the symbolic {@link Klass} object to which {@code classFile}
+     *        is resolved.
      */
-    void addClauseAssumeClassInitialized(String className, Klass klass) {
-   		this.clauses.add(new ClauseAssumeClassInitialized(className, klass));
+    void addClauseAssumeClassInitialized(ClassFile classFile, Klass klass) {
+        this.clauses.add(new ClauseAssumeClassInitialized(classFile, klass));
     }
 
     /**
      * Adds a clause to the path condition. The clause is the resolution of a 
      * class by assuming it not initialized.
      *   
-     * @param className the concrete class name as a {@link String}.
+     * @param classFile a {@link ClassFile}.
      */
-    void addClauseAssumeClassNotInitialized(String className) {
-   		this.clauses.add(new ClauseAssumeClassNotInitialized(className));
+    void addClauseAssumeClassNotInitialized(ClassFile classFile) {
+        this.clauses.add(new ClauseAssumeClassNotInitialized(classFile));
     }
 
-	/**
-	 * Tests whether a symbolic reference is resolved.
-	 * 
-	 * @param reference a {@link ReferenceSymbolic}.
-	 * @return {@code true} iff {@code reference} is resolved.
+    /**
+     * Tests whether a symbolic reference is resolved.
+     * 
+     * @param reference a {@link ReferenceSymbolic}.
+     * @return {@code true} iff {@code reference} is resolved.
      * @throws NullPointerException if {@code reference == null}.
-	 */
+     */
     boolean resolved(ReferenceSymbolic reference) {
-    	return this.referenceResolutionMap.containsKey(reference.getId());
+        return this.referenceResolutionMap.containsKey(reference.getId());
     }
-        
-	/**
-	 * Returns the heap position associated to a resolved 
-	 * symbolic reference.
-	 * 
-	 * @param reference a {@link ReferenceSymbolic}. It must be 
-	 * {@link #resolved}{@code (reference) == true}.
-	 * @return a {@code long}, the heap position to which
-	 * {@code reference} has been resolved or {@code null} if
+
+    /**
+     * Returns the heap position associated to a resolved 
+     * symbolic reference.
+     * 
+     * @param reference a {@link ReferenceSymbolic}. It must be 
+     * {@link #resolved}{@code (reference) == true}.
+     * @return a {@code long}, the heap position to which
+     * {@code reference} has been resolved or {@code null} if
      * {@link #resolved}{@code (reference) == false}.
-	 * @throws NullPointerException if {@code reference == null}.
-	 */
+     * @throws NullPointerException if {@code reference == null}.
+     */
     long getResolution(ReferenceSymbolic reference) {
-    	return this.referenceResolutionMap.get(reference.getId());
+        return this.referenceResolutionMap.get(reference.getId());
     }
-    
+
     /**
      * Tests whether this path condition refines, i.e., 
      * if it has more clauses than, another one.
@@ -160,19 +161,19 @@ final class PathCondition implements Cloneable {
      *         {@code pathCondition} returns {@code null}.
      */
     Iterator<Clause> refines(PathCondition pathCondition) {
-    	final Iterator<Clause> i = this.clauses.iterator();
-    	for (Clause c : pathCondition.clauses) {
-    		if (!i.hasNext()) {
-    			return null;
-    		}
-    		final Clause cc = i.next();
-    		if (!cc.equals(c)) {
-    			return null;
-    		}
-    	}
-    	return i;
+        final Iterator<Clause> i = this.clauses.iterator();
+        for (Clause c : pathCondition.clauses) {
+            if (!i.hasNext()) {
+                return null;
+            }
+            final Clause cc = i.next();
+            if (!cc.equals(c)) {
+                return null;
+            }
+        }
+        return i;
     }
-    
+
     /**
      * Returns the number of assumed object of a given class.
      * 
@@ -181,12 +182,12 @@ final class PathCondition implements Cloneable {
      * assumed by this path condition.
      */
     int getNumAssumed(String className) {
-    	if (this.objectCounters.containsKey(className)) {
-    		return this.objectCounters.get(className);
-    	}
-    	return 0;
+        if (this.objectCounters.containsKey(className)) {
+            return this.objectCounters.get(className);
+        }
+        return 0;
     }
-    
+
     /**
      * Returns all the {@link Clause}s of the path condition.
      *  
@@ -195,44 +196,44 @@ final class PathCondition implements Cloneable {
      * It is valid until {@code this} is modified.
      */
     List<Clause> getClauses() {
-    	return Collections.unmodifiableList(this.clauses);
+        return Collections.unmodifiableList(this.clauses);
     }
-    
+
     @Override
     public String toString() {
-    	final StringBuilder buf = new StringBuilder();
-    	boolean isFirst = true;
-    	for (Clause c : this.clauses) {
-    		if (isFirst) {
-    		    isFirst = false;
-    		} else {
-    		    buf.append(" && ");
-    		}
-    		buf.append(c.toString());
-    	}
-    	
-    	final String bufString = buf.toString();
-    	if (bufString.isEmpty()) {
-    		return "true";
-    	} else {
-    	    return bufString;
-    	}
+        final StringBuilder buf = new StringBuilder();
+        boolean isFirst = true;
+        for (Clause c : this.clauses) {
+            if (isFirst) {
+                isFirst = false;
+            } else {
+                buf.append(" && ");
+            }
+            buf.append(c.toString());
+        }
+
+        final String bufString = buf.toString();
+        if (bufString.isEmpty()) {
+            return "true";
+        } else {
+            return bufString;
+        }
     }
-    
+
     @Override
     public PathCondition clone() {
         final PathCondition o;
         try {
             o = (PathCondition) super.clone();
         } catch (CloneNotSupportedException e) {
-        	throw new InternalError(e);
+            throw new InternalError(e);
         }
-        
+
         //does a deep copy
         o.clauses = new ArrayList<Clause>(this.clauses);
         o.referenceResolutionMap = new HashMap<>(this.referenceResolutionMap);
         o.objectCounters = new HashMap<>(this.objectCounters);
-        
+
         return o;
     }
 }

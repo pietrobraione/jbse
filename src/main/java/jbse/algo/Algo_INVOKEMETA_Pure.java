@@ -1,8 +1,12 @@
 package jbse.algo;
 
+import static java.lang.System.arraycopy;
+
 import static jbse.algo.Util.failExecution;
 import static jbse.common.Type.binaryClassName;
 import static jbse.common.Type.parametersNumber;
+import static jbse.common.Type.splitParametersDescriptors;
+import static jbse.common.Type.splitReturnValueDescriptor;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -16,10 +20,9 @@ import jbse.algo.exc.CannotManageStateException;
 import jbse.common.Type;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
-import jbse.jvm.exc.FailureException;
 import jbse.mem.State;
-import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Calculator;
 import jbse.val.FunctionApplication;
 import jbse.val.Primitive;
@@ -104,7 +107,7 @@ public class Algo_INVOKEMETA_Pure extends Algo_INVOKEMETA_Nonbranching {
     private void invokeMetacircularly(State state, Simplex[] args) throws CannotInvokeNativeException {
         try {
             //converts the arguments
-            final String[] argsType = Type.splitParametersDescriptors(this.data.signature().getDescriptor());
+            final String[] argsType = splitParametersDescriptors(this.data.signature().getDescriptor());
             final Object[] argsRefl = new Object[args.length];
             final Class<?>[] argsClass = new Class[args.length];
             for (int i = 0; i < args.length; ++i) {
@@ -114,21 +117,21 @@ public class Algo_INVOKEMETA_Pure extends Algo_INVOKEMETA_Nonbranching {
 
             //gets the method and invokes it
             final Class<?> c = Class.forName(binaryClassName(this.data.signature().getClassName()));
-            final Method m = c.getMethod(this.data.signature().getName(), argsClass);
+            final Method m = c.getDeclaredMethod(this.data.signature().getName(), argsClass);
+            m.setAccessible(true);
             final Object retValRefl;
             if (Modifier.isStatic(m.getModifiers())) {
                 retValRefl = m.invoke(null, argsRefl);
             } else {
-                final Object argThis = argsRefl[0]; //TODO reify argsRefl[0]
+                //TODO currently this block does not work because we do not reify argsRefl[0] to a Java object
+                final Object argThis = argsRefl[0]; 
                 final Object[] argsReflOthers = new Object[argsRefl.length - 1];
-                for (int i = 0; i < argsReflOthers.length; ++i) {
-                    argsReflOthers[i] = argsRefl[i + 1];
-                }
+                arraycopy(argsRefl, 1, argsReflOthers, 0, argsReflOthers.length);
                 retValRefl = m.invoke(argThis, argsReflOthers);
             }
 
             //reifies the return value
-            final String retType =  Type.splitReturnValueDescriptor(this.data.signature().getDescriptor());
+            final String retType =  splitReturnValueDescriptor(this.data.signature().getDescriptor());
             this.returnValue = toValue(state.getCalculator(), retValRefl, retType);
         } catch (ClassNotFoundException | SecurityException | 
                  NoSuchMethodException | IllegalArgumentException | 
@@ -172,10 +175,11 @@ public class Algo_INVOKEMETA_Pure extends Algo_INVOKEMETA_Nonbranching {
     }
     
     @Override
-    protected void update(State state) throws ThreadStackEmptyException, ClasspathException, CannotManageStateException,
-    DecisionException, ContradictionException, FailureException, InterruptException {
-        if (this.returnValue != null) {
-            state.pushOperand(this.returnValue); //TODO possibly widen to integer if it is not an operand stack primitive
-        }
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> { 
+            if (this.returnValue != null) {
+                state.pushOperand(this.returnValue); //TODO possibly widen to integer if it is not an operand stack primitive
+            }
+        };
     }
 }

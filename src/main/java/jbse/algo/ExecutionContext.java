@@ -16,6 +16,8 @@ import static jbse.algo.Overrides.ALGO_JAVA_CLASS_ISASSIGNABLEFROM;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_ISINSTANCE;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_ISINTERFACE;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_ISPRIMITIVE;
+import static jbse.algo.Overrides.ALGO_JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS;
+import static jbse.algo.Overrides.ALGO_JAVA_CLASSLOADER_FINDLOADEDCLASS0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD;
 import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_RESOLVE;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_CLONE;
@@ -35,6 +37,8 @@ import static jbse.algo.Overrides.ALGO_JAVA_THREAD_CURRENTTHREAD;
 import static jbse.algo.Overrides.ALGO_JAVA_THROWABLE_FILLINSTACKTRACE;
 import static jbse.algo.Overrides.ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH;
 import static jbse.algo.Overrides.ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT;
+import static jbse.algo.Overrides.ALGO_JAVA_UNIXFILESYSTEM_GETBOOLEANATTRIBUTES0;
+import static jbse.algo.Overrides.ALGO_JAVA_WINNTFILESYSTEM_GETBOOLEANATTRIBUTES;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ANY;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ENDGUIDANCE;
@@ -44,8 +48,6 @@ import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ISRESOLVED;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ISSYMBOLIC;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_SUCCEED;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_SYMBOLNAME;
-import static jbse.algo.Overrides.ALGO_noclass_REGISTERMETHODTYPE;
-import static jbse.algo.Overrides.ALGO_noclass_STORELINKEDMETHODANDAPPENDIX;
 import static jbse.algo.Overrides.ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
 import static jbse.algo.Overrides.ALGO_SUN_REFLECTION_GETCALLERCLASS;
 import static jbse.algo.Overrides.ALGO_SUN_REFLECTION_GETCLASSACCESSFLAGS;
@@ -64,7 +66,12 @@ import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_PUTLONG;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_PUTOBJECTVOLATILE;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_SHOULDBEINITIALIZED;
-import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION;
+import static jbse.algo.Overrides.ALGO_noclass_REGISTERLOADEDCLASS;
+import static jbse.algo.Overrides.ALGO_noclass_REGISTERMETHODTYPE;
+import static jbse.algo.Overrides.ALGO_noclass_SETSTANDARDCLASSLOADERSREADY;
+import static jbse.algo.Overrides.ALGO_noclass_STORELINKEDMETHODANDAPPENDIX;
+import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_1;
+import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_2;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT;
 import static jbse.algo.Overrides.BASE_JAVA_ATOMICLONG_VMSUPPORTSCS8;
@@ -81,7 +88,7 @@ import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ADDRESSSIZE;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ARRAYBASEOFFSET;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ARRAYINDEXSCALE;
 import static jbse.algo.Overrides.BASE_SUN_URLCLASSPATH_GETLOOKUPCACHEURLS;
-
+import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Signatures.ARITHMETIC_EXCEPTION;
 import static jbse.bc.Signatures.ARRAY_STORE_EXCEPTION;
 import static jbse.bc.Signatures.CLASS_CAST_EXCEPTION;
@@ -95,7 +102,8 @@ import static jbse.bc.Signatures.JAVA_ABSTRACTSET;
 import static jbse.bc.Signatures.JAVA_ABSTRACTSTRINGBUILDER;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLCONTEXT;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER;
-import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION;
+import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_1;
+import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_2;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT;
 import static jbse.bc.Signatures.JAVA_ACCESSIBLEOBJECT;
@@ -151,7 +159,9 @@ import static jbse.bc.Signatures.JAVA_CLASS_ISPRIMITIVE;
 import static jbse.bc.Signatures.JAVA_CLASS_REFLECTIONDATA;
 import static jbse.bc.Signatures.JAVA_CLASS_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER;
+import static jbse.bc.Signatures.JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_FINDBUILTINLIB;
+import static jbse.bc.Signatures.JAVA_CLASSLOADER_FINDLOADEDCLASS0;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_NATIVELIBRARY;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_NATIVELIBRARY_LOAD;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_PARALLELLOADERS;
@@ -178,7 +188,7 @@ import static jbse.bc.Signatures.JAVA_DOUBLE;
 import static jbse.bc.Signatures.JAVA_DOUBLE_DOUBLETORAWLONGBITS;
 import static jbse.bc.Signatures.JAVA_DOUBLE_LONGBITSTODOUBLE;
 import static jbse.bc.Signatures.JAVA_ENUM;
-import static jbse.bc.Signatures.JAVA_EXCEPTION;
+import static jbse.bc.Signatures.EXCEPTION;
 import static jbse.bc.Signatures.JAVA_EXECUTABLE;
 import static jbse.bc.Signatures.JAVA_EXPIRINGCACHE;
 import static jbse.bc.Signatures.JAVA_EXPIRINGCACHE_1;
@@ -267,7 +277,6 @@ import static jbse.bc.Signatures.JAVA_REFLECTACCESS;
 import static jbse.bc.Signatures.JAVA_REFLECTPERMISSION;
 import static jbse.bc.Signatures.JAVA_RUNTIME;
 import static jbse.bc.Signatures.JAVA_RUNTIME_AVAILABLEPROCESSORS;
-import static jbse.bc.Signatures.JAVA_RUNTIMEEXCEPTION;
 import static jbse.bc.Signatures.JAVA_RUNTIMEPERMISSION;
 import static jbse.bc.Signatures.JAVA_SECURECLASSLOADER;
 import static jbse.bc.Signatures.JAVA_SHORT;
@@ -310,6 +319,7 @@ import static jbse.bc.Signatures.JAVA_SYSTEM_ARRAYCOPY;
 import static jbse.bc.Signatures.JAVA_SYSTEM_IDENTITYHASHCODE;
 import static jbse.bc.Signatures.JAVA_SYSTEM_INITPROPERTIES;
 import static jbse.bc.Signatures.JAVA_SYSTEM_MAPLIBRARYNAME;
+import static jbse.bc.Signatures.JAVA_SYSTEM_NANOTIME;
 import static jbse.bc.Signatures.JAVA_SYSTEM_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_SYSTEM_SETERR0;
 import static jbse.bc.Signatures.JAVA_SYSTEM_SETIN0;
@@ -332,6 +342,7 @@ import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEELEMENT;
 import static jbse.bc.Signatures.JAVA_THROWABLE_SENTINELHOLDER;
 import static jbse.bc.Signatures.JAVA_TREESET;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM;
+import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_GETBOOLEANATTRIBUTES0;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_INITIDS;
 import static jbse.bc.Signatures.JAVA_URLCLASSLOADER;
 import static jbse.bc.Signatures.JAVA_URLCLASSLOADER_7;
@@ -343,6 +354,7 @@ import static jbse.bc.Signatures.JAVA_WEAKHASHMAP_ENTRY;
 import static jbse.bc.Signatures.JAVA_WEAKHASHMAP_KEYSET;
 import static jbse.bc.Signatures.JAVA_WEAKREFERENCE;
 import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM;
+import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM_GETBOOLEANATTRIBUTES;
 import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM_INITIDS;
 import static jbse.bc.Signatures.JAVA_WRITER;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ANY;
@@ -370,10 +382,9 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_INT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_LONG;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_SHORT;
 import static jbse.bc.Signatures.JBSE_BASE;
-import static jbse.bc.Signatures.noclass_REGISTERMETHODTYPE;
-import static jbse.bc.Signatures.noclass_STORELINKEDMETHODANDAPPENDIX;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
+import static jbse.bc.Signatures.RUNTIME_EXCEPTION;
 import static jbse.bc.Signatures.STACK_OVERFLOW_ERROR;
 import static jbse.bc.Signatures.SUN_CLEANER;
 import static jbse.bc.Signatures.SUN_CONSTRUCTORACCESSORIMPL;
@@ -388,6 +399,7 @@ import static jbse.bc.Signatures.SUN_LAUNCHER_EXTCLASSLOADER;
 import static jbse.bc.Signatures.SUN_LAUNCHER_EXTCLASSLOADER_1;
 import static jbse.bc.Signatures.SUN_LAUNCHER_FACTORY;
 import static jbse.bc.Signatures.SUN_MAGICACCESSORIMPL;
+import static jbse.bc.Signatures.SUN_METAINDEX;
 import static jbse.bc.Signatures.SUN_NATIVECONSTRUCTORACCESSORIMPL;
 import static jbse.bc.Signatures.SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
 import static jbse.bc.Signatures.SUN_NATIVESIGNALHANDLER;
@@ -441,7 +453,10 @@ import static jbse.bc.Signatures.SUN_VM;
 import static jbse.bc.Signatures.SUN_VM_INITIALIZE;
 import static jbse.bc.Signatures.SUN_WRAPPER_FORMAT;
 import static jbse.bc.Signatures.VIRTUAL_MACHINE_ERROR;
-import static jbse.common.Type.binaryClassName;
+import static jbse.bc.Signatures.noclass_REGISTERLOADEDCLASS;
+import static jbse.bc.Signatures.noclass_REGISTERMETHODTYPE;
+import static jbse.bc.Signatures.noclass_SETSTANDARDCLASSLOADERSREADY;
+import static jbse.bc.Signatures.noclass_STORELINKEDMETHODANDAPPENDIX;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -451,6 +466,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import jbse.algo.exc.MetaUnsupportedException;
+import jbse.bc.ClassFile;
 import jbse.bc.ClassFileFactory;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Classpath;
@@ -604,7 +620,8 @@ public final class ExecutionContext {
         //defaults
         try {
             //JRE methods
-            addBaseOverridden(JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION,       BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION);
+            addBaseOverridden(JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_1,     BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_1);
+            addBaseOverridden(JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_2,     BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_2);
             addBaseOverridden(JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION,     BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION);
             addBaseOverridden(JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT, BASE_JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT);
             addBaseOverridden(JAVA_ATOMICLONG_VMSUPPORTSCS8,                      BASE_JAVA_ATOMICLONG_VMSUPPORTSCS8);
@@ -625,7 +642,9 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_CLASS_ISINTERFACE,                             ALGO_JAVA_CLASS_ISINTERFACE);
             addMetaOverridden(JAVA_CLASS_ISPRIMITIVE,                             ALGO_JAVA_CLASS_ISPRIMITIVE);
             addMetaOverridden(JAVA_CLASS_REGISTERNATIVES,                         ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS,                ALGO_JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS);
             addBaseOverridden(JAVA_CLASSLOADER_FINDBUILTINLIB,                    BASE_JAVA_CLASSLOADER_FINDBUILTINLIB);
+            addMetaOverridden(JAVA_CLASSLOADER_FINDLOADEDCLASS0,                  ALGO_JAVA_CLASSLOADER_FINDLOADEDCLASS0);
             addMetaOverridden(JAVA_CLASSLOADER_NATIVELIBRARY_LOAD,                ALGO_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD);
             addMetaOverridden(JAVA_CLASSLOADER_REGISTERNATIVES,                   ALGO_INVOKEMETA_PURE);
             addMetaOverridden(JAVA_DOUBLE_DOUBLETORAWLONGBITS,                    ALGO_INVOKEMETA_PURE);
@@ -676,6 +695,7 @@ public final class ExecutionContext {
             addBaseOverridden(JAVA_SYSTEM_INITPROPERTIES,                         BASE_JAVA_SYSTEM_INITPROPERTIES);
             addMetaOverridden(JAVA_SYSTEM_IDENTITYHASHCODE,                       ALGO_JAVA_SYSTEM_IDENTITYHASHCODE);
             addMetaOverridden(JAVA_SYSTEM_MAPLIBRARYNAME,                         ALGO_JAVA_SYSTEM_MAPLIBRARYNAME);
+            addMetaOverridden(JAVA_SYSTEM_NANOTIME,                               ALGO_INVOKEMETA_PURE);
             addMetaOverridden(JAVA_SYSTEM_REGISTERNATIVES,                        ALGO_INVOKEMETA_PURE);
             addMetaOverridden(JAVA_SYSTEM_SETERR0,                                ALGO_JAVA_SYSTEM_SETERR0);
             addMetaOverridden(JAVA_SYSTEM_SETIN0,                                 ALGO_JAVA_SYSTEM_SETIN0);
@@ -688,7 +708,9 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_THROWABLE_FILLINSTACKTRACE,                    ALGO_JAVA_THROWABLE_FILLINSTACKTRACE);
             addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEDEPTH,                  ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH);
             addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEELEMENT,                ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT);
+            addMetaOverridden(JAVA_UNIXFILESYSTEM_GETBOOLEANATTRIBUTES0,          ALGO_JAVA_UNIXFILESYSTEM_GETBOOLEANATTRIBUTES0);
             addMetaOverridden(JAVA_UNIXFILESYSTEM_INITIDS,                        ALGO_INVOKEMETA_PURE);
+            addMetaOverridden(JAVA_WINNTFILESYSTEM_GETBOOLEANATTRIBUTES,          ALGO_JAVA_WINNTFILESYSTEM_GETBOOLEANATTRIBUTES);
             addMetaOverridden(JAVA_WINNTFILESYSTEM_INITIDS,                       ALGO_INVOKEMETA_PURE);
             addMetaOverridden(SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0,     ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0);
             addMetaOverridden(SUN_REFLECTION_GETCALLERCLASS,                      ALGO_SUN_REFLECTION_GETCALLERCLASS);
@@ -744,7 +766,9 @@ public final class ExecutionContext {
             addMetaOverridden(JBSE_ANALYSIS_SYMBOLNAME_SHORT,          ALGO_JBSE_ANALYSIS_SYMBOLNAME);
             
             //jbse classless (pseudo)methods
+            addMetaOverridden(noclass_REGISTERLOADEDCLASS,          ALGO_noclass_REGISTERLOADEDCLASS);
             addMetaOverridden(noclass_REGISTERMETHODTYPE,           ALGO_noclass_REGISTERMETHODTYPE);
+            addMetaOverridden(noclass_SETSTANDARDCLASSLOADERSREADY, ALGO_noclass_SETSTANDARDCLASSLOADERSREADY);
             addMetaOverridden(noclass_STORELINKEDMETHODANDAPPENDIX, ALGO_noclass_STORELINKEDMETHODANDAPPENDIX);
         } catch (MetaUnsupportedException e) {
             throw new UnexpectedInternalException(e);
@@ -829,17 +853,7 @@ public final class ExecutionContext {
      */
     public void addMetaOverridden(Signature methodSignature, String metaDelegateClassName) 
     throws MetaUnsupportedException {
-        try {
-            @SuppressWarnings("unchecked")
-            final Class<? extends Algo_INVOKEMETA<?, ?, ?, ?>> metaDelegateClass = 
-                (Class<? extends Algo_INVOKEMETA<?, ?, ?, ?>>) 
-                ClassLoader.getSystemClassLoader().loadClass(binaryClassName(metaDelegateClassName)).asSubclass(Algo_INVOKEMETA.class);
-            this.dispatcherMeta.loadAlgoMetaOverridden(methodSignature, metaDelegateClass);
-        } catch (ClassNotFoundException e) {
-            throw new MetaUnsupportedException("meta-level implementation class " + metaDelegateClassName + " not found");
-        } catch (ClassCastException e) {
-            throw new MetaUnsupportedException("meta-level implementation class " + metaDelegateClassName + " does not implement " + Algorithm.class);
-        }
+        this.dispatcherMeta.loadAlgoMetaOverridden(methodSignature, metaDelegateClassName);
     }
 
     /**
@@ -863,10 +877,11 @@ public final class ExecutionContext {
      * is executed.
      * 
      * @param classHierarchy a {@link ClassHierarchy}.
-     * @param className the name of the class.
+     * @param classFile the {@link ClassFile} for a class.
      * @return {@code true} iff the class has a pure static initializer.
      */
-    public boolean hasClassAPureInitializer(ClassHierarchy hier, String className) {
+    public boolean hasClassAPureInitializer(ClassHierarchy hier, ClassFile classFile) {
+        final String className = classFile.getClassName();
         return 
         (
         className.equals(ARITHMETIC_EXCEPTION) ||
@@ -938,7 +953,7 @@ public final class ExecutionContext {
         className.equals(JAVA_DICTIONARY) ||
         className.equals(JAVA_DIRECTMETHODHANDLE) || //wouldn't manage method handles otherwise
         className.equals(JAVA_DOUBLE) ||
-        className.equals(JAVA_EXCEPTION) ||
+        className.equals(EXCEPTION) ||
         className.equals(JAVA_EXECUTABLE) ||
         className.equals(JAVA_EXPIRINGCACHE) ||
         className.equals(JAVA_EXPIRINGCACHE_1) ||
@@ -1013,7 +1028,7 @@ public final class ExecutionContext {
         className.equals(JAVA_REFLECTACCESS) ||
         className.equals(JAVA_REFLECTPERMISSION) ||
         className.equals(JAVA_RUNTIME) ||
-        className.equals(JAVA_RUNTIMEEXCEPTION) ||
+        className.equals(RUNTIME_EXCEPTION) ||
         className.equals(JAVA_RUNTIMEPERMISSION) ||
         className.equals(JAVA_SECURECLASSLOADER) || //its static initializer registers this class as a parallel capable class loader
         className.equals(JAVA_SHORT) || 
@@ -1062,6 +1077,7 @@ public final class ExecutionContext {
         className.equals(SUN_LAUNCHER_EXTCLASSLOADER_1) ||
         className.equals(SUN_LAUNCHER_FACTORY) || //not really, but its only static field is effectively final
         className.equals(SUN_MAGICACCESSORIMPL) ||
+        className.equals(SUN_METAINDEX) || //not really, but it is a sort of cache that after JVM initialization should not change
         className.equals(SUN_NATIVECONSTRUCTORACCESSORIMPL) ||
         className.equals(SUN_NATIVESIGNALHANDLER) ||
         className.equals(SUN_OSENVIRONMENT) ||
@@ -1089,7 +1105,7 @@ public final class ExecutionContext {
         className.equals(SUN_VM) ||
         className.equals(SUN_WRAPPER_FORMAT) ||
         className.equals(VIRTUAL_MACHINE_ERROR) ||
-        hier.isSubclass(className, JAVA_ENUM));
+        hier.isSubclass(classFile, hier.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_ENUM)));
     }
 
     public <R extends DecisionAlternative> 

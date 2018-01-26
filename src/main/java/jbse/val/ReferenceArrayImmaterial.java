@@ -2,6 +2,7 @@ package jbse.val;
 
 import java.util.Arrays;
 
+import jbse.bc.ClassFile;
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.exc.InvalidTypeException;
@@ -20,122 +21,121 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  */
 public final class ReferenceArrayImmaterial extends Reference {
-	/** The type of the array. */
-	private final String arrayType;
-	
-	/** The lengths of the array's dimensions. */
-	private final Primitive[] arrayLength;
-	
-	public ReferenceArrayImmaterial(String arrayType, Primitive[] arrayLength) 
-	throws InvalidTypeException {
-		super();
-		if (Type.getDeclaredNumberOfDimensions(arrayType) != arrayLength.length) {
-		    throw new InvalidTypeException("the number of declared dimensions of the array disagrees with the number of length values");
-		}
-		this.arrayType = arrayType;
-		this.arrayLength = arrayLength.clone(); //safety copy
-	}
-	
-	/**
-	 * Returns the type of the array this 
-	 * object models.
-	 * 
-	 * @return a {@code String}, an array type.
-	 */
-	public String getArrayType() {
-		return this.arrayType;
-	}
-	
-	/** 
-	 * Gets the length of the array.
-	 * 
-	 * @return a {@link Primitive}, the length of the 
-	 *         array (i.e., of its first dimension). As an
-	 *         example, if {@code this} is an
-	 *         {@link ReferenceArrayImmaterial} satisfied by
-	 *         an array with dimensions {@code [foo][bar]},
-	 *         {@code this.getLength()} returns {@code foo}. 
-	 *           
-	 */
-	public Primitive getLength() {
-		return this.arrayLength[0];
-	}
-	
-	/**
-	 * Gets a {@link ReferenceArrayImmaterial} for the members
-	 * of the array this object refers to.
-	 *  
-	 * @return an {@link ReferenceArrayImmaterial} for all the 
-	 *         members of the array whose shape is modeled by
-	 *         {@code this} object.
-	 *         As an example, if {@code this} is an
-	 *         {@link ReferenceArrayImmaterial} satisfied by
-	 *         an array with dimensions {@code [foo][bar]},
-	 *         {@code this.next()} returns {@code [bar]}.
-	 *         If {@code this} describes a monodimensional 
-	 *         array, the method returns 
-	 *         {@code null} (e.g., for the above example
-	 *         {@code this.getMember().getMember() == null}).
-	 *          
-	 */
-	public ReferenceArrayImmaterial getMember() {
-		if (this.arrayLength.length > 1) {
-			Primitive[] newLength = new Primitive[this.arrayLength.length - 1];
-			boolean first = true;
-			int i = 0;
-			for (Primitive p : this.arrayLength) {
-				if (first) {
-					first = false;
-				} else {
-					newLength[i] = p;
-				}
-				i++;
-			}
-			try {
-			    return new ReferenceArrayImmaterial(Type.getArrayMemberType(this.arrayType), newLength);
-			} catch (InvalidTypeException e) {
-			    //this should never happen
-			    throw new UnexpectedInternalException(e);
-			}
-		} else {
-			return null;
-		}
-	}
+    /** The type of the array. */
+    private final ClassFile arrayType;
+
+    /** The lengths of the array's dimensions. */
+    private final Primitive[] arrayLength;
+
+    public ReferenceArrayImmaterial(ClassFile arrayType, Primitive[] arrayLength) 
+    throws InvalidTypeException {
+        super();
+        if (Type.getDeclaredNumberOfDimensions(arrayType.getClassName()) != arrayLength.length) {
+            throw new InvalidTypeException("the number of declared dimensions of the array disagrees with the number of length values");
+        }
+        this.arrayType = arrayType;
+        this.arrayLength = arrayLength.clone(); //safety copy
+    }
+
+    /**
+     * Returns the type of the array this 
+     * object models.
+     * 
+     * @return a {@code String}, an array type.
+     */
+    public ClassFile getArrayType() {
+        return this.arrayType;
+    }
+
+    /** 
+     * Gets the length of the array.
+     * 
+     * @return a {@link Primitive}, the length of the 
+     *         array (i.e., of its first dimension). As an
+     *         example, if {@code this} is an
+     *         {@link ReferenceArrayImmaterial} satisfied by
+     *         an array with dimensions {@code [foo][bar]},
+     *         {@code this.getLength()} returns {@code foo}. 
+     *           
+     */
+    public Primitive getLength() {
+        return this.arrayLength[0];
+    }
+
+    /**
+     * Gets a {@link ReferenceArrayImmaterial} for the members
+     * of the array this object refers to.
+     *  
+     * @return an {@link ReferenceArrayImmaterial} for all the 
+     *         members of the array whose shape is modeled by
+     *         {@code this} object.
+     *         As an example, if {@code this} is an
+     *         {@link ReferenceArrayImmaterial} satisfied by
+     *         an array with dimensions {@code [foo][bar]},
+     *         {@code this.next()} returns {@code [bar]}.
+     *         If {@code this} describes a monodimensional 
+     *         array, the method returns 
+     *         {@code null} (e.g., for the above example
+     *         {@code this.getMember().getMember() == null}).
+     *          
+     */
+    public ReferenceArrayImmaterial getMember() {
+        if (this.arrayLength.length > 1) {
+            Primitive[] newLength = new Primitive[this.arrayLength.length - 1];
+            boolean first = true;
+            int i = 0;
+            for (Primitive p : this.arrayLength) {
+                if (first) {
+                    first = false;
+                } else {
+                    newLength[i] = p;
+                }
+                i++;
+            }
+            try {
+                return new ReferenceArrayImmaterial(this.arrayType.getMemberClass(), newLength);
+            } catch (InvalidTypeException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            }
+        } else {
+            return null;
+        }
+    }
 
     @Override
     public boolean isSymbolic() {
         return false; 
     }
 
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (o == null) {
-			return false;
-		}
-		if (this.getClass() != o.getClass()) {
-			return false;
-		}
-		final ReferenceArrayImmaterial c = (ReferenceArrayImmaterial) o;
-		if (c.arrayLength.length != this.arrayLength.length) {
-			return false;
-		}
-		//heap position is unknown
-		if (!this.arrayType.equals(c.arrayType)) {
-			return false;
-		}
-		return Arrays.equals(this.arrayLength, c.arrayLength);
-	}
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null) {
+            return false;
+        }
+        if (this.getClass() != o.getClass()) {
+            return false;
+        }
+        final ReferenceArrayImmaterial c = (ReferenceArrayImmaterial) o;
+        if (c.arrayLength.length != this.arrayLength.length) {
+            return false;
+        }
+        //heap position is unknown
+        if (this.arrayType != c.arrayType) {
+            return false;
+        }
+        return Arrays.equals(this.arrayLength, c.arrayLength);
+    }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + Arrays.hashCode(this.arrayLength);
-        result =
-            prime * result +
+        result = prime * result +
             ((this.arrayType == null) ? 0 : this.arrayType.hashCode());
         return result;
     }

@@ -6,17 +6,23 @@ import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOSPECIAL;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOSTATIC;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOVIRTUAL;
 
-import jbse.bc.Signature;
-
 class Util {
-    static boolean isSignaturePolymorphicMethodIntrinsic(Signature methodSignature) {
-        final Signature methodSignatureNoDescriptor = new Signature(methodSignature.getClassName(), null, methodSignature.getName());
+    /**
+     * Checks if a method name is the name of an intrinsic signature polymorphic
+     * method.
+     * 
+     * @param methodName a {@link String}.
+     * @return {@code true} if {@code methodName} is one of {@code invokeBasic}, 
+     *         {@code linkToInterface}, {@code linkToSpecial}, {@code linkToStatic},
+     *         or {@code linkToVirtual}. 
+     */
+    static boolean isSignaturePolymorphicMethodIntrinsic(String methodName) {
         return 
-        (JAVA_METHODHANDLE_INVOKEBASIC.equals(methodSignatureNoDescriptor) ||
-        JAVA_METHODHANDLE_LINKTOINTERFACE.equals(methodSignatureNoDescriptor) ||
-        JAVA_METHODHANDLE_LINKTOSPECIAL.equals(methodSignatureNoDescriptor) ||
-        JAVA_METHODHANDLE_LINKTOSTATIC.equals(methodSignatureNoDescriptor) ||
-        JAVA_METHODHANDLE_LINKTOVIRTUAL.equals(methodSignatureNoDescriptor));
+        (JAVA_METHODHANDLE_INVOKEBASIC.getName().equals(methodName) ||
+        JAVA_METHODHANDLE_LINKTOINTERFACE.getName().equals(methodName) ||
+        JAVA_METHODHANDLE_LINKTOSPECIAL.getName().equals(methodName) ||
+        JAVA_METHODHANDLE_LINKTOSTATIC.getName().equals(methodName) ||
+        JAVA_METHODHANDLE_LINKTOVIRTUAL.getName().equals(methodName));
     }
     
     //do not instantiate!

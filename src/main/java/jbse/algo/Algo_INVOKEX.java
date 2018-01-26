@@ -1,9 +1,9 @@
 package jbse.algo;
 
 import static jbse.algo.Util.continueWith;
-import static jbse.algo.Util.ensureClassCreatedAndInitialized;
+import static jbse.algo.Util.ensureClassInitialized;
 import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.invokeClassLoaderLoadClass;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.offsetInvoke;
@@ -17,14 +17,14 @@ import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
 import java.util.function.Supplier;
 
-import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.MethodAbstractException;
 import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
-import jbse.dec.exc.InvalidInputException;
+import jbse.bc.exc.PleaseLoadClassException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 
@@ -48,8 +48,11 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
             //performs method resolution
             try {
                 resolveMethod(state);
+            } catch (PleaseLoadClassException e) {
+                invokeClassLoaderLoadClass(state, e);
+                exitFromAlgorithm();
             } catch (ClassFileNotFoundException e) {
-                //TODO is it ok?
+                //TODO this exception should wrap a ClassNotFoundException
                 throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
                 exitFromAlgorithm();
             } catch (ClassFileIllFormedException e) {
@@ -62,12 +65,9 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
             } catch (MethodNotFoundException e) {
                 throwNew(state, NO_SUCH_METHOD_ERROR);
                 exitFromAlgorithm();
-            } catch (MethodNotAccessibleException e) {
+            } catch (ClassFileNotAccessibleException | MethodNotAccessibleException e) {
                 throwNew(state, ILLEGAL_ACCESS_ERROR);
                 exitFromAlgorithm();
-            } catch (BadClassFileException e) {
-                //this should never happen since we already caught both its subclasses
-                failExecution(e);
             }
 
             //checks the resolved method; note that more checks 
@@ -75,32 +75,26 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
             check(state);
 
             //creates and initializes the class of the resolved method in the invokestatic case
-            if (this.isStatic) { 
+            if (this.isStatic && this.methodResolvedClass != null) { 
                 try {
-                    ensureClassCreatedAndInitialized(state, this.methodSignatureResolved.getClassName(), this.ctx);
+                    ensureClassInitialized(state, this.methodResolvedClass, this.ctx);
                 } catch (HeapMemoryExhaustedException e) {
                     throwNew(state, OUT_OF_MEMORY_ERROR);
                     exitFromAlgorithm();
-                } catch (InvalidInputException | BadClassFileException e) {
-                    //this should never happen after resolution 
-                    failExecution(e);
                 }
             }
             
             //looks for the method implementation with standard lookup
             try {
                 findImpl(state);
+            } catch (IncompatibleClassFileException e) {
+                throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                exitFromAlgorithm();
             } catch (MethodNotAccessibleException e) {
                 throwNew(state, ILLEGAL_ACCESS_ERROR);
                 exitFromAlgorithm();
             } catch (MethodAbstractException e) {
                 throwNew(state, ABSTRACT_METHOD_ERROR);
-                exitFromAlgorithm();
-            } catch (IncompatibleClassFileException e) {
-                throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
-                exitFromAlgorithm();
-            } catch (BadClassFileException e) {
-                throwVerifyError(state);
                 exitFromAlgorithm();
             }
 
@@ -109,7 +103,7 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
             findOverridingImpl(state);
 
             //if the method has no implementation, raises NoSuchMethodError
-            if (this.classFileMethodImpl == null) {
+            if (this.methodImplClass == null) {
                 throwNew(state, NO_SUCH_METHOD_ERROR);
                 exitFromAlgorithm();
             }
@@ -119,7 +113,7 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
                 state.getCurrentFrame().patchCode(OP_INVOKEHANDLE);
                 exitFromAlgorithm();
             } else {
-                this.algo_INVOKEX_Completion.setImplementation(this.classFileMethodImpl, this.methodSignatureImpl);
+                this.algo_INVOKEX_Completion.setImplementation(this.methodImplClass, this.methodImplSignature);
                 this.algo_INVOKEX_Completion.setProgramCounterOffset(returnPcOffset());                
                 continueWith(this.algo_INVOKEX_Completion);
             }

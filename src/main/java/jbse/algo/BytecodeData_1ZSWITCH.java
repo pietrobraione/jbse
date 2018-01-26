@@ -6,6 +6,7 @@ import static jbse.algo.Util.throwVerifyError;
 
 import java.util.function.Supplier;
 
+import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
 import jbse.mem.SwitchTable;
 import jbse.mem.exc.InvalidProgramCounterException;
@@ -21,7 +22,7 @@ public final class BytecodeData_1ZSWITCH extends BytecodeData {
     final boolean isTableSwitch;
 
     @Override
-    public void readImmediates(State state) throws InterruptException {
+    public void readImmediates(State state) throws InterruptException, ClasspathException {
         try {
             setSwitchTable(new SwitchTable(state.getCurrentFrame(), state.getCalculator(), this.isTableSwitch));
         } catch (InvalidProgramCounterException e) {

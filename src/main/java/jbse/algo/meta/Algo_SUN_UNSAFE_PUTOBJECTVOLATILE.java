@@ -6,12 +6,14 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.Simplex;
@@ -61,7 +63,9 @@ public final class Algo_SUN_UNSAFE_PUTOBJECTVOLATILE extends Algo_INVOKEMETA_Non
     }
     
     @Override
-    protected void update(State state) {
-        this.toModify.setFieldValue(this.slot, this.val);
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            this.toModify.setFieldValue(this.slot, this.val);
+        };
     }
 }

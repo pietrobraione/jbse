@@ -1,7 +1,10 @@
 package jbse.dec;
 
+import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
+
 import java.util.ArrayList;
 
+import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.mem.ClauseAssumeClassNotInitialized;
 import jbse.rewr.CalculatorRewriting;
@@ -16,11 +19,11 @@ public final class DecisionProcedureClassInit extends DecisionProcedureChainOfRe
     private final ClassInitRulesRepo rulesRepo;
 
     /**
-     * Stores all the class names from the 
+     * Stores all the classes from the 
      * {@link ClauseAssumeClassNotInitialized} 
      * that are pushed. 
      */
-    private final ArrayList<String> notInit = new ArrayList<>();
+    private final ArrayList<ClassFile> notInit = new ArrayList<>();
 
     public DecisionProcedureClassInit(DecisionProcedure next, CalculatorRewriting calc, ClassInitRulesRepo rulesRepo) {
         super(next, calc);
@@ -34,20 +37,20 @@ public final class DecisionProcedureClassInit extends DecisionProcedureChainOfRe
 
     @Override
     protected void pushAssumptionLocal(ClauseAssumeClassNotInitialized c) {
-        this.notInit.add(c.getClassName());
+        this.notInit.add(c.getClassFile());
     }
 
     //TODO support pop of assumptions
 
     @Override
-    protected boolean isSatInitializedLocal(ClassHierarchy hier, String c) {
+    protected boolean isSatInitializedLocal(ClassHierarchy hier, ClassFile classFile) {
         //we only support mutually exclusive initialized/not-initialized cases
         //TODO drop mutual exclusion of class initialized/not-initialized cases and branch bytecodes during initialization based on assumptions
-        return !isSatNotInitializedLocal(hier, c);
+        return !isSatNotInitializedLocal(hier, classFile);
     }
 
     @Override
-    protected boolean isSatNotInitializedLocal(ClassHierarchy hier, String c) {
-        return (this.rulesRepo.notInitializedClassesContains(c) || this.notInit.contains(c));
+    protected boolean isSatNotInitializedLocal(ClassHierarchy hier, ClassFile classFile) {
+        return (classFile.getDefiningClassLoader() > CLASSLOADER_APP || this.rulesRepo.notInitializedClassesContains(classFile.getClassName()) || this.notInit.contains(classFile));
     }
 }

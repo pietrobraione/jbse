@@ -8,11 +8,12 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
 import jbse.bc.ClassFile;
-import jbse.bc.exc.BadClassFileException;
+import jbse.common.exc.ClasspathException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 import jbse.val.Simplex;
 
@@ -30,29 +31,25 @@ public final class Algo_JAVA_CLASS_GETMODIFIERS extends Algo_INVOKEMETA_Nonbranc
     }
 
     @Override
-    protected void cookMore(State state) throws InterruptException {
+    protected void cookMore(State state) throws InterruptException, ClasspathException {
         try {
             final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject((Reference) this.data.operand(0));
             if (clazz == null) {
                 //this should never happen
                 failExecution("violated invariant (unexpected heap access with symbolic unresolved reference)");
             }
-            final String className = clazz.representedClass();
-            final ClassFile cf = (clazz.isPrimitive() ? 
-                                  state.getClassHierarchy().getClassFilePrimitive(className) :
-                                  state.getClassHierarchy().getClassFile(className));
+            final ClassFile cf = clazz.representedClass();
             this.modifiers = state.getCalculator().valInt(cf.getModifiers());
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (BadClassFileException e) {
-            //this should never happen
-            failExecution(e);
         }
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        state.pushOperand(this.modifiers);
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.pushOperand(this.modifiers);
+        };
     }
 }

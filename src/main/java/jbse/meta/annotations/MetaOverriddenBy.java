@@ -5,8 +5,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import jbse.algo.Algo_INVOKEMETA;
-
 /**
  * This annotation applies to methods. It indicates that the annotated 
  * has an implementation at the meta level that overrides its implementation
@@ -24,5 +22,5 @@ import jbse.algo.Algo_INVOKEMETA;
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.CLASS)
 public @interface MetaOverriddenBy {
-	java.lang.Class<? extends Algo_INVOKEMETA<?, ?, ?, ?>> value();
+	java.lang.String value();
 }

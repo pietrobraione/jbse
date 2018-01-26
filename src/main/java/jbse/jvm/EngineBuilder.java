@@ -4,6 +4,7 @@ import java.util.List;
 
 import jbse.algo.ExecutionContext;
 import jbse.algo.exc.MetaUnsupportedException;
+import jbse.algo.exc.NotYetImplementedException;
 import jbse.bc.ClassFileFactoryJavassist;
 import jbse.bc.Signature;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
@@ -46,12 +47,15 @@ public class EngineBuilder {
      *         that allows nevertheless to perform symbolic execution, in which case 
      *         only the observers to existing variables will be notified.
      * @throws ClasspathException in case some essential standard JRE class is missing
-     *         from the classpath or is incompatible with the current JBSE version.
+     *         from the bootstrap classpath, or is ill-formed, or cannot access one of its
+     *         superclasses/superinterfaces.
+     * @throws NotYetImplementedException if the trigger methods for the initial root 
+     *         object expansion (when present) are not in the root class.
      */
     public Engine build(EngineParameters parameters) 
     throws CannotBuildEngineException, DecisionException, InitializationException, 
     InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, 
-    ClasspathException {
+    ClasspathException, NotYetImplementedException {
         //checks whether parameters is complete
         if (parameters.getMethodSignature() == null && parameters.getInitialState() == null) {
             throw new CannotBuildEngineException(new NullPointerException());

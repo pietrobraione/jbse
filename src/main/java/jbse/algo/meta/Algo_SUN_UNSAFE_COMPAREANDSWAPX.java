@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
@@ -19,6 +20,7 @@ import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 import jbse.val.Simplex;
 import jbse.val.Value;
@@ -46,7 +48,7 @@ public abstract class Algo_SUN_UNSAFE_COMPAREANDSWAPX extends Algo_INVOKEMETA_No
     }
 
     protected abstract boolean checkCompare(State state, Value current, Value toCompare) 
-    throws CannotManageStateException, InterruptException;
+    throws CannotManageStateException, InterruptException, ClasspathException;
 
     @Override
     protected final void cookMore(State state)
@@ -95,21 +97,23 @@ public abstract class Algo_SUN_UNSAFE_COMPAREANDSWAPX extends Algo_INVOKEMETA_No
 
 
     @Override
-    protected final void update(State state) throws ThreadStackEmptyException {
-        if (this.objectToSet == null) {
-            state.pushOperand(state.getCalculator().valInt(0)); //false
-        } else {
-            if (this.objectToSet instanceof Array) {
-                try {
-                    ((Array) this.objectToSet).setFast(state.getCalculator().valInt(this.fieldSlotToSet), this.toWrite);
-                } catch (InvalidOperandException | InvalidTypeException | FastArrayAccessNotAllowedException e) {
-                    //this should never happen
-                    failExecution(e);
-                }
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            if (this.objectToSet == null) {
+                state.pushOperand(state.getCalculator().valInt(0)); //false
             } else {
-                this.objectToSet.setFieldValue(this.fieldSlotToSet, this.toWrite);
+                if (this.objectToSet instanceof Array) {
+                    try {
+                        ((Array) this.objectToSet).setFast(state.getCalculator().valInt(this.fieldSlotToSet), this.toWrite);
+                    } catch (InvalidOperandException | InvalidTypeException | FastArrayAccessNotAllowedException e) {
+                        //this should never happen
+                        failExecution(e);
+                    }
+                } else {
+                    this.objectToSet.setFieldValue(this.fieldSlotToSet, this.toWrite);
+                }
+                state.pushOperand(state.getCalculator().valInt(1)); //true
             }
-            state.pushOperand(state.getCalculator().valInt(1)); //true
-        }
+        };
     }
 }

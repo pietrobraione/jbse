@@ -1,7 +1,7 @@
 package jbse.algo;
 
 import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.invokeClassLoaderLoadClass;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.MULTIANEWARRAY_OFFSET;
@@ -10,9 +10,13 @@ import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 
 import java.util.function.Supplier;
 
-import jbse.bc.exc.BadClassFileException;
+import jbse.bc.ClassFile;
+import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.PleaseLoadClassException;
+import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Primitive;
@@ -35,7 +39,8 @@ final class Algo_MULTIANEWARRAY extends Algo_XNEWARRAY<BytecodeData_2CLUB> {
     }
 
     @Override
-    protected void preCook(State state) throws InterruptException {
+    protected void preCook(State state) 
+    throws InterruptException, ThreadStackEmptyException, InvalidInputException, ClasspathException {
         //checks the number of dimensions
         final int ndims = this.data.immediateUnsignedByte();
         if (ndims <= 0) {
@@ -55,25 +60,23 @@ final class Algo_MULTIANEWARRAY extends Algo_XNEWARRAY<BytecodeData_2CLUB> {
             exitFromAlgorithm();
         }
 
-        //sets the array type
-        this.arrayType = this.data.className();
-
-        //resolves the member class
         try {
-            final String currentClassName = state.getCurrentMethodSignature().getClassName();
-            state.getClassHierarchy().resolveClass(currentClassName, this.data.className()); //same as resolving the member class
+            //performs resolution
+            final ClassFile currentClass = state.getCurrentClass();
+            this.arrayType = state.getClassHierarchy().resolveClass(currentClass, this.data.className(), state.areStandardClassLoadersNotReady());
+        } catch (PleaseLoadClassException e) {
+            invokeClassLoaderLoadClass(state, e);
+            exitFromAlgorithm();
         } catch (ClassFileNotFoundException e) {
+            //TODO this exception should wrap a ClassNotFoundException
             throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
             exitFromAlgorithm();
         } catch (ClassFileNotAccessibleException e) {
             throwNew(state, ILLEGAL_ACCESS_ERROR);
             exitFromAlgorithm();
-        } catch (BadClassFileException e) {
+        } catch (ClassFileIllFormedException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (ThreadStackEmptyException e) {
-            //this should never happen
-            failExecution(e);
         }
     }
 

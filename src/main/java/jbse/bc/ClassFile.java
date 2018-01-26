@@ -3,7 +3,6 @@ package jbse.bc;
 import java.util.List;
 
 import jbse.bc.exc.AttributeNotFoundException;
-import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
@@ -14,14 +13,14 @@ import jbse.common.Type;
  * Abstract class for managing the information on a single 
  * class file.
  */
-public abstract class ClassFile {
+public abstract class ClassFile implements Comparable<ClassFile> {
     protected static final String JAR_FILE_EXTENSION = ".jar";
     
     /**
      * Returns the content of the binary file for this class.
-     * This is a backdoor only used for anonymous classfiles.
      * 
-     * @return a {@code byte[]} or {@code null}.
+     * @return a {@code byte[]} if {@link #isDummy()}, otherwise
+     *         it may be {@code null}.
      */
     abstract byte[] getBinaryFileContent();
 
@@ -31,9 +30,24 @@ public abstract class ClassFile {
      * 
      * @return the name of the source code file as a {@link String}, 
      *         or the empty {@link String} in case it has none
-     *         (array classes, primitive classes, bad classfiles).
+     *         (array classes, primitive classes, snippet classfiles).
      */
     public abstract String getSourceFile();
+
+    /**
+     * Returns the name of the class.
+     * 
+     * @return the name of the class.
+     */
+    public abstract String getClassName();
+    
+    /**
+     * Returns the defining classloader identifier 
+     * for this class.
+     * 
+     * @return an {@code int}.
+     */
+    public abstract int getDefiningClassLoader();
 
     /**
      * Returns the name of the package where this class has been declared.
@@ -69,6 +83,17 @@ public abstract class ClassFile {
      */
     public abstract int getAccessFlags();
 
+    /** 
+     * Test whether the class is dummy, i.e., 
+     * it is a lightweight wrapper for accessing
+     * the content of a classfile but cannot be
+     * used for other purposes because it is not
+     * linked to other {@link ClassFile}s.
+     * 
+     * @return {@code true} iff the class is dummy.
+     */
+    public abstract boolean isDummy();
+    
     /**
      * Test whether the class is an array class.
      * 
@@ -89,7 +114,7 @@ public abstract class ClassFile {
      * @return {@code true} iff the class is primitive.
      */
     public abstract boolean isPrimitive();
-    
+
     /**
      * Equivalent to {@code !}{@link #isPrimitive()}{@code  && }{@code !}{@link #isArray()}.
      * 
@@ -142,6 +167,13 @@ public abstract class ClassFile {
     public abstract boolean isPrivate();
 
     /**
+     * Tests whether the class is static.
+     * 
+     * @return {@code true} iff the class is static.
+     */
+    public abstract boolean isStatic();
+    
+    /**
      * Tests the {@code invokespecial} bytecode semantics required
      * for this class.
      *  
@@ -167,12 +199,60 @@ public abstract class ClassFile {
     public abstract boolean isAnonymous();
 
     /**
-     * Returns the host class name for an anonymous class.
+     * Returns the class for the member type
+     * of an array class.
      * 
-     * @return a {@code String}, the name of the host class
-     *         for this class, or {@code null} if {@link #isAnonymous()}{@code  == false}.
+     * @return a {@link ClassFile}, or {@code null}
+     * if {@code !}{@link #isArray()}.
      */
-    public abstract String getHostClass();
+    public abstract ClassFile getMemberClass();
+
+    /**
+     * Returns the class for the i-th level of
+     * membership type of a multiarray class.
+     * 
+     * @param level how many levels of nesting
+     *        must be skipped. For {@code level == 0}
+     *        the method returns {@code this}, 
+     *        for {@code level == 1} the method
+     *        returns {@link #getMemberClass()}, 
+     *        when {@code level} is greater than
+     *        the maximum level of nesting of the
+     *        array type the method returns {@code null}.
+     * @return
+     */
+    public final ClassFile getMemberClass(int level) {
+        ClassFile retVal = this;
+        for (int i = 0; i < level; ++i) {
+            retVal = retVal.getMemberClass();
+            if (retVal == null) {
+                break;
+            }
+        }
+        return retVal;
+    }
+    
+    /**
+     * Checks whether the class is anonymous 
+     * (not in the sense of JLS v8, section 15.9.5 but 
+     * in the sense of  
+     * {@link sun.misc.Unsafe#defineAnonymousClass}).
+     * 
+     * @return {@code true} iff the class is anonymous.
+     */
+    public abstract boolean isAnonymousUnregistered();
+    
+    /**
+     * Returns the host class name for an anonymous 
+     * (not in the sense of JLS v8, section 15.9.5 but 
+     * in the sense of  
+     * {@link sun.misc.Unsafe#defineAnonymousClass}).
+     * 
+     * @return a {@code ClassFile}, the host class
+     *         for this class, or {@code null} if 
+     *         {@link #isAnonymousUnregistered()}{@code  == false}
+     */
+    public abstract ClassFile getHostClass();
     
     /**
      * If this class is nested (statically nested, inner, anonymous 
@@ -181,10 +261,8 @@ public abstract class ClassFile {
      * @return A {@link String}, the name of the class containing
      *         this class, or {@code null} in case
      *         this class is not nested.
-     * @throws ClassFileNotFoundException iff the container class
-     *         of this class is not in the classpath.
      */
-    public abstract String classContainer() throws ClassFileNotFoundException;
+    public abstract String classContainer();
     
     /**
      * If this class is local or anonymous returns the {@link Signature} of the
@@ -203,15 +281,8 @@ public abstract class ClassFile {
      * @throws ClassFileNotFoundException if the enclosing class does not 
      *         exist in the classpath.
      */
-    public abstract Signature getEnclosingMethodOrConstructor() throws ClassFileNotFoundException;
+    public abstract Signature getEnclosingMethodOrConstructor();
 
-    /**
-     * Tests whether the class is static.
-     * 
-     * @return {@code true} iff the class is static.
-     */
-    public abstract boolean isStatic();
-    
     /**
      * Returns the size of the constant pool.
      * Indices to the constant pool must range
@@ -348,11 +419,9 @@ public abstract class ClassFile {
      * 
      * @param methodSignature the {@link Signature} of the method to be checked.
      * @return {@code true} iff the method is caller sensitive.
-     * @throws ClassFileNotFoundException iff the classfile for {@code sun.reflect.CallerSensitive} 
-     *         is not in the classpath.
      * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
      */
-    public abstract boolean isMethodCallerSensitive(Signature methodSignature) throws ClassFileNotFoundException, MethodNotFoundException;
+    public abstract boolean isMethodCallerSensitive(Signature methodSignature) throws MethodNotFoundException;
     
     /**
      * Returns the generic signature (type) of a method.
@@ -388,12 +457,28 @@ public abstract class ClassFile {
      * Returns all the annotations of a method that are available on the current classpath.
      * 
      * @param methodSignature the {@link Signature} of a method.
-     * @return an {@link Object}{@code []} containing all the annotations of the method.
+     * @return an {@link String}{@code []} containing all the names of the annotations of the method (just the class name).
      * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
      */
-    public abstract Object[] getMethodAvailableAnnotations(Signature methodSignature) 
+    public abstract String[] getMethodAvailableAnnotations(Signature methodSignature) 
     throws MethodNotFoundException;
 
+    /**
+     * Gets the value of an annotation parameter on a method annotation. It must be a {@link String}.
+     * 
+     * @param methodSignature the {@link Signature} of the method. Only the name and 
+     *        descriptor are considered.
+     * @param annotation a {@code String}, the name of the annotation to look for.
+     * @return a {@link String}, the value of parameter {@code parameter} for 
+     *         annotation {@code annotation}, or {@code null} if {@code annotation}
+     *         is not present, or is present and {@code parameter} is not present, 
+     *         or {@code parameter} is present and has default value or is not a {@link String}.
+     * @throws MethodNotFoundException if {@code classFileMethod} does not contain a 
+     *         method with name and descriptor as {@code methodSignature}.
+     */
+    public abstract String getMethodAnnotationParameterValueString(Signature methodSignature, String annotation, String parameter) 
+    throws MethodNotFoundException;
+    
     /**
      * Returns the list of the exception that a method declares to throw.
      * 
@@ -538,7 +623,8 @@ public abstract class ClassFile {
     /**
      * Tests whether a field in the class is declared static.
      * 
-     * @param fieldSignature the {@link Signature} of the field to be checked.
+     * @param fieldSignature the {@link Signature} of the field to be checked. 
+     *        The class of the signature is ignored.
      * @return {@code true} iff the field is static.
      * @throws FieldNotFoundException iff {@link #hasFieldDeclaration}{@code (fieldSignature) == false}.
      */
@@ -718,15 +804,34 @@ public abstract class ClassFile {
      *         in the class constant pool.
      */
     public abstract String getClassSignature(int classRef) throws InvalidIndexException;
+    
+    /**
+     * Returns the superclass.
+     * 
+     * @return the {@link ClassFile} for this {@link ClassFile}'s
+     * superclass, or {@code null}
+     * in the case the class has no superclass ({@code java.lang.Object}, 
+     * interfaces, primitive classes, snippet classfiles).
+     */
+    public abstract ClassFile getSuperclass();
 
     /**
      * Returns the name of the superclass.
      * 
      * @return the name of the superclass as a {@link String}, or {@code null}
      * in the case the class has no superclass ({@code java.lang.Object}, 
-     * interfaces, primitive classes, bad classfiles).
+     * interfaces, primitive classes, snippet classfiles).
      */
     public abstract String getSuperclassName();
+
+    /**
+     * Returns the list of the superinterfaces.
+     * 
+     * @return an immutable {@link List}{@code <}{@link ClassFile}{@code >} 
+     *         containing all the superinterfaces of this 
+     *         class (empty if none).
+     */
+    public abstract List<ClassFile> getSuperInterfaces();
 
     /**
      * Returns the list of the names of the superinterfaces.
@@ -736,13 +841,6 @@ public abstract class ClassFile {
      *         class (empty if none).
      */
     public abstract List<String> getSuperInterfaceNames();
-
-    /**
-     * Returns the name of the class.
-     * 
-     * @return the name of the class.
-     */
-    public abstract String getClassName();
 
     /**
      * Returns the length of the local variable table of a method.
@@ -827,7 +925,18 @@ public abstract class ClassFile {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public int compareTo(ClassFile other) {
+        final int compareNames = getClassName().compareTo(other.getClassName());
+        if (compareNames == 0) {
+            final int d = other.getDefiningClassLoader() - getDefiningClassLoader();
+            return (d < 0 ? -1 : (d == 0 ? 0 : 1));
+        } else {
+            return compareNames;
+        }
+    }
+
+    @Override
+    public final boolean equals(Object o) {
         if (this == o) {
             return true;
         }
@@ -837,12 +946,22 @@ public abstract class ClassFile {
         if (this.getClass() != o.getClass()) {
             return false; 
         }
-        return this.getClassName().equals(((ClassFile) o).getClassName());
+        final ClassFile ocf = (ClassFile) o;
+        return this.getClassName().equals(ocf.getClassName()) && this.getDefiningClassLoader() == ocf.getDefiningClassLoader();
+    }
+    
+    @Override
+    public final String toString() {
+        return "(" + getDefiningClassLoader() + "," + getClassName() + ")";
     }
 
     @Override
-    public int hashCode() {
-        return this.getClassName().hashCode();
-    }
+    public final int hashCode() {
+        final int prime = 6719;
+        int tmpHashCode = 1;
+        tmpHashCode = prime * tmpHashCode + getClassName().hashCode();
+        tmpHashCode = prime * tmpHashCode + getDefiningClassLoader();
 
+        return tmpHashCode;
+    }
 }

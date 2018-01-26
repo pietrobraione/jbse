@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
@@ -19,6 +20,7 @@ import jbse.mem.Array;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.Simplex;
@@ -85,7 +87,9 @@ public final class Algo_SUN_UNSAFE_GETINTVOLATILE extends Algo_INVOKEMETA_Nonbra
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        state.pushOperand(this.read);
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.pushOperand(this.read);
+        };
     }
 }

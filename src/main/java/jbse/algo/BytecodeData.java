@@ -11,8 +11,8 @@ import static jbse.common.Util.byteCatShort;
 import java.util.function.Supplier;
 
 import jbse.bc.Signature;
-import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.InvalidIndexException;
+import jbse.common.exc.ClasspathException;
 import jbse.mem.Frame;
 import jbse.mem.State;
 import jbse.mem.SwitchTable;
@@ -62,11 +62,14 @@ public abstract class BytecodeData {
      * @param numOperandsSupplier a {@link Supplier}{@code <}{@link Integer}{@code >}
      *        returning the number of operands to be read from {@code state}'s 
      *        operand stack.
-     * @throws ThreadStackEmptyException
-     * @throws InterruptException
+     * @throws ThreadStackEmptyException when {@code state}'s thread stack is empty.
+     * @throws InterruptException if the execution of the container
+     *         {@link Algorithm} must be interrupted.
+     * @throws ClasspathException when some standard classfile is not found, 
+     *         or ill-formed, or not accessible.
      */
     public final void read(State state, Supplier<Integer> numOperandsSupplier) 
-    throws ThreadStackEmptyException, InterruptException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException {
         this.nextWide = state.nextWide();
         readImmediates(state);
         readOperands(state, numOperandsSupplier.get());
@@ -78,8 +81,10 @@ public abstract class BytecodeData {
      * @param state a {@link State}.
      * @throws InterruptException if the execution of the container
      *         {@link Algorithm} must be interrupted.
+     * @throws ClasspathException  when some standard classfile is not found, 
+     *         or ill-formed, or not accessible.
      */
-    protected abstract void readImmediates(State state) throws InterruptException;
+    protected abstract void readImmediates(State state) throws InterruptException, ClasspathException;
 
     /**
      * Reads a signed byte immediate from a {@link State}'s current method code.
@@ -89,9 +94,11 @@ public abstract class BytecodeData {
      *        with respect to {@code state}'s current program counter.
      * @throws InterruptException if the execution of the container
      *         {@link Algorithm} must be interrupted.
+     * @throws ClasspathException  when some standard classfile is not found, 
+     *         or ill-formed, or not accessible.
      */
     protected final void readImmediateSignedByte(State state, int immediateDisplacement) 
-    throws InterruptException {
+    throws InterruptException, ClasspathException {
         try {
             this.valByte = state.getInstruction(immediateDisplacement);
         } catch (InvalidProgramCounterException e) {
@@ -110,9 +117,11 @@ public abstract class BytecodeData {
      *        with respect to {@code state}'s current program counter.
      * @throws InterruptException if the execution of the container
      *         {@link Algorithm} must be interrupted.
+     * @throws ClasspathException  when some standard classfile is not found, 
+     *         or ill-formed, or not accessible.
      */
     protected final void readImmediateUnsignedByte(State state, int immediateDisplacement) 
-    throws InterruptException {
+    throws InterruptException, ClasspathException {
         try {
             this.valShort = asUnsignedByte(state.getInstruction(immediateDisplacement));
         } catch (InvalidProgramCounterException e) {
@@ -132,9 +141,11 @@ public abstract class BytecodeData {
      *        with respect to {@code state}'s current program counter.
      * @throws InterruptException if the execution of the container
      *         {@link Algorithm} must be interrupted.
+     * @throws ClasspathException  when some standard classfile is not found, 
+     *         or ill-formed, or not accessible.
      */
     protected final void readImmediateSignedWord(State state, int immediateDisplacement) 
-    throws InterruptException {
+    throws InterruptException, ClasspathException {
         try {
             this.valShort = byteCatShort(state.getInstruction(immediateDisplacement), state.getInstruction(immediateDisplacement + 1));
         } catch (InvalidProgramCounterException e) {
@@ -154,9 +165,11 @@ public abstract class BytecodeData {
      *        with respect to {@code state}'s current program counter.
      * @throws InterruptException if the execution of the container
      *         {@link Algorithm} must be interrupted.
+     * @throws ClasspathException  when some standard classfile is not found, 
+     *         or ill-formed, or not accessible.
      */
     protected final void readImmediateUnsignedWord(State state, int immediateDisplacement) 
-    throws InterruptException {
+    throws InterruptException, ClasspathException {
         try {
             this.valInt = 
                 byteCat(state.getInstruction(immediateDisplacement), state.getInstruction(immediateDisplacement + 1));
@@ -177,9 +190,11 @@ public abstract class BytecodeData {
      *        with respect to {@code state}'s current program counter.
      * @throws InterruptException if the execution of the container
      *         {@link Algorithm} must be interrupted.
+     * @throws ClasspathException  when some standard classfile is not found, 
+     *         or ill-formed, or not accessible.
      */
     protected final void readImmediateSignedDword(State state, int immediateDisplacement) 
-    throws InterruptException {
+    throws InterruptException, ClasspathException {
         try {
             this.valInt = 
                 byteCat(state.getInstruction(immediateDisplacement), state.getInstruction(immediateDisplacement + 1), 
@@ -200,9 +215,11 @@ public abstract class BytecodeData {
      *        local variable. Usually it is itself an immediate.
      * @throws InterruptException if the execution of the container
      *         {@link Algorithm} must be interrupted.
+     * @throws ClasspathException  when some standard classfile is not found, 
+     *         or ill-formed, or not accessible.
      */
     protected final void readLocalVariable(State state, int varSlot) 
-    throws InterruptException {
+    throws InterruptException, ClasspathException {
         try {
             this.varSlot = varSlot;
             this.varName = state.getLocalVariableDeclaredName(varSlot);
@@ -242,15 +259,17 @@ public abstract class BytecodeData {
      *        Usually it is itself an immediate.
      * @throws InterruptException if the execution of the container
      *         {@link Algorithm} must be interrupted.
+     * @throws ClasspathException  when some standard classfile is not found, 
+     *         or ill-formed, or not accessible.
      */
     protected final void readClassName(State state, int classRefIndex)
-    throws InterruptException {
+    throws InterruptException, ClasspathException {
         try {
-            this.className = state.getClassHierarchy().getClassFile(state.getCurrentMethodSignature().getClassName()).getClassSignature(classRefIndex);
+            this.className = state.getCurrentClass().getClassSignature(classRefIndex);
         } catch (InvalidIndexException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (BadClassFileException | ThreadStackEmptyException e) {
+        } catch (ThreadStackEmptyException e) {
             failExecution(e);
         }
     }
@@ -264,15 +283,17 @@ public abstract class BytecodeData {
      *        Usually it is itself an immediate.
      * @throws InterruptException if the execution of the container
      *         {@link Algorithm} must be interrupted.
+     * @throws ClasspathException  when some standard classfile is not found, 
+     *         or ill-formed, or not accessible.
      */
     protected final void readFieldSignature(State state, int fieldRefIndex)
-    throws InterruptException {
+    throws InterruptException, ClasspathException {
         try {
-            this.signature = state.getClassHierarchy().getClassFile(state.getCurrentMethodSignature().getClassName()).getFieldSignature(fieldRefIndex);
+            this.signature = state.getCurrentClass().getFieldSignature(fieldRefIndex);
         } catch (InvalidIndexException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (BadClassFileException | ThreadStackEmptyException e) {
+        } catch (ThreadStackEmptyException e) {
             failExecution(e);
         }
     }
@@ -286,15 +307,17 @@ public abstract class BytecodeData {
      *        Usually it is itself an immediate.
      * @throws InterruptException if the execution of the container
      *         {@link Algorithm} must be interrupted.
+     * @throws ClasspathException  when some standard classfile is not found, 
+     *         or ill-formed, or not accessible.
      */
     protected final void readInterfaceMethodSignature(State state, int interfaceMethodRefIndex)
-    throws InterruptException {
+    throws InterruptException, ClasspathException {
         try {
-            this.signature = state.getClassHierarchy().getClassFile(state.getCurrentMethodSignature().getClassName()).getInterfaceMethodSignature(interfaceMethodRefIndex);
+            this.signature = state.getCurrentClass().getInterfaceMethodSignature(interfaceMethodRefIndex);
         } catch (InvalidIndexException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (BadClassFileException | ThreadStackEmptyException e) {
+        } catch (ThreadStackEmptyException e) {
             failExecution(e);
         }
     }
@@ -308,15 +331,17 @@ public abstract class BytecodeData {
      *        Usually it is itself an immediate.
      * @throws InterruptException if the execution of the container
      *         {@link Algorithm} must be interrupted.
+     * @throws ClasspathException  when some standard classfile is not found, 
+     *         or ill-formed, or not accessible.
      */
     protected final void readNoninterfaceMethodSignature(State state, int noninterfaceMethodRefIndex)
-    throws InterruptException {
+    throws InterruptException, ClasspathException {
         try {
-            this.signature = state.getClassHierarchy().getClassFile(state.getCurrentMethodSignature().getClassName()).getMethodSignature(noninterfaceMethodRefIndex);
+            this.signature = state.getCurrentClass().getMethodSignature(noninterfaceMethodRefIndex);
         } catch (InvalidIndexException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (BadClassFileException | ThreadStackEmptyException e) {
+        } catch (ThreadStackEmptyException e) {
             failExecution(e);
         }
     }
@@ -330,21 +355,23 @@ public abstract class BytecodeData {
      *        Usually it is itself an immediate.
      * @throws InterruptException if the execution of the container
      *         {@link Algorithm} must be interrupted.
+     * @throws ClasspathException  when some standard classfile is not found, 
+     *         or ill-formed, or not accessible.
      */
     protected final void readMethodSignature(State state, int methodRefIndex)
-    throws InterruptException {
+    throws InterruptException, ClasspathException {
         try {
-            this.signature = state.getClassHierarchy().getClassFile(state.getCurrentMethodSignature().getClassName()).getMethodSignature(methodRefIndex);
+            this.signature = state.getCurrentClass().getMethodSignature(methodRefIndex);
         } catch (InvalidIndexException e1) {
             try {
-                this.signature = state.getClassHierarchy().getClassFile(state.getCurrentMethodSignature().getClassName()).getInterfaceMethodSignature(methodRefIndex);
+                this.signature = state.getCurrentClass().getInterfaceMethodSignature(methodRefIndex);
             } catch (InvalidIndexException e2) {
                 throwVerifyError(state);
                 exitFromAlgorithm();
-            } catch (BadClassFileException | ThreadStackEmptyException e) {
+            } catch (ThreadStackEmptyException e) {
                 failExecution(e);
             }
-        } catch (BadClassFileException | ThreadStackEmptyException e) {
+        } catch (ThreadStackEmptyException e) {
             failExecution(e);
         }
     }
@@ -368,9 +395,11 @@ public abstract class BytecodeData {
      *        Usually it is itself an immediate.
      * @throws InterruptException if the execution of the container
      *         {@link Algorithm} must be interrupted.
+     * @throws ClasspathException  when some standard classfile is not found, 
+     *         or ill-formed, or not accessible.
      */
     protected final void setPrimitiveType(State state, char primitiveType)
-    throws InterruptException {
+    throws InterruptException, ClasspathException {
         if (isPrimitive(primitiveType)) {
             this.primitiveType = primitiveType;
         } else {
@@ -398,9 +427,11 @@ public abstract class BytecodeData {
      *         has an empty stack.
      * @throws InterruptException if the execution of the container
      *         {@link Algorithm} must be interrupted.
+     * @throws ClasspathException  when some standard classfile is not found, 
+     *         or ill-formed, or not accessible.
      */
     private void readOperands(State state, int numOperands) 
-    throws ThreadStackEmptyException, InterruptException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException {
         final Frame frame = state.getCurrentFrame();
         try {
             this.operands = frame.operands(numOperands);

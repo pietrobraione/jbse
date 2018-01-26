@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
+import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.common.Type;
 import jbse.mem.Array;
@@ -19,7 +20,7 @@ import jbse.mem.Frame;
 import jbse.mem.Instance;
 import jbse.mem.Klass;
 import jbse.mem.Objekt;
-import jbse.mem.SnippetFrame;
+import jbse.mem.SnippetFrameContext;
 import jbse.mem.State;
 import jbse.mem.Variable;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -227,18 +228,18 @@ public class StateFormatterText implements Formatter {
 
     private static String formatStaticMethodArea(State state, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
-        final Map<String, Klass> a = state.getStaticMethodArea();
+        final Map<ClassFile, Klass> a = state.getStaticMethodArea();
         String retVal = indentCurrent;
         boolean doneFirst = false;
-        for (Map.Entry<String, Klass> ee : a.entrySet()) {
+        for (Map.Entry<ClassFile, Klass> ee : a.entrySet()) {
             final Klass k = ee.getValue();
             if (k.getStoredFieldSignatures().size() > 0) { //only klasses with fields will be printed
                 if (doneFirst) {
                     retVal += lineSep + indentCurrent;
                 }
                 doneFirst = true;
-                final String c = ee.getKey();
-                retVal += "Class[" + c + "]: " + "{";
+                final ClassFile c = ee.getKey();
+                retVal += "Class[(" + c.getDefiningClassLoader() + ", " + c.getClassName() + ")]: {";
                 retVal += formatObject(state, k, breakLines, indentTxt, indentCurrent + indentTxt) + lineSep;
                 retVal += indentCurrent + "}";
             }
@@ -277,7 +278,7 @@ public class StateFormatterText implements Formatter {
             indentCurrent += indentTxt;
         }
         //if it is an array of chars, then it prints it in a string style
-        final boolean printAsString = a.isSimple() && (Type.getArrayMemberType(a.getType()).equals("" + Type.CHAR));
+        final boolean printAsString = a.isSimple() && (a.getType().getMemberClass().getClassName().equals("char"));
         if (printAsString) {
             str += "\"";
         }
@@ -451,8 +452,8 @@ public class StateFormatterText implements Formatter {
         final String lineSep = (breakLines ? LINE_SEP : "");
         String tmp = "";
         tmp += indentCurrent + "Method signature: " + f.getCurrentMethodSignature().toString();
-        if (f instanceof SnippetFrame) {
-            tmp += " (executing snippet, will resume with program counter " + ((SnippetFrame) f).getContextFrame().getReturnProgramCounter() + ")";
+        if (f instanceof SnippetFrameContext) {
+            tmp += " (executing snippet, will resume with program counter " + ((SnippetFrameContext) f).getContextFrame().getReturnProgramCounter() + ")";
         }
         tmp +=  lineSep;
         tmp += indentCurrent + "Program counter: " + f.getProgramCounter() + lineSep;

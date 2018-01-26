@@ -1,14 +1,15 @@
 package jbse.bc.exc;
 
 /**
- * Exception thrown in all the situations (e.g., method resolution and lookup)
- * where a class definition is not found. Typically a 
- * {@link java.lang.NoClassDefFoundError} must be raised.
+ * Exception thrown in all the situations (e.g., class resolution)
+ * where a class definition is not found. 
+ * Typically a {@link ClassNotFoundException}, possibly boxed in a {@link java.lang.NoClassDefFoundError}, 
+ * must be raised.
  * 
  * @author Pietro Braione
  *
  */
-public class ClassFileNotFoundException extends BadClassFileException {
+public class ClassFileNotFoundException extends Exception {
     /**
 	 * 
 	 */

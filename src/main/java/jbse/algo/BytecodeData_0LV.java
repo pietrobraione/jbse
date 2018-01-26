@@ -2,6 +2,7 @@ package jbse.algo;
 
 import java.util.function.Supplier;
 
+import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
 
 /**
@@ -14,7 +15,7 @@ public final class BytecodeData_0LV extends BytecodeData {
     private final int numVarSlot;
 
     @Override
-    protected void readImmediates(State state) throws InterruptException {
+    protected void readImmediates(State state) throws InterruptException, ClasspathException {
         readLocalVariable(state, this.numVarSlot);
     }
 

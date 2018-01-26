@@ -6,6 +6,8 @@ import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.MissingTriggerParameterException;
+import jbse.algo.exc.NotYetImplementedException;
+import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
 import jbse.tree.DecisionAlternative_XALOAD;
@@ -24,16 +26,17 @@ import jbse.tree.VisitorDecisionAlternative_XALOAD;
  * @author Pietro Braione
  */
 //TODO refactor together with StrategyUpdate_SUN_UNSAFE_GETOBJECTVOLATILE_Array
-abstract class StrategyUpdate_SUN_UNSAFE_GETINTVOLATILE_Array implements StrategyUpdate<DecisionAlternative_XALOAD> {
+abstract class StrategyUpdate_SUN_UNSAFE_GETX_Array implements StrategyUpdate<DecisionAlternative_XALOAD> {
     abstract public void updateResolved(State state, DecisionAlternative_XALOAD_Resolved alt) 
-    throws DecisionException, InterruptException, MissingTriggerParameterException;
+    throws DecisionException, InterruptException, MissingTriggerParameterException, ClasspathException, NotYetImplementedException;
 
     abstract public void updateOut(State state, DecisionAlternative_XALOAD_Out alt) 
     throws CannotManageStateException;
 
     @Override
     public final void update(final State state, DecisionAlternative_XALOAD alt)
-    throws DecisionException, InterruptException, MissingTriggerParameterException {
+    throws DecisionException, InterruptException, MissingTriggerParameterException, 
+    ClasspathException, NotYetImplementedException {
         //a visitor redispatching to the methods which specialize this.update
         final VisitorDecisionAlternative_XALOAD visitorUpdate = 
             new VisitorDecisionAlternative_XALOAD() {
@@ -60,21 +63,22 @@ abstract class StrategyUpdate_SUN_UNSAFE_GETINTVOLATILE_Array implements Strateg
     
                 @Override
                 public void visitDecisionAlternative_XALOAD_Resolved(DecisionAlternative_XALOAD_Resolved alt) 
-                throws DecisionException, InterruptException, MissingTriggerParameterException {
-                    StrategyUpdate_SUN_UNSAFE_GETINTVOLATILE_Array.this.updateResolved(state, alt);
+                throws DecisionException, InterruptException, MissingTriggerParameterException, ClasspathException, NotYetImplementedException {
+                    StrategyUpdate_SUN_UNSAFE_GETX_Array.this.updateResolved(state, alt);
                 }
     
                 @Override
                 public void visitDecisionAlternative_XALOAD_Out(DecisionAlternative_XALOAD_Out alt) 
                 throws CannotManageStateException {
-                    StrategyUpdate_SUN_UNSAFE_GETINTVOLATILE_Array.this.updateOut(state, alt);
+                    StrategyUpdate_SUN_UNSAFE_GETX_Array.this.updateOut(state, alt);
                 }
             };
 
         try {
             alt.accept(visitorUpdate);
         } catch (DecisionException | InterruptException | 
-        MissingTriggerParameterException | RuntimeException e) {
+                 MissingTriggerParameterException | ClasspathException | 
+                 NotYetImplementedException | RuntimeException e) {
             throw e;
         } catch (Exception e) {
             failExecution(e);

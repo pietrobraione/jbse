@@ -136,7 +136,7 @@ class LocalVariablesArea implements Cloneable {
      * 
      * @param slot an {@code int}, the slot of the local variable.
      * @return a {@link Value}, the one stored in the local variable.
-     * @throws InvalidSlotException 
+     * @throws InvalidSlotException if {@code slot} is not a valid slot number.
      */
     Value get(int slot) throws InvalidSlotException {
         Value retVal = this.values.get(slot);

@@ -2,6 +2,7 @@ package jbse.algo;
 
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.invokeClassLoaderLoadClass;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.GETX_PUTX_OFFSET;
@@ -18,13 +19,13 @@ import static jbse.common.Type.NULLREF;
 import java.util.function.Supplier;
 
 import jbse.bc.ClassFile;
-import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
-import jbse.bc.exc.BadClassFileException;
+import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotAccessibleException;
 import jbse.bc.exc.FieldNotFoundException;
+import jbse.bc.exc.PleaseLoadClassException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.exc.DecisionException;
@@ -50,9 +51,13 @@ DecisionAlternative_NONE,
 StrategyDecide<DecisionAlternative_NONE>, 
 StrategyRefine<DecisionAlternative_NONE>, 
 StrategyUpdate<DecisionAlternative_NONE>> {
-
-    protected Signature fieldSignatureResolved; //set by cook
-    protected Value valueToPut; //set by subclass
+    private final boolean isStatic; //set by subclass via constructor
+    protected ClassFile fieldClassResolved; //set by cook
+    protected Value valueToPut;     //set by subclass
+    
+    public Algo_PUTX(boolean isStatic) {
+        this.isStatic = isStatic;
+    }
 
     @Override
     protected final Supplier<BytecodeData_1FI> bytecodeData() {
@@ -62,52 +67,29 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     @Override
     protected final BytecodeCooker bytecodeCooker() {
         return (state) -> {
-            //gets the value to put
-            this.valueToPut = valueToPut();
-            
-            //gets the class hierarchy
-            final ClassHierarchy hier = state.getClassHierarchy();
-
-            //performs field resolution
-            String currentClassName = null; //it's final 
             try {
-                currentClassName = state.getCurrentMethodSignature().getClassName();    
-                this.fieldSignatureResolved = hier.resolveField(currentClassName, this.data.signature());
-            } catch (ClassFileNotFoundException e) {
-                throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
-                exitFromAlgorithm();
-            } catch (FieldNotFoundException e) {
-                throwNew(state, NO_SUCH_FIELD_ERROR);
-                exitFromAlgorithm();
-            } catch (ClassFileNotAccessibleException | FieldNotAccessibleException e) {
-                throwNew(state, ILLEGAL_ACCESS_ERROR);
-                exitFromAlgorithm();
-            } catch (BadClassFileException e) {
-                throwVerifyError(state);
-                exitFromAlgorithm();
-            } catch (ThreadStackEmptyException e) {
-                //this should never happen
-                failExecution(e);
-            }
+                //gets the value to put
+                this.valueToPut = valueToPut();
+                
+                //performs field resolution
+                final ClassFile currentClass = state.getCurrentClass();    
+                this.fieldClassResolved = state.getClassHierarchy().resolveField(currentClass, this.data.signature(), state.areStandardClassLoadersNotReady());
 
-            //checks the field
-            try {
-                final String fieldClassName = this.fieldSignatureResolved.getClassName();
-                final ClassFile fieldClassFile = state.getClassHierarchy().getClassFile(fieldClassName);
-
-                //checks that if the field is final is declared in the current class
-                if (fieldClassFile.isFieldFinal(this.fieldSignatureResolved) &&
-                    !fieldClassName.equals(currentClassName)) {
+                //checks that, if the field is final, then it is declared in the current class and the
+                //current method is an instance initialization method
+                final String initializationMethodName = (this.isStatic ? "<clinit>" : "<init>");
+                if (this.fieldClassResolved.isFieldFinal(this.data.signature()) && 
+                   (this.fieldClassResolved != currentClass || !initializationMethodName.equals(state.getCurrentMethodSignature().getName()))) {
                     throwNew(state, ILLEGAL_ACCESS_ERROR);
                     exitFromAlgorithm();
                 }
 
                 //TODO this code is duplicated in Algo_XRETURN: refactor! 
                 //checks/converts the type of the value to be put
-                final String fieldType = this.fieldSignatureResolved.getDescriptor();
+                final String destinationType = this.data.signature().getDescriptor();
                 final char valueType = this.valueToPut.getType();
-                if (isPrimitive(fieldType)) {
-                    final char fieldTypePrimitive = fieldType.charAt(0);
+                if (isPrimitive(destinationType)) {
+                    final char fieldTypePrimitive = destinationType.charAt(0);
                     if (isPrimitiveOpStack(fieldTypePrimitive)) {
                         if (valueType != fieldTypePrimitive) {
                             throwVerifyError(state);
@@ -127,8 +109,10 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 } else if (isReference(valueType)) {
                     final Reference refToPut = (Reference) this.valueToPut;
                     if (!state.isNull(refToPut)) {
-                        final String valueObjectType = state.getObject(refToPut).getType();
-                        if (!state.getClassHierarchy().isAssignmentCompatible(valueObjectType, className(fieldType))) {
+                        //TODO the JVMS v8, putfield instruction, does not explicitly say how and when the field descriptor type is resolved  
+                        final ClassFile destinationTypeClass = state.getClassHierarchy().resolveClass(currentClass, className(destinationType), state.areStandardClassLoadersNotReady());
+                        final ClassFile valueObjectType = state.getObject(refToPut).getType();
+                        if (!state.getClassHierarchy().isAssignmentCompatible(valueObjectType, destinationTypeClass)) {
                             throwVerifyError(state);
                             exitFromAlgorithm();
                         }
@@ -139,10 +123,28 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     throwVerifyError(state);
                     exitFromAlgorithm();
                 }
-                
-                //bytecode-specific checks
-                checkMore(state, fieldClassName, fieldClassFile);
-            } catch (FieldNotFoundException | BadClassFileException e) {
+            } catch (PleaseLoadClassException e) {
+                invokeClassLoaderLoadClass(state, e);
+                exitFromAlgorithm();
+            } catch (ClassFileNotFoundException e) {
+                //TODO this exception should wrap a ClassNotFoundException
+                throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                exitFromAlgorithm();
+            } catch (FieldNotFoundException e) {
+                throwNew(state, NO_SUCH_FIELD_ERROR);
+                exitFromAlgorithm();
+            } catch (ClassFileNotAccessibleException | FieldNotAccessibleException e) {
+                throwNew(state, ILLEGAL_ACCESS_ERROR);
+                exitFromAlgorithm();
+            } catch (ClassFileIllFormedException e) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            }
+
+            //does bytecode-specific checks
+            try {
+                checkMore(state);
+            } catch (FieldNotFoundException e) {
                 //this should never happen
                 failExecution(e);
             }
@@ -152,7 +154,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     @Override
     protected final StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            destination(state).setFieldValue(this.fieldSignatureResolved, this.valueToPut);
+            final Signature fieldSignatureResolved = new Signature(this.fieldClassResolved.getClassName(), this.data.signature().getDescriptor(), this.data.signature().getName());
+            destination(state).setFieldValue(fieldSignatureResolved, this.valueToPut);
         };
     }
 
@@ -186,19 +189,15 @@ StrategyUpdate<DecisionAlternative_NONE>> {
      * field) is correct for the bytecode (bytecode-specific checks).
      * 
      * @param state the current {@link State}.
-     * @param fieldClassName a {@link String}, the name of the class
-     *        of the field.
-     * @param fieldClassFile the {@link ClassFile} for {@code fieldClassName}.
      * @throws FieldNotFoundException if the field does not exist.
-     * @throws BadClassFileException if the classfile for the field 
-     *         does not exist or is ill-formed.
      * @throws DecisionException if the decision procedure fails.
      * @throws ClasspathException if a standard class is not found.
      * @throws InterruptException if the {@link Algorithm} must be interrupted.
+     * @throws ThreadStackEmptyException if the stack is empty.
      */
-    protected abstract void checkMore(State state, String fieldClassName, ClassFile fieldClassFile)
-    throws FieldNotFoundException, BadClassFileException, 
-    DecisionException, ClasspathException, InterruptException;
+    protected abstract void checkMore(State state)
+    throws FieldNotFoundException, DecisionException, 
+    ClasspathException, InterruptException, ThreadStackEmptyException;
     
     /**
      * Returns the destination puts the value to its destination. 
@@ -207,9 +206,11 @@ StrategyUpdate<DecisionAlternative_NONE>> {
      * @return the {@link Objekt} containing the field where the
      *         value must be put.
      * @throws InterruptException if the {@link Algorithm} must be interrupted.
+     * @throws ClasspathException if it needs to throw a {@code java.lang.VerifyException}
+     *         but it is not found, or ill-formed, or cannot access its superclasses/superinterfaces.
      */
     protected abstract Objekt destination(State state)
-    throws InterruptException;
+    throws InterruptException, ClasspathException;
 
     @Override
     protected final Supplier<Boolean> isProgramCounterUpdateAnOffset() {

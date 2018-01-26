@@ -1,6 +1,5 @@
 package jbse.algo;
 
-import static jbse.algo.Util.failExecution;
 import static jbse.mem.Util.toPrimitive;
 import static jbse.common.Type.parametersNumber;
 import static jbse.common.Type.isPrimitive;
@@ -12,10 +11,9 @@ import java.util.function.Supplier;
 import jbse.algo.exc.UninterpretedUnsupportedException;
 import jbse.bc.Signature;
 import jbse.mem.State;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
 import jbse.val.Value;
-import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -63,15 +61,11 @@ public final class Algo_INVOKEUNINTERPRETED extends Algo_INVOKEMETA_Nonbranching
             throw new UninterpretedUnsupportedException("The method " + this.methodSignatureImpl + " has a nonprimitive argument other than 'this'."); 
         }
     }
-
+    
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        //pushes the uninterpreted function term
-        try {
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
             state.pushOperand(state.getCalculator().applyFunction(this.returnType, this.functionName, this.argsPrimitive));
-        } catch (InvalidOperandException | InvalidTypeException e) {
-            //this should never happen
-            failExecution(e);
-        }
+        };
     }
 }

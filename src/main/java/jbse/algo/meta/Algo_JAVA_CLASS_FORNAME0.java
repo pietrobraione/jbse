@@ -1,30 +1,40 @@
 package jbse.algo.meta;
 
 import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
-import static jbse.algo.Util.ensureClassCreatedAndInitialized;
-import static jbse.algo.Util.ensureInstance_JAVA_CLASS;
+import static jbse.algo.Util.invokeClassLoaderLoadClass;
+import static jbse.algo.Util.ensureClassInitialized;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
+import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Signatures.CLASS_NOT_FOUND_EXCEPTION;
+import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.JBSE_BASE_BOXEXCEPTIONININITIALIZERERROR;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
+import static jbse.common.Type.internalClassName;
 
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
-import jbse.bc.exc.BadClassFileException;
+import jbse.bc.ClassFile;
+import jbse.bc.ClassHierarchy;
+import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.PleaseLoadClassException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
-import jbse.dec.exc.InvalidInputException;
+import jbse.mem.Instance_JAVA_CLASS;
+import jbse.mem.Instance_JAVA_CLASSLOADER;
 import jbse.mem.State;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.Simplex;
@@ -35,7 +45,7 @@ import jbse.val.Simplex;
  * @author Pietro Braione
  */
 public final class Algo_JAVA_CLASS_FORNAME0 extends Algo_INVOKEMETA_Nonbranching {
-    private String className; //set by cookMore
+    private Reference classRef; //set by cookMore
 
     @Override
     protected Supplier<Integer> numOperands() {
@@ -46,18 +56,20 @@ public final class Algo_JAVA_CLASS_FORNAME0 extends Algo_INVOKEMETA_Nonbranching
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, DecisionException, 
     ClasspathException, SymbolicValueNotAllowedException, 
-    InterruptException {
+    InvalidInputException, InterruptException {
         try {
-            //gets the "this" object and the name of its class
+            //gets the name of the class
             final Reference classNameRef = (Reference) this.data.operand(0);
             if (state.isNull(classNameRef)) {
                 throwNew(state, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
-            this.className = valueString(state, (Reference) this.data.operand(0)).replace('.', '/');
+            final String className = internalClassName(valueString(state, classNameRef));
             if (className == null) {
                 throw new SymbolicValueNotAllowedException("The className parameter to java.lang.Class.forName0 cannot be a symbolic String");
             }
+            
+            //gets whether the class must be initialized
             if (!(this.data.operand(1) instanceof Primitive)) {
                 throwVerifyError(state);
                 exitFromAlgorithm();
@@ -65,29 +77,67 @@ public final class Algo_JAVA_CLASS_FORNAME0 extends Algo_INVOKEMETA_Nonbranching
                 throw new SymbolicValueNotAllowedException("The toInit parameter to java.lang.Class.forName0 cannot be a symbolic boolean");
             }
             final boolean toInit = (((Integer) ((Simplex) this.data.operand(1)).getActualValue()).intValue() > 0);
-            ensureInstance_JAVA_CLASS(state, this.className, this.className, this.ctx);
-            if (toInit) {
-                ensureClassCreatedAndInitialized(state, this.className, this.ctx);
+            
+            //gets the classloader
+            final Reference classLoaderRef = (Reference) this.data.operand(2);
+            final int classLoader;
+            if (state.isNull(classLoaderRef)) {
+                classLoader = CLASSLOADER_BOOT;
+            } else {
+                final Instance_JAVA_CLASSLOADER classLoaderInstance = (Instance_JAVA_CLASSLOADER) state.getObject(classLoaderRef);
+                classLoader = classLoaderInstance.classLoaderIdentifier();
             }
-        } catch (ClassFileNotFoundException e) {
-            throwNew(state, CLASS_NOT_FOUND_EXCEPTION);
+            
+            //loads/creates the class
+            final ClassHierarchy hier = state.getClassHierarchy();
+            final ClassFile classFile = hier.loadCreateClass(classLoader, className, state.areStandardClassLoadersNotReady());
+            
+            //gets the caller class
+            final Reference callerClassRef = (Reference) this.data.operand(3);
+            final ClassFile callerClass;
+            if (state.isNull(callerClassRef)) {
+                callerClass = classFile; //free access!
+            } else  {
+                final Instance_JAVA_CLASS callerClassObject = (Instance_JAVA_CLASS) state.getObject(callerClassRef);
+                callerClass = callerClassObject.representedClass();
+            }
+
+            //checks whether callerClass can access this.classFile 
+            if (!hier.isClassAccessible(callerClass, classFile)) {
+                throwNew(state, ILLEGAL_ACCESS_ERROR);
+                exitFromAlgorithm();
+            }
+            
+            //makes the instance of java.lang.Class and possibly
+            //initializes it
+            state.ensureInstance_JAVA_CLASS(classFile);
+            if (toInit) {
+                ensureClassInitialized(state, classFile, this.ctx, JBSE_BASE_BOXEXCEPTIONININITIALIZERERROR); 
+            }
+            
+            this.classRef = state.referenceToInstance_JAVA_CLASS(classFile);
+        } catch (PleaseLoadClassException e) {
+            invokeClassLoaderLoadClass(state, e);
             exitFromAlgorithm();
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
-        } catch (ClassCastException e) {
+        } catch (ClassFileNotFoundException e) {
+            throwNew(state, CLASS_NOT_FOUND_EXCEPTION);
+            exitFromAlgorithm();
+        } catch (ClassFileNotAccessibleException e) {
+            throwNew(state, ILLEGAL_ACCESS_ERROR);
+            exitFromAlgorithm();
+        } catch (ClassFileIllFormedException | ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (ClassFileNotAccessibleException | BadClassFileException | InvalidInputException e) {
-            //this should never happen
-            failExecution(e);
         }
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        //gets the instance of the class of the "this" object
-        final Reference classRef = state.referenceToInstance_JAVA_CLASS(this.className);
-        state.pushOperand(classRef);
+    protected final StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.pushOperand(this.classRef);
+        };
     }
 }

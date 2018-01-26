@@ -1,6 +1,6 @@
 package jbse.jvm;
 
-import java.nio.file.Paths;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import jbse.bc.Classpath;
 import jbse.bc.Signature;
@@ -148,9 +147,6 @@ public final class EngineParameters implements Cloneable {
     /** The breadth mode. */
     private BreadthMode breadthMode = BreadthMode.MORE_THAN_ONE;
 
-    /** The path to the JRE. */
-    private String jrePath = "";
-
     /** 
      * The initial {@link State} of the symbolic execution, or
      * {@code null} iff an initial state for a method invocation 
@@ -158,11 +154,24 @@ public final class EngineParameters implements Cloneable {
      */
     private State initialState = null;
 
+    /** 
+     * The bootstrap path to the core Java classes; overridden by 
+     * {@code initialState}'s bootstrap path when 
+     * {@code initialState != null}. 
+     */
+    private String bootPath = System.getProperty("sun.boot.class.path");
+    
+    /** 
+     * The extensions directories; overridden by {@code initialState}'s 
+     * extension directories when {@code initialState != null}. 
+     */
+    private ArrayList<String> extPaths = new ArrayList<>(Arrays.asList(System.getProperty("java.ext.dirs").split(File.pathSeparator)));
+
     /**  
-     * The classpath; overridden by {@code initialState}'s classpath
+     * The user classpath; overridden by {@code initialState}'s classpath
      * when {@code initialState != null}.
      */
-    private ArrayList<String> paths = new ArrayList<>();
+    private ArrayList<String> userPaths = new ArrayList<>();
 
     /** 
      * The {@link Calculator}; overridden by {@code initialState}'s 
@@ -326,14 +335,14 @@ public final class EngineParameters implements Cloneable {
 
     /**
      * Sets the initial state of the symbolic execution, and cancels the 
-     * effect of any previous call to {@link #addClasspath(String...)},
+     * effect of any previous call to {@link #addUserClasspath(String...)},
      * {@link #setMethodSignature(String)}.
      *  
      * @param s a {@link State}.
      */
     public void setInitialState(State s) { 
         this.initialState = s; 
-        this.paths.clear();
+        this.userPaths.clear();
         this.methodSignature = null;
         this.calc = null;
     }
@@ -366,68 +375,103 @@ public final class EngineParameters implements Cloneable {
     }
 
     /**
-     * Sets the JRE path.
+     * Sets the bootstrap classpath, and cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
      * 
-     * @param jrePath a {@link String}.
-     * @throws NullPointerException if {@code jrePath == null}.
+     * @param bootPath a {@link String}.
+     * @throws NullPointerException if {@code bootPath == null}.
      */
-    public void setJREPath(String jrePath) {
-        if (jrePath == null) {
+    public void setBootPath(String bootPath) {
+        if (bootPath == null) {
             throw new NullPointerException();
         }
-        this.jrePath = jrePath;
+        this.initialState = null; 
+        this.bootPath = bootPath;
     }
-
+    
     /**
-     * Gets the JRE path.
-     * 
-     * @return a {@link String}, the path to the JRE.
-     * @throws NullPointerException if {@code jrePath == null}.
+     * Brings the bootstrap classpath back to the default,
+     * i.e., the same bootstrap path of the JVM that
+     * executes JBSE, as returned by the system property
+     * {@code sun.boot.class.path}.
      */
-    public String getJREPath() {
-        return this.jrePath;
+    public void setDefaultBootPath() {
+        this.bootPath = System.getProperty("sun.boot.class.path");
     }
 
     /**
-     * Sets the symbolic execution's classpath, and cancels the effect of any 
-     * previous call to {@link #setInitialState(State)}; the 
-     * default classpath is {@code "."}.
+     * Gets the bootstrap classpath.
+     * 
+     * @return a {@link String}, the bootstrap classpath.
+     */
+    public String getBootPath() {
+        return this.bootPath;
+    }
+
+    /**
+     * Adds paths to the extensions classpath, and cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
      * 
      * @param paths a varargs of {@link String}, 
-     *        the paths to be added to the classpath.
+     *        the paths to be added to the extensions 
+     *        classpath.
      */
-    public void addClasspath(String... paths) { 
+    public void addExtClasspath(String... paths) { 
         this.initialState = null; 
-        Collections.addAll(this.paths, paths); 
+        Collections.addAll(this.extPaths, paths); 
     }
 
     /**
-     * Clears the symbolic execution's classpath.
+     * Sets the extensions classpath to
+     * no path.
      */
-    public void clearClasspath() {
-        this.paths.clear();
+    public void clearExtClasspath() {
+        this.extPaths.clear();
     }
 
     /**
-     * Returns the symbolic execution's classpath (a safety copy).
+     * Brings the extensions classpath back to the default,
+     * i.e., the same extensions path of the JVM that
+     * executes JBSE, as returned by the system property
+     * {@code java.ext.dirs}.
+     */
+    public void setDefaultExtClasspath() {
+        this.extPaths = new ArrayList<>(Arrays.asList(System.getProperty("java.ext.dirs").split(File.pathSeparator)));
+    }
+
+    /**
+     * Adds paths to the user classpath, and cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
+     * 
+     * @param paths a varargs of {@link String}, 
+     *        the paths to be added to the user 
+     *        classpath.
+     */
+    public void addUserClasspath(String... paths) { 
+        this.initialState = null; 
+        Collections.addAll(this.userPaths, paths); 
+    }
+
+    /**
+     * Brings the user classpath back to the default,
+     * i.e., no user path.
+     */
+    public void clearUserClasspath() {
+        this.userPaths.clear();
+    }
+
+    /**
+     * Builds the classpath.
      * 
      * @return a {@link Classpath} object. 
      */
     public Classpath getClasspath() {
         if (this.initialState == null) {
-            final String[] classpathJRE = new String[] {
-                                                        Paths.get(this.jrePath, "rt.jar").toString(),
-                                                        Paths.get(this.jrePath, "charset.jar").toString()
-                                                        //TODO more?
-            };
-            final String[] classpathUser = this.paths.toArray(ARRAY_OF_STRING);
-            final String[] classpath = Stream.concat(Arrays.stream(classpathJRE), Arrays.stream(classpathUser)).toArray(String[]::new);
-            return new Classpath(classpath); //safety copy
+            return new Classpath(this.bootPath, this.extPaths, this.userPaths);
         } else {
             return this.initialState.getClasspath();
         }
     }
-    private static final String[] ARRAY_OF_STRING = { };
 
     /**
      * Returns the {@link TriggerRulesRepo} 
@@ -788,7 +832,7 @@ public final class EngineParameters implements Cloneable {
         if (this.initialState != null) {
             o.initialState = this.initialState.clone();
         }
-        o.paths = (ArrayList<String>) this.paths.clone();
+        o.userPaths = (ArrayList<String>) this.userPaths.clone();
         //calc and decisionProcedure are *not* cloned
         o.observedVars = (ArrayList<Signature>) this.observedVars.clone();
         o.repoTrigger = this.repoTrigger.clone();

@@ -12,37 +12,37 @@ import jbse.val.exc.ValueDoesNotSupportNativeException;
  */
 public final class DefaultValue extends Value {
     private static DefaultValue instance = new DefaultValue();
-	
-	private DefaultValue() { 
-		super(Type.UNKNOWN); 
-	}
-	
+
+    private DefaultValue() { 
+        super(Type.UNKNOWN); 
+    }
+
     public static DefaultValue getInstance() {
         return instance;
     }
-	
-	@Override
-	public boolean equals(Object o) {
-		return (o == instance);
-	}
-	
-	@Override
-	public int hashCode() {
-		return toString().hashCode();
-	}
-	
-	@Override
-	public String toString() {
-		return "<DEFAULT>";
-	}
 
-	@Override
-	public Object getValueForNative() throws ValueDoesNotSupportNativeException {
-		throw new ValueDoesNotSupportNativeException();
-	}
+    @Override
+    public boolean equals(Object o) {
+        return (o == instance);
+    }
 
-	@Override
-	public boolean isSymbolic() {
-		return true;
-	}
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "<DEFAULT>";
+    }
+
+    @Override
+    public Object getValueForNative() throws ValueDoesNotSupportNativeException {
+        throw new ValueDoesNotSupportNativeException();
+    }
+
+    @Override
+    public boolean isSymbolic() {
+        return true;
+    }
 }

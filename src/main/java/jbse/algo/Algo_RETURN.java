@@ -2,9 +2,12 @@ package jbse.algo;
 
 import java.util.function.Supplier;
 
+import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.dec.DecisionProcedureAlgorithms;
+import jbse.mem.Frame;
 import jbse.mem.Klass;
+import jbse.mem.MethodFrame;
 import jbse.tree.DecisionAlternative_NONE;
 
 /**
@@ -58,14 +61,16 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> { 
-            final Signature returnedMethod = state.popCurrentFrame().getCurrentMethodSignature();
+            final Frame poppedFrame = state.popCurrentFrame();
+            final Signature returnedMethod = poppedFrame.getCurrentMethodSignature();
+            final ClassFile returnedCurrentClass = poppedFrame.getCurrentClass();
             if (state.getStackSize() == 0) {
                 state.setStuckReturn();
             } else {
                 this.pcReturn = state.getReturnPC();
             }
-            if ("<clinit>".equals(returnedMethod.getName())) {
-                final Klass k = state.getKlass(returnedMethod.getClassName());
+            if (poppedFrame instanceof MethodFrame && "<clinit>".equals(returnedMethod.getName())) {
+                final Klass k = state.getKlass(returnedCurrentClass);
                 k.setInitialized();
             }
         };

@@ -4,8 +4,10 @@ import static jbse.algo.BytecodeData_1KME.Kind.kind;
 import static jbse.algo.Util.continueWith;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
-import static jbse.algo.Util.lookupClassfileMethodImpl;
+import static jbse.algo.Util.invokeClassLoaderLoadClass;
+import static jbse.algo.Util.lookupMethodImpl;
 import static jbse.algo.Util.throwNew;
+import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.NO_SUCH_METHOD_ERROR;
@@ -19,14 +21,20 @@ import java.util.function.Supplier;
 import jbse.algo.exc.BaseUnsupportedException;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.MetaUnsupportedException;
+import jbse.algo.exc.NotYetImplementedException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
-import jbse.bc.exc.BadClassFileException;
+import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.MethodAbstractException;
 import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
+import jbse.bc.exc.PleaseLoadClassException;
+import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
@@ -57,9 +65,9 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         this.isStatic = isStatic;
     }
 
-    protected Signature methodSignatureResolved; //set by cooking methods (resolveMethod)
-    protected ClassFile classFileMethodImpl; //set by cooking methods (findImpl / findOverridingImpl)
-    protected Signature methodSignatureImpl; //set by cooking methods (findImpl / findOverridingImpl)
+    protected ClassFile methodResolvedClass; //set by cooking methods (resolveMethod)
+    protected ClassFile methodImplClass; //set by cooking methods (findImpl / findOverridingImpl)
+    protected Signature methodImplSignature; //set by cooking methods (findImpl / findOverridingImpl)
     protected boolean isSignaturePolymorphic; //set by cooking methods (findImpl / findOverridingImpl)
 
     @Override
@@ -75,24 +83,25 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     protected final void resolveMethod(State state) 
-    throws BadClassFileException, IncompatibleClassFileException,  
-    MethodNotFoundException, MethodNotAccessibleException {
-        try {
-            //performs method resolution
-            final ClassHierarchy hier = state.getClassHierarchy();
-            final String currentClassName = state.getCurrentMethodSignature().getClassName();
-            this.methodSignatureResolved = hier.resolveMethod(currentClassName, this.data.signature(), this.isInterface);
-        } catch (ThreadStackEmptyException e) {
-            //this should never happen
-            failExecution(e);
+    throws ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, 
+    PleaseLoadClassException, IncompatibleClassFileException, MethodNotFoundException, MethodNotAccessibleException,
+    ThreadStackEmptyException, InvalidInputException {
+        final ClassFile currentClass = state.getCurrentClass();
+        if (this.data.signature().getClassName() == null) {
+            //signature with no class: skips resolution
+            this.methodResolvedClass = null;
+        } else {
+            this.methodResolvedClass = state.getClassHierarchy().resolveMethod(currentClass, this.data.signature(), this.isInterface, state.areStandardClassLoadersNotReady());
         }
     }
     
-    protected final void check(State state) throws InterruptException, CannotManageStateException {
+    protected final void check(State state) 
+    throws InterruptException, CannotManageStateException, ClasspathException, ThreadStackEmptyException {
+        if (this.methodResolvedClass == null) {
+            return;
+        }
+        
         try {
-            final ClassHierarchy hier = state.getClassHierarchy();
-            final ClassFile classFileResolved = hier.getClassFile(this.methodSignatureResolved.getClassName());
-            
             if (this.isInterface) {
                 //checks for invokeinterface
                 
@@ -101,20 +110,20 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 //the first linking exception pertains to method resolution
                 
                 //second linking exception
-                if (classFileResolved.isMethodStatic(this.methodSignatureResolved) || classFileResolved.isMethodPrivate(this.methodSignatureResolved)) {
+                if (this.methodResolvedClass.isMethodStatic(this.data.signature()) || this.methodResolvedClass.isMethodPrivate(this.data.signature())) {
                     throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
                     exitFromAlgorithm();
                 }
                 
                 //first run-time exception
-                final Reference receiver = state.peekReceiverArg(this.methodSignatureResolved);
+                final Reference receiver = state.peekReceiverArg(this.data.signature());
                 if (state.isNull(receiver)) {
                     throwNew(state, NULL_POINTER_EXCEPTION);
                     exitFromAlgorithm();
                 }
                 
                 //second run-time exception
-                if (!hier.isSubclass(state.getObject(receiver).getType(), this.methodSignatureResolved.getClassName())) {
+                if (!state.getClassHierarchy().isSubclass(state.getObject(receiver).getType(), this.methodResolvedClass)) {
                     throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
                     exitFromAlgorithm();
                 }
@@ -126,33 +135,33 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 //the first linking exception pertains to method resolution
                 
                 //second linking exception
-                if ("<init>".equals(this.methodSignatureResolved.getName()) &&
-                    !this.methodSignatureResolved.getClassName().equals(this.data.signature().getClassName())) {
+                if ("<init>".equals(this.data.signature().getName()) &&
+                    !this.methodResolvedClass.getClassName().equals(this.data.signature().getClassName())) {
                     throwNew(state, NO_SUCH_METHOD_ERROR);
                     exitFromAlgorithm();
                 }
                 
                 //third linking exception
-                if (classFileResolved.isMethodStatic(this.methodSignatureResolved)) {
+                if (this.methodResolvedClass.isMethodStatic(this.data.signature())) {
                     throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
                     exitFromAlgorithm();
                 }
                 
                 //first run-time exception
-                final Reference receiver = state.peekReceiverArg(this.methodSignatureResolved);
+                final Reference receiver = state.peekReceiverArg(this.data.signature());
                 if (state.isNull(receiver)) {
                     throwNew(state, NULL_POINTER_EXCEPTION);
                     exitFromAlgorithm();
                 }
                 
                 //second run-time exception (identical to second run-time exception of invokevirtual case)
-                final String currentClass = state.getCurrentMethodSignature().getClassName();
-                if (classFileResolved.isMethodProtected(this.methodSignatureResolved) &&
-                    hier.isSubclass(currentClass, this.methodSignatureResolved.getClassName())) {
-                    final ClassFile classFileCurrent = hier.getClassFile(currentClass);
-                    final boolean samePackage = classFileCurrent.getPackageName().equals(classFileResolved.getPackageName());
-                    final String receiverClass = state.getObject(receiver).getType();                    
-                    if (!samePackage && !hier.isSubclass(receiverClass, currentClass)) {
+                final ClassFile currentClass = state.getCurrentClass();
+                final ClassHierarchy hier = state.getClassHierarchy();
+                if (this.methodResolvedClass.isMethodProtected(this.data.signature()) &&
+                    hier.isSubclass(currentClass, this.methodResolvedClass)) {
+                    final boolean sameRuntimePackage = (currentClass.getDefiningClassLoader() == this.methodResolvedClass.getDefiningClassLoader() && currentClass.getPackageName().equals(this.methodResolvedClass.getPackageName()));
+                    final ClassFile receiverClass = state.getObject(receiver).getType();                    
+                    if (!sameRuntimePackage && !hier.isSubclass(receiverClass, currentClass)) {
                         throwNew(state, ILLEGAL_ACCESS_ERROR);
                         exitFromAlgorithm();
                     }
@@ -168,7 +177,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 //the first linking exception pertains to method resolution
                 
                 //second linking exception
-                if (!classFileResolved.isMethodStatic(this.methodSignatureResolved)) {
+                if (!this.methodResolvedClass.isMethodStatic(this.data.signature())) {
                     throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
                     exitFromAlgorithm();
                 }
@@ -183,7 +192,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 //the first linking exception pertains to method resolution
                 
                 //second linking exception
-                if (classFileResolved.isMethodStatic(this.methodSignatureResolved)) {
+                if (this.methodResolvedClass.isMethodStatic(this.data.signature())) {
                     throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
                     exitFromAlgorithm();
                 }
@@ -191,20 +200,20 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 //the third linking exception pertains to method type resolution
                 
                 //first run-time exception
-                final Reference receiver = state.peekReceiverArg(this.methodSignatureResolved);
+                final Reference receiver = state.peekReceiverArg(this.data.signature());
                 if (state.isNull(receiver)) {
                     throwNew(state, NULL_POINTER_EXCEPTION);
                     exitFromAlgorithm();
                 }
                 
                 //second run-time exception (identical to second run-time exception of invokespecial case)
-                final String currentClass = state.getCurrentMethodSignature().getClassName();
-                if (classFileResolved.isMethodProtected(this.methodSignatureResolved) &&
-                    hier.isSubclass(currentClass, this.methodSignatureResolved.getClassName())) {
-                    final ClassFile classFileCurrent = hier.getClassFile(currentClass);
-                    final boolean samePackage = classFileCurrent.getPackageName().equals(classFileResolved.getPackageName());
-                    final String receiverClass = state.getObject(receiver).getType();                    
-                    if (!samePackage && !hier.isSubclass(receiverClass, currentClass)) {
+                final ClassFile currentClass = state.getCurrentClass();
+                final ClassHierarchy hier = state.getClassHierarchy();
+                if (this.methodResolvedClass.isMethodProtected(this.data.signature()) &&
+                    hier.isSubclass(currentClass, this.methodResolvedClass)) {
+                    final boolean sameRuntimePackage = (currentClass.getDefiningClassLoader() == this.methodResolvedClass.getDefiningClassLoader() && currentClass.getPackageName().equals(this.methodResolvedClass.getPackageName()));
+                    final ClassFile receiverClass = state.getObject(receiver).getType();                    
+                    if (!sameRuntimePackage && !hier.isSubclass(receiverClass, currentClass)) {
                         throwNew(state, ILLEGAL_ACCESS_ERROR);
                         exitFromAlgorithm();
                     }
@@ -214,98 +223,115 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 
                 //the seventh and eighth run-time exceptions pertain to the code after method type resolution
             }            
-        } catch (BadClassFileException | MethodNotFoundException | ThreadStackEmptyException e) {
+        } catch (MethodNotFoundException e) {
             //this should never happen after resolution
             failExecution(e);
         }
     }
 
     protected final void findImpl(State state) 
-    throws BadClassFileException, IncompatibleClassFileException, 
-    MethodNotAccessibleException, MethodAbstractException, InterruptException {
+    throws IncompatibleClassFileException, MethodNotAccessibleException, 
+    MethodAbstractException, InterruptException, ThreadStackEmptyException {
+        if (this.methodResolvedClass == null) {
+            this.methodImplClass = null;
+            this.methodImplSignature = this.data.signature();
+            this.isSignaturePolymorphic = false;
+            return;
+        }
+        
         try {
             final boolean isVirtualInterface = !this.isStatic && !this.isSpecial;
-            final String receiverClassName;
+            final ClassFile receiverClass;
             if (isVirtualInterface) {
-                final Reference thisRef = state.peekReceiverArg(this.methodSignatureResolved);
-                receiverClassName = state.getObject(thisRef).getType();
+                final Reference thisRef = state.peekReceiverArg(this.data.signature());
+                receiverClass = state.getObject(thisRef).getType();
             } else {
-                receiverClassName = null;
+                receiverClass = null;
             }
-            this.classFileMethodImpl = lookupClassfileMethodImpl(state, 
-                                                                 this.methodSignatureResolved, 
-                                                                 this.isInterface, 
-                                                                 this.isSpecial, 
-                                                                 this.isStatic,
-                                                                 receiverClassName);
-            this.methodSignatureImpl = new Signature(this.classFileMethodImpl.getClassName(), 
-                                                     this.methodSignatureResolved.getDescriptor(), 
-                                                     this.methodSignatureResolved.getName());
-            this.isSignaturePolymorphic = this.classFileMethodImpl.isMethodSignaturePolymorphic(this.methodSignatureImpl);
+            this.methodImplClass = 
+                lookupMethodImpl(state, 
+                                          this.methodResolvedClass, 
+                                          this.data.signature(),
+                                          this.isInterface, 
+                                          this.isSpecial, 
+                                          this.isStatic,
+                                          receiverClass);
+            this.methodImplSignature = 
+                new Signature(this.methodImplClass.getClassName(), 
+                              this.data.signature().getDescriptor(), 
+                              this.data.signature().getName());
+            this.isSignaturePolymorphic = this.methodImplClass.isMethodSignaturePolymorphic(this.methodImplSignature);
         } catch (MethodNotFoundException e) {
-            this.classFileMethodImpl = null;
-            this.methodSignatureImpl = null;
+            this.methodImplClass = null;
+            this.methodImplSignature = null;
             this.isSignaturePolymorphic = false;
-        } catch (ThreadStackEmptyException e) {
-            //this should never happen
-            failExecution(e);
         }
     }
 
     protected final void findOverridingImpl(State state)
-    throws BaseUnsupportedException, MetaUnsupportedException, InterruptException {
-        if (this.methodSignatureImpl == null || this.isSignaturePolymorphic) {
+    throws BaseUnsupportedException, MetaUnsupportedException, NotYetImplementedException, InterruptException, 
+    ClasspathException, ThreadStackEmptyException, InvalidInputException {
+        if (this.methodImplSignature == null || this.isSignaturePolymorphic) {
             return; //no implementation to override, or method is signature polymorphic (cannot be overridden!)
         }
-        if (this.ctx.isMethodBaseLevelOverridden(this.methodSignatureImpl)) {
-            final Signature methodSignatureOverriding = this.ctx.getBaseOverride(this.methodSignatureImpl);
+        if (this.ctx.isMethodBaseLevelOverridden(this.methodImplSignature)) {
             try {
-                final ClassFile classFileMethodOverriding = state.getClassHierarchy().getClassFile(methodSignatureOverriding.getClassName());
-                checkOverridingMethodFits(state, methodSignatureOverriding, classFileMethodOverriding);
-                this.classFileMethodImpl = classFileMethodOverriding;
-                this.methodSignatureImpl = methodSignatureOverriding;
-                this.isSignaturePolymorphic = this.classFileMethodImpl.isMethodSignaturePolymorphic(this.methodSignatureImpl);
-            } catch (MethodNotFoundException e) {
-                throw new BaseUnsupportedException("The overriding method " + methodSignatureOverriding + " does not exist (but the class seems to exist)");
-            } catch (BadClassFileException e) {
-                throw new BaseUnsupportedException("The overriding method " + methodSignatureOverriding + " does not exist because its class does not exist");
+                final Signature methodSignatureOverriding = this.ctx.getBaseOverride(this.methodImplSignature);
+                final ClassFile classFileMethodResolved = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, methodSignatureOverriding.getClassName(), state.areStandardClassLoadersNotReady());
+                final ClassFile classFileMethodOverriding = state.getClassHierarchy().resolveMethod(classFileMethodResolved, methodSignatureOverriding, false, state.areStandardClassLoadersNotReady()); //TODO is false ok? And the accessor?
+                checkOverridingMethodFits(state, classFileMethodOverriding, methodSignatureOverriding);
+                this.methodImplClass = classFileMethodOverriding;
+                this.methodImplSignature = methodSignatureOverriding;
+                this.isSignaturePolymorphic = this.methodImplClass.isMethodSignaturePolymorphic(this.methodImplSignature);
+                return;
+            } catch (PleaseLoadClassException e) {
+                invokeClassLoaderLoadClass(state, e);
+                exitFromAlgorithm();
+            } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException |
+                     IncompatibleClassFileException | MethodNotFoundException | MethodNotAccessibleException e) {
+                throw new BaseUnsupportedException(e);
             }
         } else {
             try {
-                if (this.ctx.dispatcherMeta.isMeta(state.getClassHierarchy(), this.methodSignatureImpl)) {
-                    final Algo_INVOKEMETA<?, ?, ?, ?> algo = this.ctx.dispatcherMeta.select(this.methodSignatureImpl);
+                if (this.ctx.dispatcherMeta.isMeta(this.methodImplClass, this.methodImplSignature)) {
+                    final Algo_INVOKEMETA<?, ?, ?, ?> algo = this.ctx.dispatcherMeta.select(this.methodImplSignature);
                     algo.setFeatures(this.isInterface, this.isSpecial, this.isStatic);
                     continueWith(algo);
                 }
-            } catch (BadClassFileException | MethodNotFoundException e) {
+            } catch (MethodNotFoundException e) {
                 //this should never happen after resolution 
                 failExecution(e);
             }
         }
+        
+        //if we are here no overriding implementation exists:
+        //if the method is classless throw an exception
+        if (this.methodImplClass == null) {
+            throw new NotYetImplementedException("The classless method " + this.methodImplSignature.toString() + " has no implementation.");
+        }
     }
 
-    private void checkOverridingMethodFits(State state, Signature methodSignatureOverriding, ClassFile classFileMethodOverriding) 
-    throws BaseUnsupportedException, BadClassFileException, MethodNotFoundException {
-        final ClassFile classFileMethodResolved = state.getClassHierarchy().getClassFile(this.methodSignatureResolved.getClassName());
+    private void checkOverridingMethodFits(State state, ClassFile classFileMethodOverriding, Signature methodSignatureOverriding) 
+    throws BaseUnsupportedException, MethodNotFoundException {
         if (!classFileMethodOverriding.hasMethodImplementation(methodSignatureOverriding)) {
             throw new BaseUnsupportedException("The overriding method " + methodSignatureOverriding + " is abstract.");
         }
-        final boolean resolvedStatic = classFileMethodResolved.isMethodStatic(this.methodSignatureResolved);
+        final boolean overriddenStatic = this.methodImplClass.isMethodStatic(this.methodImplSignature);
         final boolean overridingStatic = classFileMethodOverriding.isMethodStatic(methodSignatureOverriding);
-        if (resolvedStatic == overridingStatic) {
-            if (this.methodSignatureResolved.getDescriptor().equals(methodSignatureOverriding.getDescriptor())) {
+        if (overriddenStatic == overridingStatic) {
+            if (this.methodImplSignature.getDescriptor().equals(methodSignatureOverriding.getDescriptor())) {
                 return;
             }
-        } else if (!resolvedStatic && overridingStatic) {
-            if (descriptorAsStatic(this.methodSignatureResolved).equals(methodSignatureOverriding.getDescriptor())) {
+        } else if (!overriddenStatic && overridingStatic) {
+            if (descriptorAsStatic(this.methodImplSignature).equals(methodSignatureOverriding.getDescriptor())) {
                 return;
             }
-        } else { //(resolvedStatic && !overridingStatic)
-            if (this.methodSignatureResolved.getDescriptor().equals(descriptorAsStatic(methodSignatureOverriding))) {
+        } else { //(overriddenStatic && !overridingStatic)
+            if (this.methodImplSignature.getDescriptor().equals(descriptorAsStatic(methodSignatureOverriding))) {
                 return;
             }
         }
-        throw new BaseUnsupportedException("The overriding method " + methodSignatureOverriding + " has signature incompatible with overridden " + this.methodSignatureImpl);
+        throw new BaseUnsupportedException("The overriding method " + methodSignatureOverriding + " has signature incompatible with overridden " + this.methodImplSignature);
     }
 
     private static String descriptorAsStatic(Signature sig) {

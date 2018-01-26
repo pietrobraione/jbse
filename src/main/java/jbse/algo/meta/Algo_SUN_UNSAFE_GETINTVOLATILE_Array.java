@@ -6,8 +6,9 @@ import static jbse.algo.Util.storeInArray;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
+import static jbse.bc.Signatures.CLASS_NOT_FOUND_EXCEPTION;
+import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
-import static jbse.common.Type.getArrayMemberType;
 import static jbse.common.Type.INT;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isPrimitiveOpStack;
@@ -23,7 +24,13 @@ import jbse.algo.StrategyDecide;
 import jbse.algo.StrategyRefine;
 import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.MissingTriggerParameterException;
+import jbse.algo.exc.NotYetImplementedException;
 import jbse.algo.meta.exc.UndefinedResultException;
+import jbse.bc.ClassFile;
+import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.common.exc.ClasspathException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
@@ -80,8 +87,8 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             Array array = null;
             try {
                 array = (Array) state.getObject(this.myObjectRef);
-                final String arrayType = array.getType();
-                if (!getArrayMemberType(arrayType).equals("" + INT)) {
+                final ClassFile arrayType = array.getType();
+                if (!arrayType.getMemberClass().getClassName().equals("int")) {
                     throw new UndefinedResultException("The Object o parameter to sun.misc.Unsafe.getIntVolatile was an array whose member type is not int");
                 }
             } catch (ClassCastException e) {
@@ -145,7 +152,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                             val = ((Array.AccessOutcomeInValue) e).getValue();
                             if (val == null) {
                                 try {
-                                    val = state.createSymbol(getArrayMemberType(arrayToProcess.getType()), 
+                                    val = state.createSymbol(arrayToProcess.getType().getMemberClass().getClassName(), 
                                                              arrayToProcess.getOrigin().thenArrayMember(this.index.add(arrayOffset)));
                                 } catch (InvalidOperandException | InvalidTypeException exc) {
                                     //this should never happen
@@ -161,6 +168,16 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                         try {
                             final Expression accessCondition = (arrayAccessCondition == null ? e.getAccessCondition() : (Expression) arrayAccessCondition.and(e.getAccessCondition()));
                             o = this.ctx.decisionProcedure.resolve_XALOAD(state, accessCondition, val, fresh, refToArrayToProcess, result);
+                        //TODO the next three catch blocks should disappear, see comments on removing exceptions in jbse.dec.DecisionProcedureAlgorithms.doResolveReference
+                        } catch (ClassFileNotFoundException exc) {
+                            throwNew(state, CLASS_NOT_FOUND_EXCEPTION);
+                            exitFromAlgorithm();
+                        } catch (ClassFileNotAccessibleException exc) {
+                            throwNew(state, ILLEGAL_ACCESS_ERROR);
+                            exitFromAlgorithm();
+                        } catch (ClassFileIllFormedException exc) {
+                            throwVerifyError(state);
+                            exitFromAlgorithm();
                         } catch (InvalidOperandException | InvalidTypeException exc) {
                             //this should never happen
                             failExecution(exc);
@@ -197,7 +214,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
     }
 
     protected Value possiblyMaterialize(State state, Value val) 
-    throws DecisionException, InterruptException {
+    throws DecisionException, InterruptException, ClasspathException {
         //calculates the actual value to push by materializing 
         //a member array, if it is the case, and then pushes it
         //on the operand stack
@@ -223,8 +240,8 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
     }
 
     @Override
-    protected StrategyRefine_SUN_UNSAFE_GETINTVOLATILE_Array refiner() {
-        return new StrategyRefine_SUN_UNSAFE_GETINTVOLATILE_Array() {
+    protected StrategyRefine_SUN_UNSAFE_GETX_Array refiner() {
+        return new StrategyRefine_SUN_UNSAFE_GETX_Array() {
             @Override
             public void refineResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved)
             throws DecisionException {
@@ -245,11 +262,11 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
         };
     }
 
-    protected StrategyUpdate_SUN_UNSAFE_GETINTVOLATILE_Array updater() {
-        return new StrategyUpdate_SUN_UNSAFE_GETINTVOLATILE_Array() {
+    protected StrategyUpdate_SUN_UNSAFE_GETX_Array updater() {
+        return new StrategyUpdate_SUN_UNSAFE_GETX_Array() {
             @Override
             public void updateResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved) 
-            throws DecisionException, InterruptException, MissingTriggerParameterException {
+            throws DecisionException, InterruptException, MissingTriggerParameterException, ClasspathException, NotYetImplementedException {
                 //possibly materializes the value
                 final Value val = altResolved.getValueToLoad();
                 final Value valMaterialized = possiblyMaterialize(state, val);
@@ -273,7 +290,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 //manages triggers
                 try {
                     final boolean someTriggerFrameLoaded = 
-                    Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.ctx.triggerManager.loadTriggerFrames(state, altResolved, Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.programCounterUpdate.get());
+                        Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.ctx.triggerManager.loadTriggerFrames(state, altResolved, Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.programCounterUpdate.get());
                     if (someTriggerFrameLoaded) {
                         exitFromAlgorithm();
                     }

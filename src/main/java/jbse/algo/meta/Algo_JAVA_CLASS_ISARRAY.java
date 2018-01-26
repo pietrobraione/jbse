@@ -3,15 +3,17 @@ package jbse.algo.meta;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwVerifyError;
-import static jbse.common.Type.isArray;
 
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
+import jbse.common.exc.ClasspathException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 import jbse.val.Simplex;
 
@@ -30,7 +32,7 @@ public final class Algo_JAVA_CLASS_ISARRAY extends Algo_INVOKEMETA_Nonbranching 
 
     @Override
     protected void cookMore(State state)
-    throws ThreadStackEmptyException, InterruptException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException {
         try {
             //gets the 'this' java.lang.Class instance from the heap 
             //and the name of the class it represents
@@ -45,7 +47,7 @@ public final class Algo_JAVA_CLASS_ISARRAY extends Algo_INVOKEMETA_Nonbranching 
                 //this should never happen
                 failExecution("The 'this' parameter to java.lang.Class.isArray method is symbolic and unresolved.");
             }
-            this.isArray = state.getCalculator().valInt(isArray(clazz.representedClass()) ? 1 : 0);
+            this.isArray = state.getCalculator().valInt(clazz.representedClass().isArray() ? 1 : 0);
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
@@ -53,7 +55,9 @@ public final class Algo_JAVA_CLASS_ISARRAY extends Algo_INVOKEMETA_Nonbranching 
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        state.pushOperand(this.isArray);
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.pushOperand(this.isArray);
+        };
     }
 }

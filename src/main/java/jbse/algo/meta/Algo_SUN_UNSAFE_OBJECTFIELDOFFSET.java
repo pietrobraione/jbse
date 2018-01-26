@@ -10,12 +10,14 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Instance;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 import jbse.val.Simplex;
 import jbse.val.exc.InvalidTypeException;
@@ -53,7 +55,9 @@ public final class Algo_SUN_UNSAFE_OBJECTFIELDOFFSET extends Algo_INVOKEMETA_Non
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        state.pushOperand(this.ofst);
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.pushOperand(this.ofst);
+        };
     }
 }

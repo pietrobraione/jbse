@@ -7,11 +7,12 @@ import static jbse.apps.Util.formatExpression;
 import java.io.PrintStream;
 import java.util.Collection;
 
+import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureDecorator;
 import jbse.dec.exc.DecisionException;
-import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Clause;
 import jbse.mem.Objekt;
 import jbse.val.Expression;
@@ -84,12 +85,12 @@ public class DecisionProcedureDecoratorPrint extends DecisionProcedureDecorator 
     }
 
     @Override
-    public boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, String className)
+    public boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, ClassFile classFile)
     throws InvalidInputException, DecisionException {
-        final boolean retVal = super.isSatExpands(hier, r, className);
+        final boolean retVal = super.isSatExpands(hier, r, classFile);
         IO.print(this.out, ":: Decided: ");
         IO.print(this.out, formatClauses(this.getAssumptions())); 
-        IO.println(this.out, TURNSTILE + r.getOrigin() + " == fresh " + className + ". Result: " + Boolean.toString(retVal));
+        IO.println(this.out, TURNSTILE + r.getOrigin() + " == fresh " + classFile.getClassName() + ". Result: " + Boolean.toString(retVal));
         return retVal;
     }
 
@@ -104,22 +105,22 @@ public class DecisionProcedureDecoratorPrint extends DecisionProcedureDecorator 
     }
 
     @Override
-    public boolean isSatInitialized(ClassHierarchy hier, String className) 
+    public boolean isSatInitialized(ClassHierarchy hier, ClassFile classFile) 
     throws InvalidInputException, DecisionException {
-        final boolean retVal = super.isSatInitialized(hier, className);
+        final boolean retVal = super.isSatInitialized(hier, classFile);
         IO.print(this.out, ":: Decided: ");
         IO.print(this.out, formatClauses(this.getAssumptions())); 
-        IO.println(this.out, TURNSTILE + "pre_init(" + className + "). Result: " + Boolean.toString(retVal));
+        IO.println(this.out, TURNSTILE + "pre_init(" + classFile.getClassName() + "). Result: " + Boolean.toString(retVal));
         return retVal;
     }
 
     @Override
-    public boolean isSatNotInitialized(ClassHierarchy hier, String className)
+    public boolean isSatNotInitialized(ClassHierarchy hier, ClassFile classFile)
     throws InvalidInputException, DecisionException {
-        final boolean retVal = super.isSatNotInitialized(hier, className);
+        final boolean retVal = super.isSatNotInitialized(hier, classFile);
         IO.print(this.out, ":: Decided: ");
         IO.print(this.out, formatClauses(this.getAssumptions())); 
-        IO.println(this.out, TURNSTILE + "!pre_init(" + className + "). Result: " + Boolean.toString(retVal));
+        IO.println(this.out, TURNSTILE + "!pre_init(" + classFile.getClassName() + "). Result: " + Boolean.toString(retVal));
         return retVal;
     }
 }

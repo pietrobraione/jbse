@@ -3,9 +3,10 @@ package jbse.dec;
 import java.util.Collection;
 import java.util.Map;
 
+import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
-import jbse.dec.exc.InvalidInputException;
 import jbse.dec.exc.NoModelException;
 import jbse.mem.Clause;
 import jbse.mem.Objekt;
@@ -165,15 +166,14 @@ public interface DecisionProcedure extends AutoCloseable {
      * 
      * @param hier a {@link ClassHierarchy}. It must not be {@code null}.
      * @param r a {@link ReferenceSymbolic}. It must not be {@code null}.
-     * @param className a {@link String}, the name of a class. 
-     *        It must not be {@code null}.
+     * @param classFile a {@link ClassFile}. It must not be {@code null}.
      * @return {@code true} iff {@code r} can be resolved by aliasing to 
-     *         a fresh object of class {@code className} under
+     *         a fresh object of class {@code classFile} under
      *         the current assumption.
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
      */
-    boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, String className) 
+    boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, ClassFile classFile) 
     throws InvalidInputException, DecisionException;
 
     /**
@@ -182,15 +182,14 @@ public interface DecisionProcedure extends AutoCloseable {
      * assumptions.
      * 
      * @param hier a {@link ClassHierarchy}. It must not be {@code null}.
-     * @param className a {@link String}, the name of a class.
-     *        It must not be {@code null}.
-     * @return {@code true} iff the assumption that {@code className} is
+     * @param classFile a {@link ClassFile}. It must not be {@code null}.
+     * @return {@code true} iff the assumption that {@code classFile} is
      *         initialized at the start of the symbolic execution is 
      *         satisfiable under the current assumption.
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
      */
-    boolean isSatInitialized(ClassHierarchy hier, String className) 
+    boolean isSatInitialized(ClassHierarchy hier, ClassFile classFile) 
     throws InvalidInputException, DecisionException;
 
     /**
@@ -199,15 +198,14 @@ public interface DecisionProcedure extends AutoCloseable {
      * assumptions.
      * 
      * @param hier a {@link ClassHierarchy}. It must not be {@code null}.
-     * @param className a {@link String}, the name of a class.
-     *        It must not be {@code null}.
-     * @return {@code true} iff the assumption that {@code className} is
+     * @param classFile a {@link ClassFile}. It must not be {@code null}.
+     * @return {@code true} iff the assumption that {@code classFile} is
      *         not initialized at the start of the symbolic execution is 
      *         satisfiable under the current assumption.
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure. 
      */
-    boolean isSatNotInitialized(ClassHierarchy hier, String className) 
+    boolean isSatNotInitialized(ClassHierarchy hier, ClassFile classFile) 
     throws InvalidInputException, DecisionException;
 
     /**

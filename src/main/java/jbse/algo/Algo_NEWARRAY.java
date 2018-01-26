@@ -1,12 +1,18 @@
 package jbse.algo;
 
 import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.NEWARRAY_OFFSET;
 
 import java.util.function.Supplier;
 
+import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.common.Type;
+import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.State;
 import jbse.val.Primitive;
 
@@ -28,7 +34,8 @@ final class Algo_NEWARRAY extends Algo_XNEWARRAY<BytecodeData_1AT> {
     }
 
     @Override
-    protected void preCook(State state) throws InterruptException {
+    protected void preCook(State state) 
+    throws InterruptException, InvalidInputException, ClasspathException {
         //sets the array length
         try {
             this.dimensionsCounts = new Primitive[] { (Primitive) this.data.operand(0) };
@@ -38,7 +45,13 @@ final class Algo_NEWARRAY extends Algo_XNEWARRAY<BytecodeData_1AT> {
         }
 
         //sets the array type
-        this.arrayType = "" + Type.ARRAYOF + this.data.primitiveType();
+        try {
+            this.arrayType = state.getClassHierarchy().loadCreateClass("" + Type.ARRAYOF + this.data.primitiveType());
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
+                 ClassFileNotAccessibleException e) {
+            //this should never happen
+            failExecution(e);
+        }
     }
 
     @Override

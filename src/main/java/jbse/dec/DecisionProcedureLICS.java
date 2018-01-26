@@ -3,6 +3,7 @@ package jbse.dec;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.Objekt;
@@ -41,7 +42,7 @@ public final class DecisionProcedureLICS extends DecisionProcedureChainOfRespons
     //TODO support pop of assumptions
 
     @Override
-    protected boolean isSatExpandsLocal(ClassHierarchy hier, ReferenceSymbolic ref, String className) {
+    protected boolean isSatExpandsLocal(ClassHierarchy hier, ReferenceSymbolic ref, ClassFile classFile) {
         //gets the rules matching ref
         final ArrayList<LICSRuleExpandsTo> rules = this.rulesRepo.matchingLICSRulesExpandsTo(ref);
 
@@ -53,7 +54,7 @@ public final class DecisionProcedureLICS extends DecisionProcedureChainOfRespons
 
         //2- if ref satisfies some rules, returns true 
         for (LICSRuleExpandsTo rule : rules) {
-            if (rule.satisfies(className)) {
+            if (rule.satisfies(classFile.getClassName())) {
                 return true;
             }
         }

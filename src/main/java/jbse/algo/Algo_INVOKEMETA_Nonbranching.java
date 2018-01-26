@@ -1,17 +1,15 @@
 package jbse.algo;
 
-import static jbse.algo.Util.failExecution;
 import static jbse.bc.Offsets.offsetInvoke;
 
 import java.util.function.Supplier;
 
 import jbse.algo.exc.CannotManageStateException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.exc.DecisionException;
-import jbse.jvm.exc.FailureException;
 import jbse.mem.State;
-import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 
@@ -41,9 +39,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     protected void cookMore(State state) 
-    throws ThreadStackEmptyException, DecisionException, 
-    ClasspathException, CannotManageStateException, 
-    InterruptException {
+    throws ThreadStackEmptyException, DecisionException, ClasspathException, 
+    CannotManageStateException, InterruptException, InvalidInputException {
         //the default implementation does nothing
     }
 
@@ -64,24 +61,6 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected final StrategyRefine<DecisionAlternative_NONE> refiner() {
         return (state, alt) -> { };
     }
-
-    @Override
-    protected final StrategyUpdate<DecisionAlternative_NONE> updater() {
-        return (state, alt) -> {
-            //updates
-            try { 
-                update(state);
-            } catch (ThreadStackEmptyException e) {
-                //this should never happen
-                failExecution(e);
-            }
-        };
-    }
-
-    protected abstract void update(State state)
-    throws ThreadStackEmptyException, ClasspathException,
-    CannotManageStateException, DecisionException, 
-    ContradictionException, FailureException, InterruptException;
 
     @Override
     protected Supplier<Boolean> isProgramCounterUpdateAnOffset() {

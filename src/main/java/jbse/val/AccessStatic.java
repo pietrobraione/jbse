@@ -1,5 +1,7 @@
 package jbse.val;
 
+import jbse.bc.ClassFile;
+
 /**
  * An access to the static method area for a class.
  * 
@@ -7,19 +9,19 @@ package jbse.val;
  *
  */
 public final class AccessStatic extends AccessRoot {
-    private final String className;
+    private final ClassFile classFile;
     private final String toString;
     private final int hashCode;
 
-    public AccessStatic(String className) {
-        this.className = className;
-        this.toString = "[" + className.replace('/', '.').replace('$', '.') + "]";
+    public AccessStatic(ClassFile classFile) {
+        this.classFile = classFile;
+        this.toString = "[" + classFile.getClassName().replace('/', '.').replace('$', '.') + "]";
         final int prime = 7331;
-        this.hashCode = prime + ((this.className == null) ? 0 : this.className.hashCode());
+        this.hashCode = prime + ((this.classFile == null) ? 0 : this.classFile.hashCode());
     }
     
-    public String className() {
-        return this.className;
+    public ClassFile classFile() {
+        return this.classFile;
     }
 
     @Override
@@ -34,11 +36,11 @@ public final class AccessStatic extends AccessRoot {
             return false;
         }
         final AccessStatic other = (AccessStatic) obj;
-        if (this.className == null) {
-            if (other.className != null) {
+        if (this.classFile == null) {
+            if (other.classFile != null) {
                 return false;
             }
-        } else if (!this.className.equals(other.className)) {
+        } else if (!this.classFile.equals(other.classFile)) {
             return false;
         }
         return true;

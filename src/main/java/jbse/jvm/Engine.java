@@ -9,13 +9,14 @@ import jbse.algo.ExecutionContext;
 import jbse.algo.Action;
 import jbse.algo.Algo_INIT;
 import jbse.algo.exc.CannotManageStateException;
+import jbse.algo.exc.NotYetImplementedException;
 import jbse.bc.Opcodes;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionBacktrackException;
 import jbse.dec.exc.DecisionException;
-import jbse.dec.exc.InvalidInputException;
 import jbse.jvm.exc.CannotBacktrackException;
 import jbse.jvm.exc.EngineStuckException;
 import jbse.jvm.exc.FailureException;
@@ -136,7 +137,6 @@ public class Engine implements AutoCloseable {
      * @throws InitializationException in case the specified root method 
      *         does not exist or cannot be symbolically executed for 
      *         any reason (e.g., is native).
-     * @throws ThreadStackEmptyException 
      * @throws InvalidClassFileFactoryClassException in case the class object 
      *         provided to build a class file factory cannot be used
      *         (e.g., it has not a suitable constructor or it is not visible).
@@ -144,12 +144,16 @@ public class Engine implements AutoCloseable {
      *         observed variable names cannot be observed. This is the only exception
      *         that allows nevertheless to perform symbolic execution, in which case 
      *         only the observers to existing variables will be notified.
-     * @throws ClasspathException 
+     * @throws ClasspathException in case some essential standard JRE class is missing
+     *         from the bootstrap classpath, or is ill-formed, or cannot access one of its
+     *         superclasses/superinterfaces.
+     * @throws NotYetImplementedException if the trigger methods for the initial root 
+     *         object expansion (when present) are not in the root class.
      */
     void init() 
     throws DecisionException, InitializationException, 
     InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, 
-    ClasspathException {
+    ClasspathException, NotYetImplementedException {
         //executes the initial state setup step
         final Algo_INIT algo = this.ctx.dispatcher.select();
         algo.exec(this.ctx);
@@ -256,10 +260,10 @@ public class Engine implements AutoCloseable {
                 continuationCounters.push(continuationCounter);
                 continuationCounter = 0;
             } catch (ClasspathException | CannotManageStateException | 
-                     ThreadStackEmptyException |  ContradictionException | 
+                     ThreadStackEmptyException | ContradictionException | 
                      DecisionException | FailureException | 
                      UnexpectedInternalException e) {
-                this.stopCurrentTrace();
+                stopCurrentTrace();
                 throw e;
             } 
         } while (!continuations.isEmpty() && continuationCounter < continuations.peek().length);

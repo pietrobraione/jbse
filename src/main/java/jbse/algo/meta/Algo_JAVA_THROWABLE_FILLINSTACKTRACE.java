@@ -1,6 +1,6 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.ensureClassCreatedAndInitialized;
+import static jbse.algo.Util.ensureClassInitialized;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.fillExceptionBacktrace;
@@ -14,14 +14,19 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.CannotManageStateException;
-import jbse.bc.exc.BadClassFileException;
+import jbse.bc.ClassFile;
+import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
-import jbse.dec.exc.InvalidInputException;
 import jbse.mem.State;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
 /**
@@ -38,30 +43,33 @@ public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE extends Algo_INVOKEMETA_
     @Override
     protected void cookMore(State state)
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
-    CannotManageStateException, InterruptException {
+    CannotManageStateException, InterruptException, InvalidInputException {
         try {
-            ensureClassCreatedAndInitialized(state, JAVA_STRING, this.ctx);
-            ensureClassCreatedAndInitialized(state, JAVA_THROWABLE, this.ctx);
+            final ClassFile cf_JAVA_STRING = state.getClassHierarchy().loadCreateClass(JAVA_STRING);
+            ensureClassInitialized(state, cf_JAVA_STRING, this.ctx);
+            final ClassFile cf_JAVA_THROWABLE = state.getClassHierarchy().loadCreateClass(JAVA_THROWABLE);
+            ensureClassInitialized(state, cf_JAVA_THROWABLE, this.ctx);
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
-        } catch (BadClassFileException e) {
-            throw new ClasspathException(e);
-        } catch (InvalidInputException e) {
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
+                 ClassFileNotAccessibleException e) {
             //this should never happen
             failExecution(e);
         }
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException, InterruptException {
-        try {
-            final Reference excReference = (Reference) this.data.operand(0);
-            fillExceptionBacktrace(state, excReference);
-            state.pushOperand(excReference); //returns "this"
-        } catch (ClassCastException e) {
-            throwVerifyError(state);
-            exitFromAlgorithm();
-        }
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            try {
+                final Reference excReference = (Reference) this.data.operand(0);
+                fillExceptionBacktrace(state, excReference);
+                state.pushOperand(excReference); //returns "this"
+            } catch (ClassCastException e) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            }
+        };
     }
 }

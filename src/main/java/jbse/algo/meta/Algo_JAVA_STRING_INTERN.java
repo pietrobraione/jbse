@@ -10,12 +10,13 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
 import jbse.mem.exc.HeapMemoryExhaustedException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
 /**
@@ -56,7 +57,9 @@ public final class Algo_JAVA_STRING_INTERN extends Algo_INVOKEMETA_Nonbranching 
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        state.pushOperand(state.referenceToStringLiteral(this.valueString));
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.pushOperand(state.referenceToStringLiteral(this.valueString));
+        };
     }
 }

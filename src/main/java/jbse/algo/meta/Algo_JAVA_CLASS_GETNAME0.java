@@ -11,10 +11,13 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
+import jbse.common.exc.ClasspathException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
 /**
@@ -32,7 +35,7 @@ public final class Algo_JAVA_CLASS_GETNAME0 extends Algo_INVOKEMETA_Nonbranching
 
     @Override
     protected void cookMore(State state)
-    throws ThreadStackEmptyException, InterruptException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException {
         try {
             //gets the 'this' java.lang.Class instance from the heap 
             //and the classfile of the class it represents
@@ -47,7 +50,7 @@ public final class Algo_JAVA_CLASS_GETNAME0 extends Algo_INVOKEMETA_Nonbranching
                 //this should never happen
                 failExecution("The 'this' parameter to java.lang.Class.getName0v method is symbolic and unresolved.");
             }
-            final String className = binaryClassName(clazz.representedClass()); //note that binaryClassName(x) == x if x is the canonical name of a primitive type
+            final String className = binaryClassName(clazz.representedClass().getClassName()); //note that binaryClassName(x) == x if x is the canonical name of a primitive type
             state.ensureStringLiteral(className);
             this.refClassName = state.referenceToStringLiteral(className);
         } catch (HeapMemoryExhaustedException e) {
@@ -60,7 +63,9 @@ public final class Algo_JAVA_CLASS_GETNAME0 extends Algo_INVOKEMETA_Nonbranching
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        state.pushOperand(this.refClassName);
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.pushOperand(this.refClassName);
+        };
     }
 }

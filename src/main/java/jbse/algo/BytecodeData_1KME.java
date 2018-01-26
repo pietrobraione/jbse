@@ -2,6 +2,7 @@ package jbse.algo;
 
 import java.util.function.Supplier;
 
+import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
 
 /**
@@ -19,7 +20,7 @@ public final class BytecodeData_1KME extends BytecodeData {
     private final Kind kind;
 
     @Override
-    protected void readImmediates(State state) throws InterruptException {
+    protected void readImmediates(State state) throws InterruptException, ClasspathException {
         readImmediateUnsignedWord(state, 1);
         switch (kind) {
         case NONINTERFACE:

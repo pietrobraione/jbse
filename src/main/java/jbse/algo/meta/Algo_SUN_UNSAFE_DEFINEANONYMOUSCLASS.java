@@ -23,6 +23,7 @@ import java.util.function.Supplier;
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.ConstantPoolObject;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.ClassFile;
 import jbse.bc.ConstantPoolClass;
@@ -30,10 +31,10 @@ import jbse.bc.ConstantPoolPrimitive;
 import jbse.bc.ConstantPoolString;
 import jbse.bc.ConstantPoolUtf8;
 import jbse.bc.ConstantPoolValue;
-import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileIllFormedException;
-import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.InvalidIndexException;
+import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Array;
 import jbse.mem.Array.AccessOutcomeInValue;
@@ -42,7 +43,7 @@ import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 import jbse.val.Simplex;
 import jbse.val.exc.InvalidOperandException;
@@ -54,7 +55,7 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  */
 public final class Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS extends Algo_INVOKEMETA_Nonbranching {
-    private String hostClass; //set by cookMore
+    private ClassFile hostClass; //set by cookMore
     private byte[] bytecode; //set by cookMore
     private ClassFile cfAnonymousDummy; //set by cookMore
     private ConstantPoolValue[] cpPatches;  //set by cookMore
@@ -66,7 +67,7 @@ public final class Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS extends Algo_INVOKEMETA_
     
     @Override
     protected void cookMore(State state) 
-    throws SymbolicValueNotAllowedException, InterruptException {
+    throws SymbolicValueNotAllowedException, InterruptException, ClasspathException {
         try {
             //gets the name of the host class
             final Reference refClassHost = (Reference) this.data.operand(1);
@@ -98,21 +99,22 @@ public final class Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS extends Algo_INVOKEMETA_
             }
             
             //creates the dummy anonymous classfile
-            this.cfAnonymousDummy = state.getClassHierarchy().createClassFileAnonymous(this.bytecode);
+            this.cfAnonymousDummy = state.getClassHierarchy().createClassFileAnonymousDummy(this.bytecode);
             
             //gets the constant pool patches
             final Reference refCpPatches = (Reference) this.data.operand(3);
             this.cpPatches = patches(state, refCpPatches);
             
             //let's push the right assumption
-            state.assumeClassNotInitialized(this.cfAnonymousDummy.getClassName());
-        } catch (BadClassFileException e) {
+            state.assumeClassNotInitialized(this.cfAnonymousDummy);
+        } catch (ClassFileIllFormedException e) {
             throwNew(state, CLASS_FORMAT_ERROR); //this is the behaviour of Hotspot
             exitFromAlgorithm();
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (InvalidOperandException | InvalidTypeException | FastArrayAccessNotAllowedException e) {
+        } catch (InvalidOperandException | InvalidTypeException | 
+                 FastArrayAccessNotAllowedException | InvalidInputException e) {
             //this should never happen
             failExecution(e);
         }
@@ -159,7 +161,7 @@ public final class Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS extends Algo_INVOKEMETA_
                         retVal[i] = new ConstantPoolUtf8(value);
                     } else if (cpEntry instanceof ConstantPoolClass) {
                         final Instance_JAVA_CLASS _oJavaClass = (Instance_JAVA_CLASS) _o;
-                        final String value = _oJavaClass.representedClass();
+                        final String value = _oJavaClass.representedClass().getClassName();
                         retVal[i] = new ConstantPoolClass(value);
                     } else if (cpEntry instanceof ConstantPoolString) {
                         retVal[i] = new ConstantPoolObject(_r);
@@ -175,17 +177,16 @@ public final class Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS extends Algo_INVOKEMETA_
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException, InterruptException {
-        try {
-            final ClassFile cfAnonymous = state.getClassHierarchy().addClassFileAnonymous(this.cfAnonymousDummy, this.hostClass, this.cpPatches);
-            state.ensureInstance_JAVA_CLASS(cfAnonymous.getClassName(), cfAnonymous.getClassName());
-            state.pushOperand(state.referenceToInstance_JAVA_CLASS(cfAnonymous.getClassName()));
-        } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
-            exitFromAlgorithm();
-        } catch (BadClassFileException | ClassFileNotAccessibleException e) {
-            //this should never happen now
-            failExecution(e);
-        }
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            try {
+                final ClassFile cfAnonymous = state.getClassHierarchy().addClassFileAnonymous(this.cfAnonymousDummy, this.hostClass, this.cpPatches);
+                state.ensureInstance_JAVA_CLASS(cfAnonymous);
+                state.pushOperand(state.referenceToInstance_JAVA_CLASS(cfAnonymous));
+            } catch (HeapMemoryExhaustedException e) {
+                throwNew(state, OUT_OF_MEMORY_ERROR);
+                exitFromAlgorithm();
+            }
+        };
     }
 }

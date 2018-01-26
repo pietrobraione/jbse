@@ -243,7 +243,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 this.s.append("    @Test\n");
             } else {
                 this.s.append("    @Test(expected=");
-                this.s.append(javaClass(finalState.getObject(exception).getType()));
+                this.s.append(javaClass(finalState.getObject(exception).getType().getClassName()));
                 this.s.append(".class)\n");
             }
             this.s.append("    public void test");
@@ -326,7 +326,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                         if (finalState.isNull(returnedRef)) {
                             this.s.append("java.lang.Object");
                         } else {
-                            this.s.append(javaClass(finalState.getObject(returnedRef).getType()));
+                            this.s.append(javaClass(finalState.getObject(returnedRef).getType().getClassName()));
                         }
                     }
                     this.s.append(" __returnedValue = ");
@@ -588,7 +588,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
         private static String getTypeOfObjectInHeap(State finalState, long num) {
             final Map<Long, Objekt> heap = finalState.getHeap();
             final Objekt o = heap.get(num);
-            return o.getType();
+            return o.getType().getClassName();
         }
 
         private String getOriginOfObjectInHeap(State finalState, long heapPos){

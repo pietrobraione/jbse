@@ -7,9 +7,12 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
+import jbse.common.exc.ClasspathException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 
@@ -19,24 +22,32 @@ import jbse.val.Reference;
  * @author Pietro Braione
  */
 public final class Algo_JAVA_OBJECT_HASHCODE extends Algo_INVOKEMETA_Nonbranching {
+    private Primitive hashCode; //set by cookMore
+    
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 1;
     }
-
+    
     @Override
-    protected void update(State state) 
-    throws ThreadStackEmptyException, InterruptException {
+    protected void cookMore(State state) 
+    throws ThreadStackEmptyException, InterruptException, ClasspathException {
         try {
             final Reference thisReference = (Reference) this.data.operand(0);
             final Objekt thisObjekt = state.getObject(thisReference);
 
             //gets the hash code stored in the objekt and returns it
-            final Primitive hashCode = thisObjekt.getObjektDefaultHashCode();
-            state.pushOperand(hashCode);
+            this.hashCode = thisObjekt.getObjektDefaultHashCode();
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
         }
+    }
+
+    @Override
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.pushOperand(this.hashCode);
+        };
     }
 }

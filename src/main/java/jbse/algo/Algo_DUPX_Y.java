@@ -7,6 +7,7 @@ import static jbse.common.Type.isCat_1;
 
 import java.util.function.Supplier;
 
+import jbse.common.exc.ClasspathException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.mem.State;
 import jbse.mem.exc.InvalidNumberOfOperandsException;
@@ -132,7 +133,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     private static void dup_x2_form1(State state, Value value1, Value value2) 
-    throws ThreadStackEmptyException, InterruptException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException {
         //we need a third cat1 operand
         try {
             final Value value3 = state.popOperand();
@@ -158,7 +159,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     private static void dup2_x1_form1(State state, Value value1, Value value2) 
-    throws ThreadStackEmptyException, InterruptException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException {
         //we need a third cat1 operand
         try {
             final Value value3 = state.popOperand();
@@ -185,7 +186,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     private static void dup2_x2_form1Or3(State state, Value value1, Value value2) 
-    throws ThreadStackEmptyException, InterruptException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException {
         //we need a third operand, that also allows us
         //to decide the form
         try {
@@ -202,7 +203,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     private static void dup2_x2_form1(State state, Value value1, Value value2, Value value3) 
-    throws ThreadStackEmptyException, InterruptException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException {
         try {
             //we need a fourth cat1 operand
             final Value value4 = state.popOperand();
@@ -223,7 +224,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     private static void dup2_x2_form2(State state, Value value1, Value value2) 
-    throws ThreadStackEmptyException, InterruptException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException {
         //we need a third cat1 operand
         try {
             final Value value3 = state.popOperand();

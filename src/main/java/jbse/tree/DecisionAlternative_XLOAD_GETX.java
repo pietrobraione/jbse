@@ -8,30 +8,35 @@ package jbse.tree;
  */
 public abstract class DecisionAlternative_XLOAD_GETX 
 implements DecisionAlternative_XYLOAD_GETX_Loads {
-	protected static final String ALT_CODE = "XLOAD_GETX";
-	
-	private final String branchId;
-	private final int branchNumber;
-	
-	public DecisionAlternative_XLOAD_GETX(String branchId, int branchNumber) {
-		this.branchId = branchId;
-		this.branchNumber = branchNumber;
-	}
-	
-	public abstract void accept(VisitorDecisionAlternative_XLOAD_GETX v) throws Exception;
+    protected static final String ALT_CODE = "XLOAD_GETX";
 
-	@Override
-	public final String getIdentifier() {
-		return this.branchId;
-	}
-	
-	@Override
-	public final int getBranchNumber() {
-		return this.branchNumber;
-	}
-    
+    private final String branchId;
+    private final int branchNumber;
+
+    public DecisionAlternative_XLOAD_GETX(String branchId, int branchNumber) {
+        this.branchId = branchId;
+        this.branchNumber = branchNumber;
+    }
+
+    public abstract void accept(VisitorDecisionAlternative_XLOAD_GETX v) throws Exception;
+
+    @Override
+    public final String getIdentifier() {
+        return this.branchId;
+    }
+
+    @Override
+    public final int getBranchNumber() {
+        return this.branchNumber;
+    }
+
     @Override
     public final boolean noDecision() {
         return false;
+    }
+    
+    @Override
+    public final String toString() {
+        return this.branchId;
     }
 }

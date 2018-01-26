@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.Algorithm;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.bc.Signature;
 import jbse.common.exc.ClasspathException;
@@ -17,6 +18,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.mem.Instance;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 
@@ -53,11 +55,13 @@ public final class Algo_noclass_STORELINKEDMETHODANDAPPENDIX extends Algo_INVOKE
             //this should never happen
             failExecution("Unexpected null value while trying to store in the state the linked invoker/appendix for a signature polymorphic method.");
         }
-        this.methodSignature = new Signature(JAVA_METHODHANDLE, methodDescriptor, methodName);
+        this.methodSignature = new Signature(JAVA_METHODHANDLE, methodDescriptor, methodName); //note that the invoke and invokeExact method are both in java.lang.invoke.MethodHandle
     }
     
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        state.link(this.methodSignature, (ReferenceConcrete) this.data.operand(3), (ReferenceConcrete) this.data.operand(2));
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.link(this.methodSignature, (ReferenceConcrete) this.data.operand(3), (ReferenceConcrete) this.data.operand(2));
+        };
     }
 }

@@ -8,6 +8,7 @@ import static jbse.mem.Util.areNotAlias;
 
 import jbse.algo.InterruptException;
 import jbse.algo.exc.CannotManageStateException;
+import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
 import jbse.val.Reference;
 import jbse.val.Value;
@@ -24,7 +25,7 @@ public final class Algo_SUN_UNSAFE_COMPAREANDSWAPOBJECT extends Algo_SUN_UNSAFE_
 
     @Override
     protected boolean checkCompare(State state, Value current, Value toCompare) 
-    throws CannotManageStateException, InterruptException {
+    throws CannotManageStateException, InterruptException, ClasspathException {
         try {
             final Reference refCurrent = (Reference) current;
             final Reference refToCompare = (Reference) toCompare;

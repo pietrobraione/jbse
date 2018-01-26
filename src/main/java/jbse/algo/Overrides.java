@@ -32,80 +32,91 @@ import jbse.bc.Signature;
  */
 public final class Overrides {
     //Overriding meta-level implementations of standard methods
-    public static final String ALGO_INVOKEMETA_PURE                     = internalClassName(jbse.algo.Algo_INVOKEMETA_Pure.class.getCanonicalName());
-    public static final String ALGO_JAVA_CLASS_FORNAME0                 = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_FORNAME0.class.getCanonicalName());
-    public static final String ALGO_JAVA_CLASS_GETCOMPONENTTYPE         = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETCOMPONENTTYPE.class.getCanonicalName());
-    public static final String ALGO_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0.class.getCanonicalName());
-    public static final String ALGO_JAVA_CLASS_GETDECLAREDFIELDS0       = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETDECLAREDFIELDS0.class.getCanonicalName());
-    public static final String ALGO_JAVA_CLASS_GETDECLARINGCLASS0       = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETDECLARINGCLASS0.class.getCanonicalName());
-    public static final String ALGO_JAVA_CLASS_GETENCLOSINGMETHOD0      = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETENCLOSINGMETHOD0.class.getCanonicalName());
-    public static final String ALGO_JAVA_CLASS_GETMODIFIERS             = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETMODIFIERS.class.getCanonicalName());
-    public static final String ALGO_JAVA_CLASS_GETNAME0                 = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETNAME0.class.getCanonicalName());
-    public static final String ALGO_JAVA_CLASS_GETPRIMITIVECLASS        = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETPRIMITIVECLASS.class.getCanonicalName());
-    public static final String ALGO_JAVA_CLASS_GETSUPERCLASS            = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETSUPERCLASS.class.getCanonicalName());
-    public static final String ALGO_JAVA_CLASS_ISARRAY                  = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISARRAY.class.getCanonicalName());
-    public static final String ALGO_JAVA_CLASS_ISASSIGNABLEFROM         = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISASSIGNABLEFROM.class.getCanonicalName());
-    public static final String ALGO_JAVA_CLASS_ISINSTANCE               = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISINSTANCE.class.getCanonicalName());
-    public static final String ALGO_JAVA_CLASS_ISINTERFACE              = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISINTERFACE.class.getCanonicalName());
-    public static final String ALGO_JAVA_CLASS_ISPRIMITIVE              = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISPRIMITIVE.class.getCanonicalName());
-    public static final String ALGO_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD = internalClassName(jbse.algo.meta.Algo_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD.class.getCanonicalName());
-    public static final String ALGO_JAVA_METHODHANDLENATIVES_RESOLVE    = internalClassName(jbse.algo.meta.Algo_JAVA_METHODHANDLENATIVES_RESOLVE.class.getCanonicalName());
-    public static final String ALGO_JAVA_OBJECT_CLONE                   = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_CLONE.class.getCanonicalName());
-    public static final String ALGO_JAVA_OBJECT_GETCLASS                = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_GETCLASS.class.getCanonicalName());
-    public static final String ALGO_JAVA_OBJECT_HASHCODE                = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_HASHCODE.class.getCanonicalName());
-    public static final String ALGO_JAVA_REFLECT_ARRAY_NEWARRAY         = internalClassName(jbse.algo.meta.Algo_JAVA_REFLECT_ARRAY_NEWARRAY.class.getCanonicalName());
-    public static final String ALGO_JAVA_STRING_HASHCODE                = internalClassName(jbse.algo.meta.Algo_JAVA_STRING_HASHCODE.class.getCanonicalName());
-    public static final String ALGO_JAVA_STRING_INTERN                  = internalClassName(jbse.algo.meta.Algo_JAVA_STRING_INTERN.class.getCanonicalName());
-    public static final String ALGO_JAVA_STRINGBUILDER_APPEND           = internalClassName(jbse.algo.meta.Algo_JAVA_STRINGBUILDER_APPEND.class.getCanonicalName());
-    public static final String ALGO_JAVA_SYSTEM_ARRAYCOPY               = internalClassName(jbse.algo.meta.Algo_JAVA_SYSTEM_ARRAYCOPY.class.getCanonicalName());
-    public static final String ALGO_JAVA_SYSTEM_IDENTITYHASHCODE        = internalClassName(jbse.algo.meta.Algo_JAVA_SYSTEM_IDENTITYHASHCODE.class.getCanonicalName());
-    public static final String ALGO_JAVA_SYSTEM_MAPLIBRARYNAME          = internalClassName(jbse.algo.meta.Algo_JAVA_SYSTEM_MAPLIBRARYNAME.class.getCanonicalName());
-    public static final String ALGO_JAVA_SYSTEM_SETERR0                 = internalClassName(jbse.algo.meta.Algo_JAVA_SYSTEM_SETERR0.class.getCanonicalName());
-    public static final String ALGO_JAVA_SYSTEM_SETIN0                  = internalClassName(jbse.algo.meta.Algo_JAVA_SYSTEM_SETIN0.class.getCanonicalName());
-    public static final String ALGO_JAVA_SYSTEM_SETOUT0                 = internalClassName(jbse.algo.meta.Algo_JAVA_SYSTEM_SETOUT0.class.getCanonicalName());
-    public static final String ALGO_JAVA_THREAD_CURRENTTHREAD           = internalClassName(jbse.algo.meta.Algo_JAVA_THREAD_CURRENTTHREAD.class.getCanonicalName());
-    public static final String ALGO_JAVA_THROWABLE_FILLINSTACKTRACE     = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_FILLINSTACKTRACE.class.getCanonicalName());
-    public static final String ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH   = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH.class.getCanonicalName());
-    public static final String ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT.class.getCanonicalName());
-    public static final String ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 = internalClassName(jbse.algo.meta.Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0.class.getCanonicalName());
-    public static final String ALGO_SUN_REFLECTION_GETCALLERCLASS       = internalClassName(jbse.algo.meta.Algo_SUN_REFLECTION_GETCALLERCLASS.class.getCanonicalName());
-    public static final String ALGO_SUN_REFLECTION_GETCLASSACCESSFLAGS  = internalClassName(jbse.algo.meta.Algo_SUN_REFLECTION_GETCLASSACCESSFLAGS.class.getCanonicalName());
-    public static final String ALGO_SUN_UNSAFE_ALLOCATEMEMORY           = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_ALLOCATEMEMORY.class.getCanonicalName());
-    public static final String ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET        = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_OBJECTFIELDOFFSET.class.getCanonicalName());
-    public static final String ALGO_SUN_UNSAFE_COMPAREANDSWAPINT        = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_COMPAREANDSWAPINT.class.getCanonicalName());
-    public static final String ALGO_SUN_UNSAFE_COMPAREANDSWAPLONG       = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_COMPAREANDSWAPLONG.class.getCanonicalName());
-    public static final String ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT     = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_COMPAREANDSWAPOBJECT.class.getCanonicalName());
-    public static final String ALGO_SUN_UNSAFE_DEFINEANONYMOUSCLASS     = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS.class.getCanonicalName());
-    public static final String ALGO_SUN_UNSAFE_ENSURECLASSINITIALIZED   = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_ENSURECLASSINITIALIZED.class.getCanonicalName());
-    public static final String ALGO_SUN_UNSAFE_FREEMEMORY               = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_FREEMEMORY.class.getCanonicalName());
-    public static final String ALGO_SUN_UNSAFE_GETBYTE                  = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETBYTE.class.getCanonicalName());
-    public static final String ALGO_SUN_UNSAFE_GETINTVOLATILE           = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETINTVOLATILE.class.getCanonicalName());
-    public static final String ALGO_SUN_UNSAFE_GETLONG                  = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETLONG.class.getCanonicalName());
-    public static final String ALGO_SUN_UNSAFE_GETOBJECTVOLATILE        = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETOBJECTVOLATILE.class.getCanonicalName());
-    public static final String ALGO_SUN_UNSAFE_PUTLONG                  = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_PUTLONG.class.getCanonicalName());
-    public static final String ALGO_SUN_UNSAFE_PUTOBJECTVOLATILE        = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_PUTOBJECTVOLATILE.class.getCanonicalName());
-    public static final String ALGO_SUN_UNSAFE_SHOULDBEINITIALIZED      = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_SHOULDBEINITIALIZED.class.getCanonicalName());
+    public static final String ALGO_INVOKEMETA_PURE                                = internalClassName(jbse.algo.Algo_INVOKEMETA_Pure.class.getName());
+    public static final String ALGO_JAVA_CLASS_FORNAME0                            = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_FORNAME0.class.getName());
+    public static final String ALGO_JAVA_CLASS_GETCOMPONENTTYPE                    = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETCOMPONENTTYPE.class.getName());
+    public static final String ALGO_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0            = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0.class.getName());
+    public static final String ALGO_JAVA_CLASS_GETDECLAREDFIELDS0                  = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETDECLAREDFIELDS0.class.getName());
+    public static final String ALGO_JAVA_CLASS_GETDECLARINGCLASS0                  = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETDECLARINGCLASS0.class.getName());
+    public static final String ALGO_JAVA_CLASS_GETENCLOSINGMETHOD0                 = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETENCLOSINGMETHOD0.class.getName());
+    public static final String ALGO_JAVA_CLASS_GETMODIFIERS                        = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETMODIFIERS.class.getName());
+    public static final String ALGO_JAVA_CLASS_GETNAME0                            = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETNAME0.class.getName());
+    public static final String ALGO_JAVA_CLASS_GETPRIMITIVECLASS                   = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETPRIMITIVECLASS.class.getName());
+    public static final String ALGO_JAVA_CLASS_GETSUPERCLASS                       = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETSUPERCLASS.class.getName());
+    public static final String ALGO_JAVA_CLASS_ISARRAY                             = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISARRAY.class.getName());
+    public static final String ALGO_JAVA_CLASS_ISASSIGNABLEFROM                    = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISASSIGNABLEFROM.class.getName());
+    public static final String ALGO_JAVA_CLASS_ISINSTANCE                          = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISINSTANCE.class.getName());
+    public static final String ALGO_JAVA_CLASS_ISINTERFACE                         = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISINTERFACE.class.getName());
+    public static final String ALGO_JAVA_CLASS_ISPRIMITIVE                         = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISPRIMITIVE.class.getName());
+    public static final String ALGO_JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS            = internalClassName(jbse.algo.meta.Algo_JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS.class.getName());
+    public static final String ALGO_JAVA_CLASSLOADER_FINDLOADEDCLASS0              = internalClassName(jbse.algo.meta.Algo_JAVA_CLASSLOADER_FINDLOADEDCLASS0.class.getName());
+    public static final String ALGO_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD            = internalClassName(jbse.algo.meta.Algo_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD.class.getName());
+    public static final String ALGO_JAVA_METHODHANDLENATIVES_RESOLVE               = internalClassName(jbse.algo.meta.Algo_JAVA_METHODHANDLENATIVES_RESOLVE.class.getName());
+    public static final String ALGO_JAVA_OBJECT_CLONE                              = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_CLONE.class.getName());
+    public static final String ALGO_JAVA_OBJECT_GETCLASS                           = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_GETCLASS.class.getName());
+    public static final String ALGO_JAVA_OBJECT_HASHCODE                           = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_HASHCODE.class.getName());
+    public static final String ALGO_JAVA_REFLECT_ARRAY_NEWARRAY                    = internalClassName(jbse.algo.meta.Algo_JAVA_REFLECT_ARRAY_NEWARRAY.class.getName());
+    public static final String ALGO_JAVA_STRING_HASHCODE                           = internalClassName(jbse.algo.meta.Algo_JAVA_STRING_HASHCODE.class.getName());
+    public static final String ALGO_JAVA_STRING_INTERN                             = internalClassName(jbse.algo.meta.Algo_JAVA_STRING_INTERN.class.getName());
+    public static final String ALGO_JAVA_STRINGBUILDER_APPEND                      = internalClassName(jbse.algo.meta.Algo_JAVA_STRINGBUILDER_APPEND.class.getName());
+    public static final String ALGO_JAVA_SYSTEM_ARRAYCOPY                          = internalClassName(jbse.algo.meta.Algo_JAVA_SYSTEM_ARRAYCOPY.class.getName());
+    public static final String ALGO_JAVA_SYSTEM_IDENTITYHASHCODE                   = internalClassName(jbse.algo.meta.Algo_JAVA_SYSTEM_IDENTITYHASHCODE.class.getName());
+    public static final String ALGO_JAVA_SYSTEM_MAPLIBRARYNAME                     = internalClassName(jbse.algo.meta.Algo_JAVA_SYSTEM_MAPLIBRARYNAME.class.getName());
+    public static final String ALGO_JAVA_SYSTEM_SETERR0                            = internalClassName(jbse.algo.meta.Algo_JAVA_SYSTEM_SETERR0.class.getName());
+    public static final String ALGO_JAVA_SYSTEM_SETIN0                             = internalClassName(jbse.algo.meta.Algo_JAVA_SYSTEM_SETIN0.class.getName());
+    public static final String ALGO_JAVA_SYSTEM_SETOUT0                            = internalClassName(jbse.algo.meta.Algo_JAVA_SYSTEM_SETOUT0.class.getName());
+    public static final String ALGO_JAVA_THREAD_CURRENTTHREAD                      = internalClassName(jbse.algo.meta.Algo_JAVA_THREAD_CURRENTTHREAD.class.getName());
+    public static final String ALGO_JAVA_THROWABLE_FILLINSTACKTRACE                = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_FILLINSTACKTRACE.class.getName());
+    public static final String ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH              = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH.class.getName());
+    public static final String ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT            = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT.class.getName());
+    public static final String ALGO_JAVA_UNIXFILESYSTEM_GETBOOLEANATTRIBUTES0      = internalClassName(jbse.algo.meta.Algo_JAVA_UNIXFILESYSTEM_GETBOOLEANATTRIBUTES0.class.getName());
+    public static final String ALGO_JAVA_WINNTFILESYSTEM_GETBOOLEANATTRIBUTES      = internalClassName(jbse.algo.meta.Algo_JAVA_WINNTFILESYSTEM_GETBOOLEANATTRIBUTES.class.getName());
+    public static final String ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 = internalClassName(jbse.algo.meta.Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0.class.getName());
+    public static final String ALGO_SUN_REFLECTION_GETCALLERCLASS                  = internalClassName(jbse.algo.meta.Algo_SUN_REFLECTION_GETCALLERCLASS.class.getName());
+    public static final String ALGO_SUN_REFLECTION_GETCLASSACCESSFLAGS             = internalClassName(jbse.algo.meta.Algo_SUN_REFLECTION_GETCLASSACCESSFLAGS.class.getName());
+    public static final String ALGO_SUN_UNSAFE_ALLOCATEMEMORY                      = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_ALLOCATEMEMORY.class.getName());
+    public static final String ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET                   = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_OBJECTFIELDOFFSET.class.getName());
+    public static final String ALGO_SUN_UNSAFE_COMPAREANDSWAPINT                   = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_COMPAREANDSWAPINT.class.getName());
+    public static final String ALGO_SUN_UNSAFE_COMPAREANDSWAPLONG                  = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_COMPAREANDSWAPLONG.class.getName());
+    public static final String ALGO_SUN_UNSAFE_COMPAREANDSWAPOBJECT                = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_COMPAREANDSWAPOBJECT.class.getName());
+    public static final String ALGO_SUN_UNSAFE_DEFINEANONYMOUSCLASS                = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS.class.getName());
+    public static final String ALGO_SUN_UNSAFE_ENSURECLASSINITIALIZED              = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_ENSURECLASSINITIALIZED.class.getName());
+    public static final String ALGO_SUN_UNSAFE_FREEMEMORY                          = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_FREEMEMORY.class.getName());
+    public static final String ALGO_SUN_UNSAFE_GETBYTE                             = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETBYTE.class.getName());
+    public static final String ALGO_SUN_UNSAFE_GETINTVOLATILE                      = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETINTVOLATILE.class.getName());
+    public static final String ALGO_SUN_UNSAFE_GETLONG                             = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETLONG.class.getName());
+    public static final String ALGO_SUN_UNSAFE_GETOBJECTVOLATILE                   = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_GETOBJECTVOLATILE.class.getName());
+    public static final String ALGO_SUN_UNSAFE_PUTLONG                             = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_PUTLONG.class.getName());
+    public static final String ALGO_SUN_UNSAFE_PUTOBJECTVOLATILE                   = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_PUTOBJECTVOLATILE.class.getName());
+    public static final String ALGO_SUN_UNSAFE_SHOULDBEINITIALIZED                 = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_SHOULDBEINITIALIZED.class.getName());
 
     //Overriding meta-level implementations of jbse.meta.Analysis methods
-    public static final String ALGO_JBSE_ANALYSIS_ANY                       = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ANY.class.getCanonicalName());
-    public static final String ALGO_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED.class.getCanonicalName());
-    public static final String ALGO_JBSE_ANALYSIS_ENDGUIDANCE               = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ENDGUIDANCE.class.getCanonicalName());
-    public static final String ALGO_JBSE_ANALYSIS_FAIL                      = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_FAIL.class.getCanonicalName());
-    public static final String ALGO_JBSE_ANALYSIS_IGNORE                    = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_IGNORE.class.getCanonicalName());
-    public static final String ALGO_JBSE_ANALYSIS_ISRESOLVED                = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ISRESOLVED.class.getCanonicalName());
-    public static final String ALGO_JBSE_ANALYSIS_ISSYMBOLIC                = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ISSYMBOLIC.class.getCanonicalName());
-    public static final String ALGO_JBSE_ANALYSIS_SUCCEED                   = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_SUCCEED.class.getCanonicalName());
-    public static final String ALGO_JBSE_ANALYSIS_SYMBOLNAME                = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_SYMBOLNAME.class.getCanonicalName());
+    public static final String ALGO_JBSE_ANALYSIS_ANY                       = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ANY.class.getName());
+    public static final String ALGO_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED.class.getName());
+    public static final String ALGO_JBSE_ANALYSIS_ENDGUIDANCE               = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ENDGUIDANCE.class.getName());
+    public static final String ALGO_JBSE_ANALYSIS_FAIL                      = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_FAIL.class.getName());
+    public static final String ALGO_JBSE_ANALYSIS_IGNORE                    = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_IGNORE.class.getName());
+    public static final String ALGO_JBSE_ANALYSIS_ISRESOLVED                = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ISRESOLVED.class.getName());
+    public static final String ALGO_JBSE_ANALYSIS_ISSYMBOLIC                = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ISSYMBOLIC.class.getName());
+    public static final String ALGO_JBSE_ANALYSIS_SUCCEED                   = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_SUCCEED.class.getName());
+    public static final String ALGO_JBSE_ANALYSIS_SYMBOLNAME                = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_SYMBOLNAME.class.getName());
+    public static final String ALGO_JBSE_BASE_CLINIT                        = internalClassName(jbse.algo.meta.Algo_JBSE_BASE_CLINIT.class.getName());
 
     //Overriding meta-level implementations of JBSE classless (pseudo)methods
-    public static final String ALGO_noclass_REGISTERMETHODTYPE           = internalClassName(jbse.algo.meta.Algo_noclass_REGISTERMETHODTYPE.class.getCanonicalName());
-    public static final String ALGO_noclass_STORELINKEDMETHODANDAPPENDIX = internalClassName(jbse.algo.meta.Algo_noclass_STORELINKEDMETHODANDAPPENDIX.class.getCanonicalName());
+    public static final String ALGO_noclass_REGISTERLOADEDCLASS          = internalClassName(jbse.algo.meta.Algo_noclass_REGISTERLOADEDCLASS.class.getName());
+    public static final String ALGO_noclass_REGISTERMETHODTYPE           = internalClassName(jbse.algo.meta.Algo_noclass_REGISTERMETHODTYPE.class.getName());
+    public static final String ALGO_noclass_SETSTANDARDCLASSLOADERSREADY = internalClassName(jbse.algo.meta.Algo_noclass_SETSTANDARDCLASSLOADERSREADY.class.getName());
+    public static final String ALGO_noclass_STORELINKEDMETHODANDAPPENDIX = internalClassName(jbse.algo.meta.Algo_noclass_STORELINKEDMETHODANDAPPENDIX.class.getName());
     
     //Overriding base-level implementation of standard methods
-    private static final String JBSE_BASE = internalClassName(jbse.base.Base.class.getCanonicalName());
-    public static final Signature BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION = 
+    private static final String JBSE_BASE = internalClassName(jbse.base.Base.class.getName());
+    public static final Signature BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_1 = 
         new Signature(JBSE_BASE, 
                       "(" + REFERENCE + JAVA_PRIVILEGEDEXCEPTIONACTION + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, 
+                      "base_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION");
+    public static final Signature BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_2 = 
+        new Signature(JBSE_BASE, 
+                      "(" + REFERENCE + JAVA_PRIVILEGEDEXCEPTIONACTION + TYPEEND + REFERENCE + JAVA_ACCESSCONTROLCONTEXT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, 
                       "base_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION");
     public static final Signature BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION = 
         new Signature(JBSE_BASE, 

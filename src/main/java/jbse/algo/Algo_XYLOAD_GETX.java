@@ -6,15 +6,19 @@ import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.common.Type.INT;
-import static jbse.common.Type.isArray;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isPrimitiveOpStack;
 
 import jbse.algo.exc.MissingTriggerParameterException;
+import jbse.algo.exc.NotYetImplementedException;
+import jbse.algo.exc.SymbolicValueNotAllowedException;
+import jbse.bc.ClassFile;
+import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.exc.CannotAssumeSymbolicObjectException;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
@@ -61,19 +65,22 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
     }
 
     protected final void refineRefExpands(State state, DecisionAlternative_XYLOAD_GETX_Expands drc) 
-    throws ContradictionException, InvalidTypeException, InterruptException {
+    throws ContradictionException, InvalidTypeException, InterruptException, 
+    SymbolicValueNotAllowedException, ClasspathException {
         final ReferenceSymbolic referenceToExpand = drc.getValueToLoad();
-        final String classNameOfTargetObject = drc.getClassNameOfTargetObject();
+        final ClassFile classFileOfTargetObject = drc.getClassFileOfTargetObject();
         try {
-            state.assumeExpands(referenceToExpand, classNameOfTargetObject);
+            state.assumeExpands(referenceToExpand, classFileOfTargetObject);
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
+        } catch (CannotAssumeSymbolicObjectException e) {
+            throw new SymbolicValueNotAllowedException(e);
         }
         
         //in the case the expansion object is an array, we assume it 
         //to have nonnegative length
-        if (isArray(classNameOfTargetObject)) {
+        if (classFileOfTargetObject.isArray()) {
             try {
                 final Array targetObject = (Array) state.getObject(referenceToExpand);
                 final Primitive lengthPositive = targetObject.getLength().ge(state.getCalculator().valInt(0));
@@ -88,7 +95,7 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
     protected final void refineRefAliases(State state, DecisionAlternative_XYLOAD_GETX_Aliases altAliases)
     throws ContradictionException {
         final ReferenceSymbolic referenceToResolve = altAliases.getValueToLoad();
-        final long aliasPosition = altAliases.getAliasPosition();
+        final long aliasPosition = altAliases.getObjectPosition();
         final Objekt object = state.getObjectInitial(new ReferenceConcrete(aliasPosition));
         state.assumeAliases(referenceToResolve, aliasPosition, object);
     }
@@ -100,7 +107,8 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
     }
 
     protected final void update(State state, DecisionAlternative_XYLOAD_GETX_Loads altLoads) 
-    throws DecisionException, InterruptException, MissingTriggerParameterException {
+    throws DecisionException, InterruptException, MissingTriggerParameterException, 
+    ClasspathException, NotYetImplementedException {
         //possibly materializes the value
         final Value val = altLoads.getValueToLoad();
         final Value valMaterialized = possiblyMaterialize(state, val);
@@ -145,9 +153,10 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
      * @return a materialized {@link Value}.
      * @throws DecisionException
      * @throws InterruptException 
+     * @throws ClasspathException 
      */
     protected abstract Value possiblyMaterialize(State s, Value val) 
-    throws DecisionException, InterruptException;
+    throws DecisionException, InterruptException, ClasspathException;
 
     @Override
     public final boolean someReferenceNotExpanded() { 

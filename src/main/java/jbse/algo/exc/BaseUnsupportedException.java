@@ -17,4 +17,8 @@ public class BaseUnsupportedException extends CannotManageStateException {
     public BaseUnsupportedException(String param) {
         super(param);
     }
+    
+    public BaseUnsupportedException(Throwable e) {
+        super(e);
+    }
 }

@@ -8,11 +8,10 @@ import java.util.SortedSet;
 import java.util.function.Supplier;
 
 import jbse.algo.exc.CannotManageStateException;
-import jbse.bc.exc.BadClassFileException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
-import jbse.dec.exc.InvalidInputException;
 import jbse.jvm.exc.FailureException;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
@@ -20,6 +19,7 @@ import jbse.mem.exc.InvalidNumberOfOperandsException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative;
+import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -151,20 +151,26 @@ UP extends StrategyUpdate<R>> implements Action {
      * 
      * @param state the {@link State}.
      * @param e the {@link InvalidInputException} thrown.
+     * @throws DecisionException possibly raised if the action uses a 
+     *         decision procedure and the decision procedure fails.
+     * @throws ContradictionException possibly raised if the action execution
+     *         results in no successor states, which happens whenever all the 
+     *         candidate successors (and thus {@code state}) fail to satisfy 
+     *         the execution assumptions. 
+     * @throws ClasspathException possibly raised if some core 
+     *         standard class is missing from the classpath of ill-formed.
+     * @throws CannotManageStateException possibly raised if the 
+     *         action cannot be executed due to limitations of JBSE.
+     * @throws FailureException
+     * @throws ContinuationException if the execution of this action must
+     *         be interrupted, and possibly followed by the execution of another
+     *         action.
      */
-    protected void onInvalidInputException(State state, InvalidInputException e) {
-        failExecution(e);
-    }
-
-    /**
-     * What to do in case of {@link BadClassFileException}.
-     * By default the execution fails
-     * with the {@link BadClassFileException} as cause.
-     * 
-     * @param state the {@link State}.
-     * @param e the {@link BadClassFileException} thrown.
-     */
-    protected void onBadClassFileException(State state, BadClassFileException e) {
+    protected void onInvalidInputException(State state, InvalidInputException e) 
+    throws DecisionException, ContradictionException, 
+    ThreadStackEmptyException, ClasspathException, 
+    CannotManageStateException, FailureException, 
+    ContinuationException {
         failExecution(e);
     }
 
@@ -220,14 +226,12 @@ UP extends StrategyUpdate<R>> implements Action {
             doExec(state);
         } catch (InvalidInputException e) {
             onInvalidInputException(state, e);
-        } catch (BadClassFileException e) {
-            onBadClassFileException(state, e);
         }
     }
 
     private void doExec(State state) 
     throws DecisionException, ContradictionException, 
-    ClasspathException, InvalidInputException, BadClassFileException, 
+    ClasspathException, InvalidInputException, 
     CannotManageStateException, FailureException, 
     ContinuationException {
         if (this.data == null) {
@@ -249,7 +253,16 @@ UP extends StrategyUpdate<R>> implements Action {
 
         //decides the satisfiability of the different alternatives
         final SortedSet<R> decisionResults = this.ctx.mkDecisionResultSet(classDecisionAlternative());     
-        final Outcome outcome = this.decider.decide(state, decisionResults);
+        final Outcome outcome;
+        try {
+            outcome = this.decider.decide(state, decisionResults);
+        } catch (InterruptException e) {
+            if (e.hasContinuation()) {
+                throw new ContinuationException(e.getContinuation());
+            } else {
+                return;
+            }
+        }
 
         //checks if at least one alternative is satisfiable
         final int tot = decisionResults.size();
@@ -284,7 +297,9 @@ UP extends StrategyUpdate<R>> implements Action {
                 this.updater.update(stateCurrent, result);
             } catch (InterruptException e) {
                 interrupt = e;
-            } catch (InvalidTypeException | ThreadStackEmptyException e) {
+            } catch (InvalidInputException | InvalidTypeException | 
+                    InvalidOperandException | ThreadStackEmptyException e) {
+                //this should never happen
                 failExecution(e);
             }
 

@@ -10,10 +10,13 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
-import jbse.bc.ClassHierarchy;
+import jbse.algo.StrategyUpdate;
+import jbse.bc.ClassFile;
+import jbse.common.exc.ClasspathException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 import jbse.val.Simplex;
 
@@ -23,8 +26,7 @@ import jbse.val.Simplex;
  * @author Pietro Braione
  */
 public final class Algo_JAVA_CLASS_ISASSIGNABLEFROM extends Algo_INVOKEMETA_Nonbranching {
-    private String classThis; //set by cookMore
-    private String classOther; //set by cookMore
+    private Simplex valToPush; //set by cookMore
 
     @Override
     protected Supplier<Integer> numOperands() {
@@ -33,7 +35,7 @@ public final class Algo_JAVA_CLASS_ISASSIGNABLEFROM extends Algo_INVOKEMETA_Nonb
 
     @Override
     protected void cookMore(State state)
-    throws ThreadStackEmptyException, InterruptException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException {
         try {
             //gets the 'this' java.lang.Class instance from the heap 
             //and the name of the class it represents
@@ -42,13 +44,12 @@ public final class Algo_JAVA_CLASS_ISASSIGNABLEFROM extends Algo_INVOKEMETA_Nonb
                 //this should never happen
                 failExecution("The 'this' parameter to java.lang.Class.isInstance method is null.");
             }
-            //TODO the next cast fails if javaClassRef is symbolic and expanded to a regular Instance. Handle the case.
             final Instance_JAVA_CLASS javaClassThis = (Instance_JAVA_CLASS) state.getObject(javaClassRefThis);
             if (javaClassThis == null) {
                 //this should never happen
                 failExecution("The 'this' parameter to java.lang.Class.isInstance method is symbolic and unresolved.");
             }
-            this.classThis = javaClassThis.representedClass();
+            final ClassFile classThis = javaClassThis.representedClass();
 
             //gets the reference to the class to be checked
             final Reference javaClassRefOther = (Reference) this.data.operand(1);
@@ -56,13 +57,15 @@ public final class Algo_JAVA_CLASS_ISASSIGNABLEFROM extends Algo_INVOKEMETA_Nonb
                 throwNew(state, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
-            //TODO the next cast fails if javaClassRef is symbolic and expanded to a regular Instance. Handle the case.
             final Instance_JAVA_CLASS javaClassOther = (Instance_JAVA_CLASS) state.getObject(javaClassRefThis);
             if (javaClassOther == null) {
                 //this should never happen
                 failExecution("The class parameter to java.lang.Class.isInstance method is symbolic and unresolved.");
             }
-            this.classOther = javaClassOther.representedClass();
+            final ClassFile classOther = javaClassOther.representedClass();
+
+            //calculates the value to push
+            this.valToPush = state.getCalculator().valInt(state.getClassHierarchy().isSubclass(classOther, classThis) ? 1 : 0);
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
@@ -70,9 +73,9 @@ public final class Algo_JAVA_CLASS_ISASSIGNABLEFROM extends Algo_INVOKEMETA_Nonb
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        final ClassHierarchy hier = state.getClassHierarchy();
-        final Simplex valToPush = state.getCalculator().valInt(hier.isSubclass(this.classOther, this.classThis) ? 1 : 0);
-        state.pushOperand(valToPush);
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.pushOperand(this.valToPush);
+        };
     }
 }

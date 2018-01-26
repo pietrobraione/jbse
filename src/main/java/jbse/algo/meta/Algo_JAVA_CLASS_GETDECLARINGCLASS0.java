@@ -1,23 +1,31 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.ensureInstance_JAVA_CLASS;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.invokeClassLoaderLoadClass;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Signatures.CLASS_NOT_FOUND_EXCEPTION;
+import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
 import jbse.bc.ClassFile;
-import jbse.bc.exc.BadClassFileException;
+import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.PleaseLoadClassException;
+import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Null;
 import jbse.val.Reference;
 
@@ -36,7 +44,7 @@ public final class Algo_JAVA_CLASS_GETDECLARINGCLASS0 extends Algo_INVOKEMETA_No
 
     @Override
     protected void cookMore(State state)
-    throws ThreadStackEmptyException, InterruptException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException, InvalidInputException {
         //There are four kind of classes:
         //
         //1- Top-level: not nested (declared outside everything in packages, or so it seems)
@@ -49,57 +57,59 @@ public final class Algo_JAVA_CLASS_GETDECLARINGCLASS0 extends Algo_INVOKEMETA_No
         //for top-level classes, local and anonymous classes, as these are not,
         //or are not considered, members of the class they are nested in.
         //Thus this method should return, only for static nested classes and 
-        //proper (neither local nor anonymous) inner classes the name of the
+        //proper (neither local nor anonymous) inner classes the 
         //container class.
         try {
             //gets the 'this' java.lang.Class instance from the heap 
-            //and the name of the class it represents
+            //and from it the class it represents as a ClassFile
             final Reference javaClassRef = (Reference) this.data.operand(0);
             if (state.isNull(javaClassRef)) {
                 //this should never happen
                 failExecution("The 'this' parameter to java.lang.Class.getDeclaringClass0 method is null.");
             }
             //TODO the next cast fails if javaClassRef is symbolic and expanded to a regular Instance. Handle the case.
-            final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject(javaClassRef);
-            if (clazz == null) {
+            final Instance_JAVA_CLASS javaClass = (Instance_JAVA_CLASS) state.getObject(javaClassRef);
+            if (javaClass == null) {
                 //this should never happen
                 failExecution("The 'this' parameter to java.lang.Class.getDeclaringClass0 method is symbolic and unresolved.");
             }
-            
-            //gets the classfile
-            ClassFile cf = null; //to keep the compiler happy
-            try {
-                final String className = clazz.representedClass();
-                cf = (clazz.isPrimitive() ? 
-                      state.getClassHierarchy().getClassFilePrimitive(className) :
-                      state.getClassHierarchy().getClassFile(className));
-            } catch (BadClassFileException e) {
-                //this should never happen
-                failExecution(e);
-            }
+            final ClassFile thisClass = javaClass.representedClass();
             
             //gets a reference to the java.lang.Class object for the container class
-            final String container = cf.classContainer();
-            if (container == null || cf.isArray() || cf.isPrimitive() || cf.isLocal() || cf.isAnonymous()) {
+            final String declaringClassName = thisClass.classContainer();
+            if (declaringClassName == null || thisClass.isArray() || thisClass.isPrimitive() || thisClass.isLocal() || thisClass.isAnonymous()) {
                 this.declaringClass = Null.getInstance();
             } else {
-                ensureInstance_JAVA_CLASS(state, container, container, this.ctx); //TODO should check the accessor?
-                this.declaringClass = state.referenceToInstance_JAVA_CLASS(container);
+                final ClassFile declaringClassFile = state.getClassHierarchy().resolveClass(thisClass, declaringClassName, state.areStandardClassLoadersNotReady()); //TODO is ok that accessor == thisClass?
+                state.ensureInstance_JAVA_CLASS(declaringClassFile);
+                this.declaringClass = state.referenceToInstance_JAVA_CLASS(declaringClassFile);
             }            
+        } catch (PleaseLoadClassException e) {
+            invokeClassLoaderLoadClass(state, e);
+            exitFromAlgorithm();
+        } catch (ClassFileNotFoundException e) {
+            throwNew(state, CLASS_NOT_FOUND_EXCEPTION);
+            exitFromAlgorithm();
+        } catch (ClassFileNotAccessibleException e) {
+            throwNew(state, ILLEGAL_ACCESS_ERROR);
+            exitFromAlgorithm();
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
-        } catch (ClassCastException | BadClassFileException e) {
+        } catch (ClassFileIllFormedException e) {
+            //TODO throw a LinkError?
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (ClassFileNotAccessibleException e) {
-            //this should never happen
-            failExecution(e);
+        } catch (ClassCastException e) {
+            throwVerifyError(state);
+            exitFromAlgorithm();
         }
     }
-
+    
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        state.pushOperand(this.declaringClass);
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.pushOperand(this.declaringClass);
+        };
     }
 }

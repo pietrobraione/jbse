@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Map;
 
+import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.ExternalProtocolInterfaceException;
@@ -136,7 +137,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
     protected final void pushAssumptionLocal(ClauseAssumeExpands cSimpl)
     throws DecisionException { 
         try {
-            this.extIf.sendClauseAssumeExpands(cSimpl.getReference(), cSimpl.getObjekt().getType());
+            this.extIf.sendClauseAssumeExpands(cSimpl.getReference(), cSimpl.getObjekt().getType().getClassName());
         } catch (ExternalProtocolInterfaceException | IOException e) {
             throw new DecisionException(e);
         }
@@ -156,7 +157,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
     protected final void pushAssumptionLocal(ClauseAssumeClassInitialized cSimpl)
     throws DecisionException { 
         try {
-            this.extIf.sendClauseAssumeClassInitialized(cSimpl.getClassName());
+            this.extIf.sendClauseAssumeClassInitialized(cSimpl.getClassFile().getClassName());
         } catch (ExternalProtocolInterfaceException | IOException e) {
             throw new DecisionException(e);
         }
@@ -166,7 +167,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
     protected final void pushAssumptionLocal(ClauseAssumeClassNotInitialized cSimpl) 
     throws DecisionException { 
         try {
-            this.extIf.sendClauseAssumeClassNotInitialized(cSimpl.getClassName());
+            this.extIf.sendClauseAssumeClassNotInitialized(cSimpl.getClassFile().getClassName());
         } catch (ExternalProtocolInterfaceException | IOException e) {
             throw new DecisionException(e);
         }
@@ -253,14 +254,14 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
     }
 
     @Override
-    protected final boolean isSatExpandsLocal(ClassHierarchy hier, ReferenceSymbolic r, String className)
+    protected final boolean isSatExpandsLocal(ClassHierarchy hier, ReferenceSymbolic r, ClassFile classFile)
     throws DecisionException {
         try {
             if (this.extIf.isWorking()) {
                 if (this.notInSynch) {
                     resynch();
                 }
-                this.extIf.sendClauseAssumeExpands(r, className);
+                this.extIf.sendClauseAssumeExpands(r, classFile.getClassName());
                 final boolean retVal = this.extIf.checkSat(hier, true); 
                 this.extIf.retractClause();
                 return retVal;

@@ -9,9 +9,11 @@ import java.util.function.Supplier;
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.Algorithm;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
+import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
 import jbse.mem.exc.HeapMemoryExhaustedException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Null;
 import jbse.val.ReferenceConcrete;
 import jbse.val.Value;
@@ -38,7 +40,7 @@ public final class Algo_JBSE_ANALYSIS_SYMBOLNAME extends Algo_INVOKEMETA_Nonbran
     }
     
     @Override
-    protected void cookMore(State state) throws InterruptException {
+    protected void cookMore(State state) throws InterruptException, ClasspathException {
         final Value arg = this.data.operand(0);
         if (arg.isSymbolic()) {
             try {
@@ -54,7 +56,9 @@ public final class Algo_JBSE_ANALYSIS_SYMBOLNAME extends Algo_INVOKEMETA_Nonbran
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        state.pushOperand(this.toPush);
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.pushOperand(this.toPush);
+        };
     }
 }

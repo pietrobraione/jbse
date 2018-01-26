@@ -3,18 +3,20 @@ package jbse.dec;
 import static org.junit.Assert.*;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import jbse.bc.ClassFile;
 import jbse.bc.ClassFileFactoryJavassist;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Classpath;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
-import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Clause;
 import jbse.mem.ClauseAssume;
 import jbse.mem.Objekt;
@@ -38,7 +40,7 @@ public class DecisionProcedureSignAnalysisTest {
 	public DecisionProcedureSignAnalysisTest() throws InvalidClassFileFactoryClassException {
         this.calc = new CalculatorRewriting();
         this.calc.addRewriter(new RewriterOperationOnSimplex());
-        this.hier = new ClassHierarchy(new Classpath(), ClassFileFactoryJavassist.class, new HashMap<>());
+        this.hier = new ClassHierarchy(new Classpath("", Collections.emptyList(), Collections.emptyList()), ClassFileFactoryJavassist.class, new HashMap<>());
 	}
 
 	static class NoDecisionException extends DecisionException {
@@ -71,15 +73,15 @@ public class DecisionProcedureSignAnalysisTest {
 		throws DecisionException { throw new NoDecisionException(); }
 
 		@Override
-		public boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, String className)
+		public boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, ClassFile classFile)
 		throws DecisionException { throw new NoDecisionException(); }
 
 		@Override
-		public boolean isSatInitialized(ClassHierarchy hier, String className)
+		public boolean isSatInitialized(ClassHierarchy hier, ClassFile classFile)
 		throws DecisionException { throw new NoDecisionException(); }
 
 		@Override
-		public boolean isSatNotInitialized(ClassHierarchy hier, String className)
+		public boolean isSatNotInitialized(ClassHierarchy hier, ClassFile classFile)
 		throws DecisionException { throw new NoDecisionException(); }
 	}
 	

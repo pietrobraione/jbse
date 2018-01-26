@@ -3,7 +3,8 @@ package jbse.algo.meta;
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
-import jbse.mem.State;
+import jbse.algo.StrategyUpdate;
+import jbse.tree.DecisionAlternative_NONE;
 
 public final class Algo_JBSE_ANALYSIS_SUCCEED extends Algo_INVOKEMETA_Nonbranching {
     @Override
@@ -12,7 +13,9 @@ public final class Algo_JBSE_ANALYSIS_SUCCEED extends Algo_INVOKEMETA_Nonbranchi
     }
 
     @Override
-    protected void update(State state) {
-        state.setStuckStop();
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.setStuckStop();
+        };
     }
 }

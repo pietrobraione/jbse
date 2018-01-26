@@ -1,5 +1,6 @@
 package jbse.mem;
 
+import jbse.bc.ClassFile;
 
 /**
  * A path condition {@link Clause}, an assumption 
@@ -10,91 +11,91 @@ package jbse.mem;
  *
  */
 public class ClauseAssumeClassInitialized implements Clause {
-	private final String className;
-	private final Klass k;
-		
-	/**
-	 * Constructor.
-	 * 
-	 * @param className a {@code String}, the name of the class.
-	 *        It must not be {@code null}.
-	 * @param k the symbolic {@link Klass} corresponding to {@code className}
-	 *        (cached here for convenience).
-	 */
-	ClauseAssumeClassInitialized(String className, Klass k) { 
-		this.className = className; 
-		this.k = k.clone(); //safety copy
-	}
+    private final ClassFile classFile;
+    private final Klass k;
 
-	/**
-	 * Returns the class name.
-	 * 
-	 * @return a {@link String}, the name of the class assumed initialized.
-	 */
-	public String getClassName() { return this.className; }	
+    /**
+     * Constructor.
+     * 
+     * @param classFile a {@code ClassFile}, class.
+     *        It must not be {@code null}.
+     * @param k the symbolic {@link Klass} corresponding to {@code classFile}
+     *        (cached here for convenience).
+     */
+    ClauseAssumeClassInitialized(ClassFile classFile, Klass k) { 
+        this.classFile = classFile; 
+        this.k = k.clone(); //safety copy
+    }
 
-	Klass getKlass() { 
-		return this.k.clone(); //preserves the safety copy
-	}
-	
-	@Override
-	public void accept(ClauseVisitor v) throws Exception {
-		v.visitClauseAssumeClassInitialized(this);
-	}
+    /**
+     * Returns the classfile.
+     * 
+     * @return a {@link ClassFile}, the class assumed initialized.
+     */
+    public ClassFile getClassFile() { return this.classFile; }	
 
-	@Override
-	public int hashCode() {
-		final int prime = 89;
-		int result = 1;
-		result = prime * result
-				+ ((className == null) ? 0 : className.hashCode());
-		result = prime * result + ((k == null) ? 0 : k.hashCode());
-		return result;
-	}
+    Klass getKlass() { 
+        return this.k.clone(); //preserves the safety copy
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		ClauseAssumeClassInitialized other = (ClauseAssumeClassInitialized) obj;
-		if (className == null) {
-			if (other.className != null) {
-				return false;
-			}
-		} else if (!className.equals(other.className)) {
-			return false;
-		}
-		if (k == null) {
-			if (other.k != null) {
-				return false;
-			}
-		} else if (!k.equals(other.k)) {
-			return false;
-		}
-		return true;
-	}
+    @Override
+    public void accept(ClauseVisitor v) throws Exception {
+        v.visitClauseAssumeClassInitialized(this);
+    }
 
-	@Override
-	public String toString() {
-		return "pre_init(" + this.className +")";
-	}
+    @Override
+    public int hashCode() {
+        final int prime = 89;
+        int result = 1;
+        result = prime * result
+        + ((classFile == null) ? 0 : classFile.hashCode());
+        result = prime * result + ((k == null) ? 0 : k.hashCode());
+        return result;
+    }
 
-	
-	@Override
-	public ClauseAssumeClassInitialized clone() {
-		final ClauseAssumeClassInitialized o;
-		try {
-			o = (ClauseAssumeClassInitialized) super.clone();
-		} catch (CloneNotSupportedException e) {
-			throw new InternalError(e);
-		}
-		return o;
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        ClauseAssumeClassInitialized other = (ClauseAssumeClassInitialized) obj;
+        if (this.classFile == null) {
+            if (other.classFile != null) {
+                return false;
+            }
+        } else if (this.classFile != other.classFile) {
+            return false;
+        }
+        if (this.k == null) {
+            if (other.k != null) {
+                return false;
+            }
+        } else if (!this.k.equals(other.k)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "pre_init(" + this.classFile.getClassName() + ")";
+    }
+
+
+    @Override
+    public ClauseAssumeClassInitialized clone() {
+        final ClauseAssumeClassInitialized o;
+        try {
+            o = (ClauseAssumeClassInitialized) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new InternalError(e);
+        }
+        return o;
+    }
 }

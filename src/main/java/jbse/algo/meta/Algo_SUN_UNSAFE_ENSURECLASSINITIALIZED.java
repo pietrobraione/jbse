@@ -1,6 +1,6 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.ensureClassCreatedAndInitialized;
+import static jbse.algo.Util.ensureClassInitialized;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
@@ -11,15 +11,16 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
-import jbse.bc.exc.BadClassFileException;
+import jbse.algo.StrategyUpdate;
+import jbse.bc.ClassFile;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
-import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
 import jbse.mem.exc.HeapMemoryExhaustedException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
 /**
@@ -41,19 +42,20 @@ public final class Algo_SUN_UNSAFE_ENSURECLASSINITIALIZED extends Algo_INVOKEMET
             throwNew(state, NULL_POINTER_EXCEPTION); //this is what Hotspot does
             exitFromAlgorithm();
         }
+        
         final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject(ref);
         if (clazz == null) {
             //this should never happen
             throw new UnexpectedInternalException("Unexpected unresolved symbolic reference as Class c parameter of sun.misc.Unsafe.ensureClassInitialized.");
         }
-        final String className = clazz.representedClass();
         
+        final ClassFile classFile = clazz.representedClass();
         try {
-            ensureClassCreatedAndInitialized(state, className, this.ctx);
+            ensureClassInitialized(state, classFile, this.ctx);
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
-        } catch (InvalidInputException | BadClassFileException e) {
+        } catch (InvalidInputException e) {
             //this should never happen
             //TODO really?
             failExecution(e);
@@ -61,7 +63,9 @@ public final class Algo_SUN_UNSAFE_ENSURECLASSINITIALIZED extends Algo_INVOKEMET
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        //nothing to do
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            //nothing to do
+        };
     }
 }

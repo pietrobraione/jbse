@@ -1,8 +1,6 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.ensureInstance_JAVA_CLASS;
 import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.bc.Signatures.JAVA_METHOD_INVOKE;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
@@ -13,19 +11,18 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
-import jbse.algo.exc.CannotManageStateException;
-import jbse.bc.exc.BadClassFileException;
-import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.algo.StrategyUpdate;
+import jbse.algo.exc.CannotInvokeMethodInCurrentContext;
+import jbse.bc.ClassFile;
 import jbse.common.exc.ClasspathException;
-import jbse.dec.exc.DecisionException;
 import jbse.mem.Frame;
 import jbse.mem.State;
 import jbse.mem.exc.HeapMemoryExhaustedException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
 public final class Algo_SUN_REFLECTION_GETCALLERCLASS extends Algo_INVOKEMETA_Nonbranching {
-    private String className; //set by cookMore
+    private Reference classRef; //set by cookMore
 
     @Override
     protected Supplier<Integer> numOperands() {
@@ -34,11 +31,11 @@ public final class Algo_SUN_REFLECTION_GETCALLERCLASS extends Algo_INVOKEMETA_No
 
     @Override
     protected void cookMore(State state)
-    throws ThreadStackEmptyException, DecisionException, ClasspathException,
-    CannotManageStateException, InterruptException {
+    throws ClasspathException, CannotInvokeMethodInCurrentContext, InterruptException {
         final List<Frame> stack = state.getStack();
         final ListIterator<Frame> it = stack.listIterator(stack.size());
         boolean firstSkipped = false;
+        ClassFile classFile = null;
         while (it.hasPrevious()) {
             final Frame f = it.previous();
             if (firstSkipped) {
@@ -48,29 +45,32 @@ public final class Algo_SUN_REFLECTION_GETCALLERCLASS extends Algo_INVOKEMETA_No
                     continue;
                 }
 
-                this.className = f.getCurrentMethodSignature().getClassName();
+                classFile = f.getCurrentClass();
                 break;
             } else {
                 firstSkipped = true;
             }
         }
+        if (classFile == null) {
+            //this should happen only if this method is invoked by the root frame
+            throw new CannotInvokeMethodInCurrentContext("The sun.reflect.Reflection.getCallerClass was invoked in a context where there is no caller (arguably the root frame).");
+        }
 
         try {
-            ensureInstance_JAVA_CLASS(state, this.className, this.className, this.ctx);
+            state.ensureInstance_JAVA_CLASS(classFile);
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
-        } catch (ClassFileNotAccessibleException | BadClassFileException e) {
-            //this should never happen
-            failExecution(e);
         }
+        
+        this.classRef = state.referenceToInstance_JAVA_CLASS(classFile);
     }
 
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        //gets the instance of the class of the caller object
-        final Reference classRef = state.referenceToInstance_JAVA_CLASS(this.className);
-        state.pushOperand(classRef);
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.pushOperand(this.classRef);
+        };
     }
 }

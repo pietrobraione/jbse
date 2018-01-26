@@ -8,9 +8,11 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
+import jbse.common.exc.ClasspathException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 import jbse.val.Simplex;
 
@@ -28,14 +30,14 @@ public final class Algo_JAVA_CLASS_ISPRIMITIVE extends Algo_INVOKEMETA_Nonbranch
     }
 
     @Override
-    protected void cookMore(State state) throws InterruptException {
+    protected void cookMore(State state) throws InterruptException, ClasspathException {
         try {
             final Instance_JAVA_CLASS thisObject = (Instance_JAVA_CLASS) state.getObject((Reference) this.data.operand(0));
             if (thisObject == null) {
                 //this should never happen
                 failExecution("violated invariant (unexpected heap access with symbolic unresolved reference)");
             }
-            this.isPrimitive = state.getCalculator().valInt(thisObject.isPrimitive() ? 1 : 0);
+            this.isPrimitive = state.getCalculator().valInt(thisObject.representedClass().isPrimitive() ? 1 : 0);
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
@@ -43,7 +45,9 @@ public final class Algo_JAVA_CLASS_ISPRIMITIVE extends Algo_INVOKEMETA_Nonbranch
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        state.pushOperand(this.isPrimitive);
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.pushOperand(this.isPrimitive);
+        };
     }
 }

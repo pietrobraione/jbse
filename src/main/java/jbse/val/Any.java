@@ -14,56 +14,56 @@ import jbse.val.exc.ValueDoesNotSupportNativeException;
  * @author Pietro Braione
  */
 public final class Any extends Primitive {
-	private Any(Calculator calc) throws InvalidTypeException {
-		super(Type.BOOLEAN, calc);
-	}
-	
-	public static Any make(Calculator calc) {
-		try {
-			return new Any(calc);
-		} catch (InvalidTypeException e) {
-			//this should never happen
-			throw new UnexpectedInternalException(e);
-		}
-	}
+    private Any(Calculator calc) throws InvalidTypeException {
+        super(Type.BOOLEAN, calc);
+    }
 
-	@Override
-	public Object getValueForNative() throws ValueDoesNotSupportNativeException {
-		throw new ValueDoesNotSupportNativeException();
-	}
+    public static Any make(Calculator calc) {
+        try {
+            return new Any(calc);
+        } catch (InvalidTypeException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
+    }
 
-	@Override
-	public boolean surelyTrue() {
-		return false;
-	}
+    @Override
+    public Object getValueForNative() throws ValueDoesNotSupportNativeException {
+        throw new ValueDoesNotSupportNativeException();
+    }
 
-	@Override
-	public boolean surelyFalse() {
-		return false;
-	}
+    @Override
+    public boolean surelyTrue() {
+        return false;
+    }
 
-	@Override
-	public void accept(PrimitiveVisitor v) throws Exception { 
-		v.visitAny(this);
-	}
+    @Override
+    public boolean surelyFalse() {
+        return false;
+    }
 
-	@Override
-	public boolean isSymbolic() {
-		return true;
-	}
+    @Override
+    public void accept(PrimitiveVisitor v) throws Exception { 
+        v.visitAny(this);
+    }
 
-	@Override
-	public boolean equals(Object o) {
-		return this == o;
-	}
+    @Override
+    public boolean isSymbolic() {
+        return true;
+    }
 
-	@Override
-	public int hashCode() {
-		return 0;
-	}
+    @Override
+    public boolean equals(Object o) {
+        return this == o;
+    }
 
-	@Override
-	public String toString() {
-		return "*";
-	}
+    @Override
+    public int hashCode() {
+        return 0;
+    }
+
+    @Override
+    public String toString() {
+        return "*";
+    }
 }

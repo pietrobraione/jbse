@@ -7,15 +7,15 @@ import static javassist.bytecode.AccessFlag.setProtected;
 import static javassist.bytecode.AccessFlag.setPublic;
 import static javassist.bytecode.AccessFlag.STATIC;
 import static javassist.bytecode.AccessFlag.SUPER;
+import static jbse.bc.ClassLoaders.CLASSLOADER_NONE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE;
 import static jbse.bc.Signatures.SIGNATURE_POLYMORPHIC_DESCRIPTOR;
-import static jbse.common.Type.binaryClassName;
+import static jbse.bc.Signatures.SUN_CALLERSENSITIVE;
 import static jbse.common.Type.internalClassName;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -25,13 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
-import javassist.ClassPool;
-import javassist.CtBehavior;
-import javassist.CtClass;
-import javassist.CtConstructor;
-import javassist.CtField;
 import javassist.Modifier;
-import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
 import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.AttributeInfo;
@@ -39,17 +33,25 @@ import javassist.bytecode.AttributeInfo;
 import javassist.bytecode.CodeAttribute;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.EnclosingMethodAttribute;
+import javassist.bytecode.ExceptionsAttribute;
+import javassist.bytecode.FieldInfo;
+import javassist.bytecode.InnerClassesAttribute;
 import javassist.bytecode.LineNumberAttribute;
 import javassist.bytecode.LocalVariableAttribute;
+import javassist.bytecode.MethodInfo;
+import javassist.bytecode.SignatureAttribute;
+import javassist.bytecode.annotation.Annotation;
+import javassist.bytecode.annotation.MemberValue;
+import javassist.bytecode.annotation.StringMemberValue;
 //also uses javassist.bytecode.ExceptionTable, not imported to avoid name clash
 import jbse.bc.exc.AttributeNotFoundException;
-import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.ClassFileIllFormedException;
-import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
+import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 
 /**
@@ -58,60 +60,132 @@ import jbse.common.exc.UnexpectedInternalException;
  * @author Pietro Braione
  */
 public class ClassFileJavassist extends ClassFile {
-    private final CtClass cls;
+    private final boolean isAnonymousUnregistered;
+    private final int definingClassLoader;
+    private final javassist.bytecode.ClassFile cf;
     private final ConstPool cp;
-    private final byte[] bytecode; //only for anonymous classes
+    private final byte[] bytecode; //only for dummy classes
+    private final ClassFile superClass;
+    private final ClassFile[] superInterfaces;
     private final ConstantPoolValue[] cpPatches;
-    private String hostClass;
+    private ClassFile hostClass;
     private ArrayList<Signature> fieldsStatic; //lazily initialized
     private ArrayList<Signature> fieldsObject; //lazily initialized
+    private ArrayList<Signature> methods; //lazily initialized
     private ArrayList<Signature> constructors; //lazily initialized
 
     /**
      * Constructor for nonanonymous classes.
      * 
-     * @param cpool a {@link ClassPool} where the class must be looked for.
+     * @param definingClassLoader a {@code int}, the defining classloader of
+     *        the class.
      * @param className a {@code String}, the name of the class.
-     * @throws BadClassFileException if the classfile for {@code className} 
-     *         does not exist in {@code cpool} or is ill-formed.
+     * @param bytecode a {@code byte[]}, the bytecode of the class.
+     * @param superClass a {@link ClassFile}, the superclass. It can be {@code null} for
+     *        <em>dummy</em>, i.e., incomplete classfiles that are created to access
+     *        the bytecode conveniently.
+     * @param superInterfaces a {@link ClassFile}{@code []}, the superinterfaces 
+     *        (empty array when no superinterfaces). 
+     *        It must be {@code null} for <em>dummy</em>, i.e., incomplete classfiles 
+     *        that are created to access the bytecode conveniently.
+     * @throws ClassFileIllFormedException if the {@code bytecode} 
+     *         is ill-formed.
+     * @throws InvalidInputException if {@code className}, {@code superClass} or
+     *         {@code superInterfaces} do not agree with {@code bytecode},
+     *         or {@code bytecode == null}.
      */
-    ClassFileJavassist(ClassPool cpool, String className) throws BadClassFileException {
+    ClassFileJavassist(int definingClassLoader, String className, byte[] bytecode, ClassFile superClass, ClassFile[] superInterfaces) 
+    throws ClassFileIllFormedException, InvalidInputException {
         try {
-            this.cls = cpool.get(binaryClassName(className));
-            this.cp = this.cls.getClassFile().getConstPool();
-            this.bytecode = null;
+            //checks
+            if (bytecode == null) {
+                throw new InvalidInputException("ClassFile constructor invoked with bytecode parameters whose value is null.");
+            }
+            
+            //reads the bytecode
+            this.cf = new javassist.bytecode.ClassFile(new DataInputStream(new ByteArrayInputStream(bytecode)));
+            
+            //checks
+            if (!className.equals(getClassName())) {
+                throw new InvalidInputException("ClassFile constructor invoked with className and bytecode parameters that do not agree: className is " + className + " but bytecode requires " + this.cf.getName() + ".");
+            }
+            if (superClass != null && !superClass.getClassName().equals(getSuperclassName())) {
+                throw new InvalidInputException("ClassFile constructor invoked with superClass and bytecode parameters that do not agree: superClass is for class " + superClass.getClassName() + " but bytecode requires " + this.cf.getSuperclass() + ".");
+            }
+            if (superInterfaces != null) {
+                final String[] superInterfaceNames = Arrays.stream(superInterfaces).map(ClassFile::getClassName).toArray(String[]::new);
+                final String[] bytecodeSuperInterfaceNames = Arrays.stream(this.cf.getInterfaces()).map(Type::internalClassName).toArray(String[]::new);
+                Arrays.sort(superInterfaceNames);
+                Arrays.sort(bytecodeSuperInterfaceNames);
+                if (superInterfaceNames.length != bytecodeSuperInterfaceNames.length) {
+                    throw new InvalidInputException("ClassFile constructor invoked with superInterfaces and bytecode parameters that do not agree: superInterfaces counts " + superInterfaceNames.length + " superinterfaces but bytecode requires " + bytecodeSuperInterfaceNames.length + " superinterfaces." );
+                }
+                for (int i = 0; i < superInterfaceNames.length; ++i) {
+                    if (!superInterfaceNames[i].equals(bytecodeSuperInterfaceNames[i])) {
+                        throw new InvalidInputException("ClassFile constructor invoked with superInterfaces and bytecode parameters that do not agree: superInterfaces has superinterface " + superInterfaceNames[i] + " that does not match with bytecode superinterface " + bytecodeSuperInterfaceNames[i] + "." );
+                    }
+                }
+            }
+            
+            //inits
+            this.isAnonymousUnregistered = false;
+            this.definingClassLoader = definingClassLoader;
+            this.cp = this.cf.getConstPool();
+            this.bytecode = (superInterfaces == null ? bytecode : null); //only dummy classfiles (without a superInterfaces array) cache their bytecode
+            this.superClass = superClass;
+            this.superInterfaces = superInterfaces;
             this.cpPatches = null;
             this.hostClass = null;
             this.fieldsStatic = this.fieldsObject = this.constructors = null;
-        } catch (NotFoundException e) {
-            throw new ClassFileNotFoundException(className);
-        } catch (RuntimeException e) {
-            //ugly, but it seems to be the only way to detect
-            //an ill-formed classfile
-            if (e.getMessage().equals("java.io.IOException: non class file")) {
-                throw new ClassFileIllFormedException(className);
-            } else {
-                throw e;
-            }
+        } catch (IOException e) {
+            throw new ClassFileIllFormedException(className);
         }
     }
     
-    ClassFileJavassist(ClassPool cpool, String hostClass, byte[] bytecode, ConstantPoolValue[] cpPatches) 
-    throws ClassFileIllFormedException {
+    /**
+     * Constructor for anonymous (unregistered) classes.
+     * 
+     * @param bytecode a {@code byte[]}, the bytecode of the class.
+     * @param cpPatches a {@link ConstantPoolValue}{@code []}; The i-th element of this
+     *        array patches the i-th element in the constant pool defined
+     *        by the {@code bytecode}. Note that {@code cpPatches[0]} and all the
+     *        {@code cpPatches[i]} with {@code i} equal or greater than the size
+     *        of the constant pool in {@code classFile} are ignored. It can be {@code null} for
+     *        <em>dummy</em>, i.e., incomplete classfiles that are created to access
+     *        the bytecode conveniently.
+     * @param hostClass a {@link ClassFile}, the host class for the anonymous class. 
+     *        It must be {@code null} for <em>dummy</em>, i.e., incomplete classfiles 
+     *        that are created to access the bytecode conveniently.
+     * @throws ClassFileIllFormedException if the {@code bytecode} 
+     *         is ill-formed.
+     * @throws InvalidInputException if {@code cpPatches} does not agree with {@code bytecode},
+     *         or {@code bytecode == null}.
+     */
+    ClassFileJavassist(byte[] bytecode, ConstantPoolValue[] cpPatches, ClassFile hostClass) 
+    throws ClassFileIllFormedException, InvalidInputException {
         try {
-            final javassist.bytecode.ClassFile cf = new javassist.bytecode.ClassFile(new DataInputStream(new ByteArrayInputStream(bytecode)));
-            checkCpPatches(cf.getConstPool(), cpPatches);
-            patch(cf.getConstPool(), cpPatches);
+            //checks
+            if (bytecode == null) {
+                throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with bytecode parameters whose value is null.");
+            }
+            
+            //reads and patches the bytecode
+            this.cf = new javassist.bytecode.ClassFile(new DataInputStream(new ByteArrayInputStream(bytecode)));
+            checkCpPatches(this.cf.getConstPool(), cpPatches);
+            patch(this.cf.getConstPool(), cpPatches);
             
             //modifies the class name by adding the hash
-            final String defaultName = cf.getName(); //the (possibly patched) name in the bytecode
-            final String name = defaultName + '$' + Arrays.hashCode(bytecode);
-            cf.setName(name);
+            final String defaultName = this.cf.getName(); //the (possibly patched) name in the bytecode
+            final String name = defaultName + '/' + Arrays.hashCode(bytecode);
+            this.cf.setName(name);
             
-            //makes the CtClass
-            this.cls = cpool.makeClass(cf);
-            this.cp = this.cls.getClassFile().getConstPool();
-            this.bytecode = (hostClass == null ? bytecode : null); //only dummy anonymous classfiles without a host class cache their bytecode
+            //inits
+            this.isAnonymousUnregistered = true;
+            this.definingClassLoader = CLASSLOADER_NONE;  //the classloader context is taken from the host class
+            this.cp = this.cf.getConstPool();
+            this.bytecode = (hostClass == null ? bytecode : null); //only dummy anonymous classfiles (without a host class) cache their bytecode
+            this.superClass = null;      //TODO is it ok to impose that anonymous classfiles have no superclass?
+            this.superInterfaces = null; //TODO is it ok to impose that anonymous classfiles have no superinterfaces?
             this.cpPatches = (cpPatches == null ? null : cpPatches.clone());
             this.hostClass = hostClass;
             this.fieldsStatic = this.fieldsObject = this.constructors = null;
@@ -121,7 +195,7 @@ public class ClassFileJavassist extends ClassFile {
     }
     
     private void checkCpPatches(javassist.bytecode.ConstPool cp, ConstantPoolValue[] cpPatches) 
-    throws ClassFileIllFormedException {
+    throws InvalidInputException {
         if (cpPatches == null) {
             return;
         }
@@ -159,7 +233,7 @@ public class ClassFileJavassist extends ClassFile {
             if (tag == ConstPool.CONST_Class && cpPatches[i] instanceof ConstantPoolClass) {
                 continue;
             }
-            throw new ClassFileIllFormedException("anonymous, patches");
+            throw new InvalidInputException("ClassFile constructor for anonymous classfile invoked with cpPatches parameter not matching bytecode's constant pool.");
         }
     }
     
@@ -248,12 +322,17 @@ public class ClassFileJavassist extends ClassFile {
     
     @Override
     public String getSourceFile() {
-        return this.cls.getClassFile().getSourceFile();
+        return this.cf.getSourceFile();
+    }
+    
+    @Override
+    public int getDefiningClassLoader() {
+        return this.definingClassLoader;
     }
 
     @Override
     public String getClassName() {
-        return internalClassName(this.cls.getName());
+        return internalClassName(this.cf.getName());
     }
 
     @Override
@@ -270,10 +349,9 @@ public class ClassFileJavassist extends ClassFile {
     @Override
     public int getModifiers() {
         //this code reimplements CtClassType.getModifiers() to circumvent a bug
-        javassist.bytecode.ClassFile cf = this.cls.getClassFile2();
-        int acc = cf.getAccessFlags();
+        int acc = this.cf.getAccessFlags();
         acc = clear(acc, SUPER);
-        int inner = cf.getInnerAccessFlags();
+        int inner = this.cf.getInnerAccessFlags();
         if (inner != -1) {
             if ((inner & STATIC) != 0) {
                 acc |= STATIC;
@@ -295,7 +373,12 @@ public class ClassFileJavassist extends ClassFile {
 
     @Override
     public int getAccessFlags() {
-        return this.cls.getClassFile().getAccessFlags();
+        return this.cf.getAccessFlags();
+    }
+    
+    @Override
+    public boolean isDummy() {
+        return (this.isAnonymousUnregistered ? this.hostClass == null : this.superInterfaces == null);
     }
 
     @Override
@@ -319,6 +402,11 @@ public class ClassFileJavassist extends ClassFile {
     }
 
     @Override
+    public boolean isStatic() {
+        return Modifier.isStatic(getModifiers());
+    }
+
+    @Override
     public boolean isArray() {
         return false;
     }
@@ -337,7 +425,7 @@ public class ClassFileJavassist extends ClassFile {
     public boolean isSuperInvoke() {
         //note that we use getClassFile().getAccessFlag() because 
         //getModifiers() does not provide the ACC_SUPER flag
-        return ((this.cls.getClassFile().getAccessFlags() & AccessFlag.SUPER) != 0);
+        return ((this.cf.getAccessFlags() & AccessFlag.SUPER) != 0);
     }
     
     @Override
@@ -370,7 +458,17 @@ public class ClassFileJavassist extends ClassFile {
     }
     
     @Override
-    public String getHostClass() {
+    public ClassFile getMemberClass() {
+        return null;
+    }
+    
+    @Override
+    public boolean isAnonymousUnregistered() {
+        return this.isAnonymousUnregistered;
+    }
+ 
+    @Override
+    public ClassFile getHostClass() {
         return this.hostClass;
     }
     
@@ -396,10 +494,11 @@ public class ClassFileJavassist extends ClassFile {
     private ArrayList<Signature> getDeclaredFields(boolean areStatic) {
         if ((areStatic ? this.fieldsStatic : this.fieldsObject) == null) {
             final ArrayList<Signature> fields = new ArrayList<Signature>();
-            final CtField[] fieldsJA = this.cls.getDeclaredFields();
-            for (CtField fld : fieldsJA) {
-                if (Modifier.isStatic(fld.getModifiers()) == areStatic) {
-                    final Signature sig = new Signature(getClassName(), fld.getSignature(), fld.getName());
+            @SuppressWarnings("unchecked")
+            final List<FieldInfo> fieldsJA = this.cf.getFields();
+            for (FieldInfo fld : fieldsJA) {
+                if (Modifier.isStatic(AccessFlag.toModifier(fld.getAccessFlags())) == areStatic) {
+                    final Signature sig = new Signature(getClassName(), fld.getDescriptor(), fld.getName());
                     fields.add(sig);
                 }
             }
@@ -458,17 +557,18 @@ public class ClassFileJavassist extends ClassFile {
      *         {@link CtBehavior} for it; the class name in {@code methodSignature}
      *         is ignored.
      */
-    private CtBehavior findMethodDeclaration(Signature methodSignature) {
+    private MethodInfo findMethodDeclaration(Signature methodSignature) {
         if ("<clinit>".equals(methodSignature.getName())) {
-            return this.cls.getClassInitializer();
+            return this.cf.getStaticInitializer();
         }
 
-        final CtBehavior[] bs = this.cls.getDeclaredBehaviors();
-        for (CtBehavior b : bs) {
-            final String internalName = ctBehaviorInternalName(b);
+        @SuppressWarnings("unchecked")
+        final List<MethodInfo> ms = this.cf.getMethods();
+        for (MethodInfo m : ms) {
+            final String internalName = m.getName();
             if (internalName.equals(methodSignature.getName()) &&
-                b.getSignature().equals(methodSignature.getDescriptor())) {
-                return b;
+                m.getDescriptor().equals(methodSignature.getDescriptor())) {
+                return m;
             }
         }
         return null;
@@ -476,11 +576,11 @@ public class ClassFileJavassist extends ClassFile {
 
     private CodeAttribute getMethodCodeAttribute(Signature methodSignature) 
     throws MethodNotFoundException, MethodCodeNotFoundException {
-        final CtBehavior b = findMethodDeclaration(methodSignature);
-        if (b == null) { 
+        final MethodInfo m = findMethodDeclaration(methodSignature);
+        if (m == null) { 
             throw new MethodNotFoundException(methodSignature.toString());
         }
-        final CodeAttribute ca = b.getMethodInfo().getCodeAttribute();
+        final CodeAttribute ca = m.getCodeAttribute();
         if (ca == null) {
             throw new MethodCodeNotFoundException(methodSignature.toString()); 
         }
@@ -554,22 +654,33 @@ public class ClassFileJavassist extends ClassFile {
     }
 
     @Override
+    public ClassFile getSuperclass() {
+        return this.superClass;
+    }
+    
+    @Override
     public String getSuperclassName() {
         if (isInterface()) {
             return null;
         } else {
-            String name = this.cls.getClassFile().getSuperclass();
+            String name = this.cf.getSuperclass();
             if (name != null) {
                 name = internalClassName(name);
             }
             return name;
         }
     }
+    
+    @Override
+    public List<ClassFile> getSuperInterfaces() {
+        final List<ClassFile> superinterfaces = Arrays.asList(this.superInterfaces);
+        return Collections.unmodifiableList(superinterfaces);
+    }
 
     @Override
     public List<String> getSuperInterfaceNames() {
         final ArrayList<String> superinterfaces = new ArrayList<>();
-        final String[] ifs = this.cls.getClassFile().getInterfaces();
+        final String[] ifs = this.cf.getInterfaces();
 
         for (String s : ifs) {
             superinterfaces.add(internalClassName(s));
@@ -610,23 +721,15 @@ public class ClassFileJavassist extends ClassFile {
         return (findMethodDeclaration(methodSignature) != null);
     }
     
-    private final String ctBehaviorInternalName(CtBehavior b) {
-        if (b instanceof CtConstructor) {
-            final CtConstructor bc = (CtConstructor) b;
-            return (bc.isClassInitializer() ? "<clinit>" : "<init>"); 
-        } else {
-            return b.getName();
-        }
-    }
-    
-    private CtBehavior findUniqueMethodDeclarationWithName(String methodName) {
-        final CtBehavior[] bs = this.cls.getDeclaredBehaviors();
-        CtBehavior retVal = null;
-        for (CtBehavior b : bs) {
-            final String internalName = ctBehaviorInternalName(b);
+    private MethodInfo findUniqueMethodDeclarationWithName(String methodName) {
+        @SuppressWarnings("unchecked")
+        final List<MethodInfo> ms = this.cf.getMethods();
+        MethodInfo retVal = null;
+        for (MethodInfo m : ms) {
+            final String internalName = m.getName();
             if (internalName.equals(methodName)) {
                 if (retVal == null) {
-                    retVal = b;
+                    retVal = m;
                 } else {
                     //two methods with same name - not unique
                     return null;
@@ -644,18 +747,18 @@ public class ClassFileJavassist extends ClassFile {
         }
         
         //the method declaration must be unique
-        final CtBehavior uniqueMethod = findUniqueMethodDeclarationWithName(methodName);
+        final MethodInfo uniqueMethod = findUniqueMethodDeclarationWithName(methodName);
         if (uniqueMethod == null) {
             return false;
         }
         
         //cannot be signature polymorphic if it has wrong descriptor
-        if (!SIGNATURE_POLYMORPHIC_DESCRIPTOR.equals(uniqueMethod.getSignature())) {
+        if (!SIGNATURE_POLYMORPHIC_DESCRIPTOR.equals(uniqueMethod.getDescriptor())) {
             return false;
         }
         
         //cannot be signature polymorphic if it not native or if it is not varargs
-        if (!Modifier.isNative(uniqueMethod.getModifiers()) || (uniqueMethod.getModifiers() & Modifier.VARARGS) == 0) {
+        if (!Modifier.isNative(AccessFlag.toModifier(uniqueMethod.getAccessFlags())) || (AccessFlag.toModifier(uniqueMethod.getAccessFlags()) & Modifier.VARARGS) == 0) {
             return false;
         }
 
@@ -665,43 +768,45 @@ public class ClassFileJavassist extends ClassFile {
 
     @Override
     public boolean hasMethodImplementation(Signature methodSignature) {
-        final CtBehavior b = findMethodDeclaration(methodSignature);
-        return (b != null && (b.getMethodInfo().getCodeAttribute() != null || Modifier.isNative(b.getModifiers())));
+        final MethodInfo m = findMethodDeclaration(methodSignature);
+        return (m != null && (m.getCodeAttribute() != null || Modifier.isNative(AccessFlag.toModifier(m.getAccessFlags()))));
     }
 
     @Override
     public boolean isAbstract() {
-        return Modifier.isAbstract(this.cls.getModifiers());
+        return Modifier.isAbstract(AccessFlag.toModifier(this.cf.getAccessFlags()));
     }
 
     @Override
     public boolean isInterface() {
-        return this.cls.isInterface();
+        return this.cf.isInterface();
     }
 
     @Override
     public boolean isMethodAbstract(Signature methodSignature) throws MethodNotFoundException {
-        final CtBehavior b = findMethodDeclaration(methodSignature);
-        if (b == null) throw new MethodNotFoundException(methodSignature.toString());
-        return Modifier.isAbstract(b.getModifiers());
+        final MethodInfo m = findMethodDeclaration(methodSignature);
+        if (m == null) {
+            throw new MethodNotFoundException(methodSignature.toString());
+        }
+        return Modifier.isAbstract(AccessFlag.toModifier(m.getAccessFlags()));
     }
 
     @Override
     public boolean isMethodNative(Signature methodSignature) throws MethodNotFoundException {
-        final CtBehavior b = findMethodDeclaration(methodSignature);
-        if (b == null) {
+        final MethodInfo m = findMethodDeclaration(methodSignature);
+        if (m == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
-        return Modifier.isNative(b.getModifiers());
+        return Modifier.isNative(AccessFlag.toModifier(m.getAccessFlags()));
     }
     
     @Override
     public boolean isMethodVarargs(Signature methodSignature) throws MethodNotFoundException {
-        final CtBehavior b = findMethodDeclaration(methodSignature);
-        if (b == null) {
+        final MethodInfo m = findMethodDeclaration(methodSignature);
+        if (m == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
-        return (b.getModifiers() & Modifier.VARARGS) != 0;
+        return (AccessFlag.toModifier(m.getAccessFlags()) & Modifier.VARARGS) != 0;
     }
     
     @Override
@@ -726,18 +831,10 @@ public class ClassFileJavassist extends ClassFile {
     
     @Override
     public boolean isMethodCallerSensitive(Signature methodSignature) 
-    throws ClassFileNotFoundException, MethodNotFoundException {
-        final Object[] annotations = getMethodAvailableAnnotations(methodSignature);
-        for (Object annotation : annotations) {
-            @SuppressWarnings("unchecked")
-            Class<? extends Annotation> annotationClass = (Class<? extends Annotation>) annotation.getClass();
-            final Class<?> callerSensitiveClass;
-            try {
-                callerSensitiveClass = Class.forName("sun.reflect.CallerSensitive");
-            } catch (ClassNotFoundException e) {
-                throw new ClassFileNotFoundException("sun.reflect.CallerSensitive");
-            }
-            if (callerSensitiveClass.isAssignableFrom(annotationClass)) {
+    throws MethodNotFoundException {
+        final String[] annotations = getMethodAvailableAnnotations(methodSignature);
+        for (String annotation : annotations) {
+            if (SUN_CALLERSENSITIVE.equals(annotation)) {
                 return true;
             }
         }
@@ -746,31 +843,33 @@ public class ClassFileJavassist extends ClassFile {
 
     @Override
     public Signature[] getDeclaredMethods() {
-        final CtBehavior[] methods = cls.getDeclaredMethods();
-        final Signature[] retVal = new Signature[methods.length];
-        for (int i = 0; i < methods.length; ++i) {
-            retVal[i] = new Signature(getClassName(), methods[i].getSignature(), ctBehaviorInternalName(methods[i]));
+        if (this.methods == null) {
+            fillMethodsAndConstructors();
         }
+        final Signature[] retVal = new Signature[this.methods.size()];
+        this.methods.toArray(retVal);
         return retVal;
     }
 
     @Override
     public String getMethodGenericSignatureType(Signature methodSignature) throws MethodNotFoundException {
-        final CtBehavior b = findMethodDeclaration(methodSignature);
-        if (b == null) {
+        final MethodInfo m = findMethodDeclaration(methodSignature);
+        if (m == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
-        return b.getGenericSignature();
+        final SignatureAttribute sa
+            = (SignatureAttribute) m.getAttribute(SignatureAttribute.tag);
+        return sa == null ? null : sa.getSignature();
     }
 
     @Override
     public int getMethodModifiers(Signature methodSignature) 
     throws MethodNotFoundException {
-        final CtBehavior b = findMethodDeclaration(methodSignature);
-        if (b == null) {
+        final MethodInfo m = findMethodDeclaration(methodSignature);
+        if (m == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
-        return b.getModifiers();
+        return AccessFlag.toModifier(m.getAccessFlags());
     }
 
     private byte[] mergeVisibleAndInvisibleAttributes(AttributeInfo attrVisible, AttributeInfo attrInvisible) {
@@ -785,100 +884,128 @@ public class ClassFileJavassist extends ClassFile {
     @Override
     public byte[] getMethodAnnotationsRaw(Signature methodSignature) 
     throws MethodNotFoundException {
-        final CtBehavior b = findMethodDeclaration(methodSignature);
-        if (b == null) {
+        final MethodInfo m = findMethodDeclaration(methodSignature);
+        if (m == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
-        final AttributeInfo attrVisible = b.getMethodInfo().getAttribute(AnnotationsAttribute.visibleTag);
-        final AttributeInfo attrInvisible = b.getMethodInfo().getAttribute(AnnotationsAttribute.invisibleTag);
+        final AttributeInfo attrVisible = m.getAttribute(AnnotationsAttribute.visibleTag);
+        final AttributeInfo attrInvisible = m.getAttribute(AnnotationsAttribute.invisibleTag);
         return mergeVisibleAndInvisibleAttributes(attrVisible, attrInvisible);
     }
 
     @Override
-    public Object[] getMethodAvailableAnnotations(Signature methodSignature)
+    public String[] getMethodAvailableAnnotations(Signature methodSignature)
     throws MethodNotFoundException {
-        //this circumvents a bug in Javassist 3.22.0-GA
-        if (isMethodSignaturePolymorphic(methodSignature)) {
-            Class<?> ann;
-            try {
-                ann = Class.forName("java.lang.invoke.MethodHandle$PolymorphicSignature");
-            } catch (ClassNotFoundException e) {
-                return new Object[0];
-            }
-            return new Object[]{ ann };
-        } else if (isAnonymous()) {
-            return new Object[0];
-        }
-        
-        final CtBehavior b = findMethodDeclaration(methodSignature);
-        if (b == null) {
+        final MethodInfo m = findMethodDeclaration(methodSignature);
+        if (m == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
-        return b.getAvailableAnnotations();
+        AnnotationsAttribute ainfo = 
+            (AnnotationsAttribute) m.getAttribute(AnnotationsAttribute.invisibleTag);  
+        AnnotationsAttribute ainfo2 = 
+            (AnnotationsAttribute) m.getAttribute(AnnotationsAttribute.visibleTag);
+        final ArrayList<String> anno = new ArrayList<>();
+        if (ainfo != null) {
+            for (Annotation a : ainfo.getAnnotations()) {
+                anno.add(internalClassName(a.getTypeName()));
+            }
+        }
+        if (ainfo2 != null) {
+            for (Annotation a : ainfo2.getAnnotations()) {
+                anno.add(internalClassName(a.getTypeName()));
+            }
+        }
+        return anno.toArray(new String[0]);
     }
 
     @Override
+    public String getMethodAnnotationParameterValueString(Signature methodSignature, String annotation, String parameter) 
+    throws MethodNotFoundException {
+        final MethodInfo m = findMethodDeclaration(methodSignature);
+        if (m == null) {
+            throw new MethodNotFoundException(methodSignature.toString());
+        }
+        AnnotationsAttribute ainfo = 
+            (AnnotationsAttribute) m.getAttribute(AnnotationsAttribute.invisibleTag);  
+        AnnotationsAttribute ainfo2 = 
+            (AnnotationsAttribute) m.getAttribute(AnnotationsAttribute.visibleTag);
+        if (ainfo != null) {
+            for (Annotation a : ainfo.getAnnotations()) {
+                final MemberValue mv = a.getMemberValue(parameter);
+                if (mv != null && mv instanceof StringMemberValue) {
+                    return ((StringMemberValue) mv).getValue();
+                }
+            }
+        }
+        if (ainfo2 != null) {
+            for (Annotation a : ainfo2.getAnnotations()) {
+                final MemberValue mv = a.getMemberValue(parameter);
+                if (mv != null && mv instanceof StringMemberValue) {
+                    return ((StringMemberValue) mv).getValue();
+                }
+            }
+        }
+        return null;
+    }
+    
+    @Override
     public String[] getMethodThrownExceptions(Signature methodSignature) 
     throws MethodNotFoundException {
-        final CtBehavior b = findMethodDeclaration(methodSignature);
-        if (b == null) {
+        final MethodInfo m = findMethodDeclaration(methodSignature);
+        if (m == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
 
-        CtClass[] exc;
-        try {
-            exc = b.getExceptionTypes();
-        } catch (NotFoundException e) {
-            //it is unclear when this exception is thrown;
-            //so we just catch it and set exc to an empty array
-            exc = new CtClass[0];
+        final ExceptionsAttribute exc = m.getExceptionsAttribute();
+        if (exc == null) {
+            return new String[0];
         }
-        return Arrays.stream(exc).map(cls -> internalClassName(cls.getName())).toArray(String[]::new);
+        return exc.getExceptions();
     }
 
     @Override
     public boolean isMethodStatic(Signature methodSignature) throws MethodNotFoundException {
-        final CtBehavior b = findMethodDeclaration(methodSignature);
-        if (b == null) {
+        final MethodInfo m = findMethodDeclaration(methodSignature);
+        if (m == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
-        return Modifier.isStatic(b.getModifiers());
+        return Modifier.isStatic(AccessFlag.toModifier(m.getAccessFlags()));
     }
 
     @Override
     public boolean isMethodPublic(Signature methodSignature) throws MethodNotFoundException {
-        final CtBehavior b = findMethodDeclaration(methodSignature);
-        if (b == null) {
+        final MethodInfo m = findMethodDeclaration(methodSignature);
+        if (m == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
-        return Modifier.isPublic(b.getModifiers());
+        return Modifier.isPublic(AccessFlag.toModifier(m.getAccessFlags()));
     }
 
     @Override
     public boolean isMethodProtected(Signature methodSignature) throws MethodNotFoundException {
-        final CtBehavior b = findMethodDeclaration(methodSignature);
-        if (b == null) {
+        final MethodInfo m = findMethodDeclaration(methodSignature);
+        if (m == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
-        return Modifier.isProtected(b.getModifiers());
+        return Modifier.isProtected(AccessFlag.toModifier(m.getAccessFlags()));
     }
 
     @Override
     public boolean isMethodPackage(Signature methodSignature) throws MethodNotFoundException {
-        final CtBehavior b = findMethodDeclaration(methodSignature);
-        if (b == null) {
+        final MethodInfo m = findMethodDeclaration(methodSignature);
+        if (m == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
-        return Modifier.isPackage(b.getModifiers());
+        return Modifier.isPackage(AccessFlag.toModifier(m.getAccessFlags()));
     }
 
     @Override
     public boolean isMethodPrivate(Signature methodSignature) throws MethodNotFoundException {
-        final CtBehavior b = findMethodDeclaration(methodSignature);
-        if (b == null) {
+        final MethodInfo m = findMethodDeclaration(methodSignature);
+        if (m == null) {
             throw new MethodNotFoundException(methodSignature.toString());
         }
-        return Modifier.isPrivate(b.getModifiers());
+        return Modifier.isPrivate(AccessFlag.toModifier(m.getAccessFlags()));
     }
 
     @Override
@@ -892,8 +1019,9 @@ public class ClassFileJavassist extends ClassFile {
         final CodeAttribute ca = this.getMethodCodeAttribute(methodSignature);
         final LineNumberAttribute lnJA = (LineNumberAttribute) ca.getAttribute("LineNumberTable");
 
-        if (lnJA == null)
+        if (lnJA == null) {
             return defaultLineNumberTable();
+        }
         final LineNumberTable LN = new LineNumberTable(lnJA.tableLength());
         for (int i = 0; i < lnJA.tableLength(); ++i) {
             LN.addRow(lnJA.startPc(i), lnJA.lineNumber(i));
@@ -903,11 +1031,11 @@ public class ClassFileJavassist extends ClassFile {
 
     @Override
     public int fieldConstantValueIndex(Signature fieldSignature) throws FieldNotFoundException, AttributeNotFoundException {
-        final CtField fld = findField(fieldSignature);
+        final FieldInfo fld = findField(fieldSignature);
         if (fld == null) {
             throw new FieldNotFoundException(fieldSignature.toString());
         }
-        final int cpVal = fld.getFieldInfo().getConstantValue();
+        final int cpVal = fld.getConstantValue();
         if (cpVal == 0) {
             throw new AttributeNotFoundException();
         }
@@ -916,120 +1044,130 @@ public class ClassFileJavassist extends ClassFile {
 
     @Override
     public boolean hasFieldConstantValue(Signature fieldSignature) throws FieldNotFoundException {
-        final CtField fld = findField(fieldSignature);
+        final FieldInfo fld = findField(fieldSignature);
         if (fld == null) {
             throw new FieldNotFoundException(fieldSignature.toString());
         }
-        return (fld.getConstantValue() != null);
+        return (fld.getConstantValue() != 0);
     }
 
     @Override
     public boolean isFieldFinal(Signature fieldSignature) throws FieldNotFoundException {
-        final CtField fld = findField(fieldSignature);
+        final FieldInfo fld = findField(fieldSignature);
         if (fld == null) {
             throw new FieldNotFoundException(fieldSignature.toString());
         }
-        return Modifier.isFinal(fld.getModifiers());
+        return Modifier.isFinal(AccessFlag.toModifier(fld.getAccessFlags()));
     }
 
     @Override
     public boolean isFieldPublic(Signature fieldSignature) throws FieldNotFoundException {
-        final CtField fld = findField(fieldSignature);
+        final FieldInfo fld = findField(fieldSignature);
         if (fld == null) {
             throw new FieldNotFoundException(fieldSignature.toString());
         }
-        return Modifier.isPublic(fld.getModifiers());
+        return Modifier.isPublic(AccessFlag.toModifier(fld.getAccessFlags()));
     }
 
     @Override
     public boolean isFieldProtected(Signature fieldSignature) throws FieldNotFoundException {
-        final CtField fld = findField(fieldSignature);
+        final FieldInfo fld = findField(fieldSignature);
         if (fld == null) {
             throw new FieldNotFoundException(fieldSignature.toString());
         }
-        return Modifier.isProtected(fld.getModifiers());
+        return Modifier.isProtected(AccessFlag.toModifier(fld.getAccessFlags()));
     }
 
     @Override
     public boolean isFieldPackage(Signature fieldSignature) throws FieldNotFoundException {
-        final CtField fld = findField(fieldSignature);
+        final FieldInfo fld = findField(fieldSignature);
         if (fld == null) {
             throw new FieldNotFoundException(fieldSignature.toString());
         }
-        return Modifier.isPackage(fld.getModifiers());
+        return Modifier.isPackage(AccessFlag.toModifier(fld.getAccessFlags()));
     }
 
     @Override
     public boolean isFieldPrivate(Signature fieldSignature) throws FieldNotFoundException {
-        final CtField fld = findField(fieldSignature);
+        final FieldInfo fld = findField(fieldSignature);
         if (fld == null) {
             throw new FieldNotFoundException(fieldSignature.toString());
         }
-        return Modifier.isPrivate(fld.getModifiers());
+        return Modifier.isPrivate(AccessFlag.toModifier(fld.getAccessFlags()));
     }
 
     @Override
     public boolean isFieldStatic(Signature fieldSignature) throws FieldNotFoundException {
-        final CtField fld = findField(fieldSignature);
+        final FieldInfo fld = findField(fieldSignature);
         if (fld == null) {
             throw new FieldNotFoundException(fieldSignature.toString());
         }
-        return Modifier.isStatic(fld.getModifiers());
+        return Modifier.isStatic(AccessFlag.toModifier(fld.getAccessFlags()));
     }
 
     @Override
     public String getFieldGenericSignatureType(Signature fieldSignature) 
     throws FieldNotFoundException {
-        final CtField fld = findField(fieldSignature);
+        final FieldInfo fld = findField(fieldSignature);
         if (fld == null) {
             throw new FieldNotFoundException(fieldSignature.toString());
         }
-        return fld.getGenericSignature();
+        SignatureAttribute sa = (SignatureAttribute) fld.getAttribute(SignatureAttribute.tag);
+        return (sa == null ? null : sa.getSignature());
     }
 
     @Override
     public int getFieldModifiers(Signature fieldSignature) 
     throws FieldNotFoundException {
-        final CtField fld = findField(fieldSignature);
+        final FieldInfo fld = findField(fieldSignature);
         if (fld == null) {
             throw new FieldNotFoundException(fieldSignature.toString());
         }
-        return fld.getModifiers();
+        return AccessFlag.toModifier(fld.getAccessFlags());
     }
 
     @Override
     public byte[] getFieldAnnotationsRaw(Signature fieldSignature) 
     throws FieldNotFoundException {
-        final CtField fld = findField(fieldSignature);
+        final FieldInfo fld = findField(fieldSignature);
         if (fld == null) {
             throw new FieldNotFoundException(fieldSignature.toString());
         }
-        final AttributeInfo attrVisible = fld.getFieldInfo().getAttribute(AnnotationsAttribute.visibleTag);
-        final AttributeInfo attrInvisible = fld.getFieldInfo().getAttribute(AnnotationsAttribute.invisibleTag);
+        final AttributeInfo attrVisible = fld.getAttribute(AnnotationsAttribute.visibleTag);
+        final AttributeInfo attrInvisible = fld.getAttribute(AnnotationsAttribute.invisibleTag);
         return mergeVisibleAndInvisibleAttributes(attrVisible, attrInvisible);
     }
 
-    private CtField findField(Signature fieldSignature) {
-        final CtField[] fieldsJA = this.cls.getDeclaredFields();
-        for (CtField fld : fieldsJA) {
-            if (fld.getSignature().equals(fieldSignature.getDescriptor()) && 
-            fld.getName().equals(fieldSignature.getName())) {
+    private FieldInfo findField(Signature fieldSignature) {
+        @SuppressWarnings("unchecked")
+        final List<FieldInfo> fieldsJA = this.cf.getFields();
+        for (FieldInfo fld : fieldsJA) {
+            if (fld.getDescriptor().equals(fieldSignature.getDescriptor()) && 
+                fld.getName().equals(fieldSignature.getName())) {
                 return fld;
             }
         }
         return null;
     }
+    
+    private void fillMethodsAndConstructors() {
+        this.methods = new ArrayList<>();
+        this.constructors = new ArrayList<>();
+        @SuppressWarnings("unchecked")
+        final List<MethodInfo> ms = this.cf.getMethods();
+        for (MethodInfo m : ms) {
+            final Signature sig = new Signature(getClassName(), m.getDescriptor(), m.getName());
+            this.methods.add(sig);
+            if (m.isConstructor()) {
+                this.constructors.add(sig);
+            }
+        }
+    }
 
     @Override
     public Signature[] getDeclaredConstructors() {
         if (this.constructors == null) {
-            final ArrayList<Signature> constructors = new ArrayList<Signature>();
-            final CtConstructor[] constrJA = this.cls.getDeclaredConstructors();
-            for (CtConstructor constr : constrJA) {
-                final Signature sig = new Signature(getClassName(), constr.getSignature(), ctBehaviorInternalName(constr));
-                constructors.add(sig);
-            }
-            this.constructors = constructors;
+            fillMethodsAndConstructors();
         }
         final Signature[] retVal = new Signature[this.constructors.size()];
         this.constructors.toArray(retVal);
@@ -1037,34 +1175,42 @@ public class ClassFileJavassist extends ClassFile {
     }
 
     @Override
-    public String classContainer() throws ClassFileNotFoundException {
-        try {
-            if (this.cls.getDeclaringClass() == null) {
-                return null;
-            }
-            return (this.cls.getDeclaringClass().getName());
-        } catch (NotFoundException e) {
-            throw new ClassFileNotFoundException(e.getMessage());
+    public String classContainer() {
+        //taken from Javassist, method javassist.CtClassType.getDeclaringClass()
+        final InnerClassesAttribute ica = 
+            (InnerClassesAttribute) this.cf.getAttribute(InnerClassesAttribute.tag);
+        if (ica == null) {
+            return null;
         }
+
+        final String name = getClassName();
+        final int n = ica.tableLength();
+        for (int i = 0; i < n; ++i)
+            if (name.equals(ica.innerClass(i))) {
+                final String outName = ica.outerClass(i);
+                if (outName != null) {
+                    return outName;                    
+                } else {
+                    // maybe anonymous or local class.
+                    final EnclosingMethodAttribute ema =
+                        (EnclosingMethodAttribute)cf.getAttribute(EnclosingMethodAttribute.tag);
+                    if (ema != null) {
+                        return ema.className();
+                    }
+                }
+            }
+
+        return null;
     }
     
     @Override
     public Signature getEnclosingMethodOrConstructor() {
-        //we do not use this.cls.getEnclosingBehavior because this
-        //method does not handle the case of local and anonymous classes
-        //that are not immediately enclosed by a method or constructor.
-        //This code is copied from CtClassType#getEnclosingBehavior.
-        final javassist.bytecode.ClassFile cf = this.cls.getClassFile2();
+        //taken from Javassist, method javassist.CtClassType.getEnclosingBehavior().
         final EnclosingMethodAttribute ema = 
-            (EnclosingMethodAttribute) cf.getAttribute(EnclosingMethodAttribute.tag);
+            (EnclosingMethodAttribute) this.cf.getAttribute(EnclosingMethodAttribute.tag);
         if (ema == null) {
             return null;
         }
         return new Signature(internalClassName(ema.className()), ema.methodDescriptor(), ema.methodName());
-    }
-
-    @Override
-    public boolean isStatic() {
-        return Modifier.isStatic(cls.getModifiers());
     }
 }

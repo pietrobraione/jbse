@@ -5,11 +5,13 @@ import static jbse.algo.Util.failExecution;
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
+import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
+import jbse.bc.ClassFile;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.Klass;
 import jbse.mem.State;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
 /**
@@ -30,8 +32,8 @@ public final class Algo_SUN_UNSAFE_SHOULDBEINITIALIZED extends Algo_INVOKEMETA_N
         try {
             final Reference refParam = (Reference) this.data.operand(1);
             final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject(refParam);
-            final String className = clazz.representedClass();
-            final Klass k = state.getKlass(className);
+            final ClassFile classFile = clazz.representedClass();
+            final Klass k = state.getKlass(classFile);
             this.shouldBeInitialized = (k == null || !k.isInitialized());
         } catch (ClassCastException | NullPointerException e) {
             //this should never happen
@@ -40,7 +42,9 @@ public final class Algo_SUN_UNSAFE_SHOULDBEINITIALIZED extends Algo_INVOKEMETA_N
     }
     
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        state.pushOperand(state.getCalculator().valInt(this.shouldBeInitialized ? 1 : 0));
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.pushOperand(state.getCalculator().valInt(this.shouldBeInitialized ? 1 : 0));
+        };
     }
 }

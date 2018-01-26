@@ -1,8 +1,8 @@
 package jbse.common.exc;
 
 /**
- * This exception is thrown whenever the JRE is not on 
- * the classpath or is incompatible.
+ * This exception is thrown whenever a standard Java class 
+ * is not on the classpath or is incompatible.
  *  
  * @author Pietro Braione
  *

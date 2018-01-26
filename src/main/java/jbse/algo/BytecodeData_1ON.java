@@ -1,5 +1,6 @@
 package jbse.algo;
 
+import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
 
 /**
@@ -10,7 +11,7 @@ import jbse.mem.State;
  */
 public final class BytecodeData_1ON extends BytecodeData {
     @Override
-    public void readImmediates(State state) throws InterruptException {
+    public void readImmediates(State state) throws InterruptException, ClasspathException {
         readImmediateSignedWord(state, 1);
         readJump(state, immediateSignedWord());
     }

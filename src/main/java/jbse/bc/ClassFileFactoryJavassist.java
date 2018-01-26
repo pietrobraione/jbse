@@ -1,9 +1,7 @@
 package jbse.bc;
 
-import javassist.ClassPool;
-import javassist.NotFoundException;
-
-import jbse.bc.exc.BadClassFileException;
+import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.common.exc.InvalidInputException;
 
 /**
  * A {@link ClassFileFactory} that uses the <a href="http://www.javassist.org/">Javassist</a> library
@@ -12,29 +10,25 @@ import jbse.bc.exc.BadClassFileException;
  * @author Pietro Braione
  */
 public class ClassFileFactoryJavassist extends ClassFileFactory {
-    private ClassPool cpool;
-
-    public ClassFileFactoryJavassist(ClassFileStore cfi, Classpath cp) { 
-        super(cfi);
-        this.cpool = new ClassPool();
-        for (String s : cp.classPath()) {
-            try {
-                this.cpool.appendClassPath(s);
-            } catch (NotFoundException e) {
-                //does nothing
-            }
-        }
-    }
-
     @Override
-    protected ClassFile newClassFileClass(String className) 
-    throws BadClassFileException {
-        return new ClassFileJavassist(this.cpool, className);
+    protected ClassFile newClassFileClass(int definingClassLoader, String className, byte[] bytecode, ClassFile superClass, ClassFile[] superInterfaces) 
+    throws InvalidInputException, ClassFileIllFormedException {
+        if (definingClassLoader < 0) {
+            throw new InvalidInputException("The definingClassLoader parameter to " + ClassFileFactoryJavassist.class.getName() + ".newClassFileClass method was negative.");
+        }
+        if (className == null) {
+            throw new InvalidInputException("The className parameter to " + ClassFileFactoryJavassist.class.getName() + ".newClassFileClass method was null.");
+        }
+        if (bytecode == null) {
+            throw new InvalidInputException("The bytecode parameter to " + ClassFileFactoryJavassist.class.getName() + ".newClassFileClass method was null.");
+        }
+        
+        return new ClassFileJavassist(definingClassLoader, className, bytecode, superClass, superInterfaces);
     }
     
     @Override
-    protected ClassFile newClassFileAnonymous(String hostClass, byte[] bytecode, ConstantPoolValue[] cpPatches) 
-    throws BadClassFileException {
-        return new ClassFileJavassist(this.cpool, hostClass, bytecode, cpPatches);
+    protected ClassFile newClassFileAnonymous(byte[] bytecode, ConstantPoolValue[] cpPatches, ClassFile hostClass) 
+    throws InvalidInputException, ClassFileIllFormedException {
+        return new ClassFileJavassist(bytecode, cpPatches, hostClass);
     }
 }

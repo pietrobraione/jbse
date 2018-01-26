@@ -1,5 +1,6 @@
 package jbse.algo;
 
+import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.common.Type.splitParametersDescriptors;
 import static jbse.common.Type.splitReturnValueDescriptor;
 import static jbse.common.Type.VOID;
@@ -8,11 +9,17 @@ import static jbse.rules.Util.getTriggerMethodParameterObject;
 import java.util.ArrayList;
 
 import jbse.algo.exc.MissingTriggerParameterException;
+import jbse.algo.exc.NotYetImplementedException;
+import jbse.bc.ClassFile;
 import jbse.bc.Signature;
-import jbse.bc.exc.BadClassFileException;
+import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
+import jbse.bc.exc.PleaseLoadClassException;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
@@ -61,9 +68,11 @@ public class TriggerManager {
      * @throws ThreadStackEmptyException if {@code state}'s thread stack is empty.
      * @throws MissingTriggerParameterException  if the parameter of a trigger cannot be find
      *         in {@code State}.
+     * @throws NotYetImplementedException if the class where the trigger method resides
+     *         is not loaded.
      */
     public void loadTriggerFramesRoot(State state, DecisionAlternative_XLOAD_GETX_Expands rootExpansion) 
-    throws ThreadStackEmptyException, MissingTriggerParameterException {
+    throws ThreadStackEmptyException, MissingTriggerParameterException, NotYetImplementedException {
         try {
             loadTriggerFrames(state, rootExpansion, 0);
         } catch (InvalidProgramCounterException e) {
@@ -88,9 +97,12 @@ public class TriggerManager {
      * @throws ThreadStackEmptyException if {@code state}'s thread stack is empty.
      * @throws MissingTriggerParameterException if the parameter of a trigger cannot be find
      *         in {@code State}.
+     * @throws NotYetImplementedException if the class where the trigger method resides
+     *         is not loaded.
      */
     public boolean loadTriggerFrames(State state, DecisionAlternative_XYLOAD_GETX_Loads da, int pcOffset) 
-    throws InvalidProgramCounterException, ThreadStackEmptyException, MissingTriggerParameterException {
+    throws InvalidProgramCounterException, ThreadStackEmptyException, 
+    MissingTriggerParameterException, NotYetImplementedException {
         if (!(da instanceof DecisionAlternative_XYLOAD_GETX_Unresolved)) {
             return false;
         }
@@ -111,20 +123,24 @@ public class TriggerManager {
                     throw new MissingTriggerParameterException("No heap object matches the parameter part in the trigger rule " + rule);
                 }
                 try {
-                    //TODO resolution? lookup of implementation?
-                    state.pushFrame(triggerSig, false, pcOffset, triggerArg);
+                    final ClassFile cf = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, triggerSig.getClassName(), true);
+                    state.pushFrame(cf, triggerSig, false, pcOffset, triggerArg);
                     retVal = true;
                     pcOffset = 0; //the offset of the second, third... frames
-                } catch (MethodNotFoundException | MethodCodeNotFoundException | 
-                         InvalidSlotException | InvalidTypeException e) {
+                } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException | 
+                         MethodNotFoundException | MethodCodeNotFoundException | 
+                         InvalidSlotException | InvalidTypeException | InvalidInputException e) {
                     //does nothing, falls through to skip 
-                    //the nonexistent/nonstatic/native method
+                    //the unfriendly method
                     //TODO very ugly! should we throw an exception? are we sure that they are all not internal exceptions?
-                } catch (BadClassFileException | NullMethodReceiverException e) {
+                } catch (PleaseLoadClassException e) {
+                    throw new NotYetImplementedException("Currently JBSE is unable to automatically load the class where a trigger implementation resides. Please load manually the class before trigger execution.");
+                } catch (NullMethodReceiverException e) {
                     //this should never happen
                     throw new UnexpectedInternalException(e);
                 }
-            } //TODO should we throw an exception if the signature is not ok?
+            } //else, just skip 
+            //TODO should we manage the else case, possibly throwing an exception?
         }
         return retVal;
     }
@@ -135,7 +151,7 @@ public class TriggerManager {
         if (da instanceof DecisionAlternative_XYLOAD_GETX_Aliases) {
             final DecisionAlternative_XYLOAD_GETX_Aliases daa = (DecisionAlternative_XYLOAD_GETX_Aliases) da;
             final ReferenceSymbolic ref = daa.getValueToLoad();
-            final Objekt o = s.getObject(new ReferenceConcrete(daa.getAliasPosition()));
+            final Objekt o = s.getObject(new ReferenceConcrete(daa.getObjectPosition()));
             final ArrayList<TriggerRuleAliases> rulesNonMax = rulesRepo.matchingTriggerRulesAliasesNonMax(ref);
             final ArrayList<TriggerRuleAliases> rulesMax = rulesRepo.matchingTriggerRulesAliasesMax(ref);
             final ArrayList<TriggerRule> retVal = new ArrayList<>();
@@ -160,11 +176,11 @@ public class TriggerManager {
         } else if (da instanceof DecisionAlternative_XYLOAD_GETX_Expands) {
             final DecisionAlternative_XYLOAD_GETX_Expands dae = (DecisionAlternative_XYLOAD_GETX_Expands) da;
             final ReferenceSymbolic ref = dae.getValueToLoad();
-            final String className = dae.getClassNameOfTargetObject();
+            final ClassFile classFile = dae.getClassFileOfTargetObject();
             final ArrayList<TriggerRuleExpandsTo> rules = rulesRepo.matchingTriggerRulesExpandsTo(ref);
             final ArrayList<TriggerRule> retVal = new ArrayList<>();
             for (TriggerRuleExpandsTo rule : rules) {
-                if (rule.satisfies(className)) {
+                if (rule.satisfies(classFile.getClassName())) {
                     retVal.add(rule);
                 }
             }

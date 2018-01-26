@@ -1,5 +1,7 @@
 package jbse.bc;
 
+import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
+
 import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.List;
@@ -70,13 +72,18 @@ abstract class ClassFilePrimitive extends ClassFile {
     }
 
     @Override
-    public String getPackageName() {
-        return ""; //TODO is it ok?
+    public String getClassName() {
+        return this.className;
+    }
+    
+    @Override
+    public int getDefiningClassLoader() {
+        return CLASSLOADER_BOOT;
     }
 
     @Override
-    public String getClassName() {
-        return this.className;
+    public String getPackageName() {
+        return ""; //TODO is it ok?
     }
     
     @Override
@@ -87,6 +94,11 @@ abstract class ClassFilePrimitive extends ClassFile {
     @Override
     public int getAccessFlags() {
         return Modifier.ABSTRACT | Modifier.FINAL | Modifier.PUBLIC; //see openjdk 8, hotspot source code, src/share/vm/prims/jvm.cpp function JVM_GetClassAccessFlags
+    }
+    
+    @Override
+    public boolean isDummy() {
+        return false;
     }
 
     @Override
@@ -149,9 +161,19 @@ abstract class ClassFilePrimitive extends ClassFile {
     public boolean isAnonymous() {
         return false;
     }
+    
+    @Override
+    public ClassFile getMemberClass() {
+        return null;
+    }
 
     @Override
-    public String getHostClass() {
+    public boolean isAnonymousUnregistered() {
+        return false;
+    }
+    
+    @Override
+    public ClassFile getHostClass() {
         return null;
     }
 
@@ -267,9 +289,14 @@ abstract class ClassFilePrimitive extends ClassFile {
     }
 
     @Override
-    public Object[] getMethodAvailableAnnotations(Signature methodSignature)
+    public String[] getMethodAvailableAnnotations(Signature methodSignature)
     throws MethodNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
+    }
+    
+    @Override
+    public String getMethodAnnotationParameterValueString(Signature methodSignature, String annotation, String parameter) {
+        return null;
     }
 
     @Override
@@ -427,10 +454,20 @@ abstract class ClassFilePrimitive extends ClassFile {
     throws InvalidIndexException {
         throw new InvalidIndexException(NO_CONSTANT_POOL);
     }
+    
+    @Override
+    public ClassFile getSuperclass() {
+        return null;
+    }
 
     @Override
     public String getSuperclassName() {
         return null;
+    }
+    
+    @Override
+    public List<ClassFile> getSuperInterfaces() {
+        return Collections.emptyList();
     }
 
     @Override

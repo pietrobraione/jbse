@@ -184,14 +184,14 @@ public final class Run {
 
         /**
          * Determines whether the stack size of the current state 
-         * is below the maximum treshold for being printed.
+         * is below the maximum threshold for being printed.
          * 
-         * @return {@code true} iff it is below the treshold.
+         * @return {@code true} iff it is below the threshold.
          */
         private boolean stackSizeAcceptable() {
             final State currentState = Run.this.engine.getCurrentState();
             return (Run.this.parameters.getStackDepthShow() == 0 || 
-            Run.this.parameters.getStackDepthShow() > currentState.getStackSize());
+                    Run.this.parameters.getStackDepthShow() > currentState.getStackSize());
         }
 
         /**
@@ -201,7 +201,7 @@ public final class Run {
          * @return {@code true} iff the user told to stop execution.
          */
         private boolean printAndAsk() {
-            if (this.endOfTraceMessage == null && this.traceKind != TraceTypes.CONTRADICTORY && this.stackSizeAcceptable() && mayPrint) {
+            if (this.endOfTraceMessage == null && this.traceKind != TraceTypes.CONTRADICTORY && this.stackSizeAcceptable() && this.mayPrint) {
                 try {
                     final State currentState = Run.this.getCurrentState();
                     Run.this.emitState(currentState, this.isBranch);
@@ -697,6 +697,9 @@ public final class Run {
         } catch (CannotBuildDecisionProcedureException e) {
             err(ERROR_DECISION_PROCEDURE_FAILED + e.getCause() + ".");
             return 1;
+        } catch (NotYetImplementedException e) {
+            err(ERROR_NOT_IMPLEMENTED_FEATURE_DURING_INIT + e.getCause() + ".");
+            return 1;
         } catch (CannotBuildEngineException e) {
             err(ERROR_BUILD_FAILED + e.getCause() + ".");
             return 2;
@@ -947,7 +950,7 @@ public final class Run {
             checkerParameters.setDecisionProcedure(this.decisionProcedureConcretization);
             @SuppressWarnings("resource")
             final DecisionProcedureConservativeRepOk dec = 
-            new DecisionProcedureConservativeRepOk(core, calc, checkerParameters, this.parameters.getConservativeRepOks());
+                new DecisionProcedureConservativeRepOk(core, calc, checkerParameters, this.parameters.getConservativeRepOks());
             dec.setInitialStateSupplier(this::getInitialState); 
             dec.setCurrentStateSupplier(this::getCurrentState); 
             core = dec;
@@ -1253,6 +1256,9 @@ public final class Run {
 
     /** Error: failed guidance. */
     private static final String ERROR_GUIDANCE_FAILED = "Failed guidance, cause: ";
+
+    /** Error: cannot handle something. */
+    private static final String ERROR_NOT_IMPLEMENTED_FEATURE_DURING_INIT = " met an unimplemented feature during initialization: ";
 
     /**
      * Error : unable to initialize engine, because unable to initialize

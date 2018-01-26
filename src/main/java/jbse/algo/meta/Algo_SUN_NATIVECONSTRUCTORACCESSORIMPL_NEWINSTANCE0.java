@@ -4,6 +4,7 @@ import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.Signatures.ILLEGAL_ARGUMENT_EXCEPTION;
 import static jbse.bc.Signatures.INSTANTIATION_EXCEPTION;
 import static jbse.bc.Signatures.JAVA_BOOLEAN;
@@ -24,6 +25,7 @@ import static jbse.bc.Signatures.JAVA_LONG;
 import static jbse.bc.Signatures.JAVA_LONG_VALUE;
 import static jbse.bc.Signatures.JAVA_SHORT;
 import static jbse.bc.Signatures.JAVA_SHORT_VALUE;
+import static jbse.bc.Signatures.JBSE_BASE;
 import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTION;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.common.Type.toPrimitiveInternalName;
@@ -36,14 +38,19 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
-import jbse.bc.exc.BadClassFileException;
+import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
+import jbse.bc.exc.PleaseLoadClassException;
+import jbse.common.exc.ClasspathException;
 import jbse.mem.Array;
 import jbse.mem.Array.AccessOutcomeInValue;
 import jbse.mem.Instance;
@@ -54,7 +61,7 @@ import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Calculator;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -65,7 +72,7 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends Algo_INVOKEMETA_Nonbranching {
-    private String className; //set by cookMore
+    private ClassFile constructorClassFile; //set by cookMore
     private String descriptor; //set by cookMore
     private Value[] params; //set by cookMore
     
@@ -75,7 +82,9 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
     }
 
     @Override
-    protected void cookMore(State state) throws InterruptException, UndefinedResultException, SymbolicValueNotAllowedException {
+    protected void cookMore(State state) 
+    throws InterruptException, UndefinedResultException, SymbolicValueNotAllowedException, 
+    ClasspathException {
         try {
             //gets and check the class of the object that must be created
             final Reference refConstructor = (Reference) this.data.operand(0);
@@ -85,23 +94,22 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
             }
             final Instance constructor = (Instance) state.getObject(refConstructor);
             final Instance_JAVA_CLASS constructorJavaClass = (Instance_JAVA_CLASS) state.getObject((Reference) constructor.getFieldValue(JAVA_CONSTRUCTOR_CLAZZ));
-            this.className = constructorJavaClass.representedClass();
-            final ClassFile constructorClassFile = state.getClassHierarchy().getClassFile(this.className); //primitive classes have no constructors, so it is safe to use getClassFile
-            if (constructorClassFile.isAbstract()) {
+            this.constructorClassFile = constructorJavaClass.representedClass();
+            if (this.constructorClassFile.isAbstract()) {
                 throwNew(state, INSTANTIATION_EXCEPTION);
                 exitFromAlgorithm();
             }
-            if (constructorClassFile.isEnum()) {
+            if (this.constructorClassFile.isEnum()) {
                 //don't know what Hotspot does if the constructor is that of an enum,
                 //but we will suppose it crashes
-                throw new UndefinedResultException("the first argument to sun.reflect.NativeConstructorAccessorImpl.newInstance0 was the constructor of an enum class");
+                throw new UndefinedResultException("The first argument to sun.reflect.NativeConstructorAccessorImpl.newInstance0 was the constructor of an enum class.");
             }
             
             //gets the parameters types
             final Array constructorParameterTypes = (Array) state.getObject((Reference) constructor.getFieldValue(JAVA_CONSTRUCTOR_PARAMETERTYPES));
             if (constructorParameterTypes == null || !constructorParameterTypes.hasSimpleRep()) {
                 //this should never happen
-                failExecution("the parameterTypes field in a java.lang.reflect.Constructor object is null or has not simple representation");
+                failExecution("The parameterTypes field in a java.lang.reflect.Constructor object is null or has not simple representation.");
             }
             final int numOfConstructorParametersFormal = ((Integer) ((Simplex) constructorParameterTypes.getLength()).getActualValue()).intValue();
 
@@ -112,12 +120,12 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
             for (int i = 0; i < numOfConstructorParametersFormal; ++i) {
                 final AccessOutcomeInValue typeFormalAccess = (AccessOutcomeInValue) constructorParameterTypes.getFast(calc.valInt(i));
                 final Instance_JAVA_CLASS typeFormalJavaClass = (Instance_JAVA_CLASS) state.getObject((Reference) typeFormalAccess.getValue());
-                final String typeFormal = typeFormalJavaClass.representedClass();
-                if (typeFormalJavaClass.isPrimitive()) {
-                    sbDescriptor.append(toPrimitiveInternalName(typeFormal));
+                final ClassFile typeFormal = typeFormalJavaClass.representedClass();
+                if (typeFormal.isPrimitive()) {
+                    sbDescriptor.append(toPrimitiveInternalName(typeFormal.getClassName()));
                 } else {
                     sbDescriptor.append(REFERENCE);
-                    sbDescriptor.append(typeFormal);
+                    sbDescriptor.append(typeFormal.getClassName());
                     sbDescriptor.append(TYPEEND);
                 }
             }
@@ -157,22 +165,23 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
         } catch (ClassCastException e) {
             throwVerifyError(state); //TODO is it right?
             exitFromAlgorithm();
-        } catch (BadClassFileException | InvalidOperandException | InvalidTypeException | FastArrayAccessNotAllowedException e) {
+        } catch (InvalidOperandException | InvalidTypeException | FastArrayAccessNotAllowedException e) {
             //this should never happen
             failExecution(e);
         }
     }
     
-    private Value checkAndConvert(State state, Reference refTypeFormal, Reference refValActual) throws InterruptException {
+    private Value checkAndConvert(State state, Reference refTypeFormal, Reference refValActual) 
+    throws InterruptException, ClasspathException {
         try {
             final Instance_JAVA_CLASS typeFormalJavaClass = (Instance_JAVA_CLASS) state.getObject(refTypeFormal);
-            final String typeFormal = typeFormalJavaClass.representedClass();
+            final ClassFile typeFormal = typeFormalJavaClass.representedClass();
             final Objekt actual = state.getObject(refValActual);
-            final String typeActual = actual.getType();
-            if (typeFormalJavaClass.isPrimitive()) {
+            final ClassFile typeActual = actual.getType();
+            if (typeFormal.isPrimitive()) {
                 //unboxes the parameter
                 final Primitive actualValue;
-                switch (typeActual) {
+                switch (typeActual.getClassName()) {
                 case JAVA_BOOLEAN:
                     actualValue = (Primitive) actual.getFieldValue(JAVA_BOOLEAN_VALUE);
                     break;
@@ -204,7 +213,7 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
                 }
                 
                 //possibly widens the unboxed value and returns it
-                final char typeFormalPrimitive = toPrimitiveInternalName(typeFormal);
+                final char typeFormalPrimitive = toPrimitiveInternalName(typeFormal.getClassName());
                 final char typeActualValue = actualValue.getType();
                 if (typeFormalPrimitive == typeActualValue) {
                     return actualValue;
@@ -227,37 +236,39 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
                     exitFromAlgorithm();
                 }
             }
-        } catch (ClassCastException | BadClassFileException e) {
+        } catch (ClassCastException e) {
             //this should never happen
             failExecution(e);
         }
         return null; //to keep the compiler happy
     }
 
-
     @Override
-    protected void update(State state) throws ThreadStackEmptyException, InterruptException {
-        try {
-            //creates the new object in the heap
-            final ReferenceConcrete refNew = state.createInstance(this.className);
-            state.pushOperand(refNew);
-            this.params[0] = refNew;
-            
-            //pushes the frames for the constructor and for the 
-            //method that boxes the exceptions raised by the constructor
-            state.pushFrame(JBSE_BASE_BOXINVOCATIONTARGETEXCEPTION, false, this.pcOffset);
-            final Signature constructorSignature = new Signature(this.className, this.descriptor, "<init>");
-            state.pushFrame(constructorSignature, false, 0, this.params);
-        } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
-            exitFromAlgorithm();
-        } catch (NullMethodReceiverException | BadClassFileException | MethodNotFoundException | 
-                 MethodCodeNotFoundException | InvalidSlotException | InvalidProgramCounterException | 
-                 InvalidTypeException e) {
-            //this should never happen
-            //TODO really?
-            failExecution(e);
-        }
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            try {
+                //creates the new object in the heap
+                final ReferenceConcrete refNew = state.createInstance(this.constructorClassFile);
+                state.pushOperand(refNew);
+                this.params[0] = refNew;
+
+                //pushes the frames for the constructor and for the 
+                //method that boxes the exceptions raised by the constructor
+                final ClassFile cf_JBSE_BASE = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, JBSE_BASE, state.areStandardClassLoadersNotReady());
+                state.pushFrame(cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTION, false, this.pcOffset);
+                final Signature constructorSignature = new Signature(this.constructorClassFile.getClassName(), this.descriptor, "<init>");
+                state.pushFrame(this.constructorClassFile, constructorSignature, false, 0, this.params);
+            } catch (HeapMemoryExhaustedException e) {
+                throwNew(state, OUT_OF_MEMORY_ERROR);
+                exitFromAlgorithm();
+            } catch (NullMethodReceiverException | MethodNotFoundException | MethodCodeNotFoundException |
+                     ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException | 
+                     PleaseLoadClassException | InvalidSlotException | InvalidProgramCounterException e) {
+                //this should never happen
+                //TODO really?
+                failExecution(e);
+            }
+        };
     }
     
     @Override

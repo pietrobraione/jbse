@@ -11,20 +11,20 @@ import jbse.val.Reference;
  */
 public abstract class DecisionAlternative_XALOAD_In 
 extends DecisionAlternative_XALOAD implements DecisionAlternative_XYLOAD_GETX_Loads {
-	private final boolean fresh;
-	private final Reference arrayToWriteBack;
-	
-	protected DecisionAlternative_XALOAD_In(String branchId, Expression arrayAccessExpression, boolean fresh, Reference arrayToWriteBack, int branchNumber) {
-		super(branchId, arrayAccessExpression, branchNumber);
-		this.fresh = fresh;
-		this.arrayToWriteBack = arrayToWriteBack;
-	}
-	
-	public final boolean isValueFresh() {
-		return this.fresh;
-	}
-	
-	public final Reference getArrayToWriteBack() {
-		return this.arrayToWriteBack;
-	}
+    private final boolean fresh;
+    private final Reference arrayReference;
+
+    protected DecisionAlternative_XALOAD_In(String branchId, Expression arrayAccessExpression, boolean fresh, Reference arrayReference, int branchNumber) {
+        super(branchId, arrayAccessExpression, branchNumber);
+        this.fresh = fresh;
+        this.arrayReference = arrayReference;
+    }
+
+    public final boolean isValueFresh() {
+        return this.fresh;
+    }
+
+    public final Reference getArrayReference() {
+        return this.arrayReference;
+    }
 }

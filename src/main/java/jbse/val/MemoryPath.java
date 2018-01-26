@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
+import jbse.bc.ClassFile;
+
 /**
  * A path is a sequence of {@link Access}es to a state's
  * memory that yields a value.
@@ -23,8 +25,8 @@ public final class MemoryPath implements Iterable<Access> {
         this.hashCode = prime + Arrays.hashCode(this.accesses);
     }
     
-    public static MemoryPath mkStatic(String className) {
-        return new MemoryPath(new AccessStatic(className));
+    public static MemoryPath mkStatic(ClassFile classFile) {
+        return new MemoryPath(new AccessStatic(classFile));
     }
     
     public static MemoryPath mkLocalVariable(String variableName) {

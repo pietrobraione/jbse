@@ -9,15 +9,18 @@ import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
 import java.util.function.Supplier;
 
+import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.common.Type;
+import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
-import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XNEWARRAY;
 import jbse.val.Calculator;
 import jbse.val.Expression;
@@ -49,7 +52,7 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
 
     //must be set by subclasses in preCook
     protected Primitive[] dimensionsCounts;
-    protected String arrayType;
+    protected ClassFile arrayType;
 
     private int layersToCreateNow; //produced by cook
     private Primitive countsNonNegative, countsNegative; //produced by cook
@@ -63,8 +66,11 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
      * @param state a {@link State}
      * @throws InterruptException if the execution of this {@link Algorithm}
      *         must be interrupted.
+     * @throws ClasspathException if some standard class is missing from the classpath.
+     * @throws ThreadStackEmptyException if the stack is empty.
+     * @throws InvalidInputException if some input is ill-formed.
      */
-    protected abstract void preCook(State state) throws InterruptException;
+    protected abstract void preCook(State state) throws InterruptException, ClasspathException, ThreadStackEmptyException, InvalidInputException;
 
     @Override
     protected BytecodeCooker bytecodeCooker() {
@@ -99,6 +105,14 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
                 throwVerifyError(state);
                 exitFromAlgorithm();
             }
+            
+            //calculates the number of dimensions as declared in arrayType
+            //and checks that the length parameter does not exceed this number
+            final int dimDecl = Type.getDeclaredNumberOfDimensions(this.arrayType.getClassName());
+            if (dimDecl < this.dimensionsCounts.length) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            }
         };
     }
 
@@ -128,19 +142,6 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
     protected StrategyUpdate<DecisionAlternative_XNEWARRAY> updater() {
         return (state, alt) -> {
             if (alt.ok()) {
-                //calculates the number of dimensions as declared in arrayType
-                //and checks that the length parameter does not exceed this number
-                int dimDecl = Type.getDeclaredNumberOfDimensions(Algo_XNEWARRAY.this.arrayType);
-                if (dimDecl < Algo_XNEWARRAY.this.dimensionsCounts.length) {
-                    throwVerifyError(state);
-                    exitFromAlgorithm();
-                }
-
-                //TODO check that arrayMemberSignature refers to an existing class (when should this be done???)
-                //determines the signature of the array member
-                //String arrayMemberSignature = arrayType.substring(dimDecl);
-                //etc...
-
                 //determines the initialization value
                 Value initValue = null; //means default value
                 if (this.layersToCreateNow < this.dimensionsCounts.length) {
@@ -149,7 +150,7 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
                     final Primitive[] lConstr = new Primitive[this.dimensionsCounts.length - this.layersToCreateNow];
                     System.arraycopy(this.dimensionsCounts, this.layersToCreateNow, lConstr, 0, lConstr.length);
                     try {
-                        initValue = new ReferenceArrayImmaterial(arrayType.substring(this.layersToCreateNow), lConstr);
+                        initValue = new ReferenceArrayImmaterial(this.arrayType.getMemberClass(this.layersToCreateNow), lConstr);
                     } catch (InvalidTypeException e) {
                         //this should never happen
                         failExecution(e);
@@ -214,7 +215,7 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
                     zeroBreak = this.ctx.decisionProcedure.isSat(hier, currentLayerLengthZero); 
                     zeroBreak = zeroBreak && !this.ctx.decisionProcedure.isSat(hier, currentLayerLengthNonzero);
                 } catch (ClassCastException | InvalidOperandException | 
-                InvalidTypeException | InvalidInputException e) {
+                         InvalidTypeException | InvalidInputException e) {
                     //this should never happen
                     failExecution(e);
                 } 
@@ -224,7 +225,7 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
             final Reference[] next = new Reference[toCreateInCurrentLayer];
             for (int k = 0; k < toCreateInCurrentLayer; ++k) {
                 //creates the k-th array in the layer
-                final String subarrayType = this.arrayType.substring(currentLayer);
+                final ClassFile subarrayType = this.arrayType.getMemberClass(currentLayer);
                 final ReferenceConcrete ref = state.createArray(initValue, currentLayerLength, subarrayType);
 
                 //stores the reference to the created array

@@ -1,14 +1,22 @@
 package jbse.algo.meta;
 
+import static jbse.algo.Util.failExecution;
 import static jbse.bc.Signatures.JAVA_SYSTEM;
 import static jbse.bc.Signatures.JAVA_SYSTEM_OUT;
 
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
+import jbse.algo.StrategyUpdate;
 import jbse.algo.meta.exc.UndefinedResultException;
+import jbse.bc.ClassFile;
+import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Klass;
 import jbse.mem.State;
+import jbse.tree.DecisionAlternative_NONE;
 
 /**
  * Meta-level implementation of {@link java.lang.System#setOut0(java.io.PrintStream)}.
@@ -25,15 +33,24 @@ public final class Algo_JAVA_SYSTEM_SETOUT0 extends Algo_INVOKEMETA_Nonbranching
     
     
     @Override
-    protected void cookMore(State state) throws UndefinedResultException {
-        this.k = state.getKlass(JAVA_SYSTEM);
-        if (this.k == null) {
-            throw new UndefinedResultException("Invoked java.lang.System.setOut0 before initialization of class java.lang.System.");
+    protected void cookMore(State state) throws UndefinedResultException, InvalidInputException {
+        try {
+            final ClassFile cf_JAVA_SYSTEM = state.getClassHierarchy().loadCreateClass(JAVA_SYSTEM);
+            this.k = state.getKlass(cf_JAVA_SYSTEM);
+            if (this.k == null || !this.k.isInitialized()) {
+                throw new UndefinedResultException("Invoked java.lang.System.setIn0 before initialization of class java.lang.System.");
+            }
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException |
+                 ClassFileNotAccessibleException e) {
+            //this should never happen
+            failExecution(e);
         }
     }
 
     @Override
-    protected void update(State state) {
-        this.k.setFieldValue(JAVA_SYSTEM_OUT, this.data.operand(0));
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            this.k.setFieldValue(JAVA_SYSTEM_OUT, this.data.operand(0));
+        };
     }
 }

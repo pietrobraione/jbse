@@ -11,7 +11,6 @@ import jbse.bc.ConstantPoolString;
 import jbse.bc.ConstantPoolValue;
 import jbse.bc.Dispatcher;
 import jbse.bc.Signature;
-import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.common.Type;
 import jbse.common.Util;
@@ -325,7 +324,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                         UW = asUnsignedByte(f.getInstruction(1));
                     }
                     final ConstantPoolValue cpVal = 
-                    hier.getClassFile(f.getCurrentMethodSignature().getClassName()).getValueFromConstantPool(UW);
+                        f.getCurrentClass().getValueFromConstantPool(UW);
                     final Object val = cpVal.getValue();
 
                     if (val instanceof Integer) {
@@ -344,7 +343,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                         retVal += UNRECOGNIZED_BYTECODE;
                     }
                 } catch (InvalidProgramCounterException | InvalidIndexException |
-                BadClassFileException | UnexpectedInternalException e) {
+                         UnexpectedInternalException e) {
                     //unrecognized bytecode
                     retVal += UNRECOGNIZED_BYTECODE;
                 }
@@ -372,10 +371,10 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                 String retVal = DispatchStrategyFormat1CL.this.text + " ";
                 try {
                     final int UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
-                    final String sig = hier.getClassFile(f.getCurrentMethodSignature().getClassName()).getClassSignature(UW);
+                    final String sig = f.getCurrentClass().getClassSignature(UW);
                     retVal += sig;
                 } catch (InvalidProgramCounterException | InvalidIndexException |
-                BadClassFileException | UnexpectedInternalException e) {
+                         UnexpectedInternalException e) {
                     //unrecognized bytecode
                     retVal += UNRECOGNIZED_BYTECODE;
                 }
@@ -402,10 +401,10 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                 String retVal = DispatchStrategyFormat1FI.this.text + " ";
                 try {
                     final int UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
-                    final Signature sig = hier.getClassFile(f.getCurrentMethodSignature().getClassName()).getFieldSignature(UW);
+                    final Signature sig = f.getCurrentClass().getFieldSignature(UW);
                     retVal += sig.getClassName() + Signature.SIGNATURE_SEPARATOR + sig.getName() + " [" + UW + "]";
                 } catch (InvalidProgramCounterException | InvalidIndexException |
-                BadClassFileException | UnexpectedInternalException e) {
+                         UnexpectedInternalException e) {
                     //unrecognized bytecode
                     retVal += UNRECOGNIZED_BYTECODE;
                 }
@@ -436,13 +435,13 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                     final int UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
                     final Signature sig;
                     if (isInterface) {
-                        sig = hier.getClassFile(f.getCurrentMethodSignature().getClassName()).getInterfaceMethodSignature(UW);
+                        sig = f.getCurrentClass().getInterfaceMethodSignature(UW);
                     } else {
-                        sig = hier.getClassFile(f.getCurrentMethodSignature().getClassName()).getMethodSignature(UW);
+                        sig = f.getCurrentClass().getMethodSignature(UW);
                     }
                     retVal += sig + " [" + UW + "]";
                 } catch (InvalidProgramCounterException | InvalidIndexException |
-                BadClassFileException | UnexpectedInternalException e) {
+                         UnexpectedInternalException e) {
                     //unrecognized bytecode
                     retVal += UNRECOGNIZED_BYTECODE;
                 }
@@ -471,10 +470,10 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                 try {
                     final int UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
                     final short UB = f.getInstruction(3);
-                    final String sig = hier.getClassFile(f.getCurrentMethodSignature().getClassName()).getClassSignature(UW);
+                    final String sig = f.getCurrentClass().getClassSignature(UW);
                     retVal += sig + " " + UB + " [" + UW + "]";
                 } catch (InvalidProgramCounterException | InvalidIndexException |
-                BadClassFileException | UnexpectedInternalException e) {
+                         UnexpectedInternalException e) {
                     //unrecognized bytecode
                     retVal += UNRECOGNIZED_BYTECODE;
                 }

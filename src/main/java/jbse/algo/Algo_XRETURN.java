@@ -2,7 +2,11 @@ package jbse.algo;
 
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.invokeClassLoaderLoadClass;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.common.Type.className;
 import static jbse.common.Type.INT;
 import static jbse.common.Type.NULLREF;
@@ -14,9 +18,12 @@ import static jbse.common.Type.splitReturnValueDescriptor;
 
 import java.util.function.Supplier;
 
-import jbse.bc.exc.BadClassFileException;
+import jbse.bc.ClassFile;
+import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.PleaseLoadClassException;
 import jbse.dec.DecisionProcedureAlgorithms;
-import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -73,6 +80,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             //TODO this code is duplicated in Algo_PUTX: refactor! 
             try {
                 //checks/converts the type of the value to be returned
+                final ClassFile currentClass = state.getCurrentClass();    
                 final String destinationType = splitReturnValueDescriptor(state.getCurrentMethodSignature().getDescriptor());
                 if (isPrimitive(destinationType)) {
                     final char destinationTypePrimitive = destinationType.charAt(0);
@@ -95,22 +103,33 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 } else if (isReference(valueType)) {
                     final Reference refToReturn = (Reference) this.valueToReturn;
                     if (!state.isNull(refToReturn)) {
-                        final String valueObjectType = state.getObject(refToReturn).getType();
-                        if (!state.getClassHierarchy().isAssignmentCompatible(valueObjectType, className(destinationType))) {
+                        //TODO the JVMS v8, *return instruction, does not explicitly say how and when the return descriptor type is resolved  
+                        final ClassFile destinationTypeClass = state.getClassHierarchy().resolveClass(currentClass, className(destinationType), state.areStandardClassLoadersNotReady());
+                        final ClassFile valueObjectType = state.getObject(refToReturn).getType();
+                        if (!state.getClassHierarchy().isAssignmentCompatible(valueObjectType, destinationTypeClass)) {
                             throwVerifyError(state);
                             exitFromAlgorithm();
                         }
                     }
                 } else if (valueType == NULLREF) {
                     //nothing to do
-                } else { //field has reference type, value has primitive type
+                } else { //destination has reference type, value has primitive type
                     throwVerifyError(state);
                     exitFromAlgorithm();
                 }
-            } catch (BadClassFileException | ThreadStackEmptyException e) {
-                //this should not happen
-                //TODO really?
-                failExecution(e);
+            } catch (PleaseLoadClassException e) {
+                invokeClassLoaderLoadClass(state, e);
+                exitFromAlgorithm();
+            } catch (ClassFileNotFoundException e) {
+                //TODO this exception should wrap a ClassNotFoundException
+                throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                exitFromAlgorithm();
+            } catch (ClassFileNotAccessibleException e) {
+                throwNew(state, ILLEGAL_ACCESS_ERROR);
+                exitFromAlgorithm();
+            } catch (ClassFileIllFormedException e) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
             }
             
             //since the value to return goes on the operand stack, it 

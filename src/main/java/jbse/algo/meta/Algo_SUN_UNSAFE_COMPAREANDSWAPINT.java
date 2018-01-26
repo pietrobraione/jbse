@@ -7,6 +7,7 @@ import static jbse.algo.Util.throwVerifyError;
 import jbse.algo.InterruptException;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
+import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
 import jbse.val.Primitive;
 import jbse.val.Simplex;
@@ -27,7 +28,7 @@ public final class Algo_SUN_UNSAFE_COMPAREANDSWAPINT extends Algo_SUN_UNSAFE_COM
 
     @Override
     protected boolean checkCompare(State state, Value current, Value toCompare) 
-    throws CannotManageStateException, InterruptException {
+    throws CannotManageStateException, InterruptException, ClasspathException {
         try {
             final Primitive primCurrent = (Primitive) current;
             final Primitive primToCompare = (Primitive) toCompare;

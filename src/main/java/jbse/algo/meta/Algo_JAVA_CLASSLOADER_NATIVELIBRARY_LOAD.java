@@ -10,9 +10,11 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
+import jbse.common.exc.ClasspathException;
 import jbse.mem.Instance;
 import jbse.mem.State;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 import jbse.val.Value;
 
@@ -22,23 +24,20 @@ import jbse.val.Value;
  * @author Pietro Braione
  */
 public final class Algo_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD extends Algo_INVOKEMETA_Nonbranching {
+    private Instance thisInstance; //set by cookMore
+    
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 3;
     }
 
     @Override
-    protected void cookMore(State state) throws InterruptException {
+    protected void cookMore(State state) throws InterruptException, ClasspathException {
         try {
             //just sets some field of the NativeLibrary object, to simulate
             //the fact that the library is loaded
             final Reference thisReference = (Reference) this.data.operand(0);
-            final Value name = this.data.operand(1);
-            final Value isBuiltin = this.data.operand(2);
-            final Instance thisInstance = (Instance) state.getObject(thisReference);
-            thisInstance.setFieldValue(JAVA_CLASSLOADER_NATIVELIBRARY_NAME, name);
-            thisInstance.setFieldValue(JAVA_CLASSLOADER_NATIVELIBRARY_ISBUILTIN, isBuiltin);
-            thisInstance.setFieldValue(JAVA_CLASSLOADER_NATIVELIBRARY_LOADED, state.getCalculator().valBoolean(true));
+            this.thisInstance = (Instance) state.getObject(thisReference);
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
@@ -46,7 +45,13 @@ public final class Algo_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD extends Algo_INVOKEM
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        //nothing to do
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            final Value name = this.data.operand(1);
+            final Value isBuiltin = this.data.operand(2);
+            this.thisInstance.setFieldValue(JAVA_CLASSLOADER_NATIVELIBRARY_NAME, name);
+            this.thisInstance.setFieldValue(JAVA_CLASSLOADER_NATIVELIBRARY_ISBUILTIN, isBuiltin);
+            this.thisInstance.setFieldValue(JAVA_CLASSLOADER_NATIVELIBRARY_LOADED, state.getCalculator().valBoolean(true));
+        };
     }
 }

@@ -1,5 +1,7 @@
 package jbse.algo;
 
+import jbse.algo.exc.SymbolicValueNotAllowedException;
+import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
@@ -32,7 +34,16 @@ public interface StrategyRefine<R> {
      * @throws InterruptException  possibly raised if the execution 
      *         of the bytecode semantics must be interrupted, in this
      *         case only because of heap memory exhaustion.
+     * @throws SymbolicValueNotAllowedException possibly raised when the 
+     *         refinement action leads to assuming a symbolic object in 
+     *         the initial state that is disallowed (currently 
+     *         {@code java.lang.Class} or {@code java.lang.ClassLoader}
+     *         objects).
+     * @throws ClasspathException possibly raised when the refinement
+     *         action must throw a standard exception and the exception 
+     *         is not found in the classpath.
      */
     public void refine(State s, R r) 
-    throws DecisionException, ContradictionException, InvalidTypeException, InterruptException;
+    throws DecisionException, ContradictionException, InvalidTypeException, InterruptException,
+    SymbolicValueNotAllowedException, ClasspathException;
 }

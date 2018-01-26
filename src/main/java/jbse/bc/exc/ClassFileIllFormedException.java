@@ -1,6 +1,15 @@
 package jbse.bc.exc;
 
-public class ClassFileIllFormedException extends BadClassFileException {
+/**
+ * Exception thrown in all the situations (e.g., class resolution)
+ * where a class definition was found but it is ill-formed (not a classfile). 
+ * Typically some {@link LinkageError} of {@link VerifyError} 
+ * must be raised.
+ * 
+ * @author Pietro Braione
+ *
+ */
+public class ClassFileIllFormedException extends Exception {
 
     /**
      * 

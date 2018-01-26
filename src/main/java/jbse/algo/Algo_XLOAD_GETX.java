@@ -1,11 +1,19 @@
 package jbse.algo;
 
+import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 
-import jbse.bc.exc.BadClassFileException;
-import jbse.common.exc.UnexpectedInternalException;
+import jbse.algo.exc.SymbolicValueNotAllowedException;
+import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
-import jbse.dec.exc.InvalidInputException;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
 import jbse.tree.DecisionAlternative_XLOAD_GETX;
@@ -45,7 +53,21 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
     @Override
     protected final StrategyDecide<DecisionAlternative_XLOAD_GETX> decider() {
         return (state, result) -> {
-            final Outcome o = this.ctx.decisionProcedure.resolve_XLOAD_GETX(state, this.valToLoad, result);
+            Outcome o = null; //to keep the compiler happy
+            try {
+                o = this.ctx.decisionProcedure.resolve_XLOAD_GETX(state, this.valToLoad, result);
+            //TODO the next three catch blocks should disappear, see comments on removing exceptions in jbse.dec.DecisionProcedureAlgorithms.doResolveReference
+            } catch (ClassFileNotFoundException exc) {
+                //TODO this exception should wrap a ClassNotFoundException
+                throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                exitFromAlgorithm();
+            } catch (ClassFileNotAccessibleException exc) {
+                throwNew(state, ILLEGAL_ACCESS_ERROR);
+                exitFromAlgorithm();
+            } catch (ClassFileIllFormedException exc) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
+            }
             this.someRefNotExpanded = o.noReferenceExpansion();
             if (this.someRefNotExpanded) {
                 try {
@@ -53,7 +75,8 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
                     this.nonExpandedRefTypes = refToLoad.getStaticType();
                     this.nonExpandedRefOrigins = refToLoad.getOrigin().toString();
                 } catch (ClassCastException e) {
-                    throw new UnexpectedInternalException(e);
+                    //this should never happen
+                    failExecution(e);
                 }
             }
             return o;
@@ -65,7 +88,8 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
         return new StrategyRefine_XLOAD_GETX() {
             @Override
             public void refineRefExpands(State s, DecisionAlternative_XLOAD_GETX_Expands alt) 
-            throws ContradictionException, InvalidTypeException, InterruptException {
+            throws ContradictionException, InvalidTypeException, InterruptException, 
+            SymbolicValueNotAllowedException, ClasspathException {
                 Algo_XLOAD_GETX.this.refineRefExpands(s, alt); //implemented in Algo_XYLOAD_GETX
             }
 
@@ -100,14 +124,9 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
     }
 
     @Override
-    protected final void onInvalidInputException(State state, InvalidInputException e) {
+    protected final void onInvalidInputException(State state, InvalidInputException e) throws ClasspathException {
         //bad value to load (triggered by call to resolve_XLOAD_GETX done by decider())
         throwVerifyError(state);
     }
 
-    @Override
-    protected final void onBadClassFileException(State state, BadClassFileException e) {
-        //bad value to load (triggered by call to resolve_XLOAD_GETX done by decider())
-        throwVerifyError(state);
-    }
 }

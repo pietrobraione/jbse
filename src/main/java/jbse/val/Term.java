@@ -26,29 +26,29 @@ import jbse.val.exc.ValueDoesNotSupportNativeException;
  */
 public final class Term extends Primitive {
     /** The conventional value of the {@link Term}, a {@link String}. */
-	private final String value;
-	
-	/** Cached hash code. */
-	private final int hashCode;
-	
-	/**
-	 * Constructor.
-	 * 
-	 * @param type
-	 * @param calc
-	 * @param value
-	 * @throws InvalidTypeException 
-	 */
-	Term(char type, Calculator calc, String value) throws InvalidTypeException {
-		super(type, calc);
-		this.value = value;
-		
-		//calculates the hash code
-		final int prime = 293;
-		int tmpHashCode = 1;
-		tmpHashCode = prime * tmpHashCode + ((value == null) ? 0 : value.hashCode());
-		this.hashCode = tmpHashCode;
-	}
+    private final String value;
+
+    /** Cached hash code. */
+    private final int hashCode;
+
+    /**
+     * Constructor.
+     * 
+     * @param type
+     * @param calc
+     * @param value
+     * @throws InvalidTypeException 
+     */
+    Term(char type, Calculator calc, String value) throws InvalidTypeException {
+        super(type, calc);
+        this.value = value;
+
+        //calculates the hash code
+        final int prime = 293;
+        int tmpHashCode = 1;
+        tmpHashCode = prime * tmpHashCode + ((value == null) ? 0 : value.hashCode());
+        this.hashCode = tmpHashCode;
+    }
 
     public String getValue() {
         return this.value;
@@ -57,81 +57,81 @@ public final class Term extends Primitive {
     /**
      * {@inheritDoc}
      */
-	@Override
-	public void accept(PrimitiveVisitor v) throws Exception {
-		v.visitTerm(this);
-	}
+    @Override
+    public void accept(PrimitiveVisitor v) throws Exception {
+        v.visitTerm(this);
+    }
 
     /**
      * {@inheritDoc}
      */
-	@Override
-	public boolean surelyTrue() {
-		return false;
-	}
+    @Override
+    public boolean surelyTrue() {
+        return false;
+    }
 
     /**
      * {@inheritDoc}
      */
-	@Override
-	public boolean surelyFalse() {
-		return false;
-	}
+    @Override
+    public boolean surelyFalse() {
+        return false;
+    }
 
     /**
      * {@inheritDoc}
      */
-	@Override
-	public Object getValueForNative() throws ValueDoesNotSupportNativeException {
-		throw new ValueDoesNotSupportNativeException();
-	}
+    @Override
+    public Object getValueForNative() throws ValueDoesNotSupportNativeException {
+        throw new ValueDoesNotSupportNativeException();
+    }
 
     /**
      * {@inheritDoc}
      */
-	@Override
-	public boolean isSymbolic() {
-		return true;
-	}
+    @Override
+    public boolean isSymbolic() {
+        return true;
+    }
 
     /**
      * {@inheritDoc}
      */
-	@Override
-	public int hashCode() {
-		return this.hashCode;
-	}
+    @Override
+    public int hashCode() {
+        return this.hashCode;
+    }
 
     /**
      * {@inheritDoc}
      */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		Term other = (Term) obj;
-		if (value == null) {
-			if (other.value != null) { 
-				return false;
-			}
-		} else if (!value.equals(other.value)) {
-			return false;
-		}
-		return true;
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        Term other = (Term) obj;
+        if (value == null) {
+            if (other.value != null) { 
+                return false;
+            }
+        } else if (!value.equals(other.value)) {
+            return false;
+        }
+        return true;
+    }
 
     /**
      * {@inheritDoc}
      */
-	@Override
-	public String toString() {
-		return this.value;
-	}
+    @Override
+    public String toString() {
+        return this.value;
+    }
 }

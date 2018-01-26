@@ -3,6 +3,7 @@ package jbse.apps.run;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
@@ -12,6 +13,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.jvm.RunnerParameters;
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.exc.CannotAssumeSymbolicObjectException;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.meta.annotations.ConservativeRepOk;
@@ -46,11 +48,13 @@ public final class DecisionProcedureConservativeRepOk extends DecisionProcedureC
     }
 
     @Override
-    protected boolean isSatExpandsLocal(ClassHierarchy hier, ReferenceSymbolic r, String className)
+    protected boolean isSatExpandsLocal(ClassHierarchy hier, ReferenceSymbolic r, ClassFile classFile)
     throws DecisionException {
         final State sIni = this.checker.makeInitialState();
         try {
-            sIni.assumeExpands(r, className);
+            sIni.assumeExpands(r, classFile);
+        } catch (CannotAssumeSymbolicObjectException e) {
+            return false;
         } catch (InvalidTypeException | ContradictionException | HeapMemoryExhaustedException e) {
             //this should not happen
             throw new UnexpectedInternalException(e);

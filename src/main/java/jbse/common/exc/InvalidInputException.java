@@ -1,4 +1,4 @@
-package jbse.dec.exc;
+package jbse.common.exc;
 
 public class InvalidInputException extends Exception {
 	/**

@@ -1,15 +1,13 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.failExecution;
 import static jbse.common.Type.INT;
 
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.Algorithm;
-import jbse.mem.State;
-import jbse.mem.exc.ThreadStackEmptyException;
-import jbse.val.exc.InvalidTypeException;
+import jbse.algo.StrategyUpdate;
+import jbse.tree.DecisionAlternative_NONE;
 
 /**
  * An {@link Algorithm} implementing the effect of a method call
@@ -25,12 +23,9 @@ public final class Algo_JBSE_ANALYSIS_ANY extends Algo_INVOKEMETA_Nonbranching {
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        try {
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
             state.pushOperand(state.getCalculator().valAny().widen(INT));
-        } catch (InvalidTypeException e) {
-            //this should never happen
-            failExecution(e);
-        }
+        };
     }
 }

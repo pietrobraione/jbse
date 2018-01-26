@@ -7,16 +7,23 @@ import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.XALOADSTORE_OFFSET;
 import static jbse.bc.Signatures.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION;
+import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
-import static jbse.common.Type.getArrayMemberType;
 
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.function.Supplier;
 
 import jbse.algo.exc.MissingTriggerParameterException;
+import jbse.algo.exc.NotYetImplementedException;
+import jbse.algo.exc.SymbolicValueNotAllowedException;
+import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.common.Type;
+import jbse.common.exc.ClasspathException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
@@ -157,7 +164,7 @@ StrategyUpdate_XALOAD> {
                             val = ((Array.AccessOutcomeInValue) e).getValue();
                             if (val == null) {
                                 try {
-                                    val = state.createSymbol(getArrayMemberType(arrayToProcess.getType()), 
+                                    val = state.createSymbol(arrayToProcess.getType().getMemberClass().getClassName(), 
                                                              arrayToProcess.getOrigin().thenArrayMember(this.index.add(arrayOffset)));
                                 } catch (InvalidOperandException | InvalidTypeException exc) {
                                     //this should never happen
@@ -175,6 +182,17 @@ StrategyUpdate_XALOAD> {
                                                                 e.getAccessCondition() : 
                                                                 (Expression) arrayAccessCondition.and(e.getAccessCondition()));
                             o = this.ctx.decisionProcedure.resolve_XALOAD(state, accessCondition, val, fresh, refToArrayToProcess, result);
+                        //TODO the next three catch blocks should disappear, see comments on removing exceptions in jbse.dec.DecisionProcedureAlgorithms.doResolveReference
+                        } catch (ClassFileNotFoundException exc) {
+                            //TODO this exception should wrap a ClassNotFoundException
+                            throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                            exitFromAlgorithm();
+                        } catch (ClassFileNotAccessibleException exc) {
+                            throwNew(state, ILLEGAL_ACCESS_ERROR);
+                            exitFromAlgorithm();
+                        } catch (ClassFileIllFormedException exc) {
+                            throwVerifyError(state);
+                            exitFromAlgorithm();
                         } catch (InvalidOperandException | InvalidTypeException exc) {
                             //this should never happen
                             failExecution(exc);
@@ -220,7 +238,7 @@ StrategyUpdate_XALOAD> {
 
     @Override   
     protected Value possiblyMaterialize(State state, Value val) 
-    throws DecisionException, InterruptException {
+    throws DecisionException, InterruptException, ClasspathException {
         //calculates the actual value to push by materializing 
         //a member array, if it is the case, and then pushes it
         //on the operand stack
@@ -251,7 +269,8 @@ StrategyUpdate_XALOAD> {
         return new StrategyRefine_XALOAD() {
             @Override
             public void refineRefExpands(State state, DecisionAlternative_XALOAD_Expands altExpands) 
-            throws DecisionException, ContradictionException, InvalidTypeException, InterruptException {
+            throws DecisionException, ContradictionException, InvalidTypeException, InterruptException, 
+            SymbolicValueNotAllowedException, ClasspathException {
                 //handles all the assumptions for reference resolution by expansion
                 Algo_XALOAD.this.refineRefExpands(state, altExpands); //implemented in Algo_XYLOAD_GETX
 
@@ -262,7 +281,7 @@ StrategyUpdate_XALOAD> {
                 //if the value is fresh, writes it back in the array
                 if (altExpands.isValueFresh()) { //pleonastic: all unresolved symbolic references from an array are fresh
                     final ReferenceSymbolic referenceToExpand = altExpands.getValueToLoad();
-                    final Reference source = altExpands.getArrayToWriteBack();
+                    final Reference source = altExpands.getArrayReference();
                     writeBackToSource(state, source, referenceToExpand);
                 }
             }
@@ -280,7 +299,7 @@ StrategyUpdate_XALOAD> {
                 //if the value is fresh, writes it back in the array
                 if (altAliases.isValueFresh()) { //pleonastic: all unresolved symbolic references from an array are fresh
                     final ReferenceSymbolic referenceToResolve = altAliases.getValueToLoad();
-                    final Reference source = altAliases.getArrayToWriteBack();
+                    final Reference source = altAliases.getArrayReference();
                     writeBackToSource(state, source, referenceToResolve);
                 }
             }
@@ -297,7 +316,7 @@ StrategyUpdate_XALOAD> {
                 //if the value is fresh, writes it back in the array
                 if (altNull.isValueFresh()) { //pleonastic: all unresolved symbolic references from an array are fresh
                     final ReferenceSymbolic referenceToResolve = altNull.getValueToLoad();
-                    final Reference source = altNull.getArrayToWriteBack();
+                    final Reference source = altNull.getArrayReference();
                     writeBackToSource(state, source, referenceToResolve);
                 }
             }
@@ -311,7 +330,7 @@ StrategyUpdate_XALOAD> {
                 //if the value is fresh, writes it back in the array
                 if (altResolved.isValueFresh()) {
                     final Value valueToLoad = altResolved.getValueToLoad();
-                    final Reference source = altResolved.getArrayToWriteBack();
+                    final Reference source = altResolved.getArrayReference();
                     writeBackToSource(state, source, valueToLoad);
                 }
             }
@@ -328,19 +347,21 @@ StrategyUpdate_XALOAD> {
         return new StrategyUpdate_XALOAD() {
             @Override
             public void updateResolved(State s, DecisionAlternative_XALOAD_Resolved dav) 
-            throws DecisionException, InterruptException, MissingTriggerParameterException {
+            throws DecisionException, InterruptException, MissingTriggerParameterException, 
+            ClasspathException, NotYetImplementedException {
                 Algo_XALOAD.this.update(s, dav); //implemented in Algo_XYLOAD_GETX
             }
 
             @Override
             public void updateReference(State s, DecisionAlternative_XALOAD_Unresolved dar) 
-            throws DecisionException, InterruptException, MissingTriggerParameterException {
+            throws DecisionException, InterruptException, MissingTriggerParameterException, 
+            ClasspathException, NotYetImplementedException {
                 Algo_XALOAD.this.update(s, dar); //implemented in Algo_XYLOAD_GETX
             }
 
             @Override
             public void updateOut(State s, DecisionAlternative_XALOAD_Out dao) 
-            throws InterruptException {
+            throws InterruptException, ClasspathException {
                 throwNew(s, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
                 exitFromAlgorithm();
             }

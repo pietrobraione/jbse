@@ -1,6 +1,6 @@
 package jbse.algo;
 
-import static jbse.algo.Util.ensureClassCreatedAndInitialized;
+import static jbse.algo.Util.ensureClassInitialized;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
@@ -9,12 +9,10 @@ import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
 import java.util.function.Supplier;
 
-import jbse.bc.ClassFile;
-import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.FieldNotFoundException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
-import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.HeapMemoryExhaustedException;
@@ -33,14 +31,11 @@ final class Algo_GETSTATIC extends Algo_GETX {
     }
 
     @Override
-    protected void check(State state, String currentClassName)
-    throws FieldNotFoundException, BadClassFileException, InterruptException {
-        final String fieldClassName = this.fieldSignatureResolved.getClassName();
-        final ClassFile fieldClassFile = state.getClassHierarchy().getClassFile(fieldClassName);
-
+    protected void check(State state)
+    throws ClasspathException, FieldNotFoundException, InterruptException {
         //checks that the field is static or belongs to an interface
-        if (!fieldClassFile.isInterface() && 
-        !fieldClassFile.isFieldStatic(this.fieldSignatureResolved)) {
+        if (!this.fieldClassResolved.isInterface() && 
+            !this.fieldClassResolved.isFieldStatic(this.data.signature())) {
             throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
             exitFromAlgorithm();
         }
@@ -48,21 +43,19 @@ final class Algo_GETSTATIC extends Algo_GETX {
 
     @Override
     protected Objekt source(State state)
-    throws DecisionException, ClasspathException, InterruptException {
-        final String fieldClassName = this.fieldSignatureResolved.getClassName();
-
-        //possibly creates and initializes the class of the field
+    throws ClasspathException, DecisionException, InterruptException {
+        //possibly initializes the class of the field
         try {
-            ensureClassCreatedAndInitialized(state, fieldClassName, this.ctx);
+            ensureClassInitialized(state, this.fieldClassResolved, this.ctx);
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
-        } catch (InvalidInputException | BadClassFileException e) {
+        } catch (InvalidInputException e) {
             //this should never happen
             //TODO really?
             failExecution(e);
         }
 
-        return state.getKlass(fieldClassName);
+        return state.getKlass(this.fieldClassResolved);
     }
 }

@@ -45,8 +45,8 @@ public class StateFormatterTrace implements Formatter {
             }
         } else {
             try {
-                this.output += s.getCurrentMethodSignature() + this.fieldSep + s.getSourceRow() + this.fieldSep 
-                + s.getPC() + this.fieldSep + this.bcf.format(s);
+                this.output += s.getCurrentMethodSignature() + this.fieldSep + s.getSourceRow() + this.fieldSep +
+                               s.getPC() + this.fieldSep + this.bcf.format(s);
             } catch (ThreadStackEmptyException e) {
                 //the state is not stuck but it has no frames:
                 //this case is not common but it can mean a state
@@ -63,7 +63,7 @@ public class StateFormatterTrace implements Formatter {
             if (s.isNull((Reference) v)) {
                 return "null";
             } else {
-                return s.getObject((Reference) v).getType();
+                return s.getObject((Reference) v).getType().getClassName();
             }
         } else {
             throw new UnexpectedInternalException("Unexpected value " + v + " returned.");

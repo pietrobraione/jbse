@@ -1,5 +1,6 @@
 package jbse.dec;
 
+import jbse.bc.ClassFile;
 import jbse.tree.DecisionAlternative_XALOAD_Aliases;
 import jbse.tree.DecisionAlternative_XALOAD_Expands;
 import jbse.tree.DecisionAlternative_XALOAD_Null;
@@ -18,35 +19,44 @@ import jbse.val.ReferenceSymbolic;
 class DecisionAlternativeReferenceFactory_XALOAD 
 implements DecisionAlternativeReferenceFactory<DecisionAlternative_XALOAD_Aliases, 
 DecisionAlternative_XALOAD_Expands, DecisionAlternative_XALOAD_Null> {
-	private final Expression exp;
-	private final boolean fresh;
-	private final Reference arrayToWriteBack;
-	
-	public DecisionAlternativeReferenceFactory_XALOAD(Expression exp, boolean fresh, Reference arrayToWriteBack) {
-		this.exp = exp;
-		this.fresh = fresh;
-		this.arrayToWriteBack = arrayToWriteBack;
-	}
+    private final Expression arrayAccessExpression;
+    private final boolean fresh;
+    private final Reference arrayReference;
 
-	@Override
-	public DecisionAlternative_XALOAD_Aliases 
-	createAlternativeRefAliases(ReferenceSymbolic refToResolve, long objectPosition, MemoryPath objectOrigin, int branchNumber) {
-		return new DecisionAlternative_XALOAD_Aliases(this.exp, this.fresh, this.arrayToWriteBack,
-				refToResolve, objectPosition, objectOrigin, branchNumber);
-	}
+    /**
+     * Constructor.
+     * 
+     * @param arrayAccessExpression the array access {@link Expression}.
+     * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
+     *        is not stored in the array and, therefore, must be written
+     *        back to the array.
+     * @param arrayReference when {@code fresh == true} is a {@link Reference} to the array 
+     *        where {@code valueToLoad} originates from.
+     */
+    public DecisionAlternativeReferenceFactory_XALOAD(Expression arrayAccessExpression, boolean fresh, Reference arrayReference) {
+        this.arrayAccessExpression = arrayAccessExpression;
+        this.fresh = fresh;
+        this.arrayReference = arrayReference;
+    }
 
-	@Override
-	public DecisionAlternative_XALOAD_Expands 
-	createAlternativeRefExpands(ReferenceSymbolic refToResolve, String className, int branchNumber) {
-		return new DecisionAlternative_XALOAD_Expands(this.exp, this.fresh, this.arrayToWriteBack, 
-				refToResolve, className, branchNumber);
-	}
+    @Override
+    public DecisionAlternative_XALOAD_Aliases 
+    createAlternativeRefAliases(ReferenceSymbolic referenceToResolve, long objectPosition, MemoryPath objectOrigin, int branchNumber) {
+        return new DecisionAlternative_XALOAD_Aliases(this.arrayAccessExpression, referenceToResolve, this.fresh,
+                                                      this.arrayReference, objectPosition, objectOrigin, branchNumber);
+    }
 
-	@Override
-	public DecisionAlternative_XALOAD_Null 
-	createAlternativeRefNull(ReferenceSymbolic refToResolve, int branchNumber) {
-		return new DecisionAlternative_XALOAD_Null(this.exp, this.fresh, this.arrayToWriteBack, 
-				refToResolve, branchNumber);
-	}
-	
+    @Override
+    public DecisionAlternative_XALOAD_Expands 
+    createAlternativeRefExpands(ReferenceSymbolic referenceToResolve, ClassFile classFile, int branchNumber) {
+        return new DecisionAlternative_XALOAD_Expands(this.arrayAccessExpression, referenceToResolve, this.fresh, 
+                                                      this.arrayReference, classFile, branchNumber);
+    }
+
+    @Override
+    public DecisionAlternative_XALOAD_Null 
+    createAlternativeRefNull(ReferenceSymbolic referenceToResolve, int branchNumber) {
+        return new DecisionAlternative_XALOAD_Null(this.arrayAccessExpression, referenceToResolve, this.fresh, 
+                                                   this.arrayReference, branchNumber);
+    }
 }

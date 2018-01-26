@@ -4,11 +4,7 @@ import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.storeInArray;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
-import static jbse.common.Type.className;
-import static jbse.common.Type.getArrayMemberType;
 import static jbse.common.Type.INT;
-import static jbse.common.Type.isArray;
-import static jbse.common.Type.isReference;
 
 import java.util.function.Supplier;
 
@@ -19,8 +15,8 @@ import jbse.algo.StrategyRefine;
 import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
+import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
-import jbse.bc.exc.BadClassFileException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
@@ -84,8 +80,8 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                 final Array array = (Array) state.getObject(this.arrayReference);
                 this.inRange = array.inRange(this.index);
                 this.outOfRange = array.outOfRange(this.index);
-                final String arrayMemberType = getArrayMemberType(array.getType());
-                if (isReference(arrayMemberType) || isArray(arrayMemberType)) {
+                final ClassFile arrayMemberType = array.getType().getMemberClass();
+                if (arrayMemberType.isReference() || arrayMemberType.isArray()) {
                     if (!(value instanceof Reference)) {
                         throwVerifyError(state);
                         exitFromAlgorithm();
@@ -94,7 +90,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                     final Objekt o = state.getObject(valueToStoreRef);
                     final ClassHierarchy hier = state.getClassHierarchy();
                     if (state.isNull(valueToStoreRef) ||
-                        hier.isAssignmentCompatible(o.getType(), className(arrayMemberType))) {
+                        hier.isAssignmentCompatible(o.getType(), arrayMemberType)) {
                         this.valueToStore = value;
                     } else {
                         throw new UndefinedResultException("The Object x parameter to sun.misc.Unsafe.putObjectVolatile was not assignment-compatible with the Object o (array) parameter.");
@@ -103,7 +99,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                     throw new UndefinedResultException("The Object o parameter to sun.misc.Unsafe.putObjectVolatile was an array whose member type is not a reference.");
                 }
             } catch (InvalidOperandException | InvalidTypeException | 
-                     ClassCastException | BadClassFileException e) {
+                     ClassCastException e) {
                 //index is bad, or the reference does not point to an array,
                 //or the class/superclasses of the array component, or of 
                 //the value to store, are not in the classpath or are incompatible

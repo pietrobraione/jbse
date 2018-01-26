@@ -2,12 +2,13 @@ package jbse.algo;
 
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.invokeClassLoaderLoadClass;
 import static jbse.algo.Util.throwNew;
-import static jbse.algo.Util.ensureInstance_JAVA_CLASS;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.LDC_OFFSET;
 import static jbse.bc.Offsets.LDC_W_OFFSET;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.common.Type.isCat_1;
 
@@ -18,12 +19,13 @@ import jbse.bc.ConstantPoolClass;
 import jbse.bc.ConstantPoolPrimitive;
 import jbse.bc.ConstantPoolString;
 import jbse.bc.ConstantPoolValue;
-import jbse.bc.exc.BadClassFileException;
+import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
+import jbse.bc.exc.PleaseLoadClassException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.mem.exc.HeapMemoryExhaustedException;
-import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Value;
 
@@ -72,16 +74,9 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
             try {
-                final String currentClassName = state.getCurrentMethodSignature().getClassName();
-                ClassFile cf = null; //to keep the compiler happy
-                try {
-                    cf = state.getClassHierarchy().getClassFile(currentClassName);
-                } catch (BadClassFileException e) {
-                    //this should never happen
-                    failExecution(e);
-                }
+                final ClassFile currentClass = state.getCurrentClass();
                 final int index = (this.wide ? this.data.immediateUnsignedWord() : this.data.immediateUnsignedByte());
-                final ConstantPoolValue cpv = cf.getValueFromConstantPool(index);
+                final ConstantPoolValue cpv = currentClass.getValueFromConstantPool(index);
                 if (cpv instanceof ConstantPoolPrimitive) {
                     this.val = state.getCalculator().val_(cpv.getValue());
                     if (this.cat1 != isCat_1(val.getType())) {
@@ -94,26 +89,35 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     this.val = state.referenceToStringLiteral(stringLit);
                 } else if (cpv instanceof ConstantPoolClass) {
                     final String classSignature = ((ConstantPoolClass) cpv).getValue();
-                    ensureInstance_JAVA_CLASS(state, currentClassName, classSignature, this.ctx);
-                    this.val = state.referenceToInstance_JAVA_CLASS(classSignature);
+                    final ClassFile resolvedClass = state.getClassHierarchy().resolveClass(currentClass, classSignature, state.areStandardClassLoadersNotReady());
+                    state.ensureInstance_JAVA_CLASS(resolvedClass);
+                    this.val = state.referenceToInstance_JAVA_CLASS(resolvedClass);
                 } else if (cpv instanceof ConstantPoolObject) {
                     this.val = ((ConstantPoolObject) cpv).getValue();
                 } else {
                     //this should never happen
                     failExecution("Unexpected value from the constant pool.");
                 }
+            } catch (PleaseLoadClassException e) {
+                invokeClassLoaderLoadClass(state, e);
+                exitFromAlgorithm();
+            } catch (ClassFileNotFoundException e) {
+                //TODO this exception should wrap a ClassNotFoundException
+                throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                exitFromAlgorithm();
             } catch (ClassFileNotAccessibleException e) {
                 throwNew(state, ILLEGAL_ACCESS_ERROR);
                 exitFromAlgorithm();
             } catch (HeapMemoryExhaustedException e) {
                 throwNew(state, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
-            } catch (InvalidIndexException | BadClassFileException e) {
+            } catch (ClassFileIllFormedException e) {
+                //TODO throw LinkageError insead
                 throwVerifyError(state);
                 exitFromAlgorithm();
-            } catch (ThreadStackEmptyException e) {
-                //this should never happen
-                failExecution(e);
+            } catch (InvalidIndexException e) {
+                throwVerifyError(state);
+                exitFromAlgorithm();
             }
         };
     }

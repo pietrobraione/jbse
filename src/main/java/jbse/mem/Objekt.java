@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.val.Calculator;
 import jbse.val.MemoryPath;
@@ -28,8 +29,8 @@ public abstract class Objekt implements Cloneable {
         EPOCH_BEFORE_START, EPOCH_AFTER_START
     }
 
-    /** Static type identifier. Immutable. */
-    protected final String type;
+    /** ClassFile for this object's class. Immutable. */
+    protected final ClassFile classFile;
 
     /**
      * The origin of the object in the case it is created by 
@@ -76,7 +77,7 @@ public abstract class Objekt implements Cloneable {
      * Constructor.
      * 
      * @param calc a {@link Calculator}.
-     * @param type a {@link String}, the class of this object.
+     * @param type a {@link ClassFile}, the class of this object.
      * @param origin a {@link MemoryPath}, the
      *        chain of memory accesses which allowed to discover
      *        the object for the first time. It can be null when
@@ -89,7 +90,7 @@ public abstract class Objekt implements Cloneable {
      * @param fieldSignatures varargs of field {@link Signature}s, all the
      *        fields this object knows.
      */
-    protected Objekt(Calculator calc, String type, MemoryPath origin, Epoch epoch, boolean staticFields, int numOfStaticFields, Signature... fieldSignatures) {
+    protected Objekt(Calculator calc, ClassFile classFile, MemoryPath origin, Epoch epoch, boolean staticFields, int numOfStaticFields, Signature... fieldSignatures) {
         this.fields = new HashMap<>();
         this.staticFields = staticFields;
         this.numOfStaticFields = numOfStaticFields;
@@ -102,20 +103,19 @@ public abstract class Objekt implements Cloneable {
             }
             ++curSlot;
         }
-        this.type = type;
+        this.classFile = classFile;
         this.origin = origin;
         this.epoch = epoch;
         //this.hashCode must be initialized by means of setters
     }
 
     /**
-     * Returns the class name of this {@link Objekt} (i.e., 
-     * {@code "java/lang/Object"} or {@code "[[I"}).
+     * Returns the class of this object.
      * 
-     * @return a {@link String}.
+     * @return a {@link ClassFile}.
      */
-    public final String getType() {
-        return this.type;
+    public final ClassFile getType() {
+        return this.classFile;
     }
 
     /**

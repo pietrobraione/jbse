@@ -10,8 +10,8 @@ import jbse.bc.Signature;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.common.exc.UnexpectedInternalException;
-import jbse.mem.exc.InvalidSlotException;
 import jbse.mem.exc.InvalidNumberOfOperandsException;
+import jbse.mem.exc.InvalidSlotException;
 import jbse.val.Value;
 
 /**
@@ -19,16 +19,16 @@ import jbse.val.Value;
  */
 public final class MethodFrame extends Frame implements Cloneable {
     /** The signature of the frame's method. */
-    private final Signature mySignature;
+    private final Signature methodSignature;
 
     /** The frame's method line number table. */
     private final LineNumberTable lnt;
 
-    /** The frame's operand stack. */ 
-    private OperandStack operandStack;
-
     /** The frame's local variable area. */ 
-    private LocalVariablesArea localVariables;
+    private LocalVariablesArea localVariables; //not final because of clone
+
+    /** The frame's operand stack. */ 
+    private OperandStack operandStack; //not final because of clone
 
     /**
      * Constructor.
@@ -44,8 +44,8 @@ public final class MethodFrame extends Frame implements Cloneable {
      */
     public MethodFrame(Signature methodSignature, ClassFile classMethodImpl) 
     throws MethodNotFoundException, MethodCodeNotFoundException {
-        super(classMethodImpl.getMethodCodeBySignature(methodSignature));
-        this.mySignature = methodSignature;
+        super(classMethodImpl, classMethodImpl.getMethodCodeBySignature(methodSignature));
+        this.methodSignature = methodSignature;
         this.lnt = classMethodImpl.getLineNumberTable(methodSignature);
         this.localVariables = new LocalVariablesArea(classMethodImpl.getLocalVariableTable(methodSignature));
         this.operandStack = new OperandStack();
@@ -67,10 +67,10 @@ public final class MethodFrame extends Frame implements Cloneable {
         }
         return retVal;
     }
-
+    
     @Override
     public Signature getCurrentMethodSignature() {
-        return this.mySignature;
+        return this.methodSignature;
     }
 
     @Override
@@ -150,19 +150,29 @@ public final class MethodFrame extends Frame implements Cloneable {
     @Override
     public MethodFrame clone() {
         final MethodFrame o = (MethodFrame) super.clone();
-        o.operandStack = o.operandStack.clone();
         o.localVariables = o.localVariables.clone();
+        o.operandStack = o.operandStack.clone();
         return o;
     }
 
     @Override
     public String toString(){
         String tmp = "[";
-        tmp += "Method:" + mySignature.toString() + ", ";
+        tmp += "Method:" + this.methodSignature.toString() + ", ";
         tmp += "ProgramCounter:" + getProgramCounter() + ", ";
         tmp += "ReturnProgramCounter:" + (getReturnProgramCounter() == UNKNOWN_PC ? "UNKNOWN" : getReturnProgramCounter()) + ", ";
-        tmp += "OperandStack:" + operandStack.toString() +", ";
-        tmp += "Locals:" + localVariables.toString() + "]";
+        tmp += "OperandStack:" + this.operandStack.toString() + ", ";
+        tmp += "Locals:" + this.localVariables.toString() + "]";
         return tmp;
+    }
+    
+    //these are just to implement toString in SnippetFrameContext
+    
+    OperandStack getOperandStack() {
+        return this.operandStack;
+    }
+    
+    LocalVariablesArea getLocalVariableArea() {
+        return this.localVariables;
     }
 }

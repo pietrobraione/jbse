@@ -10,7 +10,6 @@ import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.Properties;
 
-import jbse.algo.meta.Algo_JBSE_BASE_CLINIT;
 import jbse.meta.annotations.MetaOverriddenBy;
 import sun.misc.Unsafe;
 
@@ -21,7 +20,15 @@ import sun.misc.Unsafe;
  *
  */
 public final class Base {
-    //Properties to be set metacircularly
+    //Properties to be set at the meta level
+    private static final String JBSE_VERSION            = null;
+    private static final String JBSE_NAME               = null;
+    private static final String JAVA_EXT_DIRS           = null;
+    private static final String SUN_BOOT_LIBRARY_PATH   = null;
+    private static final String JAVA_LIBRARY_PATH       = null;
+    private static final String JAVA_HOME               = null;
+    private static final String SUN_BOOT_CLASS_PATH     = null;
+    private static final String JAVA_CLASS_PATH         = null;
     private static final String OS_NAME                 = null;
     private static final String OS_VERSION              = null;
     private static final String OS_ARCH                 = null;
@@ -63,7 +70,7 @@ public final class Base {
      * of this class to the values (if exist) of the 
      * corresponding properties at the meta-level.
      */
-    @MetaOverriddenBy(Algo_JBSE_BASE_CLINIT.class)
+    @MetaOverriddenBy("jbse/algo/meta/Algo_JBSE_BASE_CLINIT")
     private static native void clinit();
     
     /**
@@ -71,6 +78,22 @@ public final class Base {
      * @see java.security.AccessController#doPrivileged(PrivilegedExceptionAction)
      */
     private static Object base_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION(PrivilegedExceptionAction<?> action)
+    throws PrivilegedActionException {
+        //since JBSE does not enforce access control we just execute the action
+        try {
+            return action.run();
+        } catch (RuntimeException e) {
+            throw e; //runtime exceptions propagate
+        } catch (Exception e) {
+            throw new PrivilegedActionException(e); //not explicitly told, but this is the only sensible behavior
+        }
+    }
+
+    /**
+     * Overriding implementation of {@link java.security.AccessController#doPrivileged(PrivilegedExceptionAction, AccessControlContext)}.
+     * @see java.security.AccessController#doPrivileged(PrivilegedExceptionAction, AccessControlContext)
+     */
+    private static Object base_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION(PrivilegedExceptionAction<?> action, AccessControlContext context)
     throws PrivilegedActionException {
         //since JBSE does not enforce access control we just execute the action
         try {
@@ -118,7 +141,7 @@ public final class Base {
      */
     private static boolean base_JAVA_CLASS_DESIREDASSERTIONSTATUS0(Class<?> clazz) {
         return false; //no assertions, sorry
-        //TODO should we give a way to control the assertion status, possibly handling Java assertions as jbse assertions?
+        //TODO should we give a way to control the assertion status, possibly handling Java assertions as JBSE assertions?
     }
     
     /**
@@ -173,6 +196,19 @@ public final class Base {
      * @see java.lang.System#initProperties(Properties)
      */
     private static Properties base_JAVA_SYSTEM_INITPROPERTIES(Properties p) {
+        //properties taken from openjdk 8, hotspot:src/share/vm/runtime/arguments.cpp
+        putSafe(p, "java.vm.specification.name", "Java Virtual Machine Specification");
+        putSafe(p, "java.vm.version",            JBSE_VERSION);
+        putSafe(p, "java.vm.name",               JBSE_NAME);
+        putSafe(p, "java.vm.info",               "");
+        putSafe(p, "java.ext.dirs",              JAVA_EXT_DIRS);
+        putSafe(p, "java.endorsed.dirs",         ""); //TODO currently unsupported, study and support
+        putSafe(p, "sun.boot.library.path",      SUN_BOOT_LIBRARY_PATH);
+        putSafe(p, "java.library.path",          JAVA_LIBRARY_PATH);
+        putSafe(p, "java.home",                  JAVA_HOME);
+        putSafe(p, "sun.boot.class.path",        SUN_BOOT_CLASS_PATH);
+        putSafe(p, "java.class.path",            JAVA_CLASS_PATH);
+        
         //properties taken from openjdk 8, jdk:src/share/native/java/lang/System.c
         putSafe(p, "java.specification.version", "1.8");
         putSafe(p, "java.specification.name",    "Java Platform API Specification");
@@ -236,11 +272,24 @@ public final class Base {
      */
     private static void boxInvocationTargetException() 
     throws InvocationTargetException {
-        //the implementation of this method just boxes exceptions and rethrows them
         try {
             foo(); //does nothing, it's just to force the compiler to generate the catch block
         } catch (Exception e) {
             throw new InvocationTargetException(e);
+        }
+    }
+    
+    /**
+     * Helper method for {@link java.lang.Class#forName0(String, boolean, ClassLoader, Class)}.
+     * Just boxes the exceptions that are raised by the execution of a constructor 
+     * into an {@link InvocationTargetException} and rethrows them.
+     */
+    private static void boxExceptionInInitializerError()
+    throws ExceptionInInitializerError {
+        try {
+            foo(); //does nothing, it's just to force the compiler to generate the catch block
+        } catch (Exception e) {
+            throw new ExceptionInInitializerError(e);
         }
     }
     

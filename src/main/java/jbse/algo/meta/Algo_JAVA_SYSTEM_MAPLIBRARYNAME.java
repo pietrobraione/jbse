@@ -11,10 +11,12 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
+import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
 import jbse.mem.exc.HeapMemoryExhaustedException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
 /**
@@ -31,7 +33,8 @@ public final class Algo_JAVA_SYSTEM_MAPLIBRARYNAME extends Algo_INVOKEMETA_Nonbr
     }
     
     @Override
-    protected void cookMore(State state) throws InterruptException, SymbolicValueNotAllowedException {
+    protected void cookMore(State state) 
+    throws InterruptException, SymbolicValueNotAllowedException, ClasspathException {
         try {
             final Reference refString = (Reference) this.data.operand(0);
             if (state.isNull(refString)) {
@@ -56,7 +59,9 @@ public final class Algo_JAVA_SYSTEM_MAPLIBRARYNAME extends Algo_INVOKEMETA_Nonbr
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
         state.pushOperand(this.retVal);
+        };
     }
 }

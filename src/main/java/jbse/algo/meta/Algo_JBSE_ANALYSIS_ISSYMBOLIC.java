@@ -4,12 +4,13 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.Algorithm;
-import jbse.mem.State;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.algo.StrategyUpdate;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Value;
 
 /**
- * An {@link Algorithm} implementing {@link jbse.meta.Analysis#isSymbolic(boolean)},
+ * An {@link Algorithm} implementing 
+ * {@link jbse.meta.Analysis#isSymbolic(boolean)},
  * {@link jbse.meta.Analysis#isSymbolic(byte)},
  * {@link jbse.meta.Analysis#isSymbolic(char)},
  * {@link jbse.meta.Analysis#isSymbolic(double)},
@@ -28,8 +29,10 @@ public final class Algo_JBSE_ANALYSIS_ISSYMBOLIC extends Algo_INVOKEMETA_Nonbran
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        final Value arg = this.data.operand(0);
-        state.pushOperand(state.getCalculator().valInt(arg.isSymbolic() ? 1 : 0));
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            final Value arg = this.data.operand(0);
+            state.pushOperand(state.getCalculator().valInt(arg.isSymbolic() ? 1 : 0));
+        };
     }
 }

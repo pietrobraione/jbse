@@ -7,7 +7,9 @@ import java.util.function.Supplier;
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.Algorithm;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
 import jbse.mem.State;
+import jbse.tree.DecisionAlternative_NONE;
 
 /**
  * Meta-level implementation of {@link java.lang.reflect.Array#newArray(Class, int)}.
@@ -29,7 +31,9 @@ public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY extends Algo_INVOKEMETA_Nonb
     }
 
     @Override
-    protected void update(State state)  {
-        //nothing to do    
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            //nothing to do
+        };
     }
 }

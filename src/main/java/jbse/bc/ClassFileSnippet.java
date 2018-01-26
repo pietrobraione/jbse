@@ -1,261 +1,292 @@
 package jbse.bc;
 
+import java.lang.reflect.Modifier;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import jbse.bc.exc.AttributeNotFoundException;
-import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 
 /**
- * A {@link ClassFile} that wraps another one at the purpose of 
- * extending its constant pool.
+ * A {@link ClassFile} that can be created on-the-fly for code
+ * snippets.
  * 
  * @author Pietro Braione
- *
  */
-public class ClassFileWrapper extends ClassFile {
-    private final ClassFile toWrap; 
+public class ClassFileSnippet extends ClassFile {
     final HashMap<Integer, ConstantPoolValue> constants;
     final HashMap<Integer, Signature> signatures;
     final HashMap<Integer, String> classes;
+    final int definingClassLoader;
+    final String packageName;
     
-    ClassFileWrapper(ClassFile toWrap,
-                     Map<Integer, ConstantPoolValue> constants, 
-                     Map<Integer, Signature> signatures,
-                     Map<Integer, String> classes) {
-        this.toWrap = toWrap;
-        this.constants = new HashMap<>(constants);
-        this.signatures = new HashMap<>(signatures);
-        this.classes = new HashMap<>(classes);
-    }
-    
-    public ClassFile getWrapped() {
-        return this.toWrap;
+    /**
+     * Constructor.
+     * 
+     * @param snippet a {@link Snippet}.
+     * @param definingClassLoader an {@code int}, the defining classloader 
+     *        assumed for this {@link ClassFileSnippet}.
+     * @param packageName a {@code String}, the name of the package where this
+     *        {@link ClassFileSnippet} must be assumed to reside.
+     */
+    public ClassFileSnippet(Snippet snippet, int definingClassLoader, String packageName) {
+        this.constants = new HashMap<>(snippet.getConstants());
+        this.signatures = new HashMap<>(snippet.getSignatures());
+        this.classes = new HashMap<>(snippet.getClasses());
+        this.definingClassLoader = definingClassLoader;
+        this.packageName = packageName;
     }
     
     @Override
     public byte[] getBinaryFileContent() {
-        return this.toWrap.getBinaryFileContent();
+        return null;
     }
 
     @Override
     public String getSourceFile() {
-        return this.toWrap.getSourceFile();
+        return "";
+    }
+
+    @Override
+    public String getClassName() {
+        return packageName + "/";
+    }
+    
+    @Override
+    public int getDefiningClassLoader() {
+        return this.definingClassLoader;
     }
 
     @Override
     public int getModifiers() {
-        return this.toWrap.getModifiers();
+        return getAccessFlags();
     }
 
     @Override
     public int getAccessFlags() {
-        return this.toWrap.getAccessFlags();
+        return Modifier.ABSTRACT | Modifier.FINAL | Modifier.PUBLIC;
+    }
+    
+    @Override
+    public boolean isDummy() {
+        return false;
     }
 
     @Override
     public boolean isArray() {
-        return this.toWrap.isArray();
+        return false;
     }
 
     @Override
     public boolean isEnum() {
-        return this.toWrap.isEnum();
+        return false;
     }
 
     @Override
     public boolean isPrimitive() {
-        return this.toWrap.isPrimitive();
+        return false;
     }
 
     @Override
     public boolean isInterface() {
-        return this.toWrap.isInterface();
+        return false;
     }
 
     @Override
     public boolean isAbstract() {
-        return this.toWrap.isAbstract();
+        return true;
     }
 
     @Override
     public boolean isPublic() {
-        return this.toWrap.isPublic();
+        return true;
     }
 
     @Override
     public boolean isProtected() {
-        return this.toWrap.isProtected();
+        return false;
     }
 
     @Override
     public boolean isPackage() {
-        return this.toWrap.isPackage();
+        return false;
     }
 
     @Override
     public boolean isPrivate() {
-        return this.toWrap.isPrivate();
+        return false;
     }
 
     @Override
     public boolean isSuperInvoke() {
-        return this.toWrap.isSuperInvoke();
+        return true;
     }
 
     @Override
     public boolean isLocal() {
-        return this.toWrap.isLocal();
+        return false;
     }
 
     @Override
     public boolean isAnonymous() {
-        return this.toWrap.isAnonymous();
+        return false;
     }
     
     @Override
-    public String getHostClass() {
-        return this.toWrap.getHostClass();
+    public ClassFile getMemberClass() {
+        return null;
+    }
+    
+    @Override
+    public boolean isAnonymousUnregistered() {
+        return false;
+    }
+    
+    @Override
+    public ClassFile getHostClass() {
+        return null;
     }
 
     @Override
-    public String classContainer() throws ClassFileNotFoundException {
-        return this.toWrap.classContainer();
+    public String classContainer() {
+        return null;
     }
 
     @Override
-    public Signature getEnclosingMethodOrConstructor() throws ClassFileNotFoundException {
-        return this.toWrap.getEnclosingMethodOrConstructor();
+    public Signature getEnclosingMethodOrConstructor() {
+        return null;
     }
 
     @Override
     public boolean isStatic() {
-        return this.toWrap.isStatic();
+        return false;
     }
     
     @Override
     public int constantPoolSize() {
-        return this.toWrap.constantPoolSize() + this.constants.size() + this.signatures.size() + this.classes.size();
+        return this.constants.size() + this.signatures.size() + this.classes.size();
     }
 
     @Override
     public boolean hasMethodImplementation(Signature methodSignature) {
-        return this.toWrap.hasMethodImplementation(methodSignature);
+        return false;
     }
 
     @Override
     public boolean hasMethodDeclaration(Signature methodSignature) {
-        return this.toWrap.hasMethodDeclaration(methodSignature);
+        return false;
     }
 
     @Override
     public boolean hasOneSignaturePolymorphicMethodDeclaration(String methodName) {
-        return this.toWrap.hasOneSignaturePolymorphicMethodDeclaration(methodName);
+        return false;
     }
 
     @Override
     public boolean isMethodAbstract(Signature methodSignature) throws MethodNotFoundException {
-        return this.toWrap.isMethodAbstract(methodSignature);
+        throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public boolean isMethodStatic(Signature methodSignature) throws MethodNotFoundException {
-        return this.toWrap.isMethodStatic(methodSignature);
+        throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public boolean isMethodPublic(Signature methodSignature) throws MethodNotFoundException {
-        return this.toWrap.isMethodPublic(methodSignature);
+        throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public boolean isMethodProtected(Signature methodSignature) throws MethodNotFoundException {
-        return this.toWrap.isMethodProtected(methodSignature);
+        throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public boolean isMethodPackage(Signature methodSignature) throws MethodNotFoundException {
-        return this.toWrap.isMethodPackage(methodSignature);
+        throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public boolean isMethodPrivate(Signature methodSignature) throws MethodNotFoundException {
-        return this.toWrap.isMethodPrivate(methodSignature);
+        throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public boolean isMethodNative(Signature methodSignature) throws MethodNotFoundException {
-        return this.toWrap.isMethodNative(methodSignature);
+        throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public boolean isMethodVarargs(Signature methodSignature) throws MethodNotFoundException {
-        return this.toWrap.isMethodVarargs(methodSignature);
+        throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public boolean isMethodSignaturePolymorphic(Signature methodSignature) throws MethodNotFoundException {
-        return this.toWrap.isMethodSignaturePolymorphic(methodSignature);
+        throw new MethodNotFoundException(methodSignature.toString());
     }
     
     @Override
-    public boolean isMethodCallerSensitive(Signature methodSignature) throws ClassFileNotFoundException, MethodNotFoundException {
-        return this.toWrap.isMethodCallerSensitive(methodSignature);
+    public boolean isMethodCallerSensitive(Signature methodSignature) throws MethodNotFoundException {
+        throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public String getMethodGenericSignatureType(Signature methodSignature) throws MethodNotFoundException {
-        return this.toWrap.getMethodGenericSignatureType(methodSignature);
+        throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public int getMethodModifiers(Signature methodSignature) throws MethodNotFoundException {
-        return this.toWrap.getMethodModifiers(methodSignature);
+        throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public byte[] getMethodAnnotationsRaw(Signature methodSignature) throws MethodNotFoundException {
-        return this.toWrap.getMethodAnnotationsRaw(methodSignature);
+        throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
-    public Object[] getMethodAvailableAnnotations(Signature methodSignature) throws MethodNotFoundException {
-        return this.toWrap.getMethodAvailableAnnotations(methodSignature);
+    public String[] getMethodAvailableAnnotations(Signature methodSignature) throws MethodNotFoundException {
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
+    
+    @Override
+    public String getMethodAnnotationParameterValueString(Signature methodSignature, String annotation, String parameter) {
+        return null;
     }
 
     @Override
     public String[] getMethodThrownExceptions(Signature methodSignature) throws MethodNotFoundException {
-        return this.toWrap.getMethodThrownExceptions(methodSignature);
+        throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public ExceptionTable getExceptionTable(Signature methodSignature)
     throws InvalidIndexException, MethodNotFoundException, MethodCodeNotFoundException {
-        return this.toWrap.getExceptionTable(methodSignature);
+        throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public LocalVariableTable getLocalVariableTable(Signature methodSignature)
     throws MethodNotFoundException, MethodCodeNotFoundException {
-        return this.toWrap.getLocalVariableTable(methodSignature);
+        throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public LineNumberTable getLineNumberTable(Signature methodSignature)
     throws MethodNotFoundException, MethodCodeNotFoundException {
-        return this.toWrap.getLineNumberTable(methodSignature);
+        throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public ConstantPoolValue getValueFromConstantPool(int index) throws InvalidIndexException {
-        if (index < this.toWrap.constantPoolSize()) {
-            return this.toWrap.getValueFromConstantPool(index);
-        } else if (this.constants.containsKey(index)) {
+        if (this.constants.containsKey(index)) {
             return this.constants.get(index);
         } else {
             throw new InvalidIndexException("index " + index + " not set");
@@ -265,90 +296,88 @@ public class ClassFileWrapper extends ClassFile {
     @Override
     public byte[] getMethodCodeBySignature(Signature methodSignature)
     throws MethodNotFoundException, MethodCodeNotFoundException {
-        return this.toWrap.getMethodCodeBySignature(methodSignature);
+        throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public boolean hasFieldDeclaration(Signature fieldSignature) {
-        return this.toWrap.hasFieldDeclaration(fieldSignature);
+        return false;
     }
 
     @Override
     public boolean isFieldFinal(Signature fieldSignature) throws FieldNotFoundException {
-        return this.toWrap.isFieldFinal(fieldSignature);
+        throw new FieldNotFoundException(fieldSignature.toString());
     }
 
     @Override
     public boolean isFieldPublic(Signature fieldSignature) throws FieldNotFoundException {
-        return this.toWrap.isFieldPublic(fieldSignature);
+        throw new FieldNotFoundException(fieldSignature.toString());
     }
 
     @Override
     public boolean isFieldProtected(Signature fieldSignature) throws FieldNotFoundException {
-        return this.toWrap.isFieldProtected(fieldSignature);
+        throw new FieldNotFoundException(fieldSignature.toString());
     }
 
     @Override
     public boolean isFieldPackage(Signature fieldSignature) throws FieldNotFoundException {
-        return this.toWrap.isFieldPackage(fieldSignature);
+        throw new FieldNotFoundException(fieldSignature.toString());
     }
 
     @Override
     public boolean isFieldPrivate(Signature fieldSignature) throws FieldNotFoundException {
-        return this.toWrap.isFieldPrivate(fieldSignature);
+        throw new FieldNotFoundException(fieldSignature.toString());
     }
 
     @Override
     public boolean isFieldStatic(Signature fieldSignature) throws FieldNotFoundException {
-        return this.toWrap.isFieldStatic(fieldSignature);
+        throw new FieldNotFoundException(fieldSignature.toString());
     }
 
     @Override
     public boolean hasFieldConstantValue(Signature fieldSignature) throws FieldNotFoundException {
-        return this.toWrap.hasFieldConstantValue(fieldSignature);
+        throw new FieldNotFoundException(fieldSignature.toString());
     }
 
     @Override
     public String getFieldGenericSignatureType(Signature fieldSignature) throws FieldNotFoundException {
-        return this.toWrap.getFieldGenericSignatureType(fieldSignature);
+        throw new FieldNotFoundException(fieldSignature.toString());
     }
 
     @Override
     public int getFieldModifiers(Signature fieldSignature) throws FieldNotFoundException {
-        return this.toWrap.getFieldModifiers(fieldSignature);
+        throw new FieldNotFoundException(fieldSignature.toString());
     }
 
     @Override
     public byte[] getFieldAnnotationsRaw(Signature fieldSignature) throws FieldNotFoundException {
-        return this.toWrap.getFieldAnnotationsRaw(fieldSignature);
+        throw new FieldNotFoundException(fieldSignature.toString());
     }
 
     @Override
     public int fieldConstantValueIndex(Signature fieldSignature)
     throws FieldNotFoundException, AttributeNotFoundException {
-        return this.toWrap.fieldConstantValueIndex(fieldSignature);
+        throw new FieldNotFoundException(fieldSignature.toString());
     }
     
     @Override
     public Signature[] getDeclaredFieldsNonStatic() {
-        return this.toWrap.getDeclaredFieldsNonStatic();
+        return new Signature[0];
     }
 
     @Override
     public Signature[] getDeclaredFieldsStatic() {
-        return this.toWrap.getDeclaredFieldsStatic();
+        return new Signature[0];
     }
 
     @Override
     public Signature[] getDeclaredFields() {
-        return this.toWrap.getDeclaredFields();
+        return new Signature[0];
     }
 
     @Override
     public Signature getFieldSignature(int fieldRef) throws InvalidIndexException {
-        if (fieldRef < this.toWrap.constantPoolSize()) {
-            return this.toWrap.getFieldSignature(fieldRef);
-        } else if (this.signatures.containsKey(fieldRef)) {
+        if (this.signatures.containsKey(fieldRef)) {
             return this.signatures.get(fieldRef);
         } else {
             throw new InvalidIndexException("index " + fieldRef + " not set");
@@ -357,19 +386,17 @@ public class ClassFileWrapper extends ClassFile {
 
     @Override
     public Signature[] getDeclaredConstructors() {
-        return this.toWrap.getDeclaredConstructors();
+        return new Signature[0];
     }
 
     @Override
     public Signature[] getDeclaredMethods() {
-        return this.toWrap.getDeclaredMethods();
+        return new Signature[0];
     }
 
     @Override
     public Signature getMethodSignature(int methodRef) throws InvalidIndexException {
-        if (methodRef < this.toWrap.constantPoolSize()) {
-            return this.toWrap.getMethodSignature(methodRef);
-        } else if (this.signatures.containsKey(methodRef)) {
+        if (this.signatures.containsKey(methodRef)) {
             return this.signatures.get(methodRef);
         } else {
             throw new InvalidIndexException("index " + methodRef + " not set");
@@ -378,9 +405,7 @@ public class ClassFileWrapper extends ClassFile {
 
     @Override
     public Signature getInterfaceMethodSignature(int methodRef) throws InvalidIndexException {
-        if (methodRef < this.toWrap.constantPoolSize()) {
-            return this.toWrap.getInterfaceMethodSignature(methodRef);
-        } else if (this.signatures.containsKey(methodRef)) {
+        if (this.signatures.containsKey(methodRef)) {
             return this.signatures.get(methodRef);
         } else {
             throw new InvalidIndexException("index " + methodRef + " not set");
@@ -389,39 +414,42 @@ public class ClassFileWrapper extends ClassFile {
 
     @Override
     public String getClassSignature(int classRef) throws InvalidIndexException {
-        if (classRef < this.toWrap.constantPoolSize()) {
-            return this.toWrap.getClassSignature(classRef);
-        } else if (this.classes.containsKey(classRef)) {
+        if (this.classes.containsKey(classRef)) {
             return this.classes.get(classRef);
         } else {
             throw new InvalidIndexException("index " + classRef + " not set");
         }
     }
+    
+    @Override
+    public ClassFile getSuperclass() {
+        return null;
+    }
 
     @Override
     public String getSuperclassName() {
-        return this.toWrap.getSuperclassName();
+        return null;
+    }
+    
+    @Override
+    public List<ClassFile> getSuperInterfaces() {
+        return Collections.emptyList();
     }
     
     @Override
     public List<String> getSuperInterfaceNames() {
-        return this.toWrap.getSuperInterfaceNames();
-    }
-
-    @Override
-    public String getClassName() {
-        return this.toWrap.getClassName();
+        return Collections.emptyList();
     }
 
     @Override
     public int getLocalVariableLength(Signature methodSignature)
     throws MethodNotFoundException, MethodCodeNotFoundException {
-        return this.toWrap.getLocalVariableLength(methodSignature);
+        throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
     public int getCodeLength(Signature methodSignature) 
     throws MethodNotFoundException, MethodCodeNotFoundException {
-        return this.toWrap.getCodeLength(methodSignature);
+        throw new MethodNotFoundException(methodSignature.toString());
     }
 }

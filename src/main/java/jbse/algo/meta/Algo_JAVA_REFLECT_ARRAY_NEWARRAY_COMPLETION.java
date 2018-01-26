@@ -8,10 +8,6 @@ import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import static jbse.bc.Signatures.ILLEGAL_ARGUMENT_EXCEPTION;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
-import static jbse.common.Type.ARRAYOF;
-import static jbse.common.Type.REFERENCE;
-import static jbse.common.Type.TYPEEND;
-import static jbse.common.Type.toPrimitiveInternalName;
 
 import java.util.function.Supplier;
 
@@ -19,6 +15,7 @@ import jbse.algo.Algo_XNEWARRAY;
 import jbse.algo.Algorithm;
 import jbse.algo.BytecodeData_1KME;
 import jbse.algo.InterruptException;
+import jbse.common.exc.ClasspathException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
 import jbse.val.Primitive;
@@ -42,7 +39,7 @@ public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEW
     }
 
     @Override
-    protected void preCook(State state) throws InterruptException {
+    protected void preCook(State state) throws InterruptException, ClasspathException {
         //sets the array length
         try {
             this.dimensionsCounts = new Primitive[] { (Primitive) this.data.operand(1) };
@@ -72,12 +69,7 @@ public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEW
                     exitFromAlgorithm();
                 }
             }
-            final String representedClass = clazz.representedClass();
-            if (clazz.isPrimitive()) {
-                this.arrayType = "" + ARRAYOF + toPrimitiveInternalName(representedClass);
-            } else {
-                this.arrayType = "" + ARRAYOF + REFERENCE + representedClass + TYPEEND;
-            }
+            this.arrayType = clazz.representedClass();
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();

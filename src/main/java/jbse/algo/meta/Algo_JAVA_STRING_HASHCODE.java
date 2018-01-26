@@ -8,9 +8,12 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
+import jbse.common.exc.ClasspathException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 
@@ -28,7 +31,8 @@ public final class Algo_JAVA_STRING_HASHCODE extends Algo_INVOKEMETA_Nonbranchin
     private Primitive hash; //set by cookMore
 
     @Override
-    protected void cookMore(State state) throws ThreadStackEmptyException, InterruptException {
+    protected void cookMore(State state) 
+    throws ThreadStackEmptyException, InterruptException, ClasspathException {
         try {
             final Reference thisReference = (Reference) this.data.operand(0);
             final Objekt thisObject = state.getObject(thisReference);
@@ -46,7 +50,9 @@ public final class Algo_JAVA_STRING_HASHCODE extends Algo_INVOKEMETA_Nonbranchin
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        state.pushOperand(this.hash);
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.pushOperand(this.hash);
+        };
     }
 }

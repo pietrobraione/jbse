@@ -223,11 +223,11 @@ public final class Type {
     }
 
     public static String binaryClassName(String className) {
-        return className.replace('/', '.');
+        return (className == null ? null : className.replace('/', '.'));
     }
 
     public static String internalClassName(String className) {
-        return className.replace('.', '/');
+        return (className == null ? null : className.replace('.', '/'));
     }
 
     /**

@@ -8,9 +8,8 @@ import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 
 import java.util.function.Supplier;
 
-import jbse.bc.ClassFile;
-import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.FieldNotFoundException;
+import jbse.common.exc.ClasspathException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.val.Reference;
@@ -29,20 +28,17 @@ final class Algo_GETFIELD extends Algo_GETX {
     }
 
     @Override
-    protected void check(State state, String currentClass)
-    throws FieldNotFoundException, BadClassFileException, InterruptException {
-        final String fieldClassName = this.fieldSignatureResolved.getClassName();        
-        final ClassFile fieldClassFile = state.getClassHierarchy().getClassFile(fieldClassName);
-
+    protected void check(State state)
+    throws ClasspathException, FieldNotFoundException, InterruptException {
         //checks that the field is not static
-        if (fieldClassFile.isFieldStatic(this.fieldSignatureResolved)) {
+        if (this.fieldClassResolved.isFieldStatic(this.data.signature())) {
             throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
             exitFromAlgorithm();
         }
     }
 
     @Override
-    protected Objekt source(State state) throws InterruptException {
+    protected Objekt source(State state) throws ClasspathException, InterruptException {
         try {
             final Reference myObjectRef = (Reference) this.data.operand(0);
             if (state.isNull(myObjectRef)) {

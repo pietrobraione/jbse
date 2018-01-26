@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.common.exc.ClasspathException;
@@ -18,6 +19,7 @@ import jbse.mem.Array;
 import jbse.mem.Array.AccessOutcomeInValue;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.Simplex;
@@ -25,7 +27,6 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 public final class Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT extends Algo_INVOKEMETA_Nonbranching {
-    private Reference thisObject; //set by cookMore
     private Primitive index; //set by cookMore
     private Array backtrace; //set by cookMore
 
@@ -39,12 +40,12 @@ public final class Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT extends Algo_INVOKEM
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
     CannotManageStateException, InterruptException {
         try {
-            this.thisObject = (Reference) this.data.operand(0);
+            final Reference thisObject = (Reference) this.data.operand(0);
             this.index = (Primitive) this.data.operand(1);
-            if (!(index instanceof Simplex)) { //quite unlikely...
+            if (!(this.index instanceof Simplex)) { //quite unlikely...
                 throw new SymbolicValueNotAllowedException("the index parameter to java.lang.Throwable.getStackTraceElement method cannot be a symbolic int");
             }
-            final int indexInt = (int) ((Simplex) index).getActualValue();
+            final int indexInt = (int) ((Simplex) this.index).getActualValue();
             this.backtrace = (Array) state.getObject((Reference) state.getObject(thisObject).getFieldValue(JAVA_THROWABLE_BACKTRACE));
             final int stackDepth = (int) ((Simplex) this.backtrace.getLength()).getActualValue();
             if (indexInt < 0 || indexInt >= stackDepth) {
@@ -58,15 +59,15 @@ public final class Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT extends Algo_INVOKEM
     }
 
     @Override
-    protected void update(State state) 
-    throws InterruptException, SymbolicValueNotAllowedException, ClasspathException, 
-    DecisionException {
-        try {
-            final AccessOutcomeInValue outcome = (AccessOutcomeInValue) this.backtrace.get(this.index).iterator().next();
-            state.pushOperand(outcome.getValue());
-        } catch (InvalidOperandException | InvalidTypeException | ThreadStackEmptyException | ClassCastException e) {
-            //this should never happen
-            failExecution(e);
-        }
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            try {
+                final AccessOutcomeInValue outcome = (AccessOutcomeInValue) this.backtrace.get(this.index).iterator().next();
+                state.pushOperand(outcome.getValue());
+            } catch (InvalidOperandException | InvalidTypeException | ThreadStackEmptyException | ClassCastException e) {
+                //this should never happen
+                failExecution(e);
+            }
+        };
     }
 }

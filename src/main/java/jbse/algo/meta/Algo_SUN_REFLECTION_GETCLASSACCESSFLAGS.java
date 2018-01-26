@@ -5,11 +5,11 @@ import static jbse.algo.Util.failExecution;
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
+import jbse.algo.StrategyUpdate;
 import jbse.bc.ClassFile;
-import jbse.bc.exc.BadClassFileException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
 public final class Algo_SUN_REFLECTION_GETCLASSACCESSFLAGS extends Algo_INVOKEMETA_Nonbranching {
@@ -25,19 +25,18 @@ public final class Algo_SUN_REFLECTION_GETCLASSACCESSFLAGS extends Algo_INVOKEME
         try {
             final Reference refParam = (Reference) this.data.operand(0);
             final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject(refParam);
-            final String className = clazz.representedClass();
-            final ClassFile cf = (clazz.isPrimitive() ? 
-                                  state.getClassHierarchy().getClassFilePrimitive(className) :
-                                  state.getClassHierarchy().getClassFile(className));
+            final ClassFile cf = clazz.representedClass();
             this.flags = cf.getAccessFlags();
-        } catch (ClassCastException | NullPointerException | BadClassFileException e) {
+        } catch (ClassCastException | NullPointerException e) {
             //this should never happen
             failExecution(e);
         }
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        state.pushOperand(state.getCalculator().valInt(this.flags));
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.pushOperand(state.getCalculator().valInt(this.flags));
+        };
     }
 }

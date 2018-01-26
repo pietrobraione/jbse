@@ -455,45 +455,85 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
-     * Sets the JRE path.
+     * Sets the bootstrap classpath.
      * 
-     * @param jrePath a {@link String}.
-     * @throws NullPointerException if {@code jrePath == null}.
+     * @param bootPath a {@link String}.
+     * @throws NullPointerException if {@code bootPath == null}.
      */
-    public void setJREPath(String jrePath) {
-        this.runnerParameters.setJREPath(jrePath);
+    public void setBootPath(String bootPath) {
+        this.runnerParameters.setBootPath(bootPath);
     }
 
     /**
-     * Gets the JRE path.
-     * 
-     * @return a {@link String}, the path to the JRE.
-     * @throws NullPointerException if {@code jrePath == null}.
+     * Brings the bootstrap classpath back to the default,
+     * i.e., the same bootstrap path of the JVM that
+     * executes JBSE, as returned by the system property
+     * {@code sun.boot.class.path}.
      */
-    public String getJREPath() {
-        return this.runnerParameters.getJREPath();
+    public void setDefaultBootPath() {
+        this.runnerParameters.setDefaultBootPath();
     }
 
     /**
-     * Sets the symbolic execution's classpath; the 
-     * default classpath is {@code "."}.
+     * Gets the bootstrap classpath.
+     * 
+     * @return a {@link String}, the bootstrap classpath.
+     */
+    public String getBootPath() {
+        return this.runnerParameters.getBootPath();
+    }
+
+
+    /**
+     * Adds paths to the extensions classpath.
      * 
      * @param paths a varargs of {@link String}, 
-     *        the paths to be added to the classpath.
+     *        the paths to be added to the extensions 
+     *        classpath.
      */
-    public void addClasspath(String... paths) { 
-        this.runnerParameters.addClasspath(paths);
+    public void addExtClasspath(String... paths) {
+        this.runnerParameters.addExtClasspath(paths);
+    }
+    
+    /**
+     * Sets the extensions classpath to
+     * no path.
+     */
+    public void clearExtClasspath() {
+        this.runnerParameters.clearExtClasspath();
+    }
+    
+    /**
+     * Brings the extensions classpath back to the default,
+     * i.e., the same extensions path of the JVM that
+     * executes JBSE, as returned by the system property
+     * {@code java.ext.dirs}.
+     */
+    public void setDefaultExtClasspath() {
+        this.runnerParameters.setDefaultExtClasspath();
+    }
+    
+    /**
+     * Adds paths to the user classpath.
+     * 
+     * @param paths a varargs of {@link String}, 
+     *        the paths to be added to the user 
+     *        classpath.
+     */
+    public void addUserClasspath(String... paths) { 
+        this.runnerParameters.addUserClasspath(paths);
     }
 
     /**
-     * Clears the symbolic execution's classpath.
+     * Brings the user classpath back to the default,
+     * i.e., no user path.
      */
-    public void clearClasspath() {
-        this.runnerParameters.clearClasspath();
+    public void clearUserClasspath() {
+        this.runnerParameters.clearUserClasspath();
     }
 
     /**
-     * Returns the symbolic execution's classpath.
+     * Builds the classpath.
      * 
      * @return a {@link Classpath} object. 
      */
@@ -1763,7 +1803,7 @@ public final class RunParameters implements Cloneable {
     public List<String> getSourcePath() {
         final String[] sourcePathJRE = 
         new String[] {
-                      Paths.get(getJREPath(), "src.zip").toString()
+                      Paths.get(getBootPath(), "src.zip").toString()
                       //TODO more?
         };
         final String[] sourcePathUser = this.srcPath.toArray(ARRAY_OF_STRING);

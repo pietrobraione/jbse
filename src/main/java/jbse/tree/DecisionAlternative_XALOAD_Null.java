@@ -12,19 +12,31 @@ import jbse.val.ReferenceSymbolic;
  */
 public final class DecisionAlternative_XALOAD_Null extends DecisionAlternative_XALOAD_Unresolved implements DecisionAlternative_XYLOAD_GETX_Null {
     private final int hashCode;
-    
-	public DecisionAlternative_XALOAD_Null(Expression arrayAccessExpression, boolean fresh, Reference arrayToWriteBack, ReferenceSymbolic referenceToResolve, int branchNumber) {
-		super(ALT_CODE + "_Null:" + arrayAccessExpression, fresh, arrayToWriteBack, arrayAccessExpression, referenceToResolve, branchNumber);
+
+    /**
+     * Constructor.
+     * 
+     * @param arrayAccessExpression the array access {@link Expression}.
+     * @param referenceToResolve the {@link ReferenceSymbolic} loaded from the array.
+     * @param fresh {@code true} iff {@code referenceToResolve} is fresh, i.e., 
+     *        is not stored in the array and, therefore, must be written
+     *        back to the array.
+     * @param arrayReference when {@code fresh == true} is a {@link Reference} to the array 
+     *        where {@code referenceToResolve} originates from.
+     * @param branchNumber an {@code int}, the branch number.
+     */
+    public DecisionAlternative_XALOAD_Null(Expression arrayAccessExpression, ReferenceSymbolic referenceToResolve, boolean fresh, Reference arrayReference, int branchNumber) {
+        super(ALT_CODE + "_Null:" + arrayAccessExpression, arrayAccessExpression, referenceToResolve, fresh, arrayReference, branchNumber);
         final int prime = 3331;
         int result = super.hashCode();
         result = prime * result;
         this.hashCode = result;
-	}
+    }
 
-	@Override
-	public void accept(VisitorDecisionAlternative_XALOAD v) throws Exception {
-		v.visitDecisionAlternative_XALOAD_Null(this);
-	}
+    @Override
+    public void accept(VisitorDecisionAlternative_XALOAD v) throws Exception {
+        v.visitDecisionAlternative_XALOAD_Null(this);
+    }
 
     @Override
     public int hashCode() {
@@ -33,9 +45,6 @@ public final class DecisionAlternative_XALOAD_Null extends DecisionAlternative_X
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
         if (!super.equals(obj)) {
             return false;
         }

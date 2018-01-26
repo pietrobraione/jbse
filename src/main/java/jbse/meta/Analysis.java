@@ -1,8 +1,9 @@
 package jbse.meta;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.reflect.Field;
 import java.util.Random;
+
+import sun.misc.Unsafe;
 
 /**
  * The methods in this class can be invoked by the analyzed code to 
@@ -401,25 +402,23 @@ final public class Analysis {
     /**
      * Assumes that a class has not yet been initialized; if 
      * it is initialized it {@link #ignore() ignore}s the current
-     * trace. When executed on a JVM different from JBSE, it 
-     * exits with error code 99 iff the class is loaded (that is, 
-     * an approximation of the desired semantics).
+     * trace. When executed on a JVM different from JBSE, if
+     * the class is initialized exits with error code 99.
      * 
-     * @param className The name of the class as a {@link String}.
+     * @param classToCheck the {@link Class}.
      */
-    public static void assumeClassNotInitialized(String className) {
+    public static void assumeClassNotInitialized(Class<?> classToCheck) {
+        //ugly Unsafe trickery, but it is the only way to check initialization
+        //without triggering it
         try {
-            final Method m = ClassLoader.class.getDeclaredMethod("findLoadedClass", new Class[] { String.class });
-            m.setAccessible(true);
-            final ClassLoader cl = ClassLoader.getSystemClassLoader();
-            final Object c = m.invoke(cl, className.replace('/', '.'));
-            if (c != null) {
+            final Field fieldUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
+            fieldUnsafe.setAccessible(true);
+            final Unsafe unsafe = (Unsafe) fieldUnsafe.get(null);
+            if (!unsafe.shouldBeInitialized(classToCheck)) {
                 System.exit(99);
             }
-        } catch (NoSuchMethodException | SecurityException | 
-        IllegalAccessException | IllegalArgumentException | 
-        InvocationTargetException e) {
-            throw new RuntimeException(e);
+        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+            throw new AssertionError();
         }
     }
 }

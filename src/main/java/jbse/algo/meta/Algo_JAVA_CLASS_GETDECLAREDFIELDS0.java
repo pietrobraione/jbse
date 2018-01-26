@@ -1,10 +1,11 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.ensureInstance_JAVA_CLASS;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.invokeClassLoaderLoadClass;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.JAVA_ACCESSIBLEOBJECT_OVERRIDE;
 import static jbse.bc.Signatures.JAVA_FIELD;
 import static jbse.bc.Signatures.JAVA_FIELD_ANNOTATIONS;
@@ -14,6 +15,9 @@ import static jbse.bc.Signatures.JAVA_FIELD_NAME;
 import static jbse.bc.Signatures.JAVA_FIELD_SIGNATURE;
 import static jbse.bc.Signatures.JAVA_FIELD_SLOT;
 import static jbse.bc.Signatures.JAVA_FIELD_TYPE;
+import static jbse.bc.Signatures.JAVA_THROWABLE;
+import static jbse.bc.Signatures.JAVA_THROWABLE_BACKTRACE;
+import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.BYTE;
@@ -30,14 +34,16 @@ import java.util.stream.Collectors;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.CannotManageStateException;
-import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.ClassFile;
+import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
-import jbse.bc.exc.BadClassFileException;
+import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotFoundException;
+import jbse.bc.exc.PleaseLoadClassException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
@@ -47,6 +53,7 @@ import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Calculator;
 import jbse.val.Null;
 import jbse.val.Reference;
@@ -61,7 +68,7 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  */
 public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_Nonbranching {
-    private ClassFile cf; //set by cookMore
+    private ClassFile thisClass; //set by cookMore
 
     @Override
     protected Supplier<Integer> numOperands() {
@@ -73,198 +80,227 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
     CannotManageStateException, InterruptException {
         try {           
-            //gets the classfile represented by the "this" parameter
-            final Reference classRef = (Reference) this.data.operand(0);
-            final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject(classRef); //TODO check that operand is concrete and not null
-            final String className = clazz.representedClass();
-            this.cf = (clazz.isPrimitive() ? 
-                       state.getClassHierarchy().getClassFilePrimitive(className) :
-                       state.getClassHierarchy().getClassFile(className));
+            //gets the classfile represented by the 'this' parameter
+            final Reference thisClassRef = (Reference) this.data.operand(0);
+            if (state.isNull(thisClassRef)) {
+                //this should never happen
+                failExecution("The 'this' parameter to java.lang.Class.getDeclaredFields0 method is null.");
+            }
+            final Instance_JAVA_CLASS thisClassObject = (Instance_JAVA_CLASS) state.getObject(thisClassRef); //TODO check that operand is concrete and not null
+            this.thisClass = thisClassObject.representedClass();
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (BadClassFileException e) {
-            //this should never happen
-            failExecution(e);
         }
     }
-
+    
     @Override
-    protected void update(State state) 
-    throws SymbolicValueNotAllowedException, ThreadStackEmptyException, InterruptException {
-        //gets the signatures of the fields to emit; the position of the signature
-        //in sigFields indicates its slot
-        final boolean onlyPublic = ((Simplex) this.data.operand(1)).surelyTrue();
-        final List<Signature> sigFields;
-        try {
-            sigFields = Arrays.stream(this.cf.getDeclaredFields())
-            .map(sig -> {
-                try {
-                    if (onlyPublic && !this.cf.isFieldPublic(sig)) {
-                        return null;
-                    } else {
-                        return sig;
-                    }
-                } catch (FieldNotFoundException e) {
-                    throw new RuntimeException(e);
-                }
-            })
-            .collect(Collectors.toList());
-        } catch (RuntimeException e) {
-            if (e.getCause() instanceof FieldNotFoundException) {
-                //this should never happen
-                failExecution((Exception) e.getCause());
-            }
-            throw e;
-        }
-
-        final int numFields = sigFields.stream()
-        .map(s -> (s == null ? 0 : 1))
-        .reduce(0, (a, b) -> a + b);
-
-
-        //builds the array to return
-        ReferenceConcrete result = null; //to keep the compiler happy
-        try {
-            result = state.createArray(null, state.getCalculator().valInt(numFields), "" + ARRAYOF + REFERENCE + JAVA_FIELD + TYPEEND);
-        } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
-            exitFromAlgorithm();
-        } catch (InvalidTypeException e) {
-            //this should never happen
-            failExecution(e);
-        }
-
-        //constructs the java.lang.reflect.Field objects and fills the array
-        final Reference classRef = (Reference) this.data.operand(0);
-        final Array resultArray = (Array) state.getObject(result);
-        final Calculator calc = state.getCalculator();
-        int index = 0;
-        int slot = 0;
-        for (Signature sigField : sigFields) {
-            if (sigField != null) {
-                //creates an instance of java.lang.reflect.Field and 
-                //puts it in the return array
-                ReferenceConcrete fieldRef = null; //to keep the compiler happy
-                try {
-                    fieldRef = state.createInstance(JAVA_FIELD);
-                    resultArray.setFast(calc.valInt(index) , fieldRef);
-                } catch (HeapMemoryExhaustedException e) {
-                    throwNew(state, OUT_OF_MEMORY_ERROR);
-                    exitFromAlgorithm();
-                } catch (InvalidOperandException | InvalidTypeException | FastArrayAccessNotAllowedException e) {
-                    //this should never happen
-                    failExecution(e);
-                }
-
-                //from here initializes the java.lang.reflect.Field instance
-                final Instance field = (Instance) state.getObject(fieldRef);
-
-                //sets clazz
-                field.setFieldValue(JAVA_FIELD_CLAZZ, classRef);
-
-                //sets name
-                try {
-                    state.ensureStringLiteral(sigField.getName());
-                } catch (HeapMemoryExhaustedException e) {
-                    throwNew(state, OUT_OF_MEMORY_ERROR);
-                    exitFromAlgorithm();
-                }
-                final ReferenceConcrete refSigName = state.referenceToStringLiteral(sigField.getName());
-                field.setFieldValue(JAVA_FIELD_NAME, refSigName);
-
-                //sets modifiers
-                try {
-                    field.setFieldValue(JAVA_FIELD_MODIFIERS, calc.valInt(this.cf.getFieldModifiers(sigField)));
-                } catch (FieldNotFoundException e) {
-                    //this should never happen
-                    failExecution(e);
-                }
-
-                //sets signature
-                try {
-                    final String sigType = this.cf.getFieldGenericSignatureType(sigField);
-                    final ReferenceConcrete refSigType;
-                    if (sigType == null) {
-                        refSigType = Null.getInstance();
-                    } else {
-                        state.ensureStringLiteral(sigType);
-                        refSigType = state.referenceToStringLiteral(sigType);
-                    }
-                    field.setFieldValue(JAVA_FIELD_SIGNATURE, refSigType);
-                } catch (HeapMemoryExhaustedException e) {
-                    throwNew(state, OUT_OF_MEMORY_ERROR);
-                    exitFromAlgorithm();
-                } catch (FieldNotFoundException e) {
-                    //this should never happen
-                    failExecution(e);
-                }
-
-                //sets slot
-                field.setFieldValue(JAVA_FIELD_SLOT, calc.valInt(slot));
-
-                //sets type
-                final String fieldType = sigField.getDescriptor();
-                ReferenceConcrete typeClassRef = null; //to keep the compiler happy
-                if (isPrimitive(fieldType)) {
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            final ClassHierarchy hier = state.getClassHierarchy();
+            final Calculator calc = state.getCalculator();
+            
+            //gets the signatures of the fields to emit; the position of the signature
+            //in sigFields indicates its slot
+            final boolean onlyPublic = ((Simplex) this.data.operand(1)).surelyTrue();
+            final List<Signature> sigFields;
+            final boolean skipBacktrace;
+            try {
+                final boolean[] _skipBacktrace = new boolean[1]; //boxed boolean so the closure can access it
+                sigFields = Arrays.stream(this.thisClass.getDeclaredFields())
+                .map(sig -> {
                     try {
-                        final String fieldTypeNameCanonical = toPrimitiveCanonicalName(fieldType);
-                        state.ensureInstance_JAVA_CLASS_primitive(fieldTypeNameCanonical);
-                        typeClassRef = state.referenceToInstance_JAVA_CLASS_primitive(fieldTypeNameCanonical);
+                        if (onlyPublic && !this.thisClass.isFieldPublic(sig)) {
+                            return null;
+                        } else if (JAVA_THROWABLE.equals(this.thisClass.getClassName()) && JAVA_THROWABLE_BACKTRACE.equals(sig)) {
+                            //we need to exclude the backtrace field of java.lang.Throwable
+                            _skipBacktrace[0] = true;
+                            return null;
+                        } else {
+                            return sig;
+                        }
+                    } catch (FieldNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .collect(Collectors.toList());
+                skipBacktrace = _skipBacktrace[0]; //unboxes
+            } catch (RuntimeException e) {
+                if (e.getCause() instanceof FieldNotFoundException) {
+                    //this should never happen
+                    failExecution((Exception) e.getCause());
+                }
+                throw e;
+            }
+
+            final int numFields = sigFields.stream()
+            .map(s -> (s == null ? 0 : 1))
+            .reduce(0, (a, b) -> a + b);
+            
+
+            //gets class for Field[]
+            ClassFile cf_arraOfJAVA_FIELD = null; //to keep the compiler happy
+            try {
+                cf_arraOfJAVA_FIELD = hier.loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_FIELD + TYPEEND);
+            } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException e) {
+                throw new ClasspathException(e);
+            }
+
+
+            //builds the array to return
+            ReferenceConcrete result = null; //to keep the compiler happy
+            try {
+                result = state.createArray(null, state.getCalculator().valInt(numFields), cf_arraOfJAVA_FIELD);
+            } catch (HeapMemoryExhaustedException e) {
+                throwNew(state, OUT_OF_MEMORY_ERROR);
+                exitFromAlgorithm();
+            } catch (InvalidTypeException e) {
+                //this should never happen
+                failExecution(e);
+            }
+
+            //constructs the java.lang.reflect.Field objects and fills the array
+            final Reference thisClassRef = (Reference) this.data.operand(0);
+            final Array resultArray = (Array) state.getObject(result);
+            int index = 0;
+            int slot = 0;
+            for (Signature sigField : sigFields) {
+                if (sigField != null && !(skipBacktrace && JAVA_THROWABLE_BACKTRACE.equals(sigField))) {
+                    //creates an instance of java.lang.reflect.Field and 
+                    //puts it in the return array
+                    ReferenceConcrete fieldRef = null; //to keep the compiler happy
+                    try {
+                        final ClassFile cf_JAVA_FIELD = hier.loadCreateClass(JAVA_FIELD);
+                        fieldRef = state.createInstance(cf_JAVA_FIELD);
+                        resultArray.setFast(calc.valInt(index) , fieldRef);
                     } catch (HeapMemoryExhaustedException e) {
                         throwNew(state, OUT_OF_MEMORY_ERROR);
+                        exitFromAlgorithm();
+                    } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException e) {
+                        throw new ClasspathException(e);
+                    } catch (InvalidOperandException | FastArrayAccessNotAllowedException e) {
+                        //this should never happen
+                        failExecution(e);
+                    }
+
+                    //from here initializes the java.lang.reflect.Field instance
+                    final Instance field = (Instance) state.getObject(fieldRef);
+
+                    //sets clazz
+                    field.setFieldValue(JAVA_FIELD_CLAZZ, thisClassRef);
+
+                    //sets name
+                    try {
+                        state.ensureStringLiteral(sigField.getName());
+                    } catch (HeapMemoryExhaustedException e) {
+                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                        exitFromAlgorithm();
+                    }
+                    final ReferenceConcrete refSigName = state.referenceToStringLiteral(sigField.getName());
+                    field.setFieldValue(JAVA_FIELD_NAME, refSigName);
+
+                    //sets modifiers
+                    try {
+                        field.setFieldValue(JAVA_FIELD_MODIFIERS, calc.valInt(this.thisClass.getFieldModifiers(sigField)));
+                    } catch (FieldNotFoundException e) {
+                        //this should never happen
+                        failExecution(e);
+                    }
+
+                    //sets signature
+                    try {
+                        final String sigType = this.thisClass.getFieldGenericSignatureType(sigField);
+                        final ReferenceConcrete refSigType;
+                        if (sigType == null) {
+                            refSigType = Null.getInstance();
+                        } else {
+                            state.ensureStringLiteral(sigType);
+                            refSigType = state.referenceToStringLiteral(sigType);
+                        }
+                        field.setFieldValue(JAVA_FIELD_SIGNATURE, refSigType);
+                    } catch (HeapMemoryExhaustedException e) {
+                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                        exitFromAlgorithm();
+                    } catch (FieldNotFoundException e) {
+                        //this should never happen
+                        failExecution(e);
+                    }
+
+                    //sets slot
+                    field.setFieldValue(JAVA_FIELD_SLOT, calc.valInt(slot));
+
+                    //sets type
+                    try {
+                        final String fieldType = sigField.getDescriptor();
+                        ReferenceConcrete typeClassRef = null; //to keep the compiler happy
+                        if (isPrimitive(fieldType)) {
+                            try {
+                                final String fieldTypeNameCanonical = toPrimitiveCanonicalName(fieldType);
+                                state.ensureInstance_JAVA_CLASS_primitive(fieldTypeNameCanonical);
+                                typeClassRef = state.referenceToInstance_JAVA_CLASS_primitive(fieldTypeNameCanonical);
+                            } catch (ClassFileNotFoundException e) {
+                                //this should never happen
+                                failExecution(e);
+                            }
+                        } else {
+                            final String fieldTypeClassName = className(fieldType);
+                            final ClassFile fieldTypeClass = hier.resolveClass(this.thisClass, fieldTypeClassName, state.areStandardClassLoadersNotReady()); //note that the accessor is the owner of the field, i.e., the 'this' class
+                            state.ensureInstance_JAVA_CLASS(fieldTypeClass);
+                            typeClassRef = state.referenceToInstance_JAVA_CLASS(fieldTypeClass);
+                        }
+                        field.setFieldValue(JAVA_FIELD_TYPE, typeClassRef);
+                    } catch (PleaseLoadClassException e) {
+                        invokeClassLoaderLoadClass(state, e);
                         exitFromAlgorithm();
                     } catch (ClassFileNotFoundException e) {
-                        //this should never happen
-                        failExecution(e);
-                    }
-                } else {
-                    final String fieldTypeClass = className(fieldType);
-                    try {
-                        ensureInstance_JAVA_CLASS(state, fieldTypeClass, fieldTypeClass, this.ctx);
-                        typeClassRef = state.referenceToInstance_JAVA_CLASS(fieldTypeClass);
+                        //TODO this exception should wrap a ClassNotFoundException
+                        throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                        exitFromAlgorithm();
+                    } catch (ClassFileNotAccessibleException e) {
+                        throwNew(state, ILLEGAL_ACCESS_ERROR);
+                        exitFromAlgorithm();
                     } catch (HeapMemoryExhaustedException e) {
                         throwNew(state, OUT_OF_MEMORY_ERROR);
                         exitFromAlgorithm();
-                    } catch (BadClassFileException e) {
-                        //TODO is it ok?
+                    } catch (ClassFileIllFormedException e) {
+                        //TODO should throw a subclass of LinkageError
                         throwVerifyError(state);
                         exitFromAlgorithm();
-                    } catch (ClassFileNotAccessibleException e) {
+                    }
+
+                    //sets override
+                    field.setFieldValue(JAVA_ACCESSIBLEOBJECT_OVERRIDE, calc.valBoolean(false));
+
+                    //sets annotations
+                    try {
+                        final byte[] annotations = this.thisClass.getFieldAnnotationsRaw(sigField);
+                        final ClassFile cf_arrayOfBYTE = hier.loadCreateClass("" + ARRAYOF + BYTE);
+                        final ReferenceConcrete annotationsRef = state.createArray(null, calc.valInt(annotations.length), cf_arrayOfBYTE);
+                        field.setFieldValue(JAVA_FIELD_ANNOTATIONS, annotationsRef);
+                        
+                        //populates annotations
+                        final Array annotationsArray = (Array) state.getObject(annotationsRef);
+                        for (int i = 0; i < annotations.length; ++i) {
+                            annotationsArray.setFast(calc.valInt(i), calc.valByte(annotations[i]));
+                        }
+                    } catch (HeapMemoryExhaustedException e) {
+                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                        exitFromAlgorithm();
+                    } catch (FieldNotFoundException | ClassFileNotFoundException | 
+                             ClassFileIllFormedException | ClassFileNotAccessibleException |  
+                             InvalidOperandException | FastArrayAccessNotAllowedException e) {
                         //this should never happen
                         failExecution(e);
                     }
+                    
+                    ++index;
                 }
-                field.setFieldValue(JAVA_FIELD_TYPE, typeClassRef);
-
-                //sets override
-                field.setFieldValue(JAVA_ACCESSIBLEOBJECT_OVERRIDE, calc.valBoolean(false));
-
-                //sets annotations
-                try {
-                    final byte[] annotations = this.cf.getFieldAnnotationsRaw(sigField);
-                    final ReferenceConcrete annotationsRef = state.createArray(null, calc.valInt(annotations.length), "" + ARRAYOF + BYTE);
-                    field.setFieldValue(JAVA_FIELD_ANNOTATIONS, annotationsRef);
-                    final Array annotationsArray = (Array) state.getObject(annotationsRef);
-                    for (int i = 0; i < annotations.length; ++i) {
-                        annotationsArray.setFast(calc.valInt(i), calc.valByte(annotations[i]));
-                    }
-                } catch (HeapMemoryExhaustedException e) {
-                    throwNew(state, OUT_OF_MEMORY_ERROR);
-                    exitFromAlgorithm();
-                } catch (FieldNotFoundException | InvalidTypeException | 
-                         InvalidOperandException | FastArrayAccessNotAllowedException e) {
-                    //this should never happen
-                    failExecution(e);
-                }
-                
-                ++index;
+                ++slot;
             }
-            ++slot;
-        }
 
 
-        //returns the array
-        state.pushOperand(result);
+            //returns the array
+            state.pushOperand(result);
+        };
     }
 }

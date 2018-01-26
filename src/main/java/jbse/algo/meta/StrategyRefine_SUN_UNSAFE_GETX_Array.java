@@ -17,13 +17,13 @@ import jbse.val.exc.InvalidTypeException;
 
 /**
  * Strategy for refining a state during the execution of 
- * {@link sun.misc.Unsafe.getObjectVolatile(Object, long)} when the object 
+ * {@link sun.misc.Unsafe.getIntVolatile(Object, long)} when the object 
  * parameter is an array.
  * 
  * @author Pietro Braione
  */
-//TODO refactor together with StrategyRefine_SUN_UNSAFE_GETINTVOLATILE_Array
-abstract class StrategyRefine_SUN_UNSAFE_GETOBJECTVOLATILE_Array implements StrategyRefine<DecisionAlternative_XALOAD>{
+//TODO refactor together with StrategyRefine_SUN_UNSAFE_GETOBJECTVOLATILE_Array
+abstract class StrategyRefine_SUN_UNSAFE_GETX_Array implements StrategyRefine<DecisionAlternative_XALOAD>{
     abstract public void refineResolved(State s, DecisionAlternative_XALOAD_Resolved dav) 
     throws DecisionException;
 
@@ -38,32 +38,32 @@ abstract class StrategyRefine_SUN_UNSAFE_GETOBJECTVOLATILE_Array implements Stra
                 public void visitDecisionAlternative_XALOAD_Expands(DecisionAlternative_XALOAD_Expands dac)
                 throws DecisionException, ContradictionException, InvalidTypeException {
                     //this should never happen
-                    failExecution("Unexpected decision on symbolic reference during sun.misc.Unsafe.getObjectVolatile invocation");
+                    failExecution("Unexpected decision on symbolic reference during sun.misc.Unsafe.getIntVolatile invocation");
                 }
     
                 @Override
                 public void visitDecisionAlternative_XALOAD_Aliases(DecisionAlternative_XALOAD_Aliases dai)
                 throws DecisionException, ContradictionException {
                     //this should never happen
-                    failExecution("Unexpected decision on symbolic reference during sun.misc.Unsafe.getObjectVolatile invocation");
+                    failExecution("Unexpected decision on symbolic reference during sun.misc.Unsafe.getIntVolatile invocation");
                 }
     
                 @Override
                 public void visitDecisionAlternative_XALOAD_Null(DecisionAlternative_XALOAD_Null dan)
                 throws DecisionException, ContradictionException {
                     //this should never happen
-                    failExecution("Unexpected decision on symbolic reference during sun.misc.Unsafe.getObjectVolatile invocation");
+                    failExecution("Unexpected decision on symbolic reference during sun.misc.Unsafe.getIntVolatile invocation");
                 }
     
                 @Override
                 public void visitDecisionAlternative_XALOAD_Resolved(DecisionAlternative_XALOAD_Resolved dav)
                 throws DecisionException {
-                    StrategyRefine_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.refineResolved(s, dav);
+                    StrategyRefine_SUN_UNSAFE_GETX_Array.this.refineResolved(s, dav);
                 }
     
                 @Override
                 public void visitDecisionAlternative_XALOAD_Out(DecisionAlternative_XALOAD_Out dao) {
-                    StrategyRefine_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.refineOut(s, dao);
+                    StrategyRefine_SUN_UNSAFE_GETX_Array.this.refineOut(s, dao);
                 }
             };
 

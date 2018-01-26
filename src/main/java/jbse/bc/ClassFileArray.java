@@ -12,7 +12,6 @@ import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_OBJECT_CLONE;
 import static jbse.bc.Signatures.JAVA_SERIALIZABLE;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,25 +49,54 @@ public final class ClassFileArray extends ClassFile {
     
     private static final String NO_CONSTANT_POOL = "no member of this kind is in the constant pool of an array class";
     
-    public static enum Visibility {
+    private static enum Accessibility {
         PUBLIC(Modifier.PUBLIC), 
         PROTECTED(Modifier.PROTECTED), 
         PACKAGE(0), 
         PRIVATE(Modifier.PRIVATE);
         
         private final int modifier;
-        private Visibility(int modifier) { this.modifier = modifier; }
+        private Accessibility(int modifier) { this.modifier = modifier; }
     };
 
     private final String className;
+    private final ClassFile memberClass;
+    private final ClassFile cf_JAVA_OBJECT;
+    private final ClassFile cf_JAVA_CLONEABLE;
+    private final ClassFile cf_JAVA_SERIALIZABLE;
+    private final int definingClassLoader;
     private final String packageName;
-    private final Visibility visibility;
+    private final Accessibility accessibility;
     private final Signature signatureCloneMethod;
 
-    ClassFileArray(String className, String packageName, Visibility visibility) { 
+    ClassFileArray(String className, ClassFile memberClass, ClassFile cf_JAVA_OBJECT, ClassFile cf_JAVA_CLONEABLE, ClassFile cf_JAVA_SERIALIZABLE) { 
         this.className = className; 
-        this.packageName = packageName;
-        this.visibility = visibility;
+        this.memberClass = memberClass;
+        this.cf_JAVA_OBJECT = cf_JAVA_OBJECT;
+        this.cf_JAVA_CLONEABLE = cf_JAVA_CLONEABLE;
+        this.cf_JAVA_SERIALIZABLE = cf_JAVA_SERIALIZABLE;
+        
+        //calculates accessibility (JVMS v8, section 5.3.3 last line, this
+        //implementation also works with primitive classfile members
+        //because they all have public visibility when queried)
+        if (memberClass.isPublic()) {
+            this.accessibility = Accessibility.PUBLIC;
+        } else if (memberClass.isProtected()) {
+            this.accessibility = Accessibility.PROTECTED;
+        } else if (memberClass.isPackage()) {
+            this.accessibility = Accessibility.PACKAGE;
+        } else { //private
+            this.accessibility = Accessibility.PRIVATE;
+        }
+        
+        //calculates dynamic package (defining classloader and package name);
+        //note that this complements the value of this.accessibility in 
+        //determining what this class may access and which classes may access
+        //this class.
+        //TODO the JVMS v8 is not clear about that. Is it ok? Does it work for nested classes?
+        this.definingClassLoader = memberClass.getDefiningClassLoader();
+        this.packageName = memberClass.getPackageName();
+
         this.signatureCloneMethod = new Signature(this.className, JAVA_OBJECT_CLONE.getDescriptor(), JAVA_OBJECT_CLONE.getName());
     }
 
@@ -86,6 +114,11 @@ public final class ClassFileArray extends ClassFile {
     public String getSourceFile() {
         return "";
     }
+    
+    @Override
+    public int getDefiningClassLoader() {
+        return this.definingClassLoader;
+    }
 
     @Override
     public String getPackageName() {
@@ -94,12 +127,17 @@ public final class ClassFileArray extends ClassFile {
 
     @Override
     public int getModifiers() {
-        return Modifier.FINAL | this.visibility.modifier;
+        return Modifier.FINAL | this.accessibility.modifier;
     }
 
     @Override
     public int getAccessFlags() {
         return 0; //no access flags set, checked against implementation
+    }
+    
+    @Override
+    public boolean isDummy() {
+        return false;
     }
 
     @Override
@@ -220,15 +258,28 @@ public final class ClassFileArray extends ClassFile {
         }
         throw new InvalidIndexException(NO_CONSTANT_POOL);
     }
+    
+    @Override
+    public ClassFile getSuperclass() {
+        return this.cf_JAVA_OBJECT;
+    }
 
     @Override
     public String getSuperclassName() {
         return JAVA_OBJECT;
     }
+    
+    @Override
+    public List<ClassFile> getSuperInterfaces() {
+        final List<ClassFile> superinterfaces = new ArrayList<>(2);
+        superinterfaces.add(this.cf_JAVA_CLONEABLE);
+        superinterfaces.add(this.cf_JAVA_SERIALIZABLE);
+        return Collections.unmodifiableList(superinterfaces);
+    }
 
     @Override
     public List<String> getSuperInterfaceNames() {
-        final List<String> superinterfaces = new ArrayList<String>(2);
+        final List<String> superinterfaces = new ArrayList<>(2);
         superinterfaces.add(JAVA_CLONEABLE);
         superinterfaces.add(JAVA_SERIALIZABLE);
         return Collections.unmodifiableList(superinterfaces);
@@ -345,12 +396,17 @@ public final class ClassFileArray extends ClassFile {
     }
 
     @Override
-    public Annotation[] getMethodAvailableAnnotations(Signature methodSignature)
+    public String[] getMethodAvailableAnnotations(Signature methodSignature)
     throws MethodNotFoundException {
         if (isMethodClone(methodSignature)) {
-            return new Annotation[0];
+            return new String[0];
         }
         throw new MethodNotFoundException(methodSignature.toString());
+    }
+    
+    @Override
+    public String getMethodAnnotationParameterValueString(Signature methodSignature, String annotation, String parameter) {
+        return null;
     }
 
     @Override
@@ -404,22 +460,22 @@ public final class ClassFileArray extends ClassFile {
 
     @Override
     public boolean isPublic() {
-        return this.visibility == Visibility.PUBLIC;
+        return this.accessibility == Accessibility.PUBLIC;
     }
     
     @Override
     public boolean isProtected() {
-        return this.visibility == Visibility.PROTECTED;
+        return this.accessibility == Accessibility.PROTECTED;
     }
 
     @Override
     public boolean isPackage() {
-        return this.visibility == Visibility.PACKAGE;
+        return this.accessibility == Accessibility.PACKAGE;
     }
     
     @Override
     public boolean isPrivate() {
-        return this.visibility == Visibility.PRIVATE;
+        return this.accessibility == Accessibility.PRIVATE;
     }
 
     @Override
@@ -439,7 +495,17 @@ public final class ClassFileArray extends ClassFile {
     }
     
     @Override
-    public String getHostClass() {
+    public ClassFile getMemberClass() {
+        return this.memberClass;
+    }
+    
+    @Override
+    public boolean isAnonymousUnregistered() {
+        return false;
+    }
+    
+    @Override
+    public ClassFile getHostClass() {
         return null;
     }
 

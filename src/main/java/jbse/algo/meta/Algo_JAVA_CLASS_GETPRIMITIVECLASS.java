@@ -11,11 +11,14 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
+import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
 import jbse.mem.exc.HeapMemoryExhaustedException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
 /**
@@ -24,14 +27,16 @@ import jbse.val.Reference;
  * @author Pietro Braione
  */
 public final class Algo_JAVA_CLASS_GETPRIMITIVECLASS extends Algo_INVOKEMETA_Nonbranching {
+    private Reference classRef; //set by cookMore
+    
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 1;
     }
-
+    
     @Override
-    protected void update(State state) 
-    throws SymbolicValueNotAllowedException, ThreadStackEmptyException, InterruptException {
+    protected void cookMore(State state) 
+    throws ClasspathException, CannotManageStateException, InterruptException {
         try {           
             //gets the canonical name of the primitive type and converts it to a string
             final Reference typeNameRef = (Reference) this.data.operand(0);
@@ -42,8 +47,7 @@ public final class Algo_JAVA_CLASS_GETPRIMITIVECLASS extends Algo_INVOKEMETA_Non
 
             //gets the instance of the class
             state.ensureInstance_JAVA_CLASS_primitive(typeName);
-            final Reference classRef = state.referenceToInstance_JAVA_CLASS_primitive(typeName);
-            state.pushOperand(classRef);
+            this.classRef = state.referenceToInstance_JAVA_CLASS_primitive(typeName);
         } catch (ClassFileNotFoundException e) {
             throwNew(state, CLASS_NOT_FOUND_EXCEPTION);  //this is how Hotspot behaves
             exitFromAlgorithm();
@@ -54,5 +58,12 @@ public final class Algo_JAVA_CLASS_GETPRIMITIVECLASS extends Algo_INVOKEMETA_Non
             throwVerifyError(state);
             exitFromAlgorithm();
         }
+    }
+
+    @Override
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.pushOperand(classRef);
+        };
     }
 }

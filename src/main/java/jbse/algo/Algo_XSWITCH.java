@@ -6,8 +6,9 @@ import static jbse.algo.Util.throwVerifyError;
 
 import java.util.function.Supplier;
 
+import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
-import jbse.dec.exc.InvalidInputException;
 import jbse.mem.State;
 import jbse.mem.SwitchTable;
 import jbse.tree.DecisionAlternative_XSWITCH;
@@ -127,7 +128,7 @@ StrategyUpdate<DecisionAlternative_XSWITCH>> {
     }
 
     @Override
-    protected void onInvalidInputException(State state, InvalidInputException e) {
+    protected void onInvalidInputException(State state, InvalidInputException e) throws ClasspathException {
         //bad selector
         throwVerifyError(state);
     }

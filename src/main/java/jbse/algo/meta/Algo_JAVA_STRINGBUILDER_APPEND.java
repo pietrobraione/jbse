@@ -13,12 +13,15 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
 import jbse.bc.Snippet;
-import jbse.bc.exc.BadClassFileException;
+import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.State;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
 import jbse.val.ReferenceConcrete;
 
@@ -34,7 +37,8 @@ public final class Algo_JAVA_STRINGBUILDER_APPEND extends Algo_INVOKEMETA_Nonbra
     }
 
     @Override
-    protected void cookMore(State state) throws ThreadStackEmptyException, InterruptException {
+    protected void cookMore(State state) 
+    throws ThreadStackEmptyException, InterruptException, InvalidInputException, ClasspathException {
         try {
             final Primitive toAppend = (Primitive) this.data.operand(1);
             if (toAppend.isSymbolic()) {
@@ -47,7 +51,7 @@ public final class Algo_JAVA_STRINGBUILDER_APPEND extends Algo_INVOKEMETA_Nonbra
                     .op_invokevirtual(JAVA_STRINGBUILDER_APPEND_STRING)
                     .op_return()
                     .mk();
-                state.pushSnippetFrame(snippet, INVOKESPECIALSTATICVIRTUAL_OFFSET);
+                state.pushSnippetFrameWrap(snippet, INVOKESPECIALSTATICVIRTUAL_OFFSET);
                 exitFromAlgorithm();
             } else {
                 continueWithBaseLevelImpl(state, this.isInterface, this.isSpecial, this.isStatic); //executes the original StringBuilder.append implementation
@@ -58,14 +62,16 @@ public final class Algo_JAVA_STRINGBUILDER_APPEND extends Algo_INVOKEMETA_Nonbra
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (BadClassFileException | InvalidProgramCounterException e) {
+        } catch (InvalidProgramCounterException e) {
             //this should never happen
             failExecution(e);
         }
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException, InterruptException {
-        //never used
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            //never used
+        };
     }
 }

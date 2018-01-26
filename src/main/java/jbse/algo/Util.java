@@ -1,7 +1,9 @@
 package jbse.algo;
 
+import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
+import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Offsets.offsetInvoke;
-import static jbse.bc.Signatures.JAVA_CLASS_NAME;
+import static jbse.bc.Signatures.JAVA_CLASSLOADER_LOADCLASS;
 import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_STACKTRACEELEMENT;
 import static jbse.bc.Signatures.JAVA_STACKTRACEELEMENT_DECLARINGCLASS;
@@ -12,7 +14,10 @@ import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_STRING_VALUE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_BACKTRACE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_STACKTRACE;
+import static jbse.bc.Signatures.JBSE_BASE;
+import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.VERIFY_ERROR;
+import static jbse.bc.Signatures.noclass_REGISTERLOADEDCLASS;
 import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
@@ -27,15 +32,15 @@ import java.util.ListIterator;
 import java.util.Set;
 
 import sun.misc.Unsafe;
-
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.ConstantPoolPrimitive;
 import jbse.bc.ConstantPoolString;
 import jbse.bc.ConstantPoolValue;
 import jbse.bc.Signature;
+import jbse.bc.Snippet;
 import jbse.bc.exc.AttributeNotFoundException;
-import jbse.bc.exc.BadClassFileException;
+import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotFoundException;
@@ -46,15 +51,17 @@ import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
+import jbse.bc.exc.PleaseLoadClassException;
 import jbse.common.Type;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
-import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.mem.Frame;
 import jbse.mem.Instance;
 import jbse.mem.Klass;
+import jbse.mem.SnippetFrameNoContext;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
@@ -127,21 +134,20 @@ public class Util {
     }
 
     /**
-     * Finds the {@link ClassFile} where the implementation of a method
-     * resides (or where the method is declared native).
+     * Performs lookup of a method implementation (bytecode or native).
+     * See JVMS v8, invokeinterface, invokespecial, invokestatic and invokevirtual
+     * bytecodes specification.
      * 
      * @param state a {@link State}
-     * @param methodSignatureResolved the {@link Signature} of the resolved method
-     *        to lookup.
+     * @param resolutionClass the {@link ClassFile} of the resolved method.
+     * @param methodSignature the {@link Signature} of the method
+     *        whose implementation must be looked up.
      * @param isInterface {@code true} iff the method is declared interface.
      * @param isSpecial {@code true} iff the method is declared special.
      * @param isStatic {@code true} iff the method is declared static.
-     * @param receiverClassName a {@link String}, the class name of the receiver
+     * @param receiverClass a {@link ClassFile}, the class of the receiver
      *        of the method invocation.
      * @return the {@link ClassFile} of the class which contains the method implementation.
-     * @throws BadClassFileException  when the class file 
-     *         with name {@code methodSignature.}{@link Signature#getClassName() getClassName()}
-     *         does not exist or is ill-formed.
      * @throws MethodNotFoundException if lookup fails and {@link java.lang.NoSuchMethodError} should be thrown.
      * @throws MethodNotAccessibleException  if lookup fails and {@link java.lang.IllegalAccessError} should be thrown.
      * @throws MethodAbstractException if lookup fails and {@link java.lang.AbstractMethodError} should be thrown.
@@ -149,19 +155,19 @@ public class Util {
      * @throws ThreadStackEmptyException if {@code state} has an empty stack (i.e., no
      *         current method).
      */
-    public static ClassFile lookupClassfileMethodImpl(State state, Signature methodSignatureResolved, boolean isInterface, boolean isSpecial, boolean isStatic, String receiverClassName) 
-    throws BadClassFileException, MethodNotFoundException, MethodNotAccessibleException, IncompatibleClassFileException, MethodAbstractException, ThreadStackEmptyException {
+    public static ClassFile lookupMethodImpl(State state, ClassFile resolutionClass, Signature methodSignature, boolean isInterface, boolean isSpecial, boolean isStatic, ClassFile receiverClass) 
+    throws MethodNotFoundException, MethodNotAccessibleException, MethodAbstractException, IncompatibleClassFileException, ThreadStackEmptyException {
         final ClassFile retVal;
         final ClassHierarchy hier = state.getClassHierarchy();
         if (isInterface) { 
-            retVal = hier.lookupMethodImplInterface(receiverClassName, methodSignatureResolved);
+            retVal = hier.lookupMethodImplInterface(receiverClass, resolutionClass, methodSignature);
         } else if (isSpecial) {
-            final String currentClassName = state.getCurrentMethodSignature().getClassName();
-            retVal = hier.lookupMethodImplSpecial(currentClassName, methodSignatureResolved);
+            final ClassFile currentClass = state.getCurrentClass();
+            retVal = hier.lookupMethodImplSpecial(currentClass, resolutionClass, methodSignature);
         } else if (isStatic) {
-            retVal = hier.lookupMethodImplStatic(methodSignatureResolved);
+            retVal = hier.lookupMethodImplStatic(resolutionClass, methodSignature);
         } else { //invokevirtual
-            retVal = hier.lookupMethodImplVirtual(receiverClassName, methodSignatureResolved);
+            retVal = hier.lookupMethodImplVirtual(receiverClass, resolutionClass, methodSignature);
         }
         //TODO invokedynamic
         return retVal;
@@ -176,8 +182,8 @@ public class Util {
      * @return a {@link String} corresponding to the {@code value} of 
      *         the {@link Instance} referred by {@code ref}, 
      *         or {@code null} if such {@link Instance}'s 
-     *         {@link Instance#getType() type} is not 
-     *         {@code "java/lang/String"}, or its {@code value}
+     *         {@link Instance#getType() type} is not the 
+     *         {@code java.lang.String} class, or its {@code value}
      *         is not a concrete array of {@code char}s.
      */
     public static String valueString(State s, Reference ref) {
@@ -204,7 +210,11 @@ public class Util {
      *         is not a concrete array of {@code char}s.
      */
     public static String valueString(State s, Instance i) {
-        if (i.getType().equals(JAVA_STRING)) {
+        final ClassFile cf_JAVA_STRING = s.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STRING);
+        if (cf_JAVA_STRING == null) {
+            failExecution("Could not find class java.lang.String.");
+        }
+        if (i.getType() == cf_JAVA_STRING) {
             final Reference valueRef = (Reference) i.getFieldValue(JAVA_STRING_VALUE);
             final Array value = (Array) s.getObject(valueRef);
             if (value == null) {
@@ -223,20 +233,30 @@ public class Util {
      * 
      * @param state the {@link State} whose {@link Heap} will receive 
      *              the new object.
+     * @throws ClasspathException if the class file for {@code java.lang.VerifyError}
+     *         is not in the classpath, or is ill-formed, or cannot access one of its
+     *         superclasses/superinterfaces.
      */
-    public static void throwVerifyError(State state) {
+    public static void throwVerifyError(State state) throws ClasspathException {
         try {
-            final ReferenceConcrete excReference = state.createInstanceSurely(VERIFY_ERROR);
+            final ClassFile cf_VERIFY_ERROR = state.getClassHierarchy().loadCreateClass(VERIFY_ERROR);
+            if (cf_VERIFY_ERROR == null) {
+                failExecution("Could not find class java.lang.VerifyError.");
+            }
+            final ReferenceConcrete excReference = state.createInstanceSurely(cf_VERIFY_ERROR);
             fillExceptionBacktrace(state, excReference);
             state.unwindStack(excReference);
-        } catch (InvalidIndexException | InvalidProgramCounterException e) {
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException e) {
+            throw new ClasspathException(e);
+        } catch (InvalidInputException | InvalidTypeException | InvalidIndexException | 
+                 InvalidProgramCounterException e) {
             //there is not much we can do if this happens
             failExecution(e);
         }
     }
 
     /**
-     * Creates a new instance of a given class in the 
+     * Creates a new instance of a given object in the 
      * heap of a state. The fields of the object are initialized 
      * with the default values for each field's type. Then, unwinds 
      * the stack of the state in search for an exception handler for
@@ -245,16 +265,29 @@ public class Util {
      * 
      * @param state the {@link State} where the new object will be 
      *        created and whose stack will be unwound.
-     * @param exceptionClassName the name of the class of the new instance.
+     * @param toThrowClassName the name of the class of the new instance
+     *        to throw. It must be a {@link Throwable} defined in the standard
+     *        library and available in the bootstrap classpath.
+     * @throws ClasspathException  if the classfile for {@code toThrowClassName}
+     *         is missing or is ill-formed.
      */
-    public static void throwNew(State state, String exceptionClassName) {
-        if (exceptionClassName.equals(VERIFY_ERROR)) {
+    public static void throwNew(State state, String toThrowClassName) throws ClasspathException {
+        if (toThrowClassName.equals(VERIFY_ERROR)) {
             throwVerifyError(state);
             return;
         }
-        final ReferenceConcrete excReference = state.createInstanceSurely(exceptionClassName);
-        fillExceptionBacktrace(state, excReference);
-        throwObject(state, excReference);
+        try {
+            final ClassFile exceptionClass = state.getClassHierarchy().loadCreateClass(toThrowClassName);
+            final ReferenceConcrete excReference = state.createInstanceSurely(exceptionClass);
+            fillExceptionBacktrace(state, excReference);
+            throwObject(state, excReference);
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException e) {
+            throw new ClasspathException(e);
+        } catch (ClassFileNotAccessibleException | InvalidInputException | 
+                 InvalidTypeException e) {
+            //there is not much we can do if this happens
+            failExecution(e);
+        }
     }
 
     /**
@@ -266,8 +299,14 @@ public class Util {
      * @param state the {@link State} where the new object will be 
      *        created and whose stack will be unwound.
      * @param toThrow see {@link State#unwindStack(Reference)}.
+     * @throws InvalidInputException if {@code toThrow} is an unresolved symbolic reference, 
+     *         or is a null reference, or is a reference to an object that does not extend {@code java.lang.Throwable}.
+     * @throws ClasspathException if the class file for {@code java.lang.VerifyError}
+     *         is not in the classpath, or is ill-formed, or cannot access one of its
+     *         superclasses/superinterfaces.
      */
-    public static void throwObject(State state, Reference toThrow) {
+    public static void throwObject(State state, Reference toThrow) 
+    throws InvalidInputException, ClasspathException {
         try {
             state.unwindStack(toThrow);
         } catch (InvalidIndexException | InvalidProgramCounterException e) {
@@ -295,33 +334,48 @@ public class Util {
         try {
             final Instance exc = (Instance) state.getObject(excReference);
             exc.setFieldValue(JAVA_THROWABLE_STACKTRACE, Null.getInstance());
-            final String excClass = exc.getType();
+            final ClassFile excClass = exc.getType();
             int stackDepth = 0;
             for (Frame f : state.getStack()) {
-                final String fClass = f.getCurrentMethodSignature().getClassName();
+                if (f instanceof SnippetFrameNoContext) {
+                    continue; //skips
+                }
+                final ClassFile fClass = f.getCurrentClass();
                 final String methodName = f.getCurrentMethodSignature().getName();
-                if (excClass.equals(fClass) && "<init>".equals(methodName)) {
+                if (excClass == fClass && "<init>".equals(methodName)) {
                     break;
                 }
                 ++stackDepth;
             }
+            final ClassFile cf_JAVA_STACKTRACEELEMENT = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STACKTRACEELEMENT);
+            if (cf_JAVA_STACKTRACEELEMENT == null) {
+                failExecution("Could not find classfile for java.lang.StackTraceElement.");
+            }
+            final ClassFile cf_arrayJAVA_STACKTRACEELEMENT = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, "" + ARRAYOF + REFERENCE + JAVA_STACKTRACEELEMENT + TYPEEND);
+            if (cf_arrayJAVA_STACKTRACEELEMENT == null) {
+                failExecution("Could not find classfile for java.lang.StackTraceElement[].");
+            }
             final ReferenceConcrete refToArray = 
-                state.createArray(null, state.getCalculator().valInt(stackDepth), "" + ARRAYOF + REFERENCE + JAVA_STACKTRACEELEMENT + TYPEEND);
+                state.createArray(null, state.getCalculator().valInt(stackDepth), cf_arrayJAVA_STACKTRACEELEMENT);
             final Array theArray = (Array) state.getObject(refToArray);
             exc.setFieldValue(JAVA_THROWABLE_BACKTRACE, refToArray);
             int i = 0;
+            final Calculator calc = state.getCalculator();
             for (Frame f : state.getStack()) {
-                final Calculator calc = state.getCalculator();
-                final String fClass = f.getCurrentMethodSignature().getClassName();
+                if (f instanceof SnippetFrameNoContext) {
+                    continue; //skips
+                }
+                
+                final ClassFile currentClass = f.getCurrentClass();
 
                 //gets the data
-                final String declaringClass = fClass.replace('/', '.').replace('$', '.'); //TODO is it ok?
-                final String fileName       = state.getClassHierarchy().getClassFile(fClass).getSourceFile();
+                final String declaringClass = currentClass.getClassName().replace('/', '.').replace('$', '.'); //TODO is it ok?
+                final String fileName       = currentClass.getSourceFile();
                 final int    lineNumber     = f.getSourceRow(); 
                 final String methodName     = f.getCurrentMethodSignature().getName();
 
                 //break if we reach the first frame for the exception <init>
-                if (excClass.equals(fClass) && "<init>".equals(methodName)) {
+                if (excClass.equals(currentClass) && "<init>".equals(methodName)) {
                     break;
                 }
 
@@ -331,7 +385,7 @@ public class Util {
                 state.ensureStringLiteral(methodName);
 
                 //creates the java.lang.StackTraceElement object and fills it
-                final ReferenceConcrete steReference = state.createInstance(JAVA_STACKTRACEELEMENT);
+                final ReferenceConcrete steReference = state.createInstance(cf_JAVA_STACKTRACEELEMENT);
                 final Instance stackTraceElement = (Instance) state.getObject(steReference);
                 stackTraceElement.setFieldValue(JAVA_STACKTRACEELEMENT_DECLARINGCLASS, state.referenceToStringLiteral(declaringClass));
                 stackTraceElement.setFieldValue(JAVA_STACKTRACEELEMENT_FILENAME,       state.referenceToStringLiteral(fileName));
@@ -344,7 +398,7 @@ public class Util {
         } catch (HeapMemoryExhaustedException e) {
             //just gives up
             return;
-        } catch (BadClassFileException | ClassCastException | 
+        } catch (ClassCastException | 
                  InvalidTypeException | InvalidOperandException | 
                  FastArrayAccessNotAllowedException e) {
             //this should not happen (and if happens there is not much we can do)
@@ -354,22 +408,21 @@ public class Util {
 
     /**
      * Ensures that a {@link State} has a {@link Klass} in its 
-     * static store, possibly by creating it together with all 
-     * the necessary super{@link Klass}es and all the necessary
-     * frames for the {@code <clinit>} methods. It is equivalent
-     * to {@link #ensureClassCreatedAndInitialized(State, String, ExecutionContext, Set) ensureClassCreatedAndInitialized}
-     * {@code (state, className, ctx, null)}.
+     * static store for a class, possibly creating the necessary
+     * frames for the {@code <clinit>} methods to initialize it, 
+     * or initializing it symbolically. If necessary it also recursively 
+     * initializes its superclasses. It is equivalent
+     * to {@link #ensureClassInitialized(State, String, ExecutionContext, Set, Signature) ensureClassInitialized}
+     * {@code (state, classFile, ctx, null, null)}.
      * 
      * @param state a {@link State}. It must have a current frame.
-     * @param className a {@link String}, the name of a class.
+     * @param classFile a {@link ClassFile} for the class which must
+     *        be initialized.
      * @param ctx an {@link ExecutionContext}.
-     * @throws InvalidInputException if {@code className} or {@code state} 
+     * @throws InvalidInputException if {@code classFile} or {@code state} 
      *         is null.
      * @throws DecisionException if {@code dec} fails in determining
-     *         whether {@code className} is or is not initialized.
-     * @throws BadClassFileException if {@code className} or
-     *         one of its superclasses is not in the classpath or
-     *         is ill-formed.
+     *         whether {@code classFile} is or is not initialized.
      * @throws ClasspathException if some standard JRE class is missing
      *         from {@code state}'s classpath or is incompatible with the
      *         current version of JBSE. 
@@ -380,32 +433,38 @@ public class Util {
      *         {@code <clinit>} method(s) for the initialized 
      *         class(es) or because of heap memory exhaustion.
      */
-    public static void ensureClassCreatedAndInitialized(State state, String className, ExecutionContext ctx)
-    throws InvalidInputException, DecisionException, BadClassFileException, 
+    public static void ensureClassInitialized(State state, ClassFile classFile, ExecutionContext ctx)
+    throws InvalidInputException, DecisionException, 
     ClasspathException, HeapMemoryExhaustedException, InterruptException {
-        ensureClassCreatedAndInitialized(state, className, ctx, null);
+        try {
+            ensureClassInitialized(state, classFile, ctx, null, null);
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException e) {
+            //this should never happen
+            failExecution(e);
+        }
     }
     
     /**
      * Ensures that a {@link State} has a {@link Klass} in its 
-     * static store, possibly by creating it together with all 
-     * the necessary super{@link Klass}es and all the necessary
-     * frames for the {@code <clinit>} methods.
+     * static store for a class, possibly creating the necessary
+     * frames for the {@code <clinit>} methods to initialize it, 
+     * or initializing it symbolically. If necessary it also recursively 
+     * initializes its superclasses. It is equivalent
+     * to {@link #ensureClassInitialized(State, String, ExecutionContext, Set, Signature) ensureClassInitialized}
+     * {@code (state, classFile, ctx, null, boxExceptionMethodSignature)}.
      * 
      * @param state a {@link State}. It must have a current frame.
-     * @param className a {@link String}, the name of a class.
+     * @param classFile a {@link ClassFile} for the class which must
+     *        be initialized.
      * @param ctx an {@link ExecutionContext}.
-     * @param skip a {@link Set}{@code <}{@link String}{@code >}.
-     *        All the classes (and their superclasses and superinterfaces recursively) 
-     *        whose names are in this set will not be created. A {@code null} value
-     *        is equivalent to the empty set.
-     * @throws InvalidInputException if {@code className} or {@code state} 
+     * @param boxExceptionMethodSignature a {@link Signature} for a method in
+     *        {@link jbse.base.Base} that boxes exceptions thrown by the initializer
+     *        methods, or {@code null} if no boxing must be performed. The class
+     *        name in the signature is not considered.
+     * @throws InvalidInputException if {@code classFile} or {@code state} 
      *         is null.
      * @throws DecisionException if {@code dec} fails in determining
-     *         whether {@code className} is or is not initialized.
-     * @throws BadClassFileException if {@code className} or
-     *         one of its superclasses is not in the classpath or
-     *         is ill-formed.
+     *         whether {@code classFile} is or is not initialized.
      * @throws ClasspathException if some standard JRE class is missing
      *         from {@code state}'s classpath or is incompatible with the
      *         current version of JBSE. 
@@ -416,12 +475,106 @@ public class Util {
      *         {@code <clinit>} method(s) for the initialized 
      *         class(es) or because of heap memory exhaustion.
      */
-    public static void ensureClassCreatedAndInitialized(State state, String className, ExecutionContext ctx, Set<String> skip) 
-    throws InvalidInputException, DecisionException, BadClassFileException, 
+    public static void ensureClassInitialized(State state, ClassFile classFile, ExecutionContext ctx, Signature boxExceptionMethodSignature)
+    throws InvalidInputException, DecisionException, 
     ClasspathException, HeapMemoryExhaustedException, InterruptException {
+        try {
+            ensureClassInitialized(state, classFile, ctx, null, boxExceptionMethodSignature);
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException e) {
+            //this should never happen
+            failExecution(e);
+        }
+    }
+    
+    /**
+     * Ensures that a {@link State} has a {@link Klass} in its 
+     * static store for a class, possibly creating the necessary
+     * frames for the {@code <clinit>} methods to initialize it, 
+     * or initializing it symbolically. If necessary it also recursively 
+     * initializes its superclasses. It is equivalent
+     * to {@link #ensureClassInitialized(State, String, ExecutionContext, Set, Signature) ensureClassInitialized}
+     * {@code (state, classFile, ctx, skip, null)}.
+     * 
+     * @param state a {@link State}. It must have a current frame.
+     * @param classFile a {@link ClassFile} for the class which must
+     *        be initialized.
+     * @param ctx an {@link ExecutionContext}.
+     * @param skip a {@link Set}{@code <}{@link String}{@code >}.
+     *        All the classes (and their superclasses and superinterfaces recursively) 
+     *        whose names are in this set will not be created. A {@code null} value
+     *        is equivalent to the empty set. All the classes must be in the bootstrap
+     *        classpath and will be loaded with the bootstrap classloader.
+     * @throws InvalidInputException if {@code classFile} or {@code state} 
+     *         is null.
+     * @throws DecisionException if {@code dec} fails in determining
+     *         whether {@code classFile} is or is not initialized.
+     * @throws ClasspathException if some standard JRE class is missing
+     *         from {@code state}'s classpath or is incompatible with the
+     *         current version of JBSE. 
+     * @throws HeapMemoryExhaustedException if during class creation
+     *         and initialization the heap memory ends.
+     * @throws InterruptException iff it is necessary to interrupt the
+     *         execution of the bytecode, to run the 
+     *         {@code <clinit>} method(s) for the initialized 
+     *         class(es) or because of heap memory exhaustion.
+     * @throws ClassFileNotFoundException if some class in {@code skip} does not exist
+     *         in the bootstrap classpath.
+     * @throws ClassFileIllFormedException if some class in {@code skip} is ill-formed.
+     * @throws ClassFileNotAccessibleException if some class in {@code skip} has
+     *         a superclass/superinterface that it cannot access.
+     */
+    public static void ensureClassInitialized(State state, ClassFile classFile, ExecutionContext ctx, Set<String> skip)
+    throws InvalidInputException, DecisionException, 
+    ClasspathException, HeapMemoryExhaustedException, InterruptException, 
+    ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException {
+        ensureClassInitialized(state, classFile, ctx, skip, null);
+    }
+    
+    /**
+     * Ensures that a {@link State} has a {@link Klass} in its 
+     * static store for a class, possibly creating the necessary
+     * frames for the {@code <clinit>} methods to initialize it, 
+     * or initializing it symbolically. If necessary it also recursively 
+     * initializes its superclasses.
+     * 
+     * @param state a {@link State}. It must have a current frame.
+     * @param classFile a {@link ClassFile} for the class which must
+     *        be initialized.
+     * @param ctx an {@link ExecutionContext}.
+     * @param skip a {@link Set}{@code <}{@link String}{@code >}.
+     *        All the classes (and their superclasses and superinterfaces recursively) 
+     *        whose names are in this set will not be created. A {@code null} value
+     *        is equivalent to the empty set. All the classes must be in the bootstrap
+     *        classpath and will be loaded with the bootstrap classloader.
+     * @param boxExceptionMethodSignature a {@link Signature} for a method in
+     *        {@link jbse.base.Base} that boxes exceptions thrown by the initializer
+     *        methods, or {@code null} if no boxing must be performed. The class
+     *        name in the signature is not considered.
+     * @throws InvalidInputException if {@code classFile} or {@code state} 
+     *         is null.
+     * @throws DecisionException if {@code dec} fails in determining
+     *         whether {@code classFile} is or is not initialized.
+     * @throws ClasspathException if some standard JRE class is missing
+     *         from {@code state}'s classpath or is incompatible with the
+     *         current version of JBSE. 
+     * @throws HeapMemoryExhaustedException if during class creation
+     *         and initialization the heap memory ends.
+     * @throws InterruptException iff it is necessary to interrupt the
+     *         execution of the bytecode, to run the 
+     *         {@code <clinit>} method(s) for the initialized 
+     *         class(es) or because of heap memory exhaustion.
+     * @throws ClassFileNotFoundException if some class in {@code skip} does not exist
+     *         in the bootstrap classpath.
+     * @throws ClassFileIllFormedException if some class in {@code skip} is ill-formed.
+     * @throws ClassFileNotAccessibleException if some class in {@code skip} has
+     *         a superclass/superinterface that it cannot access.
+     */
+    public static void ensureClassInitialized(State state, ClassFile classFile, ExecutionContext ctx, Set<String> skip, Signature boxExceptionMethodSignature) 
+    throws InvalidInputException, DecisionException, ClasspathException, HeapMemoryExhaustedException, InterruptException, 
+    ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException {
         final Set<String> _skip = (skip == null) ? new HashSet<>() : skip; //null safety
-        final ClassInitializer ci = new ClassInitializer(state, ctx, _skip);
-        final boolean failed = ci.initialize(className);
+        final ClassInitializer ci = new ClassInitializer(state, ctx, _skip, boxExceptionMethodSignature);
+        final boolean failed = ci.initialize(classFile);
         if (failed) {
             return;
         }
@@ -455,15 +608,15 @@ public class Util {
         private int createdFrames = 0;
 
         /**
-         * Stores the names of the {@link Klass}es that are created by this initializer.
+         * Stores the classes for which this initializer has created a {@link Klass}.
          */
-        private final ArrayList<String> classesCreated = new ArrayList<>();
+        private final ArrayList<ClassFile> classesWithNewKlass = new ArrayList<>();
 
         /**
-         * Stores the names of the {@link Klass}es for which the {@code <clinit>} 
+         * Stores the classes for which the {@code <clinit>} 
          * method must be run.
          */
-        private final ArrayList<String> classesToInitialize = new ArrayList<>();
+        private final ArrayList<ClassFile> classesToInitialize = new ArrayList<>();
 
         /**
          * Set to {@code true} iff must load a frame for {@code java.lang.Object}'s 
@@ -471,90 +624,106 @@ public class Util {
          */
         private boolean pushFrameForJavaLangObject = false;
 
-        /**
-         * Is the initialization process failed?
-         */
+        /** Is the initialization process failed? */
         private boolean failed = false;
 
-        /**
-         * What is the cause of the failure? (meaningless if failed == false)
-         */
+        /** What is the cause of the failure? (meaningless if failed == false) */
         private String failure = null;
-
-        /**
-         * Constructor.
+        
+        /** 
+         * The signature of the method that boxes exception, or null if exceptions
+         * shall not be boxed.
          */
-        private ClassInitializer(State s, ExecutionContext ctx, Set<String> skip) {
+        private Signature boxExceptionMethodSignature;
+        
+        /** ClassFile for jbse.base.Base. */
+        private ClassFile cf_JBSE_BASE;
+
+        private ClassInitializer(State s, ExecutionContext ctx, Set<String> skip, Signature boxExceptionMethodSignature) 
+        throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException,  
+        ClassFileNotAccessibleException {
             this.s = s;
             this.ctx = ctx;
+            this.boxExceptionMethodSignature = boxExceptionMethodSignature;
             
             //closes skip w.r.t. superclasses
             this.skip = new HashSet<>();
             final ClassHierarchy hier = this.s.getClassHierarchy();
             for (String className : skip) {
                 this.skip.add(className);
-                for (ClassFile superClass : hier.superclasses(className)) {
+                final ClassFile  classFile = hier.loadCreateClass(className);
+                for (ClassFile superClass : hier.superclasses(classFile)) {
                     this.skip.add(superClass.getClassName());
                 }
-                for (ClassFile superInterface : hier.superinterfaces(className)) {
+                for (ClassFile superInterface : hier.superinterfaces(classFile)) {
                     this.skip.add(superInterface.getClassName());
+                }
+            }
+            
+            //gets classfile for jbse.base.Base and checks the method
+            if (this.boxExceptionMethodSignature == null) {
+                this.cf_JBSE_BASE = null;
+            } else {
+                try {
+                    this.cf_JBSE_BASE = s.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, JBSE_BASE, true);
+                } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
+                         ClassFileNotAccessibleException | PleaseLoadClassException e) {
+                    //this should never happen
+                    failExecution("Could not find classfile for loaded class jbse.base.Base.");
+                }
+                if (!this.cf_JBSE_BASE.hasMethodImplementation(this.boxExceptionMethodSignature)) {
+                    throw new InvalidInputException("Could not find implementation of exception boxim method " + this.boxExceptionMethodSignature.toString() + ".");
                 }
             }
         }
 
         /**
-         * Implements {@link Util#ensureClassCreatedAndInitialized}.
+         * Implements {@link Util#ensureClassInitialized(State, ClassFile, ExecutionContext, Set)}.
          * 
-         * @param className the class to be initialized.
+         * @param classFile the {@link ClassFile} of the class to be initialized.
          * @return {@code true} iff the initialization of 
-         *         {@code className} or of one of its superclasses 
+         *         the class or of one of its superclasses 
          *         fails for some reason.
-         * @throws InvalidInputException if {@code className} is null.
+         * @throws InvalidInputException if {@code classFile} is null.
          * @throws DecisionException if the decision procedure fails.
-         * @throws BadClassFileException if the classfile for {@code className} or
-         *         for one of its superclasses is not in the classpath or
-         *         is ill-formed.
          * @throws ClasspathException if the classfile for some JRE class
          *         is not in the classpath or is incompatible with the
          *         current version of JBSE.
          * @throws HeapMemoryExhaustedException if heap memory ends while
          *         performing class initialization
          */
-        private boolean initialize(String className)
-        throws InvalidInputException, DecisionException, BadClassFileException, 
+        private boolean initialize(ClassFile classFile)
+        throws InvalidInputException, DecisionException, 
         ClasspathException, HeapMemoryExhaustedException {
-            phase1(className);
+            phase1(classFile);
             if (this.failed) {
-                handleFailure();
+                revert();
                 return true;
             }
             phase2();
             if (this.failed) {
-                handleFailure();
+                revert();
                 return true;
             }
             phase3();
             if (this.failed) {
-                handleFailure();
+                revert();
                 return true;
             }
             return false;
         }
 
         /**
-         * Equivalent to {@link #phase1(String, ListIterator) phase1}{@code (className, null)}.
+         * Equivalent to {@link #phase1(ClassFile, ListIterator) phase1}{@code (classFile, null)}.
          * 
-         * @param className a {@code String}, the name of the class.
+         * @param classFile the {@link ClassFile} of the class to be initialized.
          * @param it a {@code ListIterator}, the name of the class.
-         * @throws InvalidInputException if {@code className} is null.
+         * @throws InvalidInputException if {@code classFile} is null.
          * @throws DecisionException if the decision procedure fails.
-         * @throws BadClassFileException if the classfile for {@code className} or
-         *         for one of its superclasses is not in the classpath or
-         *         is ill-formed.
          */
-        private void phase1(String className)
-        throws InvalidInputException, DecisionException, BadClassFileException {
-            phase1(className, null);
+        private void phase1(ClassFile classFile)
+        throws InvalidInputException, DecisionException {
+            phase1(classFile, null);
         }
 
         /**
@@ -562,28 +731,25 @@ public class Util {
          * superclasses that can be assumed to be not initialized. It also 
          * refines the path condition by adding all the initialization assumptions.
          * 
-         * @param className a {@code String}, the name of the class.
-         * @param it a {@code ListIterator} to {@code this.classesCreated}, or
+         * @param classFile the {@link ClassFile} of the class to be initialized.
+         * @param it a {@link ListIterator} to {@code this.classesCreated}, or
          *        {@code null} to add to the end of {@code this.classesCreated}.
-         * @throws InvalidInputException if {@code className} is null.
+         * @throws InvalidInputException if {@code classFile} is null.
          * @throws DecisionException if the decision procedure fails.
-         * @throws BadClassFileException if the classfile for {@code className} or
-         *         for one of its superclasses is not in the classpath or
-         *         is ill-formed.
          */
-        private void phase1(String className, ListIterator<String> it)
-        throws InvalidInputException, DecisionException, BadClassFileException {
+        private void phase1(ClassFile classFile, ListIterator<ClassFile> it)
+        throws InvalidInputException, DecisionException {
             //if there is a Klass object for className, 
             //or if className is in the skip set,
             //there is nothing to do
-            if (this.s.existsKlass(className) || this.skip.contains(className)) {
+            if (this.s.existsKlass(classFile) || this.skip.contains(classFile.getClassName())) {
                 return;
             }    
 
             if (it == null) {
-                this.classesCreated.add(className);
+                this.classesWithNewKlass.add(classFile);
             } else {
-                it.add(className);
+                it.add(classFile);
             }
             //TODO here we assume mutual exclusion of the initialized/not initialized assumptions. Withdraw this assumption and branch.
             try {
@@ -591,24 +757,27 @@ public class Util {
                 //assumption to the state's path condition and creates 
                 //a Klass
                 final ClassHierarchy hier = this.s.getClassHierarchy();
-                final boolean pure = this.ctx.hasClassAPureInitializer(hier, className);
+                final boolean pure = this.ctx.hasClassAPureInitializer(hier, classFile);
+                final String className = classFile.getClassName();
+                final int definingLoader = classFile.getDefiningClassLoader();
                 final boolean createKlass;
                 if (pure) {
                     createKlass = true;
-                } else if (this.ctx.decisionProcedure.isSatInitialized(hier, className)) { 
-                    this.s.assumeClassInitialized(className);
-                    createKlass = false;
+                } else if (CLASSLOADER_BOOT <= definingLoader && definingLoader <= CLASSLOADER_APP && 
+                           this.ctx.decisionProcedure.isSatInitialized(hier, classFile)) { 
+                    this.s.assumeClassInitialized(classFile);
+                    createKlass = false; //already created when invoking assumeClassInitialized
                 } else {
-                    this.s.assumeClassNotInitialized(className);
+                    this.s.assumeClassNotInitialized(classFile);
                     createKlass = true;
                 }
                 if (createKlass) {
                     //creates the Klass and schedules it for phase 3
-                    this.s.ensureKlass(className);
+                    this.s.ensureKlass(classFile);
                     if (className.equals(JAVA_OBJECT)) {
                         this.pushFrameForJavaLangObject = true;
                     } else {
-                        this.classesToInitialize.add(className);
+                        this.classesToInitialize.add(classFile);
                     }
                 }
             } catch (InvalidIndexException e) {
@@ -617,14 +786,13 @@ public class Util {
                 return;
             }
 
-            //if className denotes a class rather than an interface
+            //if classFile denotes a class rather than an interface
             //and has a superclass, then recursively performs phase1 
             //on its superclass(es)
-            final ClassFile classFile = this.s.getClassHierarchy().getClassFile(className);
             if (!classFile.isInterface()) {
-                final String superName = classFile.getSuperclassName();
-                if (superName != null) {
-                    phase1(superName, it);
+                final ClassFile superclass = classFile.getSuperclass();
+                if (superclass != null) {
+                    phase1(superclass, it);
                 }
             }
         }
@@ -636,29 +804,21 @@ public class Util {
          * the class is explicitly initialized by the init algorithm.
          * 
          * @throws DecisionException if the decision procedure fails.
-         * @throws BadClassFileException if the classfile for any of the 
-         *         classes to initialize is not in the classpath or
-         *         is ill-formed.
-         * @throws ClasspathException if the classfile for some JRE class
-         *         is not in the classpath or is incompatible with the
-         *         current version of JBSE.
          * @throws HeapMemoryExhaustedException if during phase 2 heap memory ends.
          */
         private void phase2() 
-        throws DecisionException, BadClassFileException, 
-        ClasspathException, HeapMemoryExhaustedException {
-            final ListIterator<String> it = this.classesCreated.listIterator();
+        throws DecisionException, HeapMemoryExhaustedException {
+            final ListIterator<ClassFile> it = this.classesWithNewKlass.listIterator();
             while (it.hasNext()) {
-                final String className = it.next();
-                final Klass k = this.s.getKlass(className);
-                final ClassFile classFile = this.s.getClassHierarchy().getClassFile(className);
+                final ClassFile classFile = it.next();
+                final Klass k = this.s.getKlass(classFile);
                 final Signature[] flds = classFile.getDeclaredFieldsStatic();
                 for (final Signature sig : flds) {
                     try {
                         if (classFile.isFieldConstant(sig)) {
                             //sig is directly extracted from the classfile, 
                             //so no resolution is necessary
-                            final Value v;
+                            Value v = null; //to keep the compiler happy
                             final ConstantPoolValue cpv = classFile.fieldConstantValue(sig);
                             if (cpv instanceof ConstantPoolPrimitive) {
                                 v = s.getCalculator().val_(cpv.getValue());
@@ -668,14 +828,14 @@ public class Util {
                                 v = s.referenceToStringLiteral(stringLit);
                             } else { //should never happen
                                 //TODO is it true with *all* the other constant pool values? Give another look at the JVMS for constant static fields
-                                throw new UnexpectedInternalException("Unexpected constant from constant pool (neither primitive nor java.lang.String)."); 
+                                failExecution("Unexpected constant from constant pool (neither primitive nor java.lang.String)."); 
                                 //TODO put string in constant or throw better exception
                             }
                             k.setFieldValue(sig, v);
                         }
                     } catch (FieldNotFoundException | AttributeNotFoundException | InvalidIndexException e) {
                         //this should never happen
-                        throw new UnexpectedInternalException(e);
+                        failExecution(e);
                     }
                 }
             }
@@ -684,33 +844,36 @@ public class Util {
         /**
          * Phase 3 pushes the {@code <clinit>} frames for all the initialized 
          * classes that have it.
-         * 
-         * @throws ClasspathException whenever the classfile for
-         *         {@code java.lang.Object} is not in the classpath
-         *         or is incompatible with the current JBSE.
-         * @throws BadClassFileException  whenever the classfile for
-         *         one of the classes to initialize is not in the classpath
-         *         or is ill-formed.
          */
-        private void phase3() throws ClasspathException, BadClassFileException {
+        private void phase3() {
             try {
-                final ClassHierarchy classHierarchy = this.s.getClassHierarchy();
-                for (String className : reverse(this.classesToInitialize)) {
-                    final Signature sigClinit = new Signature(className, "()" + Type.VOID, "<clinit>");
-                    final ClassFile classFile = classHierarchy.getClassFile(className);
+                if (this.boxExceptionMethodSignature != null) {
+                    this.s.pushFrame(this.cf_JBSE_BASE, this.boxExceptionMethodSignature, false, 0);                    
+                }
+                for (ClassFile classFile : reverse(this.classesToInitialize)) {
+                    final Signature sigClinit = new Signature(classFile.getClassName(), "()" + Type.VOID, "<clinit>");
                     if (classFile.hasMethodImplementation(sigClinit)) {
-                        s.pushFrame(sigClinit, false, 0);
-                        ++createdFrames;
+                        this.s.pushFrame(classFile, sigClinit, false, 0);
+                        ++this.createdFrames;
                     }
                 }
                 if (this.pushFrameForJavaLangObject) {
-                    final Signature sigClinit = new Signature(JAVA_OBJECT, "()" + Type.VOID, "<clinit>");
                     try {
-                        s.pushFrame(sigClinit, false, 0);
-                    } catch (ClassFileNotFoundException e) {
-                        throw new ClasspathException(e);
+                        final Signature sigClinit = new Signature(JAVA_OBJECT, "()" + Type.VOID, "<clinit>");
+                        final ClassFile cf_JAVA_OBJECT = this.s.getClassHierarchy().loadCreateClass(JAVA_OBJECT);
+                        this.s.pushFrame(cf_JAVA_OBJECT, sigClinit, false, 0);
+                    } catch (ClassFileNotFoundException | ClassFileIllFormedException | InvalidInputException |
+                             ClassFileNotAccessibleException e) {
+                        //this should never happen
+                        failExecution("Could not find the classfile for java.lang.Object.");
                     }
-                    ++createdFrames;
+                    ++this.createdFrames;
+                }
+                
+                //if no frame was created, then we pop the frame that boxes exceptions 
+                //(if present)
+                if (this.boxExceptionMethodSignature != null && this.createdFrames == 0) {
+                    this.s.popCurrentFrame();
                 }
             } catch (MethodNotFoundException | MethodCodeNotFoundException e) {
                 /* TODO Here I am in doubt about how I should manage exceptional
@@ -729,24 +892,28 @@ public class Util {
             } catch (InvalidProgramCounterException | NullMethodReceiverException | 
                      ThreadStackEmptyException | InvalidSlotException | InvalidTypeException e) {
                 //this should never happen
-                throw new UnexpectedInternalException(e);
+                failExecution(e);
             } 
         }
 
-        private void handleFailure() {
+        private void revert() throws ClasspathException {
             //pops all the frames created by the recursive calls
-            for (int i = 1; i <= this.createdFrames; ++i) {
-                try {
+            try {
+                for (int i = 1; i <= this.createdFrames; ++i) {
                     this.s.popCurrentFrame();
-                } catch (ThreadStackEmptyException e) {
-                    //this should never happen
-                    throw new UnexpectedInternalException(e);
                 }
+                if (this.boxExceptionMethodSignature != null) {
+                    this.s.popCurrentFrame();
+                }
+            } catch (ThreadStackEmptyException e) {
+                //this should never happen
+                failExecution(e);
             }
-
-            //TODO delete all the Klass objects from the static store?
-            //TODO delete all the created String object from static field initialization?
-
+            
+            //it is not necessary to delete the Klass object
+            //because they are not initialized and this fact
+            //is registered in their state
+            
             //throws and exits
             throwNew(this.s, this.failure);
         }
@@ -783,44 +950,6 @@ public class Util {
                 };
             }
         };
-    }
-
-    /**
-     * Ensures an {@link Instance} of class {@code java.lang.Class} 
-     * corresponding to a class name exists in the {@link Heap}. If
-     * the instance does not exist, it resolves the class and creates 
-     * it, otherwise it does nothing. Also manages the creation 
-     * of the {@link Klass}es for the classes of the members of the 
-     * created object.
-     * 
-     * @param state the {@link State} on which this method will operate.
-     * @param accessor a {@link String}, the name of the class of the accessor 
-     *        that wants to obtain the {@link Instance} of {@code java.lang.Class}. 
-     * @param className a {@link String}, the name of the class reified
-     *        by the {@link Instance} of {@code java.lang.Class}.
-     * @param ctx an {@link ExecutionContext}.
-     * @throws BadClassFileException if the classfile is ill-formed or 
-     *         does not exist.
-     * @throws ClassFileNotAccessibleException if {@code className} is not
-     *         accessible from {@code accessor}.
-     * @throws HeapMemoryExhaustedException if the {@code state}'s heap memory
-     *         ends.
-     */
-    public static void ensureInstance_JAVA_CLASS(State state, String accessor, String className, ExecutionContext ctx) 
-    throws BadClassFileException, ClassFileNotAccessibleException, HeapMemoryExhaustedException {
-        if (!state.hasInstance_JAVA_CLASS(className)) {
-            state.ensureInstance_JAVA_CLASS(accessor, className);
-            final Reference r = state.referenceToInstance_JAVA_CLASS(className);
-            final Instance i = (Instance) state.getObject(r);
-
-            //sets the fields
-            //name
-            final String classNameBinary = binaryClassName(className);
-            state.ensureStringLiteral(classNameBinary);
-            final ReferenceConcrete classNameString = state.referenceToStringLiteral(classNameBinary);
-            i.setFieldValue(JAVA_CLASS_NAME, classNameString);
-            //TODO more fields
-        }
     }
 
     /**
@@ -866,6 +995,44 @@ public class Util {
             failExecution(e);
         }
         return null; //to keep the compiler happy
+    }
+    
+    public static void invokeClassLoaderLoadClass(State state, PleaseLoadClassException e) 
+    throws ClasspathException, ThreadStackEmptyException, InvalidInputException {
+        try {
+            //gets the initiating loader
+            final int initiatingLoader = e.getInitiatingLoader();
+            if (!state.hasInstance_JAVA_CLASSLOADER(initiatingLoader)) {
+                //this should never happen
+                failExecution("Unknown classloader identifier " + initiatingLoader + ".");
+            }
+            final ReferenceConcrete classLoaderReference = state.referenceToInstance_JAVA_CLASSLOADER(initiatingLoader);
+
+            //makes the string for the class name
+            final String className = binaryClassName(e.className());
+            state.ensureStringLiteral(className);
+            final ReferenceConcrete classNameReference = state.referenceToStringLiteral(className);
+
+            //upcalls ClassLoader.loadClass
+            //first, creates the snippet
+            final Snippet snippet = state.snippetFactory()
+                .op_invokevirtual(JAVA_CLASSLOADER_LOADCLASS) //loads the class...
+                .op_invokestatic(noclass_REGISTERLOADEDCLASS) //...and registers it with the initiating loader
+                .op_return()
+                .mk();
+            state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang");
+            //TODO if ClassLoader.loadClass finds no class we should either propagate the thrown ClassNotFoundException or wrap it inside a NoClassDefFoundError.
+            //then, pushes the parameters for noclass_REGISTERLOADEDCLASS
+            state.pushOperand(state.getCalculator().valInt(initiatingLoader));
+            //finally, pushes the parameters for JAVA_CLASSLOADER_LOADCLASS
+            state.pushOperand(classLoaderReference);
+            state.pushOperand(classNameReference);
+        } catch (HeapMemoryExhaustedException exc) {
+            throwNew(state, OUT_OF_MEMORY_ERROR);
+        } catch (InvalidProgramCounterException exc) {
+            //this should never happen
+            failExecution(exc);
+        }
     }
     
     /** 

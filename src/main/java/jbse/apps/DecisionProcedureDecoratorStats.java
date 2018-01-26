@@ -2,11 +2,12 @@ package jbse.apps;
 
 import java.util.Collection;
 
+import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureDecorator;
 import jbse.dec.exc.DecisionException;
-import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Clause;
 import jbse.mem.Objekt;
 import jbse.val.Expression;
@@ -92,12 +93,12 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
     }
 
     @Override
-    public boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, String className)
+    public boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, ClassFile classFile)
     throws InvalidInputException, DecisionException {
         this.startTimer();
-        final boolean result = super.isSatExpands(hier, r, className);
+        final boolean result = super.isSatExpands(hier, r, classFile);
         final long elapsed = this.elapsed();
-        System.err.println("ISSATEXPANDS\t" + r + "\t" + className + "\t" + result + "\t" + elapsed);
+        System.err.println("ISSATEXPANDS\t" + r + "\t" + classFile.getClassName() + "\t" + result + "\t" + elapsed);
         return result;
     }
 
@@ -112,22 +113,22 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
     }
 
     @Override
-    public boolean isSatInitialized(ClassHierarchy hier, String className) 
+    public boolean isSatInitialized(ClassHierarchy hier, ClassFile classFile) 
     throws InvalidInputException, DecisionException {
         this.startTimer();
-        final boolean result = super.isSatInitialized(hier, className);
+        final boolean result = super.isSatInitialized(hier, classFile);
         final long elapsed = this.elapsed();
-        System.err.println("ISSATINITIALIZED\t" + className + "\t" + result + "\t" + elapsed);
+        System.err.println("ISSATINITIALIZED\t" + classFile.getClassName() + "\t" + result + "\t" + elapsed);
         return result;
     }
 
     @Override
-    public boolean isSatNotInitialized(ClassHierarchy hier, String className)
+    public boolean isSatNotInitialized(ClassHierarchy hier, ClassFile classFile)
     throws InvalidInputException, DecisionException {
         this.startTimer();
-        final boolean result = super.isSatInitialized(hier, className);
+        final boolean result = super.isSatInitialized(hier, classFile);
         final long elapsed = this.elapsed();
-        System.err.println("ISSATNOTINITIALIZED\t" + className + "\t" + result + "\t" + elapsed);
+        System.err.println("ISSATNOTINITIALIZED\t" + classFile.getClassName() + "\t" + result + "\t" + elapsed);
         return result;
     }
 }

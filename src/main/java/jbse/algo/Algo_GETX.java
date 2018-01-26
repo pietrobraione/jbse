@@ -2,6 +2,7 @@ package jbse.algo;
 
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.invokeClassLoaderLoadClass;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.GETX_PUTX_OFFSET;
@@ -11,13 +12,14 @@ import static jbse.bc.Signatures.NO_SUCH_FIELD_ERROR;
 
 import java.util.function.Supplier;
 
-import jbse.bc.ClassHierarchy;
+import jbse.bc.ClassFile;
 import jbse.bc.Signature;
-import jbse.bc.exc.BadClassFileException;
+import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotAccessibleException;
 import jbse.bc.exc.FieldNotFoundException;
+import jbse.bc.exc.PleaseLoadClassException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Objekt;
@@ -34,7 +36,7 @@ import jbse.mem.exc.ThreadStackEmptyException;
  */
 abstract class Algo_GETX extends Algo_XLOAD_GETX<BytecodeData_1FI> {
 
-    protected Signature fieldSignatureResolved; //set by cook
+    protected ClassFile fieldClassResolved; //set by cook
 
     @Override
     protected final Supplier<BytecodeData_1FI> bytecodeData() {
@@ -44,15 +46,15 @@ abstract class Algo_GETX extends Algo_XLOAD_GETX<BytecodeData_1FI> {
     @Override
     protected final BytecodeCooker bytecodeCooker() {
         return (state) -> {
-            //gets the class hierarchy
-            final ClassHierarchy hier = state.getClassHierarchy();
-
             //performs field resolution
-            String currentClassName = null; //it's final 
             try {
-                currentClassName = state.getCurrentMethodSignature().getClassName();    
-                this.fieldSignatureResolved = hier.resolveField(currentClassName, this.data.signature());
+                final ClassFile currentClass = state.getCurrentClass();    
+                this.fieldClassResolved = state.getClassHierarchy().resolveField(currentClass, this.data.signature(), state.areStandardClassLoadersNotReady());
+            } catch (PleaseLoadClassException e) {
+                invokeClassLoaderLoadClass(state, e);
+                exitFromAlgorithm();
             } catch (ClassFileNotFoundException e) {
+                //TODO this exception should wrap a ClassNotFoundException
                 throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
                 exitFromAlgorithm();
             } catch (FieldNotFoundException e) {
@@ -61,7 +63,7 @@ abstract class Algo_GETX extends Algo_XLOAD_GETX<BytecodeData_1FI> {
             } catch (ClassFileNotAccessibleException | FieldNotAccessibleException e) {
                 throwNew(state, ILLEGAL_ACCESS_ERROR);
                 exitFromAlgorithm();
-            } catch (BadClassFileException e) {
+            } catch (ClassFileIllFormedException e) {
                 throwVerifyError(state);
                 exitFromAlgorithm();
             } catch (ThreadStackEmptyException e) {
@@ -71,23 +73,23 @@ abstract class Algo_GETX extends Algo_XLOAD_GETX<BytecodeData_1FI> {
 
             //checks the field
             try {
-                check(state, currentClassName);
-            } catch (FieldNotFoundException | BadClassFileException e) {
+                check(state);
+            } catch (FieldNotFoundException e) {
                 //this should never happen
                 failExecution(e);
             }
 
             //reads the field value
-            this.valToLoad = source(state).getFieldValue(this.fieldSignatureResolved);
+            final Signature fieldSignatureResolved = new Signature(this.fieldClassResolved.getClassName(), this.data.signature().getDescriptor(), this.data.signature().getName());
+            this.valToLoad = source(state).getFieldValue(fieldSignatureResolved);
         };
     }
 
-    protected abstract void check(State state, String currentClass)
-    throws FieldNotFoundException, BadClassFileException, 
-    InterruptException;
+    protected abstract void check(State state)
+    throws ClasspathException, FieldNotFoundException, InterruptException;
 
     protected abstract Objekt source(State state)
-    throws DecisionException, ClasspathException, InterruptException;
+    throws ClasspathException, DecisionException, InterruptException;
 
     @Override
     protected final Supplier<Boolean> isProgramCounterUpdateAnOffset() {

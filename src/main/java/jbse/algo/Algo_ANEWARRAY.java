@@ -1,7 +1,7 @@
 package jbse.algo;
 
 import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.invokeClassLoaderLoadClass;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.ANEWARRAY_OFFSET;
@@ -13,9 +13,13 @@ import static jbse.common.Type.TYPEEND;
 
 import java.util.function.Supplier;
 
-import jbse.bc.exc.BadClassFileException;
+import jbse.bc.ClassFile;
+import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.PleaseLoadClassException;
+import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Primitive;
@@ -38,7 +42,7 @@ final class Algo_ANEWARRAY extends Algo_XNEWARRAY<BytecodeData_1CL> {
     }
 
     @Override
-    protected void preCook(State state) throws InterruptException {
+    protected void preCook(State state) throws InterruptException, ClasspathException, ThreadStackEmptyException, InvalidInputException {
         //sets the array length
         try {
             this.dimensionsCounts = new Primitive[] { (Primitive) this.data.operand(0) };
@@ -47,25 +51,26 @@ final class Algo_ANEWARRAY extends Algo_XNEWARRAY<BytecodeData_1CL> {
             exitFromAlgorithm();
         }
 
-        //sets the array type
-        this.arrayType = "" + ARRAYOF + REFERENCE + this.data.className() + TYPEEND;
 
-        //resolves the member class
         try {
-            final String currentClassName = state.getCurrentMethodSignature().getClassName();
-            state.getClassHierarchy().resolveClass(currentClassName, this.data.className());
+            //resolves the class
+            //TODO the JVMS v8, anewarray bytecode, prescribes to resolve the member class; It is not clear what initiating loader should be assumed for the array class. We assume the defining loader of the current class, so we may directly resolve the name of the array class.
+            final ClassFile currentClass = state.getCurrentClass();
+            this.arrayType = state.getClassHierarchy().resolveClass(currentClass, "" + ARRAYOF + REFERENCE + this.data.className() + TYPEEND, state.areStandardClassLoadersNotReady());
+        } catch (PleaseLoadClassException e) {
+            invokeClassLoaderLoadClass(state, e);
+            exitFromAlgorithm();
         } catch (ClassFileNotFoundException e) {
+            //TODO this exception should wrap a ClassNotFoundException
             throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
             exitFromAlgorithm();
         } catch (ClassFileNotAccessibleException e) {
             throwNew(state, ILLEGAL_ACCESS_ERROR);
             exitFromAlgorithm();
-        } catch (BadClassFileException e) {
+        } catch (ClassFileIllFormedException e) {
+            //TODO throw LinkageError insead
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (ThreadStackEmptyException e) {
-            //this should never happen
-            failExecution(e);
         }
     }
 

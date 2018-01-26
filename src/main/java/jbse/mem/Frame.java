@@ -3,6 +3,7 @@ package jbse.mem;
 import java.util.Collection;
 import java.util.SortedMap;
 
+import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
@@ -20,6 +21,9 @@ public abstract class Frame implements Cloneable {
      */
     public final static int UNKNOWN_PC = -1;
 
+    /** the {@link ClassFile} for the current class. */
+    private ClassFile currentClass;
+    
     /** The bytecode of the frame's method. */
     private byte[] bytecode; //not final to implement clone method (bytecode may be patched)
 
@@ -34,7 +38,8 @@ public abstract class Frame implements Cloneable {
      * 
      * @param bytecode a {@code byte[]}, the bytecode to be executed.
      */
-    public Frame(byte[] bytecode) {
+    public Frame(ClassFile currentClass, byte[] bytecode) {
+        this.currentClass = currentClass;
         this.bytecode = bytecode.clone();
         this.programCounter = 0;
         this.returnProgramCounter = UNKNOWN_PC;
@@ -158,8 +163,17 @@ public abstract class Frame implements Cloneable {
      * 
      * @return an {@code int}, the return program counter.
      */
-    public int getReturnProgramCounter() {
+    public final int getReturnProgramCounter() {
         return this.returnProgramCounter;
+    }
+    
+    /**
+     * Returns the current class.
+     * 
+     * @return the {@link ClassFile} for the current class.
+     */
+    public final ClassFile getCurrentClass() {
+        return this.currentClass;
     }
 
     /**
@@ -315,7 +329,7 @@ public abstract class Frame implements Cloneable {
         } catch (CloneNotSupportedException e) {
             throw new InternalError(e);
         }
-        o.bytecode = this.bytecode.clone();
+        o.bytecode = o.bytecode.clone();
         return o;
     }
 }

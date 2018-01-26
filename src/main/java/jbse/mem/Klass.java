@@ -25,7 +25,7 @@ public final class Klass extends Objekt {
      *        fields this object knows.
      */
     Klass(Calculator calc, MemoryPath origin, Epoch epoch, int numOfStaticFields, Signature... fieldSignatures) {
-    	    super(calc, "KLASS", origin, epoch, true, numOfStaticFields, fieldSignatures);
+    	    super(calc, null, origin, epoch, true, numOfStaticFields, fieldSignatures);
     	    this.initialized = false;
     }
     

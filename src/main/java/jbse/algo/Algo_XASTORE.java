@@ -8,16 +8,13 @@ import static jbse.bc.Offsets.XALOADSTORE_OFFSET;
 import static jbse.bc.Signatures.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION;
 import static jbse.bc.Signatures.ARRAY_STORE_EXCEPTION;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
-import static jbse.common.Type.className;
-import static jbse.common.Type.getArrayMemberType;
-import static jbse.common.Type.isArray;
 import static jbse.common.Type.isPrimitiveOpStack;
-import static jbse.common.Type.isReference;
+import static jbse.common.Type.toPrimitiveInternalName;
 
 import java.util.function.Supplier;
 
+import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
-import jbse.bc.exc.BadClassFileException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
@@ -85,8 +82,8 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                 final Array array = (Array) state.getObject(myObjectRef);
                 this.inRange = array.inRange(index);
                 this.outOfRange = array.outOfRange(index);
-                final String arrayMemberType = getArrayMemberType(array.getType());
-                if (isReference(arrayMemberType) || isArray(arrayMemberType)) {
+                final ClassFile arrayMemberType = array.getType().getMemberClass();
+                if (arrayMemberType.isReference() || arrayMemberType.isArray()) {
                     if (!(value instanceof Reference)) {
                         throwVerifyError(state);
                         exitFromAlgorithm();
@@ -95,27 +92,28 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                     final Objekt o = state.getObject(valueToStoreRef);
                     final ClassHierarchy hier = state.getClassHierarchy();
                     if (state.isNull(valueToStoreRef) ||
-                        hier.isAssignmentCompatible(o.getType(), className(arrayMemberType))) {
+                        hier.isAssignmentCompatible(o.getType(), arrayMemberType)) {
                         this.valueToStore = value;
                     } else {
                         throwNew(state, ARRAY_STORE_EXCEPTION);
                         exitFromAlgorithm();
                     }
-                } else {
+                } else { //arrayMemberType.isPrimitive()
                     if (!(value instanceof Primitive)) {
                         throwVerifyError(state);
                         exitFromAlgorithm();
                     }
                     try {
-                        this.valueToStore = (isPrimitiveOpStack(arrayMemberType.charAt(0)) ? value : 
-                            ((Primitive) value).to(arrayMemberType.charAt(0)));
+                        final char arrayMemberTypeInternal = toPrimitiveInternalName(arrayMemberType.getClassName());
+                        this.valueToStore = (isPrimitiveOpStack(arrayMemberTypeInternal) ? value : 
+                            ((Primitive) value).to(arrayMemberTypeInternal));
                     } catch (InvalidTypeException e) {
                         throwVerifyError(state);
                         exitFromAlgorithm();
                     }
                 }
             } catch (InvalidOperandException | InvalidTypeException | 
-                     ClassCastException | BadClassFileException e) {
+                     ClassCastException e) {
                 //index is bad or the reference does not point to an array
                 //or the class/superclasses of the array component, or of 
                 //the value to store, is not in the classpath or are incompatible

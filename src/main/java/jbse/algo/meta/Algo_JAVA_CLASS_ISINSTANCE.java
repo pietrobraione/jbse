@@ -8,11 +8,14 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
-import jbse.bc.ClassHierarchy;
+import jbse.algo.StrategyUpdate;
+import jbse.bc.ClassFile;
+import jbse.common.exc.ClasspathException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 import jbse.val.Simplex;
 
@@ -31,7 +34,7 @@ public final class Algo_JAVA_CLASS_ISINSTANCE extends Algo_INVOKEMETA_Nonbranchi
 
     @Override
     protected void cookMore(State state)
-    throws ThreadStackEmptyException, InterruptException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException {
         try {
             //gets the 'this' java.lang.Class instance from the heap 
             //and the name of the class it represents
@@ -46,21 +49,20 @@ public final class Algo_JAVA_CLASS_ISINSTANCE extends Algo_INVOKEMETA_Nonbranchi
                 //this should never happen
                 failExecution("The 'this' parameter to java.lang.Class.isInstance method is symbolic and unresolved.");
             }
-            final String representedClass = clazz.representedClass();
+            final ClassFile representedClass = clazz.representedClass();
 
             //gets the reference to the object to be checked
             final Reference objRef = (Reference) this.data.operand(1);
             
             //determines which value to push on the operand stack
-            if (clazz.isPrimitive() || state.isNull(objRef)) {
+            if (clazz.representedClass().isPrimitive() || state.isNull(objRef)) {
                 this.valToPush = state.getCalculator().valInt(0);
             } else {
                 //checks whether the object's class is a subclass 
                 //of the class name from the constant pool
-                final ClassHierarchy hier = state.getClassHierarchy();
                 final Objekt obj = state.getObject(objRef);
-                final String objClass = obj.getType();
-                this.valToPush = state.getCalculator().valInt(hier.isSubclass(objClass, representedClass) ? 1 : 0);
+                final ClassFile objClass = obj.getType();
+                this.valToPush = state.getCalculator().valInt(state.getClassHierarchy().isSubclass(objClass, representedClass) ? 1 : 0);
             }
         } catch (ClassCastException e) {
             throwVerifyError(state);
@@ -69,7 +71,9 @@ public final class Algo_JAVA_CLASS_ISINSTANCE extends Algo_INVOKEMETA_Nonbranchi
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        state.pushOperand(this.valToPush);
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.pushOperand(this.valToPush);
+        };
     }
 }

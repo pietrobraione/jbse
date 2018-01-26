@@ -5,9 +5,12 @@ import java.util.Iterator;
 import java.util.SortedSet;
 
 import jbse.algo.exc.CannotManageStateException;
+import jbse.algo.exc.NotYetImplementedException;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
-import jbse.bc.exc.BadClassFileException;
+import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.common.Type;
@@ -178,11 +181,12 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
             final RunnerBuilder b = new RunnerBuilder();
             runner = b.build(runnerParameters);
             this.engine = b.getEngine();
-        } catch (CannotBuildEngineException | InitializationException | ClasspathException e) {
+        } catch (CannotBuildEngineException | InitializationException | ClasspathException | NotYetImplementedException e) {
             //CannotBuildEngineException may happen if something goes wrong in the construction 
             //of the decision procedure
             //InitializationException happens when the method does not exist or is native
             //ClasspathException happens when the classpath does not point to a valid JRE
+            //NotYetImplementedException happens when there are triggers for the root object expansion but they are not in the root class
             throw new GuidanceException(e);
         } catch (NonexistingObservedVariablesException | DecisionException | InvalidClassFileFactoryClassException e) {
             //NonexistingObservedVariablesException should not happen since this decision procedure does not register any variable observer
@@ -229,13 +233,11 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
         //the (resolved) root object is put in seenObject, if present
         Value refToRoot;
         try {
-            final ClassHierarchy hier = this.initialStateConcrete.getClassHierarchy();
             final Signature currentMethod = this.initialStateConcrete.getCurrentMethodSignature();
-            refToRoot = hier.getClassFile(currentMethod.getClassName()).isMethodStatic(currentMethod) ?
-                                          null :
-                                          getValue(this.initialStateConcrete, this.rootFrameConcrete, MemoryPath.mkLocalVariable("this"));
+            refToRoot = this.initialStateConcrete.getCurrentClass().isMethodStatic(currentMethod) ?
+                        null : getValue(this.initialStateConcrete, this.rootFrameConcrete, MemoryPath.mkLocalVariable("this"));
         } catch (GuidanceException | ThreadStackEmptyException | 
-                 MethodNotFoundException | BadClassFileException e) {
+                 MethodNotFoundException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
@@ -402,7 +404,7 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 
     @Override
     protected Outcome resolve_XLOAD_GETX_Unresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)
-    throws DecisionException, BadClassFileException {
+    throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException {
         if (this.failedConcrete) {
             throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
         }
@@ -441,7 +443,7 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 
     @Override
     protected Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result)
-    throws DecisionException, BadClassFileException {
+    throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException {
         if (this.failedConcrete) {
             throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
         }
@@ -470,7 +472,7 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
             return;
         }
         final Objekt objInConcreteState = this.initialStateConcrete.getObject(refInConcreteState);
-        final String objType = objInConcreteState.getType();
+        final String objType = objInConcreteState.getType().getClassName();
         if (!refType.equals(objType)) {
             state.getClassHierarchy().addToExpansionBackdoor(refType, objType);
         }
@@ -483,7 +485,7 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
             it.remove();
         } else if (dar instanceof DecisionAlternative_XYLOAD_GETX_Aliases) {
             final DecisionAlternative_XYLOAD_GETX_Aliases dara = (DecisionAlternative_XYLOAD_GETX_Aliases) dar;
-            final MemoryPath aliasOrigin = state.getObject(new ReferenceConcrete(dara.getAliasPosition())).getOrigin();
+            final MemoryPath aliasOrigin = state.getObject(new ReferenceConcrete(dara.getObjectPosition())).getOrigin();
             final Reference aliasInConcreteState = (Reference) getValue(this.initialStateConcrete, this.rootFrameConcrete, aliasOrigin);
             if (!Util.areAlias(this.initialStateConcrete, refInConcreteState, aliasInConcreteState)) {
                 it.remove();
@@ -493,7 +495,7 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
             final long refHeapPosInConcreteState = Util.heapPosition(this.initialStateConcrete, refInConcreteState);
             if (Util.isNull(this.initialStateConcrete, refInConcreteState) || 
                 this.seenObjects.contains(refHeapPosInConcreteState) ||
-                !dare.getClassNameOfTargetObject().equals(this.initialStateConcrete.getObject(refInConcreteState).getType())) {
+                !dare.getClassFileOfTargetObject().equals(this.initialStateConcrete.getObject(refInConcreteState).getType())) {
                 it.remove();
             } else {
                 this.seenObjects.add(refHeapPosInConcreteState);
@@ -531,7 +533,7 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
             } else if (a instanceof AccessStatic) {
                 final AccessStatic as = (AccessStatic) a;
                 fieldValue = null;
-                o = state.getKlass(as.className());
+                o = state.getKlass(as.classFile());
             } else if (a instanceof AccessField) {
                 if (o == null) {
                     throw new GuidanceException(ERROR_BAD_PATH);

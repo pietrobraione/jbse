@@ -2,10 +2,10 @@ package jbse.algo;
 
 import java.util.SortedSet;
 
-import jbse.bc.exc.BadClassFileException;
+import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
-import jbse.dec.exc.InvalidInputException;
 import jbse.mem.State;
 
 /**
@@ -30,10 +30,14 @@ public interface StrategyDecide<R> {
      *         when invoked with invalid parameters.
      * @throws DecisionException possibly thrown by the decision procedure
      *         upon failure.
-     * @throws BadClassFileException possibly thrown by the decision procedure
-     *         when performing reference resolution, if some classfile is
-     *         missing or is incompatible with the current JBSE.
+     * @throws ClasspathException possibly raised if some core 
+     *         standard class is missing from the classpath of ill-formed.
+     * @throws InterruptException possibly raised if the execution 
+     *         of the bytecode semantics must be interrupted, e.g., 
+     *         if some correctness check fails or if heap memory
+     *         is exhausted.
      */
     public Outcome decide(State state, SortedSet<R> result) 
-    throws InvalidInputException, BadClassFileException, DecisionException;
+    throws InvalidInputException, DecisionException,
+    ClasspathException, InterruptException;
 }

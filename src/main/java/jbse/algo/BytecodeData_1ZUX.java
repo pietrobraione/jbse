@@ -2,6 +2,7 @@ package jbse.algo;
 
 import java.util.function.Supplier;
 
+import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
 
 /**
@@ -14,7 +15,7 @@ public final class BytecodeData_1ZUX extends BytecodeData {
     final boolean wide;
 
     @Override
-    public void readImmediates(State state) throws InterruptException {
+    public void readImmediates(State state) throws InterruptException, ClasspathException {
         if (this.wide) {
             readImmediateUnsignedWord(state, 1);
         } else {

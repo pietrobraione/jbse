@@ -1,21 +1,27 @@
 package jbse.bc;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.Map;
+import static jbse.bc.ClassLoaders.CLASSLOADER_NONE;
 
-import jbse.bc.exc.BadClassFileException;
-import jbse.bc.exc.ClassFileNotFoundException;
-import jbse.bc.exc.InvalidClassFileFactoryClassException;
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 
 /**
- * Container of all classfiles. Currently it does not support 
- * multiple class loaders, nor dynamic class loading.
+ * A container for the loaded classfiles. Implements
+ * the loaded class cache, similarly to what
+ * in the Hotspot JVM implementation does the system
+ * dictionary. 
  */ 
-final class ClassFileStore implements Cloneable {
-    private final ClassFileFactory f;
+final class ClassFileStore implements Cloneable {  
+    /** 
+     * The loaded class cache; maps the initiating loader id plus the class name
+     * to the {@link ClassFile} for the loaded class.
+     */
+    private ArrayList<HashMap<String, ClassFile>> loadedClassCache = new ArrayList<>(); //not final because of clone
+    
+    // The primitive classfiles.
     private final ClassFileBoolean primitiveClassFileBoolean = new ClassFileBoolean(); 
     private final ClassFileByte primitiveClassFileByte = new ClassFileByte();   
     private final ClassFileCharacter primitiveClassFileCharacter = new ClassFileCharacter();    
@@ -24,94 +30,86 @@ final class ClassFileStore implements Cloneable {
     private final ClassFileLong primitiveClassFileLong = new ClassFileLong();   
     private final ClassFileFloat primitiveClassFileFloat = new ClassFileFloat();    
     private final ClassFileDouble primitiveClassFileDouble = new ClassFileDouble(); 
-    private final ClassFileVoid primitiveClassFileVoid = new ClassFileVoid();   
-    private HashMap<String, ClassFile> classFiles = new HashMap<>(); //not final because of clone
+    private final ClassFileVoid primitiveClassFileVoid = new ClassFileVoid();
+    
+    /** The cache for the anonymous classes. */
+    //TODO is it necessary?
+    private HashMap<String, ClassFile> anonymousClasses = new HashMap<>(); //not final because of clone
 
     /**
-     * Constructor.
+     * Given a class name and the identifier of an initiating class loader 
+     * returns the corresponding {@link ClassFile} stored in the loaded 
+     * class cache, if present. It does not manage primitive classes.
      * 
-     * @param cp a {@link Classpath}.
-     * @param fClass the {@link Class} of some subclass of {@link ClassFileFactory}.
-     *        The class must have an accessible constructor with two parameters, the first a 
-     *        {@link ClassFileStore}, the second a {@link Classpath}.
-     * @throws InvalidClassFileFactoryClassException in the case {@link fClass}
-     *         has not the expected features (missing constructor, unaccessible 
-     *         constructor...).
+     * @param initiatingLoader an {@code int}, the identifier of 
+     *        a classloader.
+     * @param className a {@link String}, the name of a class.
+     * @return the {@link ClassFile} corresponding to the pair 
+     *         {@code (initiatingLoader, className)} in the
+     *         loaded class cache, if there is one, {@code null}
+     *         otherwise. 
      */
-    ClassFileStore(Classpath cp, Class<? extends ClassFileFactory> fClass) 
-    throws InvalidClassFileFactoryClassException {
-        final Constructor<? extends ClassFileFactory> c;
-        try {
-            c = fClass.getConstructor(ClassFileStore.class, Classpath.class);
-            this.f = c.newInstance(this, cp);
-        } catch (SecurityException | NoSuchMethodException | IllegalArgumentException | 
-        InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            throw new InvalidClassFileFactoryClassException(e);
-        }
-    }
-    
-    /**
-     * Given a class name returns the corresponding {@link ClassFile}.
-     * To avoid name clashes it does not manage primitive classes.
-     * 
-     * @param className the searched class.
-     * @return the {@link ClassFile} of the corresponding class, 
-     *         possibly a {@link ClassFileBad}.
-     */
-    ClassFile getClassFile(String className) {
-        //if the class file is not already in cache, adds it
-        if (!this.classFiles.containsKey(className)) {        
-            ClassFile tempCF;
-            try {
-                tempCF = this.f.newClassFile(className);
-            } catch (BadClassFileException e) {
-                tempCF = new ClassFileBad(className, e);
+    ClassFile getLoadedClassCache(int initiatingLoader, String className) {
+        if (0 <= initiatingLoader && initiatingLoader < this.loadedClassCache.size()) {
+            final HashMap<String, ClassFile> classFiles = this.loadedClassCache.get(initiatingLoader);
+            if (classFiles.containsKey(className)) {
+                return classFiles.get(className);
             }
-            this.classFiles.put(className, tempCF);
         }
-        return this.classFiles.get(className);
+        return null;
     }
     
     /**
-     * Wraps a {@link ClassFile} to (temporarily) add
-     * some constants to its constant pool.
+     * Puts a {@link ClassFile} in the loaded class cache.
      * 
-     * @param classToWrap a {@link String}, 
-     *        the name of the class to wrap.
-     * @param constants a {@link Map}{@code <}{@link Integer}{@code , }{@link ConstantPoolValue}{@code >}, 
-     *        mapping indices to corresponding constant 
-     *        values in the expanded constant pool.
-     * @param signatures a {@link Map}{@code <}{@link Integer}{@code , }{@link Signature}{@code >}, 
-     *        mapping indices to corresponding {@link Signature}s 
-     *        in the expanded constant pool.
-     * @param classes a {@link Map}{@code <}{@link Integer}{@code , }{@link String}{@code >}, 
-     *        mapping indices to corresponding class names 
-     *        in the expanded constant pool.
+     * @param initiatingLoader an {@code int}, the identifier of 
+     *        a classloader.
+     * @param classFile a {@link ClassFile}.
+     * @throws InvalidInputException if {@code initiatingLoader} is invalid (negative),
+     *         or {@code classFile == null}, or {@code classFile.}{@link ClassFile#isPrimitive()}, or 
+     *         {@code classFile.}{@link ClassFile#isAnonymousUnregistered()}, or there is already a different
+     *         {@link ClassFile} in the loaded class cache for the pair
+     *         {@code (initiatingLoader, classFile.}{@link ClassFile#getClassName() getClassName}{@code ())}.
      */
-    void wrapClassFile(String classToWrap,
-                     Map<Integer, ConstantPoolValue> constants, 
-                     Map<Integer, Signature> signatures,
-                     Map<Integer, String> classes) {
-        final ClassFile classFileToWrap = getClassFile(classToWrap);
-        if (classFileToWrap instanceof ClassFileBad) {
+    void putLoadedClassCache(int initiatingLoader, ClassFile classFile) 
+    throws InvalidInputException {
+        //checks parameters
+        if (initiatingLoader <= CLASSLOADER_NONE) {
+            throw new InvalidInputException("Attemped to invoke " + ClassFileStore.class.getName() + ".putLoadedClassCache with an invalid (negative) initiatingLoader value.");
+        }
+        if (classFile == null) {
+            throw new InvalidInputException("Attemped to invoke " + ClassFileStore.class.getName() + ".putLoadedClassCache with an invalid (null) classFile value.");
+        }
+        if (classFile.isPrimitive()) {
+            throw new InvalidInputException("Invoked " + this.getClass().getName() + ".addClassFile() with a classFile parameter that the classfile for the primitive type " + classFile.getClassName() + ".");
+        }
+        if (classFile.isAnonymousUnregistered()) {
+            throw new InvalidInputException("Invoked " + this.getClass().getName() + ".addClassFile() with a classFile parameter that is a an anonymous classfile with name " + classFile.getClassName() + ".");
+        }
+        if (classFile.isDummy()) {
+            throw new InvalidInputException("Invoked " + this.getClass().getName() + ".addClassFileClass() with a classFile parameter that is a dummy classfile.");
+        }
+        
+        //makes room
+        for (int i = this.loadedClassCache.size(); i <= initiatingLoader; ++i) {
+            this.loadedClassCache.add(new HashMap<>());
+        }
+
+        final ClassFile previousClassFile = getLoadedClassCache(initiatingLoader, classFile.getClassName());
+        if (previousClassFile == null) {
+            this.loadedClassCache.get(initiatingLoader).put(classFile.getClassName(), classFile);
+        } else if (previousClassFile == classFile) {
+            //reinsertion of the same classfile, does nothing
             return;
+        } else {
+            //attempted modification
+            throw new InvalidInputException("Attemped to invoke " + ClassFileStore.class.getName() + ".putLoadedClassCache to modify, rather than increase, the loaded class cache.");
         }
-        final ClassFileWrapper wrapper = new ClassFileWrapper(classFileToWrap, constants, signatures, classes);
-        this.classFiles.put(classToWrap, wrapper);
     }
     
-    /**
-     * Unwraps a previously wrapped {@link ClassFile}.
-     * 
-     * @param classToUnwrap classToWrap a {@link String}, 
-     *        the name of the class to unwrap.
-     */
-    void unwrapClassFile(String classToUnwrap) {
-        final ClassFile classFileToUnwrap = getClassFile(classToUnwrap);
-        if (classFileToUnwrap instanceof ClassFileWrapper) {
-            final ClassFileWrapper wrapper = (ClassFileWrapper) classFileToUnwrap;
-            this.classFiles.put(classToUnwrap, wrapper.getWrapped());
-        }
+    //TODO is it necessary?
+    void putAnonymousClassCache(ClassFile classFile) {
+        this.anonymousClasses.put(classFile.getClassName(), classFile);
     }
 
     /**
@@ -121,8 +119,9 @@ final class ClassFileStore implements Cloneable {
      * @param typeName a {@code String}, the internal name of a primitive type 
      *        (see the class {@link Type}).
      * @return same as {@link #getClassFilePrimitive(char) getClassFilePrimitive}{@code (typeName.charAt(0))}.
+     * @throws InvalidInputException if {@code typeName} is not the internal name of a primitive type.
      */
-    ClassFile getClassFilePrimitive(String typeName) {
+    ClassFile getClassFilePrimitive(String typeName) throws InvalidInputException {
         return getClassFilePrimitive(typeName.charAt(0));
     }
     
@@ -134,8 +133,9 @@ final class ClassFileStore implements Cloneable {
      *        (see the class {@link Type}).
      * @return the {@link ClassFile} of the corresponding primitive class,
      *         possibly a {@link ClassFileBad}.
+     * @throws InvalidInputException if {@code type} is not valid.
      */
-    ClassFile getClassFilePrimitive(char type) {
+    ClassFile getClassFilePrimitive(char type) throws InvalidInputException {
         switch (type) {
         case Type.BOOLEAN:
             return this.primitiveClassFileBoolean;
@@ -156,21 +156,8 @@ final class ClassFileStore implements Cloneable {
         case Type.VOID:
             return this.primitiveClassFileVoid;
         default:
-            return new ClassFileBad("" + type, new ClassFileNotFoundException("" + type));
+            throw new InvalidInputException("Attempted to invoke " + this.getClass().getName() + ".getClassFilePrimitive with parameter type equal to " + type);
         }
-    }
-
-    ClassFile createClassFileAnonymous(byte[] bytecode) 
-    throws BadClassFileException {
-        final ClassFile tempCF = this.f.newClassFile(null, bytecode, null);
-        return tempCF;
-    }
-    
-    ClassFile addClassFileAnonymous(ClassFile classFile, String hostClass, ConstantPoolValue[] cpPatches) 
-    throws BadClassFileException {
-        final ClassFile tempCF = this.f.newClassFile(hostClass, classFile.getBinaryFileContent(), cpPatches);
-        this.classFiles.put(tempCF.getClassName(), tempCF);
-        return tempCF;
     }
     
     @Override
@@ -182,8 +169,14 @@ final class ClassFileStore implements Cloneable {
             throw new InternalError(e);
         }
         
-        //classFiles
-        o.classFiles = new HashMap<>(o.classFiles);
+        //loadedClassCache
+        o.loadedClassCache = new ArrayList<>();
+        for (HashMap<String, ClassFile> map : this.loadedClassCache) {
+            o.loadedClassCache.add(new HashMap<>(map));
+        }
+        
+        //anonymousClasses
+        o.anonymousClasses = new HashMap<>(o.anonymousClasses);
         
         return o;
     }

@@ -1,5 +1,7 @@
 package jbse.dec;
 
+import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -7,13 +9,17 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeMap;
 
+import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
-import jbse.bc.exc.BadClassFileException;
+import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.PleaseLoadClassException;
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
-import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.mem.Clause;
 import jbse.mem.ClauseAssumeExpands;
@@ -558,7 +564,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @param hier a {@link ClassHierarchy}.
 	 * @param inRange a {@link Primitive} expressing the fact that the access
 	 *        index is in the interval 0..array.length. 
-	 * @param result a {@link SortedSet}&lt;{@link DecisionAlternative_XASTORE}&gt;, which the method 
+	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XASTORE}{@code >}, which the method 
 	 *            will update by adding to it {@link DecisionAlternative_XASTORE#IN} 
 	 *            or {@link DecisionAlternative_XASTORE#OUT} in the case the access may be 
 	 *            in range or out of range. Note that the two situations are not
@@ -626,8 +632,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	}
 
 	/**
-	 * Resolves loading a value to the operand stack, when the value
-	 * comes from a local variable or a field.
+	 * Resolves loading a value from a local variable or a field to the operand stack.
 	 * 
 	 * @param state a {@link State}. 
 	 * @param valToLoad the {@link Value} returned by the local variable access, 
@@ -638,13 +643,23 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @return an {@link Outcome}.
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
-	 * @throws BadClassFileException if {@code valToLoad} is a symbolic reference and
-	 *         its class name, or the class names of one of its possible expansions, 
-	 *         does not detect a classfile in the classpath, or if the classfile is
-	 *         ill-formed for JBSE.
+         * @throws ClassFileNotFoundException if {@code valToLoad} is a symbolic 
+         *         reference and 
+         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or the class name of one of its possibile expansions does 
+         *         not have a classfile in {@code state}'s classpath.
+         * @throws ClassFileIllFormedException if {@code valToLoad} is a symbolic 
+         *         reference and the classfile for
+         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or for the class name of one of its possibile expansions is ill-formed.
+         * @throws ClassFileNotAccessibleException if {@code valToLoad} is a symbolic 
+         *         reference and the classfile for
+         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or for the class name of one of its possibile expansions cannot access
+         *         one of its superclass/superinterfaces.
 	 */
 	public Outcome resolve_XLOAD_GETX(State state, Value valToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result) 
-	throws InvalidInputException, DecisionException, BadClassFileException {
+	throws InvalidInputException, DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException {
 	    if (state == null || valToLoad == null || result == null) {
 	        throw new InvalidInputException("resolve_XLOAD_GETX invoked with a null parameter.");
 	    }
@@ -656,11 +671,37 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	    }
 	}
 	
+	/**
+         * Resolves loading a value from a local variable or a field to the operand stack,
+	 * in the case the value to load is an unresolved symbolic
+         * reference.
+         * 
+	 * @param state a {@link State}.
+	 * @param refToLoad the {@link ReferenceSymbolic} returned by the local variable access, 
+         *        that must be loaded on {@code state}'s operand stack. It must not be {@code null}.
+         * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XLOAD_GETX}{@code >}, 
+         *        where the method will put all the {@link DecisionAlternative_XLOAD_GETX}s 
+         *        representing all the satisfiable outcomes of the operation.
+	 * @return an {@link Outcome}.
+	 * @throws DecisionException upon failure.
+         * @throws ClassFileNotFoundException if 
+         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or the class name of one of its possibile expansions does 
+         *         not have a classfile in {@code state}'s classpath.
+         * @throws ClassFileIllFormedException if the classfile for
+         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or for the class name of one of its possibile expansions is ill-formed.
+         * @throws ClassFileNotAccessibleException if the classfile for
+         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or for the class name of one of its possibile expansions cannot access
+         *         one of its superclass/superinterfaces.
+	 * @see {@link #resolve_XLOAD_GETX(State, Value, SortedSet) resolve_XLOAD_GETX}.
+	 */
 	protected Outcome resolve_XLOAD_GETX_Unresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)
-	throws DecisionException, BadClassFileException {
+	throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException {
 	    try {
 	        final boolean partialReferenceResolution = 
-	        doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFactory_XLOAD_GETX(), result);
+	            doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFactory_XLOAD_GETX(), result);
 	        return Outcome.val(true, partialReferenceResolution, true); //uninitialized symbolic references always require a refinement action
 	    } catch (InvalidInputException e) {
 	        //this should never happen as arguments have been checked by the caller
@@ -693,14 +734,24 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @return an {@link Outcome}.
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
-	 * @throws BadClassFileException if {@code valToLoad} is a symbolic reference and
-	 *         its class name, or the class names of one of its possible expansions, 
-	 *         does not detect a classfile in the classpath, or if the classfile is
-	 *         ill-formed for JBSE.
+         * @throws ClassFileNotFoundException if {@code valToLoad} is a symbolic 
+         *         reference and 
+         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or the class name of one of its possibile expansions does 
+         *         not have a classfile in {@code state}'s classpath.
+	 * @throws ClassFileIllFormedException if {@code valToLoad} is a symbolic 
+         *         reference and the classfile for
+         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or for the class name of one of its possibile expansions is ill-formed.
+         * @throws ClassFileNotAccessibleException if {@code valToLoad} is a symbolic 
+         *         reference and the classfile for
+         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or for the class name of one of its possibile expansions cannot access
+         *         one of its superclass/superinterfaces.
 	 */
 	//TODO should be final?
 	public Outcome resolve_XALOAD(State state, Expression accessExpression, Value valToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result)
-	throws InvalidInputException, DecisionException, BadClassFileException {
+	throws InvalidInputException, DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException {
 		if (state == null || result == null) {
 			throw new InvalidInputException("resolve_XALOAD invoked with a null parameter.");
 		}
@@ -736,7 +787,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *        {@link DecisionAlternative_XALOAD}s representing all the 
 	 *        satisfiable outcomes of the operation.
 	 * @return an {@link Outcome}.
-	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet)}.
+	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, Reference, SortedSet) resolve_XALOAD}.
 	 */
 	private Outcome resolve_XALOAD_ResolvedConcrete(Value valToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result) {
 	    final boolean accessOutOfBounds = (valToLoad == null);
@@ -773,7 +824,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *        {@link DecisionAlternative_XALOAD}s representing all the 
 	 *        satisfiable outcomes of the operation.
 	 * @return an {@link Outcome}.
-	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet) resolve_XALOAD}.
+	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, Reference, SortedSet) resolve_XALOAD}.
 	 */
 	protected Outcome resolve_XALOAD_ResolvedNonconcrete(ClassHierarchy hier, Expression accessExpression, Value valToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result)
 	throws DecisionException {
@@ -804,27 +855,38 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * in the case the value to load is an unresolved symbolic
 	 * reference.
 	 * 
+         * @param state a {@link State}. 
 	 * @param accessExpression an {@link Expression}, the condition under
 	 *        which the array access yields {@code valToLoad} as result. 
 	 *        It must not be {@code null}.
-	 * @param valToLoad the {@link Value} returned by the array access 
-	 *        when {@code accessExpression} is true,
-	 *        or {@code null} to denote an access out of the 
-	 *        array bounds.
-	 * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
+	 * @param refToLoad the {@link ReferenceSymbolic} returned by the array access 
+	 *        when {@code accessExpression} is true, 
+         *        that must be loaded on {@code state}'s operand stack. It must not be {@code null}.
+	 * @param fresh {@code true} iff {@code refToLoad} is fresh, i.e., 
 	 *        its existence was assumed during the array access and thus it 
 	 *        is not yet stored in the {@link Array} it originates from.
-	 * @param arrayToWriteBack when {@code fresh == true} is the array 
-	 *        where {@code valToLoad} originates from.
+	 * @param arrayReference when {@code fresh == true} it is a {@link Reference} 
+	 *        to the array where {@code refToLoad} originates from.
 	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
 	 *        where the method will put all the 
 	 *        {@link DecisionAlternative_XALOAD}s representing all the 
 	 *        satisfiable outcomes of the operation.
 	 * @return an {@link Outcome}.
+         * @throws ClassFileNotFoundException  when 
+         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or the class name of one of its possibile expansions does 
+         *         not have a classfile in the classpath.
+	 * @throws ClassFileIllFormedException when the classfile for
+         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or for the class name of one of its possibile expansions is ill-formed.
+         * @throws ClassFileNotAccessibleException when the classfile for
+         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or for the class name of one of its possibile expansions cannot access
+         *         one of its superclass/superinterfaces.
 	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet) resolve_XALOAD}.
 	 */
-	protected Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result)
-	throws DecisionException, BadClassFileException {
+	protected Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, Reference arrayReference, SortedSet<DecisionAlternative_XALOAD> result)
+	throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException {
 	    try {
 	        final boolean accessConcrete = (accessExpression == null);
 	        final boolean shouldRefine;
@@ -832,7 +894,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	        if (accessConcrete || isSat(state.getClassHierarchy(), accessExpression)) {
 	            shouldRefine = true; //unresolved symbolic references always require a refinement action
 	            noReferenceExpansion =
-	              doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFactory_XALOAD(accessExpression, fresh, arrayToWriteBack), result);
+	                doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFactory_XALOAD(accessExpression, fresh, arrayReference), result);
 	        } else {
 	            //accessExpression is unsatisfiable: nothing to do
 	            shouldRefine = false;
@@ -865,55 +927,79 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *         partial (see {@link Outcome#noReferenceExpansion()}).
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
-	 * @throws BadClassFileException when 
-	 *         {@code refToResolve.}{@link Signature#getClassName() getClassName()}
-	 *         or the class name of one of its possibile expansions does 
-	 *         not have a classfile in the classpath, or if the classpath is
-	 *         ill-formed for JBSE.
+         * @throws ClassFileNotFoundException when 
+         *         {@code refToResolve.}{@link Signature#getClassName() getClassName()}
+         *         or the class name of one of its possibile expansions does 
+         *         not have a classfile in {@code state}'s classpath.
+	 * @throws ClassFileIllFormedException when the classfile for
+         *         {@code refToResolve.}{@link Signature#getClassName() getClassName()}
+         *         or for the class name of one of its possibile expansions is ill-formed.
+	 * @throws ClassFileNotAccessibleException when the classfile for
+         *         {@code refToResolve.}{@link Signature#getClassName() getClassName()}
+         *         or for the class name of one of its possibile expansions cannot access
+         *         one of its superclass/superinterfaces.
 	 */
 	protected <D, DA extends D, DE extends D, DN extends D> 
 	boolean doResolveReference(State state, ReferenceSymbolic refToResolve, 
 	DecisionAlternativeReferenceFactory<DA, DE, DN> factory, SortedSet<D> result) 
-	throws InvalidInputException, DecisionException, BadClassFileException {
-		//gets the statically compatible possible aliases 
-		//and expansions of refToResolve
-		final Map<Long, Objekt> possibleAliases = getPossibleAliases(state, refToResolve);
-		final Set<String> possibleExpansions = getPossibleExpansions(state, refToResolve);
-		if (possibleAliases == null || possibleExpansions == null) {
-			throw new UnexpectedInternalException("Symbolic reference " + refToResolve + 
-					" (" + refToResolve.getOrigin() + ") has a bad type.");
-		}
-		
+	throws InvalidInputException, DecisionException, ClassFileNotFoundException, 
+	ClassFileIllFormedException, ClassFileNotAccessibleException {
 		int branchCounter = result.size() + 1;
 		final ClassHierarchy hier = state.getClassHierarchy();
 		
+		//loads the static type of the reference and determines
+		//whether it can be assumed to be initialized (if not, 
+		//the only compatible resolution of the reference is null)
+		final ClassFile refToResolveClass;
+		try {                               
+		    refToResolveClass = hier.loadCreateClass(CLASSLOADER_APP, refToResolve.getStaticType(), true); //TODO instead of rethrowing exceptions (class file not found, ill-formed or unaccessible) just set refToResolveTypeIsSatInitialized to false  
+		} catch (PleaseLoadClassException e) {
+		    //this should never happen since we bypassed standard loading
+		    throw new UnexpectedInternalException(e);
+		}
+		final boolean refToResolveTypeIsSatInitialized = isSatInitialized(hier, refToResolveClass);
+		
 		//filters static aliases based on their satisfiability
-		for (Map.Entry<Long, Objekt> ae : possibleAliases.entrySet()) {
-			final long i = ae.getKey();
-			final Objekt o = ae.getValue();
-			if (isSatAliases(hier, refToResolve, i, o)) {
-				final DA a = factory.createAlternativeRefAliases(refToResolve, i, o.getOrigin(), branchCounter);
-				result.add(a);
-			}
-			++branchCounter;
+		if (refToResolveTypeIsSatInitialized) {
+		    final Map<Long, Objekt> possibleAliases = getPossibleAliases(state, refToResolveClass);
+		    if (possibleAliases == null) {
+		        throw new UnexpectedInternalException("Symbolic reference " + refToResolve + 
+		                                              " (" + refToResolve.getOrigin() + ") has a bad type " + refToResolve.getStaticType() + ".");
+		    }
+		    for (Map.Entry<Long, Objekt> ae : possibleAliases.entrySet()) {
+		        final long i = ae.getKey();
+		        final Objekt o = ae.getValue();
+		        if (isSatAliases(hier, refToResolve, i, o)) {
+		            final DA a = factory.createAlternativeRefAliases(refToResolve, i, o.getOrigin(), branchCounter);
+		            result.add(a);
+		        }
+		        ++branchCounter;
+		    }
 		}
 		
 		//same for static expansions
 		boolean partialReferenceResolution = true;
-		for (String className : possibleExpansions) {
-			if (isSatInitialized(hier, className) && isSatExpands(hier, refToResolve, className)) {
-				final DE e = factory.createAlternativeRefExpands(refToResolve, className, branchCounter);
-				result.add(e);
-				partialReferenceResolution = false;
-			}
-			++branchCounter;
-		}
+                if (refToResolveTypeIsSatInitialized) {
+                    final Set<ClassFile> possibleExpansions = getPossibleExpansions(state, refToResolveClass); //TODO incapsulate thrown exceptions (class file not found, ill-formed or unaccessible) as effect in each decision alternative, or just skip class and report cumulatively these missed class as non-expanded references
+                    if (possibleExpansions == null) {
+                            throw new UnexpectedInternalException("Symbolic reference " + refToResolve + 
+                                            " (" + refToResolve.getOrigin() + ") has a bad type " + refToResolve.getStaticType() + ".");
+                    }
+                    for (ClassFile expansionClass : possibleExpansions) {
+                        if (isSatInitialized(hier, expansionClass) && isSatExpands(hier, refToResolve, expansionClass)) {
+                            final DE e = factory.createAlternativeRefExpands(refToResolve, expansionClass, branchCounter);
+                            result.add(e);
+                            partialReferenceResolution = false;
+                        }
+                        ++branchCounter;
+                    }
+                }
 		
 		//same for null
 		if (isSatNull(hier, refToResolve)) {
-			final DN n = factory.createAlternativeRefNull(refToResolve, branchCounter);
-			result.add(n);
-			//no need to increment branchNumber
+		    final DN n = factory.createAlternativeRefNull(refToResolve, branchCounter);
+		    result.add(n);
+		    //no need to increment branchNumber
 		}
 		
 		//is there a partial reference resolution?
@@ -932,10 +1018,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *         If {@code ref} does not denote a reference or array type, the method 
 	 *         returns {@code null}.
 	 */
-	private static Map<Long, Objekt> getPossibleAliases(State state, ReferenceSymbolic ref) {
+	private static Map<Long, Objekt> getPossibleAliases(State state, ClassFile refClass) {
 	    //checks preconditions
-	    final String type = ref.getStaticType();
-	    if (!Type.isReference(type) && !Type.isArray(type)) {
+	    if (!refClass.isReference() && !refClass.isArray()) {
 	        return null;
 	    }
 
@@ -951,10 +1036,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	            final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
 	            final Long i = cExp.getHeapPosition();
 	            final Objekt o = cExp.getObjekt();
-
+	            
 	            //if it is time and epoch compatible, adds the object
 	            //to the result
-	            if (isTypeAndEpochCompatible(o, ref, classHierarchy)) {
+	            if (isTypeAndEpochCompatible(o, refClass, classHierarchy)) {
 	                retVal.put(i, o);
 	            }
 	        }
@@ -967,18 +1052,16 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * to resolve of a symbolic reference.
 	 * 
 	 * @param o an {@link Objekt}.
-	 * @param ref a {@link ReferenceSymbolic}.
+	 * @param refClass a {@link ClassFile} for the static type of the symbolic reference.
 	 * @param classHierarchy a {@link ClassHierarchy}.
-	 * @return {@code true} iff {@code ref} can be resolved by {@code o}. 
+	 * @return {@code true} iff {@code refClass} can be resolved by {@code o}. 
 	 *         More precisely, returns {@code true} iff the creation epoch of 
-	 *         {@code o} comes before that of {@code ref}, and {@code o}'s type 
-	 *         is a subtype of the static type of {@code ref}.
+	 *         {@code o} comes before that of the symbolic reference, and {@code o}'s type 
+	 *         is a subclass of {@code refClass}.
 	 */
-	private static boolean isTypeAndEpochCompatible(Objekt o, ReferenceSymbolic ref, ClassHierarchy classHierarchy) {
-	    final String type = ref.getStaticType();
-	    final String className = Type.className(type);
+	private static boolean isTypeAndEpochCompatible(Objekt o, ClassFile refClass, ClassHierarchy classHierarchy) {
 	    return (o.isSymbolic() && //TODO this works only with the two-epoch approach 
-	            classHierarchy.isSubclass(o.getType(), className));
+	            classHierarchy.isSubclass(o.getType(), refClass));
 	}
 
 	/**
@@ -986,34 +1069,41 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * aliases of a given {@link ReferenceSymbolic}.
 	 *
 	 * @param state a {@link State}.
-	 * @param ref a {@link ReferenceSymbolic} to be resolved.
+	 * @param refClass a {@link ClassFile} for the static type of the reference 
+	 *        to be resolved.
 	 * @return a {@link Set}{@code <}{@link String}{@code >}, listing
 	 *         all the classes that are compatible, in their type and epoch of 
 	 *         initialization, with {@code ref}.
 	 *         If {@code ref} does not denote a reference or array type, the method 
 	 *         returns {@code null}.
-	 * @throws BadClassFileException if any of {@code ref}'s class name or its subclasses'
-	 *         names does not denote a classfile in the classpath, or if the 
-	 *         classfile is ill-formed for the current JBSE.
+         * @throws InvalidInputException if one of the candidate subclass names in {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
+         *         expansion backdoor is invalid.
+	 * @throws ClassFileNotFoundException if any of the candidate subclass names in {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
+         *         expansion backdoor does not have a classfile neither 
+         *         in the bootstrap, nor in the 
+         *         extension, nor in the application classpath.
+	 *         names does not denote a classfile in the classpath.
+         * @throws ClassFileIllFormedException if any of the candidate subclass names in {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
+         *         expansion backdoor has an ill-formed classfile.
+	 * @throws ClassFileNotAccessibleException if the classfile of any of the candidate subclass names in {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
+         *         expansion backdoor cannot access one of its superclasses/superinterfaces.
 	 */
-	private static Set<String> getPossibleExpansions(State state, ReferenceSymbolic ref) 
-	throws BadClassFileException {
-	    final String type = ref.getStaticType();
-	    if (!Type.isReference(type) && !Type.isArray(type)) {
+	private static Set<ClassFile> getPossibleExpansions(State state, ClassFile refClass) 
+	throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException {
+	    if (!refClass.isReference() && !refClass.isArray()) {
 	        return null;
 	    }
 
-	    final Set<String> retVal;
-	    if (Type.isArray(type)) {
+	    final Set<ClassFile> retVal;
+	    if (refClass.isArray()) {
 	        //the (really trivial) array case:
 	        //array classes are final, concrete, and can
 	        //always be assumed to be initialized, so
 	        //this is the only expansion possible
 	        retVal = new HashSet<>();
-	        retVal.add(type);
+	        retVal.add(refClass);
 	    } else {
-	        final String className = Type.className(type);
-	        retVal = state.getClassHierarchy().getAllConcreteSubclasses(className);
+	        retVal = state.getClassHierarchy().getAllConcreteSubclasses(refClass);
 	    }
 
 	    return retVal;
@@ -1105,10 +1195,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * 
 	 * @param rootThis a {@link ReferenceSymbolic}, the {ROOT}:this 
 	 *        reference.
-	 * @param className the class name of the root object.
+	 * @param classFile the {@link ClassFile} of the root object.
 	 * @return a {@link DecisionAlternative_XLOAD_GETX_Expands}.
 	 */
-	public DecisionAlternative_XLOAD_GETX_Expands getRootDecisionAlternative(ReferenceSymbolic rootThis, String className) {
-	    return new DecisionAlternative_XLOAD_GETX_Expands(rootThis, className, 1);
+	public DecisionAlternative_XLOAD_GETX_Expands getRootDecisionAlternative(ReferenceSymbolic rootThis, ClassFile classFile) {
+	    return new DecisionAlternative_XLOAD_GETX_Expands(rootThis, classFile, 1);
 	}
 }

@@ -7,8 +7,9 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.Algorithm;
+import jbse.algo.StrategyUpdate;
 import jbse.mem.State;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 
@@ -48,7 +49,9 @@ public final class Algo_noclass_REGISTERMETHODTYPE extends Algo_INVOKEMETA_Nonbr
     }
 
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        state.setReferenceToInstance_JAVA_METHODTYPE(this.descriptor, this.methodType);
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.setReferenceToInstance_JAVA_METHODTYPE(this.descriptor, this.methodType);
+        };
     }
 }

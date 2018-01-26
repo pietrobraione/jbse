@@ -1,71 +1,39 @@
 package jbse.bc;
 
-import jbse.bc.ClassFileArray.Visibility;
-import jbse.bc.exc.BadClassFileException;
+import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 
 /**
  * Factory for {@link ClassFile}s.
  * 
  * @author Pietro Braione
- *
  */
-public abstract class ClassFileFactory {
-    /** Backlink to owner {@link ClassFileStore}. */
-    private ClassFileStore cfi;
-
-    public ClassFileFactory(ClassFileStore cfi) {
-        this.cfi = cfi;
-    }
-
-    protected abstract ClassFile newClassFileClass(String className) 
-    throws BadClassFileException;
+public abstract class ClassFileFactory implements Cloneable {
+    protected abstract ClassFile newClassFileClass(int definingClassLoader, String className, byte[] bytecode, ClassFile superClass, ClassFile[] superInterfaces) 
+    throws InvalidInputException, ClassFileIllFormedException;
     
-    protected abstract ClassFile newClassFileAnonymous(String hostClass, byte[] bytecode, ConstantPoolValue[] cpPatches)
-    throws BadClassFileException;
+    protected abstract ClassFile newClassFileAnonymous(byte[] bytecode, ConstantPoolValue[] cpPatches, ClassFile hostClass)
+    throws InvalidInputException, ClassFileIllFormedException;
 
-    final ClassFile newClassFile(String className) 
-    throws BadClassFileException {
+    protected final ClassFile newClassFileArray(String className, ClassFile memberClass, ClassFile cf_JAVA_OBJECT, ClassFile cf_JAVA_CLONEABLE, ClassFile cf_JAVA_SERIALIZABLE) 
+    throws InvalidInputException {
         if (className == null) {
-            throw new NullPointerException("the name of a classfile was null");
-        } else if (Type.isArray(className)) {
-            //(recursively) gets the member class of an array
-            final String memberType = Type.getArrayMemberType(className);
-            final ClassFile classFileMember;
-            if (Type.isPrimitive(memberType)) {
-                classFileMember = this.cfi.getClassFilePrimitive(memberType);
-            } else {
-                final String memberClass = Type.className(memberType);
-                classFileMember = this.cfi.getClassFile(memberClass);
-            }
-            if (classFileMember instanceof ClassFileBad) {
-                throw ((ClassFileBad) classFileMember).getException();
-            }
+            throw new InvalidInputException("The className parameter to " + ClassFileFactory.class.getCanonicalName() + ".newClassFileArray was null.");
+        } 
+        if (!Type.isArray(className)) {
+            throw new InvalidInputException("The className parameter to " + ClassFileFactory.class.getCanonicalName() + ".newClassFileArray was not an array type.");
+        } 
+        if (cf_JAVA_OBJECT == null) {
+            throw new InvalidInputException("The cf_JAVA_OBJECT parameter to " + ClassFileFactory.class.getCanonicalName() + ".newClassFileArray was null.");
+        } 
+        if (cf_JAVA_CLONEABLE == null) {
+            throw new InvalidInputException("The cf_JAVA_CLONEABLE parameter to " + ClassFileFactory.class.getCanonicalName() + ".newClassFileArray was null.");
+        } 
+        if (cf_JAVA_SERIALIZABLE == null) {
+            throw new InvalidInputException("The cf_JAVA_SERIALIZABLE parameter to " + ClassFileFactory.class.getCanonicalName() + ".newClassFileArray was null.");
+        } 
 
-            //calculates package name
-            //TODO couldn't find any specification for calculating this! Does it work for nested classes?
-            final String packageName = classFileMember.getPackageName();
-
-            //calculates visibility (JVMS v8, section 5.3.3 last line, this
-            //implementation also works with primitive classfile members)
-            final Visibility visibility;
-            if (classFileMember.isPublic()) {
-                visibility = ClassFileArray.Visibility.PUBLIC;
-            } else if (classFileMember.isPackage()) {
-                visibility = ClassFileArray.Visibility.PACKAGE;
-            } else if (classFileMember.isProtected()) {
-                visibility = ClassFileArray.Visibility.PROTECTED;
-            } else { //private
-                visibility = ClassFileArray.Visibility.PRIVATE;
-            }
-            return new ClassFileArray(className, packageName, visibility);
-        } else {
-            return newClassFileClass(className);
-        }
-    }
-    
-    final ClassFile newClassFile(String hostClass, byte[] bytecode, ConstantPoolValue[] cpPatches)
-    throws BadClassFileException {
-        return newClassFileAnonymous(hostClass, bytecode, cpPatches);
+        return new ClassFileArray(className, memberClass, cf_JAVA_OBJECT, cf_JAVA_CLONEABLE, cf_JAVA_SERIALIZABLE);
     }
 }

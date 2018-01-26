@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 
+import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
@@ -465,7 +466,8 @@ public final class Array extends Objekt {
      *        whenever {@code initSymbolic == true}); if {@code initValue == null}
      *        the default value for the array member type is used for initialization.
      * @param length a {@link Primitive}, the number of elements in the array.
-     * @param type a {@link String}, the type of the array.
+     * @param classFile a {@code classFile}, the class of 
+     *        this {@link Instance}; It must be {@code classFile.}{@link ClassFile#isReference() isArray}{@code () == true}.
      * @param origin a {@link MemoryPath}, the
      *        chain of memory accesses which allowed to discover
      *        the {@link Array} for the first time. It can be null when
@@ -476,16 +478,16 @@ public final class Array extends Objekt {
      *        the initial state. Used only if {@code epoch == }{@link Epoch#EPOCH_AFTER_START}.
      * @param maxSimpleArrayLength an {@code int}, the maximum length an array may have
      *        to be granted simple representation.
-     * @throws InvalidTypeException iff {@code type} is invalid. 
+     * @throws InvalidTypeException iff {@code classFile} is invalid. 
      */
-    public Array(Calculator calc, boolean initSymbolic, Value initValue, Primitive length, String type, MemoryPath origin, Epoch epoch, boolean isInitial, int maxSimpleArrayLength) 
+    public Array(Calculator calc, boolean initSymbolic, Value initValue, Primitive length, ClassFile classFile, MemoryPath origin, Epoch epoch, boolean isInitial, int maxSimpleArrayLength) 
     throws InvalidTypeException {
-        super(calc, type, origin, epoch, false, 0, new Signature(type, "" + Type.INT, "length"));
-        if (isIllFormed(type)) {
-            throw new InvalidTypeException("attempted creation of an array with type " + type);
+        super(calc, classFile, origin, epoch, false, 0, new Signature(classFile.getClassName(), "" + Type.INT, "length"));
+        if (classFile == null || !classFile.isArray()) {
+            throw new InvalidTypeException("Attempted creation of an array with type " + classFile.getClassName());
         }
         this.isInitial = isInitial;
-        this.lengthSignature = new Signature(type, "" + Type.INT, "length");
+        this.lengthSignature = new Signature(classFile.getClassName(), "" + Type.INT, "length");
         this.calc = calc;
         try {
             this.INDEX = this.calc.valTerm(Type.INT, INDEX_ID);
@@ -514,10 +516,10 @@ public final class Array extends Objekt {
      * @throws NullPointerException if {@code otherArray == null}.
      */
     public Array(Reference referenceToOtherArray, Array otherArray) throws InvalidOperandException {
-        super(otherArray.calc, otherArray.type, otherArray.getOrigin(), Epoch.EPOCH_BEFORE_START, false, 0, new Signature(otherArray.type, "" + Type.INT, "length"));
+        super(otherArray.calc, otherArray.classFile, otherArray.getOrigin(), Epoch.EPOCH_BEFORE_START, false, 0, new Signature(otherArray.classFile.getClassName(), "" + Type.INT, "length"));
         //TODO assert other is an initial symbolic array
         this.isInitial = false;
-        this.lengthSignature = new Signature(this.type, "" + Type.INT, "length");
+        this.lengthSignature = new Signature(this.classFile.getClassName(), "" + Type.INT, "length");
         this.calc = otherArray.calc;
         try {
             this.INDEX = this.calc.valTerm(Type.INT, INDEX_ID);
@@ -538,36 +540,12 @@ public final class Array extends Objekt {
         this.entries.add(new AccessOutcomeInInitialArray(this.indexInRange, referenceToOtherArray));
     }
 
-    private static boolean isIllFormed(String type) {
-        boolean illFormed = false;
-        if (type == null || type.charAt(0) != Type.ARRAYOF || type.length() < 2) {
-            illFormed = true;
-        } else {
-            switch (type.charAt(1)) {
-            case Type.BOOLEAN:
-            case Type.CHAR:
-            case Type.FLOAT:
-            case Type.DOUBLE:
-            case Type.BYTE:
-            case Type.SHORT:
-            case Type.INT:
-            case Type.LONG:
-            case Type.REFERENCE:
-            case Type.ARRAYOF:
-                break;
-            default:
-                illFormed = true;
-            }
-        }
-        return illFormed;
-    }
-
     private void setEntriesInit(boolean initSymbolic, Value initValue, int maxSimpleArrayLength) {
         final Value entryValue;
         if (initSymbolic) {
             entryValue = null;
         } else if (initValue == null) {
-            entryValue = this.calc.createDefault(Type.getArrayMemberType(this.type).charAt(0)); 
+            entryValue = this.calc.createDefault(Type.getArrayMemberType(this.classFile.getClassName()).charAt(0)); 
         } else {
             entryValue = initValue;
         }
@@ -609,8 +587,8 @@ public final class Array extends Objekt {
      * @throws InvalidTypeException if {@code other} has different type from {@code this}.
      */
     public void cloneEntries(Array other) throws InvalidTypeException {
-        if (!this.type.equals(other.type)) {
-            throw new InvalidTypeException("tried to clone entries of a " + other.type + " array into a " + this.type + " array");
+        if (!this.classFile.equals(other.classFile)) {
+            throw new InvalidTypeException("tried to clone entries of a " + other.classFile + " array into a " + this.classFile + " array");
         }
         this.entries.clear();
         for (AccessOutcomeIn entry : other.entries) {
@@ -954,8 +932,8 @@ public final class Array extends Objekt {
      */
     public Iterator<AccessOutcomeIn> arraycopy(Array src, Primitive srcPos, Primitive destPos, Primitive length, Consumer<Reference> checkOk) 
     throws InvalidOperandException, InvalidTypeException {
-        final String srcTypeComponent = getArrayMemberType(src.getType());
-        final String destTypeComponent = getArrayMemberType(getType());
+        final String srcTypeComponent = getArrayMemberType(src.getType().getClassName());
+        final String destTypeComponent = getArrayMemberType(getType().getClassName());
         if (this.simpleRep && src.simpleRep && 
             srcPos instanceof Simplex && destPos instanceof Simplex && 
             length instanceof Simplex) {
@@ -1071,7 +1049,7 @@ public final class Array extends Objekt {
      *         is the content of this array.
      */
     public String valueString() {
-        if (this.type.equals("" + Type.ARRAYOF + Type.CHAR) && isSimple()) {
+        if (this.classFile.getMemberClass().getClassName().equals("char") && isSimple()) {
             final StringBuilder buf = new StringBuilder();
             for (AccessOutcomeIn e : this.entries) {
                 buf.append(((AccessOutcomeInValue) e).returnedValue.toString());
@@ -1089,7 +1067,7 @@ public final class Array extends Objekt {
 
     @Override
     public String toString() {
-        String str = "[Type:" + this.type + ", Length:" + this.getLength().toString() + ", Elements: {";
+        String str = "[Type:" + this.classFile + ", Length:" + this.getLength().toString() + ", Elements: {";
         boolean firstEntryPassed = false;
         final StringBuilder buf = new StringBuilder();
         for (AccessOutcomeIn e : this.entries) {

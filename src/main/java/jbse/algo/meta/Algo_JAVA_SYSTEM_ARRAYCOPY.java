@@ -8,9 +8,6 @@ import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import static jbse.bc.Signatures.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION;
 import static jbse.bc.Signatures.ARRAY_STORE_EXCEPTION;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
-import static jbse.common.Type.className;
-import static jbse.common.Type.getArrayMemberType;
-import static jbse.common.Type.isPrimitive;
 
 import java.util.Iterator;
 import java.util.function.Supplier;
@@ -20,9 +17,10 @@ import jbse.algo.BytecodeCooker;
 import jbse.algo.StrategyDecide;
 import jbse.algo.StrategyRefine;
 import jbse.algo.StrategyUpdate;
-import jbse.bc.exc.BadClassFileException;
+import jbse.bc.ClassFile;
+import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
-import jbse.dec.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
 import jbse.tree.DecisionAlternative_XASTORE;
@@ -78,15 +76,15 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                 exitFromAlgorithm();
             }
 
-            final String srcTypeComponent = getArrayMemberType(srcArray.getType());
-            final String destTypeComponent = getArrayMemberType(destArray.getType());
-            if (isPrimitive(srcTypeComponent) && 
-                isPrimitive(destTypeComponent)) {
+            final ClassFile srcTypeComponent = srcArray.getType().getMemberClass();
+            final ClassFile destTypeComponent = destArray.getType().getMemberClass();
+            if (srcTypeComponent.isPrimitive() && 
+                destTypeComponent.isPrimitive()) {
                 if (!srcTypeComponent.equals(destTypeComponent)) {
                     throwNew(state, ARRAY_STORE_EXCEPTION);
                     exitFromAlgorithm();
                 }
-            } else if (isPrimitive(srcTypeComponent) != isPrimitive(destTypeComponent)) {
+            } else if (srcTypeComponent.isPrimitive() != destTypeComponent.isPrimitive()) {
                 throwNew(state, ARRAY_STORE_EXCEPTION);
                 exitFromAlgorithm();
             }
@@ -137,24 +135,33 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                 try {
                     srcArray = (Array) state.getObject(this.src);
                     destArray = (Array) state.getObject(this.dest);
-                    final String destTypeComponent = getArrayMemberType(destArray.getType());
+                    final ClassFile destTypeComponent = destArray.getType().getMemberClass();
+                    final ClasspathException[] _e = new ClasspathException[1]; //boxes so the next closure can store the exception
                     final Iterator<Array.AccessOutcomeIn> entries = 
-                    destArray.arraycopy(srcArray, this.srcPos, this.destPos, this.length,  
+                        destArray.arraycopy(srcArray, this.srcPos, this.destPos, this.length,  
                                         (Reference ref) -> {
                                             if (ref instanceof Null) {
                                                 return;
                                             }
                                             final Objekt srcElement = state.getObject(ref);
                                             try {
-                                                if (!state.getClassHierarchy().isAssignmentCompatible(srcElement.getType(), className(destTypeComponent))) {
+                                                if (!state.getClassHierarchy().isAssignmentCompatible(srcElement.getType(), destTypeComponent)) {
                                                     throwNew(state, ARRAY_STORE_EXCEPTION);
                                                     throw new ExitFromAlgorithmException();
                                                 }
-                                            } catch (BadClassFileException exc) {
-                                                throwVerifyError(state);
+                                            } catch (ClasspathException exc) {
+                                                try {
+                                                    throwVerifyError(state);
+                                                } catch (ClasspathException e) {
+                                                    _e[0] = e;
+                                                    //then falls through
+                                                }
                                                 throw new ExitFromAlgorithmException();
                                             }
                                         });
+                    if (_e[0] != null) {
+                        throw _e[0];
+                    }
                     this.ctx.decisionProcedure.completeArraycopy(state.getClassHierarchy(), entries, this.srcPos, this.destPos, this.length);
                 } catch (InvalidOperandException | InvalidTypeException | 
                          InvalidInputException | ClassCastException e) {

@@ -3,6 +3,7 @@ package jbse.algo.meta;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
+import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.Signatures.JBSE_BASE;
 import static jbse.bc.Signatures.JBSE_BASE_FILE_ENCODING;
 import static jbse.bc.Signatures.JBSE_BASE_FILE_SEPARATOR;
@@ -17,6 +18,12 @@ import static jbse.bc.Signatures.JBSE_BASE_HTTP_PROXYHOST;
 import static jbse.bc.Signatures.JBSE_BASE_HTTP_PROXYPORT;
 import static jbse.bc.Signatures.JBSE_BASE_HTTPS_PROXYHOST;
 import static jbse.bc.Signatures.JBSE_BASE_HTTPS_PROXYPORT;
+import static jbse.bc.Signatures.JBSE_BASE_JAVA_CLASS_PATH;
+import static jbse.bc.Signatures.JBSE_BASE_JAVA_EXT_DIRS;
+import static jbse.bc.Signatures.JBSE_BASE_JAVA_HOME;
+import static jbse.bc.Signatures.JBSE_BASE_JAVA_LIBRARY_PATH;
+import static jbse.bc.Signatures.JBSE_BASE_JBSE_NAME;
+import static jbse.bc.Signatures.JBSE_BASE_JBSE_VERSION;
 import static jbse.bc.Signatures.JBSE_BASE_LINE_SEPARATOR;
 import static jbse.bc.Signatures.JBSE_BASE_OS_ARCH;
 import static jbse.bc.Signatures.JBSE_BASE_OS_NAME;
@@ -26,6 +33,8 @@ import static jbse.bc.Signatures.JBSE_BASE_SOCKSNONPROXYHOSTS;
 import static jbse.bc.Signatures.JBSE_BASE_SOCKSPROXYHOST;
 import static jbse.bc.Signatures.JBSE_BASE_SOCKSPROXYPORT;
 import static jbse.bc.Signatures.JBSE_BASE_SUN_CPU_ENDIAN;
+import static jbse.bc.Signatures.JBSE_BASE_SUN_BOOT_CLASS_PATH;
+import static jbse.bc.Signatures.JBSE_BASE_SUN_BOOT_LIBRARY_PATH;
 import static jbse.bc.Signatures.JBSE_BASE_SUN_CPU_ISALIST;
 import static jbse.bc.Signatures.JBSE_BASE_SUN_IO_UNICODE_ENCODING;
 import static jbse.bc.Signatures.JBSE_BASE_SUN_JNU_ENCODING;
@@ -38,16 +47,27 @@ import static jbse.bc.Signatures.JBSE_BASE_USER_VARIANT;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
 import java.util.function.Supplier;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
+import jbse.JBSE;
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.Algorithm;
 import jbse.algo.ExecutionContext;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
+import jbse.bc.ClassFile;
+import jbse.bc.Classpath;
 import jbse.bc.Signature;
+import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.PleaseLoadClassException;
+import jbse.common.exc.ClasspathException;
 import jbse.mem.Klass;
 import jbse.mem.State;
 import jbse.mem.exc.HeapMemoryExhaustedException;
-import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.ReferenceConcrete;
 
 /**
@@ -58,6 +78,14 @@ import jbse.val.ReferenceConcrete;
  *
  */
 public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
+    private static final String JBSE_NAME               = JBSE.NAME + " (" + JBSE.ACRONYM + ")";
+    private static final String JBSE_VERSION            = JBSE.VERSION;
+    private static       String JAVA_HOME               = null;
+    private static       String SUN_BOOT_CLASS_PATH     = null;
+    private static       String JAVA_EXT_DIRS           = null;
+    private static       String JAVA_CLASS_PATH         = null;
+    private static       String SUN_BOOT_LIBRARY_PATH   = null;
+    private static       String JAVA_LIBRARY_PATH       = null;
     private static final String OS_NAME                 = System.getProperty("os.name");
     private static final String OS_VERSION              = System.getProperty("os.version");
     private static final String OS_ARCH                 = System.getProperty("os.arch");
@@ -96,7 +124,26 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
     }
 
     @Override
-    protected void cookMore(State state) throws InterruptException {
+    protected void cookMore(State state) throws InterruptException, ClasspathException {
+        final Classpath cp = state.getClasspath();
+        
+        //initializes the paths
+        JAVA_HOME             = cp.javaHome();
+        SUN_BOOT_CLASS_PATH   = stream(cp.bootClassPath()).reduce("", (s, t) -> s + PATH_SEPARATOR + t);
+        JAVA_EXT_DIRS         = stream(cp.extClassPath()).reduce("", (s, t) -> s + PATH_SEPARATOR + t);
+        JAVA_CLASS_PATH       = stream(cp.classPath()).reduce("", (s, t) -> s + PATH_SEPARATOR + t);
+        SUN_BOOT_LIBRARY_PATH = JAVA_HOME + FILE_SEPARATOR + "lib";
+        JAVA_LIBRARY_PATH     = JAVA_EXT_DIRS; //TODO this is an approximation, the real case is much more complex and os-dependent
+        
+        //creates the literals
+        safeEnsureStringLiteral(state, this.ctx, JBSE_NAME);
+        safeEnsureStringLiteral(state, this.ctx, JBSE_VERSION);
+        safeEnsureStringLiteral(state, this.ctx, JAVA_EXT_DIRS);
+        safeEnsureStringLiteral(state, this.ctx, SUN_BOOT_LIBRARY_PATH);
+        safeEnsureStringLiteral(state, this.ctx, JAVA_LIBRARY_PATH);
+        safeEnsureStringLiteral(state, this.ctx, JAVA_HOME);
+        safeEnsureStringLiteral(state, this.ctx, SUN_BOOT_CLASS_PATH);
+        safeEnsureStringLiteral(state, this.ctx, JAVA_CLASS_PATH);        
         safeEnsureStringLiteral(state, this.ctx, OS_NAME);
         safeEnsureStringLiteral(state, this.ctx, OS_VERSION);
         safeEnsureStringLiteral(state, this.ctx, OS_ARCH);
@@ -130,8 +177,19 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
         safeEnsureStringLiteral(state, this.ctx, SOCKSNONPROXYHOSTS);
     }
 
+    /**
+     * Converts an iterable to a stream.
+     * See <a href="https://stackoverflow.com/a/23177907/450589">https://stackoverflow.com/a/23177907/450589</a>.
+     * @param it an {@link Iterable}{@code <T>}.
+     * @return a {@link Stream}{@code <T>} for {@code it}.
+     */
+    private static <T> Stream<T> stream(Iterable<T> it) {
+        return StreamSupport.stream(it.spliterator(), false);
+    }
+    
+
     private static void safeEnsureStringLiteral(State state, ExecutionContext ctx, String stringLit) 
-    throws InterruptException {
+    throws InterruptException, ClasspathException {
         if (stringLit != null) {
             try {
                 state.ensureStringLiteral(stringLit);
@@ -142,46 +200,65 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
         }
     }
 
-
     @Override
-    protected void update(State state) throws ThreadStackEmptyException {
-        final Klass klassBase = state.getKlass(JBSE_BASE);
-        if (klassBase == null) {
-            //this should never happen
-            failExecution("Found no klass " + JBSE_BASE);
-        }
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            //gets the Klass for jbse.base.Base
+            Klass klassBase = null; //to keep the compiler happy
+            try {
+                final ClassFile  cf_JBSE_BASE = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, JBSE_BASE, true);
+                klassBase = state.getKlass(cf_JBSE_BASE);
+                if (klassBase == null) {
+                    //this should never happen
+                    failExecution("Found no Klass for " + JBSE_BASE);
+                }
+            } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
+                     ClassFileNotAccessibleException | PleaseLoadClassException e) {
+                //this should never happen
+                failExecution(e);
+            }
 
-        safeSetStringValue(state, klassBase, JBSE_BASE_OS_NAME,                 OS_NAME);
-        safeSetStringValue(state, klassBase, JBSE_BASE_OS_VERSION,              OS_VERSION);
-        safeSetStringValue(state, klassBase, JBSE_BASE_OS_ARCH,                 OS_ARCH);
-        safeSetStringValue(state, klassBase, JBSE_BASE_FILE_SEPARATOR,          FILE_SEPARATOR);
-        safeSetStringValue(state, klassBase, JBSE_BASE_PATH_SEPARATOR,          PATH_SEPARATOR);
-        safeSetStringValue(state, klassBase, JBSE_BASE_LINE_SEPARATOR,          LINE_SEPARATOR);
-        safeSetStringValue(state, klassBase, JBSE_BASE_USER_LANGUAGE,           USER_LANGUAGE);
-        safeSetStringValue(state, klassBase, JBSE_BASE_USER_SCRIPT,             USER_SCRIPT);
-        safeSetStringValue(state, klassBase, JBSE_BASE_USER_COUNTRY,            USER_COUNTRY);
-        safeSetStringValue(state, klassBase, JBSE_BASE_USER_VARIANT,            USER_VARIANT);
-        safeSetStringValue(state, klassBase, JBSE_BASE_FILE_ENCODING,           FILE_ENCODING);
-        safeSetStringValue(state, klassBase, JBSE_BASE_SUN_JNU_ENCODING,        SUN_JNU_ENCODING);
-        safeSetStringValue(state, klassBase, JBSE_BASE_SUN_STDOUT_ENCODING,     SUN_STDOUT_ENCODING);
-        safeSetStringValue(state, klassBase, JBSE_BASE_SUN_STDERR_ENCODING,     SUN_STDERR_ENCODING);
-        safeSetStringValue(state, klassBase, JBSE_BASE_SUN_IO_UNICODE_ENCODING, SUN_IO_UNICODE_ENCODING);
-        safeSetStringValue(state, klassBase, JBSE_BASE_SUN_CPU_ISALIST,         SUN_CPU_ISALIST);
-        safeSetStringValue(state, klassBase, JBSE_BASE_SUN_CPU_ENDIAN,          SUN_CPU_ENDIAN);
-        safeSetStringValue(state, klassBase, JBSE_BASE_HTTP_PROXYHOST,          HTTP_PROXYHOST);
-        safeSetStringValue(state, klassBase, JBSE_BASE_HTTP_PROXYPORT,          HTTP_PROXYPORT);
-        safeSetStringValue(state, klassBase, JBSE_BASE_HTTPS_PROXYHOST,         HTTP_PROXYHOST);
-        safeSetStringValue(state, klassBase, JBSE_BASE_HTTPS_PROXYPORT,         HTTP_PROXYPORT);
-        safeSetStringValue(state, klassBase, JBSE_BASE_FTP_PROXYHOST,           FTP_PROXYHOST);
-        safeSetStringValue(state, klassBase, JBSE_BASE_FTP_PROXYPORT,           FTP_PROXYPORT);
-        safeSetStringValue(state, klassBase, JBSE_BASE_SOCKSPROXYHOST,          SOCKSPROXYHOST);
-        safeSetStringValue(state, klassBase, JBSE_BASE_SOCKSPROXYPORT,          SOCKSPROXYPORT);
-        safeSetStringValue(state, klassBase, JBSE_BASE_GOPHERPROXYSET,          GOPHERPROXYSET);
-        safeSetStringValue(state, klassBase, JBSE_BASE_GOPHERPROXYHOST,         GOPHERPROXYHOST);
-        safeSetStringValue(state, klassBase, JBSE_BASE_GOPHERPROXYPORT,         GOPHERPROXYPORT);
-        safeSetStringValue(state, klassBase, JBSE_BASE_HTTP_NONPROXYHOSTS,      HTTP_NONPROXYHOSTS);
-        safeSetStringValue(state, klassBase, JBSE_BASE_FTP_NONPROXYHOSTS,       FTP_NONPROXYHOSTS);
-        safeSetStringValue(state, klassBase, JBSE_BASE_SOCKSNONPROXYHOSTS,      SOCKSNONPROXYHOSTS);
+            //inits its static fields
+            safeSetStringValue(state, klassBase, JBSE_BASE_JBSE_NAME,               JBSE_NAME);
+            safeSetStringValue(state, klassBase, JBSE_BASE_JBSE_VERSION,            JBSE_VERSION);
+            safeSetStringValue(state, klassBase, JBSE_BASE_JAVA_EXT_DIRS,           JAVA_EXT_DIRS);
+            safeSetStringValue(state, klassBase, JBSE_BASE_SUN_BOOT_LIBRARY_PATH,   SUN_BOOT_LIBRARY_PATH);
+            safeSetStringValue(state, klassBase, JBSE_BASE_JAVA_LIBRARY_PATH,       JAVA_LIBRARY_PATH);
+            safeSetStringValue(state, klassBase, JBSE_BASE_JAVA_HOME,               JAVA_HOME);
+            safeSetStringValue(state, klassBase, JBSE_BASE_SUN_BOOT_CLASS_PATH,     SUN_BOOT_CLASS_PATH);
+            safeSetStringValue(state, klassBase, JBSE_BASE_JAVA_CLASS_PATH,         JAVA_CLASS_PATH);
+            safeSetStringValue(state, klassBase, JBSE_BASE_OS_NAME,                 OS_NAME);
+            safeSetStringValue(state, klassBase, JBSE_BASE_OS_VERSION,              OS_VERSION);
+            safeSetStringValue(state, klassBase, JBSE_BASE_OS_ARCH,                 OS_ARCH);
+            safeSetStringValue(state, klassBase, JBSE_BASE_FILE_SEPARATOR,          FILE_SEPARATOR);
+            safeSetStringValue(state, klassBase, JBSE_BASE_PATH_SEPARATOR,          PATH_SEPARATOR);
+            safeSetStringValue(state, klassBase, JBSE_BASE_LINE_SEPARATOR,          LINE_SEPARATOR);
+            safeSetStringValue(state, klassBase, JBSE_BASE_USER_LANGUAGE,           USER_LANGUAGE);
+            safeSetStringValue(state, klassBase, JBSE_BASE_USER_SCRIPT,             USER_SCRIPT);
+            safeSetStringValue(state, klassBase, JBSE_BASE_USER_COUNTRY,            USER_COUNTRY);
+            safeSetStringValue(state, klassBase, JBSE_BASE_USER_VARIANT,            USER_VARIANT);
+            safeSetStringValue(state, klassBase, JBSE_BASE_FILE_ENCODING,           FILE_ENCODING);
+            safeSetStringValue(state, klassBase, JBSE_BASE_SUN_JNU_ENCODING,        SUN_JNU_ENCODING);
+            safeSetStringValue(state, klassBase, JBSE_BASE_SUN_STDOUT_ENCODING,     SUN_STDOUT_ENCODING);
+            safeSetStringValue(state, klassBase, JBSE_BASE_SUN_STDERR_ENCODING,     SUN_STDERR_ENCODING);
+            safeSetStringValue(state, klassBase, JBSE_BASE_SUN_IO_UNICODE_ENCODING, SUN_IO_UNICODE_ENCODING);
+            safeSetStringValue(state, klassBase, JBSE_BASE_SUN_CPU_ISALIST,         SUN_CPU_ISALIST);
+            safeSetStringValue(state, klassBase, JBSE_BASE_SUN_CPU_ENDIAN,          SUN_CPU_ENDIAN);
+            safeSetStringValue(state, klassBase, JBSE_BASE_HTTP_PROXYHOST,          HTTP_PROXYHOST);
+            safeSetStringValue(state, klassBase, JBSE_BASE_HTTP_PROXYPORT,          HTTP_PROXYPORT);
+            safeSetStringValue(state, klassBase, JBSE_BASE_HTTPS_PROXYHOST,         HTTP_PROXYHOST);
+            safeSetStringValue(state, klassBase, JBSE_BASE_HTTPS_PROXYPORT,         HTTP_PROXYPORT);
+            safeSetStringValue(state, klassBase, JBSE_BASE_FTP_PROXYHOST,           FTP_PROXYHOST);
+            safeSetStringValue(state, klassBase, JBSE_BASE_FTP_PROXYPORT,           FTP_PROXYPORT);
+            safeSetStringValue(state, klassBase, JBSE_BASE_SOCKSPROXYHOST,          SOCKSPROXYHOST);
+            safeSetStringValue(state, klassBase, JBSE_BASE_SOCKSPROXYPORT,          SOCKSPROXYPORT);
+            safeSetStringValue(state, klassBase, JBSE_BASE_GOPHERPROXYSET,          GOPHERPROXYSET);
+            safeSetStringValue(state, klassBase, JBSE_BASE_GOPHERPROXYHOST,         GOPHERPROXYHOST);
+            safeSetStringValue(state, klassBase, JBSE_BASE_GOPHERPROXYPORT,         GOPHERPROXYPORT);
+            safeSetStringValue(state, klassBase, JBSE_BASE_HTTP_NONPROXYHOSTS,      HTTP_NONPROXYHOSTS);
+            safeSetStringValue(state, klassBase, JBSE_BASE_FTP_NONPROXYHOSTS,       FTP_NONPROXYHOSTS);
+            safeSetStringValue(state, klassBase, JBSE_BASE_SOCKSNONPROXYHOSTS,      SOCKSNONPROXYHOSTS);
+        };
     }
 
     private static void safeSetStringValue(State state, Klass k, Signature field, String property) {

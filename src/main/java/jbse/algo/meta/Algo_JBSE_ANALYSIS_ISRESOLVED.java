@@ -8,27 +8,34 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
+import jbse.algo.StrategyUpdate;
+import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.Signature;
+import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.Instance;
 import jbse.mem.State;
 import jbse.mem.Util;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
 import jbse.val.Value;
 
 public final class Algo_JBSE_ANALYSIS_ISRESOLVED extends Algo_INVOKEMETA_Nonbranching {
+    private Simplex retVal; //set by cookMore
+    
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 2;
     }
 
     @Override
-    protected void update(State state) 
-    throws ThreadStackEmptyException, SymbolicValueNotAllowedException, 
-    InterruptException {
+    protected void cookMore(State state) throws ThreadStackEmptyException, DecisionException, ClasspathException,
+    CannotManageStateException, InterruptException, InvalidInputException {
         Reference fieldNameRef = null, objRef = null; //to keep the compiler happy
         try {
             objRef = (Reference) this.data.operand(0);
@@ -70,16 +77,19 @@ public final class Algo_JBSE_ANALYSIS_ISRESOLVED extends Algo_INVOKEMETA_Nonbran
         }
 
         //analyzes the field and calculates the return value
-        final Simplex retVal;
         final Value fieldValue = objectInstance.getFieldValue(sig);
         if (fieldValue != null && Util.isSymbolicReference(fieldValue)) {
             final ReferenceSymbolic refToBeChecked = (ReferenceSymbolic) fieldValue;
-            retVal = state.getCalculator().valInt(state.resolved(refToBeChecked) ? 1 : 0);
+            this.retVal = state.getCalculator().valInt(state.resolved(refToBeChecked) ? 1 : 0);
         } else {
-            retVal = state.getCalculator().valInt(1);
+            this.retVal = state.getCalculator().valInt(1);
         }
-
-        //pushes it
-        state.pushOperand(retVal);
+    }
+    
+    @Override
+    protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+        return (state, alt) -> {
+            state.pushOperand(this.retVal);
+        };
     }
 }

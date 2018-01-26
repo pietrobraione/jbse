@@ -2,11 +2,14 @@ package jbse.algo;
 
 import jbse.algo.exc.CannotManageStateException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.exc.FailureException;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * Strategy for updating a state, i.e., for performing the 
@@ -37,6 +40,12 @@ public interface StrategyUpdate<R> {
      *         current execution state.
      * @throws DecisionException possibly raised by array-related
      *         operations (e.g., detecting unsatisfiable entries).
+     * @throws InvalidInputException possibly raised if some input
+     *         to some method is ill-formed (should never happen).
+     * @throws InvalidTypeException possibly raised if a wrong type
+     *         is used somewhere (should never happen).
+     * @throws InvalidOperandException possibly raised if an operator
+     *         is applied to a wrong operand (should never happen).
      * @throws ContradictionException possibly raised if the state 
      *         falsifies an assumption.
      * @throws FailureException possibly raised if the state falsifies
@@ -46,6 +55,7 @@ public interface StrategyUpdate<R> {
      */
     public void update(State state, R alt) 
     throws ThreadStackEmptyException, ClasspathException,
-    CannotManageStateException, DecisionException, 
-    ContradictionException, FailureException, InterruptException;
+    CannotManageStateException, DecisionException, InvalidInputException, 
+    InvalidTypeException, InvalidOperandException, ContradictionException, 
+    FailureException, InterruptException;
 }

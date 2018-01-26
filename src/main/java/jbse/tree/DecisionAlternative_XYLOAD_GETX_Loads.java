@@ -13,5 +13,11 @@ import jbse.val.Value;
  * @author Pietro Braione
  */
 public interface DecisionAlternative_XYLOAD_GETX_Loads extends DecisionAlternative {
-	Value getValueToLoad();
+    /**
+     * Returns the value from array/field/variable that is loaded 
+     * on the operand stack.
+     * 
+     * @return a {@link Value}.
+     */
+    Value getValueToLoad();
 }

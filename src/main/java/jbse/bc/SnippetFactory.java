@@ -12,8 +12,8 @@ public class SnippetFactory {
     private ArrayList<Byte> bytecode = new ArrayList<>();
     private int nextIndex;
     
-    public SnippetFactory(ClassFile classFile) {
-        this.nextIndex = classFile.constantPoolSize(); 
+    public SnippetFactory() {
+        this.nextIndex = 1; 
     }
     
     private void addIndex() {

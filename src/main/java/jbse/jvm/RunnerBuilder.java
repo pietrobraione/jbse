@@ -1,5 +1,6 @@
 package jbse.jvm;
 
+import jbse.algo.exc.NotYetImplementedException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
@@ -39,12 +40,15 @@ public class RunnerBuilder {
 	 *         observed variable names cannot be observed. This is the only exception
 	 *         that allows nevertheless to perform symbolic execution, in which case 
 	 *         only the observers to existing variables will be notified.
-	 * @throws ClasspathException in case some standard JRE class is missing from the
-	 *         classpath or is incompatible with the current JBSE version.
+	 * @throws ClasspathException in case some essential standard JRE class is missing
+	 *         from the bootstrap classpath, or is ill-formed, or cannot access one of its
+	 *         superclasses/superinterfaces.
+	 * @throws NotYetImplementedException if the trigger methods for the initial root 
+	 *         object expansion (when present) are not in the root class.
 	 */
 	public Runner build(RunnerParameters parameters) 
 	throws CannotBuildEngineException, DecisionException, InitializationException, 
-	InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, ClasspathException {
+	InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, ClasspathException, NotYetImplementedException {
 		this.engine = this.eb.build(parameters.getEngineParameters());
 		return new Runner(this.engine, parameters.getActions(), parameters.getIdentifierSubregion(), 
 				parameters.getTimeout(), parameters.getHeapScope(), parameters.getDepthScope(), 
