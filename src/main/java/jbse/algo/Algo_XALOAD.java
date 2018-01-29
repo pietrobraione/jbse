@@ -11,6 +11,9 @@ import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
+import static jbse.common.Type.REFERENCE;
+import static jbse.common.Type.TYPEEND;
+import static jbse.common.Type.toPrimitiveInternalName;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -19,6 +22,7 @@ import java.util.function.Supplier;
 import jbse.algo.exc.MissingTriggerParameterException;
 import jbse.algo.exc.NotYetImplementedException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
+import jbse.bc.ClassFile;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
@@ -164,8 +168,9 @@ StrategyUpdate_XALOAD> {
                             val = ((Array.AccessOutcomeInValue) e).getValue();
                             if (val == null) {
                                 try {
-                                    val = state.createSymbol(arrayToProcess.getType().getMemberClass().getClassName(), 
-                                                             arrayToProcess.getOrigin().thenArrayMember(this.index.add(arrayOffset)));
+                                    final ClassFile memberClass = arrayToProcess.getType().getMemberClass();
+                                    final String memberType = typeFromClassName(memberClass); 
+                                    val = state.createSymbol(memberType, arrayToProcess.getOrigin().thenArrayMember(this.index.add(arrayOffset)));
                                 } catch (InvalidOperandException | InvalidTypeException exc) {
                                     //this should never happen
                                     failExecution(exc);
@@ -229,6 +234,16 @@ StrategyUpdate_XALOAD> {
             //on result.size().
             return Outcome.val(shouldRefine, this.someRefNotExpanded, branchingDecision);
         };
+    }
+    
+    private static String typeFromClassName(ClassFile cf) {
+        if (cf.isPrimitive()) {
+            return "" + toPrimitiveInternalName(cf.getClassName()); 
+        } else if (cf.isArray()) {
+            return cf.getClassName();
+        } else { //cf.isReference()
+            return "" + REFERENCE + cf.getClassName() + TYPEEND;
+        }
     }
 
     private void writeBackToSource(State state, Reference refToSource, Value valueToStore) 

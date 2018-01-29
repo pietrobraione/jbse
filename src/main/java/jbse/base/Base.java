@@ -264,7 +264,6 @@ public final class Base {
         putSafe(p, "http.nonProxyHosts",         HTTP_NONPROXYHOSTS);
         putSafe(p, "ftp.nonProxyHosts",          FTP_NONPROXYHOSTS);
         putSafe(p, "socksNonProxyHosts",         SOCKSNONPROXYHOSTS);
-        //TODO more properties?
         putSafe(p, "java.awt.printerjob",        JAVA_AWT_PRINTERJOB);
         putSafe(p, "sun.arch.data.model",        SUN_ARCH_DATA_MODEL);
         putSafe(p, "sun.os.patch.level",         SUN_OS_PATCH_LEVEL);

@@ -32,7 +32,7 @@ import jbse.bc.Signature;
  */
 public final class Overrides {
     //Overriding meta-level implementations of standard methods
-    public static final String ALGO_INVOKEMETA_PURE                                = internalClassName(jbse.algo.Algo_INVOKEMETA_Pure.class.getName());
+    public static final String ALGO_INVOKEMETA_METACIRCULAR                                = internalClassName(jbse.algo.Algo_INVOKEMETA_Metacircular.class.getName());
     public static final String ALGO_JAVA_CLASS_FORNAME0                            = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_FORNAME0.class.getName());
     public static final String ALGO_JAVA_CLASS_GETCOMPONENTTYPE                    = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETCOMPONENTTYPE.class.getName());
     public static final String ALGO_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0            = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0.class.getName());
@@ -69,6 +69,7 @@ public final class Overrides {
     public static final String ALGO_JAVA_THROWABLE_FILLINSTACKTRACE                = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_FILLINSTACKTRACE.class.getName());
     public static final String ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH              = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH.class.getName());
     public static final String ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT            = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT.class.getName());
+    public static final String ALGO_JAVA_XFILESYSTEM_CANONICALIZE0                 = internalClassName(jbse.algo.meta.Algo_JAVA_XFILESYSTEM_CANONICALIZE0.class.getName());
     public static final String ALGO_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX         = internalClassName(jbse.algo.meta.Algo_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX.class.getName());
     public static final String ALGO_JAVA_XFILESYSTEM_LIST                          = internalClassName(jbse.algo.meta.Algo_JAVA_XFILESYSTEM_LIST.class.getName());
     public static final String ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 = internalClassName(jbse.algo.meta.Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0.class.getName());

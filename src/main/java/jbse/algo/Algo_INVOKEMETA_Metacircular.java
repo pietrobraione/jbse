@@ -35,10 +35,8 @@ import jbse.val.exc.ValueDoesNotSupportNativeException;
 
 /**
  * {@link Algo_INVOKEMETA_Nonbranching} implementing the effect of 
- * a method call assuming that the invoked 
- * method is pure, i.e., it does not produce any effect other than 
- * returning a value on the operand stack according to the method's 
- * signature. More precisely:
+ * a method call assuming that the invoked method does not produce 
+ * any effect other than returning a value. More precisely:
  * <ul>
  * <li>If the method's return type is {@code void}, then the 
  *     method invocation has no effect;</li>
@@ -56,7 +54,7 @@ import jbse.val.exc.ValueDoesNotSupportNativeException;
  * 
  * @author Pietro Braione
  */
-public class Algo_INVOKEMETA_Pure extends Algo_INVOKEMETA_Nonbranching {
+public class Algo_INVOKEMETA_Metacircular extends Algo_INVOKEMETA_Nonbranching {
     private Value returnValue;
     
     @Override

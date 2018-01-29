@@ -7,6 +7,7 @@ import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
 import static jbse.bc.Signatures.JAVA_FILE_PATH;
 import static jbse.bc.Signatures.JAVA_STRING;
+import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.TYPEEND;
@@ -55,16 +56,23 @@ public final class Algo_JAVA_XFILESYSTEM_LIST extends Algo_INVOKEMETA_Nonbranchi
     protected void cookMore(State state) 
     throws InterruptException, ClasspathException, SymbolicValueNotAllowedException {
         try {
-            //gets the File parameter: if null, the attributes are 0
+            //gets the filesystem object and its class
+            final Field fileSystemField = File.class.getDeclaredField("fs");
+            fileSystemField.setAccessible(true);
+            final Object fileSystem = fileSystemField.get(null);
+            final Class<?> fileSystemClass = fileSystem.getClass(); 
+            final String methodName = "list";
+
+            //gets the File parameter
             final Reference fileReference = (Reference) this.data.operand(1);
             if (state.isNull(fileReference)) {
-                this.theList = null;
-                return;
+                throwNew(state, NULL_POINTER_EXCEPTION);
+                exitFromAlgorithm();
             }
             final Instance fileObject = (Instance) state.getObject(fileReference);
             if (fileObject == null) {
                 //this should never happen
-                failExecution("The File f parameter to invocation of method java.io.UnixFileSystem.getBooleanAttributes0 was an unresolved symbolic reference.");
+                failExecution("The File f parameter to invocation of method " + fileSystemClass.getName() + "." + methodName + " was an unresolved symbolic reference.");
             }
             
             //gets the path field as a String
@@ -73,19 +81,19 @@ public final class Algo_JAVA_XFILESYSTEM_LIST extends Algo_INVOKEMETA_Nonbranchi
                 throwVerifyError(state);
                 exitFromAlgorithm();
             }
+            if (state.isNull(filePathReference)) {
+                throwNew(state, NULL_POINTER_EXCEPTION);
+                exitFromAlgorithm();
+            }
             final String filePath = valueString(state, filePathReference);
             if (filePath == null) {
-                throw new SymbolicValueNotAllowedException("The File f parameter to invocation of method java.io.UnixFileSystem.getBooleanAttributes0 has a symbolic String in its path field.");
+                throw new SymbolicValueNotAllowedException("The File f parameter to invocation of method " + fileSystemClass.getName() + "." + methodName + " has a symbolic String in its path field.");
             }
             
             //creates a File object with same path and
-            //invokes metacircularly the java.io.UnixFileSystem.getBooleanAttributes0
-            //method to obtain its attributes
-            final Field fileSystemField = File.class.getDeclaredField("fs");
-            fileSystemField.setAccessible(true);
-            final Object fileSystem = fileSystemField.get(null);
-            final Class<?> fileSystemClass = fileSystem.getClass(); 
-            final Method listMethod = fileSystemClass.getDeclaredMethod("list", File.class);
+            //invokes metacircularly the list
+            //method to obtain the list
+            final Method listMethod = fileSystemClass.getDeclaredMethod(methodName, File.class);
             listMethod.setAccessible(true);
             final File f = new File(filePath);
             this.theList = (String[]) listMethod.invoke(fileSystem, f);

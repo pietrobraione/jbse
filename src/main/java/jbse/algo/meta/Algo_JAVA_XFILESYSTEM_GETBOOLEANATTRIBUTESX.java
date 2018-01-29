@@ -2,10 +2,12 @@ package jbse.algo.meta;
 
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
 import static jbse.bc.Signatures.JAVA_FILE_PATH;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM;
+import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.common.Type.internalClassName;
 
 import java.io.File;
@@ -51,11 +53,11 @@ public final class Algo_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX extends Algo_INVO
             final boolean isUnix = JAVA_UNIXFILESYSTEM.equals(internalClassName(fileSystemClass.getName()));
             final String methodName = "getBooleanAttributes" + (isUnix ? "0" : "");
 
-            //gets the File parameter: if null, the attributes are 0
+            //gets the File parameter
             final Reference fileReference = (Reference) this.data.operand(1);
             if (state.isNull(fileReference)) {
-                this.toPush = state.getCalculator().valInt(0);
-                return;
+                throwNew(state, NULL_POINTER_EXCEPTION);
+                exitFromAlgorithm();
             }
             final Instance fileObject = (Instance) state.getObject(fileReference);
             if (fileObject == null) {
@@ -69,13 +71,17 @@ public final class Algo_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX extends Algo_INVO
                 throwVerifyError(state);
                 exitFromAlgorithm();
             }
+            if (state.isNull(filePathReference)) {
+                throwNew(state, NULL_POINTER_EXCEPTION);
+                exitFromAlgorithm();
+            }
             final String filePath = valueString(state, filePathReference);
             if (filePath == null) {
                 throw new SymbolicValueNotAllowedException("The File f parameter to invocation of method " + fileSystemClass.getName() + "." + methodName + " has a symbolic String in its path field.");
             }
             
             //creates a File object with same path and
-            //invokes metacircularly the java.io.UnixFileSystem.getBooleanAttributes0
+            //invokes metacircularly the getBooleanAttributes[0]
             //method to obtain its attributes
             final Method getAttributesMethod = fileSystemClass.getDeclaredMethod(methodName, File.class);
             getAttributesMethod.setAccessible(true);

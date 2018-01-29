@@ -1,6 +1,7 @@
 package jbse.dec;
 
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
+import static jbse.common.Type.className;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -952,7 +953,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		//the only compatible resolution of the reference is null)
 		final ClassFile refToResolveClass;
 		try {                               
-		    refToResolveClass = hier.loadCreateClass(CLASSLOADER_APP, refToResolve.getStaticType(), true); //TODO instead of rethrowing exceptions (class file not found, ill-formed or unaccessible) just set refToResolveTypeIsSatInitialized to false  
+		    refToResolveClass = hier.loadCreateClass(CLASSLOADER_APP, className(refToResolve.getStaticType()), true); //TODO instead of rethrowing exceptions (class file not found, ill-formed or unaccessible) just set refToResolveTypeIsSatInitialized to false  
 		} catch (PleaseLoadClassException e) {
 		    //this should never happen since we bypassed standard loading
 		    throw new UnexpectedInternalException(e);

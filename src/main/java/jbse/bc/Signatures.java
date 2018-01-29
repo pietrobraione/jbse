@@ -264,7 +264,7 @@ public final class Signatures {
     public static final String ILLEGAL_MONITOR_STATE_EXCEPTION     = "java/lang/IllegalMonitorStateException";
     public static final String INDEX_OUT_OF_BOUNDS_EXCEPTION       = "java/lang/IndexOutOfBoundsException";
     public static final String INSTANTIATION_EXCEPTION             = "java/lang/InstantiationException";
-    public static final String INTERNAL_ERROR                      = "java/lang/InternalError";
+    public static final String IO_EXCEPTION                        = "java/io/IOException";
     public static final String NEGATIVE_ARRAY_SIZE_EXCEPTION       = "java/lang/NegativeArraySizeException";
     public static final String NULL_POINTER_EXCEPTION              = "java/lang/NullPointerException";
     public static final String RUNTIME_EXCEPTION                   = "java/lang/RuntimeException";
@@ -275,6 +275,7 @@ public final class Signatures {
     public static final String ERROR                               = "java/lang/Error";
     public static final String ILLEGAL_ACCESS_ERROR                = "java/lang/IllegalAccessError";
     public static final String INCOMPATIBLE_CLASS_CHANGE_ERROR     = "java/lang/IncompatibleClassChangeError";
+    public static final String INTERNAL_ERROR                      = "java/lang/InternalError";
     public static final String LINKAGE_ERROR                       = "java/lang/LinkageError";
     public static final String NO_CLASS_DEFINITION_FOUND_ERROR     = "java/lang/NoClassDefFoundError";
     public static final String NO_SUCH_FIELD_ERROR                 = "java/lang/NoSuchFieldError";
@@ -474,6 +475,8 @@ public final class Signatures {
                       "arraycopy");
     public static final Signature JAVA_SYSTEM_CLINIT = 
         new Signature(JAVA_SYSTEM, "()" + VOID, "<clinit>");
+    public static final Signature JAVA_SYSTEM_CURRENTTIMEMILLIS = 
+        new Signature(JAVA_SYSTEM, "()" + LONG, "currentTimeMillis");
     public static final Signature JAVA_SYSTEM_IDENTITYHASHCODE =
         new Signature(JAVA_SYSTEM, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + INT, "identityHashCode");
     public static final Signature JAVA_SYSTEM_INITIALIZESYSTEMCLASS =
@@ -514,12 +517,16 @@ public final class Signatures {
         new Signature(JAVA_THROWABLE, "()" + INT, "getStackTraceDepth");
     public static final Signature JAVA_THROWABLE_GETSTACKTRACEELEMENT = 
         new Signature(JAVA_THROWABLE, "(" + INT + ")" + REFERENCE + JAVA_STACKTRACEELEMENT + TYPEEND, "getStackTraceElement");
+    public static final Signature JAVA_UNIXFILESYSTEM_CANONICALIZE0 = 
+        new Signature(JAVA_UNIXFILESYSTEM, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_STRING + TYPEEND, "canonicalize0");
     public static final Signature JAVA_UNIXFILESYSTEM_GETBOOLEANATTRIBUTES0 = 
         new Signature(JAVA_UNIXFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + INT, "getBooleanAttributes0");
     public static final Signature JAVA_UNIXFILESYSTEM_INITIDS = 
         new Signature(JAVA_UNIXFILESYSTEM, "()" + VOID, "initIDs");
     public static final Signature JAVA_UNIXFILESYSTEM_LIST = 
         new Signature(JAVA_UNIXFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + ARRAYOF + REFERENCE + JAVA_STRING + TYPEEND, "list");
+    public static final Signature JAVA_WINNTFILESYSTEM_CANONICALIZE0 = 
+        new Signature(JAVA_WINNTFILESYSTEM, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_STRING + TYPEEND, "canonicalize0");
     public static final Signature JAVA_WINNTFILESYSTEM_GETBOOLEANATTRIBUTES = 
         new Signature(JAVA_WINNTFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + INT, "getBooleanAttributes");
     public static final Signature JAVA_WINNTFILESYSTEM_INITIDS = 
