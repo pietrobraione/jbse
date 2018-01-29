@@ -5,6 +5,8 @@ import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
 import static jbse.bc.Signatures.JAVA_FILE_PATH;
+import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM;
+import static jbse.common.Type.internalClassName;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -24,12 +26,12 @@ import jbse.val.Reference;
 import jbse.val.Simplex;
 
 /**
- * Meta-level implementation of {@link java.io.UnixFileSystem#getBooleanAttributes0(File)}.
+ * Meta-level implementation of {@link java.io.UnixFileSystem#getBooleanAttributes0(File)} and
+ * {@link java.io.WinNTFileSystem#getBooleanAttributes(File)}.
  * 
  * @author Pietro Braione
  */
-//TODO unify with Algo_JAVA_WINNTFILESYSTEM_GETBOOLEANATTRIBUTES
-public final class Algo_JAVA_UNIXFILESYSTEM_GETBOOLEANATTRIBUTES0 extends Algo_INVOKEMETA_Nonbranching {
+public final class Algo_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX extends Algo_INVOKEMETA_Nonbranching {
     private Simplex toPush; //set by cookMore
 
     @Override
@@ -41,6 +43,14 @@ public final class Algo_JAVA_UNIXFILESYSTEM_GETBOOLEANATTRIBUTES0 extends Algo_I
     protected void cookMore(State state) 
     throws InterruptException, ClasspathException, SymbolicValueNotAllowedException {
         try {
+            //gets the filesystem object and its class
+            final Field fileSystemField = File.class.getDeclaredField("fs");
+            fileSystemField.setAccessible(true);
+            final Object fileSystem = fileSystemField.get(null);
+            final Class<?> fileSystemClass = fileSystem.getClass();
+            final boolean isUnix = JAVA_UNIXFILESYSTEM.equals(internalClassName(fileSystemClass.getName()));
+            final String methodName = "getBooleanAttributes" + (isUnix ? "0" : "");
+
             //gets the File parameter: if null, the attributes are 0
             final Reference fileReference = (Reference) this.data.operand(1);
             if (state.isNull(fileReference)) {
@@ -50,7 +60,7 @@ public final class Algo_JAVA_UNIXFILESYSTEM_GETBOOLEANATTRIBUTES0 extends Algo_I
             final Instance fileObject = (Instance) state.getObject(fileReference);
             if (fileObject == null) {
                 //this should never happen
-                failExecution("The File f parameter to invocation of method java.io.UnixFileSystem.getBooleanAttributes0 was an unresolved symbolic reference.");
+                failExecution("The File f parameter to invocation of method " + fileSystemClass.getName() + "." + methodName + " was an unresolved symbolic reference.");
             }
             
             //gets the path field as a String
@@ -61,20 +71,16 @@ public final class Algo_JAVA_UNIXFILESYSTEM_GETBOOLEANATTRIBUTES0 extends Algo_I
             }
             final String filePath = valueString(state, filePathReference);
             if (filePath == null) {
-                throw new SymbolicValueNotAllowedException("The File f parameter to invocation of method java.io.UnixFileSystem.getBooleanAttributes0 has a symbolic String in its path field.");
+                throw new SymbolicValueNotAllowedException("The File f parameter to invocation of method " + fileSystemClass.getName() + "." + methodName + " has a symbolic String in its path field.");
             }
             
             //creates a File object with same path and
             //invokes metacircularly the java.io.UnixFileSystem.getBooleanAttributes0
             //method to obtain its attributes
-            final Field fileSystemField = File.class.getDeclaredField("fs");
-            fileSystemField.setAccessible(true);
-            final Object fileSystem = fileSystemField.get(null);
-            final Class<?> fileSystemClass = fileSystem.getClass(); 
-            final Method getBooleanAttributes0Method = fileSystemClass.getDeclaredMethod("getBooleanAttributes0", File.class);
-            getBooleanAttributes0Method.setAccessible(true);
+            final Method getAttributesMethod = fileSystemClass.getDeclaredMethod(methodName, File.class);
+            getAttributesMethod.setAccessible(true);
             final File f = new File(filePath);
-            final int attributes = ((Integer) getBooleanAttributes0Method.invoke(fileSystem, f)).intValue();
+            final int attributes = ((Integer) getAttributesMethod.invoke(fileSystem, f)).intValue();
             
             //converts the attributes to Simplex
             this.toPush = state.getCalculator().valInt(attributes);

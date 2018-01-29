@@ -69,8 +69,8 @@ public final class Overrides {
     public static final String ALGO_JAVA_THROWABLE_FILLINSTACKTRACE                = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_FILLINSTACKTRACE.class.getName());
     public static final String ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH              = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH.class.getName());
     public static final String ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT            = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT.class.getName());
-    public static final String ALGO_JAVA_UNIXFILESYSTEM_GETBOOLEANATTRIBUTES0      = internalClassName(jbse.algo.meta.Algo_JAVA_UNIXFILESYSTEM_GETBOOLEANATTRIBUTES0.class.getName());
-    public static final String ALGO_JAVA_WINNTFILESYSTEM_GETBOOLEANATTRIBUTES      = internalClassName(jbse.algo.meta.Algo_JAVA_WINNTFILESYSTEM_GETBOOLEANATTRIBUTES.class.getName());
+    public static final String ALGO_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX         = internalClassName(jbse.algo.meta.Algo_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX.class.getName());
+    public static final String ALGO_JAVA_XFILESYSTEM_LIST                          = internalClassName(jbse.algo.meta.Algo_JAVA_XFILESYSTEM_LIST.class.getName());
     public static final String ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 = internalClassName(jbse.algo.meta.Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0.class.getName());
     public static final String ALGO_SUN_REFLECTION_GETCALLERCLASS                  = internalClassName(jbse.algo.meta.Algo_SUN_REFLECTION_GETCALLERCLASS.class.getName());
     public static final String ALGO_SUN_REFLECTION_GETCLASSACCESSFLAGS             = internalClassName(jbse.algo.meta.Algo_SUN_REFLECTION_GETCLASSACCESSFLAGS.class.getName());

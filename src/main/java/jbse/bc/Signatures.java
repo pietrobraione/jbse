@@ -518,10 +518,14 @@ public final class Signatures {
         new Signature(JAVA_UNIXFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + INT, "getBooleanAttributes0");
     public static final Signature JAVA_UNIXFILESYSTEM_INITIDS = 
         new Signature(JAVA_UNIXFILESYSTEM, "()" + VOID, "initIDs");
+    public static final Signature JAVA_UNIXFILESYSTEM_LIST = 
+        new Signature(JAVA_UNIXFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + ARRAYOF + REFERENCE + JAVA_STRING + TYPEEND, "list");
     public static final Signature JAVA_WINNTFILESYSTEM_GETBOOLEANATTRIBUTES = 
         new Signature(JAVA_WINNTFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + INT, "getBooleanAttributes");
     public static final Signature JAVA_WINNTFILESYSTEM_INITIDS = 
         new Signature(JAVA_WINNTFILESYSTEM, "()" + VOID, "initIDs");
+    public static final Signature JAVA_WINNTFILESYSTEM_LIST = 
+        new Signature(JAVA_WINNTFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + ARRAYOF + REFERENCE + JAVA_STRING + TYPEEND, "list");
     public static final Signature JBSE_ANALYSIS_ANY = 
         new Signature(JBSE_ANALYSIS, "()" + BOOLEAN, "any");
     public static final Signature JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED = 
@@ -760,12 +764,18 @@ public final class Signatures {
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "HTTPS_PROXYHOST");
     public static final Signature JBSE_BASE_HTTPS_PROXYPORT = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "HTTPS_PROXYPORT");
+    public static final Signature JBSE_BASE_JAVA_AWT_GRAPHICSENV = 
+        new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "JAVA_AWT_GRAPHICSENV");
+    public static final Signature JBSE_BASE_JAVA_AWT_PRINTERJOB = 
+        new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "JAVA_AWT_PRINTERJOB");
     public static final Signature JBSE_BASE_JAVA_CLASS_PATH = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "JAVA_CLASS_PATH");
     public static final Signature JBSE_BASE_JAVA_EXT_DIRS = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "JAVA_EXT_DIRS");
     public static final Signature JBSE_BASE_JAVA_HOME = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "JAVA_HOME");
+    public static final Signature JBSE_BASE_JAVA_IO_TMPDIR = 
+        new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "JAVA_IO_TMPDIR");
     public static final Signature JBSE_BASE_JAVA_LIBRARY_PATH = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "JAVA_LIBRARY_PATH");
     public static final Signature JBSE_BASE_JBSE_NAME = 
@@ -788,6 +798,8 @@ public final class Signatures {
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SOCKSPROXYHOST");
     public static final Signature JBSE_BASE_SOCKSPROXYPORT = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SOCKSPROXYPORT");
+    public static final Signature JBSE_BASE_SUN_ARCH_DATA_MODEL = 
+        new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SUN_ARCH_DATA_MODEL");
     public static final Signature JBSE_BASE_SUN_BOOT_CLASS_PATH = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SUN_BOOT_CLASS_PATH");
     public static final Signature JBSE_BASE_SUN_BOOT_LIBRARY_PATH = 
@@ -796,20 +808,34 @@ public final class Signatures {
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SUN_CPU_ENDIAN");
     public static final Signature JBSE_BASE_SUN_CPU_ISALIST = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SUN_CPU_ISALIST");
+    public static final Signature JBSE_BASE_SUN_DESKTOP = 
+        new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SUN_DESKTOP");
     public static final Signature JBSE_BASE_SUN_IO_UNICODE_ENCODING = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SUN_IO_UNICODE_ENCODING");
+    public static final Signature JBSE_BASE_SUN_JAVA2D_FONTPATH = 
+        new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SUN_JAVA2D_FONTPATH");
     public static final Signature JBSE_BASE_SUN_JNU_ENCODING = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SUN_JNU_ENCODING");
+    public static final Signature JBSE_BASE_SUN_OS_PATCH_LEVEL = 
+        new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SUN_OS_PATCH_LEVEL");
     public static final Signature JBSE_BASE_SUN_STDERR_ENCODING = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SUN_STDERR_ENCODING");
     public static final Signature JBSE_BASE_SUN_STDOUT_ENCODING = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "SUN_STDOUT_ENCODING");
     public static final Signature JBSE_BASE_USER_COUNTRY = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "USER_COUNTRY");
+    public static final Signature JBSE_BASE_USER_DIR = 
+        new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "USER_DIR");
+    public static final Signature JBSE_BASE_USER_HOME = 
+        new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "USER_HOME");
     public static final Signature JBSE_BASE_USER_LANGUAGE = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "USER_LANGUAGE");
+    public static final Signature JBSE_BASE_USER_NAME = 
+        new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "USER_NAME");
     public static final Signature JBSE_BASE_USER_SCRIPT = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "USER_SCRIPT");
+    public static final Signature JBSE_BASE_USER_TIMEZONE = 
+        new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "USER_TIMEZONE");
     public static final Signature JBSE_BASE_USER_VARIANT = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "USER_VARIANT");
 

@@ -18,9 +18,12 @@ import static jbse.bc.Signatures.JBSE_BASE_HTTP_PROXYHOST;
 import static jbse.bc.Signatures.JBSE_BASE_HTTP_PROXYPORT;
 import static jbse.bc.Signatures.JBSE_BASE_HTTPS_PROXYHOST;
 import static jbse.bc.Signatures.JBSE_BASE_HTTPS_PROXYPORT;
+import static jbse.bc.Signatures.JBSE_BASE_JAVA_AWT_GRAPHICSENV;
+import static jbse.bc.Signatures.JBSE_BASE_JAVA_AWT_PRINTERJOB;
 import static jbse.bc.Signatures.JBSE_BASE_JAVA_CLASS_PATH;
 import static jbse.bc.Signatures.JBSE_BASE_JAVA_EXT_DIRS;
 import static jbse.bc.Signatures.JBSE_BASE_JAVA_HOME;
+import static jbse.bc.Signatures.JBSE_BASE_JAVA_IO_TMPDIR;
 import static jbse.bc.Signatures.JBSE_BASE_JAVA_LIBRARY_PATH;
 import static jbse.bc.Signatures.JBSE_BASE_JBSE_NAME;
 import static jbse.bc.Signatures.JBSE_BASE_JBSE_VERSION;
@@ -32,17 +35,25 @@ import static jbse.bc.Signatures.JBSE_BASE_PATH_SEPARATOR;
 import static jbse.bc.Signatures.JBSE_BASE_SOCKSNONPROXYHOSTS;
 import static jbse.bc.Signatures.JBSE_BASE_SOCKSPROXYHOST;
 import static jbse.bc.Signatures.JBSE_BASE_SOCKSPROXYPORT;
-import static jbse.bc.Signatures.JBSE_BASE_SUN_CPU_ENDIAN;
+import static jbse.bc.Signatures.JBSE_BASE_SUN_ARCH_DATA_MODEL;
 import static jbse.bc.Signatures.JBSE_BASE_SUN_BOOT_CLASS_PATH;
 import static jbse.bc.Signatures.JBSE_BASE_SUN_BOOT_LIBRARY_PATH;
+import static jbse.bc.Signatures.JBSE_BASE_SUN_CPU_ENDIAN;
 import static jbse.bc.Signatures.JBSE_BASE_SUN_CPU_ISALIST;
+import static jbse.bc.Signatures.JBSE_BASE_SUN_DESKTOP;
 import static jbse.bc.Signatures.JBSE_BASE_SUN_IO_UNICODE_ENCODING;
+import static jbse.bc.Signatures.JBSE_BASE_SUN_JAVA2D_FONTPATH;
 import static jbse.bc.Signatures.JBSE_BASE_SUN_JNU_ENCODING;
+import static jbse.bc.Signatures.JBSE_BASE_SUN_OS_PATCH_LEVEL;
 import static jbse.bc.Signatures.JBSE_BASE_SUN_STDERR_ENCODING;
 import static jbse.bc.Signatures.JBSE_BASE_SUN_STDOUT_ENCODING;
 import static jbse.bc.Signatures.JBSE_BASE_USER_COUNTRY;
+import static jbse.bc.Signatures.JBSE_BASE_USER_DIR;
+import static jbse.bc.Signatures.JBSE_BASE_USER_HOME;
 import static jbse.bc.Signatures.JBSE_BASE_USER_LANGUAGE;
+import static jbse.bc.Signatures.JBSE_BASE_USER_NAME;
 import static jbse.bc.Signatures.JBSE_BASE_USER_SCRIPT;
+import static jbse.bc.Signatures.JBSE_BASE_USER_TIMEZONE;
 import static jbse.bc.Signatures.JBSE_BASE_USER_VARIANT;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
@@ -117,6 +128,17 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
     private static final String HTTP_NONPROXYHOSTS      = System.getProperty("http.nonProxyHosts");
     private static final String FTP_NONPROXYHOSTS       = System.getProperty("ftp.nonProxyHosts");
     private static final String SOCKSNONPROXYHOSTS      = System.getProperty("socksNonProxyHosts");
+    private static final String JAVA_AWT_PRINTERJOB     = System.getProperty("java.awt.printerjob");
+    private static final String SUN_ARCH_DATA_MODEL     = System.getProperty("sun.arch.data.model");
+    private static final String SUN_OS_PATCH_LEVEL      = System.getProperty("sun.os.patch.level");
+    private static final String JAVA_AWT_GRAPHICSENV    = System.getProperty("java.awt.graphicsenv");
+    private static final String SUN_JAVA2D_FONTPATH     = System.getProperty("sun.java2d.fontpath");
+    private static final String JAVA_IO_TMPDIR          = System.getProperty("java.io.tmpdir");
+    private static final String USER_NAME               = System.getProperty("user.name");
+    private static final String USER_HOME               = System.getProperty("user.home");
+    private static final String USER_TIMEZONE           = System.getProperty("user.timezone");
+    private static final String USER_DIR                = System.getProperty("user.dir");
+    private static final String SUN_DESKTOP             = System.getProperty("sun.desktop");
 
     @Override
     protected Supplier<Integer> numOperands() {
@@ -175,6 +197,17 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
         safeEnsureStringLiteral(state, this.ctx, HTTP_NONPROXYHOSTS);
         safeEnsureStringLiteral(state, this.ctx, FTP_NONPROXYHOSTS);
         safeEnsureStringLiteral(state, this.ctx, SOCKSNONPROXYHOSTS);
+        safeEnsureStringLiteral(state, this.ctx, JAVA_AWT_PRINTERJOB);
+        safeEnsureStringLiteral(state, this.ctx, SUN_ARCH_DATA_MODEL);
+        safeEnsureStringLiteral(state, this.ctx, SUN_OS_PATCH_LEVEL);
+        safeEnsureStringLiteral(state, this.ctx, JAVA_AWT_GRAPHICSENV);
+        safeEnsureStringLiteral(state, this.ctx, SUN_JAVA2D_FONTPATH);
+        safeEnsureStringLiteral(state, this.ctx, JAVA_IO_TMPDIR);
+        safeEnsureStringLiteral(state, this.ctx, USER_NAME);
+        safeEnsureStringLiteral(state, this.ctx, USER_HOME);
+        safeEnsureStringLiteral(state, this.ctx, USER_TIMEZONE);
+        safeEnsureStringLiteral(state, this.ctx, USER_DIR);
+        safeEnsureStringLiteral(state, this.ctx, SUN_DESKTOP);
     }
 
     /**
@@ -258,6 +291,17 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
             safeSetStringValue(state, klassBase, JBSE_BASE_HTTP_NONPROXYHOSTS,      HTTP_NONPROXYHOSTS);
             safeSetStringValue(state, klassBase, JBSE_BASE_FTP_NONPROXYHOSTS,       FTP_NONPROXYHOSTS);
             safeSetStringValue(state, klassBase, JBSE_BASE_SOCKSNONPROXYHOSTS,      SOCKSNONPROXYHOSTS);
+            safeSetStringValue(state, klassBase, JBSE_BASE_JAVA_AWT_PRINTERJOB,     JAVA_AWT_PRINTERJOB);
+            safeSetStringValue(state, klassBase, JBSE_BASE_SUN_ARCH_DATA_MODEL,     SUN_ARCH_DATA_MODEL);
+            safeSetStringValue(state, klassBase, JBSE_BASE_SUN_OS_PATCH_LEVEL,      SUN_OS_PATCH_LEVEL);
+            safeSetStringValue(state, klassBase, JBSE_BASE_JAVA_AWT_GRAPHICSENV,    JAVA_AWT_GRAPHICSENV);
+            safeSetStringValue(state, klassBase, JBSE_BASE_SUN_JAVA2D_FONTPATH,     SUN_JAVA2D_FONTPATH);
+            safeSetStringValue(state, klassBase, JBSE_BASE_JAVA_IO_TMPDIR,          JAVA_IO_TMPDIR);
+            safeSetStringValue(state, klassBase, JBSE_BASE_USER_NAME,               USER_NAME);
+            safeSetStringValue(state, klassBase, JBSE_BASE_USER_HOME,               USER_HOME);
+            safeSetStringValue(state, klassBase, JBSE_BASE_USER_TIMEZONE,           USER_TIMEZONE);
+            safeSetStringValue(state, klassBase, JBSE_BASE_USER_DIR,                USER_DIR);
+            safeSetStringValue(state, klassBase, JBSE_BASE_SUN_DESKTOP,             SUN_DESKTOP);
         };
     }
 

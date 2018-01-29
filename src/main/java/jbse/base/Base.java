@@ -60,6 +60,17 @@ public final class Base {
     private static final String HTTP_NONPROXYHOSTS      = null;
     private static final String FTP_NONPROXYHOSTS       = null;
     private static final String SOCKSNONPROXYHOSTS      = null;
+    private static final String JAVA_AWT_PRINTERJOB     = null;
+    private static final String SUN_ARCH_DATA_MODEL     = null;
+    private static final String SUN_OS_PATCH_LEVEL      = null;
+    private static final String JAVA_AWT_GRAPHICSENV    = null;
+    private static final String SUN_JAVA2D_FONTPATH     = null;
+    private static final String JAVA_IO_TMPDIR          = null;
+    private static final String USER_NAME               = null;
+    private static final String USER_HOME               = null;
+    private static final String USER_TIMEZONE           = null;
+    private static final String USER_DIR                = null;
+    private static final String SUN_DESKTOP             = null;
 
     static {
         clinit();
@@ -197,17 +208,20 @@ public final class Base {
      */
     private static Properties base_JAVA_SYSTEM_INITPROPERTIES(Properties p) {
         //properties taken from openjdk 8, hotspot:src/share/vm/runtime/arguments.cpp
-        putSafe(p, "java.vm.specification.name", "Java Virtual Machine Specification");
-        putSafe(p, "java.vm.version",            JBSE_VERSION);
-        putSafe(p, "java.vm.name",               JBSE_NAME);
-        putSafe(p, "java.vm.info",               "");
-        putSafe(p, "java.ext.dirs",              JAVA_EXT_DIRS);
-        putSafe(p, "java.endorsed.dirs",         ""); //TODO currently unsupported, study and support
-        putSafe(p, "sun.boot.library.path",      SUN_BOOT_LIBRARY_PATH);
-        putSafe(p, "java.library.path",          JAVA_LIBRARY_PATH);
-        putSafe(p, "java.home",                  JAVA_HOME);
-        putSafe(p, "sun.boot.class.path",        SUN_BOOT_CLASS_PATH);
-        putSafe(p, "java.class.path",            JAVA_CLASS_PATH);
+        putSafe(p, "java.vm.specification.name",    "Java Virtual Machine Specification");
+        putSafe(p, "java.vm.version",               JBSE_VERSION);
+        putSafe(p, "java.vm.name",                  JBSE_NAME);
+        putSafe(p, "java.vm.info",                  "");
+        putSafe(p, "java.ext.dirs",                 JAVA_EXT_DIRS);
+        putSafe(p, "java.endorsed.dirs",            ""); //TODO currently unsupported, study and support
+        putSafe(p, "sun.boot.library.path",         SUN_BOOT_LIBRARY_PATH);
+        putSafe(p, "java.library.path",             JAVA_LIBRARY_PATH);
+        putSafe(p, "java.home",                     JAVA_HOME);
+        putSafe(p, "sun.boot.class.path",           SUN_BOOT_CLASS_PATH);
+        putSafe(p, "java.class.path",               JAVA_CLASS_PATH);
+        putSafe(p, "java.vm.specification.vendor",  "Oracle Corporation");
+        putSafe(p, "java.vm.specification.version", "1.8");
+        putSafe(p, "java.vm.vendor",                "JBSE project");
         
         //properties taken from openjdk 8, jdk:src/share/native/java/lang/System.c
         putSafe(p, "java.specification.version", "1.8");
@@ -251,6 +265,17 @@ public final class Base {
         putSafe(p, "ftp.nonProxyHosts",          FTP_NONPROXYHOSTS);
         putSafe(p, "socksNonProxyHosts",         SOCKSNONPROXYHOSTS);
         //TODO more properties?
+        putSafe(p, "java.awt.printerjob",        JAVA_AWT_PRINTERJOB);
+        putSafe(p, "sun.arch.data.model",        SUN_ARCH_DATA_MODEL);
+        putSafe(p, "sun.os.patch.level",         SUN_OS_PATCH_LEVEL);
+        putSafe(p, "java.awt.graphicsenv",       JAVA_AWT_GRAPHICSENV);
+        putSafe(p, "sun.java2d.fontpath",        SUN_JAVA2D_FONTPATH);
+        putSafe(p, "java.io.tmpdir",             JAVA_IO_TMPDIR);
+        putSafe(p, "user.name",                  USER_NAME);
+        putSafe(p, "user.home",                  USER_HOME);
+        putSafe(p, "user.timezone",              USER_TIMEZONE);
+        putSafe(p, "user.dir",                   USER_DIR);
+        putSafe(p, "sun.desktop",                SUN_DESKTOP);
         return p;
     }
     
