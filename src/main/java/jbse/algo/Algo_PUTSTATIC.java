@@ -15,6 +15,7 @@ import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.val.Value;
 
@@ -42,7 +43,8 @@ final class Algo_PUTSTATIC extends Algo_PUTX {
 
     @Override
     protected void checkMore(State state)
-    throws FieldNotFoundException, DecisionException, ClasspathException, InterruptException {
+    throws FieldNotFoundException, DecisionException, ClasspathException, 
+    InterruptException, ContradictionException {
         //checks that the field is static or belongs to an interface
         if (!this.fieldClassResolved.isInterface() && 
             !this.fieldClassResolved.isFieldStatic(this.data.signature())) {

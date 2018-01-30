@@ -107,7 +107,7 @@ final class PathCondition implements Cloneable {
      *   
      * @param classFile a {@link ClassFile}.
      * @param klass the symbolic {@link Klass} object to which {@code classFile}
-     *        is resolved.
+     *        is resolved, or {@code null} if the initial class was not symbolic.
      */
     void addClauseAssumeClassInitialized(ClassFile classFile, Klass klass) {
         this.clauses.add(new ClauseAssumeClassInitialized(classFile, klass));

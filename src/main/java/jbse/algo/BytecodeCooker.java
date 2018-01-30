@@ -5,6 +5,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
+import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.ThreadStackEmptyException;
 
 /**
@@ -43,8 +44,12 @@ public interface BytecodeCooker {
      *         of the bytecode semantics must be interrupted, e.g., 
      *         if some correctness check fails or if heap memory
      *         is exhausted.
+     * @throws ContradictionException possibly raised if some initialization
+     *         assumption is contradicted (currently JBSE does not manage
+     *         initialization in the decider).
      */
     void cook(State state) 
     throws DecisionException, ClasspathException, InvalidInputException, 
-    ThreadStackEmptyException, CannotManageStateException, InterruptException;
+    ThreadStackEmptyException, CannotManageStateException, InterruptException, 
+    ContradictionException;
 }

@@ -135,6 +135,9 @@ public final class State implements Cloneable {
 
     /** The JVM static method area. */
     private StaticMethodArea staticMethodArea = new StaticMethodArea();
+    
+    /** {@code true} iff the state is in the initialization phase. */
+    private boolean isPhaseInit = true;
 
     /** The path condition of the state in the execution tree. */
     private PathCondition pathCondition = new PathCondition();
@@ -575,6 +578,25 @@ public final class State implements Cloneable {
      */
     public ClassHierarchy getClassHierarchy() {
         return this.classHierarchy;
+    }
+    
+    /**
+     * Checks if this {@link State} is in its
+     * initialization phase.
+     * 
+     * @return {@code true} until the {@link #setPhasePostInit()}
+     *         method is invoked.
+     */
+    public boolean isPhaseInit() {
+        return this.isPhaseInit;
+    }
+    
+    /**
+     * Sets this state to its post-initizialization
+     * phase.
+     */
+    public void setPhasePostInit() {
+        this.isPhaseInit = false;
     }
 
     /**
@@ -1690,6 +1712,14 @@ public final class State implements Cloneable {
         return this.heap.getObjects();
     }
 
+    /**
+     * Returns all the symbolic objects of this state according
+     * to its path condition.
+     * 
+     * @return an {@link Iterable}{@code <}{@link Objekt}{@code >}
+     *         that iterates through all the objects in the {@link ClauseAssumeExpands}
+     *         in the state's path condition.
+     */
     public Iterable<Objekt> objectsSymbolic() {
         return new Iterable<Objekt>() {
             @Override
@@ -1950,26 +1980,21 @@ public final class State implements Cloneable {
 
     /**
      * Assumes that a class is initialized before the 
-     * start of symbolic execution and
-     * creates a symbolic {@link Klass} object in the 
-     * static method area if absent (it does not 
-     * create {@link Klass} objects for superclasses).
+     * start of symbolic execution.
      * 
      * @param classFile the corresponding concrete class. 
-     *        It must be 
-     *        {@link classFile != null}.
-     * @throws NullPointerException if {@code classFile} 
-     *         is {@code null}.
+     *        It must be {@code classFile != null}.
+     * @param k the symbolic {@link Klass} for {@code classFile}, 
+     *        or {@code null} if the initial class is not symbolic. 
+     * @throws NullPointerException if {@code classFile == null}.
      * @throws InvalidIndexException if the access to the class 
      *         constant pool fails.
      */
-    public void assumeClassInitialized(ClassFile classFile) 
+    public void assumeClassInitialized(ClassFile classFile, Klass k) 
     throws InvalidIndexException {
         if (classFile == null) {
             throw new NullPointerException();
         }
-        ensureKlassSymbolic(classFile);
-        final Klass k = getKlass(classFile);
         this.pathCondition.addClauseAssumeClassInitialized(classFile, k);
         ++this.nPushedClauses;
     }
@@ -2285,7 +2310,9 @@ public final class State implements Cloneable {
                 final ClauseAssumeClassInitialized cCl = (ClauseAssumeClassInitialized) c;
                 final ClassFile cf = cCl.getClassFile();
                 final Klass k = cCl.getKlass(); //note that the getter produces a safety copy
-                this.staticMethodArea.set(cf, k);
+                if (k != null) {
+                    this.staticMethodArea.set(cf, k);
+                }
             } //else do nothing
         }
 

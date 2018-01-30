@@ -24,6 +24,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.ThreadStackEmptyException;
 
 //TODO extract common superclass with Algo_PUTX and eliminate duplicate code
@@ -89,7 +90,7 @@ abstract class Algo_GETX extends Algo_XLOAD_GETX<BytecodeData_1FI> {
     throws ClasspathException, FieldNotFoundException, InterruptException;
 
     protected abstract Objekt source(State state)
-    throws ClasspathException, DecisionException, InterruptException;
+    throws ClasspathException, DecisionException, InterruptException, ContradictionException;
 
     @Override
     protected final Supplier<Boolean> isProgramCounterUpdateAnOffset() {

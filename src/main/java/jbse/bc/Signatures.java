@@ -22,232 +22,98 @@ import static jbse.common.Type.VOID;
  */
 public final class Signatures {
     //classes and interfaces
-    public static final String JAVA_ABSTRACTCOLLECTION       = "java/util/AbstractCollection";
-    public static final String JAVA_ABSTRACTLIST             = "java/util/AbstractList";
-    public static final String JAVA_ABSTRACTMAP              = "java/util/AbstractMap";
-    public static final String JAVA_ABSTRACTSET              = "java/util/AbstractSet";
-    public static final String JAVA_ABSTRACTSTRINGBUILDER    = "java/lang/AbstractStringBuilder";
     public static final String JAVA_ACCESSCONTROLCONTEXT     = "java/security/AccessControlContext";
     public static final String JAVA_ACCESSCONTROLLER         = "java/security/AccessController";
     public static final String JAVA_ACCESSIBLEOBJECT         = "java/lang/reflect/AccessibleObject";
     public static final String JAVA_ANNOTATEDELEMENT         = "java/lang/reflect/AnnotatedElement";
-    public static final String JAVA_ARRAYLIST                = "java/util/ArrayList";
-    public static final String JAVA_ARRAYS                   = "java/util/Arrays";
-    public static final String JAVA_ATOMICINTEGER            = "java/util/concurrent/atomic/AtomicInteger";
     public static final String JAVA_ATOMICLONG               = "java/util/concurrent/atomic/AtomicLong";
-    public static final String JAVA_ATOMICREFERENCEFIELDUPDATER        = "java/util/concurrent/atomic/AtomicReferenceFieldUpdater";
-    public static final String JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL   = "java/util/concurrent/atomic/AtomicReferenceFieldUpdater$AtomicReferenceFieldUpdaterImpl";
-    public static final String JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL_1 = "java/util/concurrent/atomic/AtomicReferenceFieldUpdater$AtomicReferenceFieldUpdaterImpl$1";
-    public static final String JAVA_BASICPERMISSION          = "java/security/BasicPermission";
     public static final String JAVA_BITS                     = "java/nio/Bits";
-    public static final String JAVA_BITS_1                   = "java/nio/Bits$1";
     public static final String JAVA_BOOLEAN                  = "java/lang/Boolean";
     public static final String JAVA_BOUNDMETHODHANDLE        = "java/lang/invoke/BoundMethodHandle";
     public static final String JAVA_BOUNDMETHODHANDLE_SPECIESDATA = "java/lang/invoke/BoundMethodHandle$SpeciesData";
     public static final String JAVA_BOUNDMETHODHANDLE_SPECIES_L   = "java/lang/invoke/BoundMethodHandle$Species_L";
-    public static final String JAVA_BUFFER                   = "java/nio/Buffer";
-    public static final String JAVA_BUFFEREDINPUTSTREAM      = "java/io/BufferedInputStream";
-    public static final String JAVA_BUFFEREDOUTPUTSTREAM     = "java/io/BufferedOutputStream";
-    public static final String JAVA_BUFFEREDWRITER           = "java/io/BufferedWriter";
     public static final String JAVA_BYTE                     = "java/lang/Byte";
     public static final String JAVA_BYTE_BYTECACHE           = "java/lang/Byte$ByteCache";
-    public static final String JAVA_BYTEBUFFER               = "java/nio/ByteBuffer";
-    public static final String JAVA_BYTEORDER                = "java/nio/ByteOrder";
     public static final String JAVA_CHARACTER                = "java/lang/Character";
     public static final String JAVA_CHARACTER_CHARACTERCACHE = "java/lang/Character$CharacterCache";
     public static final String JAVA_CHARSEQUENCE             = "java/lang/CharSequence";
-    public static final String JAVA_CHARSET                  = "java/nio/charset/Charset";
     public static final String JAVA_CHARSET_EXTENDEDPROVIDERHOLDER = "java/nio/charset/Charset$ExtendedProviderHolder";
     public static final String JAVA_CHARSETENCODER           = "java/nio/charset/CharsetEncoder";
-    public static final String JAVA_CHARSETPROVIDER          = "java/nio/charset/spi/CharsetProvider";
     public static final String JAVA_CLASS                    = "java/lang/Class";
-    public static final String JAVA_CLASS_1                  = "java/lang/Class$1";
-    public static final String JAVA_CLASS_3                  = "java/lang/Class$3";
-    public static final String JAVA_CLASS_ATOMIC             = "java/lang/Class$Atomic";
-    public static final String JAVA_CLASS_REFLECTIONDATA     = "java/lang/Class$ReflectionData";
     public static final String JAVA_CLASSLOADER              = "java/lang/ClassLoader";
     public static final String JAVA_CLASSLOADER_NATIVELIBRARY   = "java/lang/ClassLoader$NativeLibrary";
-    public static final String JAVA_CLASSLOADER_PARALLELLOADERS = "java/lang/ClassLoader$ParallelLoaders";
-    public static final String JAVA_CLASSVALUE               = "java/lang/ClassValue";
     public static final String JAVA_CLONEABLE                = "java/lang/Cloneable";
-    public static final String JAVA_CODESOURCE               = "java/security/CodeSource";
-    public static final String JAVA_CODINGERRORACTION        = "java/nio/charset/CodingErrorAction";
-    public static final String JAVA_COLLECTIONS              = "java/util/Collections";
-    public static final String JAVA_COLLECTIONS_EMPTYLIST    = "java/util/Collections$EmptyList";
-    public static final String JAVA_COLLECTIONS_EMPTYMAP     = "java/util/Collections$EmptyMap";
-    public static final String JAVA_COLLECTIONS_EMPTYSET     = "java/util/Collections$EmptySet";
-    public static final String JAVA_COLLECTIONS_SETFROMMAP   = "java/util/Collections$SetFromMap";
-    public static final String JAVA_COLLECTIONS_SYNCHRONIZEDCOLLECTION       = "java/util/Collections$SynchronizedCollection";
-    public static final String JAVA_COLLECTIONS_SYNCHRONIZEDSET              = "java/util/Collections$SynchronizedSet";
-    public static final String JAVA_COLLECTIONS_UNMODIFIABLECOLLECTION       = "java/util/Collections$UnmodifiableCollection";
-    public static final String JAVA_COLLECTIONS_UNMODIFIABLELIST             = "java/util/Collections$UnmodifiableList";
-    public static final String JAVA_COLLECTIONS_UNMODIFIABLERANDOMACCESSLIST = "java/util/Collections$UnmodifiableRandomAccessList";
     public static final String JAVA_COMPARABLE               = "java/lang/Comparable";
-    public static final String JAVA_CONCURRENTHASHMAP        = "java/util/concurrent/ConcurrentHashMap";
     public static final String JAVA_CONSTRUCTOR              = "java/lang/reflect/Constructor";
-    public static final String JAVA_DEFAULTFILESYSTEM        = "java/io/DefaultFileSystem";
-    public static final String JAVA_DICTIONARY               = "java/util/Dictionary";
     public static final String JAVA_DIRECTMETHODHANDLE       = "java/lang/invoke/DirectMethodHandle";
     public static final String JAVA_DOUBLE                   = "java/lang/Double";
     public static final String JAVA_ENUM                     = "java/lang/Enum";
     public static final String JAVA_EXECUTABLE               = "java/lang/reflect/Executable";
-    public static final String JAVA_EXPIRINGCACHE            = "java/io/ExpiringCache";
-    public static final String JAVA_EXPIRINGCACHE_1          = "java/io/ExpiringCache$1";
     public static final String JAVA_FIELD                    = "java/lang/reflect/Field";
     public static final String JAVA_FILE                     = "java/io/File";
     public static final String JAVA_FILEDESCRIPTOR           = "java/io/FileDescriptor";
-    public static final String JAVA_FILEDESCRIPTOR_1         = "java/io/FileDescriptor$1";
     public static final String JAVA_FILEINPUTSTREAM          = "java/io/FileInputStream";
     public static final String JAVA_FILEOUTPUTSTREAM         = "java/io/FileOutputStream";
-    public static final String JAVA_FILESYSTEM               = "java/io/FileSystem";
-    public static final String JAVA_FILTERINPUTSTREAM        = "java/io/FilterInputStream";
-    public static final String JAVA_FILTEROUTPUTSTREAM       = "java/io/FilterOutputStream";
     public static final String JAVA_FINALIZER                = "java/lang/ref/Finalizer";
-    public static final String JAVA_FINALIZER_FINALIZERTHREAD = "java/lang/ref/Finalizer$FinalizerThread";
     public static final String JAVA_FINALREFERENCE           = "java/lang/ref/FinalReference";
     public static final String JAVA_FLOAT                    = "java/lang/Float";
     public static final String JAVA_GENERICDECLARATION       = "java/lang/reflect/GenericDeclaration";
-    public static final String JAVA_HASHMAP                  = "java/util/HashMap";
-    public static final String JAVA_HASHMAP_NODE             = "java/util/HashMap$Node";
-    public static final String JAVA_HASHSET                  = "java/util/HashSet";
-    public static final String JAVA_HASHTABLE                = "java/util/Hashtable";
-    public static final String JAVA_HASHTABLE_ENTRY          = "java/util/Hashtable$Entry";
-    public static final String JAVA_HASHTABLE_ENTRYSET       = "java/util/Hashtable$EntrySet";
-    public static final String JAVA_HASHTABLE_ENUMERATOR     = "java/util/Hashtable$Enumerator";
-    public static final String JAVA_HEAPBYTEBUFFER           = "java/nio/HeapByteBuffer";
     public static final String JAVA_IDENTITYHASHMAP          = "java/util/IdentityHashMap";
     public static final String JAVA_INPUTSTREAM              = "java/io/InputStream";
     public static final String JAVA_INTEGER                  = "java/lang/Integer";
-    public static final String JAVA_INTEGER_INTEGERCACHE     = "java/lang/Integer$IntegerCache";
-    public static final String JAVA_INTERRUPTEDEXCEPTION     = "java/lang/InterruptedException";
-    public static final String JAVA_INVOKERBYTECODEGENERATOR = "java/lang/invoke/InvokerBytecodeGenerator";
     public static final String JAVA_INVOKERBYTECODEGENERATOR_2 = "java/lang/invoke/InvokerBytecodeGenerator$2";
     public static final String JAVA_LAMBDAFORM               = "java/lang/invoke/LambdaForm";
     public static final String JAVA_LAMBDAFORM_NAME          = "java/lang/invoke/LambdaForm$Name";
-    public static final String JAVA_LINKEDHASHMAP            = "java/util/LinkedHashMap";
     public static final String JAVA_LINKEDLIST               = "java/util/LinkedList";
     public static final String JAVA_LINKEDLIST_ENTRY         = "java/util/LinkedList$Entry";
     public static final String JAVA_LONG                     = "java/lang/Long";
-    public static final String JAVA_LONG_LONGCACHE           = "java/lang/Long$LongCache";
-    public static final String JAVA_MATH                     = "java/lang/Math";
     public static final String JAVA_MEMBER                   = "java/lang/reflect/Member";
     public static final String JAVA_MEMBERNAME               = "java/lang/invoke/MemberName";
-    public static final String JAVA_MEMBERNAME_FACTORY       = "java/lang/invoke/MemberName$Factory";
     public static final String JAVA_METHOD                   = "java/lang/reflect/Method";
     public static final String JAVA_METHODHANDLE             = "java/lang/invoke/MethodHandle";
-    public static final String JAVA_METHODHANDLEIMPL         = "java/lang/invoke/MethodHandleImpl";
     public static final String JAVA_METHODHANDLENATIVES      = "java/lang/invoke/MethodHandleNatives";
     public static final String JAVA_METHODHANDLES            = "java/lang/invoke/MethodHandles";
     public static final String JAVA_METHODHANDLES_LOOKUP     = "java/lang/invoke/MethodHandles$Lookup";
-    public static final String JAVA_METHODHANDLESTATICS      = "java/lang/invoke/MethodHandleStatics";
     public static final String JAVA_METHODTYPE               = "java/lang/invoke/MethodType";
     public static final String JAVA_METHODTYPEFORM           = "java/lang/invoke/MethodTypeForm";
-    public static final String JAVA_MODIFIER                 = "java/lang/reflect/Modifier";
-    public static final String JAVA_NUMBER                   = "java/lang/Number";
     public static final String JAVA_OBJECT                   = "java/lang/Object";
-    public static final String JAVA_OBJECTS                  = "java/util/Objects";
-    public static final String JAVA_OUTPUTSTREAM             = "java/io/OutputStream";
-    public static final String JAVA_OUTPUTSTREAMWRITER       = "java/io/OutputStreamWriter";
-    public static final String JAVA_PERMISSION               = "java/security/Permission";
-    public static final String JAVA_PHANTOMREFERENCE         = "java/lang/ref/PhantomReference";
     public static final String JAVA_PRINTSTREAM              = "java/io/PrintStream";
     public static final String JAVA_PRIVILEGEDACTION         = "java/security/PrivilegedAction";
     public static final String JAVA_PRIVILEGEDEXCEPTIONACTION = "java/security/PrivilegedExceptionAction";
     public static final String JAVA_PROPERTIES               = "java/util/Properties";
-    public static final String JAVA_PROTECTIONDOMAIN         = "java/security/ProtectionDomain";
-    public static final String JAVA_PROTECTIONDOMAIN_2       = "java/security/ProtectionDomain$2";
-    public static final String JAVA_PROTECTIONDOMAIN_JAVASECURITYACCESSIMPL = "java/security/ProtectionDomain$JavaSecurityAccessImpl";
-    public static final String JAVA_PROTECTIONDOMAIN_KEY     = "java/security/ProtectionDomain$Key";
     public static final String JAVA_REFERENCE                = "java/lang/ref/Reference";
-    public static final String JAVA_REFERENCE_1              = "java/lang/ref/Reference$1";
-    public static final String JAVA_REFERENCE_LOCK           = "java/lang/ref/Reference$Lock";
-    public static final String JAVA_REFERENCE_REFERENCEHANDLER = "java/lang/ref/Reference$ReferenceHandler";
-    public static final String JAVA_REFERENCEQUEUE           = "java/lang/ref/ReferenceQueue";
-    public static final String JAVA_REFERENCEQUEUE_LOCK      = "java/lang/ref/ReferenceQueue$Lock";
-    public static final String JAVA_REFERENCEQUEUE_NULL      = "java/lang/ref/ReferenceQueue$Null";
     public static final String JAVA_REFLECT_ARRAY            = "java/lang/reflect/Array";
-    public static final String JAVA_REFLECTACCESS            = "java/lang/reflect/ReflectAccess";
-    public static final String JAVA_REFLECTPERMISSION        = "java/lang/reflect/ReflectPermission";
     public static final String JAVA_RUNNABLE                 = "java/lang/Runnable";
     public static final String JAVA_RUNTIME                  = "java/lang/Runtime";
-    public static final String JAVA_RUNTIMEPERMISSION        = "java/lang/RuntimePermission";
-    public static final String JAVA_SECURECLASSLOADER        = "java/security/SecureClassLoader";
     public static final String JAVA_SERIALIZABLE             = "java/io/Serializable";
     public static final String JAVA_SHORT                    = "java/lang/Short";
     public static final String JAVA_SHORT_SHORTCACHE         = "java/lang/Short$ShortCache";
     public static final String JAVA_SIMPLEMETHODHANDLE       = "java/lang/invoke/SimpleMethodHandle";
-    public static final String JAVA_STACK                    = "java/util/Stack";
     public static final String JAVA_STACKTRACEELEMENT        = "java/lang/StackTraceElement";
     public static final String JAVA_STRICTMATH               = "java/lang/StrictMath";
     public static final String JAVA_STRING                   = "java/lang/String";
-    public static final String JAVA_STRING_CASEINSCOMP       = "java/lang/String$CaseInsensitiveComparator";
     public static final String JAVA_STRINGBUILDER            = "java/lang/StringBuilder";
     public static final String JAVA_SYSTEM                   = "java/lang/System";
-    public static final String JAVA_SYSTEM_2                 = "java/lang/System$2";
-    public static final String JAVA_TERMINATOR               = "java/lang/Terminator";
-    public static final String JAVA_TERMINATOR_1             = "java/lang/Terminator$1";
     public static final String JAVA_THREAD                   = "java/lang/Thread";
     public static final String JAVA_THREAD_UNCAUGHTEXCEPTIONHANDLER = "java/lang/Thread$UncaughtExceptionHandler";
     public static final String JAVA_THREADGROUP              = "java/lang/ThreadGroup";
-    public static final String JAVA_THREADLOCAL              = "java/lang/ThreadLocal";
     public static final String JAVA_THROWABLE                = "java/lang/Throwable";
     public static final String JAVA_THROWABLE_SENTINELHOLDER = "java/lang/Throwable$SentinelHolder";
     public static final String JAVA_TREESET                  = "java/util/TreeSet";
     public static final String JAVA_TYPE                     = "java/lang/reflect/Type";
     public static final String JAVA_UNIXFILESYSTEM           = "java/io/UnixFileSystem";
     public static final String JAVA_URL                      = "java/net/URL";
-    public static final String JAVA_URLCLASSLOADER           = "java/net/URLClassLoader";
-    public static final String JAVA_URLCLASSLOADER_7         = "java/net/URLClassLoader$7";
-    public static final String JAVA_URLSTREAMHANDLER         = "java/net/URLStreamHandler";
-    public static final String JAVA_VECTOR                   = "java/util/Vector";
     public static final String JAVA_VOID                     = "java/lang/Void";
-    public static final String JAVA_WEAKHASHMAP              = "java/util/WeakHashMap";
-    public static final String JAVA_WEAKHASHMAP_ENTRY        = "java/util/WeakHashMap$Entry";
-    public static final String JAVA_WEAKHASHMAP_KEYSET       = "java/util/WeakHashMap$KeySet";
-    public static final String JAVA_WEAKREFERENCE            = "java/lang/ref/WeakReference";
     public static final String JAVA_WINNTFILESYSTEM          = "java/io/WinNTFileSystem";
-    public static final String JAVA_WRITER                   = "java/io/Writer";
     public static final String JBSE_ANALYSIS                 = internalClassName(jbse.meta.Analysis.class.getCanonicalName());
     public static final String JBSE_BASE                     = internalClassName(jbse.base.Base.class.getCanonicalName());
     public static final String SUN_CALLERSENSITIVE           = "sun/reflect/CallerSensitive";
-    public static final String SUN_CLEANER                   = "sun/misc/Cleaner";
-    public static final String SUN_CONSTRUCTORACCESSORIMPL   = "sun/reflect/ConstructorAccessorImpl";
-    public static final String SUN_DEBUG                     = "sun/security/util/Debug";
-    public static final String SUN_DELEGATINGCONSTRUCTORACCESSORIMPL = "sun/reflect/DelegatingConstructorAccessorImpl";
-    public static final String SUN_FASTCHARSETPROVIDER       = "sun/nio/cs/FastCharsetProvider";
-    public static final String SUN_GETPROPERTYACTION         = "sun/security/action/GetPropertyAction";
-    public static final String SUN_HANDLER                   = "sun/net/www/protocol/jar/Handler";
-    public static final String SUN_LAUNCHER                  = "sun/misc/Launcher";
-    public static final String SUN_LAUNCHERHELPER            = "sun/launcher/LauncherHelper";
-    public static final String SUN_LAUNCHER_EXTCLASSLOADER   = "sun/misc/Launcher$ExtClassLoader";
-    public static final String SUN_LAUNCHER_EXTCLASSLOADER_1 = "sun/misc/Launcher$ExtClassLoader$1";
-    public static final String SUN_LAUNCHER_FACTORY          = "sun/misc/Launcher$Factory";
-    public static final String SUN_MAGICACCESSORIMPL         = "sun/reflect/MagicAccessorImpl";
-    public static final String SUN_METAINDEX                 = "sun/misc/MetaIndex";
     public static final String SUN_NATIVECONSTRUCTORACCESSORIMPL = "sun/reflect/NativeConstructorAccessorImpl";
-    public static final String SUN_NATIVESIGNALHANDLER       = "sun/misc/NativeSignalHandler";
-    public static final String SUN_OSENVIRONMENT             = "sun/misc/OSEnvironment";
-    public static final String SUN_PREHASHEDMAP              = "sun/util/PreHashedMap";
     public static final String SUN_REFLECTION                = "sun/reflect/Reflection";
-    public static final String SUN_REFLECTIONFACTORY         = "sun/reflect/ReflectionFactory";
-    public static final String SUN_REFLECTIONFACTORY_1       = "sun/reflect/ReflectionFactory$1";
-    public static final String SUN_REFLECTIONFACTORY_GETREFLECTIONFACTORYACTION = "sun/reflect/ReflectionFactory$GetReflectionFactoryAction";
-    public static final String SUN_REFLECTUTIL               = "sun/reflect/misc/ReflectUtil";
-    public static final String SUN_SHAREDSECRETS             = "sun/misc/SharedSecrets";
     public static final String SUN_SIGNAL                    = "sun/misc/Signal";
-    public static final String SUN_SIGNALHANDLER             = "sun/misc/SignalHandler";
-    public static final String SUN_STANDARDCHARSETS          = "sun/nio/cs/StandardCharsets";
-    public static final String SUN_STANDARDCHARSETS_ALIASES  = "sun/nio/cs/StandardCharsets$Aliases";
-    public static final String SUN_STANDARDCHARSETS_CACHE    = "sun/nio/cs/StandardCharsets$Cache";
-    public static final String SUN_STANDARDCHARSETS_CLASSES  = "sun/nio/cs/StandardCharsets$Classes";
-    public static final String SUN_STREAMENCODER             = "sun/nio/cs/StreamEncoder";
-    public static final String SUN_UNICODE                   = "sun/nio/cs/Unicode";
     public static final String SUN_UNSAFE                    = "sun/misc/Unsafe";
     public static final String SUN_URLCLASSPATH              = "sun/misc/URLClassPath";
-    public static final String SUN_UTF_8                     = "sun/nio/cs/UTF_8";
-    public static final String SUN_UTF_8_ENCODER             = "sun/nio/cs/UTF_8$Encoder";
     public static final String SUN_VERIFYACCESS              = "sun/invoke/util/VerifyAccess";
-    public static final String SUN_VERSION                   = "sun/misc/Version";
     public static final String SUN_VM                        = "sun/misc/VM";
     public static final String SUN_WRAPPER_FORMAT            = "sun/invoke/util/Wrapper$Format";
 
@@ -285,7 +151,7 @@ public final class Signatures {
     public static final String VERIFY_ERROR                        = "java/lang/VerifyError";
     public static final String VIRTUAL_MACHINE_ERROR               = "java/lang/VirtualMachineError";
     
-    //descriptors (for signature polymorphic methods)
+    //method descriptors (for signature polymorphic methods)
     public static final String SIGNATURE_POLYMORPHIC_DESCRIPTOR = "(" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND;
     
     //methods (empty signature)
@@ -299,7 +165,6 @@ public final class Signatures {
     public static final Signature JAVA_METHODHANDLE_LINKTOSPECIAL   = new Signature(JAVA_METHODHANDLE, null, "linkToSpecial");
     public static final Signature JAVA_METHODHANDLE_LINKTOSTATIC    = new Signature(JAVA_METHODHANDLE, null, "linkToStatic");
     public static final Signature JAVA_METHODHANDLE_LINKTOVIRTUAL   = new Signature(JAVA_METHODHANDLE, null, "linkToVirtual");
-    
     
     //methods
     public static final Signature JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_1 =
@@ -647,10 +512,15 @@ public final class Signatures {
         new Signature(null, "(" + INT + REFERENCE + JAVA_CLASSLOADER + TYPEEND + ")" + VOID, "registerLoadedClass");
     public static final Signature noclass_REGISTERMETHODTYPE =
         new Signature(null, "(" + REFERENCE + JAVA_STRING + TYPEEND + REFERENCE + JAVA_METHODTYPE + TYPEEND + ")" + VOID, "registerMethodType");
-    public static final Signature noclass_STORELINKEDMETHODANDAPPENDIX =
-        new Signature(null, "(" + REFERENCE + JAVA_STRING + TYPEEND + REFERENCE + JAVA_METHODTYPE + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_MEMBERNAME + TYPEEND + ")" + VOID, "storeLinkedMethodAndAppendix");
+    public static final Signature noclass_SETPHASEPOSTINIT =
+        new Signature(null, "()" + VOID, "setPhasePostInit");
     public static final Signature noclass_SETSTANDARDCLASSLOADERSREADY =
         new Signature(null, "()" + VOID, "setStandardClassLoadersReady");
+    public static final Signature noclass_STORELINKEDMETHODANDAPPENDIX =
+        new Signature(null, "(" + REFERENCE + JAVA_STRING + TYPEEND + REFERENCE + JAVA_METHODTYPE + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_MEMBERNAME + TYPEEND + ")" + VOID, "storeLinkedMethodAndAppendix");
+    
+    //field names
+    public static final String ASSERTIONDISABLED_NAME = "$assertionsDisabled";
     
     //fields
     public static final Signature JAVA_ACCESSIBLEOBJECT_OVERRIDE = 

@@ -149,11 +149,13 @@ public class Engine implements AutoCloseable {
      *         superclasses/superinterfaces.
      * @throws NotYetImplementedException if the trigger methods for the initial root 
      *         object expansion (when present) are not in the root class.
+     * @throws ContradictionException  if some initialization assumption is
+     *         contradicted.
      */
     void init() 
     throws DecisionException, InitializationException, 
     InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, 
-    ClasspathException, NotYetImplementedException {
+    ClasspathException, NotYetImplementedException, ContradictionException {
         //executes the initial state setup step
         final Algo_INIT algo = this.ctx.dispatcher.select();
         algo.exec(this.ctx);

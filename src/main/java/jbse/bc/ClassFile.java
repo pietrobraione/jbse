@@ -1,5 +1,13 @@
 package jbse.bc;
 
+import static jbse.bc.Signatures.ASSERTIONDISABLED_NAME;
+import static jbse.bc.Signatures.JAVA_STRING;
+import static jbse.common.Type.REFERENCE;
+import static jbse.common.Type.TYPEEND;
+import static jbse.common.Type.className;
+import static jbse.common.Type.isCat_1;
+import static jbse.common.Type.splitParametersDescriptors;
+
 import java.util.List;
 
 import jbse.bc.exc.AttributeNotFoundException;
@@ -8,6 +16,7 @@ import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
 
 /**
  * Abstract class for managing the information on a single 
@@ -282,6 +291,48 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      *         exist in the classpath.
      */
     public abstract Signature getEnclosingMethodOrConstructor();
+    
+    /**
+     * Does a best-effort check of whether the class is pure. The
+     * answer is sound, in that if the method returns {@code true}
+     * the class is surely pure (but it may return {@code false} 
+     * for some pure classes).
+     * 
+     * @return {@code true} iff all the static fields are private and
+     *         final and have primitive or {@link String} type, and
+     *         the class has no static constructor.
+     */
+    public final boolean isPure() {
+        for (Signature sigMethod : getDeclaredMethods()) {
+            if ("<clinit>".equals(sigMethod.getName())) {
+                return false;
+            }
+        }
+        for (Signature sigFieldStatic : getDeclaredFieldsStatic()) {
+            try {
+                //skips field $assertionDisabled
+                if (ASSERTIONDISABLED_NAME.equals(sigFieldStatic.getName())) {
+                    continue;
+                }
+                if (!isFieldPrivate(sigFieldStatic)) {
+                    return false;
+                }
+                if (!isFieldFinal(sigFieldStatic)) {
+                    return false;
+                }
+                if (!Type.isPrimitive(sigFieldStatic.getDescriptor())) {
+                    final String className = className(sigFieldStatic.getDescriptor());
+                    if (!JAVA_STRING.equals(className)) {
+                        return false;
+                    }
+                }
+            } catch (FieldNotFoundException e) {
+                //this should never happen
+                throw new UnexpectedInternalException("Classfile " + getClassName() + " cannot find declared static field " + sigFieldStatic.toString() + ".");
+            }
+        }
+        return true;
+    }
 
     /**
      * Returns the size of the constant pool.
@@ -886,12 +937,12 @@ public abstract class ClassFile implements Comparable<ClassFile> {
         //if no LocalVariableTable attribute is found, tries to create the local 
         //variable table from information on the method's signature
         boolean isStatic = isMethodStatic(methodSignature);
-        final String[] parDescList = Type.splitParametersDescriptors(methodSignature.getDescriptor());
+        final String[] parDescList = splitParametersDescriptors(methodSignature.getDescriptor());
         final LocalVariableTable lvt = new LocalVariableTable(getLocalVariableLength(methodSignature));
         int i = 0;
         short slot = 0;
         if (!isStatic) {
-            lvt.setEntry(slot, Type.REFERENCE + this.getClassName() + Type.TYPEEND, 
+            lvt.setEntry(slot, REFERENCE + this.getClassName() + TYPEEND, 
                          "this", 0, this.getCodeLength(methodSignature));
             ++i; ++slot;
         }
@@ -899,7 +950,7 @@ public abstract class ClassFile implements Comparable<ClassFile> {
             lvt.setEntry(slot, descriptor, 
                          "__PARAM[" + i + "]", 0, this.getCodeLength(methodSignature));
             ++i; ++slot;
-            if (!Type.isCat_1(descriptor.charAt(0))) {
+            if (!isCat_1(descriptor.charAt(0))) {
                 ++slot;
             }
         }

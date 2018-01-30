@@ -7,6 +7,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.jvm.exc.CannotBuildEngineException;
 import jbse.jvm.exc.InitializationException;
 import jbse.jvm.exc.NonexistingObservedVariablesException;
+import jbse.mem.exc.ContradictionException;
 
 public class RunnerBuilder {
 	/**
@@ -45,10 +46,13 @@ public class RunnerBuilder {
 	 *         superclasses/superinterfaces.
 	 * @throws NotYetImplementedException if the trigger methods for the initial root 
 	 *         object expansion (when present) are not in the root class.
+	 * @throws ContradictionException  if some initialization assumption is
+	 *         contradicted.
 	 */
 	public Runner build(RunnerParameters parameters) 
 	throws CannotBuildEngineException, DecisionException, InitializationException, 
-	InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, ClasspathException, NotYetImplementedException {
+	InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, ClasspathException, 
+	NotYetImplementedException, ContradictionException {
 		this.engine = this.eb.build(parameters.getEngineParameters());
 		return new Runner(this.engine, parameters.getActions(), parameters.getIdentifierSubregion(), 
 				parameters.getTimeout(), parameters.getHeapScope(), parameters.getDepthScope(), 

@@ -7,7 +7,9 @@ package jbse.mem.exc;
  * @author Pietro Braione
  */
 public class ContradictionException extends Exception {
-	public ContradictionException() { }
+	public ContradictionException() { super(); }
+	
+	public ContradictionException(String s) { super(s); }
 
 	/**
 	 * 

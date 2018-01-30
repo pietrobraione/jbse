@@ -181,12 +181,15 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
             final RunnerBuilder b = new RunnerBuilder();
             runner = b.build(runnerParameters);
             this.engine = b.getEngine();
-        } catch (CannotBuildEngineException | InitializationException | ClasspathException | NotYetImplementedException e) {
+        } catch (CannotBuildEngineException | InitializationException | ClasspathException | NotYetImplementedException | 
+                 ContradictionException e) {
             //CannotBuildEngineException may happen if something goes wrong in the construction 
             //of the decision procedure
             //InitializationException happens when the method does not exist or is native
             //ClasspathException happens when the classpath does not point to a valid JRE
             //NotYetImplementedException happens when there are triggers for the root object expansion but they are not in the root class
+            //ContradictionException happens if in the runner parameters there are some initialization assumptions that are contradicted 
+            //during initialization
             throw new GuidanceException(e);
         } catch (NonexistingObservedVariablesException | DecisionException | InvalidClassFileFactoryClassException e) {
             //NonexistingObservedVariablesException should not happen since this decision procedure does not register any variable observer

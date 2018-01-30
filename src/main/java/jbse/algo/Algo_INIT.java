@@ -54,6 +54,7 @@ import static jbse.bc.Signatures.RUNTIME_EXCEPTION;
 import static jbse.bc.Signatures.STACK_OVERFLOW_ERROR;
 import static jbse.bc.Signatures.VERIFY_ERROR;
 import static jbse.bc.Signatures.VIRTUAL_MACHINE_ERROR;
+import static jbse.bc.Signatures.noclass_SETPHASEPOSTINIT;
 import static jbse.bc.Signatures.noclass_SETSTANDARDCLASSLOADERSREADY;
 import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.CHAR;
@@ -84,6 +85,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.jvm.exc.InitializationException;
 import jbse.mem.State;
 import jbse.mem.exc.CannotAssumeSymbolicObjectException;
+import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
@@ -132,7 +134,7 @@ public final class Algo_INIT {
     public void exec(ExecutionContext ctx) 
     throws DecisionException, InitializationException, 
     InvalidClassFileFactoryClassException, ClasspathException, 
-    NotYetImplementedException {
+    NotYetImplementedException, ContradictionException {
         //TODO do checks and possibly raise exceptions
         State state = ctx.getInitialState();
         if (state == null) {
@@ -146,7 +148,7 @@ public final class Algo_INIT {
 
     private State createInitialState(ExecutionContext ctx) 
     throws InvalidClassFileFactoryClassException, InitializationException, 
-    DecisionException, ClasspathException, NotYetImplementedException {
+    DecisionException, ClasspathException, NotYetImplementedException, ContradictionException {
         final State state = new State(ctx.maxSimpleArrayLength, ctx.maxHeapSize, ctx.classpath, ctx.classFileFactoryClass, ctx.expansionBackdoor, ctx.calc);
         
         //(loads and) creates the essential classes that
@@ -155,8 +157,11 @@ public final class Algo_INIT {
 
         //pushes a frame for the root method (and possibly triggers)
         invokeRootMethod(state, ctx);
+        
+        //pushes a frame that sets the post-init phase
+        setPostInitPhase(state);
 
-        //initializes the root class
+        //pushes a frame to initialize the root class
         initializeRootClass(state, ctx);
 
         //the rest of the initialization mirrors hotspot source code from openjdk v8, 
@@ -167,7 +172,7 @@ public final class Algo_INIT {
         
         //TODO possibly more initialization assumption from sun.launcher.LauncherHelper
         
-        //creates and initializes classes for handle invocation
+        //pushes frames to initialize classes for handle invocation
         initializeClass(state, JAVA_METHODHANDLENATIVES, ctx);
         initializeClass(state, JAVA_MEMBERNAME, ctx);
         initializeClass(state, JAVA_METHODHANDLE, ctx);
@@ -175,7 +180,7 @@ public final class Algo_INIT {
         //pushes a frame for java.lang.ClassLoader.getSystemClassLoader
         invokeGetSystemClassLoader(state);
         
-        //initializes some error/exception classes
+        //pushes frames to initialize some error/exception classes
         //(actually they do not have any static initializer, but
         //they might in the future)
         //TODO these currently statically initializes java.lang.Throwable, but not in Hotspot! This contradicts the fact that to statically initialize a class its superclass must be statically initialized first 
@@ -191,19 +196,20 @@ public final class Algo_INIT {
         //pushes a frame for java.lang.System.initializeSystemClass
         invokeInitializeSystemClass(state);
         
-        //initializes jbse.base.Base
+        //pushes a frame to initialize jbse.base.Base
         initializeClass(state, JBSE_BASE, ctx);
         
-        //initializes more standard classes
+        //pushes frames to initialize more standard classes
         initializeClass(state, JAVA_FINALIZER, ctx);
         initializeClass(state, JAVA_METHOD, ctx);
         initializeClass(state, JAVA_CLASSLOADER, ctx);
         initializeClass(state, JAVA_CLASS, ctx);
 
         //creates the initial thread and thread group
+        //and pushes frames to initialize them 
         createInitialThreadAndThreadGroups(state, ctx);
         
-        //initializes more standard classes
+        //pushes frames to initialize more standard classes
         initializeClass(state, JAVA_THREAD, ctx);
         initializeClass(state, JAVA_THREADGROUP, ctx);
         initializeClass(state, JAVA_SYSTEM, ctx);
@@ -297,8 +303,21 @@ public final class Algo_INIT {
         }
     }
     
+    private void setPostInitPhase(State state) {
+        try {
+            final Snippet snippet = state.snippetFactory()
+                .op_invokestatic(noclass_SETPHASEPOSTINIT)
+                .op_return()
+                .mk();
+            state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang");
+        } catch (ThreadStackEmptyException | InvalidProgramCounterException e) {
+            //this should not happen now
+            failExecution(e);
+        }
+    }
+    
     private void initializeRootClass(State state, ExecutionContext ctx) 
-    throws DecisionException, ClasspathException, InitializationException {
+    throws DecisionException, ClasspathException, InitializationException, ContradictionException {
         try {
             this.doNotInitialize.remove(state.getRootClass().getClassName());
             ensureClassInitialized(state, state.getRootClass(), ctx, this.doNotInitialize);
@@ -314,7 +333,7 @@ public final class Algo_INIT {
     }
     
     private void initializeClass(State state, String className, ExecutionContext ctx) 
-    throws DecisionException, ClasspathException, InitializationException {
+    throws DecisionException, ClasspathException, InitializationException, ContradictionException {
         try {
             this.doNotInitialize.remove(className);
             final int classLoader = (JBSE_BASE.equals(className) ? CLASSLOADER_APP : CLASSLOADER_BOOT);

@@ -31,6 +31,7 @@ import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
@@ -194,10 +195,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
      * @throws ClasspathException if a standard class is not found.
      * @throws InterruptException if the {@link Algorithm} must be interrupted.
      * @throws ThreadStackEmptyException if the stack is empty.
+     * @throws ContradictionException  if some initialization assumption is
+     *         contradicted.
      */
     protected abstract void checkMore(State state)
     throws FieldNotFoundException, DecisionException, 
-    ClasspathException, InterruptException, ThreadStackEmptyException;
+    ClasspathException, InterruptException, ThreadStackEmptyException, ContradictionException;
     
     /**
      * Returns the destination puts the value to its destination. 

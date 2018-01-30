@@ -700,6 +700,9 @@ public final class Run {
         } catch (NotYetImplementedException e) {
             err(ERROR_NOT_IMPLEMENTED_FEATURE_DURING_INIT + e.getCause() + ".");
             return 1;
+        } catch (ContradictionException e) {
+            err(ERROR_CONTRADICTION_DURING_INIT + e.getCause() + ".");
+            return 1;
         } catch (CannotBuildEngineException e) {
             err(ERROR_BUILD_FAILED + e.getCause() + ".");
             return 2;
@@ -1259,6 +1262,9 @@ public final class Run {
 
     /** Error: cannot handle something. */
     private static final String ERROR_NOT_IMPLEMENTED_FEATURE_DURING_INIT = " met an unimplemented feature during initialization: ";
+
+    /** Error: cannot handle something. */
+    private static final String ERROR_CONTRADICTION_DURING_INIT = " some class initialization assumption was violated during initialization: ";
 
     /**
      * Error : unable to initialize engine, because unable to initialize

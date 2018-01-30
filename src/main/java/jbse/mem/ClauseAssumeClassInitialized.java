@@ -19,12 +19,12 @@ public class ClauseAssumeClassInitialized implements Clause {
      * 
      * @param classFile a {@code ClassFile}, class.
      *        It must not be {@code null}.
-     * @param k the symbolic {@link Klass} corresponding to {@code classFile}
-     *        (cached here for convenience).
+     * @param k the symbolic {@link Klass} corresponding to {@code classFile},
+     *        or {@code null} if the initial class was not symbolic.
      */
     ClauseAssumeClassInitialized(ClassFile classFile, Klass k) { 
         this.classFile = classFile; 
-        this.k = k.clone(); //safety copy
+        this.k = (k == null ? null : k.clone()); //safety copy
     }
 
     /**
@@ -35,7 +35,7 @@ public class ClauseAssumeClassInitialized implements Clause {
     public ClassFile getClassFile() { return this.classFile; }	
 
     Klass getKlass() { 
-        return this.k.clone(); //preserves the safety copy
+        return (this.k == null ? null : this.k.clone()); //preserves the safety copy
     }
 
     @Override

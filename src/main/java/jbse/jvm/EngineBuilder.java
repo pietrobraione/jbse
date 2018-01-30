@@ -13,6 +13,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.jvm.exc.CannotBuildEngineException;
 import jbse.jvm.exc.InitializationException;
 import jbse.jvm.exc.NonexistingObservedVariablesException;
+import jbse.mem.exc.ContradictionException;
 import jbse.tree.DecisionAlternativeComparators;
 
 /**
@@ -51,11 +52,13 @@ public class EngineBuilder {
      *         superclasses/superinterfaces.
      * @throws NotYetImplementedException if the trigger methods for the initial root 
      *         object expansion (when present) are not in the root class.
+     * @throws ContradictionException  if some initialization assumption is
+     *         contradicted.
      */
     public Engine build(EngineParameters parameters) 
     throws CannotBuildEngineException, DecisionException, InitializationException, 
     InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, 
-    ClasspathException, NotYetImplementedException {
+    ClasspathException, NotYetImplementedException, ContradictionException {
         //checks whether parameters is complete
         if (parameters.getMethodSignature() == null && parameters.getInitialState() == null) {
             throw new CannotBuildEngineException(new NullPointerException());

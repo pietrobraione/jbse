@@ -32,6 +32,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.Instance_JAVA_CLASSLOADER;
 import jbse.mem.State;
+import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
@@ -56,7 +57,7 @@ public final class Algo_JAVA_CLASS_FORNAME0 extends Algo_INVOKEMETA_Nonbranching
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, DecisionException, 
     ClasspathException, SymbolicValueNotAllowedException, 
-    InvalidInputException, InterruptException {
+    InvalidInputException, InterruptException, ContradictionException {
         try {
             //gets the name of the class
             final Reference classNameRef = (Reference) this.data.operand(0);

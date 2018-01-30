@@ -63,6 +63,7 @@ import jbse.mem.Instance;
 import jbse.mem.Klass;
 import jbse.mem.SnippetFrameNoContext;
 import jbse.mem.State;
+import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
@@ -432,10 +433,12 @@ public class Util {
      *         execution of the bytecode, to run the 
      *         {@code <clinit>} method(s) for the initialized 
      *         class(es) or because of heap memory exhaustion.
+     * @throws ContradictionException  if some initialization assumption is
+     *         contradicted.
      */
     public static void ensureClassInitialized(State state, ClassFile classFile, ExecutionContext ctx)
     throws InvalidInputException, DecisionException, 
-    ClasspathException, HeapMemoryExhaustedException, InterruptException {
+    ClasspathException, HeapMemoryExhaustedException, InterruptException, ContradictionException {
         try {
             ensureClassInitialized(state, classFile, ctx, null, null);
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException e) {
@@ -474,10 +477,12 @@ public class Util {
      *         execution of the bytecode, to run the 
      *         {@code <clinit>} method(s) for the initialized 
      *         class(es) or because of heap memory exhaustion.
+     * @throws ContradictionException  if some initialization assumption is
+     *         contradicted.
      */
     public static void ensureClassInitialized(State state, ClassFile classFile, ExecutionContext ctx, Signature boxExceptionMethodSignature)
     throws InvalidInputException, DecisionException, 
-    ClasspathException, HeapMemoryExhaustedException, InterruptException {
+    ClasspathException, HeapMemoryExhaustedException, InterruptException, ContradictionException {
         try {
             ensureClassInitialized(state, classFile, ctx, null, boxExceptionMethodSignature);
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException e) {
@@ -522,11 +527,13 @@ public class Util {
      * @throws ClassFileIllFormedException if some class in {@code skip} is ill-formed.
      * @throws ClassFileNotAccessibleException if some class in {@code skip} has
      *         a superclass/superinterface that it cannot access.
+     * @throws ContradictionException  if some initialization assumption is
+     *         contradicted.
      */
     public static void ensureClassInitialized(State state, ClassFile classFile, ExecutionContext ctx, Set<String> skip)
     throws InvalidInputException, DecisionException, 
     ClasspathException, HeapMemoryExhaustedException, InterruptException, 
-    ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException {
+    ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, ContradictionException {
         ensureClassInitialized(state, classFile, ctx, skip, null);
     }
     
@@ -568,10 +575,12 @@ public class Util {
      * @throws ClassFileIllFormedException if some class in {@code skip} is ill-formed.
      * @throws ClassFileNotAccessibleException if some class in {@code skip} has
      *         a superclass/superinterface that it cannot access.
+     * @throws ContradictionException  if some initialization assumption is
+     *         contradicted.
      */
     public static void ensureClassInitialized(State state, ClassFile classFile, ExecutionContext ctx, Set<String> skip, Signature boxExceptionMethodSignature) 
     throws InvalidInputException, DecisionException, ClasspathException, HeapMemoryExhaustedException, InterruptException, 
-    ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException {
+    ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, ContradictionException {
         final Set<String> _skip = (skip == null) ? new HashSet<>() : skip; //null safety
         final ClassInitializer ci = new ClassInitializer(state, ctx, _skip, boxExceptionMethodSignature);
         final boolean failed = ci.initialize(classFile);
@@ -691,10 +700,12 @@ public class Util {
          *         current version of JBSE.
          * @throws HeapMemoryExhaustedException if heap memory ends while
          *         performing class initialization
+         * @throws ContradictionException  if some initialization assumption is
+         *         contradicted.
          */
         private boolean initialize(ClassFile classFile)
         throws InvalidInputException, DecisionException, 
-        ClasspathException, HeapMemoryExhaustedException {
+        ClasspathException, HeapMemoryExhaustedException, ContradictionException {
             phase1(classFile);
             if (this.failed) {
                 revert();
@@ -720,11 +731,15 @@ public class Util {
          * @param it a {@code ListIterator}, the name of the class.
          * @throws InvalidInputException if {@code classFile} is null.
          * @throws DecisionException if the decision procedure fails.
+         * @throws ContradictionException  if some initialization assumption is
+         *         contradicted.
          */
         private void phase1(ClassFile classFile)
-        throws InvalidInputException, DecisionException {
+        throws InvalidInputException, DecisionException, ContradictionException {
             phase1(classFile, null);
         }
+        
+        private static enum Assumption { INITIALIZED, NOT_INITIALIZED, NONE }
 
         /**
          * Phase 1 creates all the {@link Klass} objects for a class and its
@@ -736,9 +751,11 @@ public class Util {
          *        {@code null} to add to the end of {@code this.classesCreated}.
          * @throws InvalidInputException if {@code classFile} is null.
          * @throws DecisionException if the decision procedure fails.
+         * @throws ContradictionException  if some initialization assumption is
+         *         contradicted.
          */
         private void phase1(ClassFile classFile, ListIterator<ClassFile> it)
-        throws InvalidInputException, DecisionException {
+        throws InvalidInputException, DecisionException, ContradictionException {
             //if there is a Klass object for className, 
             //or if className is in the skip set,
             //there is nothing to do
@@ -751,35 +768,52 @@ public class Util {
             } else {
                 it.add(classFile);
             }
-            //TODO here we assume mutual exclusion of the initialized/not initialized assumptions. Withdraw this assumption and branch.
             try {
                 //invokes the decision procedure, adds the returned 
                 //assumption to the state's path condition and creates 
                 //a Klass
                 final ClassHierarchy hier = this.s.getClassHierarchy();
-                final boolean pure = this.ctx.hasClassAPureInitializer(hier, classFile);
+                final boolean pure = classFile.isPure() || this.ctx.hasClassAPureInitializer(hier, classFile);
                 final String className = classFile.getClassName();
                 final int definingLoader = classFile.getDefiningClassLoader();
-                final boolean createKlass;
-                if (pure) {
-                    createKlass = true;
+                final boolean toInitialize;
+                final Assumption assumeInitialized;
+                if (this.s.isPhaseInit()) {
+                    if (this.ctx.decisionProcedure.isSatInitialized(hier, classFile)) {
+                        toInitialize = true;
+                        assumeInitialized = Assumption.INITIALIZED;
+                    } else {
+                        throw new ContradictionException("According to path condition class " + classFile.getClassName() + " should not be initialized before start of symbolic execution, but the initialization phase wants to initialize it.");
+                    }
+                } else if (pure) {
+                    toInitialize = true;
+                    assumeInitialized = Assumption.NONE;
+                //TODO here we assume mutual exclusion of the initialized/not initialized assumptions. Withdraw this assumption and branch.
                 } else if (CLASSLOADER_BOOT <= definingLoader && definingLoader <= CLASSLOADER_APP && 
                            this.ctx.decisionProcedure.isSatInitialized(hier, classFile)) { 
-                    this.s.assumeClassInitialized(classFile);
-                    createKlass = false; //already created when invoking assumeClassInitialized
+                    toInitialize = false;
+                    assumeInitialized = Assumption.INITIALIZED;
                 } else {
-                    this.s.assumeClassNotInitialized(classFile);
-                    createKlass = true;
+                    toInitialize = true;
+                    assumeInitialized = Assumption.NOT_INITIALIZED;
                 }
-                if (createKlass) {
-                    //creates the Klass and schedules it for phase 3
+                if (toInitialize) {
+                    //creates a concrete Klass and schedules it for phase 3
                     this.s.ensureKlass(classFile);
                     if (className.equals(JAVA_OBJECT)) {
                         this.pushFrameForJavaLangObject = true;
                     } else {
                         this.classesToInitialize.add(classFile);
                     }
+                } else {
+                    this.s.ensureKlassSymbolic(classFile);
                 }
+                if (assumeInitialized == Assumption.INITIALIZED) {
+                    final Klass k = this.s.getKlass(classFile);
+                    this.s.assumeClassInitialized(classFile, k);
+                } else if (assumeInitialized == Assumption.NOT_INITIALIZED) {
+                    this.s.assumeClassNotInitialized(classFile);
+                } //else, do nothing
             } catch (InvalidIndexException e) {
                 this.failed = true;
                 this.failure = VERIFY_ERROR;

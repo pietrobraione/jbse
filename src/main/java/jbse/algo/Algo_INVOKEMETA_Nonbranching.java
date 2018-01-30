@@ -10,6 +10,7 @@ import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
+import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 
@@ -40,7 +41,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
 
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, DecisionException, ClasspathException, 
-    CannotManageStateException, InterruptException, InvalidInputException {
+    CannotManageStateException, InterruptException, InvalidInputException, ContradictionException {
         //the default implementation does nothing
     }
 

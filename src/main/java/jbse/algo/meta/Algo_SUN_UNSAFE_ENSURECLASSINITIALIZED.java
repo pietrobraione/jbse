@@ -19,6 +19,7 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
+import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
@@ -36,7 +37,7 @@ public final class Algo_SUN_UNSAFE_ENSURECLASSINITIALIZED extends Algo_INVOKEMET
     
     @Override
     protected void cookMore(State state) 
-    throws InterruptException, DecisionException, ClasspathException {
+    throws InterruptException, DecisionException, ClasspathException, ContradictionException {
         final Reference ref = (Reference) this.data.operand(1);
         if (state.isNull(ref)) {
             throwNew(state, NULL_POINTER_EXCEPTION); //this is what Hotspot does

@@ -69,6 +69,7 @@ import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_PUTOBJECTVOLATILE;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_SHOULDBEINITIALIZED;
 import static jbse.algo.Overrides.ALGO_noclass_REGISTERLOADEDCLASS;
 import static jbse.algo.Overrides.ALGO_noclass_REGISTERMETHODTYPE;
+import static jbse.algo.Overrides.ALGO_noclass_SETPHASEPOSTINIT;
 import static jbse.algo.Overrides.ALGO_noclass_SETSTANDARDCLASSLOADERSREADY;
 import static jbse.algo.Overrides.ALGO_noclass_STORELINKEDMETHODANDAPPENDIX;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_1;
@@ -90,58 +91,14 @@ import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ARRAYBASEOFFSET;
 import static jbse.algo.Overrides.BASE_SUN_UNSAFE_ARRAYINDEXSCALE;
 import static jbse.algo.Overrides.BASE_SUN_URLCLASSPATH_GETLOOKUPCACHEURLS;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
-import static jbse.bc.Signatures.ARITHMETIC_EXCEPTION;
-import static jbse.bc.Signatures.ARRAY_STORE_EXCEPTION;
-import static jbse.bc.Signatures.CLASS_CAST_EXCEPTION;
-import static jbse.bc.Signatures.ERROR;
-import static jbse.bc.Signatures.EXCEPTION;
-import static jbse.bc.Signatures.ILLEGAL_ARGUMENT_EXCEPTION;
-import static jbse.bc.Signatures.ILLEGAL_MONITOR_STATE_EXCEPTION;
-import static jbse.bc.Signatures.JAVA_ABSTRACTCOLLECTION;
-import static jbse.bc.Signatures.JAVA_ABSTRACTLIST;
-import static jbse.bc.Signatures.JAVA_ABSTRACTMAP;
-import static jbse.bc.Signatures.JAVA_ABSTRACTSET;
-import static jbse.bc.Signatures.JAVA_ABSTRACTSTRINGBUILDER;
-import static jbse.bc.Signatures.JAVA_ACCESSCONTROLCONTEXT;
-import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_1;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_2;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT;
-import static jbse.bc.Signatures.JAVA_ACCESSIBLEOBJECT;
-import static jbse.bc.Signatures.JAVA_ARRAYLIST;
-import static jbse.bc.Signatures.JAVA_ARRAYS;
-import static jbse.bc.Signatures.JAVA_ATOMICINTEGER;
-import static jbse.bc.Signatures.JAVA_ATOMICLONG;
 import static jbse.bc.Signatures.JAVA_ATOMICLONG_VMSUPPORTSCS8;
-import static jbse.bc.Signatures.JAVA_ATOMICREFERENCEFIELDUPDATER;
-import static jbse.bc.Signatures.JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL;
-import static jbse.bc.Signatures.JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL_1;
-import static jbse.bc.Signatures.JAVA_BASICPERMISSION;
-import static jbse.bc.Signatures.JAVA_BITS;
-import static jbse.bc.Signatures.JAVA_BITS_1;
-import static jbse.bc.Signatures.JAVA_BOOLEAN;
-import static jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE;
-import static jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIESDATA;
-import static jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIES_L;
-import static jbse.bc.Signatures.JAVA_BUFFER;
-import static jbse.bc.Signatures.JAVA_BUFFEREDINPUTSTREAM;
-import static jbse.bc.Signatures.JAVA_BUFFEREDOUTPUTSTREAM;
-import static jbse.bc.Signatures.JAVA_BUFFEREDWRITER;
-import static jbse.bc.Signatures.JAVA_BYTE;
 import static jbse.bc.Signatures.JAVA_BYTE_BYTECACHE;
-import static jbse.bc.Signatures.JAVA_BYTEBUFFER;
-import static jbse.bc.Signatures.JAVA_BYTEORDER;
-import static jbse.bc.Signatures.JAVA_CHARACTER;
 import static jbse.bc.Signatures.JAVA_CHARACTER_CHARACTERCACHE;
-import static jbse.bc.Signatures.JAVA_CHARSET;
 import static jbse.bc.Signatures.JAVA_CHARSET_EXTENDEDPROVIDERHOLDER;
-import static jbse.bc.Signatures.JAVA_CHARSETENCODER;
-import static jbse.bc.Signatures.JAVA_CHARSETPROVIDER;
-import static jbse.bc.Signatures.JAVA_CLASS;
-import static jbse.bc.Signatures.JAVA_CLASS_1;
-import static jbse.bc.Signatures.JAVA_CLASS_3;
-import static jbse.bc.Signatures.JAVA_CLASS_ATOMIC;
 import static jbse.bc.Signatures.JAVA_CLASS_DESIREDASSERTIONSTATUS0;
 import static jbse.bc.Signatures.JAVA_CLASS_FORNAME0;
 import static jbse.bc.Signatures.JAVA_CLASS_GETCOMPONENTTYPE;
@@ -158,132 +115,37 @@ import static jbse.bc.Signatures.JAVA_CLASS_ISASSIGNABLEFROM;
 import static jbse.bc.Signatures.JAVA_CLASS_ISINSTANCE;
 import static jbse.bc.Signatures.JAVA_CLASS_ISINTERFACE;
 import static jbse.bc.Signatures.JAVA_CLASS_ISPRIMITIVE;
-import static jbse.bc.Signatures.JAVA_CLASS_REFLECTIONDATA;
 import static jbse.bc.Signatures.JAVA_CLASS_REGISTERNATIVES;
-import static jbse.bc.Signatures.JAVA_CLASSLOADER;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_FINDBUILTINLIB;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_FINDLOADEDCLASS0;
-import static jbse.bc.Signatures.JAVA_CLASSLOADER_NATIVELIBRARY;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_NATIVELIBRARY_LOAD;
-import static jbse.bc.Signatures.JAVA_CLASSLOADER_PARALLELLOADERS;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_REGISTERNATIVES;
-import static jbse.bc.Signatures.JAVA_CLASSVALUE;
-import static jbse.bc.Signatures.JAVA_CODESOURCE;
-import static jbse.bc.Signatures.JAVA_CODINGERRORACTION;
-import static jbse.bc.Signatures.JAVA_COLLECTIONS;
-import static jbse.bc.Signatures.JAVA_COLLECTIONS_EMPTYLIST;
-import static jbse.bc.Signatures.JAVA_COLLECTIONS_EMPTYMAP;
-import static jbse.bc.Signatures.JAVA_COLLECTIONS_EMPTYSET;
-import static jbse.bc.Signatures.JAVA_COLLECTIONS_SETFROMMAP;
-import static jbse.bc.Signatures.JAVA_COLLECTIONS_SYNCHRONIZEDCOLLECTION;
-import static jbse.bc.Signatures.JAVA_COLLECTIONS_SYNCHRONIZEDSET;
-import static jbse.bc.Signatures.JAVA_COLLECTIONS_UNMODIFIABLECOLLECTION;
-import static jbse.bc.Signatures.JAVA_COLLECTIONS_UNMODIFIABLELIST;
-import static jbse.bc.Signatures.JAVA_COLLECTIONS_UNMODIFIABLERANDOMACCESSLIST;
-import static jbse.bc.Signatures.JAVA_CONCURRENTHASHMAP;
-import static jbse.bc.Signatures.JAVA_CONSTRUCTOR;
-import static jbse.bc.Signatures.JAVA_DEFAULTFILESYSTEM;
-import static jbse.bc.Signatures.JAVA_DICTIONARY;
-import static jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE;
-import static jbse.bc.Signatures.JAVA_DOUBLE;
 import static jbse.bc.Signatures.JAVA_DOUBLE_DOUBLETORAWLONGBITS;
 import static jbse.bc.Signatures.JAVA_DOUBLE_LONGBITSTODOUBLE;
 import static jbse.bc.Signatures.JAVA_ENUM;
-import static jbse.bc.Signatures.JAVA_EXECUTABLE;
-import static jbse.bc.Signatures.JAVA_EXPIRINGCACHE;
-import static jbse.bc.Signatures.JAVA_EXPIRINGCACHE_1;
-import static jbse.bc.Signatures.JAVA_FIELD;
-import static jbse.bc.Signatures.JAVA_FILE;
-import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR;
 import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR_INITIDS;
-import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR_1;
-import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM_INITIDS;
-import static jbse.bc.Signatures.JAVA_FILEOUTPUTSTREAM;
 import static jbse.bc.Signatures.JAVA_FILEOUTPUTSTREAM_INITIDS;
-import static jbse.bc.Signatures.JAVA_FILESYSTEM;
-import static jbse.bc.Signatures.JAVA_FILTERINPUTSTREAM;
-import static jbse.bc.Signatures.JAVA_FILTEROUTPUTSTREAM;
-import static jbse.bc.Signatures.JAVA_FINALIZER;
-import static jbse.bc.Signatures.JAVA_FINALIZER_FINALIZERTHREAD;
-import static jbse.bc.Signatures.JAVA_FINALREFERENCE;
-import static jbse.bc.Signatures.JAVA_FLOAT;
 import static jbse.bc.Signatures.JAVA_FLOAT_FLOATTORAWINTBITS;
-import static jbse.bc.Signatures.JAVA_HASHMAP;
-import static jbse.bc.Signatures.JAVA_HASHMAP_NODE;
-import static jbse.bc.Signatures.JAVA_HASHSET;
-import static jbse.bc.Signatures.JAVA_HASHTABLE;
-import static jbse.bc.Signatures.JAVA_HASHTABLE_ENTRY;
-import static jbse.bc.Signatures.JAVA_HASHTABLE_ENTRYSET;
-import static jbse.bc.Signatures.JAVA_HASHTABLE_ENUMERATOR;
-import static jbse.bc.Signatures.JAVA_HEAPBYTEBUFFER;
 import static jbse.bc.Signatures.JAVA_IDENTITYHASHMAP;
-import static jbse.bc.Signatures.JAVA_INPUTSTREAM;
-import static jbse.bc.Signatures.JAVA_INTEGER;
-import static jbse.bc.Signatures.JAVA_INTEGER_INTEGERCACHE;
-import static jbse.bc.Signatures.JAVA_INTERRUPTEDEXCEPTION;
-import static jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR;
 import static jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR_2;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM_NAME;
-import static jbse.bc.Signatures.JAVA_LINKEDHASHMAP;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
-import static jbse.bc.Signatures.JAVA_LONG;
-import static jbse.bc.Signatures.JAVA_LONG_LONGCACHE;
-import static jbse.bc.Signatures.JAVA_MATH;
-import static jbse.bc.Signatures.JAVA_MEMBERNAME;
-import static jbse.bc.Signatures.JAVA_MEMBERNAME_FACTORY;
-import static jbse.bc.Signatures.JAVA_METHOD;
-import static jbse.bc.Signatures.JAVA_METHODHANDLE;
-import static jbse.bc.Signatures.JAVA_METHODHANDLEIMPL;
-import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_GETCONSTANT;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_RESOLVE;
-import static jbse.bc.Signatures.JAVA_METHODHANDLES;
-import static jbse.bc.Signatures.JAVA_METHODHANDLES_LOOKUP;
-import static jbse.bc.Signatures.JAVA_METHODHANDLESTATICS;
-import static jbse.bc.Signatures.JAVA_METHODTYPE;
 import static jbse.bc.Signatures.JAVA_METHODTYPEFORM;
-import static jbse.bc.Signatures.JAVA_MODIFIER;
-import static jbse.bc.Signatures.JAVA_NUMBER;
-import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_OBJECT_CLONE;
 import static jbse.bc.Signatures.JAVA_OBJECT_GETCLASS;
 import static jbse.bc.Signatures.JAVA_OBJECT_HASHCODE;
 import static jbse.bc.Signatures.JAVA_OBJECT_NOTIFYALL;
 import static jbse.bc.Signatures.JAVA_OBJECT_REGISTERNATIVES;
-import static jbse.bc.Signatures.JAVA_OBJECTS;
-import static jbse.bc.Signatures.JAVA_OUTPUTSTREAM;
-import static jbse.bc.Signatures.JAVA_OUTPUTSTREAMWRITER;
-import static jbse.bc.Signatures.JAVA_PERMISSION;
-import static jbse.bc.Signatures.JAVA_PHANTOMREFERENCE;
-import static jbse.bc.Signatures.JAVA_PRINTSTREAM;
-import static jbse.bc.Signatures.JAVA_PROPERTIES;
-import static jbse.bc.Signatures.JAVA_PROTECTIONDOMAIN;
-import static jbse.bc.Signatures.JAVA_PROTECTIONDOMAIN_2;
-import static jbse.bc.Signatures.JAVA_PROTECTIONDOMAIN_JAVASECURITYACCESSIMPL;
-import static jbse.bc.Signatures.JAVA_PROTECTIONDOMAIN_KEY;
-import static jbse.bc.Signatures.JAVA_REFERENCE;
-import static jbse.bc.Signatures.JAVA_REFERENCE_1;
-import static jbse.bc.Signatures.JAVA_REFERENCE_LOCK;
-import static jbse.bc.Signatures.JAVA_REFERENCE_REFERENCEHANDLER;
-import static jbse.bc.Signatures.JAVA_REFERENCEQUEUE;
-import static jbse.bc.Signatures.JAVA_REFERENCEQUEUE_LOCK;
-import static jbse.bc.Signatures.JAVA_REFERENCEQUEUE_NULL;
 import static jbse.bc.Signatures.JAVA_REFLECT_ARRAY_NEWARRAY;
-import static jbse.bc.Signatures.JAVA_REFLECTACCESS;
-import static jbse.bc.Signatures.JAVA_REFLECTPERMISSION;
-import static jbse.bc.Signatures.JAVA_RUNTIME;
 import static jbse.bc.Signatures.JAVA_RUNTIME_AVAILABLEPROCESSORS;
-import static jbse.bc.Signatures.JAVA_RUNTIMEPERMISSION;
-import static jbse.bc.Signatures.JAVA_SECURECLASSLOADER;
-import static jbse.bc.Signatures.JAVA_SHORT;
 import static jbse.bc.Signatures.JAVA_SHORT_SHORTCACHE;
-import static jbse.bc.Signatures.JAVA_SIMPLEMETHODHANDLE;
-import static jbse.bc.Signatures.JAVA_STACK;
 import static jbse.bc.Signatures.JAVA_STRICTMATH_ACOS;
 import static jbse.bc.Signatures.JAVA_STRICTMATH_ASIN;
 import static jbse.bc.Signatures.JAVA_STRICTMATH_ATAN;
@@ -304,18 +166,14 @@ import static jbse.bc.Signatures.JAVA_STRICTMATH_SINH;
 import static jbse.bc.Signatures.JAVA_STRICTMATH_SQRT;
 import static jbse.bc.Signatures.JAVA_STRICTMATH_TAN;
 import static jbse.bc.Signatures.JAVA_STRICTMATH_TANH;
-import static jbse.bc.Signatures.JAVA_STRING;
-import static jbse.bc.Signatures.JAVA_STRING_CASEINSCOMP;
 import static jbse.bc.Signatures.JAVA_STRING_HASHCODE;
 import static jbse.bc.Signatures.JAVA_STRING_INTERN;
-import static jbse.bc.Signatures.JAVA_STRINGBUILDER;
 import static jbse.bc.Signatures.JAVA_STRINGBUILDER_APPEND_BOOLEAN;
 import static jbse.bc.Signatures.JAVA_STRINGBUILDER_APPEND_CHAR;
 import static jbse.bc.Signatures.JAVA_STRINGBUILDER_APPEND_DOUBLE;
 import static jbse.bc.Signatures.JAVA_STRINGBUILDER_APPEND_FLOAT;
 import static jbse.bc.Signatures.JAVA_STRINGBUILDER_APPEND_INT;
 import static jbse.bc.Signatures.JAVA_STRINGBUILDER_APPEND_LONG;
-import static jbse.bc.Signatures.JAVA_SYSTEM;
 import static jbse.bc.Signatures.JAVA_SYSTEM_ARRAYCOPY;
 import static jbse.bc.Signatures.JAVA_SYSTEM_CURRENTTIMEMILLIS;
 import static jbse.bc.Signatures.JAVA_SYSTEM_IDENTITYHASHCODE;
@@ -326,43 +184,25 @@ import static jbse.bc.Signatures.JAVA_SYSTEM_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_SYSTEM_SETERR0;
 import static jbse.bc.Signatures.JAVA_SYSTEM_SETIN0;
 import static jbse.bc.Signatures.JAVA_SYSTEM_SETOUT0;
-import static jbse.bc.Signatures.JAVA_SYSTEM_2;
-import static jbse.bc.Signatures.JAVA_TERMINATOR;
-import static jbse.bc.Signatures.JAVA_TERMINATOR_1;
-import static jbse.bc.Signatures.JAVA_THREAD;
 import static jbse.bc.Signatures.JAVA_THREAD_CURRENTTHREAD;
 import static jbse.bc.Signatures.JAVA_THREAD_ISALIVE;
 import static jbse.bc.Signatures.JAVA_THREAD_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_THREAD_SETPRIORITY0;
 import static jbse.bc.Signatures.JAVA_THREAD_START0;
-import static jbse.bc.Signatures.JAVA_THREADGROUP;
-import static jbse.bc.Signatures.JAVA_THREADLOCAL;
-import static jbse.bc.Signatures.JAVA_THROWABLE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_FILLINSTACKTRACE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEDEPTH;
 import static jbse.bc.Signatures.JAVA_THROWABLE_GETSTACKTRACEELEMENT;
 import static jbse.bc.Signatures.JAVA_THROWABLE_SENTINELHOLDER;
 import static jbse.bc.Signatures.JAVA_TREESET;
-import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_CANONICALIZE0;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_GETBOOLEANATTRIBUTES0;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_INITIDS;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_LIST;
-import static jbse.bc.Signatures.JAVA_URLCLASSLOADER;
-import static jbse.bc.Signatures.JAVA_URLCLASSLOADER_7;
-import static jbse.bc.Signatures.JAVA_URLSTREAMHANDLER;
-import static jbse.bc.Signatures.JAVA_VECTOR;
 import static jbse.bc.Signatures.JAVA_VOID;
-import static jbse.bc.Signatures.JAVA_WEAKHASHMAP;
-import static jbse.bc.Signatures.JAVA_WEAKHASHMAP_ENTRY;
-import static jbse.bc.Signatures.JAVA_WEAKHASHMAP_KEYSET;
-import static jbse.bc.Signatures.JAVA_WEAKREFERENCE;
-import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM;
 import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM_CANONICALIZE0;
 import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM_GETBOOLEANATTRIBUTES;
 import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM_INITIDS;
 import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM_LIST;
-import static jbse.bc.Signatures.JAVA_WRITER;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ANY;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ENDGUIDANCE;
@@ -387,49 +227,11 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_FLOAT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_INT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_LONG;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_SHORT;
-import static jbse.bc.Signatures.JBSE_BASE;
-import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
-import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
-import static jbse.bc.Signatures.RUNTIME_EXCEPTION;
-import static jbse.bc.Signatures.STACK_OVERFLOW_ERROR;
-import static jbse.bc.Signatures.SUN_CLEANER;
-import static jbse.bc.Signatures.SUN_CONSTRUCTORACCESSORIMPL;
-import static jbse.bc.Signatures.SUN_DEBUG;
-import static jbse.bc.Signatures.SUN_DELEGATINGCONSTRUCTORACCESSORIMPL;
-import static jbse.bc.Signatures.SUN_FASTCHARSETPROVIDER;
-import static jbse.bc.Signatures.SUN_GETPROPERTYACTION;
-import static jbse.bc.Signatures.SUN_HANDLER;
-import static jbse.bc.Signatures.SUN_LAUNCHER;
-import static jbse.bc.Signatures.SUN_LAUNCHERHELPER;
-import static jbse.bc.Signatures.SUN_LAUNCHER_EXTCLASSLOADER;
-import static jbse.bc.Signatures.SUN_LAUNCHER_EXTCLASSLOADER_1;
-import static jbse.bc.Signatures.SUN_LAUNCHER_FACTORY;
-import static jbse.bc.Signatures.SUN_MAGICACCESSORIMPL;
-import static jbse.bc.Signatures.SUN_METAINDEX;
-import static jbse.bc.Signatures.SUN_NATIVECONSTRUCTORACCESSORIMPL;
 import static jbse.bc.Signatures.SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
-import static jbse.bc.Signatures.SUN_NATIVESIGNALHANDLER;
-import static jbse.bc.Signatures.SUN_OSENVIRONMENT;
-import static jbse.bc.Signatures.SUN_PREHASHEDMAP;
-import static jbse.bc.Signatures.SUN_REFLECTION;
-import static jbse.bc.Signatures.SUN_REFLECTIONFACTORY;
-import static jbse.bc.Signatures.SUN_REFLECTIONFACTORY_1;
-import static jbse.bc.Signatures.SUN_REFLECTIONFACTORY_GETREFLECTIONFACTORYACTION;
 import static jbse.bc.Signatures.SUN_REFLECTION_GETCALLERCLASS;
 import static jbse.bc.Signatures.SUN_REFLECTION_GETCLASSACCESSFLAGS;
-import static jbse.bc.Signatures.SUN_REFLECTUTIL;
-import static jbse.bc.Signatures.SUN_SHAREDSECRETS;
-import static jbse.bc.Signatures.SUN_SIGNAL;
 import static jbse.bc.Signatures.SUN_SIGNAL_FINDSIGNAL;
 import static jbse.bc.Signatures.SUN_SIGNAL_HANDLE0;
-import static jbse.bc.Signatures.SUN_SIGNALHANDLER;
-import static jbse.bc.Signatures.SUN_STANDARDCHARSETS;
-import static jbse.bc.Signatures.SUN_STANDARDCHARSETS_ALIASES;
-import static jbse.bc.Signatures.SUN_STANDARDCHARSETS_CACHE;
-import static jbse.bc.Signatures.SUN_STANDARDCHARSETS_CLASSES;
-import static jbse.bc.Signatures.SUN_STREAMENCODER;
-import static jbse.bc.Signatures.SUN_UNICODE;
-import static jbse.bc.Signatures.SUN_UNSAFE;
 import static jbse.bc.Signatures.SUN_UNSAFE_ADDRESSSIZE;
 import static jbse.bc.Signatures.SUN_UNSAFE_ALLOCATEMEMORY;
 import static jbse.bc.Signatures.SUN_UNSAFE_ARRAYBASEOFFSET;
@@ -449,18 +251,13 @@ import static jbse.bc.Signatures.SUN_UNSAFE_PUTLONG;
 import static jbse.bc.Signatures.SUN_UNSAFE_PUTOBJECTVOLATILE;
 import static jbse.bc.Signatures.SUN_UNSAFE_REGISTERNATIVES;
 import static jbse.bc.Signatures.SUN_UNSAFE_SHOULDBEINITIALIZED;
-import static jbse.bc.Signatures.SUN_URLCLASSPATH;
 import static jbse.bc.Signatures.SUN_URLCLASSPATH_GETLOOKUPCACHEURLS;
-import static jbse.bc.Signatures.SUN_UTF_8;
-import static jbse.bc.Signatures.SUN_UTF_8_ENCODER;
 import static jbse.bc.Signatures.SUN_VERIFYACCESS;
-import static jbse.bc.Signatures.SUN_VERSION;
-import static jbse.bc.Signatures.SUN_VM;
 import static jbse.bc.Signatures.SUN_VM_INITIALIZE;
 import static jbse.bc.Signatures.SUN_WRAPPER_FORMAT;
-import static jbse.bc.Signatures.VIRTUAL_MACHINE_ERROR;
 import static jbse.bc.Signatures.noclass_REGISTERLOADEDCLASS;
 import static jbse.bc.Signatures.noclass_REGISTERMETHODTYPE;
+import static jbse.bc.Signatures.noclass_SETPHASEPOSTINIT;
 import static jbse.bc.Signatures.noclass_SETSTANDARDCLASSLOADERSREADY;
 import static jbse.bc.Signatures.noclass_STORELINKEDMETHODANDAPPENDIX;
 
@@ -779,6 +576,7 @@ public final class ExecutionContext {
             //jbse classless (pseudo)methods
             addMetaOverridden(noclass_REGISTERLOADEDCLASS,          ALGO_noclass_REGISTERLOADEDCLASS);
             addMetaOverridden(noclass_REGISTERMETHODTYPE,           ALGO_noclass_REGISTERMETHODTYPE);
+            addMetaOverridden(noclass_SETPHASEPOSTINIT,             ALGO_noclass_SETPHASEPOSTINIT);
             addMetaOverridden(noclass_SETSTANDARDCLASSLOADERSREADY, ALGO_noclass_SETSTANDARDCLASSLOADERSREADY);
             addMetaOverridden(noclass_STORELINKEDMETHODANDAPPENDIX, ALGO_noclass_STORELINKEDMETHODANDAPPENDIX);
         } catch (MetaUnsupportedException e) {
@@ -893,231 +691,38 @@ public final class ExecutionContext {
      */
     public boolean hasClassAPureInitializer(ClassHierarchy hier, ClassFile classFile) {
         final String className = classFile.getClassName();
-        return 
-        (
-        className.equals(ARITHMETIC_EXCEPTION) ||
-        className.equals(ARRAY_STORE_EXCEPTION) ||
-        className.equals(CLASS_CAST_EXCEPTION) ||
-        className.equals(ERROR) ||
-        className.equals(ILLEGAL_ARGUMENT_EXCEPTION) ||
-        className.equals(ILLEGAL_MONITOR_STATE_EXCEPTION) ||
-        className.equals(JAVA_ABSTRACTCOLLECTION) ||
-        className.equals(JAVA_ABSTRACTLIST) ||
-        className.equals(JAVA_ABSTRACTMAP) ||
-        className.equals(JAVA_ABSTRACTSET) ||
-        className.equals(JAVA_ABSTRACTSTRINGBUILDER) ||
-        className.equals(JAVA_ACCESSCONTROLCONTEXT) || //not really, but its static fields are lazily initialized so it is as it were
-        className.equals(JAVA_ACCESSCONTROLLER) || 
-        className.equals(JAVA_ACCESSIBLEOBJECT) || 
-        className.equals(JAVA_ARRAYLIST) || 
-        className.equals(JAVA_ARRAYS) || 
-        className.equals(JAVA_ATOMICINTEGER) || 
-        className.equals(JAVA_ATOMICLONG) || 
-        className.equals(JAVA_ATOMICREFERENCEFIELDUPDATER) || 
-        className.equals(JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL) || 
-        className.equals(JAVA_ATOMICREFERENCEFIELDUPDATER_IMPL_1) || 
-        className.equals(JAVA_BASICPERMISSION) ||
-        className.equals(JAVA_BITS) || //not for maxMemory and memoryLimitSet, all the others seem to be ok (final or lazily intialized)
-        className.equals(JAVA_BITS_1) ||
-        className.equals(JAVA_BOOLEAN) ||
-        className.equals(JAVA_BOUNDMETHODHANDLE) || //necessary for method handles
-        className.equals(JAVA_BOUNDMETHODHANDLE_SPECIESDATA) || //necessary for method handles
-        className.equals(JAVA_BOUNDMETHODHANDLE_SPECIES_L) || //necessary for method handles
-        className.equals(JAVA_BUFFER) ||
-        className.equals(JAVA_BUFFEREDINPUTSTREAM) ||
-        className.equals(JAVA_BUFFEREDOUTPUTSTREAM) ||
-        className.equals(JAVA_BUFFEREDWRITER) ||
-        className.equals(JAVA_BYTE) ||
+        return (
         className.equals(JAVA_BYTE_BYTECACHE) ||
-        className.equals(JAVA_BYTEBUFFER) ||
-        className.equals(JAVA_BYTEORDER) ||
-        className.equals(JAVA_CHARACTER) ||
         className.equals(JAVA_CHARACTER_CHARACTERCACHE) ||
-        className.equals(JAVA_CHARSET) || //not really, but most static values seem to be just caches, so we treat it as it were
         className.equals(JAVA_CHARSET_EXTENDEDPROVIDERHOLDER) ||
-        className.equals(JAVA_CHARSETENCODER) || //one field is not final, but it is never reassigned
-        className.equals(JAVA_CHARSETPROVIDER) ||
-        className.equals(JAVA_CLASS) || 
-        className.equals(JAVA_CLASS_1) || 
-        className.equals(JAVA_CLASS_3) || 
-        className.equals(JAVA_CLASS_ATOMIC) || 
-        className.equals(JAVA_CLASS_REFLECTIONDATA) || 
-        className.equals(JAVA_CLASSLOADER) || //not really, but static fields are either lazily initialized and not modified, or are not modified; plus the collections of loaded libraries etc. will be assumed to be empty at the start of symbolic execution 
-        className.equals(JAVA_CLASSLOADER_NATIVELIBRARY) || 
-        className.equals(JAVA_CLASSLOADER_PARALLELLOADERS) || //necessary for initialization (although it isn't) 
-        className.equals(JAVA_CLASSVALUE) || //not really, but the only critical field is nextHashCode, that is used to generate hash codes for the class instances that are later used in internal table, so it is as it were 
-        className.equals(JAVA_CODESOURCE) ||
-        className.equals(JAVA_CODINGERRORACTION) ||
-        className.equals(JAVA_COLLECTIONS) ||
-        className.equals(JAVA_COLLECTIONS_EMPTYLIST) ||
-        className.equals(JAVA_COLLECTIONS_EMPTYMAP) ||
-        className.equals(JAVA_COLLECTIONS_EMPTYSET) ||
-        className.equals(JAVA_COLLECTIONS_SETFROMMAP) || 
-        className.equals(JAVA_COLLECTIONS_SYNCHRONIZEDCOLLECTION) || 
-        className.equals(JAVA_COLLECTIONS_SYNCHRONIZEDSET) ||
-        className.equals(JAVA_COLLECTIONS_UNMODIFIABLECOLLECTION) ||
-        className.equals(JAVA_COLLECTIONS_UNMODIFIABLELIST) ||
-        className.equals(JAVA_COLLECTIONS_UNMODIFIABLERANDOMACCESSLIST) ||
-        className.equals(JAVA_CONCURRENTHASHMAP) || //only RESIZE_STAMP_BITS is not final, but it is never modified
-        className.equals(JAVA_CONSTRUCTOR) ||
-        className.equals(JAVA_DEFAULTFILESYSTEM) ||
-        className.equals(JAVA_DICTIONARY) ||
-        className.equals(JAVA_DIRECTMETHODHANDLE) || //wouldn't manage method handles otherwise
-        className.equals(JAVA_DOUBLE) ||
-        className.equals(EXCEPTION) ||
-        className.equals(JAVA_EXECUTABLE) ||
-        className.equals(JAVA_EXPIRINGCACHE) ||
-        className.equals(JAVA_EXPIRINGCACHE_1) ||
-        className.equals(JAVA_FIELD) ||
-        className.equals(JAVA_FILE) || 
-        className.equals(JAVA_FILEDESCRIPTOR) || 
-        className.equals(JAVA_FILEDESCRIPTOR_1) || 
-        className.equals(JAVA_FILEINPUTSTREAM) || 
-        className.equals(JAVA_FILEOUTPUTSTREAM) || 
-        className.equals(JAVA_FILESYSTEM) || // the useCanonCaches and useCanonPrefixCache are not final but are never overwritten after initialization (note that they are not private)
-        className.equals(JAVA_FILTERINPUTSTREAM) || 
-        className.equals(JAVA_FILTEROUTPUTSTREAM) || 
-        className.equals(JAVA_FINALIZER) || 
-        className.equals(JAVA_FINALIZER_FINALIZERTHREAD) || //not at all, it statically initializes a single finalizer thread (being JBSE single-threaded it is as it had no effect) 
-        className.equals(JAVA_FINALREFERENCE) || 
-        className.equals(JAVA_FLOAT) || 
-        className.equals(JAVA_HASHMAP) || 
-        className.equals(JAVA_HASHMAP_NODE) || 
-        className.equals(JAVA_HASHSET) || 
-        className.equals(JAVA_HASHTABLE) || 
-        className.equals(JAVA_HASHTABLE_ENTRY) || 
-        className.equals(JAVA_HASHTABLE_ENTRYSET) ||
-        className.equals(JAVA_HASHTABLE_ENUMERATOR) || 
-        className.equals(JAVA_HEAPBYTEBUFFER) || 
         className.equals(JAVA_IDENTITYHASHMAP) || 
-        className.equals(JAVA_INPUTSTREAM) ||
-        className.equals(JAVA_INTEGER) || 
-        className.equals(JAVA_INTEGER_INTEGERCACHE) || 
-        className.equals(JAVA_INTERRUPTEDEXCEPTION) || 
-        className.equals(JAVA_INVOKERBYTECODEGENERATOR) || //the only nonfinal static field STATICALLY_INVOCABLE_PACKAGES is never modified
         className.equals(JAVA_INVOKERBYTECODEGENERATOR_2) ||
         className.equals(JAVA_LAMBDAFORM) || 
         className.equals(JAVA_LAMBDAFORM_NAME) || 
-        className.equals(JAVA_LINKEDHASHMAP) || 
         className.equals(JAVA_LINKEDLIST) || 
         className.equals(JAVA_LINKEDLIST_ENTRY) ||
-        className.equals(JAVA_LONG) || 
-        className.equals(JAVA_LONG_LONGCACHE) || 
-        className.equals(JAVA_MATH) || 
-        className.equals(JAVA_MEMBERNAME) || 
-        className.equals(JAVA_MEMBERNAME_FACTORY) || //its only mutable static member ALLOWED_FLAGS is never changed
-        className.equals(JAVA_METHOD) ||
-        className.equals(JAVA_METHODHANDLE) ||
-        className.equals(JAVA_METHODHANDLEIMPL) || //the critical members (TYPED_COLLECTORS, FILL_ARRAY_TO_RIGHT and FAKE_METHOD_HANDLE_INVOKE) are lazily initialized caches
-        className.equals(JAVA_METHODHANDLENATIVES) || 
-        className.equals(JAVA_METHODHANDLES) || //not really, but can be considered as it were (all final except ZERO_MHS and IDENTITY_MHS that are caches) 
-        className.equals(JAVA_METHODHANDLES_LOOKUP) || //not really, but can be considered as it were (all final including PUBLIC_LOOKUP and IMPL_LOOKUP that are instances of Lookup - that is immutable - and except LOOKASIDE_TABLE, that seems to be a sort of cache) 
-        className.equals(JAVA_METHODHANDLESTATICS) || 
-        className.equals(JAVA_METHODTYPE) || //not really, but can be considered as it were (all final except internTable and objectOnlyTypes that are caches) 
         className.equals(JAVA_METHODTYPEFORM) || 
-        className.equals(JAVA_MODIFIER) || //not really, but used as it were (it bootstraps sun.misc.SharedSecrets on init)
-        className.equals(JAVA_NUMBER) || 
-        className.equals(JAVA_OBJECT) ||
-        className.equals(JAVA_OBJECTS) ||
-        className.equals(JAVA_OUTPUTSTREAM) ||
-        className.equals(JAVA_OUTPUTSTREAMWRITER) ||
-        className.equals(JAVA_PERMISSION) ||
-        className.equals(JAVA_PHANTOMREFERENCE) ||
-        className.equals(JAVA_PRINTSTREAM) ||
-        className.equals(JAVA_PROPERTIES) ||
-        className.equals(JAVA_PROTECTIONDOMAIN) || //its static initializer sets up stuff in SharedSecrets
-        className.equals(JAVA_PROTECTIONDOMAIN_2) ||
-        className.equals(JAVA_PROTECTIONDOMAIN_JAVASECURITYACCESSIMPL) ||
-        className.equals(JAVA_PROTECTIONDOMAIN_KEY) ||
-        className.equals(JAVA_REFERENCE) ||  //not really, but the lock field is effectively final and the discovered field is managed by the garbage collector, that JBSE has not
-        className.equals(JAVA_REFERENCE_1) ||
-        className.equals(JAVA_REFERENCE_LOCK) ||
-        className.equals(JAVA_REFERENCE_REFERENCEHANDLER) ||
-        className.equals(JAVA_REFERENCEQUEUE) ||  //not really, but used as it were
-        className.equals(JAVA_REFERENCEQUEUE_LOCK) ||
-        className.equals(JAVA_REFERENCEQUEUE_NULL) ||
-        className.equals(JAVA_REFLECTACCESS) ||
-        className.equals(JAVA_REFLECTPERMISSION) ||
-        className.equals(JAVA_RUNTIME) ||
-        className.equals(RUNTIME_EXCEPTION) ||
-        className.equals(JAVA_RUNTIMEPERMISSION) ||
-        className.equals(JAVA_SECURECLASSLOADER) || //its static initializer registers this class as a parallel capable class loader
-        className.equals(JAVA_SHORT) || 
         className.equals(JAVA_SHORT_SHORTCACHE) || 
-        className.equals(JAVA_SIMPLEMETHODHANDLE) || //necessary for method handles
-        className.equals(JAVA_STACK) || 
-        className.equals(JAVA_STRING) || 
-        className.equals(JAVA_STRING_CASEINSCOMP) ||
-        className.equals(JAVA_STRINGBUILDER) || 
-        className.equals(JAVA_SYSTEM) || 
-        className.equals(JAVA_SYSTEM_2) || 
-        className.equals(JAVA_TERMINATOR) || //not really, but its only static field is private and lazily initialized
-        className.equals(JAVA_TERMINATOR_1) ||
         className.equals(JAVA_TREESET) ||
-        className.equals(JAVA_THREAD) || //not really, but it's not a terrible approximation considering it as it were (and also initializes many static final members)
-        className.equals(JAVA_THREADGROUP) ||
-        className.equals(JAVA_THREADLOCAL) || //not really, but the only static member generates sequences of hash codes, so it can be treated as it were
-        className.equals(JAVA_THROWABLE) || 
         className.equals(JAVA_THROWABLE_SENTINELHOLDER) ||
-        className.equals(JAVA_UNIXFILESYSTEM) || 
-        className.equals(JAVA_URLCLASSLOADER) || //its static initializer registers stuff into SharedSecrets
-        className.equals(JAVA_URLCLASSLOADER_7) ||
-        className.equals(JAVA_URLSTREAMHANDLER) || //it isn't; necessary to init SharedSecrets
-        className.equals(JAVA_VECTOR) || 
         className.equals(JAVA_VOID) || 
-        className.equals(JAVA_WEAKHASHMAP) ||
-        className.equals(JAVA_WEAKHASHMAP_ENTRY) ||
-        className.equals(JAVA_WEAKHASHMAP_KEYSET) ||
-        className.equals(JAVA_WEAKREFERENCE) ||
-        className.equals(JAVA_WINNTFILESYSTEM) || //not really, but the only static member driveDirCache is a cache
-        className.equals(JAVA_WRITER) || 
-        className.equals(JBSE_BASE) ||
-        className.equals(NULL_POINTER_EXCEPTION) ||
-        className.equals(OUT_OF_MEMORY_ERROR) ||
-        className.equals(STACK_OVERFLOW_ERROR) ||
-        className.equals(SUN_CLEANER) ||  //not really, but we don't care very much about finalization since JBSE never garbage-collects, thus we treat it as it were
-        className.equals(SUN_CONSTRUCTORACCESSORIMPL) ||        
-        className.equals(SUN_DEBUG) || //its static nonfinal member args is effectively final        
-        className.equals(SUN_DELEGATINGCONSTRUCTORACCESSORIMPL) ||        
-        className.equals(SUN_FASTCHARSETPROVIDER) ||        
-        className.equals(SUN_GETPROPERTYACTION) ||        
-        className.equals(SUN_HANDLER) ||        
-        className.equals(SUN_LAUNCHER) || //necessary to JVM bootstrap
-        className.equals(SUN_LAUNCHERHELPER) || //necessary to JVM bootstrap (is it really?)
-        className.equals(SUN_LAUNCHER_EXTCLASSLOADER) || //its static initializer registers this class as a parallel capable class loader
-        className.equals(SUN_LAUNCHER_EXTCLASSLOADER_1) ||
-        className.equals(SUN_LAUNCHER_FACTORY) || //not really, but its only static field is effectively final
-        className.equals(SUN_MAGICACCESSORIMPL) ||
-        className.equals(SUN_METAINDEX) || //not really, but it is a sort of cache that after JVM initialization should not change
-        className.equals(SUN_NATIVECONSTRUCTORACCESSORIMPL) ||
-        className.equals(SUN_NATIVESIGNALHANDLER) ||
-        className.equals(SUN_OSENVIRONMENT) ||
-        className.equals(SUN_PREHASHEDMAP) ||
-        className.equals(SUN_REFLECTION) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
-        className.equals(SUN_REFLECTIONFACTORY) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init)
-        className.equals(SUN_REFLECTIONFACTORY_1) ||
-        className.equals(SUN_REFLECTIONFACTORY_GETREFLECTIONFACTORYACTION) ||
-        className.equals(SUN_REFLECTUTIL) ||
-        className.equals(SUN_SHAREDSECRETS) ||  //not really, but at a first approximation we consider it as it were (it is loaded by System bootstrapping on init); its members are initialized by many other classes, so beware
-        className.equals(SUN_SIGNAL) || //not really, but we will assume it is; its static member are not final but are treated as if they were 
-        className.equals(SUN_SIGNALHANDLER) || 
-        className.equals(SUN_STANDARDCHARSETS) ||
-        className.equals(SUN_STANDARDCHARSETS_ALIASES) ||
-        className.equals(SUN_STANDARDCHARSETS_CACHE) ||
-        className.equals(SUN_STANDARDCHARSETS_CLASSES) ||
-        className.equals(SUN_STREAMENCODER) ||
-        className.equals(SUN_UNICODE) ||
-        className.equals(SUN_UNSAFE) ||
-        className.equals(SUN_URLCLASSPATH) || //necessary to JVM bootstrap
-        className.equals(SUN_UTF_8) ||
-        className.equals(SUN_UTF_8_ENCODER) ||
         className.equals(SUN_VERIFYACCESS) ||
-        className.equals(SUN_VERSION) ||
-        className.equals(SUN_VM) ||
         className.equals(SUN_WRAPPER_FORMAT) ||
-        className.equals(VIRTUAL_MACHINE_ERROR) ||
         hier.isSubclass(classFile, hier.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_ENUM)));
     }
+    
+    /* TODO possibly grant initialization to these unpure classes (old code):
+     *  className.equals(JAVA_BOUNDMETHODHANDLE) || //necessary for method handles
+        className.equals(JAVA_BOUNDMETHODHANDLE_SPECIESDATA) || //necessary for method handles
+        className.equals(JAVA_BOUNDMETHODHANDLE_SPECIES_L) || //necessary for method handles
+        className.equals(JAVA_DIRECTMETHODHANDLE) || //wouldn't manage method handles otherwise
+        className.equals(JAVA_INVOKERBYTECODEGENERATOR) || //the only nonfinal static field STATICALLY_INVOCABLE_PACKAGES is never modified
+        className.equals(JAVA_METHODHANDLES) || //not really, but can be considered as it were (all final except ZERO_MHS and IDENTITY_MHS that are caches) 
+        className.equals(JAVA_METHODHANDLES_LOOKUP) || //not really, but can be considered as it were (all final including PUBLIC_LOOKUP and IMPL_LOOKUP that are instances of Lookup - that is immutable - and except LOOKASIDE_TABLE, that seems to be a sort of cache) 
+        className.equals(JAVA_METHODTYPE) || //not really, but can be considered as it were (all final except internTable and objectOnlyTypes that are caches) 
+        className.equals(JAVA_SIMPLEMETHODHANDLE) || //necessary for method handles
+        className.equals(SUN_LAUNCHERHELPER) || //necessary to JVM bootstrap (is it really?)
+     */
 
     public <R extends DecisionAlternative> 
     SortedSet<R> mkDecisionResultSet(Class<R> superclassDecisionAlternatives) {
