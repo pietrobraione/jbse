@@ -10,6 +10,7 @@ import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.common.Type.ARRAYOF;
+import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
 
 import java.io.File;
@@ -117,7 +118,7 @@ public final class Algo_JAVA_XFILESYSTEM_LIST extends Algo_INVOKEMETA_Nonbranchi
             try {
                 //creates an Array and fills it with the result
                 final Calculator calc = state.getCalculator();
-                final ClassFile cf_arrayOfJAVA_STRING = state.getClassHierarchy().loadCreateClass("" + ARRAYOF + JAVA_STRING + TYPEEND);
+                final ClassFile cf_arrayOfJAVA_STRING = state.getClassHierarchy().loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_STRING + TYPEEND);
                 final ReferenceConcrete arrayRef = state.createArray(null, calc.valInt(this.theList.length), cf_arrayOfJAVA_STRING);
                 final Array array = (Array) state.getObject(arrayRef);
                 for (int i = 0; i < this.theList.length; ++i) {
