@@ -90,6 +90,7 @@ public final class Signatures {
     public static final String JAVA_SHORT_SHORTCACHE         = "java/lang/Short$ShortCache";
     public static final String JAVA_SIMPLEMETHODHANDLE       = "java/lang/invoke/SimpleMethodHandle";
     public static final String JAVA_STACKTRACEELEMENT        = "java/lang/StackTraceElement";
+    public static final String JAVA_STANDARDCHARSETS         = "java/nio/charset/StandardCharsets";
     public static final String JAVA_STRICTMATH               = "java/lang/StrictMath";
     public static final String JAVA_STRING                   = "java/lang/String";
     public static final String JAVA_STRINGBUILDER            = "java/lang/StringBuilder";
@@ -234,6 +235,8 @@ public final class Signatures {
         new Signature(JAVA_FILEDESCRIPTOR, "()" + VOID, "initIDs");
     public static final Signature JAVA_FILEINPUTSTREAM_AVAILABLE =
         new Signature(JAVA_FILEINPUTSTREAM, "()" + INT, "available");
+    public static final Signature JAVA_FILEINPUTSTREAM_CLOSE0 =
+        new Signature(JAVA_FILEINPUTSTREAM, "()" + VOID, "close0");
     public static final Signature JAVA_FILEINPUTSTREAM_INITIDS =
         new Signature(JAVA_FILEINPUTSTREAM, "()" + VOID, "initIDs");
     public static final Signature JAVA_FILEINPUTSTREAM_OPEN0 =
@@ -393,6 +396,8 @@ public final class Signatures {
         new Signature(JAVA_UNIXFILESYSTEM, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_STRING + TYPEEND, "canonicalize0");
     public static final Signature JAVA_UNIXFILESYSTEM_GETBOOLEANATTRIBUTES0 = 
         new Signature(JAVA_UNIXFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + INT, "getBooleanAttributes0");
+    public static final Signature JAVA_UNIXFILESYSTEM_GETLASTMODIFIEDTIME = 
+        new Signature(JAVA_UNIXFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + LONG, "getLastModifiedTime");
     public static final Signature JAVA_UNIXFILESYSTEM_INITIDS = 
         new Signature(JAVA_UNIXFILESYSTEM, "()" + VOID, "initIDs");
     public static final Signature JAVA_UNIXFILESYSTEM_LIST = 
@@ -401,6 +406,8 @@ public final class Signatures {
         new Signature(JAVA_WINNTFILESYSTEM, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_STRING + TYPEEND, "canonicalize0");
     public static final Signature JAVA_WINNTFILESYSTEM_GETBOOLEANATTRIBUTES = 
         new Signature(JAVA_WINNTFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + INT, "getBooleanAttributes");
+    public static final Signature JAVA_WINNTFILESYSTEM_GETLASTMODIFIEDTIME = 
+        new Signature(JAVA_WINNTFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + LONG, "getLastModifiedTime");
     public static final Signature JAVA_WINNTFILESYSTEM_INITIDS = 
         new Signature(JAVA_WINNTFILESYSTEM, "()" + VOID, "initIDs");
     public static final Signature JAVA_WINNTFILESYSTEM_LIST = 

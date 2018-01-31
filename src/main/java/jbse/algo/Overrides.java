@@ -53,6 +53,7 @@ public final class Overrides {
     public static final String ALGO_JAVA_CLASSLOADER_FINDLOADEDCLASS0              = internalClassName(jbse.algo.meta.Algo_JAVA_CLASSLOADER_FINDLOADEDCLASS0.class.getName());
     public static final String ALGO_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD            = internalClassName(jbse.algo.meta.Algo_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD.class.getName());
     public static final String ALGO_JAVA_FILEINPUTSTREAM_AVAILABLE                 = internalClassName(jbse.algo.meta.Algo_JAVA_FILEINPUTSTREAM_AVAILABLE.class.getName());
+    public static final String ALGO_JAVA_FILEINPUTSTREAM_CLOSE0                    = internalClassName(jbse.algo.meta.Algo_JAVA_FILEINPUTSTREAM_CLOSE0.class.getName());
     public static final String ALGO_JAVA_FILEINPUTSTREAM_OPEN0                     = internalClassName(jbse.algo.meta.Algo_JAVA_FILEINPUTSTREAM_OPEN0.class.getName());
     public static final String ALGO_JAVA_FILEINPUTSTREAM_READBYTES                 = internalClassName(jbse.algo.meta.Algo_JAVA_FILEINPUTSTREAM_READBYTES.class.getName());
     public static final String ALGO_JAVA_METHODHANDLENATIVES_RESOLVE               = internalClassName(jbse.algo.meta.Algo_JAVA_METHODHANDLENATIVES_RESOLVE.class.getName());
@@ -75,6 +76,7 @@ public final class Overrides {
     public static final String ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT            = internalClassName(jbse.algo.meta.Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT.class.getName());
     public static final String ALGO_JAVA_XFILESYSTEM_CANONICALIZE0                 = internalClassName(jbse.algo.meta.Algo_JAVA_XFILESYSTEM_CANONICALIZE0.class.getName());
     public static final String ALGO_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX         = internalClassName(jbse.algo.meta.Algo_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX.class.getName());
+    public static final String ALGO_JAVA_XFILESYSTEM_GETLASTMODIFIEDTIME           = internalClassName(jbse.algo.meta.Algo_JAVA_XFILESYSTEM_GETLASTMODIFIEDTIME.class.getName());
     public static final String ALGO_JAVA_XFILESYSTEM_LIST                          = internalClassName(jbse.algo.meta.Algo_JAVA_XFILESYSTEM_LIST.class.getName());
     public static final String ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 = internalClassName(jbse.algo.meta.Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0.class.getName());
     public static final String ALGO_SUN_REFLECTION_GETCALLERCLASS                  = internalClassName(jbse.algo.meta.Algo_SUN_REFLECTION_GETCALLERCLASS.class.getName());

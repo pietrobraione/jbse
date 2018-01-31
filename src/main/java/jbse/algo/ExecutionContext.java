@@ -20,6 +20,7 @@ import static jbse.algo.Overrides.ALGO_JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASSLOADER_FINDLOADEDCLASS0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD;
 import static jbse.algo.Overrides.ALGO_JAVA_FILEINPUTSTREAM_AVAILABLE;
+import static jbse.algo.Overrides.ALGO_JAVA_FILEINPUTSTREAM_CLOSE0;
 import static jbse.algo.Overrides.ALGO_JAVA_FILEINPUTSTREAM_OPEN0;
 import static jbse.algo.Overrides.ALGO_JAVA_FILEINPUTSTREAM_READBYTES;
 import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_RESOLVE;
@@ -42,6 +43,7 @@ import static jbse.algo.Overrides.ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH;
 import static jbse.algo.Overrides.ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT;
 import static jbse.algo.Overrides.ALGO_JAVA_XFILESYSTEM_CANONICALIZE0;
 import static jbse.algo.Overrides.ALGO_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX;
+import static jbse.algo.Overrides.ALGO_JAVA_XFILESYSTEM_GETLASTMODIFIEDTIME;
 import static jbse.algo.Overrides.ALGO_JAVA_XFILESYSTEM_LIST;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ANY;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED;
@@ -130,6 +132,7 @@ import static jbse.bc.Signatures.JAVA_ENUM;
 import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR_INITIDS;
 import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM_INITIDS;
 import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM_AVAILABLE;
+import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM_CLOSE0;
 import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM_OPEN0;
 import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM_READBYTES;
 import static jbse.bc.Signatures.JAVA_FILEOUTPUTSTREAM_INITIDS;
@@ -152,6 +155,7 @@ import static jbse.bc.Signatures.JAVA_OBJECT_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_REFLECT_ARRAY_NEWARRAY;
 import static jbse.bc.Signatures.JAVA_RUNTIME_AVAILABLEPROCESSORS;
 import static jbse.bc.Signatures.JAVA_SHORT_SHORTCACHE;
+import static jbse.bc.Signatures.JAVA_STANDARDCHARSETS;
 import static jbse.bc.Signatures.JAVA_STRICTMATH_ACOS;
 import static jbse.bc.Signatures.JAVA_STRICTMATH_ASIN;
 import static jbse.bc.Signatures.JAVA_STRICTMATH_ATAN;
@@ -202,11 +206,13 @@ import static jbse.bc.Signatures.JAVA_THROWABLE_SENTINELHOLDER;
 import static jbse.bc.Signatures.JAVA_TREESET;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_CANONICALIZE0;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_GETBOOLEANATTRIBUTES0;
+import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_GETLASTMODIFIEDTIME;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_INITIDS;
 import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM_LIST;
 import static jbse.bc.Signatures.JAVA_VOID;
 import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM_CANONICALIZE0;
 import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM_GETBOOLEANATTRIBUTES;
+import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM_GETLASTMODIFIEDTIME;
 import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM_INITIDS;
 import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM_LIST;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ANY;
@@ -460,6 +466,7 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_DOUBLE_LONGBITSTODOUBLE,                       ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(JAVA_FILEDESCRIPTOR_INITIDS,                        ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(JAVA_FILEINPUTSTREAM_AVAILABLE,                     ALGO_JAVA_FILEINPUTSTREAM_AVAILABLE);
+            addMetaOverridden(JAVA_FILEINPUTSTREAM_CLOSE0,                        ALGO_JAVA_FILEINPUTSTREAM_CLOSE0);
             addMetaOverridden(JAVA_FILEINPUTSTREAM_INITIDS,                       ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(JAVA_FILEINPUTSTREAM_OPEN0,                         ALGO_JAVA_FILEINPUTSTREAM_OPEN0);
             addMetaOverridden(JAVA_FILEINPUTSTREAM_READBYTES,                     ALGO_JAVA_FILEINPUTSTREAM_READBYTES);
@@ -523,10 +530,12 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEELEMENT,                ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT);
             addMetaOverridden(JAVA_UNIXFILESYSTEM_CANONICALIZE0,                  ALGO_JAVA_XFILESYSTEM_CANONICALIZE0);
             addMetaOverridden(JAVA_UNIXFILESYSTEM_GETBOOLEANATTRIBUTES0,          ALGO_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX);
+            addMetaOverridden(JAVA_UNIXFILESYSTEM_GETLASTMODIFIEDTIME,            ALGO_JAVA_XFILESYSTEM_GETLASTMODIFIEDTIME);
             addMetaOverridden(JAVA_UNIXFILESYSTEM_INITIDS,                        ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(JAVA_UNIXFILESYSTEM_LIST,                           ALGO_JAVA_XFILESYSTEM_LIST);
             addMetaOverridden(JAVA_WINNTFILESYSTEM_CANONICALIZE0,                 ALGO_JAVA_XFILESYSTEM_CANONICALIZE0);
             addMetaOverridden(JAVA_WINNTFILESYSTEM_GETBOOLEANATTRIBUTES,          ALGO_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX);
+            addMetaOverridden(JAVA_WINNTFILESYSTEM_GETLASTMODIFIEDTIME,           ALGO_JAVA_XFILESYSTEM_GETLASTMODIFIEDTIME);
             addMetaOverridden(JAVA_WINNTFILESYSTEM_INITIDS,                       ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(JAVA_WINNTFILESYSTEM_LIST,                          ALGO_JAVA_XFILESYSTEM_LIST);
             addMetaOverridden(SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0,     ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0);
@@ -712,6 +721,7 @@ public final class ExecutionContext {
         className.equals(JAVA_LINKEDLIST_ENTRY) ||
         className.equals(JAVA_METHODTYPEFORM) || 
         className.equals(JAVA_SHORT_SHORTCACHE) || 
+        className.equals(JAVA_STANDARDCHARSETS) || 
         className.equals(JAVA_TREESET) ||
         className.equals(JAVA_THROWABLE_SENTINELHOLDER) ||
         className.equals(JAVA_VOID) || 

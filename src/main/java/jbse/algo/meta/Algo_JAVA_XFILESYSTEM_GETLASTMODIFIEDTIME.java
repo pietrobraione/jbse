@@ -6,9 +6,7 @@ import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
 import static jbse.bc.Signatures.JAVA_FILE_PATH;
-import static jbse.bc.Signatures.JAVA_UNIXFILESYSTEM;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
-import static jbse.common.Type.internalClassName;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -28,13 +26,13 @@ import jbse.val.Reference;
 import jbse.val.Simplex;
 
 /**
- * Meta-level implementation of {@link java.io.UnixFileSystem#getBooleanAttributes0(File)} and
- * {@link java.io.WinNTFileSystem#getBooleanAttributes(File)}.
+ * Meta-level implementation of {@link java.io.UnixFileSystem#getLastModifiedTime(File)} and
+ * {@link java.io.WinNTFileSystem#getLastModifiedTime(File)}.
  * 
  * @author Pietro Braione
  */
-//TODO merge with Algo_JAVA_XFILESYSTEM_GETLASTMODIFIEDTIME
-public final class Algo_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX extends Algo_INVOKEMETA_Nonbranching {
+//TODO merge with Algo_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX
+public final class Algo_JAVA_XFILESYSTEM_GETLASTMODIFIEDTIME extends Algo_INVOKEMETA_Nonbranching {
     private Simplex toPush; //set by cookMore
 
     @Override
@@ -51,8 +49,7 @@ public final class Algo_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX extends Algo_INVO
             fileSystemField.setAccessible(true);
             final Object fileSystem = fileSystemField.get(null);
             final Class<?> fileSystemClass = fileSystem.getClass();
-            final boolean isUnix = JAVA_UNIXFILESYSTEM.equals(internalClassName(fileSystemClass.getName()));
-            final String methodName = "getBooleanAttributes" + (isUnix ? "0" : "");
+            final String methodName = "getLastModifiedTime";
 
             //gets the File parameter
             final Reference fileReference = (Reference) this.data.operand(1);
@@ -82,15 +79,15 @@ public final class Algo_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX extends Algo_INVO
             }
             
             //creates a File object with same path and
-            //invokes metacircularly the getBooleanAttributes[0]
-            //method to obtain its attributes
-            final Method getAttributesMethod = fileSystemClass.getDeclaredMethod(methodName, File.class);
-            getAttributesMethod.setAccessible(true);
+            //invokes metacircularly the getLastModifiedTime
+            //method to obtain its modification time
+            final Method getLastModifiedTimeMethod = fileSystemClass.getDeclaredMethod(methodName, File.class);
+            getLastModifiedTimeMethod.setAccessible(true);
             final File f = new File(filePath);
-            final int attributes = ((Integer) getAttributesMethod.invoke(fileSystem, f)).intValue();
+            final long time = ((Long) getLastModifiedTimeMethod.invoke(fileSystem, f)).longValue();
             
             //converts the attributes to Simplex
-            this.toPush = state.getCalculator().valInt(attributes);
+            this.toPush = state.getCalculator().valLong(time);
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();

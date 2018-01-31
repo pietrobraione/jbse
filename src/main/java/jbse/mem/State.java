@@ -14,9 +14,14 @@ import static jbse.common.Type.parametersNumber;
 import static jbse.common.Type.binaryClassName;
 import static jbse.common.Type.isPrimitiveCanonicalName;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FilterInputStream;
+import java.io.FilterOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -229,11 +234,42 @@ public final class State implements Cloneable {
                  Calculator calc) 
                  throws InvalidClassFileFactoryClassException {
         this.classLoaders.add(Null.getInstance()); //classloader 0 is the bootstrap classloader
+        setStandardFiles();
         this.heap = new Heap(maxHeapSize);
         this.classHierarchy = new ClassHierarchy(cp, fClass, expansionBackdoor);
         this.maxSimpleArrayLength = maxSimpleArrayLength;
         this.calc = calc;
         this.symbolFactory = new SymbolFactory(this.calc);
+    }
+    
+    private void setStandardFiles() {
+        try {
+            //gets reflectively some fields
+            final Field fisInField = FilterInputStream.class.getDeclaredField("in");
+            fisInField.setAccessible(true);
+            final Field fosOutField = FilterOutputStream.class.getDeclaredField("out");
+            fosOutField.setAccessible(true);
+            
+            //gets the stdin and registers it
+            final BufferedInputStream bisIn = (BufferedInputStream) System.in;
+            final FileInputStream in = (FileInputStream) fisInField.get(bisIn);
+            setFile(0, in);
+            
+            //gets the stdout and registers it
+            final PrintStream psOut = (PrintStream) System.out;
+            final BufferedOutputStream bosOut = (BufferedOutputStream) fosOutField.get(psOut);
+            final FileOutputStream out = (FileOutputStream) fosOutField.get(bosOut);
+            setFile(1, out);
+            
+            //gets the err and registers it
+            final PrintStream psErr = (PrintStream) System.err;
+            final BufferedOutputStream bosErr = (BufferedOutputStream) fosOutField.get(psErr);
+            final FileOutputStream err = (FileOutputStream) fosOutField.get(bosErr);
+            setFile(2, err);
+        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -683,14 +719,41 @@ public final class State implements Cloneable {
         return this.linkAppendices.get(signature);
     }
     
+    /**
+     * Returns the file stream associated to a open file descriptor.
+     * 
+     * @param descriptor an {@code int}.
+     * @return a {@link FileInputStream} of a {@link FileOutputStream}, or
+     *         {@code null} if {@code descriptor} is not the descriptor
+     *         of an open file previously associated with a call to {@link #setFile(int, Object)}.
+     */
     public Object getFile(int descriptor) {
         return this.files.get(Integer.valueOf(descriptor));
     }
     
+    /**
+     * Associates a file stream to an open file descriptor.
+     * 
+     * @param descriptor an {@code int}, the descriptor of an open file.
+     * @param fileStream a {@link FileInputStream} or a {@link FileOutputStream} 
+     *        (if it is not an instance of one of these types the method does
+     *        nothing).
+     */
     public void setFile(int descriptor, Object fileStream) {
         if (fileStream instanceof FileInputStream || fileStream instanceof FileOutputStream) {
             this.files.put(Integer.valueOf(descriptor), fileStream);
         }
+    }
+    
+    /**
+     * Removes an open file descriptor and its associated file stream.
+     * 
+     * @param descriptor an {@code int}, the open file descriptor to remove
+     *        (if it is not a previously associated open file descriptor
+     *        the method does nothing).
+     */
+    public void removeFile(int descriptor) {
+        this.files.remove(Integer.valueOf(descriptor));
     }
 
     /**
@@ -2422,31 +2485,40 @@ public final class State implements Cloneable {
         o.methodTypes = new HashMap<>(o.methodTypes);
         
         //files
-        o.files = new HashMap<>();
-        for (Map.Entry<Integer, Object> entry : this.files.entrySet()) {
-            try {
+        try {
+            o.files = new HashMap<>();
+            final Field fisPath = FileInputStream.class.getDeclaredField("path");
+            fisPath.setAccessible(true);
+            final Field fosPath = FileOutputStream.class.getDeclaredField("path");
+            fosPath.setAccessible(true);
+            for (Map.Entry<Integer, Object> entry : this.files.entrySet()) {
                 if (entry.getValue() instanceof FileInputStream) {
-                    final FileInputStream fisThis = (FileInputStream) entry.getValue();
-                    final Field fisPath = FileInputStream.class.getDeclaredField("path");
-                    fisPath.setAccessible(true);
-                    final String path = (String) fisPath.get(fisThis);
-                    final FileInputStream fisClone = new FileInputStream(path);
-                    fisClone.skip(fisThis.getChannel().position());
+                    final FileInputStream fisClone;
+                    if (entry.getKey() == 0) {
+                        fisClone = (FileInputStream) entry.getValue();
+                    } else {
+                        final FileInputStream fisThis = (FileInputStream) entry.getValue();
+                        final String path = (String) fisPath.get(fisThis);
+                        fisClone = new FileInputStream(path);
+                        fisClone.skip(fisThis.getChannel().position());
+                    }
                     o.files.put(entry.getKey(), fisClone);
                 } else {
-                    final FileOutputStream fosThis = (FileOutputStream) entry.getValue();
-                    final Field fosPath = FileOutputStream.class.getDeclaredField("path");
-                    fosPath.setAccessible(true);
-                    final String path = (String) fosPath.get(fosThis);
-                    final FileInputStream fosClone = new FileInputStream(path);
-                    fosClone.skip(fosThis.getChannel().position());
+                    final FileOutputStream fosClone;
+                    if (entry.getKey() == 1 ||  entry.getKey() == 2) {
+                        fosClone = (FileOutputStream) entry.getValue();
+                    } else {
+                        final FileOutputStream fosThis = (FileOutputStream) entry.getValue();
+                        final String path = (String) fosPath.get(fosThis);
+                        fosClone = new FileOutputStream(path);
+                    }
                     o.files.put(entry.getKey(), fosClone);
                 }
-            } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | 
-                     IllegalAccessException | IOException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
             }
+        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | 
+                 IllegalAccessException | IOException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
         }
 
         //stack
