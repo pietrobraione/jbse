@@ -152,7 +152,7 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
         //initializes the paths
         JAVA_HOME             = cp.javaHome();
         SUN_BOOT_CLASS_PATH   = stream(cp.bootClassPath()).reduce("", (s, t) -> s + PATH_SEPARATOR + t);
-        JAVA_EXT_DIRS         = stream(cp.extClassPath()).reduce("", (s, t) -> s + PATH_SEPARATOR + t);
+        JAVA_EXT_DIRS         = stream(cp.extDirs()).reduce("", (s, t) -> s + PATH_SEPARATOR + t);
         JAVA_CLASS_PATH       = stream(cp.classPath()).reduce("", (s, t) -> s + PATH_SEPARATOR + t);
         SUN_BOOT_LIBRARY_PATH = JAVA_HOME + FILE_SEPARATOR + "lib";
         JAVA_LIBRARY_PATH     = JAVA_EXT_DIRS; //TODO this is an approximation, the real case is much more complex and os-dependent

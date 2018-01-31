@@ -15,6 +15,7 @@ public class Classpath implements Cloneable {
     private final String javaHome;
     private ArrayList<String> bootClassPath; //nonfinal because of clone
     private ArrayList<String> extClassPath; //nonfinal because of clone
+    private ArrayList<String> extDirs; //nonfinal because of clone
     private ArrayList<String> userClassPath; //nonfinal because of clone
     private ArrayList<String> classPath; //nonfinal because of clone
 
@@ -22,7 +23,7 @@ public class Classpath implements Cloneable {
      * Constructor.
      * 
      * @param javaHome a {@link String}, the Java home directory.
-     * @param extPaths a {@link List}{@code <}{@link String}{@code >}, 
+     * @param extDirs a {@link List}{@code <}{@link String}{@code >}, 
      *        the extension directories. It must contain valid paths
      *        to directories. Only the jar files contained in these
      *        directories will be considered.
@@ -30,7 +31,7 @@ public class Classpath implements Cloneable {
      *        the user classpath. It must contain valid paths to directories
      *        or jar files.
      */
-    public Classpath(String javaHome, List<String> extPaths, List<String> userPaths) {
+    public Classpath(String javaHome, List<String> extDirs, List<String> userPaths) {
         this.javaHome = javaHome;
         
         //bootstrap paths
@@ -45,9 +46,12 @@ public class Classpath implements Cloneable {
         addClassPath(this.bootClassPath, Paths.get(javaHome, "lib", "jfr.jar").toString());
         addClassPath(this.bootClassPath, Paths.get(javaHome, "classes").toString());
         
-        //extension paths
+        //extension paths and dirs
         this.extClassPath = new ArrayList<>();
-        for (String dir : extPaths) {
+        this.extDirs = new ArrayList<>();
+        for (String dir : extDirs) {
+            addClassPath(this.extDirs, dir);
+            
             final File f = new File(dir);
             final File[] jars = f.listFiles((dir2, name) -> name.endsWith(".jar"));
             if (jars == null) {
@@ -110,12 +114,22 @@ public class Classpath implements Cloneable {
     public Iterable<String> bootClassPath() {
         return Collections.unmodifiableCollection(this.bootClassPath);
     }
-
+    
     /**
-     * Returns the paths in the extension classpath.
+     * Returns the extensions directories.
      * 
      * @return an {@link Iterable}{@code <}{@link String}{@code >}
-     *         of all the paths in the extension classpath.
+     *         of all the extensions directories.
+     */
+    public Iterable<String> extDirs() {
+        return Collections.unmodifiableCollection(this.extDirs);
+    }
+
+    /**
+     * Returns the paths in the extensions classpath.
+     * 
+     * @return an {@link Iterable}{@code <}{@link String}{@code >}
+     *         of all the paths in the extensions classpath.
      */
     public Iterable<String> extClassPath() {
         return Collections.unmodifiableCollection(this.extClassPath);
