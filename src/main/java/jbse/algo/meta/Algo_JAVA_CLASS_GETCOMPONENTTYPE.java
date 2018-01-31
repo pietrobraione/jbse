@@ -1,6 +1,7 @@
 package jbse.algo.meta;
 
 import static jbse.algo.Util.exitFromAlgorithm;
+import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
@@ -43,6 +44,10 @@ public final class Algo_JAVA_CLASS_GETCOMPONENTTYPE extends Algo_INVOKEMETA_Nonb
         try {           
             //gets the canonical name of the primitive type and converts it to a string
             final Reference classRef = (Reference) this.data.operand(0);
+            if (state.isNull(classRef)) {
+                //this should never happen
+                failExecution("The 'this' parameter to java.lang.Class.getComponentType method is null.");
+            }
             final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject(classRef);
             final ClassFile classFile = clazz.representedClass();
             if (classFile.isArray()) {

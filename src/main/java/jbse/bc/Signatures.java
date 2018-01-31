@@ -126,6 +126,7 @@ public final class Signatures {
     public static final String CLONE_NOT_SUPPORTED_EXCEPTION       = "java/lang/CloneNotSupportedException";
     public static final String EXCEPTION                           = "java/lang/Exception";
     public static final String EXCEPTIONININITIALIZERERROR         = "java/lang/ExceptionInInitializerError";
+    public static final String FILE_NOT_FOUND_EXCEPTION            = "java/io/FileNotFoundException";
     public static final String ILLEGAL_ARGUMENT_EXCEPTION          = "java/lang/IllegalArgumentException";
     public static final String ILLEGAL_MONITOR_STATE_EXCEPTION     = "java/lang/IllegalMonitorStateException";
     public static final String INDEX_OUT_OF_BOUNDS_EXCEPTION       = "java/lang/IndexOutOfBoundsException";
@@ -231,8 +232,14 @@ public final class Signatures {
         new Signature(JAVA_DOUBLE, "(" + LONG + ")" + DOUBLE, "longBitsToDouble");
     public static final Signature JAVA_FILEDESCRIPTOR_INITIDS =
         new Signature(JAVA_FILEDESCRIPTOR, "()" + VOID, "initIDs");
+    public static final Signature JAVA_FILEINPUTSTREAM_AVAILABLE =
+        new Signature(JAVA_FILEINPUTSTREAM, "()" + INT, "available");
     public static final Signature JAVA_FILEINPUTSTREAM_INITIDS =
         new Signature(JAVA_FILEINPUTSTREAM, "()" + VOID, "initIDs");
+    public static final Signature JAVA_FILEINPUTSTREAM_OPEN0 =
+        new Signature(JAVA_FILEINPUTSTREAM, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + VOID, "open0");
+    public static final Signature JAVA_FILEINPUTSTREAM_READBYTES =
+        new Signature(JAVA_FILEINPUTSTREAM, "(" + ARRAYOF + BYTE + INT + INT + ")" + INT, "readBytes");
     public static final Signature JAVA_FILEOUTPUTSTREAM_INITIDS =
         new Signature(JAVA_FILEOUTPUTSTREAM, "()" + VOID, "initIDs");
     public static final Signature JAVA_FLOAT_FLOATTORAWINTBITS =
@@ -573,6 +580,10 @@ public final class Signatures {
         new Signature(JAVA_FIELD, "" + REFERENCE + JAVA_CLASS + TYPEEND, "type");
     public static final Signature JAVA_FILE_PATH = 
         new Signature(JAVA_FILE, "" + REFERENCE + JAVA_STRING + TYPEEND, "path");
+    public static final Signature JAVA_FILEDESCRIPTOR_FD = 
+        new Signature(JAVA_FILEDESCRIPTOR, "" + INT, "fd");
+    public static final Signature JAVA_FILEINPUTSTREAM_FD = 
+        new Signature(JAVA_FILEINPUTSTREAM, "" + REFERENCE + JAVA_FILEDESCRIPTOR + TYPEEND, "fd");
     public static final Signature JAVA_FLOAT_VALUE = 
         new Signature(JAVA_FLOAT, "" + FLOAT, "value");
     public static final Signature JAVA_INTEGER_VALUE = 

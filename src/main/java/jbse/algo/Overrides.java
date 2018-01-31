@@ -31,8 +31,9 @@ import jbse.bc.Signature;
  *
  */
 public final class Overrides {
+    public static final String ALGO_INVOKEMETA_METACIRCULAR                        = internalClassName(jbse.algo.Algo_INVOKEMETA_Metacircular.class.getName());
+    
     //Overriding meta-level implementations of standard methods
-    public static final String ALGO_INVOKEMETA_METACIRCULAR                                = internalClassName(jbse.algo.Algo_INVOKEMETA_Metacircular.class.getName());
     public static final String ALGO_JAVA_CLASS_FORNAME0                            = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_FORNAME0.class.getName());
     public static final String ALGO_JAVA_CLASS_GETCOMPONENTTYPE                    = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETCOMPONENTTYPE.class.getName());
     public static final String ALGO_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0            = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0.class.getName());
@@ -51,6 +52,9 @@ public final class Overrides {
     public static final String ALGO_JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS            = internalClassName(jbse.algo.meta.Algo_JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS.class.getName());
     public static final String ALGO_JAVA_CLASSLOADER_FINDLOADEDCLASS0              = internalClassName(jbse.algo.meta.Algo_JAVA_CLASSLOADER_FINDLOADEDCLASS0.class.getName());
     public static final String ALGO_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD            = internalClassName(jbse.algo.meta.Algo_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD.class.getName());
+    public static final String ALGO_JAVA_FILEINPUTSTREAM_AVAILABLE                 = internalClassName(jbse.algo.meta.Algo_JAVA_FILEINPUTSTREAM_AVAILABLE.class.getName());
+    public static final String ALGO_JAVA_FILEINPUTSTREAM_OPEN0                     = internalClassName(jbse.algo.meta.Algo_JAVA_FILEINPUTSTREAM_OPEN0.class.getName());
+    public static final String ALGO_JAVA_FILEINPUTSTREAM_READBYTES                 = internalClassName(jbse.algo.meta.Algo_JAVA_FILEINPUTSTREAM_READBYTES.class.getName());
     public static final String ALGO_JAVA_METHODHANDLENATIVES_RESOLVE               = internalClassName(jbse.algo.meta.Algo_JAVA_METHODHANDLENATIVES_RESOLVE.class.getName());
     public static final String ALGO_JAVA_OBJECT_CLONE                              = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_CLONE.class.getName());
     public static final String ALGO_JAVA_OBJECT_GETCLASS                           = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_GETCLASS.class.getName());

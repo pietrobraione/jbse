@@ -14,6 +14,10 @@ import static jbse.common.Type.parametersNumber;
 import static jbse.common.Type.binaryClassName;
 import static jbse.common.Type.isPrimitiveCanonicalName;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -120,6 +124,9 @@ public final class State implements Cloneable {
     
     /** The {@link ReferenceConcrete}s to {@link Instance}s of {@code java.lang.invoke.MethodType}s. */
     private HashMap<String, ReferenceConcrete> methodTypes = new HashMap<>();
+    
+    /** Maps file descriptors to (meta-level) open files. */
+    private HashMap<Integer, Object> files = new HashMap<>();
 
     /** The JVM stack of the current execution thread. */
     private ThreadStack stack = new ThreadStack();
@@ -674,6 +681,16 @@ public final class State implements Cloneable {
      */
     public ReferenceConcrete getAppendix(Signature signature) {
         return this.linkAppendices.get(signature);
+    }
+    
+    public Object getFile(int descriptor) {
+        return this.files.get(Integer.valueOf(descriptor));
+    }
+    
+    public void setFile(int descriptor, Object fileStream) {
+        if (fileStream instanceof FileInputStream || fileStream instanceof FileOutputStream) {
+            this.files.put(Integer.valueOf(descriptor), fileStream);
+        }
     }
 
     /**
@@ -2403,6 +2420,34 @@ public final class State implements Cloneable {
         
         //methodTypes
         o.methodTypes = new HashMap<>(o.methodTypes);
+        
+        //files
+        o.files = new HashMap<>();
+        for (Map.Entry<Integer, Object> entry : this.files.entrySet()) {
+            try {
+                if (entry.getValue() instanceof FileInputStream) {
+                    final FileInputStream fisThis = (FileInputStream) entry.getValue();
+                    final Field fisPath = FileInputStream.class.getDeclaredField("path");
+                    fisPath.setAccessible(true);
+                    final String path = (String) fisPath.get(fisThis);
+                    final FileInputStream fisClone = new FileInputStream(path);
+                    fisClone.skip(fisThis.getChannel().position());
+                    o.files.put(entry.getKey(), fisClone);
+                } else {
+                    final FileOutputStream fosThis = (FileOutputStream) entry.getValue();
+                    final Field fosPath = FileOutputStream.class.getDeclaredField("path");
+                    fosPath.setAccessible(true);
+                    final String path = (String) fosPath.get(fosThis);
+                    final FileInputStream fosClone = new FileInputStream(path);
+                    fosClone.skip(fosThis.getChannel().position());
+                    o.files.put(entry.getKey(), fosClone);
+                }
+            } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | 
+                     IllegalAccessException | IOException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            }
+        }
 
         //stack
         o.stack = o.stack.clone();
