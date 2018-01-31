@@ -3,11 +3,16 @@ package jbse.algo.meta;
 import static jbse.algo.BytecodeData_1KME.Kind.kind;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.invokeClassLoaderLoadClass;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import static jbse.bc.Signatures.ILLEGAL_ARGUMENT_EXCEPTION;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
+import static jbse.common.Type.ARRAYOF;
+import static jbse.common.Type.REFERENCE;
+import static jbse.common.Type.TYPEEND;
+import static jbse.common.Type.toPrimitiveInternalName;
 
 import java.util.function.Supplier;
 
@@ -15,9 +20,16 @@ import jbse.algo.Algo_XNEWARRAY;
 import jbse.algo.Algorithm;
 import jbse.algo.BytecodeData_1KME;
 import jbse.algo.InterruptException;
+import jbse.bc.ClassFile;
+import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.PleaseLoadClassException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 
@@ -39,7 +51,8 @@ public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEW
     }
 
     @Override
-    protected void preCook(State state) throws InterruptException, ClasspathException {
+    protected void preCook(State state) 
+    throws InterruptException, ClasspathException, InvalidInputException, ThreadStackEmptyException {
         //sets the array length
         try {
             this.dimensionsCounts = new Primitive[] { (Primitive) this.data.operand(1) };
@@ -69,10 +82,25 @@ public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEW
                     exitFromAlgorithm();
                 }
             }
-            this.arrayType = clazz.representedClass();
+            final ClassFile arrayMemberType = clazz.representedClass();
+            final String arrayTypeName;
+            if (arrayMemberType.isPrimitive()) {
+                arrayTypeName = "" + ARRAYOF + toPrimitiveInternalName(arrayMemberType.getClassName());
+            } else if (arrayMemberType.isArray()) {
+                arrayTypeName = "" + ARRAYOF + arrayMemberType.getClassName();
+            } else { //isReference()
+                arrayTypeName = "" + ARRAYOF + REFERENCE + arrayMemberType.getClassName() + TYPEEND;
+            }
+            this.arrayType = state.getClassHierarchy().loadCreateClass(arrayMemberType.getDefiningClassLoader(), arrayTypeName, state.areStandardClassLoadersNotReady());
+        } catch (PleaseLoadClassException e) {
+            invokeClassLoaderLoadClass(state, e);
+            exitFromAlgorithm();
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException e) {
+            //this should never happen
+            failExecution(e);
         }
     }
 
