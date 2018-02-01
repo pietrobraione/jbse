@@ -146,6 +146,13 @@
       <scope>system</scope>
       <systemPath>C:/Users/Matteo/Documents/Università/STAGE/tools.jar</systemPath>
     </dependency>
+    <dependency>
+      <groupId>org.apache</groupId>
+      <artifactId>commons-lang3-3.6</artifactId>
+      <version>1.8</version>
+      <scope>system</scope>
+      <systemPath>C:/Users/Matteo/Documents/Università/STAGE/commons-lang3-3.6.jar</systemPath>
+    </dependency>
   </dependencies>
 
   <properties>
