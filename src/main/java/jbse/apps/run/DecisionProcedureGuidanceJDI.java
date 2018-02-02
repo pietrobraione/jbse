@@ -25,7 +25,6 @@ import com.sun.jdi.ReferenceType;
 import com.sun.jdi.ShortValue;
 import com.sun.jdi.StackFrame;
 import com.sun.jdi.ThreadReference;
-import com.sun.jdi.VMDisconnectedException;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.connect.Connector;
 import com.sun.jdi.connect.IllegalConnectorArgumentsException;
@@ -41,7 +40,6 @@ import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.MethodEntryRequest;
 import com.sun.jdi.request.MethodExitRequest;
-
 
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
@@ -89,18 +87,8 @@ import jbse.val.exc.InvalidTypeException;
  * according to the state reached by the guiding JVM.
  */
 public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorithms {
+    private final JVM jvm;
     private boolean ended;
-    private String path;   
-    private String test;   
-    private String methodTarget;  
-    private VirtualMachine vm;
-    private static MethodEntryEvent e;
-    private String methodRunnPar;
-    private boolean intoMethodRunnPar=false;
-    RunnerParameters runnerParameters;
-    Signature stopSignature;
-    int numberOfHits;
-    int numOfHits;
 
     /**
      * Builds the {@link DecisionProcedureGuidanceJDI}.
@@ -141,180 +129,10 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
     public DecisionProcedureGuidanceJDI(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits) 
     throws GuidanceException {
         super(component, calc);
-        this.runnerParameters=runnerParameters;
-        this.stopSignature=stopSignature;
-        this.numberOfHits=numberOfHits;
         if (numberOfHits < 1) {
             throw new GuidanceException("Invalid number of hits " + numberOfHits + ".");
         }
-        methodRunnPar = runnerParameters.getMethodSignature().getName();
-        methodTarget=stopSignature.getName();
-        Iterable<String> classPath = runnerParameters.getClasspath().classPath();
-        List<String> listClassPath = new ArrayList<>();
-        classPath.forEach(listClassPath::add);
-        //the variable 'path' is the last one defined in the list 'listClassPath'
-        path = listClassPath.get(listClassPath.size()-1);
-        path = path.substring(0, path.length()-1);
-        test=stopSignature.getClassName();
-        JVM VirtMach = new JVM();
-        VirtMach.startVm();					
-    }
-
-    private void run(){
-        EventQueue queue = vm.eventQueue();
-        boolean testMethodEntryFound = false;
-        while (!testMethodEntryFound) {
-            try {
-                EventSet eventSet = queue.remove();
-                EventIterator it = eventSet.eventIterator();
-                while (!testMethodEntryFound && it.hasNext()) {
-                    testMethodEntryFound = checkIfMethodEntry(it.nextEvent());
-                }
-                if (!testMethodEntryFound) 
-                    eventSet.resume();
-            } catch (InterruptedException exc) {
-                //System.out.println(exc.toString());
-            } catch (VMDisconnectedException discExc) {
-                //System.out.println(discExc.toString());
-                break;
-            }
-        }
-    }
-
-    private boolean checkIfMethodEntry(Event event){
-        if (event instanceof MethodExitEvent && 
-        (((MethodExitEvent) event).method().name().equals(methodRunnPar))) {
-            intoMethodRunnPar = false;
-        }
-        if (event instanceof MethodEntryEvent){
-            if (((MethodEntryEvent) event).method().name().equals(methodRunnPar)) {
-                numOfHits=0;
-                intoMethodRunnPar = true;
-            }
-            if (((MethodEntryEvent) event).method().name().equals(methodTarget) && (intoMethodRunnPar)) {
-                numOfHits++;
-                if (numOfHits==numberOfHits){
-                    e=(MethodEntryEvent) event;
-                    return true;
-                }
-                return false;
-            }
-        }
-        return false;
-    }
-
-    public static Object getValueParam(String var) throws GuidanceException {
-        Object output = null;
-        try {
-            boolean findParam = false;
-            com.sun.jdi.Value val = null;
-            String delims = "[.]";
-            String[] tokens = var.split(delims);
-            ThreadReference thread = e.thread();
-            List<StackFrame> frames = thread.frames();
-            if (frames.size() > 0) { 
-                StackFrame frame = frames.get(0); 
-                List<LocalVariable> variables = frame.visibleVariables();  
-                if (variables != null) { 
-                    for (LocalVariable variable: variables) { 
-                        if (variable.name().equals(tokens[0])){
-                            findParam = true;
-                            val = frame.getValue(variable);
-                            if (tokens.length>1){
-                                val = innestate(val,tokens);
-                            }
-                        }
-                    } 
-                }
-            }
-            if (!findParam)
-                val = getValueInstanceField(var);
-            switch(val.type().toString()){
-            case "int":
-                IntegerValue intVal = (IntegerValue) val;
-                output = intVal.intValue();
-                return output;
-            case "boolean":
-                BooleanValue boolVal = (BooleanValue)val;
-                output = boolVal.booleanValue();
-                return output;
-            case "char":
-                CharValue charVal = (CharValue)val;
-                output = charVal.charValue();
-                return output;
-            case "byte":
-                ByteValue byteVal = (ByteValue)val;
-                output = byteVal.byteValue();
-                return output;
-            case "double":
-                DoubleValue doubleVal = (DoubleValue)val;
-                output = doubleVal.doubleValue();
-                return output;
-            case "float":
-                FloatValue floatVal = (FloatValue)val;
-                output = floatVal.floatValue();
-                return output;
-            case "long":
-                LongValue longVal = (LongValue)val;
-                output = longVal.longValue();
-                return output;
-            case "short":
-                ShortValue shortVal = (ShortValue)val;
-                output = shortVal.shortValue();
-                return output;
-            default:
-                return output;
-            }
-        } catch (IncompatibleThreadStateException | AbsentInformationException e1) {
-            throw new GuidanceException(e1.toString());
-        }
-    }
-
-    public static com.sun.jdi.Value getValueInstanceField(String var) throws IncompatibleThreadStateException {
-        com.sun.jdi.Value val=null;
-        String delims = "[.]";
-        String[] tokens = var.split(delims);
-        ThreadReference thread = e.thread();
-        List<StackFrame> frames = thread.frames(); 
-        if (frames.size() > 0) {
-            StackFrame frame = frames.get(0);
-            ObjectReference objRef = frame.thisObject();
-            ReferenceType refType = objRef.referenceType();
-            List<Field> objFields = refType.allFields();
-            for (int i=0; i<objFields.size(); i++){
-                Field nextField = objFields.get(i);
-                if (nextField.name().equals(tokens[0])){
-                    val = (com.sun.jdi.Value) objRef.getValue(nextField);
-                    if (tokens.length>1){
-                        val = innestate(val,tokens);
-                    }
-                }
-            }
-        }
-        return val;
-    }
-
-    private static com.sun.jdi.Value innestate (com.sun.jdi.Value val, String[] tokens) {
-        String[] tokensNoFirst = new String[tokens.length - 1];
-        System.arraycopy(tokens, 1, tokensNoFirst, 0, tokens.length - 1);
-        ObjectReference obj = (ObjectReference)val;
-        ReferenceType refType = obj.referenceType();
-        List<Field> objF = refType.allFields();
-        for (int i=0; i<objF.size(); i++){
-            Field nextField = objF.get(i);
-            if (nextField.name().equals(tokensNoFirst[0])){
-                val = (com.sun.jdi.Value) obj.getValue(nextField);
-                if (tokensNoFirst.length>1){
-                    try{
-                        val = innestate(val, tokensNoFirst);
-                    }
-                    catch (Exception exc){
-                        System.out.println(exc.toString());
-                    }
-                }
-            }
-        }
-        return val;
+        this.jvm = new JVM(runnerParameters, stopSignature, numberOfHits);
     }
 
     /**
@@ -338,17 +156,17 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
         stopFastAndImprecise();
     }
 
-    private static String nameVar (Primitive var){
-        String nameVar = ((AccessLocalVariable) (((PrimitiveSymbolic)var).getOrigin().getAccess())[0]).variableName();
-        return nameVar;
-    }
-
-    private Primitive eval (Primitive condition){
-        final Evaluator evaluator = new Evaluator(this.calc);
+    private Primitive eval(Primitive condition) 
+    throws GuidanceException {
+        final Evaluator evaluator = new Evaluator(this.calc, this.jvm);
         try {
             condition.accept((PrimitiveVisitor) evaluator);
+        } catch (RuntimeException | GuidanceException e) {
+            //do not stop them
+            throw e;
         } catch (Exception e) {
-            e.printStackTrace();
+            //should not happen
+            throw new UnexpectedInternalException(e);
         }
         return evaluator.value;
     }
@@ -417,9 +235,9 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
                     final DecisionAlternative_XSWITCH da = it.next();
                     //Value valueSelector = getValueParam(nameVar(selector));
                     final Primitive conditionToCheck =
-                    (da.isDefault() ?
-                                     tab.getDefaultClause(selector) :
-                                         selector.eq(this.calc.valInt(da.value())));
+                        (da.isDefault() ?
+                         tab.getDefaultClause(selector) :
+                         selector.eq(this.calc.valInt(da.value())));
                     final Primitive valueInConcreteState = eval(conditionToCheck);
                     if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
                         it.remove();
@@ -464,7 +282,6 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
             try {
                 final Iterator<DecisionAlternative_XASTORE> it = result.iterator();
                 while (it.hasNext()) {
-
                     final DecisionAlternative_XASTORE da = it.next();
                     final Primitive conditionToCheck = (da.isInRange() ? inRange : inRange.not());
                     final Primitive valueInConcreteState = eval(conditionToCheck);
@@ -543,54 +360,206 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
         //TODO
     }
 
-    public class JVM {
+    private class JVM {
+        private final String[] excludes = {"java.*", "javax.*", "sun.*", "com.sun.*", "org.*"};
+        private final int numberOfHits;
+        private final String methodStart;
+        private final String methodStop;  
+        private final VirtualMachine vm;
+        private boolean intoMethodRunnPar = false;
+        private int hitCounter = 0;
+        private MethodEntryEvent methodEntryEvent;
 
-        private String[] excludes = {"java.*", "javax.*", "sun.*",
-                                     "com.sun.*", "org.*"};
-
-        public void startVm (){
-            vm = launchTarget("-classpath \"" + path + test);
-            generateTrace();
-        }
-
-        void generateTrace(){
+        public JVM(RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits) throws GuidanceException {
+            this.numberOfHits = numberOfHits;
+            this.methodStart = runnerParameters.getMethodSignature().getName();
+            this.methodStop = stopSignature.getName();
+            this.vm = createVM(runnerParameters, stopSignature);
             setEventRequests();
             run();
         }
+        
+        public Object getValueParam(String var) throws GuidanceException {
+            try {
+                boolean findParam = false;
+                com.sun.jdi.Value val = null;
+                final String delims = "[.]";
+                final String[] tokens = var.split(delims);
+                final ThreadReference thread = this.methodEntryEvent.thread();
+                final List<StackFrame> frames = thread.frames();
+                if (frames.size() > 0) { 
+                    final StackFrame frame = frames.get(0); 
+                    final List<LocalVariable> variables = frame.visibleVariables();  
+                    if (variables != null) { 
+                        for (LocalVariable variable: variables) { 
+                            if (variable.name().equals(tokens[0])) {
+                                findParam = true;
+                                val = frame.getValue(variable);
+                                if (tokens.length > 1) {
+                                    val = innestate(val,tokens);
+                                }
+                            }
+                        } 
+                    }
+                }
+                if (!findParam) {
+                    val = getValueInstanceField(var);
+                }
+                
+                switch (val.type().toString()) {
+                case "int":
+                    return ((IntegerValue) val).intValue();
+                case "boolean":
+                    return ((BooleanValue) val).booleanValue();
+                case "char":
+                    return ((CharValue) val).charValue();
+                case "byte":
+                    return ((ByteValue) val).byteValue();
+                case "double":
+                    return ((DoubleValue) val).doubleValue();
+                case "float":
+                    return ((FloatValue) val).floatValue();
+                case "long":
+                    return ((LongValue) val).longValue();
+                case "short":
+                    return ((ShortValue) val).shortValue();
+                default:
+                    return null; //TODO throw exception?
+                }
+            } catch (IncompatibleThreadStateException | AbsentInformationException e) {
+                throw new GuidanceException(e.toString());
+            }
+        }
+        
+        private VirtualMachine createVM(RunnerParameters runnerParameters, Signature stopSignature) 
+        throws GuidanceException {
+            //the variable 'path' is the last one defined in the list 'listClassPath'
+            //TODO this block of code seems fragile
+            final Iterable<String> classPath = runnerParameters.getClasspath().classPath();
+            final List<String> listClassPath = new ArrayList<>();
+            classPath.forEach(listClassPath::add);
+            final String last = listClassPath.get(listClassPath.size() - 1);
+            final String path = last.substring(0, last.length() - 1);
+            final String test = stopSignature.getClassName();
+            return launchTarget("-classpath \"" + path + test);
+        }
 
-        void setEventRequests() {
-            EventRequestManager mgr = vm.eventRequestManager();
-            MethodEntryRequest menr = mgr.createMethodEntryRequest();
-            for (int i=0; i<excludes.length; ++i) {
-                menr.addClassExclusionFilter(excludes[i]);
+        private com.sun.jdi.Value getValueInstanceField(String var) throws IncompatibleThreadStateException {
+            com.sun.jdi.Value val = null;
+            final String delims = "[.]";
+            final String[] tokens = var.split(delims);
+            final ThreadReference thread = this.methodEntryEvent.thread();
+            final List<StackFrame> frames = thread.frames(); 
+            if (frames.size() > 0) {
+                final StackFrame frame = frames.get(0);
+                final ObjectReference objRef = frame.thisObject();
+                final ReferenceType refType = objRef.referenceType();
+                final List<Field> objFields = refType.allFields();
+                for (int i = 0; i < objFields.size(); ++i){
+                    final Field nextField = objFields.get(i);
+                    if (nextField.name().equals(tokens[0])) {
+                        val = objRef.getValue(nextField);
+                        if (tokens.length > 1) {
+                            val = innestate(val,tokens);
+                        }
+                    }
+                }
+            }
+            return val;
+        }
+
+        private com.sun.jdi.Value innestate(com.sun.jdi.Value val, String[] tokens) {
+            final String[] tokensNoFirst = new String[tokens.length - 1];
+            System.arraycopy(tokens, 1, tokensNoFirst, 0, tokens.length - 1);
+            final ObjectReference obj = (ObjectReference) val;
+            final ReferenceType refType = obj.referenceType();
+            final List<Field> objF = refType.allFields();
+            for (int i = 0; i < objF.size(); ++i) {
+                final Field nextField = objF.get(i);
+                if (nextField.name().equals(tokensNoFirst[0])) {
+                    val = obj.getValue(nextField);
+                    if (tokensNoFirst.length > 1) {
+                        try {
+                            val = innestate(val, tokensNoFirst);
+                        } catch (Exception exc) {
+                            System.out.println(exc.toString());
+                        }
+                    }
+                }
+            }
+            return val;
+        }
+
+        private VirtualMachine launchTarget(String mainArgs) throws GuidanceException {
+            final LaunchingConnector connector = findLaunchingConnector();
+            final Map<String, Connector.Argument> arguments =
+                connectorArguments(connector, mainArgs);
+            try {
+                return connector.launch(arguments);
+            } catch (IOException | IllegalConnectorArgumentsException | VMStartException exc) {
+                throw new GuidanceException(exc);
+            }
+        }
+
+        private void setEventRequests() {
+            final EventRequestManager mgr = this.vm.eventRequestManager();
+            final MethodEntryRequest menr = mgr.createMethodEntryRequest();
+            for (String exclude : this.excludes) {
+                menr.addClassExclusionFilter(exclude);
             }
             menr.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
             menr.enable();
-            MethodExitRequest mexr = mgr.createMethodExitRequest();
-            for (int i=0; i<excludes.length; ++i) {
-                mexr.addClassExclusionFilter(excludes[i]);
+            final MethodExitRequest mexr = mgr.createMethodExitRequest();
+            for (String exclude : this.excludes) {
+                mexr.addClassExclusionFilter(exclude);
             }
             mexr.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
             mexr.enable();
         }
 
-        VirtualMachine launchTarget(String mainArgs) {
-            LaunchingConnector connector = findLaunchingConnector();
-            Map<String, Connector.Argument> arguments =
-            connectorArguments(connector, mainArgs);
-            try {
-                return connector.launch(arguments);
-            } catch (IOException exc) {
-                throw new Error("Unable to launch target VM: " + exc);
-            } catch (IllegalConnectorArgumentsException exc) {
-                throw new Error("Internal error: " + exc);
-            } catch (VMStartException exc) {
-                throw new Error("Target VM failed to initialize: " +
-                exc.getMessage());
+
+        private void run() {
+            final EventQueue queue = this.vm.eventQueue();
+            boolean testMethodEntryFound = false;
+            while (!testMethodEntryFound) {
+                try {
+                    final EventSet eventSet = queue.remove();
+                    final EventIterator it = eventSet.eventIterator();
+                    while (!testMethodEntryFound && it.hasNext()) {
+                        testMethodEntryFound = checkIfMethodEntry(it.nextEvent());
+                    }
+                    if (!testMethodEntryFound) {
+                        eventSet.resume();
+                    }
+                } catch (InterruptedException e) {
+                    //TODO
+                }
             }
         }
 
-        LaunchingConnector findLaunchingConnector() {
+        private boolean checkIfMethodEntry(Event event) {
+            if (event instanceof MethodExitEvent && 
+                (((MethodExitEvent) event).method().name().equals(this.methodStart))) {
+                this.intoMethodRunnPar = false;
+            }
+            if (event instanceof MethodEntryEvent) {
+                if (((MethodEntryEvent) event).method().name().equals(this.methodStart)) {
+                    this.hitCounter = 0;
+                    this.intoMethodRunnPar = true;
+                }
+                if (((MethodEntryEvent) event).method().name().equals(this.methodStop) && (this.intoMethodRunnPar)) {
+                    this.hitCounter++;
+                    if (this.hitCounter == this.numberOfHits){
+                        this.methodEntryEvent = (MethodEntryEvent) event;
+                        return true;
+                    }
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        private LaunchingConnector findLaunchingConnector() {
             List<Connector> connectors = Bootstrap.virtualMachineManager().allConnectors();
             for (Connector connector : connectors) {
                 if (connector.name().equals("com.sun.jdi.CommandLineLaunch")) {
@@ -600,7 +569,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
             throw new Error("No launching connector");
         }
 
-        Map<String, Connector.Argument> connectorArguments(LaunchingConnector connector, String mainArgs) {
+        private Map<String, Connector.Argument> connectorArguments(LaunchingConnector connector, String mainArgs) {
             Map<String, Connector.Argument> arguments = connector.defaultArguments();
             Connector.Argument mainArg =
             (Connector.Argument)arguments.get("main");
@@ -614,10 +583,12 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
 
     private static class Evaluator implements PrimitiveVisitor {
         private final Calculator calc;
+        private final JVM jvm;
         Primitive value; //the result
 
-        public Evaluator(Calculator calc) {
+        public Evaluator(Calculator calc, JVM jvm) {
             this.calc = calc;
+            this.jvm = jvm;
         }
 
         @Override
@@ -669,19 +640,9 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
 
         @Override
         public void visitPrimitiveSymbolic(PrimitiveSymbolic x) throws GuidanceException {
-            String nameVar = nameVar(x);
-            Object fieldValue = getValueParam(nameVar);
-            try {
-                final Simplex v = new Simplex('I',calc,fieldValue);
-                if (v instanceof Primitive) {
-                    this.value = (Primitive) v;
-                } else {
-                    this.value = null;
-                }
-            } catch (InvalidOperandException | InvalidTypeException e) {
-                e.printStackTrace();
-            }
-
+            final String nameVar = ((AccessLocalVariable) x.getOrigin().iterator().next()).variableName(); //TODO this seems fragile
+            final Object fieldValue = this.jvm.getValueParam(nameVar);
+            this.value = this.calc.val_(fieldValue);
         }
 
         @Override
