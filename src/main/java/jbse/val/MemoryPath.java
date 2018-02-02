@@ -54,12 +54,12 @@ public final class MemoryPath implements Iterable<Access> {
 
             @Override
             public boolean hasNext() {
-                return (this.index < accesses.length);
+                return (this.index < MemoryPath.this.accesses.length);
             }
 
             @Override
             public Access next() {
-                return accesses[this.index++];
+                return MemoryPath.this.accesses[this.index++];
             }
         };
     }
