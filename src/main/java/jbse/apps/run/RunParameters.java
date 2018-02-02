@@ -74,7 +74,6 @@ import jbse.val.ReferenceSymbolic;
  * </ul> 
  * 
  * @author Pietro Braione
- *
  */
 public final class RunParameters implements Cloneable {
     /**
@@ -434,7 +433,7 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
-     * Gets the embedder {@link RunnerParameters} object.
+     * Gets the embedded {@link RunnerParameters} object.
      * 
      * @return the {@link RunnerParameters} that backs this 
      *         {@link RunParameters} object.
@@ -519,7 +518,6 @@ public final class RunParameters implements Cloneable {
         return this.runnerParameters.getJavaHome();
     }
 
-
     /**
      * Adds paths to the extensions classpath.
      * 
@@ -581,12 +579,12 @@ public final class RunParameters implements Cloneable {
      * Sets the signature of the method which must be symbolically executed.
      * 
      * @param className the name of the class containing the method.
-     * @param parametersSignature the types of the method parameters.
+     * @param descriptor the descriptor of the method.
      * @param methodName the name of the method. 
      * @throws NullPointerException if any of the above parameters is {@code null}.
      */
-    public void setMethodSignature(String className, String parametersSignature, String methodName) { 
-        this.runnerParameters.setMethodSignature(className, parametersSignature, methodName); 
+    public void setMethodSignature(String className, String descriptor, String methodName) { 
+        this.runnerParameters.setMethodSignature(className, descriptor, methodName); 
     }
 
     /**
@@ -620,14 +618,14 @@ public final class RunParameters implements Cloneable {
      * that must override the standard one. 
      * 
      * @param className the name of the class containing the overridden method.
-     * @param parametersSignature the types of the method parameters.
+     * @param descriptor the descriptor of the method.
      * @param methodName the name of the method.
      * @param metaDelegateClassName the name of a {@link Class} that implements
      *        the semantics of calls to the {@code methodName} method.
      * @throws NullPointerException if any of the above parameters is {@code null}.
      */
-    public void addMetaOverridden(String className, String parametersSignature, String methodName, String metaDelegateClassName) {
-        this.runnerParameters.addMetaOverridden(className, parametersSignature, methodName, metaDelegateClassName);
+    public void addMetaOverridden(String className, String descriptor, String methodName, String metaDelegateClassName) {
+        this.runnerParameters.addMetaOverridden(className, descriptor, methodName, metaDelegateClassName);
     }
 
     /**
@@ -636,16 +634,15 @@ public final class RunParameters implements Cloneable {
      * 
      * @param className the name of the class containing the method not to be
      *        interpreted.
-     * @param parametersSignature the types of the method parameters and of
-     *        the return value. They all must be primitive, with the exception
-     *        of the first ("this") parameter if the method is not static.
+     * @param descriptor the descriptor of the method. All the parameters types 
+     *        in the descriptor must be primitive.
      * @param methodName the name of the method.
      * @param functionName a {@link String}, the name that will be given to 
      *        the uninterpreted function.
      * @throws NullPointerException if any of the above parameters is {@code null}.
      */
-    public void addUninterpreted(String className, String parametersSignature, String methodName, String functionName) {
-        this.runnerParameters.addUninterpreted(className, parametersSignature, methodName, functionName);
+    public void addUninterpreted(String className, String descriptor, String methodName, String functionName) {
+        this.runnerParameters.addUninterpreted(className, descriptor, methodName, functionName);
     }
 
     /**
@@ -1921,17 +1918,17 @@ public final class RunParameters implements Cloneable {
      * by {@link #setMethodSignature}.
      * 
      * @param driverClass a {@link String}, the class name of the driver method. 
-     * @param driverParametersSignature a {@link String}, the parameters of the 
+     * @param driverDescriptor a {@link String}, the descriptor of the 
      *        driver method (e.g., {@code "([Ljava/lang/String;)V"}. 
      * @param driverName a {@link String}, the name of the driver method.
      * @throws NullPointerException when any parameter is {@code null}.
      */
-    public void setGuided(String driverClass, String driverParametersSignature, String driverName) {
-        if (driverClass == null || driverParametersSignature == null || driverName == null) {
+    public void setGuided(String driverClass, String driverDescriptor, String driverName) {
+        if (driverClass == null || driverDescriptor == null || driverName == null) {
             throw new NullPointerException();
         }
         this.guided = true;
-        this.driverSignature = new Signature(driverClass, driverParametersSignature, driverName); 
+        this.driverSignature = new Signature(driverClass, driverDescriptor, driverName); 
     }
 
     /**
