@@ -23,10 +23,6 @@ public final class MemoryPath implements Iterable<Access> {
         this.hashCode = prime + Arrays.hashCode(this.accesses);
     }
     
-    public Access[] getAccess (){
-    	return accesses;
-    }
-    
     public static MemoryPath mkStatic(String className) {
         return new MemoryPath(new AccessStatic(className));
     }

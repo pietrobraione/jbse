@@ -17,7 +17,7 @@ public final class Simplex extends Primitive implements Cloneable {
     /** The string representation of this object. */
 	private final String toString;
     
-    public Simplex(char type, Calculator calc, Object value) 
+    private Simplex(char type, Calculator calc, Object value) 
     throws InvalidOperandException, InvalidTypeException {
     	super(type, calc);
     	//checks on parameters
