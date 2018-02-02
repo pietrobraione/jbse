@@ -115,7 +115,7 @@ public final class Run {
     /** The {@link Timer} for the decision procedure. */
     private Timer timer = null;
 
-    /** The {@link DecisionProcedureGuidance}, whenever this method is chosen for stepping the {@link Engine}. */
+    /** The {@link DecisionProcedureGuidanceJBSE}, whenever this method is chosen for stepping the {@link Engine}. */
     private DecisionProcedureGuidanceJDI guidance = null;
 
     /** A purely numeric decision procedure for concretization checks. */
