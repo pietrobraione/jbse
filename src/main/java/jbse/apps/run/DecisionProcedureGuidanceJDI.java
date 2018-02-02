@@ -7,7 +7,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
-import org.apache.commons.lang3.ArrayUtils; 
 
 import com.sun.jdi.AbsentInformationException;
 import com.sun.jdi.BooleanValue;
@@ -102,7 +101,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
     Signature stopSignature;
     int numberOfHits;
     int numOfHits;
-    
+
     /**
      * Builds the {@link DecisionProcedureGuidanceJDI}.
      *
@@ -158,9 +157,9 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
         path = path.substring(0, path.length()-1);
         test=stopSignature.getClassName();
         JVM VirtMach = new JVM();
-		VirtMach.startVm();					
-	}
-    
+        VirtMach.startVm();					
+    }
+
     private void run(){
         EventQueue queue = vm.eventQueue();
         boolean testMethodEntryFound = false;
@@ -169,10 +168,10 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
                 EventSet eventSet = queue.remove();
                 EventIterator it = eventSet.eventIterator();
                 while (!testMethodEntryFound && it.hasNext()) {
-                	testMethodEntryFound = checkIfMethodEntry(it.nextEvent());
+                    testMethodEntryFound = checkIfMethodEntry(it.nextEvent());
                 }
                 if (!testMethodEntryFound) 
-                	eventSet.resume();
+                    eventSet.resume();
             } catch (InterruptedException exc) {
                 //System.out.println(exc.toString());
             } catch (VMDisconnectedException discExc) {
@@ -181,140 +180,141 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
             }
         }
     }
-    
-    private boolean checkIfMethodEntry(Event event){
-		if (event instanceof MethodExitEvent && 
-				(((MethodExitEvent) event).method().name().equals(methodRunnPar))) {
-			intoMethodRunnPar = false;
-		}
-    	if (event instanceof MethodEntryEvent){
-    		if (((MethodEntryEvent) event).method().name().equals(methodRunnPar)) {
-    			numOfHits=0;
-    			intoMethodRunnPar = true;
-    		}
-			if (((MethodEntryEvent) event).method().name().equals(methodTarget) && (intoMethodRunnPar)) {
-				numOfHits++;
-				if (numOfHits==numberOfHits){
-					e=(MethodEntryEvent) event;
-					return true;
-				}
-				return false;
-			}
-		}
-		return false;
-	}
-    
-    public static Object getValueParam(String var) throws GuidanceException {
-    	Object output = null;
-    	try {
-    		boolean findParam = false;
-    		com.sun.jdi.Value val = null;
-    		String delims = "[.]";
-    		String[] tokens = var.split(delims);
-    		ThreadReference thread = e.thread();
-    		List<StackFrame> frames = thread.frames();
-    		if (frames.size() > 0) { 
-    			StackFrame frame = frames.get(0); 
-    			List<LocalVariable> variables = frame.visibleVariables();  
-    			if (variables != null) { 
-    				for (LocalVariable variable: variables) { 
-    					if (variable.name().equals(tokens[0])){
-    						findParam = true;
-    						val = frame.getValue(variable);
-    						if (tokens.length>1){
-    							val = innestate(val,tokens);
-    						}
-    					}
-    				} 
-    			}
-    		}
-    		if (!findParam)
-    			val = getValueInstanceField(var);
-    		switch(val.type().toString()){
-    		case "int":
-    			IntegerValue intVal = (IntegerValue) val;
-    			output = intVal.intValue();
-    			return output;
-    		case "boolean":
-    			BooleanValue boolVal = (BooleanValue)val;
-    			output = boolVal.booleanValue();
-    			return output;
-    		case "char":
-    			CharValue charVal = (CharValue)val;
-    			output = charVal.charValue();
-    			return output;
-    		case "byte":
-    			ByteValue byteVal = (ByteValue)val;
-    			output = byteVal.byteValue();
-    			return output;
-    		case "double":
-    			DoubleValue doubleVal = (DoubleValue)val;
-    			output = doubleVal.doubleValue();
-    			return output;
-    		case "float":
-    			FloatValue floatVal = (FloatValue)val;
-    			output = floatVal.floatValue();
-    			return output;
-    		case "long":
-    			LongValue longVal = (LongValue)val;
-    			output = longVal.longValue();
-    			return output;
-    		case "short":
-    			ShortValue shortVal = (ShortValue)val;
-    			output = shortVal.shortValue();
-    			return output;
-    		default:
-    			return output;
-    		}
-    	} catch (IncompatibleThreadStateException | AbsentInformationException e1) {
-    		throw new GuidanceException(e1.toString());
-    	}
-	}
 
-	public static com.sun.jdi.Value getValueInstanceField(String var) throws IncompatibleThreadStateException {
-		com.sun.jdi.Value val=null;
-		String delims = "[.]";
-		String[] tokens = var.split(delims);
-		ThreadReference thread = e.thread();
-      	List<StackFrame> frames = thread.frames(); 
-        if (frames.size() > 0) {
-        	StackFrame frame = frames.get(0);
-			ObjectReference objRef = frame.thisObject();
-	   		ReferenceType refType = objRef.referenceType();
-	    	List<Field> objFields = refType.allFields();
-	    	for (int i=0; i<objFields.size(); i++){
-	    		Field nextField = objFields.get(i);
-	    		if (nextField.name().equals(tokens[0])){
-	    			val = (com.sun.jdi.Value) objRef.getValue(nextField);
-	    			if (tokens.length>1){
-	    				val = innestate(val,tokens);
-	    			}
-	    		}
-	    	}
+    private boolean checkIfMethodEntry(Event event){
+        if (event instanceof MethodExitEvent && 
+        (((MethodExitEvent) event).method().name().equals(methodRunnPar))) {
+            intoMethodRunnPar = false;
         }
-		return val;
-	}
-	
-	private static com.sun.jdi.Value innestate (com.sun.jdi.Value val, String[] tokens){
-		tokens=ArrayUtils.remove(tokens,0);
-		ObjectReference obj = (ObjectReference)val;
-		ReferenceType refType = obj.referenceType();
-    	List<Field> objF = refType.allFields();
-    	for (int i=0; i<objF.size(); i++){
-    		Field nextField = objF.get(i);
-    		if (nextField.name().equals(tokens[0])){
-    			val = (com.sun.jdi.Value) obj.getValue(nextField);
-	    		if (tokens.length>1){
-		    		try{
-		    			val = innestate(val, tokens);
-		    		}
-		    		catch (Exception exc){
-		    			System.out.println(exc.toString());
-		    		}
-	    		}
-    		}
-    	}
-    	return val;
+        if (event instanceof MethodEntryEvent){
+            if (((MethodEntryEvent) event).method().name().equals(methodRunnPar)) {
+                numOfHits=0;
+                intoMethodRunnPar = true;
+            }
+            if (((MethodEntryEvent) event).method().name().equals(methodTarget) && (intoMethodRunnPar)) {
+                numOfHits++;
+                if (numOfHits==numberOfHits){
+                    e=(MethodEntryEvent) event;
+                    return true;
+                }
+                return false;
+            }
+        }
+        return false;
+    }
+
+    public static Object getValueParam(String var) throws GuidanceException {
+        Object output = null;
+        try {
+            boolean findParam = false;
+            com.sun.jdi.Value val = null;
+            String delims = "[.]";
+            String[] tokens = var.split(delims);
+            ThreadReference thread = e.thread();
+            List<StackFrame> frames = thread.frames();
+            if (frames.size() > 0) { 
+                StackFrame frame = frames.get(0); 
+                List<LocalVariable> variables = frame.visibleVariables();  
+                if (variables != null) { 
+                    for (LocalVariable variable: variables) { 
+                        if (variable.name().equals(tokens[0])){
+                            findParam = true;
+                            val = frame.getValue(variable);
+                            if (tokens.length>1){
+                                val = innestate(val,tokens);
+                            }
+                        }
+                    } 
+                }
+            }
+            if (!findParam)
+                val = getValueInstanceField(var);
+            switch(val.type().toString()){
+            case "int":
+                IntegerValue intVal = (IntegerValue) val;
+                output = intVal.intValue();
+                return output;
+            case "boolean":
+                BooleanValue boolVal = (BooleanValue)val;
+                output = boolVal.booleanValue();
+                return output;
+            case "char":
+                CharValue charVal = (CharValue)val;
+                output = charVal.charValue();
+                return output;
+            case "byte":
+                ByteValue byteVal = (ByteValue)val;
+                output = byteVal.byteValue();
+                return output;
+            case "double":
+                DoubleValue doubleVal = (DoubleValue)val;
+                output = doubleVal.doubleValue();
+                return output;
+            case "float":
+                FloatValue floatVal = (FloatValue)val;
+                output = floatVal.floatValue();
+                return output;
+            case "long":
+                LongValue longVal = (LongValue)val;
+                output = longVal.longValue();
+                return output;
+            case "short":
+                ShortValue shortVal = (ShortValue)val;
+                output = shortVal.shortValue();
+                return output;
+            default:
+                return output;
+            }
+        } catch (IncompatibleThreadStateException | AbsentInformationException e1) {
+            throw new GuidanceException(e1.toString());
+        }
+    }
+
+    public static com.sun.jdi.Value getValueInstanceField(String var) throws IncompatibleThreadStateException {
+        com.sun.jdi.Value val=null;
+        String delims = "[.]";
+        String[] tokens = var.split(delims);
+        ThreadReference thread = e.thread();
+        List<StackFrame> frames = thread.frames(); 
+        if (frames.size() > 0) {
+            StackFrame frame = frames.get(0);
+            ObjectReference objRef = frame.thisObject();
+            ReferenceType refType = objRef.referenceType();
+            List<Field> objFields = refType.allFields();
+            for (int i=0; i<objFields.size(); i++){
+                Field nextField = objFields.get(i);
+                if (nextField.name().equals(tokens[0])){
+                    val = (com.sun.jdi.Value) objRef.getValue(nextField);
+                    if (tokens.length>1){
+                        val = innestate(val,tokens);
+                    }
+                }
+            }
+        }
+        return val;
+    }
+
+    private static com.sun.jdi.Value innestate (com.sun.jdi.Value val, String[] tokens) {
+        String[] tokensNoFirst = new String[tokens.length - 1];
+        System.arraycopy(tokens, 1, tokensNoFirst, 0, tokens.length - 1);
+        ObjectReference obj = (ObjectReference)val;
+        ReferenceType refType = obj.referenceType();
+        List<Field> objF = refType.allFields();
+        for (int i=0; i<objF.size(); i++){
+            Field nextField = objF.get(i);
+            if (nextField.name().equals(tokensNoFirst[0])){
+                val = (com.sun.jdi.Value) obj.getValue(nextField);
+                if (tokensNoFirst.length>1){
+                    try{
+                        val = innestate(val, tokensNoFirst);
+                    }
+                    catch (Exception exc){
+                        System.out.println(exc.toString());
+                    }
+                }
+            }
+        }
+        return val;
     }
 
     /**
@@ -337,20 +337,20 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
         this.ended = true;
         stopFastAndImprecise();
     }
-    
+
     private static String nameVar (Primitive var){
-		String nameVar = ((AccessLocalVariable) (((PrimitiveSymbolic)var).getOrigin().getAccess())[0]).variableName();
-		return nameVar;
+        String nameVar = ((AccessLocalVariable) (((PrimitiveSymbolic)var).getOrigin().getAccess())[0]).variableName();
+        return nameVar;
     }
-    
+
     private Primitive eval (Primitive condition){
-    	final Evaluator evaluator = new Evaluator(this.calc);
-    	try {
-			condition.accept((PrimitiveVisitor) evaluator);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-    	return evaluator.value;
+        final Evaluator evaluator = new Evaluator(this.calc);
+        try {
+            condition.accept((PrimitiveVisitor) evaluator);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return evaluator.value;
     }
 
     @Override
@@ -364,10 +364,10 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
                     final DecisionAlternative_IFX da = it.next();
                     final Primitive conditionNot = condition.not();
                     final Primitive conditionToCheck  = (da.value() ? condition : conditionNot);
-					final Primitive valueInConcreteState = eval(conditionToCheck);
-					if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-						it.remove();
-					}
+                    final Primitive valueInConcreteState = eval(conditionToCheck);
+                    if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+                        it.remove();
+                    }
                 }
             } catch (InvalidTypeException e) {
                 //this should never happen as arguments have been checked by the caller
@@ -379,31 +379,31 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
 
     @Override
     protected Outcome decide_XCMPY_Nonconcrete(ClassHierarchy hier, Primitive val1, Primitive val2, SortedSet<DecisionAlternative_XCMPY> result)
-    		throws DecisionException {
-    	final Outcome retVal = super.decide_XCMPY_Nonconcrete(hier, val1, val2, result);
-    	if (!this.ended) {
-    		try {
-    			final Primitive comparisonGT = val1.gt(val2);
-    			final Primitive comparisonEQ = val1.eq(val2);
-    			final Primitive comparisonLT = val1.lt(val2);
-    			final Iterator<DecisionAlternative_XCMPY> it = result.iterator();
-    			while (it.hasNext()) {
-    				final DecisionAlternative_XCMPY da = it.next();
-    				final Primitive conditionToCheck  = 
-    						(da.operator() == Operator.GT ? comparisonGT :
-    							da.operator() == Operator.EQ ? comparisonEQ :
-    								comparisonLT);
-    				final Primitive valueInConcreteState = eval(conditionToCheck);
-					if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-						it.remove();
-					}
-    			}
-    		} catch (InvalidTypeException | InvalidOperandException e) {
-    			//this should never happen as arguments have been checked by the caller
-    			throw new UnexpectedInternalException(e);
-    		}
-    	}
-    	return retVal;
+    throws DecisionException {
+        final Outcome retVal = super.decide_XCMPY_Nonconcrete(hier, val1, val2, result);
+        if (!this.ended) {
+            try {
+                final Primitive comparisonGT = val1.gt(val2);
+                final Primitive comparisonEQ = val1.eq(val2);
+                final Primitive comparisonLT = val1.lt(val2);
+                final Iterator<DecisionAlternative_XCMPY> it = result.iterator();
+                while (it.hasNext()) {
+                    final DecisionAlternative_XCMPY da = it.next();
+                    final Primitive conditionToCheck  = 
+                    (da.operator() == Operator.GT ? comparisonGT :
+                        da.operator() == Operator.EQ ? comparisonEQ :
+                            comparisonLT);
+                    final Primitive valueInConcreteState = eval(conditionToCheck);
+                    if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+                        it.remove();
+                    }
+                }
+            } catch (InvalidTypeException | InvalidOperandException e) {
+                //this should never happen as arguments have been checked by the caller
+                throw new UnexpectedInternalException(e);
+            }
+        }
+        return retVal;
     }
 
     @Override
@@ -417,13 +417,13 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
                     final DecisionAlternative_XSWITCH da = it.next();
                     //Value valueSelector = getValueParam(nameVar(selector));
                     final Primitive conditionToCheck =
-                        (da.isDefault() ?
-                        tab.getDefaultClause(selector) :
-                        selector.eq(this.calc.valInt(da.value())));
+                    (da.isDefault() ?
+                                     tab.getDefaultClause(selector) :
+                                         selector.eq(this.calc.valInt(da.value())));
                     final Primitive valueInConcreteState = eval(conditionToCheck);
-					if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-						it.remove();
-					}
+                    if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+                        it.remove();
+                    }
                 }
             } catch (InvalidOperandException | InvalidTypeException e) {
                 //this should never happen as arguments have been checked by the caller
@@ -444,9 +444,9 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
                     final DecisionAlternative_XNEWARRAY da = it.next();
                     final Primitive conditionToCheck = (da.ok() ? countsNonNegative : countsNonNegative.not());
                     final Primitive valueInConcreteState = eval(conditionToCheck);
-					if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-						it.remove();
-					}
+                    if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+                        it.remove();
+                    }
                 }
             } catch (InvalidTypeException e) {
                 //this should never happen as arguments have been checked by the caller
@@ -464,13 +464,13 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
             try {
                 final Iterator<DecisionAlternative_XASTORE> it = result.iterator();
                 while (it.hasNext()) {
-                	
+
                     final DecisionAlternative_XASTORE da = it.next();
                     final Primitive conditionToCheck = (da.isInRange() ? inRange : inRange.not());
                     final Primitive valueInConcreteState = eval(conditionToCheck);
-					if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-						it.remove();
-					}
+                    if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+                        it.remove();
+                    }
                 }
             } catch (InvalidTypeException e) {
                 //this should never happen as arguments have been checked by the caller
@@ -494,7 +494,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
         }
         return retVal;
     }
-    
+
     @Override
     protected Outcome resolve_XALOAD_ResolvedNonconcrete(ClassHierarchy hier, Expression accessExpression, Value valueToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
     throws DecisionException {
@@ -542,172 +542,172 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
     throws GuidanceException {
         //TODO
     }
-    
+
     public class JVM {
-		
-	    private String[] excludes = {"java.*", "javax.*", "sun.*",
-		                                 "com.sun.*", "org.*"};
 
-		public void startVm (){
-	        vm = launchTarget("-classpath \"" + path + test);
-	        generateTrace();
-	    }
-	    
-	    void generateTrace(){
-	        setEventRequests();
-	        run();
-	    }
-	    
-	    void setEventRequests() {
-	        EventRequestManager mgr = vm.eventRequestManager();
-	        MethodEntryRequest menr = mgr.createMethodEntryRequest();
-	        for (int i=0; i<excludes.length; ++i) {
-	            menr.addClassExclusionFilter(excludes[i]);
-	        }
-	        menr.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-	        menr.enable();
-	        MethodExitRequest mexr = mgr.createMethodExitRequest();
-	        for (int i=0; i<excludes.length; ++i) {
-	            mexr.addClassExclusionFilter(excludes[i]);
-	        }
-	        mexr.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-	        mexr.enable();
-	    }
-	    
-	    VirtualMachine launchTarget(String mainArgs) {
-	        LaunchingConnector connector = findLaunchingConnector();
-	        Map<String, Connector.Argument> arguments =
-	           connectorArguments(connector, mainArgs);
-	        try {
-	            return connector.launch(arguments);
-	        } catch (IOException exc) {
-	            throw new Error("Unable to launch target VM: " + exc);
-	        } catch (IllegalConnectorArgumentsException exc) {
-	            throw new Error("Internal error: " + exc);
-	        } catch (VMStartException exc) {
-	            throw new Error("Target VM failed to initialize: " +
-	                            exc.getMessage());
-	        }
-	    }
-		
-		LaunchingConnector findLaunchingConnector() {
-	        List<Connector> connectors = Bootstrap.virtualMachineManager().allConnectors();
-	        for (Connector connector : connectors) {
-	            if (connector.name().equals("com.sun.jdi.CommandLineLaunch")) {
-	                return (LaunchingConnector)connector;
-	            }
-	        }
-	        throw new Error("No launching connector");
-	    }
+        private String[] excludes = {"java.*", "javax.*", "sun.*",
+                                     "com.sun.*", "org.*"};
 
-	    Map<String, Connector.Argument> connectorArguments(LaunchingConnector connector, String mainArgs) {
-	        Map<String, Connector.Argument> arguments = connector.defaultArguments();
-	        Connector.Argument mainArg =
-	                           (Connector.Argument)arguments.get("main");
-	        if (mainArg == null) {
-	            throw new Error("Bad launching connector");
-	        }
-	        mainArg.setValue(mainArgs);
-	        return arguments;
-	    }
-	}
-    
+        public void startVm (){
+            vm = launchTarget("-classpath \"" + path + test);
+            generateTrace();
+        }
+
+        void generateTrace(){
+            setEventRequests();
+            run();
+        }
+
+        void setEventRequests() {
+            EventRequestManager mgr = vm.eventRequestManager();
+            MethodEntryRequest menr = mgr.createMethodEntryRequest();
+            for (int i=0; i<excludes.length; ++i) {
+                menr.addClassExclusionFilter(excludes[i]);
+            }
+            menr.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
+            menr.enable();
+            MethodExitRequest mexr = mgr.createMethodExitRequest();
+            for (int i=0; i<excludes.length; ++i) {
+                mexr.addClassExclusionFilter(excludes[i]);
+            }
+            mexr.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
+            mexr.enable();
+        }
+
+        VirtualMachine launchTarget(String mainArgs) {
+            LaunchingConnector connector = findLaunchingConnector();
+            Map<String, Connector.Argument> arguments =
+            connectorArguments(connector, mainArgs);
+            try {
+                return connector.launch(arguments);
+            } catch (IOException exc) {
+                throw new Error("Unable to launch target VM: " + exc);
+            } catch (IllegalConnectorArgumentsException exc) {
+                throw new Error("Internal error: " + exc);
+            } catch (VMStartException exc) {
+                throw new Error("Target VM failed to initialize: " +
+                exc.getMessage());
+            }
+        }
+
+        LaunchingConnector findLaunchingConnector() {
+            List<Connector> connectors = Bootstrap.virtualMachineManager().allConnectors();
+            for (Connector connector : connectors) {
+                if (connector.name().equals("com.sun.jdi.CommandLineLaunch")) {
+                    return (LaunchingConnector)connector;
+                }
+            }
+            throw new Error("No launching connector");
+        }
+
+        Map<String, Connector.Argument> connectorArguments(LaunchingConnector connector, String mainArgs) {
+            Map<String, Connector.Argument> arguments = connector.defaultArguments();
+            Connector.Argument mainArg =
+            (Connector.Argument)arguments.get("main");
+            if (mainArg == null) {
+                throw new Error("Bad launching connector");
+            }
+            mainArg.setValue(mainArgs);
+            return arguments;
+        }
+    }
+
     private static class Evaluator implements PrimitiveVisitor {
-		private final Calculator calc;
-		Primitive value; //the result
-		
-		public Evaluator(Calculator calc) {
-			this.calc = calc;
-		}
-		
-		@Override
-		public void visitAny(Any x) {
-			this.value = x;
-		}
+        private final Calculator calc;
+        Primitive value; //the result
 
-		@Override
-		public void visitExpression(Expression e) throws Exception {
-			if (e.isUnary()) {
-				e.getOperand().accept(this);
-				final Primitive operandValue = this.value;
-				if (operandValue == null) {
-					this.value = null;
-					return;
-				}
-				this.value = this.calc.applyUnary(e.getOperator(), operandValue);
-			} else {
-				e.getFirstOperand().accept(this);
-				final Primitive firstOperandValue = this.value;
-				if (firstOperandValue == null) {
-					this.value = null;
-					return;
-				}
-				e.getSecondOperand().accept(this);
-				final Primitive secondOperandValue = this.value;
-				if (secondOperandValue == null) {
-					this.value = null;
-					return;
-				}
-				this.value = this.calc.applyBinary(firstOperandValue, e.getOperator(), secondOperandValue);
-			}
-		}
+        public Evaluator(Calculator calc) {
+            this.calc = calc;
+        }
 
-		@Override
-		public void visitFunctionApplication(FunctionApplication x) throws Exception {
-			final Primitive[] args = x.getArgs();
-			final Primitive[] argValues = new Primitive[args.length];
-			for (int i = 0; i < args.length; ++i) {
-				args[i].accept(this);
-				argValues[i] = this.value;
-				if (argValues[i] == null) {
-					this.value = null;
-					return;
-				}
-			}
-			this.value = this.calc.applyFunction(x.getType(), x.getOperator(), argValues);
-		}
+        @Override
+        public void visitAny(Any x) {
+            this.value = x;
+        }
 
-		@Override
-		public void visitPrimitiveSymbolic(PrimitiveSymbolic x) throws GuidanceException {
-    		String nameVar = nameVar(x);
-			Object fieldValue = getValueParam(nameVar);
-			try {
-				final Simplex v = new Simplex('I',calc,fieldValue);
-				if (v instanceof Primitive) {
-					this.value = (Primitive) v;
-				} else {
-					this.value = null;
-				}
-			} catch (InvalidOperandException | InvalidTypeException e) {
-				e.printStackTrace();
-			}
-			
-		}
+        @Override
+        public void visitExpression(Expression e) throws Exception {
+            if (e.isUnary()) {
+                e.getOperand().accept(this);
+                final Primitive operandValue = this.value;
+                if (operandValue == null) {
+                    this.value = null;
+                    return;
+                }
+                this.value = this.calc.applyUnary(e.getOperator(), operandValue);
+            } else {
+                e.getFirstOperand().accept(this);
+                final Primitive firstOperandValue = this.value;
+                if (firstOperandValue == null) {
+                    this.value = null;
+                    return;
+                }
+                e.getSecondOperand().accept(this);
+                final Primitive secondOperandValue = this.value;
+                if (secondOperandValue == null) {
+                    this.value = null;
+                    return;
+                }
+                this.value = this.calc.applyBinary(firstOperandValue, e.getOperator(), secondOperandValue);
+            }
+        }
 
-		@Override
-		public void visitSimplex(Simplex x) {
-			this.value = x;
-		}
+        @Override
+        public void visitFunctionApplication(FunctionApplication x) throws Exception {
+            final Primitive[] args = x.getArgs();
+            final Primitive[] argValues = new Primitive[args.length];
+            for (int i = 0; i < args.length; ++i) {
+                args[i].accept(this);
+                argValues[i] = this.value;
+                if (argValues[i] == null) {
+                    this.value = null;
+                    return;
+                }
+            }
+            this.value = this.calc.applyFunction(x.getType(), x.getOperator(), argValues);
+        }
 
-		@Override
-		public void visitTerm(Term x) {
-			this.value = x;
-		}
+        @Override
+        public void visitPrimitiveSymbolic(PrimitiveSymbolic x) throws GuidanceException {
+            String nameVar = nameVar(x);
+            Object fieldValue = getValueParam(nameVar);
+            try {
+                final Simplex v = new Simplex('I',calc,fieldValue);
+                if (v instanceof Primitive) {
+                    this.value = (Primitive) v;
+                } else {
+                    this.value = null;
+                }
+            } catch (InvalidOperandException | InvalidTypeException e) {
+                e.printStackTrace();
+            }
 
-		@Override
-		public void visitNarrowingConversion(NarrowingConversion x) throws Exception {
-			x.getArg().accept(this);
-			this.value = this.calc.narrow(x.getType(), this.value);
-		}
+        }
 
-		@Override
-		public void visitWideningConversion(WideningConversion x) throws Exception {
-			x.getArg().accept(this);
-			this.value = (x.getType() == this.value.getType() ? this.value : this.calc.widen(x.getType(), this.value));
-			//note that the concrete this.value could already be widened
-			//because of conversion of actual types to computational types
-			//through operand stack, see JVMSpec 2.11.1, tab. 2.3
-		}
-		
+        @Override
+        public void visitSimplex(Simplex x) {
+            this.value = x;
+        }
+
+        @Override
+        public void visitTerm(Term x) {
+            this.value = x;
+        }
+
+        @Override
+        public void visitNarrowingConversion(NarrowingConversion x) throws Exception {
+            x.getArg().accept(this);
+            this.value = this.calc.narrow(x.getType(), this.value);
+        }
+
+        @Override
+        public void visitWideningConversion(WideningConversion x) throws Exception {
+            x.getArg().accept(this);
+            this.value = (x.getType() == this.value.getType() ? this.value : this.calc.widen(x.getType(), this.value));
+            //note that the concrete this.value could already be widened
+            //because of conversion of actual types to computational types
+            //through operand stack, see JVMSpec 2.11.1, tab. 2.3
+        }
+
     }
 }

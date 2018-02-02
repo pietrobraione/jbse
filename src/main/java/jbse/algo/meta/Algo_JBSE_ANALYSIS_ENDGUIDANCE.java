@@ -4,7 +4,7 @@ import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.StrategyUpdate;
-import jbse.apps.run.DecisionProcedureGuidance;
+import jbse.apps.run.DecisionProcedureGuidanceJBSE;
 import jbse.tree.DecisionAlternative_NONE;
 
 public final class Algo_JBSE_ANALYSIS_ENDGUIDANCE extends Algo_INVOKEMETA_Nonbranching {
@@ -16,8 +16,8 @@ public final class Algo_JBSE_ANALYSIS_ENDGUIDANCE extends Algo_INVOKEMETA_Nonbra
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            if (this.ctx.decisionProcedure instanceof DecisionProcedureGuidance) {
-                final DecisionProcedureGuidance dec = (DecisionProcedureGuidance) this.ctx.decisionProcedure;
+            if (this.ctx.decisionProcedure instanceof DecisionProcedureGuidanceJBSE) {
+                final DecisionProcedureGuidanceJBSE dec = (DecisionProcedureGuidanceJBSE) this.ctx.decisionProcedure;
                 dec.endGuidance();
             }
         };
