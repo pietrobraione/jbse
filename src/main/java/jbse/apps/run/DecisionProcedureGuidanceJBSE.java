@@ -82,7 +82,7 @@ import jbse.val.exc.InvalidTypeException;
  * all the decisions taken by a component decision procedure it decorates 
  * according to the state reached by the guiding engine.
  */
-public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
+public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureAlgorithms {
 	private final Engine engine;
 	private final Frame rootFrameConcrete;
 	private State initialStateConcrete;
@@ -92,7 +92,7 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 	private boolean ended;
 	
 	/**
-	 * Builds the {@link DecisionProcedureGuidance}.
+	 * Builds the {@link DecisionProcedureGuidanceJBSE}.
 	 *
 	 * @param component the component {@link DecisionProcedure} it decorates.
 	 * @param calc a {@link Calculator}.
@@ -106,13 +106,13 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 	 * @throws GuidanceException if something fails during creation (and the caller
 	 *         is to blame).
 	 */
-	public DecisionProcedureGuidance(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature) 
+	public DecisionProcedureGuidanceJBSE(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature) 
 	throws GuidanceException {
 		this(component, calc, runnerParameters, stopSignature, 1);
 	}
 	
 	/**
-	 * Builds the {@link DecisionProcedureGuidance}.
+	 * Builds the {@link DecisionProcedureGuidanceJBSE}.
 	 *
 	 * @param component the component {@link DecisionProcedure} it decorates.
 	 * @param calc a {@link Calculator}.
@@ -127,7 +127,7 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 	 * @throws GuidanceException if something fails during creation (and the caller
 	 *         is to blame).
 	 */
-	public DecisionProcedureGuidance(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits) 
+	public DecisionProcedureGuidanceJBSE(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits) 
 	throws GuidanceException {
 		super(component, calc);
 		if (numberOfHits < 1) {
