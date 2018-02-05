@@ -27,6 +27,7 @@ import jbse.apps.Timer;
 import jbse.apps.Util;
 import jbse.apps.run.RunParameters.DecisionProcedureCreationStrategy;
 import jbse.apps.run.RunParameters.DecisionProcedureType;
+import jbse.apps.run.RunParameters.GuidanceType;
 import jbse.apps.run.RunParameters.InteractionMode;
 import jbse.apps.run.RunParameters.StateFormatMode;
 import jbse.apps.run.RunParameters.StepShowMode;
@@ -965,7 +966,13 @@ public final class Run {
 			    log(MSG_TRY_GUIDANCE + guidanceDriverParameters.getMethodSignature() + ".");
 			}
 			try {
-				this.guidance = new DecisionProcedureGuidance(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
+			    if (this.parameters.getGuidanceType() == GuidanceType.JBSE) {
+                                this.guidance = new DecisionProcedureGuidanceJBSE(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
+			    } else if (this.parameters.getGuidanceType() == GuidanceType.JDI) {
+				this.guidance = new DecisionProcedureGuidanceJDI(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
+			    } else {
+			        
+			    }
 			} catch (GuidanceException | UnexpectedInternalException e) {
 				err(ERROR_GUIDANCE_FAILED + e.getMessage());
 				throw new CannotBuildDecisionProcedureException(e);
@@ -1259,7 +1266,7 @@ public final class Run {
 	private static final String ERROR_ENGINE_INIT_INITIAL_STATE = "Failed initialization of the symbolic execution.";
 
 	/** Error: failure of the decision procedure. */
-	private static final String ERROR_ENGINE_DECISION_PROCEDURE = "Unexpected failure of the decision procedude.";
+	private static final String ERROR_ENGINE_DECISION_PROCEDURE = "Unexpected failure of the decision procedure.";
 
 	/**
 	 * Error: unable to quit engine, because unable to quit the decision

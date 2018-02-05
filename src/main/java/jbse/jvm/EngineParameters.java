@@ -580,17 +580,17 @@ public final class EngineParameters implements Cloneable {
 	 * that must override the standard one. 
 	 * 
 	 * @param className the name of the class containing the overridden method.
-	 * @param parametersSignature the types of the method parameters.
+	 * @param descriptor the descriptor of the method.
 	 * @param methodName the name of the method.
 	 * @param metaDelegateClassName the name of a {@link Class} that implements
 	 *        the semantics of calls to the {@code methodName} method.
 	 * @throws NullPointerException if any of the above parameters is {@code null}.
 	 */
-	public void addMetaOverridden(String className, String parametersSignature, String methodName, String metaDelegateClassName) {
-		if (className == null || parametersSignature == null || methodName == null || metaDelegateClassName == null) {
+	public void addMetaOverridden(String className, String descriptor, String methodName, String metaDelegateClassName) {
+		if (className == null || descriptor == null || methodName == null || metaDelegateClassName == null) {
 			throw new NullPointerException();
 		}
-		this.metaOverridden.add(new String[] { className, parametersSignature, methodName, metaDelegateClassName });
+		this.metaOverridden.add(new String[] { className, descriptor, methodName, metaDelegateClassName });
 	}
 	
 	/**
@@ -620,17 +620,18 @@ public final class EngineParameters implements Cloneable {
 	 * 
 	 * @param className the name of the class containing the method not to be
 	 *        interpreted.
-	 * @param parametersSignature the types of the method parameters.
+         * @param descriptor the descriptor of the method. All the parameters types 
+         *        in the descriptor must be primitive.
 	 * @param methodName the name of the method.
 	 * @param functionName a {@link String}, the name that will be given to 
 	 *        the uninterpreted function.
 	 * @throws NullPointerException if any of the above parameters is {@code null}.
 	 */
-	public void addUninterpreted(String className, String parametersSignature, String methodName, String functionName) {
-		if (className == null || parametersSignature == null || methodName == null || functionName == null) {
+	public void addUninterpreted(String className, String descriptor, String methodName, String functionName) {
+		if (className == null || descriptor == null || methodName == null || functionName == null) {
 			throw new NullPointerException();
 		}
-		this.uninterpreted.add(new String[] { className, parametersSignature, methodName, functionName });
+		this.uninterpreted.add(new String[] { className, descriptor, methodName, functionName });
 	}
 	
 	/**
@@ -659,16 +660,16 @@ public final class EngineParameters implements Cloneable {
 	 * and cancels the effect of any previous call to {@link #setInitialState(State)}.
 	 * 
 	 * @param className the name of the class containing the method.
-	 * @param parametersSignature the types of the method parameters.
+	 * @param descriptor the descriptor of the method.
 	 * @param methodName the name of the method. 
 	 * @throws NullPointerException if any of the above parameters is {@code null}.
 	 */
-	public void setMethodSignature(String className, String parametersSignature, String methodName) { 
-		if (className == null || parametersSignature == null || methodName == null) {
+	public void setMethodSignature(String className, String descriptor, String methodName) { 
+		if (className == null || descriptor == null || methodName == null) {
 			throw new NullPointerException();
 		}
 		this.initialState = null; 
-		this.methodSignature = new Signature(className, parametersSignature, methodName); 
+		this.methodSignature = new Signature(className, descriptor, methodName); 
 	}
 	
 	/**

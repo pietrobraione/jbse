@@ -1,7 +1,7 @@
 package jbse.val;
 
 /**
- * An access to an object's field.
+ * An access to an array's length.
  * 
  * @author Pietro Braione
  *

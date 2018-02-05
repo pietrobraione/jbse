@@ -199,12 +199,12 @@ public final class RunnerParameters implements Cloneable {
 	 * Sets the signature of the method which must be symbolically executed.
 	 * 
 	 * @param className the name of the class containing the method.
-	 * @param parametersSignature the types of the method parameters.
+	 * @param descriptor the descriptor of the method.
 	 * @param methodName the name of the method. 
 	 * @throws NullPointerException if any of the above parameters is {@code null}.
 	 */
-	public void setMethodSignature(String className, String parametersSignature, String methodName) { 
-		this.engineParameters.setMethodSignature(className, parametersSignature, methodName); 
+	public void setMethodSignature(String className, String descriptor, String methodName) { 
+		this.engineParameters.setMethodSignature(className, descriptor, methodName); 
 	}
 	
 	/**
@@ -238,14 +238,14 @@ public final class RunnerParameters implements Cloneable {
 	 * that must override the standard one. 
 	 * 
 	 * @param className the name of the class containing the overridden method.
-	 * @param parametersSignature the types of the method parameters.
+	 * @param descriptor the descriptor of the method.
 	 * @param methodName the name of the method.
 	 * @param metaDelegateClassName the name of a {@link Class} that implements
 	 *        the semantics of calls to the {@code methodName} method.
 	 * @throws NullPointerException if any of the above parameters is {@code null}.
 	 */
-	public void addMetaOverridden(String className, String parametersSignature, String methodName, String metaDelegateClassName) {
-		this.engineParameters.addMetaOverridden(className, parametersSignature, methodName, metaDelegateClassName);
+	public void addMetaOverridden(String className, String descriptor, String methodName, String metaDelegateClassName) {
+		this.engineParameters.addMetaOverridden(className, descriptor, methodName, metaDelegateClassName);
 	}
 
 	/**
@@ -254,14 +254,15 @@ public final class RunnerParameters implements Cloneable {
 	 * 
 	 * @param className the name of the class containing the method not to be
 	 *        interpreted.
-	 * @param parametersSignature the types of the method parameters.
+         * @param descriptor the descriptor of the method. All the parameters types 
+         *        in the descriptor must be primitive.
 	 * @param methodName the name of the method.
 	 * @param functionName a {@link String}, the name that will be given to 
 	 *        the uninterpreted function.
 	 * @throws NullPointerException if any of the above parameters is {@code null}.
 	 */
-	public void addUninterpreted(String className, String parametersSignature, String methodName, String functionName) {
-		this.engineParameters.addUninterpreted(className, parametersSignature, methodName, functionName);
+	public void addUninterpreted(String className, String descriptor, String methodName, String functionName) {
+		this.engineParameters.addUninterpreted(className, descriptor, methodName, functionName);
 	}
     
     /**

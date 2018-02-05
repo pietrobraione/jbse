@@ -71,7 +71,6 @@ import jbse.val.ReferenceSymbolic;
  * </ul> 
  * 
  * @author Pietro Braione
- *
  */
 public final class RunParameters implements Cloneable {
 	/**
@@ -88,6 +87,20 @@ public final class RunParameters implements Cloneable {
 		
 		/** Uses CVC4. */
 		CVC4
+	}
+	
+	/**
+	 * Enumeration of the possible guidance decision procedures.
+	 * 
+	 * @author Pietro Braione
+	 *
+	 */
+	public static enum GuidanceType {
+	    /** Use JBSE for the concrete execution. */
+	    JBSE,
+	    
+	    /** Use the platform JVM through JDI for the concrete execution. */
+	    JDI
 	}
 
 	/**
@@ -278,6 +291,9 @@ public final class RunParameters implements Cloneable {
 	 * arithmetic conditions.
 	 */
 	private DecisionProcedureType decisionProcedureType = DecisionProcedureType.Z3;
+	
+	/** The decision procedure for guidance. */
+	private GuidanceType guidanceType = GuidanceType.JBSE;
 	
 	/** The {@link Path} where the executable of the external decision procedure is. */
 	private Path externalDecisionProcedurePath = null;
@@ -479,12 +495,12 @@ public final class RunParameters implements Cloneable {
 	 * Sets the signature of the method which must be symbolically executed.
 	 * 
 	 * @param className the name of the class containing the method.
-	 * @param parametersSignature the types of the method parameters.
+	 * @param descriptor the descriptor of the method.
 	 * @param methodName the name of the method. 
 	 * @throws NullPointerException if any of the above parameters is {@code null}.
 	 */
-	public void setMethodSignature(String className, String parametersSignature, String methodName) { 
-		this.runnerParameters.setMethodSignature(className, parametersSignature, methodName); 
+	public void setMethodSignature(String className, String descriptor, String methodName) { 
+		this.runnerParameters.setMethodSignature(className, descriptor, methodName); 
 	}
 	
 	/**
@@ -518,14 +534,14 @@ public final class RunParameters implements Cloneable {
 	 * that must override the standard one. 
 	 * 
 	 * @param className the name of the class containing the overridden method.
-	 * @param parametersSignature the types of the method parameters.
+	 * @param descriptor the descriptor of the method.
 	 * @param methodName the name of the method.
 	 * @param metaDelegateClassName the name of a {@link Class} that implements
 	 *        the semantics of calls to the {@code methodName} method.
 	 * @throws NullPointerException if any of the above parameters is {@code null}.
 	 */
-	public void addMetaOverridden(String className, String parametersSignature, String methodName, String metaDelegateClassName) {
-		this.runnerParameters.addMetaOverridden(className, parametersSignature, methodName, metaDelegateClassName);
+	public void addMetaOverridden(String className, String descriptor, String methodName, String metaDelegateClassName) {
+		this.runnerParameters.addMetaOverridden(className, descriptor, methodName, metaDelegateClassName);
 	}
 
 	/**
@@ -534,16 +550,15 @@ public final class RunParameters implements Cloneable {
 	 * 
 	 * @param className the name of the class containing the method not to be
 	 *        interpreted.
-	 * @param parametersSignature the types of the method parameters and of
-	 *        the return value. They all must be primitive, with the exception
-	 *        of the first ("this") parameter if the method is not static.
+	 * @param descriptor the descriptor of the method. All the parameters types 
+	 *        in the descriptor must be primitive.
 	 * @param methodName the name of the method.
 	 * @param functionName a {@link String}, the name that will be given to 
 	 *        the uninterpreted function.
 	 * @throws NullPointerException if any of the above parameters is {@code null}.
 	 */
-	public void addUninterpreted(String className, String parametersSignature, String methodName, String functionName) {
-		this.runnerParameters.addUninterpreted(className, parametersSignature, methodName, functionName);
+	public void addUninterpreted(String className, String descriptor, String methodName, String functionName) {
+		this.runnerParameters.addUninterpreted(className, descriptor, methodName, functionName);
 	}
 
 	/**
@@ -707,8 +722,7 @@ public final class RunParameters implements Cloneable {
 	}
 
 	/**
-	 * Sets the decision procedure. Overrides any previous call to
-	 * {@link #setDecisionProcedureGuidance}.
+	 * Sets the decision procedure type.
 	 * 
 	 * @param decisionProcedureType A {@link DecisionProcedureType} 
 	 * representing the decision procedure.
@@ -1787,17 +1801,29 @@ public final class RunParameters implements Cloneable {
 	 * by {@link #setMethodSignature}.
 	 * 
 	 * @param driverClass a {@link String}, the class name of the driver method. 
-	 * @param driverParametersSignature a {@link String}, the parameters of the 
-	 *        driver method (e.g., {@code "([Ljava/lang/String;)V"}. 
-	 * @param driverName a {@link String}, the name of the driver method.
+	 * @param driverName a {@link String}, the name of the driver method. The
+	 *        method must be parameterless and have {@code void} return type.
 	 * @throws NullPointerException when any parameter is {@code null}.
 	 */
-	public void setGuided(String driverClass, String driverParametersSignature, String driverName) {
-		if (driverClass == null || driverParametersSignature == null || driverName == null) {
+	public void setGuided(String driverClass, String driverName) {
+		if (driverClass == null || driverName == null) {
 			throw new NullPointerException();
 		}
 		this.guided = true;
-		this.driverSignature = new Signature(driverClass, driverParametersSignature, driverName); 
+		this.driverSignature = new Signature(driverClass, "()V", driverName); 
+	}
+	
+	/**
+	 * Sets the type of the guidance decision procedure
+	 * 
+	 * @param guidanceType a {@link GuidanceType}.
+         * @throws NullPointerException if {@code guidanceType == null}.
+	 */
+	public void setGuidanceType(GuidanceType guidanceType) {
+	    if (guidanceType == null) {
+	        throw new NullPointerException();
+	    }
+	    this.guidanceType = guidanceType;
 	}
 	
 	/**
@@ -1816,6 +1842,15 @@ public final class RunParameters implements Cloneable {
 	 */
 	public boolean isGuided() {
 		return this.guided;
+	}
+	
+	/**
+	 * Returns the decision procedure guidance type.
+	 * 
+	 * @return a {@link GuidanceType}.
+	 */
+	public GuidanceType getGuidanceType() {
+	    return this.guidanceType;
 	}
 
 	/**
