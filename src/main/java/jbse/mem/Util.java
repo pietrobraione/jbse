@@ -77,7 +77,8 @@ public class Util {
 	 * @param r1 a {@link Reference}. It must not be {@code null}.
 	 * @param r2 a {@link Reference}. It must not be {@code null}.
 	 * @return {@code true} if {@code r1} and {@code r2} denote 
-	 *         the same heap position, {@code false} if they do not, 
+	 *         the same heap position or both denote {@code null}, 
+	 *         {@code false} if they do not, 
 	 *         or if at least one is an unresolved symbolic reference.
 	 */
 	public static boolean areAlias(State s, Reference r1, Reference r2) {
