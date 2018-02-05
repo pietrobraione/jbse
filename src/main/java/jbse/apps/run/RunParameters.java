@@ -88,6 +88,20 @@ public final class RunParameters implements Cloneable {
 		/** Uses CVC4. */
 		CVC4
 	}
+	
+	/**
+	 * Enumeration of the possible guidance decision procedures.
+	 * 
+	 * @author Pietro Braione
+	 *
+	 */
+	public static enum GuidanceType {
+	    /** Use JBSE for the concrete execution. */
+	    JBSE,
+	    
+	    /** Use the platform JVM through JDI for the concrete execution. */
+	    JDI
+	}
 
 	/**
 	 * A Strategy for creating {@link DecisionProcedure}s. 
@@ -277,6 +291,9 @@ public final class RunParameters implements Cloneable {
 	 * arithmetic conditions.
 	 */
 	private DecisionProcedureType decisionProcedureType = DecisionProcedureType.Z3;
+	
+	/** The decision procedure for guidance. */
+	private GuidanceType guidanceType = GuidanceType.JBSE;
 	
 	/** The {@link Path} where the executable of the external decision procedure is. */
 	private Path externalDecisionProcedurePath = null;
@@ -705,8 +722,7 @@ public final class RunParameters implements Cloneable {
 	}
 
 	/**
-	 * Sets the decision procedure. Overrides any previous call to
-	 * {@link #setDecisionProcedureGuidance}.
+	 * Sets the decision procedure type.
 	 * 
 	 * @param decisionProcedureType A {@link DecisionProcedureType} 
 	 * representing the decision procedure.
@@ -1798,6 +1814,19 @@ public final class RunParameters implements Cloneable {
 	}
 	
 	/**
+	 * Sets the type of the guidance decision procedure
+	 * 
+	 * @param guidanceType a {@link GuidanceType}.
+         * @throws NullPointerException if {@code guidanceType == null}.
+	 */
+	public void setGuidanceType(GuidanceType guidanceType) {
+	    if (guidanceType == null) {
+	        throw new NullPointerException();
+	    }
+	    this.guidanceType = guidanceType;
+	}
+	
+	/**
 	 * Sets ordinary symbolic execution, not guided by a concrete one.
 	 * This is the default behaviour.
 	 */
@@ -1813,6 +1842,15 @@ public final class RunParameters implements Cloneable {
 	 */
 	public boolean isGuided() {
 		return this.guided;
+	}
+	
+	/**
+	 * Returns the decision procedure guidance type.
+	 * 
+	 * @return a {@link GuidanceType}.
+	 */
+	public GuidanceType getGuidanceType() {
+	    return this.guidanceType;
 	}
 
 	/**

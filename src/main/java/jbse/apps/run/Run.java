@@ -27,6 +27,7 @@ import jbse.apps.Timer;
 import jbse.apps.Util;
 import jbse.apps.run.RunParameters.DecisionProcedureCreationStrategy;
 import jbse.apps.run.RunParameters.DecisionProcedureType;
+import jbse.apps.run.RunParameters.GuidanceType;
 import jbse.apps.run.RunParameters.InteractionMode;
 import jbse.apps.run.RunParameters.StateFormatMode;
 import jbse.apps.run.RunParameters.StepShowMode;
@@ -120,8 +121,8 @@ public final class Run {
 	/** The {@link Timer} for the decision procedure. */
 	private Timer timer = null;
 
-	/** The {@link DecisionProcedureGuidanceJBSE}, whenever this method is chosen for stepping the {@link Engine}. */
-	private DecisionProcedureGuidanceJDI guidance = null;
+	/** The {@link DecisionProcedureGuidance}, whenever this method is chosen for stepping the {@link Engine}. */
+	private DecisionProcedureGuidance guidance = null;
 	
 	/** A purely numeric decision procedure for concretization checks. */
 	private DecisionProcedureAlgorithms decisionProcedureConcretization = null;
@@ -965,7 +966,13 @@ public final class Run {
 			    log(MSG_TRY_GUIDANCE + guidanceDriverParameters.getMethodSignature() + ".");
 			}
 			try {
+			    if (this.parameters.getGuidanceType() == GuidanceType.JBSE) {
+                                this.guidance = new DecisionProcedureGuidanceJBSE(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
+			    } else if (this.parameters.getGuidanceType() == GuidanceType.JDI) {
 				this.guidance = new DecisionProcedureGuidanceJDI(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
+			    } else {
+			        
+			    }
 			} catch (GuidanceException | UnexpectedInternalException e) {
 				err(ERROR_GUIDANCE_FAILED + e.getMessage());
 				throw new CannotBuildDecisionProcedureException(e);
