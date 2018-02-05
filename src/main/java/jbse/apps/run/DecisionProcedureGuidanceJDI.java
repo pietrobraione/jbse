@@ -1,7 +1,12 @@
 package jbse.apps.run;
 
+import static jbse.common.Type.binaryClassName;
+import static jbse.common.Type.internalClassName;
+
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -9,22 +14,27 @@ import java.util.Map;
 import java.util.SortedSet;
 
 import com.sun.jdi.AbsentInformationException;
+import com.sun.jdi.ArrayReference;
 import com.sun.jdi.BooleanValue;
 import com.sun.jdi.Bootstrap;
 import com.sun.jdi.ByteValue;
 import com.sun.jdi.CharValue;
+import com.sun.jdi.ClassNotLoadedException;
 import com.sun.jdi.DoubleValue;
 import com.sun.jdi.Field;
 import com.sun.jdi.FloatValue;
 import com.sun.jdi.IncompatibleThreadStateException;
 import com.sun.jdi.IntegerValue;
+import com.sun.jdi.InvocationException;
 import com.sun.jdi.LocalVariable;
 import com.sun.jdi.LongValue;
+import com.sun.jdi.Method;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ReferenceType;
 import com.sun.jdi.ShortValue;
 import com.sun.jdi.StackFrame;
 import com.sun.jdi.ThreadReference;
+import com.sun.jdi.VMDisconnectedException;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.connect.Connector;
 import com.sun.jdi.connect.IllegalConnectorArgumentsException;
@@ -65,7 +75,13 @@ import jbse.tree.DecisionAlternative_XSWITCH;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Aliases;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Expands;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Null;
+import jbse.val.Access;
+import jbse.val.AccessArrayLength;
+import jbse.val.AccessArrayMember;
+import jbse.val.AccessField;
+import jbse.val.AccessHashCode;
 import jbse.val.AccessLocalVariable;
+import jbse.val.AccessStatic;
 import jbse.val.Any;
 import jbse.val.Calculator;
 import jbse.val.Expression;
@@ -364,7 +380,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
         }
     }
     
-    private void initSeen() {
+    private void initSeen() throws GuidanceException {
         if (this.jvm.isCurrentMethodNonStatic()) {
             final MemoryPath thisOrigin = MemoryPath.mkLocalVariable("this");
             this.seen.add(thisOrigin);
@@ -380,7 +396,9 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
     }
     
     private static class JVM {
+        private static final String ERROR_BAD_PATH = "Failed accessing through a memory access path.";
         private static final String[] EXCLUDES = {"java.*", "javax.*", "sun.*", "com.sun.*", "org.*"};
+        
         private final Calculator calc;
         private final String methodStart;
         private final String methodStop;  
@@ -389,6 +407,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
         private boolean intoMethodRunnPar = false;
         private int hitCounter = 0;
         private MethodEntryEvent methodEntryEvent;
+        private StackFrame rootFrameConcrete;
 
         public JVM(Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits) 
         throws GuidanceException {
@@ -399,6 +418,16 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
             this.vm = createVM(runnerParameters, stopSignature);
             setEventRequests();
             run();
+            
+            //sets rootFrameConcrete
+            try {
+                final ThreadReference thread = this.methodEntryEvent.thread();
+                final List<StackFrame> frames = thread.frames();
+                this.rootFrameConcrete = frames.get(0);
+            } catch (IncompatibleThreadStateException | IndexOutOfBoundsException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            }
         }
         
         private VirtualMachine createVM(RunnerParameters runnerParameters, Signature stopSignature) 
@@ -406,12 +435,14 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
             //the variable 'path' is the last one defined in the list 'listClassPath'
             //TODO this block of code seems fragile
             final Iterable<String> classPath = runnerParameters.getClasspath().classPath();
-            final List<String> listClassPath = new ArrayList<>();
+            final ArrayList<String> listClassPath = new ArrayList<>();
             classPath.forEach(listClassPath::add);
-            final String last = listClassPath.get(listClassPath.size() - 1);
-            final String path = last.substring(0, last.length() - 1);
-            final String test = stopSignature.getClassName();
-            return launchTarget("-classpath \"" + path + test);
+            /*final String last = listClassPath.get(listClassPath.size() - 1);
+            final String path = last.substring(0, last.length() - 1);*/
+            final String stringClassPath = String.join(File.pathSeparator, listClassPath.toArray(new String[0]));
+            final String mainClass = DecisionProcedureGuidanceJDILauncher.class.getName();
+            final String targetClass = binaryClassName(runnerParameters.getMethodSignature().getClassName());
+            return launchTarget("-classpath \"" + stringClassPath + "\" " + mainClass + " " + targetClass + " " + this.methodStart);
         }
         
         private VirtualMachine launchTarget(String mainArgs) throws GuidanceException {
@@ -466,6 +497,8 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
                     }
                 } catch (InterruptedException e) {
                     //TODO
+                } catch (VMDisconnectedException e) {
+                    break;
                 }
             }
         }
@@ -502,125 +535,144 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
             throw new Error("No launching connector");
         }
         
-        public boolean isCurrentMethodNonStatic() {
-            return false; //TODO
+        public boolean isCurrentMethodNonStatic() throws GuidanceException {
+            return !this.rootFrameConcrete.location().method().declaringType().isStatic();
         }
         
         public String typeOfObject(MemoryPath origin) throws GuidanceException {
-            return null; //TODO
+            final ObjectReference object = (ObjectReference) getJDIValue(origin);
+            if (object == null) {
+                return null;
+            }
+            return internalClassName(object.referenceType().name());
         }
         
         public boolean isNull(MemoryPath origin) throws GuidanceException {
-            return false; //TODO
+            final ObjectReference object = (ObjectReference) getJDIValue(origin);
+            return (object == null);
         }
         
         public boolean areAlias(MemoryPath first, MemoryPath second) throws GuidanceException {
-            return false; //TODO
+            final ObjectReference objectFirst = (ObjectReference) getJDIValue(first);
+            final ObjectReference objectSecond = (ObjectReference) getJDIValue(second);
+            return ((objectFirst == null && objectSecond == null) || objectFirst.equals(objectSecond));
         }
 
         private Object getValue(MemoryPath origin) throws GuidanceException {
+            final com.sun.jdi.Value val = getJDIValue(origin);
+            if (val instanceof IntegerValue) {
+                return this.calc.valInt(((IntegerValue) val).intValue());
+            } else if (val instanceof BooleanValue) {
+                return this.calc.valBoolean(((BooleanValue) val).booleanValue());
+            } else if (val instanceof CharValue) {
+                return this.calc.valChar(((CharValue) val).charValue());
+            } else if (val instanceof ByteValue) {
+                return this.calc.valByte(((ByteValue) val).byteValue());
+            } else if (val instanceof DoubleValue) {
+                return this.calc.valDouble(((DoubleValue) val).doubleValue());
+            } else if (val instanceof FloatValue) {
+                return this.calc.valFloat(((FloatValue) val).floatValue());
+            } else if (val instanceof LongValue) {
+                return this.calc.valLong(((LongValue) val).longValue());
+            } else if (val instanceof ShortValue) {
+                return this.calc.valShort(((ShortValue) val).shortValue());
+            } else if (val instanceof ObjectReference) {
+                return val;
+            } else { //val instanceof VoidValue || val == null
+                return null;
+            }
+        }
+        private com.sun.jdi.Value getJDIValue(MemoryPath origin) throws GuidanceException {
             try {
-                final String nameVar = ((AccessLocalVariable) origin.iterator().next()).variableName(); //TODO this seems fragile!
-                final com.sun.jdi.Value val = getJDIValueLocalVariable(nameVar);
-                if (val instanceof IntegerValue) {
-                    return this.calc.valInt(((IntegerValue) val).intValue());
-                } else if (val instanceof BooleanValue) {
-                    return this.calc.valBoolean(((BooleanValue) val).booleanValue());
-                } else if (val instanceof CharValue) {
-                    return this.calc.valChar(((CharValue) val).charValue());
-                } else if (val instanceof ByteValue) {
-                    return this.calc.valByte(((ByteValue) val).byteValue());
-                } else if (val instanceof DoubleValue) {
-                    return this.calc.valDouble(((DoubleValue) val).doubleValue());
-                } else if (val instanceof FloatValue) {
-                    return this.calc.valFloat(((FloatValue) val).floatValue());
-                } else if (val instanceof LongValue) {
-                    return this.calc.valLong(((LongValue) val).longValue());
-                } else if (val instanceof ShortValue) {
-                    return this.calc.valShort(((ShortValue) val).shortValue());
-                } else if (val instanceof ObjectReference) {
-                    return val;
-                } else { //val instanceof VoidValue or val == null
-                    return null;
+                com.sun.jdi.Value value = null;
+                com.sun.jdi.ReferenceType t = null;
+                com.sun.jdi.ObjectReference o = null;
+                for (Access a : origin) {
+                    if (a instanceof AccessLocalVariable) {
+                        value = getJDIValueLocalVariable(((AccessLocalVariable) a).variableName());
+                        if (value == null) {
+                            throw new GuidanceException(ERROR_BAD_PATH);
+                        }
+                    } else if (a instanceof AccessStatic) {
+                        value = null;
+                        t = getJDIObjectStatic(((AccessStatic) a).className());
+                        if (t == null) {
+                            throw new GuidanceException(ERROR_BAD_PATH);
+                        }
+                        o = null;
+                    } else if (a instanceof AccessField) {
+                        final String fieldName = ((AccessField) a).fieldName();
+                        final Field fld = (t == null ? o.referenceType().fieldByName(fieldName) : t.fieldByName(fieldName));
+                        if (fld == null) {
+                            throw new GuidanceException(ERROR_BAD_PATH);
+                        }
+                        try {
+                            value = (t == null ? o.getValue(fld) : t.getValue(fld));
+                        } catch (IllegalArgumentException e) {
+                            throw new GuidanceException(e);
+                        }
+                        o = null;
+                    } else if (a instanceof AccessArrayLength) {
+                        if (!(o instanceof ArrayReference)) {
+                            throw new GuidanceException(ERROR_BAD_PATH);
+                        }
+                        value = this.vm.mirrorOf(((ArrayReference) o).length());
+                    } else if (a instanceof AccessArrayMember) {
+                        if (!(o instanceof ArrayReference)) {
+                            throw new GuidanceException(ERROR_BAD_PATH);
+                        }
+                        try {
+                            final Simplex index = (Simplex) eval(((AccessArrayMember) a).index());
+                            value = ((ArrayReference) o).getValue(((Integer) index.getActualValue()).intValue());
+                        } catch (ClassCastException e) {
+                            throw new GuidanceException(e);
+                        }
+                    } else if (a instanceof AccessHashCode) {
+                        if (o == null) {
+                            throw new GuidanceException(ERROR_BAD_PATH);
+                        }
+                        final Method hashCode = o.referenceType().methodsByName("hashCode", "()I").get(0);
+                        value = o.invokeMethod(this.methodEntryEvent.thread(), hashCode, Collections.emptyList(), 0);
+                    }
+                    if (value instanceof ObjectReference) {
+                        t = null;
+                        o = (ObjectReference) value;
+                    } else if (value != null) {
+                        t = null;
+                        o = null; 
+                    }
                 }
-            } catch (IncompatibleThreadStateException | AbsentInformationException e) {
+                if (value == null) {
+                    throw new GuidanceException(ERROR_BAD_PATH);
+                }
+                return value;
+            } catch (IncompatibleThreadStateException | AbsentInformationException | 
+                     com.sun.jdi.InvalidTypeException | ClassNotLoadedException | 
+                     InvocationException e) {
                 throw new GuidanceException(e);
             }
         }
         
         private com.sun.jdi.Value getJDIValueLocalVariable(String var) 
         throws IncompatibleThreadStateException, AbsentInformationException {
-            boolean findParam = false;
-            com.sun.jdi.Value val = null;
-            final String delims = "[.]";
-            final String[] tokens = var.split(delims);
-            final ThreadReference thread = this.methodEntryEvent.thread();
-            final List<StackFrame> frames = thread.frames();
-            if (frames.size() > 0) { 
-                final StackFrame frame = frames.get(0); 
-                final List<LocalVariable> variables = frame.visibleVariables();  
-                if (variables != null) { 
-                    for (LocalVariable variable: variables) { 
-                        if (variable.name().equals(tokens[0])) {
-                            findParam = true;
-                            val = frame.getValue(variable);
-                            if (tokens.length > 1) {
-                                val = innestate(val, tokens);
-                            }
-                        }
-                    } 
-                }
-            }
-            if (!findParam) {
-                val = getValueInstanceField(var);
+            final com.sun.jdi.Value val;
+            if ("this".equals(var)) {
+                val = this.rootFrameConcrete.thisObject();
+            } else {
+                final LocalVariable variable = this.rootFrameConcrete.visibleVariableByName(var); 
+                val = (variable == null ? null : this.rootFrameConcrete.getValue(variable));
             }
             return val;
         }
-
-        private com.sun.jdi.Value getValueInstanceField(String var) throws IncompatibleThreadStateException {
-            com.sun.jdi.Value val = null;
-            final String delims = "[.]";
-            final String[] tokens = var.split(delims);
-            final ThreadReference thread = this.methodEntryEvent.thread();
-            final List<StackFrame> frames = thread.frames(); 
-            if (frames.size() > 0) {
-                final StackFrame frame = frames.get(0);
-                final ObjectReference objRef = frame.thisObject();
-                final ReferenceType refType = objRef.referenceType();
-                final List<Field> objFields = refType.allFields();
-                for (int i = 0; i < objFields.size(); ++i){
-                    final Field nextField = objFields.get(i);
-                    if (nextField.name().equals(tokens[0])) {
-                        val = objRef.getValue(nextField);
-                        if (tokens.length > 1) {
-                            val = innestate(val,tokens);
-                        }
-                    }
-                }
+        
+        private com.sun.jdi.ReferenceType getJDIObjectStatic(String className) 
+        throws IncompatibleThreadStateException, AbsentInformationException {
+            com.sun.jdi.ReferenceType o = null;
+            final List<ReferenceType> classes = this.vm.classesByName(className);
+            if (classes.size() == 1) {
+                o = classes.get(0);
             }
-            return val;
-        }
-
-        private com.sun.jdi.Value innestate(com.sun.jdi.Value val, String[] tokens) {
-            final String[] tokensNoFirst = new String[tokens.length - 1];
-            System.arraycopy(tokens, 1, tokensNoFirst, 0, tokens.length - 1);
-            final ObjectReference obj = (ObjectReference) val;
-            final ReferenceType refType = obj.referenceType();
-            final List<Field> objF = refType.allFields();
-            for (int i = 0; i < objF.size(); ++i) {
-                final Field nextField = objF.get(i);
-                if (nextField.name().equals(tokensNoFirst[0])) {
-                    val = obj.getValue(nextField);
-                    if (tokensNoFirst.length > 1) {
-                        try {
-                            val = innestate(val, tokensNoFirst);
-                        } catch (Exception exc) {
-                            System.out.println(exc.toString());
-                        }
-                    }
-                }
-            }
-            return val;
+            return o;
         }
 
         public Primitive eval(Primitive toEval) throws GuidanceException {
@@ -731,3 +783,4 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureAlgorit
         }
     }
 }
+
