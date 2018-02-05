@@ -1918,17 +1918,15 @@ public final class RunParameters implements Cloneable {
      * by {@link #setMethodSignature}.
      * 
      * @param driverClass a {@link String}, the class name of the driver method. 
-     * @param driverDescriptor a {@link String}, the descriptor of the 
-     *        driver method (e.g., {@code "([Ljava/lang/String;)V"}. 
      * @param driverName a {@link String}, the name of the driver method.
      * @throws NullPointerException when any parameter is {@code null}.
      */
-    public void setGuided(String driverClass, String driverDescriptor, String driverName) {
-        if (driverClass == null || driverDescriptor == null || driverName == null) {
+    public void setGuided(String driverClass, String driverName) {
+        if (driverClass == null || driverName == null) {
             throw new NullPointerException();
         }
         this.guided = true;
-        this.driverSignature = new Signature(driverClass, driverDescriptor, driverName); 
+        this.driverSignature = new Signature(driverClass, "()V", driverName); 
     }
 
     /**
