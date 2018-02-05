@@ -25,6 +25,7 @@ import jbse.apps.Timer;
 import jbse.apps.Util;
 import jbse.apps.run.RunParameters.DecisionProcedureCreationStrategy;
 import jbse.apps.run.RunParameters.DecisionProcedureType;
+import jbse.apps.run.RunParameters.GuidanceType;
 import jbse.apps.run.RunParameters.InteractionMode;
 import jbse.apps.run.RunParameters.StateFormatMode;
 import jbse.apps.run.RunParameters.StepShowMode;
@@ -115,8 +116,8 @@ public final class Run {
     /** The {@link Timer} for the decision procedure. */
     private Timer timer = null;
 
-    /** The {@link DecisionProcedureGuidanceJBSE}, whenever this method is chosen for stepping the {@link Engine}. */
-    private DecisionProcedureGuidanceJDI guidance = null;
+    /** The {@link DecisionProcedureGuidance}, whenever this method is chosen for stepping the {@link Engine}. */
+    private DecisionProcedureGuidance guidance = null;
 
     /** A purely numeric decision procedure for concretization checks. */
     private DecisionProcedureAlgorithms decisionProcedureConcretization = null;
@@ -939,7 +940,13 @@ public final class Run {
                 log(MSG_TRY_GUIDANCE + guidanceDriverParameters.getMethodSignature() + ".");
             }
             try {
-                this.guidance = new DecisionProcedureGuidanceJDI(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
+                if (this.parameters.getGuidanceType() == GuidanceType.JBSE) {
+                    this.guidance = new DecisionProcedureGuidanceJBSE(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
+                } else if (this.parameters.getGuidanceType() == GuidanceType.JDI) {
+                    this.guidance = new DecisionProcedureGuidanceJDI(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
+                } else {
+                    throw new UnexpectedInternalException(ERROR_DECISION_PROCEDURE_GUIDANCE_UNRECOGNIZED + this.parameters.getGuidanceType().toString());
+                }
             } catch (GuidanceException | UnexpectedInternalException e) {
                 err(ERROR_GUIDANCE_FAILED + e.getMessage());
                 throw new CannotBuildDecisionProcedureException(e);
@@ -1203,6 +1210,9 @@ public final class Run {
 
     /** Error: unable to connect with decision procedure. */
     private static final String ERROR_DECISION_PROCEDURE_FAILED = "Connection failed, cause: ";
+
+    /** Error: unrecognized guidance decision procedure type. */
+    private static final String ERROR_DECISION_PROCEDURE_GUIDANCE_UNRECOGNIZED = "Unrecognized guidance decision procedure type ";
 
     /** Error: failed building symbolic executor. */
     private static final String ERROR_BUILD_FAILED = "Failed construction of symbolic executor, cause: ";
