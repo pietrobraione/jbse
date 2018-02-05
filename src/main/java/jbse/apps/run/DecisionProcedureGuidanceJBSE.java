@@ -354,7 +354,7 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureAlgori
         }
     }
     
-    private void initSeen() {
+    private void initSeen() throws GuidanceException {
         if (this.jvm.isCurrentMethodNonStatic()) {
             final MemoryPath thisOrigin = MemoryPath.mkLocalVariable("this");
             this.seen.add(thisOrigin);
@@ -482,7 +482,7 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureAlgori
             }
         }
         
-        public boolean isCurrentMethodNonStatic() {
+        public boolean isCurrentMethodNonStatic() throws GuidanceException {
             try {
                 final ClassHierarchy hier = this.initialStateConcrete.getClassHierarchy();
                 final Signature currentMethod = this.initialStateConcrete.getCurrentMethodSignature();
@@ -515,30 +515,30 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureAlgori
         }
 
         private Object getValue(MemoryPath origin) throws GuidanceException {
-            Value fieldValue = null;
+            Value value = null;
             Objekt o = null;
             for (Access a : origin) {
                 if (a instanceof AccessLocalVariable) {
                     final AccessLocalVariable al = (AccessLocalVariable) a;
-                    fieldValue = this.rootFrameConcrete.getLocalVariableValue(al.variableName());
-                    if (fieldValue == null) {
+                    value = this.rootFrameConcrete.getLocalVariableValue(al.variableName());
+                    if (value == null) {
                         throw new GuidanceException(ERROR_BAD_PATH);
                     }
                 } else if (a instanceof AccessStatic) {
                     final AccessStatic as = (AccessStatic) a;
-                    fieldValue = null;
+                    value = null;
                     o = this.initialStateConcrete.getKlass(as.className());
-                } else if (a instanceof AccessField) {
                     if (o == null) {
                         throw new GuidanceException(ERROR_BAD_PATH);
                     }
+                } else if (a instanceof AccessField) {
                     final AccessField af = (AccessField) a;
-                    fieldValue = o.getFieldValue(af.fieldName());
+                    value = o.getFieldValue(af.fieldName());
                 } else if (a instanceof AccessArrayLength) {
                     if (! (o instanceof Array)) {
                         throw new GuidanceException(ERROR_BAD_PATH);
                     }
-                    fieldValue = ((Array) o).getLength();
+                    value = ((Array) o).getLength();
                 } else if (a instanceof AccessArrayMember) {
                     if (! (o instanceof Array)) {
                         throw new GuidanceException(ERROR_BAD_PATH);
@@ -548,7 +548,7 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureAlgori
                         for (AccessOutcome ao : ((Array) o).get(eval(aa.index()))) {
                             if (ao instanceof AccessOutcomeIn) {
                                 final AccessOutcomeIn aoi = (AccessOutcomeIn) ao;
-                                fieldValue = aoi.getValue();
+                                value = aoi.getValue();
                                 break;
                             }
                         }
@@ -559,18 +559,18 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureAlgori
                     if (o == null) {
                         throw new GuidanceException(ERROR_BAD_PATH);
                     }
-                    fieldValue = o.getObjektHashCode();
+                    value = o.getObjektHashCode();
                 }
-                if (fieldValue instanceof Reference) {
-                    o = this.initialStateConcrete.getObject((Reference) fieldValue);
-                } else if (fieldValue != null) {
+                if (value instanceof Reference) {
+                    o = this.initialStateConcrete.getObject((Reference) value);
+                } else if (value != null) {
                     o = null;
                 }
             }
-            if (fieldValue == null) {
+            if (value == null) {
                 throw new GuidanceException(ERROR_BAD_PATH);
             }
-            return fieldValue;
+            return value;
         }
 
         public Primitive eval(Primitive toEval) throws GuidanceException {
