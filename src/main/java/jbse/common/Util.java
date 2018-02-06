@@ -1,5 +1,10 @@
 package jbse.common;
 
+import java.lang.reflect.Field;
+
+import jbse.common.exc.UnexpectedInternalException;
+import sun.misc.Unsafe;
+
 /**
  * Class that provides some utility constants and static methods.
  */
@@ -59,5 +64,16 @@ public final class Util {
      */
     private Util() {
         //intentionally empty
+    }
+
+    public static Unsafe unsafe() {
+        try {
+            final Field fieldUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
+            fieldUnsafe.setAccessible(true);
+            return (Unsafe) fieldUnsafe.get(null);
+        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
     }
 }

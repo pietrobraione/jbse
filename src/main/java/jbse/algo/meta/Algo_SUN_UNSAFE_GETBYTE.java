@@ -1,6 +1,6 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.unsafe;
+import static jbse.common.Util.unsafe;
 
 import java.util.function.Supplier;
 

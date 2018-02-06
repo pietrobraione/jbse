@@ -1,6 +1,6 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.unsafe;
+import static jbse.common.Util.unsafe;
 
 import java.util.function.Supplier;
 
@@ -17,6 +17,8 @@ import jbse.val.Simplex;
  * @author Pietro Braione
  */
 public final class Algo_SUN_UNSAFE_FREEMEMORY extends Algo_INVOKEMETA_Nonbranching {
+    private long memoryAddress; //set by cookMore
+    
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 2;
@@ -27,14 +29,15 @@ public final class Algo_SUN_UNSAFE_FREEMEMORY extends Algo_INVOKEMETA_Nonbranchi
         if (!(this.data.operand(1) instanceof Simplex)) {
             throw new SymbolicValueNotAllowedException("sun.misc.Unsafe.freeMemory cannot be invoked with a symbolic argument");
         }
-        final long memoryAddress = ((Long) ((Simplex) this.data.operand(1)).getActualValue()).longValue();
-        unsafe().freeMemory(memoryAddress);
+        this.memoryAddress = ((Long) ((Simplex) this.data.operand(1)).getActualValue()).longValue();
+        
     }
 
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            //nothing to do
+            state.removeMemoryBlock(this.memoryAddress);
+            unsafe().freeMemory(this.memoryAddress);
         };
     }
 }

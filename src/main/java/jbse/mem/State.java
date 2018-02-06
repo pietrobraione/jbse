@@ -13,6 +13,7 @@ import static jbse.bc.Signatures.JAVA_THROWABLE;
 import static jbse.common.Type.parametersNumber;
 import static jbse.common.Type.binaryClassName;
 import static jbse.common.Type.isPrimitiveCanonicalName;
+import static jbse.common.Util.unsafe;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -78,6 +79,7 @@ import jbse.val.SymbolFactory;
 import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
+import sun.misc.Unsafe;
 
 /**
  * Class that represents the state of execution.
@@ -85,6 +87,25 @@ import jbse.val.exc.InvalidTypeException;
 public final class State implements Cloneable {
     /** The slot number of the "this" (method receiver) object. */
     private static final int ROOT_THIS_SLOT = 0;
+    
+    private static final class MemoryBlock implements Cloneable {
+        long address;
+        long size;
+        
+        public MemoryBlock(long address, long size) {
+            this.address = address;
+            this.size = size;
+        }
+        
+        @Override
+        public MemoryBlock clone() {
+            try {
+                return (MemoryBlock) super.clone();
+            } catch (CloneNotSupportedException e) {
+                throw new AssertionError();
+            }
+        }
+    }
 
     /** 
      * The identifier of the state in the execution tree.
@@ -132,6 +153,9 @@ public final class State implements Cloneable {
     
     /** Maps file descriptors to (meta-level) open files. */
     private HashMap<Integer, Object> files = new HashMap<>();
+    
+    /** Maps memory addresses to (meta-level) allocated memory blocks. */
+    private HashMap<Long, MemoryBlock> allocatedMemory = new HashMap<>();
 
     /** The JVM stack of the current execution thread. */
     private ThreadStack stack = new ThreadStack();
@@ -754,6 +778,72 @@ public final class State implements Cloneable {
      */
     public void removeFile(int descriptor) {
         this.files.remove(Integer.valueOf(descriptor));
+    }
+    
+    /**
+     * Registers a raw memory block.
+     * 
+     * @param address a {@code long}, the base address of the memory block.
+     * @param size a {@code long}, the address of the memory block.
+     * @throws InvalidInputException if {@code address} is already
+     *         a registered memory block base address, or if {@code size <= 0}.
+     */
+    public void addMemoryBlock(long address, long size) throws InvalidInputException {
+        if (this.allocatedMemory.containsKey(address)) {
+            throw new InvalidInputException("Tried to add a raw memory block with an already known address.");
+        }
+        if (size <= 0) {
+            throw new InvalidInputException("Tried to add a raw memory block with a nonpositive size.");
+        }
+        this.allocatedMemory.put(address, new MemoryBlock(address, size));
+    }
+    
+    /**
+     * Returns the base address of a memory block.
+     * 
+     * @param address a {@code long}, the address as known by this {@link State}
+     *        (base-level address).
+     * @return a {@code long}, the true base address of the memory block
+     *         (meta-level address).
+     * @throws InvalidInputException if {@code address} is not a memory block
+     *         address previously registered by a call to {@link #addMemoryBlock(long, long) addMemoryBlock}.
+     */
+    public long getMemoryBlockAddress(long address) throws InvalidInputException {
+        if (!this.allocatedMemory.containsKey(address)) {
+            throw new InvalidInputException("Tried to get the address of a raw memory block corresponding to an unknown (base-level) address.");
+        }
+        return this.allocatedMemory.get(address).address;
+    }
+
+    /**
+     * Returns the size of a memory block.
+     * 
+     * @param address a {@code long}, the address as known by this {@link State}
+     *        (base-level address).
+     * @return a {@code long}, the size of the memory block.
+     * @throws InvalidInputException if {@code address} is not a memory block
+     *         address previously registered by a call to {@link #addMemoryBlock(long, long) addMemoryBlock}.
+     */
+    public long getMemoryBlockSize(long address) throws InvalidInputException {
+        if (!this.allocatedMemory.containsKey(address)) {
+            throw new InvalidInputException("Tried to get the size of a raw memory block corresponding to an unknown (base-level) address.");
+        }
+        return this.allocatedMemory.get(address).size;
+    }
+
+    /**
+     * Removes the registration of a memory block.
+     * 
+     * @param address a {@code long}, the address as known by this {@link State}
+     *        (base-level address).
+     * @throws InvalidInputException if {@code address} is not a memory block
+     *         address previously registered by a call to {@link #addMemoryBlock(long, long) addMemoryBlock}.
+     */
+    public void removeMemoryBlock(long address) throws InvalidInputException {
+        if (!this.allocatedMemory.containsKey(address)) {
+            throw new InvalidInputException("Tried to remove a raw memory block corresponding to an unknown (base-level) address.");
+        }
+        this.allocatedMemory.remove(address);
     }
 
     /**
@@ -2519,6 +2609,18 @@ public final class State implements Cloneable {
                  IllegalAccessException | IOException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
+        }
+        
+        //allocatedMemory
+        o.allocatedMemory = new HashMap<>();
+        final Unsafe unsafe = unsafe();
+        for (Map.Entry<Long, MemoryBlock> entry : this.allocatedMemory.entrySet()) {
+            final long baseLevelAddress = entry.getKey();
+            final long oldMemoryBlockAddress = entry.getValue().address;
+            final long size = entry.getValue().size;
+            final long newMemoryBlockAddress = unsafe.allocateMemory(size);
+            unsafe.copyMemory(oldMemoryBlockAddress, newMemoryBlockAddress, size);
+            o.allocatedMemory.put(baseLevelAddress, new MemoryBlock(newMemoryBlockAddress, size));
         }
 
         //stack

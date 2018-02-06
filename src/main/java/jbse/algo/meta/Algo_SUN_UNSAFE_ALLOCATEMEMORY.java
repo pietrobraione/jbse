@@ -1,6 +1,6 @@
 package jbse.algo.meta;
 
-import static jbse.algo.Util.unsafe;
+import static jbse.common.Util.unsafe;
 
 import java.util.function.Supplier;
 
@@ -17,7 +17,8 @@ import jbse.val.Simplex;
  * @author Pietro Braione
  */
 public final class Algo_SUN_UNSAFE_ALLOCATEMEMORY extends Algo_INVOKEMETA_Nonbranching {
-    private long memoryAddress;
+    private long bytes; //set by cookMore
+    private long memoryAddress; //set by cookMore
     
     @Override
     protected Supplier<Integer> numOperands() {
@@ -27,15 +28,16 @@ public final class Algo_SUN_UNSAFE_ALLOCATEMEMORY extends Algo_INVOKEMETA_Nonbra
     @Override
     protected void cookMore(State state) throws SymbolicValueNotAllowedException {
         if (!(this.data.operand(1) instanceof Simplex)) {
-            throw new SymbolicValueNotAllowedException("sun.misc.Unsafe.allocateMemory cannot be invoked with a symbolic argument");
+            throw new SymbolicValueNotAllowedException("Method sun.misc.Unsafe.allocateMemory cannot be invoked with a symbolic long size argument");
         }
-        final long bytes = ((Long) ((Simplex) this.data.operand(1)).getActualValue()).longValue();
-        this.memoryAddress = unsafe().allocateMemory(bytes);
+        this.bytes = ((Long) ((Simplex) this.data.operand(1)).getActualValue()).longValue();
+        this.memoryAddress = unsafe().allocateMemory(this.bytes);
     }
 
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
+            state.addMemoryBlock(this.memoryAddress, this.bytes);
             state.pushOperand(state.getCalculator().valLong(this.memoryAddress));
         };
     }

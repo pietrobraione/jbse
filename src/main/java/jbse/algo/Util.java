@@ -23,7 +23,6 @@ import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.binaryClassName;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -31,7 +30,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
 
-import sun.misc.Unsafe;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.ConstantPoolPrimitive;
@@ -1017,18 +1015,6 @@ public class Util {
             //this should never happen
             failExecution(e);
         }
-    }
-    
-    public static Unsafe unsafe() {
-        try {
-            final Field fieldUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
-            fieldUnsafe.setAccessible(true);
-            return (Unsafe) fieldUnsafe.get(null);
-        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-            //this should never happen
-            failExecution(e);
-        }
-        return null; //to keep the compiler happy
     }
     
     public static void invokeClassLoaderLoadClass(State state, PleaseLoadClassException e) 
