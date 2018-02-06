@@ -146,13 +146,9 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         
         private VirtualMachine createVM(RunnerParameters runnerParameters, Signature stopSignature) 
         throws GuidanceException {
-            //the variable 'path' is the last one defined in the list 'listClassPath'
-            //TODO this block of code seems fragile
             final Iterable<String> classPath = runnerParameters.getClasspath().classPath();
             final ArrayList<String> listClassPath = new ArrayList<>();
             classPath.forEach(listClassPath::add);
-            /*final String last = listClassPath.get(listClassPath.size() - 1);
-            final String path = last.substring(0, last.length() - 1);*/
             final String stringClassPath = String.join(File.pathSeparator, listClassPath.toArray(new String[0]));
             final String mainClass = DecisionProcedureGuidanceJDILauncher.class.getName();
             final String targetClass = binaryClassName(runnerParameters.getMethodSignature().getClassName());
