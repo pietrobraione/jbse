@@ -268,7 +268,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     private void updateExpansionBackdoor(State state, ReferenceSymbolic refToLoad) throws GuidanceException {
         final String refType = Type.getReferenceClassName(refToLoad.getStaticType());
         final String objType = this.jvm.typeOfObject(refToLoad.getOrigin());
-        if (!refType.equals(objType)) {
+        if (objType != null && !refType.equals(objType)) {
             state.getClassHierarchy().addToExpansionBackdoor(refType, objType);
         }
     }
@@ -350,7 +350,8 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
          * 
          * @param origin the {@link MemoryPath} to the object.
          * @return a {@link String}, the class of the object referred to
-         *         by {@code origin}.
+         *         by {@code origin}, or {@code null} if {@code origin}
+         *         points to {@code null}.
          * @throws GuidanceException if {@code origin} does not refer to an object.
          */
         public abstract String typeOfObject(MemoryPath origin) throws GuidanceException;
