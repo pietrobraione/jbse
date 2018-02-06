@@ -25,6 +25,7 @@ import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Calculator;
+import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.Simplex;
 
@@ -57,10 +58,16 @@ public final class Algo_JAVA_FILEINPUTSTREAM_READBYTES extends Algo_INVOKEMETA_N
             this.buf = (Array) state.getObject(bufReference);
             
             //gets offset and length
-            final Simplex _ofst = (Simplex) this.data.operand(2);
-            this.ofst = ((Integer) _ofst.getActualValue()).intValue();
-            final Simplex _len = (Simplex) this.data.operand(3);
-            final int len = ((Integer) _len.getActualValue()).intValue();
+            final Primitive _ofst = (Primitive) this.data.operand(2);
+            if (_ofst.isSymbolic()) {
+                throw new SymbolicValueNotAllowedException("The int ofst parameter to java.io.FileInputStream.readBytes method cannot be a symbolic value.");
+            }
+            this.ofst = ((Integer) ((Simplex) _ofst).getActualValue()).intValue();
+            final Primitive _len = (Primitive) this.data.operand(3);
+            if (_len.isSymbolic()) {
+                throw new SymbolicValueNotAllowedException("The int len parameter to java.io.FileInputStream.readBytes method cannot be a symbolic value.");
+            }
+            final int len = ((Integer) ((Simplex) _len).getActualValue()).intValue();
             
             //checks the parameters
             if (!this.buf.hasSimpleRep()) {
