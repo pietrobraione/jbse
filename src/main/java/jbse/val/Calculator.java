@@ -224,39 +224,39 @@ public abstract class Calculator {
 
     //same methods overloaded
 
-    public Primitive val_(double val) {
+    public Simplex val_(double val) {
         return this.valDouble(val);
     }
 
-    public Primitive val_(float val) {
+    public Simplex val_(float val) {
         return this.valFloat(val);
     }
 
-    public Primitive val_(long val) {
+    public Simplex val_(long val) {
         return this.valLong(val);
     }
 
-    public Primitive val_(int val) {
+    public Simplex val_(int val) {
         return this.valInt(val);
     }
 
-    public Primitive val_(short val) {
+    public Simplex val_(short val) {
         return this.valShort(val);
     }
 
-    public Primitive val_(byte val) {
+    public Simplex val_(byte val) {
         return this.valByte(val);
     }
 
-    public Primitive val_(char val) {
+    public Simplex val_(char val) {
         return this.valChar(val);
     }
 
-    public Primitive val_(boolean val) {
+    public Simplex val_(boolean val) {
         return this.valBoolean(val);
     }
 
-    public Value val_(Object v) {
+    public Simplex val_(Object v) {
         if (v instanceof Byte) {
             return valByte(((Byte) v).byteValue());
         } else if (v instanceof Short) {
