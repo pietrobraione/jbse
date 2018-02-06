@@ -269,7 +269,8 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         public boolean areAlias(MemoryPath first, MemoryPath second) throws GuidanceException {
             final ObjectReference objectFirst = (ObjectReference) getJDIValue(first);
             final ObjectReference objectSecond = (ObjectReference) getJDIValue(second);
-            return ((objectFirst == null && objectSecond == null) || objectFirst.equals(objectSecond));
+            return ((objectFirst == null && objectSecond == null) || 
+                    (objectFirst != null && objectSecond != null && objectFirst.equals(objectSecond)));
         }
 
         @Override
@@ -300,43 +301,32 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         
         private com.sun.jdi.Value getJDIValue(MemoryPath origin) throws GuidanceException {
             try {
+                boolean someValue = false;
                 com.sun.jdi.Value value = null;
                 com.sun.jdi.ReferenceType t = null;
                 com.sun.jdi.ObjectReference o = null;
                 for (Access a : origin) {
                     if (a instanceof AccessLocalVariable) {
+                        someValue = true;
                         value = getJDIValueLocalVariable(((AccessLocalVariable) a).variableName());
-                        if (value == null) {
-                            throw new GuidanceException(ERROR_BAD_PATH);
-                        }
                     } else if (a instanceof AccessStatic) {
-                        value = null;
+                        someValue = false;
                         t = getJDIObjectStatic(((AccessStatic) a).className());
-                        if (t == null) {
-                            throw new GuidanceException(ERROR_BAD_PATH);
-                        }
                         o = null;
                     } else if (a instanceof AccessField) {
-                        final String fieldName = ((AccessField) a).fieldName();
-                        final Field fld = (t == null ? o.referenceType().fieldByName(fieldName) : t.fieldByName(fieldName));
-                        if (fld == null) {
-                            throw new GuidanceException(ERROR_BAD_PATH);
-                        }
-                        try {
-                            value = (t == null ? o.getValue(fld) : t.getValue(fld));
-                        } catch (IllegalArgumentException e) {
-                            throw new GuidanceException(e);
-                        }
-                        o = null;
+                        someValue = true;
+                        value = getJDIValueField(((AccessField) a).fieldName(), t, o);
                     } else if (a instanceof AccessArrayLength) {
                         if (!(o instanceof ArrayReference)) {
                             throw new GuidanceException(ERROR_BAD_PATH);
                         }
+                        someValue = true;
                         value = this.vm.mirrorOf(((ArrayReference) o).length());
                     } else if (a instanceof AccessArrayMember) {
                         if (!(o instanceof ArrayReference)) {
                             throw new GuidanceException(ERROR_BAD_PATH);
                         }
+                        someValue = true;
                         try {
                             final Simplex index = (Simplex) eval(((AccessArrayMember) a).index());
                             value = ((ArrayReference) o).getValue(((Integer) index.getActualValue()).intValue());
@@ -347,18 +337,19 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                         if (o == null) {
                             throw new GuidanceException(ERROR_BAD_PATH);
                         }
+                        someValue = true;
                         final Method hashCode = o.referenceType().methodsByName("hashCode", "()I").get(0);
                         value = o.invokeMethod(this.methodEntryEvent.thread(), hashCode, Collections.emptyList(), 0);
                     }
                     if (value instanceof ObjectReference) {
                         t = null;
                         o = (ObjectReference) value;
-                    } else if (value != null) {
+                    } else if (someValue) {
                         t = null;
                         o = null; 
                     }
                 }
-                if (value == null) {
+                if (!someValue) {
                     throw new GuidanceException(ERROR_BAD_PATH);
                 }
                 return value;
@@ -370,25 +361,41 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         }
         
         private com.sun.jdi.Value getJDIValueLocalVariable(String var) 
-        throws IncompatibleThreadStateException, AbsentInformationException {
+        throws GuidanceException, IncompatibleThreadStateException, AbsentInformationException {
             final com.sun.jdi.Value val;
             if ("this".equals(var)) {
                 val = this.rootFrameConcrete.thisObject();
             } else {
                 final LocalVariable variable = this.rootFrameConcrete.visibleVariableByName(var); 
-                val = (variable == null ? null : this.rootFrameConcrete.getValue(variable));
+                if (variable == null) {
+                    throw new GuidanceException(ERROR_BAD_PATH);
+                }
+                val = this.rootFrameConcrete.getValue(variable);
             }
             return val;
         }
         
         private com.sun.jdi.ReferenceType getJDIObjectStatic(String className) 
-        throws IncompatibleThreadStateException, AbsentInformationException {
-            com.sun.jdi.ReferenceType o = null;
+        throws GuidanceException, IncompatibleThreadStateException, AbsentInformationException {
             final List<ReferenceType> classes = this.vm.classesByName(className);
             if (classes.size() == 1) {
-                o = classes.get(0);
+                return classes.get(0);
+            } else {
+                throw new GuidanceException(ERROR_BAD_PATH);
             }
-            return o;
+        }
+        
+        private com.sun.jdi.Value getJDIValueField(String fieldName, com.sun.jdi.ReferenceType t, com.sun.jdi.ObjectReference o) 
+        throws GuidanceException {
+            final Field fld = (t == null ? o.referenceType().fieldByName(fieldName) : t.fieldByName(fieldName));
+            if (fld == null) {
+                throw new GuidanceException(ERROR_BAD_PATH);
+            }
+            try {
+                return (t == null ? o.getValue(fld) : t.getValue(fld));
+            } catch (IllegalArgumentException e) {
+                throw new GuidanceException(e);
+            }
         }
     }
 }
