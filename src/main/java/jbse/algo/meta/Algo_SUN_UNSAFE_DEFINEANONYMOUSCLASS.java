@@ -141,16 +141,16 @@ public final class Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS extends Algo_INVOKEMETA_
                     final Instance _o = (Instance) state.getObject(_r);
                     final ConstantPoolValue cpEntry = this.cfAnonymousDummy.getValueFromConstantPool(i);
                     if (cpEntry instanceof ConstantPoolPrimitive) {
-                        if (JAVA_DOUBLE.equals(_o.getType()) && cpEntry.getValue() instanceof Double) {
+                        if (JAVA_DOUBLE.equals(_o.getType().getClassName()) && cpEntry.getValue() instanceof Double) {
                             final double value =  ((Double) ((Simplex) (_o.getFieldValue(JAVA_DOUBLE_VALUE))).getActualValue()).doubleValue();
                             retVal[i] = new ConstantPoolPrimitive(value);
-                        } else if (JAVA_FLOAT.equals(_o.getType()) && cpEntry.getValue() instanceof Float) {
+                        } else if (JAVA_FLOAT.equals(_o.getType().getClassName()) && cpEntry.getValue() instanceof Float) {
                             final float value =  ((Float) ((Simplex) (_o.getFieldValue(JAVA_FLOAT_VALUE))).getActualValue()).floatValue();
                             retVal[i] = new ConstantPoolPrimitive(value);
-                        } else if (JAVA_INTEGER.equals(_o.getType()) && cpEntry.getValue() instanceof Integer) {
+                        } else if (JAVA_INTEGER.equals(_o.getType().getClassName()) && cpEntry.getValue() instanceof Integer) {
                             final int value =  ((Integer) ((Simplex) (_o.getFieldValue(JAVA_INTEGER_VALUE))).getActualValue()).intValue();
                             retVal[i] = new ConstantPoolPrimitive(value);
-                        } else if (JAVA_LONG.equals(_o.getType()) && cpEntry.getValue() instanceof Long) {
+                        } else if (JAVA_LONG.equals(_o.getType().getClassName()) && cpEntry.getValue() instanceof Long) {
                             final long value =  ((Long) ((Simplex) (_o.getFieldValue(JAVA_LONG_VALUE))).getActualValue()).longValue();
                             retVal[i] = new ConstantPoolPrimitive(value);
                         } else {
