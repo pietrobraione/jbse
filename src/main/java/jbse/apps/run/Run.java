@@ -318,7 +318,7 @@ public final class Run {
         throws CannotManageStateException {
             if (e instanceof CannotInvokeNativeException) {
                 this.traceKind = TraceTypes.UNMANAGEABLE;
-                this.endOfTraceMessage = WARNING_CANNOT_INVOKE_NATIVE;
+                this.endOfTraceMessage = WARNING_CANNOT_INVOKE_NATIVE + e.getMessage();
                 return false;
             } else if (e instanceof NotYetImplementedException) {
                 this.traceKind = TraceTypes.UNMANAGEABLE;
@@ -1237,7 +1237,7 @@ public final class Run {
     private static final String WARNING_SCOPE_EXHAUSTED_COUNT = " trace exhausted count scope.";
 
     /** Warning: cannot manage a native method invocation. */
-    private static final String WARNING_CANNOT_INVOKE_NATIVE = " met an unmanageable native method invocation.";
+    private static final String WARNING_CANNOT_INVOKE_NATIVE = " met an unmanageable native method invocation: ";
 
     /** Warning: cannot handle something. */
     private static final String WARNING_NOT_IMPLEMENTED_FEATURE = " met an unimplemented feature: ";
