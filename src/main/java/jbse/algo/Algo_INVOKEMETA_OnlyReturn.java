@@ -54,7 +54,7 @@ import jbse.val.exc.ValueDoesNotSupportNativeException;
  * 
  * @author Pietro Braione
  */
-public class Algo_INVOKEMETA_Metacircular extends Algo_INVOKEMETA_Nonbranching {
+public class Algo_INVOKEMETA_OnlyReturn extends Algo_INVOKEMETA_Nonbranching {
     private Value returnValue;
     
     @Override

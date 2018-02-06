@@ -1,6 +1,6 @@
 package jbse.algo;
 
-import static jbse.algo.Overrides.ALGO_INVOKEMETA_METACIRCULAR;
+import static jbse.algo.Overrides.ALGO_INVOKEMETA_ONLYRETURN;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETCOMPONENTTYPE;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_FORNAME0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0;
@@ -45,6 +45,7 @@ import static jbse.algo.Overrides.ALGO_JAVA_XFILESYSTEM_CANONICALIZE0;
 import static jbse.algo.Overrides.ALGO_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX;
 import static jbse.algo.Overrides.ALGO_JAVA_XFILESYSTEM_GETLASTMODIFIEDTIME;
 import static jbse.algo.Overrides.ALGO_JAVA_XFILESYSTEM_LIST;
+import static jbse.algo.Overrides.ALGO_JAVA_ZIPFILE_OPEN;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ANY;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ENDGUIDANCE;
@@ -100,6 +101,7 @@ import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_1;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_2;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT;
+import static jbse.bc.Signatures.JAVA_ARRAYDEQUE;
 import static jbse.bc.Signatures.JAVA_ATOMICLONG_VMSUPPORTSCS8;
 import static jbse.bc.Signatures.JAVA_BYTE_BYTECACHE;
 import static jbse.bc.Signatures.JAVA_CHARACTER_CHARACTERCACHE;
@@ -139,6 +141,7 @@ import static jbse.bc.Signatures.JAVA_FILEOUTPUTSTREAM_INITIDS;
 import static jbse.bc.Signatures.JAVA_FLOAT_FLOATTORAWINTBITS;
 import static jbse.bc.Signatures.JAVA_IDENTITYHASHMAP;
 import static jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR_2;
+import static jbse.bc.Signatures.JAVA_JARFILE;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM_NAME;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST;
@@ -215,6 +218,9 @@ import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM_GETBOOLEANATTRIBUTES;
 import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM_GETLASTMODIFIEDTIME;
 import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM_INITIDS;
 import static jbse.bc.Signatures.JAVA_WINNTFILESYSTEM_LIST;
+import static jbse.bc.Signatures.JAVA_ZIPFILE;
+import static jbse.bc.Signatures.JAVA_ZIPFILE_INITIDS;
+import static jbse.bc.Signatures.JAVA_ZIPFILE_OPEN;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ANY;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ENDGUIDANCE;
@@ -240,6 +246,10 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_INT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_LONG;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_SHORT;
 import static jbse.bc.Signatures.SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
+import static jbse.bc.Signatures.SUN_PERF;
+import static jbse.bc.Signatures.SUN_PERF_REGISTERNATIVES;
+import static jbse.bc.Signatures.SUN_PERFCOUNTER;
+import static jbse.bc.Signatures.SUN_PERFCOUNTER_CORECOUNTERS;
 import static jbse.bc.Signatures.SUN_REFLECTION_GETCALLERCLASS;
 import static jbse.bc.Signatures.SUN_REFLECTION_GETCLASSACCESSFLAGS;
 import static jbse.bc.Signatures.SUN_SIGNAL_FINDSIGNAL;
@@ -456,52 +466,52 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_CLASS_ISINSTANCE,                              ALGO_JAVA_CLASS_ISINSTANCE);
             addMetaOverridden(JAVA_CLASS_ISINTERFACE,                             ALGO_JAVA_CLASS_ISINTERFACE);
             addMetaOverridden(JAVA_CLASS_ISPRIMITIVE,                             ALGO_JAVA_CLASS_ISPRIMITIVE);
-            addMetaOverridden(JAVA_CLASS_REGISTERNATIVES,                         ALGO_INVOKEMETA_METACIRCULAR);
+            addMetaOverridden(JAVA_CLASS_REGISTERNATIVES,                         ALGO_INVOKEMETA_ONLYRETURN);
             addMetaOverridden(JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS,                ALGO_JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS);
             addBaseOverridden(JAVA_CLASSLOADER_FINDBUILTINLIB,                    BASE_JAVA_CLASSLOADER_FINDBUILTINLIB);
             addMetaOverridden(JAVA_CLASSLOADER_FINDLOADEDCLASS0,                  ALGO_JAVA_CLASSLOADER_FINDLOADEDCLASS0);
             addMetaOverridden(JAVA_CLASSLOADER_NATIVELIBRARY_LOAD,                ALGO_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD);
-            addMetaOverridden(JAVA_CLASSLOADER_REGISTERNATIVES,                   ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_DOUBLE_DOUBLETORAWLONGBITS,                    ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_DOUBLE_LONGBITSTODOUBLE,                       ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_FILEDESCRIPTOR_INITIDS,                        ALGO_INVOKEMETA_METACIRCULAR);
+            addMetaOverridden(JAVA_CLASSLOADER_REGISTERNATIVES,                   ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_DOUBLE_DOUBLETORAWLONGBITS,                    ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_DOUBLE_LONGBITSTODOUBLE,                       ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_FILEDESCRIPTOR_INITIDS,                        ALGO_INVOKEMETA_ONLYRETURN);
             addMetaOverridden(JAVA_FILEINPUTSTREAM_AVAILABLE,                     ALGO_JAVA_FILEINPUTSTREAM_AVAILABLE);
             addMetaOverridden(JAVA_FILEINPUTSTREAM_CLOSE0,                        ALGO_JAVA_FILEINPUTSTREAM_CLOSE0);
-            addMetaOverridden(JAVA_FILEINPUTSTREAM_INITIDS,                       ALGO_INVOKEMETA_METACIRCULAR);
+            addMetaOverridden(JAVA_FILEINPUTSTREAM_INITIDS,                       ALGO_INVOKEMETA_ONLYRETURN);
             addMetaOverridden(JAVA_FILEINPUTSTREAM_OPEN0,                         ALGO_JAVA_FILEINPUTSTREAM_OPEN0);
             addMetaOverridden(JAVA_FILEINPUTSTREAM_READBYTES,                     ALGO_JAVA_FILEINPUTSTREAM_READBYTES);
-            addMetaOverridden(JAVA_FILEOUTPUTSTREAM_INITIDS,                      ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_FLOAT_FLOATTORAWINTBITS,                       ALGO_INVOKEMETA_METACIRCULAR);
+            addMetaOverridden(JAVA_FILEOUTPUTSTREAM_INITIDS,                      ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_FLOAT_FLOATTORAWINTBITS,                       ALGO_INVOKEMETA_ONLYRETURN);
             addBaseOverridden(JAVA_METHODHANDLENATIVES_GETCONSTANT,               BASE_JAVA_METHODHANDLENATIVES_GETCONSTANT);
-            addMetaOverridden(JAVA_METHODHANDLENATIVES_REGISTERNATIVES,           ALGO_INVOKEMETA_METACIRCULAR);
+            addMetaOverridden(JAVA_METHODHANDLENATIVES_REGISTERNATIVES,           ALGO_INVOKEMETA_ONLYRETURN);
             addMetaOverridden(JAVA_METHODHANDLENATIVES_RESOLVE,                   ALGO_JAVA_METHODHANDLENATIVES_RESOLVE);
             addMetaOverridden(JAVA_OBJECT_CLONE,                                  ALGO_JAVA_OBJECT_CLONE);
             addMetaOverridden(JAVA_OBJECT_GETCLASS,                               ALGO_JAVA_OBJECT_GETCLASS);
             addMetaOverridden(JAVA_OBJECT_HASHCODE,                               ALGO_JAVA_OBJECT_HASHCODE);
-            addMetaOverridden(JAVA_OBJECT_NOTIFYALL,                              ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_OBJECT_REGISTERNATIVES,                        ALGO_INVOKEMETA_METACIRCULAR);
+            addMetaOverridden(JAVA_OBJECT_NOTIFYALL,                              ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_OBJECT_REGISTERNATIVES,                        ALGO_INVOKEMETA_ONLYRETURN);
             addMetaOverridden(JAVA_REFLECT_ARRAY_NEWARRAY,                        ALGO_JAVA_REFLECT_ARRAY_NEWARRAY);
             addBaseOverridden(JAVA_RUNTIME_AVAILABLEPROCESSORS,                   BASE_JAVA_RUNTIME_AVAILABLEPROCESSORS);
-            addMetaOverridden(JAVA_STRICTMATH_ACOS,                               ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_STRICTMATH_ASIN,                               ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_STRICTMATH_ATAN,                               ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_STRICTMATH_ATAN2,                              ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_STRICTMATH_CBRT,                               ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_STRICTMATH_COS,                                ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_STRICTMATH_COSH,                               ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_STRICTMATH_EXP,                                ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_STRICTMATH_EXPM1,                              ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_STRICTMATH_HYPOT,                              ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_STRICTMATH_IEEEREMAINDER,                      ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_STRICTMATH_LOG,                                ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_STRICTMATH_LOG10,                              ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_STRICTMATH_LOG1P,                              ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_STRICTMATH_POW,                                ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_STRICTMATH_SIN,                                ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_STRICTMATH_SINH,                               ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_STRICTMATH_SQRT,                               ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_STRICTMATH_TAN,                                ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_STRICTMATH_TANH,                               ALGO_INVOKEMETA_METACIRCULAR);
+            addMetaOverridden(JAVA_STRICTMATH_ACOS,                               ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_STRICTMATH_ASIN,                               ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_STRICTMATH_ATAN,                               ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_STRICTMATH_ATAN2,                              ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_STRICTMATH_CBRT,                               ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_STRICTMATH_COS,                                ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_STRICTMATH_COSH,                               ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_STRICTMATH_EXP,                                ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_STRICTMATH_EXPM1,                              ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_STRICTMATH_HYPOT,                              ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_STRICTMATH_IEEEREMAINDER,                      ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_STRICTMATH_LOG,                                ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_STRICTMATH_LOG10,                              ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_STRICTMATH_LOG1P,                              ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_STRICTMATH_POW,                                ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_STRICTMATH_SIN,                                ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_STRICTMATH_SINH,                               ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_STRICTMATH_SQRT,                               ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_STRICTMATH_TAN,                                ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_STRICTMATH_TANH,                               ALGO_INVOKEMETA_ONLYRETURN);
             addMetaOverridden(JAVA_STRING_HASHCODE,                               ALGO_JAVA_STRING_HASHCODE);
             addMetaOverridden(JAVA_STRING_INTERN,                                 ALGO_JAVA_STRING_INTERN);
             addMetaOverridden(JAVA_STRINGBUILDER_APPEND_BOOLEAN,                  ALGO_JAVA_STRINGBUILDER_APPEND);
@@ -511,34 +521,37 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_STRINGBUILDER_APPEND_INT,                      ALGO_JAVA_STRINGBUILDER_APPEND);
             addMetaOverridden(JAVA_STRINGBUILDER_APPEND_LONG,                     ALGO_JAVA_STRINGBUILDER_APPEND);
             addMetaOverridden(JAVA_SYSTEM_ARRAYCOPY,                              ALGO_JAVA_SYSTEM_ARRAYCOPY);
-            addMetaOverridden(JAVA_SYSTEM_CURRENTTIMEMILLIS,                      ALGO_INVOKEMETA_METACIRCULAR);
+            addMetaOverridden(JAVA_SYSTEM_CURRENTTIMEMILLIS,                      ALGO_INVOKEMETA_ONLYRETURN);
             addBaseOverridden(JAVA_SYSTEM_INITPROPERTIES,                         BASE_JAVA_SYSTEM_INITPROPERTIES);
             addMetaOverridden(JAVA_SYSTEM_IDENTITYHASHCODE,                       ALGO_JAVA_SYSTEM_IDENTITYHASHCODE);
             addMetaOverridden(JAVA_SYSTEM_MAPLIBRARYNAME,                         ALGO_JAVA_SYSTEM_MAPLIBRARYNAME);
-            addMetaOverridden(JAVA_SYSTEM_NANOTIME,                               ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_SYSTEM_REGISTERNATIVES,                        ALGO_INVOKEMETA_METACIRCULAR);
+            addMetaOverridden(JAVA_SYSTEM_NANOTIME,                               ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_SYSTEM_REGISTERNATIVES,                        ALGO_INVOKEMETA_ONLYRETURN);
             addMetaOverridden(JAVA_SYSTEM_SETERR0,                                ALGO_JAVA_SYSTEM_SETERR0);
             addMetaOverridden(JAVA_SYSTEM_SETIN0,                                 ALGO_JAVA_SYSTEM_SETIN0);
             addMetaOverridden(JAVA_SYSTEM_SETOUT0,                                ALGO_JAVA_SYSTEM_SETOUT0);
             addMetaOverridden(JAVA_THREAD_CURRENTTHREAD,                          ALGO_JAVA_THREAD_CURRENTTHREAD);
             addBaseOverridden(JAVA_THREAD_ISALIVE,                                BASE_JAVA_THREAD_ISALIVE);
-            addMetaOverridden(JAVA_THREAD_REGISTERNATIVES,                        ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_THREAD_SETPRIORITY0,                           ALGO_INVOKEMETA_METACIRCULAR);
-            addMetaOverridden(JAVA_THREAD_START0,                                 ALGO_INVOKEMETA_METACIRCULAR);
+            addMetaOverridden(JAVA_THREAD_REGISTERNATIVES,                        ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_THREAD_SETPRIORITY0,                           ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_THREAD_START0,                                 ALGO_INVOKEMETA_ONLYRETURN);
             addMetaOverridden(JAVA_THROWABLE_FILLINSTACKTRACE,                    ALGO_JAVA_THROWABLE_FILLINSTACKTRACE);
             addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEDEPTH,                  ALGO_JAVA_THROWABLE_GETSTACKTRACEDEPTH);
             addMetaOverridden(JAVA_THROWABLE_GETSTACKTRACEELEMENT,                ALGO_JAVA_THROWABLE_GETSTACKTRACEELEMENT);
             addMetaOverridden(JAVA_UNIXFILESYSTEM_CANONICALIZE0,                  ALGO_JAVA_XFILESYSTEM_CANONICALIZE0);
             addMetaOverridden(JAVA_UNIXFILESYSTEM_GETBOOLEANATTRIBUTES0,          ALGO_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX);
             addMetaOverridden(JAVA_UNIXFILESYSTEM_GETLASTMODIFIEDTIME,            ALGO_JAVA_XFILESYSTEM_GETLASTMODIFIEDTIME);
-            addMetaOverridden(JAVA_UNIXFILESYSTEM_INITIDS,                        ALGO_INVOKEMETA_METACIRCULAR);
+            addMetaOverridden(JAVA_UNIXFILESYSTEM_INITIDS,                        ALGO_INVOKEMETA_ONLYRETURN);
             addMetaOverridden(JAVA_UNIXFILESYSTEM_LIST,                           ALGO_JAVA_XFILESYSTEM_LIST);
             addMetaOverridden(JAVA_WINNTFILESYSTEM_CANONICALIZE0,                 ALGO_JAVA_XFILESYSTEM_CANONICALIZE0);
             addMetaOverridden(JAVA_WINNTFILESYSTEM_GETBOOLEANATTRIBUTES,          ALGO_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX);
             addMetaOverridden(JAVA_WINNTFILESYSTEM_GETLASTMODIFIEDTIME,           ALGO_JAVA_XFILESYSTEM_GETLASTMODIFIEDTIME);
-            addMetaOverridden(JAVA_WINNTFILESYSTEM_INITIDS,                       ALGO_INVOKEMETA_METACIRCULAR);
+            addMetaOverridden(JAVA_WINNTFILESYSTEM_INITIDS,                       ALGO_INVOKEMETA_ONLYRETURN);
             addMetaOverridden(JAVA_WINNTFILESYSTEM_LIST,                          ALGO_JAVA_XFILESYSTEM_LIST);
+            addMetaOverridden(JAVA_ZIPFILE_INITIDS,                               ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_ZIPFILE_OPEN,                                  ALGO_JAVA_ZIPFILE_OPEN);
             addMetaOverridden(SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0,     ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0);
+            addMetaOverridden(SUN_PERF_REGISTERNATIVES,                           ALGO_INVOKEMETA_ONLYRETURN);
             addMetaOverridden(SUN_REFLECTION_GETCALLERCLASS,                      ALGO_SUN_REFLECTION_GETCALLERCLASS);
             addMetaOverridden(SUN_REFLECTION_GETCLASSACCESSFLAGS,                 ALGO_SUN_REFLECTION_GETCLASSACCESSFLAGS);
             addBaseOverridden(SUN_SIGNAL_FINDSIGNAL,                              BASE_SUN_SIGNAL_FINDSIGNAL);
@@ -560,10 +573,10 @@ public final class ExecutionContext {
             addMetaOverridden(SUN_UNSAFE_OBJECTFIELDOFFSET,                       ALGO_SUN_UNSAFE_OBJECTFIELDOFFSET);
             addMetaOverridden(SUN_UNSAFE_PUTLONG,                                 ALGO_SUN_UNSAFE_PUTLONG);
             addMetaOverridden(SUN_UNSAFE_PUTOBJECTVOLATILE,                       ALGO_SUN_UNSAFE_PUTOBJECTVOLATILE);
-            addMetaOverridden(SUN_UNSAFE_REGISTERNATIVES,                         ALGO_INVOKEMETA_METACIRCULAR);
+            addMetaOverridden(SUN_UNSAFE_REGISTERNATIVES,                         ALGO_INVOKEMETA_ONLYRETURN);
             addMetaOverridden(SUN_UNSAFE_SHOULDBEINITIALIZED,                     ALGO_SUN_UNSAFE_SHOULDBEINITIALIZED);
             addBaseOverridden(SUN_URLCLASSPATH_GETLOOKUPCACHEURLS,                BASE_SUN_URLCLASSPATH_GETLOOKUPCACHEURLS);
-            addMetaOverridden(SUN_VM_INITIALIZE,                                  ALGO_INVOKEMETA_METACIRCULAR);
+            addMetaOverridden(SUN_VM_INITIALIZE,                                  ALGO_INVOKEMETA_ONLYRETURN);
 
             //jbse.meta.Analysis methods
             addMetaOverridden(JBSE_ANALYSIS_ANY,                       ALGO_JBSE_ANALYSIS_ANY);
@@ -710,11 +723,13 @@ public final class ExecutionContext {
     public boolean hasClassAPureInitializer(ClassHierarchy hier, ClassFile classFile) {
         final String className = classFile.getClassName();
         return (
+        className.equals(JAVA_ARRAYDEQUE) ||
         className.equals(JAVA_BYTE_BYTECACHE) ||
         className.equals(JAVA_CHARACTER_CHARACTERCACHE) ||
         className.equals(JAVA_CHARSET_EXTENDEDPROVIDERHOLDER) ||
         className.equals(JAVA_IDENTITYHASHMAP) || 
         className.equals(JAVA_INVOKERBYTECODEGENERATOR_2) ||
+        className.equals(JAVA_JARFILE) || 
         className.equals(JAVA_LAMBDAFORM) || 
         className.equals(JAVA_LAMBDAFORM_NAME) || 
         className.equals(JAVA_LINKEDLIST) || 
@@ -725,6 +740,10 @@ public final class ExecutionContext {
         className.equals(JAVA_TREESET) ||
         className.equals(JAVA_THROWABLE_SENTINELHOLDER) ||
         className.equals(JAVA_VOID) || 
+        className.equals(JAVA_ZIPFILE) || 
+        className.equals(SUN_PERF) ||
+        className.equals(SUN_PERFCOUNTER) ||
+        className.equals(SUN_PERFCOUNTER_CORECOUNTERS) ||
         className.equals(SUN_VERIFYACCESS) ||
         className.equals(SUN_WRAPPER_FORMAT) ||
         hier.isSubclass(classFile, hier.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_ENUM)));

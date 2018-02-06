@@ -26,6 +26,7 @@ public final class Signatures {
     public static final String JAVA_ACCESSCONTROLLER         = "java/security/AccessController";
     public static final String JAVA_ACCESSIBLEOBJECT         = "java/lang/reflect/AccessibleObject";
     public static final String JAVA_ANNOTATEDELEMENT         = "java/lang/reflect/AnnotatedElement";
+    public static final String JAVA_ARRAYDEQUE               = "java/util/ArrayDeque";
     public static final String JAVA_ATOMICLONG               = "java/util/concurrent/atomic/AtomicLong";
     public static final String JAVA_BITS                     = "java/nio/Bits";
     public static final String JAVA_BOOLEAN                  = "java/lang/Boolean";
@@ -62,6 +63,7 @@ public final class Signatures {
     public static final String JAVA_INPUTSTREAM              = "java/io/InputStream";
     public static final String JAVA_INTEGER                  = "java/lang/Integer";
     public static final String JAVA_INVOKERBYTECODEGENERATOR_2 = "java/lang/invoke/InvokerBytecodeGenerator$2";
+    public static final String JAVA_JARFILE                  = "java/util/jar/JarFile";
     public static final String JAVA_LAMBDAFORM               = "java/lang/invoke/LambdaForm";
     public static final String JAVA_LAMBDAFORM_NAME          = "java/lang/invoke/LambdaForm$Name";
     public static final String JAVA_LINKEDLIST               = "java/util/LinkedList";
@@ -106,10 +108,14 @@ public final class Signatures {
     public static final String JAVA_URL                      = "java/net/URL";
     public static final String JAVA_VOID                     = "java/lang/Void";
     public static final String JAVA_WINNTFILESYSTEM          = "java/io/WinNTFileSystem";
+    public static final String JAVA_ZIPFILE                  = "java/util/zip/ZipFile";
     public static final String JBSE_ANALYSIS                 = internalClassName(jbse.meta.Analysis.class.getCanonicalName());
     public static final String JBSE_BASE                     = internalClassName(jbse.base.Base.class.getCanonicalName());
     public static final String SUN_CALLERSENSITIVE           = "sun/reflect/CallerSensitive";
     public static final String SUN_NATIVECONSTRUCTORACCESSORIMPL = "sun/reflect/NativeConstructorAccessorImpl";
+    public static final String SUN_PERF                      = "sun/misc/Perf";
+    public static final String SUN_PERFCOUNTER               = "sun/misc/PerfCounter";
+    public static final String SUN_PERFCOUNTER_CORECOUNTERS  = "sun/misc/PerfCounter$CoreCounters";
     public static final String SUN_REFLECTION                = "sun/reflect/Reflection";
     public static final String SUN_SIGNAL                    = "sun/misc/Signal";
     public static final String SUN_UNSAFE                    = "sun/misc/Unsafe";
@@ -412,6 +418,10 @@ public final class Signatures {
         new Signature(JAVA_WINNTFILESYSTEM, "()" + VOID, "initIDs");
     public static final Signature JAVA_WINNTFILESYSTEM_LIST = 
         new Signature(JAVA_WINNTFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + ARRAYOF + REFERENCE + JAVA_STRING + TYPEEND, "list");
+    public static final Signature JAVA_ZIPFILE_INITIDS = 
+        new Signature(JAVA_ZIPFILE, "()" + VOID, "initIDs");
+    public static final Signature JAVA_ZIPFILE_OPEN = 
+        new Signature(JAVA_ZIPFILE, "(" + REFERENCE + JAVA_STRING + TYPEEND + INT + LONG + BOOLEAN + ")" + LONG, "open");
     public static final Signature JBSE_ANALYSIS_ANY = 
         new Signature(JBSE_ANALYSIS, "()" + BOOLEAN, "any");
     public static final Signature JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED = 
@@ -468,6 +478,8 @@ public final class Signatures {
         new Signature(SUN_NATIVECONSTRUCTORACCESSORIMPL, 
                       "(" + REFERENCE + JAVA_CONSTRUCTOR + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, 
                       "newInstance0");
+    public static final Signature SUN_PERF_REGISTERNATIVES =
+        new Signature(SUN_PERF, "()" + VOID, "registerNatives");
     public static final Signature SUN_REFLECTION_GETCALLERCLASS = 
         new Signature(SUN_REFLECTION, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getCallerClass");
     public static final Signature SUN_REFLECTION_GETCLASSACCESSFLAGS = 
