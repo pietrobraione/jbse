@@ -129,6 +129,8 @@ import static jbse.bc.Signatures.JAVA_CLASSLOADER_FINDBUILTINLIB;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_FINDLOADEDCLASS0;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_NATIVELIBRARY_LOAD;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER_REGISTERNATIVES;
+import static jbse.bc.Signatures.JAVA_DIRECTBYTEBUFFER;
+import static jbse.bc.Signatures.JAVA_DIRECTLONGBUFFERU;
 import static jbse.bc.Signatures.JAVA_DOUBLE_DOUBLETORAWLONGBITS;
 import static jbse.bc.Signatures.JAVA_DOUBLE_LONGBITSTODOUBLE;
 import static jbse.bc.Signatures.JAVA_ENUM;
@@ -147,6 +149,7 @@ import static jbse.bc.Signatures.JAVA_LAMBDAFORM;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM_NAME;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
+import static jbse.bc.Signatures.JAVA_MAPPEDBYTEBUFFER;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_GETCONSTANT;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_RESOLVE;
@@ -276,6 +279,7 @@ import static jbse.bc.Signatures.SUN_UNSAFE_PUTOBJECTVOLATILE;
 import static jbse.bc.Signatures.SUN_UNSAFE_REGISTERNATIVES;
 import static jbse.bc.Signatures.SUN_UNSAFE_SHOULDBEINITIALIZED;
 import static jbse.bc.Signatures.SUN_URLCLASSPATH_GETLOOKUPCACHEURLS;
+import static jbse.bc.Signatures.SUN_URLCLASSPATH_JARLOADER;
 import static jbse.bc.Signatures.SUN_VERIFYACCESS;
 import static jbse.bc.Signatures.SUN_VM_INITIALIZE;
 import static jbse.bc.Signatures.SUN_WRAPPER_FORMAT;
@@ -730,6 +734,8 @@ public final class ExecutionContext {
         className.equals(JAVA_BYTE_BYTECACHE) ||
         className.equals(JAVA_CHARACTER_CHARACTERCACHE) ||
         className.equals(JAVA_CHARSET_EXTENDEDPROVIDERHOLDER) ||
+        className.equals(JAVA_DIRECTBYTEBUFFER) || 
+        className.equals(JAVA_DIRECTLONGBUFFERU) || 
         className.equals(JAVA_IDENTITYHASHMAP) || 
         className.equals(JAVA_INVOKERBYTECODEGENERATOR_2) ||
         className.equals(JAVA_JARFILE) || 
@@ -737,6 +743,7 @@ public final class ExecutionContext {
         className.equals(JAVA_LAMBDAFORM_NAME) || 
         className.equals(JAVA_LINKEDLIST) || 
         className.equals(JAVA_LINKEDLIST_ENTRY) ||
+        className.equals(JAVA_MAPPEDBYTEBUFFER) || 
         className.equals(JAVA_METHODTYPEFORM) || 
         className.equals(JAVA_SHORT_SHORTCACHE) || 
         className.equals(JAVA_STANDARDCHARSETS) || 
@@ -747,6 +754,7 @@ public final class ExecutionContext {
         className.equals(SUN_PERF) ||
         className.equals(SUN_PERFCOUNTER) ||
         className.equals(SUN_PERFCOUNTER_CORECOUNTERS) ||
+        className.equals(SUN_URLCLASSPATH_JARLOADER) ||
         className.equals(SUN_VERIFYACCESS) ||
         className.equals(SUN_WRAPPER_FORMAT) ||
         hier.isSubclass(classFile, hier.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_ENUM)));

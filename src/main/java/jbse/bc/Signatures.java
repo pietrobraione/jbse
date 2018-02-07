@@ -48,6 +48,7 @@ public final class Signatures {
     public static final String JAVA_COMPARABLE               = "java/lang/Comparable";
     public static final String JAVA_CONSTRUCTOR              = "java/lang/reflect/Constructor";
     public static final String JAVA_DIRECTBYTEBUFFER         = "java/nio/DirectByteBuffer";
+    public static final String JAVA_DIRECTLONGBUFFERU        = "java/nio/DirectLongBufferU";
     public static final String JAVA_DIRECTMETHODHANDLE       = "java/lang/invoke/DirectMethodHandle";
     public static final String JAVA_DOUBLE                   = "java/lang/Double";
     public static final String JAVA_ENUM                     = "java/lang/Enum";
@@ -71,6 +72,7 @@ public final class Signatures {
     public static final String JAVA_LINKEDLIST               = "java/util/LinkedList";
     public static final String JAVA_LINKEDLIST_ENTRY         = "java/util/LinkedList$Entry";
     public static final String JAVA_LONG                     = "java/lang/Long";
+    public static final String JAVA_MAPPEDBYTEBUFFER         = "java/nio/MappedByteBuffer";
     public static final String JAVA_MEMBER                   = "java/lang/reflect/Member";
     public static final String JAVA_MEMBERNAME               = "java/lang/invoke/MemberName";
     public static final String JAVA_METHOD                   = "java/lang/reflect/Method";
@@ -122,6 +124,7 @@ public final class Signatures {
     public static final String SUN_SIGNAL                    = "sun/misc/Signal";
     public static final String SUN_UNSAFE                    = "sun/misc/Unsafe";
     public static final String SUN_URLCLASSPATH              = "sun/misc/URLClassPath";
+    public static final String SUN_URLCLASSPATH_JARLOADER    = "sun/misc/URLClassPath$JarLoader";
     public static final String SUN_VERIFYACCESS              = "sun/invoke/util/VerifyAccess";
     public static final String SUN_VM                        = "sun/misc/VM";
     public static final String SUN_WRAPPER_FORMAT            = "sun/invoke/util/Wrapper$Format";
