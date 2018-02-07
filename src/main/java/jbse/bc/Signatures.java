@@ -35,6 +35,7 @@ public final class Signatures {
     public static final String JAVA_BOUNDMETHODHANDLE_SPECIES_L   = "java/lang/invoke/BoundMethodHandle$Species_L";
     public static final String JAVA_BYTE                     = "java/lang/Byte";
     public static final String JAVA_BYTE_BYTECACHE           = "java/lang/Byte$ByteCache";
+    public static final String JAVA_BYTEBUFFER               = "java/nio/ByteBuffer";
     public static final String JAVA_CHARACTER                = "java/lang/Character";
     public static final String JAVA_CHARACTER_CHARACTERCACHE = "java/lang/Character$CharacterCache";
     public static final String JAVA_CHARSEQUENCE             = "java/lang/CharSequence";
@@ -46,6 +47,7 @@ public final class Signatures {
     public static final String JAVA_CLONEABLE                = "java/lang/Cloneable";
     public static final String JAVA_COMPARABLE               = "java/lang/Comparable";
     public static final String JAVA_CONSTRUCTOR              = "java/lang/reflect/Constructor";
+    public static final String JAVA_DIRECTBYTEBUFFER         = "java/nio/DirectByteBuffer";
     public static final String JAVA_DIRECTMETHODHANDLE       = "java/lang/invoke/DirectMethodHandle";
     public static final String JAVA_DOUBLE                   = "java/lang/Double";
     public static final String JAVA_ENUM                     = "java/lang/Enum";
@@ -233,6 +235,8 @@ public final class Signatures {
         new Signature(JAVA_CLASSLOADER_NATIVELIBRARY, "(" + REFERENCE + JAVA_STRING + TYPEEND + BOOLEAN + ")" + VOID, "load");
     public static final Signature JAVA_CLASSLOADER_REGISTERNATIVES =
         new Signature(JAVA_CLASSLOADER, "()" + VOID, "registerNatives");
+    public static final Signature JAVA_DIRECTBYTEBUFFER_INIT =
+        new Signature(JAVA_DIRECTBYTEBUFFER, "(" + LONG + INT + ")" + VOID, "<init>");
     public static final Signature JAVA_DOUBLE_DOUBLETORAWLONGBITS =
         new Signature(JAVA_DOUBLE, "(" + DOUBLE + ")" + LONG, "doubleToRawLongBits");
     public static final Signature JAVA_DOUBLE_LONGBITSTODOUBLE =
@@ -478,6 +482,8 @@ public final class Signatures {
         new Signature(SUN_NATIVECONSTRUCTORACCESSORIMPL, 
                       "(" + REFERENCE + JAVA_CONSTRUCTOR + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, 
                       "newInstance0");
+    public static final Signature SUN_PERF_CREATELONG =
+        new Signature(SUN_PERF, "(" + REFERENCE + JAVA_STRING + TYPEEND + INT + INT + LONG + ")" + REFERENCE + JAVA_BYTEBUFFER + TYPEEND, "createLong");
     public static final Signature SUN_PERF_REGISTERNATIVES =
         new Signature(SUN_PERF, "()" + VOID, "registerNatives");
     public static final Signature SUN_REFLECTION_GETCALLERCLASS = 

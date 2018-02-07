@@ -80,6 +80,7 @@ public final class Overrides {
     public static final String ALGO_JAVA_XFILESYSTEM_LIST                          = internalClassName(jbse.algo.meta.Algo_JAVA_XFILESYSTEM_LIST.class.getName());
     public static final String ALGO_JAVA_ZIPFILE_OPEN                              = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_OPEN.class.getName());
     public static final String ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 = internalClassName(jbse.algo.meta.Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0.class.getName());
+    public static final String ALGO_SUN_PERF_CREATELONG                            = internalClassName(jbse.algo.meta.Algo_SUN_PERF_CREATELONG.class.getName());
     public static final String ALGO_SUN_REFLECTION_GETCALLERCLASS                  = internalClassName(jbse.algo.meta.Algo_SUN_REFLECTION_GETCALLERCLASS.class.getName());
     public static final String ALGO_SUN_REFLECTION_GETCLASSACCESSFLAGS             = internalClassName(jbse.algo.meta.Algo_SUN_REFLECTION_GETCLASSACCESSFLAGS.class.getName());
     public static final String ALGO_SUN_UNSAFE_ALLOCATEMEMORY                      = internalClassName(jbse.algo.meta.Algo_SUN_UNSAFE_ALLOCATEMEMORY.class.getName());

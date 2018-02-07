@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -89,7 +90,10 @@ public final class State implements Cloneable {
     private static final int ROOT_THIS_SLOT = 0;
     
     private static final class MemoryBlock implements Cloneable {
+        /** The base address of the memory block. */
         long address;
+        
+        /** The size in bytes of the memory block. */
         long size;
         
         public MemoryBlock(long address, long size) {
@@ -156,6 +160,9 @@ public final class State implements Cloneable {
     
     /** Maps memory addresses to (meta-level) allocated memory blocks. */
     private HashMap<Long, MemoryBlock> allocatedMemory = new HashMap<>();
+    
+    /** The registered performance counters. */
+    private HashSet<String> perfCounters = new HashSet<>();
 
     /** The JVM stack of the current execution thread. */
     private ThreadStack stack = new ThreadStack();
@@ -784,7 +791,7 @@ public final class State implements Cloneable {
      * Registers a raw memory block.
      * 
      * @param address a {@code long}, the base address of the memory block.
-     * @param size a {@code long}, the address of the memory block.
+     * @param size a {@code long}, the size in bytes of the memory block.
      * @throws InvalidInputException if {@code address} is already
      *         a registered memory block base address, or if {@code size <= 0}.
      */
@@ -820,7 +827,7 @@ public final class State implements Cloneable {
      * 
      * @param address a {@code long}, the address as known by this {@link State}
      *        (base-level address).
-     * @return a {@code long}, the size of the memory block.
+     * @return a {@code long}, the size in bytes of the memory block.
      * @throws InvalidInputException if {@code address} is not a memory block
      *         address previously registered by a call to {@link #addMemoryBlock(long, long) addMemoryBlock}.
      */
@@ -844,6 +851,19 @@ public final class State implements Cloneable {
             throw new InvalidInputException("Tried to remove a raw memory block corresponding to an unknown (base-level) address.");
         }
         this.allocatedMemory.remove(address);
+    }
+    
+    /**
+     * Registers a performance counter.
+     * 
+     * @param name a {@code String}, the name of the performance counter.
+     * @throws InvalidIndexException if {@code name} is already registered.
+     */
+    public void registerPerfCounter(String name) throws InvalidInputException {
+        if (this.perfCounters.contains(name)) {
+            throw new InvalidInputException("Tried to register the performance counter " + name + " twice.");
+        }
+        this.perfCounters.add(name);
     }
 
     /**
