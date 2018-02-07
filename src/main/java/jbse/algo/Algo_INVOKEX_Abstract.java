@@ -276,9 +276,10 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         }
         if (this.ctx.isMethodBaseLevelOverridden(this.methodImplSignature)) {
             try {
+                final ClassHierarchy hier = state.getClassHierarchy();
                 final Signature methodSignatureOverriding = this.ctx.getBaseOverride(this.methodImplSignature);
-                final ClassFile classFileMethodResolved = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, methodSignatureOverriding.getClassName(), state.areStandardClassLoadersNotReady());
-                final ClassFile classFileMethodOverriding = state.getClassHierarchy().resolveMethod(classFileMethodResolved, methodSignatureOverriding, false, state.areStandardClassLoadersNotReady()); //TODO is false ok? And the accessor?
+                final ClassFile classFileMethodResolved = hier.loadCreateClass(CLASSLOADER_APP, methodSignatureOverriding.getClassName(), state.areStandardClassLoadersNotReady());
+                final ClassFile classFileMethodOverriding = hier.resolveMethod(classFileMethodResolved, methodSignatureOverriding, false, state.areStandardClassLoadersNotReady()); //TODO is false ok? And the accessor?
                 checkOverridingMethodFits(state, classFileMethodOverriding, methodSignatureOverriding);
                 this.methodImplClass = classFileMethodOverriding;
                 this.methodImplSignature = methodSignatureOverriding;

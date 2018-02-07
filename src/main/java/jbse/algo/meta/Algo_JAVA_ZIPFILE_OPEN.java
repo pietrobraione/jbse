@@ -56,14 +56,14 @@ public final class Algo_JAVA_ZIPFILE_OPEN extends Algo_INVOKEMETA_Nonbranching {
             //gets the second (int mode) parameter
             final Primitive _mode = (Primitive) this.data.operand(1);
             if (_mode.isSymbolic()) {
-                throw new SymbolicValueNotAllowedException("The int mode parameter to invocation of method java.util.zip.ZipFile.open method cannot be a symbolic value.");
+                throw new SymbolicValueNotAllowedException("The int mode parameter to invocation of method java.util.zip.ZipFile.open cannot be a symbolic value.");
             }
             final int mode = ((Integer) ((Simplex) _mode).getActualValue()).intValue();
             
             //gets the third (long lastModified) parameter
             final Primitive _lastModified = (Primitive) this.data.operand(2);
             if (_lastModified.isSymbolic()) {
-                throw new SymbolicValueNotAllowedException("The long lastModified parameter to invocation of method java.util.zip.ZipFile.open method cannot be a symbolic value.");
+                throw new SymbolicValueNotAllowedException("The long lastModified parameter to invocation of method java.util.zip.ZipFile.open cannot be a symbolic value.");
             }
             final long lastModified = ((Long) ((Simplex) _lastModified).getActualValue()).longValue();
             

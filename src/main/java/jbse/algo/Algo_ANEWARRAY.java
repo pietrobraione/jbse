@@ -54,7 +54,7 @@ final class Algo_ANEWARRAY extends Algo_XNEWARRAY<BytecodeData_1CL> {
 
         try {
             //resolves the class
-            //TODO the JVMS v8, anewarray bytecode, prescribes to resolve the member class; It is not clear what initiating loader should be assumed for the array class. We assume the defining loader of the current class, so we may directly resolve the name of the array class.
+            //TODO the JVMS v8, anewarray bytecode, prescribes to resolve the member class; It is not clear what initiating loader should be assumed for the array class. We assume the defining loader of the current class, so we can directly resolve the name of the array class.
             final ClassFile currentClass = state.getCurrentClass();
             this.arrayType = state.getClassHierarchy().resolveClass(currentClass, "" + ARRAYOF + REFERENCE + this.data.className() + TYPEEND, state.areStandardClassLoadersNotReady());
         } catch (PleaseLoadClassException e) {
@@ -68,7 +68,7 @@ final class Algo_ANEWARRAY extends Algo_XNEWARRAY<BytecodeData_1CL> {
             throwNew(state, ILLEGAL_ACCESS_ERROR);
             exitFromAlgorithm();
         } catch (ClassFileIllFormedException e) {
-            //TODO throw LinkageError insead
+            //TODO throw LinkageError instead
             throwVerifyError(state);
             exitFromAlgorithm();
         }

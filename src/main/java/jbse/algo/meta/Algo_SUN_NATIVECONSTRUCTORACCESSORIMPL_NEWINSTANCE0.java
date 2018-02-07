@@ -74,7 +74,7 @@ import jbse.val.exc.InvalidTypeException;
 public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends Algo_INVOKEMETA_Nonbranching {
     private ClassFile constructorClassFile; //set by cookMore
     private String descriptor; //set by cookMore
-    private Value[] params; //set by cookMore
+    private Value[] params; //set by cookMore except for params[0] that is set by updater
     
     @Override
     protected Supplier<Integer> numOperands() {
@@ -261,9 +261,9 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
             } catch (HeapMemoryExhaustedException e) {
                 throwNew(state, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
-            } catch (NullMethodReceiverException | MethodNotFoundException | MethodCodeNotFoundException |
-                     ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException | 
-                     PleaseLoadClassException | InvalidSlotException | InvalidProgramCounterException e) {
+            } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException | 
+                     PleaseLoadClassException | NullMethodReceiverException | MethodNotFoundException | 
+                     MethodCodeNotFoundException | InvalidSlotException | InvalidProgramCounterException e) {
                 //this should never happen
                 //TODO really?
                 failExecution(e);

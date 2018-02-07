@@ -18,7 +18,6 @@ import jbse.val.Simplex;
  */
 public final class Algo_SUN_UNSAFE_ALLOCATEMEMORY extends Algo_INVOKEMETA_Nonbranching {
     private long bytes; //set by cookMore
-    private long memoryAddress; //set by cookMore
     
     @Override
     protected Supplier<Integer> numOperands() {
@@ -31,14 +30,14 @@ public final class Algo_SUN_UNSAFE_ALLOCATEMEMORY extends Algo_INVOKEMETA_Nonbra
             throw new SymbolicValueNotAllowedException("Method sun.misc.Unsafe.allocateMemory cannot be invoked with a symbolic long size argument");
         }
         this.bytes = ((Long) ((Simplex) this.data.operand(1)).getActualValue()).longValue();
-        this.memoryAddress = unsafe().allocateMemory(this.bytes);
     }
 
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            state.addMemoryBlock(this.memoryAddress, this.bytes);
-            state.pushOperand(state.getCalculator().valLong(this.memoryAddress));
+            final long memoryAddress = unsafe().allocateMemory(this.bytes);
+            state.addMemoryBlock(memoryAddress, this.bytes);
+            state.pushOperand(state.getCalculator().valLong(memoryAddress));
         };
     }
 }
