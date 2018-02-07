@@ -2528,6 +2528,28 @@ public final class State implements Cloneable {
     public void setWide() {
         this.wide = true;
     }
+    
+    @Override
+    protected void finalize() {
+        //closes all files
+        for (Object file : this.files.values()) {
+            try {
+                if (file instanceof FileInputStream) {
+                    ((FileInputStream) file).close();
+                } else { //file instanceof FileOutputStream
+                    ((FileOutputStream) file).close();
+                }
+            } catch (IOException e) {
+                //go on with the next file
+            }
+        }
+        
+        //deallocates all memory blocks
+        final Unsafe unsafe = unsafe();
+        for (MemoryBlock memoryBlock : this.allocatedMemory.values()) {
+            unsafe.freeMemory(memoryBlock.address);
+        }
+    }
 
     @Override
     public String toString() {
@@ -2593,7 +2615,7 @@ public final class State implements Cloneable {
                         fisClone.skip(fisThis.getChannel().position());
                     }
                     o.files.put(entry.getKey(), fisClone);
-                } else {
+                } else { //entry.getValue() instanceof FileOutputStream
                     final FileOutputStream fosClone;
                     if (entry.getKey() == 1 ||  entry.getKey() == 2) {
                         fosClone = (FileOutputStream) entry.getValue();
