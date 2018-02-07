@@ -427,8 +427,20 @@ public final class Signatures {
         new Signature(JAVA_WINNTFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + ARRAYOF + REFERENCE + JAVA_STRING + TYPEEND, "list");
     public static final Signature JAVA_ZIPFILE_GETENTRY = 
         new Signature(JAVA_ZIPFILE, "(" + LONG + ARRAYOF + BYTE + BOOLEAN + ")" + LONG, "getEntry");
+    public static final Signature JAVA_ZIPFILE_GETENTRYBYTES = 
+        new Signature(JAVA_ZIPFILE, "(" + LONG + INT + ")" + ARRAYOF + BYTE, "getEntryBytes");
+    public static final Signature JAVA_ZIPFILE_GETENTRYCRC = 
+        new Signature(JAVA_ZIPFILE, "(" + LONG + ")" + LONG, "getEntryCrc");
+    public static final Signature JAVA_ZIPFILE_GETENTRYCSIZE = 
+        new Signature(JAVA_ZIPFILE, "(" + LONG + ")" + LONG, "getEntryCSize");
     public static final Signature JAVA_ZIPFILE_GETENTRYFLAG = 
         new Signature(JAVA_ZIPFILE, "(" + LONG + ")" + INT, "getEntryFlag");
+    public static final Signature JAVA_ZIPFILE_GETENTRYMETHOD = 
+        new Signature(JAVA_ZIPFILE, "(" + LONG + ")" + INT, "getEntryMethod");
+    public static final Signature JAVA_ZIPFILE_GETENTRYSIZE = 
+        new Signature(JAVA_ZIPFILE, "(" + LONG + ")" + LONG, "getEntrySize");
+    public static final Signature JAVA_ZIPFILE_GETENTRYTIME = 
+        new Signature(JAVA_ZIPFILE, "(" + LONG + ")" + LONG, "getEntryTime");
     public static final Signature JAVA_ZIPFILE_GETTOTAL = 
         new Signature(JAVA_ZIPFILE, "(" + LONG + ")" + INT, "getTotal");
     public static final Signature JAVA_ZIPFILE_INITIDS = 

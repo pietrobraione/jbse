@@ -26,7 +26,7 @@ import jbse.val.Simplex;
  * 
  * @author Pietro Braione
  */
-//TODO merge with Algo_JAVA_ZIPFILE_STARTSWITHLOC and Algo_JAVA_ZIPFILE_GETTOTAL
+//TODO merge with Algo_JAVA_ZIPFILE_STARTSWITHLOC and Algo_JAVA_ZIPFILE_GETTOTAL and Algo_JAVA_ZIPFILE_GETENTRYTIME and Algo_JAVA_ZIPFILE_GETENTRYCRC and Algo_JAVA_ZIPFILE_GETENTRYSIZE and Algo_JAVA_ZIPFILE_GETENTRYCSIZE and Algo_JAVA_ZIPFILE_GETENTRYMETHOD
 public final class Algo_JAVA_ZIPFILE_GETENTRYFLAG extends Algo_INVOKEMETA_Nonbranching {
     private Simplex toPush; //set by cookMore
     

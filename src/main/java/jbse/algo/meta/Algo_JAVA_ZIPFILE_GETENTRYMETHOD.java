@@ -22,12 +22,12 @@ import jbse.val.Primitive;
 import jbse.val.Simplex;
 
 /**
- * Meta-level implementation of {@link java.util.zip.ZipFile#startsWithLOC(long)}.
+ * Meta-level implementation of {@link java.util.zip.ZipFile#getEntryMethod(long)}.
  * 
  * @author Pietro Braione
  */
-//TODO merge with Algo_JAVA_ZIPFILE_GETTOTAL and Algo_JAVA_ZIPFILE_GETENTRYFLAG and Algo_JAVA_ZIPFILE_GETENTRYTIME and Algo_JAVA_ZIPFILE_GETENTRYCRC and Algo_JAVA_ZIPFILE_GETENTRYSIZE and Algo_JAVA_ZIPFILE_GETENTRYCSIZE and Algo_JAVA_ZIPFILE_GETENTRYMETHOD
-public final class Algo_JAVA_ZIPFILE_STARTSWITHLOC extends Algo_INVOKEMETA_Nonbranching {
+//TODO merge with Algo_JAVA_ZIPFILE_STARTSWITHLOC and Algo_JAVA_ZIPFILE_GETTOTAL and Algo_JAVA_ZIPFILE_GETENTRYTIME and Algo_JAVA_ZIPFILE_GETENTRYCRC and Algo_JAVA_ZIPFILE_GETENTRYSIZE and Algo_JAVA_ZIPFILE_GETENTRYCSIZE and Algo_JAVA_ZIPFILE_GETENTRYFLAG
+public final class Algo_JAVA_ZIPFILE_GETENTRYMETHOD extends Algo_INVOKEMETA_Nonbranching {
     private Simplex toPush; //set by cookMore
     
     @Override
@@ -39,19 +39,19 @@ public final class Algo_JAVA_ZIPFILE_STARTSWITHLOC extends Algo_INVOKEMETA_Nonbr
     protected void cookMore(State state) 
     throws InterruptException, ClasspathException, SymbolicValueNotAllowedException {
         try {
-            //gets the (long jzfile) parameter
-            final Primitive _jzfile = (Primitive) this.data.operand(0);
-            if (_jzfile.isSymbolic()) {
-                throw new SymbolicValueNotAllowedException("The long jzfile parameter to invocation of method java.util.zip.ZipFile.startsWithLOC cannot be a symbolic value.");
+            //gets the (long jzentry) parameter
+            final Primitive _jzentry = (Primitive) this.data.operand(0);
+            if (_jzentry.isSymbolic()) {
+                throw new SymbolicValueNotAllowedException("The long jzentry parameter to invocation of method java.util.zip.ZipFile.getEntryMethod cannot be a symbolic value.");
             }
-            final long jzfile = ((Long) ((Simplex) _jzfile).getActualValue()).longValue();
-            //TODO what if jzfile is not open?
+            final long jzentry = ((Long) ((Simplex) _jzentry).getActualValue()).longValue();
+            //TODO what if jzentry is not open?
             
-            //invokes metacircularly the startsWithLOC method
-            final Method method = ZipFile.class.getDeclaredMethod("startsWithLOC", long.class);
+            //invokes metacircularly the getEntryMethod method
+            final Method method = ZipFile.class.getDeclaredMethod("getEntryMethod", long.class);
             method.setAccessible(true);
-            final boolean retVal = (boolean) method.invoke(null, jzfile);
-            this.toPush = state.getCalculator().valInt(retVal ? 1 : 0);
+            final int retVal = (int) method.invoke(null, jzentry);
+            this.toPush = state.getCalculator().valInt(retVal);
         } catch (InvocationTargetException e) {
             final String cause = internalClassName(e.getCause().getClass().getName());
             throwNew(state, cause);

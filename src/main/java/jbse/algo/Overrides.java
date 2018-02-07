@@ -79,7 +79,13 @@ public final class Overrides {
     public static final String ALGO_JAVA_XFILESYSTEM_GETLASTMODIFIEDTIME           = internalClassName(jbse.algo.meta.Algo_JAVA_XFILESYSTEM_GETLASTMODIFIEDTIME.class.getName());
     public static final String ALGO_JAVA_XFILESYSTEM_LIST                          = internalClassName(jbse.algo.meta.Algo_JAVA_XFILESYSTEM_LIST.class.getName());
     public static final String ALGO_JAVA_ZIPFILE_GETENTRY                          = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_GETENTRY.class.getName());
+    public static final String ALGO_JAVA_ZIPFILE_GETENTRYBYTES                     = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_GETENTRYBYTES.class.getName());
+    public static final String ALGO_JAVA_ZIPFILE_GETENTRYCRC                       = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_GETENTRYCRC.class.getName());
+    public static final String ALGO_JAVA_ZIPFILE_GETENTRYCSIZE                     = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_GETENTRYCSIZE.class.getName());
     public static final String ALGO_JAVA_ZIPFILE_GETENTRYFLAG                      = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_GETENTRYFLAG.class.getName());
+    public static final String ALGO_JAVA_ZIPFILE_GETENTRYMETHOD                    = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_GETENTRYMETHOD.class.getName());
+    public static final String ALGO_JAVA_ZIPFILE_GETENTRYSIZE                      = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_GETENTRYSIZE.class.getName());
+    public static final String ALGO_JAVA_ZIPFILE_GETENTRYTIME                      = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_GETENTRYTIME.class.getName());
     public static final String ALGO_JAVA_ZIPFILE_GETTOTAL                          = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_GETTOTAL.class.getName());
     public static final String ALGO_JAVA_ZIPFILE_OPEN                              = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_OPEN.class.getName());
     public static final String ALGO_JAVA_ZIPFILE_STARTSWITHLOC                     = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_STARTSWITHLOC.class.getName());
