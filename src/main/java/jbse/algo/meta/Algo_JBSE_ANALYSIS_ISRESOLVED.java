@@ -80,7 +80,7 @@ public final class Algo_JBSE_ANALYSIS_ISRESOLVED extends Algo_INVOKEMETA_Nonbran
         final Value fieldValue = objectInstance.getFieldValue(sig);
         if (fieldValue != null && Util.isSymbolicReference(fieldValue)) {
             final ReferenceSymbolic refToBeChecked = (ReferenceSymbolic) fieldValue;
-            this.retVal = state.getCalculator().valInt(state.resolved(refToBeChecked) ? 1 : 0);
+            this.retVal = state.getCalculator().valInt(Util.isResolved(state, refToBeChecked) ? 1 : 0);
         } else {
             this.retVal = state.getCalculator().valInt(1);
         }

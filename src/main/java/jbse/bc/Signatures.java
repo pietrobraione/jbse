@@ -425,10 +425,18 @@ public final class Signatures {
         new Signature(JAVA_WINNTFILESYSTEM, "()" + VOID, "initIDs");
     public static final Signature JAVA_WINNTFILESYSTEM_LIST = 
         new Signature(JAVA_WINNTFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + ARRAYOF + REFERENCE + JAVA_STRING + TYPEEND, "list");
+    public static final Signature JAVA_ZIPFILE_GETENTRY = 
+        new Signature(JAVA_ZIPFILE, "(" + LONG + ARRAYOF + BYTE + BOOLEAN + ")" + LONG, "getEntry");
+    public static final Signature JAVA_ZIPFILE_GETENTRYFLAG = 
+        new Signature(JAVA_ZIPFILE, "(" + LONG + ")" + INT, "getEntryFlag");
+    public static final Signature JAVA_ZIPFILE_GETTOTAL = 
+        new Signature(JAVA_ZIPFILE, "(" + LONG + ")" + INT, "getTotal");
     public static final Signature JAVA_ZIPFILE_INITIDS = 
         new Signature(JAVA_ZIPFILE, "()" + VOID, "initIDs");
     public static final Signature JAVA_ZIPFILE_OPEN = 
         new Signature(JAVA_ZIPFILE, "(" + REFERENCE + JAVA_STRING + TYPEEND + INT + LONG + BOOLEAN + ")" + LONG, "open");
+    public static final Signature JAVA_ZIPFILE_STARTSWITHLOC = 
+        new Signature(JAVA_ZIPFILE, "(" + LONG + ")" + BOOLEAN, "startsWithLOC");
     public static final Signature JBSE_ANALYSIS_ANY = 
         new Signature(JBSE_ANALYSIS, "()" + BOOLEAN, "any");
     public static final Signature JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED = 

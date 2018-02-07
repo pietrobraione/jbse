@@ -5,12 +5,11 @@ import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
-import static jbse.bc.Signatures.IO_EXCEPTION;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
+import static jbse.common.Type.internalClassName;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -72,14 +71,9 @@ public final class Algo_JAVA_XFILESYSTEM_CANONICALIZE0 extends Algo_INVOKEMETA_N
             try {
                 pathCanonical = (String) method.invoke(fileSystem, path);
             } catch (InvocationTargetException e) {
-                if (e.getCause() instanceof IOException) {
-                    //bad pathname
-                    throwNew(state, IO_EXCEPTION);
-                    exitFromAlgorithm();
-                } else {
-                    //this should never happen
-                    failExecution(e);
-                }
+                final String cause = internalClassName(e.getCause().getClass().getName());
+                throwNew(state, cause);
+                exitFromAlgorithm();
             }
             
             //adds a String to the state for the canonical path

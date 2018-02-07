@@ -87,14 +87,18 @@ public final class Algo_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX extends Algo_INVO
             final Method getAttributesMethod = fileSystemClass.getDeclaredMethod(methodName, File.class);
             getAttributesMethod.setAccessible(true);
             final File f = new File(filePath);
-            final int attributes = ((Integer) getAttributesMethod.invoke(fileSystem, f)).intValue();
-            
-            //converts the attributes to Simplex
-            this.toPush = state.getCalculator().valInt(attributes);
+            try {
+                final int attributes = ((Integer) getAttributesMethod.invoke(fileSystem, f)).intValue();
+                this.toPush = state.getCalculator().valInt(attributes);
+            } catch (InvocationTargetException e) {
+                final String cause = internalClassName(e.getCause().getClass().getName());
+                throwNew(state, cause);
+                exitFromAlgorithm();
+            }            
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (NoSuchFieldException | SecurityException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+        } catch (NoSuchFieldException | SecurityException | IllegalAccessException | NoSuchMethodException e) {
             //this should not happen
             failExecution(e);
         }

@@ -12,6 +12,7 @@ import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
+import static jbse.common.Type.internalClassName;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -97,11 +98,17 @@ public final class Algo_JAVA_XFILESYSTEM_LIST extends Algo_INVOKEMETA_Nonbranchi
             final Method listMethod = fileSystemClass.getDeclaredMethod(methodName, File.class);
             listMethod.setAccessible(true);
             final File f = new File(filePath);
-            this.theList = (String[]) listMethod.invoke(fileSystem, f);
+            try {
+                this.theList = (String[]) listMethod.invoke(fileSystem, f);
+            } catch (InvocationTargetException e) {
+                final String cause = internalClassName(e.getCause().getClass().getName());
+                throwNew(state, cause);
+                exitFromAlgorithm();
+            }
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (NoSuchFieldException | SecurityException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+        } catch (NoSuchFieldException | SecurityException | IllegalAccessException | NoSuchMethodException e) {
             //this should not happen
             failExecution(e);
         }

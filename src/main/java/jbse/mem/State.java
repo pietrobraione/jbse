@@ -2664,6 +2664,9 @@ public final class State implements Cloneable {
             unsafe.copyMemory(oldMemoryBlockAddress, newMemoryBlockAddress, size);
             o.allocatedMemory.put(baseLevelAddress, new MemoryBlock(newMemoryBlockAddress, size));
         }
+        
+        //perfCounters
+        o.perfCounters = new HashSet<>(o.perfCounters);
 
         //stack
         o.stack = o.stack.clone();

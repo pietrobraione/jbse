@@ -7,6 +7,7 @@ import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
 import static jbse.bc.Signatures.JAVA_FILE_PATH;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
+import static jbse.common.Type.internalClassName;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -84,14 +85,18 @@ public final class Algo_JAVA_XFILESYSTEM_GETLASTMODIFIEDTIME extends Algo_INVOKE
             final Method getLastModifiedTimeMethod = fileSystemClass.getDeclaredMethod(methodName, File.class);
             getLastModifiedTimeMethod.setAccessible(true);
             final File f = new File(filePath);
-            final long time = ((Long) getLastModifiedTimeMethod.invoke(fileSystem, f)).longValue();
-            
-            //converts the attributes to Simplex
-            this.toPush = state.getCalculator().valLong(time);
+            try {
+                final long time = ((Long) getLastModifiedTimeMethod.invoke(fileSystem, f)).longValue();
+                this.toPush = state.getCalculator().valLong(time);
+            } catch (InvocationTargetException e) {
+                final String cause = internalClassName(e.getCause().getClass().getName());
+                throwNew(state, cause);
+                exitFromAlgorithm();
+            }
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (NoSuchFieldException | SecurityException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+        } catch (NoSuchFieldException | SecurityException | IllegalAccessException | NoSuchMethodException e) {
             //this should not happen
             failExecution(e);
         }

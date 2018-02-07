@@ -5,10 +5,9 @@ import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
-import static jbse.bc.Signatures.IO_EXCEPTION;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
+import static jbse.common.Type.internalClassName;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.function.Supplier;
@@ -70,28 +69,19 @@ public final class Algo_JAVA_ZIPFILE_OPEN extends Algo_INVOKEMETA_Nonbranching {
             //gets the fourth (boolean usemmap) parameter
             final Primitive _usemmap = (Primitive) this.data.operand(3);
             if (_usemmap.isSymbolic()) {
-                throw new SymbolicValueNotAllowedException("The int mode parameter to invocation of method java.util.zip.ZipFile.open method cannot be a symbolic value.");
+                throw new SymbolicValueNotAllowedException("The boolean usemmap parameter to invocation of method java.util.zip.ZipFile.open method cannot be a symbolic value.");
             }
             final boolean usemmap = (((Integer) ((Simplex) _usemmap).getActualValue()).intValue() > 0);
             
             //invokes metacircularly the open method
             final Method method = ZipFile.class.getDeclaredMethod("open", String.class, int.class, long.class, boolean.class);
             method.setAccessible(true);
-            long jzfile = 0; //to keep the compiler happy
-            try {
-                jzfile = (long) method.invoke(null, name, mode, lastModified, usemmap);
-            } catch (InvocationTargetException e) {
-                if (e.getCause() instanceof IOException) {
-                    //bad pathname
-                    throwNew(state, IO_EXCEPTION);
-                    exitFromAlgorithm();
-                } else {
-                    //this should never happen
-                    failExecution(e);
-                }
-            }
-            
+            final long jzfile = (long) method.invoke(null, name, mode, lastModified, usemmap);
             this.toPush = state.getCalculator().valLong(jzfile);
+        } catch (InvocationTargetException e) {
+            final String cause = internalClassName(e.getCause().getClass().getName());
+            throwNew(state, cause);
+            exitFromAlgorithm();
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
