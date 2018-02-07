@@ -12,7 +12,7 @@ import jbse.val.ReferenceSymbolic;
  * @author Pietro Braione
  */
 public class TriggerRuleAliasesInstanceof extends TriggerRuleAliases {
-	/** Should not be {@code null}. */
+	/** If {@code null} means aliases nothing. */
 	private final String classAllowed;
 
 	public TriggerRuleAliasesInstanceof(String originExp, String classAllowed, Signature triggerMethod, String triggerParameter) {
@@ -27,7 +27,7 @@ public class TriggerRuleAliasesInstanceof extends TriggerRuleAliases {
 		}
 
 		//ref is not used
-		return o.getType().equals(this.classAllowed);
+		return this.classAllowed.equals(o.getType().getClassName());
 	}
 
 	@Override

@@ -27,7 +27,7 @@ public class LICSRuleAliasesInstanceof extends LICSRuleAliases {
 		if (this.isNothingRule()) {
 			return false;
 		}
-		return this.classAllowed.equals(o.getType());
+		return this.classAllowed.equals(o.getType().getClassName());
 	}
 
 	@Override
