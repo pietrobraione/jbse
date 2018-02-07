@@ -425,6 +425,8 @@ public final class Signatures {
         new Signature(JAVA_WINNTFILESYSTEM, "()" + VOID, "initIDs");
     public static final Signature JAVA_WINNTFILESYSTEM_LIST = 
         new Signature(JAVA_WINNTFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + ARRAYOF + REFERENCE + JAVA_STRING + TYPEEND, "list");
+    public static final Signature JAVA_ZIPFILE_FREEENTRY = 
+        new Signature(JAVA_ZIPFILE, "(" + LONG + LONG + ")" + VOID, "freeEntry");
     public static final Signature JAVA_ZIPFILE_GETENTRY = 
         new Signature(JAVA_ZIPFILE, "(" + LONG + ARRAYOF + BYTE + BOOLEAN + ")" + LONG, "getEntry");
     public static final Signature JAVA_ZIPFILE_GETENTRYBYTES = 
