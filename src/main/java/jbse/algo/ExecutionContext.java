@@ -23,6 +23,7 @@ import static jbse.algo.Overrides.ALGO_JAVA_FILEINPUTSTREAM_AVAILABLE;
 import static jbse.algo.Overrides.ALGO_JAVA_FILEINPUTSTREAM_CLOSE0;
 import static jbse.algo.Overrides.ALGO_JAVA_FILEINPUTSTREAM_OPEN0;
 import static jbse.algo.Overrides.ALGO_JAVA_FILEINPUTSTREAM_READBYTES;
+import static jbse.algo.Overrides.ALGO_JAVA_JARFILE_GETMETAINFENTRYNAMES;
 import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_RESOLVE;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_CLONE;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_GETCLASS;
@@ -56,6 +57,7 @@ import static jbse.algo.Overrides.ALGO_JAVA_ZIPFILE_GETENTRYSIZE;
 import static jbse.algo.Overrides.ALGO_JAVA_ZIPFILE_GETENTRYTIME;
 import static jbse.algo.Overrides.ALGO_JAVA_ZIPFILE_GETTOTAL;
 import static jbse.algo.Overrides.ALGO_JAVA_ZIPFILE_OPEN;
+import static jbse.algo.Overrides.ALGO_JAVA_ZIPFILE_READ;
 import static jbse.algo.Overrides.ALGO_JAVA_ZIPFILE_STARTSWITHLOC;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ANY;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED;
@@ -154,8 +156,11 @@ import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM_READBYTES;
 import static jbse.bc.Signatures.JAVA_FILEOUTPUTSTREAM_INITIDS;
 import static jbse.bc.Signatures.JAVA_FLOAT_FLOATTORAWINTBITS;
 import static jbse.bc.Signatures.JAVA_IDENTITYHASHMAP;
+import static jbse.bc.Signatures.JAVA_INFLATER;
+import static jbse.bc.Signatures.JAVA_INFLATER_INITIDS;
 import static jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR_2;
 import static jbse.bc.Signatures.JAVA_JARFILE;
+import static jbse.bc.Signatures.JAVA_JARFILE_GETMETAINFENTRYNAMES;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM_NAME;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST;
@@ -246,6 +251,7 @@ import static jbse.bc.Signatures.JAVA_ZIPFILE_GETENTRYTIME;
 import static jbse.bc.Signatures.JAVA_ZIPFILE_GETTOTAL;
 import static jbse.bc.Signatures.JAVA_ZIPFILE_INITIDS;
 import static jbse.bc.Signatures.JAVA_ZIPFILE_OPEN;
+import static jbse.bc.Signatures.JAVA_ZIPFILE_READ;
 import static jbse.bc.Signatures.JAVA_ZIPFILE_STARTSWITHLOC;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ANY;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED;
@@ -510,6 +516,8 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_FILEINPUTSTREAM_READBYTES,                     ALGO_JAVA_FILEINPUTSTREAM_READBYTES);
             addMetaOverridden(JAVA_FILEOUTPUTSTREAM_INITIDS,                      ALGO_INVOKEMETA_ONLYRETURN);
             addMetaOverridden(JAVA_FLOAT_FLOATTORAWINTBITS,                       ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_INFLATER_INITIDS,                              ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_JARFILE_GETMETAINFENTRYNAMES,                  ALGO_JAVA_JARFILE_GETMETAINFENTRYNAMES);
             addBaseOverridden(JAVA_METHODHANDLENATIVES_GETCONSTANT,               BASE_JAVA_METHODHANDLENATIVES_GETCONSTANT);
             addMetaOverridden(JAVA_METHODHANDLENATIVES_REGISTERNATIVES,           ALGO_INVOKEMETA_ONLYRETURN);
             addMetaOverridden(JAVA_METHODHANDLENATIVES_RESOLVE,                   ALGO_JAVA_METHODHANDLENATIVES_RESOLVE);
@@ -588,6 +596,7 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_ZIPFILE_GETENTRYTIME,                          ALGO_JAVA_ZIPFILE_GETENTRYTIME);
             addMetaOverridden(JAVA_ZIPFILE_GETTOTAL,                              ALGO_JAVA_ZIPFILE_GETTOTAL);
             addMetaOverridden(JAVA_ZIPFILE_OPEN,                                  ALGO_JAVA_ZIPFILE_OPEN);
+            addMetaOverridden(JAVA_ZIPFILE_READ,                                  ALGO_JAVA_ZIPFILE_READ);
             addMetaOverridden(JAVA_ZIPFILE_STARTSWITHLOC,                         ALGO_JAVA_ZIPFILE_STARTSWITHLOC);
             addMetaOverridden(SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0,     ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0);
             addMetaOverridden(SUN_PERF_CREATELONG,                                ALGO_SUN_PERF_CREATELONG);
@@ -770,6 +779,7 @@ public final class ExecutionContext {
         className.equals(JAVA_DIRECTBYTEBUFFER) || 
         className.equals(JAVA_DIRECTLONGBUFFERU) || 
         className.equals(JAVA_IDENTITYHASHMAP) || 
+        className.equals(JAVA_INFLATER) ||
         className.equals(JAVA_INVOKERBYTECODEGENERATOR_2) ||
         className.equals(JAVA_JARFILE) || 
         className.equals(JAVA_LAMBDAFORM) || 

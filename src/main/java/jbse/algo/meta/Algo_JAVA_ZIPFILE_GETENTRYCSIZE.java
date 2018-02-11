@@ -16,6 +16,7 @@ import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.State;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
@@ -37,7 +38,7 @@ public final class Algo_JAVA_ZIPFILE_GETENTRYCSIZE extends Algo_INVOKEMETA_Nonbr
 
     @Override
     protected void cookMore(State state) 
-    throws InterruptException, ClasspathException, SymbolicValueNotAllowedException {
+    throws InterruptException, ClasspathException, SymbolicValueNotAllowedException, InvalidInputException {
         try {
             //gets the (long jzentry) parameter
             final Primitive _jzentry = (Primitive) this.data.operand(0);
@@ -50,7 +51,7 @@ public final class Algo_JAVA_ZIPFILE_GETENTRYCSIZE extends Algo_INVOKEMETA_Nonbr
             //invokes metacircularly the getEntryCSize method
             final Method method = ZipFile.class.getDeclaredMethod("getEntryCSize", long.class);
             method.setAccessible(true);
-            final long retVal = (long) method.invoke(null, jzentry);
+            final long retVal = (long) method.invoke(null, state.getZipFileEntryJz(jzentry));
             this.toPush = state.getCalculator().valLong(retVal);
         } catch (InvocationTargetException e) {
             final String cause = internalClassName(e.getCause().getClass().getName());
@@ -59,7 +60,7 @@ public final class Algo_JAVA_ZIPFILE_GETENTRYCSIZE extends Algo_INVOKEMETA_Nonbr
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (SecurityException | NoSuchMethodException | IllegalAccessException e) {
+        } catch (SecurityException | NoSuchMethodException | IllegalAccessException | IllegalArgumentException e) {
             //this should not happen
             failExecution(e);
         }

@@ -24,6 +24,8 @@ import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -89,25 +91,81 @@ public final class State implements Cloneable {
     /** The slot number of the "this" (method receiver) object. */
     private static final int ROOT_THIS_SLOT = 0;
     
-    private static final class MemoryBlock implements Cloneable {
+    /**
+     * Class that stores the information about a raw memory
+     * block allocated to support {@link sun.misc.Unsafe}
+     * raw allocation methods.
+     * 
+     * @author Pietro Braione
+     */
+    private static final class MemoryBlock {
         /** The base address of the memory block. */
-        long address;
+        final long address;
         
         /** The size in bytes of the memory block. */
-        long size;
+        final long size;
         
-        public MemoryBlock(long address, long size) {
+        MemoryBlock(long address, long size) {
             this.address = address;
             this.size = size;
-        }
+        }        
+    }
+    
+    /**
+     * Class that stores information about an open
+     * zip file to support {@link java.util.zip.ZipFile}
+     * and {@link java.util.jar.JarFile} native methods.
+     * 
+     * @author Pietro Braione
+     */
+    private static final class ZipFile {
+        /** 
+         * The address of a jzfile C data structure for the
+         * entry. 
+         */
+        final long jzfile;
         
-        @Override
-        public MemoryBlock clone() {
-            try {
-                return (MemoryBlock) super.clone();
-            } catch (CloneNotSupportedException e) {
-                throw new AssertionError();
-            }
+        /** The name of the file. */
+        final String name;
+        
+        /** The file opening mode. */
+        final int mode;
+        
+        /** When the file was modified. */
+        final long lastModified;
+        
+        /** Should we use mmap? */
+        final boolean usemmap;
+        
+        ZipFile(long jzfile, String name, int mode, long lastModified, boolean usemmap) {
+            this.jzfile = jzfile;
+            this.name = name;
+            this.mode = mode;
+            this.lastModified = lastModified;
+            this.usemmap = usemmap;
+        }
+    }
+    
+    private static final class ZipFileEntry {
+        /** 
+         * The address of a jzentry C data structure for the
+         * entry. 
+         */
+        final long jzentry;
+        
+        /** 
+         * The (base-level) jzfile for the file this entry
+         * belongs to. 
+         */
+        final long jzfile;
+        
+        /** The name of the entry. */
+        final byte[] name;
+        
+        ZipFileEntry(long jzentry, long jzfile, byte[] name) {
+            this.jzentry = jzentry;
+            this.jzfile = jzfile;
+            this.name = name.clone();
         }
     }
 
@@ -160,6 +218,18 @@ public final class State implements Cloneable {
     
     /** Maps memory addresses to (meta-level) allocated memory blocks. */
     private HashMap<Long, MemoryBlock> allocatedMemory = new HashMap<>();
+    
+    /** 
+     * Maps (base-level) jzfile C structure addresses to 
+     * (meta-level) open zip files. 
+     */
+    private HashMap<Long, ZipFile> zipFiles = new HashMap<>();
+    
+    /** 
+     * Maps (base-level) jzentry C structure addresses to 
+     * (meta-level) open zip file entries.
+     */
+    private HashMap<Long, ZipFileEntry> zipFileEntries = new HashMap<>();
     
     /** The registered performance counters. */
     private HashSet<String> perfCounters = new HashSet<>();
@@ -292,14 +362,13 @@ public final class State implements Cloneable {
             final FileOutputStream out = (FileOutputStream) fosOutField.get(bosOut);
             setFile(1, out);
             
-            //gets the err and registers it
+            //gets the stderr and registers it
             final PrintStream psErr = (PrintStream) System.err;
             final BufferedOutputStream bosErr = (BufferedOutputStream) fosOutField.get(psErr);
             final FileOutputStream err = (FileOutputStream) fosOutField.get(bosErr);
             setFile(2, err);
         } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw new UnexpectedInternalException(e);
         }
     }
 
@@ -326,12 +395,13 @@ public final class State implements Cloneable {
      * operand stack.
      * 
      * @return the {@link Value} on the top of the current 
-     * operand stack.
+     *         operand stack.
      * @throws ThreadStackEmptyException if the thread stack is empty.
      * @throws InvalidNumberOfOperandsException if the current operand 
      *         stack is empty.
      */
-    public Value popOperand() throws ThreadStackEmptyException, InvalidNumberOfOperandsException {
+    public Value popOperand() 
+    throws ThreadStackEmptyException, InvalidNumberOfOperandsException {
         return getCurrentFrame().pop();
     }
 
@@ -344,7 +414,8 @@ public final class State implements Cloneable {
      *         does not contain at least {@code num} elements, or if 
      *         {@code num} is negative.
      */
-    public void popOperands(int num) throws ThreadStackEmptyException, InvalidNumberOfOperandsException {
+    public void popOperands(int num) 
+    throws ThreadStackEmptyException, InvalidNumberOfOperandsException {
         getCurrentFrame().pop(num);
     }
 
@@ -851,6 +922,142 @@ public final class State implements Cloneable {
             throw new InvalidInputException("Tried to remove a raw memory block corresponding to an unknown (base-level) address.");
         }
         this.allocatedMemory.remove(address);
+    }
+    
+    /**
+     * Adds a zip file.
+     * 
+     * @param jzfile a {@code long}, the address of a jzfile C data structure
+     *        for the open zip file.
+     * @param name a {@link String}, the name of the file.
+     * @param mode an {@code int}, the mode this zip file was opened.
+     * @param lastModified a {@code long}, when this zip file was last modified.
+     * @param usemmap a {@code boolean}, whether mmap was used when this zip file
+     *        was opened.
+     * @throws InvalidInputException if {@code jzfile} was already added before, or
+     *         {@code name == null}.
+     */
+    public void addZipFile(long jzfile, String name, int mode, long lastModified, boolean usemmap) throws InvalidInputException {
+        if (this.zipFiles.containsKey(jzfile)) {
+            throw new InvalidInputException("Tried to add an already existing zip file.");
+        }
+        if (name == null) {
+            throw new InvalidInputException("Tried to add a zip file with null name.");
+        }
+        final ZipFile zf = new ZipFile(jzfile, name, mode, lastModified, usemmap);
+        this.zipFiles.put(jzfile, zf);
+    }
+    
+    /**
+     * Adds a zip file entry.
+     * 
+     * @param jzentry a {@code long}, the address of a jzentry C data structure
+     *        for the open zip file entry.
+     * @param jzfile a {@code long}, a jzfile address as known by this {@link State}
+     *        (base-level address).
+     * @param name a {@code byte[]}, the name of the entry.
+     * @throws InvalidInputException if {@code jzfile} was not added before by a call to
+     *         {@link #addZipFile(long, String, int, long, boolean) addZipFile}, or
+     *         {@code jzentry} was already added before, or
+     *         {@code name == null}.
+     */
+    public void addZipFileEntry(long jzentry, long jzfile, byte[] name) throws InvalidInputException {
+        if (!this.zipFiles.containsKey(jzfile)) {
+            throw new InvalidInputException("Tried to add a zip file entry for an unknown zip file.");
+        }
+        if (this.zipFileEntries.containsKey(jzentry)) {
+            throw new InvalidInputException("Tried to add an already existing zip file entry.");
+        }
+        if (name == null) {
+            throw new InvalidInputException("Tried to add a zip file entry with null name.");
+        }
+        final ZipFileEntry zfe = new ZipFileEntry(jzentry, jzfile, name);
+        this.zipFileEntries.put(jzentry, zfe);
+    }
+    
+    /**
+     * Checks whether an open zip file exists.
+     * 
+     * @param jzfile a {@code long}, the address of a jzentry C data structure
+     *        as known by this {@link State} (base-level address).
+     * @return {@code true} iff {@code jzfile} was added before by a call to
+     *         {@link #addZipFile(long, String, int, long, boolean) addZipFile}.
+     */
+    public boolean hasZipFile(long jzfile) {
+        return this.zipFiles.containsKey(jzfile);
+    }
+    
+    /**
+     * Gets the address of a jzfile C structure.
+     * 
+     * @param jzfile a {@code long}, the address as known by this {@link State} 
+     *        (base-level address).
+     * @return a {@code long}, the true address of the jzfile C structure
+     *         (meta-level address).
+     * @throws InvalidInputException if {@code jzfile} was not added before by a call to
+     *         {@link #addZipFile(long, String, int, long, boolean) addZipFile}.
+     */
+    public long getZipFileJz(long jzfile) throws InvalidInputException {
+        if (!this.zipFiles.containsKey(jzfile)) {
+            throw new InvalidInputException("Tried to get a jzfile for an unknown zip file.");
+        }
+        return this.zipFiles.get(jzfile).jzfile;
+    }
+    
+    /**
+     * Gets the address of a jzentry C structure.
+     * 
+     * @param jzentry a {@code long}, the address as known by this {@link State} 
+     *        (base-level address).
+     * @return a {@code long}, the true address of the jzentry C structure
+     *         (meta-level address).
+     * @throws InvalidInputException if {@code jzentry} was not added before by a call to
+     *         {@link #addZipFileEntry(long, long, byte[]) addZipFileEntry}.
+     */
+    public long getZipFileEntryJz(long jzentry) throws InvalidInputException {
+        if (!this.zipFileEntries.containsKey(jzentry)) {
+            throw new InvalidInputException("Tried to get a jzentry for an unknown zip file entry.");
+        }
+        return this.zipFileEntries.get(jzentry).jzentry;
+    }
+    
+    /**
+     * Removes a zip file and all its associated entries.
+     * 
+     * @param jzfile a {@code long}, the address of a jzfile C structure as known 
+     *        by this {@link State} (base-level address).
+     * @throws InvalidInputException if {@code jzfile} was not added before by a call to
+     *         {@link #addZipFile(long, String, int, long, boolean) addZipFile}.
+     */
+    public void removeZipFile(long jzfile) throws InvalidInputException {
+        if (!this.zipFiles.containsKey(jzfile)) {
+            throw new InvalidInputException("Tried to remove an unknown zip file.");
+        }
+        this.zipFiles.remove(jzfile);
+        final HashSet<Long> toRemove = new HashSet<>();
+        for (Map.Entry<Long, ZipFileEntry> entry : this.zipFileEntries.entrySet()) {
+            if (entry.getValue().jzfile == jzfile) {
+                toRemove.add(entry.getKey());
+            }
+        }
+        for (long jzentry : toRemove) {
+            this.zipFileEntries.remove(jzentry);
+        }
+    }
+    
+    /**
+     * Removes a zip file entry.
+     * 
+     * @param jzentry a {@code long}, the address of a jzentry C structure as known 
+     *        by this {@link State} (base-level address).
+     * @throws InvalidInputException if {@code jzentry} was not added before by a call to
+     *         {@link #addZipFileEntry(long, long, byte[]) addZipFileEntry}.
+     */
+    public void removeZipFileEntry(long jzentry) throws InvalidInputException {
+        if (!this.zipFileEntries.containsKey(jzentry)) {
+            throw new InvalidInputException("Tried to remove an unknown zip file entry.");
+        }
+        this.zipFileEntries.remove(jzentry);
     }
     
     /**
@@ -2663,6 +2870,47 @@ public final class State implements Cloneable {
             final long newMemoryBlockAddress = unsafe.allocateMemory(size);
             unsafe.copyMemory(oldMemoryBlockAddress, newMemoryBlockAddress, size);
             o.allocatedMemory.put(baseLevelAddress, new MemoryBlock(newMemoryBlockAddress, size));
+        }
+        
+        //zipFiles
+        o.zipFiles = new HashMap<>();
+        try {
+            final Method method = java.util.zip.ZipFile.class.getDeclaredMethod("open", String.class, int.class, long.class, boolean.class);
+            method.setAccessible(true);
+            for (Map.Entry<Long, ZipFile> entry : this.zipFiles.entrySet()) {
+                final ZipFile zf = entry.getValue();
+                final String name = zf.name;
+                final int mode = zf.mode;
+                final long lastModified = zf.lastModified;
+                final boolean usemmap = zf.usemmap;
+                final long jzfileNew = (long) method.invoke(null, name, mode, lastModified, usemmap);
+                final ZipFile zfNew = new ZipFile(jzfileNew, name, mode, lastModified, usemmap);
+                o.zipFiles.put(entry.getKey(), zfNew);
+            }
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | 
+                 NoSuchMethodException | SecurityException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
+        
+        //zipFileEntries
+        o.zipFileEntries = new HashMap<>();
+        try {
+            final Method method = java.util.zip.ZipFile.class.getDeclaredMethod("getEntry", long.class, byte[].class, boolean.class);
+            method.setAccessible(true);
+            for (Map.Entry<Long, ZipFileEntry> entry : this.zipFileEntries.entrySet()) {
+                final ZipFileEntry zfe = entry.getValue();
+                final long _jzfile = zfe.jzfile;
+                final long jzfile = o.zipFiles.get(_jzfile).jzfile;
+                final byte[] name = zfe.name;
+                final long jzentryNew = (long) method.invoke(null, jzfile, name, true);
+                final ZipFileEntry zfeNew = new ZipFileEntry(jzentryNew, _jzfile, name);
+                o.zipFileEntries.put(entry.getKey(), zfeNew);
+            }
+        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | 
+                 IllegalArgumentException | InvocationTargetException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
         }
         
         //perfCounters

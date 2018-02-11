@@ -30,7 +30,11 @@ import jbse.val.Simplex;
  * @author Pietro Braione
  */
 public final class Algo_JAVA_ZIPFILE_OPEN extends Algo_INVOKEMETA_Nonbranching {
-    private Simplex toPush; //set by cookMore
+    private long jzfile; //set by cookMore
+    private String name; //set by cookMore
+    private int mode; //set by cookMore
+    private long lastModified; //set by cookMore
+    private boolean usemmap; //set by cookMore
     
     @Override
     protected Supplier<Integer> numOperands() {
@@ -47,8 +51,8 @@ public final class Algo_JAVA_ZIPFILE_OPEN extends Algo_INVOKEMETA_Nonbranching {
                 throwNew(state, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
-            final String name = valueString(state, nameReference);
-            if (name == null) {
+            this.name = valueString(state, nameReference);
+            if (this.name == null) {
                 throw new SymbolicValueNotAllowedException("The String name parameter to invocation of method java.util.zip.ZipFile.open cannot be a symbolic String.");
             }
             
@@ -57,27 +61,26 @@ public final class Algo_JAVA_ZIPFILE_OPEN extends Algo_INVOKEMETA_Nonbranching {
             if (_mode.isSymbolic()) {
                 throw new SymbolicValueNotAllowedException("The int mode parameter to invocation of method java.util.zip.ZipFile.open cannot be a symbolic value.");
             }
-            final int mode = ((Integer) ((Simplex) _mode).getActualValue()).intValue();
+            this.mode = ((Integer) ((Simplex) _mode).getActualValue()).intValue();
             
             //gets the third (long lastModified) parameter
             final Primitive _lastModified = (Primitive) this.data.operand(2);
             if (_lastModified.isSymbolic()) {
                 throw new SymbolicValueNotAllowedException("The long lastModified parameter to invocation of method java.util.zip.ZipFile.open cannot be a symbolic value.");
             }
-            final long lastModified = ((Long) ((Simplex) _lastModified).getActualValue()).longValue();
+            this.lastModified = ((Long) ((Simplex) _lastModified).getActualValue()).longValue();
             
             //gets the fourth (boolean usemmap) parameter
             final Primitive _usemmap = (Primitive) this.data.operand(3);
             if (_usemmap.isSymbolic()) {
                 throw new SymbolicValueNotAllowedException("The boolean usemmap parameter to invocation of method java.util.zip.ZipFile.open method cannot be a symbolic value.");
             }
-            final boolean usemmap = (((Integer) ((Simplex) _usemmap).getActualValue()).intValue() > 0);
+            this.usemmap = (((Integer) ((Simplex) _usemmap).getActualValue()).intValue() > 0);
             
             //invokes metacircularly the open method
             final Method method = ZipFile.class.getDeclaredMethod("open", String.class, int.class, long.class, boolean.class);
             method.setAccessible(true);
-            final long jzfile = (long) method.invoke(null, name, mode, lastModified, usemmap);
-            this.toPush = state.getCalculator().valLong(jzfile);
+            this.jzfile = (long) method.invoke(null, this.name, this.mode, this.lastModified, this.usemmap);
         } catch (InvocationTargetException e) {
             final String cause = internalClassName(e.getCause().getClass().getName());
             throwNew(state, cause);
@@ -85,7 +88,7 @@ public final class Algo_JAVA_ZIPFILE_OPEN extends Algo_INVOKEMETA_Nonbranching {
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (SecurityException | IllegalAccessException | NoSuchMethodException e) {
+        } catch (SecurityException | IllegalAccessException | NoSuchMethodException | IllegalArgumentException e) {
             //this should not happen
             failExecution(e);
         }
@@ -94,7 +97,9 @@ public final class Algo_JAVA_ZIPFILE_OPEN extends Algo_INVOKEMETA_Nonbranching {
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            state.pushOperand(this.toPush);
+            state.addZipFile(this.jzfile, this.name, this.mode, this.lastModified, this.usemmap);
+            final Simplex toPush = state.getCalculator().valLong(this.jzfile);
+            state.pushOperand(toPush);
         };
     }
 }

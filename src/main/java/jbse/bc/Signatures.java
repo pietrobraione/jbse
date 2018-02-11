@@ -64,6 +64,7 @@ public final class Signatures {
     public static final String JAVA_GENERICDECLARATION       = "java/lang/reflect/GenericDeclaration";
     public static final String JAVA_IDENTITYHASHMAP          = "java/util/IdentityHashMap";
     public static final String JAVA_INPUTSTREAM              = "java/io/InputStream";
+    public static final String JAVA_INFLATER                 = "java/util/zip/Inflater";
     public static final String JAVA_INTEGER                  = "java/lang/Integer";
     public static final String JAVA_INVOKERBYTECODEGENERATOR_2 = "java/lang/invoke/InvokerBytecodeGenerator$2";
     public static final String JAVA_JARFILE                  = "java/util/jar/JarFile";
@@ -244,6 +245,8 @@ public final class Signatures {
         new Signature(JAVA_DOUBLE, "(" + DOUBLE + ")" + LONG, "doubleToRawLongBits");
     public static final Signature JAVA_DOUBLE_LONGBITSTODOUBLE =
         new Signature(JAVA_DOUBLE, "(" + LONG + ")" + DOUBLE, "longBitsToDouble");
+    public static final Signature JAVA_INFLATER_INITIDS =
+        new Signature(JAVA_INFLATER, "()" + VOID, "initIDs");
     public static final Signature JAVA_FILEDESCRIPTOR_INITIDS =
         new Signature(JAVA_FILEDESCRIPTOR, "()" + VOID, "initIDs");
     public static final Signature JAVA_FILEINPUTSTREAM_AVAILABLE =
@@ -260,6 +263,8 @@ public final class Signatures {
         new Signature(JAVA_FILEOUTPUTSTREAM, "()" + VOID, "initIDs");
     public static final Signature JAVA_FLOAT_FLOATTORAWINTBITS =
         new Signature(JAVA_FLOAT, "(" + FLOAT + ")" + INT, "floatToRawIntBits");
+    public static final Signature JAVA_JARFILE_GETMETAINFENTRYNAMES =
+        new Signature(JAVA_JARFILE, "()" + ARRAYOF + REFERENCE + JAVA_STRING + TYPEEND, "getMetaInfEntryNames");
     public static final Signature JAVA_MEMBERNAME_GETTYPE =
         new Signature(JAVA_MEMBERNAME, "()" + REFERENCE + JAVA_OBJECT + TYPEEND, "getType");
     public static final Signature JAVA_METHOD_INVOKE =
@@ -449,6 +454,8 @@ public final class Signatures {
         new Signature(JAVA_ZIPFILE, "()" + VOID, "initIDs");
     public static final Signature JAVA_ZIPFILE_OPEN = 
         new Signature(JAVA_ZIPFILE, "(" + REFERENCE + JAVA_STRING + TYPEEND + INT + LONG + BOOLEAN + ")" + LONG, "open");
+    public static final Signature JAVA_ZIPFILE_READ = 
+        new Signature(JAVA_ZIPFILE, "(" + LONG + LONG + LONG + ARRAYOF + BYTE + INT + INT + ")" + INT, "read");
     public static final Signature JAVA_ZIPFILE_STARTSWITHLOC = 
         new Signature(JAVA_ZIPFILE, "(" + LONG + ")" + BOOLEAN, "startsWithLOC");
     public static final Signature JBSE_ANALYSIS_ANY = 
@@ -676,6 +683,8 @@ public final class Signatures {
         new Signature(JAVA_THROWABLE, "" + REFERENCE + JAVA_OBJECT + TYPEEND, "backtrace");
     public static final Signature JAVA_THROWABLE_STACKTRACE = 
         new Signature(JAVA_THROWABLE, "" + ARRAYOF + REFERENCE + JAVA_STACKTRACEELEMENT + TYPEEND, "stackTrace");
+    public static final Signature JAVA_ZIPFILE_JZFILE = 
+        new Signature(JAVA_ZIPFILE, "" + LONG, "jzfile");
     public static final Signature JBSE_BASE_FILE_ENCODING = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "FILE_ENCODING");
     public static final Signature JBSE_BASE_FILE_SEPARATOR = 

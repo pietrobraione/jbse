@@ -23,6 +23,7 @@ import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
@@ -49,7 +50,7 @@ public final class Algo_JAVA_ZIPFILE_GETENTRYBYTES extends Algo_INVOKEMETA_Nonbr
 
     @Override
     protected void cookMore(State state) 
-    throws InterruptException, ClasspathException, SymbolicValueNotAllowedException {
+    throws InterruptException, ClasspathException, SymbolicValueNotAllowedException, InvalidInputException {
         try {
             //gets the first (long jzentry) parameter
             final Primitive _jzentry = (Primitive) this.data.operand(0);
@@ -69,7 +70,7 @@ public final class Algo_JAVA_ZIPFILE_GETENTRYBYTES extends Algo_INVOKEMETA_Nonbr
             //invokes metacircularly the getEntryBytes method
             final Method method = ZipFile.class.getDeclaredMethod("getEntryBytes", long.class, int.class);
             method.setAccessible(true);
-            this.entryBytes = (byte[]) method.invoke(null, jzentry, type);
+            this.entryBytes = (byte[]) method.invoke(null, state.getZipFileEntryJz(jzentry), type);
         } catch (InvocationTargetException e) {
             final String cause = internalClassName(e.getCause().getClass().getName());
             throwNew(state, cause);
@@ -77,8 +78,8 @@ public final class Algo_JAVA_ZIPFILE_GETENTRYBYTES extends Algo_INVOKEMETA_Nonbr
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (SecurityException | NoSuchMethodException | IllegalAccessException e) {
-            //this should not happen
+        } catch (SecurityException | NoSuchMethodException | IllegalAccessException | IllegalArgumentException e) {
+            //this should never happen
             failExecution(e);
         }
     }

@@ -17,6 +17,7 @@ import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Array;
 import jbse.mem.State;
@@ -36,7 +37,9 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  */
 public final class Algo_JAVA_ZIPFILE_GETENTRY extends Algo_INVOKEMETA_Nonbranching {
-    private Simplex toPush; //set by cookMore
+    private long jzentry; //set by cookMore
+    private long jzfile; //set by cookMore
+    private byte[] name; //set by cookMore
     
     @Override
     protected Supplier<Integer> numOperands() {
@@ -45,14 +48,15 @@ public final class Algo_JAVA_ZIPFILE_GETENTRY extends Algo_INVOKEMETA_Nonbranchi
 
     @Override
     protected void cookMore(State state) 
-    throws InterruptException, ClasspathException, SymbolicValueNotAllowedException, UndefinedResultException {
+    throws InterruptException, ClasspathException, SymbolicValueNotAllowedException, 
+    UndefinedResultException, InvalidInputException {
         try {
             //gets the first (long jzfile) parameter
             final Primitive _jzfile = (Primitive) this.data.operand(0);
             if (_jzfile.isSymbolic()) {
                 throw new SymbolicValueNotAllowedException("The long jzfile parameter to invocation of method java.util.zip.ZipFile.getEntry cannot be a symbolic value.");
             }
-            final long jzfile = ((Long) ((Simplex) _jzfile).getActualValue()).longValue();
+            this.jzfile = ((Long) ((Simplex) _jzfile).getActualValue()).longValue();
             //TODO check that jzfile is open, and throw UndefinedResultException in the negative case
             
             //gets the second (byte[] name) parameter
@@ -68,11 +72,11 @@ public final class Algo_JAVA_ZIPFILE_GETENTRY extends Algo_INVOKEMETA_Nonbranchi
                 throw new SymbolicValueNotAllowedException("The byte[] name parameter to invocation of method java.util.zip.ZipFile.getEntry cannot be an array that is not simple.");
             }
             final int nameLength = ((Integer) ((Simplex) _name.getLength()).getActualValue()).intValue();
-            final byte[] name = new byte[nameLength];
+            this.name = new byte[nameLength];
             final Calculator calc = state.getCalculator();
             for (int i = 0; i < nameLength; ++i) {
                 final Simplex name_i = (Simplex) ((AccessOutcomeInValue) _name.getFast(calc.valInt(i))).getValue();
-                name[i] = ((Byte) name_i.getActualValue()).byteValue();
+                this.name[i] = ((Byte) name_i.getActualValue()).byteValue();
             }
             
             //gets the third (boolean addSlash) parameter
@@ -86,8 +90,7 @@ public final class Algo_JAVA_ZIPFILE_GETENTRY extends Algo_INVOKEMETA_Nonbranchi
             //invokes metacircularly the getEntry method
             final Method method = ZipFile.class.getDeclaredMethod("getEntry", long.class, byte[].class, boolean.class);
             method.setAccessible(true);
-            final long retVal = (long) method.invoke(null, jzfile, name, addSlash);
-            this.toPush = state.getCalculator().valLong(retVal);
+            this.jzentry = (long) method.invoke(null, state.getZipFileJz(this.jzfile), this.name, addSlash);
         } catch (InvocationTargetException e) {
             final String cause = internalClassName(e.getCause().getClass().getName());
             throwNew(state, cause);
@@ -96,7 +99,8 @@ public final class Algo_JAVA_ZIPFILE_GETENTRY extends Algo_INVOKEMETA_Nonbranchi
             throwVerifyError(state);
             exitFromAlgorithm();
         } catch (SecurityException | NoSuchMethodException | IllegalAccessException | 
-                 FastArrayAccessNotAllowedException | InvalidTypeException | InvalidOperandException e) {
+                 FastArrayAccessNotAllowedException | InvalidTypeException | 
+                 InvalidOperandException e) {
             //this should not happen
             failExecution(e);
         }
@@ -105,7 +109,9 @@ public final class Algo_JAVA_ZIPFILE_GETENTRY extends Algo_INVOKEMETA_Nonbranchi
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            state.pushOperand(this.toPush);
+            final Simplex toPush = state.getCalculator().valLong(this.jzentry);
+            state.pushOperand(toPush);
+            state.addZipFileEntry(this.jzentry, this.jzfile, this.name);
         };
     }
 }
