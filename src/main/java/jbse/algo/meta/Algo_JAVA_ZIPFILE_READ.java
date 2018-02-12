@@ -104,7 +104,7 @@ public final class Algo_JAVA_ZIPFILE_READ extends Algo_INVOKEMETA_Nonbranching {
             this.readBytes = new byte[len];
             final Method method = ZipFile.class.getDeclaredMethod("read", long.class, long.class, long.class, byte[].class, int.class, int.class);
             method.setAccessible(true);
-            this.nread = (int) method.invoke(null, jzfile, jzentry, pos, this.readBytes, this.ofst, len);
+            this.nread = (int) method.invoke(null, jzfile, jzentry, pos, this.readBytes, 0, len);
         } catch (InvocationTargetException e) {
             final String cause = internalClassName(e.getCause().getClass().getName());
             throwNew(state, cause);
