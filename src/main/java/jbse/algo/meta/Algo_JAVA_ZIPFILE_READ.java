@@ -66,11 +66,11 @@ public final class Algo_JAVA_ZIPFILE_READ extends Algo_INVOKEMETA_Nonbranching {
             //if jzentry is not open the metacircular method invocation will raise InvocationTargetException
             
             //gets the third (long pos) parameter
-            final Primitive _pos = (Primitive) this.data.operand(1);
+            final Primitive _pos = (Primitive) this.data.operand(2);
             if (_pos.isSymbolic()) {
                 throw new SymbolicValueNotAllowedException("The long pos parameter to invocation of method java.util.zip.ZipFile.read cannot be a symbolic value.");
             }
-            final long pos = ((Long) ((Simplex) _jzentry).getActualValue()).longValue();
+            final long pos = ((Long) ((Simplex) _pos).getActualValue()).longValue();
             //if pos is out of range the metacircular method invocation will raise InvocationTargetException
             
             //gets the (byte[] b) parameter
