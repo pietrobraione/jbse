@@ -54,7 +54,7 @@ public final class Algo_JAVA_FILEINPUTSTREAM_OPEN0 extends Algo_INVOKEMETA_Nonbr
             }
             final Instance thisObject = (Instance) state.getObject(thisReference);
             final Reference fileDescriptorReference = (Reference) thisObject.getFieldValue(JAVA_FILEINPUTSTREAM_FD);
-            if (state.isNull(thisReference)) {
+            if (state.isNull(fileDescriptorReference)) {
                 //this should never happen
                 failExecution("The 'this' parameter to java.io.FileInputStream.open0 method apparently has not a FileDescriptor fd field.");
             }
