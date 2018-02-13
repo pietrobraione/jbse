@@ -34,7 +34,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     /**
      * Constructor.
      * 
-     * @param cat1 {@code true} for dup_*, {@code false} for dup2_*.
+     * @param cat1 {@code true} for dup_x*, {@code false} for dup2_x*.
      * @param x1 {@code true} for dup*_x1, {@code false} for dup*_x2.
      */
     public Algo_DUPX_Y(boolean cat1, boolean x1) {
@@ -55,21 +55,25 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
+            final Value value1 = this.data.operand(1); //topmost on the stack
+            final Value value2 = this.data.operand(0); //second on the stack
             if (this.cat1) {
-                if (!isCat_1(this.data.operand(1).getType())) {
+                //dup_x*
+                if (!isCat_1(value1.getType())) {
                     throwVerifyError(state);
                     exitFromAlgorithm();
                 }
-                if (this.x1 && !isCat_1(this.data.operand(0).getType())) {
+                if (this.x1 && !isCat_1(value2.getType())) { //dup_x1
                     throwVerifyError(state);
                     exitFromAlgorithm();
                 }
             } else if (this.x1) {
-                if (isCat_1(this.data.operand(0).getType())) {
+                //dup2_x1
+                if (!isCat_1(value2.getType())) {
                     throwVerifyError(state);
                     exitFromAlgorithm();
                 }
-            } else if (!isCat_1(this.data.operand(0).getType()) && isCat_1(this.data.operand(0).getType())) {
+            } else if (isCat_1(value1.getType()) && !isCat_1(value2.getType())) { //dup2_x2
                 throwVerifyError(state);
                 exitFromAlgorithm();
             }
@@ -97,8 +101,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            final Value value1 = this.data.operand(1);
-            final Value value2 = this.data.operand(0);
+            final Value value1 = this.data.operand(1); //topmost on the stack
+            final Value value2 = this.data.operand(0); //second on the stack
             if (this.cat1 && this.x1) {
                 dup_x1(state, value1, value2);
             } else if (this.cat1 && !this.x1) {
