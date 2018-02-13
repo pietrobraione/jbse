@@ -56,11 +56,15 @@ public final class Overrides {
     public static final String ALGO_JAVA_FILEINPUTSTREAM_CLOSE0                    = internalClassName(jbse.algo.meta.Algo_JAVA_FILEINPUTSTREAM_CLOSE0.class.getName());
     public static final String ALGO_JAVA_FILEINPUTSTREAM_OPEN0                     = internalClassName(jbse.algo.meta.Algo_JAVA_FILEINPUTSTREAM_OPEN0.class.getName());
     public static final String ALGO_JAVA_FILEINPUTSTREAM_READBYTES                 = internalClassName(jbse.algo.meta.Algo_JAVA_FILEINPUTSTREAM_READBYTES.class.getName());
+    public static final String ALGO_JAVA_INFLATER_INFLATEBYTES                     = internalClassName(jbse.algo.meta.Algo_JAVA_INFLATER_INFLATEBYTES.class.getName());
+    public static final String ALGO_JAVA_INFLATER_INIT                             = internalClassName(jbse.algo.meta.Algo_JAVA_INFLATER_INIT.class.getName());
+    public static final String ALGO_JAVA_INFLATER_RESET                            = internalClassName(jbse.algo.meta.Algo_JAVA_INFLATER_RESET.class.getName());
     public static final String ALGO_JAVA_JARFILE_GETMETAINFENTRYNAMES              = internalClassName(jbse.algo.meta.Algo_JAVA_JARFILE_GETMETAINFENTRYNAMES.class.getName());
     public static final String ALGO_JAVA_METHODHANDLENATIVES_RESOLVE               = internalClassName(jbse.algo.meta.Algo_JAVA_METHODHANDLENATIVES_RESOLVE.class.getName());
     public static final String ALGO_JAVA_OBJECT_CLONE                              = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_CLONE.class.getName());
     public static final String ALGO_JAVA_OBJECT_GETCLASS                           = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_GETCLASS.class.getName());
     public static final String ALGO_JAVA_OBJECT_HASHCODE                           = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_HASHCODE.class.getName());
+    public static final String ALGO_JAVA_PACKAGE_GETSYSTEMPACKAGE0                 = internalClassName(jbse.algo.meta.Algo_JAVA_PACKAGE_GETSYSTEMPACKAGE0.class.getName());
     public static final String ALGO_JAVA_REFLECT_ARRAY_NEWARRAY                    = internalClassName(jbse.algo.meta.Algo_JAVA_REFLECT_ARRAY_NEWARRAY.class.getName());
     public static final String ALGO_JAVA_STRING_HASHCODE                           = internalClassName(jbse.algo.meta.Algo_JAVA_STRING_HASHCODE.class.getName());
     public static final String ALGO_JAVA_STRING_INTERN                             = internalClassName(jbse.algo.meta.Algo_JAVA_STRING_INTERN.class.getName());

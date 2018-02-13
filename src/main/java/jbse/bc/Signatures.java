@@ -28,6 +28,7 @@ public final class Signatures {
     public static final String JAVA_ANNOTATEDELEMENT         = "java/lang/reflect/AnnotatedElement";
     public static final String JAVA_ARRAYDEQUE               = "java/util/ArrayDeque";
     public static final String JAVA_ATOMICLONG               = "java/util/concurrent/atomic/AtomicLong";
+    public static final String JAVA_ATTRIBUTES_NAME          = "java/util/jar/Attributes$Name";
     public static final String JAVA_BITS                     = "java/nio/Bits";
     public static final String JAVA_BOOLEAN                  = "java/lang/Boolean";
     public static final String JAVA_BOUNDMETHODHANDLE        = "java/lang/invoke/BoundMethodHandle";
@@ -68,6 +69,7 @@ public final class Signatures {
     public static final String JAVA_INTEGER                  = "java/lang/Integer";
     public static final String JAVA_INVOKERBYTECODEGENERATOR_2 = "java/lang/invoke/InvokerBytecodeGenerator$2";
     public static final String JAVA_JARFILE                  = "java/util/jar/JarFile";
+    public static final String JAVA_JARVERIFIER              = "java/util/jar/JarVerifier";
     public static final String JAVA_LAMBDAFORM               = "java/lang/invoke/LambdaForm";
     public static final String JAVA_LAMBDAFORM_NAME          = "java/lang/invoke/LambdaForm$Name";
     public static final String JAVA_LINKEDLIST               = "java/util/LinkedList";
@@ -84,6 +86,7 @@ public final class Signatures {
     public static final String JAVA_METHODTYPE               = "java/lang/invoke/MethodType";
     public static final String JAVA_METHODTYPEFORM           = "java/lang/invoke/MethodTypeForm";
     public static final String JAVA_OBJECT                   = "java/lang/Object";
+    public static final String JAVA_PACKAGE                  = "java/lang/Package";
     public static final String JAVA_PRINTSTREAM              = "java/io/PrintStream";
     public static final String JAVA_PRIVILEGEDACTION         = "java/security/PrivilegedAction";
     public static final String JAVA_PRIVILEGEDEXCEPTIONACTION = "java/security/PrivilegedExceptionAction";
@@ -101,6 +104,7 @@ public final class Signatures {
     public static final String JAVA_STRICTMATH               = "java/lang/StrictMath";
     public static final String JAVA_STRING                   = "java/lang/String";
     public static final String JAVA_STRINGBUILDER            = "java/lang/StringBuilder";
+    public static final String JAVA_STRINGCODING             = "java/lang/StringCoding";
     public static final String JAVA_SYSTEM                   = "java/lang/System";
     public static final String JAVA_THREAD                   = "java/lang/Thread";
     public static final String JAVA_THREAD_UNCAUGHTEXCEPTIONHANDLER = "java/lang/Thread$UncaughtExceptionHandler";
@@ -114,9 +118,13 @@ public final class Signatures {
     public static final String JAVA_VOID                     = "java/lang/Void";
     public static final String JAVA_WINNTFILESYSTEM          = "java/io/WinNTFileSystem";
     public static final String JAVA_ZIPFILE                  = "java/util/zip/ZipFile";
+    public static final String JAVA_ZSTREAMREF               = "java/util/zip/ZStreamRef";
     public static final String JBSE_ANALYSIS                 = internalClassName(jbse.meta.Analysis.class.getCanonicalName());
     public static final String JBSE_BASE                     = internalClassName(jbse.base.Base.class.getCanonicalName());
+    public static final String SUN_ASCIICASEINSENSITIVECOMPARATOR = "sun/misc/ASCIICaseInsensitiveComparator";
     public static final String SUN_CALLERSENSITIVE           = "sun/reflect/CallerSensitive";
+    public static final String SUN_EXTENSIONDEPENDENCY       = "sun/misc/ExtensionDependency";
+    public static final String SUN_JARINDEX                  = "sun/misc/JarIndex";
     public static final String SUN_NATIVECONSTRUCTORACCESSORIMPL = "sun/reflect/NativeConstructorAccessorImpl";
     public static final String SUN_PERF                      = "sun/misc/Perf";
     public static final String SUN_PERFCOUNTER               = "sun/misc/PerfCounter";
@@ -245,8 +253,6 @@ public final class Signatures {
         new Signature(JAVA_DOUBLE, "(" + DOUBLE + ")" + LONG, "doubleToRawLongBits");
     public static final Signature JAVA_DOUBLE_LONGBITSTODOUBLE =
         new Signature(JAVA_DOUBLE, "(" + LONG + ")" + DOUBLE, "longBitsToDouble");
-    public static final Signature JAVA_INFLATER_INITIDS =
-        new Signature(JAVA_INFLATER, "()" + VOID, "initIDs");
     public static final Signature JAVA_FILEDESCRIPTOR_INITIDS =
         new Signature(JAVA_FILEDESCRIPTOR, "()" + VOID, "initIDs");
     public static final Signature JAVA_FILEINPUTSTREAM_AVAILABLE =
@@ -263,6 +269,14 @@ public final class Signatures {
         new Signature(JAVA_FILEOUTPUTSTREAM, "()" + VOID, "initIDs");
     public static final Signature JAVA_FLOAT_FLOATTORAWINTBITS =
         new Signature(JAVA_FLOAT, "(" + FLOAT + ")" + INT, "floatToRawIntBits");
+    public static final Signature JAVA_INFLATER_INFLATEBYTES =
+        new Signature(JAVA_INFLATER, "(" + LONG + ARRAYOF + BYTE + INT + INT + ")" + INT, "inflateBytes");
+    public static final Signature JAVA_INFLATER_INIT =
+        new Signature(JAVA_INFLATER, "(" + BOOLEAN + ")" + LONG, "init");
+    public static final Signature JAVA_INFLATER_INITIDS =
+        new Signature(JAVA_INFLATER, "()" + VOID, "initIDs");
+    public static final Signature JAVA_INFLATER_RESET =
+        new Signature(JAVA_INFLATER, "(" + LONG + ")" + VOID, "reset");
     public static final Signature JAVA_JARFILE_GETMETAINFENTRYNAMES =
         new Signature(JAVA_JARFILE, "()" + ARRAYOF + REFERENCE + JAVA_STRING + TYPEEND, "getMetaInfEntryNames");
     public static final Signature JAVA_MEMBERNAME_GETTYPE =
@@ -300,6 +314,8 @@ public final class Signatures {
         new Signature(JAVA_OBJECT, "()" + VOID, "notifyAll");
     public static final Signature JAVA_OBJECT_REGISTERNATIVES =
         new Signature(JAVA_OBJECT, "()" + VOID, "registerNatives");
+    public static final Signature JAVA_PACKAGE_GETSYSTEMPACKAGE0 =
+        new Signature(JAVA_PACKAGE, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_STRING + TYPEEND, "getSystemPackage0");
     public static final Signature JAVA_REFLECT_ARRAY_NEWARRAY =
         new Signature(JAVA_REFLECT_ARRAY, "(" + REFERENCE + JAVA_CLASS + TYPEEND + INT + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "newArray");
     public static final Signature JAVA_RUNTIME_AVAILABLEPROCESSORS = 
@@ -643,6 +659,22 @@ public final class Signatures {
         new Signature(JAVA_FILEINPUTSTREAM, "" + REFERENCE + JAVA_FILEDESCRIPTOR + TYPEEND, "fd");
     public static final Signature JAVA_FLOAT_VALUE = 
         new Signature(JAVA_FLOAT, "" + FLOAT, "value");
+    public static final Signature JAVA_INFLATER_BUF = 
+        new Signature(JAVA_INFLATER, "" + ARRAYOF + BYTE, "buf");
+    public static final Signature JAVA_INFLATER_BYTESREAD = 
+        new Signature(JAVA_INFLATER, "" + LONG, "bytesRead");
+    public static final Signature JAVA_INFLATER_BYTESWRITTEN = 
+        new Signature(JAVA_INFLATER, "" + LONG, "bytesWritten");
+    public static final Signature JAVA_INFLATER_FINISHED = 
+        new Signature(JAVA_INFLATER, "" + BOOLEAN, "finished");
+    public static final Signature JAVA_INFLATER_LEN = 
+        new Signature(JAVA_INFLATER, "" + INT, "len");
+    public static final Signature JAVA_INFLATER_NEEDDICT = 
+        new Signature(JAVA_INFLATER, "" + BOOLEAN, "needDict");
+    public static final Signature JAVA_INFLATER_OFF = 
+        new Signature(JAVA_INFLATER, "" + INT, "off");
+    public static final Signature JAVA_INFLATER_ZSREF = 
+        new Signature(JAVA_INFLATER, "" + REFERENCE + JAVA_ZSTREAMREF + TYPEEND, "zsRef");
     public static final Signature JAVA_INTEGER_VALUE = 
         new Signature(JAVA_INTEGER, "" + INT, "value");
     public static final Signature JAVA_LONG_VALUE = 
@@ -685,6 +717,8 @@ public final class Signatures {
         new Signature(JAVA_THROWABLE, "" + ARRAYOF + REFERENCE + JAVA_STACKTRACEELEMENT + TYPEEND, "stackTrace");
     public static final Signature JAVA_ZIPFILE_JZFILE = 
         new Signature(JAVA_ZIPFILE, "" + LONG, "jzfile");
+    public static final Signature JAVA_ZSTREAMREF_ADDRESS = 
+        new Signature(JAVA_ZSTREAMREF, "" + LONG, "address");
     public static final Signature JBSE_BASE_FILE_ENCODING = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "FILE_ENCODING");
     public static final Signature JBSE_BASE_FILE_SEPARATOR = 

@@ -64,6 +64,17 @@ public final class ClassHierarchy implements Cloneable {
     private final HashMap<ClassFile, ArrayList<Signature>> allFieldsOf;
     private final ClassFileFactory f;
     private ClassFileStore cfs; //not final because of clone
+    private HashMap<String, String> systemPackages; //not final because of clone
+    
+    private static class FindBytecodeResult {
+        final byte[] bytecode;
+        final String loadedFrom;
+        
+        public FindBytecodeResult(byte[] bytecode, String loadedFrom) {
+            this.bytecode = bytecode;
+            this.loadedFrom = loadedFrom;
+        }
+    }
 
     /**
      * Constructor.
@@ -90,6 +101,7 @@ public final class ClassHierarchy implements Cloneable {
         } catch (InstantiationException | IllegalAccessException e) {
             throw new InvalidClassFileFactoryClassException(e);
         }
+        this.systemPackages = new HashMap<>();
     }
 
     /**
@@ -313,22 +325,47 @@ public final class ClassHierarchy implements Cloneable {
             expansions.add(subtype);
         }
     }
+    
+    /**
+     * Returns the jar file or directory from which the classes
+     * in a system package were loaded from.
+     * 
+     * @param packageName a {@link String}, the name of a package
+     * @return a {@link String}, the jar file or directory from which 
+     *         the system classes in {@code packageName} were loaded from, 
+     *         or {@code null} if no system class from {@code packageName}
+     *         was loaded. 
+     */
+    public String getSystemPackageLoadedFrom(String packageName) {
+        return this.systemPackages.get(packageName);
+    }
+    
+    /**
+     * Gets the system packages.
+     * 
+     * @return a {@link Set}{@code <}{@link String}{@code >} of all
+     *         the system package names.
+     */
+    public Set<String> getSystemPackages() {
+        return new HashSet<>(this.systemPackages.keySet());
+    }
 
     /**
      * Lists the concrete subclasses of a class. <br />
      * <em>Note:</em> An exact implementation of this method, 
      * searching the classpath for all the concrete subclasses 
      * of an arbitrary class, would be too demanding. Thus this
-     * implementation returns {@code className}, if it is not 
-     * an interface or an abstract class, and all the classes 
-     * associated to {@code className} in the 
-     * expansion backdoor provided at construction time.
+     * implementation returns {@code classFile.}{@link ClassFile#getClassName() getClassName()}, 
+     * if it is not an interface or an abstract class, and all the classes 
+     * associated to {@code classFile.}{@link ClassFile#getClassName() getClassName()}, 
+     * in the expansion backdoor provided at construction time.
      * 
      * @param classFile a {@link ClassFile}.
      * @return A {@link Set}{@code <}{@link ClassFile}{@code >} of 
      *         subclasses of {@code classFile}.
-     * @throws InvalidInputException if one of the subclass names 
-     *         in the expansion backdoor is ill-formed.
+     * @throws InvalidInputException if {@code classFile == null} or 
+     *         one of the subclass names in the expansion backdoor 
+     *         is ill-formed.
      * @throws ClassFileNotFoundException when the class file 
      *         for one of the subclass names 
      *         in the expansion backdoor does not exist neither 
@@ -345,6 +382,9 @@ public final class ClassHierarchy implements Cloneable {
     public Set<ClassFile> getAllConcreteSubclasses(ClassFile classFile)
     throws InvalidInputException, ClassFileNotFoundException, 
     ClassFileIllFormedException, ClassFileNotAccessibleException {
+        if (classFile == null) {
+            throw new InvalidInputException("Tried to get the concrete subclasses of a null classfile.");
+        }
         final HashSet<ClassFile> retVal = new HashSet<>();
         if (!classFile.isAbstract()) {
             retVal.add(classFile);
@@ -761,15 +801,15 @@ public final class ClassHierarchy implements Cloneable {
 
                     //first, looks for the bytecode in the filesystem and determines
                     //the defining classloader based on where it finds the bytecode
-                    byte[] bytecode = null;
+                    FindBytecodeResult findBytecodeResult = null;
                     int definingClassLoader;
                     for (definingClassLoader = CLASSLOADER_BOOT; definingClassLoader <= initiatingLoader; ++definingClassLoader) {
-                        bytecode = findBytecode(classSignature, definingClassLoader);
-                        if (bytecode != null) {
+                        findBytecodeResult = findBytecode(classSignature, definingClassLoader);
+                        if (findBytecodeResult != null) {
                             break;
                         }
                     }
-                    if (bytecode == null) {
+                    if (findBytecodeResult == null) {
                         throw new ClassFileNotFoundException("Did not find any class " + classSignature + " in the classpath.");
                     }
                     
@@ -779,7 +819,7 @@ public final class ClassHierarchy implements Cloneable {
                     accessed = getClassFileClassArray(definingClassLoader, classSignature);
                     if (accessed == null) {
                         //nothing in the loaded class cache: creates a dummy classfile
-                        final ClassFile accessedDummy = createClassFileClassDummy(definingClassLoader, classSignature, bytecode);
+                        final ClassFile accessedDummy = createClassFileClassDummy(definingClassLoader, classSignature, findBytecodeResult.bytecode);
 
                         //then, uses the dummy ClassFile to recursively resolve all the immediate 
                         //ancestor classes
@@ -790,13 +830,19 @@ public final class ClassHierarchy implements Cloneable {
                             superInterfaces[i] = resolveClass(accessedDummy, superInterfaceNames.get(i), bypassStandardLoading);
                         }
 
-                        //finally, creates a complete ClassFile for the class 
+                        //then, creates a complete ClassFile for the class 
                         //and puts it in the loaded class cache, registering it
                         //with all the compatible initiating loaders through the
                         //delegation chain
                         accessed = createClassFileClass(accessedDummy, superClass, superInterfaces);
                         for (int i = definingClassLoader; i <= initiatingLoader; ++i) {
                             addClassFileClassArray(i, accessed);
+                        }
+                        
+                        //finally, if the loader is the bootstrap one, registers
+                        //the system package
+                        if (definingClassLoader == CLASSLOADER_BOOT) {
+                            registerSystemPackage(classSignature, findBytecodeResult.loadedFrom);
                         }
                     }
                 } else { //the initiating loader is a user-defined classloader and we do not bypass standard loading
@@ -819,16 +865,33 @@ public final class ClassHierarchy implements Cloneable {
     }
     
     /**
+     * Registers a system package.
+     * 
+     * @param classSignature a {@link String}, a signature of a loaded
+     *        system class.
+     * @param loadedFrom a {@link String}, the name of the jar file
+     *        or directory from where {@code classSignature} was loaded.
+     */
+    private void registerSystemPackage(String classSignature, String loadedFrom) {
+        final String packageName = classSignature.substring(0, classSignature.lastIndexOf('/') + 1);
+        this.systemPackages.put(packageName, loadedFrom);  
+        //note that replacing the origin of an already registered package
+        //upon loading of multiple classes from the package is a behavior
+        //compatible with what Hotspot does, see hotspot:src/share/vm/classfile/classLoader.cpp:1013
+        //(function ClassLoader::add_package).
+    }
+    
+    /**
      * Returns the bytecode of a class file by searching the 
      * class file on the filesystem.
      * 
      * @param className a {@link String}, the name of the class.
      * @param initatingLoader an {@code int}; It must be either {@link ClassLoaders#CLASSLOADER_BOOT}, 
      *        or {@link ClassLoaders#CLASSLOADER_EXT}, or {@link ClassLoaders#CLASSLOADER_APP}.
-     * @return a {@code byte[]} or {@code null} if there is no class for {@code classSignature}
+     * @return a {@link FindBytecodeResult} or {@code null} if there is no class for {@code classSignature}
      *         in {@code paths}.
      */
-    private byte[] findBytecode(String className, int initiatingLoader) {
+    private FindBytecodeResult findBytecode(String className, int initiatingLoader) {
         final Iterable<String> paths = (initiatingLoader == CLASSLOADER_BOOT ? this.cp.bootClassPath() :
                                         initiatingLoader == CLASSLOADER_EXT ? this.cp.extClassPath() :
                                         this.cp.userClassPath());
@@ -837,7 +900,7 @@ public final class ClassHierarchy implements Cloneable {
                 final Path path = Paths.get(_path); 
                 if (Files.isDirectory(path)) {
                     final Path pathOfClass = path.resolve(className + ".class");
-                    return Files.readAllBytes(pathOfClass);
+                    return new FindBytecodeResult(Files.readAllBytes(pathOfClass), _path);
                 } else if (Files.isRegularFile(path) && _path.endsWith(".jar")) {
                     try (final JarFile f = new JarFile(_path)) {
                         final JarEntry e = f.getJarEntry(className + ".class");
@@ -851,7 +914,7 @@ public final class ClassHierarchy implements Cloneable {
                         while ((nbytes = inStr.read(buf)) != -1) {
                             outStr.write(buf, 0, nbytes);
                         }
-                        return outStr.toByteArray();
+                        return new FindBytecodeResult(outStr.toByteArray(), _path);
                     }
                 }
             } catch (IOException e) {

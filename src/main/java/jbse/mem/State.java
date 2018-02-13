@@ -168,6 +168,29 @@ public final class State implements Cloneable {
             this.name = name.clone();
         }
     }
+    
+    private static class Inflater {
+        final long address;
+        
+        final boolean nowrap;
+        
+        final byte[] dictionary;
+        
+        Inflater(long address, boolean nowrap, byte[] dictionary, int off, int len) {
+            this.address = address;
+            this.nowrap = nowrap;
+            if (dictionary == null) {
+                this.dictionary = null;
+            } else {
+                this.dictionary = new byte[len];
+                System.arraycopy(dictionary, off, this.dictionary, 0, len);
+            }
+        }
+        
+        Inflater(long address, boolean nowrap) {
+            this(address, nowrap, null, 0, 0);
+        }
+    }
 
     /** 
      * The identifier of the state in the execution tree.
@@ -230,6 +253,9 @@ public final class State implements Cloneable {
      * (meta-level) open zip file entries.
      */
     private HashMap<Long, ZipFileEntry> zipFileEntries = new HashMap<>();
+    
+    /** Maps (base-level) inflater addresses to (meta-level) inflaters. */
+    private HashMap<Long, Inflater> inflaters = new HashMap<>();
     
     /** The registered performance counters. */
     private HashSet<String> perfCounters = new HashSet<>();
@@ -988,6 +1014,40 @@ public final class State implements Cloneable {
     }
     
     /**
+     * Checks whether an address of a jzentry C structure is present.
+     * 
+     * @param jzentry a {@code long}.
+     * @return {@code true} iff {@code jzentry} is the true address of 
+     *         a jzfile C structure (meta-level address).
+     */
+    public boolean hasZipFileEntryJzInverse(long jzentry) {
+        for (ZipFileEntry entry : this.zipFileEntries.values()) {
+            if (entry.jzentry == jzentry) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    /**
+     * Returns the base-level address of a jzentry C structure.
+     * @param jzentry a {@code long}, the  address of a jzfile C structure
+     *         (meta-level address).
+     * @return a {@code long}, the base-level address corresponding to
+     *         {@code jzentry}.
+     * @throws InvalidInputException if {@code jzentry} is not the address
+     *         of a jzentry data structure.
+     */
+    public long getZipFileEntryJzInverse(long jzentry) throws InvalidInputException {
+        for (Map.Entry<Long, ZipFileEntry> entry : this.zipFileEntries.entrySet()) {
+            if (entry.getValue().jzentry == jzentry) {
+                return entry.getKey();
+            }
+        }
+        throw new InvalidInputException("Tried to invert an unknown jzentry C structure address.");
+    }
+    
+    /**
      * Gets the address of a jzfile C structure.
      * 
      * @param jzfile a {@code long}, the address as known by this {@link State} 
@@ -1058,6 +1118,36 @@ public final class State implements Cloneable {
             throw new InvalidInputException("Tried to remove an unknown zip file entry.");
         }
         this.zipFileEntries.remove(jzentry);
+    }
+    
+    public void addInflater(long address, boolean nowrap, byte[] dictionary, int ofst, int len) throws InvalidInputException {
+        if (this.inflaters.containsKey(address)) {
+            throw new InvalidInputException("Tried to add an already registered inflater block address.");
+        }
+        final Inflater inflater = new Inflater(address, nowrap, dictionary, ofst, len);
+        this.inflaters.put(address, inflater);
+    }
+    
+    public void addInflater(long address, boolean nowrap) throws InvalidInputException {
+        if (this.inflaters.containsKey(address)) {
+            throw new InvalidInputException("Tried to add an already registered inflater block address.");
+        }
+        final Inflater inflater = new Inflater(address, nowrap);
+        this.inflaters.put(address, inflater);
+    }
+    
+    public long getInflater(long address) throws InvalidInputException {
+        if (!this.inflaters.containsKey(address)) {
+            throw new InvalidInputException("Tried to get the address of an unknown inflater.");
+        }
+        return this.inflaters.get(address).address;
+    }
+    
+    public void removeInflater(long address) throws InvalidInputException {
+        if (!this.inflaters.containsKey(address)) {
+            throw new InvalidInputException("Tried to remove an unknown inflater.");
+        }
+        this.inflaters.remove(address);
     }
     
     /**
@@ -2875,15 +2965,15 @@ public final class State implements Cloneable {
         //zipFiles
         o.zipFiles = new HashMap<>();
         try {
-            final Method method = java.util.zip.ZipFile.class.getDeclaredMethod("open", String.class, int.class, long.class, boolean.class);
-            method.setAccessible(true);
+            final Method methodOpen = java.util.zip.ZipFile.class.getDeclaredMethod("open", String.class, int.class, long.class, boolean.class);
+            methodOpen.setAccessible(true);
             for (Map.Entry<Long, ZipFile> entry : this.zipFiles.entrySet()) {
                 final ZipFile zf = entry.getValue();
                 final String name = zf.name;
                 final int mode = zf.mode;
                 final long lastModified = zf.lastModified;
                 final boolean usemmap = zf.usemmap;
-                final long jzfileNew = (long) method.invoke(null, name, mode, lastModified, usemmap);
+                final long jzfileNew = (long) methodOpen.invoke(null, name, mode, lastModified, usemmap);
                 final ZipFile zfNew = new ZipFile(jzfileNew, name, mode, lastModified, usemmap);
                 o.zipFiles.put(entry.getKey(), zfNew);
             }
@@ -2896,14 +2986,14 @@ public final class State implements Cloneable {
         //zipFileEntries
         o.zipFileEntries = new HashMap<>();
         try {
-            final Method method = java.util.zip.ZipFile.class.getDeclaredMethod("getEntry", long.class, byte[].class, boolean.class);
-            method.setAccessible(true);
+            final Method methodGetEntry = java.util.zip.ZipFile.class.getDeclaredMethod("getEntry", long.class, byte[].class, boolean.class);
+            methodGetEntry.setAccessible(true);
             for (Map.Entry<Long, ZipFileEntry> entry : this.zipFileEntries.entrySet()) {
                 final ZipFileEntry zfe = entry.getValue();
                 final long _jzfile = zfe.jzfile;
                 final long jzfile = o.zipFiles.get(_jzfile).jzfile;
                 final byte[] name = zfe.name;
-                final long jzentryNew = (long) method.invoke(null, jzfile, name, true);
+                final long jzentryNew = (long) methodGetEntry.invoke(null, jzfile, name, true);
                 final ZipFileEntry zfeNew = new ZipFileEntry(jzentryNew, _jzfile, name);
                 o.zipFileEntries.put(entry.getKey(), zfeNew);
             }
@@ -2913,6 +3003,31 @@ public final class State implements Cloneable {
             throw new UnexpectedInternalException(e);
         }
         
+        //inflaters
+        o.inflaters = new HashMap<>();
+        try {
+            final Method methodInit = java.util.zip.Inflater.class.getDeclaredMethod("init", boolean.class);
+            methodInit.setAccessible(true);
+            final Method methodSetDictionary = java.util.zip.Inflater.class.getDeclaredMethod("setDictionary", long.class, byte[].class, int.class, int.class);
+            methodSetDictionary.setAccessible(true);
+            for (Map.Entry<Long, Inflater> entry : this.inflaters.entrySet()) {
+                final Inflater inf = entry.getValue();
+                final long addressNew = (long) methodInit.invoke(null, inf.nowrap);
+                final Inflater infNew;
+                if (inf.dictionary == null) {
+                    infNew = new Inflater(addressNew, inf.nowrap);
+                } else {
+                    methodSetDictionary.invoke(null, addressNew, inf.dictionary, 0, inf.dictionary.length);
+                    infNew = new Inflater(addressNew, inf.nowrap, inf.dictionary, 0, inf.dictionary.length);
+                }
+                o.inflaters.put(entry.getKey(), infNew);
+            }
+        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | 
+                 IllegalArgumentException | InvocationTargetException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
+
         //perfCounters
         o.perfCounters = new HashSet<>(o.perfCounters);
 

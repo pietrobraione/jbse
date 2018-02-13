@@ -19,6 +19,9 @@ import static jbse.algo.Overrides.ALGO_JAVA_CLASS_ISPRIMITIVE;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASSLOADER_FINDLOADEDCLASS0;
 import static jbse.algo.Overrides.ALGO_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD;
+import static jbse.algo.Overrides.ALGO_JAVA_INFLATER_INFLATEBYTES;
+import static jbse.algo.Overrides.ALGO_JAVA_INFLATER_INIT;
+import static jbse.algo.Overrides.ALGO_JAVA_INFLATER_RESET;
 import static jbse.algo.Overrides.ALGO_JAVA_FILEINPUTSTREAM_AVAILABLE;
 import static jbse.algo.Overrides.ALGO_JAVA_FILEINPUTSTREAM_CLOSE0;
 import static jbse.algo.Overrides.ALGO_JAVA_FILEINPUTSTREAM_OPEN0;
@@ -28,6 +31,7 @@ import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_RESOLVE;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_CLONE;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_GETCLASS;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_HASHCODE;
+import static jbse.algo.Overrides.ALGO_JAVA_PACKAGE_GETSYSTEMPACKAGE0;
 import static jbse.algo.Overrides.ALGO_JAVA_REFLECT_ARRAY_NEWARRAY;
 import static jbse.algo.Overrides.ALGO_JAVA_STRING_HASHCODE;
 import static jbse.algo.Overrides.ALGO_JAVA_STRING_INTERN;
@@ -117,6 +121,7 @@ import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT;
 import static jbse.bc.Signatures.JAVA_ARRAYDEQUE;
 import static jbse.bc.Signatures.JAVA_ATOMICLONG_VMSUPPORTSCS8;
+import static jbse.bc.Signatures.JAVA_ATTRIBUTES_NAME;
 import static jbse.bc.Signatures.JAVA_BYTE_BYTECACHE;
 import static jbse.bc.Signatures.JAVA_CHARACTER_CHARACTERCACHE;
 import static jbse.bc.Signatures.JAVA_CHARSET_EXTENDEDPROVIDERHOLDER;
@@ -157,10 +162,14 @@ import static jbse.bc.Signatures.JAVA_FILEOUTPUTSTREAM_INITIDS;
 import static jbse.bc.Signatures.JAVA_FLOAT_FLOATTORAWINTBITS;
 import static jbse.bc.Signatures.JAVA_IDENTITYHASHMAP;
 import static jbse.bc.Signatures.JAVA_INFLATER;
+import static jbse.bc.Signatures.JAVA_INFLATER_INFLATEBYTES;
+import static jbse.bc.Signatures.JAVA_INFLATER_INIT;
 import static jbse.bc.Signatures.JAVA_INFLATER_INITIDS;
+import static jbse.bc.Signatures.JAVA_INFLATER_RESET;
 import static jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR_2;
 import static jbse.bc.Signatures.JAVA_JARFILE;
 import static jbse.bc.Signatures.JAVA_JARFILE_GETMETAINFENTRYNAMES;
+import static jbse.bc.Signatures.JAVA_JARVERIFIER;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM;
 import static jbse.bc.Signatures.JAVA_LAMBDAFORM_NAME;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST;
@@ -175,6 +184,7 @@ import static jbse.bc.Signatures.JAVA_OBJECT_GETCLASS;
 import static jbse.bc.Signatures.JAVA_OBJECT_HASHCODE;
 import static jbse.bc.Signatures.JAVA_OBJECT_NOTIFYALL;
 import static jbse.bc.Signatures.JAVA_OBJECT_REGISTERNATIVES;
+import static jbse.bc.Signatures.JAVA_PACKAGE_GETSYSTEMPACKAGE0;
 import static jbse.bc.Signatures.JAVA_REFLECT_ARRAY_NEWARRAY;
 import static jbse.bc.Signatures.JAVA_RUNTIME_AVAILABLEPROCESSORS;
 import static jbse.bc.Signatures.JAVA_SHORT_SHORTCACHE;
@@ -277,6 +287,8 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_FLOAT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_INT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_LONG;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_SHORT;
+import static jbse.bc.Signatures.SUN_ASCIICASEINSENSITIVECOMPARATOR;
+import static jbse.bc.Signatures.SUN_JARINDEX;
 import static jbse.bc.Signatures.SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
 import static jbse.bc.Signatures.SUN_PERF;
 import static jbse.bc.Signatures.SUN_PERF_CREATELONG;
@@ -516,7 +528,10 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_FILEINPUTSTREAM_READBYTES,                     ALGO_JAVA_FILEINPUTSTREAM_READBYTES);
             addMetaOverridden(JAVA_FILEOUTPUTSTREAM_INITIDS,                      ALGO_INVOKEMETA_ONLYRETURN);
             addMetaOverridden(JAVA_FLOAT_FLOATTORAWINTBITS,                       ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_INFLATER_INFLATEBYTES,                         ALGO_JAVA_INFLATER_INFLATEBYTES);
+            addMetaOverridden(JAVA_INFLATER_INIT,                                 ALGO_JAVA_INFLATER_INIT);
             addMetaOverridden(JAVA_INFLATER_INITIDS,                              ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_INFLATER_RESET,                                ALGO_JAVA_INFLATER_RESET);
             addMetaOverridden(JAVA_JARFILE_GETMETAINFENTRYNAMES,                  ALGO_JAVA_JARFILE_GETMETAINFENTRYNAMES);
             addBaseOverridden(JAVA_METHODHANDLENATIVES_GETCONSTANT,               BASE_JAVA_METHODHANDLENATIVES_GETCONSTANT);
             addMetaOverridden(JAVA_METHODHANDLENATIVES_REGISTERNATIVES,           ALGO_INVOKEMETA_ONLYRETURN);
@@ -526,6 +541,7 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_OBJECT_HASHCODE,                               ALGO_JAVA_OBJECT_HASHCODE);
             addMetaOverridden(JAVA_OBJECT_NOTIFYALL,                              ALGO_INVOKEMETA_ONLYRETURN);
             addMetaOverridden(JAVA_OBJECT_REGISTERNATIVES,                        ALGO_INVOKEMETA_ONLYRETURN);
+            addMetaOverridden(JAVA_PACKAGE_GETSYSTEMPACKAGE0,                     ALGO_JAVA_PACKAGE_GETSYSTEMPACKAGE0);
             addMetaOverridden(JAVA_REFLECT_ARRAY_NEWARRAY,                        ALGO_JAVA_REFLECT_ARRAY_NEWARRAY);
             addBaseOverridden(JAVA_RUNTIME_AVAILABLEPROCESSORS,                   BASE_JAVA_RUNTIME_AVAILABLEPROCESSORS);
             addMetaOverridden(JAVA_STRICTMATH_ACOS,                               ALGO_INVOKEMETA_ONLYRETURN);
@@ -773,6 +789,7 @@ public final class ExecutionContext {
         final String className = classFile.getClassName();
         return (
         className.equals(JAVA_ARRAYDEQUE) ||
+        className.equals(JAVA_ATTRIBUTES_NAME) ||
         className.equals(JAVA_BYTE_BYTECACHE) ||
         className.equals(JAVA_CHARACTER_CHARACTERCACHE) ||
         className.equals(JAVA_CHARSET_EXTENDEDPROVIDERHOLDER) ||
@@ -782,6 +799,7 @@ public final class ExecutionContext {
         className.equals(JAVA_INFLATER) ||
         className.equals(JAVA_INVOKERBYTECODEGENERATOR_2) ||
         className.equals(JAVA_JARFILE) || 
+        className.equals(JAVA_JARVERIFIER) || 
         className.equals(JAVA_LAMBDAFORM) || 
         className.equals(JAVA_LAMBDAFORM_NAME) || 
         className.equals(JAVA_LINKEDLIST) || 
@@ -794,6 +812,8 @@ public final class ExecutionContext {
         className.equals(JAVA_THROWABLE_SENTINELHOLDER) ||
         className.equals(JAVA_VOID) || 
         className.equals(JAVA_ZIPFILE) || 
+        className.equals(SUN_ASCIICASEINSENSITIVECOMPARATOR) ||
+        className.equals(SUN_JARINDEX) ||
         className.equals(SUN_PERF) ||
         className.equals(SUN_PERFCOUNTER) ||
         className.equals(SUN_PERFCOUNTER_CORECOUNTERS) ||

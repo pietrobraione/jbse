@@ -314,9 +314,6 @@ public abstract class ClassFile implements Comparable<ClassFile> {
                 if (ASSERTIONDISABLED_NAME.equals(sigFieldStatic.getName())) {
                     continue;
                 }
-                if (!isFieldPrivate(sigFieldStatic)) {
-                    return false;
-                }
                 if (!isFieldFinal(sigFieldStatic)) {
                     return false;
                 }

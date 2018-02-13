@@ -86,7 +86,6 @@ public final class Algo_JAVA_ZIPFILE_GETENTRY extends Algo_INVOKEMETA_Nonbranchi
             }
             final boolean addSlash = (((Integer) ((Simplex) _addSlash).getActualValue()).intValue() > 0);
             
-            
             //invokes metacircularly the getEntry method
             final Method method = ZipFile.class.getDeclaredMethod("getEntry", long.class, byte[].class, boolean.class);
             method.setAccessible(true);
@@ -109,9 +108,18 @@ public final class Algo_JAVA_ZIPFILE_GETENTRY extends Algo_INVOKEMETA_Nonbranchi
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            final Simplex toPush = state.getCalculator().valLong(this.jzentry);
+            final long _toPush;
+            if (this.jzentry == 0L) {
+                //not found
+                _toPush = 0L;
+            } else if (state.hasZipFileEntryJzInverse(this.jzentry)) {
+                _toPush = state.getZipFileEntryJzInverse(this.jzentry);
+            } else {
+                state.addZipFileEntry(this.jzentry, this.jzfile, this.name);
+                _toPush = this.jzentry;
+            }
+            final Simplex toPush = state.getCalculator().valLong(_toPush);
             state.pushOperand(toPush);
-            state.addZipFileEntry(this.jzentry, this.jzfile, this.name);
         };
     }
 }

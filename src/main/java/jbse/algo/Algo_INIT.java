@@ -30,11 +30,13 @@ import static jbse.bc.Signatures.JAVA_METHOD;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES;
 import static jbse.bc.Signatures.JAVA_OBJECT;
+import static jbse.bc.Signatures.JAVA_PACKAGE;
 import static jbse.bc.Signatures.JAVA_REFERENCE;
 import static jbse.bc.Signatures.JAVA_RUNNABLE;
 import static jbse.bc.Signatures.JAVA_SERIALIZABLE;
 import static jbse.bc.Signatures.JAVA_STACKTRACEELEMENT;
 import static jbse.bc.Signatures.JAVA_STRING;
+import static jbse.bc.Signatures.JAVA_STRINGCODING;
 import static jbse.bc.Signatures.JAVA_SYSTEM;
 import static jbse.bc.Signatures.JAVA_THREAD;
 import static jbse.bc.Signatures.JAVA_THREAD_INIT;
@@ -52,6 +54,7 @@ import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.RUNTIME_EXCEPTION;
 import static jbse.bc.Signatures.STACK_OVERFLOW_ERROR;
+import static jbse.bc.Signatures.SUN_EXTENSIONDEPENDENCY;
 import static jbse.bc.Signatures.VERIFY_ERROR;
 import static jbse.bc.Signatures.VIRTUAL_MACHINE_ERROR;
 import static jbse.bc.Signatures.noclass_SETPHASEPOSTINIT;
@@ -111,6 +114,9 @@ public final class Algo_INIT {
      * Constructor.
      */
     public Algo_INIT() {
+        this.doNotInitialize.add(JAVA_PACKAGE);
+        this.doNotInitialize.add(JAVA_STRINGCODING);
+        this.doNotInitialize.add(SUN_EXTENSIONDEPENDENCY);
         this.doNotInitialize.add(JAVA_METHODHANDLENATIVES);
         this.doNotInitialize.add(JAVA_MEMBERNAME);
         this.doNotInitialize.add(JAVA_METHODHANDLE);
@@ -164,13 +170,18 @@ public final class Algo_INIT {
         //pushes a frame to initialize the root class
         initializeRootClass(state, ctx);
 
+        //pushes frames to initialize classes for dynamic classloading
+        initializeClass(state, JAVA_PACKAGE, ctx);
+        initializeClass(state, JAVA_STRINGCODING, ctx);
+        initializeClass(state, SUN_EXTENSIONDEPENDENCY, ctx);
+
+        //TODO possibly more initialization assumption from sun.launcher.LauncherHelper
+
         //the rest of the initialization mirrors hotspot source code from openjdk v8, 
         //see hotspot:src/share/vm/runtime/thread.cpp method Threads::create_vm, 
         //create_initial_thread_group, and create_initial_thread,
         //and jdk:src/share/bin/java.c function JavaMain and invoked function 
         //LoadMainClass
-        
-        //TODO possibly more initialization assumption from sun.launcher.LauncherHelper
         
         //pushes frames to initialize classes for handle invocation
         initializeClass(state, JAVA_METHODHANDLENATIVES, ctx);
@@ -214,7 +225,7 @@ public final class Algo_INIT {
         initializeClass(state, JAVA_THREADGROUP, ctx);
         initializeClass(state, JAVA_SYSTEM, ctx);
         initializeClass(state, JAVA_STRING, ctx);
-
+        
         //done
         return state;
     }
@@ -269,6 +280,9 @@ public final class Algo_INIT {
             classHierarchy.loadCreateClass(JAVA_MEMBER);
             classHierarchy.loadCreateClass(JAVA_MEMBERNAME);
             classHierarchy.loadCreateClass(JAVA_METHODHANDLENATIVES);
+            classHierarchy.loadCreateClass(SUN_EXTENSIONDEPENDENCY);
+            classHierarchy.loadCreateClass(JAVA_STRINGCODING);
+            classHierarchy.loadCreateClass(JAVA_PACKAGE);
             
             //loads application classes
             classHierarchy.loadCreateClass(CLASSLOADER_APP, JBSE_BASE, true);
