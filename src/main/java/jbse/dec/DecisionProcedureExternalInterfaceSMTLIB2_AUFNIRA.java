@@ -695,7 +695,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
             } else if (x.getType() != Type.BOOLEAN && this.isBooleanExpression) {
                 throw new UnexpectedInternalException("error while parsing expression (expected a numeric expression but it is not): " + x.toString());
             }
-            final String operator = x.getOperator();
+            final String operator = x.getOperator().split(":")[2];
             final char type = x.getType();
             final StringBuilder clause = new StringBuilder();
             final StringBuilder smtlib2Signature = new StringBuilder();

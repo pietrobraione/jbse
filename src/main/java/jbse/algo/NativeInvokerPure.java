@@ -62,7 +62,7 @@ public class NativeInvokerPure implements NativeInvoker {
 			}
 			if (someSymbolic) {
 				try {
-					returnValue = state.getCalculator().applyFunction(returnType.charAt(0), methodSignatureResolved.getName(), argsPrim);
+					returnValue = state.getCalculator().applyFunction(returnType.charAt(0), methodSignatureResolved.toString(), argsPrim);
 				} catch (InvalidOperandException | InvalidTypeException e) {
 					//this should never happen
 					throw new UnexpectedInternalException(e);
