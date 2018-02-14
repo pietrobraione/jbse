@@ -545,7 +545,7 @@ public class Util {
                 final String className = it.next();
                 final Klass k = this.s.getKlass(className);
                 final ClassFile classFile = this.s.getClassHierarchy().getClassFile(className);
-                final Signature[] flds = classFile.getDeclaredFieldsStatic();
+                final Signature[] flds = classFile.getFieldsStatic();
                 for (final Signature sig : flds) {
                     try {
                         if (classFile.isFieldConstant(sig)) {
