@@ -269,6 +269,10 @@ public final class Signatures {
         new Signature(JAVA_FILEOUTPUTSTREAM, "()" + VOID, "initIDs");
     public static final Signature JAVA_FLOAT_FLOATTORAWINTBITS =
         new Signature(JAVA_FLOAT, "(" + FLOAT + ")" + INT, "floatToRawIntBits");
+    public static final Signature JAVA_INFLATER_END =
+        new Signature(JAVA_INFLATER, "(" + LONG + ")" + VOID, "end");
+    public static final Signature JAVA_INFLATER_GETADLER =
+        new Signature(JAVA_INFLATER, "(" + LONG + ")" + INT, "getAdler");
     public static final Signature JAVA_INFLATER_INFLATEBYTES =
         new Signature(JAVA_INFLATER, "(" + LONG + ARRAYOF + BYTE + INT + INT + ")" + INT, "inflateBytes");
     public static final Signature JAVA_INFLATER_INIT =
@@ -277,6 +281,8 @@ public final class Signatures {
         new Signature(JAVA_INFLATER, "()" + VOID, "initIDs");
     public static final Signature JAVA_INFLATER_RESET =
         new Signature(JAVA_INFLATER, "(" + LONG + ")" + VOID, "reset");
+    public static final Signature JAVA_INFLATER_SETDICTIONARY =
+        new Signature(JAVA_INFLATER, "(" + LONG + ARRAYOF + BYTE + INT + INT + ")" + VOID, "setDictionary");
     public static final Signature JAVA_JARFILE_GETMETAINFENTRYNAMES =
         new Signature(JAVA_JARFILE, "()" + ARRAYOF + REFERENCE + JAVA_STRING + TYPEEND, "getMetaInfEntryNames");
     public static final Signature JAVA_MEMBERNAME_GETTYPE =

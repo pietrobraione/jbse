@@ -56,9 +56,12 @@ public final class Overrides {
     public static final String ALGO_JAVA_FILEINPUTSTREAM_CLOSE0                    = internalClassName(jbse.algo.meta.Algo_JAVA_FILEINPUTSTREAM_CLOSE0.class.getName());
     public static final String ALGO_JAVA_FILEINPUTSTREAM_OPEN0                     = internalClassName(jbse.algo.meta.Algo_JAVA_FILEINPUTSTREAM_OPEN0.class.getName());
     public static final String ALGO_JAVA_FILEINPUTSTREAM_READBYTES                 = internalClassName(jbse.algo.meta.Algo_JAVA_FILEINPUTSTREAM_READBYTES.class.getName());
+    public static final String ALGO_JAVA_INFLATER_END                              = internalClassName(jbse.algo.meta.Algo_JAVA_INFLATER_END.class.getName());
+    public static final String ALGO_JAVA_INFLATER_GETADLER                         = internalClassName(jbse.algo.meta.Algo_JAVA_INFLATER_GETADLER.class.getName());
     public static final String ALGO_JAVA_INFLATER_INFLATEBYTES                     = internalClassName(jbse.algo.meta.Algo_JAVA_INFLATER_INFLATEBYTES.class.getName());
     public static final String ALGO_JAVA_INFLATER_INIT                             = internalClassName(jbse.algo.meta.Algo_JAVA_INFLATER_INIT.class.getName());
     public static final String ALGO_JAVA_INFLATER_RESET                            = internalClassName(jbse.algo.meta.Algo_JAVA_INFLATER_RESET.class.getName());
+    public static final String ALGO_JAVA_INFLATER_SETDICTIONARY                    = internalClassName(jbse.algo.meta.Algo_JAVA_INFLATER_SETDICTIONARY.class.getName());
     public static final String ALGO_JAVA_JARFILE_GETMETAINFENTRYNAMES              = internalClassName(jbse.algo.meta.Algo_JAVA_JARFILE_GETMETAINFENTRYNAMES.class.getName());
     public static final String ALGO_JAVA_METHODHANDLENATIVES_RESOLVE               = internalClassName(jbse.algo.meta.Algo_JAVA_METHODHANDLENATIVES_RESOLVE.class.getName());
     public static final String ALGO_JAVA_OBJECT_CLONE                              = internalClassName(jbse.algo.meta.Algo_JAVA_OBJECT_CLONE.class.getName());

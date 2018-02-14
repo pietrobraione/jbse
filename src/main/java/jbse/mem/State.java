@@ -146,6 +146,13 @@ public final class State implements Cloneable {
         }
     }
     
+    /**
+     * Class that stores the information about an open
+     * zip file's entries to support {@link java.util.zip.ZipFile}
+     * and {@link java.util.jar.JarFile} native methods.
+     * 
+     * @author Pietro Braione
+     */
     private static final class ZipFileEntry {
         /** 
          * The address of a jzentry C data structure for the
@@ -1120,14 +1127,14 @@ public final class State implements Cloneable {
         this.zipFileEntries.remove(jzentry);
     }
     
-    public void addInflater(long address, boolean nowrap, byte[] dictionary, int ofst, int len) throws InvalidInputException {
-        if (this.inflaters.containsKey(address)) {
-            throw new InvalidInputException("Tried to add an already registered inflater block address.");
-        }
-        final Inflater inflater = new Inflater(address, nowrap, dictionary, ofst, len);
-        this.inflaters.put(address, inflater);
-    }
-    
+    /**
+     * Registers an inflater.
+     * 
+     * @param address a {@code long}, the address of an inflater block.
+     * @param nowrap a {@code boolean}, the {@code nowrap} parameter 
+     *        to {@link java.util.zip.Inflater#init(boolean)}.
+     * @throws InvalidInputException if {@code address} was already registered.
+     */
     public void addInflater(long address, boolean nowrap) throws InvalidInputException {
         if (this.inflaters.containsKey(address)) {
             throw new InvalidInputException("Tried to add an already registered inflater block address.");
@@ -1136,6 +1143,16 @@ public final class State implements Cloneable {
         this.inflaters.put(address, inflater);
     }
     
+    /**
+     * Gets the address of an inflater block.
+     * 
+     * @param address a {@code long}, the address of an inflater block
+     *        as known by this state (base-level address).
+     * @return a {@code long}, the true address of the inflater block
+     *         (meta-level address).
+     * @throws InvalidInputException  if {@code address} was not previously
+     *         registered.
+     */
     public long getInflater(long address) throws InvalidInputException {
         if (!this.inflaters.containsKey(address)) {
             throw new InvalidInputException("Tried to get the address of an unknown inflater.");
@@ -1143,6 +1160,40 @@ public final class State implements Cloneable {
         return this.inflaters.get(address).address;
     }
     
+    /**
+     * Stores the dictionary of an inflater.
+     * 
+     * @param address a {@code long}, the address of an inflater block
+     *        as known by this state (base-level address).
+     * @param dictionary a {@code byte[]} containing the dictionary.
+     * @param ofst a {@code int}, the offset in {@code dictionary}
+     *        where the dictionary starts.
+     * @param len a {@code int}, the length of the dictionary.
+     * @throws InvalidInputException if {@code address} was not previously
+     *         registered, or {@code dictionary == null}, or {@code ofst < 0}, 
+     *         or {@code len < 0}, or {@code ofst >= dictionary.length}, or
+     *         {@code ofst + len > dictionary.length}.
+     */
+    public void setInflaterDictionary(long address, byte[] dictionary, int ofst, int len) throws InvalidInputException {
+        if (!this.inflaters.containsKey(address)) {
+            throw new InvalidInputException("Tried to set the dictionary of an unknown inflater.");
+        }
+        if (dictionary == null || ofst < 0 || len < 0 || ofst >= dictionary.length || ofst + len > dictionary.length) {
+            throw new InvalidInputException("Tried to set the dictionary of an inflater with wrong dictionary, offset or length.");
+        }
+        final Inflater inflaterOld = this.inflaters.get(address);
+        final Inflater inflaterNew = new Inflater(inflaterOld.address, inflaterOld.nowrap, dictionary, ofst, len);
+        this.inflaters.put(address, inflaterNew);
+    }
+    
+    /**
+     * Removes a registered inflater.
+     * 
+     * @param address a {@code long}, the address of an inflater block
+     *        as known by this state (base-level address).
+     * @throws InvalidInputException if {@code address} was not previously
+     *         registered.
+     */
     public void removeInflater(long address) throws InvalidInputException {
         if (!this.inflaters.containsKey(address)) {
             throw new InvalidInputException("Tried to remove an unknown inflater.");
