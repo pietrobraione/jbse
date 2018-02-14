@@ -88,7 +88,7 @@ public class Algo_INVOKEMETA_OnlyReturn extends Algo_INVOKEMETA_Nonbranching {
             }
             if (someSymbolic) {
                 try {
-                    this.returnValue = state.getCalculator().applyFunction(returnType.charAt(0), this.data.signature().getName(), argsPrim);
+                    this.returnValue = state.getCalculator().applyFunction(returnType.charAt(0), this.data.signature().toString(), argsPrim);
                 } catch (InvalidOperandException | InvalidTypeException e) {
                     //this should never happen
                     failExecution(e);
