@@ -17,6 +17,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Null;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 
@@ -47,8 +48,12 @@ public final class Algo_JAVA_PACKAGE_GETSYSTEMPACKAGE0 extends Algo_INVOKEMETA_N
                 throw new SymbolicValueNotAllowedException("The String name parameter to invocation of method java.lang.Package.getSystemPackage0 cannot be a symbolic String.");
             }
             final String fileName = state.getClassHierarchy().getSystemPackageLoadedFrom(name);
-            state.ensureStringLiteral(fileName);
-            this.refFileName = state.referenceToStringLiteral(fileName);
+            if (fileName == null) {
+                this.refFileName = Null.getInstance();
+            } else {
+                state.ensureStringLiteral(fileName);
+                this.refFileName = state.referenceToStringLiteral(fileName);
+            }
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
