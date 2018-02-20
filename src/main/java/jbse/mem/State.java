@@ -971,7 +971,13 @@ public final class State implements Cloneable {
      */
     public void addZipFile(long jzfile, String name, int mode, long lastModified, boolean usemmap) throws InvalidInputException {
         if (this.zipFiles.containsKey(jzfile)) {
-            throw new InvalidInputException("Tried to add an already existing zip file.");
+            final ZipFile zf = this.zipFiles.get(jzfile);
+            if (zf.name.equals(name) && zf.lastModified == lastModified) {
+                //already opened, zlib reuses the allocated C data structure
+                return;
+            } else {
+                throw new InvalidInputException("Tried to add a zipfile with an already existing jzfile address.");
+            }
         }
         if (name == null) {
             throw new InvalidInputException("Tried to add a zip file with null name.");
