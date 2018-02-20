@@ -33,7 +33,7 @@ import jbse.val.Simplex;
  * 
  * @author Pietro Braione
  */
-//TODO merge with Algo_JAVA_XFILESYSTEM_GETLASTMODIFIEDTIME
+//TODO merge with Algo_JAVA_XFILESYSTEM_GETLASTMODIFIEDTIME and Algo_JAVA_XFILESYSTEM_GETLENGTH
 public final class Algo_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX extends Algo_INVOKEMETA_Nonbranching {
     private Simplex toPush; //set by cookMore
 

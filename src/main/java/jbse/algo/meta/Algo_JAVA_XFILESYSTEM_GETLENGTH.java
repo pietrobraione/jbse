@@ -32,8 +32,8 @@ import jbse.val.Simplex;
  * 
  * @author Pietro Braione
  */
-//TODO merge with Algo_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX and Algo_JAVA_XFILESYSTEM_GETLENGTH
-public final class Algo_JAVA_XFILESYSTEM_GETLASTMODIFIEDTIME extends Algo_INVOKEMETA_Nonbranching {
+//TODO merge with Algo_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX and JAVA_XFILESYSTEM_GETLASTMODIFIEDTIME
+public final class Algo_JAVA_XFILESYSTEM_GETLENGTH extends Algo_INVOKEMETA_Nonbranching {
     private Simplex toPush; //set by cookMore
 
     @Override
@@ -50,7 +50,7 @@ public final class Algo_JAVA_XFILESYSTEM_GETLASTMODIFIEDTIME extends Algo_INVOKE
             fileSystemField.setAccessible(true);
             final Object fileSystem = fileSystemField.get(null);
             final Class<?> fileSystemClass = fileSystem.getClass();
-            final String methodName = "getLastModifiedTime";
+            final String methodName = "getLength";
 
             //gets the File parameter
             final Reference fileReference = (Reference) this.data.operand(1);
@@ -80,14 +80,14 @@ public final class Algo_JAVA_XFILESYSTEM_GETLASTMODIFIEDTIME extends Algo_INVOKE
             }
             
             //creates a File object with same path and
-            //invokes metacircularly the getLastModifiedTime
-            //method to obtain its modification time
-            final Method getLastModifiedTimeMethod = fileSystemClass.getDeclaredMethod(methodName, File.class);
-            getLastModifiedTimeMethod.setAccessible(true);
+            //invokes metacircularly the getLength
+            //method to obtain its length
+            final Method getLengthMethod = fileSystemClass.getDeclaredMethod(methodName, File.class);
+            getLengthMethod.setAccessible(true);
             final File f = new File(filePath);
             try {
-                final long time = ((Long) getLastModifiedTimeMethod.invoke(fileSystem, f)).longValue();
-                this.toPush = state.getCalculator().valLong(time);
+                final long length = ((Long) getLengthMethod.invoke(fileSystem, f)).longValue();
+                this.toPush = state.getCalculator().valLong(length);
             } catch (InvocationTargetException e) {
                 final String cause = internalClassName(e.getCause().getClass().getName());
                 throwNew(state, cause);

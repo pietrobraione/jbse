@@ -443,6 +443,8 @@ public final class Signatures {
         new Signature(JAVA_UNIXFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + INT, "getBooleanAttributes0");
     public static final Signature JAVA_UNIXFILESYSTEM_GETLASTMODIFIEDTIME = 
         new Signature(JAVA_UNIXFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + LONG, "getLastModifiedTime");
+    public static final Signature JAVA_UNIXFILESYSTEM_GETLENGTH = 
+        new Signature(JAVA_UNIXFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + LONG, "getLength");
     public static final Signature JAVA_UNIXFILESYSTEM_INITIDS = 
         new Signature(JAVA_UNIXFILESYSTEM, "()" + VOID, "initIDs");
     public static final Signature JAVA_UNIXFILESYSTEM_LIST = 
@@ -453,6 +455,8 @@ public final class Signatures {
         new Signature(JAVA_WINNTFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + INT, "getBooleanAttributes");
     public static final Signature JAVA_WINNTFILESYSTEM_GETLASTMODIFIEDTIME = 
         new Signature(JAVA_WINNTFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + LONG, "getLastModifiedTime");
+    public static final Signature JAVA_WINNTFILESYSTEM_GETLENGTH = 
+        new Signature(JAVA_WINNTFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + LONG, "getLength");
     public static final Signature JAVA_WINNTFILESYSTEM_INITIDS = 
         new Signature(JAVA_WINNTFILESYSTEM, "()" + VOID, "initIDs");
     public static final Signature JAVA_WINNTFILESYSTEM_LIST = 

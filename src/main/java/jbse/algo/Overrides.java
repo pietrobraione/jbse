@@ -87,6 +87,7 @@ public final class Overrides {
     public static final String ALGO_JAVA_XFILESYSTEM_CANONICALIZE0                 = internalClassName(jbse.algo.meta.Algo_JAVA_XFILESYSTEM_CANONICALIZE0.class.getName());
     public static final String ALGO_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX         = internalClassName(jbse.algo.meta.Algo_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX.class.getName());
     public static final String ALGO_JAVA_XFILESYSTEM_GETLASTMODIFIEDTIME           = internalClassName(jbse.algo.meta.Algo_JAVA_XFILESYSTEM_GETLASTMODIFIEDTIME.class.getName());
+    public static final String ALGO_JAVA_XFILESYSTEM_GETLENGTH                     = internalClassName(jbse.algo.meta.Algo_JAVA_XFILESYSTEM_GETLENGTH.class.getName());
     public static final String ALGO_JAVA_XFILESYSTEM_LIST                          = internalClassName(jbse.algo.meta.Algo_JAVA_XFILESYSTEM_LIST.class.getName());
     public static final String ALGO_JAVA_ZIPFILE_FREEENTRY                         = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_FREEENTRY.class.getName());
     public static final String ALGO_JAVA_ZIPFILE_GETENTRY                          = internalClassName(jbse.algo.meta.Algo_JAVA_ZIPFILE_GETENTRY.class.getName());
