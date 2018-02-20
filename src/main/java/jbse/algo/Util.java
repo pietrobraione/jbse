@@ -247,8 +247,7 @@ public class Util {
             state.unwindStack(excReference);
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException e) {
             throw new ClasspathException(e);
-        } catch (InvalidInputException | InvalidTypeException | InvalidIndexException | 
-                 InvalidProgramCounterException e) {
+        } catch (InvalidInputException | InvalidIndexException | InvalidProgramCounterException e) {
             //there is not much we can do if this happens
             failExecution(e);
         }
@@ -282,8 +281,7 @@ public class Util {
             throwObject(state, excReference);
         } catch (ClassFileNotFoundException | ClassFileIllFormedException e) {
             throw new ClasspathException(e);
-        } catch (ClassFileNotAccessibleException | InvalidInputException | 
-                 InvalidTypeException e) {
+        } catch (ClassFileNotAccessibleException | InvalidInputException e) {
             //there is not much we can do if this happens
             failExecution(e);
         }
@@ -397,7 +395,7 @@ public class Util {
         } catch (HeapMemoryExhaustedException e) {
             //just gives up
             return;
-        } catch (ClassCastException | 
+        } catch (ClassCastException | InvalidInputException |
                  InvalidTypeException | InvalidOperandException | 
                  FastArrayAccessNotAllowedException e) {
             //this should not happen (and if happens there is not much we can do)

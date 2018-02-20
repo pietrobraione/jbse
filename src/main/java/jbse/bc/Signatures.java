@@ -48,6 +48,7 @@ public final class Signatures {
     public static final String JAVA_CLONEABLE                = "java/lang/Cloneable";
     public static final String JAVA_COMPARABLE               = "java/lang/Comparable";
     public static final String JAVA_CONSTRUCTOR              = "java/lang/reflect/Constructor";
+    public static final String JAVA_CRC32                    = "java/util/zip/CRC32";
     public static final String JAVA_DIRECTBYTEBUFFER         = "java/nio/DirectByteBuffer";
     public static final String JAVA_DIRECTLONGBUFFERU        = "java/nio/DirectLongBufferU";
     public static final String JAVA_DIRECTMETHODHANDLE       = "java/lang/invoke/DirectMethodHandle";
@@ -247,6 +248,8 @@ public final class Signatures {
         new Signature(JAVA_CLASSLOADER_NATIVELIBRARY, "(" + REFERENCE + JAVA_STRING + TYPEEND + BOOLEAN + ")" + VOID, "load");
     public static final Signature JAVA_CLASSLOADER_REGISTERNATIVES =
         new Signature(JAVA_CLASSLOADER, "()" + VOID, "registerNatives");
+    public static final Signature JAVA_CRC32_UPDATEBYTES =
+        new Signature(JAVA_CRC32, "(" + INT + ARRAYOF + BYTE + INT + INT +")" + INT, "updateBytes");
     public static final Signature JAVA_DIRECTBYTEBUFFER_INIT =
         new Signature(JAVA_DIRECTBYTEBUFFER, "(" + LONG + INT + ")" + VOID, "<init>");
     public static final Signature JAVA_DOUBLE_DOUBLETORAWLONGBITS =
@@ -416,6 +419,8 @@ public final class Signatures {
         new Signature(JAVA_THREAD, "(" + REFERENCE + JAVA_THREADGROUP + TYPEEND + REFERENCE + JAVA_STRING + TYPEEND + ")" + VOID, "<init>");
     public static final Signature JAVA_THREAD_ISALIVE =
         new Signature(JAVA_THREAD, "()" + BOOLEAN, "isAlive");
+    public static final Signature JAVA_THREAD_ISINTERRUPTED =
+        new Signature(JAVA_THREAD, "(" + BOOLEAN + ")" + BOOLEAN, "isInterrupted");
     public static final Signature JAVA_THREAD_REGISTERNATIVES =
         new Signature(JAVA_THREAD, "()" + VOID, "registerNatives");
     public static final Signature JAVA_THREAD_SETPRIORITY0 =

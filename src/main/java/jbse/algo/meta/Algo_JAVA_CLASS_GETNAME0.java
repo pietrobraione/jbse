@@ -48,7 +48,7 @@ public final class Algo_JAVA_CLASS_GETNAME0 extends Algo_INVOKEMETA_Nonbranching
             final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject(javaClassRef);
             if (clazz == null) {
                 //this should never happen
-                failExecution("The 'this' parameter to java.lang.Class.getName0v method is symbolic and unresolved.");
+                failExecution("The 'this' parameter to java.lang.Class.getName0 method is symbolic and unresolved.");
             }
             final String className = binaryClassName(clazz.representedClass().getClassName()); //note that binaryClassName(x) == x if x is the canonical name of a primitive type
             state.ensureStringLiteral(className);

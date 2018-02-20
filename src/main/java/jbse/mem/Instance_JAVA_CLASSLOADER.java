@@ -18,7 +18,7 @@ public final class Instance_JAVA_CLASSLOADER extends Instance {
     throws InvalidTypeException {
         super(calc, classFile, origin, epoch, numOfStaticFields, fieldSignatures);
         if (classFile == null) {
-            throw new InvalidTypeException("Attempted creation of an instance of java.lang.Class with type null.");
+            throw new InvalidTypeException("Attempted creation of an instance of a subclass of java.lang.ClassLoader with type null.");
         }
 
         this.classLoaderIdentifier = classLoaderIdentifier;

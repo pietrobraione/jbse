@@ -23,7 +23,6 @@ import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.ReferenceConcrete;
-import jbse.val.exc.InvalidTypeException;
 
 /**
  * {@link Algorithm} managing the "create new object"
@@ -77,7 +76,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             } catch (ClassFileNotAccessibleException e) {
                 throwNew(state, ILLEGAL_ACCESS_ERROR);
                 exitFromAlgorithm();
-            } catch (ClassFileIllFormedException | InvalidTypeException e) {
+            } catch (ClassFileIllFormedException e) {
                 throwVerifyError(state);
                 exitFromAlgorithm();
             } catch (ThreadStackEmptyException e) {

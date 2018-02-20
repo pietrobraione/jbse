@@ -4,14 +4,13 @@ import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_CLASS_CLASSLOADER;
-import static jbse.bc.Signatures.JAVA_CLASS_NAME;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER;
 import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_STRING_HASH;
 import static jbse.bc.Signatures.JAVA_STRING_VALUE;
+import static jbse.bc.Signatures.JAVA_THREAD;
 import static jbse.bc.Signatures.JAVA_THROWABLE;
 import static jbse.common.Type.parametersNumber;
-import static jbse.common.Type.binaryClassName;
 import static jbse.common.Type.isPrimitiveCanonicalName;
 import static jbse.common.Util.unsafe;
 
@@ -1246,13 +1245,16 @@ public final class State implements Cloneable {
      * @param classFile the {@link ClassFile} for the class of the new object.
      * @return a {@link ReferenceConcrete} to the newly created object.
      * @throws HeapMemoryExhaustedException if the heap is full.
-     * @throws InvalidTypeException  if {@code classFile} is invalid.
+     * @throws InvalidInputException  if {@code classFile} is invalid.
      */
     public ReferenceConcrete createInstance(ClassFile classFile) 
-    throws HeapMemoryExhaustedException, InvalidTypeException {
+    throws HeapMemoryExhaustedException, InvalidInputException {
+        if (classFile == null) {
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".createInstance with null ClassFile classFile parameter.");
+        }
         if (JAVA_CLASS.equals(classFile.getClassName())) {
             //use createInstance_JAVA_CLASS instead
-            throw new InvalidTypeException("Cannot use method " + getClass().getName() + ".createInstance to create an instance of java.lang.Class.");
+            throw new InvalidInputException("Cannot use method " + getClass().getName() + ".createInstance to create an instance of java.lang.Class.");
         }
         final Instance myObj = doCreateInstance(classFile);
         final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(myObj));
@@ -1271,12 +1273,15 @@ public final class State implements Cloneable {
      * 
      * @param classFile the {@link ClassFile} for the class of the new object.
      * @return a {@link ReferenceConcrete} to the newly created object.
-     * @throws InvalidTypeException if {@code classFile} is invalid.
+     * @throws InvalidInputException if {@code classFile} is invalid.
      */
-    public ReferenceConcrete createInstanceSurely(ClassFile classFile) throws InvalidTypeException {
-        if (JAVA_CLASS.equals(classFile.getClassName()) || JAVA_CLASSLOADER.equals(classFile.getClassName())) {
+    public ReferenceConcrete createInstanceSurely(ClassFile classFile) throws InvalidInputException {
+        if (classFile == null) {
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".createInstanceSurely with null ClassFile classFile parameter.");
+        }
+        if (JAVA_CLASS.equals(classFile.getClassName()) || JAVA_CLASSLOADER.equals(classFile.getClassName()) || JAVA_THREAD.equals(classFile.getClassName())) {
             //cannot be used for that
-            throw new InvalidTypeException("Cannot use method " + getClass().getName() + ".createInstanceSurely to create an instance of java.lang.Class or java.lang.Classloader.");
+            throw new InvalidInputException("Cannot use method " + getClass().getName() + ".createInstanceSurely to create an instance of java.lang.Class or java.lang.Classloader or java.lang.Thread.");
         }
         final Instance myObj = doCreateInstance(classFile);
         final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNewSurely(myObj));
@@ -1284,28 +1289,30 @@ public final class State implements Cloneable {
         return retVal;
     }
     
-    private Instance doCreateInstance(ClassFile classFile) throws InvalidTypeException {
-        if (JAVA_CLASS.equals(classFile.getClassName())) {
-            //use createInstance_JAVA_CLASS instead
-            throw new RuntimeException(); //TODO better exception
-        }
+    private Instance doCreateInstance(ClassFile classFile) {
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
         final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
         final ClassFile cf_JAVA_CLASSLOADER;
+        final ClassFile cf_JAVA_THREAD;
         try {
             cf_JAVA_CLASSLOADER = this.classHierarchy.loadCreateClass(JAVA_CLASSLOADER);
+            cf_JAVA_THREAD = this.classHierarchy.loadCreateClass(JAVA_THREAD);
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
                  InvalidInputException | ClassFileNotAccessibleException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-        if (JAVA_CLASSLOADER.equals(classFile.getClassName())) {
-            System.out.println("Gotcha");
-        }
-        if (this.classHierarchy.isSubclass(classFile, cf_JAVA_CLASSLOADER)) {
-            return new Instance_JAVA_CLASSLOADER(this.calc, classFile, null, Epoch.EPOCH_AFTER_START, this.nextClassLoaderIdentifier++, numOfStaticFields, fieldsSignatures);
-        } else {
-            return new Instance(this.calc, classFile, null, Epoch.EPOCH_AFTER_START, numOfStaticFields, fieldsSignatures);
+        try {
+            if (this.classHierarchy.isSubclass(classFile, cf_JAVA_CLASSLOADER)) {
+                return new Instance_JAVA_CLASSLOADER(this.calc, classFile, null, Epoch.EPOCH_AFTER_START, this.nextClassLoaderIdentifier++, numOfStaticFields, fieldsSignatures);
+            } else if (this.classHierarchy.isSubclass(classFile, cf_JAVA_THREAD)) {
+                return new Instance_JAVA_THREAD(this.calc, classFile, null, Epoch.EPOCH_AFTER_START, numOfStaticFields, fieldsSignatures);
+            } else {
+                return new Instance(this.calc, classFile, null, Epoch.EPOCH_AFTER_START, numOfStaticFields, fieldsSignatures);
+            }
+        } catch (InvalidTypeException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
         }
     }
 
@@ -1332,22 +1339,27 @@ public final class State implements Cloneable {
             final Instance myObj = new Instance_JAVA_CLASS(this.calc, cf_JAVA_CLASS, null, Epoch.EPOCH_AFTER_START, representedClass, numOfStaticFields, fieldsSignatures);
             final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(myObj));
             
-            //initializes the fields of the new instance
+            //initializes the fields of the new instance: The only
+            //field we need to init is classLoader, see
+            //hotspot:src/share/vm/classfile/javaClasses.cpp:572 
+            //(function java_lang_Class::create_mirror), where the
+            //only place where a field of the java.lang.Object is
+            //set is at line 630. There are also some injected fields,
+            //that can be found at
+            //hotspot:src/share/vm/classfile/javaClasses.cpp:218
+            //among which we have the represented class, the list of the 
+            //static fields of the represented class, and the protection domain.
+            //We chose to store the represented class as a meta-level field
+            //rather than a base-level field as done by Hotspot, so we can
+            //represent the missing stuff as, e.g., the protection domain 
+            //the same way.
             
             //hash code
             initDefaultHashCodeConcrete(myObj, retVal);
             
-            //name
-            final String classNameBinary = binaryClassName(representedClass.getClassName());
-            ensureStringLiteral(classNameBinary);
-            final ReferenceConcrete classNameString = referenceToStringLiteral(classNameBinary);
-            myObj.setFieldValue(JAVA_CLASS_NAME, classNameString);
-            
             //class loader
             final int classLoader = (representedClass.isAnonymousUnregistered() ? CLASSLOADER_BOOT : representedClass.getDefiningClassLoader()); //Instance_JAVA_CLASS for anonymous classfiles have the classloader field set to null
             myObj.setFieldValue(JAVA_CLASS_CLASSLOADER, this.classLoaders.get(classLoader));
-            
-            //TODO more fields
             
             return retVal;
         } catch (InvalidTypeException e) {
@@ -1565,7 +1577,7 @@ public final class State implements Cloneable {
             i.setFieldValue(JAVA_STRING_VALUE,  value);
             i.setFieldValue(JAVA_STRING_HASH,   hash);
             this.stringLiterals.put(stringLit, retVal);
-        } catch (InvalidTypeException e) {
+        } catch (InvalidInputException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }

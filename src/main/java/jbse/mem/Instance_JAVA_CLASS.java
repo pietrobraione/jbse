@@ -29,7 +29,7 @@ public final class Instance_JAVA_CLASS extends Instance {
      * Returns the class this {@code Instance}
      * of {@code java.lang.Class} represents.
      * 
-     * @return a {@code ClassFile}, the  
+     * @return a {@link ClassFile}, the  
      * represented class.
      */
     public ClassFile representedClass() {

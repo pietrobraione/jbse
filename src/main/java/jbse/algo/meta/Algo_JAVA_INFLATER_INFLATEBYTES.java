@@ -107,7 +107,7 @@ public final class Algo_JAVA_INFLATER_INFLATEBYTES extends Algo_INVOKEMETA_Nonbr
             final int len = ((Integer) ((Simplex) _len).getActualValue()).intValue();
             //TODO what if len is out of range?
                         
-            //invokes metacircularly the read method
+            //invokes metacircularly the inflateBytes method
             makeInflater(state, addr);
             this.inflatedBytes = new byte[len];
             final Method method = Inflater.class.getDeclaredMethod("inflateBytes", long.class, byte[].class, int.class, int.class);
