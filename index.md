@@ -14,23 +14,23 @@ Determining whether a control-flow path in the program can be covered by some in
 
 JBSE also has limitations on its own. JBSE aims to implement as faithfully as possible the [Java Virtual Machine specification v.8](http://docs.oracle.com/javase/specs/jvms/se8/html/index.html), but we are not there yet. JBSE cannot execute the invokedynamic bytecode (read: no lambdas), nor it can detect and execute default methods in interfaces. JBSE does not even implement multithreading and synchronization to its full extent: You can dynamically create threads other than the initial one, but JBSE will not schedule them - in other words, JBSE is single-threaded. Also lacking are most native methods in the JRE standard library, most reflective methods, security and dynamic class loading. Some of these limitations stem from the sheer amount of work that is necessary to do for implementing the desired features, some stem from the fact that doing a symbolic analysis of a full-featured Java program is too hard computationally.
 
+### More information
+A user and developer manual is in progress at [this Gitbook link](https://pietrobraione.gitbooks.io/the-jbse-manual/) but it is far from being complete. In the meantime you can refer to the [README.md](https://github.com/pietrobraione/jbse/blob/master/README.md) file and the [examples project](https://github.com/pietrobraione/jbse-examples) for learning how to use JBSE, and to the publications section at the [homepage of Pietro Braione](https://sites.google.com/site/pietrobraione/home) for an overview of the JBSE techniques and internals.
+
 ### Authors and Contributors
 The contributions to JBSE extend over a very long period. The current maintainer of JBSE is Pietro Braione (@pietrobraione), with help from Giovanni Denaro, who also contributed the rewriting engine. Marco Gaboardi wrote the initial implementation of JBSE. Diego Piazza contributed to the development of the SMTLIB2 interface. Esther Turati worked on the JUnit test suite generator. Last but not least, Andrea Mattavelli restructured the project to be built with Maven, and Andrea Aquino contributed patches to existing code.
 
 ### Acknowledging our work
 If you find JBSE useful and you want to cite it in your publication you can refer these papers:
 
-P. Braione, G. Denaro, M. Pezzè. *Symbolic execution of programs with heap inputs*. In Proceedings of the 10th Joint Meeting of the European Software Engineering Conference and the ACM SIGSOFT Symposium on the Foundations of Software Engineering (ESEC/FSE 2015), pp 602-613. [doi:10.1145/2786805.2786842](http://dx.doi.org/10.1145/2786805.2786842).
+P. Braione, G. Denaro, M. Pezzè. *Symbolic execution of programs with heap inputs*. In Proceedings of the 10th Joint Meeting of the European Software Engineering Conference and the ACM SIGSOFT Symposium on the Foundations of Software Engineering (ESEC/FSE 2015), pp 602-613. [doi:10.1145/2786805.2786842](https://doi.org/10.1145/2786805.2786842).
 
-P. Braione, G. Denaro, M. Pezzè. *Enhancing Symbolic Execution with Built-In Term Rewriting and Constrained Lazy Initialization*. In Proceedings of the 9th Joint Meeting of the European Software Engineering Conference and the ACM SIGSOFT Symposium on the Foundations of Software Engineering (ESEC/FSE 2013), pp 411-421. [doi:10.1145/2491411.2491433](http://dx.doi.org/10.1145/2491411.2491433).
+P. Braione, G. Denaro, M. Pezzè. *Enhancing Symbolic Execution with Built-In Term Rewriting and Constrained Lazy Initialization*. In Proceedings of the 9th Joint Meeting of the European Software Engineering Conference and the ACM SIGSOFT Symposium on the Foundations of Software Engineering (ESEC/FSE 2013), pp 411-421. [doi:10.1145/2491411.2491433](https://doi.org/10.1145/2491411.2491433).
 
 Of course we invite you to star the project on Github. We also invite you to give a look at [SUSHI](https://github.com/pietrobraione/sushi), out automatic test generator for Java software based on JBSE and [EvoSuite](http://www.evosuite.org/).
 
 ### Disclaimer
 JBSE is a research prototype offered as-is, and we disclaim any expressed or implied warranty on its correctness, quality, or even fitness for a particular purpose. In no event shall its authors and the organization they belong to be considered liable for any direct or consequent damage that may derive from its use, for any definition of liability. See the [license](https://github.com/pietrobraione/jbse/blob/master/LICENSE.txt) for more information.
 
-### More information
-A user manual is on the way but not yet available. In the meantime you can refer to the [README.md](https://github.com/pietrobraione/jbse/blob/master/README.md) file and the [examples project](https://github.com/pietrobraione/jbse-examples) for learning how to use JBSE, and to the publications section at the [homepage of Pietro Braione](https://sites.google.com/site/pietrobraione/home) for an overview of the JBSE techniques and internals.
-
 ### Support or Contact
-For any issue contact Pietro Braione at *name*.*surname*@unimib.it.
+For any issue contact Pietro Braione at *name*.*surname*@unimib.it or open an issue [here](https://github.com/pietrobraione/jbse/issues).
