@@ -1,7 +1,9 @@
 package jbse.apps.run;
 
 import static jbse.common.Type.binaryClassName;
+import static jbse.common.Type.binaryPrimitiveClassNameToInternal;
 import static jbse.common.Type.internalClassName;
+import static jbse.common.Type.isPrimitiveBinaryClassName;
 
 import java.io.File;
 import java.io.IOException;
@@ -256,7 +258,14 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             if (object == null) {
                 return null;
             }
-            return internalClassName(object.referenceType().name());
+            final StringBuilder buf = new StringBuilder();
+            String name = object.referenceType().name();
+            while (name.endsWith("[]")) {
+            		buf.append("[");
+            		name = name.substring(0, name.length() - 2);
+            }
+            buf.append(isPrimitiveBinaryClassName(name) ? binaryPrimitiveClassNameToInternal(name) : internalClassName(name));
+            return buf.toString();
         }
         
         @Override
