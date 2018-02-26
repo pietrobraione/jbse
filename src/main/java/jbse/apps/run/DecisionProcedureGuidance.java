@@ -1,5 +1,7 @@
 package jbse.apps.run;
 
+import static jbse.common.Type.className;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.SortedSet;
@@ -7,7 +9,6 @@ import java.util.SortedSet;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileException;
-import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureAlgorithms;
@@ -266,7 +267,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     private void updateExpansionBackdoor(State state, ReferenceSymbolic refToLoad) throws GuidanceException {
-        final String refType = Type.getReferenceClassName(refToLoad.getStaticType());
+        final String refType = className(refToLoad.getStaticType());
         final String objType = this.jvm.typeOfObject(refToLoad.getOrigin());
         if (objType != null && !refType.equals(objType)) {
             state.getClassHierarchy().addToExpansionBackdoor(refType, objType);
