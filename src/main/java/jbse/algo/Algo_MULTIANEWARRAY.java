@@ -6,6 +6,7 @@ import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.MULTIANEWARRAY_OFFSET;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 
 import java.util.function.Supplier;
@@ -14,6 +15,7 @@ import jbse.bc.ClassFile;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -70,6 +72,9 @@ final class Algo_MULTIANEWARRAY extends Algo_XNEWARRAY<BytecodeData_2CLUB> {
         } catch (ClassFileNotFoundException e) {
             //TODO this exception should wrap a ClassNotFoundException
             throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+            exitFromAlgorithm();
+        } catch (IncompatibleClassFileException e) {
+            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
             exitFromAlgorithm();
         } catch (ClassFileNotAccessibleException e) {
             throwNew(state, ILLEGAL_ACCESS_ERROR);

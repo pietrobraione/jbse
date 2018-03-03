@@ -8,6 +8,7 @@ import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import static jbse.bc.Signatures.CLASS_NOT_FOUND_EXCEPTION;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.common.Type.INT;
 import static jbse.common.Type.isPrimitive;
@@ -30,6 +31,7 @@ import jbse.bc.ClassFile;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
@@ -171,6 +173,9 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                         //TODO the next three catch blocks should disappear, see comments on removing exceptions in jbse.dec.DecisionProcedureAlgorithms.doResolveReference
                         } catch (ClassFileNotFoundException exc) {
                             throwNew(state, CLASS_NOT_FOUND_EXCEPTION);
+                            exitFromAlgorithm();
+                        } catch (IncompatibleClassFileException exc) {
+                            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
                             exitFromAlgorithm();
                         } catch (ClassFileNotAccessibleException exc) {
                             throwNew(state, ILLEGAL_ACCESS_ERROR);

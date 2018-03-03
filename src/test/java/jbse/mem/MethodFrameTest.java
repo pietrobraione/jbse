@@ -17,6 +17,7 @@ import jbse.bc.Signature;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
@@ -42,7 +43,7 @@ public class MethodFrameTest {
     }
 
     @Test
-    public void testFrameCurrentMethodSignature() throws ClassFileNotFoundException, ClassFileIllFormedException, InvalidInputException, ClassFileNotAccessibleException, PleaseLoadClassException, MethodNotFoundException, MethodCodeNotFoundException {
+    public void testFrameCurrentMethodSignature() throws ClassFileNotFoundException, ClassFileIllFormedException, InvalidInputException, IncompatibleClassFileException, ClassFileNotAccessibleException, PleaseLoadClassException, MethodNotFoundException, MethodCodeNotFoundException {
         final String className = "tsafe/engine/TsafeEngine";
         final ClassFile cf = hier.loadCreateClass(CLASSLOADER_APP, className, true);
         final Signature sigMethod = new Signature(className, "()V", "start");
@@ -51,7 +52,7 @@ public class MethodFrameTest {
     }
 
     @Test
-    public void testFrameLocalVariables1() throws ClassFileNotFoundException, ClassFileIllFormedException, InvalidInputException, ClassFileNotAccessibleException, PleaseLoadClassException, MethodNotFoundException, MethodCodeNotFoundException, InvalidSlotException {
+    public void testFrameLocalVariables1() throws ClassFileNotFoundException, ClassFileIllFormedException, InvalidInputException, IncompatibleClassFileException, ClassFileNotAccessibleException, PleaseLoadClassException, MethodNotFoundException, MethodCodeNotFoundException, InvalidSlotException {
         final String className = "tsafe/engine/TsafeEngine";
         final ClassFile cf = hier.loadCreateClass(CLASSLOADER_APP, className, true);
         final Signature sigMethod = new Signature(className, "()V", "start");
@@ -62,7 +63,7 @@ public class MethodFrameTest {
     }
 
     @Test
-    public void testFrameLocalVariables2() throws ClassFileNotFoundException, ClassFileIllFormedException, InvalidInputException, ClassFileNotAccessibleException, PleaseLoadClassException, MethodNotFoundException, MethodCodeNotFoundException, InvalidSlotException {
+    public void testFrameLocalVariables2() throws ClassFileNotFoundException, ClassFileIllFormedException, InvalidInputException, IncompatibleClassFileException, ClassFileNotAccessibleException, PleaseLoadClassException, MethodNotFoundException, MethodCodeNotFoundException, InvalidSlotException {
         final String className = "tsafe/engine/TsafeEngine";
         final ClassFile cf = hier.loadCreateClass(CLASSLOADER_APP, className, true);
         final Signature sigMethod = new Signature(className, "()V", "start");
@@ -73,7 +74,7 @@ public class MethodFrameTest {
     }
 
     @Test
-    public void testFrameClone() throws ClassFileNotFoundException, ClassFileIllFormedException, InvalidInputException, ClassFileNotAccessibleException, PleaseLoadClassException, MethodNotFoundException, MethodCodeNotFoundException, InvalidSlotException {
+    public void testFrameClone() throws ClassFileNotFoundException, ClassFileIllFormedException, InvalidInputException, IncompatibleClassFileException, ClassFileNotAccessibleException, PleaseLoadClassException, MethodNotFoundException, MethodCodeNotFoundException, InvalidSlotException {
         final String className = "tsafe/engine/TsafeEngine";
         final ClassFile cf = hier.loadCreateClass(CLASSLOADER_APP, className, true);
         final Signature sigMethod = new Signature(className, "()V", "start");

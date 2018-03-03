@@ -16,6 +16,7 @@ import jbse.bc.Signature;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
@@ -653,6 +654,11 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
          *         reference and the classfile for
          *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
          *         or for the class name of one of its possibile expansions is ill-formed.
+         * @throws IncompatibleClassFileException if {@code valToLoad} is a symbolic 
+         *         reference and the superclass of class
+         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+         *         is resolved to an interface class, or any superinterface is resolved
+         *         to an object class.
          * @throws ClassFileNotAccessibleException if {@code valToLoad} is a symbolic 
          *         reference and the classfile for
          *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
@@ -660,7 +666,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
          *         one of its superclass/superinterfaces.
 	 */
 	public Outcome resolve_XLOAD_GETX(State state, Value valToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result) 
-	throws InvalidInputException, DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException {
+	throws InvalidInputException, DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
+	IncompatibleClassFileException, ClassFileNotAccessibleException {
 	    if (state == null || valToLoad == null || result == null) {
 	        throw new InvalidInputException("resolve_XLOAD_GETX invoked with a null parameter.");
 	    }
@@ -692,6 +699,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
          * @throws ClassFileIllFormedException if the classfile for
          *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
          *         or for the class name of one of its possibile expansions is ill-formed.
+         * @throws IncompatibleClassFileException if the superclass of
+         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or of one of its possible expansion is resolved to an interface class,
+         *         or any superinterface is resolved to an object class.
          * @throws ClassFileNotAccessibleException if the classfile for
          *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
          *         or for the class name of one of its possibile expansions cannot access
@@ -699,7 +710,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @see {@link #resolve_XLOAD_GETX(State, Value, SortedSet) resolve_XLOAD_GETX}.
 	 */
 	protected Outcome resolve_XLOAD_GETX_Unresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)
-	throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException {
+	throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
+	IncompatibleClassFileException, ClassFileNotAccessibleException {
 	    try {
 	        final boolean partialReferenceResolution = 
 	            doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFactory_XLOAD_GETX(), result);
@@ -744,6 +756,11 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
          *         reference and the classfile for
          *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
          *         or for the class name of one of its possibile expansions is ill-formed.
+         * @throws IncompatibleClassFileException if {@code valToLoad} is a symbolic 
+         *         reference and the superclass of class
+         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+         *         is resolved to an interface class, or any superinterface is resolved
+         *         to an object class.
          * @throws ClassFileNotAccessibleException if {@code valToLoad} is a symbolic 
          *         reference and the classfile for
          *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
@@ -752,7 +769,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 */
 	//TODO should be final?
 	public Outcome resolve_XALOAD(State state, Expression accessExpression, Value valToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result)
-	throws InvalidInputException, DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException {
+	throws InvalidInputException, DecisionException, ClassFileNotFoundException, 
+	ClassFileIllFormedException, IncompatibleClassFileException, ClassFileNotAccessibleException {
 		if (state == null || result == null) {
 			throw new InvalidInputException("resolve_XALOAD invoked with a null parameter.");
 		}
@@ -880,6 +898,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws ClassFileIllFormedException when the classfile for
          *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
          *         or for the class name of one of its possibile expansions is ill-formed.
+         * @throws IncompatibleClassFileException when the superclass of class
+         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+         *         is resolved to an interface class, or any superinterface is resolved
+         *         to an object class.
          * @throws ClassFileNotAccessibleException when the classfile for
          *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
          *         or for the class name of one of its possibile expansions cannot access
@@ -887,7 +909,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet) resolve_XALOAD}.
 	 */
 	protected Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, Reference arrayReference, SortedSet<DecisionAlternative_XALOAD> result)
-	throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException {
+	throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
+	IncompatibleClassFileException, ClassFileNotAccessibleException {
 	    try {
 	        final boolean accessConcrete = (accessExpression == null);
 	        final boolean shouldRefine;
@@ -944,7 +967,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	boolean doResolveReference(State state, ReferenceSymbolic refToResolve, 
 	DecisionAlternativeReferenceFactory<DA, DE, DN> factory, SortedSet<D> result) 
 	throws InvalidInputException, DecisionException, ClassFileNotFoundException, 
-	ClassFileIllFormedException, ClassFileNotAccessibleException {
+	ClassFileIllFormedException, IncompatibleClassFileException, ClassFileNotAccessibleException {
 		int branchCounter = result.size() + 1;
 		final ClassHierarchy hier = state.getClassHierarchy();
 		
@@ -1077,20 +1100,29 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *         initialization, with {@code ref}.
 	 *         If {@code ref} does not denote a reference or array type, the method 
 	 *         returns {@code null}.
-         * @throws InvalidInputException if one of the candidate subclass names in {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
+         * @throws InvalidInputException if one of the candidate subclass names 
+         *         for {@code refClass} in {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
          *         expansion backdoor is invalid.
-	 * @throws ClassFileNotFoundException if any of the candidate subclass names in {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
+	 * @throws ClassFileNotFoundException if any of the candidate subclass names 
+	 *         for {@code refClass} in {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
          *         expansion backdoor does not have a classfile neither 
          *         in the bootstrap, nor in the 
          *         extension, nor in the application classpath.
 	 *         names does not denote a classfile in the classpath.
-         * @throws ClassFileIllFormedException if any of the candidate subclass names in {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
+         * @throws ClassFileIllFormedException if any of the candidate subclass names 
+         *         for {@code refClass} in {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
          *         expansion backdoor has an ill-formed classfile.
-	 * @throws ClassFileNotAccessibleException if the classfile of any of the candidate subclass names in {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
+         * @throws IncompatibleClassFileException if the superclass of any of the candidate subclasses 
+         *         for {@code refClass} in {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
+         *         expansion backdoor is resolved to an interface class, or any superinterface is resolved
+         *         to an object class.
+	 * @throws ClassFileNotAccessibleException if the classfile of any of the candidate subclass names 
+	 *         for {@code refClass} in {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
          *         expansion backdoor cannot access one of its superclasses/superinterfaces.
 	 */
 	private static Set<ClassFile> getPossibleExpansions(State state, ClassFile refClass) 
-	throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException {
+	throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, 
+	IncompatibleClassFileException, ClassFileNotAccessibleException {
 	    if (!refClass.isReference() && !refClass.isArray()) {
 	        return null;
 	    }

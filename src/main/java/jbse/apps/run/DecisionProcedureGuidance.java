@@ -11,6 +11,7 @@ import jbse.bc.Signature;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.common.Type;
@@ -407,7 +408,8 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 
     @Override
     protected Outcome resolve_XLOAD_GETX_Unresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)
-    throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException {
+    throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
+    IncompatibleClassFileException, ClassFileNotAccessibleException {
         if (this.failedConcrete) {
             throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
         }
@@ -446,7 +448,8 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
 
     @Override
     protected Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result)
-    throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException {
+    throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
+    IncompatibleClassFileException, ClassFileNotAccessibleException {
         if (this.failedConcrete) {
             throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
         }

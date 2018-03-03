@@ -24,6 +24,7 @@ import jbse.bc.ClassFile;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -98,7 +99,8 @@ public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEW
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException e) {
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
+                 IncompatibleClassFileException | ClassFileNotAccessibleException e) {
             //this should never happen
             failExecution(e);
         }

@@ -22,6 +22,7 @@ import jbse.bc.ClassFile;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.mem.Array;
@@ -103,7 +104,8 @@ public final class Algo_JAVA_ZIPFILE_GETENTRYBYTES extends Algo_INVOKEMETA_Nonbr
             } catch (HeapMemoryExhaustedException e) {
                 throwNew(state, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
-            } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException | 
+            } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
+                     IncompatibleClassFileException | ClassFileNotAccessibleException | 
                      ClassCastException | FastArrayAccessNotAllowedException e) {
                 //this should never happen
                 failExecution(e);

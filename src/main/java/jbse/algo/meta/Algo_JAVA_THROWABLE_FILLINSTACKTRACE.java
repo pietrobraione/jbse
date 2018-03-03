@@ -20,6 +20,7 @@ import jbse.bc.ClassFile;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
@@ -54,7 +55,7 @@ public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE extends Algo_INVOKEMETA_
             throwNew(state, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
-                 ClassFileNotAccessibleException e) {
+                 IncompatibleClassFileException | ClassFileNotAccessibleException e) {
             //this should never happen
             failExecution(e);
         }

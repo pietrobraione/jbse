@@ -6,6 +6,7 @@ import static jbse.algo.Util.invokeClassLoaderLoadClass;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.JAVA_ACCESSIBLEOBJECT_OVERRIDE;
 import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_CONSTRUCTOR;
@@ -43,6 +44,7 @@ import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.PleaseLoadClassException;
 import jbse.common.exc.ClasspathException;
@@ -140,7 +142,8 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
             } catch (HeapMemoryExhaustedException e) {
                 throwNew(state, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
-            } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException e) {
+            } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
+                     IncompatibleClassFileException | ClassFileNotAccessibleException e) {
                 throw new ClasspathException(e);
             }
 
@@ -161,7 +164,8 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                     } catch (HeapMemoryExhaustedException e) {
                         throwNew(state, OUT_OF_MEMORY_ERROR);
                         exitFromAlgorithm();
-                    } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException e) {
+                    } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
+                             IncompatibleClassFileException | ClassFileNotAccessibleException e) {
                         throw new ClasspathException(e);
                     } catch (InvalidOperandException | FastArrayAccessNotAllowedException e) {
                         //this should never happen
@@ -181,7 +185,8 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                     ClassFile cf_arraOfJAVA_CLASS = null; //to keep the compiler happy
                     try {
                         cf_arraOfJAVA_CLASS = hier.loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_CLASS + TYPEEND);
-                    } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException e) {
+                    } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
+                             IncompatibleClassFileException | ClassFileNotAccessibleException e) {
                         throw new ClasspathException(e);
                     }
 
@@ -218,6 +223,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                     } catch (PleaseLoadClassException e) {
                         invokeClassLoaderLoadClass(state, e);
                         exitFromAlgorithm();
+                    } catch (HeapMemoryExhaustedException e) {
+                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                        exitFromAlgorithm();
                     } catch (ClassFileNotFoundException e) {
                         //TODO this exception should wrap a ClassNotFoundException
                         throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
@@ -225,8 +233,8 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                     } catch (ClassFileNotAccessibleException e) {
                         throwNew(state, ILLEGAL_ACCESS_ERROR);
                         exitFromAlgorithm();
-                    } catch (HeapMemoryExhaustedException e) {
-                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                    } catch (IncompatibleClassFileException e) {
+                        throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
                         exitFromAlgorithm();
                     } catch (ClassFileIllFormedException e) {
                         //TODO should throw a subclass of LinkageError
@@ -258,6 +266,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                     } catch (PleaseLoadClassException e) {
                         invokeClassLoaderLoadClass(state, e);
                         exitFromAlgorithm();
+                    } catch (HeapMemoryExhaustedException e) {
+                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                        exitFromAlgorithm();
                     } catch (ClassFileNotFoundException e) {
                         //TODO this exception should wrap a ClassNotFoundException
                         throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
@@ -265,8 +276,8 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                     } catch (ClassFileNotAccessibleException e) {
                         throwNew(state, ILLEGAL_ACCESS_ERROR);
                         exitFromAlgorithm();
-                    } catch (HeapMemoryExhaustedException e) {
-                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                    } catch (IncompatibleClassFileException e) {
+                        throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
                         exitFromAlgorithm();
                     } catch (ClassFileIllFormedException e) {
                         //TODO should throw a subclass of LinkageError
@@ -328,7 +339,8 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                         exitFromAlgorithm();
                     } catch (MethodNotFoundException | ClassFileNotFoundException | 
                              ClassFileIllFormedException | ClassFileNotAccessibleException | 
-                             InvalidOperandException | FastArrayAccessNotAllowedException e) {
+                             IncompatibleClassFileException | InvalidOperandException | 
+                             FastArrayAccessNotAllowedException e) {
                         //this should never happen
                         failExecution(e);
                     }

@@ -6,6 +6,7 @@ import static jbse.algo.Util.invokeClassLoaderLoadClass;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.JAVA_ACCESSIBLEOBJECT_OVERRIDE;
 import static jbse.bc.Signatures.JAVA_FIELD;
 import static jbse.bc.Signatures.JAVA_FIELD_ANNOTATIONS;
@@ -43,6 +44,7 @@ import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.FieldNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
@@ -142,7 +144,8 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
             ClassFile cf_arraOfJAVA_FIELD = null; //to keep the compiler happy
             try {
                 cf_arraOfJAVA_FIELD = hier.loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_FIELD + TYPEEND);
-            } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException e) {
+            } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
+                     IncompatibleClassFileException | ClassFileNotAccessibleException e) {
                 throw new ClasspathException(e);
             }
 
@@ -176,7 +179,8 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                     } catch (HeapMemoryExhaustedException e) {
                         throwNew(state, OUT_OF_MEMORY_ERROR);
                         exitFromAlgorithm();
-                    } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException e) {
+                    } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
+                             IncompatibleClassFileException | ClassFileNotAccessibleException e) {
                         throw new ClasspathException(e);
                     } catch (InvalidOperandException | FastArrayAccessNotAllowedException e) {
                         //this should never happen
@@ -252,6 +256,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                     } catch (PleaseLoadClassException e) {
                         invokeClassLoaderLoadClass(state, e);
                         exitFromAlgorithm();
+                    } catch (HeapMemoryExhaustedException e) {
+                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                        exitFromAlgorithm();
                     } catch (ClassFileNotFoundException e) {
                         //TODO this exception should wrap a ClassNotFoundException
                         throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
@@ -259,8 +266,8 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                     } catch (ClassFileNotAccessibleException e) {
                         throwNew(state, ILLEGAL_ACCESS_ERROR);
                         exitFromAlgorithm();
-                    } catch (HeapMemoryExhaustedException e) {
-                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                    } catch (IncompatibleClassFileException e) {
+                        throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
                         exitFromAlgorithm();
                     } catch (ClassFileIllFormedException e) {
                         //TODO should throw a subclass of LinkageError
@@ -287,8 +294,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                         throwNew(state, OUT_OF_MEMORY_ERROR);
                         exitFromAlgorithm();
                     } catch (FieldNotFoundException | ClassFileNotFoundException | 
-                             ClassFileIllFormedException | ClassFileNotAccessibleException |  
-                             InvalidOperandException | FastArrayAccessNotAllowedException e) {
+                             ClassFileIllFormedException | IncompatibleClassFileException | 
+                             ClassFileNotAccessibleException | InvalidOperandException | 
+                             FastArrayAccessNotAllowedException e) {
                         //this should never happen
                         failExecution(e);
                     }

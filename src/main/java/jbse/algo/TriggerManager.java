@@ -15,6 +15,7 @@ import jbse.bc.Signature;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
@@ -127,8 +128,8 @@ public class TriggerManager {
                     state.pushFrame(cf, triggerSig, false, pcOffset, triggerArg);
                     retVal = true;
                     pcOffset = 0; //the offset of the second, third... frames
-                } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException | 
-                         MethodNotFoundException | MethodCodeNotFoundException | 
+                } catch (ClassFileNotFoundException | IncompatibleClassFileException | ClassFileIllFormedException | 
+                         ClassFileNotAccessibleException | MethodNotFoundException | MethodCodeNotFoundException | 
                          InvalidSlotException | InvalidTypeException | InvalidInputException e) {
                     //does nothing, falls through to skip 
                     //the unfriendly method

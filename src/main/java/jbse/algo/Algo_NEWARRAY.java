@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.common.Type;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -47,8 +48,8 @@ final class Algo_NEWARRAY extends Algo_XNEWARRAY<BytecodeData_1AT> {
         //sets the array type
         try {
             this.arrayType = state.getClassHierarchy().loadCreateClass("" + Type.ARRAYOF + this.data.primitiveType());
-        } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
-                 ClassFileNotAccessibleException e) {
+        } catch (ClassFileNotFoundException | IncompatibleClassFileException | 
+                 ClassFileIllFormedException | ClassFileNotAccessibleException e) {
             //this should never happen
             failExecution(e);
         }

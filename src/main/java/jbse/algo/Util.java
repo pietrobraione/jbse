@@ -245,7 +245,8 @@ public class Util {
             final ReferenceConcrete excReference = state.createInstanceSurely(cf_VERIFY_ERROR);
             fillExceptionBacktrace(state, excReference);
             state.unwindStack(excReference);
-        } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException e) {
+        } catch (ClassFileNotFoundException | IncompatibleClassFileException | 
+                 ClassFileIllFormedException | ClassFileNotAccessibleException e) {
             throw new ClasspathException(e);
         } catch (InvalidInputException | InvalidIndexException | InvalidProgramCounterException e) {
             //there is not much we can do if this happens
@@ -281,7 +282,7 @@ public class Util {
             throwObject(state, excReference);
         } catch (ClassFileNotFoundException | ClassFileIllFormedException e) {
             throw new ClasspathException(e);
-        } catch (ClassFileNotAccessibleException | InvalidInputException e) {
+        } catch (IncompatibleClassFileException | ClassFileNotAccessibleException | InvalidInputException e) {
             //there is not much we can do if this happens
             failExecution(e);
         }
@@ -437,7 +438,8 @@ public class Util {
     ClasspathException, HeapMemoryExhaustedException, InterruptException, ContradictionException {
         try {
             ensureClassInitialized(state, classFile, ctx, null, null);
-        } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException e) {
+        } catch (ClassFileNotFoundException | IncompatibleClassFileException | 
+                 ClassFileIllFormedException | ClassFileNotAccessibleException e) {
             //this should never happen
             failExecution(e);
         }
@@ -481,7 +483,8 @@ public class Util {
     ClasspathException, HeapMemoryExhaustedException, InterruptException, ContradictionException {
         try {
             ensureClassInitialized(state, classFile, ctx, null, boxExceptionMethodSignature);
-        } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException e) {
+        } catch (ClassFileNotFoundException | IncompatibleClassFileException | 
+                 ClassFileIllFormedException | ClassFileNotAccessibleException e) {
             //this should never happen
             failExecution(e);
         }
@@ -520,6 +523,8 @@ public class Util {
      *         class(es) or because of heap memory exhaustion.
      * @throws ClassFileNotFoundException if some class in {@code skip} does not exist
      *         in the bootstrap classpath.
+     * @throws IncompatibleClassFileException if the superclass for some class in {@code skip} is 
+     *         resolved to an interface type, or any superinterface is resolved to an object type.
      * @throws ClassFileIllFormedException if some class in {@code skip} is ill-formed.
      * @throws ClassFileNotAccessibleException if some class in {@code skip} has
      *         a superclass/superinterface that it cannot access.
@@ -527,9 +532,9 @@ public class Util {
      *         contradicted.
      */
     public static void ensureClassInitialized(State state, ClassFile classFile, ExecutionContext ctx, Set<String> skip)
-    throws InvalidInputException, DecisionException, 
-    ClasspathException, HeapMemoryExhaustedException, InterruptException, 
-    ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, ContradictionException {
+    throws InvalidInputException, DecisionException, ClasspathException, HeapMemoryExhaustedException, 
+    InterruptException, ClassFileNotFoundException, IncompatibleClassFileException, ClassFileIllFormedException, 
+    ClassFileNotAccessibleException, ContradictionException {
         ensureClassInitialized(state, classFile, ctx, skip, null);
     }
     
@@ -568,6 +573,8 @@ public class Util {
      *         class(es) or because of heap memory exhaustion.
      * @throws ClassFileNotFoundException if some class in {@code skip} does not exist
      *         in the bootstrap classpath.
+     * @throws IncompatibleClassFileException if the superclass for some class in {@code skip} is 
+     *         resolved to an interface type, or any superinterface is resolved to an object type.
      * @throws ClassFileIllFormedException if some class in {@code skip} is ill-formed.
      * @throws ClassFileNotAccessibleException if some class in {@code skip} has
      *         a superclass/superinterface that it cannot access.
@@ -576,7 +583,8 @@ public class Util {
      */
     public static void ensureClassInitialized(State state, ClassFile classFile, ExecutionContext ctx, Set<String> skip, Signature boxExceptionMethodSignature) 
     throws InvalidInputException, DecisionException, ClasspathException, HeapMemoryExhaustedException, InterruptException, 
-    ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, ContradictionException {
+    ClassFileNotFoundException, IncompatibleClassFileException, ClassFileIllFormedException, 
+    ClassFileNotAccessibleException, ContradictionException {
         final Set<String> _skip = (skip == null) ? new HashSet<>() : skip; //null safety
         final ClassInitializer ci = new ClassInitializer(state, ctx, _skip, boxExceptionMethodSignature);
         final boolean failed = ci.initialize(classFile);
@@ -645,8 +653,8 @@ public class Util {
         private ClassFile cf_JBSE_BASE;
 
         private ClassInitializer(State s, ExecutionContext ctx, Set<String> skip, Signature boxExceptionMethodSignature) 
-        throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException,  
-        ClassFileNotAccessibleException {
+        throws InvalidInputException, ClassFileNotFoundException, IncompatibleClassFileException, 
+        ClassFileIllFormedException, ClassFileNotAccessibleException {
             this.s = s;
             this.ctx = ctx;
             this.boxExceptionMethodSignature = boxExceptionMethodSignature;
@@ -671,10 +679,10 @@ public class Util {
             } else {
                 try {
                     this.cf_JBSE_BASE = s.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, JBSE_BASE, true);
-                } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
+                } catch (ClassFileNotFoundException | IncompatibleClassFileException | ClassFileIllFormedException | 
                          ClassFileNotAccessibleException | PleaseLoadClassException e) {
                     //this should never happen
-                    failExecution("Could not find classfile for loaded class jbse.base.Base.");
+                    failExecution("Could not find classfile for loaded class jbse.base.Base, or the classfile is ill-formed.");
                 }
                 if (!this.cf_JBSE_BASE.hasMethodImplementation(this.boxExceptionMethodSignature)) {
                     throw new InvalidInputException("Could not find implementation of exception boxim method " + this.boxExceptionMethodSignature.toString() + ".");
@@ -892,8 +900,8 @@ public class Util {
                         final Signature sigClinit = new Signature(JAVA_OBJECT, "()" + Type.VOID, "<clinit>");
                         final ClassFile cf_JAVA_OBJECT = this.s.getClassHierarchy().loadCreateClass(JAVA_OBJECT);
                         this.s.pushFrame(cf_JAVA_OBJECT, sigClinit, false, 0);
-                    } catch (ClassFileNotFoundException | ClassFileIllFormedException | InvalidInputException |
-                             ClassFileNotAccessibleException e) {
+                    } catch (ClassFileNotFoundException | IncompatibleClassFileException | ClassFileIllFormedException | 
+                             InvalidInputException | ClassFileNotAccessibleException e) {
                         //this should never happen
                         failExecution("Could not find the classfile for java.lang.Object.");
                     }

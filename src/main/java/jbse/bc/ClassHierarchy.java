@@ -378,10 +378,13 @@ public final class ClassHierarchy implements Cloneable {
      *         for one of the subclass names 
      *         in the expansion backdoor cannot access one
      *         of its superclasses/superinterfaces.
+     * @throws IncompatibleClassFileException if any subclass 
+     *         in the expansion backdoor has as superclass 
+     *         an interface type, or as superinterface an object type.
      */
     public Set<ClassFile> getAllConcreteSubclasses(ClassFile classFile)
     throws InvalidInputException, ClassFileNotFoundException, 
-    ClassFileIllFormedException, ClassFileNotAccessibleException {
+    ClassFileIllFormedException, ClassFileNotAccessibleException, IncompatibleClassFileException {
         if (classFile == null) {
             throw new InvalidInputException("Tried to get the concrete subclasses of a null classfile.");
         }
@@ -687,10 +690,13 @@ public final class ClassHierarchy implements Cloneable {
      * @throws ClassFileNotAccessibleException if during creation the recursive resolution 
      *         of a superclass/superinterface fails because the superclass/superinterface
      *         is not accessible by the subclass.
+     * @throws IncompatibleClassFileException if the superclass for {@code classSignature} is 
+     *         resolved to an interface type, or any superinterface is resolved to an object type.
      */
     public ClassFile loadCreateClass(String classSignature)
     throws InvalidInputException, ClassFileNotFoundException, 
-    ClassFileIllFormedException, ClassFileNotAccessibleException  {
+    ClassFileIllFormedException, ClassFileNotAccessibleException, 
+    IncompatibleClassFileException  {
         try {
             return loadCreateClass(CLASSLOADER_BOOT, classSignature, false);
         } catch (PleaseLoadClassException e) {
@@ -711,13 +717,13 @@ public final class ClassHierarchy implements Cloneable {
      * method in the case the initiating loader is one of the standard loaders 
      * (extension or application classloader).
      * 
-     * @param initiatingLoader an {@code int}, the identifier of the initiating loader; If it is
+     * @param initiatingLoader an {@code int}, the identifier of the initiating loader. If it is
      *        {@code initiatingLoader == }{@link ClassLoaders#CLASSLOADER_BOOT}, loads itself the class,
      *        otherwise, if the class is not already loaded, raises {@link PleaseLoadClassException}
      *        (but see also the description of {@code bypassStandardLoading}).
      * @param classSignature a {@link String}, the symbolic name of a class (array or object) 
      *        or interface.
-     * @param bypassStandardLoading a {@code boolean}; if it is {@code true} and the {@code initiatingLoader}
+     * @param bypassStandardLoading a {@code boolean}. If it is {@code true} and the {@code initiatingLoader}
      *        is either {@link ClassLoaders#CLASSLOADER_EXT} or {@link ClassLoaders#CLASSLOADER_APP}, 
      *        bypasses the standard loading procedure and loads itself the class, instead of raising 
      *        {@link PleaseLoadClassException}. In this case the defining loader is the one that
@@ -733,19 +739,19 @@ public final class ClassHierarchy implements Cloneable {
      *         (or when {@code bypassStandardLoading == true}, the initiating loader
      *         is the extensions or the application classloader, and the classfile
      *         is not found in their respective classpaths).
-     * @throws ClassFileIllFormedException if the class file for {@code classSignature} is
-     *         ill-formed; This happens when the initiating loader is the bootstrap
-     *         classloader and the classfile for {@code classSignature} or for any of its 
-     *         superclasses/superinterface is not found in the bootstrap classpath.
+     * @throws ClassFileIllFormedException if the class file for {@code classSignature} 
+     *         or for its superclass/superinterfaces is ill-formed.
      * @throws ClassFileNotAccessibleException if during creation the recursive resolution 
      *         of a superclass/superinterface fails because the superclass/superinterface
      *         is not accessible by the subclass.
+     * @throws IncompatibleClassFileException if the superclass  for {@code classSignature} is 
+     *         resolved to an interface type, or any superinterface is resolved to an object type.
      * @throws PleaseLoadClassException if creation cannot be performed because
-     *         a class must be loaded via a user-defined classloader before. 
+     *         a superclass/superinterface must be loaded via a user-defined classloader before. 
      */
     public ClassFile loadCreateClass(int initiatingLoader, String classSignature, boolean bypassStandardLoading) 
     throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    ClassFileNotAccessibleException, PleaseLoadClassException  {
+    ClassFileNotAccessibleException, IncompatibleClassFileException, PleaseLoadClassException  {
         //checks parameters
         if (initiatingLoader < CLASSLOADER_BOOT) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".loadCreateClass with invalid initiating loader " + initiatingLoader + ".");
@@ -818,23 +824,10 @@ public final class ClassHierarchy implements Cloneable {
                     //might create a duplicate of an already existing class)
                     accessed = getClassFileClassArray(definingClassLoader, classSignature);
                     if (accessed == null) {
-                        //nothing in the loaded class cache: creates a dummy classfile
-                        final ClassFile accessedDummy = createClassFileClassDummy(definingClassLoader, classSignature, findBytecodeResult.bytecode);
-
-                        //then, uses the dummy ClassFile to recursively resolve all the immediate 
-                        //ancestor classes
-                        final ClassFile superClass = (accessedDummy.getSuperclassName() == null ? null : resolveClass(accessedDummy, accessedDummy.getSuperclassName(), bypassStandardLoading));
-                        final List<String> superInterfaceNames = accessedDummy.getSuperInterfaceNames();
-                        final ClassFile[] superInterfaces = new ClassFile[superInterfaceNames.size()];
-                        for (int i = 0; i < superInterfaces.length; ++i) {
-                            superInterfaces[i] = resolveClass(accessedDummy, superInterfaceNames.get(i), bypassStandardLoading);
-                        }
-
-                        //then, creates a complete ClassFile for the class 
-                        //and puts it in the loaded class cache, registering it
-                        //with all the compatible initiating loaders through the
-                        //delegation chain
-                        accessed = createClassFileClass(accessedDummy, superClass, superInterfaces);
+                        //creates a ClassFile for the class and puts it in the 
+                        //loaded class cache, registering it with all the compatible 
+                        //initiating loaders through the delegation chain
+                        accessed = defineClass(definingClassLoader, classSignature, findBytecodeResult.bytecode, bypassStandardLoading);
                         for (int i = definingClassLoader; i <= initiatingLoader; ++i) {
                             addClassFileClassArray(i, accessed);
                         }
@@ -844,11 +837,11 @@ public final class ClassHierarchy implements Cloneable {
                         if (definingClassLoader == CLASSLOADER_BOOT) {
                             registerSystemPackage(classSignature, findBytecodeResult.loadedFrom);
                         }
-                    }
+                    } //TODO else throw LinkageError???
                 } else { //the initiating loader is a user-defined classloader and we do not bypass standard loading
                     //JVMS v8, section 5.3.1: the JVM invokes the loadClass method of the classloader.
-                    //This cannot be done here, so we interrupt the invoked with an exception.
-                    //The invoked must load the class by invoking ClassFile.loadClass,  
+                    //This cannot be done here, so we interrupt the invoker with an exception.
+                    //The invoker must load the class by invoking ClassFile.loadClass,  
                     //put the produced class in the loaded class cache, and finally
                     //reinvoke this method.
                     throw new PleaseLoadClassException(initiatingLoader, classSignature);
@@ -862,6 +855,85 @@ public final class ClassHierarchy implements Cloneable {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
+    }
+    
+    /**
+     * Defines a class from a bytecode array according to the JVMS v8 section 5.3.5.
+     * 
+     * @param definingClassLoader an {@code int}, the identifier of the defining class loader.
+     * @param classSignature a {@link String}, the name of the class to be defined. It must
+     *        not be {@code null}.
+     * @param bytecode a {@code byte[]} containing the content of the classfile for the class.
+     * @param bypassStandardLoading  a {@code boolean}. If it is {@code true} and the {@code definingClassLoader}
+     *        is either {@link ClassLoaders#CLASSLOADER_EXT} or {@link ClassLoaders#CLASSLOADER_APP}, 
+     *        bypasses the standard loading procedure and loads itself the superclass/superinterfaces, 
+     *        instead of raising {@link PleaseLoadClassException}.
+     * @return the defined {@code classFile}.
+     * @throws InvalidInputException if {@code classSignature} is invalid ({@code null}), or if 
+     *         {@code definingClassLoader < }{@link ClassLoaders#CLASSLOADER_BOOT CLASSLOADER_BOOT}, or if
+     *         {@code bytecode} is invalid ({@code null}).
+     * @throws ClassFileIllFormedException if {@code bytecode} or the bytecode for  
+     *         its superclass/superinterfaces is ill-formed.
+     * @throws ClassFileNotFoundException if a class file for {@code bytecode}'s superclass/superinterfaces 
+     *         is not found; This happens when the initiating loader is the bootstrap
+     *         classloader and the classfile is not found in the bootstrap classpath
+     *         (or when {@code bypassStandardLoading == true}, the initiating loader
+     *         is the extensions or the application classloader, and the classfile
+     *         is not found in their respective classpaths).
+     * @throws ClassFileNotAccessibleException if the recursive resolution 
+     *         of a superclass/superinterface fails because the superclass/superinterface
+     *         is not accessible by the subclass.
+     * @throws IncompatibleClassFileException if the superclass for {@code bytecode} is resolved 
+     *         to an interface type, or any superinterface is resolved to an object type.
+     * @throws PleaseLoadClassException if creation cannot be performed because
+     *         a superclass/superinterface must be loaded via a user-defined classloader before. 
+     */
+    public ClassFile defineClass(int definingClassLoader, String classSignature, byte[] bytecode, boolean bypassStandardLoading) 
+    throws InvalidInputException, ClassFileIllFormedException, ClassFileNotFoundException, 
+    ClassFileNotAccessibleException, IncompatibleClassFileException, PleaseLoadClassException {
+        //checks parameters
+        if (definingClassLoader < CLASSLOADER_BOOT) {
+            throw new InvalidInputException("Invoked " + this.getClass().getName() + ".defineClass with invalid defining class loader " + definingClassLoader + ".");
+        }
+        if (classSignature == null) {
+            throw new InvalidInputException("Invoked " + this.getClass().getName() + ".defineClass with null class signature.");
+        }
+        if (bytecode == null) {
+            throw new InvalidInputException("Invoked " + this.getClass().getName() + ".defineClass with null bytecode.");
+        }
+        
+        if (getClassFileClassArray(definingClassLoader, classSignature) != null) {
+            //TODO make the caller throw LinkageError
+        }
+        
+        final ClassFile classDummy = createClassFileClassDummy(definingClassLoader, classSignature, bytecode);
+        
+        //TODO check version number of classDummy and possibly make the thrower 
+        
+        if (!classDummy.getClassName().equals(classSignature)) {
+            //TODO make the caller throw NoClassDefFoundError (NEVER ClassNotAccessible!)
+        }
+
+        //uses the dummy ClassFile to recursively resolve all the immediate 
+        //ancestor classes
+        //TODO check circularity
+        final ClassFile superClass = (classDummy.getSuperclassName() == null ? null : resolveClass(classDummy, classDummy.getSuperclassName(), bypassStandardLoading));
+        if (superClass != null && superClass.isInterface()) {
+            throw new IncompatibleClassFileException("Superclass " + classDummy.getSuperclassName() + " of class " + classSignature + " actually is an interface.");
+        }
+        final List<String> superInterfaceNames = classDummy.getSuperInterfaceNames();
+        final ClassFile[] superInterfaces = new ClassFile[superInterfaceNames.size()];
+        for (int i = 0; i < superInterfaces.length; ++i) {
+            superInterfaces[i] = resolveClass(classDummy, superInterfaceNames.get(i), bypassStandardLoading);
+            if (!superInterfaces[i].isInterface()) {
+                //TODO make the caller throw IncompatibleClassChangeError
+            }
+        }
+
+        //creates a complete ClassFile for the class and registers it
+        final ClassFile retVal = createClassFileClass(classDummy, superClass, superInterfaces);
+        addClassFileClassArray(definingClassLoader, retVal);
+        return retVal;
     }
     
     /**
@@ -944,6 +1016,8 @@ public final class ClassHierarchy implements Cloneable {
      *         and its superclasses/superinterfaces in the classpath.
      * @throws ClassFileIllFormedException if the class file for {@code classSignature}
      *         or its superclasses/superinterfaces is ill-formed.
+     * @throws IncompatibleClassFileException if the superclass for {@code classSignature} is 
+     *         resolved to an interface type, or any superinterface is resolved to an object type.
      * @throws ClassFileNotAccessibleException if the resolved class is not accessible
      *         from {@code accessor}.
      * @throws PleaseLoadClassException if resolution cannot be performed because
@@ -951,7 +1025,7 @@ public final class ClassHierarchy implements Cloneable {
      */
     public ClassFile resolveClass(ClassFile accessor, String classSignature, boolean bypassStandardLoading) 
     throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    ClassFileNotAccessibleException, PleaseLoadClassException {
+    IncompatibleClassFileException, ClassFileNotAccessibleException, PleaseLoadClassException {
         //loads/creates the class for classSignature
         final int initiatingLoader = accessor.getDefiningClassLoader();
         final ClassFile accessed = loadCreateClass(initiatingLoader, classSignature, bypassStandardLoading);
@@ -983,6 +1057,8 @@ public final class ClassHierarchy implements Cloneable {
      *         and its superclasses/superinterfaces in the classpath.
      * @throws ClassFileIllFormedException if the class file for {@code fieldSignature.}{@link Signature#getClassName() getClassName()}
      *         or its superclasses/superinterfaces is ill-formed.
+     * @throws IncompatibleClassFileException if the superclass for {@code fieldSignature.}{@link Signature#getClassName() getClassName()} 
+     *         is resolved to an interface type, or any superinterface is resolved to an object type.
      * @throws ClassFileNotAccessibleException if the resolved class 
      *         {@code fieldSignature.}{@link Signature#getClassName() getClassName}{@code ()}
      *         is not accessible from {@code accessor}.
@@ -993,8 +1069,8 @@ public final class ClassHierarchy implements Cloneable {
      *         a class must be loaded via a user-defined classloader before.
      */
     public ClassFile resolveField(ClassFile accessor, Signature fieldSignature, boolean bypassStandardLoading) 
-    throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, 
-    FieldNotAccessibleException, FieldNotFoundException, PleaseLoadClassException {
+    throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, IncompatibleClassFileException, 
+    ClassFileNotAccessibleException, FieldNotAccessibleException, FieldNotFoundException, PleaseLoadClassException {
         //checks the parameters
         if (fieldSignature.getName() == null) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".resolveField with an invalid signature (null name field).");
@@ -1285,14 +1361,18 @@ public final class ClassHierarchy implements Cloneable {
      *         classpath.
      * @throws ClassFileIllFormedException if the classfile for one of the classes 
      *         in {@code descriptor} is ill-formed.
+     * @throws IncompatibleClassFileException if the superclass for  for one of the classes 
+     *         in {@code descriptor} is resolved to an interface type, or any superinterface 
+     *         is resolved to an object type.
      * @throws ClassFileNotAccessibleException if the classfile for one of the classes 
      *         in {@code descriptor} is not accessible from {@code accessor}.
      * @throws PleaseLoadClassException if resolution cannot be performed because
      *         a class must be loaded via a user-defined classloader before. 
+     * @throws IncompatibleClassFileException 
      */
     public ClassFile[] resolveMethodType(ClassFile accessor, String descriptor, boolean bypassStandardLoading) 
     throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    ClassFileNotAccessibleException, PleaseLoadClassException {
+    IncompatibleClassFileException, ClassFileNotAccessibleException, PleaseLoadClassException {
         //checks the parameters
         if (descriptor == null) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".resolveMethodType with descriptor == null.");

@@ -73,6 +73,7 @@ import jbse.bc.Signature;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.Klass;
@@ -246,7 +247,8 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
                     failExecution("Found no Klass for " + JBSE_BASE);
                 }
             } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
-                     ClassFileNotAccessibleException | PleaseLoadClassException e) {
+                     IncompatibleClassFileException | ClassFileNotAccessibleException | 
+                     PleaseLoadClassException e) {
                 //this should never happen
                 failExecution(e);
             }

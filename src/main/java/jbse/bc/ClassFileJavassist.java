@@ -79,14 +79,15 @@ public class ClassFileJavassist extends ClassFile {
      * 
      * @param definingClassLoader a {@code int}, the defining classloader of
      *        the class.
-     * @param className a {@code String}, the name of the class.
+     * @param className a {@code String}, the name of the class (used only for
+     *        error reporting).
      * @param bytecode a {@code byte[]}, the bytecode of the class.
-     * @param superClass a {@link ClassFile}, the superclass. It can be {@code null} for
-     *        <em>dummy</em>, i.e., incomplete classfiles that are created to access
+     * @param superClass a {@link ClassFile}, the superclass. It must be {@code null} for
+     *        <em>dummy</em>, i.e., incomplete, classfiles that are created to access
      *        the bytecode conveniently.
      * @param superInterfaces a {@link ClassFile}{@code []}, the superinterfaces 
      *        (empty array when no superinterfaces). 
-     *        It must be {@code null} for <em>dummy</em>, i.e., incomplete classfiles 
+     *        It must be {@code null} for <em>dummy</em>, i.e., incomplete, classfiles 
      *        that are created to access the bytecode conveniently.
      * @throws ClassFileIllFormedException if the {@code bytecode} 
      *         is ill-formed.
@@ -106,9 +107,6 @@ public class ClassFileJavassist extends ClassFile {
             this.cf = new javassist.bytecode.ClassFile(new DataInputStream(new ByteArrayInputStream(bytecode)));
             
             //checks
-            if (!className.equals(getClassName())) {
-                throw new InvalidInputException("ClassFile constructor invoked with className and bytecode parameters that do not agree: className is " + className + " but bytecode requires " + this.cf.getName() + ".");
-            }
             if (superClass != null && !superClass.getClassName().equals(getSuperclassName())) {
                 throw new InvalidInputException("ClassFile constructor invoked with superClass and bytecode parameters that do not agree: superClass is for class " + superClass.getClassName() + " but bytecode requires " + this.cf.getSuperclass() + ".");
             }

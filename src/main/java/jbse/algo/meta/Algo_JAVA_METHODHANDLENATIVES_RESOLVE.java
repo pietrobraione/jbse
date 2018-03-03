@@ -417,8 +417,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
     }
     
     private ClassFile resolveTypeName(State state, ClassFile accessor, String typeName) 
-    throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    ClassFileNotAccessibleException, PleaseLoadClassException {
+    throws InvalidInputException, ClassFileNotFoundException, IncompatibleClassFileException, 
+    ClassFileIllFormedException, ClassFileNotAccessibleException, PleaseLoadClassException {
         final ClassFile retVal;
         if (isPrimitive(typeName)) {
             retVal = state.getClassHierarchy().getClassFilePrimitive(toPrimitiveCanonicalName(typeName));
@@ -444,6 +444,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
      *         does not exist.
      * @throws ClassFileNotFoundException if any class referred in {@code resolved} 
      *         is ill-formed.
+     * @throws IncompatibleClassFileException if the superclass of any class referred in {@code resolved}
+     *         is resolved to an interface type, or a superinterface is resolved to an object type.
      * @throws ClassFileNotAccessibleException if any class referred in {@code resolved} 
      *         is not accessible by {@code accessor}.
      * @throws HeapMemoryExhaustedException if {@code state}'s heap memory ends.
@@ -452,7 +454,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
      */
     private ReferenceConcrete findMethodType(State state, ClassFile accessor, String descriptor) 
     throws PleaseLoadClassException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    ClassFileNotAccessibleException, HeapMemoryExhaustedException, InterruptException, ThreadStackEmptyException {
+    IncompatibleClassFileException, ClassFileNotAccessibleException, HeapMemoryExhaustedException, 
+    InterruptException, ThreadStackEmptyException {
         //fast track: the MethodType already exists in the state's cache
         if (state.hasInstance_JAVA_METHODTYPE(descriptor)) {
             return state.referenceToInstance_JAVA_METHODTYPE(descriptor);
@@ -536,6 +539,9 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
      *         class referred in {@code polymorphicMethodDescriptor} is not found in the classpath.
      * @throws ClassFileIllFormedException if the classfile for any 
      *         class referred in {@code polymorphicMethodDescriptor} is ill-formed.
+     * @throws IncompatibleClassFileException if the superclass of any 
+     *         class referred in {@code polymorphicMethodDescriptor} is resolved to an 
+     *         interface type, or any superinterface is resolved to an object type.
      * @throws ClassFileNotAccessibleException if the classfile for any 
      *         class referred in {@code polymorphicMethodDescriptor} is not accessible by {@code accessor}.
      * @throws HeapMemoryExhaustedException if {@code state}'s heap memory ends.
@@ -545,7 +551,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
      * @throws InvalidInputException if an invalid input is used by some method call. 
      */
     private Signature linkMethod(State state, ClassFile accessor, String polymorphicMethodDescriptor, String polymorphicMethodName) 
-    throws PleaseLoadClassException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, HeapMemoryExhaustedException, 
+    throws PleaseLoadClassException, ClassFileNotFoundException, ClassFileIllFormedException, 
+    IncompatibleClassFileException, ClassFileNotAccessibleException, HeapMemoryExhaustedException, 
     ThreadStackEmptyException, InterruptException, InvalidInputException {
         final Signature polymorphicMethodSignature = new Signature(this.resolvedClass.getClassName(), SIGNATURE_POLYMORPHIC_DESCRIPTOR, polymorphicMethodName);
         if (state.isMethodLinked(polymorphicMethodSignature)) {

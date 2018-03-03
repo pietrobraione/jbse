@@ -8,6 +8,7 @@ import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.NEW_OFFSET;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
@@ -17,6 +18,7 @@ import jbse.bc.ClassFile;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.mem.exc.HeapMemoryExhaustedException;
@@ -72,6 +74,9 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             } catch (ClassFileNotFoundException e) {
                 //TODO this exception should wrap a ClassNotFoundException
                 throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                exitFromAlgorithm();
+            } catch (IncompatibleClassFileException e) {
+                throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
                 exitFromAlgorithm();
             } catch (ClassFileNotAccessibleException e) {
                 throwNew(state, ILLEGAL_ACCESS_ERROR);

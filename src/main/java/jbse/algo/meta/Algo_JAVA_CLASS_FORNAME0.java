@@ -9,6 +9,7 @@ import static jbse.algo.Util.valueString;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Signatures.CLASS_NOT_FOUND_EXCEPTION;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.JBSE_BASE_BOXEXCEPTIONININITIALIZERERROR;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
@@ -25,6 +26,7 @@ import jbse.bc.ClassHierarchy;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -128,6 +130,9 @@ public final class Algo_JAVA_CLASS_FORNAME0 extends Algo_INVOKEMETA_Nonbranching
             exitFromAlgorithm();
         } catch (ClassFileNotAccessibleException e) {
             throwNew(state, ILLEGAL_ACCESS_ERROR);
+            exitFromAlgorithm();
+        } catch (IncompatibleClassFileException e) {
+            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
             exitFromAlgorithm();
         } catch (ClassFileIllFormedException | ClassCastException e) {
             throwVerifyError(state);

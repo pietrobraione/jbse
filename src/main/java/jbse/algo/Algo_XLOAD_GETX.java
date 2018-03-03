@@ -5,12 +5,14 @@ import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
@@ -60,6 +62,9 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
             } catch (ClassFileNotFoundException exc) {
                 //TODO this exception should wrap a ClassNotFoundException
                 throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                exitFromAlgorithm();
+            } catch (IncompatibleClassFileException exc) {
+                throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
                 exitFromAlgorithm();
             } catch (ClassFileNotAccessibleException exc) {
                 throwNew(state, ILLEGAL_ACCESS_ERROR);

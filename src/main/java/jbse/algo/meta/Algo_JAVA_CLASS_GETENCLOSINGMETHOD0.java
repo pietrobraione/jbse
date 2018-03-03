@@ -22,6 +22,7 @@ import jbse.bc.Signature;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -67,13 +68,7 @@ public final class Algo_JAVA_CLASS_GETENCLOSINGMETHOD0 extends Algo_INVOKEMETA_N
                 this.toPush = Null.getInstance();
             } else {
                 //resolves the enclosing class
-                ClassFile enclosingClass = null; //to keep the compiler happy
-                try {
-                    enclosingClass = state.getClassHierarchy().resolveClass(cf, sigEnclosing.getClassName(), state.areStandardClassLoadersNotReady());
-                } catch (PleaseLoadClassException e) {
-                    invokeClassLoaderLoadClass(state, e);
-                    exitFromAlgorithm();
-                }
+                final ClassFile enclosingClass = state.getClassHierarchy().resolveClass(cf, sigEnclosing.getClassName(), state.areStandardClassLoadersNotReady());
                 
                 //ensures the java.lang.Class of the enclosing class
                 state.ensureInstance_JAVA_CLASS(enclosingClass);
@@ -98,14 +93,19 @@ public final class Algo_JAVA_CLASS_GETENCLOSINGMETHOD0 extends Algo_INVOKEMETA_N
                 array.setFast(state.getCalculator().valInt(1), refName);
                 array.setFast(state.getCalculator().valInt(2), refDescriptor);
             }
+        } catch (PleaseLoadClassException e) {
+            invokeClassLoaderLoadClass(state, e);
+            exitFromAlgorithm();
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (InvalidTypeException | ClassFileNotFoundException | ClassFileNotAccessibleException |  
-                 ClassFileIllFormedException | FastArrayAccessNotAllowedException | InvalidOperandException e) {
+        } catch (InvalidTypeException | ClassFileNotFoundException | 
+                 ClassFileNotAccessibleException | IncompatibleClassFileException | 
+                 ClassFileIllFormedException | FastArrayAccessNotAllowedException | 
+                 InvalidOperandException e) {
             //this should never happen
             failExecution(e);
         }

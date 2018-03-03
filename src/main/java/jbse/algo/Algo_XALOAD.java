@@ -8,6 +8,7 @@ import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.XALOADSTORE_OFFSET;
 import static jbse.bc.Signatures.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
@@ -26,6 +27,7 @@ import jbse.bc.ClassFile;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.common.Type;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
@@ -191,6 +193,9 @@ StrategyUpdate_XALOAD> {
                         } catch (ClassFileNotFoundException exc) {
                             //TODO this exception should wrap a ClassNotFoundException
                             throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                            exitFromAlgorithm();
+                        } catch (IncompatibleClassFileException exc) {
+                            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
                             exitFromAlgorithm();
                         } catch (ClassFileNotAccessibleException exc) {
                             throwNew(state, ILLEGAL_ACCESS_ERROR);

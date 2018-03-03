@@ -28,6 +28,7 @@ import jbse.bc.ClassFile;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.Array;
 import jbse.mem.Instance;
@@ -140,7 +141,8 @@ public final class Algo_JAVA_XFILESYSTEM_LIST extends Algo_INVOKEMETA_Nonbranchi
                 throwNew(state, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
             } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
-                     ClassFileNotAccessibleException | FastArrayAccessNotAllowedException e) {
+                     IncompatibleClassFileException | ClassFileNotAccessibleException | 
+                     FastArrayAccessNotAllowedException e) {
                 //this should never happen
                 failExecution(e);
             }

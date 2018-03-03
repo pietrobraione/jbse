@@ -46,6 +46,7 @@ import jbse.bc.Signature;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
@@ -261,9 +262,10 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
             } catch (HeapMemoryExhaustedException e) {
                 throwNew(state, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
-            } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException | 
-                     PleaseLoadClassException | NullMethodReceiverException | MethodNotFoundException | 
-                     MethodCodeNotFoundException | InvalidSlotException | InvalidProgramCounterException e) {
+            } catch (ClassFileNotFoundException | ClassFileIllFormedException | IncompatibleClassFileException | 
+                     ClassFileNotAccessibleException | PleaseLoadClassException | NullMethodReceiverException | 
+                     MethodNotFoundException | MethodCodeNotFoundException | InvalidSlotException | 
+                     InvalidProgramCounterException e) {
                 //this should never happen
                 //TODO really?
                 failExecution(e);

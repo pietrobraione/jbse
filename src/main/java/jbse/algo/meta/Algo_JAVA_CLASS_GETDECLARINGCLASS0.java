@@ -7,6 +7,7 @@ import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Signatures.CLASS_NOT_FOUND_EXCEPTION;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
+import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
 import java.util.function.Supplier;
@@ -18,6 +19,7 @@ import jbse.bc.ClassFile;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -87,17 +89,20 @@ public final class Algo_JAVA_CLASS_GETDECLARINGCLASS0 extends Algo_INVOKEMETA_No
         } catch (PleaseLoadClassException e) {
             invokeClassLoaderLoadClass(state, e);
             exitFromAlgorithm();
+        } catch (HeapMemoryExhaustedException e) {
+            throwNew(state, OUT_OF_MEMORY_ERROR);
+            exitFromAlgorithm();
         } catch (ClassFileNotFoundException e) {
             throwNew(state, CLASS_NOT_FOUND_EXCEPTION);
             exitFromAlgorithm();
         } catch (ClassFileNotAccessibleException e) {
             throwNew(state, ILLEGAL_ACCESS_ERROR);
             exitFromAlgorithm();
-        } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+        } catch (IncompatibleClassFileException e) {
+            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
             exitFromAlgorithm();
         } catch (ClassFileIllFormedException e) {
-            //TODO throw a LinkError?
+            //TODO throw a LinkageError?
             throwVerifyError(state);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
