@@ -888,15 +888,16 @@ public final class ClassHierarchy implements Cloneable {
      * Defines a class from a bytecode array according to the JVMS v8 section 5.3.5.
      * 
      * @param definingClassLoader an {@code int}, the identifier of the defining class loader.
-     * @param classSignature a {@link String}, the name of the class to be defined. It must
-     *        not be {@code null}.
+     * @param classSignature a {@link String}, the name of the class to be defined. If it is
+     *        {@code null} then the method does not check that the class name in {@code byte[]}
+     *        {@link Object#equals(Object) equals} this parameter.
      * @param bytecode a {@code byte[]} containing the content of the classfile for the class.
      * @param bypassStandardLoading  a {@code boolean}. If it is {@code true} and the {@code definingClassLoader}
      *        is either {@link ClassLoaders#CLASSLOADER_EXT} or {@link ClassLoaders#CLASSLOADER_APP}, 
      *        bypasses the standard loading procedure and loads itself the superclass/superinterfaces, 
      *        instead of raising {@link PleaseLoadClassException}.
      * @return the defined {@code classFile}.
-     * @throws InvalidInputException if {@code classSignature} is invalid ({@code null}), or if 
+     * @throws InvalidInputException if  
      *         {@code definingClassLoader < }{@link ClassLoaders#CLASSLOADER_BOOT CLASSLOADER_BOOT}, or if
      *         {@code bytecode} is invalid ({@code null}).
      * @throws AlreadyDefinedClassException if {@code classSignature} was already defined for 
@@ -929,27 +930,31 @@ public final class ClassHierarchy implements Cloneable {
         if (definingClassLoader < CLASSLOADER_BOOT) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".defineClass with invalid defining class loader " + definingClassLoader + ".");
         }
-        if (classSignature == null) {
-            throw new InvalidInputException("Invoked " + this.getClass().getName() + ".defineClass with null class signature.");
-        }
         if (bytecode == null) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".defineClass with null bytecode.");
         }
         
-        if (getClassFileClassArray(definingClassLoader, classSignature) != null) {
+        //checks if a ClassFile exists for classSignature
+        if (classSignature != null && getClassFileClassArray(definingClassLoader, classSignature) != null) {
             throw new AlreadyDefinedClassException("Tried to redefine (" + definingClassLoader + ", " + classSignature + ").");
         }
         
+        //makes a dummy ClassFile
         final ClassFile classDummy = createClassFileClassDummy(definingClassLoader, classSignature, bytecode);
+        
+        //checks (again) if a ClassFile exists, now for the dummy ClassFile's name
+        if (getClassFileClassArray(definingClassLoader, classDummy.getClassName()) != null) {
+            throw new AlreadyDefinedClassException("Tried to redefine (" + definingClassLoader + ", " + classDummy.getClassName() + ").");
+        }
         
         //checks the version
         if (classDummy.getMajorVersion() < JAVA_6 || classDummy.getMajorVersion() > JAVA_8) {
-            throw new BadClassFileVersionException("The classfile for " + classSignature + " has unsupported version " + classDummy.getMajorVersion() + "." + classDummy.getMinorVersion() +".");
+            throw new BadClassFileVersionException("The classfile for " + classDummy.getClassName() + " has unsupported version " + classDummy.getMajorVersion() + "." + classDummy.getMinorVersion() +".");
         }
         
         //checks the name
-        if (!classDummy.getClassName().equals(classSignature)) {
-            throw new WrongClassNameException("The classfile for class " + classSignature + " has different class name " + classDummy.getClassName());
+        if (classSignature != null && !classDummy.getClassName().equals(classSignature)) {
+            throw new WrongClassNameException("The classfile for class " + classDummy.getClassName() + " has different class name " + classDummy.getClassName());
         }
 
         //uses the dummy ClassFile to recursively resolve all the immediate 
@@ -957,14 +962,14 @@ public final class ClassHierarchy implements Cloneable {
         //TODO check circularity
         final ClassFile superClass = (classDummy.getSuperclassName() == null ? null : resolveClass(classDummy, classDummy.getSuperclassName(), bypassStandardLoading));
         if (superClass != null && superClass.isInterface()) {
-            throw new IncompatibleClassFileException("Superclass " + classDummy.getSuperclassName() + " of class " + classSignature + " actually is an interface.");
+            throw new IncompatibleClassFileException("Superclass " + classDummy.getSuperclassName() + " of class " + classDummy.getClassName() + " actually is an interface.");
         }
         final List<String> superInterfaceNames = classDummy.getSuperInterfaceNames();
         final ClassFile[] superInterfaces = new ClassFile[superInterfaceNames.size()];
         for (int i = 0; i < superInterfaces.length; ++i) {
             superInterfaces[i] = resolveClass(classDummy, superInterfaceNames.get(i), bypassStandardLoading);
             if (!superInterfaces[i].isInterface()) {
-                throw new IncompatibleClassFileException("Superinterface " + superInterfaceNames.get(i) + " of class " + classSignature + " actually is not an interface.");
+                throw new IncompatibleClassFileException("Superinterface " + superInterfaceNames.get(i) + " of class " + classDummy.getClassName() + " actually is not an interface.");
             }
         }
 

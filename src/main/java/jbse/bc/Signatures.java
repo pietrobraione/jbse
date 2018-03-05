@@ -92,6 +92,7 @@ public final class Signatures {
     public static final String JAVA_PRIVILEGEDACTION         = "java/security/PrivilegedAction";
     public static final String JAVA_PRIVILEGEDEXCEPTIONACTION = "java/security/PrivilegedExceptionAction";
     public static final String JAVA_PROPERTIES               = "java/util/Properties";
+    public static final String JAVA_PROTECTIONDOMAIN         = "java/security/ProtectionDomain";
     public static final String JAVA_REFERENCE                = "java/lang/ref/Reference";
     public static final String JAVA_REFLECT_ARRAY            = "java/lang/reflect/Array";
     public static final String JAVA_RUNNABLE                 = "java/lang/Runnable";
@@ -235,6 +236,8 @@ public final class Signatures {
         new Signature(JAVA_CLASS, "()" + BOOLEAN, "isPrimitive");
     public static final Signature JAVA_CLASS_REGISTERNATIVES =
         new Signature(JAVA_CLASS, "()" + VOID, "registerNatives");
+    public static final Signature JAVA_CLASSLOADER_DEFINECLASS1 =
+        new Signature(JAVA_CLASSLOADER, "(" + REFERENCE + JAVA_STRING + TYPEEND + ARRAYOF + BYTE + INT + INT + REFERENCE + JAVA_PROTECTIONDOMAIN + TYPEEND + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_CLASS + TYPEEND, "defineClass1");
     public static final Signature JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS =
         new Signature(JAVA_CLASSLOADER, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_CLASS + TYPEEND, "findBootstrapClass");
     public static final Signature JAVA_CLASSLOADER_FINDBUILTINLIB =

@@ -49,6 +49,7 @@ public final class Overrides {
     public static final String ALGO_JAVA_CLASS_ISINSTANCE                          = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISINSTANCE.class.getName());
     public static final String ALGO_JAVA_CLASS_ISINTERFACE                         = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISINTERFACE.class.getName());
     public static final String ALGO_JAVA_CLASS_ISPRIMITIVE                         = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISPRIMITIVE.class.getName());
+    public static final String ALGO_JAVA_CLASSLOADER_DEFINECLASS1                  = internalClassName(jbse.algo.meta.Algo_JAVA_CLASSLOADER_DEFINECLASS1.class.getName());
     public static final String ALGO_JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS            = internalClassName(jbse.algo.meta.Algo_JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS.class.getName());
     public static final String ALGO_JAVA_CLASSLOADER_FINDLOADEDCLASS0              = internalClassName(jbse.algo.meta.Algo_JAVA_CLASSLOADER_FINDLOADEDCLASS0.class.getName());
     public static final String ALGO_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD            = internalClassName(jbse.algo.meta.Algo_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD.class.getName());
