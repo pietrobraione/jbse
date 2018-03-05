@@ -70,11 +70,13 @@ import jbse.algo.StrategyUpdate;
 import jbse.bc.ClassFile;
 import jbse.bc.Classpath;
 import jbse.bc.Signature;
+import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.Klass;
 import jbse.mem.State;
@@ -246,8 +248,8 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
                     //this should never happen
                     failExecution("Found no Klass for " + JBSE_BASE);
                 }
-            } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
-                     IncompatibleClassFileException | ClassFileNotAccessibleException | 
+            } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
+                     WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException | 
                      PleaseLoadClassException e) {
                 //this should never happen
                 failExecution(e);

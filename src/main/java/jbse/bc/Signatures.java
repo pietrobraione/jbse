@@ -171,6 +171,7 @@ public final class Signatures {
     public static final String NO_SUCH_METHOD_ERROR                = "java/lang/NoSuchMethodError";
     public static final String OUT_OF_MEMORY_ERROR                 = "java/lang/OutOfMemoryError";
     public static final String STACK_OVERFLOW_ERROR                = "java/lang/StackOverflowError";
+    public static final String UNSUPPORTED_CLASS_VERSION_ERROR     = "java/lang/UnsupportedClassVersionError";
     public static final String VERIFY_ERROR                        = "java/lang/VerifyError";
     public static final String VIRTUAL_MACHINE_ERROR               = "java/lang/VirtualMachineError";
     

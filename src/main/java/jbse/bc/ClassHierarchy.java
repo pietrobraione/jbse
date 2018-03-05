@@ -1,5 +1,7 @@
 package jbse.bc;
 
+import static jbse.bc.ClassFile.JAVA_6;
+import static jbse.bc.ClassFile.JAVA_8;
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.ClassLoaders.CLASSLOADER_EXT;
@@ -38,6 +40,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import jbse.bc.exc.AlreadyDefinedClassException;
+import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
@@ -49,6 +53,7 @@ import jbse.bc.exc.MethodAbstractException;
 import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 
@@ -371,20 +376,27 @@ public final class ClassHierarchy implements Cloneable {
      *         in the expansion backdoor does not exist neither 
      *         in the bootstrap, nor in the 
      *         extension, nor in the application classpath.
-     * @throws ClassFileIllFormedException when the class file 
+     * @throws ClassFileIllFormedException when the classfile 
      *         for one of the subclass names 
      *         in the expansion backdoor is invalid.
-     * @throws ClassFileIllFormedException when the class file 
-     *         for one of the subclass names 
+     * @throws ClassFileIllFormedException when a subclass 
      *         in the expansion backdoor cannot access one
      *         of its superclasses/superinterfaces.
      * @throws IncompatibleClassFileException if any subclass 
      *         in the expansion backdoor has as superclass 
      *         an interface type, or as superinterface an object type.
+     * @throws BadClassFileVersionException  when the bytecode 
+     *         for one of the subclass names in the expansion backdoor
+     *         has a version number that is unsupported by this 
+     *         version of JBSE.
+     * @throws WrongClassNameException  when the bytecode for one of 
+     *         the subclass names in the expansion backdoor has a 
+     *         class name different from that used for resolving it.
      */
     public Set<ClassFile> getAllConcreteSubclasses(ClassFile classFile)
     throws InvalidInputException, ClassFileNotFoundException, 
-    ClassFileIllFormedException, ClassFileNotAccessibleException, IncompatibleClassFileException {
+    ClassFileIllFormedException, ClassFileNotAccessibleException, IncompatibleClassFileException, 
+    BadClassFileVersionException, WrongClassNameException {
         if (classFile == null) {
             throw new InvalidInputException("Tried to get the concrete subclasses of a null classfile.");
         }
@@ -692,11 +704,17 @@ public final class ClassHierarchy implements Cloneable {
      *         is not accessible by the subclass.
      * @throws IncompatibleClassFileException if the superclass for {@code classSignature} is 
      *         resolved to an interface type, or any superinterface is resolved to an object type.
+     * @throws BadClassFileVersionException if the classfile for {@code classSignature}  
+     *         or of one of its superclasses/superinterfaces has a version number that is 
+     *         unsupported by this version of JBSE.
+     * @throws WrongClassNameException if the class name specified in {@code bytecode} is different
+     *         from {@code classSignature}. 
      */
     public ClassFile loadCreateClass(String classSignature)
     throws InvalidInputException, ClassFileNotFoundException, 
     ClassFileIllFormedException, ClassFileNotAccessibleException, 
-    IncompatibleClassFileException  {
+    IncompatibleClassFileException, BadClassFileVersionException, 
+    WrongClassNameException  {
         try {
             return loadCreateClass(CLASSLOADER_BOOT, classSignature, false);
         } catch (PleaseLoadClassException e) {
@@ -744,14 +762,20 @@ public final class ClassHierarchy implements Cloneable {
      * @throws ClassFileNotAccessibleException if during creation the recursive resolution 
      *         of a superclass/superinterface fails because the superclass/superinterface
      *         is not accessible by the subclass.
-     * @throws IncompatibleClassFileException if the superclass  for {@code classSignature} is 
+     * @throws IncompatibleClassFileException if the superclass for {@code classSignature} is 
      *         resolved to an interface type, or any superinterface is resolved to an object type.
      * @throws PleaseLoadClassException if creation cannot be performed because
      *         a superclass/superinterface must be loaded via a user-defined classloader before. 
+     * @throws BadClassFileVersionException if the classfile for {@code classSignature}  
+     *         or of one of its superclasses/superinterfaces has a version number that is 
+     *         unsupported by this version of JBSE.
+     * @throws WrongClassNameException if the class name specified in {@code bytecode} is different
+     *         from {@code classSignature}. 
      */
     public ClassFile loadCreateClass(int initiatingLoader, String classSignature, boolean bypassStandardLoading) 
     throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    ClassFileNotAccessibleException, IncompatibleClassFileException, PleaseLoadClassException  {
+    ClassFileNotAccessibleException, IncompatibleClassFileException, PleaseLoadClassException, 
+    BadClassFileVersionException, WrongClassNameException  {
         //checks parameters
         if (initiatingLoader < CLASSLOADER_BOOT) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".loadCreateClass with invalid initiating loader " + initiatingLoader + ".");
@@ -854,6 +878,9 @@ public final class ClassHierarchy implements Cloneable {
             }
             //this should never happen
             throw new UnexpectedInternalException(e);
+        } catch (AlreadyDefinedClassException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
         }
     }
     
@@ -872,6 +899,12 @@ public final class ClassHierarchy implements Cloneable {
      * @throws InvalidInputException if {@code classSignature} is invalid ({@code null}), or if 
      *         {@code definingClassLoader < }{@link ClassLoaders#CLASSLOADER_BOOT CLASSLOADER_BOOT}, or if
      *         {@code bytecode} is invalid ({@code null}).
+     * @throws AlreadyDefinedClassException if {@code classSignature} was already defined for 
+     *         {@code definingClassLoader}.
+     * @throws BadClassFileVersionException if {@code bytecode}'s classfile version number is unsupported
+     *         by this version of JBSE.
+     * @throws WrongClassNameException if the class name specified in {@code bytecode} is different
+     *         from {@code classSignature}. 
      * @throws ClassFileIllFormedException if {@code bytecode} or the bytecode for  
      *         its superclass/superinterfaces is ill-formed.
      * @throws ClassFileNotFoundException if a class file for {@code bytecode}'s superclass/superinterfaces 
@@ -889,7 +922,8 @@ public final class ClassHierarchy implements Cloneable {
      *         a superclass/superinterface must be loaded via a user-defined classloader before. 
      */
     public ClassFile defineClass(int definingClassLoader, String classSignature, byte[] bytecode, boolean bypassStandardLoading) 
-    throws InvalidInputException, ClassFileIllFormedException, ClassFileNotFoundException, 
+    throws InvalidInputException, AlreadyDefinedClassException, BadClassFileVersionException, 
+    WrongClassNameException, ClassFileIllFormedException, ClassFileNotFoundException, 
     ClassFileNotAccessibleException, IncompatibleClassFileException, PleaseLoadClassException {
         //checks parameters
         if (definingClassLoader < CLASSLOADER_BOOT) {
@@ -903,15 +937,19 @@ public final class ClassHierarchy implements Cloneable {
         }
         
         if (getClassFileClassArray(definingClassLoader, classSignature) != null) {
-            //TODO make the caller throw LinkageError
+            throw new AlreadyDefinedClassException("Tried to redefine (" + definingClassLoader + ", " + classSignature + ").");
         }
         
         final ClassFile classDummy = createClassFileClassDummy(definingClassLoader, classSignature, bytecode);
         
-        //TODO check version number of classDummy and possibly make the thrower 
+        //checks the version
+        if (classDummy.getMajorVersion() < JAVA_6 || classDummy.getMajorVersion() > JAVA_8) {
+            throw new BadClassFileVersionException("The classfile for " + classSignature + " has unsupported version " + classDummy.getMajorVersion() + "." + classDummy.getMinorVersion() +".");
+        }
         
+        //checks the name
         if (!classDummy.getClassName().equals(classSignature)) {
-            //TODO make the caller throw NoClassDefFoundError (NEVER ClassNotAccessible!)
+            throw new WrongClassNameException("The classfile for class " + classSignature + " has different class name " + classDummy.getClassName());
         }
 
         //uses the dummy ClassFile to recursively resolve all the immediate 
@@ -926,7 +964,7 @@ public final class ClassHierarchy implements Cloneable {
         for (int i = 0; i < superInterfaces.length; ++i) {
             superInterfaces[i] = resolveClass(classDummy, superInterfaceNames.get(i), bypassStandardLoading);
             if (!superInterfaces[i].isInterface()) {
-                //TODO make the caller throw IncompatibleClassChangeError
+                throw new IncompatibleClassFileException("Superinterface " + superInterfaceNames.get(i) + " of class " + classSignature + " actually is not an interface.");
             }
         }
 
@@ -1014,8 +1052,15 @@ public final class ClassHierarchy implements Cloneable {
      *         {@code accessor.}{@link ClassFile#getDefiningClassLoader() getDefiningClassLoader}{@code () > }{@link ClassLoaders#CLASSLOADER_APP CLASSLOADER_APP}.
      * @throws ClassFileNotFoundException if there is no class file for {@code classSignature}
      *         and its superclasses/superinterfaces in the classpath.
-     * @throws ClassFileIllFormedException if the class file for {@code classSignature}
+     * @throws ClassFileIllFormedException if the bytecode for {@code classSignature}
      *         or its superclasses/superinterfaces is ill-formed.
+     * @throws BadClassFileVersionException if the bytecode for {@code classSignature}
+     *         or its superclasses/superinterfaces has a version number that is unsupported
+     *         by this version of JBSE.
+     * @throws WrongClassNameException if the bytecode for {@code classSignature}
+     *         or its superclasses/superinterfaces contains a class name that is different
+     *         from the expected one ({@code classSignature} or the corresponding 
+     *         superclass/superinterface name).
      * @throws IncompatibleClassFileException if the superclass for {@code classSignature} is 
      *         resolved to an interface type, or any superinterface is resolved to an object type.
      * @throws ClassFileNotAccessibleException if the resolved class is not accessible
@@ -1025,7 +1070,8 @@ public final class ClassHierarchy implements Cloneable {
      */
     public ClassFile resolveClass(ClassFile accessor, String classSignature, boolean bypassStandardLoading) 
     throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    IncompatibleClassFileException, ClassFileNotAccessibleException, PleaseLoadClassException {
+    BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, 
+    ClassFileNotAccessibleException, PleaseLoadClassException {
         //loads/creates the class for classSignature
         final int initiatingLoader = accessor.getDefiningClassLoader();
         final ClassFile accessed = loadCreateClass(initiatingLoader, classSignature, bypassStandardLoading);
@@ -1057,6 +1103,13 @@ public final class ClassHierarchy implements Cloneable {
      *         and its superclasses/superinterfaces in the classpath.
      * @throws ClassFileIllFormedException if the class file for {@code fieldSignature.}{@link Signature#getClassName() getClassName()}
      *         or its superclasses/superinterfaces is ill-formed.
+     * @throws BadClassFileVersionException if the bytecode for {@code fieldSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces has a version number that is unsupported
+     *         by this version of JBSE.
+     * @throws WrongClassNameException if the bytecode for {@code fieldSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces contains a class name that is different
+     *         from the expected one ({@code fieldSignature.}{@link Signature#getClassName() getClassName()} or the corresponding 
+     *         superclass/superinterface name).
      * @throws IncompatibleClassFileException if the superclass for {@code fieldSignature.}{@link Signature#getClassName() getClassName()} 
      *         is resolved to an interface type, or any superinterface is resolved to an object type.
      * @throws ClassFileNotAccessibleException if the resolved class 
@@ -1069,8 +1122,9 @@ public final class ClassHierarchy implements Cloneable {
      *         a class must be loaded via a user-defined classloader before.
      */
     public ClassFile resolveField(ClassFile accessor, Signature fieldSignature, boolean bypassStandardLoading) 
-    throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, IncompatibleClassFileException, 
-    ClassFileNotAccessibleException, FieldNotAccessibleException, FieldNotFoundException, PleaseLoadClassException {
+    throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, BadClassFileVersionException, 
+    WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, FieldNotAccessibleException, 
+    FieldNotFoundException, PleaseLoadClassException {
         //checks the parameters
         if (fieldSignature.getName() == null) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".resolveField with an invalid signature (null name field).");
@@ -1164,6 +1218,13 @@ public final class ClassHierarchy implements Cloneable {
      *         and its superclasses/superinterfaces in the classpath.
      * @throws ClassFileIllFormedException if the class file for {@code methodSignature.}{@link Signature#getClassName() getClassName()}
      *         or its superclasses/superinterfaces is ill-formed.
+     * @throws BadClassFileVersionException if the bytecode for {@code methodSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces has a version number that is unsupported
+     *         by this version of JBSE.
+     * @throws WrongClassNameException if the bytecode for {@code methodSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces contains a class name that is different
+     *         from the expected one ({@code methodSignature.}{@link Signature#getClassName() getClassName()} or the corresponding 
+     *         superclass/superinterface name).
      * @throws ClassFileNotAccessibleException if the resolved class for {@code methodSignature.}{@link Signature#getClassName() getClassName()}
      *         is not accessible from {@code accessor}.
      * @throws IncompatibleClassFileException if the symbolic reference in 
@@ -1176,8 +1237,9 @@ public final class ClassHierarchy implements Cloneable {
      *         a class must be loaded via a user-defined classloader before. 
      */
     public ClassFile resolveMethod(ClassFile accessor, Signature methodSignature, boolean isInterface, boolean bypassStandardLoading) 
-    throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, 
-    IncompatibleClassFileException, MethodNotFoundException, MethodNotAccessibleException, PleaseLoadClassException {
+    throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, BadClassFileVersionException, 
+    WrongClassNameException, ClassFileNotAccessibleException, IncompatibleClassFileException, MethodNotFoundException, 
+    MethodNotAccessibleException, PleaseLoadClassException {
         //checks the parameters
         if (methodSignature.getName() == null) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".resolveMethod with an invalid signature (null name field).");
@@ -1356,11 +1418,17 @@ public final class ClassHierarchy implements Cloneable {
      *         last in the returned array. 
      * @throws InvalidInputException if {@code descriptor} is not a correct 
      *         method descriptor.
-     * @throws ClassFileNotFoundException if the classfile for one of the classes 
+     * @throws ClassFileNotFoundException if the bytecode for one of the classes 
      *         in {@code descriptor} does not exist in the 
      *         classpath.
-     * @throws ClassFileIllFormedException if the classfile for one of the classes 
+     * @throws ClassFileIllFormedException if the bytecode for one of the classes 
      *         in {@code descriptor} is ill-formed.
+     * @throws BadClassFileVersionException if the bytecode for one of the classes 
+     *         in {@code descriptor} has a version number that is unsupported
+     *         by this version of JBSE.
+     * @throws WrongClassNameException if the bytecode for one of the classes 
+     *         in {@code descriptor} contains a class name that is different
+     *         from the expected one (that is, the one contained in the descriptor).
      * @throws IncompatibleClassFileException if the superclass for  for one of the classes 
      *         in {@code descriptor} is resolved to an interface type, or any superinterface 
      *         is resolved to an object type.
@@ -1368,11 +1436,11 @@ public final class ClassHierarchy implements Cloneable {
      *         in {@code descriptor} is not accessible from {@code accessor}.
      * @throws PleaseLoadClassException if resolution cannot be performed because
      *         a class must be loaded via a user-defined classloader before. 
-     * @throws IncompatibleClassFileException 
      */
     public ClassFile[] resolveMethodType(ClassFile accessor, String descriptor, boolean bypassStandardLoading) 
     throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    IncompatibleClassFileException, ClassFileNotAccessibleException, PleaseLoadClassException {
+    BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, 
+    ClassFileNotAccessibleException, PleaseLoadClassException {
         //checks the parameters
         if (descriptor == null) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".resolveMethodType with descriptor == null.");

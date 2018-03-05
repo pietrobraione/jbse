@@ -21,11 +21,13 @@ import jbse.algo.Algorithm;
 import jbse.algo.BytecodeData_1KME;
 import jbse.algo.InterruptException;
 import jbse.bc.ClassFile;
+import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance_JAVA_CLASS;
@@ -99,8 +101,8 @@ public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEW
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
-                 IncompatibleClassFileException | ClassFileNotAccessibleException e) {
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
+                 WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException e) {
             //this should never happen
             failExecution(e);
         }

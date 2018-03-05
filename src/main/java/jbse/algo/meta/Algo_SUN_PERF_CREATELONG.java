@@ -14,6 +14,7 @@ import static jbse.bc.Signatures.JAVA_DIRECTBYTEBUFFER_INIT;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
+import static jbse.bc.Signatures.UNSUPPORTED_CLASS_VERSION_ERROR;
 import static jbse.common.Util.unsafe;
 
 import java.util.function.Supplier;
@@ -24,6 +25,7 @@ import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.bc.ClassFile;
+import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
@@ -32,6 +34,7 @@ import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.mem.State;
@@ -124,6 +127,12 @@ public final class Algo_SUN_PERF_CREATELONG extends Algo_INVOKEMETA_Nonbranching
         } catch (ClassFileNotFoundException e) {
             //TODO this exception should wrap a ClassNotFoundException
             throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+            exitFromAlgorithm();
+        } catch (BadClassFileVersionException e) {
+            throwNew(state, UNSUPPORTED_CLASS_VERSION_ERROR);
+            exitFromAlgorithm();
+        } catch (WrongClassNameException e) {
+            throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
             exitFromAlgorithm();
         } catch (IncompatibleClassFileException e) {
             throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);

@@ -12,6 +12,7 @@ import jbse.algo.exc.MissingTriggerParameterException;
 import jbse.algo.exc.NotYetImplementedException;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
+import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
@@ -20,6 +21,7 @@ import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Objekt;
@@ -129,8 +131,9 @@ public class TriggerManager {
                     retVal = true;
                     pcOffset = 0; //the offset of the second, third... frames
                 } catch (ClassFileNotFoundException | IncompatibleClassFileException | ClassFileIllFormedException | 
-                         ClassFileNotAccessibleException | MethodNotFoundException | MethodCodeNotFoundException | 
-                         InvalidSlotException | InvalidTypeException | InvalidInputException e) {
+                         BadClassFileVersionException | WrongClassNameException | ClassFileNotAccessibleException | 
+                         MethodNotFoundException | MethodCodeNotFoundException | InvalidSlotException | 
+                         InvalidTypeException | InvalidInputException e) {
                     //does nothing, falls through to skip 
                     //the unfriendly method
                     //TODO very ugly! should we throw an exception? are we sure that they are all not internal exceptions?

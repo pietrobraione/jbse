@@ -10,10 +10,12 @@ import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.StrategyUpdate;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.bc.ClassFile;
+import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
+import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.InvalidInputException;
 import jbse.mem.Klass;
 import jbse.mem.State;
@@ -41,8 +43,8 @@ public final class Algo_JAVA_SYSTEM_SETIN0 extends Algo_INVOKEMETA_Nonbranching 
             if (this.k == null || !this.k.isInitialized()) {
                 throw new UndefinedResultException("Invoked java.lang.System.setIn0 before initialization of class java.lang.System.");
             }
-        } catch (ClassFileNotFoundException | ClassFileIllFormedException |
-                 IncompatibleClassFileException | ClassFileNotAccessibleException e) {
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
+                 WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException e) {
             //this should never happen
             failExecution(e);
         }

@@ -19,11 +19,13 @@ import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
+import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
@@ -104,7 +106,8 @@ public final class Algo_JAVA_CLASS_GETENCLOSINGMETHOD0 extends Algo_INVOKEMETA_N
             exitFromAlgorithm();
         } catch (InvalidTypeException | ClassFileNotFoundException | 
                  ClassFileNotAccessibleException | IncompatibleClassFileException | 
-                 ClassFileIllFormedException | FastArrayAccessNotAllowedException | 
+                 ClassFileIllFormedException | BadClassFileVersionException | 
+                 WrongClassNameException | FastArrayAccessNotAllowedException | 
                  InvalidOperandException e) {
             //this should never happen
             failExecution(e);

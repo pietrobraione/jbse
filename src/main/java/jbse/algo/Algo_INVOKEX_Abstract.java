@@ -25,6 +25,7 @@ import jbse.algo.exc.NotYetImplementedException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
+import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
@@ -33,6 +34,7 @@ import jbse.bc.exc.MethodAbstractException;
 import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.mem.State;
@@ -83,8 +85,9 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     protected final void resolveMethod(State state) 
-    throws ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, 
-    PleaseLoadClassException, IncompatibleClassFileException, MethodNotFoundException, MethodNotAccessibleException,
+    throws ClassFileNotFoundException, ClassFileIllFormedException, BadClassFileVersionException, 
+    WrongClassNameException, ClassFileNotAccessibleException, PleaseLoadClassException, 
+    IncompatibleClassFileException, MethodNotFoundException, MethodNotAccessibleException,
     ThreadStackEmptyException, InvalidInputException {
         final ClassFile currentClass = state.getCurrentClass();
         if (this.data.signature().getClassName() == null) {
@@ -288,8 +291,9 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             } catch (PleaseLoadClassException e) {
                 invokeClassLoaderLoadClass(state, e);
                 exitFromAlgorithm();
-            } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException |
-                     IncompatibleClassFileException | MethodNotFoundException | MethodNotAccessibleException e) {
+            } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException | 
+                     WrongClassNameException | ClassFileNotAccessibleException | IncompatibleClassFileException | 
+                     MethodNotFoundException | MethodNotAccessibleException e) {
                 throw new BaseUnsupportedException(e);
             }
         } else {

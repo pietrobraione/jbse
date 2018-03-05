@@ -14,12 +14,14 @@ import jbse.bc.ClassFileFactoryJavassist;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Classpath;
 import jbse.bc.Signature;
+import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.InvalidInputException;
 import jbse.mem.Objekt.Epoch;
 import jbse.rewr.CalculatorRewriting;
@@ -45,7 +47,9 @@ public class InstanceTest {
     }
 
     @Test
-    public void testInstanceGetFieldValue1() throws ClassFileNotFoundException, ClassFileIllFormedException, InvalidInputException, IncompatibleClassFileException, ClassFileNotAccessibleException, PleaseLoadClassException, InvalidTypeException {
+    public void testInstanceGetFieldValue1() throws ClassFileNotFoundException, ClassFileIllFormedException, InvalidInputException, 
+    BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, 
+    PleaseLoadClassException, InvalidTypeException {
         final String className = "tsafe/main/SimpleCalculator";
         final ClassFile classFile = hier.loadCreateClass(CLASSLOADER_APP, className, true);
         final int numOfStaticFields = hier.numOfStaticFields(classFile);
@@ -57,7 +61,9 @@ public class InstanceTest {
     }
 
     @Test
-    public void testInstanceGetFieldValue2() throws ClassFileNotFoundException, ClassFileIllFormedException, InvalidInputException, IncompatibleClassFileException, ClassFileNotAccessibleException, PleaseLoadClassException, InvalidTypeException {
+    public void testInstanceGetFieldValue2() throws ClassFileNotFoundException, ClassFileIllFormedException, InvalidInputException, 
+    BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, 
+    PleaseLoadClassException, InvalidTypeException {
         final String className = "tsafe/main/SimpleCalculator";
         final ClassFile classFile = hier.loadCreateClass(CLASSLOADER_APP, className, true);
         final int numOfStaticFields = hier.numOfStaticFields(classFile);
@@ -70,7 +76,9 @@ public class InstanceTest {
     }
 
     @Test
-    public void testInstanceSetFieldValue() throws ClassFileNotFoundException, ClassFileIllFormedException, InvalidInputException, IncompatibleClassFileException, ClassFileNotAccessibleException, PleaseLoadClassException, InvalidTypeException {
+    public void testInstanceSetFieldValue() throws ClassFileNotFoundException, ClassFileIllFormedException, InvalidInputException, 
+    BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, 
+    PleaseLoadClassException, InvalidTypeException {
         final String className = "tsafe/main/SimpleCalculator";
         final ClassFile classFile = hier.loadCreateClass(CLASSLOADER_APP, className, true);
         final int numOfStaticFields = hier.numOfStaticFields(classFile);
@@ -83,7 +91,9 @@ public class InstanceTest {
     }
 
     @Test
-    public void testInstanceClone() throws ClassFileNotFoundException, ClassFileIllFormedException, InvalidInputException, IncompatibleClassFileException, ClassFileNotAccessibleException, PleaseLoadClassException, InvalidTypeException {
+    public void testInstanceClone() throws ClassFileNotFoundException, ClassFileIllFormedException, InvalidInputException, 
+    BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, 
+    PleaseLoadClassException, InvalidTypeException {
         final String className = "tsafe/main/SimpleCalculator";
         final ClassFile classFile = hier.loadCreateClass(CLASSLOADER_APP, className, true);
         final int numOfStaticFields = hier.numOfStaticFields(classFile);

@@ -13,11 +13,13 @@ import java.util.TreeMap;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
+import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.WrongClassNameException;
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
@@ -654,6 +656,17 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
          *         reference and the classfile for
          *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
          *         or for the class name of one of its possibile expansions is ill-formed.
+         * @throws BadClassFileVersionException when {@code valToLoad} is a symbolic 
+         *         reference and the bytecode for
+         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or for the class name of one of its possibile expansions has a version
+         *         number that is unsupported by this version of JBSE.
+         * @throws WrongClassNameException when {@code valToLoad} is a symbolic 
+         *         reference and the bytecode for
+         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or for the class name of one of its possibile expansions has a 
+         *         class name different from the expected one ({@code valToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or the expansion's name).
          * @throws IncompatibleClassFileException if {@code valToLoad} is a symbolic 
          *         reference and the superclass of class
          *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
@@ -667,7 +680,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 */
 	public Outcome resolve_XLOAD_GETX(State state, Value valToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result) 
 	throws InvalidInputException, DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
-	IncompatibleClassFileException, ClassFileNotAccessibleException {
+	BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException {
 	    if (state == null || valToLoad == null || result == null) {
 	        throw new InvalidInputException("resolve_XLOAD_GETX invoked with a null parameter.");
 	    }
@@ -699,6 +712,15 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
          * @throws ClassFileIllFormedException if the classfile for
          *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
          *         or for the class name of one of its possibile expansions is ill-formed.
+         * @throws BadClassFileVersionException when the bytecode for
+         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or for the class name of one of its possibile expansions has a version
+         *         number that is unsupported by this version of JBSE.
+         * @throws WrongClassNameException when the bytecode for
+         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or for the class name of one of its possibile expansions has a 
+         *         class name different from the expected one ({@code refToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or the expansion's name).
          * @throws IncompatibleClassFileException if the superclass of
          *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
          *         or of one of its possible expansion is resolved to an interface class,
@@ -711,7 +733,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 */
 	protected Outcome resolve_XLOAD_GETX_Unresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)
 	throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
-	IncompatibleClassFileException, ClassFileNotAccessibleException {
+	BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, 
+	ClassFileNotAccessibleException {
 	    try {
 	        final boolean partialReferenceResolution = 
 	            doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFactory_XLOAD_GETX(), result);
@@ -756,6 +779,17 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
          *         reference and the classfile for
          *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
          *         or for the class name of one of its possibile expansions is ill-formed.
+         * @throws BadClassFileVersionException when {@code valToLoad} is a symbolic 
+         *         reference and the bytecode for
+         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or for the class name of one of its possibile expansions has a version
+         *         number that is unsupported by this version of JBSE.
+         * @throws WrongClassNameException when {@code valToLoad} is a symbolic 
+         *         reference and the bytecode for
+         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or for the class name of one of its possibile expansions has a 
+         *         class name different from the expected one ({@code valToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or the expansion's name).
          * @throws IncompatibleClassFileException if {@code valToLoad} is a symbolic 
          *         reference and the superclass of class
          *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
@@ -770,7 +804,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	//TODO should be final?
 	public Outcome resolve_XALOAD(State state, Expression accessExpression, Value valToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result)
 	throws InvalidInputException, DecisionException, ClassFileNotFoundException, 
-	ClassFileIllFormedException, IncompatibleClassFileException, ClassFileNotAccessibleException {
+	ClassFileIllFormedException, BadClassFileVersionException, WrongClassNameException, 
+	IncompatibleClassFileException, ClassFileNotAccessibleException {
 		if (state == null || result == null) {
 			throw new InvalidInputException("resolve_XALOAD invoked with a null parameter.");
 		}
@@ -891,13 +926,22 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *        {@link DecisionAlternative_XALOAD}s representing all the 
 	 *        satisfiable outcomes of the operation.
 	 * @return an {@link Outcome}.
-         * @throws ClassFileNotFoundException  when 
+         * @throws ClassFileNotFoundException when 
          *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
          *         or the class name of one of its possibile expansions does 
          *         not have a classfile in the classpath.
 	 * @throws ClassFileIllFormedException when the classfile for
          *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
          *         or for the class name of one of its possibile expansions is ill-formed.
+         * @throws BadClassFileVersionException when the bytecode for
+         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or for the class name of one of its possibile expansions has a version
+         *         number that is unsupported by this version of JBSE.
+         * @throws WrongClassNameException when the bytecode for
+         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or for the class name of one of its possibile expansions has a 
+         *         class name different from the expected one ({@code refToLoad.}{@link Signature#getClassName() getClassName()}
+         *         or the expansion's name).
          * @throws IncompatibleClassFileException when the superclass of class
          *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
          *         is resolved to an interface class, or any superinterface is resolved
@@ -910,6 +954,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 */
 	protected Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, Reference arrayReference, SortedSet<DecisionAlternative_XALOAD> result)
 	throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
+	BadClassFileVersionException, WrongClassNameException, 
 	IncompatibleClassFileException, ClassFileNotAccessibleException {
 	    try {
 	        final boolean accessConcrete = (accessExpression == null);
@@ -954,10 +999,22 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
          * @throws ClassFileNotFoundException when 
          *         {@code refToResolve.}{@link Signature#getClassName() getClassName()}
          *         or the class name of one of its possibile expansions does 
-         *         not have a classfile in {@code state}'s classpath.
-	 * @throws ClassFileIllFormedException when the classfile for
+         *         not have bytecode in {@code state}'s classpath.
+	 * @throws ClassFileIllFormedException when the bytecode for
          *         {@code refToResolve.}{@link Signature#getClassName() getClassName()}
          *         or for the class name of one of its possibile expansions is ill-formed.
+         * @throws BadClassFileVersionException when the bytecode for
+         *         {@code refToResolve.}{@link Signature#getClassName() getClassName()}
+         *         or for the class name of one of its possibile expansions has a version
+         *         number that is unsupported by this version of JBSE.
+         * @throws WrongClassNameException when the bytecode for
+         *         {@code refToResolve.}{@link Signature#getClassName() getClassName()}
+         *         or for the class name of one of its possibile expansions has a 
+         *         class name different from the expected one ({@code refToResolve.}{@link Signature#getClassName() getClassName()}
+         *         or the expansion's name).
+         * @throws IncompatibleClassFileException if the superclass of {@code refToResolve.}{@link Signature#getClassName() getClassName()}
+         *         or for one of its possibile expansions is resolved to an interface 
+         *         class, or any superinterface is resolved to an object class.
 	 * @throws ClassFileNotAccessibleException when the classfile for
          *         {@code refToResolve.}{@link Signature#getClassName() getClassName()}
          *         or for the class name of one of its possibile expansions cannot access
@@ -967,7 +1024,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	boolean doResolveReference(State state, ReferenceSymbolic refToResolve, 
 	DecisionAlternativeReferenceFactory<DA, DE, DN> factory, SortedSet<D> result) 
 	throws InvalidInputException, DecisionException, ClassFileNotFoundException, 
-	ClassFileIllFormedException, IncompatibleClassFileException, ClassFileNotAccessibleException {
+	ClassFileIllFormedException, BadClassFileVersionException, WrongClassNameException, 
+	IncompatibleClassFileException, ClassFileNotAccessibleException {
 		int branchCounter = result.size() + 1;
 		final ClassHierarchy hier = state.getClassHierarchy();
 		
@@ -1111,7 +1169,16 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *         names does not denote a classfile in the classpath.
          * @throws ClassFileIllFormedException if any of the candidate subclass names 
          *         for {@code refClass} in {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
-         *         expansion backdoor has an ill-formed classfile.
+         *         expansion backdoor has an ill-formed bytecode.
+         * @throws BadClassFileVersionException when the bytecode for any of the 
+         *         candidate subclass names for {@code refClass} in 
+         *         {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
+         *         expansion backdoor has a version number that is unsupported by this version of JBSE.
+         * @throws WrongClassNameException when the bytecode for any of the 
+         *         candidate subclass names for {@code refClass} in 
+         *         {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
+         *         expansion backdoor has a class name different from the expected one 
+         *         (the candidate subclass name).
          * @throws IncompatibleClassFileException if the superclass of any of the candidate subclasses 
          *         for {@code refClass} in {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
          *         expansion backdoor is resolved to an interface class, or any superinterface is resolved
@@ -1122,6 +1189,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 */
 	private static Set<ClassFile> getPossibleExpansions(State state, ClassFile refClass) 
 	throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, 
+	BadClassFileVersionException, WrongClassNameException, 
 	IncompatibleClassFileException, ClassFileNotAccessibleException {
 	    if (!refClass.isReference() && !refClass.isArray()) {
 	        return null;

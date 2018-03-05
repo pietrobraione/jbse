@@ -116,6 +116,16 @@ public final class ClassFileArray extends ClassFile {
     }
     
     @Override
+    public int getMajorVersion() {
+        return JAVA_8;
+    }
+    
+    @Override
+    public int getMinorVersion() {
+        return 0;
+    }
+    
+    @Override
     public int getDefiningClassLoader() {
         return this.definingClassLoader;
     }

@@ -48,6 +48,7 @@ import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.bc.Snippet;
+import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
@@ -57,6 +58,7 @@ import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
@@ -298,6 +300,12 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
         } catch (ClassFileIllFormedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+        } catch (BadClassFileVersionException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (WrongClassNameException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         } catch (IncompatibleClassFileException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -418,7 +426,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
     
     private ClassFile resolveTypeName(State state, ClassFile accessor, String typeName) 
     throws InvalidInputException, ClassFileNotFoundException, IncompatibleClassFileException, 
-    ClassFileIllFormedException, ClassFileNotAccessibleException, PleaseLoadClassException {
+    ClassFileIllFormedException, BadClassFileVersionException, WrongClassNameException, 
+    ClassFileNotAccessibleException, PleaseLoadClassException {
         final ClassFile retVal;
         if (isPrimitive(typeName)) {
             retVal = state.getClassHierarchy().getClassFilePrimitive(toPrimitiveCanonicalName(typeName));
@@ -436,14 +445,18 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
      * @param accessor a {@link ClassFile}, the accessor class.
      * @param descriptor a {@link String}, the method descriptor.
      * @return a {@link ReferenceConcrete} to an {@link Instance} of 
-     *         {@code java.lang.invoke.MethodType} for 
-     *         {@code resolved.}{@link Signature#getDescriptor() getDescriptor}{@code ()}.
+     *         {@code java.lang.invoke.MethodType} for {@code descriptor}.
      * @throws PleaseLoadClassException if the execution of this {@link Algorithm} must be interrupted 
      *         because a class referred in {@code resolved} must be loaded by a user-defined classloader.
      * @throws ClassFileNotFoundException if any class referred in {@code resolved} 
      *         does not exist.
-     * @throws ClassFileNotFoundException if any class referred in {@code resolved} 
+     * @throws ClassFileIllFormedException if any class referred in {@code resolved} 
      *         is ill-formed.
+     * @throws BadClassFileVersionException if any class referred in {@code resolved}
+     *         has a version number that is unsupported by the current version of JBSE.
+     * @throws WrongClassNameException if the bytecode of any class referred in {@code resolved}
+     *         has a name that is different from what expected (the corresponding name in 
+     *         {@code resolved}).
      * @throws IncompatibleClassFileException if the superclass of any class referred in {@code resolved}
      *         is resolved to an interface type, or a superinterface is resolved to an object type.
      * @throws ClassFileNotAccessibleException if any class referred in {@code resolved} 
@@ -454,8 +467,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
      */
     private ReferenceConcrete findMethodType(State state, ClassFile accessor, String descriptor) 
     throws PleaseLoadClassException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    IncompatibleClassFileException, ClassFileNotAccessibleException, HeapMemoryExhaustedException, 
-    InterruptException, ThreadStackEmptyException {
+    BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, 
+    ClassFileNotAccessibleException, HeapMemoryExhaustedException, InterruptException, ThreadStackEmptyException {
         //fast track: the MethodType already exists in the state's cache
         if (state.hasInstance_JAVA_METHODTYPE(descriptor)) {
             return state.referenceToInstance_JAVA_METHODTYPE(descriptor);
@@ -535,10 +548,14 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
      *         descriptor (just for convenience).
      * @throws PleaseLoadClassException if the execution of this {@link Algorithm} must be interrupted 
      *         because a class referred in {@code resolved} must be loaded by a user-defined classloader.
-     * @throws ClassFileNotFoundException if the classfile for any 
+     * @throws ClassFileNotFoundException if the bytecode for any 
      *         class referred in {@code polymorphicMethodDescriptor} is not found in the classpath.
-     * @throws ClassFileIllFormedException if the classfile for any 
+     * @throws ClassFileIllFormedException if the bytecode for any 
      *         class referred in {@code polymorphicMethodDescriptor} is ill-formed.
+     * @throws BadClassFileVersionException if the bytecode for any 
+     *         class referred in {@code polymorphicMethodDescriptor} has a version number
+     *         that is unsupported by the current version of JBSE.
+     * @throws WrongClassNameException 
      * @throws IncompatibleClassFileException if the superclass of any 
      *         class referred in {@code polymorphicMethodDescriptor} is resolved to an 
      *         interface type, or any superinterface is resolved to an object type.
@@ -553,7 +570,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
     private Signature linkMethod(State state, ClassFile accessor, String polymorphicMethodDescriptor, String polymorphicMethodName) 
     throws PleaseLoadClassException, ClassFileNotFoundException, ClassFileIllFormedException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException, HeapMemoryExhaustedException, 
-    ThreadStackEmptyException, InterruptException, InvalidInputException {
+    ThreadStackEmptyException, InterruptException, InvalidInputException, BadClassFileVersionException, WrongClassNameException {
         final Signature polymorphicMethodSignature = new Signature(this.resolvedClass.getClassName(), SIGNATURE_POLYMORPHIC_DESCRIPTOR, polymorphicMethodName);
         if (state.isMethodLinked(polymorphicMethodSignature)) {
             //already linked
@@ -571,7 +588,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             ClassFile cf_JAVA_METHODHANDLE = null; //to keep the compiler happy
             try {
                 cf_JAVA_METHODHANDLE = state.getClassHierarchy().loadCreateClass(JAVA_METHODHANDLE);
-            } catch (ClassFileNotFoundException | ClassFileIllFormedException | ClassFileNotAccessibleException e) {
+            } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
+                     BadClassFileVersionException | WrongClassNameException | ClassFileNotAccessibleException e) {
                 //this should never happen
                 failExecution(e);
             }
@@ -586,7 +604,14 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             final ReferenceConcrete mtRef = findMethodType(state, accessor, polymorphicMethodDescriptor);
 
             //4- an array with length 1 to host the returned appendix (if any)
-            final ClassFile cf_arrayOfJAVA_OBJECT = state.getClassHierarchy().loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND);
+            ClassFile cf_arrayOfJAVA_OBJECT = null; //to keep the compiler happy
+            try {
+                cf_arrayOfJAVA_OBJECT = state.getClassHierarchy().loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND);
+            } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
+                    BadClassFileVersionException | WrongClassNameException | ClassFileNotAccessibleException e) {
+                //this should never happen
+                failExecution(e);
+            }
             final ReferenceConcrete appendixBox = state.createArray(null, state.getCalculator().valInt(1), cf_arrayOfJAVA_OBJECT);
 
             //upcalls

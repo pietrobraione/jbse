@@ -16,6 +16,7 @@ import java.util.function.Supplier;
 import jbse.algo.exc.NotYetImplementedException;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
+import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
@@ -26,6 +27,7 @@ import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.WrongClassNameException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
@@ -75,6 +77,8 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
             } catch (ClassFileNotFoundException |
                      ClassFileNotAccessibleException |
                      ClassFileIllFormedException |
+                     BadClassFileVersionException |
+                     WrongClassNameException |
                      IncompatibleClassFileException | 
                      MethodNotFoundException | 
                      MethodNotAccessibleException e) {

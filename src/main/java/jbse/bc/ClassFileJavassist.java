@@ -324,6 +324,16 @@ public class ClassFileJavassist extends ClassFile {
     }
     
     @Override
+    public int getMajorVersion() {
+        return this.cf.getMajorVersion();
+    }
+    
+    @Override
+    public int getMinorVersion() {
+        return this.cf.getMinorVersion();
+    }
+    
+    @Override
     public int getDefiningClassLoader() {
         return this.definingClassLoader;
     }

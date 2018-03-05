@@ -46,6 +46,7 @@ import jbse.bc.ExceptionTableEntry;
 import jbse.bc.Signature;
 import jbse.bc.Snippet;
 import jbse.bc.SnippetFactory;
+import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
@@ -55,6 +56,7 @@ import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
+import jbse.bc.exc.WrongClassNameException;
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
@@ -1304,7 +1306,8 @@ public final class State implements Cloneable {
         try {
             cf_JAVA_CLASSLOADER = this.classHierarchy.loadCreateClass(JAVA_CLASSLOADER);
             cf_JAVA_THREAD = this.classHierarchy.loadCreateClass(JAVA_THREAD);
-        } catch (ClassFileNotFoundException | ClassFileIllFormedException | IncompatibleClassFileException |
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException | 
+                 WrongClassNameException | IncompatibleClassFileException |
                  InvalidInputException | ClassFileNotAccessibleException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -1609,9 +1612,10 @@ public final class State implements Cloneable {
                 final char c = value.charAt(k);
                 a.setFast(this.calc.valInt(k), this.calc.valChar(c));
             }
-        } catch (ClassFileNotFoundException | ClassFileIllFormedException | IncompatibleClassFileException |
-                 ClassFileNotAccessibleException | ClassCastException | InvalidOperandException | 
-                 InvalidTypeException | InvalidInputException | FastArrayAccessNotAllowedException e) {
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException | 
+                 WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException | 
+                 ClassCastException | InvalidOperandException | InvalidTypeException | 
+                 InvalidInputException | FastArrayAccessNotAllowedException e) {
             //this should never happen 
             throw new UnexpectedInternalException(e);
         }
@@ -1858,7 +1862,8 @@ public final class State implements Cloneable {
         final ClassFile cf_JAVA_THROWABLE;
         try {
             cf_JAVA_THROWABLE = this.classHierarchy.loadCreateClass(JAVA_THROWABLE);
-        } catch (ClassFileNotFoundException | ClassFileIllFormedException | IncompatibleClassFileException |
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
+                 WrongClassNameException | IncompatibleClassFileException |
                  InvalidInputException | ClassFileNotAccessibleException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);

@@ -23,6 +23,16 @@ import jbse.common.exc.UnexpectedInternalException;
  * class file.
  */
 public abstract class ClassFile implements Comparable<ClassFile> {
+    public static final int JAVA_1 = 45;
+    public static final int JAVA_2 = 46;
+    public static final int JAVA_3 = 47;
+    public static final int JAVA_4 = 48;
+    public static final int JAVA_5 = 49;
+    public static final int JAVA_6 = 50;
+    public static final int JAVA_7 = 51;
+    public static final int JAVA_8 = 52;
+    public static final int JAVA_9 = 53;
+    
     protected static final String JAR_FILE_EXTENSION = ".jar";
     
     /**
@@ -42,6 +52,20 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      *         (array classes, primitive classes, snippet classfiles).
      */
     public abstract String getSourceFile();
+    
+    /**
+     * Gets the major version number of this class.
+     * 
+     * @return an {@code int}.
+     */
+    public abstract int getMajorVersion();
+    
+    /**
+     * Gets the minor version number of this class.
+     * 
+     * @return an {@code int}.
+     */
+    public abstract int getMinorVersion();
 
     /**
      * Returns the name of the class.

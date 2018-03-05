@@ -70,6 +70,16 @@ abstract class ClassFilePrimitive extends ClassFile {
     public String getSourceFile() {
         return "";
     }
+    
+    @Override
+    public int getMajorVersion() {
+        return JAVA_8;
+    }
+    
+    @Override
+    public int getMinorVersion() {
+        return 0;
+    }
 
     @Override
     public String getClassName() {

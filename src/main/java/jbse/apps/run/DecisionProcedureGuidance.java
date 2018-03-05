@@ -8,12 +8,14 @@ import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.NotYetImplementedException;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
+import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodNotFoundException;
+import jbse.bc.exc.WrongClassNameException;
 import jbse.common.Type;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
@@ -409,6 +411,7 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
     @Override
     protected Outcome resolve_XLOAD_GETX_Unresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)
     throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
+    BadClassFileVersionException, WrongClassNameException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException {
         if (this.failedConcrete) {
             throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);
@@ -449,6 +452,7 @@ public final class DecisionProcedureGuidance extends DecisionProcedureAlgorithms
     @Override
     protected Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result)
     throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
+    BadClassFileVersionException, WrongClassNameException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException {
         if (this.failedConcrete) {
             throw new GuidanceException(ERROR_NONCONCRETE_GUIDANCE);

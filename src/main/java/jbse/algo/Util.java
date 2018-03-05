@@ -38,6 +38,7 @@ import jbse.bc.ConstantPoolValue;
 import jbse.bc.Signature;
 import jbse.bc.Snippet;
 import jbse.bc.exc.AttributeNotFoundException;
+import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
@@ -50,6 +51,7 @@ import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.WrongClassNameException;
 import jbse.common.Type;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -246,7 +248,8 @@ public class Util {
             fillExceptionBacktrace(state, excReference);
             state.unwindStack(excReference);
         } catch (ClassFileNotFoundException | IncompatibleClassFileException | 
-                 ClassFileIllFormedException | ClassFileNotAccessibleException e) {
+                 ClassFileIllFormedException | BadClassFileVersionException | 
+                 WrongClassNameException | ClassFileNotAccessibleException e) {
             throw new ClasspathException(e);
         } catch (InvalidInputException | InvalidIndexException | InvalidProgramCounterException e) {
             //there is not much we can do if this happens
@@ -280,7 +283,8 @@ public class Util {
             final ReferenceConcrete excReference = state.createInstanceSurely(exceptionClass);
             fillExceptionBacktrace(state, excReference);
             throwObject(state, excReference);
-        } catch (ClassFileNotFoundException | ClassFileIllFormedException e) {
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
+                 BadClassFileVersionException | WrongClassNameException e) {
             throw new ClasspathException(e);
         } catch (IncompatibleClassFileException | ClassFileNotAccessibleException | InvalidInputException e) {
             //there is not much we can do if this happens
@@ -430,7 +434,7 @@ public class Util {
      *         execution of the bytecode, to run the 
      *         {@code <clinit>} method(s) for the initialized 
      *         class(es) or because of heap memory exhaustion.
-     * @throws ContradictionException  if some initialization assumption is
+     * @throws ContradictionException if some initialization assumption is
      *         contradicted.
      */
     public static void ensureClassInitialized(State state, ClassFile classFile, ExecutionContext ctx)
@@ -439,7 +443,8 @@ public class Util {
         try {
             ensureClassInitialized(state, classFile, ctx, null, null);
         } catch (ClassFileNotFoundException | IncompatibleClassFileException | 
-                 ClassFileIllFormedException | ClassFileNotAccessibleException e) {
+                 ClassFileIllFormedException | BadClassFileVersionException | 
+                 WrongClassNameException | ClassFileNotAccessibleException e) {
             //this should never happen
             failExecution(e);
         }
@@ -484,7 +489,8 @@ public class Util {
         try {
             ensureClassInitialized(state, classFile, ctx, null, boxExceptionMethodSignature);
         } catch (ClassFileNotFoundException | IncompatibleClassFileException | 
-                 ClassFileIllFormedException | ClassFileNotAccessibleException e) {
+                 ClassFileIllFormedException | BadClassFileVersionException | 
+                 WrongClassNameException | ClassFileNotAccessibleException e) {
             //this should never happen
             failExecution(e);
         }
@@ -526,6 +532,10 @@ public class Util {
      * @throws IncompatibleClassFileException if the superclass for some class in {@code skip} is 
      *         resolved to an interface type, or any superinterface is resolved to an object type.
      * @throws ClassFileIllFormedException if some class in {@code skip} is ill-formed.
+     * @throws BadClassFileVersionException if some class in {@code skip} has a version number
+     *         that is unsupported by this version of JBSE.
+     * @throws WrongClassNameException if the bytecode of some class in {@code skip} has a name
+     *         that is different from what expected (the corresponding name in {@code skip}).
      * @throws ClassFileNotAccessibleException if some class in {@code skip} has
      *         a superclass/superinterface that it cannot access.
      * @throws ContradictionException  if some initialization assumption is
@@ -534,7 +544,7 @@ public class Util {
     public static void ensureClassInitialized(State state, ClassFile classFile, ExecutionContext ctx, Set<String> skip)
     throws InvalidInputException, DecisionException, ClasspathException, HeapMemoryExhaustedException, 
     InterruptException, ClassFileNotFoundException, IncompatibleClassFileException, ClassFileIllFormedException, 
-    ClassFileNotAccessibleException, ContradictionException {
+    BadClassFileVersionException, WrongClassNameException, ClassFileNotAccessibleException, ContradictionException {
         ensureClassInitialized(state, classFile, ctx, skip, null);
     }
     
@@ -576,6 +586,10 @@ public class Util {
      * @throws IncompatibleClassFileException if the superclass for some class in {@code skip} is 
      *         resolved to an interface type, or any superinterface is resolved to an object type.
      * @throws ClassFileIllFormedException if some class in {@code skip} is ill-formed.
+     * @throws BadClassFileVersionException if some class in {@code skip} has a version number
+     *         that is unsupported by this version of JBSE.
+     * @throws WrongClassNameException if the bytecode of some class in {@code skip} has a name
+     *         that is different from what expected (the corresponding name in {@code skip}).
      * @throws ClassFileNotAccessibleException if some class in {@code skip} has
      *         a superclass/superinterface that it cannot access.
      * @throws ContradictionException  if some initialization assumption is
@@ -584,7 +598,8 @@ public class Util {
     public static void ensureClassInitialized(State state, ClassFile classFile, ExecutionContext ctx, Set<String> skip, Signature boxExceptionMethodSignature) 
     throws InvalidInputException, DecisionException, ClasspathException, HeapMemoryExhaustedException, InterruptException, 
     ClassFileNotFoundException, IncompatibleClassFileException, ClassFileIllFormedException, 
-    ClassFileNotAccessibleException, ContradictionException {
+    BadClassFileVersionException, WrongClassNameException, ClassFileNotAccessibleException, 
+    ContradictionException {
         final Set<String> _skip = (skip == null) ? new HashSet<>() : skip; //null safety
         final ClassInitializer ci = new ClassInitializer(state, ctx, _skip, boxExceptionMethodSignature);
         final boolean failed = ci.initialize(classFile);
@@ -654,7 +669,7 @@ public class Util {
 
         private ClassInitializer(State s, ExecutionContext ctx, Set<String> skip, Signature boxExceptionMethodSignature) 
         throws InvalidInputException, ClassFileNotFoundException, IncompatibleClassFileException, 
-        ClassFileIllFormedException, ClassFileNotAccessibleException {
+        ClassFileIllFormedException, BadClassFileVersionException, WrongClassNameException, ClassFileNotAccessibleException {
             this.s = s;
             this.ctx = ctx;
             this.boxExceptionMethodSignature = boxExceptionMethodSignature;
@@ -900,8 +915,10 @@ public class Util {
                         final Signature sigClinit = new Signature(JAVA_OBJECT, "()" + Type.VOID, "<clinit>");
                         final ClassFile cf_JAVA_OBJECT = this.s.getClassHierarchy().loadCreateClass(JAVA_OBJECT);
                         this.s.pushFrame(cf_JAVA_OBJECT, sigClinit, false, 0);
-                    } catch (ClassFileNotFoundException | IncompatibleClassFileException | ClassFileIllFormedException | 
-                             InvalidInputException | ClassFileNotAccessibleException e) {
+                    } catch (ClassFileNotFoundException | IncompatibleClassFileException | 
+                             ClassFileIllFormedException | BadClassFileVersionException | 
+                             WrongClassNameException | InvalidInputException | 
+                             ClassFileNotAccessibleException e) {
                         //this should never happen
                         failExecution("Could not find the classfile for java.lang.Object.");
                     }

@@ -73,6 +73,7 @@ import jbse.algo.exc.NotYetImplementedException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Snippet;
+import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
@@ -82,6 +83,7 @@ import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
@@ -288,8 +290,8 @@ public final class Algo_INIT {
             //loads application classes
             classHierarchy.loadCreateClass(CLASSLOADER_APP, JBSE_BASE, true);
             classHierarchy.loadCreateClass(CLASSLOADER_APP, ctx.rootMethodSignature.getClassName(), true);
-        } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
-                 IncompatibleClassFileException | ClassFileNotAccessibleException e) {
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
+                 WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException e) {
             throw new ClasspathException(e);
         } catch (InvalidInputException | PleaseLoadClassException e) {
             //this should never happen
@@ -341,9 +343,9 @@ public final class Algo_INIT {
             //nothing to do: fall through
         } catch (HeapMemoryExhaustedException e) {
             throw new InitializationException(e);
-        } catch (InvalidInputException | ThreadStackEmptyException | ClassFileNotFoundException | 
-            ClassFileIllFormedException | IncompatibleClassFileException | 
-            ClassFileNotAccessibleException e) {
+        } catch (ThreadStackEmptyException | InvalidInputException | ClassFileNotFoundException | 
+            ClassFileIllFormedException | BadClassFileVersionException | WrongClassNameException | 
+            IncompatibleClassFileException | ClassFileNotAccessibleException e) {
             //this should not happen at this point
             failExecution(e);
         }
@@ -360,8 +362,8 @@ public final class Algo_INIT {
             //nothing to do: fall through
         } catch (HeapMemoryExhaustedException e) {
             throw new InitializationException(e);
-        } catch (InvalidInputException | ClassFileNotFoundException | 
-                 ClassFileIllFormedException | IncompatibleClassFileException | 
+        } catch (InvalidInputException | ClassFileNotFoundException | ClassFileIllFormedException | 
+                 BadClassFileVersionException | WrongClassNameException | IncompatibleClassFileException | 
                  ClassFileNotAccessibleException e) {
             //this should not happen at this point
             failExecution(e);
@@ -387,11 +389,11 @@ public final class Algo_INIT {
         try {
             final ClassFile cf_JAVA_SYSTEM = state.getClassHierarchy().loadCreateClass(JAVA_SYSTEM); 
             state.pushFrame(cf_JAVA_SYSTEM, JAVA_SYSTEM_INITIALIZESYSTEMCLASS, false, 0);
-        } catch (NullMethodReceiverException | MethodNotFoundException | 
-                 MethodCodeNotFoundException | InvalidSlotException | InvalidProgramCounterException | 
-                 InvalidTypeException | ThreadStackEmptyException | ClassFileNotFoundException | 
-                 IncompatibleClassFileException | ClassFileIllFormedException | ClassFileNotAccessibleException | 
-                 InvalidInputException e) {
+        } catch (NullMethodReceiverException | MethodNotFoundException | MethodCodeNotFoundException | 
+                 InvalidSlotException | InvalidProgramCounterException | InvalidTypeException | 
+                 ThreadStackEmptyException | ClassFileNotFoundException | BadClassFileVersionException |
+                 WrongClassNameException | IncompatibleClassFileException | ClassFileIllFormedException | 
+                 ClassFileNotAccessibleException | InvalidInputException e) {
             //this should not happen now
             failExecution(e);
         }
@@ -428,8 +430,9 @@ public final class Algo_INIT {
             throw new InitializationException(e);
         } catch (MethodNotFoundException | MethodCodeNotFoundException e) {
             throw new ClasspathException(e);
-        } catch (ClassFileNotFoundException | IncompatibleClassFileException | ClassFileNotAccessibleException | 
-                 ClassFileIllFormedException | NullMethodReceiverException | InvalidSlotException | InvalidProgramCounterException | 
+        } catch (ClassFileNotFoundException | BadClassFileVersionException | WrongClassNameException | 
+                 IncompatibleClassFileException | ClassFileNotAccessibleException | ClassFileIllFormedException | 
+                 NullMethodReceiverException | InvalidSlotException | InvalidProgramCounterException | 
                  InvalidInputException | InvalidTypeException | ThreadStackEmptyException e) {
             //this should never happen
             failExecution(e);
