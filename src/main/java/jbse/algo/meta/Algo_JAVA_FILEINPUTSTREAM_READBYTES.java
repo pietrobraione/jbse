@@ -92,8 +92,8 @@ public final class Algo_JAVA_FILEINPUTSTREAM_READBYTES extends Algo_INVOKEMETA_N
             final int len = ((Integer) ((Simplex) _len).getActualValue()).intValue();
             
             //checks offset and length
-            final int bufSize = ((Integer) ((Simplex) this.buf.getLength()).getActualValue()).intValue();
-            if (this.ofst < 0 || len < 0 || bufSize - this.ofst < len) {
+            final int bufLength = ((Integer) ((Simplex) this.buf.getLength()).getActualValue()).intValue();
+            if (this.ofst < 0 || len < 0 || bufLength - this.ofst < len) {
                 throwNew(state, INDEX_OUT_OF_BOUNDS_EXCEPTION);
                 exitFromAlgorithm();
             }

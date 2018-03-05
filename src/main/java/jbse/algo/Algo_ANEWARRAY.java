@@ -69,17 +69,17 @@ final class Algo_ANEWARRAY extends Algo_XNEWARRAY<BytecodeData_1CL> {
             //TODO this exception should wrap a ClassNotFoundException
             throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
             exitFromAlgorithm();
-        } catch (IncompatibleClassFileException e) {
-            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
-            exitFromAlgorithm();
-        } catch (ClassFileNotAccessibleException e) {
-            throwNew(state, ILLEGAL_ACCESS_ERROR);
-            exitFromAlgorithm();
         } catch (BadClassFileVersionException e) {
             throwNew(state, UNSUPPORTED_CLASS_VERSION_ERROR);
             exitFromAlgorithm();
         } catch (WrongClassNameException e) {
             throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
+            exitFromAlgorithm();
+        } catch (IncompatibleClassFileException e) {
+            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+            exitFromAlgorithm();
+        } catch (ClassFileNotAccessibleException e) {
+            throwNew(state, ILLEGAL_ACCESS_ERROR);
             exitFromAlgorithm();
         } catch (ClassFileIllFormedException e) {
             //TODO throw LinkageError instead
