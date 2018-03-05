@@ -1,7 +1,5 @@
 package jbse.apps.run;
 
-import static jbse.apps.Util.LINE_SEP;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
@@ -111,11 +109,8 @@ public final class Run {
     /** The {@link PrintStream}s for errors (critical log information). */
     private PrintStream[] err = null;
 
-    /** The {@link Formatter} to output states at branches. */
-    private Formatter formatterBranches = null;
-
-    /** The {@link Formatter} to output states not at branches. */
-    private Formatter formatterOthers = null;
+    /** The {@link Formatter} to output states. */
+    private Formatter formatter = null;
 
     /** The {@link Timer} for the decision procedure. */
     private Timer timer = null;
@@ -204,7 +199,7 @@ public final class Run {
             if (this.endOfTraceMessage == null && this.traceKind != TraceTypes.CONTRADICTORY && this.stackSizeAcceptable() && this.mayPrint) {
                 try {
                     final State currentState = Run.this.getCurrentState();
-                    Run.this.emitState(currentState, this.isBranch);
+                    Run.this.emitState(currentState);
                 } catch (UnexpectedInternalException e) {
                     Run.this.err(ERROR_UNEXPECTED);
                     Run.this.err(e);
@@ -404,13 +399,11 @@ public final class Run {
                     if (Run.this.parameters.getStepShowMode() == StepShowMode.SUMMARIES) {
                         State initialRefined = Run.this.engine.getInitialState();
                         initialRefined.refine(currentState);
-                        Run.this.emitState(initialRefined, true);
+                        Run.this.emitState(initialRefined);
                         Run.this.out("\n===\n");
                     }
                     //prints the leaf (stuck) state
-                    Run.this.emitState(currentState,
-                                       (Run.this.parameters.getStepShowMode() == StepShowMode.LEAVES || 
-                                       Run.this.parameters.getStepShowMode() == StepShowMode.SUMMARIES));
+                    Run.this.emitState(currentState);
                 } 
 
                 //displays trace end message and updates stats
@@ -794,53 +787,16 @@ public final class Run {
     private void createFormatter() throws CannotBuildFormatterException {
         final StateFormatMode type = this.parameters.getStateFormatMode();
         if (type == StateFormatMode.FULLTEXT) {
-            this.formatterBranches = new StateFormatterText(this.parameters.getSourcePath()) {
-                @Override
-                public void formatState(State s) {
-                    this.output += LINE_SEP; // gutter
-                    this.output += 
-                    banner(s.getIdentifier() + "[" + s.getSequenceNumber() + "]", true);
-                    this.output += LINE_SEP; // gutter
-                    super.formatState(s);
-                }
-            };
-            this.formatterOthers = new StateFormatterText(this.parameters.getSourcePath()) {
-                @Override
-                public void formatState(State s) {
-                    this.output += LINE_SEP; // gutter
-                    this.output += 
-                    banner(s.getIdentifier() + "[" + s.getSequenceNumber() + "]", false);
-                    this.output += LINE_SEP; // gutter
-                    super.formatState(s);
-                }
-            };
+            this.formatter = new StateFormatterText(this.parameters.getSourcePath());
         } else if (type == StateFormatMode.GRAPHVIZ) {
-            this.formatterBranches = this.formatterOthers = new StateFormatterGraphviz();
+            this.formatter = new StateFormatterGraphviz();
         } else if (type == StateFormatMode.TRACE) {
-            this.formatterBranches = this.formatterOthers = new StateFormatterTrace();
+            this.formatter = new StateFormatterTrace();
         } else if (type == StateFormatMode.JUNIT_TEST) {
-            this.formatterBranches = this.formatterOthers = 
-            new StateFormatterJUnitTestSuite(this::getInitialState, this::getModel);
+            this.formatter = new StateFormatterJUnitTestSuite(this::getInitialState, this::getModel);
         } else {
             throw new CannotBuildFormatterException(ERROR_UNDEF_STATE_FORMAT);
         }
-    }
-
-    /**
-     * Returns a banner around a {@link String}.
-     * 
-     * @param s a {@link String} around which the banner is built, or
-     *            {@link null} for a clean banner.
-     * @return the banner.
-     */
-    private static String banner(String s, boolean branch) {
-        String retVal = (branch ? (".:: " + s + " ::. ") : (s + " "));
-        final StringBuilder buf = new StringBuilder();
-        for (int i = retVal.length() + 1; i <= BANNER_LENGTH; i++) {
-            buf.append(BANNER_CHAR);
-        }
-        retVal += buf.toString();
-        return retVal;
     }
 
     /**
@@ -1016,9 +972,9 @@ public final class Run {
      * Emits the prologue of the symbolic execution.
      */
     private void emitPrologue() {
-        this.formatterOthers.cleanup();
-        this.formatterOthers.formatPrologue();
-        outNoBreak(this.formatterOthers.emit());
+        this.formatter.cleanup();
+        this.formatter.formatPrologue();
+        outNoBreak(this.formatter.emit());
     }
 
     /**
@@ -1028,21 +984,19 @@ public final class Run {
      * @param isRootBranch {@code true} iff 
      *        {@code s} is at a branch point.
      */
-    private void emitState(State s, boolean isRootBranch) {
-        final Formatter f = 
-            (isRootBranch ? this.formatterBranches : this.formatterOthers);
-        f.cleanup();
-        f.formatState(s);
-        outNoBreak(f.emit());
+    private void emitState(State s) {
+        this.formatter.cleanup();
+        this.formatter.formatState(s);
+        outNoBreak(this.formatter.emit());
     }
 
     /**
      * Emits the epilogue of the symbolic execution.
      */
     private void emitEpilogue() {
-        this.formatterOthers.cleanup();
-        this.formatterOthers.formatEpilogue();
-        outNoBreak(this.formatterOthers.emit());
+        this.formatter.cleanup();
+        this.formatter.formatEpilogue();
+        outNoBreak(this.formatter.emit());
     }
 
     /**
@@ -1138,12 +1092,6 @@ public final class Run {
     }
 
     // Private constants.
-
-    /** Length of separator between text areas. */
-    private static final int BANNER_LENGTH = 35;
-
-    /** Char for separator between text areas. */
-    private static final char BANNER_CHAR = '.';
 
     /** Message: welcome. */
     private static final String MSG_WELCOME_TXT = "This is the " + JBSE.NAME + "'s Run Tool (" + JBSE.ACRONYM + " v." + JBSE.VERSION +").";

@@ -43,7 +43,7 @@ import jbse.val.WideningConversion;
  */
 public class StateFormatterText implements Formatter {
     protected List<String> srcPath;
-    protected String output = "";
+    protected StringBuilder output = new StringBuilder();
 
     public StateFormatterText(List<String> srcPath) {
         this.srcPath = Collections.unmodifiableList(srcPath);
@@ -51,95 +51,102 @@ public class StateFormatterText implements Formatter {
 
     @Override
     public void formatState(State s) {
-        this.output = formatState(s, this.srcPath, true, "\t", "");
+        formatState(s, this.output, this.srcPath, true, "\t", "");
     }
 
     @Override
     public String emit() {
-        return this.output;
+        return this.output.toString();
     }
 
     @Override
     public void cleanup() {
-        this.output = "";
+        this.output = new StringBuilder();
     }
 
-    private static String formatState(State state, List<String> srcPath, boolean breakLines, String indentTxt, String indentCurrent) {
+    private static void formatState(State state, StringBuilder sb, List<String> srcPath, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
-        String s = state.getIdentifier() + "[" + state.getSequenceNumber() + "] " + lineSep;
+        sb.append(state.getIdentifier()); sb.append("["); sb.append(state.getSequenceNumber()); sb.append("] "); sb.append(lineSep);
         if (state.isStuck()) {
-            s += "Leaf state";
+            sb.append("Leaf state");
             if (state.getStuckException() != null) {
-                s += ", raised exception: " + state.getStuckException().toString() + lineSep;
+                sb.append(", raised exception: "); sb.append(state.getStuckException().toString());
             } else if (state.getStuckReturn() != null) {
-                s += ", returned value: " + state.getStuckReturn().toString() + lineSep;
-            } else {
-                s += lineSep;
-            }
+                sb.append(", returned value: "); sb.append(state.getStuckReturn().toString());
+            } //else, append nothing
+            sb.append(lineSep);
         } else {
             try {
-                s += "Method signature: " +  state.getCurrentMethodSignature() + lineSep;
-                s += "Program counter: " + state.getPC() + lineSep;
+                sb.append("Method signature: "); sb.append(state.getCurrentMethodSignature()); sb.append(lineSep);
+                sb.append("Program counter: "); sb.append(state.getPC()); sb.append(lineSep);
                 final BytecodeFormatter bfmt = new BytecodeFormatter();
-                s += "Next bytecode: " + bfmt.format(state) + lineSep; 
-                s += "Source line: " + sourceLine(state.getCurrentFrame(), srcPath) + lineSep;
+                sb.append("Next bytecode: "); sb.append(bfmt.format(state)); sb.append(lineSep); 
+                sb.append("Source line: "); sourceLine(state.getCurrentFrame(), sb, srcPath); sb.append(lineSep);
             } catch (ThreadStackEmptyException e) {
                 //the state is not stuck but it has no frames:
                 //this case is not common but it can mean a state
                 //not completely ready to run
             }
         }
-        s += "Path condition: " + formatPathCondition(state, breakLines, indentTxt, indentCurrent + indentTxt) + lineSep;
-        s += "Static store: {" + lineSep + formatStaticMethodArea(state, breakLines, indentTxt, indentCurrent + indentTxt) + lineSep + "}" + lineSep;
-        s += "Heap: {" + lineSep + formatHeap(state, breakLines, indentTxt, indentCurrent + indentTxt) + lineSep + "}" + lineSep;
+        sb.append("Path condition: "); formatPathCondition(state, sb, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep);
+        sb.append("Static store: {"); sb.append(lineSep); formatStaticMethodArea(state, sb, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep); sb.append("}"); sb.append(lineSep);
+        sb.append("Heap: {"); sb.append(lineSep); formatHeap(state, sb, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep); sb.append("}"); sb.append(lineSep);
         if (state.getStackSize() > 0) {
-            s += "Stack: {" + lineSep + formatStack(state, srcPath, breakLines, indentTxt, indentCurrent + indentTxt) + lineSep + "}";
+            sb.append("Stack: {"); sb.append(lineSep); formatStack(state, sb, srcPath, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep); sb.append("}");
         }
-        s += lineSep;
-        return s;
+        sb.append(lineSep);
     }
-    private static String formatPathCondition(State s, boolean breakLines, String indentTxt, String indentCurrent) {
+    
+    private static void formatPathCondition(State s, StringBuilder sb, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
-        String expression = "";
-        String where = "";
+        final StringBuilder expression = new StringBuilder();
+        final StringBuilder where = new StringBuilder();
         boolean doneFirstExpression = false;
         boolean doneFirstWhere = false;
         HashSet<String> doneSymbols = new HashSet<String>();
         for (Clause c : s.getPathCondition()) {
-            expression += (doneFirstExpression ? (" &&" + lineSep) : "") + indentCurrent;
+            expression.append(doneFirstExpression ? (" &&" + lineSep) : ""); expression.append(indentCurrent);
             doneFirstExpression = true;
             if (c instanceof ClauseAssume) {
                 final Primitive cond = ((ClauseAssume) c).getCondition();
-                expression += formatValue(s, cond);
-                final String expressionFormatted = formatPrimitiveForPathCondition(cond, breakLines, indentTxt, indentCurrent, doneSymbols);
-                if (expressionFormatted.equals("")) {
+                formatValue(s, expression, cond);
+                final StringBuilder expressionFormatted = new StringBuilder();
+                formatPrimitiveForPathCondition(cond, expressionFormatted, breakLines, indentTxt, indentCurrent, doneSymbols);
+                if (expressionFormatted.length() == 0) {
                     //does nothing
                 } else {
-                    where += (doneFirstWhere ? (" &&" + lineSep) : "") + indentCurrent + expressionFormatted;
+                    where.append(doneFirstWhere ? (" &&" + lineSep) : ""); where.append(indentCurrent); where.append(expressionFormatted);
                     doneFirstWhere = true;
                 }
             } else if (c instanceof ClauseAssumeReferenceSymbolic) {
                 final ReferenceSymbolic ref = ((ClauseAssumeReferenceSymbolic) c).getReference(); 
-                expression += ref.toString() + " == ";
+                expression.append(ref.toString()); expression.append(" == ");
                 if (s.isNull(ref)) {
-                    expression += "null";
+                    expression.append("null");
                 } else {
                     final MemoryPath tgtOrigin = s.getObject(ref).getOrigin();
-                    expression += "Object[" + s.getResolution(ref) + "] (" + (ref.getOrigin().equals(tgtOrigin) ? "fresh" : ("aliases " + tgtOrigin)) + ")";
+                    expression.append("Object["); expression.append(s.getResolution(ref)); expression.append("] ("); expression.append(ref.getOrigin().equals(tgtOrigin) ? "fresh" : ("aliases " + tgtOrigin)); expression.append(")");
                 }
                 final String referenceFormatted = formatReferenceForPathCondition(ref, doneSymbols); 
                 if (referenceFormatted.equals("")) {
                     //does nothing
                 } else {
-                    where += (doneFirstWhere ? (" &&" + lineSep ) : "") + indentCurrent + referenceFormatted;
+                    if (doneFirstWhere) {
+                        where.append(" &&"); where.append(lineSep);
+                    }
+                    where.append(indentCurrent); where.append(referenceFormatted);
                     doneFirstWhere = true;
                 }
             } else { //(c instanceof ClauseAssumeClassInitialized) || (c instanceof ClauseAssumeClassNotInitialized)
-                expression += c.toString();
+                expression.append(c.toString());
             }
-
         }
-        return (expression.equals("") ? "" : (lineSep + expression)) + (where.equals("") ? "" : (lineSep + indentCurrent + "where:" + lineSep  + where));
+        if (expression.length() > 0) {
+            sb.append(lineSep); sb.append(expression);
+        }
+        if (where.length() > 0) {
+            sb.append(lineSep); sb.append(indentCurrent); sb.append("where:"); sb.append(lineSep); sb.append(where);
+        }
     }
 
     private static String formatReferenceForPathCondition(ReferenceSymbolic r, HashSet<String> done) {
@@ -150,129 +157,134 @@ public class StateFormatterText implements Formatter {
         }
     }
 
-    private static String formatExpressionForPathCondition(Expression e, boolean breakLines, String indentTxt, String indentCurrent, HashSet<String> done) {
+    private static boolean formatExpressionForPathCondition(Expression e, StringBuilder sb, boolean breakLines, String indentTxt, String indentCurrent, HashSet<String> done) {
         final Primitive firstOp = e.getFirstOperand();
         final Primitive secondOp = e.getSecondOperand();
-        String retVal = "";
+        boolean someFirstOp = false;
         if (firstOp != null) {
-            retVal = formatPrimitiveForPathCondition(firstOp, breakLines, indentTxt, indentCurrent, done);
+            someFirstOp = formatPrimitiveForPathCondition(firstOp, sb, breakLines, indentTxt, indentCurrent, done);
         }
-        final String secondOpFormatted = formatPrimitiveForPathCondition(secondOp, breakLines, indentTxt, indentCurrent, done);
-        if (retVal.equals("") || secondOpFormatted.equals("")) {
+        final StringBuilder second = new StringBuilder();
+        final boolean someSecondOp = formatPrimitiveForPathCondition(secondOp, second, breakLines, indentTxt, indentCurrent, done);
+        if (!someFirstOp || !someSecondOp) {
             //does nothing
         } else {
             final String lineSep = (breakLines ? LINE_SEP : "");
-            retVal += " &&" + lineSep + indentCurrent;
+            sb.append(" &&"); sb.append(lineSep); sb.append(indentCurrent);
         }
-        retVal += secondOpFormatted;
-        return retVal;
+        sb.append(second);
+        return (someFirstOp || someSecondOp);
     }
 
-    private static String formatPrimitiveForPathCondition(Primitive p, boolean breakLines, String indentTxt, String indentCurrent, HashSet<String> done) {
+    private static boolean formatPrimitiveForPathCondition(Primitive p, StringBuilder sb, boolean breakLines, String indentTxt, String indentCurrent, HashSet<String> done) {
         if (p instanceof Expression) {
-            return formatExpressionForPathCondition((Expression) p, breakLines, indentTxt, indentCurrent, done);
+            return formatExpressionForPathCondition((Expression) p, sb, breakLines, indentTxt, indentCurrent, done);
         } else if (p instanceof PrimitiveSymbolic) {
             if (done.contains(p.toString())) {
-                return "";
+                return false;
             } else {
                 done.add(p.toString());
-                return p.toString() + " == " + ((PrimitiveSymbolic) p).getOrigin();
+                sb.append(p.toString()); sb.append(" == "); sb.append(((PrimitiveSymbolic) p).getOrigin());
+                return true;
             }
         } else if (p instanceof FunctionApplication) {
-            return formatFunctionApplicationForPathCondition((FunctionApplication) p, breakLines, indentTxt, indentCurrent, done);
+            return formatFunctionApplicationForPathCondition((FunctionApplication) p, sb, breakLines, indentTxt, indentCurrent, done);
         } else if (p instanceof WideningConversion) {
             final WideningConversion pWiden = (WideningConversion) p;
-            return formatPrimitiveForPathCondition(pWiden.getArg(), breakLines, indentTxt, indentCurrent, done);
+            return formatPrimitiveForPathCondition(pWiden.getArg(), sb, breakLines, indentTxt, indentCurrent, done);
         } else if (p instanceof NarrowingConversion) {
             final NarrowingConversion pNarrow = (NarrowingConversion) p;
-            return formatPrimitiveForPathCondition(pNarrow.getArg(), breakLines, indentTxt, indentCurrent, done);
+            return formatPrimitiveForPathCondition(pNarrow.getArg(), sb, breakLines, indentTxt, indentCurrent, done);
         } else { //(p instanceof Any || p instanceof Simplex)
-            return "";
+            return false;
         }
     }
 
-    private static String formatFunctionApplicationForPathCondition(FunctionApplication a, boolean breakLines, String indentTxt, String indentCurrent, HashSet<String> done) {
-        String retVal = "";
+    private static boolean formatFunctionApplicationForPathCondition(FunctionApplication a, StringBuilder sb, boolean breakLines, String indentTxt, String indentCurrent, HashSet<String> done) {
         boolean first = true;
+        boolean some = false;
+        final String lineSep = (breakLines ? LINE_SEP : "");
         for (Primitive p : a.getArgs()) {
-            String argFormatted = formatPrimitiveForPathCondition(p, breakLines, indentTxt, indentCurrent, done);
-            if (argFormatted.equals("")) {
+            final StringBuilder arg = new StringBuilder();
+            final boolean argSome = formatPrimitiveForPathCondition(p, arg, breakLines, indentTxt, indentCurrent, done);
+            some = some || argSome;
+            if (argSome) {
                 //does nothing
             } else { 
-                final String lineSep = (breakLines ? LINE_SEP : "");
-                retVal += (first ? "" : " &&" + lineSep + indentCurrent) + argFormatted;
+                if (!first) {
+                    sb.append(" &&"); sb.append(lineSep); sb.append(indentCurrent);
+                }
+                sb.append(arg);
                 first = false;
             }
         }
-        return retVal;
+        return some;
     }
 
-    private static String formatHeap(State s, boolean breakLines, String indentTxt, String indentCurrent) {
+    private static void formatHeap(State s, StringBuilder sb, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
         final Map<Long, Objekt> h = s.getHeap();
         final int heapSize = h.size();
-        String tmpRet = indentCurrent;
+        sb.append(indentCurrent);
         int j = 0;
         for (Map.Entry<Long, Objekt> e : h.entrySet()) {
             Objekt o = e.getValue();
-            tmpRet += "Object[" + e.getKey() + "]: " + "{";
-            tmpRet += formatObject(s, o, breakLines, indentTxt, indentCurrent + indentTxt) + lineSep;
-            tmpRet += indentCurrent + "}";
+            sb.append("Object["); sb.append(e.getKey()); sb.append("]: "); sb.append("{");
+            formatObject(s, sb, o, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep);
+            sb.append(indentCurrent); sb.append("}");
             if (j < heapSize - 1) {
-                tmpRet += lineSep + indentCurrent;
+                sb.append(lineSep); sb.append(indentCurrent);
             }
             j++;
         }
-        return(tmpRet);
     }
 
-    private static String formatStaticMethodArea(State state, boolean breakLines, String indentTxt, String indentCurrent) {
+    private static void formatStaticMethodArea(State state, StringBuilder sb, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
         final Map<ClassFile, Klass> a = state.getStaticMethodArea();
-        String retVal = indentCurrent;
+        sb.append(indentCurrent);
         boolean doneFirst = false;
         for (Map.Entry<ClassFile, Klass> ee : a.entrySet()) {
             final Klass k = ee.getValue();
             if (k.getStoredFieldSignatures().size() > 0) { //only klasses with fields will be printed
                 if (doneFirst) {
-                    retVal += lineSep + indentCurrent;
+                    sb.append(lineSep); sb.append(indentCurrent);
                 }
                 doneFirst = true;
                 final ClassFile c = ee.getKey();
-                retVal += "Class[(" + c.getDefiningClassLoader() + ", " + c.getClassName() + ")]: {";
-                retVal += formatObject(state, k, breakLines, indentTxt, indentCurrent + indentTxt) + lineSep;
-                retVal += indentCurrent + "}";
+                sb.append("Class[("); sb.append(c.getDefiningClassLoader()); sb.append(", "); sb.append(c.getClassName()); sb.append(")]: {");
+                formatObject(state, sb, k, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep);
+                sb.append(indentCurrent); sb.append("}");
             }
         }
-        return retVal;
     }
 
-    private static String formatObject(State s, Objekt o, boolean breakLines, String indentTxt, String indentCurrent) {
+    private static void formatObject(State s, StringBuilder sb, Objekt o, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
-        String str = "";
         if (o.getOrigin() != null) {
-            str = lineSep + indentCurrent + "Origin: " + o.getOrigin();
+            sb.append(lineSep); sb.append(indentCurrent); sb.append("Origin: "); sb.append(o.getOrigin());
         }
         //explicit dispatch on type
         if (o instanceof Array) {
             final Array a = (Array) o;
-            str += formatArray(s, a, breakLines, indentTxt, indentCurrent);
+            formatArray(s, sb, a, breakLines, indentTxt, indentCurrent);
         } else if (o instanceof Instance) {
             final Instance i = (Instance) o;
-            str += formatInstance(s, i, breakLines, indentTxt, indentCurrent);
+            formatInstance(s, sb, i, breakLines, indentTxt, indentCurrent);
         } else if (o instanceof Klass) {
             final Klass k = (Klass) o;
-            str += formatKlass(s, k, breakLines, indentTxt, indentCurrent);
+            formatKlass(s, sb, k, breakLines, indentTxt, indentCurrent);
         }
-        return str;
     }
 
-    private static String formatArray(State s, Array a, boolean breakLines, String indentTxt, String indentCurrent) {
+    private static void formatArray(State s, StringBuilder sb, Array a, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
-        String str = (a.isSymbolic() && a.isInitial() ? " (initial)" : "") + lineSep;
-        str += indentCurrent + "Type: " + a.getType();
-        str += lineSep + indentCurrent + "Length: " + a.getLength(); 
-        str += lineSep + indentCurrent + "Items: {";
+        if (a.isSymbolic() && a.isInitial()) {
+            sb.append(" (initial)");
+        }
+        sb.append(lineSep); sb.append(indentCurrent); sb.append("Type: "); sb.append(a.getType());
+        sb.append(lineSep); sb.append(indentCurrent); sb.append("Length: "); sb.append(a.getLength()); 
+        sb.append(lineSep); sb.append(indentCurrent); sb.append("Items: {");
         final String indentOld = indentCurrent;
         if (!a.hasSimpleRep()) {
             indentCurrent += indentTxt;
@@ -280,7 +292,7 @@ public class StateFormatterText implements Formatter {
         //if it is an array of chars, then it prints it in a string style
         final boolean printAsString = a.isSimple() && (a.getType().getMemberClass().getClassName().equals("char"));
         if (printAsString) {
-            str += "\"";
+            sb.append("\"");
         }
         boolean skipComma = true;
         boolean hasUnknownValues = false;
@@ -290,13 +302,14 @@ public class StateFormatterText implements Formatter {
             if (a.hasSimpleRep()) {
                 hasKnownValues = true; //the entries will surely have values
                 buf.append(skipComma ? "" : ", ");
-                buf.append(formatArrayEntry(s, e, false));
+                formatArrayEntry(s, buf, e, false);
                 if (!printAsString) {
                     skipComma = false;
                 }
             } else {
-                final String entryFormatted = formatArrayEntry(s, e, true);
-                if (entryFormatted == null) {
+                final StringBuilder entryFormatted = new StringBuilder();
+                final boolean nothing = formatArrayEntry(s, entryFormatted, e, true);
+                if (nothing) {
                     hasUnknownValues = true;
                 } else {
                     hasKnownValues = true;
@@ -306,193 +319,185 @@ public class StateFormatterText implements Formatter {
                 }
             }
         }
-        str += buf.toString();
+        sb.append(buf);
         if (printAsString) {
-            str += "\"";
+            sb.append("\"");
         }
         if (!a.hasSimpleRep()) {
             if (hasUnknownValues) {
-                str += lineSep + indentCurrent + "(no assumption on " + (hasKnownValues ? "other " : "") + "values)";
+                sb.append(lineSep); sb.append(indentCurrent); sb.append("(no assumption on "); sb.append(hasKnownValues ? "other " : ""); sb.append("values)");
             }
-            str += lineSep;
+            sb.append(lineSep);
             indentCurrent = indentOld;
-            str += indentCurrent;
+            sb.append(indentCurrent);
         }
-        str += "}";
-        return str;
+        sb.append("}");
     }
 
-    private static String formatArrayEntry(State s, Array.AccessOutcomeIn e, boolean showExpression) {
-        final String exp = formatValue(s, e.getAccessCondition());
-        final String val;
+    private static boolean formatArrayEntry(State s, StringBuilder sb, Array.AccessOutcomeIn e, boolean showExpression) {
+        final StringBuilder val = new StringBuilder();
         if (e instanceof Array.AccessOutcomeInValue) {
             final Array.AccessOutcomeInValue eCast = (Array.AccessOutcomeInValue) e; 
             if (eCast.getValue() == null) {
-                return null;
+                return true;
             }
-            val = formatValue(s, eCast.getValue());
+            formatValue(s, val, eCast.getValue());
         } else {
             final Array.AccessOutcomeInInitialArray eCast = (Array.AccessOutcomeInInitialArray) e;
-            val = eCast.getInitialArray().toString() + "[_ + " + eCast.getOffset() + "]";
+            val.append(eCast.getInitialArray().toString()); val.append("[_ + "); val.append(eCast.getOffset()); val.append("]");
         }
-        return (showExpression ? (exp + " -> ") : "") + val;
+        if (showExpression) {
+            formatValue(s, sb, e.getAccessCondition());
+            sb.append(" -> ");
+        }
+        sb.append(val);
+        return false;
     }
 
-    private static String formatInstance(State s, Instance i, boolean breakLines, String indentTxt, String indentCurrent) {
+    private static void formatInstance(State s, StringBuilder sb, Instance i, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
-        final StringBuilder buf = new StringBuilder(lineSep);
-        buf.append(indentCurrent);
-        buf.append("Class: ");
-        buf.append(i.getType());
+        sb.append(lineSep);
+        sb.append(indentCurrent);
+        sb.append("Class: ");
+        sb.append(i.getType());
         int z = 0;
         for (Map.Entry<String, Variable> e : i.fields().entrySet()) {
-            buf.append(lineSep);
-            buf.append(indentCurrent);
-            buf.append("Field[");
-            buf.append(z);
-            buf.append("]: ");
-            buf.append(formatVariable(s, e.getValue()));
+            sb.append(lineSep);
+            sb.append(indentCurrent);
+            sb.append("Field[");
+            sb.append(z);
+            sb.append("]: ");
+            formatVariable(s, sb, e.getValue());
             ++z;
         }
-        return buf.toString();
     }
 
-    private static String formatKlass(State s, Klass k, boolean breakLines, String indentTxt, String indentCurrent) {
+    private static void formatKlass(State s, StringBuilder sb, Klass k, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
-        final StringBuilder buf = new StringBuilder(lineSep);
+        sb.append(lineSep);
         int z = 0;
         for (Map.Entry<String, Variable> e : k.fields().entrySet()) {
             if (z > 0) {
-                buf.append(lineSep);
+                sb.append(lineSep);
             }
-            buf.append(indentCurrent);
-            buf.append("Field[");
-            buf.append(z);
-            buf.append("]: ");
-            buf.append(formatVariable(s, e.getValue()));
+            sb.append(indentCurrent);
+            sb.append("Field[");
+            sb.append(z);
+            sb.append("]: ");
+            formatVariable(s, sb, e.getValue());
             ++z;
         }
-        return buf.toString();
     }
 
-
-    private static String formatVariable(State s, Variable v) {
-        String tmp;
-        Value val = v.getValue(); 
+    private static void formatVariable(State s, StringBuilder sb, Variable v) {
+        sb.append("Name: "); sb.append(v.getName()); sb.append(", Type: "); sb.append(v.getType()); sb.append(", Value: ");
+        final Value val = v.getValue(); 
         if (val == null) {
-            tmp = "ERROR: no value has been assigned to this variable.";
+            sb.append("ERROR: no value has been assigned to this variable.");
         } else {
-            tmp = formatValue(s, val) + " " + formatType(val);
+            formatValue(s, sb, val); sb.append(" "); formatType(sb, val);
         }
-        return ("Name: " + v.getName() + ", Type: " + v.getType() + ", Value: " + tmp);
     }
 
-    private static String formatValue(State s, Value val) {
-        String tmp;
+    private static void formatValue(State s, StringBuilder sb, Value val) {
         if (val.getType() == Type.CHAR && val instanceof Simplex) {
-            char c = ((Character) ((Simplex) val).getActualValue()).charValue();
+            final char c = ((Character) ((Simplex) val).getActualValue()).charValue();
             if (c == '\t') {
-                tmp = "\\t";
+                sb.append("\\t");
             } else if (c == '\b') {
-                tmp = "\\b";
+                sb.append("\\b");
             } else if (c == '\n') {
-                tmp = "\\n";
+                sb.append("\\n");
             } else if (c == '\f') {
-                tmp = "\\f";
+                sb.append("\\f");
             } else if (c == '\r') {
-                tmp = "\\r";
+                sb.append("\\r");
             } else if (c == '\"') {
-                tmp = "\\\"";
+                sb.append("\\\"");
             } else if (c == '\'') {
-                tmp = "\\\'";
+                sb.append("\\\'");
             } else if (c == '\\') {
-                tmp = "\\\\";
+                sb.append("\\\\");
             } else if (c == '\u0000') {
-                tmp = "\\u0000";
+                sb.append("\\u0000");
             } else {
-                tmp = "" + c;
+                sb.append(c);
             }
         } else {
-            tmp = val.toString();
+            sb.append(val.toString());
         } 
         if (val instanceof ReferenceSymbolic) {
-            ReferenceSymbolic ref = (ReferenceSymbolic) val;
+            final ReferenceSymbolic ref = (ReferenceSymbolic) val;
             if (s.resolved(ref)) {
                 if (s.isNull(ref)) {
-                    tmp += " == null";
+                    sb.append(" == null");
                 } else {
-                    tmp += " == Object[" + s.getResolution(ref) + "]";
+                    sb.append(" == Object["); sb.append(s.getResolution(ref)); sb.append("]");
                 }
             }
         }
-        return tmp;
     }
 
-    private static String formatType(Value val) {
-        return  "(type: " + val.getType() + ")";		
+    private static void formatType(StringBuilder sb, Value val) {
+        sb.append("(type: "); sb.append(val.getType()); sb.append(")");		
     }
 
-    private static String formatStack(State s, List<String> srcPath, boolean breakLines, String indentTxt, String indentCurrent) {
+    private static void formatStack(State s, StringBuilder sb, List<String> srcPath, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
         final Iterable<Frame> stack = s.getStack();
         final int size = s.getStackSize();
-        String tmpRet = indentCurrent;
+        sb.append(indentCurrent);
         int j = 0;
         for (Frame f : stack) {
-            tmpRet += "Frame[" + j + "]: {" + lineSep + formatFrame(s, f, srcPath, breakLines, indentTxt, indentCurrent + indentTxt) + lineSep;
-            tmpRet += indentCurrent + "}";
+            sb.append("Frame["); sb.append(j); sb.append("]: {"); sb.append(lineSep); 
+            formatFrame(s, sb, f, srcPath, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep);
+            sb.append(indentCurrent); sb.append("}");
             if (j < size - 1) 
-                tmpRet += lineSep + indentCurrent;
+                sb.append(lineSep); sb.append(indentCurrent);
             j++;
         }
-        return tmpRet;
     }
 
-    private static String formatFrame(State s, Frame f, List<String> srcPath, boolean breakLines, String indentTxt, String indentCurrent) {
+    private static void formatFrame(State s, StringBuilder sb, Frame f, List<String> srcPath, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
-        String tmp = "";
-        tmp += indentCurrent + "Method signature: " + f.getCurrentMethodSignature().toString();
+        sb.append(indentCurrent); sb.append("Method signature: "); sb.append(f.getCurrentMethodSignature().toString());
         if (f instanceof SnippetFrameContext) {
-            tmp += " (executing snippet, will resume with program counter " + ((SnippetFrameContext) f).getContextFrame().getReturnProgramCounter() + ")";
+            sb.append(" (executing snippet, will resume with program counter "); sb.append(((SnippetFrameContext) f).getContextFrame().getReturnProgramCounter()); sb.append(")");
         }
-        tmp +=  lineSep;
-        tmp += indentCurrent + "Program counter: " + f.getProgramCounter() + lineSep;
-        tmp += indentCurrent + "Program counter after return: "; 
-        tmp += ((f.getReturnProgramCounter() == Frame.UNKNOWN_PC) ? "<UNKNOWN>" : f.getReturnProgramCounter()) + lineSep;
+        sb.append(lineSep);
+        sb.append(indentCurrent); sb.append("Program counter: "); sb.append(f.getProgramCounter()); sb.append(lineSep);
+        sb.append(indentCurrent); sb.append("Program counter after return: "); 
+        sb.append((f.getReturnProgramCounter() == Frame.UNKNOWN_PC) ? "<UNKNOWN>" : f.getReturnProgramCounter()); sb.append(lineSep);
         final ClassHierarchy hier = s.getClassHierarchy();
         final BytecodeFormatter bfmt = new BytecodeFormatter();
-        tmp += indentCurrent + "Next bytecode: " + bfmt.format(f, hier) + lineSep; 
-        tmp += indentCurrent + "Source line: " + sourceLine(f, srcPath) + lineSep;
-        tmp += indentCurrent + "Operand Stack: {"+ lineSep + formatOperandStack(s, f, breakLines, indentTxt, indentCurrent + indentTxt) + lineSep + indentCurrent + "}" + lineSep;
-        tmp += indentCurrent + "Local Variables: {" + lineSep + formatLocalVariables(s, f, breakLines, indentTxt, indentCurrent + indentTxt) + lineSep + indentCurrent + "}";
-        return tmp;
+        sb.append(indentCurrent); sb.append("Next bytecode: "); sb.append(bfmt.format(f, hier)); sb.append(lineSep); 
+        sb.append(indentCurrent); sb.append("Source line: "); sourceLine(f, sb, srcPath); sb.append(lineSep);
+        sb.append(indentCurrent); sb.append("Operand Stack: {"); sb.append(lineSep); formatOperandStack(s, sb, f, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep); sb.append(indentCurrent); sb.append("}"); sb.append(lineSep);
+        sb.append(indentCurrent); sb.append("Local Variables: {"); sb.append(lineSep); formatLocalVariables(s, sb, f, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep); sb.append(indentCurrent); sb.append("}");
     }
 
-    private static String formatOperandStack(State s, Frame f, boolean breakLines, String indentTxt, String indentCurrent) {
-        final StringBuilder buf = new StringBuilder();
-        buf.append(indentCurrent);
+    private static void formatOperandStack(State s, StringBuilder sb, Frame f, boolean breakLines, String indentTxt, String indentCurrent) {
+        sb.append(indentCurrent);
         final String lineSep = (breakLines ? LINE_SEP : "");
         int i = 0;
         final int last = f.values().size() - 1;
         for (Value v : f.values()) {
-            buf.append("Operand[");
-            buf.append(i);
-            buf.append("]: ");
-            buf.append(formatValue(s, v));
-            buf.append(" ");
-            buf.append(formatType(v));
+            sb.append("Operand[");
+            sb.append(i);
+            sb.append("]: ");
+            formatValue(s, sb, v);
+            sb.append(" ");
+            formatType(sb, v);
             if (i < last)  {
-                buf.append(lineSep);
-                buf.append(indentCurrent);
+                sb.append(lineSep);
+                sb.append(indentCurrent);
             }
             ++i;
         }
-        return buf.toString();
     }
 
-    private static String formatLocalVariables(State s, Frame f, boolean breakLines, String indentTxt, String indentCurrent) {
-        final StringBuilder buf = new StringBuilder();
-        buf.append(indentCurrent);
+    private static void formatLocalVariables(State s, StringBuilder sb, Frame f, boolean breakLines, String indentTxt, String indentCurrent) {
+        sb.append(indentCurrent);
         boolean isFirst = true;
         final Map<Integer, Variable> lva = f.localVariables();
         final TreeSet<Integer> slots = new TreeSet<>(lva.keySet());
@@ -501,30 +506,29 @@ public class StateFormatterText implements Formatter {
             if (isFirst) {
                 isFirst = false;
             } else {
-                buf.append(lineSep);
-                buf.append(indentCurrent);
+                sb.append(lineSep);
+                sb.append(indentCurrent);
             }
-            buf.append("Variable[");
-            buf.append(i);
-            buf.append("]: ");
-            buf.append(formatVariable(s, lva.get(i)));
+            sb.append("Variable[");
+            sb.append(i);
+            sb.append("]: ");
+            formatVariable(s, sb, lva.get(i));
         }
-        return buf.toString();
     }
 
-    private static String sourceLine(Frame f, List<String> srcPath) {
-        String retVal = "";
+    private static void sourceLine(Frame f, StringBuilder sb, List<String> srcPath) {
         int sourceRow = f.getSourceRow();
         if (sourceRow == -1) { 
-            retVal += "<UNKNOWN>";
+            sb.append("<UNKNOWN>");
         } else { 
-            retVal += "(" + sourceRow + "): ";
-            String row = null;
-            if (srcPath != null) {
+            sb.append("("); sb.append(sourceRow); sb.append("): ");
+            final String row;
+            if (srcPath == null) {
+                row = null;
+            } else {
                 row = Util.getSrcFileRow(f.getCurrentMethodSignature().getClassName(), srcPath, PATH_SEP, sourceRow);
             }
-            retVal += (row == null ? "<UNKNOWN>" : row);
+            sb.append(row == null ? "<UNKNOWN>" : row);
         }
-        return retVal;
     }
 }
