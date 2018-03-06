@@ -36,6 +36,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.SortedMap;
 
 import jbse.bc.ClassFile;
 import jbse.bc.ClassFileFactory;
@@ -532,7 +533,8 @@ public final class State implements Cloneable {
     }
     
     /**
-     * Returns the root class.
+     * Returns the root class, i.e., the current class
+     * of the root frame.
      * 
      * @return a {@link ClassFile}.
      * @throws ThreadStackEmptyException if the stack is empty.
@@ -653,10 +655,10 @@ public final class State implements Cloneable {
      * Returns the heap position associated to a resolved 
      * symbolic reference.
      * 
-     * @param ref a {@link ReferenceSymbolic}.
+     * @param ref a {@link ReferenceSymbolic}. It must be 
+     * {@link #resolved}{@code (reference) == true}.
      * @return a {@code long}, the heap position to which
-     * {@code ref} has been resolved, or {@code null} if
-     * {@link #resolved}{@code (ref) == false}.
+     * {@code ref} has been resolved.
      * @throws NullPointerException if {@code ref == null}.
      */
     public long getResolution(ReferenceSymbolic ref) {
@@ -2169,7 +2171,7 @@ public final class State implements Cloneable {
     public Reference peekReceiverArg(Signature methodSignature) throws ThreadStackEmptyException {
         final String[] paramsDescriptors = Type.splitParametersDescriptors(methodSignature.getDescriptor());
         final int nParams = paramsDescriptors.length + 1;
-        final Collection<Value> opStackVals = getCurrentFrame().values();
+        final Collection<Value> opStackVals = getCurrentFrame().operands();
         int i = 1;
         for (Value val : opStackVals) { 
             if (i == nParams) {
@@ -2266,11 +2268,13 @@ public final class State implements Cloneable {
     /**
      * Returns an immutable view of the state's heap.
      * 
-     * @return the state's heap as an 
-     * immutable {@link Map}{@code <}{@link Integer}{@code , }{@link Objekt}{@code >}.
+     * @return the state's heap as a 
+     * {@link SortedMap}{@code <}{@link Integer}{@code , }{@link Objekt}{@code >}
+     * mapping heap positions to the {@link Objekt}s stored 
+     * at them.
      */
-    //TODO raise the abstraction level and make this method return a Map<Reference, Objekt>
-    public Map<Long, Objekt> getHeap() {
+    //TODO raise the abstraction level and make this method return a SortedMap<Reference, Objekt>
+    public SortedMap<Long, Objekt> getHeap() {
         return this.heap.getObjects();
     }
 

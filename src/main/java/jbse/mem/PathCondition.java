@@ -141,8 +141,7 @@ final class PathCondition implements Cloneable {
      * @param reference a {@link ReferenceSymbolic}. It must be 
      * {@link #resolved}{@code (reference) == true}.
      * @return a {@code long}, the heap position to which
-     * {@code reference} has been resolved or {@code null} if
-     * {@link #resolved}{@code (reference) == false}.
+     * {@code reference} has been resolved.
      * @throws NullPointerException if {@code reference == null}.
      */
     long getResolution(ReferenceSymbolic reference) {

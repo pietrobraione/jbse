@@ -249,8 +249,19 @@ public final class RunParameters implements Cloneable {
      * @author Pietro Braione
      */
     public enum StateFormatMode {
-        /** Displays the states textually (with indentation). */ 
+        /** 
+         * Displays the states textually (with indentation). 
+         * The full state is displayed. 
+         */ 
         FULLTEXT,
+
+        /** 
+         * Displays the states textually (with indentation).
+         * The static method area, and the heap objects that
+         * are not reachable by the local variables or the 
+         * operands in the operand stacks are not shown.
+         */ 
+        TEXT,
 
         /** Displays the states as DOT graphs. */
         GRAPHVIZ,

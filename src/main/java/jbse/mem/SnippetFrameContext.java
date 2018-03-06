@@ -42,8 +42,8 @@ public final class SnippetFrameContext extends Frame implements Cloneable {
     }
     
     @Override
-    public Collection<Value> values() {
-        return this.contextFrame.values();
+    public Collection<Value> operands() {
+        return this.contextFrame.operands();
     }
 
     @Override

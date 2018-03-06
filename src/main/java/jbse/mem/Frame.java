@@ -52,12 +52,12 @@ public abstract class Frame implements Cloneable {
     }
 
     /**
-     * Returns the values on the operand stack.
+     * Returns the {@link Value}s on the operand stack.
      * 
-     * @return an unmodifiable collection of the
-     *         operand stack values.
+     * @return an unmodifiable {@link Collection}{@code <}{@link Value}{@code >}
+     *  of the operand stack values. 
      */
-    public abstract Collection<Value> values();
+    public abstract Collection<Value> operands();
 
     /**
      * Returns the source code row corresponding to the 

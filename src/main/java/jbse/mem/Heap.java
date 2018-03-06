@@ -1,6 +1,5 @@
 package jbse.mem;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -97,13 +96,13 @@ final class Heap implements Cloneable {
     /**
      * Returns the objects in the heap as a {@link Map}.
      * 
-     * @return an unmodifiable 
-     * {@link Map}{@code <}{@link Long}{@code , }{@link Objekt}{@code >}
+     * @return a 
+     * {@link SortedMap}{@code <}{@link Long}{@code , }{@link Objekt}{@code >}
      * mapping heap positions to the {@link Objekt}s stored 
-     * in them.
+     * at them.
      */
-    Map<Long, Objekt> getObjects() {
-        return Collections.unmodifiableMap(this.objects);
+    SortedMap<Long, Objekt> getObjects() {
+        return new TreeMap<>(this.objects);
     }    
 
     /**

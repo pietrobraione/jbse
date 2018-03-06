@@ -35,7 +35,7 @@ public final class SnippetFrameNoContext extends Frame implements Cloneable {
     }
     
     @Override
-    public Collection<Value> values() {
+    public Collection<Value> operands() {
         return this.operandStack.values();
     }
 

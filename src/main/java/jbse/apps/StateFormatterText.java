@@ -3,11 +3,15 @@ package jbse.apps;
 import static jbse.apps.Util.LINE_SEP;
 import static jbse.apps.Util.PATH_SEP;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.BinaryOperator;
+import java.util.stream.Collectors;
 
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
@@ -30,6 +34,8 @@ import jbse.val.MemoryPath;
 import jbse.val.NarrowingConversion;
 import jbse.val.Primitive;
 import jbse.val.PrimitiveSymbolic;
+import jbse.val.Reference;
+import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
 import jbse.val.Value;
@@ -41,17 +47,23 @@ import jbse.val.WideningConversion;
  * 
  * @author Pietro Braione
  */
-public class StateFormatterText implements Formatter {
-    protected List<String> srcPath;
-    protected StringBuilder output = new StringBuilder();
+public final class StateFormatterText implements Formatter {
+    private final List<String> srcPath;
+    private final boolean fullPrint;
+    private final Reference rootObjectReference;
+    private final ClassFile rootClass;
+    private StringBuilder output = new StringBuilder();
 
-    public StateFormatterText(List<String> srcPath) {
-        this.srcPath = Collections.unmodifiableList(srcPath);
+    public StateFormatterText(List<String> srcPath, boolean fullPrint, Reference rootObjectReference, ClassFile rootClass) {
+        this.srcPath = new ArrayList<>(srcPath);
+        this.fullPrint = fullPrint;
+        this.rootObjectReference = rootObjectReference;
+        this.rootClass = rootClass;
     }
 
     @Override
     public void formatState(State s) {
-        formatState(s, this.output, this.srcPath, true, "\t", "");
+        formatState(s, this.output, this.srcPath, this.fullPrint, this.rootObjectReference, this.rootClass, true, "\t", "");
     }
 
     @Override
@@ -64,7 +76,7 @@ public class StateFormatterText implements Formatter {
         this.output = new StringBuilder();
     }
 
-    private static void formatState(State state, StringBuilder sb, List<String> srcPath, boolean breakLines, String indentTxt, String indentCurrent) {
+    private static void formatState(State state, StringBuilder sb, List<String> srcPath, boolean fullPrint, Reference rootObjectReference, ClassFile rootClass, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
         sb.append(state.getIdentifier()); sb.append("["); sb.append(state.getSequenceNumber()); sb.append("] "); sb.append(lineSep);
         if (state.isStuck()) {
@@ -89,8 +101,10 @@ public class StateFormatterText implements Formatter {
             }
         }
         sb.append("Path condition: "); formatPathCondition(state, sb, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep);
-        sb.append("Static store: {"); sb.append(lineSep); formatStaticMethodArea(state, sb, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep); sb.append("}"); sb.append(lineSep);
-        sb.append("Heap: {"); sb.append(lineSep); formatHeap(state, sb, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep); sb.append("}"); sb.append(lineSep);
+        if (fullPrint) {
+            sb.append("Static store: {"); sb.append(lineSep); formatStaticMethodArea(state, sb, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep); sb.append("}"); sb.append(lineSep);
+        }
+        sb.append("Heap: {"); sb.append(lineSep); formatHeap(state, sb, fullPrint, rootObjectReference, rootClass, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep); sb.append("}"); sb.append(lineSep);
         if (state.getStackSize() > 0) {
             sb.append("Stack: {"); sb.append(lineSep); formatStack(state, sb, srcPath, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep); sb.append("}");
         }
@@ -220,14 +234,30 @@ public class StateFormatterText implements Formatter {
         }
         return some;
     }
+    
+    //copied from java.util.stream.Collectors
+    private static <T> BinaryOperator<T> throwingMerger() {
+        return (u,v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); };
+    }
 
-    private static void formatHeap(State s, StringBuilder sb, boolean breakLines, String indentTxt, String indentCurrent) {
+
+    private static void formatHeap(State s, StringBuilder sb, boolean fullPrint, Reference rootObjectReference, ClassFile rootClass, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
         final Map<Long, Objekt> h = s.getHeap();
+        final Set<Map.Entry<Long, Objekt>> entries;
+        if (fullPrint) {
+            entries = h.entrySet();
+        } else {
+            final long rootObjectPosition = (rootObjectReference == null ? -1 : rootObjectReference instanceof ReferenceConcrete ? ((ReferenceConcrete) rootObjectReference).getHeapPosition() : s.getResolution((ReferenceSymbolic) rootObjectReference));
+            final Set<Long> reachable = new ReachableObjectsCollector().reachable(s, false, rootObjectPosition, rootClass);
+            entries = h.entrySet().stream()
+                      .filter(e -> reachable.contains(e.getKey()))
+                      .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue(), throwingMerger(), TreeMap::new)).entrySet();
+        }
         final int heapSize = h.size();
         sb.append(indentCurrent);
         int j = 0;
-        for (Map.Entry<Long, Objekt> e : h.entrySet()) {
+        for (Map.Entry<Long, Objekt> e : entries) {
             Objekt o = e.getValue();
             sb.append("Object["); sb.append(e.getKey()); sb.append("]: "); sb.append("{");
             formatObject(s, sb, o, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep);
@@ -480,8 +510,8 @@ public class StateFormatterText implements Formatter {
         sb.append(indentCurrent);
         final String lineSep = (breakLines ? LINE_SEP : "");
         int i = 0;
-        final int last = f.values().size() - 1;
-        for (Value v : f.values()) {
+        final int last = f.operands().size() - 1;
+        for (Value v : f.operands()) {
             sb.append("Operand[");
             sb.append(i);
             sb.append("]: ");

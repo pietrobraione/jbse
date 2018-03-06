@@ -653,7 +653,6 @@ public final class Run {
 
         //builds
         try {
-            createFormatter();
             final RunnerParameters runnerParameters = this.parameters.getRunnerParameters();
             runnerParameters.setActions(new ActionsRun());
             final CalculatorRewriting calc = createCalculator();
@@ -668,6 +667,7 @@ public final class Run {
                 return 1;
             }
             createHeapChecker(this.decisionProcedureConcretization);
+            createFormatter();
         } catch (NonexistingObservedVariablesException e) {
             for (int i : e.getVariableIndices()) {
                 if (Run.this.parameters.getShowWarnings()) {
@@ -786,16 +786,23 @@ public final class Run {
      */
     private void createFormatter() throws CannotBuildFormatterException {
         final StateFormatMode type = this.parameters.getStateFormatMode();
-        if (type == StateFormatMode.FULLTEXT) {
-            this.formatter = new StateFormatterText(this.parameters.getSourcePath());
-        } else if (type == StateFormatMode.GRAPHVIZ) {
-            this.formatter = new StateFormatterGraphviz();
-        } else if (type == StateFormatMode.TRACE) {
-            this.formatter = new StateFormatterTrace();
-        } else if (type == StateFormatMode.JUNIT_TEST) {
-            this.formatter = new StateFormatterJUnitTestSuite(this::getInitialState, this::getModel);
-        } else {
-            throw new CannotBuildFormatterException(ERROR_UNDEF_STATE_FORMAT);
+        try {
+            if (type == StateFormatMode.FULLTEXT) {
+                this.formatter = new StateFormatterText(this.parameters.getSourcePath(), true, this.engine.getCurrentState().getRootObjectReference(), this.engine.getCurrentState().getRootClass());
+            } else if (type == StateFormatMode.TEXT) {
+                this.formatter = new StateFormatterText(this.parameters.getSourcePath(), false, this.engine.getCurrentState().getRootObjectReference(), this.engine.getCurrentState().getRootClass());
+            } else if (type == StateFormatMode.GRAPHVIZ) {
+                this.formatter = new StateFormatterGraphviz();
+            } else if (type == StateFormatMode.TRACE) {
+                this.formatter = new StateFormatterTrace();
+            } else if (type == StateFormatMode.JUNIT_TEST) {
+                this.formatter = new StateFormatterJUnitTestSuite(this::getInitialState, this::getModel);
+            } else {
+                throw new CannotBuildFormatterException(ERROR_UNDEF_STATE_FORMAT);
+            }
+        } catch (ThreadStackEmptyException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
         }
     }
 
