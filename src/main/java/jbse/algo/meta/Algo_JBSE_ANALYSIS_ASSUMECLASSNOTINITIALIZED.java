@@ -40,7 +40,7 @@ public final class Algo_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED extends Algo_INV
             exitFromAlgorithm();
         }
 
-        //gets the name of the class and converts it to a string
+        //gets the class
         try {
             this.clazz = (Instance_JAVA_CLASS) state.getObject(javaClassRef);
             if (this.clazz == null) {

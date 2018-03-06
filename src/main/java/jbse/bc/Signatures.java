@@ -496,7 +496,7 @@ public final class Signatures {
     public static final Signature JBSE_ANALYSIS_ANY = 
         new Signature(JBSE_ANALYSIS, "()" + BOOLEAN, "any");
     public static final Signature JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED = 
-        new Signature(JBSE_ANALYSIS, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + VOID, "assumeClassNotInitialized");
+        new Signature(JBSE_ANALYSIS, "(" + REFERENCE + JAVA_CLASS + TYPEEND + ")" + VOID, "assumeClassNotInitialized");
     public static final Signature JBSE_ANALYSIS_ENDGUIDANCE = 
         new Signature(JBSE_ANALYSIS, "()" + VOID, "endGuidance");
     public static final Signature JBSE_ANALYSIS_FAIL = 
