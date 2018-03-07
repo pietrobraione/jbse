@@ -2797,6 +2797,14 @@ public final class State implements Cloneable {
     public boolean isStuck() {
         return this.stuck;
     }
+    
+    /**
+     * Sets the state's identifier to the
+     * empty {@link String}.
+     */
+    public void clearIdentifier() {
+        this.identifier = "";
+    }
 
     /**
      * Adds a suffix to the state's identifier.

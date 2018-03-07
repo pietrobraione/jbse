@@ -57,7 +57,6 @@ import static jbse.bc.Signatures.STACK_OVERFLOW_ERROR;
 import static jbse.bc.Signatures.SUN_EXTENSIONDEPENDENCY;
 import static jbse.bc.Signatures.VERIFY_ERROR;
 import static jbse.bc.Signatures.VIRTUAL_MACHINE_ERROR;
-import static jbse.bc.Signatures.noclass_SETPHASEPOSTINIT;
 import static jbse.bc.Signatures.noclass_SETSTANDARDCLASSLOADERSREADY;
 import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.CHAR;
@@ -121,18 +120,18 @@ public final class Algo_INIT {
     public void exec(ExecutionContext ctx) 
     throws DecisionException, InitializationException, 
     InvalidClassFileFactoryClassException, ClasspathException, 
-    NotYetImplementedException, ContradictionException {
+    NotYetImplementedException, ContradictionException,
+    InvalidInputException {
         //TODO do checks and possibly raise exceptions
         
         //gets or creates the initial state
         State state = ctx.getInitialState();
         if (state == null) {
             state = createInitialState(ctx);
-            ctx.setInitialState(state);
         }
 
-        //adds the initial state to the state tree
-        ctx.stateTree.addInitialState(state);
+        //adds the state to the state tree
+        ctx.stateTree.addState(state);
     }
 
     private State createInitialState(ExecutionContext ctx) 
@@ -150,9 +149,6 @@ public final class Algo_INIT {
         //pushes a frame for the root method (and possibly triggers)
         invokeRootMethod(state, ctx);
         
-        //pushes a frame that sets the post-init phase
-        setPostInitPhase(state);
-
         //pushes a frame to initialize the root class
         initializeRootClass(state, ctx);
 
@@ -324,19 +320,6 @@ public final class Algo_INIT {
             throw new InitializationException(e);
         } catch (ThreadStackEmptyException e) {
             //this should not happen at this point
-            failExecution(e);
-        }
-    }
-    
-    private void setPostInitPhase(State state) {
-        try {
-            final Snippet snippet = state.snippetFactory()
-                .op_invokestatic(noclass_SETPHASEPOSTINIT)
-                .op_return()
-                .mk();
-            state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang");
-        } catch (ThreadStackEmptyException | InvalidProgramCounterException e) {
-            //this should not happen now
             failExecution(e);
         }
     }

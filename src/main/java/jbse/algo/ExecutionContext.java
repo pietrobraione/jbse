@@ -100,7 +100,6 @@ import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_PUTOBJECTVOLATILE;
 import static jbse.algo.Overrides.ALGO_SUN_UNSAFE_SHOULDBEINITIALIZED;
 import static jbse.algo.Overrides.ALGO_noclass_REGISTERLOADEDCLASS;
 import static jbse.algo.Overrides.ALGO_noclass_REGISTERMETHODTYPE;
-import static jbse.algo.Overrides.ALGO_noclass_SETPHASEPOSTINIT;
 import static jbse.algo.Overrides.ALGO_noclass_SETSTANDARDCLASSLOADERSREADY;
 import static jbse.algo.Overrides.ALGO_noclass_STORELINKEDMETHODANDAPPENDIX;
 import static jbse.algo.Overrides.BASE_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_1;
@@ -340,7 +339,6 @@ import static jbse.bc.Signatures.SUN_VM_INITIALIZE;
 import static jbse.bc.Signatures.SUN_WRAPPER_FORMAT;
 import static jbse.bc.Signatures.noclass_REGISTERLOADEDCLASS;
 import static jbse.bc.Signatures.noclass_REGISTERMETHODTYPE;
-import static jbse.bc.Signatures.noclass_SETPHASEPOSTINIT;
 import static jbse.bc.Signatures.noclass_SETSTANDARDCLASSLOADERSREADY;
 import static jbse.bc.Signatures.noclass_STORELINKEDMETHODANDAPPENDIX;
 
@@ -703,7 +701,6 @@ public final class ExecutionContext {
             //jbse classless (pseudo)methods
             addMetaOverridden(noclass_REGISTERLOADEDCLASS,          ALGO_noclass_REGISTERLOADEDCLASS);
             addMetaOverridden(noclass_REGISTERMETHODTYPE,           ALGO_noclass_REGISTERMETHODTYPE);
-            addMetaOverridden(noclass_SETPHASEPOSTINIT,             ALGO_noclass_SETPHASEPOSTINIT);
             addMetaOverridden(noclass_SETSTANDARDCLASSLOADERSREADY, ALGO_noclass_SETSTANDARDCLASSLOADERSREADY);
             addMetaOverridden(noclass_STORELINKEDMETHODANDAPPENDIX, ALGO_noclass_STORELINKEDMETHODANDAPPENDIX);
         } catch (MetaUnsupportedException e) {

@@ -158,10 +158,20 @@ public class Engine implements AutoCloseable {
     ClasspathException, NotYetImplementedException, ContradictionException {
         //executes the initial state setup step
         final Algo_INIT algo = this.ctx.dispatcher.select();
-        algo.exec(this.ctx);
+        try {
+            algo.exec(this.ctx);
+        } catch (InvalidInputException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
 
         //extracts the initial state from the tree
-        this.currentState = this.ctx.stateTree.nextState();
+        if (this.ctx.stateTree.createdBranch()) {
+            this.currentState = this.ctx.stateTree.nextState();
+        } else {
+            //this should never happen
+            throw new UnexpectedInternalException("The pre-initial state is missing from the state tree.");
+        }
 
         //synchronizes the decision procedure with the path condition
         try {
@@ -277,11 +287,29 @@ public class Engine implements AutoCloseable {
             this.nonExpandedReferencesTypes = algo.nonExpandedReferencesTypes();
         }
         
+        //detects whether we are at the initial state
+        final boolean atInitialState;
+        if (this.currentState.isPhaseInit() && this.currentState.getStackSize() == 1) {
+            atInitialState = true;
+            this.currentState.setPhasePostInit();
+            try {
+                this.ctx.stateTree.addState(this.currentState);
+            } catch (InvalidInputException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            }
+        } else {
+            atInitialState = false;
+        }
+        
         //updates the current state and calculates return value
         final BranchPoint retVal;
         if (this.ctx.stateTree.createdBranch()) {
             retVal = this.ctx.stateTree.nextBranch();
             this.currentState = this.ctx.stateTree.nextState();
+            if (atInitialState) {
+                this.ctx.setInitialState(this.currentState);
+            }
         } else {
             retVal = null;
             this.currentState.incSequenceNumber();
@@ -295,7 +323,7 @@ public class Engine implements AutoCloseable {
             this.currentState.incCount();
         }
 
-        //synchronizes the decision procedure with the path condition
+        //synchronizes the decision procedure with the current path condition
         try {
             this.ctx.decisionProcedure.addAssumptions(this.currentState.getLastPathConditionPushedClauses());
         } catch (InvalidInputException e) {
@@ -351,8 +379,13 @@ public class Engine implements AutoCloseable {
      * Adds a branch point to the symbolic execution.
      * 
      * @return the created {@link BranchPoint}.
+     * @throws InvalidInputException if invoked before 
+     *         the initial state, i.e., when the execution
+     *         has not yet hit the state where the next
+     *         bytecode to be executed is the first bytecode
+     *         of the root method.
      */
-    public BranchPoint addBranchPoint() {
+    public BranchPoint addBranchPoint() throws InvalidInputException {
         final State s = (State) this.currentState.clone();
         this.ctx.stateTree.addBranchPoint(s, "MANUAL");
         final BranchPoint retVal = this.ctx.stateTree.nextBranch();
@@ -435,7 +468,6 @@ public class Engine implements AutoCloseable {
 
         return bp;
     }
-
 
     /**
      * Test whether some of the references resolved by the last

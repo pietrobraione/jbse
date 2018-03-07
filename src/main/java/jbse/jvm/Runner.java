@@ -434,7 +434,7 @@ public class Runner {
         final String currentRegion = this.engine.getCurrentState().getIdentifier();
         final boolean retVal = (this.identifierSubregion.equals(currentRegion) ||
                                 currentRegion.startsWith(this.identifierSubregion + StateTree.IDENTIFIER_SEPARATOR_COMPACT) || 
-                                currentRegion.startsWith(this.identifierSubregion + StateTree.IDENTIFIER_SEPARATOR_LONG) || 
+                                currentRegion.startsWith(this.identifierSubregion + StateTree.IDENTIFIER_SEPARATOR_NONCOMPACT) || 
                                 this.identifierSubregion.startsWith(currentRegion));
         return retVal;
     }

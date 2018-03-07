@@ -611,8 +611,6 @@ public final class Signatures {
         new Signature(null, "(" + INT + REFERENCE + JAVA_CLASSLOADER + TYPEEND + ")" + VOID, "registerLoadedClass");
     public static final Signature noclass_REGISTERMETHODTYPE =
         new Signature(null, "(" + REFERENCE + JAVA_STRING + TYPEEND + REFERENCE + JAVA_METHODTYPE + TYPEEND + ")" + VOID, "registerMethodType");
-    public static final Signature noclass_SETPHASEPOSTINIT =
-        new Signature(null, "()" + VOID, "setPhasePostInit");
     public static final Signature noclass_SETSTANDARDCLASSLOADERSREADY =
         new Signature(null, "()" + VOID, "setStandardClassLoadersReady");
     public static final Signature noclass_STORELINKEDMETHODANDAPPENDIX =
