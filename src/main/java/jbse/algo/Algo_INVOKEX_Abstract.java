@@ -94,7 +94,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             //signature with no class: skips resolution
             this.methodResolvedClass = null;
         } else {
-            this.methodResolvedClass = state.getClassHierarchy().resolveMethod(currentClass, this.data.signature(), this.isInterface, state.areStandardClassLoadersNotReady());
+            this.methodResolvedClass = state.getClassHierarchy().resolveMethod(currentClass, this.data.signature(), this.isInterface, state.bypassStandardLoading());
         }
     }
     
@@ -281,8 +281,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             try {
                 final ClassHierarchy hier = state.getClassHierarchy();
                 final Signature methodSignatureOverriding = this.ctx.getBaseOverride(this.methodImplSignature);
-                final ClassFile classFileMethodResolved = hier.loadCreateClass(CLASSLOADER_APP, methodSignatureOverriding.getClassName(), state.areStandardClassLoadersNotReady());
-                final ClassFile classFileMethodOverriding = hier.resolveMethod(classFileMethodResolved, methodSignatureOverriding, false, state.areStandardClassLoadersNotReady()); //TODO is false ok? And the accessor?
+                final ClassFile classFileMethodResolved = hier.loadCreateClass(CLASSLOADER_APP, methodSignatureOverriding.getClassName(), state.bypassStandardLoading());
+                final ClassFile classFileMethodOverriding = hier.resolveMethod(classFileMethodResolved, methodSignatureOverriding, false, state.bypassStandardLoading()); //TODO is false ok? And the accessor?
                 checkOverridingMethodFits(state, classFileMethodOverriding, methodSignatureOverriding);
                 this.methodImplClass = classFileMethodOverriding;
                 this.methodImplSignature = methodSignatureOverriding;

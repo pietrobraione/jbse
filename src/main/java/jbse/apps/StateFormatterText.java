@@ -19,6 +19,7 @@ import jbse.common.Type;
 import jbse.mem.Array;
 import jbse.mem.Clause;
 import jbse.mem.ClauseAssume;
+import jbse.mem.ClauseAssumeClassInitialized;
 import jbse.mem.ClauseAssumeReferenceSymbolic;
 import jbse.mem.Frame;
 import jbse.mem.Instance;
@@ -100,7 +101,7 @@ public final class StateFormatterText implements Formatter {
                 //not completely ready to run
             }
         }
-        sb.append("Path condition: "); formatPathCondition(state, sb, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep);
+        sb.append("Path condition: "); formatPathCondition(state, sb, fullPrint, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep);
         if (fullPrint) {
             sb.append("Static store: {"); sb.append(lineSep); formatStaticMethodArea(state, sb, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep); sb.append("}"); sb.append(lineSep);
         }
@@ -111,7 +112,7 @@ public final class StateFormatterText implements Formatter {
         sb.append(lineSep);
     }
     
-    private static void formatPathCondition(State s, StringBuilder sb, boolean breakLines, String indentTxt, String indentCurrent) {
+    private static void formatPathCondition(State s, StringBuilder sb, boolean fullPrint, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
         final StringBuilder expression = new StringBuilder();
         final StringBuilder where = new StringBuilder();
@@ -119,9 +120,9 @@ public final class StateFormatterText implements Formatter {
         boolean doneFirstWhere = false;
         HashSet<String> doneSymbols = new HashSet<String>();
         for (Clause c : s.getPathCondition()) {
-            expression.append(doneFirstExpression ? (" &&" + lineSep) : ""); expression.append(indentCurrent);
-            doneFirstExpression = true;
             if (c instanceof ClauseAssume) {
+                expression.append(doneFirstExpression ? (" &&" + lineSep) : ""); expression.append(indentCurrent);
+                doneFirstExpression = true;
                 final Primitive cond = ((ClauseAssume) c).getCondition();
                 formatValue(s, expression, cond);
                 final StringBuilder expressionFormatted = new StringBuilder();
@@ -133,6 +134,8 @@ public final class StateFormatterText implements Formatter {
                     doneFirstWhere = true;
                 }
             } else if (c instanceof ClauseAssumeReferenceSymbolic) {
+                expression.append(doneFirstExpression ? (" &&" + lineSep) : ""); expression.append(indentCurrent);
+                doneFirstExpression = true;
                 final ReferenceSymbolic ref = ((ClauseAssumeReferenceSymbolic) c).getReference(); 
                 expression.append(ref.toString()); expression.append(" == ");
                 if (s.isNull(ref)) {
@@ -151,7 +154,15 @@ public final class StateFormatterText implements Formatter {
                     where.append(indentCurrent); where.append(referenceFormatted);
                     doneFirstWhere = true;
                 }
-            } else { //(c instanceof ClauseAssumeClassInitialized) || (c instanceof ClauseAssumeClassNotInitialized)
+            } else if (c instanceof ClauseAssumeClassInitialized) {
+                if (fullPrint) {
+                    expression.append(doneFirstExpression ? (" &&" + lineSep) : ""); expression.append(indentCurrent);
+                    doneFirstExpression = true;
+                    expression.append(c.toString());
+                }
+            } else { //(c instanceof ClauseAssumeClassNotInitialized)
+                expression.append(doneFirstExpression ? (" &&" + lineSep) : ""); expression.append(indentCurrent);
+                doneFirstExpression = true;
                 expression.append(c.toString());
             }
         }

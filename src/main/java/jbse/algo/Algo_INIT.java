@@ -116,39 +116,19 @@ public final class Algo_INIT {
     /**
      * Constructor.
      */
-    public Algo_INIT() {
-        this.doNotInitialize.add(JAVA_PACKAGE);
-        this.doNotInitialize.add(JAVA_STRINGCODING);
-        this.doNotInitialize.add(SUN_EXTENSIONDEPENDENCY);
-        this.doNotInitialize.add(JAVA_METHODHANDLENATIVES);
-        this.doNotInitialize.add(JAVA_MEMBERNAME);
-        this.doNotInitialize.add(JAVA_METHODHANDLE);
-        this.doNotInitialize.add(ILLEGAL_ARGUMENT_EXCEPTION);
-        this.doNotInitialize.add(ILLEGAL_MONITOR_STATE_EXCEPTION);
-        this.doNotInitialize.add(STACK_OVERFLOW_ERROR);
-        this.doNotInitialize.add(ARITHMETIC_EXCEPTION);
-        this.doNotInitialize.add(ARRAY_STORE_EXCEPTION);
-        this.doNotInitialize.add(CLASS_CAST_EXCEPTION);
-        this.doNotInitialize.add(NULL_POINTER_EXCEPTION);
-        this.doNotInitialize.add(OUT_OF_MEMORY_ERROR);
-        this.doNotInitialize.add(JAVA_FINALIZER);
-        this.doNotInitialize.add(JAVA_METHOD);
-        this.doNotInitialize.add(JAVA_CLASS);
-        this.doNotInitialize.add(JAVA_THREAD);
-        this.doNotInitialize.add(JAVA_THREADGROUP);
-        this.doNotInitialize.add(JAVA_SYSTEM);
-        this.doNotInitialize.add(JAVA_STRING);
-    }
+    public Algo_INIT() { }
     
     public void exec(ExecutionContext ctx) 
     throws DecisionException, InitializationException, 
     InvalidClassFileFactoryClassException, ClasspathException, 
     NotYetImplementedException, ContradictionException {
         //TODO do checks and possibly raise exceptions
+        
+        //gets or creates the initial state
         State state = ctx.getInitialState();
         if (state == null) {
-            //builds the initial state
             state = createInitialState(ctx);
+            ctx.setInitialState(state);
         }
 
         //adds the initial state to the state tree
@@ -158,7 +138,10 @@ public final class Algo_INIT {
     private State createInitialState(ExecutionContext ctx) 
     throws InvalidClassFileFactoryClassException, InitializationException, 
     DecisionException, ClasspathException, NotYetImplementedException, ContradictionException {
-        final State state = new State(ctx.maxSimpleArrayLength, ctx.maxHeapSize, ctx.classpath, ctx.classFileFactoryClass, ctx.expansionBackdoor, ctx.calc);
+        final State state = ctx.createVirginInitialState();
+        
+        //lists all the classes that shall be explicitly initialized
+        setClassList();
         
         //(loads and) creates the essential classes that
         //will be initialized afterwards
@@ -221,7 +204,7 @@ public final class Algo_INIT {
 
         //creates the initial thread and thread group
         //and pushes frames to initialize them 
-        createInitialThreadAndThreadGroups(state, ctx);
+        createInitialThreadAndThreadGroups(state);
         
         //pushes frames to initialize more standard classes
         initializeClass(state, JAVA_THREAD, ctx);
@@ -231,6 +214,30 @@ public final class Algo_INIT {
         
         //done
         return state;
+    }
+    
+    private void setClassList() {
+        this.doNotInitialize.add(JAVA_PACKAGE);
+        this.doNotInitialize.add(JAVA_STRINGCODING);
+        this.doNotInitialize.add(SUN_EXTENSIONDEPENDENCY);
+        this.doNotInitialize.add(JAVA_METHODHANDLENATIVES);
+        this.doNotInitialize.add(JAVA_MEMBERNAME);
+        this.doNotInitialize.add(JAVA_METHODHANDLE);
+        this.doNotInitialize.add(ILLEGAL_ARGUMENT_EXCEPTION);
+        this.doNotInitialize.add(ILLEGAL_MONITOR_STATE_EXCEPTION);
+        this.doNotInitialize.add(STACK_OVERFLOW_ERROR);
+        this.doNotInitialize.add(ARITHMETIC_EXCEPTION);
+        this.doNotInitialize.add(ARRAY_STORE_EXCEPTION);
+        this.doNotInitialize.add(CLASS_CAST_EXCEPTION);
+        this.doNotInitialize.add(NULL_POINTER_EXCEPTION);
+        this.doNotInitialize.add(OUT_OF_MEMORY_ERROR);
+        this.doNotInitialize.add(JAVA_FINALIZER);
+        this.doNotInitialize.add(JAVA_METHOD);
+        this.doNotInitialize.add(JAVA_CLASS);
+        this.doNotInitialize.add(JAVA_THREAD);
+        this.doNotInitialize.add(JAVA_THREADGROUP);
+        this.doNotInitialize.add(JAVA_SYSTEM);
+        this.doNotInitialize.add(JAVA_STRING);
     }
     
     private void loadCreateEssentialClasses(State state, ExecutionContext ctx) throws ClasspathException {
@@ -399,7 +406,7 @@ public final class Algo_INIT {
         }
     }
     
-    private void createInitialThreadAndThreadGroups(State state, ExecutionContext ctx) 
+    private void createInitialThreadAndThreadGroups(State state) 
     throws InitializationException, ClasspathException {
         try {
             //creates the initial thread and thread group
@@ -415,17 +422,16 @@ public final class Algo_INIT {
             final ReferenceConcrete systemThreadGroup = state.createInstance(cf_JAVA_THREADGROUP);
             final ReferenceConcrete mainThreadGroup = state.createInstance(cf_JAVA_THREADGROUP);
             final ReferenceConcrete mainThread = state.createInstance(cf_JAVA_THREAD);
-            state.getObject(mainThread).setFieldValue(JAVA_THREAD_PRIORITY, ctx.calc.valInt(NORM_PRIORITY)); //necessary to avoid circularity issues
+            state.getObject(mainThread).setFieldValue(JAVA_THREAD_PRIORITY, state.getCalculator().valInt(NORM_PRIORITY)); //necessary to avoid circularity issues
             state.ensureStringLiteral("main");
             final ReferenceConcrete mainString = state.referenceToStringLiteral("main");
             state.pushFrame(cf_JAVA_THREAD, JAVA_THREAD_INIT, false, 0, mainThread, mainThreadGroup, mainString);
             state.pushFrame(cf_JAVA_THREADGROUP, JAVA_THREADGROUP_INIT_2, false, 0, mainThreadGroup, systemThreadGroup, mainString);
             state.pushFrame(cf_JAVA_THREADGROUP, JAVA_THREADGROUP_INIT_1, false, 0, systemThreadGroup);
 
-            //saves a copy of the created state, thread and thread group
-            ctx.setMainThreadGroup(mainThreadGroup);
-            ctx.setMainThread(mainThread);
-            ctx.setInitialState(state);
+            //saves the created thread and thread group in the state
+            state.setMainThreadGroup(mainThreadGroup);
+            state.setMainThread(mainThread);
         } catch (HeapMemoryExhaustedException e) {
             throw new InitializationException(e);
         } catch (MethodNotFoundException | MethodCodeNotFoundException e) {

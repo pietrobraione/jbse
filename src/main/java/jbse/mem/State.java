@@ -9,6 +9,7 @@ import static jbse.bc.Signatures.JAVA_STRING;
 import static jbse.bc.Signatures.JAVA_STRING_HASH;
 import static jbse.bc.Signatures.JAVA_STRING_VALUE;
 import static jbse.bc.Signatures.JAVA_THREAD;
+import static jbse.bc.Signatures.JAVA_THREADGROUP;
 import static jbse.bc.Signatures.JAVA_THROWABLE;
 import static jbse.common.Type.parametersNumber;
 import static jbse.common.Type.isPrimitiveCanonicalName;
@@ -203,13 +204,19 @@ public final class State implements Cloneable {
     }
 
     /** 
+     * {@code true} iff the bootstrap classloader should also load classes defined by the
+     * extensions and application classloaders. 
+     */
+    private final boolean bypassStandardLoading;
+
+    /** 
      * The identifier of the state in the execution tree.
      */
     private String identifier = "";
 
     /** The sequence number of the state along an execution tree branch. */
     private int sequenceNumber = 0;
-
+    
     /** 
      * Flag indicating whether the current state was produced by a
      * branching decision.
@@ -341,10 +348,19 @@ public final class State implements Cloneable {
      * generators, possibly starting from the same numbers. 
      */
     private SymbolFactory symbolFactory;
+    
+    /** A {@link ReferenceConcrete} to the main thread group created at init time. */
+    private ReferenceConcrete mainThreadGroup;
+    
+    /** A {@link ReferenceConcrete} to the main thread created at init time. */
+    private ReferenceConcrete mainThread;
 
     /**
      * Constructor of an empty State.
      * 
+     * @param bypassStandardLoading a {@code boolean}, {@code true} iff the bootstrap 
+     *        classloader should also load the classed defined by the extensions 
+     *        and application classloaders. 
      * @param maxSimpleArrayLength an {@code int}, the maximum length an array may have
      *        to be granted simple representation.
      * @param maxHeapSize the maximum size of the state's heap expressed as the
@@ -363,13 +379,15 @@ public final class State implements Cloneable {
      *         has not the expected features (missing constructor, unaccessible 
      *         constructor...).
      */
-    public State(int maxSimpleArrayLength,
+    public State(boolean bypassStandardLoading,
+                 int maxSimpleArrayLength,
                  long maxHeapSize,
                  Classpath cp, 
                  Class<? extends ClassFileFactory> fClass, 
                  Map<String, Set<String>> expansionBackdoor, 
                  Calculator calc) 
                  throws InvalidClassFileFactoryClassException {
+        this.bypassStandardLoading = bypassStandardLoading;
         this.classLoaders.add(Null.getInstance()); //classloader 0 is the bootstrap classloader
         setStandardFiles();
         this.heap = new Heap(maxHeapSize);
@@ -381,7 +399,7 @@ public final class State implements Cloneable {
     
     private void setStandardFiles() {
         try {
-            //gets reflectively some fields
+            //gets reflectively some fields from FilterInputStream and FilterOutputStream
             final Field fisInField = FilterInputStream.class.getDeclaredField("in");
             fisInField.setAccessible(true);
             final Field fosOutField = FilterOutputStream.class.getDeclaredField("out");
@@ -424,6 +442,67 @@ public final class State implements Cloneable {
      */
     public Calculator getCalculator() {
         return this.calc;
+    }
+    
+    /**
+     * Sets the main thread group.
+     * 
+     * @param mainThreadGroup a {@link ReferenceConcrete} to 
+     *        an {@link Instance} of class {@link java.lang.ThreadGroup}.
+     * @throws NullPointerException if {@code mainThreadGroup == null}.
+     * @throws InvalidInputException if {@code mainThreadGroup} does not
+     *         refer an {@link Instance} of class {@link java.lang.ThreadGroup}.
+     */
+    public void setMainThreadGroup(ReferenceConcrete mainThreadGroup) throws InvalidInputException {
+        final Objekt o = getObject(mainThreadGroup);
+        if (o == null ||
+            !(o instanceof Instance) ||
+            !JAVA_THREADGROUP.equals(o.getType().getClassName())) {
+            throw new InvalidInputException("Tried to set the main threadgroup with a reference to a object of class " + o.getType().getClassName() + ".");
+        }
+        this.mainThreadGroup = mainThreadGroup;
+    }
+
+    /**
+     * Gets the main thread group.
+     * 
+     * @return a {@link ReferenceConcrete} to 
+     *        an {@link Instance} of class {@link java.lang.ThreadGroup}, 
+     *        or {@code null} if {@link #setMainThreadGroup(ReferenceConcrete)}
+     *        was not invoked before.
+     */
+    public ReferenceConcrete getMainThreadGroup() {
+        return this.mainThreadGroup;
+    }
+    
+    /**
+     * Sets the main thread.
+     * 
+     * @param mainThread a {@link ReferenceConcrete} to 
+     *        an {@link Instance_JAVA_THREAD}.
+     * @throws NullPointerException if {@code mainThread == null}.
+     * @throws InvalidInputException if {@code mainThread} does not
+     *         refer an {@link Instance_JAVA_THREAD}.
+     */
+    public void setMainThread(ReferenceConcrete mainThread) throws InvalidInputException {
+        final Objekt o = getObject(mainThread);
+        if (o == null ||
+            !(o instanceof Instance_JAVA_THREAD)) {
+            throw new InvalidInputException("Tried to set the main thread with a reference to a object of class " + o.getType().getClassName() + ".");
+        }
+        this.mainThread = mainThread;
+    }
+    
+    /**
+     * Gets the main thread.
+     * 
+     * @return a {@link ReferenceConcrete} to 
+     *        an {@link Instance_JAVA_THREAD},
+     *        or {@code null} if {@link #setMainThread(ReferenceConcrete)}
+     *        was not invoked before.
+     */
+    public ReferenceConcrete getMainThread() {
+        return this.mainThread;
     }
 
     /**
@@ -691,6 +770,7 @@ public final class State implements Cloneable {
      *         an object in the heap, i.e.
      *         <ul>
      *         <li>{@code ref} is {@link Null}, or</li> 
+     *         <li>{@code ref} is concrete and its heap position is free, or</li> 
      *         <li>{@code ref} is symbolic and resolved to null, or</li> 
      *         <li>{@code ref} is symbolic and unresolved.</li>
      *         </ul>
@@ -1788,15 +1868,32 @@ public final class State implements Cloneable {
     }
     
     /**
-     * Checks whether the standard class loaders are
-     * not ready to be used.
+     * Checks whether the bootstrap classloader should always load the 
+     * classes defined by the extensions and application classloaders.
+     * This method returns the value set by the constructor, 
+     * so it shall only be used to query it, not to decide during
+     * symbolic execution what loader to use. For the latter use 
+     * the {@link #bypassStandardLoading()} method.
      * 
-     * @return {@code false} iff they have been set ready
-     *         by a previous call to 
-     *         {@link #setStandardClassLoadersReady()}.
+     * @return a {@code boolean}.
      */
-    public boolean areStandardClassLoadersNotReady() {
-        return this.standardClassLoadersNotReady;
+    public boolean shouldAlwaysBypassStandardLoading() {
+        return this.bypassStandardLoading;
+    }
+    
+    /**
+     * Checks whether the bootstrap classloader should load the 
+     * classes defined by the extensions and application classloaders, 
+     * either because users want to always use it at the purpose, 
+     * or because the extensions and application classloaders
+     * are not yet ready to be used.
+     * 
+     * @return {@code true} iff {@link #shouldAlwaysBypassStandardLoading()}, or 
+     *         if the method {@link #setStandardClassLoadersReady()}
+     *         was not previously invoked.
+     */
+    public boolean bypassStandardLoading() {
+        return this.bypassStandardLoading || this.standardClassLoadersNotReady;
     }
     
     /**
@@ -2927,8 +3024,13 @@ public final class State implements Cloneable {
     
     @Override
     protected void finalize() {
-        //closes all files
-        for (Object file : this.files.values()) {
+        //closes all files except stdin/out/err
+        for (Map.Entry<Integer, Object> fileEntry : this.files.entrySet()) {
+            final int fileId = fileEntry.getKey();
+            if (fileId == 0 || fileId == 1 || fileId == 2) {
+                continue;
+            }
+            final Object file = fileEntry.getValue();
             try {
                 if (file instanceof FileInputStream) {
                     ((FileInputStream) file).close();

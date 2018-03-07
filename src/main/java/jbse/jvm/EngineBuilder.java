@@ -73,24 +73,23 @@ public class EngineBuilder {
     private static Engine bootEngineArchitecture(EngineParameters parameters) 
     throws CannotBuildEngineException {
         final ExecutionContext ctx = 
-        new ExecutionContext(
-                             parameters.getInitialState(),
+        new ExecutionContext(parameters.getInitialState(),
+                             parameters.getBypassStandardLoading(),
                              parameters.getMaxSimpleArrayLength(),
                              parameters.getMaxHeapSize(),
                              parameters.getClasspath(),
-                             parameters.getMethodSignature(),
+                             ClassFileFactoryJavassist.class,          //default
+                             parameters.getExpansionBackdoor(), 
                              parameters.getCalculator(),
+                             new DecisionAlternativeComparators(),     //default 
+                             parameters.getMethodSignature(),
                              parameters.getDecisionProcedure(),
                              parameters.getStateIdentificationMode().toInternal(), 
                              parameters.getBreadthMode().toInternal(),
-                             ClassFileFactoryJavassist.class,          //default
-                             parameters.getExpansionBackdoor(), 
-                             parameters.getTriggerRulesRepo(),
-                             new DecisionAlternativeComparators()     //default 
-        );
+                             parameters.getTriggerRulesRepo());
 
         //sets the meta-level directives
-        setMeta(ctx, parameters);
+        setOverrides(ctx, parameters);
 
         final VariableObserverManager vom = new VariableObserverManager(parameters.getMethodSignature().getClassName());
 
@@ -100,7 +99,7 @@ public class EngineBuilder {
         return new Engine(ctx, vom);
     }
 
-    private static void setMeta(ExecutionContext ctx, EngineParameters parameters) {
+    private static void setOverrides(ExecutionContext ctx, EngineParameters parameters) {
         for (String[] rule : parameters.getMetaOverridden()) {
             try {
                 ctx.addMetaOverridden(new Signature(rule[0], rule[1], rule[2]), rule[3]);

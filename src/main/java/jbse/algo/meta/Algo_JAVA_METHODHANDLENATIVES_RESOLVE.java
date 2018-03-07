@@ -224,7 +224,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
 
                 //performs resolution
                 final boolean isInterface = isInvokeInterface(memberNameFlags);
-                this.resolvedClass = state.getClassHierarchy().resolveMethod(accessorClass, methodToResolve, isInterface, state.areStandardClassLoadersNotReady());
+                this.resolvedClass = state.getClassHierarchy().resolveMethod(accessorClass, methodToResolve, isInterface, state.bypassStandardLoading());
                 
                 final boolean methodIsSignaturePolymorphic = !isInterface && this.resolvedClass.hasOneSignaturePolymorphicMethodDeclaration(methodToResolve.getName());
                 final boolean methodIsSignaturePolymorphicNonIntrinsic = methodIsSignaturePolymorphic && !isSignaturePolymorphicMethodIntrinsic(methodToResolve.getName());
@@ -284,7 +284,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                 final Signature fieldToResolve = new Signature(memberNameContainerClass.getClassName(), memberNameType, memberNameName);
 
                 //performs resolution
-                this.resolvedClass = state.getClassHierarchy().resolveField(accessorClass, fieldToResolve, state.areStandardClassLoadersNotReady());
+                this.resolvedClass = state.getClassHierarchy().resolveField(accessorClass, fieldToResolve, state.bypassStandardLoading());
                 this.resolvedSignature = new Signature(this.resolvedClass.getClassName(), fieldToResolve.getDescriptor(), fieldToResolve.getName());
             } else { //the member name is a type declaration, or the flags field is ill-formed
                 //see hotspot:/src/share/vm/prims/methodHandles.cpp lines 658-730
@@ -432,7 +432,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
         if (isPrimitive(typeName)) {
             retVal = state.getClassHierarchy().getClassFilePrimitive(toPrimitiveCanonicalName(typeName));
         } else {
-            retVal = state.getClassHierarchy().resolveClass(accessor, className(typeName), state.areStandardClassLoadersNotReady());
+            retVal = state.getClassHierarchy().resolveClass(accessor, className(typeName), state.bypassStandardLoading());
         }
         return retVal;
     }

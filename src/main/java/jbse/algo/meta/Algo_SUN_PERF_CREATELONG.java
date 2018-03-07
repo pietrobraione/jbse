@@ -119,7 +119,7 @@ public final class Algo_SUN_PERF_CREATELONG extends Algo_INVOKEMETA_Nonbranching
 
         //loads the classfile for class java.nio.DirectByteBuffer
         try {
-            this.cf_JAVA_DIRECTBYTEBUFFER = state.getClassHierarchy().loadCreateClass(state.getCurrentClass().getDefiningClassLoader(), JAVA_DIRECTBYTEBUFFER, state.areStandardClassLoadersNotReady());
+            this.cf_JAVA_DIRECTBYTEBUFFER = state.getClassHierarchy().loadCreateClass(state.getCurrentClass().getDefiningClassLoader(), JAVA_DIRECTBYTEBUFFER, state.bypassStandardLoading());
         } catch (PleaseLoadClassException e) {
             invokeClassLoaderLoadClass(state, e);
             exitFromAlgorithm();

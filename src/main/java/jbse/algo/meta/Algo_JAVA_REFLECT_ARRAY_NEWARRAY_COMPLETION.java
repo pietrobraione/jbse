@@ -94,7 +94,7 @@ public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEW
             } else { //isReference()
                 arrayTypeName = "" + ARRAYOF + REFERENCE + arrayMemberType.getClassName() + TYPEEND;
             }
-            this.arrayType = state.getClassHierarchy().loadCreateClass(arrayMemberType.getDefiningClassLoader(), arrayTypeName, state.areStandardClassLoadersNotReady());
+            this.arrayType = state.getClassHierarchy().loadCreateClass(arrayMemberType.getDefiningClassLoader(), arrayTypeName, state.bypassStandardLoading());
         } catch (PleaseLoadClassException e) {
             invokeClassLoaderLoadClass(state, e);
             exitFromAlgorithm();

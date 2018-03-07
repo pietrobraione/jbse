@@ -97,14 +97,6 @@ public final class RunnerParameters implements Cloneable {
         return this.engineParameters.getDecisionProcedure();
     }
 
-    public void setCalculator(Calculator calc) {
-        this.engineParameters.setCalculator(calc);
-    }
-
-    public Calculator getCalculator() {
-        return this.engineParameters.getCalculator();
-    }
-
     /**
      * Sets the state identification mode, i.e., how a state will be
      * identified.
@@ -167,6 +159,51 @@ public final class RunnerParameters implements Cloneable {
     public State getInitialState() {
         return this.engineParameters.getInitialState();
     }
+    
+    /**
+     * Sets whether the bootstrap classloader should also be used to 
+     * load the classes defined by the extensions and application classloaders.
+     * This deviates a bit from the Java Virtual Machine Specification, 
+     * but ensures in practice a faster loading of classes than by
+     * the specification mechanism of invoking the {@link ClassLoader#loadClass(String) ClassLoader.loadClass}
+     * method. By default it is set to {@code true}. Also cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
+     * 
+     * @param bypassStandardLoading a {@code boolean}.
+     */
+    public void setBypassStandardLoading(boolean bypassStandardLoading) {
+        this.engineParameters.setBypassStandardLoading(bypassStandardLoading);
+    }
+    
+    /**
+     * Gets whether the bootstrap classloader should also be used to 
+     * load the classes defined by the extensions and application classloaders.
+     * 
+     * @return a {@code boolean}.
+     */
+    public boolean getBypassStandardLoading() {
+        return this.engineParameters.getBypassStandardLoading();
+    }
+
+    /**
+     * Sets the {@link Calculator}, and cancels the effect
+     * of any previous call to {@link #setInitialState(State)}.
+     * 
+     * @param calc a {@link Calculator}.
+     * @throws NullPointerException if {@code calc == null}.
+     */
+    public void setCalculator(Calculator calc) {
+        this.engineParameters.setCalculator(calc);
+    }
+
+    /**
+     * Gets the {@link Calculator}.
+     * 
+     * @return a {@link Calculator}
+     */
+    public Calculator getCalculator() {
+        return this.engineParameters.getCalculator();
+    }
 
     /**
      * Sets the bootstrap classpath, and cancels the effect 
@@ -183,7 +220,8 @@ public final class RunnerParameters implements Cloneable {
      * Brings the bootstrap classpath back to the default,
      * i.e., the same bootstrap path of the JVM that
      * executes JBSE, as returned by the system property
-     * {@code sun.boot.class.path}.
+     * {@code sun.boot.class.path}. Also cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
      */
     public void setDefaultBootPath() {
         this.engineParameters.setDefaultBootPath();

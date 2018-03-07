@@ -464,6 +464,31 @@ public final class RunParameters implements Cloneable {
     public void setBreadthMode(BreadthMode breadthMode) {
         this.runnerParameters.setBreadthMode(breadthMode);
     }
+    
+    /**
+     * Sets whether the bootstrap classloader should also be used to 
+     * load the classes defined by the extensions and application classloaders.
+     * This deviates a bit from the Java Virtual Machine Specification, 
+     * but ensures in practice a faster loading of classes than by
+     * the specification mechanism of invoking the {@link ClassLoader#loadClass(String) ClassLoader.loadClass}
+     * method. By default it is set to {@code true}. Also cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
+     * 
+     * @param bypassStandardLoading a {@code boolean}.
+     */
+    public void setBypassStandardLoading(boolean bypassStandardLoading) {
+        this.runnerParameters.setBypassStandardLoading(bypassStandardLoading);
+    }
+    
+    /**
+     * Gets whether the bootstrap classloader should also be used to 
+     * load the classes defined by the extensions and application classloaders.
+     * 
+     * @return a {@code boolean}.
+     */
+    public boolean getBypassStandardLoading() {
+        return this.runnerParameters.getBypassStandardLoading();
+    }
 
     /**
      * Sets the bootstrap classpath.

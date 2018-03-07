@@ -94,7 +94,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     this.val = state.referenceToStringLiteral(stringLit);
                 } else if (cpv instanceof ConstantPoolClass) {
                     final String classSignature = ((ConstantPoolClass) cpv).getValue();
-                    final ClassFile resolvedClass = state.getClassHierarchy().resolveClass(currentClass, classSignature, state.areStandardClassLoadersNotReady());
+                    final ClassFile resolvedClass = state.getClassHierarchy().resolveClass(currentClass, classSignature, state.bypassStandardLoading());
                     state.ensureInstance_JAVA_CLASS(resolvedClass);
                     this.val = state.referenceToInstance_JAVA_CLASS(resolvedClass);
                 } else if (cpv instanceof ConstantPoolObject) {

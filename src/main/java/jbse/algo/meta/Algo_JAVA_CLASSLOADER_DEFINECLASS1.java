@@ -126,7 +126,7 @@ public final class Algo_JAVA_CLASSLOADER_DEFINECLASS1 extends Algo_INVOKEMETA_No
             }
             
             //defines the class
-            this.classFile = state.getClassHierarchy().defineClass(classLoader, name, buf, state.areStandardClassLoadersNotReady());
+            this.classFile = state.getClassHierarchy().defineClass(classLoader, name, buf, state.bypassStandardLoading());
             state.ensureInstance_JAVA_CLASS(this.classFile);
         } catch (PleaseLoadClassException e) {
             invokeClassLoaderLoadClass(state, e);

@@ -67,7 +67,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     this.isNull = false;
                     //performs resolution of the class name
                     final ClassFile currentClass = state.getCurrentClass();    
-                    final ClassFile classSuper = state.getClassHierarchy().resolveClass(currentClass, this.data.className(), state.areStandardClassLoadersNotReady());
+                    final ClassFile classSuper = state.getClassHierarchy().resolveClass(currentClass, this.data.className(), state.bypassStandardLoading());
                     
                     //gets the object's class
                     final Objekt obj = state.getObject(tmpValue);

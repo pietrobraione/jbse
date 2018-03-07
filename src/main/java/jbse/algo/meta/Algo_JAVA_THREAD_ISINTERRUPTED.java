@@ -37,7 +37,7 @@ public final class Algo_JAVA_THREAD_ISINTERRUPTED extends Algo_INVOKEMETA_Nonbra
         try {
             //there's only one thread in JBSE, so skips the first parameter
             //and gets the current thread from the context
-            this.currentThread = (Instance_JAVA_THREAD) state.getObject(this.ctx.getMainThread()); 
+            this.currentThread = (Instance_JAVA_THREAD) state.getObject(state.getMainThread()); 
             this.isInterrupted = state.getCalculator().valInt(currentThread.isInterrupted() ? 1 : 0);
 
             //gets the second (boolean ClearInterrupted) parameter

@@ -61,7 +61,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             try {
                 //performs resolution
                 final ClassFile currentClass = state.getCurrentClass();
-                final ClassFile newObjectClass = state.getClassHierarchy().resolveClass(currentClass, this.data.className(), state.areStandardClassLoadersNotReady());
+                final ClassFile newObjectClass = state.getClassHierarchy().resolveClass(currentClass, this.data.className(), state.bypassStandardLoading());
                 
                 //possibly initializes the class
                 ensureClassInitialized(state, newObjectClass, this.ctx);

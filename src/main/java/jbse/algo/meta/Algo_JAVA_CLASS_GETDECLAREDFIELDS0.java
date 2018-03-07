@@ -251,7 +251,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                             }
                         } else {
                             final String fieldTypeClassName = className(fieldType);
-                            final ClassFile fieldTypeClass = hier.resolveClass(this.thisClass, fieldTypeClassName, state.areStandardClassLoadersNotReady()); //note that the accessor is the owner of the field, i.e., the 'this' class
+                            final ClassFile fieldTypeClass = hier.resolveClass(this.thisClass, fieldTypeClassName, state.bypassStandardLoading()); //note that the accessor is the owner of the field, i.e., the 'this' class
                             state.ensureInstance_JAVA_CLASS(fieldTypeClass);
                             typeClassRef = state.referenceToInstance_JAVA_CLASS(fieldTypeClass);
                         }

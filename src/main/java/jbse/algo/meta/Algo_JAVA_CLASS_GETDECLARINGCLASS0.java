@@ -86,7 +86,7 @@ public final class Algo_JAVA_CLASS_GETDECLARINGCLASS0 extends Algo_INVOKEMETA_No
             if (declaringClassName == null || thisClass.isArray() || thisClass.isPrimitive() || thisClass.isLocal() || thisClass.isAnonymous()) {
                 this.declaringClass = Null.getInstance();
             } else {
-                final ClassFile declaringClassFile = state.getClassHierarchy().resolveClass(thisClass, declaringClassName, state.areStandardClassLoadersNotReady()); //TODO is ok that accessor == thisClass?
+                final ClassFile declaringClassFile = state.getClassHierarchy().resolveClass(thisClass, declaringClassName, state.bypassStandardLoading()); //TODO is ok that accessor == thisClass?
                 state.ensureInstance_JAVA_CLASS(declaringClassFile);
                 this.declaringClass = state.referenceToInstance_JAVA_CLASS(declaringClassFile);
             }            

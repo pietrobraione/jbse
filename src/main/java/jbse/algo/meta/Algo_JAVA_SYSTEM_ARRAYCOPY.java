@@ -89,7 +89,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                 exitFromAlgorithm();
             }
 
-            final Primitive zero = this.ctx.calc.valInt(0);
+            final Primitive zero = state.getCalculator().valInt(0);
             try {
                 this.inRange = this.srcPos.ge(zero)
                 .and(this.destPos.ge(zero))

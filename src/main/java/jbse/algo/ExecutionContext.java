@@ -357,6 +357,7 @@ import jbse.bc.ClassFileFactory;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Classpath;
 import jbse.bc.Signature;
+import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.mem.State;
@@ -367,7 +368,6 @@ import jbse.tree.StateTree;
 import jbse.tree.StateTree.BreadthMode;
 import jbse.tree.StateTree.StateIdentificationMode;
 import jbse.val.Calculator;
-import jbse.val.ReferenceConcrete;
 
 /**
  * Class containing an execution context, i.e., everything 
@@ -377,40 +377,59 @@ import jbse.val.ReferenceConcrete;
  * @author Pietro Braione
  */
 public final class ExecutionContext {
-    /** The maximum length of an array to be granted simple representation. Used during initialization. */
-    public final int maxSimpleArrayLength;
-    
-    /** The maximum heap size expressed as maximum number of objects. Used during initialization. */
-    public final long maxHeapSize;
-    
-    /** The {@link Classpath}. Used during initialization. */
-    public final Classpath classpath;
-
-    /** The {@link Signature} of the root (initial) method. Used during initialization. */
-    public final Signature rootMethodSignature;
-
-    /** The {@link Calculator}. Used during initialization. */
-    public final Calculator calc;
-
-    /** The class for the symbolic execution's {@link ClassFileFactory} 
-     * (injected dependency). Used during initialization.
-     */
-    public final Class<? extends ClassFileFactory> classFileFactoryClass;
-
-    /** 
-     * Maps class names to the names of the subclasses that may be 
-     * used to expand references. Used during initialization.
-     */
-    public final Map<String, Set<String>> expansionBackdoor;
-
     /** 
      * The initial {@link State} of symbolic execution. It is a prototype 
      * that will be cloned by its getter. 
      */
     private State initialState;
+    
+    /** 
+     * {@code true} iff the bootstrap classloader should also load the classes defined by the
+     * extensions and application classloaders. 
+     */
+    private final boolean bypassStandardLoading;
+    
+    /** The maximum length of an array to be granted simple representation. Used during initialization. */
+    private final int maxSimpleArrayLength;
+    
+    /** The maximum heap size expressed as maximum number of objects. Used during initialization. */
+    private final long maxHeapSize;
+    
+    /** The {@link Classpath}. Used during initialization. */
+    private final Classpath classpath;
+
+    /** 
+     * The class for the symbolic execution's {@link ClassFileFactory} 
+     * (injected dependency). Used during initialization.
+     */
+    private final Class<? extends ClassFileFactory> classFileFactoryClass;
+
+    /** 
+     * Maps class names to the names of the subclasses that may be 
+     * used to expand references. Used during initialization.
+     */
+    private final Map<String, Set<String>> expansionBackdoor;
+
+    /** The {@link Calculator}. Used during initialization. */
+    private final Calculator calc;
 
     /** The symbolic execution's {@link DecisionAlternativeComparators}. */
     private final DecisionAlternativeComparators comparators;
+
+    /** The {@link Signature} of the root (initial) method. Used during initialization. */
+    public final Signature rootMethodSignature;
+
+    /** The symbolic execution's {@link DecisionProcedureAlgorithms}. */
+    public final DecisionProcedureAlgorithms decisionProcedure;
+
+    /** The symbolic execution's {@link StateTree}. */
+    public final StateTree stateTree;
+
+    /** 
+     * The {@link TriggerManager} that handles reference resolution events
+     * and executes triggers. 
+     */
+    public final TriggerManager triggerManager;
 
     /** The {@link DispatcherBytecodeAlgorithm}. */
     public final DispatcherBytecodeAlgorithm dispatcher = new DispatcherBytecodeAlgorithm();
@@ -424,84 +443,73 @@ public final class ExecutionContext {
     /** Maps method signatures to their base-level overrides. */
     public final HashMap<Signature, Signature> baseOverrides = new HashMap<>();
 
-    /** The symbolic execution's {@link DecisionProcedureAlgorithms}. */
-    public final DecisionProcedureAlgorithms decisionProcedure;
-
-    /** The symbolic execution's {@link StateTree}. */
-    public final StateTree stateTree;
-
-    /** 
-     * The {@link TriggerManager} that handles reference resolution events
-     * and executes triggers. 
-     */
-    public final TriggerManager triggerManager;
-    
-    /** A {@link ReferenceConcrete} to the main thread group created at init time. */
-    private ReferenceConcrete mainThreadGroup;
-    
-    /** A {@link ReferenceConcrete} to the main thread created at init time. */
-    private ReferenceConcrete mainThread;
-
     /**
      * Constructor.
      * 
      * @param initialState the initial {@code State}, or {@code null} if no
-     *        initial state. Warning: all the remaining parameters
-     *        must be coherent with it, if not {@code null} (e.g., 
-     *        {@code calc} must be the calculator used to create  
-     *        {@code initialState}). It will not be modified, but
-     *        it shall not be modified externally.
+     *        initial state. Note that no safety copy is performed, thus the 
+     *        invoker of this constructor must transfer ownership of 
+     *        {@code initialState}.
+     * @param bypassStandardLoading a {@code boolean}, {@code true} iff the bootstrap 
+     *        classloader should also load the classed defined by the extensions 
+     *        and application classloaders. Ignored when {@code initialState != null}.
      * @param maxSimpleArrayLength the maximum length an array may have
-     *        to be granted simple representation.
+     *        to be granted simple representation. Ignored when {@code initialState != null}.
      * @param maxHeapSize a {@code long}, the maximum size of the
      *        heap expressed as maximum number of objects it can store.
+     *        Ignored when {@code initialState != null}.
      * @param classpath a {@link Classpath} object, containing 
      *        information about the classpath of the symbolic execution.
-     * @param rootMethodSignature the {@link Signature} of the root method
-     *        of the symbolic execution.
-     * @param calc a {@link Calculator}.
-     * @param decisionProcedure a {@link DecisionProcedureAlgorithms}.
-     * @param stateIdentificationMode a {@link StateIdentificationMode}.
-     * @param breadthMode a {@link BreadthMode}.
+     *        Ignored when {@code initialState != null}.
      * @param classFileFactoryClass a {@link Class}{@code <? extends }{@link ClassFileFactory}{@code >}
      *        that will be instantiated by the engine to retrieve classfiles. It must 
-     *        provide a parameterless public constructor.
+     *        provide a parameterless public constructor. Ignored when 
+     *        {@code initialState != null}.
      * @param expansionBackdoor a 
      *        {@link Map}{@code <}{@link String}{@code , }{@link Set}{@code <}{@link String}{@code >>}
      *        associating class names to sets of names of their subclasses. It 
      *        is used in place of the class hierarchy to perform reference expansion.
-     * @param rulesTrigger a {@link TriggerRulesRepo}.
+     *        Ignored when {@code initialState != null}.
+     * @param calc a {@link Calculator}. Ignored when {@code initialState != null}.
      * @param comparators a {@link DecisionAlternativeComparators} which
      *        will be used to establish the order of exploration
      *        for sibling branches.
+     * @param rootMethodSignature the {@link Signature} of the root method
+     *        of the symbolic execution.
+     * @param decisionProcedure a {@link DecisionProcedureAlgorithms}.
+     * @param stateIdentificationMode a {@link StateIdentificationMode}.
+     * @param breadthMode a {@link BreadthMode}.
+     * @param rulesTrigger a {@link TriggerRulesRepo}.
      * @param nativeInvoker a {@link NativeInvoker} which will be used
      *        to execute native methods.
      */
     public ExecutionContext(State initialState,
+                            boolean bypassStandardLoading,
                             int maxSimpleArrayLength,
                             long maxHeapSize,
                             Classpath classpath,
+                            Class<? extends ClassFileFactory> classFileFactoryClass,
+                            Map<String, Set<String>> expansionBackdoor, 
+                            Calculator calc,
+                            DecisionAlternativeComparators comparators,
                             Signature rootMethodSignature,
-                            Calculator calc, 
-                            DecisionProcedureAlgorithms decisionProcedure,
+                            DecisionProcedureAlgorithms decisionProcedure, 
                             StateIdentificationMode stateIdentificationMode,
                             BreadthMode breadthMode,
-                            Class<? extends ClassFileFactory> classFileFactoryClass, 
-                            Map<String, Set<String>> expansionBackdoor,
-                            TriggerRulesRepo rulesTrigger,
-                            DecisionAlternativeComparators comparators) {
+                            TriggerRulesRepo rulesTrigger) {
         this.initialState = initialState;
+        this.bypassStandardLoading = bypassStandardLoading;
         this.maxSimpleArrayLength = maxSimpleArrayLength;
         this.maxHeapSize = maxHeapSize;
         this.classpath = classpath;
-        this.rootMethodSignature = rootMethodSignature;
-        this.calc = calc;
-        this.decisionProcedure = decisionProcedure;
-        this.stateTree = new StateTree(stateIdentificationMode, breadthMode);
         this.classFileFactoryClass = classFileFactoryClass;
         this.expansionBackdoor = new HashMap<>(expansionBackdoor);      //safety copy
-        this.triggerManager = new TriggerManager(rulesTrigger.clone()); //safety copy
+        this.calc = calc;
         this.comparators = comparators;
+        this.rootMethodSignature = rootMethodSignature;
+        this.decisionProcedure = decisionProcedure;
+        this.stateTree = new StateTree(stateIdentificationMode, breadthMode);
+        this.triggerManager = new TriggerManager(rulesTrigger.clone()); //safety copy
 
         //defaults
         try {
@@ -702,6 +710,20 @@ public final class ExecutionContext {
             throw new UnexpectedInternalException(e);
         }
     }
+    
+    /**
+     * Factory method. It creates a virgin initial 
+     * state, with incomplete initialization.
+     * 
+     * @return a {@link State}.
+     * @throws InvalidClassFileFactoryClassException in the case
+     *         the {@code classFileFactoryClass} provided during the construction
+     *         of this object has not the expected features (missing constructor, 
+     *         unaccessible constructor...).
+     */
+    public State createVirginInitialState() throws InvalidClassFileFactoryClassException {
+        return new State(this.bypassStandardLoading, this.maxSimpleArrayLength, this.maxHeapSize, this.classpath, this.classFileFactoryClass, this.expansionBackdoor, this.calc);
+    }
 
     /**
      * Sets the initial state. To be invoked whenever 
@@ -864,21 +886,5 @@ public final class ExecutionContext {
         final Comparator<R> comparator = this.comparators.get(superclassDecisionAlternatives);
         final TreeSet<R> retVal = new TreeSet<>(comparator);
         return retVal;
-    }
-    
-    public void setMainThreadGroup(ReferenceConcrete mainThreadGroup) {
-        this.mainThreadGroup = mainThreadGroup;
-    }
-    
-    public ReferenceConcrete getMainThreadGroup() {
-        return this.mainThreadGroup;
-    }
-    
-    public void setMainThread(ReferenceConcrete mainThread) {
-        this.mainThread = mainThread;
-    }
-    
-    public ReferenceConcrete getMainThread() {
-        return this.mainThread;
     }
 }

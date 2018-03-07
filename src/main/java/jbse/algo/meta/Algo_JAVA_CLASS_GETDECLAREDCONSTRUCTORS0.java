@@ -216,7 +216,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                                 paramClassRef = state.referenceToInstance_JAVA_CLASS_primitive(paramTypeNameCanonical);
                             } else {
                                 final String paramTypeClassName = className(paramType);
-                                final ClassFile paramTypeClass = hier.resolveClass(this.thisClass, paramTypeClassName, state.areStandardClassLoadersNotReady()); //note that the accessor is the owner of the constructor, i.e., the 'this' class
+                                final ClassFile paramTypeClass = hier.resolveClass(this.thisClass, paramTypeClassName, state.bypassStandardLoading()); //note that the accessor is the owner of the constructor, i.e., the 'this' class
                                 state.ensureInstance_JAVA_CLASS(paramTypeClass);
                                 paramClassRef = state.referenceToInstance_JAVA_CLASS(paramTypeClass);
                             }
@@ -266,7 +266,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                         int i = 0;
                         for (String excType : exceptions) {
                             final String excClassName = className(excType);
-                            final ClassFile excClass = hier.resolveClass(state.getCurrentClass(), excClassName, state.areStandardClassLoadersNotReady());
+                            final ClassFile excClass = hier.resolveClass(state.getCurrentClass(), excClassName, state.bypassStandardLoading());
                             state.ensureInstance_JAVA_CLASS(excClass);
                             final ReferenceConcrete excClazz = state.referenceToInstance_JAVA_CLASS(excClass);
                             arrayExcClasses.setFast(calc.valInt(i), excClazz);

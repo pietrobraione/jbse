@@ -70,7 +70,7 @@ public final class Algo_JAVA_CLASS_GETENCLOSINGMETHOD0 extends Algo_INVOKEMETA_N
                 this.toPush = Null.getInstance();
             } else {
                 //resolves the enclosing class
-                final ClassFile enclosingClass = state.getClassHierarchy().resolveClass(cf, sigEnclosing.getClassName(), state.areStandardClassLoadersNotReady());
+                final ClassFile enclosingClass = state.getClassHierarchy().resolveClass(cf, sigEnclosing.getClassName(), state.bypassStandardLoading());
                 
                 //ensures the java.lang.Class of the enclosing class
                 state.ensureInstance_JAVA_CLASS(enclosingClass);

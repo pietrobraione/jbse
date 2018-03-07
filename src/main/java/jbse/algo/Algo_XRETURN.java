@@ -109,7 +109,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     final Reference refToReturn = (Reference) this.valueToReturn;
                     if (!state.isNull(refToReturn)) {
                         //TODO the JVMS v8, *return instruction, does not explicitly say how and when the return descriptor type is resolved  
-                        final ClassFile destinationTypeClass = state.getClassHierarchy().resolveClass(currentClass, className(destinationType), state.areStandardClassLoadersNotReady());
+                        final ClassFile destinationTypeClass = state.getClassHierarchy().resolveClass(currentClass, className(destinationType), state.bypassStandardLoading());
                         final ClassFile valueObjectType = state.getObject(refToReturn).getType();
                         if (!state.getClassHierarchy().isAssignmentCompatible(valueObjectType, destinationTypeClass)) {
                             throwVerifyError(state);

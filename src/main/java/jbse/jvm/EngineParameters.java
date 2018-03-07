@@ -153,7 +153,14 @@ public final class EngineParameters implements Cloneable {
      * must be created by the runner; by default it is {@code null}.
      */
     private State initialState = null;
-
+    
+    /** 
+     * {@code true} iff the bootstrap classloader should also load the classes defined by the
+     * extensions and application classloaders; overridden by 
+     * {@code initialState}'s bypass state when {@code initialState != null}. 
+     */
+    private boolean bypassStandardLoading = true;
+    
     /** 
      * The bootstrap path to the core Java classes; overridden by 
      * {@code initialState}'s bootstrap path when 
@@ -360,12 +367,57 @@ public final class EngineParameters implements Cloneable {
             return this.initialState.clone();
         }
     }
+    
+    /**
+     * Sets whether the bootstrap classloader should also be used to 
+     * load the classes defined by the extensions and application classloaders.
+     * This deviates a bit from the Java Virtual Machine Specification, 
+     * but ensures in practice a faster loading of classes than by
+     * the specification mechanism of invoking the {@link ClassLoader#loadClass(String) ClassLoader.loadClass}
+     * method. By default it is set to {@code true}. Also cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
+     * 
+     * @param bypassStandardLoading a {@code boolean}.
+     */
+    public void setBypassStandardLoading(boolean bypassStandardLoading) {
+        this.bypassStandardLoading = bypassStandardLoading;
+        this.initialState = null;
+    }
+    
+    /**
+     * Gets whether the bootstrap classloader should also be used to 
+     * load the classes defined by the extensions and application classloaders.
+     * 
+     * @return a {@code boolean}.
+     */
+    public boolean getBypassStandardLoading() {
+        if (this.initialState == null) {
+            return this.bypassStandardLoading;
+        } else {
+            return this.initialState.shouldAlwaysBypassStandardLoading();
+        }
+    }
 
+    /**
+     * Sets the {@link Calculator}, and cancels the effect
+     * of any previous call to {@link #setInitialState(State)}.
+     * 
+     * @param calc a {@link Calculator}.
+     * @throws NullPointerException if {@code calc == null}.
+     */
     public void setCalculator(Calculator calc) {
+        if (calc == null) {
+            throw new NullPointerException();
+        }
         this.calc = calc;
         this.initialState = null;
     }
 
+    /**
+     * Gets the {@link Calculator}.
+     * 
+     * @return a {@link Calculator}
+     */
     public Calculator getCalculator() {
         if (this.initialState == null) {
             return this.calc;
@@ -393,10 +445,12 @@ public final class EngineParameters implements Cloneable {
      * Brings the bootstrap classpath back to the default,
      * i.e., the same bootstrap path of the JVM that
      * executes JBSE, as returned by the system property
-     * {@code sun.boot.class.path}.
+     * {@code sun.boot.class.path}. Also cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
      */
     public void setDefaultBootPath() {
         this.bootPath = System.getProperty("sun.boot.class.path");
+        this.initialState = null;
     }
 
     /**
@@ -405,7 +459,11 @@ public final class EngineParameters implements Cloneable {
      * @return a {@link String}, the bootstrap classpath.
      */
     public String getBootPath() {
-        return this.bootPath;
+        if (this.initialState == null) {
+            return this.bootPath;
+        } else {
+            return this.initialState.getClasspath().javaHome();
+        }
     }
 
     /**

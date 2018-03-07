@@ -79,7 +79,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 
                 //performs field resolution
                 final ClassFile currentClass = state.getCurrentClass();    
-                this.fieldClassResolved = state.getClassHierarchy().resolveField(currentClass, this.data.signature(), state.areStandardClassLoadersNotReady());
+                this.fieldClassResolved = state.getClassHierarchy().resolveField(currentClass, this.data.signature(), state.bypassStandardLoading());
 
                 //checks that, if the field is final, then it is declared in the current class and the
                 //current method is an instance initialization method
@@ -116,7 +116,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     final Reference refToPut = (Reference) this.valueToPut;
                     if (!state.isNull(refToPut)) {
                         //TODO the JVMS v8, putfield instruction, does not explicitly say how and when the field descriptor type is resolved  
-                        final ClassFile destinationTypeClass = state.getClassHierarchy().resolveClass(currentClass, className(destinationType), state.areStandardClassLoadersNotReady());
+                        final ClassFile destinationTypeClass = state.getClassHierarchy().resolveClass(currentClass, className(destinationType), state.bypassStandardLoading());
                         final ClassFile valueObjectType = state.getObject(refToPut).getType();
                         if (!state.getClassHierarchy().isAssignmentCompatible(valueObjectType, destinationTypeClass)) {
                             throwVerifyError(state);

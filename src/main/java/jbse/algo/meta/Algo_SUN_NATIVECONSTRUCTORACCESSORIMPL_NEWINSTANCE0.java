@@ -257,7 +257,7 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
 
                 //pushes the frames for the constructor and for the 
                 //method that boxes the exceptions raised by the constructor
-                final ClassFile cf_JBSE_BASE = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, JBSE_BASE, state.areStandardClassLoadersNotReady());
+                final ClassFile cf_JBSE_BASE = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, JBSE_BASE, state.bypassStandardLoading());
                 state.pushFrame(cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTION, false, this.pcOffset);
                 final Signature constructorSignature = new Signature(this.constructorClassFile.getClassName(), this.descriptor, "<init>");
                 state.pushFrame(this.constructorClassFile, constructorSignature, false, 0, this.params);

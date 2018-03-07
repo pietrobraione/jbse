@@ -97,7 +97,7 @@ public final class Algo_JAVA_CLASS_FORNAME0 extends Algo_INVOKEMETA_Nonbranching
             
             //loads/creates the class
             final ClassHierarchy hier = state.getClassHierarchy();
-            final ClassFile classFile = hier.loadCreateClass(classLoader, className, state.areStandardClassLoadersNotReady());
+            final ClassFile classFile = hier.loadCreateClass(classLoader, className, state.bypassStandardLoading());
             
             //gets the caller class
             final Reference callerClassRef = (Reference) this.data.operand(3);

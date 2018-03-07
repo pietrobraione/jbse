@@ -55,7 +55,7 @@ abstract class Algo_GETX extends Algo_XLOAD_GETX<BytecodeData_1FI> {
             //performs field resolution
             try {
                 final ClassFile currentClass = state.getCurrentClass();    
-                this.fieldClassResolved = state.getClassHierarchy().resolveField(currentClass, this.data.signature(), state.areStandardClassLoadersNotReady());
+                this.fieldClassResolved = state.getClassHierarchy().resolveField(currentClass, this.data.signature(), state.bypassStandardLoading());
             } catch (PleaseLoadClassException e) {
                 invokeClassLoaderLoadClass(state, e);
                 exitFromAlgorithm();

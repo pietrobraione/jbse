@@ -24,7 +24,7 @@ public final class Algo_JAVA_THREAD_CURRENTTHREAD extends Algo_INVOKEMETA_Nonbra
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
             try {
-                state.pushOperand(this.ctx.getMainThread()); //there's only one thread in JBSE!
+                state.pushOperand(state.getMainThread()); //there's only one thread in JBSE!
             } catch (ClassCastException e) {
                 throwVerifyError(state);
                 exitFromAlgorithm();

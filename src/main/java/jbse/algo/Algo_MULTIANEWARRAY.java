@@ -68,7 +68,7 @@ final class Algo_MULTIANEWARRAY extends Algo_XNEWARRAY<BytecodeData_2CLUB> {
         try {
             //performs resolution
             final ClassFile currentClass = state.getCurrentClass();
-            this.arrayType = state.getClassHierarchy().resolveClass(currentClass, this.data.className(), state.areStandardClassLoadersNotReady());
+            this.arrayType = state.getClassHierarchy().resolveClass(currentClass, this.data.className(), state.bypassStandardLoading());
         } catch (PleaseLoadClassException e) {
             invokeClassLoaderLoadClass(state, e);
             exitFromAlgorithm();
