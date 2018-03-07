@@ -162,11 +162,11 @@ public final class EngineParameters implements Cloneable {
     private boolean bypassStandardLoading = true;
     
     /** 
-     * The bootstrap path to the core Java classes; overridden by 
+     * The Java home, where the JRE resides; overridden by 
      * {@code initialState}'s bootstrap path when 
      * {@code initialState != null}. 
      */
-    private String bootPath = System.getProperty("sun.boot.class.path");
+    private String javaHome = System.getProperty("java.home");
     
     /** 
      * The extensions directories; overridden by {@code initialState}'s 
@@ -427,40 +427,40 @@ public final class EngineParameters implements Cloneable {
     }
 
     /**
-     * Sets the bootstrap classpath, and cancels the effect 
+     * Sets the Java home, and cancels the effect 
      * of any previous call to {@link #setInitialState(State)}.
      * 
-     * @param bootPath a {@link String}.
-     * @throws NullPointerException if {@code bootPath == null}.
+     * @param javaHome a {@link String}.
+     * @throws NullPointerException if {@code javaHome == null}.
      */
-    public void setBootPath(String bootPath) {
-        if (bootPath == null) {
+    public void setJavaHome(String javaHome) {
+        if (javaHome == null) {
             throw new NullPointerException();
         }
         this.initialState = null; 
-        this.bootPath = bootPath;
+        this.javaHome = javaHome;
     }
     
     /**
-     * Brings the bootstrap classpath back to the default,
-     * i.e., the same bootstrap path of the JVM that
+     * Brings the Java home back to the default,
+     * i.e., the Java home of the JVM that
      * executes JBSE, as returned by the system property
-     * {@code sun.boot.class.path}. Also cancels the effect 
+     * {@code java.home}. Also cancels the effect 
      * of any previous call to {@link #setInitialState(State)}.
      */
-    public void setDefaultBootPath() {
-        this.bootPath = System.getProperty("sun.boot.class.path");
+    public void setDefaultJavaHome() {
+        this.javaHome = System.getProperty("java.home");
         this.initialState = null;
     }
 
     /**
-     * Gets the bootstrap classpath.
+     * Gets the Java home.
      * 
-     * @return a {@link String}, the bootstrap classpath.
+     * @return a {@link String}, the Java home.
      */
-    public String getBootPath() {
+    public String getJavaHome() {
         if (this.initialState == null) {
-            return this.bootPath;
+            return this.javaHome;
         } else {
             return this.initialState.getClasspath().javaHome();
         }
@@ -525,7 +525,7 @@ public final class EngineParameters implements Cloneable {
      */
     public Classpath getClasspath() {
         if (this.initialState == null) {
-            return new Classpath(this.bootPath, this.extPaths, this.userPaths);
+            return new Classpath(this.javaHome, this.extPaths, this.userPaths);
         } else {
             return this.initialState.getClasspath();
         }

@@ -206,34 +206,34 @@ public final class RunnerParameters implements Cloneable {
     }
 
     /**
-     * Sets the bootstrap classpath, and cancels the effect 
+     * Sets the Java home, and cancels the effect 
      * of any previous call to {@link #setInitialState(State)}.
      * 
-     * @param bootPath a {@link String}.
-     * @throws NullPointerException if {@code bootPath == null}.
+     * @param javaHome a {@link String}.
+     * @throws NullPointerException if {@code javaHome == null}.
      */
-    public void setBootPath(String bootPath) {
-        this.engineParameters.setBootPath(bootPath);
+    public void setJavaHome(String javaHome) {
+        this.engineParameters.setJavaHome(javaHome);
     }
 
     /**
-     * Brings the bootstrap classpath back to the default,
+     * Brings the Java home back to the default,
      * i.e., the same bootstrap path of the JVM that
      * executes JBSE, as returned by the system property
-     * {@code sun.boot.class.path}. Also cancels the effect 
+     * {@code java.home}. Also cancels the effect 
      * of any previous call to {@link #setInitialState(State)}.
      */
-    public void setDefaultBootPath() {
-        this.engineParameters.setDefaultBootPath();
+    public void setDefaultJavaHome() {
+        this.engineParameters.setDefaultJavaHome();
     }
 
     /**
-     * Gets the bootstrap classpath.
+     * Gets the Java home.
      * 
-     * @return a {@link String}, the bootstrap classpath.
+     * @return a {@link String}, the Java home.
      */
-    public String getBootPath() {
-        return this.engineParameters.getBootPath();
+    public String getJavaHome() {
+        return this.engineParameters.getJavaHome();
     }
 
     /**
