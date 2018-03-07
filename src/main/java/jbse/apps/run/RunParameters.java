@@ -515,7 +515,7 @@ public final class RunParameters implements Cloneable {
      * 
      * @return a {@link String}, the Java home.
      */
-    public String getBootPath() {
+    public String getJavaHome() {
         return this.runnerParameters.getJavaHome();
     }
 
@@ -1839,7 +1839,7 @@ public final class RunParameters implements Cloneable {
     public List<String> getSourcePath() {
         final String[] sourcePathJRE = 
         new String[] {
-                      Paths.get(getBootPath(), "src.zip").toString()
+                      Paths.get(getJavaHome(), "src.zip").toString()
                       //TODO more?
         };
         final String[] sourcePathUser = this.srcPath.toArray(ARRAY_OF_STRING);
