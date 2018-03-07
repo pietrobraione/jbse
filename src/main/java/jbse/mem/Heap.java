@@ -1,6 +1,8 @@
 package jbse.mem;
 
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -112,6 +114,23 @@ final class Heap implements Cloneable {
      */
     int getSize() {
         return this.objects.size();
+    }
+    
+    /**
+     * Deletes objects from this heap.
+     * 
+     * @param exceptPos a {@link Set}{@code <}{@link Long}{@code >}.
+     *        The objects at positions in {@code except}
+     *        will not be deleted, all the remaining objects
+     *        will.
+     */
+    void disposeExcept(Set<Long> exceptPos) {
+        for (Iterator<Map.Entry<Long, Objekt>> it = this.objects.entrySet().iterator(); it.hasNext(); ) {
+            if (exceptPos.contains(it.next().getKey())) {
+                continue;
+            }
+            it.remove();
+        }
     }
 
     @Override

@@ -25,6 +25,7 @@ import jbse.mem.Frame;
 import jbse.mem.Instance;
 import jbse.mem.Klass;
 import jbse.mem.Objekt;
+import jbse.mem.ReachableObjectsCollector;
 import jbse.mem.SnippetFrameContext;
 import jbse.mem.State;
 import jbse.mem.Variable;
@@ -35,8 +36,6 @@ import jbse.val.MemoryPath;
 import jbse.val.NarrowingConversion;
 import jbse.val.Primitive;
 import jbse.val.PrimitiveSymbolic;
-import jbse.val.Reference;
-import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
 import jbse.val.Value;
@@ -51,20 +50,16 @@ import jbse.val.WideningConversion;
 public final class StateFormatterText implements Formatter {
     private final List<String> srcPath;
     private final boolean fullPrint;
-    private final Reference rootObjectReference;
-    private final ClassFile rootClass;
     private StringBuilder output = new StringBuilder();
 
-    public StateFormatterText(List<String> srcPath, boolean fullPrint, Reference rootObjectReference, ClassFile rootClass) {
+    public StateFormatterText(List<String> srcPath, boolean fullPrint) {
         this.srcPath = new ArrayList<>(srcPath);
         this.fullPrint = fullPrint;
-        this.rootObjectReference = rootObjectReference;
-        this.rootClass = rootClass;
     }
 
     @Override
     public void formatState(State s) {
-        formatState(s, this.output, this.srcPath, this.fullPrint, this.rootObjectReference, this.rootClass, true, "\t", "");
+        formatState(s, this.output, this.srcPath, this.fullPrint, true, "\t", "");
     }
 
     @Override
@@ -77,7 +72,7 @@ public final class StateFormatterText implements Formatter {
         this.output = new StringBuilder();
     }
 
-    private static void formatState(State state, StringBuilder sb, List<String> srcPath, boolean fullPrint, Reference rootObjectReference, ClassFile rootClass, boolean breakLines, String indentTxt, String indentCurrent) {
+    private static void formatState(State state, StringBuilder sb, List<String> srcPath, boolean fullPrint, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
         sb.append(state.getIdentifier()); sb.append("["); sb.append(state.getSequenceNumber()); sb.append("] "); sb.append(lineSep);
         if (state.isStuck()) {
@@ -105,7 +100,7 @@ public final class StateFormatterText implements Formatter {
         if (fullPrint) {
             sb.append("Static store: {"); sb.append(lineSep); formatStaticMethodArea(state, sb, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep); sb.append("}"); sb.append(lineSep);
         }
-        sb.append("Heap: {"); sb.append(lineSep); formatHeap(state, sb, fullPrint, rootObjectReference, rootClass, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep); sb.append("}"); sb.append(lineSep);
+        sb.append("Heap: {"); sb.append(lineSep); formatHeap(state, sb, fullPrint, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep); sb.append("}"); sb.append(lineSep);
         if (state.getStackSize() > 0) {
             sb.append("Stack: {"); sb.append(lineSep); formatStack(state, sb, srcPath, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep); sb.append("}");
         }
@@ -252,15 +247,14 @@ public final class StateFormatterText implements Formatter {
     }
 
 
-    private static void formatHeap(State s, StringBuilder sb, boolean fullPrint, Reference rootObjectReference, ClassFile rootClass, boolean breakLines, String indentTxt, String indentCurrent) {
+    private static void formatHeap(State s, StringBuilder sb, boolean fullPrint, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
         final Map<Long, Objekt> h = s.getHeap();
         final Set<Map.Entry<Long, Objekt>> entries;
         if (fullPrint) {
             entries = h.entrySet();
         } else {
-            final long rootObjectPosition = (rootObjectReference == null ? -1 : rootObjectReference instanceof ReferenceConcrete ? ((ReferenceConcrete) rootObjectReference).getHeapPosition() : s.getResolution((ReferenceSymbolic) rootObjectReference));
-            final Set<Long> reachable = new ReachableObjectsCollector().reachable(s, false, rootObjectPosition, rootClass);
+            final Set<Long> reachable = new ReachableObjectsCollector().reachable(s, false);
             entries = h.entrySet().stream()
                       .filter(e -> reachable.contains(e.getKey()))
                       .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue(), throwingMerger(), TreeMap::new)).entrySet();

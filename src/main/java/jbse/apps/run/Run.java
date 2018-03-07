@@ -786,23 +786,18 @@ public final class Run {
      */
     private void createFormatter() throws CannotBuildFormatterException {
         final StateFormatMode type = this.parameters.getStateFormatMode();
-        try {
-            if (type == StateFormatMode.FULLTEXT) {
-                this.formatter = new StateFormatterText(this.parameters.getSourcePath(), true, this.engine.getCurrentState().getRootObjectReference(), this.engine.getCurrentState().getRootClass());
-            } else if (type == StateFormatMode.TEXT) {
-                this.formatter = new StateFormatterText(this.parameters.getSourcePath(), false, this.engine.getCurrentState().getRootObjectReference(), this.engine.getCurrentState().getRootClass());
-            } else if (type == StateFormatMode.GRAPHVIZ) {
-                this.formatter = new StateFormatterGraphviz();
-            } else if (type == StateFormatMode.TRACE) {
-                this.formatter = new StateFormatterTrace();
-            } else if (type == StateFormatMode.JUNIT_TEST) {
-                this.formatter = new StateFormatterJUnitTestSuite(this::getInitialState, this::getModel);
-            } else {
-                throw new CannotBuildFormatterException(ERROR_UNDEF_STATE_FORMAT);
-            }
-        } catch (ThreadStackEmptyException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
+        if (type == StateFormatMode.FULLTEXT) {
+            this.formatter = new StateFormatterText(this.parameters.getSourcePath(), true);
+        } else if (type == StateFormatMode.TEXT) {
+            this.formatter = new StateFormatterText(this.parameters.getSourcePath(), false);
+        } else if (type == StateFormatMode.GRAPHVIZ) {
+            this.formatter = new StateFormatterGraphviz();
+        } else if (type == StateFormatMode.TRACE) {
+            this.formatter = new StateFormatterTrace();
+        } else if (type == StateFormatMode.JUNIT_TEST) {
+            this.formatter = new StateFormatterJUnitTestSuite(this::getInitialState, this::getModel);
+        } else {
+            throw new CannotBuildFormatterException(ERROR_UNDEF_STATE_FORMAT);
         }
     }
 

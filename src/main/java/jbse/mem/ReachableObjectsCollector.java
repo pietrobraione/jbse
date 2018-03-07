@@ -1,4 +1,4 @@
-package jbse.apps;
+package jbse.mem;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -6,11 +6,8 @@ import java.util.Set;
 import java.util.SortedMap;
 
 import jbse.bc.ClassFile;
-import jbse.mem.Frame;
-import jbse.mem.Klass;
-import jbse.mem.Objekt;
-import jbse.mem.State;
-import jbse.mem.Variable;
+import jbse.common.exc.UnexpectedInternalException;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
@@ -23,7 +20,18 @@ import jbse.val.Value;
  * @author Pietro Braione
  *
  */
-public class ReachableObjectsCollector {
+public final class ReachableObjectsCollector {
+    public Set<Long> reachable(State s, boolean includeStatic) {
+        try {
+            final boolean emptyStack = s.getStack().isEmpty();
+            final Reference rootObjectReference = (emptyStack ? null : s.getRootObjectReference());
+            final long rootObjectPosition = (rootObjectReference == null ? -1 : rootObjectReference instanceof ReferenceConcrete ? ((ReferenceConcrete) rootObjectReference).getHeapPosition() : s.getResolution((ReferenceSymbolic) rootObjectReference));
+            final ClassFile rootClass = (emptyStack ? null : s.getRootClass());
+            return reachable(s, includeStatic, rootObjectPosition, rootClass);
+        } catch (ThreadStackEmptyException e) {
+            throw new UnexpectedInternalException(e);
+        }
+    }
     /**
      * Returns the heap positions of the objects
      * that are reachable from the roots of a 
@@ -44,7 +52,7 @@ public class ReachableObjectsCollector {
      *         containing all the heap positions of the objects
      *         reachable
      */
-    public Set<Long> reachable(State s, boolean includeStatic, long rootObject, ClassFile rootClass) {
+    private Set<Long> reachable(State s, boolean includeStatic, long rootObject, ClassFile rootClass) {
         if (s == null) {
             throw new NullPointerException();
         }

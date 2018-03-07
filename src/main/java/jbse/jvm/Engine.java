@@ -308,6 +308,7 @@ public class Engine implements AutoCloseable {
             retVal = this.ctx.stateTree.nextBranch();
             this.currentState = this.ctx.stateTree.nextState();
             if (atInitialState) {
+                this.currentState.gc(); //does a bit of cleanup to accelerate things
                 this.ctx.setInitialState(this.currentState);
             }
         } else {

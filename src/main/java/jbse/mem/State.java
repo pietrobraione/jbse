@@ -3030,6 +3030,14 @@ public final class State implements Cloneable {
         this.wide = true;
     }
     
+    /**
+     * Collects and disposes the unreachable heap objects.
+     */
+    public void gc() {
+        final Set<Long> reachable = new ReachableObjectsCollector().reachable(this, true);
+        this.heap.disposeExcept(reachable);
+    }
+    
     @Override
     protected void finalize() {
         //closes all files except stdin/out/err
