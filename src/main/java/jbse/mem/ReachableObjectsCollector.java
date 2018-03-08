@@ -21,13 +21,32 @@ import jbse.val.Value;
  *
  */
 public final class ReachableObjectsCollector {
-    public Set<Long> reachable(State s, boolean includeStatic) {
+    /**
+     * Returns the heap positions of the objects
+     * that are reachable from the roots of a 
+     * {@link State} (i.e., the local variables and
+     * the operands in the operand stacks, for all the
+     * frames in the state's thread stack, the root
+     * object and the root class, the string literals, 
+     * all the {@link Instance_JAVA_CLASS}, all the 
+     * {@link Instance_JAVA_CLASSLOADER}, all the 
+     * {@link Instance}s of {@link java.lang.invoke.MethodType}).
+     * 
+     * @param s a {@link State}. It must not be {@code null}.
+     * @param precise a {@code boolean}, if {@code true}, 
+     *        then it includes in the roots for collection all 
+     *        the static fields, the string literals.
+     * @return a {@link Set}{@code <}{@link Long}{@code >}
+     *         containing all the heap positions of the objects
+     *         reachable from the collection roots.
+     */
+    public Set<Long> reachable(State s, boolean precise) {
         try {
             final boolean emptyStack = s.getStack().isEmpty();
             final Reference rootObjectReference = (emptyStack ? null : s.getRootObjectReference());
             final long rootObjectPosition = (rootObjectReference == null ? -1 : rootObjectReference instanceof ReferenceConcrete ? ((ReferenceConcrete) rootObjectReference).getHeapPosition() : s.getResolution((ReferenceSymbolic) rootObjectReference));
             final ClassFile rootClass = (emptyStack ? null : s.getRootClass());
-            return reachable(s, includeStatic, rootObjectPosition, rootClass);
+            return reachable(s, precise, rootObjectPosition, rootClass);
         } catch (ThreadStackEmptyException e) {
             throw new UnexpectedInternalException(e);
         }
@@ -37,22 +56,28 @@ public final class ReachableObjectsCollector {
      * that are reachable from the roots of a 
      * {@link State} (i.e., the local variables and
      * the operands in the operand stacks, for all the
-     * frames in the state's thread stack).
+     * frames in the state's thread stack, the root
+     * object and the root class, the string literals, 
+     * all the {@link Instance_JAVA_CLASS}, all the 
+     * {@link Instance_JAVA_CLASSLOADER}, all the 
+     * {@link Instance}s of {@link java.lang.invoke.MethodType}).
      * 
      * @param s a {@link State}. It must not be {@code null}.
-     * @param includeRootObject a {@code boolean}, if {@code true}, 
-     *        then it also includes in the roots the root object 
-     *        of symbolic execution and all its static fields.
-     *        The root object is assumed to be the object at heap
-     *        position {@code 0L}.
-     * @param includeStatic a {@code boolean}, if {@code true}, 
-     *        then it includes in the roots all the static 
-     *        fields.
+     * @param precise a {@code boolean}, if {@code true}, 
+     *        then it includes in the roots for collection all 
+     *        the static fields, the string literals.
+     * @param rootObject a {@code long}. If {@code rootObject >= 0}
+     *        this parameter is interpreted as the heap position of 
+     *        the root object, and all its static and nonstatic 
+     *        fields are also considered as roots for collection.
+     * @param rootClass a {@link ClassFile}. If {@code rootClass != null}
+     *        all the static fields of the root class are also considered 
+     *        as roots for collection.
      * @return a {@link Set}{@code <}{@link Long}{@code >}
      *         containing all the heap positions of the objects
-     *         reachable
+     *         reachable from the collection roots.
      */
-    private Set<Long> reachable(State s, boolean includeStatic, long rootObject, ClassFile rootClass) {
+    private Set<Long> reachable(State s, boolean precise, long rootObject, ClassFile rootClass) {
         if (s == null) {
             throw new NullPointerException();
         }
@@ -97,25 +122,57 @@ public final class ReachableObjectsCollector {
         }
         
         //possibly visits the static method area
-        if (includeStatic) {
+        if (precise) {
             final Map<ClassFile, Klass> staticMethodArea = s.getStaticMethodArea();
-            for (Map.Entry<ClassFile, Klass> e : staticMethodArea.entrySet()) {
-                final Klass k = e.getValue();
+            for (Klass k : staticMethodArea.values()) {
                 final Map<String, Variable> fields = k.fields();
                 for (Variable var : fields.values()) {
                     final Value v = var.getValue();
                     addIfReference(reachable, s, v);
                 }
             }
-/*            for (Klass k : staticMethodArea.values()) {
-                final Map<String, Variable> fields = k.fields();
-                for (Variable var : fields.values()) {
-                    final Value v = var.getValue();
-                    addIfReference(reachable, s, v);
-                }
-            }*/
         }
         
+        //possibly adds the string literals
+        if (precise) {
+            s.getStringLiterals().stream()
+                .filter(r -> !s.isNull(r))
+                .map(ReferenceConcrete::getHeapPosition)
+                .forEachOrdered(reachable::add);
+        }
+        
+        //possibly adds the classes
+        if (precise) {
+            s.getClasses().stream()
+                .filter(r -> !s.isNull(r))
+                .map(ReferenceConcrete::getHeapPosition)
+                .forEachOrdered(reachable::add);
+        }
+        
+        //possibly adds the primitive classes
+        if (precise) {
+            s.getClassesPrimitive().stream()
+                .filter(r -> !s.isNull(r))
+                .map(ReferenceConcrete::getHeapPosition)
+                .forEachOrdered(reachable::add);
+        }
+
+        //possibly adds the classloaders
+        if (precise) {
+            s.getClassLoaders().stream()
+                .filter(r -> !s.isNull(r))
+                .map(ReferenceConcrete::getHeapPosition)
+                .forEachOrdered(reachable::add);
+        }
+
+        //possibly adds the method types
+        if (precise) {
+            s.getMethodTypes().stream()
+                .filter(r -> !s.isNull(r))
+                .map(ReferenceConcrete::getHeapPosition)
+                .forEachOrdered(reachable::add);
+        }
+
         //closes reachable
         HashSet<Long> toVisit = new HashSet<>(reachable);
         while (true) {
@@ -126,6 +183,18 @@ public final class ReachableObjectsCollector {
                 for (Variable var : fields.values()) {
                     final Value v = var.getValue();
                     addIfReferenceAndMarkNext(reachable, toVisitNext, s, v);
+                }
+                if (o instanceof Array) {
+                    final Array a = (Array) o;
+                    for (Array.AccessOutcomeIn entry : a.values()) {
+                        final Value v;
+                        if (entry instanceof Array.AccessOutcomeInInitialArray) {
+                            v = ((Array.AccessOutcomeInInitialArray) entry).getInitialArray();
+                        } else { //(entry instanceof Array.AccessOutcomeInValue) 
+                            v = ((Array.AccessOutcomeInValue) entry).getValue();
+                        }
+                        addIfReferenceAndMarkNext(reachable, toVisitNext, s, v);
+                    }
                 }
             }
             if (toVisitNext.isEmpty()) {

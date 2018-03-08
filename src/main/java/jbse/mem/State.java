@@ -1704,7 +1704,7 @@ public final class State implements Cloneable {
 
         return retVal;
     }
-
+    
     /**
      * Checks if there is an {@link Instance} of {@code java.lang.Class} 
      * in this state's heap for some class.
@@ -2363,9 +2363,9 @@ public final class State implements Cloneable {
     }
 
     /**
-     * Returns an immutable view of the state's heap.
+     * Returns a copy of the state's heap.
      * 
-     * @return the state's heap as a 
+     * @return a copy the state's heap as a 
      * {@link SortedMap}{@code <}{@link Integer}{@code , }{@link Objekt}{@code >}
      * mapping heap positions to the {@link Objekt}s stored 
      * at them.
@@ -3034,8 +3034,58 @@ public final class State implements Cloneable {
      * Collects and disposes the unreachable heap objects.
      */
     public void gc() {
-        final Set<Long> reachable = new ReachableObjectsCollector().reachable(this, true);
-        this.heap.disposeExcept(reachable);
+        final Set<Long> doNotDispose = new ReachableObjectsCollector().reachable(this, true);
+        this.heap.disposeExcept(doNotDispose);
+    }
+    
+    /**
+     * Getter for garbage collection.
+     * 
+     * @return the {@link Collection}{@code <}{@link ReferenceConcrete}{@code >}
+     *         of all the references to string literals.
+     */
+    Collection<ReferenceConcrete> getStringLiterals() {
+        return this.stringLiterals.values();
+    }
+    
+    /**
+     * Getter for garbage collection.
+     * 
+     * @return the {@link Collection}{@code <}{@link ReferenceConcrete}{@code >}
+     *         of all the references to {@link Instance_JAVA_CLASS} (non primitive).
+     */
+    Collection<ReferenceConcrete> getClasses() {
+        return this.classes.values();
+    }
+    
+    /**
+     * Getter for garbage collection.
+     * 
+     * @return the {@link Collection}{@code <}{@link ReferenceConcrete}{@code >}
+     *         of all the references to {@link Instance_JAVA_CLASS} (primitive).
+     */
+    Collection<ReferenceConcrete> getClassesPrimitive() {
+        return this.classesPrimitive.values();
+    }
+    
+    /**
+     * Getter for garbage collection.
+     * 
+     * @return the {@link Collection}{@code <}{@link ReferenceConcrete}{@code >}
+     *         of all the references to {@link Instance} of {@link java.lang.ClassLoader}.
+     */
+    Collection<ReferenceConcrete> getClassLoaders() {
+        return this.classLoaders;
+    }
+    
+    /**
+     * Getter for garbage collection.
+     * 
+     * @return the {@link Collection}{@code <}{@link ReferenceConcrete}{@code >}
+     *         of all the references to {@link Instance} of {@link java.lang.invoke.MethodType}.
+     */
+    Collection<ReferenceConcrete> getMethodTypes() {
+        return this.methodTypes.values();
     }
     
     @Override
