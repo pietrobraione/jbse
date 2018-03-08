@@ -126,6 +126,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
     private Instance memberNameObject; //set by cookMore
     private ClassFile resolvedClass; //set by cookMore
     private Signature resolvedSignature; //set by cookMore
+    private Signature polymorphicMethodSignature; //set by cookMore
     private boolean isMethod; //set by cookMore
     private boolean isSetter; //set by cookMore
     
@@ -229,20 +230,22 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                 final boolean methodIsSignaturePolymorphic = !isInterface && this.resolvedClass.hasOneSignaturePolymorphicMethodDeclaration(methodToResolve.getName());
                 final boolean methodIsSignaturePolymorphicNonIntrinsic = methodIsSignaturePolymorphic && !isSignaturePolymorphicMethodIntrinsic(methodToResolve.getName());
                 if (methodIsSignaturePolymorphicNonIntrinsic) {
+                    this.polymorphicMethodSignature = new Signature(this.resolvedClass.getClassName(), SIGNATURE_POLYMORPHIC_DESCRIPTOR, methodToResolve.getName());
+                    
                     //links it, if it is the case
-                    final Signature polymorphicMethodSignature = linkMethod(state, accessorClass, methodToResolve.getDescriptor(), methodToResolve.getName());
+                    linkMethod(state, accessorClass, methodToResolve.getDescriptor());
                 
                     //if the method has an appendix throws an error, 
                     //see hotspot:/src/share/vm/prims/methodHandles.cpp, 
                     //lines 687-692 
-                    if (state.getAppendix(polymorphicMethodSignature) != null) {
+                    if (state.getAppendix(this.polymorphicMethodSignature) != null) {
                         throwNew(state, INTERNAL_ERROR);
                         exitFromAlgorithm();
                     }
                     
                     //returns the adapter instead of the resolved method
                     //TODO is it correct?
-                    final Instance invoker = getInstance(state, state.getAdapter(polymorphicMethodSignature), "invoker for the (signature polymorphic) MemberName self", FAIL_JBSE, FAIL_JBSE, FAIL_JBSE);
+                    final Instance invoker = getInstance(state, state.getAdapter(this.polymorphicMethodSignature), "invoker for the (signature polymorphic) MemberName self", FAIL_JBSE, FAIL_JBSE, FAIL_JBSE);
                     final String invokerName = valueString(state, (Reference) invoker.getFieldValue(JAVA_MEMBERNAME_NAME));
                     final Instance invokerMethodType = (Instance) state.getObject((Reference) invoker.getFieldValue(JAVA_MEMBERNAME_TYPE));
                     final String invokerDescriptor = getDescriptorFromMethodType(state, invokerMethodType);
@@ -250,8 +253,12 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                     final ClassFile invokerClass = ((Instance_JAVA_CLASS) state.getObject(invokerClassRef)).representedClass();
                     this.resolvedClass = invokerClass;
                     this.resolvedSignature = new Signature(this.resolvedClass.getClassName(), invokerDescriptor, invokerName);
+                    this.polymorphicMethodSignature = this.resolvedSignature; //TODO is the adapter always nonpolymorphic?
                 } else {
                     this.resolvedSignature = new Signature(this.resolvedClass.getClassName(), methodToResolve.getDescriptor(), methodToResolve.getName());
+                    this.polymorphicMethodSignature = (methodIsSignaturePolymorphic ?
+                                                       new Signature(this.resolvedClass.getClassName(), SIGNATURE_POLYMORPHIC_DESCRIPTOR, methodToResolve.getName()) :
+                                                       this.resolvedSignature);
                 }
             } else if (isField(memberNameFlags)) {
                 this.isMethod = false;
@@ -543,9 +550,6 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
      * @param accessor a {@link ClassFile}, the accessor class invoking {@code this.resolved}.
      * @param polymorphicMethodDescriptor a {@link String}, the descriptor of the signature-polymorphic method as declared
      *        in the member name.
-     * @param polymorphicMethodName a {@link String}, the name of the signature-polymorphic method.
-     * @return the {@link Signature} of the signature-polymorphic method with the general {@code ([Ljava/lang/Object;)Ljava/lang/Object} 
-     *         descriptor (just for convenience).
      * @throws PleaseLoadClassException if the execution of this {@link Algorithm} must be interrupted 
      *         because a class referred in {@code resolved} must be loaded by a user-defined classloader.
      * @throws ClassFileNotFoundException if the bytecode for any 
@@ -567,15 +571,15 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
      *         this {@link Algorithm} and perform the upcall.
      * @throws InvalidInputException if an invalid input is used by some method call. 
      */
-    private Signature linkMethod(State state, ClassFile accessor, String polymorphicMethodDescriptor, String polymorphicMethodName) 
+    private void linkMethod(State state, ClassFile accessor, String polymorphicMethodDescriptor) 
     throws PleaseLoadClassException, ClassFileNotFoundException, ClassFileIllFormedException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException, HeapMemoryExhaustedException, 
     ThreadStackEmptyException, InterruptException, InvalidInputException, BadClassFileVersionException, WrongClassNameException {
-        final Signature polymorphicMethodSignature = new Signature(this.resolvedClass.getClassName(), SIGNATURE_POLYMORPHIC_DESCRIPTOR, polymorphicMethodName);
-        if (state.isMethodLinked(polymorphicMethodSignature)) {
+        if (state.isMethodLinked(this.polymorphicMethodSignature)) {
             //already linked
-            return polymorphicMethodSignature;
+            return;
         }
+        final String polymorphicMethodName = this.polymorphicMethodSignature.getName();
         
         try {
             //upcalls java.lang.invoke.MethodHandleNatives.linkMethod
@@ -643,7 +647,6 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             //this should never happen
             failExecution(e);
         }
-        return null; //unreachable, this is just to keep the compiler happy
     }
     
     @Override
@@ -664,15 +667,15 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                     //that it is always the case that info.call_kind() == CallInfo::direct_call, see
                     //hotspot:/src/share/vm/interpreter/linkResolver.cpp line 88, method
                     //CallInfo::set_handle
-                    flags = (short) (((short) this.resolvedClass.getMethodModifiers(this.resolvedSignature)) & JVM_RECOGNIZED_METHOD_MODIFIERS);
-                    if (this.resolvedClass.isMethodStatic(this.resolvedSignature)) {
+                    flags = (short) (((short) this.resolvedClass.getMethodModifiers(this.polymorphicMethodSignature)) & JVM_RECOGNIZED_METHOD_MODIFIERS);
+                    if (this.resolvedClass.isMethodStatic(this.polymorphicMethodSignature)) {
                         flags |= IS_METHOD      | (REF_invokeStatic  << REFERENCE_KIND_SHIFT);
                     } else if ("<init>".equals(resolvedName) || "<clinit>".equals(resolvedName)) {
                         flags |= IS_CONSTRUCTOR | (REF_invokeSpecial << REFERENCE_KIND_SHIFT);
                     } else {
                         flags |= IS_METHOD      | (REF_invokeSpecial << REFERENCE_KIND_SHIFT);
                     }
-                    if (this.resolvedClass.isMethodCallerSensitive(this.resolvedSignature)) {
+                    if (this.resolvedClass.isMethodCallerSensitive(this.polymorphicMethodSignature)) {
                         flags |= CALLER_SENSITIVE;
                     }
                 } else {
@@ -694,7 +697,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                 failExecution(e);
             }
 
-            //pushes the reference to the MemberName
+            //pushes the reference to the MemberName (same as input)
             state.pushOperand(this.data.operand(0));
         };
     }

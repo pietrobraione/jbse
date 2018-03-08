@@ -8,6 +8,7 @@ import static jbse.bc.ClassLoaders.CLASSLOADER_EXT;
 import static jbse.bc.Signatures.JAVA_CLONEABLE;
 import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.JAVA_SERIALIZABLE;
+import static jbse.bc.Signatures.SIGNATURE_POLYMORPHIC_DESCRIPTOR;
 import static jbse.common.Type.className;
 import static jbse.common.Type.getArrayMemberType;
 import static jbse.common.Type.isArray;
@@ -1262,13 +1263,15 @@ public final class ClassHierarchy implements Cloneable {
         //attempts to find a superclass or superinterface containing 
         //a declaration for the method
         ClassFile accessed = null;
+        Signature methodSignaturePolymorphic = methodSignature;
 
         //searches for the method declaration in the superclasses; for
         //interfaces this means searching only in the interface
         //(JVMS v8, section 5.4.3.3 step 2 and section 5.4.3.4 step 2)
         for (ClassFile cf : superclasses(methodSignatureClass)) {
             if (!isInterface && cf.hasOneSignaturePolymorphicMethodDeclaration(methodSignature.getName())) {
-                accessed = cf; //note that the method has methodSignature.getName() as name and SIGNATURE_POLYMORPHIC_DESCRIPTOR as descriptor 
+                accessed = cf;
+                methodSignaturePolymorphic = new Signature(methodSignature.getClassName(), SIGNATURE_POLYMORPHIC_DESCRIPTOR, methodSignature.getName());
                 //TODO resolve all the class names in methodSignature.getDescriptor() (it is unclear how the resolved names should be used)
                 break;
             } else if (cf.hasMethodDeclaration(methodSignature)) {
@@ -1320,7 +1323,7 @@ public final class ClassHierarchy implements Cloneable {
         //if a declaration has found, then it checks accessibility and, in case, 
         //raises IllegalAccessError; otherwise, returns the resolved method signature
         try {
-            if (isMethodAccessible(accessor, accessed, methodSignatureClass, methodSignature)) {
+            if (isMethodAccessible(accessor, accessed, methodSignatureClass, methodSignaturePolymorphic)) {
                 //everything went ok
                 return accessed;
             } else {
