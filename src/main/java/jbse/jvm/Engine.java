@@ -1,5 +1,16 @@
 package jbse.jvm;
 
+import static jbse.bc.Opcodes.OP_ARETURN;
+import static jbse.bc.Opcodes.OP_ATHROW;
+import static jbse.bc.Opcodes.OP_DRETURN;
+import static jbse.bc.Opcodes.OP_FRETURN;
+import static jbse.bc.Opcodes.OP_INVOKEINTERFACE;
+import static jbse.bc.Opcodes.OP_INVOKESPECIAL;
+import static jbse.bc.Opcodes.OP_INVOKESTATIC;
+import static jbse.bc.Opcodes.OP_INVOKEVIRTUAL;
+import static jbse.bc.Opcodes.OP_IRETURN;
+import static jbse.bc.Opcodes.OP_RETURN;
+
 import java.util.ArrayDeque;
 import java.util.Collection;
 
@@ -10,7 +21,6 @@ import jbse.algo.Action;
 import jbse.algo.Algo_INIT;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.NotYetImplementedException;
-import jbse.bc.Opcodes;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -35,7 +45,7 @@ import jbse.tree.StateTree.BranchPoint;
  * tools by means of the following features:
  * 
  * <ul>
- * <li>Stepwise symbolic execution of public methods of Java classes;</li>
+ * <li>Stepwise symbolic execution of methods of Java classes;</li>
  * <li>Automatic detection of feasible branches at decision points, predictable 
  * exploration and possibility to backtrack the execution to
  * unexplored branches;</li>
@@ -562,18 +572,16 @@ public class Engine implements AutoCloseable {
             return true;
         }
         final byte currentInstruction = this.currentState.getInstruction(); 
-        return (
-        currentInstruction == Opcodes.OP_INVOKEVIRTUAL||
-        currentInstruction == Opcodes.OP_INVOKESPECIAL ||
-        currentInstruction == Opcodes.OP_INVOKESTATIC ||
-        currentInstruction == Opcodes.OP_INVOKEINTERFACE ||
-        currentInstruction == Opcodes.OP_IRETURN ||
-        currentInstruction == Opcodes.OP_FRETURN ||
-        currentInstruction == Opcodes.OP_DRETURN ||
-        currentInstruction == Opcodes.OP_ARETURN ||
-        currentInstruction == Opcodes.OP_RETURN ||
-        currentInstruction == Opcodes.OP_ATHROW
-        );
+        return (currentInstruction == OP_INVOKEVIRTUAL ||
+                currentInstruction == OP_INVOKESPECIAL ||
+                currentInstruction == OP_INVOKESTATIC ||
+                currentInstruction == OP_INVOKEINTERFACE ||
+                currentInstruction == OP_IRETURN ||
+                currentInstruction == OP_FRETURN ||
+                currentInstruction == OP_DRETURN ||
+                currentInstruction == OP_ARETURN ||
+                currentInstruction == OP_RETURN ||
+                currentInstruction == OP_ATHROW);
     }
 
     /**
