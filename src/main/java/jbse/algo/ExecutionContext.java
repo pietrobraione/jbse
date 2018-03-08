@@ -862,21 +862,20 @@ public final class ExecutionContext {
         className.equals(SUN_URLCLASSPATH_JARLOADER) ||
         className.equals(SUN_VERIFYACCESS) ||
         className.equals(SUN_WRAPPER_FORMAT) ||
+        //TODO move initialization of these unpure classes (old code):
+        className.equals(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE) || //necessary for method handles
+        className.equals(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIESDATA) || //necessary for method handles
+        className.equals(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIES_L) || //necessary for method handles
+        className.equals(jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE) || //wouldn't manage method handles otherwise
+        //className.equals(jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR) || //the only nonfinal static field STATICALLY_INVOCABLE_PACKAGES is never modified
+        className.equals(jbse.bc.Signatures.JAVA_METHODHANDLES) || //not really, but can be considered as it were (all final except ZERO_MHS and IDENTITY_MHS that are caches) 
+        className.equals(jbse.bc.Signatures.JAVA_METHODHANDLES_LOOKUP) || //not really, but can be considered as it were (all final including PUBLIC_LOOKUP and IMPL_LOOKUP that are instances of Lookup - that is immutable - and except LOOKASIDE_TABLE, that seems to be a sort of cache) 
+        className.equals(jbse.bc.Signatures.JAVA_METHODTYPE) || //not really, but can be considered as it were (all final except internTable and objectOnlyTypes that are caches) 
+        className.equals(jbse.bc.Signatures.JAVA_SIMPLEMETHODHANDLE) || //necessary for method handles
+        //className.equals(jbse.bc.Signatures.SUN_LAUNCHERHELPER) || //necessary to JVM bootstrap (is it really?)
+        
         hier.isSubclass(classFile, hier.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_ENUM)));
     }
-    
-    /* TODO possibly grant initialization to these unpure classes (old code):
-     *  className.equals(JAVA_BOUNDMETHODHANDLE) || //necessary for method handles
-        className.equals(JAVA_BOUNDMETHODHANDLE_SPECIESDATA) || //necessary for method handles
-        className.equals(JAVA_BOUNDMETHODHANDLE_SPECIES_L) || //necessary for method handles
-        className.equals(JAVA_DIRECTMETHODHANDLE) || //wouldn't manage method handles otherwise
-        className.equals(JAVA_INVOKERBYTECODEGENERATOR) || //the only nonfinal static field STATICALLY_INVOCABLE_PACKAGES is never modified
-        className.equals(JAVA_METHODHANDLES) || //not really, but can be considered as it were (all final except ZERO_MHS and IDENTITY_MHS that are caches) 
-        className.equals(JAVA_METHODHANDLES_LOOKUP) || //not really, but can be considered as it were (all final including PUBLIC_LOOKUP and IMPL_LOOKUP that are instances of Lookup - that is immutable - and except LOOKASIDE_TABLE, that seems to be a sort of cache) 
-        className.equals(JAVA_METHODTYPE) || //not really, but can be considered as it were (all final except internTable and objectOnlyTypes that are caches) 
-        className.equals(JAVA_SIMPLEMETHODHANDLE) || //necessary for method handles
-        className.equals(SUN_LAUNCHERHELPER) || //necessary to JVM bootstrap (is it really?)
-     */
 
     public <R extends DecisionAlternative> 
     SortedSet<R> mkDecisionResultSet(Class<R> superclassDecisionAlternatives) {
