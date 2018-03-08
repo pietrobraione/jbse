@@ -100,6 +100,9 @@ public class Engine implements AutoCloseable {
 
     /** The total number of {@link State}s analyzed by the {@link Engine}. */
     private long analyzedStates = 0L;
+    
+    /** {@code true} iff the current state is the initial state. */
+    private boolean atInitialState;
 
     //Construction.
 
@@ -154,7 +157,7 @@ public class Engine implements AutoCloseable {
     throws DecisionException, InitializationException, 
     InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, 
     ClasspathException, NotYetImplementedException, ContradictionException {
-        //executes the initial state setup step
+        //executes the first state setup step
         final Algo_INIT algo = this.ctx.dispatcher.select();
         try {
             algo.exec(this.ctx);
@@ -163,7 +166,7 @@ public class Engine implements AutoCloseable {
             throw new UnexpectedInternalException(e);
         }
 
-        //extracts the initial state from the tree
+        //extracts the first state from the tree
         if (this.ctx.stateTree.createdBranch()) { //we need the side effect of invoking createBranch
             this.currentState = this.ctx.stateTree.nextState();
         } else {
@@ -173,8 +176,11 @@ public class Engine implements AutoCloseable {
 
         //detects whether we are at the initial state
         if (this.currentState.getStackSize() == 1) {
+            this.atInitialState = true;
             this.currentState.setPhasePostInit(); //possibly pleonastic, but doesn't hurt
             this.ctx.setInitialState(this.currentState);
+        } else {
+            this.atInitialState = false;
         }
         
         //synchronizes the decision procedure with the path condition
@@ -196,13 +202,23 @@ public class Engine implements AutoCloseable {
     }
 
     //public methods (operations)
+    
+    /** 
+     * Checks whether the current state is the initial
+     * state.
+     * 
+     * @return a {@code boolean}.
+     */
+    public boolean atInitialState() {
+        return this.atInitialState;
+    }
 
     /**
-     * Returns the engine's initial JVM state (a safety copy).
+     * Returns the initial state (a safety copy).
      * 
-     * @return the initial {@link State} as it was at the beginning
-     *         of the symbolic execution. It is not refined on the current
-     *         path condition.
+     * @return the initial {@link State}, not refined on the current
+     *         path condition, or {@code null} if we are in the
+     *         pre-initial phase.
      */
     public State getInitialState() {
         return this.ctx.getInitialState();
@@ -292,9 +308,8 @@ public class Engine implements AutoCloseable {
         }
         
         //detects whether we are at the initial state
-        final boolean atInitialState;
         if (this.currentState.isPhaseInit() && this.currentState.getStackSize() == 1) {
-            atInitialState = true;
+            this.atInitialState = true;
             this.currentState.setPhasePostInit();
             try {
                 this.ctx.stateTree.addState(this.currentState);
@@ -303,7 +318,7 @@ public class Engine implements AutoCloseable {
                 throw new UnexpectedInternalException(e);
             }
         } else {
-            atInitialState = false;
+            this.atInitialState = false;
         }
         
         //updates the current state and calculates return value
@@ -311,7 +326,7 @@ public class Engine implements AutoCloseable {
         if (this.ctx.stateTree.createdBranch()) {
             retVal = this.ctx.stateTree.nextBranch();
             this.currentState = this.ctx.stateTree.nextState();
-            if (atInitialState) {
+            if (this.atInitialState) {
                 this.currentState.gc(); //does a bit of cleanup to accelerate things
                 this.ctx.setInitialState(this.currentState);
             }

@@ -37,13 +37,24 @@ public class Runner {
 
         /**
          * Invoked by a {@link Runner}'s {@link Runner#run run} method 
-         * whenever it is at the root (initial state). 
+         * whenever it is at the root (post-init state, either pre-initial
+         * or initial). 
          * By default returns {@code false}.
          * 
          * @return {@code true} iff the {@link Runner} must stop
          *         {@link Runner#run run}ning.
          */
         public boolean atRoot() { return false; }
+
+        /**
+         * Invoked by a {@link Runner}'s {@link Runner#run run} method 
+         * whenever it is at the initial state. 
+         * By default returns {@code false}.
+         * 
+         * @return {@code true} iff the {@link Runner} must stop
+         *         {@link Runner#run run}ning.
+         */
+        public boolean atInitial() { return false; }
 
         /**
          * Invoked by a {@link Runner}'s {@link Runner#run run} method whenever it is at 
@@ -499,6 +510,9 @@ public class Runner {
 
         //performs the symbolic execution loop
         while (true) {
+            if (this.engine.atInitialState()) {
+                if (this.actions.atInitial()) { return; }
+            }
             if (this.actions.atTraceStart()) { return; }
 
             //explores the trace
