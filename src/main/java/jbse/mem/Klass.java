@@ -10,7 +10,7 @@ import jbse.val.MemoryPath;
  */
 public final class Klass extends Objekt {
     private boolean initialized;
-    
+
     /**
      * Constructor.
      * 
@@ -25,10 +25,10 @@ public final class Klass extends Objekt {
      *        fields this object knows.
      */
     Klass(Calculator calc, MemoryPath origin, Epoch epoch, int numOfStaticFields, Signature... fieldSignatures) {
-    	    super(calc, null, origin, epoch, true, numOfStaticFields, fieldSignatures);
-    	    this.initialized = false;
+        super(calc, null, origin, epoch, true, numOfStaticFields, fieldSignatures);
+        this.initialized = false;
     }
-    
+
     /**
      * Checks whether this {@link Klass} is initialized.
      * 
@@ -37,7 +37,7 @@ public final class Klass extends Objekt {
     public boolean isInitialized() {
         return this.initialized;
     }
-    
+
     /**
      * Sets this {@link Klass} to the
      * initialized status. After the 
@@ -48,12 +48,12 @@ public final class Klass extends Objekt {
     public void setInitialized() {
         this.initialized = true;
     }
-    
+
     @Override
     public Klass clone() {
-    	final Klass o = (Klass) super.clone();
+        final Klass o = (Klass) super.clone();
         o.fields = fieldsDeepCopy();
-        
+
         return o;
     }
 }
