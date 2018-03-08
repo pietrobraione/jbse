@@ -718,7 +718,7 @@ public final class ExecutionContext {
      *         of this object has not the expected features (missing constructor, 
      *         unaccessible constructor...).
      */
-    public State createVirginInitialState() throws InvalidClassFileFactoryClassException {
+    public State createVirginPreInitialState() throws InvalidClassFileFactoryClassException {
         return new State(this.bypassStandardLoading, this.maxSimpleArrayLength, this.maxHeapSize, this.classpath, this.classFileFactoryClass, this.expansionBackdoor, this.calc);
     }
 

@@ -127,17 +127,18 @@ public final class Algo_INIT {
         //gets or creates the initial state
         State state = ctx.getInitialState();
         if (state == null) {
-            state = createInitialState(ctx);
+            state = createPreInitialState(ctx);
+            ctx.stateTree.nextIsPreInitial();
         }
 
         //adds the state to the state tree
         ctx.stateTree.addState(state);
     }
 
-    private State createInitialState(ExecutionContext ctx) 
+    private State createPreInitialState(ExecutionContext ctx) 
     throws InvalidClassFileFactoryClassException, InitializationException, 
     DecisionException, ClasspathException, NotYetImplementedException, ContradictionException {
-        final State state = ctx.createVirginInitialState();
+        final State state = ctx.createVirginPreInitialState();
         
         //lists all the classes that shall be explicitly initialized
         setClassList();

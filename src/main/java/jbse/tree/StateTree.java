@@ -168,7 +168,7 @@ public class StateTree {
 
     
     /** Which kind of state is the next that can be extracted? */
-    private StateKind nextStateIs = StateKind.PRE_INITIAL;
+    private StateKind nextStateIs = StateKind.INITIAL;
 
     /**
      * Constructor.
@@ -185,6 +185,14 @@ public class StateTree {
      */
     public StateIdentificationMode getBranchIdentificationMode() {
         return this.stateIdMode;
+    }
+    
+    /**
+     * The next state to be inserted/extracted 
+     * will be pre-initial.
+     */
+    public void nextIsPreInitial() {
+       this.nextStateIs = StateKind.PRE_INITIAL; 
     }
 
     /**

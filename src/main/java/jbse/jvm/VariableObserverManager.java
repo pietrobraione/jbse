@@ -1,5 +1,6 @@
 package jbse.jvm;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,16 +35,16 @@ class VariableObserverManager {
     private Reference rootObjectReference = null;
 
     /** The {@link Signature}s of the variables under observation. */
-    private LinkedList<Signature> varSigs = new LinkedList<>();
+    private ArrayList<Signature> varSigs = new ArrayList<>();
 
     /** The {@link ExecutionObserver}s of the variables {@link varSigs}. */
-    private LinkedList<ExecutionObserver> obs = new LinkedList<>();
+    private ArrayList<ExecutionObserver> obs = new ArrayList<>();
 
     /** Cache for the current {@link Value}s of the variables under observation. */
-    private LinkedList<Value> values = new LinkedList<>();
+    private ArrayList<Value> values = new ArrayList<>();
 
     /** Cache for the {@link Value}s of the variables under observation (for backtrack). */
-    private Map<BranchPoint, LinkedList<Value>> savedValues;
+    private Map<BranchPoint, ArrayList<Value>> savedValues;
 
     /** Backlink to the {@link Engine}; will be initialized later. */
     private Engine engine;
@@ -78,7 +79,7 @@ class VariableObserverManager {
                     this.obs.add(null);
                 }
             }
-            this.savedValues = new HashMap<BranchPoint, LinkedList<Value>>();
+            this.savedValues = new HashMap<>();
         }
 
         //if some of the observed variables does not exist, throws 
@@ -88,26 +89,17 @@ class VariableObserverManager {
         }		
     }
 
-    void notifyObservers(BranchPoint branch) {
+    void notifyObservers(BranchPoint bp) {
+        //if may backtrack, saves last observed values
+        saveObservedVariablesValues(bp);
+        
         if (hasObservers()) {
-            //if may backtrack, saves last observed values
-            final boolean mayBacktrack = (branch != null);
-            if (mayBacktrack) {
-                final LinkedList<Value> toSave = new LinkedList<>();
-                for (Value v : this.values) { 
-                    if (v != null) {
-                        toSave.add(v);
-                    }
-                }
-                this.savedValues.put(branch, toSave);
-            }
-
             //updates values of observed variables and notifies 
             //observers
             for (int i = 0; i < this.obs.size(); ++i) {
                 final ExecutionObserver o = this.obs.get(i);
                 final Value vOld = this.values.get(i);
-                final Value vNew = this.getObservedVariableValue(i);
+                final Value vNew = getObservedVariableValue(i);
                 if (o == null || vNew == null || vOld.equals(vNew)) {
                     ; //does nothing
                 } else {
@@ -119,17 +111,22 @@ class VariableObserverManager {
     }
 
     void saveObservedVariablesValues(BranchPoint bp) {
-        if (this.hasObservers()) {
-            final LinkedList<Value> toSave = new LinkedList<Value>();
-            for (int i = 0; i < this.values.size(); ++i) {
-                toSave.add(this.values.get(i));
+        if (hasObservers()) {
+            final boolean mayBacktrack = (bp != null);
+            if (mayBacktrack) {
+                final ArrayList<Value> toSave = new ArrayList<>();
+                for (Value v : this.values) { 
+                    if (v != null) {
+                        toSave.add(v);
+                    }
+                }
+                this.savedValues.put(bp, toSave);
             }
-            this.savedValues.put(bp, toSave);
         }
     }
 
     void restoreObservedVariablesValues(BranchPoint bp, boolean delete) {
-        if (this.hasObservers()) {
+        if (hasObservers()) {
             this.values = this.savedValues.get(bp);
             if (delete) {
                 this.savedValues.remove(bp);
@@ -143,7 +140,7 @@ class VariableObserverManager {
      * @return {@code true} iff some variable with their observers have been registered.
      */
     private boolean hasObservers() {
-        return (this.varSigs.size() > 0);
+        return (numObservers() > 0);
     }
 
     /**
@@ -153,7 +150,7 @@ class VariableObserverManager {
      *         fact that they do indeed exist.
      */
     private int numObservers() {
-        return (this.varSigs.size());
+        return this.varSigs.size();
     }
 
     /**

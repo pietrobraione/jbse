@@ -101,7 +101,6 @@ public class Engine implements AutoCloseable {
     /** The total number of {@link State}s analyzed by the {@link Engine}. */
     private long analyzedStates = 0L;
 
-
     //Construction.
 
     /**
@@ -113,7 +112,6 @@ public class Engine implements AutoCloseable {
         this.ctx = ctx;
         this.vom = vom;
     }
-
 
     /**
      * Steps the engine in a suitable initial state, either the one stored in 
@@ -166,13 +164,19 @@ public class Engine implements AutoCloseable {
         }
 
         //extracts the initial state from the tree
-        if (this.ctx.stateTree.createdBranch()) {
+        if (this.ctx.stateTree.createdBranch()) { //we need the side effect of invoking createBranch
             this.currentState = this.ctx.stateTree.nextState();
         } else {
             //this should never happen
             throw new UnexpectedInternalException("The pre-initial state is missing from the state tree.");
         }
 
+        //detects whether we are at the initial state
+        if (this.currentState.getStackSize() == 1) {
+            this.currentState.setPhasePostInit(); //possibly pleonastic, but doesn't hurt
+            this.ctx.setInitialState(this.currentState);
+        }
+        
         //synchronizes the decision procedure with the path condition
         try {
             this.ctx.decisionProcedure.setAssumptions(this.currentState.getPathCondition());
