@@ -98,25 +98,35 @@ public final class ReachableObjectsCollector {
         
         //possibly visits the static method area
         if (includeStatic) {
-            Map<ClassFile, Klass> staticMethodArea = s.getStaticMethodArea();
-            for (Klass k : staticMethodArea.values()) {
+            final Map<ClassFile, Klass> staticMethodArea = s.getStaticMethodArea();
+            for (Map.Entry<ClassFile, Klass> e : staticMethodArea.entrySet()) {
+                final Klass k = e.getValue();
                 final Map<String, Variable> fields = k.fields();
                 for (Variable var : fields.values()) {
                     final Value v = var.getValue();
                     addIfReference(reachable, s, v);
                 }
             }
+/*            for (Klass k : staticMethodArea.values()) {
+                final Map<String, Variable> fields = k.fields();
+                for (Variable var : fields.values()) {
+                    final Value v = var.getValue();
+                    addIfReference(reachable, s, v);
+                }
+            }*/
         }
         
         //closes reachable
         HashSet<Long> toVisit = new HashSet<>(reachable);
-        for (long nextObject : toVisit) {
+        while (true) {
             final HashSet<Long> toVisitNext = new HashSet<>();
-            final Objekt o = s.getObject(new ReferenceConcrete(nextObject));
-            final Map<String, Variable> fields = o.fields();
-            for (Variable var : fields.values()) {
-                final Value v = var.getValue();
-                addIfReferenceAndMarkNext(reachable, toVisitNext, s, v);
+            for (long nextObject : toVisit) {
+                final Objekt o = s.getObject(new ReferenceConcrete(nextObject));
+                final Map<String, Variable> fields = o.fields();
+                for (Variable var : fields.values()) {
+                    final Value v = var.getValue();
+                    addIfReferenceAndMarkNext(reachable, toVisitNext, s, v);
+                }
             }
             if (toVisitNext.isEmpty()) {
                 break;
