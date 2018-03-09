@@ -728,7 +728,7 @@ public class Util {
         private boolean initialize(ClassFile classFile)
         throws InvalidInputException, DecisionException, 
         ClasspathException, HeapMemoryExhaustedException, ContradictionException {
-            phase1(classFile);
+            phase1(classFile, false);
             if (this.failed) {
                 revert();
                 return true;
@@ -803,12 +803,15 @@ public class Util {
          * refines the path condition by adding all the initialization assumptions.
          * 
          * @param classFile the {@link ClassFile} of the class to be initialized.
+         * @param recurSuperinterfaces if {@code true}, recurs phase 1 over
+         *        {@code classFile}'s superinterfaces even if 
+         *        {@code classFile.}{@link ClassFile#isInterface() isInterface}{@code () == true}.
          * @throws InvalidInputException if {@code classFile} is null.
          * @throws DecisionException if the decision procedure fails.
          * @throws ContradictionException  if some initialization assumption is
          *         contradicted.
          */
-        private void phase1(ClassFile classFile)
+        private void phase1(ClassFile classFile, boolean recurSuperinterfaces)
         throws InvalidInputException, DecisionException, ContradictionException {
             //if there is a Klass object for className (means 
             //initialization in progress or already initialized), 
@@ -887,15 +890,15 @@ public class Util {
             //and has a superclass, then recursively performs phase1 
             //on its superclass and superinterfaces, according to
             //JVMS v8 section 5.5, point 7
-            if (!classFile.isInterface()) {
+            if (!classFile.isInterface() || recurSuperinterfaces) {
                 for (ClassFile superinterface : reverse(classFile.getSuperInterfaces())) {
                     if (hasANonStaticImplementedMethod(classFile)) {
-                        phase1(superinterface);
+                        phase1(superinterface, true);
                     }
                 }
                 final ClassFile superclass = classFile.getSuperclass();
                 if (superclass != null) {
-                    phase1(superclass);
+                    phase1(superclass, false);
                 }
             }
         }
@@ -962,9 +965,9 @@ public class Util {
                 }
                 if (this.pushClinitFor_JAVA_OBJECT) {
                     try {
-                        final Signature sigClinit = new Signature(JAVA_OBJECT, "()" + Type.VOID, "<clinit>");
+                        final Signature sigClinit_JAVA_OBJECT = new Signature(JAVA_OBJECT, "()" + Type.VOID, "<clinit>");
                         final ClassFile cf_JAVA_OBJECT = this.s.getClassHierarchy().loadCreateClass(JAVA_OBJECT);
-                        this.s.pushFrame(cf_JAVA_OBJECT, sigClinit, false, 0);
+                        this.s.pushFrame(cf_JAVA_OBJECT, sigClinit_JAVA_OBJECT, false, 0);
                     } catch (ClassFileNotFoundException | IncompatibleClassFileException | 
                              ClassFileIllFormedException | BadClassFileVersionException | 
                              WrongClassNameException | InvalidInputException | 
