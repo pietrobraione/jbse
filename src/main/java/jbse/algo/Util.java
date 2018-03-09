@@ -636,21 +636,24 @@ public class Util {
         private int createdFrames = 0;
 
         /**
-         * Stores the classes for which this initializer has created a {@link Klass}.
+         * Stores the classes for which this initializer has created a {@link Klass},
+         * and that therefore must be processed during phase 2 (creation of 
+         * constant values).
          */
-        private final ArrayList<ClassFile> classesWithNewKlass = new ArrayList<>();
+        private final ArrayList<ClassFile> classesForPhase2 = new ArrayList<>();
 
         /**
          * Stores the classes for which the {@code <clinit>} 
-         * method must be run.
+         * method must be run, and that therefore must be processed
+         * during phase 3 (creation of {@code <clinit>} frames).
          */
-        private final ArrayList<ClassFile> classesToInitialize = new ArrayList<>();
+        private final ArrayList<ClassFile> classesForPhase3 = new ArrayList<>();
 
         /**
          * Set to {@code true} iff must load a frame for {@code java.lang.Object}'s 
          * {@code <clinit>}.
          */
-        private boolean pushFrameForJavaLangObject = false;
+        private boolean pushClinitFor_JAVA_OBJECT = false;
 
         /** Is the initialization process failed? */
         private boolean failed = false;
@@ -742,23 +745,57 @@ public class Util {
             }
             return false;
         }
-
-        /**
-         * Equivalent to {@link #phase1(ClassFile, ListIterator) phase1}{@code (classFile, null)}.
-         * 
-         * @param classFile the {@link ClassFile} of the class to be initialized.
-         * @param it a {@code ListIterator}, the name of the class.
-         * @throws InvalidInputException if {@code classFile} is null.
-         * @throws DecisionException if the decision procedure fails.
-         * @throws ContradictionException  if some initialization assumption is
-         *         contradicted.
-         */
-        private void phase1(ClassFile classFile)
-        throws InvalidInputException, DecisionException, ContradictionException {
-            phase1(classFile, null);
-        }
         
         private static enum Assumption { INITIALIZED, NOT_INITIALIZED, NONE }
+        
+
+        /**
+         * Returns an {@link Iterable} that scans a {@link List} in 
+         * reverse order, from tail to head.
+         * 
+         * @param list a {@link List}{@code <T>}. It must not be {@code null}.
+         * @return an {@link Iterable}{@code <T>}.
+         */
+        private static <T> Iterable<T> reverse(final List<T> list) {
+            return new Iterable<T>() {
+                @Override
+                public Iterator<T> iterator() {
+                    return new Iterator<T>() {
+                        private ListIterator<T> delegate = list.listIterator(list.size());
+
+                        @Override
+                        public boolean hasNext() {
+                            return this.delegate.hasPrevious();
+                        }
+
+                        @Override
+                        public T next() {
+                            return this.delegate.previous();
+                        }
+
+                        @Override
+                        public void remove() {
+                            this.delegate.remove();
+                        }
+                    };
+                }
+            };
+        }
+
+        private boolean hasANonStaticImplementedMethod(ClassFile cf) {
+            final Signature[] methods = cf.getDeclaredMethods();
+            for (Signature method : methods) {
+                try {
+                    if (!cf.isMethodAbstract(method) && !cf.isMethodStatic(method)) {
+                        return true;
+                    }
+                } catch (MethodNotFoundException e) {
+                    //this should never happen
+                    failExecution(e);
+                }
+            }
+            return false;
+        }
 
         /**
          * Phase 1 creates all the {@link Klass} objects for a class and its
@@ -766,67 +803,74 @@ public class Util {
          * refines the path condition by adding all the initialization assumptions.
          * 
          * @param classFile the {@link ClassFile} of the class to be initialized.
-         * @param it a {@link ListIterator} to {@code this.classesCreated}, or
-         *        {@code null} to add to the end of {@code this.classesCreated}.
          * @throws InvalidInputException if {@code classFile} is null.
          * @throws DecisionException if the decision procedure fails.
          * @throws ContradictionException  if some initialization assumption is
          *         contradicted.
          */
-        private void phase1(ClassFile classFile, ListIterator<ClassFile> it)
+        private void phase1(ClassFile classFile)
         throws InvalidInputException, DecisionException, ContradictionException {
-            //if there is a Klass object for className, 
-            //or if className is in the skip set,
-            //there is nothing to do
+            //if there is a Klass object for className (means 
+            //initialization in progress or already initialized), 
+            //or if className is in the skip set, there is 
+            //nothing to do
             if (this.s.existsKlass(classFile) || this.skip.contains(classFile.getClassName())) {
+                //if classFile was already in this.classesToPushClinit
+                //we must reschedule it to respect the visiting order
+                //of JVMS v8 section 5.5, point 7
+                if (this.classesForPhase3.contains(classFile)) {
+                    this.classesForPhase3.remove(classFile);
+                    this.classesForPhase3.add(classFile);
+                }
                 return;
-            }    
-
-            if (it == null) {
-                this.classesWithNewKlass.add(classFile);
-            } else {
-                it.add(classFile);
             }
+
+            //saves classFile in the list of the newly
+            //created Klasses
+            this.classesForPhase2.add(classFile);
+            
             try {
                 //invokes the decision procedure, adds the returned 
                 //assumption to the state's path condition and creates 
                 //a Klass
                 final ClassHierarchy hier = this.s.getClassHierarchy();
                 final boolean pure = classFile.isPure() || this.ctx.hasClassAPureInitializer(hier, classFile);
-                final String className = classFile.getClassName();
                 final int definingLoader = classFile.getDefiningClassLoader();
-                final boolean toInitialize;
+                final boolean createSymbolicKlass;
                 final Assumption assumeInitialized;
-                if (this.s.isPhaseInit()) {
+                if (this.s.isPhasePreInit()) {
                     if (this.ctx.decisionProcedure.isSatInitialized(hier, classFile)) {
-                        toInitialize = true;
+                        createSymbolicKlass = false;
                         assumeInitialized = Assumption.INITIALIZED;
                     } else {
                         throw new ContradictionException("According to path condition class " + classFile.getClassName() + " should not be initialized before start of symbolic execution, but the initialization phase wants to initialize it.");
                     }
                 } else if (pure) {
-                    toInitialize = true;
+                    createSymbolicKlass = false;
                     assumeInitialized = Assumption.NONE;
                 //TODO here we assume mutual exclusion of the initialized/not initialized assumptions. Withdraw this assumption and branch.
                 } else if (CLASSLOADER_BOOT <= definingLoader && definingLoader <= CLASSLOADER_APP && 
                            this.ctx.decisionProcedure.isSatInitialized(hier, classFile)) { 
-                    toInitialize = false;
+                    createSymbolicKlass = true;
                     assumeInitialized = Assumption.INITIALIZED;
                 } else {
-                    toInitialize = true;
+                    createSymbolicKlass = false;
                     assumeInitialized = Assumption.NOT_INITIALIZED;
                 }
-                if (toInitialize) {
+                if (createSymbolicKlass) {
+                    //creates a symbolic Klass
+                    this.s.ensureKlassSymbolic(classFile);
+                } else {
                     //creates a concrete Klass and schedules it for phase 3
                     this.s.ensureKlass(classFile);
-                    if (className.equals(JAVA_OBJECT)) {
-                        this.pushFrameForJavaLangObject = true;
+                    if (JAVA_OBJECT.equals(classFile.getClassName())) {
+                        this.pushClinitFor_JAVA_OBJECT = true;
                     } else {
-                        this.classesToInitialize.add(classFile);
+                        this.classesForPhase3.add(classFile);
                     }
-                } else {
-                    this.s.ensureKlassSymbolic(classFile);
                 }
+                
+                //pushes assumption
                 if (assumeInitialized == Assumption.INITIALIZED) {
                     final Klass k = this.s.getKlass(classFile);
                     this.s.assumeClassInitialized(classFile, k);
@@ -841,11 +885,17 @@ public class Util {
 
             //if classFile denotes a class rather than an interface
             //and has a superclass, then recursively performs phase1 
-            //on its superclass(es)
+            //on its superclass and superinterfaces, according to
+            //JVMS v8 section 5.5, point 7
             if (!classFile.isInterface()) {
+                for (ClassFile superinterface : reverse(classFile.getSuperInterfaces())) {
+                    if (hasANonStaticImplementedMethod(classFile)) {
+                        phase1(superinterface);
+                    }
+                }
                 final ClassFile superclass = classFile.getSuperclass();
                 if (superclass != null) {
-                    phase1(superclass, it);
+                    phase1(superclass);
                 }
             }
         }
@@ -861,7 +911,7 @@ public class Util {
          */
         private void phase2() 
         throws DecisionException, HeapMemoryExhaustedException {
-            final ListIterator<ClassFile> it = this.classesWithNewKlass.listIterator();
+            final ListIterator<ClassFile> it = this.classesForPhase2.listIterator();
             while (it.hasNext()) {
                 final ClassFile classFile = it.next();
                 final Klass k = this.s.getKlass(classFile);
@@ -903,14 +953,14 @@ public class Util {
                 if (this.boxExceptionMethodSignature != null) {
                     this.s.pushFrame(this.cf_JBSE_BASE, this.boxExceptionMethodSignature, false, 0);                    
                 }
-                for (ClassFile classFile : reverse(this.classesToInitialize)) {
+                for (ClassFile classFile : this.classesForPhase3) {
                     final Signature sigClinit = new Signature(classFile.getClassName(), "()" + Type.VOID, "<clinit>");
                     if (classFile.hasMethodImplementation(sigClinit)) {
                         this.s.pushFrame(classFile, sigClinit, false, 0);
                         ++this.createdFrames;
                     }
                 }
-                if (this.pushFrameForJavaLangObject) {
+                if (this.pushClinitFor_JAVA_OBJECT) {
                     try {
                         final Signature sigClinit = new Signature(JAVA_OBJECT, "()" + Type.VOID, "<clinit>");
                         final ClassFile cf_JAVA_OBJECT = this.s.getClassHierarchy().loadCreateClass(JAVA_OBJECT);
@@ -972,39 +1022,6 @@ public class Util {
             //throws and exits
             throwNew(this.s, this.failure);
         }
-    }
-
-    /**
-     * Returns an {@link Iterable} that scans a {@link List} in 
-     * reverse order, from tail to head.
-     * 
-     * @param list a {@link List}{@code <T>}. It must not be {@code null}.
-     * @return an {@link Iterable}{@code <T>}.
-     */
-    private static <T> Iterable<T> reverse(final List<T> list) {
-        return new Iterable<T>() {
-            @Override
-            public Iterator<T> iterator() {
-                return new Iterator<T>() {
-                    private ListIterator<T> delegate = list.listIterator(list.size());
-
-                    @Override
-                    public boolean hasNext() {
-                        return this.delegate.hasPrevious();
-                    }
-
-                    @Override
-                    public T next() {
-                        return this.delegate.previous();
-                    }
-
-                    @Override
-                    public void remove() {
-                        this.delegate.remove();
-                    }
-                };
-            }
-        };
     }
 
     /**

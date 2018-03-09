@@ -293,7 +293,7 @@ public final class State implements Cloneable {
     private StaticMethodArea staticMethodArea = new StaticMethodArea();
     
     /** {@code true} iff the state is in the initialization phase. */
-    private boolean isPhaseInit = true;
+    private boolean isPhasePreInit = true;
 
     /** The path condition of the state in the execution tree. */
     private PathCondition pathCondition = new PathCondition();
@@ -844,13 +844,13 @@ public final class State implements Cloneable {
     
     /**
      * Checks if this {@link State} is in its
-     * initialization phase.
+     * pre-initialization phase.
      * 
      * @return {@code true} until the {@link #setPhasePostInit()}
      *         method is invoked.
      */
-    public boolean isPhaseInit() {
-        return this.isPhaseInit;
+    public boolean isPhasePreInit() {
+        return this.isPhasePreInit;
     }
     
     /**
@@ -858,7 +858,7 @@ public final class State implements Cloneable {
      * phase.
      */
     public void setPhasePostInit() {
-        this.isPhaseInit = false;
+        this.isPhasePreInit = false;
     }
 
     /**

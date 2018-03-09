@@ -318,7 +318,7 @@ public class Engine implements AutoCloseable {
         }
         
         //detects whether we are at the initial state
-        if (this.currentState.isPhaseInit() && this.currentState.getStackSize() == 1) {
+        if (this.currentState.isPhasePreInit() && this.currentState.getStackSize() == 1) {
             this.atInitialState = true;
             this.currentState.setPhasePostInit();
             try {
