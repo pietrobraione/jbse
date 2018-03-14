@@ -25,6 +25,7 @@ import static jbse.bc.Signatures.JBSE_BASE_JAVA_EXT_DIRS;
 import static jbse.bc.Signatures.JBSE_BASE_JAVA_HOME;
 import static jbse.bc.Signatures.JBSE_BASE_JAVA_IO_TMPDIR;
 import static jbse.bc.Signatures.JBSE_BASE_JAVA_LIBRARY_PATH;
+import static jbse.bc.Signatures.JBSE_BASE_JAVA_VERSION;
 import static jbse.bc.Signatures.JBSE_BASE_JBSE_NAME;
 import static jbse.bc.Signatures.JBSE_BASE_JBSE_VERSION;
 import static jbse.bc.Signatures.JBSE_BASE_LINE_SEPARATOR;
@@ -100,6 +101,7 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
     private static       String JAVA_CLASS_PATH         = null;
     private static       String SUN_BOOT_LIBRARY_PATH   = null;
     private static       String JAVA_LIBRARY_PATH       = null;
+    private static final String JAVA_VERSION            = System.getProperty("java.version");
     private static final String OS_NAME                 = System.getProperty("os.name");
     private static final String OS_VERSION              = System.getProperty("os.version");
     private static final String OS_ARCH                 = System.getProperty("os.arch");
@@ -169,6 +171,7 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
         safeEnsureStringLiteral(state, this.ctx, JAVA_HOME);
         safeEnsureStringLiteral(state, this.ctx, SUN_BOOT_CLASS_PATH);
         safeEnsureStringLiteral(state, this.ctx, JAVA_CLASS_PATH);        
+        safeEnsureStringLiteral(state, this.ctx, JAVA_VERSION);
         safeEnsureStringLiteral(state, this.ctx, OS_NAME);
         safeEnsureStringLiteral(state, this.ctx, OS_VERSION);
         safeEnsureStringLiteral(state, this.ctx, OS_ARCH);
@@ -264,6 +267,7 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
             safeSetStringValue(state, klassBase, JBSE_BASE_JAVA_HOME,               JAVA_HOME);
             safeSetStringValue(state, klassBase, JBSE_BASE_SUN_BOOT_CLASS_PATH,     SUN_BOOT_CLASS_PATH);
             safeSetStringValue(state, klassBase, JBSE_BASE_JAVA_CLASS_PATH,         JAVA_CLASS_PATH);
+            safeSetStringValue(state, klassBase, JBSE_BASE_JAVA_VERSION,            JAVA_VERSION);
             safeSetStringValue(state, klassBase, JBSE_BASE_OS_NAME,                 OS_NAME);
             safeSetStringValue(state, klassBase, JBSE_BASE_OS_VERSION,              OS_VERSION);
             safeSetStringValue(state, klassBase, JBSE_BASE_OS_ARCH,                 OS_ARCH);

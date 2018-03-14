@@ -867,6 +867,7 @@ public final class ExecutionContext {
         className.equals(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIESDATA) || //necessary for method handles
         className.equals(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIES_L) || //necessary for method handles
         className.equals(jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE) || //wouldn't manage method handles otherwise
+        className.equals(jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_LAZY) || //wouldn't manage method handles otherwise
         //className.equals(jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR) || //the only nonfinal static field STATICALLY_INVOCABLE_PACKAGES is never modified
         className.equals(jbse.bc.Signatures.JAVA_METHODHANDLES) || //not really, but can be considered as it were (all final except ZERO_MHS and IDENTITY_MHS that are caches) 
         className.equals(jbse.bc.Signatures.JAVA_METHODHANDLES_LOOKUP) || //not really, but can be considered as it were (all final including PUBLIC_LOOKUP and IMPL_LOOKUP that are instances of Lookup - that is immutable - and except LOOKASIDE_TABLE, that seems to be a sort of cache) 

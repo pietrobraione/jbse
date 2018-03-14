@@ -52,6 +52,7 @@ public final class Signatures {
     public static final String JAVA_DIRECTBYTEBUFFER         = "java/nio/DirectByteBuffer";
     public static final String JAVA_DIRECTLONGBUFFERU        = "java/nio/DirectLongBufferU";
     public static final String JAVA_DIRECTMETHODHANDLE       = "java/lang/invoke/DirectMethodHandle";
+    public static final String JAVA_DIRECTMETHODHANDLE_LAZY  = "java/lang/invoke/DirectMethodHandle$Lazy";
     public static final String JAVA_DOUBLE                   = "java/lang/Double";
     public static final String JAVA_ENUM                     = "java/lang/Enum";
     public static final String JAVA_EXECUTABLE               = "java/lang/reflect/Executable";
@@ -776,6 +777,8 @@ public final class Signatures {
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "JAVA_IO_TMPDIR");
     public static final Signature JBSE_BASE_JAVA_LIBRARY_PATH = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "JAVA_LIBRARY_PATH");
+    public static final Signature JBSE_BASE_JAVA_VERSION = 
+        new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "JAVA_VERSION");
     public static final Signature JBSE_BASE_JBSE_NAME = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "JBSE_NAME");
     public static final Signature JBSE_BASE_JBSE_VERSION = 

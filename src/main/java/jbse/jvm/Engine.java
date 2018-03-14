@@ -167,6 +167,12 @@ public class Engine implements AutoCloseable {
     throws DecisionException, InitializationException, 
     InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, 
     ClasspathException, NotYetImplementedException, ContradictionException {
+        //checks that the version of the meta-level JRE is ok
+        final String javaVersion = System.getProperty("java.version");
+        if (!javaVersion.startsWith("1.8.0")) {
+            throw new InitializationException("JBSE requires to be run on a Java 8 JVM.");
+        }
+        
         //executes the first state setup step
         final Algo_INIT algo = this.ctx.dispatcher.select();
         try {

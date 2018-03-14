@@ -29,6 +29,7 @@ public final class Base {
     private static final String JAVA_HOME               = null;
     private static final String SUN_BOOT_CLASS_PATH     = null;
     private static final String JAVA_CLASS_PATH         = null;
+    private static final String JAVA_VERSION            = null;
     private static final String OS_NAME                 = null;
     private static final String OS_VERSION              = null;
     private static final String OS_ARCH                 = null;
@@ -227,10 +228,10 @@ public final class Base {
         putSafe(p, "java.specification.version", "1.8");
         putSafe(p, "java.specification.name",    "Java Platform API Specification");
         putSafe(p, "java.specification.vendor",  "Oracle Corporation");
-        putSafe(p, "java.version",               "1.8.0_144");
-        putSafe(p, "java.vendor",                "JBSE project");
-        putSafe(p, "java.vendor.url",            "http://pietrobraione.github.io/jbse/");
-        putSafe(p, "java.vendor.url.bug",        "https://github.com/pietrobraione/jbse/issues");
+        putSafe(p, "java.version",               JAVA_VERSION);
+        putSafe(p, "java.vendor",                "Oracle Corporation");
+        putSafe(p, "java.vendor.url",            "http://java.oracle.com/");
+        putSafe(p, "java.vendor.url.bug",        "http://bugreport.sun.com/bugreport/");
         putSafe(p, "java.class.version",         "52.0");
         putSafe(p, "os.name",                    OS_NAME);
         putSafe(p, "os.version",                 OS_VERSION);
