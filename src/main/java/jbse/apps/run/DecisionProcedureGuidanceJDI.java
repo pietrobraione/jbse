@@ -406,6 +406,12 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                 throw new GuidanceException(e);
             }
         }
+        
+        @Override
+        protected void finalize() {
+            //obviates to inferior process leak
+            this.vm.process().destroyForcibly();
+        }
     }
 }
 
