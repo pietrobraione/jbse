@@ -187,7 +187,7 @@ public class Engine implements AutoCloseable {
             this.currentState = this.ctx.stateTree.nextState();
         } else {
             //this should never happen
-            throw new UnexpectedInternalException("The pre-initial state is missing from the state tree.");
+            throw new UnexpectedInternalException("The first state is missing from the state tree.");
         }
 
         //detects whether we are at the initial state

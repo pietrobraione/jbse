@@ -12,7 +12,7 @@ import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
-import static jbse.common.Type.toPrimitiveInternalName;
+import static jbse.common.Type.toPrimitiveOrVoidInternalName;
 
 import java.util.function.Supplier;
 
@@ -77,7 +77,7 @@ public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEW
                 //this should never happen
                 failExecution("the first parameter to java.lang.reflect.Array.newArray method is symbolic and unresolved");
             }
-            final Reference refToVoidClass = state.referenceToInstance_JAVA_CLASS_primitive("void");
+            final Reference refToVoidClass = state.referenceToInstance_JAVA_CLASS_primitiveOrVoid("void");
             if (refToVoidClass != null) {
                 final Instance_JAVA_CLASS voidClass = (Instance_JAVA_CLASS) state.getObject(refToVoidClass);
                 if (clazz == voidClass) {
@@ -88,7 +88,7 @@ public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEW
             final ClassFile arrayMemberType = clazz.representedClass();
             final String arrayTypeName;
             if (arrayMemberType.isPrimitive()) {
-                arrayTypeName = "" + ARRAYOF + toPrimitiveInternalName(arrayMemberType.getClassName());
+                arrayTypeName = "" + ARRAYOF + toPrimitiveOrVoidInternalName(arrayMemberType.getClassName());
             } else if (arrayMemberType.isArray()) {
                 arrayTypeName = "" + ARRAYOF + arrayMemberType.getClassName();
             } else { //isReference()

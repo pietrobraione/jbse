@@ -12,7 +12,7 @@ import static jbse.bc.Signatures.JAVA_THREAD;
 import static jbse.bc.Signatures.JAVA_THREADGROUP;
 import static jbse.bc.Signatures.JAVA_THROWABLE;
 import static jbse.common.Type.parametersNumber;
-import static jbse.common.Type.isPrimitiveCanonicalName;
+import static jbse.common.Type.isPrimitiveOrVoidCanonicalName;
 import static jbse.common.Util.unsafe;
 
 import java.io.BufferedInputStream;
@@ -1740,21 +1740,21 @@ public final class State implements Cloneable {
      *         or {@code null} if such instance does not exist. 
      */
     public ReferenceConcrete referenceToInstance_JAVA_CLASS(ClassFile classFile) {
-        return (classFile.isPrimitive() ? referenceToInstance_JAVA_CLASS_primitive(classFile.getClassName()) : this.classes.get(classFile));
+        return (classFile.isPrimitive() ? referenceToInstance_JAVA_CLASS_primitiveOrVoid(classFile.getClassName()) : this.classes.get(classFile));
     }
 
     /**
      * Returns a {@link ReferenceConcrete} to an {@link Instance_JAVA_CLASS} 
      * representing a primitive type. 
      * 
-     * @param typeName a {@link String} representing a primitive type
-     *        canonical name (see JLS v8, section 6.7).
+     * @param typeName a {@link String} representing the canonical name 
+     *        of a primitive type or void (see JLS v8, section 6.7).
      * @return a {@link ReferenceConcrete} to the {@link Instance_JAVA_CLASS} 
      *         in this state's {@link Heap}, representing the class of 
      *         the primitive type {@code typeName}, or {@code null} if 
      *         such instance does not exist in the heap. 
      */
-    public ReferenceConcrete referenceToInstance_JAVA_CLASS_primitive(String typeName) {
+    public ReferenceConcrete referenceToInstance_JAVA_CLASS_primitiveOrVoid(String typeName) {
         return this.classesPrimitive.get(typeName);
     }
 
@@ -1776,7 +1776,7 @@ public final class State implements Cloneable {
         }
         if (representedClass.isPrimitive()) {
             try {
-                ensureInstance_JAVA_CLASS_primitive(representedClass.getClassName());
+                ensureInstance_JAVA_CLASS_primitiveOrVoid(representedClass.getClassName());
             } catch (ClassFileNotFoundException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
@@ -1788,24 +1788,24 @@ public final class State implements Cloneable {
 
     /**
      * Ensures an {@link Instance_JAVA_CLASS} 
-     * corresponding to a primitive type exists in the {@link Heap}. If
+     * corresponding to a primitive type or void exists in the {@link Heap}. If
      * the instance does not exist, it creates it, otherwise it does 
      * nothing.
      * 
-     * @param typeName a {@link String} representing a primitive type
-     *        canonical name (see JLS v8, section 6.7).
+     * @param typeName a {@link String} representing the canonical name 
+     *        of a primitive type or void (see JLS v8, section 6.7).
      * @throws ClassFileNotFoundException if {@code typeName} is not
      *         the canonical name of a primitive type.
      * @throws HeapMemoryExhaustedException if the heap is full.
      */
-    public void ensureInstance_JAVA_CLASS_primitive(String typeName) 
+    public void ensureInstance_JAVA_CLASS_primitiveOrVoid(String typeName) 
     throws ClassFileNotFoundException, HeapMemoryExhaustedException {
         if (hasInstance_JAVA_CLASS_primitive(typeName)) {
             return;
         }
-        if (isPrimitiveCanonicalName(typeName)) {
+        if (isPrimitiveOrVoidCanonicalName(typeName)) {
             try {
-                final ClassFile cf = this.classHierarchy.getClassFilePrimitive(typeName);
+                final ClassFile cf = this.classHierarchy.getClassFilePrimitiveOrVoid(typeName);
                 if (cf == null) {
                     throw new UnexpectedInternalException("Could not find the classfile for the primitive type " + typeName + ".");
                 }

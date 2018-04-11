@@ -9,7 +9,7 @@ import static jbse.bc.Signatures.ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION;
 import static jbse.bc.Signatures.ARRAY_STORE_EXCEPTION;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.common.Type.isPrimitiveOpStack;
-import static jbse.common.Type.toPrimitiveInternalName;
+import static jbse.common.Type.toPrimitiveOrVoidInternalName;
 
 import java.util.function.Supplier;
 
@@ -104,7 +104,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                         exitFromAlgorithm();
                     }
                     try {
-                        final char arrayMemberTypeInternal = toPrimitiveInternalName(arrayMemberType.getClassName());
+                        final char arrayMemberTypeInternal = toPrimitiveOrVoidInternalName(arrayMemberType.getClassName());
                         this.valueToStore = (isPrimitiveOpStack(arrayMemberTypeInternal) ? value : 
                             ((Primitive) value).to(arrayMemberTypeInternal));
                     } catch (InvalidTypeException e) {

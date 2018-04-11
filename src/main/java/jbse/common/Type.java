@@ -199,7 +199,7 @@ public final class Type {
      * of a primitive class (including {@link java.lang.Void#TYPE})
      * 
      * @param type a {@link String}.
-     * @return {@code true} iff {@code type} equals one of 
+     * @return {@code true} iff {@code type} {@link Object#equals(Object) equals} one of 
      * {@code "byte"},
      * {@code "short"},
      * {@code "int"},
@@ -210,7 +210,7 @@ public final class Type {
      * {@code "double"}, or
      * {@code "void"}.
      */
-    public static boolean isPrimitiveCanonicalName(String type) {
+    public static boolean isPrimitiveOrVoidCanonicalName(String type) {
         return ("byte".equals(type) ||
                 "short".equals(type) ||
                 "int".equals(type) ||
@@ -232,15 +232,15 @@ public final class Type {
 
     /**
      * Converts the internal name of a primitive type  
-     * to its corresponding canonical name.
+     * or void to its corresponding canonical name.
      * 
      * @param primitiveTypeInternal a {@code char}.
      * @return a {@link String}, the canonical name for
      *        {@code primitiveTypeInternal}, or {@code null}
      *        if {@code primitiveTypeInternal} is not the
-     *        internal name of a primitive type.
+     *        internal name of a primitive type or void.
      */
-    public static String toPrimitiveCanonicalName(char primitiveTypeInternal) {
+    public static String toPrimitiveOrVoidCanonicalName(char primitiveTypeInternal) {
         if (primitiveTypeInternal == BYTE) {
             return "byte";
         } else if (primitiveTypeInternal == SHORT) {
@@ -257,6 +257,8 @@ public final class Type {
             return "float";
         } else if (primitiveTypeInternal == DOUBLE) {
             return "double";
+        } else if (primitiveTypeInternal == VOID) {
+            return "void";
         } else {
             return null;
         }
@@ -264,18 +266,18 @@ public final class Type {
 
     /**
      * Converts the internal name of a primitive type  
-     * to its corresponding canonical name.
+     * or void to its corresponding canonical name.
      * 
      * @param primitiveTypeInternal a {@link String}.
      * @return same as 
-     *         {@link #toPrimitiveCanonicalName(char) toPrimitiveCanonicalName}{@code (primitiveTypeInternal.}
+     *         {@link #toPrimitiveOrVoidCanonicalName(char) toPrimitiveOrVoidCanonicalName}{@code (primitiveTypeInternal.}
      *         {@link String#charAt(int) charAt}{@code (0))} if 
-     *         {@link #isPrimitive(String) isPrimitive}{@code (primitiveTypeInternal)},
+     *         {@link #isPrimitive(String) isPrimitive}{@code (primitiveTypeInternal) || }{@link #isVoid(String) isVoid}{@code (primitiveTypeInternal)},
      *         otherwise {@code null}.
      */
-    public static String toPrimitiveCanonicalName(String primitiveTypeInternal) {
-        if (isPrimitive(primitiveTypeInternal)) {
-            return toPrimitiveCanonicalName(primitiveTypeInternal.charAt(0));
+    public static String toPrimitiveOrVoidCanonicalName(String primitiveTypeInternal) {
+        if (isPrimitive(primitiveTypeInternal) || isVoid(primitiveTypeInternal)) {
+            return toPrimitiveOrVoidCanonicalName(primitiveTypeInternal.charAt(0));
         } else {
             return null;
         }
@@ -283,15 +285,16 @@ public final class Type {
 
     /**
      * Converts the internal name of a primitive type  
-     * to its corresponding canonical name.
+     * (or of the void type) to its corresponding canonical name.
      * 
-     * @param primitiveTypeCanonical a {@link String}.
+     * @param primitiveTypeCanonical a {@link String}, the canonical
+     *        name of a primitive type or void.
      * @return a {@code char}, the internal name for
      *         {@code primitiveTypeCanonical}, or
      *         {@link #ERROR} if {@code primitiveTypeCanonical} is not the
      *         canonical name of a primitive type.
      */
-    public static char toPrimitiveInternalName(String primitiveTypeCanonical) {
+    public static char toPrimitiveOrVoidInternalName(String primitiveTypeCanonical) {
         if ("byte".equals(primitiveTypeCanonical)) {
             return BYTE;
         } else if ("short".equals(primitiveTypeCanonical)) {

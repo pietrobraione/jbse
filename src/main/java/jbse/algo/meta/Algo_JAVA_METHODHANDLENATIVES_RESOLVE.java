@@ -29,11 +29,14 @@ import static jbse.bc.Signatures.noclass_REGISTERMETHODTYPE;
 import static jbse.bc.Signatures.noclass_STORELINKEDMETHODANDAPPENDIX;
 import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.className;
+import static jbse.common.Type.isArray;
 import static jbse.common.Type.isPrimitive;
+import static jbse.common.Type.isReference;
+import static jbse.common.Type.isVoid;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.splitParametersDescriptors;
 import static jbse.common.Type.splitReturnValueDescriptor;
-import static jbse.common.Type.toPrimitiveCanonicalName;
+import static jbse.common.Type.toPrimitiveOrVoidCanonicalName;
 import static jbse.common.Type.TYPEEND;
 
 import java.lang.reflect.Modifier;
@@ -431,15 +434,32 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
         return valueString(state, memberNameDescriptorStringReference);
     }
     
-    private ClassFile resolveTypeName(State state, ClassFile accessor, String typeName) 
+    private ClassFile resolveTypeNameReturn(State state, ClassFile accessor, String returnTypeName) 
     throws InvalidInputException, ClassFileNotFoundException, IncompatibleClassFileException, 
     ClassFileIllFormedException, BadClassFileVersionException, WrongClassNameException, 
     ClassFileNotAccessibleException, PleaseLoadClassException {
         final ClassFile retVal;
-        if (isPrimitive(typeName)) {
-            retVal = state.getClassHierarchy().getClassFilePrimitive(toPrimitiveCanonicalName(typeName));
+        if (isPrimitive(returnTypeName) || isVoid(returnTypeName)) {
+            retVal = state.getClassHierarchy().getClassFilePrimitiveOrVoid(toPrimitiveOrVoidCanonicalName(returnTypeName));
+        } else if (isArray(returnTypeName) || isReference(returnTypeName)) {
+            retVal = state.getClassHierarchy().resolveClass(accessor, className(returnTypeName), state.bypassStandardLoading());
         } else {
-            retVal = state.getClassHierarchy().resolveClass(accessor, className(typeName), state.bypassStandardLoading());
+            throw new InvalidInputException("Wrong return type name " + returnTypeName + ".");
+        }
+        return retVal;
+    }
+    
+    private ClassFile resolveTypeNameParameter(State state, ClassFile accessor, String parameterTypeName) 
+    throws InvalidInputException, ClassFileNotFoundException, IncompatibleClassFileException, 
+    ClassFileIllFormedException, BadClassFileVersionException, WrongClassNameException, 
+    ClassFileNotAccessibleException, PleaseLoadClassException {
+        final ClassFile retVal;
+        if (isPrimitive(parameterTypeName)) {
+            retVal = state.getClassHierarchy().getClassFilePrimitiveOrVoid(toPrimitiveOrVoidCanonicalName(parameterTypeName));
+        } else if (isArray(parameterTypeName) || isReference(parameterTypeName)) {
+            retVal = state.getClassHierarchy().resolveClass(accessor, className(parameterTypeName), state.bypassStandardLoading());
+        } else {
+            throw new InvalidInputException("Wrong parameter type name " + parameterTypeName + ".");
         }
         return retVal;
     }
@@ -492,7 +512,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             
             //1-the return type
             final String returnTypeName = splitReturnValueDescriptor(descriptor);
-            final ClassFile returnType = resolveTypeName(state, accessor, returnTypeName);
+            final ClassFile returnType = resolveTypeNameReturn(state, accessor, returnTypeName);
             state.ensureInstance_JAVA_CLASS(returnType);
             final ReferenceConcrete rtype = state.referenceToInstance_JAVA_CLASS(returnType);
             
@@ -503,7 +523,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             final Array ptypesArray = (Array) state.getObject(ptypes);
             int i = 0;
             for (String parameterTypeName : parameterTypeNames) {
-                final ClassFile parameterType = resolveTypeName(state, accessor, parameterTypeName);
+                final ClassFile parameterType = resolveTypeNameParameter(state, accessor, parameterTypeName);
                 state.ensureInstance_JAVA_CLASS(parameterType);
                 ptypesArray.setFast(state.getCalculator().valInt(i), state.referenceToInstance_JAVA_CLASS(parameterType));
                 ++i;

@@ -28,7 +28,7 @@ import static jbse.bc.Signatures.JAVA_SHORT_VALUE;
 import static jbse.bc.Signatures.JBSE_BASE;
 import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTION;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
-import static jbse.common.Type.toPrimitiveInternalName;
+import static jbse.common.Type.toPrimitiveOrVoidInternalName;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.VOID;
@@ -125,7 +125,7 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
                 final Instance_JAVA_CLASS typeFormalJavaClass = (Instance_JAVA_CLASS) state.getObject((Reference) typeFormalAccess.getValue());
                 final ClassFile typeFormal = typeFormalJavaClass.representedClass();
                 if (typeFormal.isPrimitive()) {
-                    sbDescriptor.append(toPrimitiveInternalName(typeFormal.getClassName()));
+                    sbDescriptor.append(toPrimitiveOrVoidInternalName(typeFormal.getClassName()));
                 } else {
                     sbDescriptor.append(REFERENCE);
                     sbDescriptor.append(typeFormal.getClassName());
@@ -216,7 +216,7 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
                 }
                 
                 //possibly widens the unboxed value and returns it
-                final char typeFormalPrimitive = toPrimitiveInternalName(typeFormal.getClassName());
+                final char typeFormalPrimitive = toPrimitiveOrVoidInternalName(typeFormal.getClassName());
                 final char typeActualValue = actualValue.getType();
                 if (typeFormalPrimitive == typeActualValue) {
                     return actualValue;

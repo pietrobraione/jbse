@@ -14,10 +14,11 @@ import static jbse.common.Type.getArrayMemberType;
 import static jbse.common.Type.isArray;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isReference;
+import static jbse.common.Type.isVoid;
 import static jbse.common.Type.splitParametersDescriptors;
 import static jbse.common.Type.splitReturnValueDescriptor;
-import static jbse.common.Type.toPrimitiveCanonicalName;
-import static jbse.common.Type.toPrimitiveInternalName;
+import static jbse.common.Type.toPrimitiveOrVoidCanonicalName;
+import static jbse.common.Type.toPrimitiveOrVoidInternalName;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -245,15 +246,15 @@ public final class ClassHierarchy implements Cloneable {
      * {@link ClassFile}.
      * 
      * @param typeName the canonical name of a primitive type 
-     *        (see JLS v8, section 6.7).
+     *        or of void (see JLS v8, section 6.7).
      * @return the {@link ClassFile} of the correspondent class.
      * @throws InvalidInputException when {@code typeName}
      *         is not the canonical name of a primitive type.
      */
-    public ClassFile getClassFilePrimitive(String typeName)
+    public ClassFile getClassFilePrimitiveOrVoid(String typeName)
     throws InvalidInputException {
         final ClassFile retval = 
-            this.cfs.getClassFilePrimitive(toPrimitiveInternalName(typeName));
+            this.cfs.getClassFilePrimitiveOrVoid(toPrimitiveOrVoidInternalName(typeName));
         return retval;
     }
     
@@ -808,7 +809,7 @@ public final class ClassHierarchy implements Cloneable {
                         memberClass = loadCreateClass(initiatingLoader, className(memberType), bypassStandardLoading);
                         definingClassLoader = memberClass.getDefiningClassLoader();
                     } else if (isPrimitive(memberType)) {
-                        memberClass = getClassFilePrimitive(toPrimitiveCanonicalName(memberType));
+                        memberClass = getClassFilePrimitiveOrVoid(toPrimitiveOrVoidCanonicalName(memberType));
                         definingClassLoader = CLASSLOADER_BOOT;
                     } else {
                         rethrowInvalidInputException = true;
@@ -1460,16 +1461,20 @@ public final class ClassHierarchy implements Cloneable {
         for (String paramType: paramsTypes) {
             if (isArray(paramType) || isReference(paramType)) {
                 retVal[i] = resolveClass(accessor, className(paramType), bypassStandardLoading);
-            } else { //isPrimitive(paramType)
-                retVal[i] = getClassFilePrimitive(toPrimitiveCanonicalName(paramType));
+            } else if (isPrimitive(paramType)) {
+                retVal[i] = getClassFilePrimitiveOrVoid(toPrimitiveOrVoidCanonicalName(paramType));
+            } else {
+                throw new InvalidInputException("Invoked" + this.getClass().getName() + ".resolveMethodType with invalid parameter type in descriptor.");
             }
             ++i;
         }
         final String returnType = splitReturnValueDescriptor(descriptor);
         if (isArray(returnType) || isReference(returnType)) {
             retVal[retVal.length - 1] = resolveClass(accessor, className(returnType), bypassStandardLoading);
-        } else { //isPrimitive(returnType)
-            retVal[retVal.length - 1] = getClassFilePrimitive(toPrimitiveCanonicalName(returnType));
+        } else if (isPrimitive(returnType) || isVoid(returnType)) {
+            retVal[retVal.length - 1] = getClassFilePrimitiveOrVoid(toPrimitiveOrVoidCanonicalName(returnType));
+        } else {
+            throw new InvalidInputException("Invoked" + this.getClass().getName() + ".resolveMethodType with invalid return type in descriptor.");
         }
         
         return retVal;

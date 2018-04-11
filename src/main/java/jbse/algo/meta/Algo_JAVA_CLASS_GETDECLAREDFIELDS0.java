@@ -25,7 +25,7 @@ import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.BYTE;
 import static jbse.common.Type.className;
 import static jbse.common.Type.isPrimitive;
-import static jbse.common.Type.toPrimitiveCanonicalName;
+import static jbse.common.Type.toPrimitiveOrVoidCanonicalName;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
 
@@ -72,6 +72,7 @@ import jbse.val.exc.InvalidTypeException;
  * 
  * @author Pietro Braione
  */
+//TODO unify with Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 and Algo_JAVA_CLASS_GETDECLAREDMETHODS0
 public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_Nonbranching {
     private ClassFile thisClass; //set by cookMore
 
@@ -97,6 +98,8 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
             throwVerifyError(state);
             exitFromAlgorithm();
         }
+        
+        //TODO resolve all field types!!!
     }
     
     @Override
@@ -242,15 +245,16 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                         ReferenceConcrete typeClassRef = null; //to keep the compiler happy
                         if (isPrimitive(fieldType)) {
                             try {
-                                final String fieldTypeNameCanonical = toPrimitiveCanonicalName(fieldType);
-                                state.ensureInstance_JAVA_CLASS_primitive(fieldTypeNameCanonical);
-                                typeClassRef = state.referenceToInstance_JAVA_CLASS_primitive(fieldTypeNameCanonical);
+                                final String fieldTypeNameCanonical = toPrimitiveOrVoidCanonicalName(fieldType);
+                                state.ensureInstance_JAVA_CLASS_primitiveOrVoid(fieldTypeNameCanonical);
+                                typeClassRef = state.referenceToInstance_JAVA_CLASS_primitiveOrVoid(fieldTypeNameCanonical);
                             } catch (ClassFileNotFoundException e) {
                                 //this should never happen
                                 failExecution(e);
                             }
                         } else {
                             final String fieldTypeClassName = className(fieldType);
+                            //TODO *absolutely* put resolution of field type OUTSIDE (in cookMore)
                             final ClassFile fieldTypeClass = hier.resolveClass(this.thisClass, fieldTypeClassName, state.bypassStandardLoading()); //note that the accessor is the owner of the field, i.e., the 'this' class
                             state.ensureInstance_JAVA_CLASS(fieldTypeClass);
                             typeClassRef = state.referenceToInstance_JAVA_CLASS(fieldTypeClass);

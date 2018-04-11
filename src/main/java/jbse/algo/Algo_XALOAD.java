@@ -15,7 +15,7 @@ import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.UNSUPPORTED_CLASS_VERSION_ERROR;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
-import static jbse.common.Type.toPrimitiveInternalName;
+import static jbse.common.Type.toPrimitiveOrVoidInternalName;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -252,7 +252,7 @@ StrategyUpdate_XALOAD> {
     
     private static String typeFromClassName(ClassFile cf) {
         if (cf.isPrimitive()) {
-            return "" + toPrimitiveInternalName(cf.getClassName()); 
+            return "" + toPrimitiveOrVoidInternalName(cf.getClassName()); 
         } else if (cf.isArray()) {
             return cf.getClassName();
         } else { //cf.isReference()

@@ -46,8 +46,8 @@ public final class Algo_JAVA_CLASS_GETPRIMITIVECLASS extends Algo_INVOKEMETA_Non
             }
 
             //gets the instance of the class
-            state.ensureInstance_JAVA_CLASS_primitive(typeName);
-            this.classRef = state.referenceToInstance_JAVA_CLASS_primitive(typeName);
+            state.ensureInstance_JAVA_CLASS_primitiveOrVoid(typeName);
+            this.classRef = state.referenceToInstance_JAVA_CLASS_primitiveOrVoid(typeName);
         } catch (ClassFileNotFoundException e) {
             throwNew(state, CLASS_NOT_FOUND_EXCEPTION);  //this is how Hotspot behaves
             exitFromAlgorithm();

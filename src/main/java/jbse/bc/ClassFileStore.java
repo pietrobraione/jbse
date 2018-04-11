@@ -118,11 +118,11 @@ final class ClassFileStore implements Cloneable {
      * 
      * @param typeName a {@code String}, the internal name of a primitive type 
      *        (see the class {@link Type}).
-     * @return same as {@link #getClassFilePrimitive(char) getClassFilePrimitive}{@code (typeName.charAt(0))}.
+     * @return same as {@link #getClassFilePrimitiveOrVoid(char) getClassFilePrimitive}{@code (typeName.charAt(0))}.
      * @throws InvalidInputException if {@code typeName} is not the internal name of a primitive type.
      */
     ClassFile getClassFilePrimitive(String typeName) throws InvalidInputException {
-        return getClassFilePrimitive(typeName.charAt(0));
+        return getClassFilePrimitiveOrVoid(typeName.charAt(0));
     }
     
     /**
@@ -135,7 +135,7 @@ final class ClassFileStore implements Cloneable {
      *         possibly a {@link ClassFileBad}.
      * @throws InvalidInputException if {@code type} is not valid.
      */
-    ClassFile getClassFilePrimitive(char type) throws InvalidInputException {
+    ClassFile getClassFilePrimitiveOrVoid(char type) throws InvalidInputException {
         switch (type) {
         case Type.BOOLEAN:
             return this.primitiveClassFileBoolean;

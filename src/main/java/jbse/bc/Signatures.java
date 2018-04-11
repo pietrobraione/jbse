@@ -213,6 +213,8 @@ public final class Signatures {
         new Signature(JAVA_CLASS, "(" + BOOLEAN + ")" + ARRAYOF + REFERENCE + JAVA_CONSTRUCTOR + TYPEEND, "getDeclaredConstructors0");
     public static final Signature JAVA_CLASS_GETDECLAREDFIELDS0 =
         new Signature(JAVA_CLASS, "(" + BOOLEAN + ")" + ARRAYOF + REFERENCE + JAVA_FIELD + TYPEEND, "getDeclaredFields0");
+    public static final Signature JAVA_CLASS_GETDECLAREDMETHODS0 =
+        new Signature(JAVA_CLASS, "(" + BOOLEAN + ")" + ARRAYOF + REFERENCE + JAVA_METHOD + TYPEEND, "getDeclaredMethods0");
     public static final Signature JAVA_CLASS_GETDECLARINGCLASS0 =
         new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getDeclaringClass0");
     public static final Signature JAVA_CLASS_GETENCLOSINGMETHOD0 =
@@ -705,6 +707,24 @@ public final class Signatures {
         new Signature(JAVA_MEMBERNAME, "" + REFERENCE + JAVA_STRING + TYPEEND, "name");
     public static final Signature JAVA_MEMBERNAME_TYPE = 
         new Signature(JAVA_MEMBERNAME, "" + REFERENCE + JAVA_OBJECT + TYPEEND, "type");
+    public static final Signature JAVA_METHOD_ANNOTATIONS = 
+        new Signature(JAVA_METHOD, "" + ARRAYOF + BYTE, "annotations");
+    public static final Signature JAVA_METHOD_CLAZZ = 
+        new Signature(JAVA_METHOD, "" + REFERENCE + JAVA_CLASS + TYPEEND, "clazz");
+    public static final Signature JAVA_METHOD_EXCEPTIONTYPES = 
+        new Signature(JAVA_METHOD, "" + ARRAYOF + REFERENCE + JAVA_CLASS + TYPEEND, "exceptionTypes");
+    public static final Signature JAVA_METHOD_MODIFIERS = 
+        new Signature(JAVA_METHOD, "" + INT, "modifiers");
+    public static final Signature JAVA_METHOD_NAME = 
+        new Signature(JAVA_METHOD, "" + REFERENCE + JAVA_STRING + TYPEEND, "name");
+    public static final Signature JAVA_METHOD_PARAMETERTYPES = 
+        new Signature(JAVA_METHOD, "" + ARRAYOF + REFERENCE + JAVA_CLASS + TYPEEND, "parameterTypes");
+    public static final Signature JAVA_METHOD_RETURNTYPE = 
+        new Signature(JAVA_METHOD, "" + REFERENCE + JAVA_CLASS + TYPEEND, "returnType");
+    public static final Signature JAVA_METHOD_SIGNATURE = 
+        new Signature(JAVA_METHOD, "" + REFERENCE + JAVA_STRING + TYPEEND, "signature");
+    public static final Signature JAVA_METHOD_SLOT = 
+        new Signature(JAVA_METHOD, "" + INT, "slot");
     public static final Signature JAVA_METHODTYPE_METHODDESCRIPTOR = 
         new Signature(JAVA_METHODTYPE, "" + REFERENCE + JAVA_STRING + TYPEEND, "methodDescriptor");
     public static final Signature JAVA_SHORT_VALUE = 

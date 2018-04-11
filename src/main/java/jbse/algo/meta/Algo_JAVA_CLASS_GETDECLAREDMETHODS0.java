@@ -9,14 +9,16 @@ import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.JAVA_ACCESSIBLEOBJECT_OVERRIDE;
 import static jbse.bc.Signatures.JAVA_CLASS;
-import static jbse.bc.Signatures.JAVA_CONSTRUCTOR;
-import static jbse.bc.Signatures.JAVA_CONSTRUCTOR_ANNOTATIONS;
-import static jbse.bc.Signatures.JAVA_CONSTRUCTOR_CLAZZ;
-import static jbse.bc.Signatures.JAVA_CONSTRUCTOR_EXCEPTIONTYPES;
-import static jbse.bc.Signatures.JAVA_CONSTRUCTOR_MODIFIERS;
-import static jbse.bc.Signatures.JAVA_CONSTRUCTOR_PARAMETERTYPES;
-import static jbse.bc.Signatures.JAVA_CONSTRUCTOR_SIGNATURE;
-import static jbse.bc.Signatures.JAVA_CONSTRUCTOR_SLOT;
+import static jbse.bc.Signatures.JAVA_METHOD;
+import static jbse.bc.Signatures.JAVA_METHOD_ANNOTATIONS;
+import static jbse.bc.Signatures.JAVA_METHOD_CLAZZ;
+import static jbse.bc.Signatures.JAVA_METHOD_EXCEPTIONTYPES;
+import static jbse.bc.Signatures.JAVA_METHOD_MODIFIERS;
+import static jbse.bc.Signatures.JAVA_METHOD_NAME;
+import static jbse.bc.Signatures.JAVA_METHOD_PARAMETERTYPES;
+import static jbse.bc.Signatures.JAVA_METHOD_RETURNTYPE;
+import static jbse.bc.Signatures.JAVA_METHOD_SIGNATURE;
+import static jbse.bc.Signatures.JAVA_METHOD_SLOT;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.UNSUPPORTED_CLASS_VERSION_ERROR;
@@ -26,9 +28,11 @@ import static jbse.common.Type.className;
 import static jbse.common.Type.isArray;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isReference;
+import static jbse.common.Type.isVoid;
 import static jbse.common.Type.toPrimitiveOrVoidCanonicalName;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.splitParametersDescriptors;
+import static jbse.common.Type.splitReturnValueDescriptor;
 import static jbse.common.Type.TYPEEND;
 
 import java.util.Arrays;
@@ -69,12 +73,12 @@ import jbse.val.Simplex;
 import jbse.val.exc.InvalidOperandException;
 
 /**
- * Meta-level implementation of {@link java.lang.Class#getDeclaredConstructors0(boolean)}.
+ * Meta-level implementation of {@link java.lang.Class#getDeclaredMethods0(boolean)}.
  * 
  * @author Pietro Braione
  */
-//TODO unify with Algo_JAVA_CLASS_GETDECLAREDFIELDS0 and Algo_JAVA_CLASS_GETDECLAREDMETHODS0
-public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEMETA_Nonbranching {
+//TODO unify with Algo_JAVA_CLASS_GETDECLAREDFIELDS0 and Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0
+public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_Nonbranching {
     private ClassFile thisClass; //set by cookMore
 
     @Override
@@ -91,7 +95,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
             final Reference thisClassRef = (Reference) this.data.operand(0);
             if (state.isNull(thisClassRef)) {
                 //this should never happen
-                failExecution("The 'this' parameter to java.lang.Class.getDeclaredConstructors0 method is null.");
+                failExecution("The 'this' parameter to java.lang.Class.getDeclaredMethods0 method is null.");
             }
             final Instance_JAVA_CLASS thisClassObject = (Instance_JAVA_CLASS) state.getObject(thisClassRef);
             this.thisClass = thisClassObject.representedClass();
@@ -101,7 +105,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
         }
         //TODO check that operands are concrete and kill trace if they are not
         
-        //TODO resolve all parameter/exception types of all constructors!!!
+        //TODO resolve all parameter/return/exception types of all methods!!!
     }
 
     @Override
@@ -110,12 +114,12 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
             final ClassHierarchy hier = state.getClassHierarchy();
             final Calculator calc = state.getCalculator();
             
-            //gets the signatures of the constructors to emit; the position of the signature
-            //in sigConstructors indicates its slot
+            //gets the signatures of the methods to emit; the position of the signature
+            //in sigMethods indicates its slot
             final boolean onlyPublic = ((Simplex) this.data.operand(1)).surelyTrue();
-            final List<Signature> sigConstructors;
+            final List<Signature> sigMethods;
             try {
-                sigConstructors = Arrays.stream(this.thisClass.getDeclaredConstructors())
+                sigMethods = Arrays.stream(this.thisClass.getDeclaredMethods())
                 .map(sig -> {
                     try {
                         if (onlyPublic && !this.thisClass.isMethodPublic(sig)) {
@@ -136,7 +140,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                 throw e;
             }
 
-            final int numConstructors = sigConstructors.stream()
+            final int numMethods = sigMethods.stream()
             .map(s -> (s == null ? 0 : 1))
             .reduce(0, (a, b) -> a + b);
 
@@ -144,8 +148,8 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
             //builds the array to return
             ReferenceConcrete result = null; //to keep the compiler happy
             try {
-                final ClassFile cf_arraOfJAVA_CONSTRUCTOR = hier.loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_CONSTRUCTOR + TYPEEND);
-                result = state.createArray(null, state.getCalculator().valInt(numConstructors), cf_arraOfJAVA_CONSTRUCTOR);
+                final ClassFile cf_arraOfJAVA_METHOD = hier.loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_METHOD + TYPEEND);
+                result = state.createArray(null, state.getCalculator().valInt(numMethods), cf_arraOfJAVA_METHOD);
             } catch (HeapMemoryExhaustedException e) {
                 throwNew(state, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
@@ -154,20 +158,20 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                 throw new ClasspathException(e);
             }
 
-            //constructs the java.lang.reflect.Constructor objects and fills the array
+            //constructs the java.lang.reflect.Method objects and fills the array
             final Reference thisClassRef = (Reference) this.data.operand(0);
             final Array resultArray = (Array) state.getObject(result);
             int index = 0;
             int slot = 0;
-            for (Signature sigConstructor : sigConstructors) {
-                if (sigConstructor != null) {
-                    //creates an instance of java.lang.reflect.Constructor and 
+            for (Signature sigMethod : sigMethods) {
+                if (sigMethod != null) {
+                    //creates an instance of java.lang.reflect.Method and 
                     //puts it in the return array
-                    ReferenceConcrete constructorRef = null; //to keep the compiler happy
+                    ReferenceConcrete methodRef = null; //to keep the compiler happy
                     try {
-                        final ClassFile cf_JAVA_CONSTRUCTOR = hier.loadCreateClass(JAVA_CONSTRUCTOR);
-                        constructorRef = state.createInstance(cf_JAVA_CONSTRUCTOR);
-                        resultArray.setFast(calc.valInt(index) , constructorRef);
+                        final ClassFile cf_JAVA_METHOD = hier.loadCreateClass(JAVA_METHOD);
+                        methodRef = state.createInstance(cf_JAVA_METHOD);
+                        resultArray.setFast(calc.valInt(index) , methodRef);
                     } catch (HeapMemoryExhaustedException e) {
                         throwNew(state, OUT_OF_MEMORY_ERROR);
                         exitFromAlgorithm();
@@ -179,14 +183,14 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                         failExecution(e);
                     }
 
-                    //from here initializes the java.lang.reflect.Constructor instance
-                    final Instance constructor = (Instance) state.getObject(constructorRef);
+                    //from here initializes the java.lang.reflect.Method instance
+                    final Instance method = (Instance) state.getObject(methodRef);
 
                     //sets clazz
-                    constructor.setFieldValue(JAVA_CONSTRUCTOR_CLAZZ, thisClassRef);
+                    method.setFieldValue(JAVA_METHOD_CLAZZ, thisClassRef);
 
                     //sets slot
-                    constructor.setFieldValue(JAVA_CONSTRUCTOR_SLOT, calc.valInt(slot));
+                    method.setFieldValue(JAVA_METHOD_SLOT, calc.valInt(slot));
 
                     //gets class for Class[]
                     ClassFile cf_arraOfJAVA_CLASS = null; //to keep the compiler happy
@@ -196,13 +200,47 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                              WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException e) {
                         throw new ClasspathException(e);
                     }
-
-                    //sets parameterTypes
+                    
+                    //sets name
                     try {
+                        state.ensureStringLiteral(sigMethod.getName());
+                        method.setFieldValue(JAVA_METHOD_NAME, state.referenceToStringLiteral(sigMethod.getName()));
+                    } catch (HeapMemoryExhaustedException e) {
+                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                        exitFromAlgorithm();
+                    }
+
+                    //sets returnType and parameterTypes
+                    try {
+                        //sets returnType
+                        final String returnType = splitReturnValueDescriptor(sigMethod.getDescriptor());
+                        final ReferenceConcrete returnClassRef;
+                        if (isPrimitive(returnType) || isVoid(returnType)) {
+                            final String returnTypeNameCanonical = toPrimitiveOrVoidCanonicalName(returnType);
+                            try {
+                                state.ensureInstance_JAVA_CLASS_primitiveOrVoid(returnTypeNameCanonical);
+                            } catch (ClassFileNotFoundException e) {
+                                //this should never happen
+                                failExecution(e);
+                            }
+                            returnClassRef = state.referenceToInstance_JAVA_CLASS_primitiveOrVoid(returnTypeNameCanonical);
+                        } else if (isArray(returnType) || isReference(returnType)) {
+                            final String returnTypeClassName = className(returnType);
+                            //TODO *absolutely* put resolution of return type OUTSIDE (in cookMore)
+                            final ClassFile returnTypeClass = hier.resolveClass(this.thisClass, returnTypeClassName, state.bypassStandardLoading()); //note that the accessor is the owner of the constructor, i.e., the 'this' class
+                            state.ensureInstance_JAVA_CLASS(returnTypeClass);
+                            returnClassRef = state.referenceToInstance_JAVA_CLASS(returnTypeClass);
+                        } else {
+                            //this should never happen
+                            failExecution("Found an ill-formed descriptor (return type) in method signature " + sigMethod.toString() + ".");
+                            return; //to keep the compiler happy
+                        }
+                        method.setFieldValue(JAVA_METHOD_RETURNTYPE, returnClassRef);
+                        
                         //creates the array and puts it in parameterTypes
-                        final String[] params = splitParametersDescriptors(sigConstructor.getDescriptor());
+                        final String[] params = splitParametersDescriptors(sigMethod.getDescriptor());
                         final ReferenceConcrete arrayParamClassesRef = state.createArray(null, calc.valInt(params.length), cf_arraOfJAVA_CLASS);
-                        constructor.setFieldValue(JAVA_CONSTRUCTOR_PARAMETERTYPES, arrayParamClassesRef);
+                        method.setFieldValue(JAVA_METHOD_PARAMETERTYPES, arrayParamClassesRef);
                         final Array arrayParamClasses = (Array) state.getObject(arrayParamClassesRef);
                         
                         //populates parameterTypes
@@ -226,7 +264,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                                 paramClassRef = state.referenceToInstance_JAVA_CLASS(paramTypeClass);
                             } else {
                                 //this should never happen
-                                failExecution("Found an ill-formed descriptor (parameter type) in constructor signature " + sigConstructor.toString() + ".");
+                                failExecution("Found an ill-formed descriptor (parameter type) in method signature " + sigMethod.toString() + ".");
                                 return; //to keep the compiler happy
                             }
                             arrayParamClasses.setFast(calc.valInt(i), paramClassRef);
@@ -266,14 +304,15 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                     //sets exceptionTypes
                     try {
                         //creates the array and puts it in exceptionTypes
-                        final String[] exceptions = this.thisClass.getMethodThrownExceptions(sigConstructor);
+                        final String[] exceptions = this.thisClass.getMethodThrownExceptions(sigMethod);
                         final ReferenceConcrete arrayExcClassesRef = state.createArray(null, calc.valInt(exceptions.length), cf_arraOfJAVA_CLASS);
-                        constructor.setFieldValue(JAVA_CONSTRUCTOR_EXCEPTIONTYPES, arrayExcClassesRef);
+                        method.setFieldValue(JAVA_METHOD_EXCEPTIONTYPES, arrayExcClassesRef);
                         final Array arrayExcClasses = (Array) state.getObject(arrayExcClassesRef);
 
                         //populates exceptionTypes
                         int i = 0;
                         for (String excClassName : exceptions) {
+                            //TODO *absolutely* put resolution of exception types OUTSIDE (in cookMore)
                             final ClassFile excClass = hier.resolveClass(state.getCurrentClass(), excClassName, state.bypassStandardLoading());
                             state.ensureInstance_JAVA_CLASS(excClass);
                             final ReferenceConcrete excClazz = state.referenceToInstance_JAVA_CLASS(excClass);
@@ -318,18 +357,18 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
 
                     //sets modifiers
                     try {
-                        constructor.setFieldValue(JAVA_CONSTRUCTOR_MODIFIERS, calc.valInt(this.thisClass.getMethodModifiers(sigConstructor)));
+                        method.setFieldValue(JAVA_METHOD_MODIFIERS, calc.valInt(this.thisClass.getMethodModifiers(sigMethod)));
                     } catch (MethodNotFoundException e) {
                         //this should never happen
                         failExecution(e);
                     }
 
                     //sets override
-                    constructor.setFieldValue(JAVA_ACCESSIBLEOBJECT_OVERRIDE, calc.valBoolean(false));
+                    method.setFieldValue(JAVA_ACCESSIBLEOBJECT_OVERRIDE, calc.valBoolean(false));
 
                     //sets signature
                     try {
-                        final String sigType = this.thisClass.getMethodGenericSignatureType(sigConstructor);
+                        final String sigType = this.thisClass.getMethodGenericSignatureType(sigMethod);
                         final ReferenceConcrete refSigType;
                         if (sigType == null) {
                             refSigType = Null.getInstance();
@@ -337,7 +376,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                             state.ensureStringLiteral(sigType);
                             refSigType = state.referenceToStringLiteral(sigType);
                         }
-                        constructor.setFieldValue(JAVA_CONSTRUCTOR_SIGNATURE, refSigType);
+                        method.setFieldValue(JAVA_METHOD_SIGNATURE, refSigType);
                     } catch (HeapMemoryExhaustedException e) {
                         throwNew(state, OUT_OF_MEMORY_ERROR);
                         exitFromAlgorithm();
@@ -348,10 +387,10 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
 
                     //sets annotations
                     try {
-                        final byte[] annotations = this.thisClass.getMethodAnnotationsRaw(sigConstructor);
+                        final byte[] annotations = this.thisClass.getMethodAnnotationsRaw(sigMethod);
                         final ClassFile cf_arrayOfBYTE = hier.loadCreateClass("" + ARRAYOF + BYTE);
                         final ReferenceConcrete annotationsRef = state.createArray(null, calc.valInt(annotations.length), cf_arrayOfBYTE);
-                        constructor.setFieldValue(JAVA_CONSTRUCTOR_ANNOTATIONS, annotationsRef);
+                        method.setFieldValue(JAVA_METHOD_ANNOTATIONS, annotationsRef);
 
                         //populates annotations
                         final Array annotationsArray = (Array) state.getObject(annotationsRef);
@@ -370,7 +409,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                         failExecution(e);
                     }
 
-                    //TODO parameterAnnotations
+                    //TODO parameterAnnotations, annotationDefault, (??) typeAnnotations
 
                     ++index;
                 }
