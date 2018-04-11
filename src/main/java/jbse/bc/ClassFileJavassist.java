@@ -968,7 +968,7 @@ public class ClassFileJavassist extends ClassFile {
         if (exc == null) {
             return new String[0];
         }
-        return exc.getExceptions();
+        return Arrays.stream(exc.getExceptions()).map(Type::internalClassName).toArray(String[]::new);
     }
 
     @Override
