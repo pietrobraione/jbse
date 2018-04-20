@@ -1,7 +1,6 @@
 package jbse.dec;
 
 import jbse.bc.ClassFile;
-import jbse.val.MemoryPath;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -24,12 +23,12 @@ interface DecisionAlternativeReferenceFactory<DA, DE, DN> {
      * @param referenceToResolve the {@link ReferenceSymbolic} loaded from the field/variable/array.
      * @param objectPosition a {@code long}, the position in the heap of the object
      *        {@code referenceToResolve} refers to.
-     * @param objectOrigin a {@link MemoryPath}, the origin of the object {@code referenceToResolve} 
+     * @param objectOrigin a {@link ReferenceSymbolic}, the origin of the object {@code referenceToResolve} 
      *        refers to.
      * @param branchNumber an {@code int}, the branch number.
      * @return a {@code DA}.
      */
-    DA createAlternativeRefAliases(ReferenceSymbolic referenceToResolve, long objectPosition, MemoryPath objectOrigin, int branchNumber);
+    DA createAlternativeRefAliases(ReferenceSymbolic referenceToResolve, long objectPosition, ReferenceSymbolic objectOrigin, int branchNumber);
     
     /**
      * Factory method for a {@code DE}.

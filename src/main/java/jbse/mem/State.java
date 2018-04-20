@@ -73,7 +73,8 @@ import jbse.mem.exc.InvalidNumberOfOperandsException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Calculator;
 import jbse.val.Expression;
-import jbse.val.MemoryPath;
+import jbse.val.HistoryPoint;
+import jbse.val.KlassPseudoReference;
 import jbse.val.Null;
 import jbse.val.Primitive;
 import jbse.val.PrimitiveSymbolic;
@@ -93,7 +94,7 @@ import sun.misc.Unsafe;
 public final class State implements Cloneable {
     /** The slot number of the "this" (method receiver) object. */
     private static final int ROOT_THIS_SLOT = 0;
-    
+
     /**
      * Class that stores the information about a raw memory
      * block allocated to support {@link sun.misc.Unsafe}
@@ -208,13 +209,8 @@ public final class State implements Cloneable {
      */
     private final boolean bypassStandardLoading;
 
-    /** 
-     * The identifier of the state in the execution tree.
-     */
-    private String identifier = "";
-
-    /** The sequence number of the state along an execution tree branch. */
-    private int sequenceNumber = 0;
+    /** The {@link HistoryPoint} of this state. */
+    private HistoryPoint historyPoint = null;
     
     /** 
      * Flag indicating whether the current state was produced by a
@@ -1476,14 +1472,15 @@ public final class State implements Cloneable {
     }
 
     /**
-     * Creates a concrete {@link Klass} object and loads it in the 
+     * Creates a concrete {@link Klass} object and puts it in the 
      * static area of this state. It does not initialize the constant 
      * fields nor loads on the stack of the state the frames for the
      * {@code <clinit>} methods. It does not create {@link Klass} objects
      * for superclasses. If the {@link Klass} already exists it does nothing.
      * 
-     * @param classFile a {@link ClassFile}. The method 
-     *        creates and loads a {@link Klass} object only for {@code classFile}, 
+     * @param classFile the {@link ClassFile} of the class for which
+     *        the {@link Klass} object must be created. The method 
+     *        creates a {@link Klass} object only for {@code classFile}, 
      *        not for its superclasses in the hierarchy.
      */
     public void ensureKlass(ClassFile classFile) {
@@ -1498,13 +1495,16 @@ public final class State implements Cloneable {
     }
 
     /**
-     * Creates a symbolic {@link Klass} object and loads it in the 
+     * Creates a symbolic {@link Klass} object and puts it in the 
      * static area of this state. It does not initialize the constant 
      * fields. It does not create {@link Klass} objects
      * for superclasses. If the {@link Klass} already exists it 
      * does nothing.
      * 
-     * @param className the name of the class to be loaded.
+     * @param classFile the {@link ClassFile} of the class for which
+     *        the {@link Klass} object must be created. The method 
+     *        creates a {@link Klass} object only for {@code classFile}, 
+     *        not for its superclasses in the hierarchy.
      * @throws InvalidIndexException if the access to the class 
      *         constant pool fails.
      */
@@ -1514,7 +1514,7 @@ public final class State implements Cloneable {
         }
         final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
-        final Klass k = new Klass(this.calc, MemoryPath.mkStatic(classFile), Objekt.Epoch.EPOCH_BEFORE_START, numOfStaticFields, fieldsSignatures);
+        final Klass k = new Klass(this.calc, createSymbolKlassPseudoReference(classFile), Objekt.Epoch.EPOCH_BEFORE_START, numOfStaticFields, fieldsSignatures);
         initWithSymbolicValues(k);
         k.setObjektDefaultHashCode(this.calc.valInt(0)); //doesn't care because it is not used
         this.staticMethodArea.set(classFile, k);
@@ -1526,7 +1526,7 @@ public final class State implements Cloneable {
      * values.
      *  
      * @param classFile a {@link ClassFile} for either an object or an array class.
-     * @param origin a {@link MemoryPath}, the origin of the object.
+     * @param origin a {@link ReferenceSymbolic}, the origin of the object.
      * @return a {@code long}, the position in the heap of the newly 
      *         created object.
      * @throws NullPointerException if {@code origin} is {@code null}.
@@ -1536,7 +1536,7 @@ public final class State implements Cloneable {
      *         a class that cannot be assumed to be symbolic
      *         (currently {@code java.lang.Class} and {@code java.lang.ClassLoader}).
      */
-    private long createObjectSymbolic(ClassFile classFile, MemoryPath origin) 
+    private long createObjectSymbolic(ClassFile classFile, ReferenceSymbolic origin) 
     throws InvalidTypeException, HeapMemoryExhaustedException, 
     CannotAssumeSymbolicObjectException {
         if (origin == null) {
@@ -1568,15 +1568,15 @@ public final class State implements Cloneable {
         return pos;
     }
 
-    private Array newArraySymbolic(ClassFile arrayClass, MemoryPath origin, boolean isInitial) 
+    private Array newArraySymbolic(ClassFile arrayClass, ReferenceSymbolic origin, boolean isInitial) 
     throws InvalidTypeException {
-        final Primitive length = (Primitive) createSymbol("" + Type.INT, origin.thenArrayLength());
+        final Primitive length = (Primitive) createSymbolMemberArrayLength(origin);
         final Array obj = new Array(this.calc, true, null, length, arrayClass, origin, Epoch.EPOCH_BEFORE_START, isInitial, this.maxSimpleArrayLength);
         initDefaultHashCodeSymbolic(obj);
         return obj;
     }
 
-    private Instance newInstanceSymbolic(ClassFile classFile, MemoryPath origin) 
+    private Instance newInstanceSymbolic(ClassFile classFile, ReferenceSymbolic origin) 
     throws CannotAssumeSymbolicObjectException, InvalidTypeException {
         if (JAVA_CLASS.equals(classFile.getClassName()) || JAVA_CLASSLOADER.equals(classFile.getClassName())) {
             throw new CannotAssumeSymbolicObjectException(classFile.getClassName());
@@ -1604,7 +1604,7 @@ public final class State implements Cloneable {
             //builds a symbolic value from signature and name 
             //and assigns it to the field
             myObj.setFieldValue(fieldSignature, 
-                                createSymbol(fieldType, myObj.getOrigin().thenField(fieldName)));
+                                createSymbolMemberField(fieldType, myObj.getOrigin(), fieldName));
         }
     }
 
@@ -1618,13 +1618,14 @@ public final class State implements Cloneable {
     private void initDefaultHashCodeConcrete(Objekt myObj, ReferenceConcrete myRef) {
         myObj.setObjektDefaultHashCode(this.calc.valInt((int) myRef.getHeapPosition()));
     }
+    
     /**
      * Initializes the hash code of an {@link Objekt} with a symbolic value.
      * 
      * @param myObj the {@link Objekt} whose hash code will be initialized.
      */
     private void initDefaultHashCodeSymbolic(Objekt myObj) {
-        myObj.setObjektDefaultHashCode((PrimitiveSymbolic) createSymbol("" + Type.INT, myObj.getOrigin().thenHashCode()));
+        myObj.setObjektDefaultHashCode((PrimitiveSymbolic) createSymbolHashCode(myObj.getOrigin()));
     }
 
     /**
@@ -2203,9 +2204,9 @@ public final class State implements Cloneable {
         final Value[] args = new Value[numArgs];
         for (int i = 0, slot = 0; i < numArgs; ++i) {
             //builds a symbolic value from signature and name
-            final MemoryPath origin = MemoryPath.mkLocalVariable(f.getLocalVariableDeclaredName(slot));
+            final String variableName = f.getLocalVariableDeclaredName(slot);
             if (slot == ROOT_THIS_SLOT && !isStatic) {
-                args[i] = createSymbol(Type.REFERENCE + currentClassName + Type.TYPEEND, origin);
+                args[i] = createSymbolLocalVariable(Type.REFERENCE + currentClassName + Type.TYPEEND, variableName);
                 //must assume {ROOT}:this expands to nonnull object (were it null the frame would not exist!)
                 try {
                     assumeExpands((ReferenceSymbolic) args[i], currentClass);
@@ -2214,7 +2215,7 @@ public final class State implements Cloneable {
                     throw new UnexpectedInternalException(e);
                 }
             } else {
-                args[i] = createSymbol(paramsDescriptors[(isStatic ? i : i - 1)], origin);
+                args[i] = createSymbolLocalVariable(paramsDescriptors[(isStatic ? i : i - 1)], variableName);
             }
 
             //next slot
@@ -2599,7 +2600,7 @@ public final class State implements Cloneable {
         if (resolved(r)) {
             throw new ContradictionException();
         }
-        final long pos = createObjectSymbolic(classFile, r.getOrigin());
+        final long pos = createObjectSymbolic(classFile, r);
         final Objekt o = this.heap.getObject(pos);
         this.pathCondition.addClauseAssumeExpands(r, pos, o);
         ++this.nPushedClauses;
@@ -2814,25 +2815,57 @@ public final class State implements Cloneable {
     }
     
     /**
-     * Sets the state's identifier to the
-     * empty {@link String}.
+     * Sets the state's {@link HistoryPoint} as the
+     * starting pre-initial one.
+     * 
+     * @param compact a {@code boolean}, whether the stringified
+     * history point should be compact.
      */
-    public void clearIdentifier() {
-        this.identifier = "";
+    public void setPreInitialHistoryPoint(boolean compact) {
+        this.historyPoint = HistoryPoint.preInitial(compact);
     }
 
     /**
-     * Adds a suffix to the state's identifier.
+     * Sets the state's {@link HistoryPoint} as the
+     * initial one.
      * 
-     * @param identifierSuffix 
-     *        a {@link String} representing the suffix to be 
-     *        appended to the state's identifier.
-     * @param increase 
+     * @param compact a {@code boolean}, whether the stringified
+     * history point should be compact.
      */
-    public void appendToIdentifier(String identifierSuffix) {
-        this.identifier += identifierSuffix;
+    public void setInitialHistoryPoint() {
+        this.historyPoint = this.historyPoint.initial();
     }
 
+    /**
+     * Adds a branch to the state's {@link HistoryPoint}.
+     * 
+     * @param additionalBranch 
+     *        a {@link String} representing the identifier
+     *        of the subbranch to be added to the state's
+     *        {@link HistoryPoint}.
+     */
+    public void addBranchToHistoryPoint(String additionalBranch) {
+        this.historyPoint = this.historyPoint.nextBranch(additionalBranch);
+    }
+    
+    /**
+     * Gets the state's {@link HistoryPoint}.
+     * 
+     * @return a {@link HistoryPoint}.
+     */
+    public HistoryPoint getHistoryPoint() {
+        return this.historyPoint;
+    }
+
+    /**
+     * Gets the state's branch identifier.
+     * 
+     * @return a {@link String} representing the 
+     *         state's branch identifier.
+     */
+    public String getIdentifier() {
+        return this.historyPoint.getBranchIdentifier();
+    }
 
     /**
      * Sets the state's depth to {@code 1}.
@@ -2884,16 +2917,6 @@ public final class State implements Cloneable {
     }
 
     /**
-     * Gets the state's identifier.
-     * 
-     * @return a {@link String} representing the 
-     *         state's identifier.
-     */
-    public String getIdentifier() {
-        return this.identifier;
-    }
-
-    /**
      * Sets whether the current state was produced by 
      * a branching decision.
      * 
@@ -2922,17 +2945,10 @@ public final class State implements Cloneable {
     }
 
     /**
-     * Sets the state's sequence number to {@code 0}.
-     */
-    public void resetSequenceNumber() {
-        this.sequenceNumber = 0;
-    }
-
-    /**
      * Increments the state's sequence number by {@code 1}.
      */
     public void incSequenceNumber() {
-        ++this.sequenceNumber;
+        this.historyPoint = this.historyPoint.next();
     }
 
     /**
@@ -2942,9 +2958,9 @@ public final class State implements Cloneable {
      *         state's sequence number.  
      */
     public int getSequenceNumber() {
-        return this.sequenceNumber;
+        return this.historyPoint.getSequenceNumber();
     }
-
+		
     /**
      * Returns the number of assumed object of a given class.
      * 
@@ -2969,13 +2985,13 @@ public final class State implements Cloneable {
      */
     public void refine(State stateRefining) throws CannotRefineException {
         //TODO this method doesn't work with arrays!!!
-        final String refiningIdentifier = stateRefining.identifier;
+        final HistoryPoint refiningHistoryPoint = stateRefining.historyPoint;
         final PathCondition refiningPathCondition = stateRefining.pathCondition;
 
         //checks that stateRefining refines this state, and 
         //gets an iterator to the additional clauses
         final Iterator<Clause> iRefining;
-        if (refiningIdentifier.startsWith(this.identifier)) {
+        if (this.historyPoint.comesBefore(refiningHistoryPoint)) {
             iRefining = refiningPathCondition.refines(this.pathCondition);
             if (iRefining == null) {
                 throw new CannotRefineException();
@@ -3010,18 +3026,100 @@ public final class State implements Cloneable {
     }
 
     /**
-     * A Factory Method for creating both reference and primitive 
-     * symbolic values.
+     * A Factory Method for creating symbolic values. The symbol
+     * has as origin a local variable in the root frame.
      * 
      * @param staticType a {@link String}, the static type of the
-     *        variable from which this reference originates (as 
-     *        from {@code origin}).
-     * @param origin a {@link MemoryPath}, the origin of this reference.
+     *        local variable from which the symbol originates.
+     * @param variableName a {@link String}, the name of the local 
+     *        variable in the root frame the symbol originates from.
      * @return a {@link PrimitiveSymbolic} or a {@link ReferenceSymbolic}
-     *         according to {@code descriptor}.
+     *         according to {@code staticType}.
      */
-    public Value createSymbol(String staticType, MemoryPath origin) {
-        return this.symbolFactory.createSymbol(staticType, origin);
+    public Value createSymbolLocalVariable(String staticType, String variableName) {
+        return this.symbolFactory.createSymbolLocalVariable(staticType, variableName);
+    }
+	
+    /**
+     * A Factory Method for creating symbolic values. The symbol
+     * is a (pseudo)reference to a {@link Klass}.
+     * 
+     * @param classFile the {@link ClassFile} for the {@link Klass} to be referred.
+     * @return a {@link KlassPseudoReference}.
+     */
+    public KlassPseudoReference createSymbolKlassPseudoReference(ClassFile classFile) {
+        return this.symbolFactory.createSymbolKlassPseudoReference(classFile);
+    }
+
+    /**
+     * A Factory Method for creating symbolic values. The symbol
+     * has as origin a field in an object (non array). 
+     * 
+     * @param staticType a {@link String}, the static type of the
+     *        local variable from which the symbol originates.
+     * @param container a {@link ReferenceSymbolic}, the container object
+     *        the symbol originates from. It must not refer an array.
+     * @param fieldName a {@link String}, the name of the field in the 
+     *        container object the symbol originates from.
+     * @return a {@link PrimitiveSymbolic} or a {@link ReferenceSymbolic}
+     *         according to {@code staticType}.
+     */
+    public Value createSymbolMemberField(String staticType, ReferenceSymbolic container, String fieldName) {
+        return this.symbolFactory.createSymbolMemberField(staticType, container, fieldName);
+    }
+
+    /**
+     * A Factory Method for creating symbolic values. The symbol
+     * has as origin a slot in an array.  
+     * 
+     * @param staticType a {@link String}, the static type of the
+     *        local variable from which the symbol originates.
+     * @param container a {@link ReferenceSymbolic}, the container object
+     *        the symbol originates from. It must refer an array.
+     * @param index a {@link Primitive}, the index of the slot in the 
+     *        container array this symbol originates from.
+     * @return a {@link PrimitiveSymbolic} or a {@link ReferenceSymbolic}
+     *         according to {@code staticType}.
+     */
+    public Value createSymbolMemberArray(String staticType, ReferenceSymbolic container, Primitive index) {
+        return this.symbolFactory.createSymbolMemberArray(staticType, container, index);
+    }
+
+    /**
+     * A Factory Method for creating symbolic values. The symbol
+     * has as origin the length of an array.  
+     * 
+     * @param container a {@link ReferenceSymbolic}, the container object
+     *        the symbol originates from. It must refer an array.
+     * @return a {@link PrimitiveSymbolic}.
+     */
+    public PrimitiveSymbolic createSymbolMemberArrayLength(ReferenceSymbolic container) {
+        return this.symbolFactory.createSymbolMemberArrayLength(container);
+    }
+
+    /**
+     * A Factory Method for creating symbolic values. The symbol
+     * has as origin the hash code of an object (the object exists
+     * in the initial heap).  
+     * 
+     * @param container a {@link ReferenceSymbolic}, the container object
+     *        the symbol originates from.
+     * @return a {@link PrimitiveSymbolic}.
+     */
+    public PrimitiveSymbolic createSymbolHashCode(ReferenceSymbolic container) {
+        return this.symbolFactory.createSymbolHashCode(container);
+    }
+
+    /**
+     * A Factory Method for creating symbolic values. The symbol
+     * has as origin the hash code of an object (the object does
+     * not exist in the initial heap).  
+     * 
+     * @param historyPoint the current {@link HistoryPoint}.
+     * @return a {@link PrimitiveSymbolic}.
+     */
+    public PrimitiveSymbolic createSymbolHashCode(HistoryPoint historyPoint) {
+        return this.symbolFactory.createSymbolHashCode(historyPoint);
     }
 
     /**
@@ -3132,7 +3230,7 @@ public final class State implements Cloneable {
 
     @Override
     public String toString() {
-        String tmp = "[ID:\"" + this.identifier + "[" + this.sequenceNumber + "]\", ";
+        String tmp = "[ID:\"" + this.historyPoint.toString() + "\", ";
         if (this.isStuck()) {
             tmp += "Stuck, ";
             if (this.exc != null) 

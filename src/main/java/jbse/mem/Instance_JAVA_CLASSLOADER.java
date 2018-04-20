@@ -3,7 +3,7 @@ package jbse.mem;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.val.Calculator;
-import jbse.val.MemoryPath;
+import jbse.val.ReferenceSymbolic;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -14,7 +14,7 @@ public final class Instance_JAVA_CLASSLOADER extends Instance {
     /** The identifier of this classloader. It must be >= 1. */
     private final int classLoaderIdentifier;
     
-    protected Instance_JAVA_CLASSLOADER(Calculator calc, ClassFile classFile, MemoryPath origin, Epoch epoch, int classLoaderIdentifier, int numOfStaticFields, Signature... fieldSignatures) 
+    protected Instance_JAVA_CLASSLOADER(Calculator calc, ClassFile classFile, ReferenceSymbolic origin, Epoch epoch, int classLoaderIdentifier, int numOfStaticFields, Signature... fieldSignatures) 
     throws InvalidTypeException {
         super(calc, classFile, origin, epoch, numOfStaticFields, fieldSignatures);
         if (classFile == null) {

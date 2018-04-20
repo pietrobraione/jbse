@@ -4,11 +4,11 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.rewr.exc.NoResultException;
 import jbse.val.Any;
 import jbse.val.Expression;
-import jbse.val.FunctionApplication;
+import jbse.val.PrimitiveSymbolicApply;
+import jbse.val.PrimitiveSymbolicAtomic;
 import jbse.val.NarrowingConversion;
 import jbse.val.Operator;
 import jbse.val.Primitive;
-import jbse.val.PrimitiveSymbolic;
 import jbse.val.PrimitiveVisitor;
 import jbse.val.Simplex;
 import jbse.val.Term;
@@ -54,7 +54,7 @@ public class RewriterAbsSum extends Rewriter {
 		//reduces the term of comparison to a polynomial and 
 		//searches an abs(X) monomial in it
 		final Polynomial subExprPolynomial = Polynomial.of(this.calc, subExpr);
-		final FunctionApplication abs = findAbs(subExprPolynomial.toPrimitive());
+		final PrimitiveSymbolicApply abs = findAbs(subExprPolynomial.toPrimitive());
 		if (abs == null) {
 			super.rewriteExpression(x);
 			return;
@@ -64,7 +64,7 @@ public class RewriterAbsSum extends Rewriter {
 		try {
 			final char absType = abs.getType();
 			final Primitive minusOne = this.calc.valInt(-1).to(absType);
-			final Primitive absArg = abs.getArgs()[0];
+			final Primitive absArg = (Primitive) abs.getArgs()[0];
 			final Simplex absMultiplier = subExprPolynomial.getMultiplier(Monomial.of(this.calc, abs));
 			final boolean absNegated;
 			final Primitive toRemove;
@@ -98,7 +98,7 @@ public class RewriterAbsSum extends Rewriter {
 		}
 	}
 
-	private FunctionApplication findAbs(Primitive x) {
+	private PrimitiveSymbolicApply findAbs(Primitive x) {
 		final AbsPrimitiveVisitor absVisitor = new AbsPrimitiveVisitor();
 		try {
 			x.accept(absVisitor);
@@ -110,7 +110,7 @@ public class RewriterAbsSum extends Rewriter {
 	}
 
 	private static class AbsPrimitiveVisitor implements PrimitiveVisitor {
-		FunctionApplication abs = null;
+		PrimitiveSymbolicApply abs = null;
 
 		@Override
 		public void visitAny(Any x) { }
@@ -125,8 +125,8 @@ public class RewriterAbsSum extends Rewriter {
 		}
 
 		@Override
-		public void visitFunctionApplication(FunctionApplication x) {
-			if (x.getOperator().equals(FunctionApplication.ABS)) {
+		public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) {
+			if (x.getOperator().equals(PrimitiveSymbolicApply.ABS)) {
 				this.abs = x;
 			}
 		}
@@ -138,7 +138,7 @@ public class RewriterAbsSum extends Rewriter {
 		public void visitNarrowingConversion(NarrowingConversion x) { }
 
 		@Override
-		public void visitPrimitiveSymbolic(PrimitiveSymbolic s) { }
+		public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) { }
 
 		@Override
 		public void visitSimplex(Simplex x) throws Exception { }

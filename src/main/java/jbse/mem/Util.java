@@ -1,7 +1,5 @@
 package jbse.mem;
 
-import java.util.ArrayList;
-
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isReference;
 
@@ -12,7 +10,6 @@ import jbse.val.ReferenceArrayImmaterial;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Value;
-import jbse.val.exc.InvalidTypeException;
 
 /**
  * Some utility functions and constants.
@@ -143,27 +140,6 @@ public class Util {
 		v instanceof ReferenceConcrete ||
         v instanceof ReferenceArrayImmaterial ||
 		isResolvedSymbolicReference(s, v);
-	}
-	
-	/**
-	 * Casts an array of {@link Value}s into an array of 
-	 * {@link Primitive}s.
-	 * 
-	 * @param args an array of {@link Value}s.
-	 * @return the array of the elements in {@code args} cast to
-	 *         {@link Primitive}, in same order.
-	 */
-	private static final Primitive[] ARRAY_OF_PRIMITIVES = new Primitive[] { }; //foo
-	public static Primitive[] toPrimitive(Value[] args) throws InvalidTypeException {
-		final ArrayList<Primitive> retVal = new ArrayList<Primitive>();
-		for (Value arg : args) {
-			if (arg instanceof Primitive) {
-				retVal.add((Primitive) arg);
-			} else {
-				throw new InvalidTypeException("not all the arguments are primitive");
-			}
-		}
-		return retVal.toArray(ARRAY_OF_PRIMITIVES);
 	}
 	
 	/**

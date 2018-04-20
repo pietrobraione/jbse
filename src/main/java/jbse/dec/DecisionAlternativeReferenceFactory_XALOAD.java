@@ -5,7 +5,6 @@ import jbse.tree.DecisionAlternative_XALOAD_Aliases;
 import jbse.tree.DecisionAlternative_XALOAD_Expands;
 import jbse.tree.DecisionAlternative_XALOAD_Null;
 import jbse.val.Expression;
-import jbse.val.MemoryPath;
 import jbse.val.Reference;
 import jbse.val.ReferenceSymbolic;
 
@@ -41,7 +40,7 @@ DecisionAlternative_XALOAD_Expands, DecisionAlternative_XALOAD_Null> {
 
     @Override
     public DecisionAlternative_XALOAD_Aliases 
-    createAlternativeRefAliases(ReferenceSymbolic referenceToResolve, long objectPosition, MemoryPath objectOrigin, int branchNumber) {
+    createAlternativeRefAliases(ReferenceSymbolic referenceToResolve, long objectPosition, ReferenceSymbolic objectOrigin, int branchNumber) {
         return new DecisionAlternative_XALOAD_Aliases(this.arrayAccessExpression, referenceToResolve, this.fresh,
                                                       this.arrayReference, objectPosition, objectOrigin, branchNumber);
     }

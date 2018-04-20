@@ -3,7 +3,7 @@ package jbse.rewr;
 import static org.junit.Assert.assertEquals;
 
 import jbse.common.Type;
-import jbse.val.FunctionApplication;
+import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.Primitive;
 import jbse.val.Term;
 import jbse.val.exc.InvalidOperandException;
@@ -25,7 +25,7 @@ public class RewriterTanTest {
 	public void testSimple1() throws InvalidOperandException, InvalidTypeException {
 		//sin(A) / cos(A) -> tan(A)
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
-		final Primitive p_post = calc.applyFunction(Type.DOUBLE, FunctionApplication.SIN, A).div(calc.applyFunction(Type.DOUBLE, FunctionApplication.COS, A)); 
-		assertEquals(calc.applyFunction(Type.DOUBLE, FunctionApplication.TAN, A), p_post);
+		final Primitive p_post = calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.SIN, A).div(calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.COS, A)); 
+		assertEquals(calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.TAN, A), p_post);
 	}
 }

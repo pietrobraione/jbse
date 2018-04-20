@@ -5,7 +5,7 @@ import java.util.Map;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.val.Calculator;
-import jbse.val.MemoryPath;
+import jbse.val.ReferenceSymbolic;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -18,8 +18,8 @@ public class Instance extends Objekt {
      * @param calc a {@link Calculator}.
      * @param classFile a {@code classFile}, the class of 
      *        this {@link Instance}; It must be {@code classFile.}{@link ClassFile#isReference() isReference}{@code () == true}.
-     * @param origin the origin of the {@code Instance}, if symbolic, 
-     *        or {@code null}, if concrete.
+     * @param origin the {@link ReferenceSymbolic} providing origin of 
+     *        the {@code Instance}, if symbolic, or {@code null}, if concrete.
      * @param epoch the creation {@link Epoch} of this {@link Instance}. 
      *        It can be null when
      *        {@code epoch == }{@link Epoch#EPOCH_AFTER_START}.
@@ -28,7 +28,7 @@ public class Instance extends Objekt {
      *        fields this instance knows.
      * @throws InvalidTypeException iff {@code classFile} is invalid. 
      */
-    protected Instance(Calculator calc, ClassFile classFile, MemoryPath origin, Epoch epoch, int numOfStaticFields, Signature... fieldSignatures) 
+    protected Instance(Calculator calc, ClassFile classFile, ReferenceSymbolic origin, Epoch epoch, int numOfStaticFields, Signature... fieldSignatures) 
     throws InvalidTypeException {
         super(calc, classFile, origin, epoch, false, numOfStaticFields, fieldSignatures);
         if (classFile == null || !classFile.isReference()) {

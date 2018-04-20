@@ -39,11 +39,11 @@ public class TriggerRuleAliasesOrigin extends TriggerRuleAliases {
 	@Override
 	public boolean satisfies(ReferenceSymbolic ref, Objekt o) {
 		//builds the pattern
-		final String valueForAny = findAny(this.originExp, ref.getOrigin());
+		final String valueForAny = findAny(this.originExp, ref);
 		final String specializedPathAllowedExp = specializeAny(this.pathAllowedExp, valueForAny);
-		final Pattern p = makePatternRelative(specializedPathAllowedExp, ref.getOrigin());
+		final Pattern p = makePatternRelative(specializedPathAllowedExp, ref);
 		//checks if the origin of o matches the pattern
-		final Matcher m = p.matcher(o.getOrigin().toString());
+		final Matcher m = p.matcher(o.getOrigin().asOriginString());
 		final boolean retVal = m.matches();
 		
 		return retVal;

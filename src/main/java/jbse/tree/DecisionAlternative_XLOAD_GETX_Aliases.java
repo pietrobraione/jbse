@@ -1,6 +1,5 @@
 package jbse.tree;
 
-import jbse.val.MemoryPath;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -20,12 +19,12 @@ public final class DecisionAlternative_XLOAD_GETX_Aliases extends DecisionAltern
      * @param referenceToResolve the {@link ReferenceSymbolic} loaded from the field/variable.
      * @param objectPosition a {@code long}, the position in the heap of the object
      *        {@code referenceToResolve} refers to.
-     * @param objectOrigin a {@link MemoryPath}, the origin of the object {@code referenceToResolve} 
+     * @param objectOrigin a {@link ReferenceSymbolic}, the origin of the object {@code referenceToResolve} 
      *        refers to.
      * @param branchNumber an {@code int}, the branch number.
      */
-    public DecisionAlternative_XLOAD_GETX_Aliases(ReferenceSymbolic referenceToResolve, long objectPosition, MemoryPath objectOrigin, int branchNumber) {
-        super(ALT_CODE + "_Aliases:" + objectOrigin.toString(), referenceToResolve, branchNumber);
+    public DecisionAlternative_XLOAD_GETX_Aliases(ReferenceSymbolic referenceToResolve, long objectPosition, ReferenceSymbolic objectOrigin, int branchNumber) {
+        super(ALT_CODE + "_Aliases:" + objectOrigin.asOriginString(), referenceToResolve, branchNumber);
         this.objectPosition = objectPosition;
         final int prime = 7573;
         int result = super.hashCode();

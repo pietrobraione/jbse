@@ -1,7 +1,6 @@
 package jbse.tree;
 
 import jbse.val.Expression;
-import jbse.val.MemoryPath;
 import jbse.val.Reference;
 import jbse.val.ReferenceSymbolic;
 
@@ -29,13 +28,13 @@ extends DecisionAlternative_XALOAD_Unresolved implements DecisionAlternative_XYL
      *        where {@code valueToLoad} originates from.
      * @param objectPosition a {@code long}, the position in the heap of the object
      *        {@code referenceToResolve} refers to.
-     * @param objectOrigin a {@link MemoryPath}, the origin of the object {@code referenceToResolve} 
+     * @param objectOrigin a {@link ReferenceSymbolic}, the origin of the object {@code referenceToResolve} 
      *        refers to.
      * @param branchNumber an {@code int}, the branch number.
      */
     public DecisionAlternative_XALOAD_Aliases(Expression arrayAccessExpression, ReferenceSymbolic referenceToResolve, boolean fresh,
-                                              Reference arrayReference, long objectPosition, MemoryPath objectOrigin, int branchNumber) {
-        super(ALT_CODE + "_Aliases:" + arrayAccessExpression + ":" + objectOrigin.toString(), arrayAccessExpression, referenceToResolve, fresh, arrayReference, branchNumber);
+                                              Reference arrayReference, long objectPosition, ReferenceSymbolic objectOrigin, int branchNumber) {
+        super(ALT_CODE + "_Aliases:" + arrayAccessExpression + ":" + objectOrigin.asOriginString(), arrayAccessExpression, referenceToResolve, fresh, arrayReference, branchNumber);
         this.objectPosition = objectPosition;
         final int prime = 1733;
         int result = super.hashCode();

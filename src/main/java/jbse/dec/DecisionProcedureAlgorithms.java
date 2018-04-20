@@ -1045,8 +1045,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		if (refToResolveTypeIsSatInitialized) {
 		    final Map<Long, Objekt> possibleAliases = getPossibleAliases(state, refToResolveClass);
 		    if (possibleAliases == null) {
-		        throw new UnexpectedInternalException("Symbolic reference " + refToResolve + 
-		                                              " (" + refToResolve.getOrigin() + ") has a bad type " + refToResolve.getStaticType() + ".");
+		        throw new UnexpectedInternalException("Symbolic reference " + refToResolve.toString() + 
+		                                              " (" + refToResolve.asOriginString() + ") has a bad type " + refToResolve.getStaticType() + ".");
 		    }
 		    for (Map.Entry<Long, Objekt> ae : possibleAliases.entrySet()) {
 		        final long i = ae.getKey();
@@ -1065,7 +1065,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
                     final Set<ClassFile> possibleExpansions = getPossibleExpansions(state, refToResolveClass); //TODO incapsulate thrown exceptions (class file not found, ill-formed or unaccessible) as effect in each decision alternative, or just skip class and report cumulatively these missed class as non-expanded references
                     if (possibleExpansions == null) {
                             throw new UnexpectedInternalException("Symbolic reference " + refToResolve + 
-                                            " (" + refToResolve.getOrigin() + ") has a bad type " + refToResolve.getStaticType() + ".");
+                                            " (" + refToResolve.asOriginString() + ") has a bad type " + refToResolve.getStaticType() + ".");
                     }
                     for (ClassFile expansionClass : possibleExpansions) {
                         if (isSatInitialized(hier, expansionClass) && isSatExpands(hier, refToResolve, expansionClass)) {

@@ -2,8 +2,8 @@ package jbse.val;
 
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
+import jbse.val.PrimitiveSymbolic;
 import jbse.val.exc.InvalidTypeException;
-import jbse.val.exc.ValueDoesNotSupportNativeException;
 
 /**
  * The boolean value on the top of the information lattice of booleans.
@@ -13,7 +13,7 @@ import jbse.val.exc.ValueDoesNotSupportNativeException;
  * 
  * @author Pietro Braione
  */
-public final class Any extends Primitive {
+public final class Any extends PrimitiveSymbolic {
     private Any(Calculator calc) throws InvalidTypeException {
         super(Type.BOOLEAN, calc);
     }
@@ -26,30 +26,15 @@ public final class Any extends Primitive {
             throw new UnexpectedInternalException(e);
         }
     }
-
+    
     @Override
-    public Object getValueForNative() throws ValueDoesNotSupportNativeException {
-        throw new ValueDoesNotSupportNativeException();
-    }
-
-    @Override
-    public boolean surelyTrue() {
-        return false;
-    }
-
-    @Override
-    public boolean surelyFalse() {
-        return false;
+    public String asOriginString() {
+        return "*";
     }
 
     @Override
     public void accept(PrimitiveVisitor v) throws Exception { 
         v.visitAny(this);
-    }
-
-    @Override
-    public boolean isSymbolic() {
-        return true;
     }
 
     @Override

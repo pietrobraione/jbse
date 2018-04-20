@@ -168,7 +168,7 @@ public class TriggerManager {
                 for (TriggerRuleAliases rule : rulesMax) {
                     if (rule.satisfies(ref, o)) {
                         for (Objekt oOther : s.objectsSymbolic()) {
-                            if (o.getOrigin().toString().length() < oOther.getOrigin().toString().length() && 
+                            if (o.getOrigin().asOriginString().length() < oOther.getOrigin().asOriginString().length() && 
                                 rule.satisfies(ref, oOther)) {
                                 continue nextRule;
                             }

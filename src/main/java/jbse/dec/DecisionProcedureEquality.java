@@ -11,7 +11,8 @@ import jbse.rewr.Rewriter;
 import jbse.rewr.exc.NoResultException;
 import jbse.val.Any;
 import jbse.val.Expression;
-import jbse.val.FunctionApplication;
+import jbse.val.PrimitiveSymbolicApply;
+import jbse.val.PrimitiveSymbolicAtomic;
 import jbse.val.NarrowingConversion;
 import jbse.val.Operator;
 import jbse.val.Primitive;
@@ -202,7 +203,7 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 		}
 
 		@Override
-		public void visitFunctionApplication(FunctionApplication x) {
+		public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) {
 			this.isEquality = false;
 			this.first = this.second = null;
 		}
@@ -220,7 +221,7 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 		}
 
 		@Override
-		public void visitPrimitiveSymbolic(PrimitiveSymbolic s)
+		public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s)
 		throws Exception {
 			this.isEquality = false;
 			this.first = this.second = null;
@@ -260,11 +261,11 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 		}
 
 		@Override
-		protected void rewriteFunctionApplication(FunctionApplication x)
+		protected void rewritePrimitiveSymbolicApply(PrimitiveSymbolicApply x)
 		throws NoResultException {
 			final Primitive xEq = equivalence.find(x);
 			if (x.equals(xEq)) {
-				super.rewriteFunctionApplication(x);
+				super.rewritePrimitiveSymbolicApply(x);
 				final Primitive xSub = this.getResult();
 				if (x.equals(xSub)) {
 					return;

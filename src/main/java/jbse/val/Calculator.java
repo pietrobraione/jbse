@@ -592,7 +592,7 @@ public abstract class Calculator {
      * @param arg a {@link Primitive}.
      * @return a {@link Primitive} representing the result of converting 
      *         {@code arg} to {@code type}, by applying a narrowing conversion.
-     * @throws InvalidOperandException  when {@code arg} is invalid.
+     * @throws InvalidOperandException when {@code arg} is invalid.
      * @throws InvalidTypeException when {@code arg} cannot be narrowed 
      *         to {@code type}. 
      */
@@ -600,18 +600,19 @@ public abstract class Calculator {
     throws InvalidOperandException, InvalidTypeException;
 
     /**
-     * Applies a function to some arguments.
+     * Applies a function to some arguments. The function returns a {@link Primitive} value.
      *  
      * @param type a {@code char} representing the type of the return value of {@code operator}
      *        (see {@link Type}).
+     * @param historyPoint the current {@link HistoryPoint}.
      * @param operator a {@code String} representing the function to be applied.
-     * @param args a {@link Primitive}{@code[]} representing the arguments to the function.
+     * @param args a {@link Value}{@code[]} representing the arguments to the function.
      * @return a {@link Primitive} representing {@code operator(args)}.
      * @throws InvalidOperandException 
      * @throws InvalidTypeException  
      */
-    public abstract Primitive applyFunction(char type, String operator,
-                                            Primitive... args) throws InvalidOperandException, InvalidTypeException;
+    public abstract Primitive applyFunctionPrimitive(char type, HistoryPoint historyPoint, String operator,
+                                            Value... args) throws InvalidOperandException, InvalidTypeException;
 
     /**
      * Applies a unary {@link Operator} to a {@link Primitive}.

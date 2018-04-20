@@ -8,18 +8,14 @@ import jbse.mem.State;
 
 /**
  * Class storing the {@link State}s in the symbolic execution
- * tree which have been discovered but not yet analyzed.
+ * tree which have been discovered but not yet analyzed. It stores
+ * only the states at branch points.
  * 
  * @author Pietro Braione
  * @author unknown
  */
 
 public class StateTree {
-    public static final String IDENTIFIER_SEPARATOR_COMPACT = ".";
-    public static final String IDENTIFIER_DEFAULT_COMPACT = IDENTIFIER_SEPARATOR_COMPACT + "1";
-    public static final String IDENTIFIER_SEPARATOR_NONCOMPACT = "|";
-    public static final String IDENTIFIER_DEFAULT_LONG = "ROOT";
-
     /**
      * Enumeration of the different kinds of state identifiers.
      * 
@@ -37,6 +33,12 @@ public class StateTree {
          */
         COMPACT, 
 
+        /**
+         * Each branch is identified by a number reflecting
+         * the decision which generated it. This identification is
+         * not exec-faithful but generates short identifiers and is 
+         * less dependent on the decision procedure.
+         */
         REPLICABLE,
 
         /**
@@ -212,7 +214,7 @@ public class StateTree {
                 if (hasStates()) {
                     throw new InvalidInputException("Tried to add a state with a not yet emitted pre-initial state.");
                 }
-                s.clearIdentifier();
+                s.setPreInitialHistoryPoint(true);
                 s.resetDepth();
                 s.resetCount();
                 addBranchPoint();
@@ -220,14 +222,12 @@ public class StateTree {
                 if (hasStates()) {
                     throw new InvalidInputException("Tried to add a state with a not yet emitted initial state.");
                 }
-                s.appendToIdentifier(IDENTIFIER_DEFAULT_COMPACT);
+                s.setInitialHistoryPoint();
                 s.resetDepth();
                 s.resetCount();
-                s.resetSequenceNumber();
                 addBranchPoint();
             } else { //(this.nextStateIs == StateKind.POST_INITIAL)
-                //does not update state identifier, in compact mode nextState() will update it            
-                s.resetSequenceNumber();
+                //does nothing, in compact mode nextState() will update it            
             }
             add(s);
         } else {
@@ -252,11 +252,10 @@ public class StateTree {
             if (this.nextStateIs == StateKind.POST_INITIAL) {
                 //updates the state identifier
                 if (this.stateIdMode == StateIdentificationMode.REPLICABLE) {
-                    s.appendToIdentifier(IDENTIFIER_SEPARATOR_NONCOMPACT + branchNumber);
+                    s.addBranchToHistoryPoint(String.valueOf(branchNumber));
                 } else { // (this.stateIdMode == StateIdentificationMode.LONG)
-                    s.appendToIdentifier(IDENTIFIER_SEPARATOR_NONCOMPACT + branchIdentifier);
+                    s.addBranchToHistoryPoint(branchIdentifier);
                 }
-                s.resetSequenceNumber();
                 add(s);
             } else { 
                 throw new InvalidInputException("Tried to add a pre-initial or initial state by specifing its branch identification.");
@@ -303,9 +302,9 @@ public class StateTree {
             this.branchList.removeFirst();
         }
         
-        if (this.nextStateIs == StateKind.POST_INITIAL && this.stateIdMode == StateIdentificationMode.COMPACT) {
-            s.appendToIdentifier(IDENTIFIER_SEPARATOR_COMPACT + String.valueOf(b.emittedStates));
-        } //else, the identifier has been already set by addState/addInitialState
+        if (this.stateIdMode == StateIdentificationMode.COMPACT && this.nextStateIs == StateKind.POST_INITIAL) {
+            s.addBranchToHistoryPoint(String.valueOf(b.emittedStates));
+        } //else, the history point was already set by addState
         
         if (this.nextStateIs == StateKind.PRE_INITIAL) {
             this.nextStateIs = StateKind.INITIAL;
@@ -314,8 +313,9 @@ public class StateTree {
         } //else, this.nextStateIs does not change
 
         return s;
-    }
-
+    }    
+    
+    
     /**
      * Possibly increases by one the level of the tree. 
      * Note that increasing the level without adding a 

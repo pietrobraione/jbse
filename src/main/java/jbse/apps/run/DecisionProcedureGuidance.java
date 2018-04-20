@@ -36,17 +36,17 @@ import jbse.tree.DecisionAlternative_XSWITCH;
 import jbse.val.Any;
 import jbse.val.Calculator;
 import jbse.val.Expression;
-import jbse.val.FunctionApplication;
-import jbse.val.MemoryPath;
+import jbse.val.PrimitiveSymbolicApply;
+import jbse.val.PrimitiveSymbolicAtomic;
 import jbse.val.NarrowingConversion;
 import jbse.val.Operator;
 import jbse.val.Primitive;
-import jbse.val.PrimitiveSymbolic;
 import jbse.val.PrimitiveVisitor;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
+import jbse.val.Symbolic;
 import jbse.val.Term;
 import jbse.val.Value;
 import jbse.val.WideningConversion;
@@ -62,6 +62,7 @@ import jbse.val.exc.InvalidTypeException;
  */
 public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
     private final JVM jvm;
+    private final boolean nonStatic;
     private final HashSet<Object> seen = new HashSet<>();
     private boolean ended;    
     
@@ -80,7 +81,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         super(component, calc);
         goFastAndImprecise(); //disables theorem proving of component until guidance ends
         this.jvm = jvm;
-        initSeen();
+        this.nonStatic = this.jvm.isCurrentMethodNonStatic();
         this.ended = false;
     }
     
@@ -278,7 +279,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
 
     private void updateExpansionBackdoor(State state, ReferenceSymbolic refToLoad) throws GuidanceException {
         final String refType = className(refToLoad.getStaticType());
-        final String objType = this.jvm.typeOfObject(refToLoad.getOrigin());
+        final String objType = this.jvm.typeOfObject(refToLoad);
         if (objType != null && !refType.equals(objType)) {
             state.getClassHierarchy().addToExpansionBackdoor(refType, objType);
         }
@@ -286,38 +287,33 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
 
     private void filter(State state, ReferenceSymbolic refToLoad, DecisionAlternative_XYLOAD_GETX_Unresolved dar, Iterator<?> it) 
     throws GuidanceException {
-        final MemoryPath refToLoadOrigin = refToLoad.getOrigin();
-        if (dar instanceof DecisionAlternative_XYLOAD_GETX_Null && !this.jvm.isNull(refToLoadOrigin)) {
+        if (dar instanceof DecisionAlternative_XYLOAD_GETX_Null && !this.jvm.isNull(refToLoad)) {
             it.remove();
         } else if (dar instanceof DecisionAlternative_XYLOAD_GETX_Aliases) {
             final DecisionAlternative_XYLOAD_GETX_Aliases dara = (DecisionAlternative_XYLOAD_GETX_Aliases) dar;
-            final MemoryPath aliasOrigin = state.getObject(new ReferenceConcrete(dara.getObjectPosition())).getOrigin();
-            if (!this.jvm.areAlias(refToLoadOrigin, aliasOrigin)) {
+            final ReferenceSymbolic aliasOrigin = state.getObject(new ReferenceConcrete(dara.getObjectPosition())).getOrigin();
+            if (!this.jvm.areAlias(refToLoad, aliasOrigin)) {
                 it.remove();
             }
         } else if (dar instanceof DecisionAlternative_XYLOAD_GETX_Expands) {
             final DecisionAlternative_XYLOAD_GETX_Expands dare = (DecisionAlternative_XYLOAD_GETX_Expands) dar;
-            if (this.jvm.isNull(refToLoadOrigin) || alreadySeen(refToLoadOrigin) ||
-               !dare.getClassFileOfTargetObject().getClassName().equals(this.jvm.typeOfObject(refToLoadOrigin))) {
+            if (this.jvm.isNull(refToLoad) || alreadySeen(refToLoad) ||
+               !dare.getClassFileOfTargetObject().getClassName().equals(this.jvm.typeOfObject(refToLoad))) {
                 it.remove();
             } else {
-                markAsSeen(refToLoadOrigin);
+                markAsSeen(refToLoad);
             }
         }
     }
     
-    private void initSeen() throws GuidanceException {
-        if (this.jvm.isCurrentMethodNonStatic()) {
-            final MemoryPath thisOrigin = MemoryPath.mkLocalVariable("this");
-            this.seen.add(this.jvm.getValue(thisOrigin));
+    private boolean alreadySeen(ReferenceSymbolic m) throws GuidanceException {
+        if (this.nonStatic && "{ROOT}:this".equals(m.asOriginString())) {
+            return true;
         }
-    }
-    
-    private boolean alreadySeen(MemoryPath m) throws GuidanceException {
         return this.seen.contains(this.jvm.getValue(m));
     }
     
-    private void markAsSeen(MemoryPath m) throws GuidanceException {
+    private void markAsSeen(ReferenceSymbolic m) throws GuidanceException {
         this.seen.add(this.jvm.getValue(m));
     }
     
@@ -365,50 +361,50 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         /**
          * Returns the class of an object in the reached concrete state.
          * 
-         * @param origin the {@link MemoryPath} to the object.
+         * @param origin the {@link ReferenceSymbolic} to the object.
          * @return a {@link String}, the class of the object referred to
          *         by {@code origin}, or {@code null} if {@code origin}
          *         points to {@code null}.
          * @throws GuidanceException if {@code origin} does not refer to an object.
          */
-        public abstract String typeOfObject(MemoryPath origin) throws GuidanceException;
+        public abstract String typeOfObject(ReferenceSymbolic origin) throws GuidanceException;
 
         /**
-         * Returns whether a {@link MemoryPath} points to {@code null} in the reached 
+         * Returns whether a {@link ReferenceSymbolic} points to {@code null} in the reached 
          * concrete state.
          * 
-         * @param origin a {@link MemoryPath}.
+         * @param origin a {@link ReferenceSymbolic}.
          * @return {@code true} iff {@code origin} points to {@code null}.
          * @throws GuidanceException if {@code origin} does not refer to an object.
          */
-        public abstract boolean isNull(MemoryPath origin) throws GuidanceException;
+        public abstract boolean isNull(ReferenceSymbolic origin) throws GuidanceException;
 
         /**
-         * Returns whether two different {@link MemoryPath}s refer to the same object
+         * Returns whether two different {@link ReferenceSymbolic}s refer to the same object
          * in the reached concrete state.
          * 
-         * @param first a {@link MemoryPath}.
-         * @param second a {@link MemoryPath}.
+         * @param first a {@link ReferenceSymbolic}.
+         * @param second a {@link ReferenceSymbolic}.
          * @return {@code true} iff {@code first} and {@code second} refer to the same
          *         object, or both refer to {@code null}.
          * @throws GuidanceException if {@code first} or {@code second} does not refer 
          *         to an object.
          */
-        public abstract boolean areAlias(MemoryPath first, MemoryPath second) throws GuidanceException;
+        public abstract boolean areAlias(ReferenceSymbolic first, ReferenceSymbolic second) throws GuidanceException;
 
         /**
-         * Returns the value referred by a {@link MemoryPath} in the reached concrete state.
+         * Returns the concrete value in the reached concrete state 
+         * for a {@link Symbolic} value in the symbolic state.
          * 
-         * @param origin a {@link MemoryPath}.
-         * @return a {@link Primitive} if {@code origin} refers to a
-         *         primitive value, otherwise a subclass-dependent
-         *         object that "stands for" the referred object: 
-         *         Such value must satisfy the property that, 
-         *         if {@link #areAlias(MemoryPath, MemoryPath) areAlias}{@code (first, second)}, 
-         *         then {@code first.}{@link Object#equals(Object) equals}{@code (second)}.
+         * @param origin a {@link Symbolic}.
+         * @return a {@link Primitive} if {@code origin} is also {@link Primitive}, 
+         *         otherwise a subclass-dependent object that "stands for" 
+         *         the referred object, that must satisfy the property that, 
+         *         if {@link #areAlias(ReferenceSymbolic, ReferenceSymbolic) areAlias}{@code (first, second)}, 
+         *         then {@link #getValue(Symbolic) getValue}{@code (first).}{@link Object#equals(Object) equals}{@code (}{@link #getValue(Symbolic) getValue}{@code (second))}.
          * @throws GuidanceException if {@code origin} does not refer to an object.
          */
-        public abstract Object getValue(MemoryPath origin) throws GuidanceException;
+        public abstract Object getValue(Symbolic origin) throws GuidanceException;
         
         /**
          * Evaluates a {@link Primitive} in the reached concrete state.
@@ -477,23 +473,25 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             }
 
             @Override
-            public void visitFunctionApplication(FunctionApplication x) throws Exception {
-                final Primitive[] args = x.getArgs();
+            public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) throws Exception {
+                final Value[] args = x.getArgs();
                 final Primitive[] argValues = new Primitive[args.length];
                 for (int i = 0; i < args.length; ++i) {
-                    args[i].accept(this);
+                    if (args[i] instanceof Primitive) {
+                        ((Primitive) args[i]).accept(this);
+                    } //TODO else?
                     argValues[i] = this.value;
                     if (argValues[i] == null) {
                         this.value = null;
                         return;
                     }
                 }
-                this.value = this.calc.applyFunction(x.getType(), x.getOperator(), argValues);
+                this.value = this.calc.applyFunctionPrimitive(x.getType(), x.getHistoryPoint(), x.getOperator(), argValues);
             }
 
             @Override
-            public void visitPrimitiveSymbolic(PrimitiveSymbolic s) throws GuidanceException {
-                final Object fieldValue = this.jvm.getValue(s.getOrigin());
+            public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) throws GuidanceException {
+                final Object fieldValue = this.jvm.getValue(s);
                 if (fieldValue instanceof Primitive) {
                     this.value = (Primitive) fieldValue;
                 } else {

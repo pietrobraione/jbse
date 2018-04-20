@@ -3,7 +3,7 @@ package jbse.mem;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.val.Calculator;
-import jbse.val.MemoryPath;
+import jbse.val.ReferenceSymbolic;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -14,7 +14,7 @@ public final class Instance_JAVA_THREAD extends Instance {
     /** The interruption state of the thread. */
     private boolean interrupted;
     
-    protected Instance_JAVA_THREAD(Calculator calc, ClassFile classFile, MemoryPath origin, Epoch epoch, int numOfStaticFields, Signature... fieldSignatures) 
+    protected Instance_JAVA_THREAD(Calculator calc, ClassFile classFile, ReferenceSymbolic origin, Epoch epoch, int numOfStaticFields, Signature... fieldSignatures) 
     throws InvalidTypeException {
         super(calc, classFile, origin, epoch, numOfStaticFields, fieldSignatures);
         if (classFile == null) {

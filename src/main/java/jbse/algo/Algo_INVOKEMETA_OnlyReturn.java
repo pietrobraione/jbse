@@ -4,6 +4,7 @@ import static java.lang.System.arraycopy;
 
 import static jbse.algo.Util.failExecution;
 import static jbse.common.Type.binaryClassName;
+import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.parametersNumber;
 import static jbse.common.Type.splitParametersDescriptors;
 import static jbse.common.Type.splitReturnValueDescriptor;
@@ -24,9 +25,8 @@ import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Calculator;
-import jbse.val.FunctionApplication;
 import jbse.val.Primitive;
-import jbse.val.PrimitiveSymbolic;
+import jbse.val.ReferenceSymbolicApply;
 import jbse.val.Simplex;
 import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
@@ -45,11 +45,8 @@ import jbse.val.exc.ValueDoesNotSupportNativeException;
  *     is used to metacircularly invoke the native method on the reified 
  *     parameters, and the corresponding value is reflected back and pushed 
  *     on the operand stack;</li>
- * <li>If the method returns a {@link Primitive}, and all its parameters 
- *     are {@link Primitive} with some {@link PrimitiveSymbolic}, then a 
- *     {@link FunctionApplication} mirroring the method's invocation is 
- *     pushed on the operand stack;</li>
- * <li>In all the other cases, throws a {@link ValueDoesNotSupportNativeException}.</li>
+ * <li>Otherwise, a {@link PrimitiveSymbolicApply} or a {@link ReferenceSymbolicApply} 
+ *     mirroring the method's invocation is pushed on the operand stack.</li>
  * </ul>
  * 
  * @author Pietro Braione
@@ -74,31 +71,35 @@ public class Algo_INVOKEMETA_OnlyReturn extends Algo_INVOKEMETA_Nonbranching {
         final String returnType = Type.splitReturnValueDescriptor(this.data.signature().getDescriptor());
         if (Type.isVoid(returnType)) {
             this.returnValue = null;
-        } else if (Type.isPrimitive(returnType)) {
-            //requires all arguments are primitive
-            final Primitive[] argsPrim = new Primitive[args.length];
-            boolean someSymbolic = false;
-            for (int i = 0; i < args.length; ++i) {
-                if (args[i] instanceof Primitive) {
-                    argsPrim[i] = (Primitive) args[i];
-                    someSymbolic = someSymbolic || (argsPrim[i].isSymbolic());
-                } else { 
-                    throw new ValueDoesNotSupportNativeException("invoked method " + this.data.signature().toString() + " with args " + Arrays.toString(args));
-                }
-            }
-            if (someSymbolic) {
-                try {
-                    this.returnValue = state.getCalculator().applyFunction(returnType.charAt(0), this.data.signature().toString(), argsPrim);
-                } catch (InvalidOperandException | InvalidTypeException e) {
-                    //this should never happen
-                    failExecution(e);
-                }
-            } else {
-                invokeMetacircularly(state, Arrays.stream(argsPrim).map(p -> (Simplex) p).toArray(Simplex[]::new));
-            }
         } else {
-            throw new ValueDoesNotSupportNativeException("invoked method " + this.data.signature().toString() + " with args " + Arrays.toString(args));
-            //TODO put reference resolution here or in the invoke* bytecodes and assign returnValue = state.createSymbol(returnType, "__NATIVE[" + state.getIdentifier() + "[" + state.getSequenceNumber() + "]");
+            //checks the parameters
+            boolean allConcrete = true;
+            boolean allPrimitive = true;
+            for (int i = 0; i < args.length; ++i) {
+                if (args[i].isSymbolic()) {
+                    allConcrete = false;
+                }
+                if (args[i] instanceof Primitive) {
+                    allPrimitive = false;
+                }
+            }
+            
+            //delegates if all parameters are concrete and primitive, and if returns a primitive
+            if (allConcrete && allPrimitive && Type.isPrimitive(returnType)) {
+                invokeMetacircularly(state, Arrays.stream(args).map(p -> (Simplex) p).toArray(Simplex[]::new));
+            }
+            
+            //otherwise, builds a term
+            try {
+                if (isPrimitive(returnType)) {
+                    this.returnValue = state.getCalculator().applyFunctionPrimitive(returnType.charAt(0), state.getHistoryPoint(), this.data.signature().toString(), args);
+                } else {
+                    this.returnValue = new ReferenceSymbolicApply(returnType, state.getHistoryPoint(), this.data.signature().toString(), args);
+                }
+            } catch (InvalidOperandException | InvalidTypeException e) {
+                //this should never happen
+                failExecution(e);
+            }
         }
     }
     

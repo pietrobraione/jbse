@@ -172,7 +172,7 @@ StrategyUpdate_XALOAD> {
                                 try {
                                     final ClassFile memberClass = arrayToProcess.getType().getMemberClass();
                                     final String memberType = memberClass.getInternalTypeName(); 
-                                    val = state.createSymbol(memberType, arrayToProcess.getOrigin().thenArrayMember(this.index.add(arrayOffset)));
+                                    val = state.createSymbolMemberArray(memberType, arrayToProcess.getOrigin(), this.index.add(arrayOffset));
                                 } catch (InvalidOperandException | InvalidTypeException exc) {
                                     //this should never happen
                                     failExecution(exc);
@@ -221,7 +221,7 @@ StrategyUpdate_XALOAD> {
                         if (o.noReferenceExpansion()) {
                             final ReferenceSymbolic refToLoad = (ReferenceSymbolic) val;
                             this.nonExpandedRefTypes += (first ? "" : ", ") + refToLoad.getStaticType();
-                            this.nonExpandedRefOrigins += (first ? "" : ", ") + refToLoad.getOrigin();
+                            this.nonExpandedRefOrigins += (first ? "" : ", ") + refToLoad.asOriginString();
                             first = false;
                         }
 

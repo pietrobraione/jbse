@@ -9,7 +9,7 @@ import java.util.Set;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.rewr.exc.NoResultException;
 import jbse.val.Expression;
-import jbse.val.FunctionApplication;
+import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.Operator;
 import jbse.val.Primitive;
 import jbse.val.exc.InvalidOperandException;
@@ -30,10 +30,10 @@ public class RewriterSinCos extends Rewriter {
 		final ArrayList<Monomial> retVal = new ArrayList<Monomial>();
 		for (Monomial m : poly.representation().keySet()) {
 			for (Primitive p : m.representation().keySet()) {
-				if (p instanceof FunctionApplication) {
-					final FunctionApplication pF = (FunctionApplication) p;
-					if (pF.getOperator().equals(FunctionApplication.SIN) ||
-						pF.getOperator().equals(FunctionApplication.COS)) {
+				if (p instanceof PrimitiveSymbolicApply) {
+					final PrimitiveSymbolicApply pF = (PrimitiveSymbolicApply) p;
+					if (pF.getOperator().equals(PrimitiveSymbolicApply.SIN) ||
+						pF.getOperator().equals(PrimitiveSymbolicApply.COS)) {
 						try {
 							retVal.add(m.mul(Monomial.of(this.calc, poly.representation().get(m))));
 						} catch (InvalidTypeException e) {
@@ -70,12 +70,12 @@ public class RewriterSinCos extends Rewriter {
 						final Primitive secondDivSecondOperand = secondDivExp.getSecondOperand();
 						if (firstDivFirstOperand.equals(firstDivSecondOperand) &&
 								secondDivFirstOperand.equals(secondDivSecondOperand) &&
-								firstDivFirstOperand  instanceof FunctionApplication && 
-								secondDivFirstOperand instanceof FunctionApplication) {
-							FunctionApplication f0 = (FunctionApplication) firstDivFirstOperand;
-							FunctionApplication f1 = (FunctionApplication) secondDivFirstOperand;
-							if ((f0.getOperator().equals(FunctionApplication.SIN) && f1.getOperator().equals(FunctionApplication.COS)) ||
-									(f0.getOperator().equals(FunctionApplication.COS) && f1.getOperator().equals(FunctionApplication.SIN))) {
+								firstDivFirstOperand  instanceof PrimitiveSymbolicApply && 
+								secondDivFirstOperand instanceof PrimitiveSymbolicApply) {
+							PrimitiveSymbolicApply f0 = (PrimitiveSymbolicApply) firstDivFirstOperand;
+							PrimitiveSymbolicApply f1 = (PrimitiveSymbolicApply) secondDivFirstOperand;
+							if ((f0.getOperator().equals(PrimitiveSymbolicApply.SIN) && f1.getOperator().equals(PrimitiveSymbolicApply.COS)) ||
+									(f0.getOperator().equals(PrimitiveSymbolicApply.COS) && f1.getOperator().equals(PrimitiveSymbolicApply.SIN))) {
 								if (f0.getArgs()[0].equals(f1.getArgs()[0])) {
 									return div[0].createBase();
 								}

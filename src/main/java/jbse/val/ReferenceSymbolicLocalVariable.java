@@ -1,0 +1,34 @@
+package jbse.val;
+
+/**
+ * Class that represent a {@link ReferenceSymbolicRoot} whose origin is a 
+ * local variable in the root frame. 
+ */
+public final class ReferenceSymbolicLocalVariable extends ReferenceSymbolicAtomic implements SymbolicLocalVariable {
+    private final String variableName;
+
+    /**
+     * Constructor.
+     * 
+     * @param variableName a {@link String}, the name of the local variable
+     *        in the root frame this symbol originates from.
+     * @param id an {@link int}, the identifier of the symbol. Different
+     *        object with same identifier will be treated as equal.
+     * @param staticType a {@link String}, the static type of the
+     *        reference (taken from bytecode).
+     */
+    ReferenceSymbolicLocalVariable(String variableName, int id, String staticType) {
+    	super(id, staticType);
+    	this.variableName = variableName;
+    }
+
+    @Override
+    public final String getVariableName() {
+        return this.variableName;
+    }
+    
+    @Override
+    public String asOriginString() {
+        return "{ROOT}:" + this.getVariableName();
+    }
+}

@@ -4,7 +4,6 @@ import jbse.bc.ClassFile;
 import jbse.tree.DecisionAlternative_XLOAD_GETX_Aliases;
 import jbse.tree.DecisionAlternative_XLOAD_GETX_Expands;
 import jbse.tree.DecisionAlternative_XLOAD_GETX_Null;
-import jbse.val.MemoryPath;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -19,7 +18,7 @@ implements DecisionAlternativeReferenceFactory<DecisionAlternative_XLOAD_GETX_Al
 DecisionAlternative_XLOAD_GETX_Expands, DecisionAlternative_XLOAD_GETX_Null> {
     @Override
     public DecisionAlternative_XLOAD_GETX_Aliases 
-    createAlternativeRefAliases(ReferenceSymbolic referenceToResolve, long objectPosition, MemoryPath objectOrigin, int branchNumber) {
+    createAlternativeRefAliases(ReferenceSymbolic referenceToResolve, long objectPosition, ReferenceSymbolic objectOrigin, int branchNumber) {
         return new DecisionAlternative_XLOAD_GETX_Aliases(referenceToResolve, objectPosition, objectOrigin, branchNumber);
     }
 

@@ -30,8 +30,8 @@ public class RewriterBasicTest {
 		CalculatorRewriting calc = new CalculatorRewriting();
 		calc.addRewriter(new RewriterBasic());
 		
-		final Primitive p_post = calc.applyFunction(Type.INT, "foo", calc.valTerm(Type.DOUBLE, "BAZ"));
-		assertEquals(calc.applyFunction(Type.INT, "foo", calc.valTerm(Type.DOUBLE, "FOO")), p_post);
+		final Primitive p_post = calc.applyFunctionPrimitive(Type.INT, null, "foo", calc.valTerm(Type.DOUBLE, "BAZ"));
+		assertEquals(calc.applyFunctionPrimitive(Type.INT, null, "foo", calc.valTerm(Type.DOUBLE, "FOO")), p_post);
 	}
 
 }

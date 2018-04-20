@@ -16,15 +16,12 @@ import jbse.val.exc.ValueDoesNotSupportNativeException;
  * handled by some decision procedures, and are therefore consistently
  * replaced by suitable terms). <br />
  * 
- * Terms are symbolic but do not implement the Symbolic interface. This 
- * because they are not identified by the state: A {@link String} name 
- * must be provided upon construction, and the name 
- * identifies them. A term stands for itself and is never replaced by 
- * another term. Also, a term has no origin.
+ * Terms are identified by a {@link String} name that 
+ * must be provided upon construction.
  * 
  * @author Pietro Braione
  */
-public final class Term extends Primitive {
+public final class Term extends Primitive implements Symbolic {
     /** The conventional value of the {@link Term}, a {@link String}. */
     private final String value;
 
@@ -50,7 +47,13 @@ public final class Term extends Primitive {
         this.hashCode = tmpHashCode;
     }
 
+    @Override
     public String getValue() {
+        return this.value;
+    }
+
+    @Override
+    public String asOriginString() {
         return this.value;
     }
 

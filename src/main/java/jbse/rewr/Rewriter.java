@@ -4,7 +4,8 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.rewr.exc.NoResultException;
 import jbse.val.Any;
 import jbse.val.Expression;
-import jbse.val.FunctionApplication;
+import jbse.val.PrimitiveSymbolicApply;
+import jbse.val.PrimitiveSymbolicAtomic;
 import jbse.val.NarrowingConversion;
 import jbse.val.Operator;
 import jbse.val.Primitive;
@@ -12,6 +13,7 @@ import jbse.val.PrimitiveSymbolic;
 import jbse.val.PrimitiveVisitor;
 import jbse.val.Simplex;
 import jbse.val.Term;
+import jbse.val.Value;
 import jbse.val.WideningConversion;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidOperatorException;
@@ -88,15 +90,17 @@ public class Rewriter {
 		setResult(x);
 	}
 	
-	protected void rewriteFunctionApplication(FunctionApplication x) 
+	protected void rewritePrimitiveSymbolicApply(PrimitiveSymbolicApply x) 
 	throws NoResultException {
-		final Primitive[] args = x.getArgs();
+		final Value[] args = x.getArgs();
 		for (int i = 0; i < args.length; i++) {
-			args[i] = rewrite(args[i]);
+		    if (args[i] instanceof Primitive) {
+			args[i] = rewrite((Primitive) args[i]);
+		    }
 		}
-		final FunctionApplication result;
+		final PrimitiveSymbolicApply result;
 		try {
-			result = new FunctionApplication(x.getType(), this.calc, x.getOperator(), args);
+			result = new PrimitiveSymbolicApply(x.getType(), x.getHistoryPoint(), this.calc, x.getOperator(), args);
 		} catch (InvalidTypeException | InvalidOperandException e) {
 			throw new NoResultException(e);
 		}
@@ -167,9 +171,9 @@ public class Rewriter {
 
 		@Override public void visitExpression(Expression e) throws NoResultException { Rewriter.this.rewriteExpression(e); }
 
-		@Override public void visitFunctionApplication(FunctionApplication x) throws NoResultException { Rewriter.this.rewriteFunctionApplication(x); }
+		@Override public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) throws NoResultException { Rewriter.this.rewritePrimitiveSymbolicApply(x); }
 
-		@Override public void visitPrimitiveSymbolic(PrimitiveSymbolic s) throws NoResultException { Rewriter.this.rewritePrimitiveSymbolic(s); }
+		@Override public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) throws NoResultException { Rewriter.this.rewritePrimitiveSymbolic(s); }
 
 		@Override public void visitSimplex(Simplex x) throws NoResultException { Rewriter.this.rewriteSimplex(x); }
 

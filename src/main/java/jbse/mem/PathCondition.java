@@ -21,10 +21,10 @@ final class PathCondition implements Cloneable {
     private ArrayList<Clause> clauses;
 
     /** 
-     * Maps symbolic reference identifiers to their respective heap positions.
+     * Maps symbolic references to their respective heap positions.
      * It is just a cache of information already contained in {@code clauses}.
      */
-    private HashMap<Integer, Long> referenceResolutionMap;
+    private HashMap<ReferenceSymbolic, Long> referenceResolutionMap;
 
     /**
      * Maps each class with the number of assumed objects in it. 
@@ -64,7 +64,7 @@ final class PathCondition implements Cloneable {
      */
     void addClauseAssumeExpands(ReferenceSymbolic reference, long heapPosition, Objekt object) {
         this.clauses.add(new ClauseAssumeExpands(reference, heapPosition, object));
-        this.referenceResolutionMap.put(reference.getId(), heapPosition);
+        this.referenceResolutionMap.put(reference, heapPosition);
 
         //increments objectCounters
         if (!this.objectCounters.containsKey(object.getType().getClassName())) {
@@ -87,7 +87,7 @@ final class PathCondition implements Cloneable {
      */
     void addClauseAssumeAliases(ReferenceSymbolic reference, long heapPosition, Objekt object) {
         this.clauses.add(new ClauseAssumeAliases(reference, heapPosition, object));
-        this.referenceResolutionMap.put(reference.getId(), heapPosition);
+        this.referenceResolutionMap.put(reference, heapPosition);
     }
 
     /**
@@ -98,7 +98,7 @@ final class PathCondition implements Cloneable {
      */
     void addClauseAssumeNull(ReferenceSymbolic reference) {
         this.clauses.add(new ClauseAssumeNull(reference));
-        this.referenceResolutionMap.put(reference.getId(), Util.POS_NULL);
+        this.referenceResolutionMap.put(reference, Util.POS_NULL);
     }
 
     /**
@@ -131,7 +131,7 @@ final class PathCondition implements Cloneable {
      * @throws NullPointerException if {@code reference == null}.
      */
     boolean resolved(ReferenceSymbolic reference) {
-        return this.referenceResolutionMap.containsKey(reference.getId());
+        return this.referenceResolutionMap.containsKey(reference);
     }
 
     /**
@@ -145,7 +145,7 @@ final class PathCondition implements Cloneable {
      * @throws NullPointerException if {@code reference == null}.
      */
     long getResolution(ReferenceSymbolic reference) {
-        return this.referenceResolutionMap.get(reference.getId());
+        return this.referenceResolutionMap.get(reference);
     }
 
     /**

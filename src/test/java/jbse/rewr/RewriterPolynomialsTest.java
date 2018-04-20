@@ -135,7 +135,7 @@ public class RewriterPolynomialsTest {
 		final Term B = calc.valTerm(Type.INT, "B");
 		final Term C = calc.valTerm(Type.INT, "C");
 		final Term D = calc.valTerm(Type.INT, "D");
-		final Primitive p1 = calc.applyFunction(Type.INT, "foo", A, B);
+		final Primitive p1 = calc.applyFunctionPrimitive(Type.INT, null, "foo", A, B);
 		final Primitive p_actual = p1.add(C).mul(D);
 		assertEquals(p1.mul(D).add(C.mul(D)), p_actual); 
 	}   

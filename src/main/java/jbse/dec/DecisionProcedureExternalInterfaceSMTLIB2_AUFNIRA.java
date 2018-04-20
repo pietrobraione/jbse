@@ -21,7 +21,8 @@ import jbse.mem.Objekt;
 import jbse.rewr.CalculatorRewriting;
 import jbse.val.Any;
 import jbse.val.Expression;
-import jbse.val.FunctionApplication;
+import jbse.val.PrimitiveSymbolicApply;
+import jbse.val.PrimitiveSymbolicAtomic;
 import jbse.val.NarrowingConversion;
 import jbse.val.Operator;
 import jbse.val.Primitive;
@@ -30,6 +31,7 @@ import jbse.val.PrimitiveVisitor;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
 import jbse.val.Term;
+import jbse.val.Value;
 import jbse.val.WideningConversion;
 
 /**
@@ -544,7 +546,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
     }
 
     /**
-     * returns z3 primitive type which corresponds to a java type
+     * Returns a SMTLIB2 primitive type which corresponds to a Java type.
      * 
      */
     private static String toSMTLIB2Type(char type) {
@@ -673,13 +675,13 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
                     final String clause;
                     if (e.isUnary()) {
                         e.getOperand().accept(new SMTLIB2ExpressionVisitor(this, isBooleanOperator));
-                        clause = "("+ op +" "+ this.clauseStack.pop() + ")";
+                        clause = "(" + op + " "+ this.clauseStack.pop() + ")";
                     } else {
                         firstOperand.accept(new SMTLIB2ExpressionVisitor(this, isBooleanOperator));
                         secondOperand.accept(new SMTLIB2ExpressionVisitor(this, isBooleanOperator));
                         final String secondOperandSMT = this.clauseStack.pop();
                         final String firstOperandSMT = this.clauseStack.pop();
-                        clause = "("+ op + " " + firstOperandSMT + " " + secondOperandSMT + ")";
+                        clause = "(" + op + " " + firstOperandSMT + " " + secondOperandSMT + ")";
                     }
                     this.clauseStack.push(clause);
                 }
@@ -689,7 +691,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
         }
 
         @Override
-        public void visitFunctionApplication(FunctionApplication x) throws Exception {
+        public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) throws Exception {
             if (x.getType() == Type.BOOLEAN && !this.isBooleanExpression) {
                 throw new UnexpectedInternalException("error while parsing expression (expected a boolean expression but it is not): " + x.toString());
             } else if (x.getType() != Type.BOOLEAN && this.isBooleanExpression) {
@@ -700,7 +702,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
             final StringBuilder clause = new StringBuilder();
             final StringBuilder smtlib2Signature = new StringBuilder();
             boolean builtIn = false;
-            if (operator.equals(FunctionApplication.ABS)) {
+            if (operator.equals(PrimitiveSymbolicApply.ABS)) {
                 if (Type.isPrimitiveIntegral(x.getType())) {
                     builtIn = true;
                     clause.append("(abs ");
@@ -713,13 +715,19 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
                 clause.append("(" + operator + " ");
                 smtlib2Signature.append(operator + " (");
             }
-            for (Primitive p : x.getArgs()) {
-                p.accept(new SMTLIB2ExpressionVisitor(this, false));
-                clause.append(this.clauseStack.pop());
-                clause.append(" ");
-                final String smtlib2Type = toSMTLIB2Type(p.getType());
-                smtlib2Signature.append(smtlib2Type);
-                smtlib2Signature.append(" ");
+            for (Value v : x.getArgs()) {
+                if (v instanceof Primitive) {
+                    final Primitive p = (Primitive) v;
+                    p.accept(new SMTLIB2ExpressionVisitor(this, false));
+                    clause.append(this.clauseStack.pop());
+                    clause.append(" ");
+                    final String smtlib2Type = toSMTLIB2Type(p.getType());
+                    smtlib2Signature.append(smtlib2Type);
+                    smtlib2Signature.append(" ");
+                } else {
+                    throw new ExternalProtocolInterfaceException("function applications with reference arguments should not reach the SMT solver");
+                    //TODO mangle?
+                }
             }
             clause.append(")");
             this.clauseStack.push(clause.toString());
@@ -829,7 +837,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
         }
 
         @Override
-        public void visitPrimitiveSymbolic(PrimitiveSymbolic s) {
+        public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) {
             putSymbol(s);
         }
 

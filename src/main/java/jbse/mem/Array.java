@@ -18,10 +18,10 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.val.Calculator;
 import jbse.val.Expression;
-import jbse.val.MemoryPath;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.ReferenceArrayImmaterial;
+import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
 import jbse.val.Term;
 import jbse.val.Value;
@@ -468,10 +468,8 @@ public final class Array extends Objekt {
      * @param length a {@link Primitive}, the number of elements in the array.
      * @param classFile a {@code classFile}, the class of 
      *        this {@link Instance}; It must be {@code classFile.}{@link ClassFile#isReference() isArray}{@code () == true}.
-     * @param origin a {@link MemoryPath}, the
-     *        chain of memory accesses which allowed to discover
-     *        the {@link Array} for the first time. It can be null when
-     *        {@code epoch == }{@link Epoch#EPOCH_AFTER_START}.
+     * @param origin the {@link ReferenceSymbolic} providing origin of 
+     *        the {@code Array}, if symbolic, or {@code null}, if concrete.
      * @param epoch the creation {@link Epoch} of the {@link Array}.
      * @param isInitial {@code true} iff this array is not an array of the 
      *        current state, but a copy of an (immutable) symbolic array in
@@ -480,7 +478,7 @@ public final class Array extends Objekt {
      *        to be granted simple representation.
      * @throws InvalidTypeException iff {@code classFile} is invalid. 
      */
-    public Array(Calculator calc, boolean initSymbolic, Value initValue, Primitive length, ClassFile classFile, MemoryPath origin, Epoch epoch, boolean isInitial, int maxSimpleArrayLength) 
+    public Array(Calculator calc, boolean initSymbolic, Value initValue, Primitive length, ClassFile classFile, ReferenceSymbolic origin, Epoch epoch, boolean isInitial, int maxSimpleArrayLength) 
     throws InvalidTypeException {
         super(calc, classFile, origin, epoch, false, 0, new Signature(classFile.getClassName(), "" + Type.INT, "length"));
         if (classFile == null || !classFile.isArray()) {

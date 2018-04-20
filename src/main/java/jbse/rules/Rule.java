@@ -38,7 +38,7 @@ public abstract class Rule {
 	public final boolean matches(ReferenceSymbolic ref) {
 		// checks ref's origin matches the pattern
 		final Pattern p = makeOriginPattern(this.originExp);
-		final String originReference = ref.getOrigin().toString();
+		final String originReference = ref.asOriginString();
 		final Matcher m = p.matcher(originReference);
 		final boolean retVal = m.matches();
 		return retVal;

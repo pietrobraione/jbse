@@ -89,7 +89,7 @@ public class RewriterDivisionEquationTest {
 		final Term B = calcPoly.valTerm(Type.INT, "B");
 		final Term C = calcPoly.valTerm(Type.INT, "C");
 		final Term D = calcPoly.valTerm(Type.INT, "D");
-		final Primitive p_post = calcPoly.applyFunction(Type.BOOLEAN, "f", A.div(B).eq(ZERO), C.div(D).eq(ZERO));
-		assertEquals(calcPoly.applyFunction(Type.BOOLEAN, "f", A.eq(ZERO).and(B.ne(ZERO)), C.eq(ZERO).and(D.ne(ZERO))), p_post);
+		final Primitive p_post = calcPoly.applyFunctionPrimitive(Type.BOOLEAN, null, "f", A.div(B).eq(ZERO), C.div(D).eq(ZERO));
+		assertEquals(calcPoly.applyFunctionPrimitive(Type.BOOLEAN, null, "f", A.eq(ZERO).and(B.ne(ZERO)), C.eq(ZERO).and(D.ne(ZERO))), p_post);
 	}
 }

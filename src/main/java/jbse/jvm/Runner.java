@@ -1,5 +1,8 @@
 package jbse.jvm;
 
+import static jbse.val.HistoryPoint.BRANCH_IDENTIFIER_SEPARATOR_COMPACT;
+import static jbse.val.HistoryPoint.BRANCH_IDENTIFIER_SEPARATOR_LONG;
+
 import java.util.Map;
 
 import jbse.algo.exc.CannotManageStateException;
@@ -12,7 +15,6 @@ import jbse.jvm.exc.FailureException;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.ThreadStackEmptyException;
-import jbse.tree.StateTree;
 import jbse.tree.StateTree.BranchPoint;
 
 /**
@@ -444,8 +446,8 @@ public class Runner {
         }
         final String currentRegion = this.engine.getCurrentState().getIdentifier();
         final boolean retVal = (this.identifierSubregion.equals(currentRegion) ||
-                                currentRegion.startsWith(this.identifierSubregion + StateTree.IDENTIFIER_SEPARATOR_COMPACT) || 
-                                currentRegion.startsWith(this.identifierSubregion + StateTree.IDENTIFIER_SEPARATOR_NONCOMPACT) || 
+                                currentRegion.startsWith(this.identifierSubregion + BRANCH_IDENTIFIER_SEPARATOR_COMPACT) || 
+                                currentRegion.startsWith(this.identifierSubregion + BRANCH_IDENTIFIER_SEPARATOR_LONG) || 
                                 this.identifierSubregion.startsWith(currentRegion));
         return retVal;
     }
