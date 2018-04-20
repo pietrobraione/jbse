@@ -68,9 +68,6 @@ public final class Algo_INIT {
             throw new UnexpectedInternalException(e);
         }
 
-        //saves a copy of the created state
-        ctx.setInitialState(state);
-
         return state;
     }
 }

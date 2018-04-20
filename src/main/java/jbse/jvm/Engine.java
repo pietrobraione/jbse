@@ -150,11 +150,14 @@ public class Engine implements AutoCloseable {
 	ClasspathException {
 		//executes the initial state setup step
 		final Algo_INIT algo = this.ctx.dispatcher.select();
-		algo.exec(ctx);
+		algo.exec(this.ctx);
 
 		//extracts the initial state from the tree
 		this.currentState = this.ctx.stateTree.nextState();
 		
+	        //saves a copy of the created state
+		this.ctx.setInitialState(this.currentState);
+
         //synchronizes the decision procedure with the path condition
 		try {
 		    this.ctx.decisionProcedure.setAssumptions(this.currentState.getPathCondition());
