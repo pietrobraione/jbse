@@ -324,7 +324,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                 } else if (origin instanceof KlassPseudoReference) {
                     return getJDIObjectStatic(((KlassPseudoReference) origin).getClassName());
                 } else if (origin instanceof SymbolicMemberField) {
-                    final Object o = getJDIValue(((PrimitiveSymbolicMemberArrayLength) origin).getContainer());
+                    final Object o = getJDIValue(((SymbolicMemberField) origin).getContainer());
                     if (!(o instanceof com.sun.jdi.ReferenceType) && !(o instanceof com.sun.jdi.ObjectReference)) {
                         throw new GuidanceException(ERROR_BAD_PATH);
                     }
