@@ -3,7 +3,7 @@ package jbse.rewr;
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.rewr.exc.NoResultException;
-import jbse.val.FunctionApplication;
+import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.Primitive;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
@@ -23,31 +23,31 @@ public class RewriterTrigNormalize extends Rewriter {
 	public RewriterTrigNormalize() { }
 
 	@Override
-	protected void rewriteFunctionApplication(FunctionApplication x)
+	protected void rewritePrimitiveSymbolicApply(PrimitiveSymbolicApply x)
 	throws NoResultException {
 		final String operator = x.getOperator();
 		final double period;
-		if (operator.equals(FunctionApplication.TAN)) {
+		if (operator.equals(PrimitiveSymbolicApply.TAN)) {
 			period = Math.PI;
-		} else if (operator.equals(FunctionApplication.SIN) ||
-				operator.equals(FunctionApplication.COS)) {
+		} else if (operator.equals(PrimitiveSymbolicApply.SIN) ||
+				operator.equals(PrimitiveSymbolicApply.COS)) {
 			period = 2 * Math.PI;
 		} else {
-			super.rewriteFunctionApplication(x);
+			super.rewritePrimitiveSymbolicApply(x);
 			return;
 		}
 		if (x.getType() != Type.DOUBLE) {
 			//trigonometric function yields nondouble value; in doubt we give up
-			super.rewriteFunctionApplication(x);
+			super.rewritePrimitiveSymbolicApply(x);
 			return;
 		}
 		if (x.getArgs().length != 1) {
 			//trigonometric function with strange number of args;
 			//since it is not our business complaining we just give up
-			super.rewriteFunctionApplication(x);
+			super.rewritePrimitiveSymbolicApply(x);
 			return;
 		}
-		Polynomial arg = Polynomial.of(this.calc, x.getArgs()[0]);
+		Polynomial arg = Polynomial.of(this.calc, (Primitive) x.getArgs()[0]);
 		double addend = ((Number)arg.getConstantTerm().getActualValue()).doubleValue();
 		final boolean normalized, negate;
 		try {
@@ -67,8 +67,8 @@ public class RewriterTrigNormalize extends Rewriter {
 			} else {
 				normalized = false;
 			}
-			if ((operator.equals(FunctionApplication.SIN) ||
-					operator.equals(FunctionApplication.COS)) && addend >= Math.PI) {
+			if ((operator.equals(PrimitiveSymbolicApply.SIN) ||
+					operator.equals(PrimitiveSymbolicApply.COS)) && addend >= Math.PI) {
 				negate = true;
 				final Polynomial nPiP = Polynomial.of(this.calc, this.calc.valDouble(-Math.PI));
 				try {
@@ -81,13 +81,13 @@ public class RewriterTrigNormalize extends Rewriter {
 				negate = false;
 			}
 			if (normalized || negate) {
-				Primitive result = this.calc.applyFunction(x.getType(), operator, arg.toPrimitive());
+				Primitive result = this.calc.applyFunctionPrimitive(x.getType(), x.getHistoryPoint(), operator, arg.toPrimitive());
 				if (negate) {
 					result = result.neg();
 				}
 				setResult(result);
 			} else {
-				super.rewriteFunctionApplication(x);
+				super.rewritePrimitiveSymbolicApply(x);
 			}
 		} catch (InvalidOperandException | InvalidTypeException e) {
 			//this should never happen

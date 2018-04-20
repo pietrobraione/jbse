@@ -51,13 +51,13 @@ public abstract class TriggerRule extends Rule {
 		if (this.originExp == null) {
 			specializedTriggerExp = this.getTriggerMethodParameter();
 		} else {
-			final String valueForAny = findAny(this.originExp, ref.getOrigin());
+			final String valueForAny = findAny(this.originExp, ref);
 			specializedTriggerExp = specializeAny(this.getTriggerMethodParameter(), valueForAny);
 		}
-		final Pattern p = makePatternRelative(specializedTriggerExp, ref.getOrigin());
+		final Pattern p = makePatternRelative(specializedTriggerExp, ref);
 
 		// checks o's origin matches the resulting pattern
-		final Matcher m = p.matcher(o.getOrigin().toString());
+		final Matcher m = p.matcher(o.getOrigin().asOriginString());
 		final boolean retVal = m.matches();
 		return retVal;
 	}

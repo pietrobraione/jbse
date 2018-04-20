@@ -51,7 +51,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
                 try {
                     final ReferenceSymbolic refToLoad = (ReferenceSymbolic) this.valToLoad;
                     this.nonExpandedRefTypes = refToLoad.getStaticType();
-                    this.nonExpandedRefOrigins = refToLoad.getOrigin().toString();
+                    this.nonExpandedRefOrigins = refToLoad.asOriginString();
                 } catch (ClassCastException e) {
                     throw new UnexpectedInternalException(e);
                 }

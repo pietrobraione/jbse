@@ -3,7 +3,7 @@ package jbse.rewr;
 import static org.junit.Assert.assertEquals;
 
 import jbse.common.Type;
-import jbse.val.FunctionApplication;
+import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.Primitive;
 import jbse.val.Term;
 import jbse.val.exc.InvalidOperandException;
@@ -27,7 +27,7 @@ public class RewriterArcTanTest {
 	public void testSimple1() throws InvalidOperandException, InvalidTypeException {
 		//tan(atan(A)) -> A
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
-		final Primitive p_post = calc.applyFunction(Type.DOUBLE, FunctionApplication.TAN, calc.applyFunction(Type.DOUBLE, FunctionApplication.ATAN, A)); 
+		final Primitive p_post = calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.TAN, calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.ATAN, A)); 
 		assertEquals(A, p_post);
 	}
 	
@@ -35,15 +35,15 @@ public class RewriterArcTanTest {
 	public void testSimple2() throws InvalidOperandException, InvalidTypeException {
 		//tan(tan(atan(A))) -> tan(A)
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
-		final Primitive p_post = calc.applyFunction(Type.DOUBLE, FunctionApplication.TAN, calc.applyFunction(Type.DOUBLE, FunctionApplication.TAN, calc.applyFunction(Type.DOUBLE, FunctionApplication.ATAN, A))); 
-		assertEquals(calc.applyFunction(Type.DOUBLE, FunctionApplication.TAN, A), p_post);
+		final Primitive p_post = calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.TAN, calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.TAN, calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.ATAN, A))); 
+		assertEquals(calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.TAN, A), p_post);
 	}
 	
 	@Test
 	public void testSimple3() throws InvalidOperandException, InvalidTypeException {
 		//atan(tan(atan(A))) -> atan(A)
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
-		final Primitive p_post = calc.applyFunction(Type.DOUBLE, FunctionApplication.ATAN, calc.applyFunction(Type.DOUBLE, FunctionApplication.TAN, calc.applyFunction(Type.DOUBLE, FunctionApplication.ATAN, A))); 
-		assertEquals(calc.applyFunction(Type.DOUBLE, FunctionApplication.ATAN, A), p_post);
+		final Primitive p_post = calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.ATAN, calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.TAN, calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.ATAN, A))); 
+		assertEquals(calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.ATAN, A), p_post);
 	}
 }

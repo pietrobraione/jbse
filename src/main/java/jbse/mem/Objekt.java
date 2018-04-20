@@ -9,8 +9,8 @@ import java.util.Map;
 
 import jbse.bc.Signature;
 import jbse.val.Calculator;
-import jbse.val.MemoryPath;
 import jbse.val.Primitive;
+import jbse.val.ReferenceSymbolic;
 import jbse.val.Value;
 
 /**
@@ -35,7 +35,7 @@ public abstract class Objekt implements Cloneable {
 	 * The origin of the object in the case it is created by 
 	 * lazy initialization. Immutable.
 	 */
-	private final MemoryPath origin;
+	private final ReferenceSymbolic origin;
 
     /** The creation epoch of this {@link Objekt}. Immutable. */
     private final Epoch epoch;
@@ -63,14 +63,12 @@ public abstract class Objekt implements Cloneable {
      * 
      * @param calc a {@link Calculator}.
      * @param type a {@link String}, the class of this object.
-     * @param origin a {@link MemoryPath}, the
-     *        chain of memory accesses which allowed to discover
-     *        the object for the first time. It can be null when
-     *        {@code epoch == }{@link Epoch#EPOCH_AFTER_START}.
+     * @param origin the {@link ReferenceSymbolic} providing origin of 
+     *        the {@code Objekt}, if symbolic, or {@code null}, if concrete.
      * @param epoch the creation {@link Epoch} of this object.
      * @param fieldSignatures an array of field {@link Signature}s.
      */
-    protected Objekt(Calculator calc, String type, MemoryPath origin, Epoch epoch, Signature... fieldSignatures) {
+    protected Objekt(Calculator calc, String type, ReferenceSymbolic origin, Epoch epoch, Signature... fieldSignatures) {
         this.fields = new HashMap<>();
         this.fieldSignatures = Arrays.asList(fieldSignatures.clone()); //safety copy
         for (Signature s : this.fieldSignatures) {
@@ -95,9 +93,9 @@ public abstract class Objekt implements Cloneable {
     /**
      * Returns the object's origin.
      * 
-     * @return a {@link String}
+     * @return a {@link ReferenceSymbolic}
      */
-    public final MemoryPath getOrigin() {
+    public final ReferenceSymbolic getOrigin() {
     	return this.origin;
     }
     

@@ -117,8 +117,7 @@ StrategyUpdate_XALOAD> {
                 if (e instanceof Array.AccessOutcomeIn) {
                     val = ((Array.AccessOutcomeIn) e).getValue();
                     if (val == null) {
-                        val = state.createSymbol(getArrayMemberType(this.arrayObj.getType()), 
-                                                 this.arrayObj.getOrigin().thenArrayMember(this.index));
+                        val = state.createSymbolMemberArray(getArrayMemberType(this.arrayObj.getType()), this.arrayObj.getOrigin(), this.index);
                         fresh = true;
                     }
                 } else { //e instanceof AccessOutcomeOut
@@ -134,7 +133,7 @@ StrategyUpdate_XALOAD> {
                 if (o.noReferenceExpansion()) {
                     final ReferenceSymbolic refToLoad = (ReferenceSymbolic) val;
                     this.nonExpandedRefTypes += (first ? "" : ", ") + refToLoad.getStaticType();
-                    this.nonExpandedRefOrigins += (first ? "" : ", ") + refToLoad.getOrigin();
+                    this.nonExpandedRefOrigins += (first ? "" : ", ") + refToLoad.asOriginString();
                     first = false;
                 }
 

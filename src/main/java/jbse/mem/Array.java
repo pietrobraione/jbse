@@ -17,10 +17,10 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.val.Calculator;
 import jbse.val.Expression;
-import jbse.val.MemoryPath;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.ReferenceArrayImmaterial;
+import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
 import jbse.val.Term;
 import jbse.val.Value;
@@ -354,14 +354,12 @@ public final class Array extends Objekt {
 	 *        the default value for the array member type is used for initialization.
 	 * @param length a {@link Primitive}, the number of elements in the array.
 	 * @param type a {@link String}, the type of the array.
-     * @param origin a {@link MemoryPath}, the
-     *        chain of memory accesses which allowed to discover
-     *        the {@link Array} for the first time. It can be null when
-     *        {@code epoch == }{@link Epoch#EPOCH_AFTER_START}.
+     * @param origin the {@link ReferenceSymbolic} providing origin of 
+     *        the {@code Array}, if symbolic, or {@code null}, if concrete.
 	 * @param epoch the creation {@link Epoch} of the {@link Array}.
 	 * @throws InvalidTypeException iff {@code type} is invalid. 
 	 */
-	public Array(Calculator calc, boolean initSymbolic, Value initValue, Primitive length, String type, MemoryPath origin, Epoch epoch) 
+	public Array(Calculator calc, boolean initSymbolic, Value initValue, Primitive length, String type, ReferenceSymbolic origin, Epoch epoch) 
 	throws InvalidTypeException {
 		super(calc, type, origin, epoch, new Signature(type, "" + Type.INT, "length"));
 		this.lengthSignature = new Signature(type, "" + Type.INT, "length");

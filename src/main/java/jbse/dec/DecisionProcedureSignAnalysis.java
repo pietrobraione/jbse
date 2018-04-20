@@ -12,7 +12,8 @@ import jbse.rewr.Rewriter;
 import jbse.rewr.exc.NoResultException;
 import jbse.val.Any;
 import jbse.val.Expression;
-import jbse.val.FunctionApplication;
+import jbse.val.PrimitiveSymbolicApply;
+import jbse.val.PrimitiveSymbolicAtomic;
 import jbse.val.NarrowingConversion;
 import jbse.val.Operator;
 import jbse.val.Primitive;
@@ -768,13 +769,13 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 					final Primitive first = e.getFirstOperand();
 					final Primitive second = e.getSecondOperand();
 					final Simplex simplex;
-					final FunctionApplication funAppl;
-					if (first instanceof Simplex && second instanceof FunctionApplication) {
+					final PrimitiveSymbolicApply funAppl;
+					if (first instanceof Simplex && second instanceof PrimitiveSymbolicApply) {
 						simplex = (Simplex) first;
-						funAppl = (FunctionApplication) second;
-					} else if (second instanceof Simplex && first instanceof FunctionApplication) {
+						funAppl = (PrimitiveSymbolicApply) second;
+					} else if (second instanceof Simplex && first instanceof PrimitiveSymbolicApply) {
 						simplex = (Simplex) second;
-						funAppl = (FunctionApplication) first;
+						funAppl = (PrimitiveSymbolicApply) first;
 					} else {
 						this.result = SignPredicate.UNK;
 						return;
@@ -787,7 +788,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 						return;
 					}
 					final String fun = funAppl.getOperator();
-					if (fun.equals(FunctionApplication.ASIN) || fun.equals(FunctionApplication.ATAN)) {
+					if (fun.equals(PrimitiveSymbolicApply.ASIN) || fun.equals(PrimitiveSymbolicApply.ATAN)) {
 						if (operator == Operator.ADD && val >= Math.PI/2) {
 							this.result = SignPredicate.GE;
 							return;
@@ -807,7 +808,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 			}
 
 			@Override
-			public void visitFunctionApplication(FunctionApplication x) { 
+			public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) { 
 				this.result = SignPredicate.UNK;
 			}
 
@@ -823,7 +824,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 			}
 
 			@Override
-			public void visitPrimitiveSymbolic(PrimitiveSymbolic s) { 
+			public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) { 
 				this.result = SignPredicate.UNK;
 			}
 
@@ -879,17 +880,17 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 		}
 
 		@Override
-		public void visitFunctionApplication(FunctionApplication x) {
+		public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) {
 			final SignPredicate infoFromOperator;
 			final String operator = x.getOperator();
-			if (operator.equals(FunctionApplication.EXP)) {
+			if (operator.equals(PrimitiveSymbolicApply.EXP)) {
 				infoFromOperator = SignPredicate.GT; //does nothing, indeed
-			} else if (operator.equals(FunctionApplication.ABS) || 
-					operator.equals(FunctionApplication.SQRT) ||
-					operator.equals(FunctionApplication.ACOS)) {
+			} else if (operator.equals(PrimitiveSymbolicApply.ABS) || 
+					operator.equals(PrimitiveSymbolicApply.SQRT) ||
+					operator.equals(PrimitiveSymbolicApply.ACOS)) {
 				infoFromOperator = SignPredicate.GE;
-            } else if (operator.equals(FunctionApplication.POW)) {
-                final Primitive arg = x.getArgs()[1];
+            } else if (operator.equals(PrimitiveSymbolicApply.POW)) {
+                final Primitive arg = (Primitive) x.getArgs()[1];
                 if (arg instanceof Simplex) {
                     final Simplex argSimplex = (Simplex) arg;
                     if (argSimplex.isZeroOne(true)) {
@@ -908,16 +909,16 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
                 } else {
                     infoFromOperator = SignPredicate.UNK;
                 }
-			} else if (operator.equals(FunctionApplication.COS)) {
-				final Primitive arg = x.getArgs()[0];
-				if (arg instanceof FunctionApplication) {
-					final String argOperator = ((FunctionApplication) arg).getOperator();
-					if (argOperator.equals(FunctionApplication.SIN) ||
-						argOperator.equals(FunctionApplication.COS) ||
-						argOperator.equals(FunctionApplication.ATAN)) {
+			} else if (operator.equals(PrimitiveSymbolicApply.COS)) {
+				final Primitive arg = (Primitive) x.getArgs()[0];
+				if (arg instanceof PrimitiveSymbolicApply) {
+					final String argOperator = ((PrimitiveSymbolicApply) arg).getOperator();
+					if (argOperator.equals(PrimitiveSymbolicApply.SIN) ||
+						argOperator.equals(PrimitiveSymbolicApply.COS) ||
+						argOperator.equals(PrimitiveSymbolicApply.ATAN)) {
 						//all these functions have value in (-PI/2, PI/2) where cos is positive
 						infoFromOperator = SignPredicate.GT; 
-					} else if (argOperator.equals(FunctionApplication.ASIN)) {
+					} else if (argOperator.equals(PrimitiveSymbolicApply.ASIN)) {
 						//all these functions have value in [-PI/2, PI/2] where cos is nonnegative
 						infoFromOperator = SignPredicate.GE;
 					} else {
@@ -926,14 +927,14 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 				} else {
 					infoFromOperator = SignPredicate.UNK;
 				}
-			} else if (operator.equals(FunctionApplication.SIN)) {
+			} else if (operator.equals(PrimitiveSymbolicApply.SIN)) {
 				//sin(atan(x)) has the same sign of x
-				final Primitive arg = x.getArgs()[0];
-				if (arg instanceof FunctionApplication) {
-					final FunctionApplication argFA = (FunctionApplication) arg;
+				final Primitive arg = (Primitive) x.getArgs()[0];
+				if (arg instanceof PrimitiveSymbolicApply) {
+					final PrimitiveSymbolicApply argFA = (PrimitiveSymbolicApply) arg;
 					final String argOperator = argFA.getOperator();
-					if (argOperator.equals(FunctionApplication.ATAN)) {
-						final Primitive argArg = argFA.getArgs()[0];
+					if (argOperator.equals(PrimitiveSymbolicApply.ATAN)) {
+						final Primitive argArg = (Primitive) argFA.getArgs()[0];
 						try {
 							argArg.accept(this);
 						} catch (Exception e) {
@@ -981,7 +982,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 		}
 
 		@Override
-		public void visitPrimitiveSymbolic(PrimitiveSymbolic s) {
+		public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) {
 			this.result = fetch(s);
 		}
 
@@ -1115,7 +1116,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 			}
 
 			@Override
-			protected void rewriteFunctionApplication(FunctionApplication x)
+			protected void rewritePrimitiveSymbolicApply(PrimitiveSymbolicApply x)
 			throws NoResultException {
 				final boolean done = setResultBasedOnSign(x);
 				if (done) {
@@ -1124,9 +1125,9 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 
 				//else
 				final String operator = x.getOperator();
-				if (operator.equals(FunctionApplication.ATAN) ||
-					operator.equals(FunctionApplication.ASIN)) { //TODO is asin simplification problematic as asin(x) requires a bounded x?
-					setResult(rewrite(x.getArgs()[0]));
+				if (operator.equals(PrimitiveSymbolicApply.ATAN) ||
+					operator.equals(PrimitiveSymbolicApply.ASIN)) { //TODO is asin simplification problematic as asin(x) requires a bounded x?
+					setResult(rewrite((Primitive) x.getArgs()[0]));
 				} else {
 					setResult(x);
 				}

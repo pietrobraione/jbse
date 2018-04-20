@@ -3,7 +3,7 @@ package jbse.rewr;
 import static org.junit.Assert.assertEquals;
 
 import jbse.common.Type;
-import jbse.val.FunctionApplication;
+import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.Primitive;
 import jbse.val.Term;
 import jbse.val.exc.InvalidOperandException;
@@ -27,8 +27,8 @@ public class RewriterSqrtTest {
 	public void testBasic() throws InvalidOperandException, InvalidTypeException {
 		//sqrt(A * A) -> abs(A)
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
-		final Primitive p_post = calc.applyFunction(Type.DOUBLE, FunctionApplication.SQRT, A.mul(A)); 
-		assertEquals(calc.applyFunction(Type.DOUBLE, FunctionApplication.ABS, A), p_post);
+		final Primitive p_post = calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.SQRT, A.mul(A)); 
+		assertEquals(calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.ABS, A), p_post);
 	}
 	
 	@Test
@@ -37,24 +37,24 @@ public class RewriterSqrtTest {
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
 		final Term B = calc.valTerm(Type.DOUBLE, "B");
 		final Primitive dmul = A.mul(B).mul(B.mul(A));
-		final Primitive p_post = calc.applyFunction(Type.DOUBLE, FunctionApplication.SQRT, dmul); 
-		assertEquals(calc.applyFunction(Type.DOUBLE, FunctionApplication.ABS, A.mul(B)), p_post);
+		final Primitive p_post = calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.SQRT, dmul); 
+		assertEquals(calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.ABS, A.mul(B)), p_post);
 	}
 	
 	@Test
 	public void testNested() throws InvalidOperandException, InvalidTypeException {
 		//sqrt(A * sqrt(A * A)) -> sqrt(A * abs(A))
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
-		final Primitive p_post = calc.applyFunction(Type.DOUBLE, FunctionApplication.SQRT, A.mul(calc.applyFunction(Type.DOUBLE, FunctionApplication.SQRT, A.mul(A)))); 
-		assertEquals(calc.applyFunction(Type.DOUBLE, FunctionApplication.SQRT, A.mul(calc.applyFunction(Type.DOUBLE, FunctionApplication.ABS, A))), p_post);
+		final Primitive p_post = calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.SQRT, A.mul(calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.SQRT, A.mul(A)))); 
+		assertEquals(calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.SQRT, A.mul(calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.ABS, A))), p_post);
 	}	
 	
 	@Test
 	public void testMult() throws InvalidOperandException, InvalidTypeException {
 		//sqrt(A * 2 * A) -> abs(A) * sqrt(2)
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
-		final Primitive p_post = calc.applyFunction(Type.DOUBLE, FunctionApplication.SQRT, A.mul(calc.valDouble(2.0d).mul(A))); 
-		assertEquals(calc.applyFunction(Type.DOUBLE, FunctionApplication.ABS, A).mul(calc.applyFunction(Type.DOUBLE, FunctionApplication.SQRT, calc.valDouble(2.0d))), p_post); 
+		final Primitive p_post = calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.SQRT, A.mul(calc.valDouble(2.0d).mul(A))); 
+		assertEquals(calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.ABS, A).mul(calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.SQRT, calc.valDouble(2.0d))), p_post); 
 		//TODO the assertion check is quite fragile, make it more robust
 	}	
 	
@@ -64,8 +64,8 @@ public class RewriterSqrtTest {
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
 		final Term B = calc.valTerm(Type.DOUBLE, "B");
 		final Primitive binomial = A.mul(A).add(calc.valDouble(2.0d).mul(A).mul(B)).add(B.mul(B)); 
-		final Primitive p_post = calc.applyFunction(Type.DOUBLE, FunctionApplication.SQRT, binomial); 
-		assertEquals(calc.applyFunction(Type.DOUBLE, FunctionApplication.ABS, A.add(B)), p_post); 
+		final Primitive p_post = calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.SQRT, binomial); 
+		assertEquals(calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.ABS, A.add(B)), p_post); 
 		//this check works thanks to polynomial rewriter normalization of results
 	}	
 	
@@ -75,8 +75,8 @@ public class RewriterSqrtTest {
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
 		final Term B = calc.valTerm(Type.DOUBLE, "B");
 		final Primitive binomial = calc.valDouble(-2.0d).mul(A).mul(B).add(B.mul(B)).add(A.mul(A));
-		final Primitive p_post = calc.applyFunction(Type.DOUBLE, FunctionApplication.SQRT, binomial); 
-		assertEquals(calc.applyFunction(Type.DOUBLE, FunctionApplication.ABS, A.sub(B)), p_post); 
+		final Primitive p_post = calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.SQRT, binomial); 
+		assertEquals(calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.ABS, A.sub(B)), p_post); 
 		//TODO this check is fragile, as it does not verifies the OR part; it also depends on polynomial rewriter to normalize results
 	}	
 	
@@ -84,9 +84,9 @@ public class RewriterSqrtTest {
 	public void testBinomial3() throws InvalidOperandException, InvalidTypeException {
 		//sqrt(2 * f(A) * g(A) + f(A) * f(A) + g(A) * g(A)) -> abs(f(A) + g(A)) (OR abs(g(A) + f(A)))
 		final Term A = calc.valTerm(Type.DOUBLE, "A");
-		final Primitive binomial = calc.valDouble(2.0d).mul(calc.applyFunction(Type.DOUBLE, "f", A)).mul(calc.applyFunction(Type.DOUBLE, "g", A)).add(calc.applyFunction(Type.DOUBLE, "f", A).mul(calc.applyFunction(Type.DOUBLE, "f", A))).add(calc.applyFunction(Type.DOUBLE, "g", A).mul(calc.applyFunction(Type.DOUBLE, "g", A)));
-		final Primitive p_post = calc.applyFunction(Type.DOUBLE, FunctionApplication.SQRT, binomial); 
-		assertEquals(calc.applyFunction(Type.DOUBLE, FunctionApplication.ABS, calc.applyFunction(Type.DOUBLE, "f", A).add(calc.applyFunction(Type.DOUBLE, "g", A))), p_post); 
+		final Primitive binomial = calc.valDouble(2.0d).mul(calc.applyFunctionPrimitive(Type.DOUBLE, null, "f", A)).mul(calc.applyFunctionPrimitive(Type.DOUBLE, null, "g", A)).add(calc.applyFunctionPrimitive(Type.DOUBLE, null, "f", A).mul(calc.applyFunctionPrimitive(Type.DOUBLE, null, "f", A))).add(calc.applyFunctionPrimitive(Type.DOUBLE, null, "g", A).mul(calc.applyFunctionPrimitive(Type.DOUBLE, null, "g", A)));
+		final Primitive p_post = calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.SQRT, binomial); 
+		assertEquals(calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.ABS, calc.applyFunctionPrimitive(Type.DOUBLE, null, "f", A).add(calc.applyFunctionPrimitive(Type.DOUBLE, null, "g", A))), p_post); 
 		//TODO this assertion check is fragile, as it does not verifies the OR part; it also depends on polynomial rewriter to normalize results
 	}	
 }

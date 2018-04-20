@@ -3,7 +3,7 @@ package jbse.rewr;
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.rewr.exc.NoResultException;
-import jbse.val.FunctionApplication;
+import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.Primitive;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
@@ -19,36 +19,36 @@ public class RewriterSqrt extends Rewriter {
 	public RewriterSqrt() { }
 	
 	@Override
-	protected void rewriteFunctionApplication(FunctionApplication x)
+	protected void rewritePrimitiveSymbolicApply(PrimitiveSymbolicApply x)
 	throws NoResultException {
-		if (x.getOperator().equals(FunctionApplication.SQRT)) {
+		if (x.getOperator().equals(PrimitiveSymbolicApply.SQRT)) {
 			if (x.getType() != Type.DOUBLE) {
 				//sqrt function yielding nondouble value; in doubt we give up
-				super.rewriteFunctionApplication(x);
+				super.rewritePrimitiveSymbolicApply(x);
 				return;
 			}
 			if (x.getArgs().length != 1) {
 				//sqrt function with strange number of args;
 				//since complaining is not our business we just give up
-				super.rewriteFunctionApplication(x);
+				super.rewritePrimitiveSymbolicApply(x);
 				return;
 			}
-			final Primitive arg = x.getArgs()[0];
+			final Primitive arg = (Primitive) x.getArgs()[0];
 			final Polynomial[] argSqrt;
 			try {
 				argSqrt = Polynomial.of(this.calc, arg).sqrt();
 				if (argSqrt[0].isZeroOne(false)) {
-					super.rewriteFunctionApplication(x);
+					super.rewritePrimitiveSymbolicApply(x);
 				} else {
-					setResult(this.calc.applyFunction(x.getType(), FunctionApplication.ABS, argSqrt[0].toPrimitive())
-							.mul(this.calc.applyFunction(x.getType(), FunctionApplication.SQRT, argSqrt[1].toPrimitive())));
+					setResult(this.calc.applyFunctionPrimitive(x.getType(), x.getHistoryPoint(), PrimitiveSymbolicApply.ABS, argSqrt[0].toPrimitive())
+							.mul(this.calc.applyFunctionPrimitive(x.getType(), x.getHistoryPoint(), PrimitiveSymbolicApply.SQRT, argSqrt[1].toPrimitive())));
 				}
 			} catch (InvalidOperandException | InvalidTypeException e) {
 				//this should never happen
 				throw new UnexpectedInternalException(e);
 			}
 		} else {
-			super.rewriteFunctionApplication(x);
+			super.rewritePrimitiveSymbolicApply(x);
 		}
 	}
 }

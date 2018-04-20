@@ -1,8 +1,7 @@
 package jbse.algo;
 
 import static jbse.algo.Util.throwVerifyError;
-
-import java.util.Arrays;
+import static jbse.common.Type.isPrimitive;
 
 import jbse.algo.exc.CannotInvokeNativeException;
 import jbse.bc.Signature;
@@ -11,7 +10,8 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.State;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
-import jbse.val.FunctionApplication;
+import jbse.val.PrimitiveSymbolicApply;
+import jbse.val.ReferenceSymbolicApply;
 import jbse.val.Primitive;
 import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
@@ -31,7 +31,7 @@ import jbse.val.exc.ValueDoesNotSupportNativeException;
  *     is used to execute the native method, and the corresponding value is
  *     pushed on the operand stack;</li>
  * <li>If the method's return type is primitive, and all its parameters 
- *     have primitive type and some is symbolic, then a {@link FunctionApplication}  
+ *     have primitive type and some is symbolic, then a {@link PrimitiveSymbolicApply}  
  *     mirroring the method's invocation is pushed on the operand stack;</li>
  * <li>In all the other cases, throws a {@link ValueDoesNotSupportNativeException}. 
  * </ul>
@@ -48,32 +48,36 @@ public class NativeInvokerPure implements NativeInvoker {
 		final Value returnValue;
 		if (Type.isVoid(returnType)) {
 			returnValue = null;
-		} else if (Type.isPrimitive(returnType)) {
-			//requires all arguments are primitive
-			final Primitive[] argsPrim = new Primitive[args.length];
-			boolean someSymbolic = false;
-			for (int i = 0; i < args.length; ++i) {
-				if (args[i] instanceof Primitive) {
-					argsPrim[i] = (Primitive) args[i];
-					someSymbolic = someSymbolic || (argsPrim[i].isSymbolic());
-				} else { 
-					throw new ValueDoesNotSupportNativeException("invoked method " + methodSignatureResolved + " with args " + Arrays.toString(args));
-				}
-			}
-			if (someSymbolic) {
-				try {
-					returnValue = state.getCalculator().applyFunction(returnType.charAt(0), methodSignatureResolved.toString(), argsPrim);
-				} catch (InvalidOperandException | InvalidTypeException e) {
-					//this should never happen
-					throw new UnexpectedInternalException(e);
-				}
-			} else {
-				this.delegate.doInvokeNative(state, methodSignatureResolved, argsPrim, pcOffset);
-				return;
-			}
 		} else {
-            throw new ValueDoesNotSupportNativeException("invoked method " + methodSignatureResolved + " with args " + Arrays.toString(args));
-			//TODO put reference resolution here or in the invoke* bytecodes and assign returnValue = state.createSymbol(returnType, "__NATIVE[" + state.getIdentifier() + "[" + state.getSequenceNumber() + "]");
+		        //checks the parameters
+			boolean allConcrete = true;
+			boolean allPrimitive = true;
+			for (int i = 0; i < args.length; ++i) {
+			    if (args[i].isSymbolic()) {
+			        allConcrete = false;
+			    }
+				if (args[i] instanceof Primitive) {
+				    allPrimitive = false;
+				}
+			}
+			
+			//delegates if all parameters are concrete and primitive
+			if (allConcrete && allPrimitive) {
+                            this.delegate.doInvokeNative(state, methodSignatureResolved, args, pcOffset);
+                            return;
+                        }
+			
+			//otherwise, builds a term
+			try {
+		            if (isPrimitive(returnType)) {
+	                            returnValue = state.getCalculator().applyFunctionPrimitive(returnType.charAt(0), state.getHistoryPoint(), methodSignatureResolved.toString(), args);
+		            } else {
+		                returnValue = new ReferenceSymbolicApply(returnType, state.getHistoryPoint(), methodSignatureResolved.toString(), args);
+		            }
+			} catch (InvalidOperandException | InvalidTypeException e) {
+			    //this should never happen
+			    throw new UnexpectedInternalException(e);
+			}
 		}
 		
 		//pushes the return value (if present) on the operand stack, 

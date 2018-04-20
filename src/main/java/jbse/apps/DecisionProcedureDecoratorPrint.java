@@ -79,7 +79,7 @@ public class DecisionProcedureDecoratorPrint extends DecisionProcedureDecorator 
 	    final boolean retVal = super.isSatAliases(hier, r, heapPos, o);
         IO.print(this.out, ":: Decided: ");
         IO.print(this.out, formatClauses(this.getAssumptions())); 
-        IO.println(this.out, TURNSTILE + r.getOrigin() + " == " + o.getOrigin() + ". Result: " + Boolean.toString(retVal));
+        IO.println(this.out, TURNSTILE + r.asOriginString() + " == " + o.getOrigin().asOriginString() + ". Result: " + Boolean.toString(retVal));
         return retVal;
 	}
 	
@@ -89,7 +89,7 @@ public class DecisionProcedureDecoratorPrint extends DecisionProcedureDecorator 
 	    final boolean retVal = super.isSatExpands(hier, r, className);
         IO.print(this.out, ":: Decided: ");
         IO.print(this.out, formatClauses(this.getAssumptions())); 
-        IO.println(this.out, TURNSTILE + r.getOrigin() + " == fresh " + className + ". Result: " + Boolean.toString(retVal));
+        IO.println(this.out, TURNSTILE + r.asOriginString() + " == fresh " + className + ". Result: " + Boolean.toString(retVal));
         return retVal;
 	}
 	
@@ -99,7 +99,7 @@ public class DecisionProcedureDecoratorPrint extends DecisionProcedureDecorator 
 	    final boolean retVal = super.isSatNull(hier, r);
         IO.print(this.out, ":: Decided: ");
         IO.print(this.out, formatClauses(this.getAssumptions())); 
-        IO.println(this.out, TURNSTILE + r.getOrigin() + " == null. Result: " + Boolean.toString(retVal));
+        IO.println(this.out, TURNSTILE + r.asOriginString() + " == null. Result: " + Boolean.toString(retVal));
         return retVal;
 	}
 	

@@ -7,10 +7,12 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.rewr.exc.NoResultException;
 import jbse.val.Calculator;
 import jbse.val.Expression;
-import jbse.val.FunctionApplication;
+import jbse.val.PrimitiveSymbolicApply;
+import jbse.val.HistoryPoint;
 import jbse.val.NarrowingConversion;
 import jbse.val.Operator;
 import jbse.val.Primitive;
+import jbse.val.Value;
 import jbse.val.WideningConversion;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidOperatorException;
@@ -328,13 +330,10 @@ public class CalculatorRewriting extends Calculator {
 		}
     }
 
-    /* (non-Javadoc)
-	 * @see jbse.mem.ICalculator#applyFunction(char, java.lang.String, jbse.mem.Primitive)
-	 */
     @Override
-	public Primitive applyFunction(char type, String operator, Primitive... args) 
+	public Primitive applyFunctionPrimitive(char type, HistoryPoint historyPoint, String operator, Value... args) 
 	throws InvalidOperandException, InvalidTypeException {
-        return applyRewriters(new FunctionApplication(type, this, operator, args));
+        return applyRewriters(new PrimitiveSymbolicApply(type, historyPoint, this, operator, args));
     }
     
     /* (non-Javadoc)

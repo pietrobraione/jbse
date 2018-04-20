@@ -12,11 +12,11 @@ import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.Any;
 import jbse.val.Expression;
-import jbse.val.FunctionApplication;
+import jbse.val.PrimitiveSymbolicApply;
+import jbse.val.PrimitiveSymbolicAtomic;
 import jbse.val.NarrowingConversion;
 import jbse.val.Operator;
 import jbse.val.Primitive;
-import jbse.val.PrimitiveSymbolic;
 import jbse.val.PrimitiveVisitor;
 import jbse.val.Simplex;
 import jbse.val.Term;
@@ -298,7 +298,7 @@ class Monomial implements Comparable<Monomial> {
 			}
 
 			@Override
-			public void visitFunctionApplication(FunctionApplication x) {
+			public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) {
 				incExponent(x, 1);
 			}
 
@@ -313,7 +313,7 @@ class Monomial implements Comparable<Monomial> {
 			}
 
 			@Override
-			public void visitPrimitiveSymbolic(PrimitiveSymbolic s) {
+			public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) {
 				incExponent(s, 1);
 			}
 

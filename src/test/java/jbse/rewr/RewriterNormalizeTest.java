@@ -3,7 +3,7 @@ package jbse.rewr;
 import static org.junit.Assert.assertEquals;
 
 import jbse.common.Type;
-import jbse.val.FunctionApplication;
+import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.Primitive;
 import jbse.val.Term;
 import jbse.val.exc.InvalidOperandException;
@@ -39,8 +39,8 @@ public class RewriterNormalizeTest {
 	public void test2() throws InvalidOperandException, InvalidTypeException {
 		final Term A = calc.valTerm(Type.INT, "A");
 		final Term B = calc.valTerm(Type.INT, "B");
-		final Primitive p_post = new FunctionApplication(Type.INT, calc, "f", A.mul(B)).mul(A);
-		assertEquals(A.mul(new FunctionApplication(Type.INT, calc, "f", B.mul(A))), p_post);
+		final Primitive p_post = new PrimitiveSymbolicApply(Type.INT, null, calc, "f", A.mul(B)).mul(A);
+		assertEquals(A.mul(new PrimitiveSymbolicApply(Type.INT, null, calc, "f", B.mul(A))), p_post);
 	}
 
 
@@ -50,8 +50,8 @@ public class RewriterNormalizeTest {
 		final Term B = calc.valTerm(Type.INT, "B");
 		final Term C = calc.valTerm(Type.INT, "C");
 		final Term D = calc.valTerm(Type.INT, "D");
-		final Primitive p_post = new FunctionApplication(Type.INT, calc, "f", A.mul(B), C.mul(D)).mul(A);
-		assertEquals(A.mul(new FunctionApplication(Type.INT, calc, "f", B.mul(A), D.mul(C))), p_post);
+		final Primitive p_post = new PrimitiveSymbolicApply(Type.INT, null, calc, "f", A.mul(B), C.mul(D)).mul(A);
+		assertEquals(A.mul(new PrimitiveSymbolicApply(Type.INT, null, calc, "f", B.mul(A), D.mul(C))), p_post);
 	}
 
 
@@ -61,7 +61,7 @@ public class RewriterNormalizeTest {
 		final Term B = calc.valTerm(Type.INT, "B");
 		final Term C = calc.valTerm(Type.INT, "C");
 		final Term D = calc.valTerm(Type.INT, "D");
-		final Primitive p_post = A.mul(new FunctionApplication(Type.INT, calc, "f", A.add(calc.valInt(-1).mul(B))).div(new FunctionApplication(Type.INT, calc, "g", C.add(calc.valInt(-1).mul(D)))));
-		assertEquals(new FunctionApplication(Type.INT, calc, "f", calc.valInt(-1).mul(B).add(A)).div(new FunctionApplication(Type.INT, calc, "g", calc.valInt(-1).mul(D).add(C))).mul(A), p_post);
+		final Primitive p_post = A.mul(new PrimitiveSymbolicApply(Type.INT, null, calc, "f", A.add(calc.valInt(-1).mul(B))).div(new PrimitiveSymbolicApply(Type.INT, null, calc, "g", C.add(calc.valInt(-1).mul(D)))));
+		assertEquals(new PrimitiveSymbolicApply(Type.INT, null, calc, "f", calc.valInt(-1).mul(B).add(A)).div(new PrimitiveSymbolicApply(Type.INT, null, calc, "g", calc.valInt(-1).mul(D).add(C))).mul(A), p_post);
 	}
 }

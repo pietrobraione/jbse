@@ -1,6 +1,5 @@
 package jbse.dec;
 
-import jbse.val.MemoryPath;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -16,7 +15,7 @@ import jbse.val.ReferenceSymbolic;
  *            expansions to null.
  */
 interface DecisionAlternativeReferenceFactory<DA, DE, DN> {
-	DA createAlternativeRefAliases(ReferenceSymbolic refToResolve, long objectPosition, MemoryPath objectOrigin, int branchNumber);
+	DA createAlternativeRefAliases(ReferenceSymbolic refToResolve, long objectPosition, ReferenceSymbolic objectOrigin, int branchNumber);
 	DE createAlternativeRefExpands(ReferenceSymbolic refToResolve, String className, int branchNumber);
 	DN createAlternativeRefNull(ReferenceSymbolic refToResolve, int branchNumber);
 }

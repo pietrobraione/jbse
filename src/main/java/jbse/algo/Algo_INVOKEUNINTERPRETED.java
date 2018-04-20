@@ -2,18 +2,16 @@ package jbse.algo;
 
 import static jbse.algo.Util.failExecution;
 import static jbse.common.Type.splitParametersDescriptors;
-import static jbse.mem.Util.toPrimitive;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.splitReturnValueDescriptor;
 
-import java.util.Arrays;
 import java.util.function.Supplier;
 
 import jbse.algo.exc.UninterpretedUnsupportedException;
 import jbse.bc.Signature;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
-import jbse.val.Primitive;
+import jbse.val.ReferenceSymbolicApply;
 import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
@@ -37,8 +35,8 @@ public final class Algo_INVOKEUNINTERPRETED extends Algo_INVOKEMETA_Nonbranching
         this.functionName = functionName;
     }
 
-    private Primitive[] argsPrimitive; //set by cooker
-    private char returnType; //set by cooker
+    private Value[] args; //set by cooker
+    private String returnType; //set by cooker
 
     @Override
     protected Supplier<Integer> numOperands() {
@@ -50,26 +48,22 @@ public final class Algo_INVOKEUNINTERPRETED extends Algo_INVOKEMETA_Nonbranching
 
     @Override
     protected void cookMore(State state) throws UninterpretedUnsupportedException {
-        //gets and checks the return type
-        this.returnType = splitReturnValueDescriptor(this.methodSignatureImpl.getDescriptor()).charAt(0);
-        if (!isPrimitive(this.returnType)) {
-            throw new UninterpretedUnsupportedException("The method " + this.methodSignatureImpl + " does not return a primitive value."); 
-        }
+        //gets the return type
+        this.returnType = splitReturnValueDescriptor(this.methodSignatureImpl.getDescriptor());
 
-        //pops the args and checks that they are all primitive
-        try {
-            final Value[] args = this.data.operands();
-            this.argsPrimitive = toPrimitive(this.isStatic ? args : Arrays.copyOfRange(args, 1, args.length));
-        } catch (InvalidTypeException e) {
-            throw new UninterpretedUnsupportedException("The method " + this.methodSignatureImpl + " has a nonprimitive argument other than 'this'."); 
-        }
+        //pops the args
+        this.args = this.data.operands();
     }
 
     @Override
     protected void update(State state) throws ThreadStackEmptyException {
         //pushes the uninterpreted function term
         try {
-            state.pushOperand(state.getCalculator().applyFunction(this.returnType, this.functionName, this.argsPrimitive));
+            if (isPrimitive(this.returnType)) {
+                state.pushOperand(state.getCalculator().applyFunctionPrimitive(this.returnType.charAt(0), state.getHistoryPoint(), this.functionName, this.args));
+            } else {
+                state.pushOperand(new ReferenceSymbolicApply(this.returnType, state.getHistoryPoint(), this.functionName, this.args));
+            }
         } catch (InvalidOperandException | InvalidTypeException e) {
             //this should never happen
             failExecution(e);

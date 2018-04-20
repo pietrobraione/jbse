@@ -11,11 +11,11 @@ import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.Any;
 import jbse.val.Expression;
-import jbse.val.FunctionApplication;
+import jbse.val.PrimitiveSymbolicApply;
+import jbse.val.PrimitiveSymbolicAtomic;
 import jbse.val.NarrowingConversion;
 import jbse.val.Operator;
 import jbse.val.Primitive;
-import jbse.val.PrimitiveSymbolic;
 import jbse.val.PrimitiveVisitor;
 import jbse.val.Simplex;
 import jbse.val.Term;
@@ -296,7 +296,7 @@ class Polynomial {
 			}
 
 			@Override
-			public void visitFunctionApplication(FunctionApplication x)
+			public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x)
 			throws Exception {
 				Monomial m = Monomial.of(calc, x);
 				addMonomial(m);
@@ -317,7 +317,7 @@ class Polynomial {
 			}
 
 			@Override
-			public void visitPrimitiveSymbolic(PrimitiveSymbolic s)
+			public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s)
 			throws Exception {
 				Monomial m = Monomial.of(calc, s);
 				addMonomial(m);

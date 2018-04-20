@@ -25,22 +25,23 @@ import jbse.mem.Array;
 import jbse.mem.Array.AccessOutcome;
 import jbse.mem.Array.AccessOutcomeIn;
 import jbse.mem.Frame;
+import jbse.mem.Klass;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.Util;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.ThreadStackEmptyException;
-import jbse.val.Access;
-import jbse.val.AccessArrayLength;
-import jbse.val.AccessArrayMember;
-import jbse.val.AccessField;
-import jbse.val.AccessHashCode;
-import jbse.val.AccessLocalVariable;
-import jbse.val.AccessStatic;
 import jbse.val.Calculator;
-import jbse.val.MemoryPath;
+import jbse.val.KlassPseudoReference;
+import jbse.val.PrimitiveSymbolicHashCode;
+import jbse.val.PrimitiveSymbolicMemberArrayLength;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
+import jbse.val.ReferenceSymbolic;
+import jbse.val.Symbolic;
+import jbse.val.SymbolicLocalVariable;
+import jbse.val.SymbolicMemberArray;
+import jbse.val.SymbolicMemberField;
 import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
@@ -216,7 +217,7 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
         }
         
         @Override
-        public String typeOfObject(MemoryPath origin) throws GuidanceException {
+        public String typeOfObject(ReferenceSymbolic origin) throws GuidanceException {
             final ReferenceConcrete refInConcreteState = (ReferenceConcrete) getValue(origin);
             if (this.initialStateConcrete.isNull(refInConcreteState)) {
                 return null;
@@ -226,76 +227,95 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
         }
 
         @Override
-        public boolean isNull(MemoryPath origin) throws GuidanceException {
+        public boolean isNull(ReferenceSymbolic origin) throws GuidanceException {
             final ReferenceConcrete refInConcreteState = (ReferenceConcrete) getValue(origin);
             return (this.initialStateConcrete.isNull(refInConcreteState));
         }
 
         @Override
-        public boolean areAlias(MemoryPath first, MemoryPath second) throws GuidanceException {
+        public boolean areAlias(ReferenceSymbolic first, ReferenceSymbolic second) throws GuidanceException {
             final ReferenceConcrete firstInConcreteState = (ReferenceConcrete) getValue(first);
             final ReferenceConcrete secondInConcreteState = (ReferenceConcrete) getValue(second);
             return Util.areAlias(this.initialStateConcrete, firstInConcreteState, secondInConcreteState);
         }
 
         @Override
-        public Object getValue(MemoryPath origin) throws GuidanceException {
-            Value value = null;
-            Objekt o = null;
-            for (Access a : origin) {
-                if (a instanceof AccessLocalVariable) {
-                    final AccessLocalVariable al = (AccessLocalVariable) a;
-                    value = this.rootFrameConcrete.getLocalVariableValue(al.variableName());
-                    if (value == null) {
-                        throw new GuidanceException(ERROR_BAD_PATH);
-                    }
-                } else if (a instanceof AccessStatic) {
-                    final AccessStatic as = (AccessStatic) a;
-                    value = null;
-                    o = this.initialStateConcrete.getKlass(as.className());
-                    if (o == null) {
-                        throw new GuidanceException(ERROR_BAD_PATH);
-                    }
-                } else if (a instanceof AccessField) {
-                    final AccessField af = (AccessField) a;
-                    value = o.getFieldValue(af.fieldName());
-                } else if (a instanceof AccessArrayLength) {
-                    if (! (o instanceof Array)) {
-                        throw new GuidanceException(ERROR_BAD_PATH);
-                    }
-                    value = ((Array) o).getLength();
-                } else if (a instanceof AccessArrayMember) {
-                    if (! (o instanceof Array)) {
-                        throw new GuidanceException(ERROR_BAD_PATH);
-                    }
-                    final AccessArrayMember aa = (AccessArrayMember) a;
-                    try {
-                        for (AccessOutcome ao : ((Array) o).get(eval(aa.index()))) {
-                            if (ao instanceof AccessOutcomeIn) {
-                                final AccessOutcomeIn aoi = (AccessOutcomeIn) ao;
-                                value = aoi.getValue();
-                                break;
-                            }
+        public Object getValue(Symbolic origin) throws GuidanceException {
+            if (origin instanceof SymbolicLocalVariable) {
+                final SymbolicLocalVariable al = (SymbolicLocalVariable) origin;
+                final Value value = this.rootFrameConcrete.getLocalVariableValue(al.getVariableName());
+                if (value == null) {
+                    throw new GuidanceException(ERROR_BAD_PATH);
+                }
+                return value;
+            } else if (origin instanceof KlassPseudoReference) {
+                final KlassPseudoReference as = (KlassPseudoReference) origin;
+                final Klass k = this.initialStateConcrete.getKlass(as.getClassName());
+                if (k == null) {
+                    throw new GuidanceException(ERROR_BAD_PATH);
+                }
+                return k;
+            } else if (origin instanceof SymbolicMemberField) {
+                final SymbolicMemberField af = (SymbolicMemberField) origin;
+                final Object o = getValue(af.getContainer());
+                if (o == null) {
+                    throw new GuidanceException(ERROR_BAD_PATH);
+                }
+                if (o instanceof Reference) {
+                    return this.initialStateConcrete.getObject((Reference) o).getFieldValue(af.getFieldName());
+                } else if (o instanceof Klass) {
+                    return ((Klass) o).getFieldValue(af.getFieldName());
+                } else { //(o is a primitive)
+                    throw new GuidanceException(ERROR_BAD_PATH);
+                }
+            } else if (origin instanceof PrimitiveSymbolicMemberArrayLength) {
+                final PrimitiveSymbolicMemberArrayLength al = (PrimitiveSymbolicMemberArrayLength) origin;
+                final Object o = getValue(al.getContainer());
+                if (o == null) {
+                    throw new GuidanceException(ERROR_BAD_PATH);
+                }
+                if (o instanceof Reference) {
+                    return ((Array) this.initialStateConcrete.getObject((Reference) o)).getLength();
+                } else { //(o is a Klass or a primitive)
+                    throw new GuidanceException(ERROR_BAD_PATH);
+                }
+            } else if (origin instanceof SymbolicMemberArray) {
+                final SymbolicMemberArray aa = (SymbolicMemberArray) origin;
+                final Object o = getValue(aa.getContainer());
+                if (o == null) {
+                    throw new GuidanceException(ERROR_BAD_PATH);
+                }
+                final Array a;
+                if (o instanceof Reference) {
+                    a = ((Array) this.initialStateConcrete.getObject((Reference) o));
+                } else { //(o is a Klass or a primitive)
+                    throw new GuidanceException(ERROR_BAD_PATH);
+                }
+                try {
+                    for (AccessOutcome ao : a.get(eval(aa.getIndex()))) {
+                        if (ao instanceof AccessOutcomeIn) {
+                            final AccessOutcomeIn aoi = (AccessOutcomeIn) ao;
+                            return aoi.getValue();
                         }
-                    } catch (InvalidOperandException | InvalidTypeException e) {
-                        throw new GuidanceException(e);
                     }
-                } else if (a instanceof AccessHashCode) {
-                    if (o == null) {
-                        throw new GuidanceException(ERROR_BAD_PATH);
-                    }
-                    value = o.getObjektHashCode();
+                    throw new GuidanceException(ERROR_BAD_PATH);
+                } catch (InvalidOperandException | InvalidTypeException e) {
+                    throw new GuidanceException(e);
                 }
-                if (value instanceof Reference) {
-                    o = this.initialStateConcrete.getObject((Reference) value);
-                } else if (value != null) {
-                    o = null;
+            } else if (origin instanceof PrimitiveSymbolicHashCode) {
+                final PrimitiveSymbolicHashCode ah = (PrimitiveSymbolicHashCode) origin;
+                final Object o = getValue(ah.getContainer());
+                if (o == null) {
+                    throw new GuidanceException(ERROR_BAD_PATH);
                 }
-            }
-            if (value == null) {
+                if (o instanceof Reference) {
+                    return this.initialStateConcrete.getObject((Reference) o).getObjektHashCode();
+                } else { //(o is a Klass or a primitive)
+                    throw new GuidanceException(ERROR_BAD_PATH);
+                }
+            } else {
                 throw new GuidanceException(ERROR_BAD_PATH);
             }
-            return value;
         }
     }
 }

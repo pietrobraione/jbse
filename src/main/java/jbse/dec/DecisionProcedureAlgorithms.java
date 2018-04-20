@@ -867,7 +867,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		final Set<String> possibleExpansions = getPossibleExpansions(state, refToResolve);
 		if (possibleAliases == null || possibleExpansions == null) {
 			throw new UnexpectedInternalException("Symbolic reference " + refToResolve + 
-					" (" + refToResolve.getOrigin() + ") has a bad type.");
+					" (" + refToResolve.asOriginString() + ") has a bad type.");
 		}
 		
 		int branchCounter = result.size() + 1;

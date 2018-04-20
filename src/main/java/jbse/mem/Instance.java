@@ -4,7 +4,7 @@ import java.util.Map;
 
 import jbse.bc.Signature;
 import jbse.val.Calculator;
-import jbse.val.MemoryPath;
+import jbse.val.ReferenceSymbolic;
 
 /**
  * Class that represent an instance of an object in the heap.
@@ -16,14 +16,12 @@ public class Instance extends Objekt {
      * @param calc a {@link Calculator}.
      * @param className a {@code String}, the name of the class of 
      *        this {@link Instance} (e.g. {@code "java/lang/Object"}).
-     * @param origin the origin of the {@code Instance}, if symbolic, 
-     *        or {@code null}, if concrete.
+     * @param origin the {@link ReferenceSymbolic} providing origin of 
+     *        the {@code Instance}, if symbolic, or {@code null}, if concrete.
      * @param epoch the creation {@link Epoch} of this {@link Instance}. 
-     *        It can be null when
-     *        {@code epoch == }{@link Epoch#EPOCH_AFTER_START}.
      * @param fieldSignatures varargs of field {@link Signature}s.
      */
-    protected Instance(Calculator calc, String className, MemoryPath origin, Epoch epoch, Signature... fieldSignatures) {
+    protected Instance(Calculator calc, String className, ReferenceSymbolic origin, Epoch epoch, Signature... fieldSignatures) {
     	super(calc, className, origin, epoch, fieldSignatures);
     }
     

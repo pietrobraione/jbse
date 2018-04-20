@@ -23,7 +23,7 @@ import jbse.rewr.RewriterOperationOnSimplex;
 import jbse.rewr.RewriterPolynomials;
 import jbse.rewr.RewriterTrigNormalize;
 import jbse.val.Expression;
-import jbse.val.FunctionApplication;
+import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.Primitive;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Term;
@@ -338,7 +338,7 @@ public class DecisionProcedureSignAnalysisTest {
 		Term C = this.calc.valTerm(Type.DOUBLE, "C");
 		this.dec.pushAssumption(new ClauseAssume((Expression) A.gt(this.calc.valInt(0))));
 		this.dec.pushAssumption(new ClauseAssume((Expression) B.gt(this.calc.valInt(0))));
-		Primitive p = A.mul(B).add(this.calc.valDouble(-1.0d).mul(this.calc.applyFunction(Type.DOUBLE, FunctionApplication.SQRT, C.mul(C))));
+		Primitive p = A.mul(B).add(this.calc.valDouble(-1.0d).mul(this.calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.SQRT, C.mul(C))));
 		this.dec.pushAssumption(new ClauseAssume((Expression) p.gt(this.calc.valInt(0))));
 		assertFalse(this.dec.isSat(this.hier, (Expression) p.div(this.calc.valDouble(-1.0d).mul(A)).gt(this.calc.valInt(0))));
 	}
@@ -359,7 +359,7 @@ public class DecisionProcedureSignAnalysisTest {
 	throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
 		//true |-/- asin(A) + 10 < 0
 		Term A = this.calc.valTerm(Type.INT, "A");
-		assertFalse(this.dec.isSat(this.hier, (Expression) this.calc.applyFunction(Type.DOUBLE, FunctionApplication.ASIN, A).add(this.calc.valDouble(10.0d)).lt(this.calc.valInt(0))));
+		assertFalse(this.dec.isSat(this.hier, (Expression) this.calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.ASIN, A).add(this.calc.valDouble(10.0d)).lt(this.calc.valInt(0))));
 	}
 
 	@Test
@@ -367,7 +367,7 @@ public class DecisionProcedureSignAnalysisTest {
 	throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
 		//true |-/- cos(atan(A)) <= 0
 		Term A = this.calc.valTerm(Type.INT, "A");
-		assertFalse(this.dec.isSat(this.hier, (Expression) this.calc.applyFunction(Type.DOUBLE, FunctionApplication.COS, this.calc.applyFunction(Type.DOUBLE, FunctionApplication.ATAN, A)).le(this.calc.valInt(0))));
+		assertFalse(this.dec.isSat(this.hier, (Expression) this.calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.COS, this.calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.ATAN, A)).le(this.calc.valInt(0))));
 	}
 
 	@Test
@@ -375,7 +375,7 @@ public class DecisionProcedureSignAnalysisTest {
 	throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
 		//true |- cos(atan(A)) > 0 (decided by simplification to true)
 		Term A = this.calc.valTerm(Type.INT, "A");
-		assertTrue(this.dec.isSat(this.hier, (Expression) this.calc.applyFunction(Type.DOUBLE, FunctionApplication.COS, this.calc.applyFunction(Type.DOUBLE, FunctionApplication.ATAN, A)).gt(this.calc.valInt(0))));
+		assertTrue(this.dec.isSat(this.hier, (Expression) this.calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.COS, this.calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.ATAN, A)).gt(this.calc.valInt(0))));
 	}
 
 	@Test
@@ -384,7 +384,7 @@ public class DecisionProcedureSignAnalysisTest {
 		//true |-/- cos(PI + atan(A)) >= 0
 		this.calc.addRewriter(new RewriterTrigNormalize());
 		Term A = this.calc.valTerm(Type.DOUBLE, "A");
-		assertFalse(this.dec.isSat(this.hier, (Expression) this.calc.applyFunction(Type.DOUBLE, FunctionApplication.COS, this.calc.valDouble(Math.PI).add(this.calc.applyFunction(Type.DOUBLE, FunctionApplication.ATAN, A))).ge(this.calc.valInt(0))));
+		assertFalse(this.dec.isSat(this.hier, (Expression) this.calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.COS, this.calc.valDouble(Math.PI).add(this.calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.ATAN, A))).ge(this.calc.valInt(0))));
 	}
 
 	@Test
@@ -394,7 +394,7 @@ public class DecisionProcedureSignAnalysisTest {
 		this.calc.addRewriter(new RewriterTrigNormalize());
 		Term A = this.calc.valTerm(Type.DOUBLE, "A");
 		this.dec.pushAssumption(new ClauseAssume((Expression) A.lt(this.calc.valInt(0))));
-		assertFalse(this.dec.isSat(this.hier, (Expression) this.calc.applyFunction(Type.DOUBLE, FunctionApplication.ATAN, A).ge(this.calc.valInt(0))));
+		assertFalse(this.dec.isSat(this.hier, (Expression) this.calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.ATAN, A).ge(this.calc.valInt(0))));
 	}
 
     @Test
@@ -402,7 +402,7 @@ public class DecisionProcedureSignAnalysisTest {
     throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
         //true |- pow(A, 0.0) > 0
         Term A = this.calc.valTerm(Type.DOUBLE, "A");
-        assertTrue(this.dec.isSat(this.hier, (Expression) this.calc.applyFunction(Type.DOUBLE, FunctionApplication.POW, A, this.calc.valDouble(0.0)).gt(this.calc.valInt(0))));
+        assertTrue(this.dec.isSat(this.hier, (Expression) this.calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.POW, A, this.calc.valDouble(0.0)).gt(this.calc.valInt(0))));
     }
 	
     @Test
@@ -410,7 +410,7 @@ public class DecisionProcedureSignAnalysisTest {
     throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
         //true |-/- pow(A, 2.0) < 0
         Term A = this.calc.valTerm(Type.DOUBLE, "A");
-        assertFalse(this.dec.isSat(this.hier, (Expression) this.calc.applyFunction(Type.DOUBLE, FunctionApplication.POW, A, this.calc.valDouble(2.0)).lt(this.calc.valInt(0))));
+        assertFalse(this.dec.isSat(this.hier, (Expression) this.calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.POW, A, this.calc.valDouble(2.0)).lt(this.calc.valInt(0))));
     }
     
     @Test(expected=NoDecisionException.class)
@@ -418,7 +418,7 @@ public class DecisionProcedureSignAnalysisTest {
     throws InvalidInputException, DecisionException, InvalidTypeException, InvalidOperandException {
         //true |-?- pow(A, 2.0) >= 0 (can refute but cannot prove)
         Term A = this.calc.valTerm(Type.DOUBLE, "A");
-        this.dec.isSat(this.hier, (Expression) this.calc.applyFunction(Type.DOUBLE, FunctionApplication.POW, A, this.calc.valDouble(2.0)).ge(this.calc.valInt(0)));
+        this.dec.isSat(this.hier, (Expression) this.calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.POW, A, this.calc.valDouble(2.0)).ge(this.calc.valInt(0)));
     }
     
 	@Test
@@ -431,7 +431,7 @@ public class DecisionProcedureSignAnalysisTest {
 		Term D = this.calc.valTerm(Type.DOUBLE, "D");
 		Term E = this.calc.valTerm(Type.DOUBLE, "E");
 		Term F = this.calc.valTerm(Type.DOUBLE, "F");
-		FunctionApplication f = (FunctionApplication) this.calc.applyFunction(Type.DOUBLE, FunctionApplication.SQRT, A.sub(B).mul(A.sub(B)).add(C.sub(D).mul(C.sub(D))));
+		PrimitiveSymbolicApply f = (PrimitiveSymbolicApply) this.calc.applyFunctionPrimitive(Type.DOUBLE, null, PrimitiveSymbolicApply.SQRT, A.sub(B).mul(A.sub(B)).add(C.sub(D).mul(C.sub(D))));
 		this.dec.pushAssumption(new ClauseAssume((Expression) E.gt(this.calc.valInt(0))));
 		this.dec.pushAssumption(new ClauseAssume((Expression) F.gt(this.calc.valInt(0))));
 		this.dec.pushAssumption(new ClauseAssume((Expression) this.calc.valDouble(-1.0d).mul(f).add(E.mul(F)).div(this.calc.valDouble(-1.0d).mul(E)).lt(this.calc.valInt(0))));

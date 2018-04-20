@@ -1,23 +1,24 @@
 package jbse.rewr;
 
-import static jbse.val.FunctionApplication.*;
+import static jbse.val.PrimitiveSymbolicApply.*;
 
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.rewr.exc.NoResultException;
 import jbse.val.Any;
 import jbse.val.Expression;
-import jbse.val.FunctionApplication;
+import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.NarrowingConversion;
 import jbse.val.Operator;
 import jbse.val.Primitive;
 import jbse.val.Simplex;
+import jbse.val.Value;
 import jbse.val.WideningConversion;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Rewrites all the {@link Expression}s or {@link FunctionApplication}s 
+ * Rewrites all the {@link Expression}s or {@link PrimitiveSymbolicApply}s 
  * with enough {@link Simplex} operands to calculate a result.
  * 
  * @author Pietro Braione
@@ -27,16 +28,16 @@ public class RewriterOperationOnSimplex extends Rewriter {
 	public RewriterOperationOnSimplex() { }
 
 	@Override
-	protected void rewriteFunctionApplication(FunctionApplication x) 
+	protected void rewritePrimitiveSymbolicApply(PrimitiveSymbolicApply x) 
 	throws NoResultException {
-		int nargs = x.getArgs().length;
-		Object[] args = new Object[nargs];
-		char[] argsType = new char[nargs];
+		final int nargs = x.getArgs().length;
+		final Object[] args = new Object[nargs];
+		final char[] argsType = new char[nargs];
 		int i = 0;
-		for (Primitive p : x.getArgs()) {
-			if (p instanceof Simplex) {
-				args[i] = ((Simplex) p).getActualValue(); 
-				argsType[i] = p.getType();
+		for (Value v : x.getArgs()) {
+			if (v instanceof Simplex) {
+				args[i] = ((Simplex) v).getActualValue(); 
+				argsType[i] = v.getType();
 			} else {
 				setResult(x);
 				return;
@@ -44,10 +45,10 @@ public class RewriterOperationOnSimplex extends Rewriter {
 			i++;
 		}
 		
-		String function = x.getOperator();
-		Primitive result = tryFunctionApplication(function, args, argsType);
+		final String function = x.getOperator();
+		final Primitive result = tryFunctionApplication(function, args, argsType);
 		if (result == null) { //failed
-			super.rewriteFunctionApplication(x);
+			super.rewritePrimitiveSymbolicApply(x);
 		} else {
 			setResult(result);
 		}

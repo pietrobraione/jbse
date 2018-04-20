@@ -1,19 +1,16 @@
 package jbse.val;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidOperatorException;
 import jbse.val.exc.InvalidTypeException;
-import jbse.val.exc.ValueDoesNotSupportNativeException;
 
 /**
- * Class that represent a unary or binary expression.
+ * Class representing the {@code PrimitiveSymbolicComputed} obtained 
+ * by applying a unary or binary {@link Operator} to arguments.
  */
-public final class Expression extends Primitive {
+public final class Expression extends PrimitiveSymbolicComputed {
 	/** The operator. */
     private final Operator operator;
     
@@ -111,47 +108,57 @@ public final class Expression extends Primitive {
         //calculates hashCode
     	final int prime = 271;
     	int tmpHashCode = 1;
-    	tmpHashCode = prime * tmpHashCode + ((firstOp == null) ? 0 : firstOp.hashCode());
-    	tmpHashCode = prime * tmpHashCode + operator.hashCode();
-    	tmpHashCode = prime * tmpHashCode + secondOp.hashCode();
+    	tmpHashCode = prime * tmpHashCode + ((this.firstOp == null) ? 0 : this.firstOp.hashCode());
+    	tmpHashCode = prime * tmpHashCode + this.operator.hashCode();
+    	tmpHashCode = prime * tmpHashCode + this.secondOp.hashCode();
     	this.hashCode = tmpHashCode;
 
     	//calculates toString
-		String tmpToString = "";
+    	this.toString = stringify(true);
+    }
+    
+    private String stringify(boolean toString) {
+        final StringBuilder retVal = new StringBuilder();
         boolean parentheses = false;
-        if (firstOp != null) {
-        	if (firstOp instanceof Expression) {
-        		parentheses = true; //default
-    			final Operator firstOpOperator = ((Expression) firstOp).operator;
-        		if (firstOpOperator.precedence() >= operator.precedence()) {
-        			parentheses = false;
-        		} 
-        	}
-    		tmpToString += (parentheses ? "(" : "") + firstOp.toString() + (parentheses ? ")" : "");
+        if (this.firstOp != null) {
+            if (this.firstOp instanceof Expression) {
+                parentheses = true; //default
+                final Operator firstOpOperator = ((Expression) this.firstOp).operator;
+                if (firstOpOperator.precedence() >= operator.precedence()) {
+                    parentheses = false;
+                } 
+            }
+            retVal.append(parentheses ? "(" : "");
+            retVal.append((toString || !this.firstOp.isSymbolic()) ? this.firstOp.toString() : ((Symbolic) this.firstOp).asOriginString());
+            retVal.append(parentheses ? ")" : "");
         }
-        tmpToString += " " + operator.toString() + " ";
+        retVal.append(" ");
+        retVal.append(this.operator.toString());
+        retVal.append(" ");
         parentheses = false;
-		if (secondOp instanceof Expression) {
-			parentheses = true; //default
-			Operator secondOpOperator = ((Expression) secondOp).operator;
-			if (secondOpOperator.precedence() > operator.precedence()) {
-				parentheses = false;
-			} else if (secondOpOperator.precedence() == operator.precedence()) {
-				if (secondOpOperator == operator) {
-					if (operator == Operator.ADD || operator == Operator.SUB || operator == Operator.MUL) {
-						parentheses = false;
-					}
-				} else if (operator == Operator.MUL && secondOpOperator == Operator.DIV) {
-					parentheses = false;
-				}
-			} else if (operator == Operator.ADD && secondOpOperator == Operator.SUB) {
-				parentheses = false;
-			} else if (operator == Operator.SUB && secondOpOperator == Operator.ADD) {
-				parentheses = false;
-			}
-		}		
-		tmpToString += (parentheses ? "(" : "") + secondOp.toString() + (parentheses ? ")" : "");
-        this.toString = tmpToString;
+        if (this.secondOp instanceof Expression) {
+            parentheses = true; //default
+            final Operator secondOpOperator = ((Expression) this.secondOp).operator;
+            if (secondOpOperator.precedence() > this.operator.precedence()) {
+                parentheses = false;
+            } else if (secondOpOperator.precedence() == this.operator.precedence()) {
+                if (secondOpOperator == this.operator) {
+                    if (this.operator == Operator.ADD || this.operator == Operator.SUB || this.operator == Operator.MUL) {
+                        parentheses = false;
+                    }
+                } else if (operator == Operator.MUL && secondOpOperator == Operator.DIV) {
+                    parentheses = false;
+                }
+            } else if (operator == Operator.ADD && secondOpOperator == Operator.SUB) {
+                parentheses = false;
+            } else if (operator == Operator.SUB && secondOpOperator == Operator.ADD) {
+                parentheses = false;
+            }
+        }               
+        retVal.append(parentheses ? "(" : "");
+        retVal.append((toString || !this.secondOp.isSymbolic()) ? this.secondOp.toString() : ((Symbolic) this.secondOp).asOriginString());
+        retVal.append(parentheses ? ")" : "");
+        return retVal.toString();
     }
     
     /**
@@ -179,56 +186,36 @@ public final class Expression extends Primitive {
      *         {@code null} otherwise.
      */
     public Primitive getFirstOperand() {
-        return(firstOp);
+        return this.firstOp;
     }
     
     /**
      * Returns the second operand of expression if exists.
      */
     public Primitive getSecondOperand() {
-        return(secondOp);
+        return this.secondOp;
     }
     
     /**
      * Gets the operator.
      */
     public Operator getOperator() {
-        return(operator);
+        return this.operator;
     }
 
-	/**
-	 * Returns a new {@link Primitive} built by substitution of 
-	 * a subterm with another one.
-	 * 
-	 * @param from a {@link Primitive}, to be replaced. 
-	 * @param to a {@link Primitive}, replacing {@code from}.
-	 * @return the {@link Primitive} obtained by replacing 
-	 *         every occurrence of {@code from} in {@code this}
-	 *         with {@code to}.
-	 * @throws InvalidOperandException if {@code from} or {@code to}
-	 *         is {@code null}.
-	 * @throws InvalidTypeException if {@code from} and {@code to}
-	 *         have different type. 
-	 */
-	public Primitive replace(Primitive from, Primitive to) 
-	throws InvalidOperandException, InvalidTypeException {
-		if (from == null || to == null) {
-			throw new InvalidOperandException("one parameter of replace is null");
-		}
-		if (from.getType() != to.getType()) {
-			throw new InvalidTypeException("cannot replace a primitive with type " + from.getType() + " with one with type " + to.getType());
-		}
-		if (from.equals(to)) {
-			return this;
-		}
-		
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+	public Primitive doReplace(Primitive from, Primitive to) {
 		final Primitive first;
 		if (isUnary()) {
 			first = null;
 		} else if (this.firstOp.equals(from)) {
 			first = to;
-		} else if (this.firstOp instanceof Expression) {
-			first = ((Expression) this.firstOp).replace(from, to);
+		} else if (this.firstOp instanceof PrimitiveSymbolicComputed) {
+			first = ((PrimitiveSymbolicComputed) this.firstOp).doReplace(from, to);
 		} else {
 			first = this.firstOp;
 		}
@@ -236,8 +223,8 @@ public final class Expression extends Primitive {
 		final Primitive second;
 		if (this.secondOp.equals(from)) {
 			second = to;
-		} else if (this.secondOp instanceof Expression) {
-			second = ((Expression) this.secondOp).replace(from, to);
+		} else if (this.secondOp instanceof PrimitiveSymbolicComputed) {
+			second = ((PrimitiveSymbolicComputed) this.secondOp).doReplace(from, to);
 		} else {
 			second = this.secondOp;
 		}
@@ -248,74 +235,15 @@ public final class Expression extends Primitive {
 			} else {
 				return this.calc.applyBinary(first, this.operator, second);//TODO possible bug! Here rewriting is applied!
 			}
-		} catch (InvalidOperatorException | InvalidTypeException e) {
+		} catch (InvalidOperatorException | InvalidTypeException | InvalidOperandException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}
 	}
-	
-	/**
-	 * Returns the set of all the identifiers of symbolic 
-	 * values mentioned in this {@link Expression}.
-	 * 
-	 * @return a {@link Set}<code>&lt;</code>{@link Integer}<code>&gt;</code> of all and only the 
-	 *         identifiers of symbolic values mentioned 
-	 *         in this expression (empty when none).
-	 */
-	public Set<Integer> symIds() {
-		HashSet<Integer> retVal = new HashSet<Integer>();
-
-		if (this.firstOp == null) {
-			//nothing to do
-		} else if (this.firstOp instanceof PrimitiveSymbolic) {
-			retVal.add(((PrimitiveSymbolic) this.firstOp).getId());
-		} else if (this.firstOp instanceof Expression) {
-			retVal.addAll(((Expression) this.firstOp).symIds());
-		} else if (this.firstOp instanceof FunctionApplication) {
-			retVal.addAll(((FunctionApplication) this.firstOp).symIds());
-		}
-		
-		if (this.secondOp instanceof PrimitiveSymbolic) {
-			retVal.add(((PrimitiveSymbolic) this.secondOp).getId());
-		} else if (this.secondOp instanceof Expression) {
-			retVal.addAll(((Expression) this.secondOp).symIds());
-		} else if (this.secondOp instanceof FunctionApplication) {
-			retVal.addAll(((FunctionApplication) this.secondOp).symIds());
-		}
-		
-		return retVal;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public boolean surelyTrue() {
-		return false;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public boolean surelyFalse() {
-		return false;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public Object getValueForNative() throws ValueDoesNotSupportNativeException {
-		throw new ValueDoesNotSupportNativeException();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-    public boolean isSymbolic() {
-    	return (this.secondOp.isSymbolic() || (this.firstOp == null ? false : this.firstOp.isSymbolic()));
+    
+    @Override
+    public String asOriginString() {
+        return stringify(false);
     }
 
 	/**

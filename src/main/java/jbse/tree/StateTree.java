@@ -14,11 +14,6 @@ import jbse.mem.State;
  */
 
 public class StateTree {
-	public static final String IDENTIFIER_SEPARATOR_COMPACT = ".";
-	public static final String IDENTIFIER_DEFAULT_COMPACT = IDENTIFIER_SEPARATOR_COMPACT + "1";
-	public static final String IDENTIFIER_SEPARATOR_LONG = "|";
-	public static final String IDENTIFIER_DEFAULT_LONG = "ROOT";
-
 	/**
 	 * Enumeration of the different kinds of state identifiers.
 	 * 
@@ -30,12 +25,18 @@ public class StateTree {
 		 * which represents the extraction order 
 		 * from this tree. This identification is highly dependent
 		 * on the decision procedure, which may prune some branches,
-		 * but it is compact and exec-faithful (i.e., the  
+		 * but it generates shorter identifier and is exec-faithful (i.e., the  
 		 * lexicographic order of branch identifiers reflects the
 		 * visiting order of the symbolic execution).
 		 */
 		COMPACT, 
 		
+		/**
+		 * Each branch is identified by a number reflecting
+		 * the decision which generated it. This identification is
+		 * not exec-faithful but generates short identifiers and is 
+		 * less dependent on the decision procedure.
+		 */
 		REPLICABLE,
 		
 		/**
@@ -174,8 +175,7 @@ public class StateTree {
     public void addInitialState(State s) {
     	this.add(s);
     	if (this.nextIsInitialState) {
-    		s.appendToIdentifier((this.stateIdMode == StateIdentificationMode.COMPACT) ? 
-    						IDENTIFIER_DEFAULT_COMPACT : IDENTIFIER_DEFAULT_LONG);
+    		s.setInitialHistoryPoint(this.stateIdMode == StateIdentificationMode.COMPACT);
             s.resetDepth();
             s.resetCount();
 	    } else {
@@ -199,10 +199,10 @@ public class StateTree {
 	    	
     	//updates the state identifier
 	    if (this.stateIdMode == StateIdentificationMode.REPLICABLE) {
-	   		s.appendToIdentifier(IDENTIFIER_SEPARATOR_LONG + branchNumber);
+	   		s.addBranchToHistoryPoint(String.valueOf(branchNumber));
 	    } else if (this.stateIdMode == StateIdentificationMode.LONG) {
-	   		s.appendToIdentifier(IDENTIFIER_SEPARATOR_LONG + branchIdentifier);
-    	} //else (compact id) do nothing, nextState() will update it
+	   		s.addBranchToHistoryPoint(branchIdentifier);
+    	} //else (compact id) do nothing, nextState() will update the state
         
     	add(s);
     }
@@ -240,10 +240,9 @@ public class StateTree {
         final BranchInfo b = this.branchList.getFirst();
         ++b.emittedStates;
         if (this.stateIdMode == StateIdentificationMode.COMPACT && !this.nextIsInitialState) {
-        	s.appendToIdentifier(IDENTIFIER_SEPARATOR_COMPACT + String.valueOf(b.emittedStates));
-        } //else, the identifier has been already set by addState
+        	s.addBranchToHistoryPoint(String.valueOf(b.emittedStates));
+        } //else, the history point was already set by addState
         this.nextIsInitialState = false;
-        s.resetSequenceNumber();
         if (b.emittedStates == b.totalStates) {
             this.branchList.removeFirst();
         }

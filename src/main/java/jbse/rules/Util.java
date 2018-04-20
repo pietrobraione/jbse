@@ -6,7 +6,6 @@ import java.util.regex.Pattern;
 
 import jbse.mem.Objekt;
 import jbse.mem.State;
-import jbse.val.MemoryPath;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 
@@ -30,18 +29,18 @@ public final class Util {
 	}
 	
 	/**
-	 * Makes absolute a relative pattern in a origin expression in 
+	 * Makes a {@link Pattern} for a relative origin expression in 
 	 * a rule.
 	 * 
-	 * @param s The relative origin expression in the rule.
-	 * @param origin The origin w.r.t. we want to make the origin
-	 *        absolute.
-	 * @return {@code s} where all the occurrences of {REF} and 
-	 *         {UP} are
-	 *         resolved using {@code origin}.
+	 * @param s a {@link String}, the relative origin expression 
+	 *        in the rule.
+	 * @param origin a {@link ReferenceSymbolic}, the origin w.r.t. 
+	 *        we want to make {@code s} absolute.
+	 * @return a {@link Pattern} for {@code s} where all the occurrences 
+	 *         of {REF} and {UP} are resolved using {@code origin}.
 	 */
-	static Pattern makePatternRelative(String s, MemoryPath origin) {
-		return Pattern.compile(translateToOriginPattern(translateRelativeToAbsolute(s, origin.toString())));
+	static Pattern makePatternRelative(String s, ReferenceSymbolic origin) {
+		return Pattern.compile(translateToOriginPattern(translateRelativeToAbsolute(s, origin.asOriginString())));
 	}
 	
 	/* TODO this is really ugly, but it works with the current 
@@ -72,9 +71,9 @@ public final class Util {
 		return retVal;
 	}
 	
-	static String findAny(String pattern, MemoryPath origin) {
+	static String findAny(String pattern, ReferenceSymbolic origin) {
 		final Pattern p = makeOriginPattern(pattern);
-		final Matcher m = p.matcher(origin.toString());
+		final Matcher m = p.matcher(origin.asOriginString());
 		if (m.matches() && m.pattern().pattern().startsWith("(.*)") && m.groupCount() >= 1) {
 			final String valueForAny = m.group(1).replace(".","/");
 			return valueForAny;

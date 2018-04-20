@@ -32,7 +32,8 @@ import jbse.mem.Variable;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Any;
 import jbse.val.Expression;
-import jbse.val.FunctionApplication;
+import jbse.val.PrimitiveSymbolicApply;
+import jbse.val.PrimitiveSymbolicAtomic;
 import jbse.val.NarrowingConversion;
 import jbse.val.Primitive;
 import jbse.val.PrimitiveSymbolic;
@@ -287,7 +288,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                     }
                     final ClauseAssume clauseAssume = (ClauseAssume) clause;
                     final Primitive p = clauseAssume.getCondition();
-                    this.s.append(primitiveSymbolAssignments(p, model));
+                    addPrimitiveSymbolAssignments(p, model);
                 } else {
                     this.s.append(';');
                 }
@@ -526,7 +527,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
         private Simplex arrayLength(ClauseAssume clause, Map<PrimitiveSymbolic, Simplex> model) {
             //the clause has shape {length} >= 0 - i.e., it has just
             //one symbol, the length
-            final Set<PrimitiveSymbolic> symbols = symbolsIn(clause.getCondition());
+            final Set<PrimitiveSymbolic> symbols = primitiveSymbolsIn(clause.getCondition());
             final PrimitiveSymbolic symbol = symbols.iterator().next();
             makeVariableFor(symbol); //so it remembers that the symbol has been processed
             final Simplex value = model.get(symbol);
@@ -574,7 +575,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
         
         private void makeVariableFor(Symbolic symbol) {
             final String value = symbol.getValue(); 
-            final String origin = symbol.getOrigin().toString();
+            final String origin = symbol.asOriginString();
             if (!this.symbolsToVariables.containsKey(value)) {
                 this.symbolsToVariables.put(value, generateName(origin));
             }
@@ -657,9 +658,8 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             this.s.append(");");
         }
         
-        private String primitiveSymbolAssignments(Primitive e, Map<PrimitiveSymbolic, Simplex> model) {
-            final Set<PrimitiveSymbolic> symbols = symbolsIn(e);
-            final StringBuilder s = new StringBuilder();
+        private void addPrimitiveSymbolAssignments(Primitive e, Map<PrimitiveSymbolic, Simplex> model) {
+            final Set<PrimitiveSymbolic> symbols = primitiveSymbolsIn(e);
             for (PrimitiveSymbolic symbol : symbols) {
                 if (getVariableFor(symbol) == null) { //not yet done
                     final Simplex value = model.get(symbol);
@@ -668,13 +668,11 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                         throw new UnexpectedInternalException("No value found in model for symbol " + symbol.toString() + ".");
                     }
                     setWithNumericValue(symbol, value);
-                    s.append(' ');
                 }
             }
-            return s.toString();
         }
         
-        private Set<PrimitiveSymbolic> symbolsIn(Primitive e) {
+        private Set<PrimitiveSymbolic> primitiveSymbolsIn(Primitive e) {
             final HashSet<PrimitiveSymbolic> symbols = new HashSet<>();
             PrimitiveVisitor v = new PrimitiveVisitor() {
                 
@@ -690,7 +688,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 public void visitSimplex(Simplex x) throws Exception { }
                 
                 @Override
-                public void visitPrimitiveSymbolic(PrimitiveSymbolic s) {
+                public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) {
                     symbols.add(s);
                 }
                 
@@ -700,9 +698,11 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 }
                 
                 @Override
-                public void visitFunctionApplication(FunctionApplication x) throws Exception {
-                    for (Primitive p : x.getArgs()) {
-                        p.accept(this);
+                public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) throws Exception {
+                    for (Value v : x.getArgs()) {
+                        if (v instanceof Primitive) {
+                            ((Primitive) v).accept(this);
+                        }
                     }
                 }
                 

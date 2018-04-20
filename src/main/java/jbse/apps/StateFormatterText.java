@@ -23,13 +23,15 @@ import jbse.mem.State;
 import jbse.mem.Variable;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Expression;
-import jbse.val.FunctionApplication;
-import jbse.val.MemoryPath;
+import jbse.val.PrimitiveSymbolicApply;
+import jbse.val.PrimitiveSymbolicAtomic;
 import jbse.val.NarrowingConversion;
 import jbse.val.Primitive;
-import jbse.val.PrimitiveSymbolic;
 import jbse.val.ReferenceSymbolic;
+import jbse.val.ReferenceSymbolicApply;
+import jbse.val.ReferenceSymbolicAtomic;
 import jbse.val.Simplex;
+import jbse.val.Symbolic;
 import jbse.val.Value;
 import jbse.val.WideningConversion;
 
@@ -109,7 +111,7 @@ public class StateFormatterText implements Formatter {
     		if (c instanceof ClauseAssume) {
     			final Primitive cond = ((ClauseAssume) c).getCondition();
     			expression += formatValue(s, cond);
-    			final String expressionFormatted = formatPrimitiveForPathCondition(cond, breakLines, indentTxt, indentCurrent, doneSymbols);
+    			final String expressionFormatted = formatValueForPathCondition(cond, breakLines, indentTxt, indentCurrent, doneSymbols);
         		if (expressionFormatted.equals("")) {
         			//does nothing
         		} else {
@@ -122,8 +124,8 @@ public class StateFormatterText implements Formatter {
     			if (s.isNull(ref)) {
     				expression += "null";
     			} else {
-    				final MemoryPath tgtOrigin = s.getObject(ref).getOrigin();
-    				expression += "Object[" + s.getResolution(ref) + "] (" + (ref.getOrigin().equals(tgtOrigin) ? "fresh" : ("aliases " + tgtOrigin)) + ")";
+    				final ReferenceSymbolic tgtOrigin = s.getObject(ref).getOrigin();
+    				expression += "Object[" + s.getResolution(ref) + "] (" + (ref.equals(tgtOrigin) ? "fresh" : ("aliases " + tgtOrigin)) + ")";
     			}
     			final String referenceFormatted = formatReferenceForPathCondition(ref, doneSymbols); 
         		if (referenceFormatted.equals("")) {
@@ -144,7 +146,7 @@ public class StateFormatterText implements Formatter {
 		if (done.contains(r.toString())) {
 			return "";
 		} else {
-			return r.toString() + " == " + r.getOrigin();
+			return r.toString() + " == " + r.asOriginString();
 		}
 	}
 	
@@ -153,9 +155,9 @@ public class StateFormatterText implements Formatter {
 		final Primitive secondOp = e.getSecondOperand();
 		String retVal = "";
         if (firstOp != null) {
-        	retVal = formatPrimitiveForPathCondition(firstOp, breakLines, indentTxt, indentCurrent, done);
+        	retVal = formatValueForPathCondition(firstOp, breakLines, indentTxt, indentCurrent, done);
         }
-        final String secondOpFormatted = formatPrimitiveForPathCondition(secondOp, breakLines, indentTxt, indentCurrent, done);
+        final String secondOpFormatted = formatValueForPathCondition(secondOp, breakLines, indentTxt, indentCurrent, done);
         if (retVal.equals("") || secondOpFormatted.equals("")) {
     		//does nothing
         } else {
@@ -166,34 +168,37 @@ public class StateFormatterText implements Formatter {
         return retVal;
 	}
 	
-	private static String formatPrimitiveForPathCondition(Primitive p, boolean breakLines, String indentTxt, String indentCurrent, HashSet<String> done) {
-		if (p instanceof Expression) {
-			return formatExpressionForPathCondition((Expression) p, breakLines, indentTxt, indentCurrent, done);
-		} else if (p instanceof PrimitiveSymbolic) {
-			if (done.contains(p.toString())) {
+	private static String formatValueForPathCondition(Value v, boolean breakLines, String indentTxt, String indentCurrent, HashSet<String> done) {
+		if (v instanceof Expression) {
+			return formatExpressionForPathCondition((Expression) v, breakLines, indentTxt, indentCurrent, done);
+		} else if (v instanceof PrimitiveSymbolicAtomic || v instanceof ReferenceSymbolicAtomic) {
+			if (done.contains(v.toString())) {
 				return "";
 			} else {
-				done.add(p.toString());
-				return p.toString() + " == " + ((PrimitiveSymbolic) p).getOrigin();
+				done.add(v.toString());
+				return v.toString() + " == " + ((Symbolic) v).asOriginString();
 			}
-		} else if (p instanceof FunctionApplication) {
-			return formatFunctionApplicationForPathCondition((FunctionApplication) p, breakLines, indentTxt, indentCurrent, done);
-		} else if (p instanceof WideningConversion) {
-			final WideningConversion pWiden = (WideningConversion) p;
-			return formatPrimitiveForPathCondition(pWiden.getArg(), breakLines, indentTxt, indentCurrent, done);
-		} else if (p instanceof NarrowingConversion) {
-			final NarrowingConversion pNarrow = (NarrowingConversion) p;
-			return formatPrimitiveForPathCondition(pNarrow.getArg(), breakLines, indentTxt, indentCurrent, done);
-		} else { //(p instanceof Any || p instanceof Simplex)
+		} else if (v instanceof PrimitiveSymbolicApply) {
+			return formatFunctionApplicationForPathCondition((PrimitiveSymbolicApply) v, breakLines, indentTxt, indentCurrent, done);
+                } else if (v instanceof ReferenceSymbolicApply) {
+                    return formatFunctionApplicationForPathCondition((ReferenceSymbolicApply) v, breakLines, indentTxt, indentCurrent, done);
+		} else if (v instanceof WideningConversion) {
+			final WideningConversion pWiden = (WideningConversion) v;
+			return formatValueForPathCondition(pWiden.getArg(), breakLines, indentTxt, indentCurrent, done);
+		} else if (v instanceof NarrowingConversion) {
+			final NarrowingConversion pNarrow = (NarrowingConversion) v;
+			return formatValueForPathCondition(pNarrow.getArg(), breakLines, indentTxt, indentCurrent, done);
+		} else { //(p instanceof Any || p instanceof Simplex || p instanceof Term  || p instanceof ReferenceConcrete || 
+		         // p instanceof ReferenceArrayImmaterial || p instanceof KlassPseudoReference)
 			return "";
 		}
 	}
 
-	private static String formatFunctionApplicationForPathCondition(FunctionApplication a, boolean breakLines, String indentTxt, String indentCurrent, HashSet<String> done) {
+	private static String formatFunctionApplicationForPathCondition(PrimitiveSymbolicApply a, boolean breakLines, String indentTxt, String indentCurrent, HashSet<String> done) {
 		String retVal = "";
 		boolean first = true;
-		for (Primitive p : a.getArgs()) {
-			String argFormatted = formatPrimitiveForPathCondition(p, breakLines, indentTxt, indentCurrent, done);
+		for (Value v : a.getArgs()) {
+			String argFormatted = formatValueForPathCondition(v, breakLines, indentTxt, indentCurrent, done);
 			if (argFormatted.equals("")) {
 				//does nothing
 			} else { 
@@ -204,6 +209,22 @@ public class StateFormatterText implements Formatter {
 		}
 		return retVal;
 	}
+
+        private static String formatFunctionApplicationForPathCondition(ReferenceSymbolicApply a, boolean breakLines, String indentTxt, String indentCurrent, HashSet<String> done) {
+            String retVal = "";
+            boolean first = true;
+            for (Value v : a.getArgs()) {
+                    String argFormatted = formatValueForPathCondition(v, breakLines, indentTxt, indentCurrent, done);
+                    if (argFormatted.equals("")) {
+                            //does nothing
+                    } else { 
+                    final String lineSep = (breakLines ? LINE_SEP : "");
+                            retVal += (first ? "" : " &&" + lineSep + indentCurrent) + argFormatted;
+                            first = false;
+                    }
+            }
+            return retVal;
+    }
 
 	private static String formatHeap(State s, boolean breakLines, String indentTxt, String indentCurrent) {
 		final String lineSep = (breakLines ? LINE_SEP : "");

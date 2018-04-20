@@ -19,14 +19,16 @@ import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.ClauseAssumeNull;
 import jbse.val.Any;
 import jbse.val.Expression;
-import jbse.val.FunctionApplication;
+import jbse.val.PrimitiveSymbolicApply;
+import jbse.val.PrimitiveSymbolicAtomic;
 import jbse.val.NarrowingConversion;
 import jbse.val.Primitive;
-import jbse.val.PrimitiveSymbolic;
 import jbse.val.PrimitiveVisitor;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
+import jbse.val.Symbolic;
 import jbse.val.Term;
+import jbse.val.Value;
 import jbse.val.WideningConversion;
 
 public class Util {
@@ -184,17 +186,17 @@ public class Util {
 	
 	public static String formatClauseAssumeAliases(ClauseAssumeAliases ca) {
 		final ReferenceSymbolic r = ca.getReference();
-		return (r.getOrigin() + " == " + ca.getObjekt().getOrigin());
+		return (r.asOriginString() + " == " + ca.getObjekt().getOrigin());
 	}
 	
 	public static String formatClauseAssumeExpands(ClauseAssumeExpands ce) {
 		final ReferenceSymbolic r = ce.getReference();
-		return (r.getOrigin() + " == fresh " + ce.getObjekt().getType());
+		return (r.asOriginString() + " == fresh " + ce.getObjekt().getType());
 	}
 	
 	public static String formatClauseAssumeNull(ClauseAssumeNull cn) {
 		final ReferenceSymbolic r = cn.getReference();
-		return (r.getOrigin() + " == null");
+		return (r.asOriginString() + " == null");
 	}
 	
 	public static String formatPrimitive(Primitive p) {
@@ -214,9 +216,9 @@ public class Util {
 		
 		@Override public void visitAny(Any x) { this.retVal = formatAny(x); }
 		@Override public void visitExpression(Expression e) { this.retVal = formatExpression(e); }
-		@Override public void visitFunctionApplication(FunctionApplication x) { this.retVal = formatFunctionApplication(x); }
+		@Override public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) { this.retVal = formatFunctionApplication(x); }
 		@Override public void visitNarrowingConversion(NarrowingConversion x) { this.retVal = formatNarrowingConversion(x); }
-		@Override public void visitPrimitiveSymbolic(PrimitiveSymbolic s) { this.retVal = formatPrimitiveSymbolic(s); }
+		@Override public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) { this.retVal = formatPrimitiveSymbolic(s); }
 		@Override public void visitSimplex(Simplex x) { this.retVal = formatSimplex(x); }
 		@Override public void visitTerm(Term x) { this.retVal = formatTerm(x); }
 		@Override public void visitWideningConversion(WideningConversion x) { this.retVal = formatWideningConversion(x); }
@@ -236,12 +238,19 @@ public class Util {
 		}
 	}
 	
-	public static String formatFunctionApplication(FunctionApplication f) {
+	public static String formatFunctionApplication(PrimitiveSymbolicApply f) {
 		final StringBuilder buf = new StringBuilder();
 		buf.append(f.getOperator() + "(");
 		boolean first = true;
-		for (Primitive p : f.getArgs()) {
-			buf.append((first ? "" : ",") + formatPrimitive(p));
+		for (Value p : f.getArgs()) {
+			buf.append(first ? "" : ",");
+			if (p instanceof Primitive) {
+			    buf.append(formatPrimitive((Primitive) p));
+			} else if (p instanceof Symbolic) {
+			    buf.append(((Symbolic) p).asOriginString());
+			} else {
+			    buf.append(p.toString());
+			}
 			first = false;
 		}
 		buf.append(")");
@@ -252,8 +261,8 @@ public class Util {
 		return "NARROW-"+ c.getType() + "(" + formatPrimitive(c.getArg()) + ")";
 	}
 	
-	public static String formatPrimitiveSymbolic(PrimitiveSymbolic p) {
-		return p.getOrigin().toString();
+	public static String formatPrimitiveSymbolic(PrimitiveSymbolicAtomic p) {
+		return p.asOriginString();
 	}
 	
 	public static String formatSimplex(Simplex s) {
