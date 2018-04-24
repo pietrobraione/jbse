@@ -5,6 +5,7 @@ import static jbse.bc.Signatures.JAVA_CLASS;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.val.Calculator;
+import jbse.val.HistoryPoint;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.exc.InvalidTypeException;
 
@@ -16,9 +17,9 @@ public final class Instance_JAVA_CLASS extends Instance {
     /** The java class it represents. Immutable. */
     private final ClassFile representedClass;
     
-    protected Instance_JAVA_CLASS(Calculator calc, ClassFile cf_JAVA_CLASS, ReferenceSymbolic origin, Epoch epoch, ClassFile representedClass, int numOfStaticFields, Signature... fieldSignatures) 
+    protected Instance_JAVA_CLASS(Calculator calc, ClassFile cf_JAVA_CLASS, ReferenceSymbolic origin, HistoryPoint epoch, ClassFile representedClass, int numOfStaticFields, Signature... fieldSignatures) 
     throws InvalidTypeException {
-        super(calc, cf_JAVA_CLASS, origin, epoch, numOfStaticFields, fieldSignatures);
+        super(false, calc, cf_JAVA_CLASS, origin, epoch, numOfStaticFields, fieldSignatures);
         if (cf_JAVA_CLASS == null || !JAVA_CLASS.equals(cf_JAVA_CLASS.getClassName())) {
             throw new InvalidTypeException("Attempted creation of an instance of java.lang.Class with type " + classFile.getClassName());
         }

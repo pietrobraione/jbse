@@ -17,7 +17,7 @@ public final class KlassPseudoReference extends ReferenceSymbolic {
      * @param classFile the {@link ClassFile} for the {@link Klass} to be referred.
      */
     KlassPseudoReference(ClassFile classFile) {
-    	super(null);
+    	super(null, null);
     	this.classFile = classFile;
     }
     

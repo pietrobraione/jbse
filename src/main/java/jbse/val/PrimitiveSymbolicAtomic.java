@@ -22,11 +22,12 @@ public abstract class PrimitiveSymbolicAtomic extends PrimitiveSymbolic implemen
      * @param id an {@link int}, the identifier of the symbol. Different
      *        object with same identifier will be treated as equal.
      * @param type the type of the represented value.
+     * @param historyPoint the current {@link HistoryPoint}.
      * @param calc a {@link Calculator}.
      * @throws InvalidTypeException if {@code type} is not primitive.
      */
-    PrimitiveSymbolicAtomic(int id, char type, Calculator calc) throws InvalidTypeException {
-    	super(type, calc);
+    PrimitiveSymbolicAtomic(int id, char type, HistoryPoint historyPoint, Calculator calc) throws InvalidTypeException {
+    	super(type, historyPoint, calc);
     	this.id = id;
         
     	//calculates hashCode

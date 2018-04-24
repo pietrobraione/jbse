@@ -198,7 +198,7 @@ public class Engine implements AutoCloseable {
         } else {
             this.atInitialState = false;
         }
-        
+
         //synchronizes the decision procedure with the path condition
         try {
             this.ctx.decisionProcedure.setAssumptions(this.currentState.getPathCondition());

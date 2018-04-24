@@ -16,9 +16,10 @@ public abstract class ReferenceSymbolicMember extends ReferenceSymbolicAtomic im
      *        object with same identifier will be treated as equal.
      * @param staticType a {@link String}, the static type of the
      *        reference (taken from bytecode).
+     * @param historyPoint the current {@link HistoryPoint}.
      */
     ReferenceSymbolicMember(ReferenceSymbolic container, int id, String staticType) {
-    	super(id, staticType);
+    	super(id, staticType, container.historyPoint());
     	this.container = container;
     }
 

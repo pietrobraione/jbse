@@ -81,7 +81,7 @@ public class RewriterTrigNormalize extends Rewriter {
 				negate = false;
 			}
 			if (normalized || negate) {
-				Primitive result = this.calc.applyFunctionPrimitive(x.getType(), x.getHistoryPoint(), operator, arg.toPrimitive());
+				Primitive result = this.calc.applyFunctionPrimitive(x.getType(), x.historyPoint(), operator, arg.toPrimitive());
 				if (negate) {
 					result = result.neg();
 				}

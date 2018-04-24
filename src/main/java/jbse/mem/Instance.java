@@ -5,6 +5,7 @@ import java.util.Map;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.val.Calculator;
+import jbse.val.HistoryPoint;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.exc.InvalidTypeException;
 
@@ -15,22 +16,23 @@ public class Instance extends Objekt {
     /**
      * Constructor.
      * 
+     * @param symbolic a {@code boolean}, whether this object is symbolic
+     *        (i.e., not explicitly created during symbolic execution by
+     *        a {@code new*} bytecode, but rather assumed).
      * @param calc a {@link Calculator}.
      * @param classFile a {@code classFile}, the class of 
      *        this {@link Instance}; It must be {@code classFile.}{@link ClassFile#isReference() isReference}{@code () == true}.
      * @param origin the {@link ReferenceSymbolic} providing origin of 
      *        the {@code Instance}, if symbolic, or {@code null}, if concrete.
-     * @param epoch the creation {@link Epoch} of this {@link Instance}. 
-     *        It can be null when
-     *        {@code epoch == }{@link Epoch#EPOCH_AFTER_START}.
+     * @param epoch the creation {@link HistoryPoint} of this {@link Instance}. 
      * @param numOfStaticFields an {@code int}, the number of static fields.
      * @param fieldSignatures varargs of field {@link Signature}s, all the
      *        fields this instance knows.
      * @throws InvalidTypeException iff {@code classFile} is invalid. 
      */
-    protected Instance(Calculator calc, ClassFile classFile, ReferenceSymbolic origin, Epoch epoch, int numOfStaticFields, Signature... fieldSignatures) 
+    protected Instance(boolean symbolic, Calculator calc, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, int numOfStaticFields, Signature... fieldSignatures) 
     throws InvalidTypeException {
-        super(calc, classFile, origin, epoch, false, numOfStaticFields, fieldSignatures);
+        super(symbolic, calc, classFile, origin, epoch, false, numOfStaticFields, fieldSignatures);
         if (classFile == null || !classFile.isReference()) {
             throw new InvalidTypeException("Attempted creation of an instance with type " + classFile.getClassName());
         }

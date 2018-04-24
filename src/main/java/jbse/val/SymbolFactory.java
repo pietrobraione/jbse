@@ -37,9 +37,9 @@ public final class SymbolFactory implements Cloneable {
         try {
             final Value retVal;
             if (Type.isPrimitive(staticType)) {
-                retVal = new PrimitiveSymbolicLocalVariable(variableName, this.getNextIdPrimitiveSymbolic(), staticType.charAt(0), this.calc);
+                retVal = new PrimitiveSymbolicLocalVariable(variableName, this.getNextIdPrimitiveSymbolic(), staticType.charAt(0), null, this.calc);
             } else {
-                retVal = new ReferenceSymbolicLocalVariable(variableName, this.getNextIdReferenceSymbolic(), staticType);
+                retVal = new ReferenceSymbolicLocalVariable(variableName, this.getNextIdReferenceSymbolic(), staticType, null);
             }
             return retVal;
         } catch (InvalidTypeException e) {

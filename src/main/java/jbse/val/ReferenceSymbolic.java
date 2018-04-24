@@ -10,9 +10,10 @@ import jbse.mem.Klass;
  * @author Pietro Braione
  */
 public abstract class ReferenceSymbolic extends Reference implements Symbolic {
-    /** 
-     * The static type of the reference (or null). 
-     */
+    /** The creation history point of this symbol. */
+    private final HistoryPoint historyPoint;
+
+    /** The static type of the reference (or null). */
     private final String staticType;
 
     /**
@@ -21,10 +22,12 @@ public abstract class ReferenceSymbolic extends Reference implements Symbolic {
      * @param staticType a {@link String}, the static type of the
      *        variable from which this reference originates, 
      *        or {@code null} if this object refers to a {@link Klass}.
+     * @param historyPoint the current {@link HistoryPoint}.
      */
-    ReferenceSymbolic(String staticType) {
+    ReferenceSymbolic(String staticType, HistoryPoint historyPoint) {
     	super(REFERENCE);
         this.staticType = staticType;
+        this.historyPoint = historyPoint;
     }
 
     /**
@@ -42,6 +45,11 @@ public abstract class ReferenceSymbolic extends Reference implements Symbolic {
     @Override
     public final String getValue() {
     	return toString();
+    }
+    
+    @Override
+    public HistoryPoint historyPoint() {
+        return this.historyPoint;
     }
 
     /**

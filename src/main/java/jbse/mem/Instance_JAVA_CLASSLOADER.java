@@ -3,20 +3,21 @@ package jbse.mem;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.val.Calculator;
+import jbse.val.HistoryPoint;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Class that represent an instance of an object with class {@code java.lang.ClassLoader} 
- * in the heap.
+ * Class that represent an instance in the heap of an object 
+ * whose class is {@code java.lang.ClassLoader} or of one of its subclasses. 
  */
 public final class Instance_JAVA_CLASSLOADER extends Instance {
     /** The identifier of this classloader. It must be >= 1. */
     private final int classLoaderIdentifier;
     
-    protected Instance_JAVA_CLASSLOADER(Calculator calc, ClassFile classFile, ReferenceSymbolic origin, Epoch epoch, int classLoaderIdentifier, int numOfStaticFields, Signature... fieldSignatures) 
+    protected Instance_JAVA_CLASSLOADER(Calculator calc, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, int classLoaderIdentifier, int numOfStaticFields, Signature... fieldSignatures) 
     throws InvalidTypeException {
-        super(calc, classFile, origin, epoch, numOfStaticFields, fieldSignatures);
+        super(false, calc, classFile, origin, epoch, numOfStaticFields, fieldSignatures);
         if (classFile == null) {
             throw new InvalidTypeException("Attempted creation of an instance of a subclass of java.lang.ClassLoader with type null.");
         }

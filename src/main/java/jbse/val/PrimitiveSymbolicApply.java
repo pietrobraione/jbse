@@ -52,9 +52,6 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed {
     /** Maximum */
     public static final String MAX = "max";
     
-    /** The history point. */
-    private final HistoryPoint historyPoint;
-
     /** The function name. */
 	private final String operator;
 	
@@ -80,8 +77,7 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed {
 	 */
 	public PrimitiveSymbolicApply(char type, HistoryPoint historyPoint, Calculator calc, String operator, Value... args) 
 	throws InvalidTypeException, InvalidOperandException {
-		super(type, calc);
-		this.historyPoint = historyPoint;
+		super(type, historyPoint, calc);
 		this.operator = operator;
 		this.args = args.clone();
 		int i = 0;
@@ -109,23 +105,13 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed {
 			first = false;
 		}
                 buf.append(")");
-                if (this.historyPoint != null) {
+                if (historyPoint != null) {
                     buf.append("@");
-                    buf.append(this.historyPoint.toString());
+                    buf.append(historyPoint.toString());
                 }
 		this.toString = buf.toString();
 	}
-	    /** 
-	     * Returns the point in history where this symbolic 
-	     * value was created.
-	     * 
-	     * @return a {@link HistoryPoint}.
-	     */
-	    public final HistoryPoint getHistoryPoint() {
-	        return this.historyPoint;
-	    }
-	    
-
+	
 	public String getOperator() {
 		return this.operator;
 	}
@@ -151,7 +137,7 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed {
 	    }
 	    
 	    try {
-	        return this.calc.applyFunctionPrimitive(this.getType(), this.historyPoint, this.operator, argsNew); //TODO possible bug! Here rewriting is applied!
+	        return this.calc.applyFunctionPrimitive(this.getType(), historyPoint(), this.operator, argsNew); //TODO possible bug! Here rewriting is applied!
 	    } catch (InvalidOperandException | InvalidTypeException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
@@ -167,8 +153,12 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed {
                     buf.append((first ? "" : ",") + (v.isSymbolic() ? ((Symbolic) v).asOriginString() : v.toString()));
                     first = false;
             }
-            buf.append(")@");
-            buf.append(this.historyPoint.toString());
+            if (historyPoint() == null) {
+                buf.append(")");
+            } else {
+                buf.append(")@");
+                buf.append(historyPoint().toString());
+            }
             return buf.toString();
 	}
 	
@@ -220,11 +210,11 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed {
 		} else if (!this.operator.equals(other.operator)) {
 			return false;
 		}
-		if (this.historyPoint == null) {
-		    if (other.historyPoint != null) {
+		if (this.historyPoint() == null) {
+		    if (other.historyPoint() != null) {
 		        return false;
 		    }
-		} else if (!this.historyPoint.equals(other.historyPoint)) {
+		} else if (!this.historyPoint().equals(other.historyPoint())) {
 		    return false;
 		}
 		return true;

@@ -34,7 +34,7 @@ public class RewriterTan extends Rewriter {
 					secondFA.getOperator().equals(PrimitiveSymbolicApply.COS) &&
 					firstFA.getArgs()[0].equals(secondFA.getArgs()[0])) {
 					try {
-						setResult(this.calc.applyFunctionPrimitive(x.getType(), firstFA.getHistoryPoint(), PrimitiveSymbolicApply.TAN, firstFA.getArgs()[0]));
+						setResult(this.calc.applyFunctionPrimitive(x.getType(), firstFA.historyPoint(), PrimitiveSymbolicApply.TAN, firstFA.getArgs()[0]));
 					} catch (InvalidOperandException | InvalidTypeException e) {
 						//this should never happen
 						throw new UnexpectedInternalException(e);

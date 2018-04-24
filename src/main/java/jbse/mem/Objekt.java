@@ -10,6 +10,7 @@ import java.util.Map;
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.val.Calculator;
+import jbse.val.HistoryPoint;
 import jbse.val.Primitive;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Value;
@@ -19,15 +20,8 @@ import jbse.val.Value;
  * i.e., either a class, or an instance of a class, or an array.
  */
 public abstract class Objekt implements Cloneable {
-    /** 
-     * The creation epoch of an {@link Objekt}.
-     * 
-     * @author Pietro Braione
-     *
-     */
-    protected enum Epoch { 
-        EPOCH_BEFORE_START, EPOCH_AFTER_START
-    }
+    /** Whether this object is symbolic. Immutable. */
+    private boolean symbolic;
 
     /** ClassFile for this object's class. Immutable. */
     protected final ClassFile classFile;
@@ -38,8 +32,8 @@ public abstract class Objekt implements Cloneable {
      */
     private final ReferenceSymbolic origin;
 
-    /** The creation epoch of this {@link Objekt}. Immutable. */
-    private final Epoch epoch;
+    /** The creation {@link HistoryPoint} of this {@link Objekt}. Immutable. */
+    private final HistoryPoint epoch;
 
     /** 
      * {@code true} if the object must store the static fields,
@@ -76,11 +70,14 @@ public abstract class Objekt implements Cloneable {
     /**
      * Constructor.
      * 
+     * @param symbolic a {@code boolean}, whether this object is symbolic
+     *        (i.e., not explicitly created during symbolic execution by
+     *        a {@code new*} bytecode, but rather assumed).
      * @param calc a {@link Calculator}.
      * @param type a {@link ClassFile}, the class of this object.
      * @param origin the {@link ReferenceSymbolic} providing origin of 
      *        the {@code Objekt}, if symbolic, or {@code null}, if concrete.
-     * @param epoch the creation {@link Epoch} of this object.
+     * @param epoch the creation {@link HistoryPoint} of this object.
      * @param staticFields {@code true} if this object stores
      *        the static fields, {@code false} if this object stores
      *        the object (nonstatic) fields.
@@ -88,7 +85,8 @@ public abstract class Objekt implements Cloneable {
      * @param fieldSignatures varargs of field {@link Signature}s, all the
      *        fields this object knows.
      */
-    protected Objekt(Calculator calc, ClassFile classFile, ReferenceSymbolic origin, Epoch epoch, boolean staticFields, int numOfStaticFields, Signature... fieldSignatures) {
+    protected Objekt(boolean symbolic, Calculator calc, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, boolean staticFields, int numOfStaticFields, Signature... fieldSignatures) {
+        this.symbolic = symbolic;
         this.fields = new HashMap<>();
         this.staticFields = staticFields;
         this.numOfStaticFields = numOfStaticFields;
@@ -126,14 +124,24 @@ public abstract class Objekt implements Cloneable {
     }
 
     /**
-     * Checks the epoch of this {@link Objekt}.
+     * Returns the creation epoch of this object
+     * as a {@link HistoryPoint}.
+     * 
+     * @return a {@link HistoryPoint}.
+     */
+    public final HistoryPoint historyPoint() {
+        return this.epoch;
+    }
+    
+    /**
+     * Checks whether this {@link Objekt} is symbolic.
      *  
      * @return {@code true} iff the object is symbolic, i.e., 
-     *         is an object that was present in the heap 
-     *         before the start of the symbolic execution.
+     *         it was not explicitly created during symbolic execution 
+     *         by a {@code new*} bytecode, but rather assumed.
      */
     public final boolean isSymbolic() {
-        return (this.epoch == Epoch.EPOCH_BEFORE_START); 
+    	return this.symbolic; 
     }
 
     /**

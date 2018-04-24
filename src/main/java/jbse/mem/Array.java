@@ -18,6 +18,7 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.val.Calculator;
 import jbse.val.Expression;
+import jbse.val.HistoryPoint;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.ReferenceArrayImmaterial;
@@ -459,7 +460,10 @@ public final class Array extends Objekt {
     /**
      * Constructor.
      * 
-     * @param calc a {@code Calculator}.  
+     * @param symbolic a {@code boolean}, whether this object is symbolic
+     *        (i.e., not explicitly created during symbolic execution by
+     *        a {@code new*} bytecode, but rather assumed).     
+     * @param calc a {@code Calculator}.
      * @param initSymbolic {@code true} iff the array must be initialized 
      *        with symbolic values.
      * @param initValue a {@link Value} for initializing the array (ignored
@@ -470,7 +474,7 @@ public final class Array extends Objekt {
      *        this {@link Instance}; It must be {@code classFile.}{@link ClassFile#isReference() isArray}{@code () == true}.
      * @param origin the {@link ReferenceSymbolic} providing origin of 
      *        the {@code Array}, if symbolic, or {@code null}, if concrete.
-     * @param epoch the creation {@link Epoch} of the {@link Array}.
+     * @param epoch the creation {@link HistoryPoint} of the {@link Array}.
      * @param isInitial {@code true} iff this array is not an array of the 
      *        current state, but a copy of an (immutable) symbolic array in
      *        the initial state. Used only if {@code epoch == }{@link Epoch#EPOCH_AFTER_START}.
@@ -478,9 +482,9 @@ public final class Array extends Objekt {
      *        to be granted simple representation.
      * @throws InvalidTypeException iff {@code classFile} is invalid. 
      */
-    public Array(Calculator calc, boolean initSymbolic, Value initValue, Primitive length, ClassFile classFile, ReferenceSymbolic origin, Epoch epoch, boolean isInitial, int maxSimpleArrayLength) 
+    public Array(boolean symbolic, Calculator calc, boolean initSymbolic, Value initValue, Primitive length, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, boolean isInitial, int maxSimpleArrayLength) 
     throws InvalidTypeException {
-        super(calc, classFile, origin, epoch, false, 0, new Signature(classFile.getClassName(), "" + Type.INT, "length"));
+        super(symbolic, calc, classFile, origin, epoch, false, 0, new Signature(classFile.getClassName(), "" + Type.INT, "length"));
         if (classFile == null || !classFile.isArray()) {
             throw new InvalidTypeException("Attempted creation of an array with type " + classFile.getClassName());
         }
@@ -514,7 +518,7 @@ public final class Array extends Objekt {
      * @throws NullPointerException if {@code otherArray == null}.
      */
     public Array(Reference referenceToOtherArray, Array otherArray) throws InvalidOperandException {
-        super(otherArray.calc, otherArray.classFile, otherArray.getOrigin(), Epoch.EPOCH_BEFORE_START, false, 0, new Signature(otherArray.classFile.getClassName(), "" + Type.INT, "length"));
+        super(otherArray.isSymbolic(), otherArray.calc, otherArray.classFile, otherArray.getOrigin(), otherArray.historyPoint(), false, 0, new Signature(otherArray.classFile.getClassName(), "" + Type.INT, "length"));
         //TODO assert other is an initial symbolic array
         this.isInitial = false;
         this.lengthSignature = new Signature(this.classFile.getClassName(), "" + Type.INT, "length");

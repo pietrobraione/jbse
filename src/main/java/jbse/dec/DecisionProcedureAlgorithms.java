@@ -50,6 +50,7 @@ import jbse.tree.DecisionAlternative_XSWITCH;
 import jbse.val.Any;
 import jbse.val.Calculator;
 import jbse.val.Expression;
+import jbse.val.HistoryPoint;
 import jbse.val.Operator;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -228,6 +229,12 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	public DecisionProcedureAlgorithms(DecisionProcedure component, Calculator calc) {
 		super(component);
 		this.calc = calc;
+	}
+	
+	private HistoryPoint initialHistoryPoint;
+	
+	public void setInitialHistoryPoint(HistoryPoint initialHistoryPoint) {
+	    this.initialHistoryPoint = initialHistoryPoint;
 	}
 
 	/**
@@ -1043,7 +1050,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		
 		//filters static aliases based on their satisfiability
 		if (refToResolveTypeIsSatInitialized) {
-		    final Map<Long, Objekt> possibleAliases = getPossibleAliases(state, refToResolveClass);
+		    final Map<Long, Objekt> possibleAliases = getPossibleAliases(state, refToResolve, refToResolveClass);
 		    if (possibleAliases == null) {
 		        throw new UnexpectedInternalException("Symbolic reference " + refToResolve.toString() + 
 		                                              " (" + refToResolve.asOriginString() + ") has a bad type " + refToResolve.getStaticType() + ".");
@@ -1094,13 +1101,14 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *
 	 * @param state a {@link State}.
 	 * @param ref a {@link ReferenceSymbolic} to be resolved.
+         * @param refClass the {@link ClassFile} for the static type of {@code ref}.
 	 * @return a {@link Map}{@code <}{@link Long}{@code, }{@link Objekt}{@code >}, 
 	 *         representing the subview of {@code state}'s heap that contains
 	 *         all the objects that are compatible, in their type and epoch, with {@code ref}.
 	 *         If {@code ref} does not denote a reference or array type, the method 
 	 *         returns {@code null}.
 	 */
-	private static Map<Long, Objekt> getPossibleAliases(State state, ClassFile refClass) {
+	private Map<Long, Objekt> getPossibleAliases(State state, ReferenceSymbolic ref, ClassFile refClass) {
 	    //checks preconditions
 	    if (!refClass.isReference() && !refClass.isArray()) {
 	        return null;
@@ -1121,7 +1129,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	            
 	            //if it is time and epoch compatible, adds the object
 	            //to the result
-	            if (isTypeAndEpochCompatible(o, refClass, classHierarchy)) {
+	            if (isTypeAndEpochCompatible(o, ref, refClass, classHierarchy)) {
 	                retVal.put(i, o);
 	            }
 	        }
@@ -1134,16 +1142,20 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * to resolve of a symbolic reference.
 	 * 
 	 * @param o an {@link Objekt}.
-	 * @param refClass a {@link ClassFile} for the static type of the symbolic reference.
+	 * @param ref a {@link ReferenceSymbolic} to be resolved.
+	 * @param refClass the {@link ClassFile} for the static type of {@code ref}.
 	 * @param classHierarchy a {@link ClassHierarchy}.
 	 * @return {@code true} iff {@code refClass} can be resolved by {@code o}. 
 	 *         More precisely, returns {@code true} iff the creation epoch of 
 	 *         {@code o} comes before that of the symbolic reference, and {@code o}'s type 
 	 *         is a subclass of {@code refClass}.
 	 */
-	private static boolean isTypeAndEpochCompatible(Objekt o, ClassFile refClass, ClassHierarchy classHierarchy) {
-	    return (o.isSymbolic() && //TODO this works only with the two-epoch approach 
-	            classHierarchy.isSubclass(o.getType(), refClass));
+	private boolean isTypeAndEpochCompatible(Objekt o, ReferenceSymbolic ref, ClassFile refClass, ClassHierarchy classHierarchy) {
+	    final boolean isTypeCompatible = classHierarchy.isSubclass(o.getType(), refClass);
+	    final HistoryPoint oEpoch = (o.historyPoint() == null ? this.initialHistoryPoint : o.historyPoint());
+            final HistoryPoint refEpoch = (ref.historyPoint() == null ? this.initialHistoryPoint : ref.historyPoint());
+	    final boolean isEpochCompatible = oEpoch.comesBefore(refEpoch);
+	    return (isTypeCompatible && isEpochCompatible); 
 	}
 
 	/**

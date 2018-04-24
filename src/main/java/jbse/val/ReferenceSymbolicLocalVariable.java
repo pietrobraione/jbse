@@ -16,9 +16,10 @@ public final class ReferenceSymbolicLocalVariable extends ReferenceSymbolicAtomi
      *        object with same identifier will be treated as equal.
      * @param staticType a {@link String}, the static type of the
      *        reference (taken from bytecode).
+     * @param historyPoint the current {@link HistoryPoint}.
      */
-    ReferenceSymbolicLocalVariable(String variableName, int id, String staticType) {
-    	super(id, staticType);
+    ReferenceSymbolicLocalVariable(String variableName, int id, String staticType, HistoryPoint historyPoint) {
+    	super(id, staticType, historyPoint);
     	this.variableName = variableName;
     }
 

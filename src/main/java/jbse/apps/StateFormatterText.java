@@ -316,7 +316,7 @@ public final class StateFormatterText implements Formatter {
     private static void formatObject(State s, StringBuilder sb, Objekt o, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
         if (o.getOrigin() != null) {
-            sb.append(lineSep); sb.append(indentCurrent); sb.append("Origin: "); sb.append(o.getOrigin());
+            sb.append(lineSep); sb.append(indentCurrent); sb.append("Origin: "); sb.append(o.getOrigin().asOriginString());
         }
         //explicit dispatch on type
         if (o instanceof Array) {

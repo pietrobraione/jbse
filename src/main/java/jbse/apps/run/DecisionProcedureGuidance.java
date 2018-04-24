@@ -486,7 +486,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                         return;
                     }
                 }
-                this.value = this.calc.applyFunctionPrimitive(x.getType(), x.getHistoryPoint(), x.getOperator(), argValues);
+                this.value = this.calc.applyFunctionPrimitive(x.getType(), x.historyPoint(), x.getOperator(), argValues);
             }
 
             @Override

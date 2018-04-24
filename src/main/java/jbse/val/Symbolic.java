@@ -25,4 +25,14 @@ public interface Symbolic {
      * @return a {@link String}.
      */
     String asOriginString();
+    
+    /**
+     * Returns the {@link HistoryPoint} of
+     * creation of this symbol. It may
+     * return {@code null} to signify existence
+     * at the initial state.
+     * 
+     * @return a {@link HistoryPoint} or {@code null}.
+     */
+    HistoryPoint historyPoint();
 }

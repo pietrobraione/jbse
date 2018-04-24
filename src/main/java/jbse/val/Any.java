@@ -15,7 +15,7 @@ import jbse.val.exc.InvalidTypeException;
  */
 public final class Any extends PrimitiveSymbolic {
     private Any(Calculator calc) throws InvalidTypeException {
-        super(Type.BOOLEAN, calc);
+        super(Type.BOOLEAN, null, calc);
     }
 
     public static Any make(Calculator calc) {

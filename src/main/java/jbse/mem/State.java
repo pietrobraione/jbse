@@ -61,7 +61,6 @@ import jbse.bc.exc.WrongClassNameException;
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
-import jbse.mem.Objekt.Epoch;
 import jbse.mem.exc.CannotAssumeSymbolicObjectException;
 import jbse.mem.exc.CannotRefineException;
 import jbse.mem.exc.ContradictionException;
@@ -208,6 +207,9 @@ public final class State implements Cloneable {
      * extensions and application classloaders. 
      */
     private final boolean bypassStandardLoading;
+
+    /** The {@link HistoryPoint} of the initial state. */
+    private HistoryPoint initialHistoryPoint = null;
 
     /** The {@link HistoryPoint} of this state. */
     private HistoryPoint historyPoint = null;
@@ -1332,7 +1334,7 @@ public final class State implements Cloneable {
      */
     public ReferenceConcrete createArray(Value initValue, Primitive length, ClassFile arrayClass) 
     throws InvalidTypeException, HeapMemoryExhaustedException {
-        final Array a = new Array(this.calc, false, initValue, length, arrayClass, null, Epoch.EPOCH_AFTER_START, false, this.maxSimpleArrayLength);
+        final Array a = new Array(false, this.calc, false, initValue, length, arrayClass, null, this.historyPoint, false, this.maxSimpleArrayLength);
         final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(a));
         initDefaultHashCodeConcrete(a, retVal);
         return retVal;
@@ -1407,11 +1409,11 @@ public final class State implements Cloneable {
         }
         try {
             if (this.classHierarchy.isSubclass(classFile, cf_JAVA_CLASSLOADER)) {
-                return new Instance_JAVA_CLASSLOADER(this.calc, classFile, null, Epoch.EPOCH_AFTER_START, this.nextClassLoaderIdentifier++, numOfStaticFields, fieldsSignatures);
+                return new Instance_JAVA_CLASSLOADER(this.calc, classFile, null, this.historyPoint, this.nextClassLoaderIdentifier++, numOfStaticFields, fieldsSignatures);
             } else if (this.classHierarchy.isSubclass(classFile, cf_JAVA_THREAD)) {
-                return new Instance_JAVA_THREAD(this.calc, classFile, null, Epoch.EPOCH_AFTER_START, numOfStaticFields, fieldsSignatures);
+                return new Instance_JAVA_THREAD(this.calc, classFile, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
             } else {
-                return new Instance(this.calc, classFile, null, Epoch.EPOCH_AFTER_START, numOfStaticFields, fieldsSignatures);
+                return new Instance(false, this.calc, classFile, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
             }
         } catch (InvalidTypeException e) {
             //this should never happen
@@ -1439,7 +1441,7 @@ public final class State implements Cloneable {
             }
             final int numOfStaticFields = this.classHierarchy.numOfStaticFields(cf_JAVA_CLASS);
             final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(cf_JAVA_CLASS);
-            final Instance myObj = new Instance_JAVA_CLASS(this.calc, cf_JAVA_CLASS, null, Epoch.EPOCH_AFTER_START, representedClass, numOfStaticFields, fieldsSignatures);
+            final Instance myObj = new Instance_JAVA_CLASS(this.calc, cf_JAVA_CLASS, null, this.historyPoint, representedClass, numOfStaticFields, fieldsSignatures);
             final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(myObj));
             
             //initializes the fields of the new instance: The only
@@ -1489,7 +1491,7 @@ public final class State implements Cloneable {
         }
         final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
-        final Klass k = new Klass(this.calc, null, Objekt.Epoch.EPOCH_AFTER_START, numOfStaticFields, fieldsSignatures);
+        final Klass k = new Klass(false, this.calc, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
         k.setObjektDefaultHashCode(this.calc.valInt(0)); //doesn't care because it is not used
         this.staticMethodArea.set(classFile, k);
     }
@@ -1514,7 +1516,7 @@ public final class State implements Cloneable {
         }
         final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
-        final Klass k = new Klass(this.calc, createSymbolKlassPseudoReference(classFile), Objekt.Epoch.EPOCH_BEFORE_START, numOfStaticFields, fieldsSignatures);
+        final Klass k = new Klass(true, this.calc, createSymbolKlassPseudoReference(classFile), this.initialHistoryPoint, numOfStaticFields, fieldsSignatures);
         initWithSymbolicValues(k);
         k.setObjektDefaultHashCode(this.calc.valInt(0)); //doesn't care because it is not used
         this.staticMethodArea.set(classFile, k);
@@ -1571,7 +1573,7 @@ public final class State implements Cloneable {
     private Array newArraySymbolic(ClassFile arrayClass, ReferenceSymbolic origin, boolean isInitial) 
     throws InvalidTypeException {
         final Primitive length = (Primitive) createSymbolMemberArrayLength(origin);
-        final Array obj = new Array(this.calc, true, null, length, arrayClass, origin, Epoch.EPOCH_BEFORE_START, isInitial, this.maxSimpleArrayLength);
+        final Array obj = new Array(true, this.calc, true, null, length, arrayClass, origin, origin.historyPoint(), isInitial, this.maxSimpleArrayLength);
         initDefaultHashCodeSymbolic(obj);
         return obj;
     }
@@ -1583,7 +1585,7 @@ public final class State implements Cloneable {
         }
         final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
-        final Instance obj = new Instance(this.calc, classFile, origin, Epoch.EPOCH_BEFORE_START, numOfStaticFields, fieldsSignatures);
+        final Instance obj = new Instance(true, this.calc, classFile, origin, origin.historyPoint(), numOfStaticFields, fieldsSignatures);
         initWithSymbolicValues(obj);
         initDefaultHashCodeSymbolic(obj);
         return obj;
@@ -2833,7 +2835,7 @@ public final class State implements Cloneable {
      * history point should be compact.
      */
     public void setInitialHistoryPoint() {
-        this.historyPoint = this.historyPoint.initial();
+        this.initialHistoryPoint = this.historyPoint = this.historyPoint.initial();
     }
 
     /**
