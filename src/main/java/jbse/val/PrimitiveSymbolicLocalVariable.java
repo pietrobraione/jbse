@@ -17,11 +17,12 @@ public final class PrimitiveSymbolicLocalVariable extends PrimitiveSymbolicAtomi
      * @param id an {@link int}, the identifier of the symbol. Different
      *        object with same identifier will be treated as equal.
      * @param type the type of the represented value.
+     * @param historyPoint the current {@link HistoryPoint}.
      * @param calc a {@link Calculator}.
      * @throws InvalidTypeException if {@code type} is not primitive.
      */
-    PrimitiveSymbolicLocalVariable(String variableName, int id, char type, Calculator calc) throws InvalidTypeException {
-    	super(id, type, calc);
+    PrimitiveSymbolicLocalVariable(String variableName, int id, char type, HistoryPoint historyPoint, Calculator calc) throws InvalidTypeException {
+    	super(id, type, historyPoint, calc);
     	this.variableName = variableName;
     }
     

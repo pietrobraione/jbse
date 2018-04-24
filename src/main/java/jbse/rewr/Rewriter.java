@@ -100,7 +100,7 @@ public class Rewriter {
 		}
 		final PrimitiveSymbolicApply result;
 		try {
-			result = new PrimitiveSymbolicApply(x.getType(), x.getHistoryPoint(), this.calc, x.getOperator(), args);
+			result = new PrimitiveSymbolicApply(x.getType(), x.historyPoint(), this.calc, x.getOperator(), args);
 		} catch (InvalidTypeException | InvalidOperandException e) {
 			throw new NoResultException(e);
 		}

@@ -221,6 +221,7 @@ public final class ExecutionContext {
 	 */
 	public void setInitialState(State initialState) {
 		this.initialState = initialState.clone();
+                this.decisionProcedure.setInitialHistoryPoint(this.initialState.getHistoryPoint());
 	}
 
 	/**

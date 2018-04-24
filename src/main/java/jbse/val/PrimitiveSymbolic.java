@@ -7,16 +7,20 @@ import jbse.val.exc.ValueDoesNotSupportNativeException;
  * Class that represent a symbolic value. 
  */
 public abstract class PrimitiveSymbolic extends Primitive implements Symbolic {
+    /** The creation history point of this symbol. */
+    private final HistoryPoint historyPoint;
+
     /**
      * Constructor.
      * 
      * @param type the type of the represented value.
-     * @param historyPoint a {@link String}, the current history point.
+     * @param historyPoint the current {@link HistoryPoint}.
      * @param calc a {@link Calculator}.
      * @throws InvalidTypeException if {@code type} is not primitive.
      */
-    PrimitiveSymbolic(char type, Calculator calc) throws InvalidTypeException {
+    PrimitiveSymbolic(char type, HistoryPoint historyPoint, Calculator calc) throws InvalidTypeException {
     	super(type, calc);
+        this.historyPoint = historyPoint;
     }
     
     /**
@@ -25,6 +29,11 @@ public abstract class PrimitiveSymbolic extends Primitive implements Symbolic {
     @Override
     public final String getValue() {
     	return toString();
+    }
+    
+    @Override
+    public final HistoryPoint historyPoint() {
+        return this.historyPoint;
     }
 
     /**

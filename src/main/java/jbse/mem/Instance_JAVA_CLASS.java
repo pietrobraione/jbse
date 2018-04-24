@@ -4,6 +4,7 @@ import static jbse.bc.Signatures.JAVA_CLASS;
 
 import jbse.bc.Signature;
 import jbse.val.Calculator;
+import jbse.val.HistoryPoint;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -14,8 +15,8 @@ public final class Instance_JAVA_CLASS extends Instance {
     /** The java class it represents. Immutable. */
     private final String representedClass;
 
-    protected Instance_JAVA_CLASS(Calculator calc, ReferenceSymbolic origin, Epoch epoch, String representedClass, Signature... fieldSignatures) {
-        super(calc, JAVA_CLASS, origin, epoch, fieldSignatures);
+    protected Instance_JAVA_CLASS(Calculator calc, ReferenceSymbolic origin, HistoryPoint epoch, String representedClass, Signature... fieldSignatures) {
+        super(false, calc, JAVA_CLASS, origin, epoch, fieldSignatures);
         this.representedClass = representedClass;
     }
     

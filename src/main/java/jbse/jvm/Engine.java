@@ -157,7 +157,7 @@ public class Engine implements AutoCloseable {
 		
 	        //saves a copy of the created state
 		this.ctx.setInitialState(this.currentState);
-
+		
         //synchronizes the decision procedure with the path condition
 		try {
 		    this.ctx.decisionProcedure.setAssumptions(this.currentState.getPathCondition());

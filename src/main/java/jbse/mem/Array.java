@@ -17,6 +17,7 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.val.Calculator;
 import jbse.val.Expression;
+import jbse.val.HistoryPoint;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.ReferenceArrayImmaterial;
@@ -346,6 +347,9 @@ public final class Array extends Objekt {
 	/**
 	 * Constructor.
 	 * 
+     * @param symbolic a {@code boolean}, whether this object is symbolic
+     *        (i.e., not explicitly created during symbolic execution by
+     *        a {@code new*} bytecode, but rather assumed).
 	 * @param calc a {@code Calculator}.  
 	 * @param initSymbolic {@code true} iff the array must be initialized 
 	 *        with symbolic values.
@@ -356,12 +360,12 @@ public final class Array extends Objekt {
 	 * @param type a {@link String}, the type of the array.
      * @param origin the {@link ReferenceSymbolic} providing origin of 
      *        the {@code Array}, if symbolic, or {@code null}, if concrete.
-	 * @param epoch the creation {@link Epoch} of the {@link Array}.
+	 * @param epoch the creation {@link HistoryPoint} of the {@link Array}.
 	 * @throws InvalidTypeException iff {@code type} is invalid. 
 	 */
-	public Array(Calculator calc, boolean initSymbolic, Value initValue, Primitive length, String type, ReferenceSymbolic origin, Epoch epoch) 
+	public Array(boolean symbolic, Calculator calc, boolean initSymbolic, Value initValue, Primitive length, String type, ReferenceSymbolic origin, HistoryPoint epoch) 
 	throws InvalidTypeException {
-		super(calc, type, origin, epoch, new Signature(type, "" + Type.INT, "length"));
+		super(symbolic, calc, type, origin, epoch, new Signature(type, "" + Type.INT, "length"));
 		this.lengthSignature = new Signature(type, "" + Type.INT, "length");
 		boolean illFormed = false;
 		if (type == null || type.charAt(0) != Type.ARRAYOF || type.length() < 2) {

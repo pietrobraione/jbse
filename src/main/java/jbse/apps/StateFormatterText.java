@@ -262,7 +262,7 @@ public class StateFormatterText implements Formatter {
 		final String lineSep = (breakLines ? LINE_SEP : "");
 		String str = "";
 		if (o.getOrigin() != null) {
-			str = indentCurrent + "Origin: " + o.getOrigin() + lineSep;
+			str = indentCurrent + "Origin: " + o.getOrigin().asOriginString() + lineSep;
 		}
 		//explicit dispatch on type
 		if (o instanceof Array) {

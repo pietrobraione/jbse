@@ -4,6 +4,7 @@ import java.util.Map;
 
 import jbse.bc.Signature;
 import jbse.val.Calculator;
+import jbse.val.HistoryPoint;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -13,16 +14,19 @@ public class Instance extends Objekt {
     /**
      * Constructor.
      * 
+     * @param symbolic a {@code boolean}, whether this object is symbolic
+     *        (i.e., not explicitly created during symbolic execution by
+     *        a {@code new*} bytecode, but rather assumed).
      * @param calc a {@link Calculator}.
      * @param className a {@code String}, the name of the class of 
      *        this {@link Instance} (e.g. {@code "java/lang/Object"}).
      * @param origin the {@link ReferenceSymbolic} providing origin of 
      *        the {@code Instance}, if symbolic, or {@code null}, if concrete.
-     * @param epoch the creation {@link Epoch} of this {@link Instance}. 
+     * @param epoch the creation {@link HistoryPoint} of this {@link Instance}. 
      * @param fieldSignatures varargs of field {@link Signature}s.
      */
-    protected Instance(Calculator calc, String className, ReferenceSymbolic origin, Epoch epoch, Signature... fieldSignatures) {
-    	super(calc, className, origin, epoch, fieldSignatures);
+    protected Instance(boolean symbolic, Calculator calc, String className, ReferenceSymbolic origin, HistoryPoint epoch, Signature... fieldSignatures) {
+    	super(symbolic, calc, className, origin, epoch, fieldSignatures);
     }
     
     @Override

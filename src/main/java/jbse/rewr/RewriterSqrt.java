@@ -40,8 +40,8 @@ public class RewriterSqrt extends Rewriter {
 				if (argSqrt[0].isZeroOne(false)) {
 					super.rewritePrimitiveSymbolicApply(x);
 				} else {
-					setResult(this.calc.applyFunctionPrimitive(x.getType(), x.getHistoryPoint(), PrimitiveSymbolicApply.ABS, argSqrt[0].toPrimitive())
-							.mul(this.calc.applyFunctionPrimitive(x.getType(), x.getHistoryPoint(), PrimitiveSymbolicApply.SQRT, argSqrt[1].toPrimitive())));
+					setResult(this.calc.applyFunctionPrimitive(x.getType(), x.historyPoint(), PrimitiveSymbolicApply.ABS, argSqrt[0].toPrimitive())
+							.mul(this.calc.applyFunctionPrimitive(x.getType(), x.historyPoint(), PrimitiveSymbolicApply.SQRT, argSqrt[1].toPrimitive())));
 				}
 			} catch (InvalidOperandException | InvalidTypeException e) {
 				//this should never happen

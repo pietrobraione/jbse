@@ -18,7 +18,6 @@ public final class PrimitiveSymbolicMemberArrayLength extends PrimitiveSymbolicM
      *        container array this symbol originates from.
      * @param id an {@link int}, the identifier of the symbol. Different
      *        object with same identifier will be treated as equal.
-     * @param type the type of the represented value.
      * @param calc a {@link Calculator}.
      * @throws InvalidTypeException (never).
      */

@@ -57,6 +57,11 @@ public final class Term extends Primitive implements Symbolic {
 	    return this.value;
 	}
 	
+
+	    @Override
+	    public HistoryPoint historyPoint() {
+	        return null;
+	    }
     /**
      * {@inheritDoc}
      */

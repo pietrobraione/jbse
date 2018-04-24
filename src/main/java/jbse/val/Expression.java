@@ -100,7 +100,7 @@ public final class Expression extends PrimitiveSymbolicComputed {
      */
     private Expression(char type, Calculator calc, Primitive firstOperand, Operator operator, Primitive secondOperand) 
     throws InvalidTypeException {
-    	super(type, calc);
+    	super(type, null, calc); //TODO put sensible history points also in primitives
         this.firstOp = firstOperand;
         this.operator = operator;
         this.secondOp = secondOperand;

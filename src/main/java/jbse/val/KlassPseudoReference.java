@@ -16,7 +16,7 @@ public final class KlassPseudoReference extends ReferenceSymbolic {
      * @param className a {@link String}, the name of a class.
      */
     KlassPseudoReference(String className) {
-    	super(null);
+    	super(null, null);
     	this.className = className;
     }
     

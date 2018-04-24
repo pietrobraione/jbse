@@ -22,9 +22,10 @@ public abstract class ReferenceSymbolicAtomic extends ReferenceSymbolic implemen
      * @param id an {@code int} identifying the reference univocally.
      * @param staticType a {@link String}, the static type of the
      *        reference (taken from bytecode).
+     * @param historyPoint the current {@link HistoryPoint}.
      */
-    ReferenceSymbolicAtomic(int id, String staticType) {
-        super(staticType);
+    ReferenceSymbolicAtomic(int id, String staticType, HistoryPoint historyPoint) {
+        super(staticType, historyPoint);
         this.id = id;
 
         //calculates hashCode

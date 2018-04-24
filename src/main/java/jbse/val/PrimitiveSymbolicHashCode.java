@@ -14,11 +14,6 @@ public final class PrimitiveSymbolicHashCode extends PrimitiveSymbolicAtomic {
      * of a concrete object.
      */
     private final ReferenceSymbolic container;
-    
-    /**
-     * The history point of when this hash code was created.
-     */
-    private final HistoryPoint historyPoint;
 
     /**
      * Constructor.
@@ -34,19 +29,14 @@ public final class PrimitiveSymbolicHashCode extends PrimitiveSymbolicAtomic {
      * @throws InvalidTypeException if {@code type} is not primitive.
      */
     PrimitiveSymbolicHashCode(ReferenceSymbolic container, int id, HistoryPoint historyPoint, Calculator calc) throws InvalidTypeException {
-    	super(id, INT, calc);
+    	super(id, INT, (container == null ? historyPoint : container.historyPoint()), calc);
     	this.container = container;
-    	this.historyPoint = historyPoint;
     }
 
     public ReferenceSymbolic getContainer() {
         return this.container;
     }
 
-    public HistoryPoint getHistoryPoint() {
-        return this.historyPoint;
-    }
-    
     @Override
     public String asOriginString() {
         return this.container.asOriginString() + ".<hashCode>";

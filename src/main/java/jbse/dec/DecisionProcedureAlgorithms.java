@@ -40,6 +40,7 @@ import jbse.tree.DecisionAlternative_XSWITCH;
 import jbse.val.Any;
 import jbse.val.Calculator;
 import jbse.val.Expression;
+import jbse.val.HistoryPoint;
 import jbse.val.Operator;
 import jbse.val.Primitive;
 import jbse.val.ReferenceSymbolic;
@@ -216,6 +217,12 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	public DecisionProcedureAlgorithms(DecisionProcedure component, Calculator calc) {
 		super(component);
 		this.calc = calc;
+	}
+	
+	private HistoryPoint initialHistoryPoint;
+	
+	public void setInitialHistoryPoint(HistoryPoint initialHistoryPoint) {
+	    this.initialHistoryPoint = initialHistoryPoint;
 	}
 
 	/**
@@ -918,7 +925,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *         If {@code ref} does not denote a reference or array type, the method 
 	 *         returns {@code null}.
 	 */
-	private static Map<Long, Objekt> getPossibleAliases(State state, ReferenceSymbolic ref) {
+	private Map<Long, Objekt> getPossibleAliases(State state, ReferenceSymbolic ref) {
 	    //checks preconditions
 	    final String type = ref.getStaticType();
 	    if (!Type.isReference(type) && !Type.isArray(type)) {
@@ -960,13 +967,16 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 *         {@code o} comes before that of {@code ref}, and {@code o}'s type 
 	 *         is a subtype of the static type of {@code ref}.
 	 */
-	private static boolean isTypeAndEpochCompatible(Objekt o, ReferenceSymbolic ref, ClassHierarchy classHierarchy) {
+	private boolean isTypeAndEpochCompatible(Objekt o, ReferenceSymbolic ref, ClassHierarchy classHierarchy) {
 	    final String type = ref.getStaticType();
 	    final String className = Type.className(type);
-	    return (o.isSymbolic() && //TODO this works only with the two-epoch approach 
-	            classHierarchy.isSubclass(o.getType(), className));
+	    final boolean isTypeCompatible = classHierarchy.isSubclass(o.getType(), className);
+	    final HistoryPoint oEpoch = (o.historyPoint() == null ? this.initialHistoryPoint : o.historyPoint());
+            final HistoryPoint refEpoch = (ref.historyPoint() == null ? this.initialHistoryPoint : ref.historyPoint());
+	    final boolean isEpochCompatible = oEpoch.comesBefore(refEpoch);
+	    return (isTypeCompatible && isEpochCompatible); 
 	}
-
+	
 	/**
 	 * Returns all the heap objects in a state that may be possible
 	 * aliases of a given {@link ReferenceSymbolic}.

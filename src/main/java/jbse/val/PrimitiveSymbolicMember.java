@@ -21,7 +21,7 @@ public abstract class PrimitiveSymbolicMember extends PrimitiveSymbolicAtomic im
      * @throws InvalidTypeException if {@code type} is not primitive.
      */
     PrimitiveSymbolicMember(ReferenceSymbolic container, int id, char type, Calculator calc) throws InvalidTypeException {
-    	super(id, type, calc);
+    	super(id, type, container.historyPoint(), calc);
     	this.container = container;
     }
 

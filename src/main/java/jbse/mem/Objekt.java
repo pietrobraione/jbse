@@ -9,6 +9,7 @@ import java.util.Map;
 
 import jbse.bc.Signature;
 import jbse.val.Calculator;
+import jbse.val.HistoryPoint;
 import jbse.val.Primitive;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Value;
@@ -18,16 +19,9 @@ import jbse.val.Value;
  * i.e., either a class, or an instance of a class, or an array.
  */
 public abstract class Objekt implements Cloneable {
-	/** 
-	 * The creation epoch of an {@link Objekt}.
-	 * 
-	 * @author Pietro Braione
-	 *
-	 */
-	protected enum Epoch { 
-		EPOCH_BEFORE_START, EPOCH_AFTER_START
-	}
-	
+    /** Whether this object is symbolic. Immutable. */
+    private boolean symbolic;
+    
     /** Static type identifier. Immutable. */
 	protected final String type;
 
@@ -38,7 +32,7 @@ public abstract class Objekt implements Cloneable {
 	private final ReferenceSymbolic origin;
 
     /** The creation epoch of this {@link Objekt}. Immutable. */
-    private final Epoch epoch;
+    private final HistoryPoint epoch;
     
     /** All the signatures of all the fields. Immutable. */
     private final List<Signature> fieldSignatures;
@@ -61,14 +55,18 @@ public abstract class Objekt implements Cloneable {
     /**
      * Constructor.
      * 
+     * @param symbolic a {@code boolean}, whether this object is symbolic
+     *        (i.e., not explicitly created during symbolic execution by
+     *        a {@code new*} bytecode, but rather assumed).
      * @param calc a {@link Calculator}.
      * @param type a {@link String}, the class of this object.
      * @param origin the {@link ReferenceSymbolic} providing origin of 
      *        the {@code Objekt}, if symbolic, or {@code null}, if concrete.
-     * @param epoch the creation {@link Epoch} of this object.
+     * @param epoch the creation {@link HistoryPoint} of this object.
      * @param fieldSignatures an array of field {@link Signature}s.
      */
-    protected Objekt(Calculator calc, String type, ReferenceSymbolic origin, Epoch epoch, Signature... fieldSignatures) {
+    protected Objekt(boolean symbolic, Calculator calc, String type, ReferenceSymbolic origin, HistoryPoint epoch, Signature... fieldSignatures) {
+        this.symbolic = symbolic;
         this.fields = new HashMap<>();
         this.fieldSignatures = Arrays.asList(fieldSignatures.clone()); //safety copy
         for (Signature s : this.fieldSignatures) {
@@ -100,25 +98,31 @@ public abstract class Objekt implements Cloneable {
     }
     
     /**
+     * Returns the creation epoch of this object
+     * as a {@link HistoryPoint}.
+     * 
+     * @return a {@link HistoryPoint}.
+     */
+    public final HistoryPoint historyPoint() {
+        return this.epoch;
+    }
+    
+    /**
      * Checks the epoch of this {@link Objekt}.
      *  
      * @return {@code true} iff the object is symbolic, i.e., 
-     *         is an object that was present in the heap 
-     *         before the start of the symbolic execution.
+     *         it was not explicitly created during symbolic execution 
+     *         by a {@code new*} bytecode, but rather assumed.
      */
     public final boolean isSymbolic() {
-    	return (this.epoch == Epoch.EPOCH_BEFORE_START); 
+    	return this.symbolic; 
     }
     
     /**
      * Sets the hash code of this {@link Objekt}.
      * 
      * @param hashCode a {@link Primitive} for the hash code
-     *        of this {@link Objekt}. It must be set when 
-     *        {@code epoch == }{@link Epoch#EPOCH_BEFORE_START}.
-     *        When {@code epoch == }{@link Epoch#EPOCH_AFTER_START}
-     *        the hash code of this {@link Objekt} from the underlying
-     *        JVM is used.
+     *        of this {@link Objekt}.
      */
     public final void setObjektHashCode(Primitive hashCode) {
         this.hashCode = hashCode;

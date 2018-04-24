@@ -17,9 +17,6 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic {
     /** java.lang.Object.toString */
     public static final String TO_STRING = "toString";
 
-    /** The history point. */
-    private final HistoryPoint historyPoint;
-
     /** The function name. */
     private final String operator;
     
@@ -44,8 +41,7 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic {
 	 */
 	public ReferenceSymbolicApply(String staticType, HistoryPoint historyPoint, String operator, Value... args) 
 	throws InvalidOperandException {
-		super(staticType);
-		this.historyPoint = historyPoint;
+		super(staticType, historyPoint);
 		this.operator = operator;
 		this.args = args.clone();
 		int i = 0;
@@ -72,20 +68,14 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic {
 			buf.append((first ? "" : ",") + v.toString());
 			first = false;
 		}
-		buf.append(")@");
-		buf.append(this.historyPoint.toString());
+		if (historyPoint == null) {
+		    buf.append(")");
+		} else {
+		    buf.append(")@");
+		    buf.append(historyPoint.toString());
+		}
 		this.toString = buf.toString();
 	}
-	    /** 
-	     * Returns the point in history where this symbolic 
-	     * value was created.
-	     * 
-	     * @return a {@link HistoryPoint}.
-	     */
-	    public final HistoryPoint getHistoryPoint() {
-	        return this.historyPoint;
-	    }
-	    
 
 	public String getOperator() {
 		return this.operator;
@@ -105,8 +95,12 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic {
                     buf.append(v.isSymbolic() ? ((Symbolic) v).asOriginString() : v.toString());
                     first = false;
             }
-            buf.append(")@");
-            buf.append(this.historyPoint.toString());
+            if (historyPoint() == null) {
+                buf.append(")");
+            } else {
+                buf.append(")@");
+                buf.append(historyPoint().toString());
+            }
             return buf.toString();
 	}
 	
@@ -150,11 +144,11 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic {
 		} else if (!this.operator.equals(other.operator)) {
 			return false;
 		}
-                if (this.historyPoint == null) {
-                    if (other.historyPoint != null) {
+                if (historyPoint() == null) {
+                    if (other.historyPoint() != null) {
                         return false;
                     }
-                } else if (!this.historyPoint.equals(other.historyPoint)) {
+                } else if (!historyPoint().equals(other.historyPoint())) {
                     return false;
                 }
 		return true;
