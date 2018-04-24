@@ -654,7 +654,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	throws DecisionException, BadClassFileException {
 	    try {
 	        final boolean partialReferenceResolution = 
-	        doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFactory_XLOAD_GETX(), result);
+	            doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFactory_XLOAD_GETX(), result);
 	        return Outcome.val(true, partialReferenceResolution, true); //uninitialized symbolic references always require a refinement action
 	    } catch (InvalidInputException e) {
 	        //this should never happen as arguments have been checked by the caller

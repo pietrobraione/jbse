@@ -110,7 +110,7 @@ public class StateFormatterText implements Formatter {
    			doneFirstExpression = true;
     		if (c instanceof ClauseAssume) {
     			final Primitive cond = ((ClauseAssume) c).getCondition();
-    			expression += formatValue(s, cond);
+    			expression += formatPrimitive(s, cond);
     			final String expressionFormatted = formatValueForPathCondition(cond, breakLines, indentTxt, indentCurrent, doneSymbols);
         		if (expressionFormatted.equals("")) {
         			//does nothing
@@ -127,7 +127,7 @@ public class StateFormatterText implements Formatter {
     				final ReferenceSymbolic tgtOrigin = s.getObject(ref).getOrigin();
     				expression += "Object[" + s.getResolution(ref) + "] (" + (ref.equals(tgtOrigin) ? "fresh" : ("aliases " + tgtOrigin)) + ")";
     			}
-    			final String referenceFormatted = formatReferenceForPathCondition(ref, doneSymbols); 
+    			final String referenceFormatted = formatValueForPathCondition(ref, breakLines, indentTxt, indentCurrent, doneSymbols); 
         		if (referenceFormatted.equals("")) {
         			//does nothing
         		} else {
@@ -140,14 +140,6 @@ public class StateFormatterText implements Formatter {
 		
 		}
 		return (expression.equals("") ? "" : (lineSep + expression)) + (where.equals("") ? "" : (lineSep + indentCurrent + "where:" + lineSep  + where));
-	}
-	
-	private static String formatReferenceForPathCondition(ReferenceSymbolic r, HashSet<String> done) {
-		if (done.contains(r.toString())) {
-			return "";
-		} else {
-			return r.toString() + " == " + r.asOriginString();
-		}
 	}
 	
 	private static String formatExpressionForPathCondition(Expression e, boolean breakLines, String indentTxt, String indentCurrent, HashSet<String> done) {
@@ -214,7 +206,7 @@ public class StateFormatterText implements Formatter {
             String retVal = "";
             boolean first = true;
             for (Value v : a.getArgs()) {
-                    String argFormatted = formatValueForPathCondition(v, breakLines, indentTxt, indentCurrent, done);
+                    final String argFormatted = formatValueForPathCondition(v, breakLines, indentTxt, indentCurrent, done);
                     if (argFormatted.equals("")) {
                             //does nothing
                     } else { 
@@ -351,9 +343,9 @@ public class StateFormatterText implements Formatter {
 		if (e.getAccessCondition() == null) {
 			exp = "true";
 		} else {
-			exp = formatValue(s, e.getAccessCondition());
+			exp = formatPrimitive(s, e.getAccessCondition());
 		}
-		final String val = formatValue(s, e.getValue());
+		final String val = formatPrimitive(s, e.getValue());
 		return (showExpression ? (exp + " -> ") : "") + val;	
 	}
 	
@@ -401,12 +393,12 @@ public class StateFormatterText implements Formatter {
         if (val == null) {
             tmp = "ERROR: no value has been assigned to this variable.";
         } else {
-            tmp = formatValue(s, val) + " " + formatType(val);
+            tmp = formatPrimitive(s, val) + " " + formatType(val);
         }
         return ("Name: " + v.getName() + ", Type: " + v.getType() + ", Value: " + tmp);
 	}
 	
-	private static String formatValue(State s, Value val) {
+	private static String formatPrimitive(State s, Value val) {
         String tmp = val.toString();
         if (val instanceof ReferenceSymbolic) {
         	ReferenceSymbolic ref = (ReferenceSymbolic) val;
@@ -467,7 +459,7 @@ public class StateFormatterText implements Formatter {
             buf.append("Operand[");
             buf.append(i);
             buf.append("]: ");
-            buf.append(formatValue(s, v));
+            buf.append(formatPrimitive(s, v));
             buf.append(" ");
             buf.append(formatType(v));
             if (i < last)  {

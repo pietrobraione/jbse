@@ -3,6 +3,7 @@ package jbse.algo;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XALOAD;
 import jbse.tree.DecisionAlternative_XALOAD_Out;
 import jbse.tree.DecisionAlternative_XALOAD_Unresolved;
@@ -23,42 +24,42 @@ import jbse.tree.VisitorDecisionAlternative_XALOAD;
  *
  */
 abstract class StrategyUpdate_XALOAD implements StrategyUpdate<DecisionAlternative_XALOAD> {
-	abstract public void updateReference(State state, DecisionAlternative_XALOAD_Unresolved alt) 
-	throws DecisionException, InterruptException;
+	abstract public void updateUnresolved(State state, DecisionAlternative_XALOAD_Unresolved alt) 
+	throws DecisionException, InterruptException, ThreadStackEmptyException;
 
 	abstract public void updateResolved(State state, DecisionAlternative_XALOAD_Resolved alt) 
-	throws DecisionException, InterruptException;
+	throws DecisionException, InterruptException, ThreadStackEmptyException;
 
 	abstract public void updateOut(State state, DecisionAlternative_XALOAD_Out alt) 
 	throws InterruptException;
 
 	@Override
 	public final void update(final State state, DecisionAlternative_XALOAD alt)
-	throws DecisionException, InterruptException {
+	throws DecisionException, InterruptException, ThreadStackEmptyException {
 		//a visitor redispatching to the methods which specialize this.update
 		final VisitorDecisionAlternative_XALOAD visitorUpdate = 
 		new VisitorDecisionAlternative_XALOAD() {
 			@Override
 			public void visitDecisionAlternative_XALOAD_Expands(DecisionAlternative_XALOAD_Expands alt) 
-			throws DecisionException, InterruptException {
-				StrategyUpdate_XALOAD.this.updateReference(state, alt);
+			throws DecisionException, InterruptException, ThreadStackEmptyException {
+				StrategyUpdate_XALOAD.this.updateUnresolved(state, alt);
 			}
 
 			@Override
 			public void visitDecisionAlternative_XALOAD_Aliases(DecisionAlternative_XALOAD_Aliases alt) 
-			throws DecisionException, InterruptException {
-				StrategyUpdate_XALOAD.this.updateReference(state, alt);
+			throws DecisionException, InterruptException, ThreadStackEmptyException {
+				StrategyUpdate_XALOAD.this.updateUnresolved(state, alt);
 			}
 
 			@Override
 			public void visitDecisionAlternative_XALOAD_Null(DecisionAlternative_XALOAD_Null alt) 
-			throws DecisionException, InterruptException {
-				StrategyUpdate_XALOAD.this.updateReference(state, alt);
+			throws DecisionException, InterruptException, ThreadStackEmptyException {
+				StrategyUpdate_XALOAD.this.updateUnresolved(state, alt);
 			}
 
 			@Override
 			public void visitDecisionAlternative_XALOAD_Resolved(DecisionAlternative_XALOAD_Resolved alt) 
-			throws DecisionException, InterruptException {
+			throws DecisionException, InterruptException, ThreadStackEmptyException {
 				StrategyUpdate_XALOAD.this.updateResolved(state, alt);
 			}
 
@@ -71,7 +72,7 @@ abstract class StrategyUpdate_XALOAD implements StrategyUpdate<DecisionAlternati
 
 		try {
 			alt.accept(visitorUpdate);
-		} catch (DecisionException | InterruptException | 
+		} catch (DecisionException | InterruptException | ThreadStackEmptyException |
 		         RuntimeException e) {
 			throw e;
 		} catch (Exception e) {
