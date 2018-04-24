@@ -141,8 +141,9 @@ public final class StateFormatterText implements Formatter {
                     final ReferenceSymbolic tgtOrigin = s.getObject(ref).getOrigin();
                     expression.append("Object["); expression.append(s.getResolution(ref)); expression.append("] ("); expression.append(ref.equals(tgtOrigin) ? "fresh" : ("aliases " + tgtOrigin)); expression.append(")");
                 }
-                final String referenceFormatted = formatReferenceForPathCondition(ref, doneSymbols); 
-                if (referenceFormatted.equals("")) {
+                final StringBuilder referenceFormatted = new StringBuilder();
+                final boolean someText = formatValueForPathCondition(ref, referenceFormatted, breakLines, indentTxt, indentCurrent, doneSymbols); 
+                if (someText) {
                     //does nothing
                 } else {
                     if (doneFirstWhere) {
@@ -168,14 +169,6 @@ public final class StateFormatterText implements Formatter {
         }
         if (where.length() > 0) {
             sb.append(lineSep); sb.append(indentCurrent); sb.append("where:"); sb.append(lineSep); sb.append(where);
-        }
-    }
-
-    private static String formatReferenceForPathCondition(ReferenceSymbolic r, HashSet<String> done) {
-        if (done.contains(r.toString())) {
-            return "";
-        } else {
-            return r.toString() + " == " + r.asOriginString();
         }
     }
 

@@ -36,6 +36,7 @@ import jbse.mem.Array;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XALOAD;
 import jbse.tree.DecisionAlternative_XALOAD_Out;
 import jbse.tree.DecisionAlternative_XALOAD_Unresolved;
@@ -362,17 +363,17 @@ StrategyUpdate_XALOAD> {
     protected StrategyUpdate_XALOAD updater() {
         return new StrategyUpdate_XALOAD() {
             @Override
-            public void updateResolved(State s, DecisionAlternative_XALOAD_Resolved dav) 
+            public void updateResolved(State s, DecisionAlternative_XALOAD_Resolved dar) 
             throws DecisionException, InterruptException, MissingTriggerParameterException, 
-            ClasspathException, NotYetImplementedException {
-                Algo_XALOAD.this.update(s, dav); //implemented in Algo_XYLOAD_GETX
+            ClasspathException, NotYetImplementedException, ThreadStackEmptyException {
+                Algo_XALOAD.this.update(s, dar); //implemented in Algo_XYLOAD_GETX
             }
 
             @Override
-            public void updateReference(State s, DecisionAlternative_XALOAD_Unresolved dar) 
+            public void updateUnresolved(State s, DecisionAlternative_XALOAD_Unresolved dau) 
             throws DecisionException, InterruptException, MissingTriggerParameterException, 
-            ClasspathException, NotYetImplementedException {
-                Algo_XALOAD.this.update(s, dar); //implemented in Algo_XYLOAD_GETX
+            ClasspathException, NotYetImplementedException, ThreadStackEmptyException {
+                Algo_XALOAD.this.update(s, dau); //implemented in Algo_XYLOAD_GETX
             }
 
             @Override

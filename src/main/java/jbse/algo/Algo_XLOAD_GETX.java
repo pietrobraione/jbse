@@ -62,7 +62,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
             try {
                 o = this.ctx.decisionProcedure.resolve_XLOAD_GETX(state, this.valToLoad, result);
             //TODO the next catch blocks should disappear, see comments on removing exceptions in jbse.dec.DecisionProcedureAlgorithms.doResolveReference
-            } catch (ClassFileNotFoundException exc) {
+            } catch (ClassFileNotFoundException e) {
                 //TODO this exception should wrap a ClassNotFoundException
                 throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
                 exitFromAlgorithm();
@@ -72,13 +72,13 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
             } catch (WrongClassNameException e) {
                 throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
                 exitFromAlgorithm();
-            } catch (IncompatibleClassFileException exc) {
+            } catch (IncompatibleClassFileException e) {
                 throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
                 exitFromAlgorithm();
-            } catch (ClassFileNotAccessibleException exc) {
+            } catch (ClassFileNotAccessibleException e) {
                 throwNew(state, ILLEGAL_ACCESS_ERROR);
                 exitFromAlgorithm();
-            } catch (ClassFileIllFormedException exc) {
+            } catch (ClassFileIllFormedException e) {
                 throwVerifyError(state);
                 exitFromAlgorithm();
             }
