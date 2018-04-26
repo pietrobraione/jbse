@@ -1154,7 +1154,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	    final boolean isTypeCompatible = classHierarchy.isSubclass(o.getType(), refClass);
 	    final HistoryPoint oEpoch = (o.historyPoint() == null ? this.initialHistoryPoint : o.historyPoint());
             final HistoryPoint refEpoch = (ref.historyPoint() == null ? this.initialHistoryPoint : ref.historyPoint());
-	    final boolean isEpochCompatible = oEpoch.comesBefore(refEpoch);
+	    final boolean isEpochCompatible = oEpoch.weaklyBefore(refEpoch);
 	    return (isTypeCompatible && isEpochCompatible); 
 	}
 

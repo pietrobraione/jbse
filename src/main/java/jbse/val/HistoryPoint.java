@@ -114,8 +114,8 @@ public final class HistoryPoint {
     }
     
     /**
-     * Checks whether this {@link HistoryPoint} comes before
-     * another one.
+     * Checks whether this {@link HistoryPoint} weakly comes before
+     * (i.e., comes before or {@link #equals(Object) equals}) another one.
      * 
      * @param other a {@link HistoryPoint}. It must not be {@code null}.
      * @return {@code true} iff this object's branch identifier is a 
@@ -124,7 +124,7 @@ public final class HistoryPoint {
      *         {@code this.}{@link #getSequenceNumber() getSequenceNumber}{@code () <= other.}{@link #getSequenceNumber() getSequenceNumber}{@code ()}.
      * @throws NullPointerException if {@code other == null}.
      */
-    public boolean comesBefore(HistoryPoint other) {
+    public boolean weaklyBefore(HistoryPoint other) {
         if (this.branchIdentifier.size() > other.branchIdentifier.size()) {
             return false;
         }
