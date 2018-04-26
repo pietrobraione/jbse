@@ -1817,7 +1817,7 @@ public final class State implements Cloneable {
 		//checks that stateRefining refines this state, and 
 		//gets an iterator to the additional clauses
 		final Iterator<Clause> iRefining;
-		if (this.historyPoint.comesBefore(refiningHistoryPoint)) {
+		if (this.historyPoint.weaklyBefore(refiningHistoryPoint)) {
 			iRefining = refiningPathCondition.refines(this.pathCondition);
 			if (iRefining == null) {
 				throw new CannotRefineException();
