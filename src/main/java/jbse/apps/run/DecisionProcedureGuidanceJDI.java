@@ -32,7 +32,6 @@ import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ReferenceType;
 import com.sun.jdi.ShortValue;
 import com.sun.jdi.StackFrame;
-import com.sun.jdi.ThreadReference;
 import com.sun.jdi.VMDisconnectedException;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.connect.Connector;
@@ -51,7 +50,6 @@ import com.sun.jdi.request.MethodEntryRequest;
 import com.sun.jdi.request.MethodExitRequest;
 
 import jbse.bc.Signature;
-import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.jvm.Runner;
 import jbse.jvm.RunnerParameters;
@@ -123,7 +121,6 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         private boolean intoMethodRunnPar = false;
         private int hitCounter = 0;
         private MethodEntryEvent methodEntryEvent;
-        private StackFrame rootFrameConcrete;
 
         public JVMJDI(Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits) 
         throws GuidanceException {
@@ -134,16 +131,10 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             this.vm = createVM(runnerParameters, stopSignature);
             setEventRequests();
             run();
-            
-            //sets rootFrameConcrete
-            try {
-                final ThreadReference thread = this.methodEntryEvent.thread();
-                final List<StackFrame> frames = thread.frames();
-                this.rootFrameConcrete = frames.get(0);
-            } catch (IncompatibleThreadStateException | IndexOutOfBoundsException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
-            }
+        }
+        
+        private StackFrame rootFrameConcrete() throws IncompatibleThreadStateException {
+        	return this.methodEntryEvent.thread().frames().get(0);
         }
         
         private VirtualMachine createVM(RunnerParameters runnerParameters, Signature stopSignature) 
@@ -249,7 +240,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         
         @Override
         public boolean isCurrentMethodNonStatic() throws GuidanceException {
-            return !this.rootFrameConcrete.location().method().declaringType().isStatic();
+            try {
+				return !rootFrameConcrete().location().method().declaringType().isStatic();
+			} catch (IncompatibleThreadStateException e) {
+				throw new GuidanceException(e);
+			}
         }
         
         @Override
@@ -373,13 +368,13 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         throws GuidanceException, IncompatibleThreadStateException, AbsentInformationException {
             final com.sun.jdi.Value val;
             if ("this".equals(var)) {
-                val = this.rootFrameConcrete.thisObject();
+                val = rootFrameConcrete().thisObject();
             } else {
-                final LocalVariable variable = this.rootFrameConcrete.visibleVariableByName(var); 
+                final LocalVariable variable = rootFrameConcrete().visibleVariableByName(var); 
                 if (variable == null) {
                     throw new GuidanceException(ERROR_BAD_PATH);
                 }
-                val = this.rootFrameConcrete.getValue(variable);
+                val = rootFrameConcrete().getValue(variable);
             }
             return val;
         }
