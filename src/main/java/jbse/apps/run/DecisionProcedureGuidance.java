@@ -311,6 +311,12 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         this.seen.add(this.jvm.getValue(m));
     }
     
+    @Override
+    public void close() throws DecisionException {
+    	super.close();
+    	this.jvm.close();
+    }
+    
     public static abstract class JVM {
         protected final Calculator calc;
 
@@ -509,7 +515,8 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                 //because of conversion of actual types to computational types
                 //through operand stack, see JVMSpec 2.11.1, tab. 2.3
             }
-
         }
+
+        protected void close() { }
     }
 }

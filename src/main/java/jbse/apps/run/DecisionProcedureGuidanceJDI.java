@@ -110,7 +110,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         super(component, calc, new JVMJDI(calc, runnerParameters, stopSignature, numberOfHits));
     }
 
-    private static class JVMJDI extends JVM {
+    private static final class JVMJDI extends JVM {
         private static final String ERROR_BAD_PATH = "Failed accessing through a memory access path.";
         private static final String[] EXCLUDES = {"java.*", "javax.*", "sun.*", "com.sun.*", "org.*"};
         
@@ -403,7 +403,9 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         }
         
         @Override
-        protected void finalize() {
+        protected void close() {
+        	this.vm.exit(0);
+        	
             //obviates to inferior process leak
             this.vm.process().destroyForcibly();
         }
