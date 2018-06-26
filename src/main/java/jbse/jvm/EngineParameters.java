@@ -1,6 +1,8 @@
 package jbse.jvm;
 
 import java.io.File;
+import static jbse.bc.Signature.SIGNATURE_SEPARATOR;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -776,6 +778,22 @@ public final class EngineParameters implements Cloneable {
             throw new NullPointerException();
         }
         this.uninterpreted.add(new String[] { className, descriptor, methodName, functionName });
+    }
+
+    /**
+     * Specifies that a method must be treated as an uninterpreted pure
+     * function, rather than executed. This method is equivalent to
+     * {@link #addUninterpreted(String, String, String, String) addUninterpreted}{@code (className, descriptor, methodName, className + ":" + descriptor + ":" + methodName)}.
+     * 
+     * @param className the name of the class containing the method not to be
+     *        interpreted.
+     * @param descriptor the descriptor of the method. All the parameters types 
+     *        in the descriptor must be primitive.
+     * @param methodName the name of the method.
+     * @throws NullPointerException if any of the above parameters is {@code null}.
+     */
+    public void addUninterpreted(String className, String descriptor, String methodName) {
+        addUninterpreted(className, descriptor, methodName, className + SIGNATURE_SEPARATOR + descriptor + SIGNATURE_SEPARATOR + methodName);
     }
 
     /**

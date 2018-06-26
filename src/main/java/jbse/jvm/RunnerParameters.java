@@ -159,7 +159,7 @@ public final class RunnerParameters implements Cloneable {
     public State getInitialState() {
         return this.engineParameters.getInitialState();
     }
-    
+
     /**
      * Sets whether the bootstrap classloader should also be used to 
      * load the classes defined by the extensions and application classloaders.
@@ -363,6 +363,22 @@ public final class RunnerParameters implements Cloneable {
      */
     public void addUninterpreted(String className, String descriptor, String methodName, String functionName) {
         this.engineParameters.addUninterpreted(className, descriptor, methodName, functionName);
+    }
+
+    /**
+     * Specifies that a method must be treated as an uninterpreted pure
+     * function, rather than executed. This method is equivalent to
+     * {@link #addUninterpreted(String, String, String, String) addUninterpreted}{@code (className, descriptor, methodName, className + ":" + descriptor + ":" + methodName)}.
+     * 
+     * @param className the name of the class containing the method not to be
+     *        interpreted.
+     * @param descriptor the descriptor of the method. All the parameters types 
+     *        in the descriptor must be primitive.
+     * @param methodName the name of the method.
+     * @throws NullPointerException if any of the above parameters is {@code null}.
+     */
+    public void addUninterpreted(String className, String descriptor, String methodName) {
+        this.engineParameters.addUninterpreted(className, descriptor, methodName);
     }
 
     /**
