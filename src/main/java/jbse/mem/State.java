@@ -15,14 +15,13 @@ import static jbse.common.Type.parametersNumber;
 import static jbse.common.Type.isPrimitiveOrVoidCanonicalName;
 import static jbse.common.Util.unsafe;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FilterInputStream;
 import java.io.FilterOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -406,20 +405,36 @@ public final class State implements Cloneable {
             fosOutField.setAccessible(true);
             
             //gets the stdin and registers it
-            final BufferedInputStream bisIn = (BufferedInputStream) System.in;
-            final FileInputStream in = (FileInputStream) fisInField.get(bisIn);
+            FileInputStream in = null;
+            for (InputStream is = System.in; (is instanceof FilterInputStream) || (is instanceof FileInputStream); is = (InputStream) fisInField.get(is)) {
+                if (is instanceof FileInputStream) {
+                    in = (FileInputStream) is;
+                    break;
+                }
+            }
+            //TODO do something if in == null
             setFile(0, in);
             
             //gets the stdout and registers it
-            final PrintStream psOut = (PrintStream) System.out;
-            final BufferedOutputStream bosOut = (BufferedOutputStream) fosOutField.get(psOut);
-            final FileOutputStream out = (FileOutputStream) fosOutField.get(bosOut);
+            FileOutputStream out = null;
+            for (OutputStream os = System.out; (os instanceof FilterOutputStream) || (os instanceof FileOutputStream); os = (OutputStream) fosOutField.get(os)) {
+                if (os instanceof FileOutputStream) {
+                    out = (FileOutputStream) os;
+                    break;
+                }
+            }
+            //TODO if out == null, set to some backup output file
             setFile(1, out);
             
             //gets the stderr and registers it
-            final PrintStream psErr = (PrintStream) System.err;
-            final BufferedOutputStream bosErr = (BufferedOutputStream) fosOutField.get(psErr);
-            final FileOutputStream err = (FileOutputStream) fosOutField.get(bosErr);
+            FileOutputStream err = null;
+            for (OutputStream os = System.err; (os instanceof FilterOutputStream) || (os instanceof FileOutputStream); os = (OutputStream) fosOutField.get(os)) {
+                if (os instanceof FileOutputStream) {
+                    err = (FileOutputStream) os;
+                    break;
+                }
+            }
+            //TODO if err == null, set to some backup output file
             setFile(2, err);
         } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
             throw new UnexpectedInternalException(e);
