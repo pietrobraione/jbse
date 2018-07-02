@@ -4,9 +4,9 @@ import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.bc.Signatures.CLONE_NOT_SUPPORTED_EXCEPTION;
 import static jbse.bc.Signatures.JAVA_CLONEABLE;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
-import static jbse.bc.Signatures.CLONE_NOT_SUPPORTED_EXCEPTION;
 
 import java.util.List;
 import java.util.function.Supplier;

@@ -180,11 +180,12 @@ public class Util {
      * 
      * @param s a {@link State}.
      * @param ref a {@link Reference}.
-     * @return a {@link String} corresponding to the {@code value} of 
-     *         the {@link Instance} referred by {@code ref}, 
-     *         or {@code null} if such {@link Instance}'s 
+     * @return a {@link String} corresponding to the value of 
+     *         the string {@link Instance} referred by {@code ref}, 
+     *         or {@code null} if {@code ref} does not refer an {@link Instance} 
+     *         in {@code s}, or if it refers an {@link Instance} but its 
      *         {@link Instance#getType() type} is not the 
-     *         {@code java.lang.String} class, or its {@code value}
+     *         {@code java.lang.String} class, or its value
      *         is not a concrete array of {@code char}s.
      */
     public static String valueString(State s, Reference ref) {
@@ -207,7 +208,7 @@ public class Util {
      *         the {@code i}, 
      *         or {@code null} if such {@link Instance}'s 
      *         {@link Instance#getType() type} is not 
-     *         {@code "java/lang/String"}, or its {@code value}
+     *         {@code "java/lang/String"}, or its value
      *         is not a concrete array of {@code char}s.
      */
     public static String valueString(State s, Instance i) {

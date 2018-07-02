@@ -171,7 +171,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
                     try {
                         final ClassFile cf_JAVA_METHOD = hier.loadCreateClass(JAVA_METHOD);
                         methodRef = state.createInstance(cf_JAVA_METHOD);
-                        resultArray.setFast(calc.valInt(index) , methodRef);
+                        resultArray.setFast(calc.valInt(index), methodRef);
                     } catch (HeapMemoryExhaustedException e) {
                         throwNew(state, OUT_OF_MEMORY_ERROR);
                         exitFromAlgorithm();
