@@ -10,9 +10,6 @@ import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import static jbse.bc.Signatures.ILLEGAL_ARGUMENT_EXCEPTION;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.common.Type.ARRAYOF;
-import static jbse.common.Type.REFERENCE;
-import static jbse.common.Type.TYPEEND;
-import static jbse.common.Type.toPrimitiveOrVoidInternalName;
 
 import java.util.function.Supplier;
 

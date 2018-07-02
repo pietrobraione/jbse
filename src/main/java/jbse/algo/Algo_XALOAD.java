@@ -13,9 +13,6 @@ import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.UNSUPPORTED_CLASS_VERSION_ERROR;
-import static jbse.common.Type.REFERENCE;
-import static jbse.common.Type.TYPEEND;
-import static jbse.common.Type.toPrimitiveOrVoidInternalName;
 
 import java.util.Collection;
 import java.util.LinkedList;
