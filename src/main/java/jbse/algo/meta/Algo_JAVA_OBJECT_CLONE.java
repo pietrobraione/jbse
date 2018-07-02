@@ -8,7 +8,6 @@ import static jbse.bc.Signatures.CLONE_NOT_SUPPORTED_EXCEPTION;
 import static jbse.bc.Signatures.JAVA_CLONEABLE;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
@@ -55,8 +54,14 @@ public final class Algo_JAVA_OBJECT_CLONE extends Algo_INVOKEMETA_Nonbranching {
                 failExecution("The 'this' parameter to java.lang.Object.clone method is symbolic and unresolved.");
             }
             this.classFile = thisObj.getType();
-            final List<String> superinterfaces = this.classFile.getSuperInterfaceNames();
-            if (!superinterfaces.contains(JAVA_CLONEABLE)) {
+            boolean isCloneable = false;
+            for (ClassFile superinterface : state.getClassHierarchy().superinterfaces(this.classFile)) {
+            	if (JAVA_CLONEABLE.equals(superinterface.getClassName())) {
+            		isCloneable = true;
+            		break;
+            	}
+            }
+            if (!isCloneable) {
                 throwNew(state, CLONE_NOT_SUPPORTED_EXCEPTION);
                 exitFromAlgorithm();
             }
