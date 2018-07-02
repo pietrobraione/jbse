@@ -123,7 +123,7 @@ public class ClassFileFactoryTest {
 
         HashSet<String> ifnsExp = new HashSet<String>();
         ifnsExp.add("java/util/List");
-        ifnsExp.add("java/util/Queue");
+        ifnsExp.add("java/util/Deque");
         ifnsExp.add("java/lang/Cloneable");
         ifnsExp.add("java/io/Serializable");
 
@@ -221,7 +221,7 @@ public class ClassFileFactoryTest {
         String className = "java/lang/Object";
         byte[] b = getFromJar(className);
         ClassFile c = f.newClassFileClass(0, className, b, null, null);         
-        assertEquals(new ConstantPoolPrimitive(500000), c.getValueFromConstantPool(1));
+        assertEquals(new ConstantPoolPrimitive(999999), c.getValueFromConstantPool(13));
     }
 
     @Test
@@ -229,7 +229,7 @@ public class ClassFileFactoryTest {
         String className = "java/lang/Math";
         byte[] b = getFromJar(className);
         ClassFile c = f.newClassFileClass(0, className, b, null, null);         
-        assertEquals(new ConstantPoolPrimitive(0.5f), c.getValueFromConstantPool(2));
+        assertEquals(new ConstantPoolPrimitive(180.0d), c.getValueFromConstantPool(8));
     }
 
     @Test
@@ -237,7 +237,7 @@ public class ClassFileFactoryTest {
         String className = "java/lang/Math";
         byte[] b = getFromJar(className);
         ClassFile c = f.newClassFileClass(0, className, b, null, null);         
-        assertEquals(new ConstantPoolPrimitive(Math.E), c.getValueFromConstantPool(73));
+        assertEquals(new ConstantPoolPrimitive(Math.E), c.getValueFromConstantPool(119));
     }
 
     @Test
@@ -245,7 +245,7 @@ public class ClassFileFactoryTest {
         String className = "java/lang/Long";
         byte[] b = getFromJar(className);
         ClassFile c = f.newClassFileClass(0, className, b, null, null);         
-        assertEquals(new ConstantPoolPrimitive(Long.MAX_VALUE), c.getValueFromConstantPool(150));
+        assertEquals(new ConstantPoolPrimitive(Long.MAX_VALUE), c.getValueFromConstantPool(125));
     }
 
     /**
@@ -801,7 +801,7 @@ public class ClassFileFactoryTest {
         byte[] b = getFromJar(className);
         ClassFile c = f.newClassFileClass(0, className, b, null, null);         
         Signature sig = new Signature(className, "B", "value");
-        assertEquals(sig, c.getFieldSignature(130));
+        assertEquals(sig, c.getFieldSignature(22));
     }
 
     @Test(expected=InvalidIndexException.class)
@@ -826,7 +826,7 @@ public class ClassFileFactoryTest {
         byte[] b = getFromJar(className);
         ClassFile c = f.newClassFileClass(0, className, b, null, null);         
         Signature sig = new Signature("java/io/ObjectOutputStream", "()V", "defaultWriteObject");
-        assertEquals(sig, c.getMethodSignature(200));
+        assertEquals(sig, c.getMethodSignature(61));
     }
 
     @Test(expected=InvalidIndexException.class)
@@ -843,7 +843,7 @@ public class ClassFileFactoryTest {
         byte[] b = getFromJar(className);
         ClassFile c = f.newClassFileClass(0, className, b, null, null);         
         Signature sig = new Signature("java/util/Collection", "()[Ljava/lang/Object;", "toArray");
-        assertEquals(sig, c.getInterfaceMethodSignature(228));
+        assertEquals(sig, c.getInterfaceMethodSignature(24));
     }
 
     @Test(expected=InvalidIndexException.class)
@@ -928,7 +928,7 @@ public class ClassFileFactoryTest {
         byte[] b = getFromJar(className);
         ClassFile c = f.newClassFileClass(0, className, b, null, null);         
         Signature sig = new Signature(className, "()V", "<init>");
-        assertEquals(43, c.getCodeLength(sig));
+        assertEquals(10, c.getCodeLength(sig));
     }
 
     @Test

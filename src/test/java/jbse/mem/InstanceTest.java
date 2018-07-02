@@ -37,7 +37,7 @@ public class InstanceTest {
         //environment
         final ArrayList<String> userPath = new ArrayList<>();
         userPath.add("src/test/resources/jbse/bc/testdata");
-        final Classpath env = new Classpath("src/test/resources/jbse/bc/testdata", new ArrayList<>(), userPath);
+        final Classpath env = new Classpath(System.getProperty("java.home"), new ArrayList<>(), userPath);
 
         //class hierarchy
         hier = new ClassHierarchy(env, ClassFileFactoryJavassist.class, new HashMap<>());
