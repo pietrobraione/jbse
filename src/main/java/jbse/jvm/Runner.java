@@ -507,12 +507,12 @@ public class Runner {
     ContradictionException, DecisionException, EngineStuckException, 
     FailureException  {
         if (this.actions.atRoot()) { return; }
+        if (this.engine.atInitialState()) {
+            if (this.actions.atInitial()) { return; }
+        }
 
         //performs the symbolic execution loop
         while (true) {
-            if (this.engine.atInitialState()) {
-                if (this.actions.atInitial()) { return; }
-            }
             if (this.actions.atTraceStart()) { return; }
 
             //explores the trace
@@ -525,7 +525,7 @@ public class Runner {
                 }
                 if (this.actions.atStepPre()) { return; }
                 try {
-                    final BranchPoint bp = this.engine.step();
+                	final BranchPoint bp = this.engine.step();
                     if (bp != null) {
                         if (!currentStateIsInRunSubregion()) { break; }
                         if (this.actions.atBranch(bp)) { return; }
@@ -546,6 +546,10 @@ public class Runner {
                     if (this.actions.atThreadStackEmptyException(e)) { return; }
                 } finally {
                     if (this.actions.atStepFinally()) { return; }
+                }
+                
+                if (this.engine.atInitialState()) {
+                    if (this.actions.atInitial()) { return; }
                 }
 
                 if (outOfScope()) {
