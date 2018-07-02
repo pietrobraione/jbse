@@ -1,5 +1,8 @@
 package jbse.bc;
 
+import static jbse.common.Type.REFERENCE;
+import static jbse.common.Type.TYPEEND;
+
 import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
@@ -64,6 +67,11 @@ public class ClassFileSnippet extends ClassFile {
     @Override
     public String getClassName() {
         return packageName + "/";
+    }
+    
+    @Override
+    public String getInternalTypeName() {
+        return "" + REFERENCE + getClassName() + TYPEEND;
     }
     
     @Override
@@ -233,6 +241,11 @@ public class ClassFileSnippet extends ClassFile {
 
     @Override
     public boolean isMethodVarargs(Signature methodSignature) throws MethodNotFoundException {
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
+    
+    @Override
+    public boolean isMethodFinal(Signature methodSignature) throws MethodNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
     }
 

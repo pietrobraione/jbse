@@ -86,14 +86,7 @@ public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEW
                 }
             }
             final ClassFile arrayMemberType = clazz.representedClass();
-            final String arrayTypeName;
-            if (arrayMemberType.isPrimitive()) {
-                arrayTypeName = "" + ARRAYOF + toPrimitiveOrVoidInternalName(arrayMemberType.getClassName());
-            } else if (arrayMemberType.isArray()) {
-                arrayTypeName = "" + ARRAYOF + arrayMemberType.getClassName();
-            } else { //isReference()
-                arrayTypeName = "" + ARRAYOF + REFERENCE + arrayMemberType.getClassName() + TYPEEND;
-            }
+            final String arrayTypeName = "" + ARRAYOF + arrayMemberType.getInternalTypeName();
             this.arrayType = state.getClassHierarchy().loadCreateClass(arrayMemberType.getDefiningClassLoader(), arrayTypeName, state.bypassStandardLoading());
         } catch (PleaseLoadClassException e) {
             invokeClassLoaderLoadClass(state, e);

@@ -1,6 +1,7 @@
 package jbse.bc;
 
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
+import static jbse.common.Type.toPrimitiveOrVoidInternalName;
 
 import java.lang.reflect.Modifier;
 import java.util.Collections;
@@ -84,6 +85,11 @@ abstract class ClassFilePrimitive extends ClassFile {
     @Override
     public String getClassName() {
         return this.className;
+    }
+    
+    @Override
+    public String getInternalTypeName() {
+        return "" + toPrimitiveOrVoidInternalName(getClassName());
     }
     
     @Override
@@ -266,6 +272,12 @@ abstract class ClassFilePrimitive extends ClassFile {
 
     @Override
     public boolean isMethodVarargs(Signature methodSignature)
+    throws MethodNotFoundException {
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
+    
+    @Override
+    public boolean isMethodFinal(Signature methodSignature) 
     throws MethodNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
     }

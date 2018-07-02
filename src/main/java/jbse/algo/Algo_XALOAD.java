@@ -174,7 +174,7 @@ StrategyUpdate_XALOAD> {
                             if (val == null) {
                                 try {
                                     final ClassFile memberClass = arrayToProcess.getType().getMemberClass();
-                                    final String memberType = typeFromClassName(memberClass); 
+                                    final String memberType = memberClass.getInternalTypeName(); 
                                     val = state.createSymbol(memberType, arrayToProcess.getOrigin().thenArrayMember(this.index.add(arrayOffset)));
                                 } catch (InvalidOperandException | InvalidTypeException exc) {
                                     //this should never happen
@@ -248,16 +248,6 @@ StrategyUpdate_XALOAD> {
             //on result.size().
             return Outcome.val(shouldRefine, this.someRefNotExpanded, branchingDecision);
         };
-    }
-    
-    private static String typeFromClassName(ClassFile cf) {
-        if (cf.isPrimitive()) {
-            return "" + toPrimitiveOrVoidInternalName(cf.getClassName()); 
-        } else if (cf.isArray()) {
-            return cf.getClassName();
-        } else { //cf.isReference()
-            return "" + REFERENCE + cf.getClassName() + TYPEEND;
-        }
     }
 
     private void writeBackToSource(State state, Reference refToSource, Value valueToStore) 

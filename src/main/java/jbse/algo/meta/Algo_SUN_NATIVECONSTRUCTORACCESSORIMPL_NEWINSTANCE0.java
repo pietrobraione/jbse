@@ -29,8 +29,6 @@ import static jbse.bc.Signatures.JBSE_BASE;
 import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTION;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.common.Type.toPrimitiveOrVoidInternalName;
-import static jbse.common.Type.REFERENCE;
-import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.VOID;
 import static jbse.common.Type.widens;
 
@@ -124,13 +122,7 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
                 final AccessOutcomeInValue typeFormalAccess = (AccessOutcomeInValue) constructorParameterTypes.getFast(calc.valInt(i));
                 final Instance_JAVA_CLASS typeFormalJavaClass = (Instance_JAVA_CLASS) state.getObject((Reference) typeFormalAccess.getValue());
                 final ClassFile typeFormal = typeFormalJavaClass.representedClass();
-                if (typeFormal.isPrimitive()) {
-                    sbDescriptor.append(toPrimitiveOrVoidInternalName(typeFormal.getClassName()));
-                } else {
-                    sbDescriptor.append(REFERENCE);
-                    sbDescriptor.append(typeFormal.getClassName());
-                    sbDescriptor.append(TYPEEND);
-                }
+                sbDescriptor.append(typeFormal.getInternalTypeName());
             }
             sbDescriptor.append(")");
             sbDescriptor.append(VOID);

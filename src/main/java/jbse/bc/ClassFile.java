@@ -75,6 +75,15 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     public abstract String getClassName();
     
     /**
+     * Returns the internal type name for 
+     * this class.
+     * 
+     * @return a {@link String}, the internal 
+     *         type name for this class.
+     */
+    public abstract String getInternalTypeName();
+    
+    /**
      * Returns the defining classloader identifier 
      * for this class.
      * 
@@ -475,6 +484,15 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
      */
     public abstract boolean isMethodVarargs(Signature methodSignature) throws MethodNotFoundException;
+
+    /**
+     * Tests whether a method in the class is final.
+     * 
+     * @param methodSignature the {@link Signature} of the method to be checked.
+     * @return {@code true} iff the method is final.
+     * @throws MethodNotFoundException iff {@link #hasMethodDeclaration}{@code (methodSignature) == false}.
+     */
+    public abstract boolean isMethodFinal(Signature methodSignature) throws MethodNotFoundException;
 
     /**
      * Tests whether a method in the class is signature polymorphic

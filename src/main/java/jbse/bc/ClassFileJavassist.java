@@ -11,6 +11,8 @@ import static jbse.bc.ClassLoaders.CLASSLOADER_NONE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE;
 import static jbse.bc.Signatures.SIGNATURE_POLYMORPHIC_DESCRIPTOR;
 import static jbse.bc.Signatures.SUN_CALLERSENSITIVE;
+import static jbse.common.Type.REFERENCE;
+import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.internalClassName;
 
 import java.io.ByteArrayInputStream;
@@ -341,6 +343,11 @@ public class ClassFileJavassist extends ClassFile {
     @Override
     public String getClassName() {
         return internalClassName(this.cf.getName());
+    }
+    
+    @Override
+    public String getInternalTypeName() {
+        return "" + REFERENCE + getClassName() + TYPEEND;
     }
 
     @Override
@@ -815,6 +822,15 @@ public class ClassFileJavassist extends ClassFile {
             throw new MethodNotFoundException(methodSignature.toString());
         }
         return (AccessFlag.toModifier(m.getAccessFlags()) & Modifier.VARARGS) != 0;
+    }
+    
+    @Override
+    public boolean isMethodFinal(Signature methodSignature) throws MethodNotFoundException {
+        final MethodInfo m = findMethodDeclaration(methodSignature);
+        if (m == null) {
+            throw new MethodNotFoundException(methodSignature.toString());
+        }
+        return Modifier.isFinal(AccessFlag.toModifier(m.getAccessFlags()));
     }
     
     @Override

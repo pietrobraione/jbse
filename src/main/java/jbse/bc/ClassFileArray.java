@@ -174,6 +174,11 @@ public final class ClassFileArray extends ClassFile {
     public String getClassName() {
         return this.className;
     }
+    
+    @Override
+    public String getInternalTypeName() {
+        return getClassName();
+    }
 
     @Override
     public String getClassSignature(int classRef) throws InvalidIndexException {
@@ -349,6 +354,15 @@ public final class ClassFileArray extends ClassFile {
     throws MethodNotFoundException {
         if (isMethodClone(methodSignature)) {
             return false;
+        }
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
+    
+    @Override
+    public boolean isMethodFinal(Signature methodSignature) 
+    throws MethodNotFoundException {
+        if (isMethodClone(methodSignature)) {
+            return true;
         }
         throw new MethodNotFoundException(methodSignature.toString());
     }

@@ -6,7 +6,25 @@ import static jbse.algo.Util.invokeClassLoaderLoadClass;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
+import static jbse.algo.meta.Util.CALLER_SENSITIVE;
+import static jbse.algo.meta.Util.isConstructor;
+import static jbse.algo.meta.Util.isField;
+import static jbse.algo.meta.Util.isInvokeInterface;
+import static jbse.algo.meta.Util.isMethod;
+import static jbse.algo.meta.Util.isSetter;
 import static jbse.algo.meta.Util.isSignaturePolymorphicMethodIntrinsic;
+import static jbse.algo.meta.Util.JVM_RECOGNIZED_FIELD_MODIFIERS;
+import static jbse.algo.meta.Util.JVM_RECOGNIZED_METHOD_MODIFIERS;
+import static jbse.algo.meta.Util.IS_CONSTRUCTOR;
+import static jbse.algo.meta.Util.IS_FIELD;
+import static jbse.algo.meta.Util.IS_METHOD;
+import static jbse.algo.meta.Util.REFERENCE_KIND_SHIFT;
+import static jbse.algo.meta.Util.REF_getField;
+import static jbse.algo.meta.Util.REF_getStatic;
+import static jbse.algo.meta.Util.REF_invokeSpecial;
+import static jbse.algo.meta.Util.REF_invokeStatic;
+import static jbse.algo.meta.Util.REF_invokeVirtual;
+import static jbse.algo.meta.Util.REF_putField;
 import static jbse.bc.Signatures.ILLEGAL_ARGUMENT_EXCEPTION;
 import static jbse.bc.Signatures.INTERNAL_ERROR;
 import static jbse.bc.Signatures.JAVA_CLASS;
@@ -39,7 +57,6 @@ import static jbse.common.Type.splitReturnValueDescriptor;
 import static jbse.common.Type.toPrimitiveOrVoidCanonicalName;
 import static jbse.common.Type.TYPEEND;
 
-import java.lang.reflect.Modifier;
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
@@ -93,39 +110,6 @@ import jbse.val.exc.InvalidTypeException;
  * easiest one and modify + return the received MemberName. 
  */
 public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA_Nonbranching {
-    //taken from java.lang.invoke.MethodHandleNatives.Constants
-    private static final int  IS_METHOD            = 0x00010000; // method (not constructor)
-    private static final int  IS_CONSTRUCTOR       = 0x00020000; // constructor
-    private static final int  IS_FIELD             = 0x00040000; // field
-    private static final int  CALLER_SENSITIVE     = 0x00100000; // @CallerSensitive annotation detected
-    private static final int  REFERENCE_KIND_SHIFT = 24; // refKind
-    private static final int  REFERENCE_KIND_MASK  = 0x0F000000 >> REFERENCE_KIND_SHIFT;
-    private static final byte REF_getField         = 1;
-    private static final byte REF_getStatic        = 2;
-    private static final byte REF_putField         = 3;
-    private static final byte REF_invokeVirtual    = 5;
-    private static final byte REF_invokeStatic     = 6;
-    private static final byte REF_invokeSpecial    = 7;
-    private static final byte REF_invokeInterface  = 9;
-
-    //taken from java.lang.reflect.Modifier
-    static final short BRIDGE    = 0x0040;
-    static final short VARARGS   = 0x0080;
-    static final short SYNTHETIC = 0x1000;
-    static final short ENUM      = 0x4000;
-
-    //taken from hotspot:/src/share/vm/prims/jvm.h, lines 1216-1237
-    private static final short JVM_RECOGNIZED_FIELD_MODIFIERS = 
-        Modifier.PUBLIC    | Modifier.PRIVATE | Modifier.PROTECTED | 
-        Modifier.STATIC    | Modifier.FINAL   | Modifier.VOLATILE  | 
-        Modifier.TRANSIENT | ENUM             | SYNTHETIC;
-
-    private static final short JVM_RECOGNIZED_METHOD_MODIFIERS =
-        Modifier.PUBLIC    | Modifier.PRIVATE | Modifier.PROTECTED     | 
-        Modifier.STATIC    | Modifier.FINAL   | Modifier.SYNCHRONIZED  | 
-        BRIDGE             | VARARGS          | Modifier.NATIVE        |
-        Modifier.ABSTRACT  | Modifier.STRICT  | SYNTHETIC;
-
     private Instance memberNameObject; //set by cookMore
     private ClassFile resolvedClass; //set by cookMore
     private Signature resolvedSignature; //set by cookMore
@@ -363,31 +347,6 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
         return theInstance;
     }
     
-    //taken from java.lang.invoke.MemberName
-    private static boolean isMethod(int flags) {
-        return (flags & IS_METHOD) == IS_METHOD;
-    }
-
-    //taken from java.lang.invoke.MemberName
-    private static boolean isConstructor(int flags) {
-        return (flags & IS_CONSTRUCTOR) == IS_CONSTRUCTOR;
-    }
-
-    //taken from java.lang.invoke.MemberName
-    private static boolean isField(int flags) {
-        return (flags & IS_FIELD) == IS_FIELD;
-    }
-
-    //taken from java.lang.invoke.MemberName.getReferenceKind
-    private static boolean isInvokeInterface(int flags) {
-        return ((byte) ((flags >>> REFERENCE_KIND_SHIFT) & REFERENCE_KIND_MASK)) == REF_invokeInterface;
-    }
-    
-    //taken from java.lang.invoke.MemberName.getReferenceKind
-    private static boolean isSetter(int flags) {
-        return ((byte) ((flags >>> REFERENCE_KIND_SHIFT) & REFERENCE_KIND_MASK)) > REF_getStatic;
-    }
-    
     /**
      * Gets the {@code methodDescriptor} field from an {@link Instance} of
      * {@code java.lang.invoke.MethodType}, possibly populating the field if
@@ -563,8 +522,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
     /**
      * Links a method in the case this is a signature polymorphic nonintrinsic method. 
      * This is done by upcalling {@code java.lang.invoke.MethodHandleNatives.linkMethod} 
-     * (see hotspot:/src/share/vm/prims/systemDictionary.cpp, lines 2377-2394). Finally, stores the link to
-     * the accessor invoker and the appendix in the {@link State}.
+     * (see hotspot:/src/share/vm/prims/systemDictionary.cpp, lines 2377-2394). Finally, 
+     * stores the link to the accessor invoker and the appendix in the {@link State}.
      * 
      * @param state a {@link State}.
      * @param accessor a {@link ClassFile}, the accessor class invoking {@code this.resolved}.
