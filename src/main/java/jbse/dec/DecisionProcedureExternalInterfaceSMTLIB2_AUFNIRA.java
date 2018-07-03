@@ -740,9 +740,9 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
         @Override
         public void visitWideningConversion(WideningConversion x) throws Exception {
             if (x.getType() == Type.BOOLEAN && !this.isBooleanExpression) {
-                throw new UnexpectedInternalException("error while parsing expression (expected a boolean expression but it is not): " + x.toString());
+                throw new UnexpectedInternalException("Error while parsing expression (context expected a numeric expression but it is boolean): " + x.toString());
             } else if (x.getType() != Type.BOOLEAN && this.isBooleanExpression) {
-                throw new UnexpectedInternalException("error while parsing expression (expected a numeric expression but it is not): " + x.toString());
+                throw new UnexpectedInternalException("Error while parsing expression (context expected a boolean expression but it is numeric): " + x.toString());
             }
             final Primitive arg = x.getArg();
             arg.accept(new SMTLIB2ExpressionVisitor(this, false));
@@ -754,9 +754,9 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
         @Override
         public void visitNarrowingConversion(NarrowingConversion x) throws Exception {
             if (x.getType() == Type.BOOLEAN && !this.isBooleanExpression) {
-                throw new UnexpectedInternalException("error while parsing expression (expected a boolean expression but it is not): " + x.toString());
+                throw new UnexpectedInternalException("Error while parsing expression (context expected a numeric expression but it is boolean): " + x.toString());
             } else if (x.getType() != Type.BOOLEAN && this.isBooleanExpression) {
-                throw new UnexpectedInternalException("error while parsing expression (expected a numeric expression but it is not): " + x.toString());
+                throw new UnexpectedInternalException("Error while parsing expression (context expected a boolean expression but it is numeric): " + x.toString());
             }
             final Primitive arg = x.getArg();
             arg.accept(new SMTLIB2ExpressionVisitor(this, false));

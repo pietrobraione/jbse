@@ -102,6 +102,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                             exitFromAlgorithm();
                         }
                     } else if (valueType == INT) {
+                    	//TODO the JVMS v8 does *not* say that in this case the value should be narrowed to the destination type: Rather, it should just be *reinterpreted*. Unfortunately JBSE cannot do that so it uses narrowing instead, and this is a bug. However in standard bytecode a value is narrowed before being reinterpreted, so it should not be an issue in the most typical case. 
                         try {
                             this.valueToPut = ((Primitive) this.valueToPut).narrow(fieldTypePrimitive);
                         } catch (InvalidTypeException e) {

@@ -248,8 +248,17 @@ public class RewriterOperationOnSimplex extends Rewriter {
             applyConversion(argSimplex, x.getType());
             return;
         }
+        
+        //3- narrowing a widening back to the starting type
+        if (arg instanceof WideningConversion) {
+        	final Primitive wideningArg = ((WideningConversion) arg).getArg();
+        	if (x.getType() == wideningArg.getType()) {
+        		setResult(wideningArg);
+        		return;
+        	}
+        }
 
-        //3- none of the above cases
+        //4- none of the above cases
         super.rewriteNarrowingConversion(x);
     }
 
