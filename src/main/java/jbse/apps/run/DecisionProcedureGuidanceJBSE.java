@@ -1,9 +1,8 @@
 package jbse.apps.run;
 
 import jbse.algo.exc.CannotManageStateException;
-import jbse.bc.ClassHierarchy;
+import jbse.algo.exc.NotYetImplementedException;
 import jbse.bc.Signature;
-import jbse.bc.exc.BadClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.common.exc.ClasspathException;
@@ -23,7 +22,7 @@ import jbse.jvm.exc.NonexistingObservedVariablesException;
 import jbse.jvm.RunnerParameters;
 import jbse.mem.Array;
 import jbse.mem.Array.AccessOutcome;
-import jbse.mem.Array.AccessOutcomeIn;
+import jbse.mem.Array.AccessOutcomeInValue;
 import jbse.mem.Frame;
 import jbse.mem.Objekt;
 import jbse.mem.State;
@@ -148,16 +147,20 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
                 final RunnerBuilder b = new RunnerBuilder();
                 runner = b.build(runnerParameters);
                 this.engine = b.getEngine();
-            } catch (CannotBuildEngineException | InitializationException | ClasspathException e) {
+            } catch (CannotBuildEngineException | InitializationException | 
+                     ClasspathException | NotYetImplementedException e) {
                 //CannotBuildEngineException may happen if something goes wrong in the construction 
                 //of the decision procedure
                 //InitializationException happens when the method does not exist or is native
                 //ClasspathException happens when the classpath does not point to a valid JRE
+                //NotYetImplementedException happens when JBSE does not implement some feature that is necessary to run
                 throw new GuidanceException(e);
-            } catch (NonexistingObservedVariablesException | DecisionException | InvalidClassFileFactoryClassException e) {
+            } catch (NonexistingObservedVariablesException | DecisionException | 
+                     InvalidClassFileFactoryClassException | ContradictionException e) {
                 //NonexistingObservedVariablesException should not happen since this decision procedure does not register any variable observer
                 //DecisionException should not happen since it happens only when the initial path condition is contradictory
                 //InvalidClassFileFactoryClassException should not happen since we use the default class file factory (javassist)
+                //ContradictionException should not happen since it is only raised if we cannot assume the root class to be preloaded, which should never be the case (or not?)
                 throw new UnexpectedInternalException(e);
             }
 
@@ -205,11 +208,9 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
         @Override
         public boolean isCurrentMethodNonStatic() throws GuidanceException {
             try {
-                final ClassHierarchy hier = this.initialStateConcrete.getClassHierarchy();
                 final Signature currentMethod = this.initialStateConcrete.getCurrentMethodSignature();
-                return !hier.getClassFile(currentMethod.getClassName()).isMethodStatic(currentMethod);
-            } catch (ThreadStackEmptyException | 
-                     MethodNotFoundException | BadClassFileException e) {
+                return !this.initialStateConcrete.getCurrentClass().isMethodStatic(currentMethod);
+            } catch (ThreadStackEmptyException | MethodNotFoundException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
             }
@@ -222,7 +223,7 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
                 return null;
             }
             final Objekt objInConcreteState = this.initialStateConcrete.getObject(refInConcreteState);
-            return objInConcreteState.getType();
+            return objInConcreteState.getType().getClassName();
         }
 
         @Override
@@ -252,7 +253,7 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
                 } else if (a instanceof AccessStatic) {
                     final AccessStatic as = (AccessStatic) a;
                     value = null;
-                    o = this.initialStateConcrete.getKlass(as.className());
+                    o = this.initialStateConcrete.getKlass(as.classFile());
                     if (o == null) {
                         throw new GuidanceException(ERROR_BAD_PATH);
                     }
@@ -271,8 +272,8 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
                     final AccessArrayMember aa = (AccessArrayMember) a;
                     try {
                         for (AccessOutcome ao : ((Array) o).get(eval(aa.index()))) {
-                            if (ao instanceof AccessOutcomeIn) {
-                                final AccessOutcomeIn aoi = (AccessOutcomeIn) ao;
+                            if (ao instanceof AccessOutcomeInValue) {
+                                final AccessOutcomeInValue aoi = (AccessOutcomeInValue) ao;
                                 value = aoi.getValue();
                                 break;
                             }
@@ -284,7 +285,7 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
                     if (o == null) {
                         throw new GuidanceException(ERROR_BAD_PATH);
                     }
-                    value = o.getObjektHashCode();
+                    value = o.getObjektDefaultHashCode(); //TODO invoke the hashCode() method
                 }
                 if (value instanceof Reference) {
                     o = this.initialStateConcrete.getObject((Reference) value);

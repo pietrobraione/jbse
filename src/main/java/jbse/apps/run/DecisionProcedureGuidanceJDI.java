@@ -1,9 +1,9 @@
 package jbse.apps.run;
 
 import static jbse.common.Type.binaryClassName;
-import static jbse.common.Type.binaryPrimitiveClassNameToInternal;
 import static jbse.common.Type.internalClassName;
-import static jbse.common.Type.isPrimitiveBinaryClassName;
+import static jbse.common.Type.isPrimitiveOrVoidCanonicalName;
+import static jbse.common.Type.toPrimitiveOrVoidInternalName;
 
 import java.io.File;
 import java.io.IOException;
@@ -259,7 +259,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             		buf.append("[");
             		name = name.substring(0, name.length() - 2);
             }
-            buf.append(isPrimitiveBinaryClassName(name) ? binaryPrimitiveClassNameToInternal(name) : internalClassName(name));
+            buf.append(isPrimitiveOrVoidCanonicalName(name) ? toPrimitiveOrVoidInternalName(name) : internalClassName(name));
             return buf.toString();
         }
         
@@ -315,7 +315,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                         value = getJDIValueLocalVariable(((AccessLocalVariable) a).variableName());
                     } else if (a instanceof AccessStatic) {
                         someValue = false;
-                        t = getJDIObjectStatic(((AccessStatic) a).className());
+                        t = getJDIObjectStatic(((AccessStatic) a).classFile().getClassName());
                         o = null;
                     } else if (a instanceof AccessField) {
                         someValue = true;

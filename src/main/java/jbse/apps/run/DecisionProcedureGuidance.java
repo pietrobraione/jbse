@@ -8,7 +8,12 @@ import java.util.SortedSet;
 
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
-import jbse.bc.exc.BadClassFileException;
+import jbse.bc.exc.BadClassFileVersionException;
+import jbse.bc.exc.ClassFileIllFormedException;
+import jbse.bc.exc.ClassFileNotAccessibleException;
+import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.IncompatibleClassFileException;
+import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureAlgorithms;
@@ -38,6 +43,7 @@ import jbse.val.Operator;
 import jbse.val.Primitive;
 import jbse.val.PrimitiveSymbolic;
 import jbse.val.PrimitiveVisitor;
+import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
@@ -214,7 +220,9 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
 
     @Override
     protected final Outcome resolve_XLOAD_GETX_Unresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)
-    throws DecisionException, BadClassFileException {
+    throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
+    BadClassFileVersionException, WrongClassNameException, 
+    IncompatibleClassFileException, ClassFileNotAccessibleException {
         updateExpansionBackdoor(state, refToLoad);
         final Outcome retVal = super.resolve_XLOAD_GETX_Unresolved(state, refToLoad, result);
         if (!this.ended) {
@@ -228,9 +236,9 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     @Override
-    protected final Outcome resolve_XALOAD_ResolvedNonconcrete(ClassHierarchy hier, Expression accessExpression, Value valueToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
+    protected final Outcome resolve_XALOAD_ResolvedNonconcrete(ClassHierarchy hier, Expression accessExpression, Value valueToLoad, boolean fresh, Reference arrayToWriteBack,SortedSet<DecisionAlternative_XALOAD> result)
     throws DecisionException {
-        final Outcome retVal = super.resolve_XALOAD_ResolvedNonconcrete(hier, accessExpression, valueToLoad, fresh, result);
+        final Outcome retVal = super.resolve_XALOAD_ResolvedNonconcrete(hier, accessExpression, valueToLoad, fresh, arrayToWriteBack, result);
         if (!this.ended) {
             final Iterator<DecisionAlternative_XALOAD> it = result.iterator();
             while (it.hasNext()) {
@@ -246,10 +254,12 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     @Override
-    protected final Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, SortedSet<DecisionAlternative_XALOAD> result)
-    throws DecisionException, BadClassFileException {
+    protected final Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, Reference arrayReference, SortedSet<DecisionAlternative_XALOAD> result)
+    throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
+    BadClassFileVersionException, WrongClassNameException, 
+    IncompatibleClassFileException, ClassFileNotAccessibleException {
         updateExpansionBackdoor(state, refToLoad);
-        final Outcome retVal = super.resolve_XALOAD_Unresolved(state, accessExpression, refToLoad, fresh, result);
+        final Outcome retVal = super.resolve_XALOAD_Unresolved(state, accessExpression, refToLoad, fresh, arrayReference, result);
         if (!this.ended) {
             final Iterator<DecisionAlternative_XALOAD> it = result.iterator();
             while (it.hasNext()) {
@@ -281,14 +291,14 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             it.remove();
         } else if (dar instanceof DecisionAlternative_XYLOAD_GETX_Aliases) {
             final DecisionAlternative_XYLOAD_GETX_Aliases dara = (DecisionAlternative_XYLOAD_GETX_Aliases) dar;
-            final MemoryPath aliasOrigin = state.getObject(new ReferenceConcrete(dara.getAliasPosition())).getOrigin();
+            final MemoryPath aliasOrigin = state.getObject(new ReferenceConcrete(dara.getObjectPosition())).getOrigin();
             if (!this.jvm.areAlias(refToLoadOrigin, aliasOrigin)) {
                 it.remove();
             }
         } else if (dar instanceof DecisionAlternative_XYLOAD_GETX_Expands) {
             final DecisionAlternative_XYLOAD_GETX_Expands dare = (DecisionAlternative_XYLOAD_GETX_Expands) dar;
             if (this.jvm.isNull(refToLoadOrigin) || alreadySeen(refToLoadOrigin) ||
-               !dare.getClassNameOfTargetObject().equals(this.jvm.typeOfObject(refToLoadOrigin))) {
+               !dare.getClassFileOfTargetObject().getClassName().equals(this.jvm.typeOfObject(refToLoadOrigin))) {
                 it.remove();
             } else {
                 markAsSeen(refToLoadOrigin);
