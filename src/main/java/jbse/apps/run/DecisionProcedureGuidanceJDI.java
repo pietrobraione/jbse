@@ -150,8 +150,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         
         private VirtualMachine launchTarget(String mainArgs) throws GuidanceException {
             final LaunchingConnector connector = findLaunchingConnector();
-            final Map<String, Connector.Argument> arguments =
-                connectorArguments(connector, mainArgs);
+            final Map<String, Connector.Argument> arguments = connectorArguments(connector, mainArgs);
             try {
                 return connector.launch(arguments);
             } catch (IOException | IllegalConnectorArgumentsException | VMStartException exc) {
