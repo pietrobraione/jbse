@@ -84,21 +84,21 @@ public class Algo_INVOKEMETA_OnlyReturn extends Algo_INVOKEMETA_Nonbranching {
                 }
             }
             
-            //delegates if all parameters are concrete and primitive, and if returns a primitive
             if (allConcrete && allPrimitive && Type.isPrimitive(returnType)) {
+                //delegates if all parameters are concrete and primitive, and if returns a primitive
                 invokeMetacircularly(state, Arrays.stream(args).map(p -> (Simplex) p).toArray(Simplex[]::new));
-            }
-            
-            //otherwise, builds a term
-            try {
-                if (isPrimitive(returnType)) {
-                    this.returnValue = state.getCalculator().applyFunctionPrimitive(returnType.charAt(0), state.getHistoryPoint(), this.data.signature().toString(), args);
-                } else {
-                    this.returnValue = new ReferenceSymbolicApply(returnType, state.getHistoryPoint(), this.data.signature().toString(), args);
+            } else {
+                //otherwise, builds a term
+                try {
+                    if (isPrimitive(returnType)) {
+                        this.returnValue = state.getCalculator().applyFunctionPrimitive(returnType.charAt(0), state.getHistoryPoint(), this.data.signature().toString(), args);
+                    } else {
+                        this.returnValue = new ReferenceSymbolicApply(returnType, state.getHistoryPoint(), this.data.signature().toString(), args);
+                    }
+                } catch (InvalidOperandException | InvalidTypeException e) {
+                    //this should never happen
+                    failExecution(e);
                 }
-            } catch (InvalidOperandException | InvalidTypeException e) {
-                //this should never happen
-                failExecution(e);
             }
         }
     }
