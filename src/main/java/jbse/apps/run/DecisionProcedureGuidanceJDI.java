@@ -134,7 +134,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         }
         
         private StackFrame rootFrameConcrete() throws IncompatibleThreadStateException {
-        	return this.methodEntryEvent.thread().frames().get(0);
+            return this.methodEntryEvent.thread().frames().get(0);
         }
         
         private VirtualMachine createVM(RunnerParameters runnerParameters, Signature stopSignature) 
@@ -241,10 +241,10 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         @Override
         public boolean isCurrentMethodNonStatic() throws GuidanceException {
             try {
-				return !rootFrameConcrete().location().method().declaringType().isStatic();
-			} catch (IncompatibleThreadStateException e) {
-				throw new GuidanceException(e);
-			}
+                return !rootFrameConcrete().location().method().declaringType().isStatic();
+            } catch (IncompatibleThreadStateException e) {
+                throw new GuidanceException(e);
+            }
         }
         
         @Override
