@@ -30,7 +30,8 @@ public final class ReachableObjectsCollector {
      * object and the root class, the string literals, 
      * all the {@link Instance_JAVA_CLASS}, all the 
      * {@link Instance_JAVA_CLASSLOADER}, all the 
-     * {@link Instance}s of {@link java.lang.invoke.MethodType}).
+     * {@link Instance}s of {@link java.lang.invoke.MethodType}, 
+     * the main {@link Thread} and {@link ThreadGroup}).
      * 
      * @param s a {@link State}. It must not be {@code null}.
      * @param precise a {@code boolean}, if {@code true}, 
@@ -65,7 +66,9 @@ public final class ReachableObjectsCollector {
      * @param s a {@link State}. It must not be {@code null}.
      * @param precise a {@code boolean}, if {@code true}, 
      *        then it includes in the roots for collection all 
-     *        the static fields, the string literals.
+     *        the static fields, the string literals, the classes,
+     *        including the primitive ones, the classloaders, the
+     *        method types, the threads and the thread groups.
      * @param rootObject a {@code long}. If {@code rootObject >= 0}
      *        this parameter is interpreted as the heap position of 
      *        the root object, and all its static and nonstatic 
@@ -171,6 +174,12 @@ public final class ReachableObjectsCollector {
                 .filter(r -> !s.isNull(r))
                 .map(ReferenceConcrete::getHeapPosition)
                 .forEachOrdered(reachable::add);
+        }
+        
+        //possibly adds the main thread and thread group
+        if (precise) {
+        	reachable.add(s.getMainThread().getHeapPosition());
+        	reachable.add(s.getMainThreadGroup().getHeapPosition());
         }
 
         //closes reachable
