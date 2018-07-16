@@ -1246,7 +1246,12 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	        while (entries.hasNext()) {
 	            final Array.AccessOutcomeIn e = entries.next();
 	            final Primitive indexInRange = e.inRange(index);
-	            final boolean entryAffected = isSat(hier, (Expression) indexInRange);
+	            final boolean entryAffected;
+	            if (indexInRange instanceof Simplex) {
+	            	entryAffected = indexInRange.surelyTrue();
+	            } else {
+	            	entryAffected = isSat(hier, (Expression) indexInRange);
+	            }
 
 	            //if the entry is affected, it is constrained and possibly removed
 	            if (entryAffected) {
