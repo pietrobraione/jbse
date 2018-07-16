@@ -473,7 +473,7 @@ public class Runner {
     }
 
     private boolean outOfScopeCount() {
-        final boolean retVal = (this.countScope > 0 && this.engine.getCurrentState().getCount() > countScope);
+        final boolean retVal = (this.countScope > 0 && !this.engine.getCurrentState().isPhasePreInit() && this.engine.getCurrentState().getCount() > countScope);
         return retVal;
     }
 
