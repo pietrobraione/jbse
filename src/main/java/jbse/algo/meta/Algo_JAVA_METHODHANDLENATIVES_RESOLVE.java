@@ -87,6 +87,7 @@ import jbse.mem.Instance;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -330,7 +331,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
     
     private static Instance getInstance(State state, Value ref, String paramName, 
                                         ErrorAction whenNoRef, ErrorAction whenNull, ErrorAction whenUnresolved)
-    throws InterruptException, SymbolicValueNotAllowedException, ClasspathException {
+    throws InterruptException, SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
         if (ref == null) {
             whenNoRef.doIt("Unexpected null value while accessing " + paramName + ".");
             return null;
@@ -359,9 +360,10 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
      *         of {@code methodType}.
      * @throws ThreadStackEmptyException if the {@code state}'s stack is empty.
      * @throws InterruptException if the execution of this {@link Algorithm} must be interrupted.
+     * @throws FrozenStateException if {@code state} is frozen.
      */
     private String getDescriptorFromMethodType(State state, Instance methodType) 
-    throws ThreadStackEmptyException, InterruptException {
+    throws ThreadStackEmptyException, InterruptException, FrozenStateException {
         //gets the methodDescriptor field
         final Reference memberNameDescriptorStringReference = (Reference) methodType.getFieldValue(JAVA_METHODTYPE_METHODDESCRIPTOR);
         if (memberNameDescriptorStringReference == null) {

@@ -15,6 +15,7 @@ import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.CannotAssumeSymbolicObjectException;
 import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.meta.annotations.ConservativeRepOk;
 import jbse.rewr.CalculatorRewriting;
@@ -55,7 +56,8 @@ public final class DecisionProcedureConservativeRepOk extends DecisionProcedureC
             sIni.assumeExpands(r, classFile);
         } catch (CannotAssumeSymbolicObjectException e) {
             return false;
-        } catch (InvalidTypeException | ContradictionException | HeapMemoryExhaustedException e) {
+        } catch (InvalidTypeException | ContradictionException | 
+        		 HeapMemoryExhaustedException | FrozenStateException e) {
             //this should not happen
             throw new UnexpectedInternalException(e);
         }
@@ -68,7 +70,7 @@ public final class DecisionProcedureConservativeRepOk extends DecisionProcedureC
         final State sIni = this.checker.makeInitialState();
         try {
             sIni.assumeAliases(r, heapPosition, o);
-        } catch (ContradictionException e) {
+        } catch (ContradictionException | FrozenStateException e) {
             //this should not happen
             throw new UnexpectedInternalException(e);
         }
@@ -81,7 +83,7 @@ public final class DecisionProcedureConservativeRepOk extends DecisionProcedureC
         final State sIni = this.checker.makeInitialState();
         try {
             sIni.assumeNull(r);
-        } catch (ContradictionException e) {
+        } catch (ContradictionException | FrozenStateException e) {
             //this should not happen
             throw new UnexpectedInternalException(e);
         }

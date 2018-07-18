@@ -81,6 +81,7 @@ import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.Klass;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.ReferenceConcrete;
@@ -151,7 +152,8 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
     }
 
     @Override
-    protected void cookMore(State state) throws InterruptException, ClasspathException {
+    protected void cookMore(State state) 
+    throws InterruptException, ClasspathException, FrozenStateException {
         final Classpath cp = state.getClasspath();
         
         //initializes the paths
@@ -228,7 +230,7 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
     
 
     private static void safeEnsureStringLiteral(State state, ExecutionContext ctx, String stringLit) 
-    throws InterruptException, ClasspathException {
+    throws InterruptException, ClasspathException, FrozenStateException {
         if (stringLit != null) {
             try {
                 state.ensureStringLiteral(stringLit);

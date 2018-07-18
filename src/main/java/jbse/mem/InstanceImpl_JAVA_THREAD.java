@@ -1,0 +1,47 @@
+package jbse.mem;
+
+import jbse.bc.ClassFile;
+import jbse.bc.Signature;
+import jbse.val.Calculator;
+import jbse.val.HistoryPoint;
+import jbse.val.ReferenceSymbolic;
+import jbse.val.exc.InvalidTypeException;
+
+/**
+ * Class that represent an instance in the heap of an object 
+ * whose class is {@code java.lang.Thread} or one of its subclasses. 
+ */
+public final class InstanceImpl_JAVA_THREAD extends InstanceImpl implements Instance_JAVA_THREAD {
+    /** The interruption state of the thread. */
+    private boolean interrupted;
+    
+    protected InstanceImpl_JAVA_THREAD(Calculator calc, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, int numOfStaticFields, Signature... fieldSignatures) 
+    throws InvalidTypeException {
+        super(false, calc, classFile, origin, epoch, numOfStaticFields, fieldSignatures);
+        if (classFile == null) {
+            throw new InvalidTypeException("Attempted creation of an instance of a subclass of java.lang.Thread with type null.");
+        }
+
+        this.interrupted = false;
+    }
+    
+    @Override
+    ObjektWrapper<? extends ObjektImpl> makeWrapper(Heap destinationHeap, long destinationPosition) {
+    	return new InstanceWrapper_JAVA_THREAD(destinationHeap, destinationPosition, this);
+    }
+    
+    @Override
+    public boolean isInterrupted() {
+        return this.interrupted;
+    }
+    
+    @Override
+    public void setInterrupted(boolean interrupted) {
+        this.interrupted = interrupted;
+    }
+    
+    @Override
+    public InstanceImpl_JAVA_THREAD clone() {
+    	return (InstanceImpl_JAVA_THREAD) super.clone();
+    }
+}

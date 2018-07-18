@@ -19,6 +19,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XNEWARRAY;
@@ -178,7 +179,7 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
     }
 
     private ReferenceConcrete createArrayMultilayer(State state, Value initValue) 
-    throws DecisionException, InvalidTypeException, HeapMemoryExhaustedException {
+    throws DecisionException, InvalidTypeException, HeapMemoryExhaustedException, FrozenStateException {
         //the reference to be pushed on the operand stack at the end of the
         //creation; note that it is initialized to null, but this is just 
         //to make the compiler happy. It will be initialized during the loop, 

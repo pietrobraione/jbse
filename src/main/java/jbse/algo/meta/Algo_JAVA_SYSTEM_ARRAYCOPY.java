@@ -23,6 +23,7 @@ import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
+import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_XASTORE;
 import jbse.val.Null;
 import jbse.val.Primitive;
@@ -78,13 +79,13 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
 
             final ClassFile srcTypeComponent = srcArray.getType().getMemberClass();
             final ClassFile destTypeComponent = destArray.getType().getMemberClass();
-            if (srcTypeComponent.isPrimitive() && 
-                destTypeComponent.isPrimitive()) {
+            if (srcTypeComponent.isPrimitiveOrVoid() && 
+                destTypeComponent.isPrimitiveOrVoid()) {
                 if (!srcTypeComponent.equals(destTypeComponent)) {
                     throwNew(state, ARRAY_STORE_EXCEPTION);
                     exitFromAlgorithm();
                 }
-            } else if (srcTypeComponent.isPrimitive() != destTypeComponent.isPrimitive()) {
+            } else if (srcTypeComponent.isPrimitiveOrVoid() != destTypeComponent.isPrimitiveOrVoid()) {
                 throwNew(state, ARRAY_STORE_EXCEPTION);
                 exitFromAlgorithm();
             }
@@ -136,15 +137,16 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                     srcArray = (Array) state.getObject(this.src);
                     destArray = (Array) state.getObject(this.dest);
                     final ClassFile destTypeComponent = destArray.getType().getMemberClass();
-                    final ClasspathException[] _e = new ClasspathException[1]; //boxes so the next closure can store the exception
-                    final Iterator<Array.AccessOutcomeIn> entries = 
+                    final ClasspathException[] _eCP = new ClasspathException[1]; //boxes so the next closure can store the exception
+                    final FrozenStateException[] _eFS = new FrozenStateException[1]; //boxes so the next closure can store the exception
+                    final Iterator<? extends Array.AccessOutcomeIn> entries = 
                         destArray.arraycopy(srcArray, this.srcPos, this.destPos, this.length,  
                                         (Reference ref) -> {
                                             if (ref instanceof Null) {
                                                 return;
                                             }
-                                            final Objekt srcElement = state.getObject(ref);
                                             try {
+                                                final Objekt srcElement = state.getObject(ref);
                                                 if (!state.getClassHierarchy().isAssignmentCompatible(srcElement.getType(), destTypeComponent)) {
                                                     throwNew(state, ARRAY_STORE_EXCEPTION);
                                                     throw new ExitFromAlgorithmException();
@@ -153,14 +155,19 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                                                 try {
                                                     throwVerifyError(state);
                                                 } catch (ClasspathException e) {
-                                                    _e[0] = e;
+                                                    _eCP[0] = e;
                                                     //then falls through
                                                 }
                                                 throw new ExitFromAlgorithmException();
-                                            }
+                                            } catch (FrozenStateException e) {
+                                            	_eFS[0] = e;
+											}
                                         });
-                    if (_e[0] != null) {
-                        throw _e[0];
+                    if (_eCP[0] != null) {
+                        throw _eCP[0];
+                    }
+                    if (_eFS[0] != null) {
+                        throw _eFS[0];
                     }
                     this.ctx.decisionProcedure.completeArraycopy(state.getClassHierarchy(), entries, this.srcPos, this.destPos, this.length);
                 } catch (InvalidOperandException | InvalidTypeException | 

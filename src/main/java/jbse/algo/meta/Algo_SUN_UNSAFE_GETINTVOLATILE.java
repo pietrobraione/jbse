@@ -19,6 +19,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
@@ -44,7 +45,7 @@ public final class Algo_SUN_UNSAFE_GETINTVOLATILE extends Algo_INVOKEMETA_Nonbra
     @Override
     protected void cookMore(State state)
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
-    CannotManageStateException, InterruptException {
+    CannotManageStateException, InterruptException, FrozenStateException {
         try {           
             //gets and checks the object parameter
             final Reference objRef = (Reference) this.data.operand(1);

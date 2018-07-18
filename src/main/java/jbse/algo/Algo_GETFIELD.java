@@ -12,6 +12,7 @@ import jbse.bc.exc.FieldNotFoundException;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.val.Reference;
 
 /**
@@ -38,7 +39,7 @@ final class Algo_GETFIELD extends Algo_GETX {
     }
 
     @Override
-    protected Objekt source(State state) throws ClasspathException, InterruptException {
+    protected Objekt source(State state) throws ClasspathException, InterruptException, FrozenStateException {
         try {
             final Reference myObjectRef = (Reference) this.data.operand(0);
             if (state.isNull(myObjectRef)) {

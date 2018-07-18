@@ -83,7 +83,7 @@ public final class Algo_JAVA_CLASS_GETDECLARINGCLASS0 extends Algo_INVOKEMETA_No
             
             //gets a reference to the java.lang.Class object for the container class
             final String declaringClassName = thisClass.classContainer();
-            if (declaringClassName == null || thisClass.isArray() || thisClass.isPrimitive() || thisClass.isLocal() || thisClass.isAnonymous()) {
+            if (declaringClassName == null || thisClass.isArray() || thisClass.isPrimitiveOrVoid() || thisClass.isLocal() || thisClass.isAnonymous()) {
                 this.declaringClass = Null.getInstance();
             } else {
                 final ClassFile declaringClassFile = state.getClassHierarchy().resolveClass(thisClass, declaringClassName, state.bypassStandardLoading()); //TODO is ok that accessor == thisClass?

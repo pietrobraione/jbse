@@ -7,6 +7,7 @@ import static jbse.mem.Frame.UNKNOWN_SOURCE_ROW;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.SnippetFrameNoContext;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -39,30 +40,35 @@ public final class StateFormatterTrace implements Formatter {
     public void formatState(State s) {
         this.output = s.getIdentifier() + "[" + s.getSequenceNumber() + "]" + FIELD_SEP + 
                       s.getDepth() + "," + s.getCount() + FIELD_SEP;
-        if (s.isStuck()) {
-            this.output += LEAF + FIELD_SEP;
-            if (s.getStuckException() != null) {
-                this.output += "exception" + FIELD_SEP + formatReturn(s, s.getStuckException());
-            } else if (s.getStuckReturn() != null) {
-                this.output += "return" + FIELD_SEP + formatReturn(s, s.getStuckReturn());
-            }
-        } else {
-            try {
-                final boolean snippet = (s.getCurrentFrame() instanceof SnippetFrameNoContext);
-                this.output += (snippet ? "(snippet)" : s.getCurrentMethodSignature()) + FIELD_SEP + 
-                               (s.getSourceRow() == UNKNOWN_SOURCE_ROW ? "*" : s.getSourceRow()) + FIELD_SEP +
-                               (s.getPC() == UNKNOWN_PC ? "*" : s.getPC()) + FIELD_SEP +
-                               this.bcf.format(s);
-            } catch (ThreadStackEmptyException e) {
-                //the state is not stuck but it has no frames:
-                //this case is not common but it can mean a state
-                //not completely ready to run
-            }
+        try {
+        	if (s.isStuck()) {
+        		this.output += LEAF + FIELD_SEP;
+        		if (s.getStuckException() != null) {
+        			this.output += "exception" + FIELD_SEP + formatReturn(s, s.getStuckException());
+        		} else if (s.getStuckReturn() != null) {
+        			this.output += "return" + FIELD_SEP + formatReturn(s, s.getStuckReturn());
+        		}
+        	} else {
+        		try {
+        			final boolean snippet = (s.getCurrentFrame() instanceof SnippetFrameNoContext);
+        			this.output += (snippet ? "(snippet)" : s.getCurrentMethodSignature()) + FIELD_SEP + 
+        					(s.getSourceRow() == UNKNOWN_SOURCE_ROW ? "*" : s.getSourceRow()) + FIELD_SEP +
+        					(s.getPC() == UNKNOWN_PC ? "*" : s.getPC()) + FIELD_SEP +
+        					this.bcf.format(s);
+        		} catch (ThreadStackEmptyException e) {
+        			//the state is not stuck but it has no frames:
+        			//this case is not common but it can mean a state
+        			//not completely ready to run
+        		}
+        	}
+            this.output += "\n";
+        } catch (FrozenStateException e) {
+        	this.output = "";
+        	return;
         }
-        this.output += "\n";
     }
 
-    private String formatReturn(State s, Value v) {
+    private String formatReturn(State s, Value v) throws FrozenStateException {
         if (v instanceof Primitive) {
             return formatPrimitive((Primitive) v);
         } else if (v instanceof Reference) {

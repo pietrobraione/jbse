@@ -16,6 +16,7 @@ import jbse.bc.Classpath;
 import jbse.bc.Signature;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.rules.TriggerRulesRepo;
 import jbse.tree.StateTree;
@@ -847,7 +848,7 @@ public final class EngineParameters implements Cloneable {
         if (this.methodSignature == null) {
             try {
                 return this.initialState.getCurrentMethodSignature();
-            } catch (ThreadStackEmptyException e) {
+            } catch (ThreadStackEmptyException | FrozenStateException e) {
                 return null;
             }
         }

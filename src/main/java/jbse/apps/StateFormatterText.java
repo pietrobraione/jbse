@@ -29,6 +29,7 @@ import jbse.mem.ReachableObjectsCollector;
 import jbse.mem.SnippetFrameContext;
 import jbse.mem.State;
 import jbse.mem.Variable;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Expression;
 import jbse.val.NarrowingConversion;
@@ -61,7 +62,11 @@ public final class StateFormatterText implements Formatter {
 
     @Override
     public void formatState(State s) {
-        formatState(s, this.output, this.srcPath, this.fullPrint, true, "\t", "");
+        try {
+			formatState(s, this.output, this.srcPath, this.fullPrint, true, "\t", "");
+		} catch (FrozenStateException e) {
+			this.output.delete(0, this.output.length());
+		}
     }
 
     @Override
@@ -74,7 +79,8 @@ public final class StateFormatterText implements Formatter {
         this.output = new StringBuilder();
     }
 
-    private static void formatState(State state, StringBuilder sb, List<String> srcPath, boolean fullPrint, boolean breakLines, String indentTxt, String indentCurrent) {
+    private static void formatState(State state, StringBuilder sb, List<String> srcPath, boolean fullPrint, boolean breakLines, String indentTxt, String indentCurrent) 
+    throws FrozenStateException {
         final String lineSep = (breakLines ? LINE_SEP : "");
         sb.append(state.getIdentifier()); sb.append("["); sb.append(state.getSequenceNumber()); sb.append("] "); sb.append(lineSep);
         if (state.isStuck()) {
@@ -109,7 +115,8 @@ public final class StateFormatterText implements Formatter {
         sb.append(lineSep);
     }
     
-    private static void formatPathCondition(State s, StringBuilder sb, boolean fullPrint, boolean breakLines, String indentTxt, String indentCurrent) {
+    private static void formatPathCondition(State s, StringBuilder sb, boolean fullPrint, boolean breakLines, String indentTxt, String indentCurrent) 
+    throws FrozenStateException {
         final String lineSep = (breakLines ? LINE_SEP : "");
         final StringBuilder expression = new StringBuilder();
         final StringBuilder where = new StringBuilder();
@@ -266,7 +273,8 @@ public final class StateFormatterText implements Formatter {
     }
 
 
-    private static void formatHeap(State s, StringBuilder sb, boolean fullPrint, boolean breakLines, String indentTxt, String indentCurrent) {
+    private static void formatHeap(State s, StringBuilder sb, boolean fullPrint, boolean breakLines, String indentTxt, String indentCurrent) 
+    throws FrozenStateException {
         final String lineSep = (breakLines ? LINE_SEP : "");
         final Map<Long, Objekt> h = s.getHeap();
         final Set<Map.Entry<Long, Objekt>> entries;
@@ -293,7 +301,8 @@ public final class StateFormatterText implements Formatter {
         }
     }
 
-    private static void formatStaticMethodArea(State state, StringBuilder sb, boolean breakLines, String indentTxt, String indentCurrent) {
+    private static void formatStaticMethodArea(State state, StringBuilder sb, boolean breakLines, String indentTxt, String indentCurrent) 
+    throws FrozenStateException {
         final String lineSep = (breakLines ? LINE_SEP : "");
         final Map<ClassFile, Klass> a = state.getStaticMethodArea();
         sb.append(indentCurrent);
@@ -496,7 +505,8 @@ public final class StateFormatterText implements Formatter {
         sb.append("(type: "); sb.append(val.getType()); sb.append(")");		
     }
 
-    private static void formatStack(State s, StringBuilder sb, List<String> srcPath, boolean breakLines, String indentTxt, String indentCurrent) {
+    private static void formatStack(State s, StringBuilder sb, List<String> srcPath, boolean breakLines, String indentTxt, String indentCurrent) 
+    throws FrozenStateException {
         final String lineSep = (breakLines ? LINE_SEP : "");
         final Iterable<Frame> stack = s.getStack();
         final int size = s.getStackSize();

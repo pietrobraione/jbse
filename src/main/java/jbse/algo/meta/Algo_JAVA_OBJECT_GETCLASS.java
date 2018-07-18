@@ -17,6 +17,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
@@ -39,7 +40,7 @@ public final class Algo_JAVA_OBJECT_GETCLASS extends Algo_INVOKEMETA_Nonbranchin
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, DecisionException, 
     ClasspathException, SymbolicValueNotAllowedException, 
-    InterruptException {
+    InterruptException, FrozenStateException {
         try {
             //gets the "this" object and the name of its class
             final Reference thisRef = (Reference) this.data.operand(0);

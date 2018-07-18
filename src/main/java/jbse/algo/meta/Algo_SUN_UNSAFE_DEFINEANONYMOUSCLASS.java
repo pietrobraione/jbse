@@ -42,6 +42,7 @@ import jbse.mem.Instance;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
@@ -122,7 +123,7 @@ public final class Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS extends Algo_INVOKEMETA_
     
     private ConstantPoolValue[] patches(State state, Reference refCpPatches) 
     throws SymbolicValueNotAllowedException, InvalidOperandException, InvalidTypeException, 
-    FastArrayAccessNotAllowedException, ClassFileIllFormedException {
+    FastArrayAccessNotAllowedException, ClassFileIllFormedException, FrozenStateException {
         if (state.isNull(refCpPatches)) {
             return null;
         }

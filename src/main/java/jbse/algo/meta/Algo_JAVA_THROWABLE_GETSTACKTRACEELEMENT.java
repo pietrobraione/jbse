@@ -18,6 +18,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.Array.AccessOutcomeInValue;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
@@ -38,7 +39,7 @@ public final class Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT extends Algo_INVOKEM
     @Override
     protected void cookMore(State state)
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
-    CannotManageStateException, InterruptException {
+    CannotManageStateException, InterruptException, FrozenStateException {
         try {
             final Reference thisObject = (Reference) this.data.operand(0);
             this.index = (Primitive) this.data.operand(1);

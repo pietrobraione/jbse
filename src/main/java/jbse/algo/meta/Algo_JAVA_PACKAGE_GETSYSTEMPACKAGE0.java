@@ -15,6 +15,7 @@ import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Null;
@@ -36,7 +37,8 @@ public final class Algo_JAVA_PACKAGE_GETSYSTEMPACKAGE0 extends Algo_INVOKEMETA_N
 
     @Override
     protected void cookMore(State state) 
-    throws InterruptException, ClasspathException, SymbolicValueNotAllowedException, UndefinedResultException {
+    throws InterruptException, ClasspathException, 
+    SymbolicValueNotAllowedException, UndefinedResultException, FrozenStateException {
         try {
             //gets the first (String name) parameter
             final Reference nameReference = (Reference) this.data.operand(0);

@@ -16,6 +16,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.val.Value;
 
@@ -65,7 +66,8 @@ final class Algo_PUTSTATIC extends Algo_PUTX {
     }
 
     @Override
-    protected Objekt destination(State state) throws InterruptException {
+    protected Objekt destination(State state) 
+    throws InterruptException, FrozenStateException {
         return state.getKlass(this.fieldClassResolved);
     }
 }

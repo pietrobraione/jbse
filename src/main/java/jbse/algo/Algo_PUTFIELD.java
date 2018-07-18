@@ -14,6 +14,7 @@ import jbse.bc.exc.FieldNotFoundException;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 import jbse.val.Value;
@@ -38,7 +39,7 @@ final class Algo_PUTFIELD extends Algo_PUTX {
 
     @Override
     protected void checkMore(State state)
-    throws FieldNotFoundException, InterruptException, ClasspathException, ThreadStackEmptyException {
+    throws FieldNotFoundException, InterruptException, ClasspathException, ThreadStackEmptyException, FrozenStateException {
         //checks that the field is not static
         if (this.fieldClassResolved.isFieldStatic(this.data.signature())) {
             throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
@@ -82,7 +83,7 @@ final class Algo_PUTFIELD extends Algo_PUTX {
     }
 
     @Override
-    protected Objekt destination(State state) throws InterruptException, ClasspathException {
+    protected Objekt destination(State state) throws InterruptException, ClasspathException, FrozenStateException {
         try {
             final Reference myObjectRef = (Reference) this.data.operand(0);
             if (state.isNull(myObjectRef)) {

@@ -6,6 +6,7 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_XALOAD;
 import jbse.tree.DecisionAlternative_XALOAD_Out;
 import jbse.tree.DecisionAlternative_XALOAD_Aliases;
@@ -29,53 +30,55 @@ import jbse.val.exc.InvalidTypeException;
 abstract class StrategyRefine_XALOAD implements StrategyRefine<DecisionAlternative_XALOAD> {
     abstract public void refineRefExpands(State s, DecisionAlternative_XALOAD_Expands dac) 
     throws DecisionException, ContradictionException, InvalidTypeException, InterruptException, 
-    SymbolicValueNotAllowedException, ClasspathException;
+    SymbolicValueNotAllowedException, ClasspathException, FrozenStateException;
 
     abstract public void refineRefAliases(State s, DecisionAlternative_XALOAD_Aliases dai) 
-    throws DecisionException, ContradictionException;
+    throws DecisionException, ContradictionException, FrozenStateException;
 
     abstract public void refineRefNull(State s, DecisionAlternative_XALOAD_Null dan) 
-    throws DecisionException, ContradictionException;
+    throws DecisionException, ContradictionException, FrozenStateException;
 
     abstract public void refineResolved(State s, DecisionAlternative_XALOAD_Resolved dav) 
-    throws DecisionException;
+    throws DecisionException, FrozenStateException;
 
-    abstract public void refineOut(State s, DecisionAlternative_XALOAD_Out dao);
+    abstract public void refineOut(State s, DecisionAlternative_XALOAD_Out dao) 
+    throws FrozenStateException;
 
     @Override
     public final void refine(final State s, DecisionAlternative_XALOAD r)
     throws DecisionException, ContradictionException, InvalidTypeException, InterruptException, 
-    SymbolicValueNotAllowedException, ClasspathException {
+    SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
         //a visitor redispatching to the methods which specialize this.refine
         final VisitorDecisionAlternative_XALOAD visitorRefine = 
             new VisitorDecisionAlternative_XALOAD() {
                 @Override
                 public void visitDecisionAlternative_XALOAD_Expands(DecisionAlternative_XALOAD_Expands dac)
                 throws DecisionException, ContradictionException, InvalidTypeException, InterruptException, 
-                SymbolicValueNotAllowedException, ClasspathException {
+                SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
                     StrategyRefine_XALOAD.this.refineRefExpands(s, dac);
                 }
     
                 @Override
                 public void visitDecisionAlternative_XALOAD_Aliases(DecisionAlternative_XALOAD_Aliases dai)
-                throws DecisionException, ContradictionException {
+                throws DecisionException, ContradictionException, FrozenStateException {
                     StrategyRefine_XALOAD.this.refineRefAliases(s, dai);
                 }
     
                 @Override
                 public void visitDecisionAlternative_XALOAD_Null(DecisionAlternative_XALOAD_Null dan)
-                throws DecisionException, ContradictionException {
+                throws DecisionException, ContradictionException, FrozenStateException {
                     StrategyRefine_XALOAD.this.refineRefNull(s, dan);
                 }
     
                 @Override
                 public void visitDecisionAlternative_XALOAD_Resolved(DecisionAlternative_XALOAD_Resolved dav)
-                throws DecisionException {
+                throws DecisionException, FrozenStateException {
                     StrategyRefine_XALOAD.this.refineResolved(s, dav);
                 }
     
                 @Override
-                public void visitDecisionAlternative_XALOAD_Out(DecisionAlternative_XALOAD_Out dao) {
+                public void visitDecisionAlternative_XALOAD_Out(DecisionAlternative_XALOAD_Out dao) 
+                throws FrozenStateException {
                     StrategyRefine_XALOAD.this.refineOut(s, dao);
                 }
             };
@@ -86,7 +89,7 @@ abstract class StrategyRefine_XALOAD implements StrategyRefine<DecisionAlternati
         } catch (DecisionException | ContradictionException | 
                  InvalidTypeException | InterruptException | 
                  SymbolicValueNotAllowedException | ClasspathException | 
-                 RuntimeException e) {
+                 FrozenStateException | RuntimeException e) {
             throw e;
         } catch (Exception e) {
             //this should never happen

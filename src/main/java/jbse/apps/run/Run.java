@@ -58,6 +58,7 @@ import jbse.jvm.exc.NonexistingObservedVariablesException;
 import jbse.mem.State;
 import jbse.mem.exc.CannotRefineException;
 import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.meta.annotations.ConcretizationCheck;
 import jbse.rewr.CalculatorRewriting;
@@ -185,9 +186,14 @@ public final class Run {
          * @return {@code true} iff it is below the threshold.
          */
         private boolean stackSizeAcceptable() {
-            final State currentState = Run.this.engine.getCurrentState();
-            return (Run.this.parameters.getStackDepthShow() == 0 || 
-                    Run.this.parameters.getStackDepthShow() > currentState.getStackSize());
+            try {
+                final State currentState = Run.this.engine.getCurrentState();
+				return (Run.this.parameters.getStackDepthShow() == 0 || 
+				        Run.this.parameters.getStackDepthShow() > currentState.getStackSize());
+			} catch (FrozenStateException e) {
+				//this should never happen
+				throw new UnexpectedInternalException(e);
+			}
         }
 
         /**
@@ -348,9 +354,14 @@ public final class Run {
             }
             
             //enables printing if we hit the root method execution
-            if (currentState.getStackSize() == 1) {
-                this.mayPrint = true;
-            }
+            try {
+				if (currentState.getStackSize() == 1) {
+				    this.mayPrint = true;
+				}
+			} catch (FrozenStateException e) {
+				//this should never happen
+				throw new UnexpectedInternalException(e);
+			}
 
             //prints/asks (all+bytecode and branches)
             boolean stop = false;
@@ -444,7 +455,7 @@ public final class Run {
                     checkFinalStateIsConcretizable(counterKind);
                 }
 
-            } catch (CannotRefineException e) {
+            } catch (CannotRefineException | FrozenStateException e) {
                 throw new UnexpectedInternalException(e);
             }
             return false;

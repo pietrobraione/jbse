@@ -19,6 +19,7 @@ import jbse.mem.Array.AccessOutcomeInValue;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
@@ -53,7 +54,7 @@ public abstract class Algo_SUN_UNSAFE_COMPAREANDSWAPX extends Algo_INVOKEMETA_No
     @Override
     protected final void cookMore(State state)
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
-    CannotManageStateException, InterruptException {
+    CannotManageStateException, InterruptException, FrozenStateException {
         try {
             final Reference refObjectToSet = (Reference) this.data.operand(1);
             this.objectToSet = state.getObject(refObjectToSet);

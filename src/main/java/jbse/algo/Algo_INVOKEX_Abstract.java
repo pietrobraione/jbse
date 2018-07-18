@@ -38,6 +38,7 @@ import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
@@ -99,7 +100,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
     
     protected final void check(State state) 
-    throws InterruptException, CannotManageStateException, ClasspathException, ThreadStackEmptyException {
+    throws InterruptException, CannotManageStateException, ClasspathException, ThreadStackEmptyException, FrozenStateException {
         if (this.methodResolvedClass == null) {
             return;
         }
@@ -234,7 +235,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
 
     protected final void findImpl(State state) 
     throws IncompatibleClassFileException, MethodNotAccessibleException, 
-    MethodAbstractException, InterruptException, ThreadStackEmptyException {
+    MethodAbstractException, InterruptException, ThreadStackEmptyException, FrozenStateException {
         if (this.methodResolvedClass == null) {
             this.methodImplClass = null;
             this.methodImplSignature = this.data.signature();
@@ -253,12 +254,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             }
             this.methodImplClass = 
                 lookupMethodImpl(state, 
-                                          this.methodResolvedClass, 
-                                          this.data.signature(),
-                                          this.isInterface, 
-                                          this.isSpecial, 
-                                          this.isStatic,
-                                          receiverClass);
+                                 this.methodResolvedClass, 
+                                 this.data.signature(),
+                                 this.isInterface, 
+                                 this.isSpecial, 
+                                 this.isStatic,
+                                 receiverClass);
             this.methodImplSignature = 
                 new Signature(this.methodImplClass.getClassName(), 
                               this.data.signature().getDescriptor(), 

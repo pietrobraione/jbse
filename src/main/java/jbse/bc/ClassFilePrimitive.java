@@ -159,7 +159,7 @@ abstract class ClassFilePrimitive extends ClassFile {
 
 
     @Override
-    public boolean isPrimitive() {
+    public boolean isPrimitiveOrVoid() {
         return true;
     }
 

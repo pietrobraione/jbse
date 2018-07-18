@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 
@@ -96,12 +97,12 @@ public final class Util {
 	 * @param ref a {@link ReferenceSymbolic}, the reference that
 	 *        is resolved by {@code r}.
 	 * @param state a {@link State}.
-	 * 
 	 * @return the first {@link Objekt} in the heap of {@code s} 
 	 *         whose origin matches the trigger parameter part 
 	 *         of {@code r}, or {@code null} if none exists in the heap.
+	 * @throws FrozenStateException if {@code state} is frozen.
 	 */
-	public static ReferenceConcrete getTriggerMethodParameterObject(TriggerRule r, ReferenceSymbolic ref, State state) {
+	public static ReferenceConcrete getTriggerMethodParameterObject(TriggerRule r, ReferenceSymbolic ref, State state) throws FrozenStateException {
 		ReferenceConcrete retVal = null;
 		final Map<Long, Objekt> allObjs = state.getHeap();
 		for (Map.Entry<Long, Objekt> e : allObjs.entrySet()){

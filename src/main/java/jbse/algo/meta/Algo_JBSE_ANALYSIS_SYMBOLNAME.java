@@ -12,6 +12,7 @@ import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Null;
@@ -40,7 +41,8 @@ public final class Algo_JBSE_ANALYSIS_SYMBOLNAME extends Algo_INVOKEMETA_Nonbran
     }
     
     @Override
-    protected void cookMore(State state) throws InterruptException, ClasspathException {
+    protected void cookMore(State state) 
+    throws InterruptException, ClasspathException, FrozenStateException {
         final Value arg = this.data.operand(0);
         if (arg.isSymbolic()) {
             try {

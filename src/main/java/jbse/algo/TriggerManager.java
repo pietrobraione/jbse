@@ -26,6 +26,7 @@ import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -73,9 +74,10 @@ public class TriggerManager {
      *         in {@code State}.
      * @throws NotYetImplementedException if the class where the trigger method resides
      *         is not loaded.
+     * @throws FrozenStateException if {@code state} is frozen.
      */
     public void loadTriggerFramesRoot(State state, DecisionAlternative_XLOAD_GETX_Expands rootExpansion) 
-    throws ThreadStackEmptyException, MissingTriggerParameterException, NotYetImplementedException {
+    throws ThreadStackEmptyException, MissingTriggerParameterException, NotYetImplementedException, FrozenStateException {
         try {
             loadTriggerFrames(state, rootExpansion, 0);
         } catch (InvalidProgramCounterException e) {
@@ -102,10 +104,11 @@ public class TriggerManager {
      *         in {@code State}.
      * @throws NotYetImplementedException if the class where the trigger method resides
      *         is not loaded.
+     * @throws FrozenStateException if {@code state} is frozen.
      */
     public boolean loadTriggerFrames(State state, DecisionAlternative_XYLOAD_GETX_Loads da, int pcOffset) 
     throws InvalidProgramCounterException, ThreadStackEmptyException, 
-    MissingTriggerParameterException, NotYetImplementedException {
+    MissingTriggerParameterException, NotYetImplementedException, FrozenStateException {
         if (!(da instanceof DecisionAlternative_XYLOAD_GETX_Unresolved)) {
             return false;
         }
@@ -150,7 +153,8 @@ public class TriggerManager {
     }
 
     private ArrayList<TriggerRule> 
-    satisfiedTriggerRules(State s, DecisionAlternative_XYLOAD_GETX_Loads da, TriggerRulesRepo rulesRepo) {
+    satisfiedTriggerRules(State s, DecisionAlternative_XYLOAD_GETX_Loads da, TriggerRulesRepo rulesRepo) 
+    throws FrozenStateException {
         //TODO replace with double dispatching
         if (da instanceof DecisionAlternative_XYLOAD_GETX_Aliases) {
             final DecisionAlternative_XYLOAD_GETX_Aliases daa = (DecisionAlternative_XYLOAD_GETX_Aliases) da;

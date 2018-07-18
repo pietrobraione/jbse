@@ -432,7 +432,7 @@ public class ClassFileJavassist extends ClassFile {
     }
 
     @Override
-    public boolean isPrimitive() {
+    public boolean isPrimitiveOrVoid() {
         return false;
     }
 

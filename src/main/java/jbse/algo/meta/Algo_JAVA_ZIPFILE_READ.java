@@ -20,6 +20,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.mem.Array;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Calculator;
 import jbse.val.Primitive;
@@ -44,7 +45,8 @@ public final class Algo_JAVA_ZIPFILE_READ extends Algo_INVOKEMETA_Nonbranching {
 
     @Override
     protected void cookMore(State state) 
-    throws InterruptException, ClasspathException, SymbolicValueNotAllowedException, UndefinedResultException {
+    throws InterruptException, ClasspathException, 
+    SymbolicValueNotAllowedException, UndefinedResultException, FrozenStateException {
         try {
             //gets the first (long jzfile) parameter
             final Primitive _jzfile = (Primitive) this.data.operand(0);

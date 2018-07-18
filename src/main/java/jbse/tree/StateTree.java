@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 
 /**
  * Class storing the {@link State}s in the symbolic execution
@@ -244,7 +245,7 @@ public class StateTree {
      *        (used when the state identification mode is {@link StateIdentificationMode#REPLICABLE}).
      * @param branchIdentifier a {@link String}, the identifier of the branch starting from {@code s}
      *        (used when the state identification mode is {@link StateIdentificationMode#LONG}).
-     * @throws InvalidInputException if this method is used to add a pre-initial 
+     * @throws InvalidInputException if {@code s} is frozen, or if this method is used to add a pre-initial 
      *         or initial state.
      */
     public void addState(State s, int branchNumber, String branchIdentifier) throws InvalidInputException {
@@ -292,9 +293,10 @@ public class StateTree {
      * Removes the next state from the store and emits it.
      * 
      * @return the {@link State} removed from the store.
+     * @throws FrozenStateException if the returned {@link State} is frozen.
      * @throws NoSuchElementException if {@link #hasStates()} {@code == false}.
      */
-    public State nextState() {
+    public State nextState() throws FrozenStateException {
         final State s = this.stateBuffer.removeFirst();
         final BranchInfo b = this.branchList.getFirst();
         ++b.emittedStates;
@@ -355,22 +357,6 @@ public class StateTree {
         }
 
         return retVal;
-    }
-
-    /**
-     * Increases by one the level of the tree and 
-     * adds a {@code State}.
-     * 
-     * @param state the {@link State} to be added
-     * @param id the identifier for {@code state}. 
-     * @throws InvalidInputException if this method is 
-     *         used to add a pre-initial or initial state, 
-     *         or if it is invoked when there is a 
-     *         pre-initial or initial state to be emitted.
-     */
-    public void addBranchPoint(State state, String id) throws InvalidInputException {
-        addBranchPoint();
-        addState(state, 1, id); //exactly one state in the branch
     }
 
     /**

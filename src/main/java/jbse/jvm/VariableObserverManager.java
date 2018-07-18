@@ -14,6 +14,7 @@ import jbse.jvm.exc.NonexistingObservedVariablesException;
 import jbse.mem.Instance;
 import jbse.mem.Klass;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.StateTree.BranchPoint;
 import jbse.val.Reference;
@@ -67,7 +68,12 @@ class VariableObserverManager {
     void init(Engine engine) 
     throws ThreadStackEmptyException, NonexistingObservedVariablesException {
         this.engine = engine;
-        this.rootObjectReference = this.engine.getCurrentState().getRootObjectReference();
+        try {
+			this.rootObjectReference = this.engine.getCurrentState().getRootObjectReference();
+		} catch (FrozenStateException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
 
         //saves the values of the observed variables
         final List<Integer> nonexistingVariables = new LinkedList<Integer>();
@@ -166,25 +172,30 @@ class VariableObserverManager {
         final State currentState = this.engine.getCurrentState();
         final Signature obsVarSignature = this.varSigs.get(i);
         Value retVal = null;
-        if (currentState.getStackSize() > 0) {
-            //if the state is not stuck because of a return 
-            //from the root method, looks in the root object
-            final Instance rootObject = (Instance) currentState.getObject(this.rootObjectReference);
-            retVal = rootObject.getFieldValue(obsVarSignature);
-        }
-        if (retVal == null) {
-            //not in the root object? Let's see if it is a static variable 
-            //in the root class 
-            final ClassFile rootClass;
-            try {
-                rootClass = currentState.getRootClass();
-            } catch (ThreadStackEmptyException e) {
-                //this should not happen
-                throw new UnexpectedInternalException(e);
-            }
-            final Klass rootKlass = currentState.getKlass(rootClass);
-            retVal = rootKlass.getFieldValue(obsVarSignature);
-        }
+        try {
+        	if (currentState.getStackSize() > 0) {
+        		//if the state is not stuck because of a return 
+        		//from the root method, looks in the root object
+        		final Instance rootObject = (Instance) currentState.getObject(this.rootObjectReference);
+        		retVal = rootObject.getFieldValue(obsVarSignature);
+        	}
+        	if (retVal == null) {
+        		//not in the root object? Let's see if it is a static variable 
+        		//in the root class 
+        		final ClassFile rootClass;
+        		try {
+        			rootClass = currentState.getRootClass();
+        		} catch (ThreadStackEmptyException e) {
+        			//this should not happen
+        			throw new UnexpectedInternalException(e);
+        		}
+        		final Klass rootKlass = currentState.getKlass(rootClass);
+        		retVal = rootKlass.getFieldValue(obsVarSignature);
+        	}
         return retVal;
+		} catch (FrozenStateException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
     }
 }

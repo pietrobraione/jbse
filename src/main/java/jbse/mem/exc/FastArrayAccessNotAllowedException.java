@@ -10,7 +10,6 @@ import jbse.mem.Array;
  *
  */
 public class FastArrayAccessNotAllowedException extends Exception {
-//TODO make it subclass of Exception
 	/**
 	 * 
 	 */

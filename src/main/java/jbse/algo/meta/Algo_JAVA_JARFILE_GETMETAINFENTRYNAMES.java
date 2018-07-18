@@ -36,6 +36,7 @@ import jbse.mem.Array;
 import jbse.mem.Instance;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Calculator;
@@ -60,7 +61,8 @@ public final class Algo_JAVA_JARFILE_GETMETAINFENTRYNAMES extends Algo_INVOKEMET
 
     @Override
     protected void cookMore(State state) 
-    throws InterruptException, ClasspathException, SymbolicValueNotAllowedException {
+    throws InterruptException, ClasspathException, 
+    SymbolicValueNotAllowedException, FrozenStateException {
         try {
             //gets the 'this' parameter
             final Reference jarFileRef = (Reference) this.data.operand(0);

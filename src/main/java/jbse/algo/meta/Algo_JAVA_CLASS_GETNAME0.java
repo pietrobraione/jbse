@@ -15,6 +15,7 @@ import jbse.algo.StrategyUpdate;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
@@ -35,7 +36,7 @@ public final class Algo_JAVA_CLASS_GETNAME0 extends Algo_INVOKEMETA_Nonbranching
 
     @Override
     protected void cookMore(State state)
-    throws ThreadStackEmptyException, InterruptException, ClasspathException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException, FrozenStateException {
         try {
             //gets the 'this' java.lang.Class instance from the heap 
             //and the classfile of the class it represents

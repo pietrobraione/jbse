@@ -7,6 +7,7 @@ import java.util.SortedMap;
 
 import jbse.bc.ClassFile;
 import jbse.common.exc.UnexpectedInternalException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
@@ -40,8 +41,9 @@ public final class ReachableObjectsCollector {
      * @return a {@link Set}{@code <}{@link Long}{@code >}
      *         containing all the heap positions of the objects
      *         reachable from the collection roots.
+     * @throws FrozenStateException if {@code s} is frozen.
      */
-    public Set<Long> reachable(State s, boolean precise) {
+    public Set<Long> reachable(State s, boolean precise) throws FrozenStateException {
         try {
             final boolean emptyStack = s.getStack().isEmpty();
             final Reference rootObjectReference = (emptyStack ? null : s.getRootObjectReference());
@@ -79,8 +81,9 @@ public final class ReachableObjectsCollector {
      * @return a {@link Set}{@code <}{@link Long}{@code >}
      *         containing all the heap positions of the objects
      *         reachable from the collection roots.
+     * @throws FrozenStateException if {@code s} is frozen.
      */
-    private Set<Long> reachable(State s, boolean precise, long rootObject, ClassFile rootClass) {
+    private Set<Long> reachable(State s, boolean precise, long rootObject, ClassFile rootClass) throws FrozenStateException {
         if (s == null) {
             throw new NullPointerException();
         }

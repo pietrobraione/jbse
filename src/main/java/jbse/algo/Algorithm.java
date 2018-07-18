@@ -274,9 +274,8 @@ UP extends StrategyUpdate<R>> implements Action {
         final boolean shouldRefine = outcome.shouldRefine();
         final boolean branchingDecision = outcome.branchingDecision();
         final boolean branchAdded = possiblyAddBranchPoint(decisionResults);
-        int cur = 1;
         for (R result : decisionResults) {
-            final State stateCurrent = (cur < tot ? state.clone() : state);
+            final State stateCurrent = (tot > 1 ? state.lazyClone() : state);
 
             //pops the operands from the operand stack
             try {
@@ -330,8 +329,10 @@ UP extends StrategyUpdate<R>> implements Action {
             if (branchAdded) {
                 this.ctx.stateTree.addState(stateCurrent, result.getBranchNumber(), result.getIdentifier());
             }
-
-            ++cur;
+        }
+        
+        if (tot > 1) {
+        	state.freeze();
         }
     }
 

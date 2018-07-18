@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.InvalidNumberOfOperandsException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
@@ -130,14 +131,14 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     private static void dup_x1(State state, Value value1, Value value2) 
-    throws ThreadStackEmptyException {
+    throws ThreadStackEmptyException, FrozenStateException {
         state.pushOperand(value1);
         state.pushOperand(value2);
         state.pushOperand(value1);
     }
 
     private static void dup_x2_form1(State state, Value value1, Value value2) 
-    throws ThreadStackEmptyException, InterruptException, ClasspathException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException, FrozenStateException {
         //we need a third cat1 operand
         try {
             final Value value3 = state.popOperand();
@@ -156,14 +157,14 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     private static void dup_x2_form2(State state, Value value1, Value value2) 
-    throws ThreadStackEmptyException {
+    throws ThreadStackEmptyException, FrozenStateException {
         state.pushOperand(value1);
         state.pushOperand(value2);
         state.pushOperand(value1);
     }
 
     private static void dup2_x1_form1(State state, Value value1, Value value2) 
-    throws ThreadStackEmptyException, InterruptException, ClasspathException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException, FrozenStateException {
         //we need a third cat1 operand
         try {
             final Value value3 = state.popOperand();
@@ -183,14 +184,14 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     private static void dup2_x1_form2(State state, Value value1, Value value2) 
-    throws ThreadStackEmptyException {
+    throws ThreadStackEmptyException, FrozenStateException {
         state.pushOperand(value1);
         state.pushOperand(value2);
         state.pushOperand(value1);
     }
 
     private static void dup2_x2_form1Or3(State state, Value value1, Value value2) 
-    throws ThreadStackEmptyException, InterruptException, ClasspathException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException, FrozenStateException {
         //we need a third operand, that also allows us
         //to decide the form
         try {
@@ -207,7 +208,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     private static void dup2_x2_form1(State state, Value value1, Value value2, Value value3) 
-    throws ThreadStackEmptyException, InterruptException, ClasspathException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException, FrozenStateException {
         try {
             //we need a fourth cat1 operand
             final Value value4 = state.popOperand();
@@ -228,7 +229,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     private static void dup2_x2_form2(State state, Value value1, Value value2) 
-    throws ThreadStackEmptyException, InterruptException, ClasspathException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException, FrozenStateException {
         //we need a third cat1 operand
         try {
             final Value value3 = state.popOperand();
@@ -247,7 +248,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     private static void dup2_x2_form3(State state, Value value1, Value value2, Value value3) 
-    throws ThreadStackEmptyException {
+    throws ThreadStackEmptyException, FrozenStateException {
         state.pushOperand(value2);
         state.pushOperand(value1);
         state.pushOperand(value3);
@@ -256,7 +257,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     private static void dup2_x2_form4(State state, Value value1, Value value2) 
-    throws ThreadStackEmptyException {
+    throws ThreadStackEmptyException, FrozenStateException {
         state.pushOperand(value1);
         state.pushOperand(value2);
         state.pushOperand(value1);

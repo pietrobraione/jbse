@@ -35,6 +35,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XALOAD;
@@ -255,7 +256,7 @@ StrategyUpdate_XALOAD> {
 
     @Override   
     protected Value possiblyMaterialize(State state, Value val) 
-    throws DecisionException, InterruptException, ClasspathException {
+    throws DecisionException, InterruptException, ClasspathException, FrozenStateException {
         //calculates the actual value to push by materializing 
         //a member array, if it is the case, and then pushes it
         //on the operand stack
@@ -287,7 +288,7 @@ StrategyUpdate_XALOAD> {
             @Override
             public void refineRefExpands(State state, DecisionAlternative_XALOAD_Expands altExpands) 
             throws DecisionException, ContradictionException, InvalidTypeException, InterruptException, 
-            SymbolicValueNotAllowedException, ClasspathException {
+            SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
                 //handles all the assumptions for reference resolution by expansion
                 Algo_XALOAD.this.refineRefExpands(state, altExpands); //implemented in Algo_XYLOAD_GETX
 
@@ -305,7 +306,7 @@ StrategyUpdate_XALOAD> {
 
             @Override
             public void refineRefAliases(State state, DecisionAlternative_XALOAD_Aliases altAliases)
-            throws DecisionException, ContradictionException {
+            throws DecisionException, ContradictionException, FrozenStateException {
                 //handles all the assumptions for reference resolution by aliasing
                 Algo_XALOAD.this.refineRefAliases(state, altAliases); //implemented in Algo_XYLOAD_GETX
 
@@ -323,7 +324,7 @@ StrategyUpdate_XALOAD> {
 
             @Override
             public void refineRefNull(State state, DecisionAlternative_XALOAD_Null altNull) 
-            throws DecisionException, ContradictionException {
+            throws DecisionException, ContradictionException, FrozenStateException {
                 Algo_XALOAD.this.refineRefNull(state, altNull); //implemented in Algo_XYLOAD_GETX
 
                 //further augments the path condition 
@@ -340,7 +341,7 @@ StrategyUpdate_XALOAD> {
 
             @Override
             public void refineResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved)
-            throws DecisionException {
+            throws DecisionException, FrozenStateException {
                 //augments the path condition
                 state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(altResolved.getArrayAccessExpression()));
 
@@ -353,7 +354,8 @@ StrategyUpdate_XALOAD> {
             }
 
             @Override
-            public void refineOut(State state, DecisionAlternative_XALOAD_Out altOut) {
+            public void refineOut(State state, DecisionAlternative_XALOAD_Out altOut) 
+            throws FrozenStateException {
                 //augments the path condition
                 state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(altOut.getArrayAccessExpression()));
             }
@@ -365,14 +367,14 @@ StrategyUpdate_XALOAD> {
             @Override
             public void updateResolved(State s, DecisionAlternative_XALOAD_Resolved dar) 
             throws DecisionException, InterruptException, MissingTriggerParameterException, 
-            ClasspathException, NotYetImplementedException, ThreadStackEmptyException {
+            ClasspathException, NotYetImplementedException, ThreadStackEmptyException, FrozenStateException {
                 Algo_XALOAD.this.update(s, dar); //implemented in Algo_XYLOAD_GETX
             }
 
             @Override
             public void updateUnresolved(State s, DecisionAlternative_XALOAD_Unresolved dau) 
             throws DecisionException, InterruptException, MissingTriggerParameterException, 
-            ClasspathException, NotYetImplementedException, ThreadStackEmptyException {
+            ClasspathException, NotYetImplementedException, ThreadStackEmptyException, FrozenStateException {
                 Algo_XALOAD.this.update(s, dau); //implemented in Algo_XYLOAD_GETX
             }
 

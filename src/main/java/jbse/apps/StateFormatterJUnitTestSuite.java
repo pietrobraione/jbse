@@ -29,6 +29,7 @@ import jbse.mem.ClauseAssumeNull;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.Variable;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Any;
 import jbse.val.Expression;
@@ -72,7 +73,11 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
 
     @Override
     public void formatState(State state) {
-        new JUnitTestCase(this.output, this.initialStateSupplier.get(), state, this.modelSupplier.get(), this.testCounter++);
+        try {
+			new JUnitTestCase(this.output, this.initialStateSupplier.get(), state, this.modelSupplier.get(), this.testCounter++);
+		} catch (FrozenStateException e) {
+			this.output.delete(0, this.output.length());
+		}
     }
 
     @Override
@@ -226,7 +231,8 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
         private boolean panic = false;
         private ClauseAssume clauseLength = null;
 
-        JUnitTestCase(StringBuilder s, State initialState, State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) {
+        JUnitTestCase(StringBuilder s, State initialState, State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) 
+        throws FrozenStateException {
             this.s = s;
             appendMethodDeclaration(finalState, testCounter);
             appendInputsInitialization(finalState, model, testCounter);
@@ -235,7 +241,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             appendMethodEnd(finalState, testCounter);
         }
 
-        private void appendMethodDeclaration(State finalState, int testCounter) {
+        private void appendMethodDeclaration(State finalState, int testCounter) throws FrozenStateException {
             if (this.panic) {
                 return;
             }
@@ -257,7 +263,8 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             this.s.append("]\n");
         }
 
-        private void appendInputsInitialization(State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) {
+        private void appendInputsInitialization(State finalState, Map<PrimitiveSymbolic, Simplex> model, int testCounter) 
+        throws FrozenStateException {
             if (this.panic) {
                 return;
             }
@@ -303,7 +310,8 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             }
         }
 
-        private void appendInvocationOfMethodUnderTest(State initialState, State finalState) {
+        private void appendInvocationOfMethodUnderTest(State initialState, State finalState) 
+        throws FrozenStateException {
             if (this.panic) {
                 return;
             }
@@ -374,7 +382,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             }
         }
 
-        private void appendAssert(State initialState, State finalState) {
+        private void appendAssert(State initialState, State finalState) throws FrozenStateException {
             if (this.panic) {
                 return;
             }
@@ -442,7 +450,8 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
         }
 
         private void setWithNewObject(State finalState, Symbolic symbol, long heapPosition, 
-                                      Iterator<Clause> iterator, Map<PrimitiveSymbolic, Simplex> model) {        
+                                      Iterator<Clause> iterator, Map<PrimitiveSymbolic, Simplex> model) 
+        throws FrozenStateException {        
             makeVariableFor(symbol);
             final String var = getVariableFor(symbol);
             final String type = getTypeOfObjectInHeap(finalState, heapPosition);
@@ -502,7 +511,8 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             }
         }
 
-        private void setWithAlias(State finalState, Symbolic symbol, long heapPosition) {
+        private void setWithAlias(State finalState, Symbolic symbol, long heapPosition) 
+        throws FrozenStateException {
             makeVariableFor(symbol);
             final String var = getVariableFor(symbol);
             final String value = getValue(getOriginOfObjectInHeap(finalState, heapPosition));
@@ -586,7 +596,8 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             return this.symbolsToVariables.get(value);
         }
 
-        private static String getTypeOfObjectInHeap(State finalState, long num) {
+        private static String getTypeOfObjectInHeap(State finalState, long num) 
+        throws FrozenStateException {
             final Map<Long, Objekt> heap = finalState.getHeap();
             final Objekt o = heap.get(num);
             return o.getType().getClassName();

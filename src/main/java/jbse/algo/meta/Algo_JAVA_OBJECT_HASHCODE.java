@@ -11,6 +11,7 @@ import jbse.algo.StrategyUpdate;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
@@ -31,7 +32,8 @@ public final class Algo_JAVA_OBJECT_HASHCODE extends Algo_INVOKEMETA_Nonbranchin
     
     @Override
     protected void cookMore(State state) 
-    throws ThreadStackEmptyException, InterruptException, ClasspathException {
+    throws ThreadStackEmptyException, InterruptException, 
+    ClasspathException, FrozenStateException {
         try {
             final Reference thisReference = (Reference) this.data.operand(0);
             final Objekt thisObjekt = state.getObject(thisReference);

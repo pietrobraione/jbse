@@ -59,6 +59,7 @@ import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
@@ -84,8 +85,8 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
 
     @Override
     protected void cookMore(State state) 
-    throws InterruptException, UndefinedResultException, SymbolicValueNotAllowedException, 
-    ClasspathException {
+    throws InterruptException, UndefinedResultException, 
+    SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
         try {
             //gets and check the class of the object that must be created
             final Reference refConstructor = (Reference) this.data.operand(0);
@@ -167,13 +168,13 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
     }
     
     private Value checkAndConvert(State state, Reference refTypeFormal, Reference refValActual) 
-    throws InterruptException, ClasspathException {
+    throws InterruptException, ClasspathException, FrozenStateException {
         try {
             final Instance_JAVA_CLASS typeFormalJavaClass = (Instance_JAVA_CLASS) state.getObject(refTypeFormal);
             final ClassFile typeFormal = typeFormalJavaClass.representedClass();
             final Objekt actual = state.getObject(refValActual);
             final ClassFile typeActual = actual.getType();
-            if (typeFormal.isPrimitive()) {
+            if (typeFormal.isPrimitiveOrVoid()) {
                 //unboxes the parameter
                 final Primitive actualValue;
                 switch (typeActual.getClassName()) {

@@ -65,6 +65,7 @@ import jbse.mem.exc.CannotAssumeSymbolicObjectException;
 import jbse.mem.exc.CannotRefineException;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
@@ -207,6 +208,9 @@ public final class State implements Cloneable {
      * extensions and application classloaders. 
      */
     private final boolean bypassStandardLoading;
+    
+    /** If {@code true} the state is immutable. */
+    private boolean frozen;
 
     /** The {@link HistoryPoint} of the initial state. */
     private HistoryPoint initialHistoryPoint = null;
@@ -384,6 +388,7 @@ public final class State implements Cloneable {
                  Map<String, Set<String>> expansionBackdoor, 
                  Calculator calc) 
                  throws InvalidClassFileFactoryClassException {
+    	this.frozen = false;
         this.bypassStandardLoading = bypassStandardLoading;
         this.classLoaders.add(Null.getInstance()); //classloader 0 is the bootstrap classloader
         setStandardFiles();
@@ -434,15 +439,24 @@ public final class State implements Cloneable {
             }
             //TODO if err == null, set to some backup output file
             setFile(2, err);
-        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | 
+        		 IllegalAccessException | FrozenStateException e) {
             throw new UnexpectedInternalException(e);
         }
+    }
+    
+    /**
+     * Freezes this state, making it immutable.
+     */
+    public void freeze() {
+    	this.frozen = true;
     }
 
     /**
      * Getter for this state's classpath.
      * 
-     * @return a {@link Classpath}.
+     * @return a {@link Classpath} (a safety copy of 
+     *         the one used to construct this state).
      */
     public Classpath getClasspath() {
         return this.classHierarchy.getClasspath();
@@ -463,10 +477,14 @@ public final class State implements Cloneable {
      * @param mainThreadGroup a {@link ReferenceConcrete} to 
      *        an {@link Instance} of class {@link java.lang.ThreadGroup}.
      * @throws NullPointerException if {@code mainThreadGroup == null}.
-     * @throws InvalidInputException if {@code mainThreadGroup} does not
+     * @throws InvalidInputException if the state is frozen or if 
+     *         {@code mainThreadGroup} does not
      *         refer an {@link Instance} of class {@link java.lang.ThreadGroup}.
      */
     public void setMainThreadGroup(ReferenceConcrete mainThreadGroup) throws InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         final Objekt o = getObject(mainThreadGroup);
         if (o == null ||
             !(o instanceof Instance) ||
@@ -494,10 +512,14 @@ public final class State implements Cloneable {
      * @param mainThread a {@link ReferenceConcrete} to 
      *        an {@link Instance_JAVA_THREAD}.
      * @throws NullPointerException if {@code mainThread == null}.
-     * @throws InvalidInputException if {@code mainThread} does not
+     * @throws InvalidInputException if the state is frozen or 
+     *         if {@code mainThread} does not
      *         refer an {@link Instance_JAVA_THREAD}.
      */
     public void setMainThread(ReferenceConcrete mainThread) throws InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         final Objekt o = getObject(mainThread);
         if (o == null ||
             !(o instanceof Instance_JAVA_THREAD)) {
@@ -527,9 +549,13 @@ public final class State implements Cloneable {
      * @throws ThreadStackEmptyException if the thread stack is empty.
      * @throws InvalidNumberOfOperandsException if the current operand 
      *         stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
     public Value popOperand() 
-    throws ThreadStackEmptyException, InvalidNumberOfOperandsException {
+    throws ThreadStackEmptyException, InvalidNumberOfOperandsException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         return getCurrentFrame().pop();
     }
 
@@ -541,9 +567,13 @@ public final class State implements Cloneable {
      * @throws InvalidNumberOfOperandsException if the operand stack 
      *         does not contain at least {@code num} elements, or if 
      *         {@code num} is negative.
+     * @throws FrozenStateException if the state is frozen.
      */
     public void popOperands(int num) 
-    throws ThreadStackEmptyException, InvalidNumberOfOperandsException {
+    throws ThreadStackEmptyException, InvalidNumberOfOperandsException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         getCurrentFrame().pop(num);
     }
 
@@ -555,9 +585,10 @@ public final class State implements Cloneable {
      * @throws ThreadStackEmptyException if the thread stack is empty.
      * @throws InvalidNumberOfOperandsException if the current operand
      *         stack is empty. 
+     * @throws FrozenStateException if the state is frozen.
      */
     public Value topOperand() 
-    throws ThreadStackEmptyException, InvalidNumberOfOperandsException {
+    throws ThreadStackEmptyException, InvalidNumberOfOperandsException, FrozenStateException {
         return getCurrentFrame().top();
     }
 
@@ -569,9 +600,13 @@ public final class State implements Cloneable {
      * @param val {@link Value} to put on the top of the current 
      * operand stack.
      * @throws ThreadStackEmptyException if the thread stack is empty. 
+     * @throws FrozenStateException  if the state is frozen.
      */
     //TODO check that only operand stack types (int, long, float, double, reference) can be pushed, or convert smaller values automatically
-    public void pushOperand(Value val) throws ThreadStackEmptyException {
+    public void pushOperand(Value val) throws ThreadStackEmptyException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         getCurrentFrame().push(val);		
     }
 
@@ -579,8 +614,12 @@ public final class State implements Cloneable {
      * Clears the current operand stack.
      * 
      * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public void clearOperands() throws ThreadStackEmptyException {
+    public void clearOperands() throws ThreadStackEmptyException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         getCurrentFrame().clear();
     }
 
@@ -598,8 +637,12 @@ public final class State implements Cloneable {
      * Disables the possibility of having 
      * other assumptions being issued later
      * during symbolic execution.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public void disableAssumptionViolation() {
+    public void disableAssumptionViolation() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         this.mayViolateAssumption = false;
     }
     
@@ -608,8 +651,9 @@ public final class State implements Cloneable {
      * 
      * @return a {@link ClassFile}.
      * @throws ThreadStackEmptyException if the stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public ClassFile getCurrentClass() throws ThreadStackEmptyException {
+    public ClassFile getCurrentClass() throws ThreadStackEmptyException, FrozenStateException {
         return getCurrentFrame().getCurrentClass();
     }
 
@@ -619,8 +663,9 @@ public final class State implements Cloneable {
      * 
      * @return a {@link Signature}.
      * @throws ThreadStackEmptyException if the stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public Signature getCurrentMethodSignature() throws ThreadStackEmptyException {
+    public Signature getCurrentMethodSignature() throws ThreadStackEmptyException, FrozenStateException {
         return getCurrentFrame().getCurrentMethodSignature();
     }
     
@@ -630,8 +675,10 @@ public final class State implements Cloneable {
      * 
      * @return a {@link ClassFile}.
      * @throws ThreadStackEmptyException if the stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public ClassFile getRootClass() throws ThreadStackEmptyException {
+    public ClassFile getRootClass() 
+    throws ThreadStackEmptyException, FrozenStateException {
         return getRootFrame().getCurrentClass();
     }
 
@@ -641,8 +688,10 @@ public final class State implements Cloneable {
      * 
      * @return a {@link Signature}.
      * @throws ThreadStackEmptyException if the stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public Signature getRootMethodSignature() throws ThreadStackEmptyException {
+    public Signature getRootMethodSignature() 
+    throws ThreadStackEmptyException, FrozenStateException {
         return getRootFrame().getCurrentMethodSignature();
     }
 
@@ -653,8 +702,10 @@ public final class State implements Cloneable {
      * @return A {@link Reference} to the root object in the heap 
      * of the current state, or {@code null} if the root method is static.
      * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public Reference getRootObjectReference() throws ThreadStackEmptyException {
+    public Reference getRootObjectReference() 
+    throws ThreadStackEmptyException, FrozenStateException {
         final Frame rootFrame = getRootFrame();
         final Signature rootMethodSignature = getRootMethodSignature();
         try {
@@ -684,8 +735,10 @@ public final class State implements Cloneable {
      *         {@code curPC}, or {@code null} if no debug information is 
      *         available for the {@code (slot, curPC)} combination.
      * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public String getLocalVariableDeclaredName(int slot) throws ThreadStackEmptyException {
+    public String getLocalVariableDeclaredName(int slot) 
+    throws ThreadStackEmptyException, FrozenStateException {
         return getCurrentFrame().getLocalVariableDeclaredName(slot);
     }
 
@@ -696,8 +749,9 @@ public final class State implements Cloneable {
      * @return a {@link Value}.
      * @throws ThreadStackEmptyException if the thread stack is empty.
      * @throws InvalidSlotException if {@code slot} is not a valid slot number.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public Value getLocalVariableValue(int slot) throws ThreadStackEmptyException, InvalidSlotException {
+    public Value getLocalVariableValue(int slot) throws ThreadStackEmptyException, InvalidSlotException, FrozenStateException {
         return getCurrentFrame().getLocalVariableValue(slot);
     }
 
@@ -709,8 +763,12 @@ public final class State implements Cloneable {
      * @param item the {@link Value} to be stored.  
      * @throws ThreadStackEmptyException if the thread stack is empty.
      * @throws InvalidSlotException if {@code slot} is not a valid slot number.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public void setLocalVariable(int slot, Value val) throws ThreadStackEmptyException, InvalidSlotException {
+    public void setLocalVariable(int slot, Value val) throws ThreadStackEmptyException, InvalidSlotException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         getCurrentFrame().setLocalVariableValue(slot, this.stack.currentFrame().getProgramCounter(), val);
     }
 
@@ -787,9 +845,13 @@ public final class State implements Cloneable {
      *         <li>{@code ref} is symbolic and resolved to null, or</li> 
      *         <li>{@code ref} is symbolic and unresolved.</li>
      *         </ul>
+     * @throws FrozenStateException if the state is frozen.
      * @throws NullPointerException if {@code ref == null}.
      */
-    public Objekt getObject(Reference ref) {
+    public Objekt getObject(Reference ref) throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         final Objekt retVal;
         if (ref.isSymbolic()) {
             final ReferenceSymbolic refSymbolic = (ReferenceSymbolic) ref;
@@ -818,9 +880,13 @@ public final class State implements Cloneable {
      *         anything (e.g., is {@link Null}, or is an unresolved 
      *         symbolic reference, or is resolved to null), or the 
      *         reference is concrete and refers to a concrete object.
+     * @throws FrozenStateException if the state is frozen.
      */
     //TODO eliminate this method!!!
-    public Objekt getObjectInitial(Reference ref) {
+    public Objekt getObjectInitial(Reference ref) throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         final long pos;
         if (ref.isSymbolic()) {
             final ReferenceSymbolic refSymbolic = (ReferenceSymbolic) ref;
@@ -869,8 +935,12 @@ public final class State implements Cloneable {
     /**
      * Sets this state to its post-initizialization
      * phase.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public void setPhasePostInit() {
+    public void setPhasePostInit() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         this.isPhasePreInit = false;
     }
 
@@ -883,8 +953,12 @@ public final class State implements Cloneable {
      *         the memory representation of the class 
      *         {@code classFile}, or {@code null} 
      *         if the class has not been initialized.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public Klass getKlass(ClassFile classFile) {
+    public Klass getKlass(ClassFile classFile) throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         return this.staticMethodArea.get(classFile);
     }
     
@@ -915,9 +989,13 @@ public final class State implements Cloneable {
      * @param appendix a {@link ReferenceConcrete}. It should
      *        refer an {@link Instance} of a {@link java.lang.Object[]},
      *        but this is not checked.
+     * @throws FrozenStateException if the state is frozen.
      * @throws NullPointerException if {@code signature == null || invoker == null || appendix == null}.
      */
-    public void link(Signature signature, ReferenceConcrete invoker, ReferenceConcrete appendix) {
+    public void link(Signature signature, ReferenceConcrete invoker, ReferenceConcrete appendix) throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (signature == null || invoker == null || appendix == null) {
             throw new NullPointerException(); //TODO throw better exception
         }
@@ -958,8 +1036,12 @@ public final class State implements Cloneable {
      * @return a {@link FileInputStream} of a {@link FileOutputStream}, or
      *         {@code null} if {@code descriptor} is not the descriptor
      *         of an open file previously associated with a call to {@link #setFile(int, Object)}.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public Object getFile(int descriptor) {
+    public Object getFile(int descriptor) throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         return this.files.get(Integer.valueOf(descriptor));
     }
     
@@ -970,8 +1052,12 @@ public final class State implements Cloneable {
      * @param fileStream a {@link FileInputStream} or a {@link FileOutputStream} 
      *        (if it is not an instance of one of these types the method does
      *        nothing).
+     * @throws FrozenStateException if the state is frozen.
      */
-    public void setFile(int descriptor, Object fileStream) {
+    public void setFile(int descriptor, Object fileStream) throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (fileStream instanceof FileInputStream || fileStream instanceof FileOutputStream) {
             this.files.put(Integer.valueOf(descriptor), fileStream);
         }
@@ -983,8 +1069,12 @@ public final class State implements Cloneable {
      * @param descriptor an {@code int}, the open file descriptor to remove
      *        (if it is not a previously associated open file descriptor
      *        the method does nothing).
+     * @throws FrozenStateException if the state is frozen.
      */
-    public void removeFile(int descriptor) {
+    public void removeFile(int descriptor) throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         this.files.remove(Integer.valueOf(descriptor));
     }
     
@@ -993,10 +1083,14 @@ public final class State implements Cloneable {
      * 
      * @param address a {@code long}, the base address of the memory block.
      * @param size a {@code long}, the size in bytes of the memory block.
-     * @throws InvalidInputException if {@code address} is already
-     *         a registered memory block base address, or if {@code size <= 0}.
+     * @throws InvalidInputException if the state is frozen, or if 
+     *         {@code address} is already a registered memory block base 
+     *         address, or if {@code size <= 0}.
      */
     public void addMemoryBlock(long address, long size) throws InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (this.allocatedMemory.containsKey(address)) {
             throw new InvalidInputException("Tried to add a raw memory block with an already known address.");
         }
@@ -1044,10 +1138,14 @@ public final class State implements Cloneable {
      * 
      * @param address a {@code long}, the address as known by this {@link State}
      *        (base-level address).
-     * @throws InvalidInputException if {@code address} is not a memory block
-     *         address previously registered by a call to {@link #addMemoryBlock(long, long) addMemoryBlock}.
+     * @throws InvalidInputException if the state is frozen, or if {@code address} 
+     *         is not a memory block address previously registered by a call to 
+     *         {@link #addMemoryBlock(long, long) addMemoryBlock}.
      */
     public void removeMemoryBlock(long address) throws InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (!this.allocatedMemory.containsKey(address)) {
             throw new InvalidInputException("Tried to remove a raw memory block corresponding to an unknown (base-level) address.");
         }
@@ -1064,10 +1162,14 @@ public final class State implements Cloneable {
      * @param lastModified a {@code long}, when this zip file was last modified.
      * @param usemmap a {@code boolean}, whether mmap was used when this zip file
      *        was opened.
-     * @throws InvalidInputException if {@code jzfile} was already added before, or
+     * @throws InvalidInputException if the state is frozen, or 
+     *         {@code jzfile} was already added before, or
      *         {@code name == null}.
      */
     public void addZipFile(long jzfile, String name, int mode, long lastModified, boolean usemmap) throws InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (this.zipFiles.containsKey(jzfile)) {
             final ZipFile zf = this.zipFiles.get(jzfile);
             if (zf.name.equals(name) && zf.lastModified == lastModified) {
@@ -1092,12 +1194,16 @@ public final class State implements Cloneable {
      * @param jzfile a {@code long}, a jzfile address as known by this {@link State}
      *        (base-level address).
      * @param name a {@code byte[]}, the name of the entry.
-     * @throws InvalidInputException if {@code jzfile} was not added before by a call to
+     * @throws InvalidInputException if the state is frozen, or {@code jzfile} was 
+     *         not added before by a call to
      *         {@link #addZipFile(long, String, int, long, boolean) addZipFile}, or
      *         {@code jzentry} was already added before, or
      *         {@code name == null}.
      */
     public void addZipFileEntry(long jzentry, long jzfile, byte[] name) throws InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (!this.zipFiles.containsKey(jzfile)) {
             throw new InvalidInputException("Tried to add a zip file entry for an unknown zip file.");
         }
@@ -1140,7 +1246,8 @@ public final class State implements Cloneable {
     }
     
     /**
-     * Returns the base-level address of a jzentry C structure.
+     * Gets the base-level address of a jzentry C structure.
+     * 
      * @param jzentry a {@code long}, the  address of a jzfile C structure
      *         (meta-level address).
      * @return a {@code long}, the base-level address corresponding to
@@ -1196,10 +1303,14 @@ public final class State implements Cloneable {
      * 
      * @param jzfile a {@code long}, the address of a jzfile C structure as known 
      *        by this {@link State} (base-level address).
-     * @throws InvalidInputException if {@code jzfile} was not added before by a call to
+     * @throws InvalidInputException if the state is frozen, or {@code jzfile} was 
+     *         not added before by a call to
      *         {@link #addZipFile(long, String, int, long, boolean) addZipFile}.
      */
     public void removeZipFile(long jzfile) throws InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (!this.zipFiles.containsKey(jzfile)) {
             throw new InvalidInputException("Tried to remove an unknown zip file.");
         }
@@ -1220,10 +1331,14 @@ public final class State implements Cloneable {
      * 
      * @param jzentry a {@code long}, the address of a jzentry C structure as known 
      *        by this {@link State} (base-level address).
-     * @throws InvalidInputException if {@code jzentry} was not added before by a call to
+     * @throws InvalidInputException if the state is frozen, or {@code jzentry} 
+     *         was not added before by a call to
      *         {@link #addZipFileEntry(long, long, byte[]) addZipFileEntry}.
      */
     public void removeZipFileEntry(long jzentry) throws InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (!this.zipFileEntries.containsKey(jzentry)) {
             throw new InvalidInputException("Tried to remove an unknown zip file entry.");
         }
@@ -1236,9 +1351,13 @@ public final class State implements Cloneable {
      * @param address a {@code long}, the address of an inflater block.
      * @param nowrap a {@code boolean}, the {@code nowrap} parameter 
      *        to {@link java.util.zip.Inflater#init(boolean)}.
-     * @throws InvalidInputException if {@code address} was already registered.
+     * @throws InvalidInputException if the state is frozen, or 
+     *         {@code address} was already registered.
      */
     public void addInflater(long address, boolean nowrap) throws InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (this.inflaters.containsKey(address)) {
             throw new InvalidInputException("Tried to add an already registered inflater block address.");
         }
@@ -1272,12 +1391,16 @@ public final class State implements Cloneable {
      * @param ofst a {@code int}, the offset in {@code dictionary}
      *        where the dictionary starts.
      * @param len a {@code int}, the length of the dictionary.
-     * @throws InvalidInputException if {@code address} was not previously
+     * @throws InvalidInputException if the state is frozen, or 
+     *         {@code address} was not previously
      *         registered, or {@code dictionary == null}, or {@code ofst < 0}, 
      *         or {@code len < 0}, or {@code ofst >= dictionary.length}, or
      *         {@code ofst + len > dictionary.length}.
      */
     public void setInflaterDictionary(long address, byte[] dictionary, int ofst, int len) throws InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (!this.inflaters.containsKey(address)) {
             throw new InvalidInputException("Tried to set the dictionary of an unknown inflater.");
         }
@@ -1294,10 +1417,13 @@ public final class State implements Cloneable {
      * 
      * @param address a {@code long}, the address of an inflater block
      *        as known by this state (base-level address).
-     * @throws InvalidInputException if {@code address} was not previously
-     *         registered.
+     * @throws InvalidInputException if the state is frozen, or 
+     *         {@code address} was not previously registered.
      */
     public void removeInflater(long address) throws InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (!this.inflaters.containsKey(address)) {
             throw new InvalidInputException("Tried to remove an unknown inflater.");
         }
@@ -1308,9 +1434,13 @@ public final class State implements Cloneable {
      * Registers a performance counter.
      * 
      * @param name a {@code String}, the name of the performance counter.
-     * @throws InvalidIndexException if {@code name} is already registered.
+     * @throws InvalidIndexException if the state is frozen, or 
+     *         {@code name} is already registered.
      */
     public void registerPerfCounter(String name) throws InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (this.perfCounters.contains(name)) {
             throw new InvalidInputException("Tried to register the performance counter " + name + " twice.");
         }
@@ -1331,10 +1461,14 @@ public final class State implements Cloneable {
      * @return a new  {@link ReferenceConcrete} to the newly created object.
      * @throws InvalidTypeException if {@code arrayClass} is invalid.
      * @throws HeapMemoryExhaustedException if the heap is full.
+     * @throws FrozenStateException if the state is frozen.
      */
     public ReferenceConcrete createArray(Value initValue, Primitive length, ClassFile arrayClass) 
-    throws InvalidTypeException, HeapMemoryExhaustedException {
-        final Array a = new Array(false, this.calc, false, initValue, length, arrayClass, null, this.historyPoint, false, this.maxSimpleArrayLength);
+    throws InvalidTypeException, HeapMemoryExhaustedException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        final ArrayImpl a = new ArrayImpl(false, this.calc, false, initValue, length, arrayClass, null, this.historyPoint, false, this.maxSimpleArrayLength);
         final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(a));
         initDefaultHashCodeConcrete(a, retVal);
         return retVal;
@@ -1349,10 +1483,14 @@ public final class State implements Cloneable {
      * @param classFile the {@link ClassFile} for the class of the new object.
      * @return a {@link ReferenceConcrete} to the newly created object.
      * @throws HeapMemoryExhaustedException if the heap is full.
-     * @throws InvalidInputException  if {@code classFile} is invalid.
+     * @throws InvalidInputException  if the state is frozen, or 
+     *         {@code classFile} is invalid.
      */
     public ReferenceConcrete createInstance(ClassFile classFile) 
     throws HeapMemoryExhaustedException, InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (classFile == null) {
             throw new InvalidInputException("Invoked method " + getClass().getName() + ".createInstance with null ClassFile classFile parameter.");
         }
@@ -1360,7 +1498,7 @@ public final class State implements Cloneable {
             //use createInstance_JAVA_CLASS instead
             throw new InvalidInputException("Cannot use method " + getClass().getName() + ".createInstance to create an instance of java.lang.Class.");
         }
-        final Instance myObj = doCreateInstance(classFile);
+        final InstanceImpl myObj = doCreateInstance(classFile);
         final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(myObj));
         if (myObj instanceof Instance_JAVA_CLASSLOADER) {
             this.classLoaders.add(retVal);
@@ -1377,9 +1515,13 @@ public final class State implements Cloneable {
      * 
      * @param classFile the {@link ClassFile} for the class of the new object.
      * @return a {@link ReferenceConcrete} to the newly created object.
-     * @throws InvalidInputException if {@code classFile} is invalid.
+     * @throws InvalidInputException if the state is frozen, or 
+     *         {@code classFile} is invalid.
      */
     public ReferenceConcrete createInstanceSurely(ClassFile classFile) throws InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (classFile == null) {
             throw new InvalidInputException("Invoked method " + getClass().getName() + ".createInstanceSurely with null ClassFile classFile parameter.");
         }
@@ -1387,13 +1529,13 @@ public final class State implements Cloneable {
             //cannot be used for that
             throw new InvalidInputException("Cannot use method " + getClass().getName() + ".createInstanceSurely to create an instance of java.lang.Class or java.lang.Classloader or java.lang.Thread.");
         }
-        final Instance myObj = doCreateInstance(classFile);
+        final InstanceImpl myObj = doCreateInstance(classFile);
         final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNewSurely(myObj));
         initDefaultHashCodeConcrete(myObj, retVal);
         return retVal;
     }
     
-    private Instance doCreateInstance(ClassFile classFile) {
+    private InstanceImpl doCreateInstance(ClassFile classFile) {
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
         final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
         final ClassFile cf_JAVA_CLASSLOADER;
@@ -1409,11 +1551,11 @@ public final class State implements Cloneable {
         }
         try {
             if (this.classHierarchy.isSubclass(classFile, cf_JAVA_CLASSLOADER)) {
-                return new Instance_JAVA_CLASSLOADER(this.calc, classFile, null, this.historyPoint, this.nextClassLoaderIdentifier++, numOfStaticFields, fieldsSignatures);
+                return new InstanceImpl_JAVA_CLASSLOADER(this.calc, classFile, null, this.historyPoint, this.nextClassLoaderIdentifier++, numOfStaticFields, fieldsSignatures);
             } else if (this.classHierarchy.isSubclass(classFile, cf_JAVA_THREAD)) {
-                return new Instance_JAVA_THREAD(this.calc, classFile, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
+                return new InstanceImpl_JAVA_THREAD(this.calc, classFile, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
             } else {
-                return new Instance(false, this.calc, classFile, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
+                return new InstanceImpl(false, this.calc, classFile, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
             }
         } catch (InvalidTypeException e) {
             //this should never happen
@@ -1441,7 +1583,7 @@ public final class State implements Cloneable {
             }
             final int numOfStaticFields = this.classHierarchy.numOfStaticFields(cf_JAVA_CLASS);
             final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(cf_JAVA_CLASS);
-            final Instance myObj = new Instance_JAVA_CLASS(this.calc, cf_JAVA_CLASS, null, this.historyPoint, representedClass, numOfStaticFields, fieldsSignatures);
+            final InstanceImpl_JAVA_CLASS myObj = new InstanceImpl_JAVA_CLASS(this.calc, cf_JAVA_CLASS, null, this.historyPoint, representedClass, numOfStaticFields, fieldsSignatures);
             final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(myObj));
             
             //initializes the fields of the new instance: The only
@@ -1484,14 +1626,18 @@ public final class State implements Cloneable {
      *        the {@link Klass} object must be created. The method 
      *        creates a {@link Klass} object only for {@code classFile}, 
      *        not for its superclasses in the hierarchy.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public void ensureKlass(ClassFile classFile) {
+    public void ensureKlass(ClassFile classFile) throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (existsKlass(classFile)) {
             return;
         }
         final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
-        final Klass k = new Klass(false, this.calc, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
+        final KlassImpl k = new KlassImpl(false, this.calc, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
         k.setObjektDefaultHashCode(this.calc.valInt(0)); //doesn't care because it is not used
         this.staticMethodArea.set(classFile, k);
     }
@@ -1509,14 +1655,19 @@ public final class State implements Cloneable {
      *        not for its superclasses in the hierarchy.
      * @throws InvalidIndexException if the access to the class 
      *         constant pool fails.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public void ensureKlassSymbolic(ClassFile classFile) throws InvalidIndexException {
+    public void ensureKlassSymbolic(ClassFile classFile) 
+    throws InvalidIndexException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (existsKlass(classFile)) {
             return;
         }
         final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
-        final Klass k = new Klass(true, this.calc, createSymbolKlassPseudoReference(classFile), this.initialHistoryPoint, numOfStaticFields, fieldsSignatures);
+        final KlassImpl k = new KlassImpl(true, this.calc, createSymbolKlassPseudoReference(classFile), this.initialHistoryPoint, numOfStaticFields, fieldsSignatures);
         initWithSymbolicValues(k);
         k.setObjektDefaultHashCode(this.calc.valInt(0)); //doesn't care because it is not used
         this.staticMethodArea.set(classFile, k);
@@ -1537,20 +1688,21 @@ public final class State implements Cloneable {
      * @throws CannotAssumeSymbolicObjectException if {@code type} is
      *         a class that cannot be assumed to be symbolic
      *         (currently {@code java.lang.Class} and {@code java.lang.ClassLoader}).
+     * @throws FrozenStateException if the state is frozen.
      */
     private long createObjectSymbolic(ClassFile classFile, ReferenceSymbolic origin) 
     throws InvalidTypeException, HeapMemoryExhaustedException, 
-    CannotAssumeSymbolicObjectException {
+    CannotAssumeSymbolicObjectException, FrozenStateException {
         if (origin == null) {
             throw new NullPointerException(); //TODO improve?
         }
-        final Objekt myObj;
+        final ObjektImpl myObj;
         if (classFile.isArray()) {
             try {
-                final Array backingArray = newArraySymbolic(classFile, origin, true);
+                final ArrayImpl backingArray = newArraySymbolic(classFile, origin, true);
                 final long posBackingArray = this.heap.addNew(backingArray);
                 final ReferenceConcrete refToBackingArray = new ReferenceConcrete(posBackingArray);
-                myObj = new Array(refToBackingArray, backingArray);
+                myObj = new ArrayImpl(refToBackingArray, backingArray);
             } catch (InvalidOperandException | InvalidTypeException | NullPointerException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
@@ -1570,22 +1722,22 @@ public final class State implements Cloneable {
         return pos;
     }
 
-    private Array newArraySymbolic(ClassFile arrayClass, ReferenceSymbolic origin, boolean isInitial) 
-    throws InvalidTypeException {
+    private ArrayImpl newArraySymbolic(ClassFile arrayClass, ReferenceSymbolic origin, boolean isInitial) 
+    throws InvalidTypeException, FrozenStateException {
         final Primitive length = (Primitive) createSymbolMemberArrayLength(origin);
-        final Array obj = new Array(true, this.calc, true, null, length, arrayClass, origin, origin.historyPoint(), isInitial, this.maxSimpleArrayLength);
+        final ArrayImpl obj = new ArrayImpl(true, this.calc, true, null, length, arrayClass, origin, origin.historyPoint(), isInitial, this.maxSimpleArrayLength);
         initDefaultHashCodeSymbolic(obj);
         return obj;
     }
 
-    private Instance newInstanceSymbolic(ClassFile classFile, ReferenceSymbolic origin) 
-    throws CannotAssumeSymbolicObjectException, InvalidTypeException {
+    private InstanceImpl newInstanceSymbolic(ClassFile classFile, ReferenceSymbolic origin) 
+    throws CannotAssumeSymbolicObjectException, InvalidTypeException, FrozenStateException {
         if (JAVA_CLASS.equals(classFile.getClassName()) || JAVA_CLASSLOADER.equals(classFile.getClassName())) {
             throw new CannotAssumeSymbolicObjectException(classFile.getClassName());
         }
         final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
-        final Instance obj = new Instance(true, this.calc, classFile, origin, origin.historyPoint(), numOfStaticFields, fieldsSignatures);
+        final InstanceImpl obj = new InstanceImpl(true, this.calc, classFile, origin, origin.historyPoint(), numOfStaticFields, fieldsSignatures);
         initWithSymbolicValues(obj);
         initDefaultHashCodeSymbolic(obj);
         return obj;
@@ -1596,8 +1748,9 @@ public final class State implements Cloneable {
      * 
      * @param myObj an {@link Objekt} which will be initialized with 
      *              symbolic values.
+     * @throws FrozenStateException if the state is frozen.
      */
-    private void initWithSymbolicValues(Objekt myObj) {
+    private void initWithSymbolicValues(Objekt myObj) throws FrozenStateException {
         for (final Signature fieldSignature : myObj.getStoredFieldSignatures()) {
             //gets the field signature and name
             final String fieldType = fieldSignature.getDescriptor();
@@ -1625,8 +1778,9 @@ public final class State implements Cloneable {
      * Initializes the hash code of an {@link Objekt} with a symbolic value.
      * 
      * @param myObj the {@link Objekt} whose hash code will be initialized.
+     * @throws FrozenStateException if the state is frozen.
      */
-    private void initDefaultHashCodeSymbolic(Objekt myObj) {
+    private void initDefaultHashCodeSymbolic(Objekt myObj) throws FrozenStateException {
         myObj.setObjektDefaultHashCode((PrimitiveSymbolic) createSymbolHashCode(myObj.getOrigin()));
     }
 
@@ -1666,8 +1820,12 @@ public final class State implements Cloneable {
      * 
      * @param stringLit a {@link String} representing a string literal.
      * @throws HeapMemoryExhaustedException if the heap is full.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public void ensureStringLiteral(String stringLit) throws HeapMemoryExhaustedException {
+    public void ensureStringLiteral(String stringLit) throws HeapMemoryExhaustedException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (stringLit == null) {
             throw new NullPointerException("null parameter passed to " + State.class.getName() + ".ensureStringLiteral");
         }
@@ -1732,19 +1890,19 @@ public final class State implements Cloneable {
      *         this state's {@link Heap} corresponding to {@code classFile}.
      */
     public boolean hasInstance_JAVA_CLASS(ClassFile classFile) {
-        return (classFile.isPrimitive() ? hasInstance_JAVA_CLASS_primitive(classFile.getClassName()) : this.classes.containsKey(classFile));
+        return (classFile.isPrimitiveOrVoid() ? hasInstance_JAVA_CLASS_primitiveOrVoid(classFile.getClassName()) : this.classes.containsKey(classFile));
     }
 
     /**
      * Checks if there is an {@link Instance} of {@code java.lang.Class} 
      * in this state's heap for some primitive type.
      * 
-     * @param typeName a {@link String} representing a primitive type
-     *        canonical name (see JLS v8, section 6.7).
+     * @param typeName a {@link String} representing the
+     *        canonical name of  a primitive type or void (see JLS v8, section 6.7).
      * @return {@code true} iff there is a {@link Instance} of {@code java.lang.Class} in 
      *         this state's {@link Heap} corresponding to {@code typeName}.
      */
-    public boolean hasInstance_JAVA_CLASS_primitive(String typeName) {
+    public boolean hasInstance_JAVA_CLASS_primitiveOrVoid(String typeName) {
         return this.classesPrimitive.containsKey(typeName);
     }
 
@@ -1758,7 +1916,7 @@ public final class State implements Cloneable {
      *         or {@code null} if such instance does not exist. 
      */
     public ReferenceConcrete referenceToInstance_JAVA_CLASS(ClassFile classFile) {
-        return (classFile.isPrimitive() ? referenceToInstance_JAVA_CLASS_primitiveOrVoid(classFile.getClassName()) : this.classes.get(classFile));
+        return (classFile.isPrimitiveOrVoid() ? referenceToInstance_JAVA_CLASS_primitiveOrVoid(classFile.getClassName()) : this.classes.get(classFile));
     }
 
     /**
@@ -1785,14 +1943,18 @@ public final class State implements Cloneable {
      * @param representedClass a {@link ClassFile}, the class represented
      *        by the created {@link Instance_JAVA_CLASS}.
      * @throws HeapMemoryExhaustedException if the heap is full.
+     * @throws FrozenStateException if the state is frozen.
      */
     public void ensureInstance_JAVA_CLASS(ClassFile representedClass) 
-    throws HeapMemoryExhaustedException {
+    throws HeapMemoryExhaustedException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (hasInstance_JAVA_CLASS(representedClass)) {
             //nothing to do
             return;
         }
-        if (representedClass.isPrimitive()) {
+        if (representedClass.isPrimitiveOrVoid()) {
             try {
                 ensureInstance_JAVA_CLASS_primitiveOrVoid(representedClass.getClassName());
             } catch (ClassFileNotFoundException e) {
@@ -1815,10 +1977,14 @@ public final class State implements Cloneable {
      * @throws ClassFileNotFoundException if {@code typeName} is not
      *         the canonical name of a primitive type.
      * @throws HeapMemoryExhaustedException if the heap is full.
+     * @throws FrozenStateException if the state is frozen.
      */
     public void ensureInstance_JAVA_CLASS_primitiveOrVoid(String typeName) 
-    throws ClassFileNotFoundException, HeapMemoryExhaustedException {
-        if (hasInstance_JAVA_CLASS_primitive(typeName)) {
+    throws ClassFileNotFoundException, HeapMemoryExhaustedException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        if (hasInstance_JAVA_CLASS_primitiveOrVoid(typeName)) {
             return;
         }
         if (isPrimitiveOrVoidCanonicalName(typeName)) {
@@ -1870,14 +2036,18 @@ public final class State implements Cloneable {
      * Declares that the standard (extensions and application) class loaders are ready
      * to be used.
      * 
-     * @throws InvalidInputException when the {@link Instance_JAVA_CLASSLOADER}s
-     *         for the standard classloaders were not created in the heap 
+     * @throws InvalidInputException when the state is frozen, or the 
+     *         {@link Instance_JAVA_CLASSLOADER}s for the standard 
+     *         classloaders were not created in the heap 
      *         (note that this method does not check that the 
      *         {@link Instance_JAVA_CLASSLOADER}s were also initialized).
      */
     public void setStandardClassLoadersReady() throws InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (!this.standardClassLoadersNotReady) {
-            return;
+            return; //nothing to do
         }
         if (this.classLoaders.size() <= CLASSLOADER_APP) {
             throw new InvalidInputException("Invoked jbse.mem.state.setStandardClassLoadersReady with true parameter, but the standard class loaders were not created yet.");
@@ -1952,8 +2122,12 @@ public final class State implements Cloneable {
      *         of {@code java.lang.invoke.MethodType} 
      *         in this state's {@link Heap} that is semantically equivalent to
      *         {@code descriptor}, but this is not checked.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public void setReferenceToInstance_JAVA_METHODTYPE(String descriptor, ReferenceConcrete ref) {
+    public void setReferenceToInstance_JAVA_METHODTYPE(String descriptor, ReferenceConcrete ref) throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         this.methodTypes.put(descriptor, ref);
     }
 
@@ -1965,8 +2139,10 @@ public final class State implements Cloneable {
      * 
      * @param exceptionToThrow a {@link Reference} to a throwable 
      *        {@link Objekt} in the state's {@link Heap}.
-     * @throws InvalidInputException if {@code exceptionToThrow} is an unresolved symbolic reference, 
-     *         or is a null reference, or is a reference to an object that does not extend {@code java.lang.Throwable}.
+     * @throws InvalidInputException if the state is frozen, or 
+     *         {@code exceptionToThrow} is an unresolved symbolic reference, 
+     *         or is a null reference, or is a reference to an object that 
+     *         does not extend {@code java.lang.Throwable}.
      * @throws InvalidIndexException if the exception type field in a row of the exception table 
      *         does not contain the index of a valid CONSTANT_Class in the class constant pool.
      * @throws InvalidProgramCounterException if the program counter handle in a row 
@@ -1974,6 +2150,9 @@ public final class State implements Cloneable {
      */
     public void unwindStack(Reference exceptionToThrow) 
     throws InvalidInputException, InvalidIndexException, InvalidProgramCounterException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         //checks that exceptionToThrow is resolved to a throwable Objekt
         final Objekt myException = getObject(exceptionToThrow);
         final ClassFile cf_JAVA_THROWABLE;
@@ -2061,10 +2240,14 @@ public final class State implements Cloneable {
      *         state's current frame.
      * @throws ThreadStackEmptyException when {@code isRoot == false} and the 
      *         state's thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
     public void pushFrame(ClassFile classMethodImpl, Signature methodSignatureImpl, boolean isRoot, int returnPCOffset, Value... args) 
     throws NullMethodReceiverException, MethodNotFoundException, MethodCodeNotFoundException, InvalidSlotException, 
-    InvalidTypeException, InvalidProgramCounterException, ThreadStackEmptyException {
+    InvalidTypeException, InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         final boolean isStatic = classMethodImpl.isMethodStatic(methodSignatureImpl);
         
         //checks the "this" parameter (invocation receiver) if necessary
@@ -2120,11 +2303,14 @@ public final class State implements Cloneable {
      * @throws InvalidProgramCounterException if {@code returnPCOffset} 
      *         is not a valid program count offset for the state's current frame.
      * @throws ThreadStackEmptyException if the state's thread stack is empty.
-     * @throws InvalidInputException if {@code wrapCurrentFrame == true} and
+     * @throws InvalidInputException if the state is frozen, or 
      *         {@link #getCurrentFrame()} does not return a {@link MethodFrame}.
      */
     public void pushSnippetFrameWrap(Snippet snippet, int returnPCOffset) 
     throws InvalidProgramCounterException, ThreadStackEmptyException, InvalidInputException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         try {
             //sets the return program counter
             setReturnProgramCounter(returnPCOffset);
@@ -2158,9 +2344,14 @@ public final class State implements Cloneable {
      * @throws InvalidProgramCounterException if {@code returnPCOffset} 
      *         is not a valid program count offset for the state's current frame.
      * @throws ThreadStackEmptyException if the state's thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
     public void pushSnippetFrameNoWrap(Snippet snippet, int returnPCOffset, int definingClassLoader, String packageName) 
-    throws InvalidProgramCounterException, ThreadStackEmptyException {
+    throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+    	
         //sets the return program counter
         setReturnProgramCounter(returnPCOffset);
 
@@ -2193,9 +2384,10 @@ public final class State implements Cloneable {
      * @throws HeapMemoryExhaustedException if the heap is full.
      * @throws CannotAssumeSymbolicObjectException if the root object has class 
      *         {@code java.lang.Class} or {@code java.lang.ClassLoader}.
+     * @throws FrozenStateException if the state is frozen.
      */
     private Value[] makeArgsSymbolic(MethodFrame f, boolean isStatic) 
-    throws HeapMemoryExhaustedException, CannotAssumeSymbolicObjectException {
+    throws HeapMemoryExhaustedException, CannotAssumeSymbolicObjectException, FrozenStateException {
         final Signature methodSignature = f.getCurrentMethodSignature();
         final String[] paramsDescriptors = Type.splitParametersDescriptors(methodSignature.getDescriptor());
         final int numArgs = parametersNumber(methodSignature.getDescriptor(), isStatic);
@@ -2251,10 +2443,14 @@ public final class State implements Cloneable {
      * @throws HeapMemoryExhaustedException if the heap is full.
      * @throws CannotAssumeSymbolicObjectException if the target of the method invocation 
      *         has class {@code java.lang.Class} or {@code java.lang.ClassLoader}.
+     * @throws FrozenStateException if the state is frozen.
      */
     public ReferenceSymbolic pushFrameSymbolic(ClassFile classMethodImpl, Signature methodSignatureImpl) 
     throws MethodNotFoundException, MethodCodeNotFoundException, 
-    HeapMemoryExhaustedException, CannotAssumeSymbolicObjectException {
+    HeapMemoryExhaustedException, CannotAssumeSymbolicObjectException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         final boolean isStatic = classMethodImpl.isMethodStatic(methodSignatureImpl);
         final MethodFrame f = new MethodFrame(methodSignatureImpl, classMethodImpl);
         final Value[] args = makeArgsSymbolic(f, isStatic);
@@ -2282,8 +2478,10 @@ public final class State implements Cloneable {
      *         item in the position of the "this" parameter is
      *         not a reference. 
      * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public Reference peekReceiverArg(Signature methodSignature) throws ThreadStackEmptyException {
+    public Reference peekReceiverArg(Signature methodSignature) 
+    throws ThreadStackEmptyException, FrozenStateException {
         final String[] paramsDescriptors = Type.splitParametersDescriptors(methodSignature.getDescriptor());
         final int nParams = paramsDescriptors.length + 1;
         final Collection<Value> opStackVals = getCurrentFrame().operands();
@@ -2308,9 +2506,13 @@ public final class State implements Cloneable {
      * @throws InvalidProgramCounterException iff current + offset program counter
      *        yield an invalid offset.
      * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
     public void setReturnProgramCounter(int returnPCOffset) 
-    throws InvalidProgramCounterException, ThreadStackEmptyException {
+    throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         getCurrentFrame().setReturnProgramCounter(returnPCOffset);
     }
 
@@ -2319,8 +2521,12 @@ public final class State implements Cloneable {
      * 
      * @return the popped {@link Frame}.
      * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public Frame popCurrentFrame() throws ThreadStackEmptyException {
+    public Frame popCurrentFrame() throws ThreadStackEmptyException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         final Frame popped = this.stack.pop();
         if (popped instanceof SnippetFrameContext) {
             //reinstates the activation context of the popped frame
@@ -2331,8 +2537,13 @@ public final class State implements Cloneable {
 
     /**
      * Removes all the frames from the thread stack.
+     * 
+     * @throws FrozenStateException if the state is frozen. 
      */
-    public void clearStack() {
+    public void clearStack() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         this.stack.clear();
     }
 
@@ -2343,8 +2554,12 @@ public final class State implements Cloneable {
      *         pushed) one.
      * @throws ThreadStackEmptyException if the 
      *         thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public MethodFrame getRootFrame() throws ThreadStackEmptyException {
+    public MethodFrame getRootFrame() throws ThreadStackEmptyException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         return (MethodFrame) this.stack.rootFrame();
     }
 
@@ -2355,8 +2570,12 @@ public final class State implements Cloneable {
      * pushed) one.
      * @throws ThreadStackEmptyException if the 
      *         thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public Frame getCurrentFrame() throws ThreadStackEmptyException {
+    public Frame getCurrentFrame() throws ThreadStackEmptyException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         return this.stack.currentFrame();
     }
 
@@ -2366,8 +2585,12 @@ public final class State implements Cloneable {
      * @return a {@link List}{@code <}{@link Frame}{@code >} 
      *         of the method activation frames in the thread stack, 
      *         in their push order.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public List<Frame> getStack() {
+    public List<Frame> getStack() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         return this.stack.frames();
     }
 
@@ -2375,8 +2598,9 @@ public final class State implements Cloneable {
      * Returns the size of the thread stack.
      * 
      * @return an {@code int}, the size.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public int getStackSize() {
+    public int getStackSize() throws FrozenStateException {
         return getStack().size();
     }
 
@@ -2387,9 +2611,13 @@ public final class State implements Cloneable {
      * {@link SortedMap}{@code <}{@link Integer}{@code , }{@link Objekt}{@code >}
      * mapping heap positions to the {@link Objekt}s stored 
      * at them.
+     * @throws FrozenStateException if the state is frozen.
      */
     //TODO raise the abstraction level and make this method return a SortedMap<Reference, Objekt>
-    public SortedMap<Long, Objekt> getHeap() {
+    public SortedMap<Long, Objekt> getHeap() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         return this.heap.getObjects();
     }
 
@@ -2400,8 +2628,12 @@ public final class State implements Cloneable {
      * @return an {@link Iterable}{@code <}{@link Objekt}{@code >}
      *         that iterates through all the objects in the {@link ClauseAssumeExpands}
      *         in the state's path condition.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public Iterable<Objekt> objectsSymbolic() {
+    public Iterable<Objekt> objectsSymbolic() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         return new Iterable<Objekt>() {
             @Override
             public Iterator<Objekt> iterator() {
@@ -2436,7 +2668,7 @@ public final class State implements Cloneable {
                         if (!hasNext()) {
                             throw new NoSuchElementException();
                         }
-                        final Objekt retVal = getHeap().get(next.getHeapPosition());
+                        final Objekt retVal = State.this.heap.getObjects().get(this.next.getHeapPosition());
                         moveForward();
                         return retVal;
                     }
@@ -2454,9 +2686,13 @@ public final class State implements Cloneable {
      * Returns the static method area of this state.
      * 
      * @return the state's static method area as an 
-     * immutable {@link Map}{@code <}{@link ClassFile}{@code , }{@link Klass}{@code >}.
+     *         immutable {@link Map}{@code <}{@link ClassFile}{@code , }{@link Klass}{@code >}.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public Map<ClassFile, Klass> getStaticMethodArea() {
+    public Map<ClassFile, Klass> getStaticMethodArea() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         return Collections.unmodifiableMap(this.staticMethodArea.getObjects());
     }
 
@@ -2468,8 +2704,10 @@ public final class State implements Cloneable {
      *         bytecode pointed by the state's current program
      *         counter.
      * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public byte getInstruction() throws ThreadStackEmptyException {
+    public byte getInstruction() 
+    throws ThreadStackEmptyException, FrozenStateException {
         return getCurrentFrame().getInstruction();
     }
 
@@ -2486,9 +2724,10 @@ public final class State implements Cloneable {
      *         counter plus {@code displacement} does not point to 
      *         a bytecode.
      * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
     public byte getInstruction(int displacement) 
-    throws InvalidProgramCounterException, ThreadStackEmptyException {
+    throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
         return getCurrentFrame().getInstruction(displacement);
     }
 
@@ -2500,8 +2739,9 @@ public final class State implements Cloneable {
      *         state's program counter, or {@code -1} 
      *         iff no debug information is available. 
      * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public int getSourceRow() throws ThreadStackEmptyException {
+    public int getSourceRow() throws ThreadStackEmptyException, FrozenStateException {
         return getCurrentFrame().getSourceRow();
     }
 
@@ -2511,8 +2751,9 @@ public final class State implements Cloneable {
      * @return an {@code int} representing the state's 
      *         current program counter.
      * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public int getPC() throws ThreadStackEmptyException {
+    public int getPC() throws ThreadStackEmptyException, FrozenStateException {
         return getCurrentFrame().getProgramCounter();
     }
 
@@ -2522,8 +2763,9 @@ public final class State implements Cloneable {
      * 
      * @return an {@code int}, the return program counter.
      * @throws ThreadStackEmptyException  if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public int getReturnPC() throws ThreadStackEmptyException {
+    public int getReturnPC() throws ThreadStackEmptyException, FrozenStateException {
         return getCurrentFrame().getReturnProgramCounter();
     }
 
@@ -2536,9 +2778,10 @@ public final class State implements Cloneable {
      *         would not point to a valid bytecode in the current method 
      *         (the state's program counter is not changed).
      * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
     public void incProgramCounter(int n) 
-    throws InvalidProgramCounterException, ThreadStackEmptyException {
+    throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
         setProgramCounter(getPC() + n);
     }
 
@@ -2550,9 +2793,10 @@ public final class State implements Cloneable {
      *         point to a valid bytecode in the current method (the
      *         state's program counter is not changed).
      * @throws ThreadStackEmptyException if the thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
      */
     public void setProgramCounter(int newPC) 
-    throws InvalidProgramCounterException, ThreadStackEmptyException {
+    throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
         getCurrentFrame().setProgramCounter(newPC);
     }
 
@@ -2564,9 +2808,13 @@ public final class State implements Cloneable {
      *          path condition. It must be {@code p != null && 
      *          ( p instanceof }{@link Expression} {@code || p instanceof }{@link Simplex}
      *          {@code ) && p.}{@link Value#getType() getType()} {@code  == }{@link Type#BOOLEAN BOOLEAN}.
+     * @throws FrozenStateException if the state is frozen.
      * @throws NullPointerException if {@code p} violates preconditions.
      */
-    public void assume(Primitive p) {
+    public void assume(Primitive p) throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (p == null || p.getType() != Type.BOOLEAN || 
         (! (p instanceof Simplex) && ! (p instanceof Expression))) { 
             throw new NullPointerException(); //TODO throw a better exception
@@ -2592,10 +2840,14 @@ public final class State implements Cloneable {
      * @throws CannotAssumeSymbolicObjectException if {@code classFile} is
      *         a class that cannot be assumed to be symbolic
      *         (currently {@code java.lang.Class} and {@code java.lang.ClassLoader}).
+     * @throws FrozenStateException if the state is frozen.
      */
     public void assumeExpands(ReferenceSymbolic r, ClassFile classFile) 
     throws InvalidTypeException, ContradictionException, HeapMemoryExhaustedException, 
-    CannotAssumeSymbolicObjectException {
+    CannotAssumeSymbolicObjectException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (r == null || classFile == null) {
             throw new NullPointerException(); //TODO find a better exception
         }
@@ -2622,11 +2874,15 @@ public final class State implements Cloneable {
      * @param o the {@link Objekt} to which {@code r} is resolved. It will not
      *        be modified nor stored.
      * @throws ContradictionException if {@code r} is already resolved.
+     * @throws FrozenStateException if the state is frozen.
      * @throws NullPointerException if either {@code r} or {@code heapPosition} 
      *         violates preconditions.
      */
     public void assumeAliases(ReferenceSymbolic r, long heapPosition, Objekt o) 
-    throws ContradictionException {
+    throws ContradictionException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (r == null || o == null) {
             throw new NullPointerException(); //TODO find a better exception
         }
@@ -2646,9 +2902,13 @@ public final class State implements Cloneable {
      *          must be {@code r != null} and {@code r} must not be
      *          already resolved.
      * @throws ContradictionException if {@code r} is already resolved.
+     * @throws FrozenStateException if the state is frozen.
      * @throws NullPointerException if {@code r} violates preconditions.
      */
-    public void assumeNull(ReferenceSymbolic r) throws ContradictionException {
+    public void assumeNull(ReferenceSymbolic r) throws ContradictionException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (r == null) {
             throw new NullPointerException(); //TODO find a better exception
         }
@@ -2670,9 +2930,13 @@ public final class State implements Cloneable {
      * @throws NullPointerException if {@code classFile == null}.
      * @throws InvalidIndexException if the access to the class 
      *         constant pool fails.
+     * @throws FrozenStateException if the state is frozen.
      */
     public void assumeClassInitialized(ClassFile classFile, Klass k) 
-    throws InvalidIndexException {
+    throws InvalidIndexException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (classFile == null) {
             throw new NullPointerException();
         }
@@ -2685,10 +2949,14 @@ public final class State implements Cloneable {
      * start of symbolic execution.
      * 
      * @param classFile a {@link ClassFile}.
+     * @throws FrozenStateException if the state is empty.
      * @throws NullPointerException if {@code classFile} 
      *         is {@code null}.
      */
-    public void assumeClassNotInitialized(ClassFile classFile) {
+    public void assumeClassNotInitialized(ClassFile classFile) throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         if (classFile == null) {
             throw new NullPointerException();
         }
@@ -2733,8 +3001,13 @@ public final class State implements Cloneable {
      * This method is invoked whenever the decision
      * procedure's current assumptions are synchronized with 
      * the state's path condition. 
+     * 
+     * @throws FrozenStateException if the state is frozen. 
      */
-    public void resetLastPathConditionClauses() {
+    public void resetLastPathConditionClauses() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         this.nPushedClauses = 0;
     }
 
@@ -2742,8 +3015,13 @@ public final class State implements Cloneable {
      * Sets the {@link State} stuck because of a return
      * from the topmost method,
      * in the case no value must be returned.
+     * 
+     * @throws FrozenStateException if the state is fro 
      */
-    public void setStuckReturn() {
+    public void setStuckReturn() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         this.stuck = true;
         this.exc = null;
         this.val = null;
@@ -2754,9 +3032,10 @@ public final class State implements Cloneable {
      * from the topmost method.
      * 
      * @param val the return {@link Value}.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public void setStuckReturn(Value val) {
-        this.setStuckReturn();
+    public void setStuckReturn(Value val) throws FrozenStateException {
+        setStuckReturn();
         this.val = val;
     }
 
@@ -2775,9 +3054,11 @@ public final class State implements Cloneable {
 
     /**
      * Sets a stuck state caused by an external stop.
+     * 
+     * @throws FrozenStateException if the state is frozen. 
      */
-    public void setStuckStop() {
-        this.setStuckReturn();
+    public void setStuckStop() throws FrozenStateException {
+        setStuckReturn();
     }
 
     /**
@@ -2785,9 +3066,10 @@ public final class State implements Cloneable {
      * 
      * @param exc a {@link Reference} to some instance 
      *            in this {@link State}'s heap. 
+     * @throws FrozenStateException if the state is frozen.
      */
-    public void setStuckException(Reference exc) {
-        this.setStuckReturn();
+    public void setStuckException(Reference exc) throws FrozenStateException {
+        setStuckReturn();
         this.exc = exc;
     }
 
@@ -2821,9 +3103,13 @@ public final class State implements Cloneable {
      * starting pre-initial one.
      * 
      * @param compact a {@code boolean}, whether the stringified
-     * history point should be compact.
+     *        history point should be compact.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public void setPreInitialHistoryPoint(boolean compact) {
+    public void setPreInitialHistoryPoint(boolean compact) throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         this.historyPoint = HistoryPoint.preInitial(compact);
     }
 
@@ -2833,8 +3119,12 @@ public final class State implements Cloneable {
      * 
      * @param compact a {@code boolean}, whether the stringified
      * history point should be compact.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public void setInitialHistoryPoint() {
+    public void setInitialHistoryPoint() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         this.initialHistoryPoint = this.historyPoint = this.historyPoint.initial();
     }
 
@@ -2845,8 +3135,12 @@ public final class State implements Cloneable {
      *        a {@link String} representing the identifier
      *        of the subbranch to be added to the state's
      *        {@link HistoryPoint}.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public void addBranchToHistoryPoint(String additionalBranch) {
+    public void addBranchToHistoryPoint(String additionalBranch) throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         this.historyPoint = this.historyPoint.nextBranch(additionalBranch);
     }
     
@@ -2871,15 +3165,25 @@ public final class State implements Cloneable {
 
     /**
      * Sets the state's depth to {@code 1}.
+     * 
+     * @throws FrozenStateException if the state is frozen. 
      */
-    public void resetDepth() {
+    public void resetDepth() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         this.depth = 1;
     }
 
     /**
      * Increments the state's depth by {@code 1}.
+     * 
+     * @throws FrozenStateException if the state is frozen. 
      */
-    public void incDepth() {
+    public void incDepth() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         ++this.depth;
     }
 
@@ -2896,15 +3200,25 @@ public final class State implements Cloneable {
 
     /**
      * Sets the state's count to {@code 1}.
+     * 
+     * @throws FrozenStateException if the state is empty.
      */
-    public void resetCount() {
+    public void resetCount() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         this.count = 1;
     }
 
     /**
      * Increments the state's count by {@code 1}.
+     * 
+     * @throws FrozenStateException if the state is empty.
      */
-    public void incCount() {
+    public void incCount() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         ++this.count;
     }
 
@@ -2924,8 +3238,12 @@ public final class State implements Cloneable {
      * 
      * @param branchingDecision {@code true} iff the current
      * state was produced by a branching decision.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public void setBranchingDecision(boolean branchingDecision) {
+    public void setBranchingDecision(boolean branchingDecision) throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         this.branchingDecision = branchingDecision;
     }
 
@@ -2938,8 +3256,12 @@ public final class State implements Cloneable {
      *         since the previous invocation 
      *         of {@code branchingDecision}, {@code false} 
      *         otherwise.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public boolean branchingDecision() {
+    public boolean branchingDecision() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         final boolean retval = this.branchingDecision;
 
         this.branchingDecision = false;
@@ -2948,8 +3270,13 @@ public final class State implements Cloneable {
 
     /**
      * Increments the state's sequence number by {@code 1}.
+     * 
+     * @throws FrozenStateException if the state is empty.
      */
-    public void incSequenceNumber() {
+    public void incSequenceNumber() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         this.historyPoint = this.historyPoint.next();
     }
 
@@ -2984,8 +3311,12 @@ public final class State implements Cloneable {
      *        of {@code stateRefining}'s identifier and path condition.
      * @throws CannotRefineException when {@code stateRefining} does not refine 
      *         {@code this}.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public void refine(State stateRefining) throws CannotRefineException {
+    public void refine(State stateRefining) throws CannotRefineException, FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         //TODO this method doesn't work with arrays!!!
         final HistoryPoint refiningHistoryPoint = stateRefining.historyPoint;
         final PathCondition refiningPathCondition = stateRefining.pathCondition;
@@ -3037,8 +3368,13 @@ public final class State implements Cloneable {
      *        variable in the root frame the symbol originates from.
      * @return a {@link PrimitiveSymbolic} or a {@link ReferenceSymbolic}
      *         according to {@code staticType}.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public Value createSymbolLocalVariable(String staticType, String variableName) {
+    public Value createSymbolLocalVariable(String staticType, String variableName) 
+    throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         return this.symbolFactory.createSymbolLocalVariable(staticType, variableName);
     }
 	
@@ -3048,8 +3384,13 @@ public final class State implements Cloneable {
      * 
      * @param classFile the {@link ClassFile} for the {@link Klass} to be referred.
      * @return a {@link KlassPseudoReference}.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public KlassPseudoReference createSymbolKlassPseudoReference(ClassFile classFile) {
+    public KlassPseudoReference createSymbolKlassPseudoReference(ClassFile classFile) 
+    throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         return this.symbolFactory.createSymbolKlassPseudoReference(classFile);
     }
 
@@ -3065,8 +3406,13 @@ public final class State implements Cloneable {
      *        container object the symbol originates from.
      * @return a {@link PrimitiveSymbolic} or a {@link ReferenceSymbolic}
      *         according to {@code staticType}.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public Value createSymbolMemberField(String staticType, ReferenceSymbolic container, String fieldName) {
+    public Value createSymbolMemberField(String staticType, ReferenceSymbolic container, String fieldName) 
+    throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         return this.symbolFactory.createSymbolMemberField(staticType, container, fieldName);
     }
 
@@ -3082,8 +3428,13 @@ public final class State implements Cloneable {
      *        container array this symbol originates from.
      * @return a {@link PrimitiveSymbolic} or a {@link ReferenceSymbolic}
      *         according to {@code staticType}.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public Value createSymbolMemberArray(String staticType, ReferenceSymbolic container, Primitive index) {
+    public Value createSymbolMemberArray(String staticType, ReferenceSymbolic container, Primitive index) 
+    throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         return this.symbolFactory.createSymbolMemberArray(staticType, container, index);
     }
 
@@ -3094,8 +3445,13 @@ public final class State implements Cloneable {
      * @param container a {@link ReferenceSymbolic}, the container object
      *        the symbol originates from. It must refer an array.
      * @return a {@link PrimitiveSymbolic}.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public PrimitiveSymbolic createSymbolMemberArrayLength(ReferenceSymbolic container) {
+    public PrimitiveSymbolic createSymbolMemberArrayLength(ReferenceSymbolic container) 
+    throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         return this.symbolFactory.createSymbolMemberArrayLength(container);
     }
 
@@ -3107,8 +3463,13 @@ public final class State implements Cloneable {
      * @param container a {@link ReferenceSymbolic}, the container object
      *        the symbol originates from.
      * @return a {@link PrimitiveSymbolic}.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public PrimitiveSymbolic createSymbolHashCode(ReferenceSymbolic container) {
+    public PrimitiveSymbolic createSymbolHashCode(ReferenceSymbolic container) 
+    throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         return this.symbolFactory.createSymbolHashCode(container);
     }
 
@@ -3119,8 +3480,13 @@ public final class State implements Cloneable {
      * 
      * @param historyPoint the current {@link HistoryPoint}.
      * @return a {@link PrimitiveSymbolic}.
+     * @throws FrozenStateException if the state is frozen.
      */
-    public PrimitiveSymbolic createSymbolHashCode(HistoryPoint historyPoint) {
+    public PrimitiveSymbolic createSymbolHashCode(HistoryPoint historyPoint) 
+    throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         return this.symbolFactory.createSymbolHashCode(historyPoint);
     }
 
@@ -3129,10 +3495,13 @@ public final class State implements Cloneable {
      * and resets the WIDE test.
      * 
      * @return {@code true} iff invoked for the first 
-     *         time after a {@link #setWide()}
-     *         call. 
+     *         time after a {@link #setWide()} call. 
+     * @throws FrozenStateException if the state is frozen.
      */
-    public boolean nextWide() {
+    public boolean nextWide() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         final boolean wide = this.wide;
         this.wide = false;
         return wide;
@@ -3140,15 +3509,22 @@ public final class State implements Cloneable {
 
     /**
      * Remembers that the next bytecode must be WIDE.
+     * 
+     * @throws FrozenStateException if the state is frozen.
      */
-    public void setWide() {
+    public void setWide() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
         this.wide = true;
     }
     
     /**
      * Collects and disposes the unreachable heap objects.
+     * 
+     * @throws FrozenStateException if the state is frozen.
      */
-    public void gc() {
+    public void gc() throws FrozenStateException {
         final Set<Long> doNotDispose = new ReachableObjectsCollector().reachable(this, true);
         this.heap.disposeExcept(doNotDispose);
     }
@@ -3203,66 +3579,14 @@ public final class State implements Cloneable {
         return this.methodTypes.values();
     }
     
-    @Override
-    protected void finalize() {
-        //closes all files except stdin/out/err
-        for (Map.Entry<Integer, Object> fileEntry : this.files.entrySet()) {
-            final int fileId = fileEntry.getKey();
-            if (fileId == 0 || fileId == 1 || fileId == 2) {
-                continue;
-            }
-            final Object file = fileEntry.getValue();
-            try {
-                if (file instanceof FileInputStream) {
-                    ((FileInputStream) file).close();
-                } else { //file instanceof FileOutputStream
-                    ((FileOutputStream) file).close();
-                }
-            } catch (IOException e) {
-                //go on with the next file
-            }
-        }
-        
-        //deallocates all memory blocks
-        final Unsafe unsafe = unsafe();
-        for (MemoryBlock memoryBlock : this.allocatedMemory.values()) {
-            unsafe.freeMemory(memoryBlock.address);
-        }
-    }
-
-    @Override
-    public String toString() {
-        String tmp = "[ID:\"" + this.historyPoint.toString() + "\", ";
-        if (this.isStuck()) {
-            tmp += "Stuck, ";
-            if (this.exc != null) 
-                tmp += "Raised:" + this.exc.toString() + ", ";
-            else if (this.val != null)
-                tmp += "Return:" + this.val.toString() + ", ";
-        } else {
-            try {
-                tmp += "CurrentMethod:" + getCurrentFrame().getCurrentMethodSignature() + ", ";
-                tmp += "ProgramCounter:" + getPC() + ", ";
-            } catch (ThreadStackEmptyException e) {
-                //does nothing
-            }
-            tmp += "Stack:" + this.stack.toString() + ", ";
-        }
-        tmp += "PathCondition:'" + this.pathCondition.toString() + "', ";
-        tmp += "StaticMethodArea:" + this.staticMethodArea.toString() + ", ";
-        tmp += "Heap:" + this.heap.toString() + "]";
-        return(tmp);
-    }
-
-    @Override
-    public State clone() {
+    private State deepCopyHeapExcluded() {
         final State o;
         try {
             o = (State) super.clone();
         } catch (CloneNotSupportedException e) {
             throw new InternalError(e);
         }
-
+        
         //stringLiterals
         o.stringLiterals = new HashMap<>(o.stringLiterals);
 
@@ -3396,9 +3720,6 @@ public final class State implements Cloneable {
         //stack
         o.stack = o.stack.clone();
 
-        //heap
-        o.heap = o.heap.clone();
-        
         //classHierarchy
         o.classHierarchy = o.classHierarchy.clone();
 
@@ -3421,6 +3742,76 @@ public final class State implements Cloneable {
         
         //all other members are immutable
 
+        return o;
+    }
+    
+    public State lazyClone() {
+    	final State o = deepCopyHeapExcluded();
+    	
+        //heap
+        o.heap = o.heap.lazyClone();
+        
+        return o;
+    }
+    
+    @Override
+    protected void finalize() {
+        //closes all files except stdin/out/err
+        for (Map.Entry<Integer, Object> fileEntry : this.files.entrySet()) {
+            final int fileId = fileEntry.getKey();
+            if (fileId == 0 || fileId == 1 || fileId == 2) {
+                continue;
+            }
+            final Object file = fileEntry.getValue();
+            try {
+                if (file instanceof FileInputStream) {
+                    ((FileInputStream) file).close();
+                } else { //file instanceof FileOutputStream
+                    ((FileOutputStream) file).close();
+                }
+            } catch (IOException e) {
+                //go on with the next file
+            }
+        }
+        
+        //deallocates all memory blocks
+        final Unsafe unsafe = unsafe();
+        for (MemoryBlock memoryBlock : this.allocatedMemory.values()) {
+            unsafe.freeMemory(memoryBlock.address);
+        }
+    }
+
+    @Override
+    public String toString() {
+        String tmp = "[ID:\"" + this.historyPoint.toString() + "\", ";
+        if (this.isStuck()) {
+            tmp += "Stuck, ";
+            if (this.exc != null) 
+                tmp += "Raised:" + this.exc.toString() + ", ";
+            else if (this.val != null)
+                tmp += "Return:" + this.val.toString() + ", ";
+        } else {
+            try {
+                tmp += "CurrentMethod:" + this.stack.currentFrame().getCurrentMethodSignature() + ", ";
+                tmp += "ProgramCounter:" + this.stack.currentFrame().getProgramCounter() + ", ";
+            } catch (ThreadStackEmptyException e) {
+                //does nothing
+            }
+            tmp += "Stack:" + this.stack.toString() + ", ";
+        }
+        tmp += "PathCondition:'" + this.pathCondition.toString() + "', ";
+        tmp += "StaticMethodArea:" + this.staticMethodArea.toString() + ", ";
+        tmp += "Heap:" + this.heap.toString() + "]";
+        return(tmp);
+    }
+
+    @Override
+    public State clone() {
+        final State o = deepCopyHeapExcluded();
+
+        //heap
+        o.heap = o.heap.clone();
+                
         return o;
     }
 }

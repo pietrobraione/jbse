@@ -11,6 +11,7 @@ import jbse.bc.ClassFile;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.Klass;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 
@@ -28,7 +29,8 @@ public final class Algo_SUN_UNSAFE_SHOULDBEINITIALIZED extends Algo_INVOKEMETA_N
     }
     
     @Override
-    protected void cookMore(State state) throws SymbolicValueNotAllowedException {
+    protected void cookMore(State state) 
+    throws SymbolicValueNotAllowedException, FrozenStateException {
         try {
             final Reference refParam = (Reference) this.data.operand(1);
             final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject(refParam);

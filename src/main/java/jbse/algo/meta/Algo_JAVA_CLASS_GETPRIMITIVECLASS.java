@@ -17,6 +17,7 @@ import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
@@ -36,7 +37,7 @@ public final class Algo_JAVA_CLASS_GETPRIMITIVECLASS extends Algo_INVOKEMETA_Non
     
     @Override
     protected void cookMore(State state) 
-    throws ClasspathException, CannotManageStateException, InterruptException {
+    throws ClasspathException, CannotManageStateException, InterruptException, FrozenStateException {
         try {           
             //gets the canonical name of the primitive type and converts it to a string
             final Reference typeNameRef = (Reference) this.data.operand(0);

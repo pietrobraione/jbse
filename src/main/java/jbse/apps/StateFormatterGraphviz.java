@@ -8,6 +8,7 @@ import jbse.mem.Instance;
 import jbse.mem.Klass;
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
@@ -39,7 +40,12 @@ public class StateFormatterGraphviz implements Formatter {
     public void formatState(State s) {
         this.output = "";
         this.output += "digraph \"" + s.getIdentifier() + "[" + s.getSequenceNumber() + "]\"" + " { ";
-        this.output += this.formatHeap(s);
+        try {
+			this.output += this.formatHeap(s);
+		} catch (FrozenStateException e) {
+	        this.output = "";
+	        return;
+		}
         //this.formatOutput += this.formatStaticMethodArea(s);
         this.output += "}\n";
     }
@@ -54,7 +60,7 @@ public class StateFormatterGraphviz implements Formatter {
         this.output = "";
     }
 
-    private String formatHeap(State s) {
+    private String formatHeap(State s) throws FrozenStateException {
         final Map<Long, Objekt> h = s.getHeap();
         String retVal = ""; //= "subgraph cluster_heap { label=\"heap\" labeljust=l ";
         this.currentNodePrefix = "H";

@@ -13,6 +13,7 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -36,7 +37,8 @@ public final class Algo_SUN_UNSAFE_PUTOBJECTVOLATILE extends Algo_INVOKEMETA_Non
     
     @Override
     protected void cookMore(State state) 
-    throws SymbolicValueNotAllowedException, UndefinedResultException, InterruptException {
+    throws SymbolicValueNotAllowedException, UndefinedResultException, 
+    InterruptException, FrozenStateException {
         //gets and checks the object to modify
         final Reference objRef = (Reference) this.data.operand(1);
         if (state.isNull(objRef)) {

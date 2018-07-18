@@ -37,6 +37,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
@@ -212,10 +213,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
      * @throws ThreadStackEmptyException if the stack is empty.
      * @throws ContradictionException  if some initialization assumption is
      *         contradicted.
+     * @throws FrozenStateException if {@code state} is frozen.
      */
     protected abstract void checkMore(State state)
     throws FieldNotFoundException, DecisionException, 
-    ClasspathException, InterruptException, ThreadStackEmptyException, ContradictionException;
+    ClasspathException, InterruptException, ThreadStackEmptyException, 
+    ContradictionException, FrozenStateException;
     
     /**
      * Returns the destination puts the value to its destination. 
@@ -226,9 +229,10 @@ StrategyUpdate<DecisionAlternative_NONE>> {
      * @throws InterruptException if the {@link Algorithm} must be interrupted.
      * @throws ClasspathException if it needs to throw a {@code java.lang.VerifyException}
      *         but it is not found, or ill-formed, or cannot access its superclasses/superinterfaces.
+     * @throws FrozenStateException if {@code state} is frozen.
      */
     protected abstract Objekt destination(State state)
-    throws InterruptException, ClasspathException;
+    throws InterruptException, ClasspathException, FrozenStateException;
 
     @Override
     protected final Supplier<Boolean> isProgramCounterUpdateAnOffset() {

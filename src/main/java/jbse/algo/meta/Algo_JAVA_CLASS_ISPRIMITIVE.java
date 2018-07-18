@@ -12,6 +12,7 @@ import jbse.algo.StrategyUpdate;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 import jbse.val.Simplex;
@@ -30,14 +31,15 @@ public final class Algo_JAVA_CLASS_ISPRIMITIVE extends Algo_INVOKEMETA_Nonbranch
     }
 
     @Override
-    protected void cookMore(State state) throws InterruptException, ClasspathException {
+    protected void cookMore(State state) 
+    throws InterruptException, ClasspathException, FrozenStateException {
         try {
             final Instance_JAVA_CLASS thisObject = (Instance_JAVA_CLASS) state.getObject((Reference) this.data.operand(0));
             if (thisObject == null) {
                 //this should never happen
                 failExecution("violated invariant (unexpected heap access with symbolic unresolved reference)");
             }
-            this.isPrimitive = state.getCalculator().valInt(thisObject.representedClass().isPrimitive() ? 1 : 0);
+            this.isPrimitive = state.getCalculator().valInt(thisObject.representedClass().isPrimitiveOrVoid() ? 1 : 0);
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();

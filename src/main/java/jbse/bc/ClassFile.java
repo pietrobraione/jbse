@@ -151,19 +151,19 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     public abstract boolean isEnum();
 
     /**
-     * Tests whether the class is primitive.
+     * Tests whether the class is primitive or void.
      * 
-     * @return {@code true} iff the class is primitive.
+     * @return {@code true} iff the class is primitive or void.
      */
-    public abstract boolean isPrimitive();
+    public abstract boolean isPrimitiveOrVoid();
 
     /**
-     * Equivalent to {@code !}{@link #isPrimitive()}{@code  && }{@code !}{@link #isArray()}.
+     * Equivalent to {@code !}{@link #isPrimitiveOrVoid()}{@code  && }{@code !}{@link #isArray()}.
      * 
      * @return {@code true} iff the class is the class for an object type.
      */
     public final boolean isReference() {
-        return !isPrimitive() && !isArray();
+        return !isPrimitiveOrVoid() && !isArray();
     }
 
     /**

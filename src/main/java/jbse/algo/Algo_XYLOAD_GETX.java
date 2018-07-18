@@ -20,6 +20,7 @@ import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.CannotAssumeSymbolicObjectException;
 import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -66,7 +67,7 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
 
     protected final void refineRefExpands(State state, DecisionAlternative_XYLOAD_GETX_Expands drc) 
     throws ContradictionException, InvalidTypeException, InterruptException, 
-    SymbolicValueNotAllowedException, ClasspathException {
+    SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
         final ReferenceSymbolic referenceToExpand = drc.getValueToLoad();
         final ClassFile classFileOfTargetObject = drc.getClassFileOfTargetObject();
         try {
@@ -93,7 +94,7 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
     }
 
     protected final void refineRefAliases(State state, DecisionAlternative_XYLOAD_GETX_Aliases altAliases)
-    throws ContradictionException {
+    throws ContradictionException, FrozenStateException {
         final ReferenceSymbolic referenceToResolve = altAliases.getValueToLoad();
         final long aliasPosition = altAliases.getObjectPosition();
         final Objekt object = state.getObjectInitial(new ReferenceConcrete(aliasPosition));
@@ -101,14 +102,14 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
     }
 
     protected final void refineRefNull(State state, DecisionAlternative_XYLOAD_GETX_Null altNull)
-    throws ContradictionException {
+    throws ContradictionException, FrozenStateException {
         final ReferenceSymbolic referenceToResolve = altNull.getValueToLoad();
         state.assumeNull(referenceToResolve);
     }
 
     protected final void update(State state, DecisionAlternative_XYLOAD_GETX_Loads altLoads) 
     throws DecisionException, InterruptException, MissingTriggerParameterException, 
-    ClasspathException, NotYetImplementedException, ThreadStackEmptyException {
+    ClasspathException, NotYetImplementedException, ThreadStackEmptyException, FrozenStateException {
         //possibly materializes the value
         final Value val = altLoads.getValueToLoad();
         final Value valMaterialized = possiblyMaterialize(state, val);
@@ -150,9 +151,10 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
      * @throws DecisionException
      * @throws InterruptException 
      * @throws ClasspathException 
+     * @throws FrozenStateException 
      */
     protected abstract Value possiblyMaterialize(State s, Value val) 
-    throws DecisionException, InterruptException, ClasspathException;
+    throws DecisionException, InterruptException, ClasspathException, FrozenStateException;
 
     @Override
     public final boolean someReferenceNotExpanded() { 

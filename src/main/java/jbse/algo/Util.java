@@ -65,6 +65,7 @@ import jbse.mem.SnippetFrameNoContext;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
@@ -155,9 +156,10 @@ public class Util {
      * @throws IncompatibleClassFileException if lookup fails and {@link java.lang.IncompatibleClassChangeError} should be thrown.
      * @throws ThreadStackEmptyException if {@code state} has an empty stack (i.e., no
      *         current method).
+     * @throws FrozenStateException if {@code state} is frozen.
      */
     public static ClassFile lookupMethodImpl(State state, ClassFile resolutionClass, Signature methodSignature, boolean isInterface, boolean isSpecial, boolean isStatic, ClassFile receiverClass) 
-    throws MethodNotFoundException, MethodNotAccessibleException, MethodAbstractException, IncompatibleClassFileException, ThreadStackEmptyException {
+    throws MethodNotFoundException, MethodNotAccessibleException, MethodAbstractException, IncompatibleClassFileException, ThreadStackEmptyException, FrozenStateException {
         final ClassFile retVal;
         final ClassHierarchy hier = state.getClassHierarchy();
         if (isInterface) { 
@@ -187,8 +189,9 @@ public class Util {
      *         {@link Instance#getType() type} is not the 
      *         {@code java.lang.String} class, or its value
      *         is not a concrete array of {@code char}s.
+     * @throws FrozenStateException if {@code s} is frozen.
      */
-    public static String valueString(State s, Reference ref) {
+    public static String valueString(State s, Reference ref) throws FrozenStateException {
         final Instance i;
         try {
             i = (Instance) s.getObject(ref);
@@ -207,11 +210,12 @@ public class Util {
      * @return a {@link String} corresponding to the {@code value} of 
      *         the {@code i}, 
      *         or {@code null} if such {@link Instance}'s 
-     *         {@link Instance#getType() type} is not 
-     *         {@code "java/lang/String"}, or its value
-     *         is not a concrete array of {@code char}s.
+     *         {@link Instance#getType() type} is not the 
+     *         {@code java.lang.String} class, or its value
+     *         is not a simple array of {@code char}s.
+     * @throws FrozenStateException if {@code s} is frozen.
      */
-    public static String valueString(State s, Instance i) {
+    public static String valueString(State s, Instance i) throws FrozenStateException {
         final ClassFile cf_JAVA_STRING = s.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STRING);
         if (cf_JAVA_STRING == null) {
             failExecution("Could not find class java.lang.String.");
@@ -912,9 +916,10 @@ public class Util {
          * 
          * @throws DecisionException if the decision procedure fails.
          * @throws HeapMemoryExhaustedException if during phase 2 heap memory ends.
+         * @throws FrozenStateException if {@code this.s} is frozen.
          */
         private void phase2() 
-        throws DecisionException, HeapMemoryExhaustedException {
+        throws DecisionException, HeapMemoryExhaustedException, FrozenStateException {
             final ListIterator<ClassFile> it = this.classesForPhase2.listIterator();
             while (it.hasNext()) {
                 final ClassFile classFile = it.next();
@@ -951,8 +956,10 @@ public class Util {
         /**
          * Phase 3 pushes the {@code <clinit>} frames for all the initialized 
          * classes that have it.
+         * 
+         * @throws FrozenStateException if {@code this.s} is frozen. 
          */
-        private void phase3() {
+        private void phase3() throws FrozenStateException {
             try {
                 if (this.boxExceptionMethodSignature != null) {
                     this.s.pushFrame(this.cf_JBSE_BASE, this.boxExceptionMethodSignature, false, 0);                    
@@ -1005,7 +1012,7 @@ public class Util {
             } 
         }
 
-        private void revert() throws ClasspathException {
+        private void revert() throws ClasspathException, FrozenStateException {
             //pops all the frames created by the recursive calls
             try {
                 for (int i = 1; i <= this.createdFrames; ++i) {
@@ -1049,7 +1056,7 @@ public class Util {
             if (array.hasSimpleRep() && index instanceof Simplex) {
                 array.setFast((Simplex) index, valueToStore);
             } else {
-                final Iterator<Array.AccessOutcomeIn> entries = array.entriesPossiblyAffectedByAccess(index, valueToStore);
+                final Iterator<? extends Array.AccessOutcomeIn> entries = array.entriesPossiblyAffectedByAccess(index, valueToStore);
                 ctx.decisionProcedure.constrainArrayForSet(state.getClassHierarchy(), entries, index);
                 array.set(index, valueToStore);
             }

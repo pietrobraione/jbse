@@ -16,6 +16,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.mem.Frame;
 import jbse.mem.State;
 import jbse.mem.SwitchTable;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.InvalidNumberOfOperandsException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
@@ -67,9 +68,11 @@ public abstract class BytecodeData {
      *         {@link Algorithm} must be interrupted.
      * @throws ClasspathException when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
+     * @throws FrozenStateException if the state is empty.
      */
     public final void read(State state, Supplier<Integer> numOperandsSupplier) 
-    throws ThreadStackEmptyException, InterruptException, ClasspathException {
+    throws ThreadStackEmptyException, InterruptException, 
+    ClasspathException, FrozenStateException {
         this.nextWide = state.nextWide();
         readImmediates(state);
         readOperands(state, numOperandsSupplier.get());
@@ -83,8 +86,9 @@ public abstract class BytecodeData {
      *         {@link Algorithm} must be interrupted.
      * @throws ClasspathException  when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
+     * @throws FrozenStateException if the state is frozen.
      */
-    protected abstract void readImmediates(State state) throws InterruptException, ClasspathException;
+    protected abstract void readImmediates(State state) throws InterruptException, ClasspathException, FrozenStateException;
 
     /**
      * Reads a signed byte immediate from a {@link State}'s current method code.
@@ -96,9 +100,10 @@ public abstract class BytecodeData {
      *         {@link Algorithm} must be interrupted.
      * @throws ClasspathException  when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
+     * @throws FrozenStateException if the state is frozen.
      */
     protected final void readImmediateSignedByte(State state, int immediateDisplacement) 
-    throws InterruptException, ClasspathException {
+    throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.valByte = state.getInstruction(immediateDisplacement);
         } catch (InvalidProgramCounterException e) {
@@ -119,9 +124,10 @@ public abstract class BytecodeData {
      *         {@link Algorithm} must be interrupted.
      * @throws ClasspathException  when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
+     * @throws FrozenStateException if the state is frozen.
      */
     protected final void readImmediateUnsignedByte(State state, int immediateDisplacement) 
-    throws InterruptException, ClasspathException {
+    throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.valShort = asUnsignedByte(state.getInstruction(immediateDisplacement));
         } catch (InvalidProgramCounterException e) {
@@ -143,9 +149,10 @@ public abstract class BytecodeData {
      *         {@link Algorithm} must be interrupted.
      * @throws ClasspathException  when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
+     * @throws FrozenStateException if the state is frozen.
      */
     protected final void readImmediateSignedWord(State state, int immediateDisplacement) 
-    throws InterruptException, ClasspathException {
+    throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.valShort = byteCatShort(state.getInstruction(immediateDisplacement), state.getInstruction(immediateDisplacement + 1));
         } catch (InvalidProgramCounterException e) {
@@ -167,9 +174,10 @@ public abstract class BytecodeData {
      *         {@link Algorithm} must be interrupted.
      * @throws ClasspathException  when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
+     * @throws FrozenStateException if the state is frozen.
      */
     protected final void readImmediateUnsignedWord(State state, int immediateDisplacement) 
-    throws InterruptException, ClasspathException {
+    throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.valInt = 
                 byteCat(state.getInstruction(immediateDisplacement), state.getInstruction(immediateDisplacement + 1));
@@ -192,9 +200,10 @@ public abstract class BytecodeData {
      *         {@link Algorithm} must be interrupted.
      * @throws ClasspathException  when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
+     * @throws FrozenStateException if the state is frozen.
      */
     protected final void readImmediateSignedDword(State state, int immediateDisplacement) 
-    throws InterruptException, ClasspathException {
+    throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.valInt = 
                 byteCat(state.getInstruction(immediateDisplacement), state.getInstruction(immediateDisplacement + 1), 
@@ -217,9 +226,10 @@ public abstract class BytecodeData {
      *         {@link Algorithm} must be interrupted.
      * @throws ClasspathException  when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
+     * @throws FrozenStateException if the state is frozen.
      */
     protected final void readLocalVariable(State state, int varSlot) 
-    throws InterruptException, ClasspathException {
+    throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.varSlot = varSlot;
             this.varName = state.getLocalVariableDeclaredName(varSlot);
@@ -238,10 +248,12 @@ public abstract class BytecodeData {
      * @param state a {@link State}.
      * @param varSlot an {@code int}, the offset of the jump. 
      *        Usually it is itself an immediate.
+     * @throws FrozenStateException if the state is frozen.
      * @throws InterruptException if the execution of the container
      *         {@link Algorithm} must be interrupted.
      */
-    protected final void readJump(State state, int jumpOffset) {
+    protected final void readJump(State state, int jumpOffset) 
+    throws FrozenStateException {
         try {
             this.jumpOffset = jumpOffset;
             this.jumpTarget = state.getPC() + jumpOffset;
@@ -261,9 +273,10 @@ public abstract class BytecodeData {
      *         {@link Algorithm} must be interrupted.
      * @throws ClasspathException  when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
+     * @throws FrozenStateException if the state is frozen.
      */
     protected final void readClassName(State state, int classRefIndex)
-    throws InterruptException, ClasspathException {
+    throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.className = state.getCurrentClass().getClassSignature(classRefIndex);
         } catch (InvalidIndexException e) {
@@ -285,9 +298,10 @@ public abstract class BytecodeData {
      *         {@link Algorithm} must be interrupted.
      * @throws ClasspathException  when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
+     * @throws FrozenStateException if the state is frozen.
      */
     protected final void readFieldSignature(State state, int fieldRefIndex)
-    throws InterruptException, ClasspathException {
+    throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.signature = state.getCurrentClass().getFieldSignature(fieldRefIndex);
         } catch (InvalidIndexException e) {
@@ -309,9 +323,10 @@ public abstract class BytecodeData {
      *         {@link Algorithm} must be interrupted.
      * @throws ClasspathException  when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
+     * @throws FrozenStateException if the state is frozen.
      */
     protected final void readInterfaceMethodSignature(State state, int interfaceMethodRefIndex)
-    throws InterruptException, ClasspathException {
+    throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.signature = state.getCurrentClass().getInterfaceMethodSignature(interfaceMethodRefIndex);
         } catch (InvalidIndexException e) {
@@ -333,9 +348,10 @@ public abstract class BytecodeData {
      *         {@link Algorithm} must be interrupted.
      * @throws ClasspathException  when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
+     * @throws FrozenStateException if the state is frozen.
      */
     protected final void readNoninterfaceMethodSignature(State state, int noninterfaceMethodRefIndex)
-    throws InterruptException, ClasspathException {
+    throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.signature = state.getCurrentClass().getMethodSignature(noninterfaceMethodRefIndex);
         } catch (InvalidIndexException e) {
@@ -357,9 +373,10 @@ public abstract class BytecodeData {
      *         {@link Algorithm} must be interrupted.
      * @throws ClasspathException  when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
+     * @throws FrozenStateException if the state is frozen.
      */
     protected final void readMethodSignature(State state, int methodRefIndex)
-    throws InterruptException, ClasspathException {
+    throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.signature = state.getCurrentClass().getMethodSignature(methodRefIndex);
         } catch (InvalidIndexException e1) {
@@ -429,9 +446,10 @@ public abstract class BytecodeData {
      *         {@link Algorithm} must be interrupted.
      * @throws ClasspathException  when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
+     * @throws FrozenStateException if the state is frozen.
      */
     private void readOperands(State state, int numOperands) 
-    throws ThreadStackEmptyException, InterruptException, ClasspathException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException, FrozenStateException {
         final Frame frame = state.getCurrentFrame();
         try {
             this.operands = frame.operands(numOperands);

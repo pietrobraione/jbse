@@ -14,6 +14,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
@@ -34,7 +35,7 @@ public final class Algo_JAVA_CLASS_ISINSTANCE extends Algo_INVOKEMETA_Nonbranchi
 
     @Override
     protected void cookMore(State state)
-    throws ThreadStackEmptyException, InterruptException, ClasspathException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException, FrozenStateException {
         try {
             //gets the 'this' java.lang.Class instance from the heap 
             //and the name of the class it represents
@@ -55,7 +56,7 @@ public final class Algo_JAVA_CLASS_ISINSTANCE extends Algo_INVOKEMETA_Nonbranchi
             final Reference objRef = (Reference) this.data.operand(1);
             
             //determines which value to push on the operand stack
-            if (clazz.representedClass().isPrimitive() || state.isNull(objRef)) {
+            if (clazz.representedClass().isPrimitiveOrVoid() || state.isNull(objRef)) {
                 this.valToPush = state.getCalculator().valInt(0);
             } else {
                 //checks whether the object's class is a subclass 

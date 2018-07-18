@@ -41,6 +41,7 @@ import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -229,7 +230,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
     }
 
     protected Value possiblyMaterialize(State state, Value val) 
-    throws DecisionException, InterruptException, ClasspathException {
+    throws DecisionException, InterruptException, ClasspathException, FrozenStateException {
         //calculates the actual value to push by materializing 
         //a member array, if it is the case, and then pushes it
         //on the operand stack
@@ -259,7 +260,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
         return new StrategyRefine_SUN_UNSAFE_GETX_Array() {
             @Override
             public void refineResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved)
-            throws DecisionException {
+            throws DecisionException, FrozenStateException {
                 //augments the path condition
                 state.assume(Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.ctx.decisionProcedure.simplify(altResolved.getArrayAccessExpression()));
 
@@ -270,7 +271,8 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             }
 
             @Override
-            public void refineOut(State state, DecisionAlternative_XALOAD_Out altOut) {
+            public void refineOut(State state, DecisionAlternative_XALOAD_Out altOut) 
+            throws FrozenStateException {
                 //augments the path condition
                 state.assume(Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.ctx.decisionProcedure.simplify(altOut.getArrayAccessExpression()));
             }
@@ -281,7 +283,8 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
         return new StrategyUpdate_SUN_UNSAFE_GETX_Array() {
             @Override
             public void updateResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved) 
-            throws DecisionException, InterruptException, MissingTriggerParameterException, ClasspathException, NotYetImplementedException {
+            throws DecisionException, InterruptException, MissingTriggerParameterException, 
+            ClasspathException, NotYetImplementedException, FrozenStateException {
                 //possibly materializes the value
                 final Value val = altResolved.getValueToLoad();
                 final Value valMaterialized = possiblyMaterialize(state, val);

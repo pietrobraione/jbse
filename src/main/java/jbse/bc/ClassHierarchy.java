@@ -214,7 +214,7 @@ public final class ClassHierarchy implements Cloneable {
      *        a classloader.
      * @param classFile a {@link ClassFile} for the class to be added.
      * @throws InvalidInputException if {@code initiatingLoader} is invalid (negative),
-     *         or {@code classFile == null}, or {@code classFile.}{@link ClassFile#isPrimitive()}, or 
+     *         or {@code classFile == null}, or {@code classFile.}{@link ClassFile#isPrimitiveOrVoid()}, or 
      *         {@code classFile.}{@link ClassFile#isAnonymousUnregistered()}, or there is already a different
      *         {@link ClassFile} in the loaded class cache for the pair
      *         {@code (initiatingLoader, classFile.}{@link ClassFile#getClassName() getClassName}{@code ())}.
@@ -465,7 +465,7 @@ public final class ClassHierarchy implements Cloneable {
         if (sub.isArray() && sup.isArray()) {
             final ClassFile subMember = sub.getMemberClass(); 
             final ClassFile supMember = sup.getMemberClass();
-            if (subMember.isPrimitive() && supMember.isPrimitive()) {
+            if (subMember.isPrimitiveOrVoid() && supMember.isPrimitiveOrVoid()) {
                 return (subMember == supMember);
             } else if (subMember.isReference() && supMember.isReference()) {
                 return isSubclass(subMember, supMember);
@@ -1838,7 +1838,7 @@ public final class ClassHierarchy implements Cloneable {
             } else if (target.isArray()) {
                 final ClassFile sourceComponent = source.getMemberClass();
                 final ClassFile targetComponent = target.getMemberClass();
-                if (sourceComponent.isPrimitive() && targetComponent.isPrimitive()) {
+                if (sourceComponent.isPrimitiveOrVoid() && targetComponent.isPrimitiveOrVoid()) {
                     return (sourceComponent == targetComponent);
                 } else if ((sourceComponent.isReference() && targetComponent.isReference()) ||
                            (sourceComponent.isArray() && targetComponent.isArray())) {

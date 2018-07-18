@@ -4,6 +4,7 @@ import java.util.function.Supplier;
 
 import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 
 /**
  * One implicit (local variable),
@@ -15,7 +16,8 @@ public final class BytecodeData_0LV extends BytecodeData {
     private final int numVarSlot;
 
     @Override
-    protected void readImmediates(State state) throws InterruptException, ClasspathException {
+    protected void readImmediates(State state) 
+    throws InterruptException, ClasspathException, FrozenStateException {
         readLocalVariable(state, this.numVarSlot);
     }
 

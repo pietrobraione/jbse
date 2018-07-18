@@ -82,5 +82,4 @@ public class SnippetFactory {
         }
         return new Snippet(this.constants, this.signatures, this.classes, code);
     }
-    
 }

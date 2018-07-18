@@ -17,6 +17,7 @@ import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.ClassFile;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
@@ -39,7 +40,7 @@ public final class Algo_JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS extends Algo_INVOKEM
     @Override
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, ClasspathException, 
-    SymbolicValueNotAllowedException, InterruptException {
+    SymbolicValueNotAllowedException, InterruptException, FrozenStateException {
         try {
             //gets the name of the class
             final Reference classNameRef = (Reference) this.data.operand(1);

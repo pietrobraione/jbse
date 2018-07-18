@@ -21,6 +21,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.jvm.RunnerParameters;
 import jbse.mem.State;
 import jbse.mem.SwitchTable;
+import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_XALOAD;
 import jbse.tree.DecisionAlternative_XALOAD_Unresolved;
 import jbse.tree.DecisionAlternative_XASTORE;
@@ -291,7 +292,13 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             it.remove();
         } else if (dar instanceof DecisionAlternative_XYLOAD_GETX_Aliases) {
             final DecisionAlternative_XYLOAD_GETX_Aliases dara = (DecisionAlternative_XYLOAD_GETX_Aliases) dar;
-            final ReferenceSymbolic aliasOrigin = state.getObject(new ReferenceConcrete(dara.getObjectPosition())).getOrigin();
+            final ReferenceSymbolic aliasOrigin;
+			try {
+				aliasOrigin = state.getObject(new ReferenceConcrete(dara.getObjectPosition())).getOrigin();
+			} catch (FrozenStateException e) {
+				//this should never happen
+				throw new UnexpectedInternalException(e);
+			}
             if (!this.jvm.areAlias(refToLoad, aliasOrigin)) {
                 it.remove();
             }

@@ -59,11 +59,6 @@ class Util {
     static final byte REF_invokeStatic     = 6;
     static final byte REF_invokeSpecial    = 7;
     static final byte REF_invokeInterface  = 9;
-    
-    //do not instantiate!
-    private Util() {
-        throw new AssertionError();
-    }
 
     //taken from java.lang.invoke.MemberName
     static boolean isMethod(int flags) {
@@ -93,5 +88,10 @@ class Util {
     //taken from java.lang.invoke.MemberName.getReferenceKind
     static boolean isSetter(int flags) {
         return ((byte) ((flags >>> REFERENCE_KIND_SHIFT) & REFERENCE_KIND_MASK)) > REF_getStatic;
+    }
+    
+    //do not instantiate!
+    private Util() {
+        throw new AssertionError();
     }
 }

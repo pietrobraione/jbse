@@ -53,7 +53,7 @@ public class InstanceTest {
         final ClassFile classFile = hier.loadCreateClass(CLASSLOADER_APP, className, true);
         final int numOfStaticFields = hier.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = hier.getAllFields(classFile);
-        final Instance i = new Instance(false, calc, classFile, null, null, numOfStaticFields, fieldsSignatures);
+        final Instance i = new InstanceImpl(false, calc, classFile, null, null, numOfStaticFields, fieldsSignatures);
         final Signature sigMinLat = new Signature(className, "D", "minLat");
         final Value valMinLat = i.getFieldValue(sigMinLat);
         assertEquals(valMinLat, calc.valDouble(0));
@@ -67,7 +67,7 @@ public class InstanceTest {
         final ClassFile classFile = hier.loadCreateClass(CLASSLOADER_APP, className, true);
         final int numOfStaticFields = hier.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = hier.getAllFields(classFile);
-        final Instance i = new Instance(false, calc, classFile, null, null, numOfStaticFields, fieldsSignatures);
+        final Instance i = new InstanceImpl(false, calc, classFile, null, null, numOfStaticFields, fieldsSignatures);
         final Signature sigMinLat = new Signature(className, "D", "minLat");
         final Value valMinLat = i.getFieldValue(sigMinLat);
         final Value valMinLat2 = i.getFieldValue("minLat");
@@ -82,7 +82,7 @@ public class InstanceTest {
         final ClassFile classFile = hier.loadCreateClass(CLASSLOADER_APP, className, true);
         final int numOfStaticFields = hier.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = hier.getAllFields(classFile);
-        final Instance i = new Instance(false, calc, classFile, null, null, numOfStaticFields, fieldsSignatures);
+        final Instance i = new InstanceImpl(false, calc, classFile, null, null, numOfStaticFields, fieldsSignatures);
         final Signature sigMinLat = new Signature(className, "D", "minLat");
         i.setFieldValue(sigMinLat, calc.valDouble(1.0d));
         final Value valMinLat = i.getFieldValue("minLat");
@@ -97,7 +97,7 @@ public class InstanceTest {
         final ClassFile classFile = hier.loadCreateClass(CLASSLOADER_APP, className, true);
         final int numOfStaticFields = hier.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = hier.getAllFields(classFile);
-        final Instance i = new Instance(false, calc, classFile, null, null, numOfStaticFields, fieldsSignatures);
+        final Instance i = new InstanceImpl(false, calc, classFile, null, null, numOfStaticFields, fieldsSignatures);
         final Instance iClone = i.clone();
         final Signature sigMinLat = new Signature(className, "D", "minLat");
         i.setFieldValue(sigMinLat, calc.valDouble(1.0d));

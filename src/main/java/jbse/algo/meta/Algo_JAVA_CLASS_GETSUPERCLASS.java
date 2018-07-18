@@ -15,6 +15,7 @@ import jbse.bc.ClassFile;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Null;
@@ -35,7 +36,8 @@ public final class Algo_JAVA_CLASS_GETSUPERCLASS extends Algo_INVOKEMETA_Nonbran
     }
 
     @Override
-    protected void cookMore(State state) throws InterruptException, ClasspathException {
+    protected void cookMore(State state) 
+    throws InterruptException, ClasspathException, FrozenStateException {
         try {
             final Instance_JAVA_CLASS clazz = (Instance_JAVA_CLASS) state.getObject((Reference) this.data.operand(0));
             if (clazz == null) {

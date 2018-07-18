@@ -15,6 +15,7 @@ import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
@@ -34,7 +35,8 @@ public final class Algo_JAVA_SYSTEM_MAPLIBRARYNAME extends Algo_INVOKEMETA_Nonbr
     
     @Override
     protected void cookMore(State state) 
-    throws InterruptException, SymbolicValueNotAllowedException, ClasspathException {
+    throws InterruptException, SymbolicValueNotAllowedException, 
+    ClasspathException, FrozenStateException {
         try {
             final Reference refString = (Reference) this.data.operand(0);
             if (state.isNull(refString)) {

@@ -21,6 +21,7 @@ import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Null;
@@ -43,7 +44,8 @@ public final class Algo_JAVA_XFILESYSTEM_CANONICALIZE0 extends Algo_INVOKEMETA_N
 
     @Override
     protected void cookMore(State state) 
-    throws InterruptException, ClasspathException, SymbolicValueNotAllowedException {
+    throws InterruptException, ClasspathException, 
+    SymbolicValueNotAllowedException, FrozenStateException {
         try {
             //gets the filesystem object and its class
             final Field fileSystemField = File.class.getDeclaredField("fs");

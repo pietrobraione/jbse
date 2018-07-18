@@ -19,6 +19,7 @@ import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -43,7 +44,8 @@ public final class Algo_JAVA_ZIPFILE_OPEN extends Algo_INVOKEMETA_Nonbranching {
 
     @Override
     protected void cookMore(State state) 
-    throws InterruptException, ClasspathException, SymbolicValueNotAllowedException {
+    throws InterruptException, ClasspathException, 
+    SymbolicValueNotAllowedException, FrozenStateException {
         try {
             //gets the first (String name) parameter
             final Reference nameReference = (Reference) this.data.operand(0);

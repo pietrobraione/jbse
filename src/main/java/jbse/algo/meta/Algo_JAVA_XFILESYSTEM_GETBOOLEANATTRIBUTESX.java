@@ -23,6 +23,7 @@ import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.Instance;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
 import jbse.val.Simplex;
@@ -44,7 +45,8 @@ public final class Algo_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX extends Algo_INVO
 
     @Override
     protected void cookMore(State state) 
-    throws InterruptException, ClasspathException, SymbolicValueNotAllowedException {
+    throws InterruptException, ClasspathException, 
+    SymbolicValueNotAllowedException, FrozenStateException {
         try {
             //gets the filesystem object and its class
             final Field fileSystemField = File.class.getDeclaredField("fs");

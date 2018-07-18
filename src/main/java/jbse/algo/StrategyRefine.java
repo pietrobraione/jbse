@@ -2,6 +2,7 @@ package jbse.algo;
 
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
@@ -42,8 +43,10 @@ public interface StrategyRefine<R> {
      * @throws ClasspathException possibly raised when the refinement
      *         action must throw a standard exception and the exception 
      *         is not found in the classpath.
+     * @throws InvalidInputException possibly raised when an input is invalid
+     *         (currently, only if {@code s} is frozen).
      */
     public void refine(State s, R r) 
     throws DecisionException, ContradictionException, InvalidTypeException, InterruptException,
-    SymbolicValueNotAllowedException, ClasspathException;
+    SymbolicValueNotAllowedException, ClasspathException, InvalidInputException;
 }

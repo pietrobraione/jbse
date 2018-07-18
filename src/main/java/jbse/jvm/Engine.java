@@ -35,6 +35,7 @@ import jbse.jvm.exc.NonexistingObservedVariablesException;
 import jbse.mem.Clause;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.StateTree.BranchPoint;
 
@@ -183,30 +184,36 @@ public class Engine implements AutoCloseable {
         }
 
         //extracts the first state from the tree
-        if (this.ctx.stateTree.createdBranch()) { //we need the side effect of invoking createBranch
-            this.currentState = this.ctx.stateTree.nextState();
-        } else {
-            //this should never happen
-            throw new UnexpectedInternalException("The first state is missing from the state tree.");
-        }
-
-        //detects whether we are at the initial state
-        if (this.currentState.getStackSize() == 1) {
-            this.atInitialState = true;
-            this.currentState.setPhasePostInit(); //possibly pleonastic, but doesn't hurt
-            this.ctx.setInitialState(this.currentState);
-        } else {
-            this.atInitialState = false;
-        }
-
-        //synchronizes the decision procedure with the path condition
         try {
+        	if (this.ctx.stateTree.createdBranch()) { //we need the side effect of invoking createBranch
+        		this.currentState = this.ctx.stateTree.nextState();
+        	} else {
+        		//this should never happen
+        		throw new UnexpectedInternalException("The first state is missing from the state tree.");
+        	}
+        } catch (FrozenStateException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
+
+        try {
+            //detects whether we are at the initial state
+        	if (this.currentState.getStackSize() == 1) {
+        		this.atInitialState = true;
+        		this.currentState.setPhasePostInit(); //possibly pleonastic, but doesn't hurt
+        		this.ctx.setInitialState(this.currentState);
+        	} else {
+        		this.atInitialState = false;
+        	}
+
+        	//synchronizes the decision procedure with the path condition
             this.ctx.decisionProcedure.setAssumptions(this.currentState.getPathCondition());
+
+            this.currentState.resetLastPathConditionClauses();
         } catch (InvalidInputException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-        this.currentState.resetLastPathConditionClauses();
 
         //inits the variable observer manager
         try {
@@ -279,105 +286,105 @@ public class Engine implements AutoCloseable {
     throws EngineStuckException, CannotManageStateException, ClasspathException, 
     ThreadStackEmptyException, ContradictionException, DecisionException, 
     FailureException {
-        //sanity check
-        if (!canStep()) {
-            throw new EngineStuckException();
-        }
-
-        //updates the information about the state before the step
-        this.preStepSourceRow = this.currentState.getSourceRow();
-        this.preStepStackSize = this.currentState.getStackSize();
-
-        //steps
-        Action action;
-        int continuationCounter = 0;
-        final ArrayDeque<Action[]> continuations = new ArrayDeque<>();
-        final ArrayDeque<Integer> continuationCounters = new ArrayDeque<>();
-        do {
-            action = (continuations.isEmpty() ? 
-                     this.ctx.dispatcher.select(this.currentState.getInstruction()) : 
-                     continuations.peek()[continuationCounter++]);
-            if (!continuations.isEmpty() && continuationCounter == continuations.peek().length) {
-                continuations.pop();
-                continuationCounter = continuationCounters.pop();
-            }
-            try {
-                action.exec(this.currentState, this.ctx);
-            } catch (ContinuationException e) {
-                continuations.push(e.getContinuation());
-                continuationCounters.push(continuationCounter);
-                continuationCounter = 0;
-            } catch (ClasspathException | CannotManageStateException | 
-                     ThreadStackEmptyException | ContradictionException | 
-                     DecisionException | FailureException | 
-                     UnexpectedInternalException e) {
-                stopCurrentTrace();
-                throw e;
-            } 
-        } while (!continuations.isEmpty() && continuationCounter < continuations.peek().length);
-
-        if (action instanceof Algorithm<?, ?, ?, ?, ?>) {
-            final Algorithm<?, ?, ?, ?, ?> algo = (Algorithm<?, ?, ?, ?, ?>) action;
-            this.someReferenceNotExpanded = algo.someReferenceNotExpanded();
-            this.nonExpandedReferencesOrigins = algo.nonExpandedReferencesOrigins();
-            this.nonExpandedReferencesTypes = algo.nonExpandedReferencesTypes();
-        }
-        
-        //detects whether we are at the initial state
-        if (this.currentState.isPhasePreInit() && this.currentState.getStackSize() == 1) {
-            this.atInitialState = true;
-            this.currentState.setPhasePostInit();
-            try {
-                this.ctx.stateTree.addState(this.currentState);
-            } catch (InvalidInputException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
-            }
-        } else {
-            this.atInitialState = false;
-        }
-        
-        //updates the current state and calculates return value
-        final BranchPoint retVal;
-        if (this.ctx.stateTree.createdBranch()) {
-            retVal = this.ctx.stateTree.nextBranch();
-            this.currentState = this.ctx.stateTree.nextState();
-            if (this.atInitialState) {
-                this.currentState.gc(); //does a bit of cleanup to accelerate things
-                this.ctx.setInitialState(this.currentState);
-            }
-        } else {
-            retVal = null;
-            this.currentState.incSequenceNumber();
-        }
-
-        //updates the counters for depth/count scope
-        if (this.currentState.branchingDecision()) {
-            this.currentState.incDepth();
-            this.currentState.resetCount();
-        } else {
-            this.currentState.incCount();
-        }
-
-        //synchronizes the decision procedure with the current path condition
         try {
-            this.ctx.decisionProcedure.addAssumptions(this.currentState.getLastPathConditionPushedClauses());
+        	//sanity check
+        	if (!canStep()) {
+        		throw new EngineStuckException();
+        	}
+
+        	//updates the information about the state before the step
+        	this.preStepSourceRow = this.currentState.getSourceRow();
+        	this.preStepStackSize = this.currentState.getStackSize();
+
+        	//steps
+        	Action action;
+        	int continuationCounter = 0;
+        	final ArrayDeque<Action[]> continuations = new ArrayDeque<>();
+        	final ArrayDeque<Integer> continuationCounters = new ArrayDeque<>();
+        	do {
+        		action = (continuations.isEmpty() ? 
+        				this.ctx.dispatcher.select(this.currentState.getInstruction()) : 
+        					continuations.peek()[continuationCounter++]);
+        		if (!continuations.isEmpty() && continuationCounter == continuations.peek().length) {
+        			continuations.pop();
+        			continuationCounter = continuationCounters.pop();
+        		}
+        		try {
+        			action.exec(this.currentState, this.ctx);
+        		} catch (ContinuationException e) {
+        			continuations.push(e.getContinuation());
+        			continuationCounters.push(continuationCounter);
+        			continuationCounter = 0;
+        		} catch (ClasspathException | CannotManageStateException | 
+        				ThreadStackEmptyException | ContradictionException | 
+        				DecisionException | FailureException | 
+        				UnexpectedInternalException e) {
+        			stopCurrentTrace();
+        			throw e;
+        		} 
+        	} while (!continuations.isEmpty() && continuationCounter < continuations.peek().length);
+
+        	if (action instanceof Algorithm<?, ?, ?, ?, ?>) {
+        		final Algorithm<?, ?, ?, ?, ?> algo = (Algorithm<?, ?, ?, ?, ?>) action;
+        		this.someReferenceNotExpanded = algo.someReferenceNotExpanded();
+        		this.nonExpandedReferencesOrigins = algo.nonExpandedReferencesOrigins();
+        		this.nonExpandedReferencesTypes = algo.nonExpandedReferencesTypes();
+        	}
+
+        	//detects whether we are at the initial state
+        	if (this.currentState.isPhasePreInit() && this.currentState.getStackSize() == 1) {
+        		this.atInitialState = true;
+        		this.currentState.setPhasePostInit();
+        		try {
+        			this.ctx.stateTree.addState(this.currentState);
+        		} catch (InvalidInputException e) {
+        			//this should never happen
+        			throw new UnexpectedInternalException(e);
+        		}
+        	} else {
+        		this.atInitialState = false;
+        	}
+
+        	//updates the current state and calculates return value
+        	final BranchPoint retVal;
+        	if (this.ctx.stateTree.createdBranch()) {
+        		retVal = this.ctx.stateTree.nextBranch();
+        		this.currentState = this.ctx.stateTree.nextState();
+        		if (this.atInitialState) {
+        			this.currentState.gc(); //does a bit of cleanup to accelerate things
+        			this.ctx.setInitialState(this.currentState);
+        		}
+        	} else {
+        		retVal = null;
+        		this.currentState.incSequenceNumber();
+        	}
+
+        	//updates the counters for depth/count scope
+        	if (this.currentState.branchingDecision()) {
+        		this.currentState.incDepth();
+        		this.currentState.resetCount();
+        	} else {
+        		this.currentState.incCount();
+        	}
+
+        	//synchronizes the decision procedure with the current path condition
+        	this.ctx.decisionProcedure.addAssumptions(this.currentState.getLastPathConditionPushedClauses());
+        	this.currentState.resetLastPathConditionClauses();
+
+        	//manages variable observation
+        	this.vom.notifyObservers(retVal);
+
+        	//updates stats
+        	if (this.analyzedStates < Long.MAX_VALUE) { 
+        		++this.analyzedStates;
+        	}
+
+        	//returns
+        	return retVal;
         } catch (InvalidInputException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-        this.currentState.resetLastPathConditionClauses();
-
-        //manages variable observation
-        this.vom.notifyObservers(retVal);
-
-        //updates stats
-        if (this.analyzedStates < Long.MAX_VALUE) { 
-            ++this.analyzedStates;
-        }
-
-        //returns
-        return retVal;
     }
 
     /**
@@ -411,29 +418,16 @@ public class Engine implements AutoCloseable {
         return this.currentState.getNumAssumed(className);
     }
 
-    /** 
-     * Adds a branch point to the symbolic execution.
-     * 
-     * @return the created {@link BranchPoint}.
-     * @throws InvalidInputException if invoked before 
-     *         the initial state, i.e., when the execution
-     *         has not yet hit the state where the next
-     *         bytecode to be executed is the first bytecode
-     *         of the root method.
-     */
-    public BranchPoint addBranchPoint() throws InvalidInputException {
-        final State s = (State) this.currentState.clone();
-        this.ctx.stateTree.addBranchPoint(s, "MANUAL");
-        final BranchPoint retVal = this.ctx.stateTree.nextBranch();
-        this.vom.saveObservedVariablesValues(retVal);
-        return retVal;
-    }
-
     /**
      * Stops the execution along the current trace.
      */
     public void stopCurrentTrace() {
-        this.currentState.setStuckStop();
+    	try {
+    		this.currentState.setStuckStop();
+		} catch (FrozenStateException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
     }
 
     /**
@@ -485,19 +479,19 @@ public class Engine implements AutoCloseable {
             final Collection<Clause> currentAssumptions = this.currentState.getPathCondition();
             this.ctx.decisionProcedure.setAssumptions(currentAssumptions);
             this.currentState.resetLastPathConditionClauses();
+
+            //updates the counters for depth/count scope
+            if (this.currentState.branchingDecision()) {
+                this.currentState.incDepth();
+                this.currentState.resetCount();
+            } else {
+                this.currentState.incCount();
+            }
         } catch (DecisionException e) {
             throw new DecisionBacktrackException(e);
         } catch (InvalidInputException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
-        }
-
-        //updates the counters for depth/count scope
-        if (this.currentState.branchingDecision()) {
-            this.currentState.incDepth();
-            this.currentState.resetCount();
-        } else {
-            this.currentState.incCount();
         }
 
         this.vom.restoreObservedVariablesValues(bp, isLast);
@@ -550,8 +544,13 @@ public class Engine implements AutoCloseable {
      * @throws ThreadStackEmptyException if the thread stack is empty.
      */
     public boolean sourceRowChanged() throws ThreadStackEmptyException {
-        return (this.currentState.isStuck() || 
-                (this.currentState.getSourceRow() != this.preStepSourceRow));
+        try {
+			return (this.currentState.isStuck() || 
+			        (this.currentState.getSourceRow() != this.preStepSourceRow));
+		} catch (FrozenStateException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
     }
 
     /**
@@ -562,8 +561,13 @@ public class Engine implements AutoCloseable {
      *         or the current state is stuck.
      */
     public boolean currentMethodChanged() {
-        return (this.currentState.isStuck() || 
-                (this.currentState.getStackSize() != this.preStepStackSize));
+        try {
+			return (this.currentState.isStuck() || 
+			        (this.currentState.getStackSize() != this.preStepStackSize));
+		} catch (FrozenStateException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
     }
 
     /**
@@ -577,17 +581,22 @@ public class Engine implements AutoCloseable {
         if (this.currentState.isStuck()) {
             return true;
         }
-        final byte currentInstruction = this.currentState.getInstruction(); 
-        return (currentInstruction == OP_INVOKEVIRTUAL ||
-                currentInstruction == OP_INVOKESPECIAL ||
-                currentInstruction == OP_INVOKESTATIC ||
-                currentInstruction == OP_INVOKEINTERFACE ||
-                currentInstruction == OP_IRETURN ||
-                currentInstruction == OP_FRETURN ||
-                currentInstruction == OP_DRETURN ||
-                currentInstruction == OP_ARETURN ||
-                currentInstruction == OP_RETURN ||
-                currentInstruction == OP_ATHROW);
+        try {
+        	final byte currentInstruction = this.currentState.getInstruction(); 
+        	return (currentInstruction == OP_INVOKEVIRTUAL ||
+        			currentInstruction == OP_INVOKESPECIAL ||
+        			currentInstruction == OP_INVOKESTATIC ||
+        			currentInstruction == OP_INVOKEINTERFACE ||
+        			currentInstruction == OP_IRETURN ||
+        			currentInstruction == OP_FRETURN ||
+        			currentInstruction == OP_DRETURN ||
+        			currentInstruction == OP_ARETURN ||
+        			currentInstruction == OP_RETURN ||
+        			currentInstruction == OP_ATHROW);
+		} catch (FrozenStateException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
     }
 
     /**

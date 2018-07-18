@@ -1,30 +1,10 @@
 package jbse.mem;
 
-import jbse.bc.ClassFile;
-import jbse.bc.Signature;
-import jbse.val.Calculator;
-import jbse.val.HistoryPoint;
-import jbse.val.ReferenceSymbolic;
-import jbse.val.exc.InvalidTypeException;
-
 /**
  * Class that represent an instance in the heap of an object 
  * whose class is {@code java.lang.ClassLoader} or of one of its subclasses. 
  */
-public final class Instance_JAVA_CLASSLOADER extends Instance {
-    /** The identifier of this classloader. It must be >= 1. */
-    private final int classLoaderIdentifier;
-    
-    protected Instance_JAVA_CLASSLOADER(Calculator calc, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, int classLoaderIdentifier, int numOfStaticFields, Signature... fieldSignatures) 
-    throws InvalidTypeException {
-        super(false, calc, classFile, origin, epoch, numOfStaticFields, fieldSignatures);
-        if (classFile == null) {
-            throw new InvalidTypeException("Attempted creation of an instance of a subclass of java.lang.ClassLoader with type null.");
-        }
-
-        this.classLoaderIdentifier = classLoaderIdentifier;
-    }
-    
+public interface Instance_JAVA_CLASSLOADER extends Instance {
     /**
      * Returns the identifier of this
      * {@code java.lang.ClassLoader}.
@@ -32,7 +12,7 @@ public final class Instance_JAVA_CLASSLOADER extends Instance {
      * @return an {@code int}, the identifier of 
      * this classloader.
      */
-    public int classLoaderIdentifier() {
-        return this.classLoaderIdentifier;
-    }
+    int classLoaderIdentifier();
+    
+    Instance_JAVA_CLASSLOADER clone();
 }

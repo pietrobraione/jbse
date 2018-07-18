@@ -18,6 +18,7 @@ import jbse.bc.ClassFile;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.Instance_JAVA_CLASSLOADER;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
@@ -40,7 +41,7 @@ public final class Algo_JAVA_CLASSLOADER_FINDLOADEDCLASS0 extends Algo_INVOKEMET
     @Override
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, ClasspathException, 
-    SymbolicValueNotAllowedException, InterruptException {
+    SymbolicValueNotAllowedException, InterruptException, FrozenStateException {
         try {
             //gets the classloader ('this' object)
             final Reference classLoaderRef = (Reference) this.data.operand(0);

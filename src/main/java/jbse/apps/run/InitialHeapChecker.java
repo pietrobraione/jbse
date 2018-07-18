@@ -38,6 +38,7 @@ import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.CannotRefineException;
 import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -74,47 +75,48 @@ public final class InitialHeapChecker {
     }
 
     public boolean checkHeap(State sIni, boolean scopeExhaustionMeansSuccess) {
-        //runs the check methods on all the instances in the heap 
-        for (long heapPos : sIni.getHeap().keySet()) {
-            final Reference objectRef = new ReferenceConcrete(heapPos);
-            final Objekt obj = sIni.getObject(objectRef);
-            if (obj.isSymbolic()) {
-                try {
-                    final Signature methodSignature = this.checkMethodTable.findCheckMethod(obj.getType(), sIni);
-                    if (methodSignature == null) {
-                        //nothing to check
-                    } else {
-                        final State sRun = sIni.clone();
-                        final boolean repOk = 
-                            runCheckMethod(sRun, objectRef, obj.getType(), methodSignature, this.runnerParameters, scopeExhaustionMeansSuccess);
-                        if (!repOk) {
-                            return false; 
-                        }
-                    }
-                } catch (DecisionException | 
-                         InitializationException | InvalidClassFileFactoryClassException | 
-                         NonexistingObservedVariablesException |  
-                         CannotBacktrackException | EngineStuckException | CannotManageStateException | 
-                         ClasspathException | ContradictionException | FailureException | 
-                         UnexpectedInternalException | CannotBuildEngineException | 
-                         ThreadStackEmptyException | InvalidProgramCounterException | 
-                         NullMethodReceiverException | InvalidSlotException exc) {
-                    //TODO check and filter exceptions and blame caller when necessary
-                    throw new UnexpectedInternalException(exc);
-                }
-            }
-        }
+        try {
+        	//runs the check methods on all the instances in the heap 
+        	for (long heapPos : sIni.getHeap().keySet()) {
+        		final Reference objectRef = new ReferenceConcrete(heapPos);
+        		final Objekt obj = sIni.getObject(objectRef);
+        		if (obj.isSymbolic()) {
+        			final Signature methodSignature = this.checkMethodTable.findCheckMethod(obj.getType(), sIni);
+        			if (methodSignature == null) {
+        				//nothing to check
+        			} else {
+        				final State sRun = sIni.clone();
+        				final boolean repOk = 
+        						runCheckMethod(sRun, objectRef, obj.getType(), methodSignature, this.runnerParameters, scopeExhaustionMeansSuccess);
+        				if (!repOk) {
+        					return false; 
+        				}
+        			}
+        		}
+        	}
+        } catch (DecisionException | FrozenStateException |
+                InitializationException | InvalidClassFileFactoryClassException | 
+                NonexistingObservedVariablesException |  
+                CannotBacktrackException | EngineStuckException | CannotManageStateException | 
+                ClasspathException | ContradictionException | FailureException | 
+                UnexpectedInternalException | CannotBuildEngineException | 
+                ThreadStackEmptyException | InvalidProgramCounterException | 
+                NullMethodReceiverException | InvalidSlotException exc) {
+           //TODO check and filter exceptions and blame caller when necessary
+           throw new UnexpectedInternalException(exc);
+       }
         return true;
     }
 
     public State makeInitialState() {
-        //takes a copy of the initial state and refines it
-        final State sIni =  this.initialStateSupplier.get();
-        sIni.clearStack();
-        final State s = this.currentStateSupplier.get();
+    	final State sIni;
+    	//takes a copy of the initial state and refines it
         try {
+            sIni =  this.initialStateSupplier.get();
+            sIni.clearStack();
+            final State s = this.currentStateSupplier.get();
             sIni.refine(s);
-        } catch (CannotRefineException e) {
+        } catch (CannotRefineException | FrozenStateException e) {
             //this should not happen
             throw new UnexpectedInternalException(e);
         }
@@ -249,6 +251,7 @@ public final class InitialHeapChecker {
      * @throws EngineStuckException
      * @throws FailureException
      * @throws ThreadStackEmptyException 
+     * @throws FrozenStateException
      */
     //TODO handle and convert all these exceptions and raise the abstraction level of the operation
     private static boolean 
@@ -258,7 +261,7 @@ public final class InitialHeapChecker {
     NullMethodReceiverException, InvalidSlotException, NonexistingObservedVariablesException, 
     DecisionException, CannotBacktrackException, CannotManageStateException, 
     ClasspathException, ContradictionException, EngineStuckException, FailureException, 
-    ThreadStackEmptyException {
+    ThreadStackEmptyException, FrozenStateException {
         try {
             s.pushFrame(classFile, methodSignatureImpl, true, 0, r);
         } catch (MethodNotFoundException | MethodCodeNotFoundException | InvalidTypeException e) {

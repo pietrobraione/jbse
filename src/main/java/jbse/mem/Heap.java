@@ -1,21 +1,86 @@
 package jbse.mem;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import jbse.bc.ClassFile;
+import jbse.bc.Signature;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
+import jbse.val.HistoryPoint;
+import jbse.val.Primitive;
+import jbse.val.ReferenceSymbolic;
+import jbse.val.Value;
 
 /**
  * Class that implements the heap in the JVM's memory.
  */
 final class Heap implements Cloneable {
     private final long maxHeapSize;
+	private Heap delegate; //TODO nonfinal to allow cloning
     private SortedMap<Long, Objekt> objects; //TODO nonfinal to allow cloning
     private long nextIndex;
+    
+    private static final class PleaseLookInDelegateHeap implements Objekt {
+    	private static final PleaseLookInDelegateHeap INSTANCE = new PleaseLookInDelegateHeap();
+		static PleaseLookInDelegateHeap instance() { return INSTANCE; }
+		
+		private PleaseLookInDelegateHeap() { }
+		
+		private static final String ERROR_USE = "Attempted to use class Heap.PleaseDelegate as it were a true Objekt.";
+
+		@Override
+		public ClassFile getType() { throw new UnexpectedInternalException(ERROR_USE); }
+
+		@Override
+		public ReferenceSymbolic getOrigin() { throw new UnexpectedInternalException(ERROR_USE); }
+
+		@Override
+		public HistoryPoint historyPoint() { throw new UnexpectedInternalException(ERROR_USE); }
+
+		@Override
+		public boolean isSymbolic() { throw new UnexpectedInternalException(ERROR_USE); }
+		
+		@Override
+		public void setObjektDefaultHashCode(Primitive defaultHashCode) { throw new UnexpectedInternalException(ERROR_USE); }
+
+		@Override
+		public Primitive getObjektDefaultHashCode() { throw new UnexpectedInternalException(ERROR_USE); }
+
+		@Override
+		public Collection<Signature> getStoredFieldSignatures() { throw new UnexpectedInternalException(ERROR_USE); }
+
+		@Override
+		public boolean hasSlot(int slot) { throw new UnexpectedInternalException(ERROR_USE); }
+
+		@Override
+		public Value getFieldValue(Signature sig) { throw new UnexpectedInternalException(ERROR_USE); }
+
+		@Override
+		public Value getFieldValue(String fieldName) { throw new UnexpectedInternalException(ERROR_USE); }
+
+		@Override
+		public Value getFieldValue(int slot) { throw new UnexpectedInternalException(ERROR_USE); }
+
+		@Override
+		public int getFieldSlot(Signature field) { throw new UnexpectedInternalException(ERROR_USE); }
+
+		@Override
+		public void setFieldValue(Signature field, Value item) { throw new UnexpectedInternalException(ERROR_USE); }
+
+		@Override
+		public void setFieldValue(int slot, Value item) { throw new UnexpectedInternalException(ERROR_USE); }
+
+		@Override
+		public Map<String, Variable> fields() { throw new UnexpectedInternalException(ERROR_USE); }
+
+		@Override
+		public Objekt clone() { throw new UnexpectedInternalException(ERROR_USE); }
+    }
 
     /**
      * Constructor.
@@ -24,6 +89,7 @@ final class Heap implements Cloneable {
      *        of objects this heap can store.
      */
     Heap(long maxHeapSize) {
+    	this.delegate = null;
         this.maxHeapSize = maxHeapSize;
         this.objects = new TreeMap<>();
         this.nextIndex = Util.POS_ROOT;
@@ -33,14 +99,14 @@ final class Heap implements Cloneable {
      * Stores a new object into the heap up to the
      * maximum capacity of the heap.
      * 
-     * @param item the {@link Objekt} to be stored in 
+     * @param item the {@link ObjektImpl} to be stored in 
      *        the heap.
      * @return the position in the heap  
      *         where {@code item} is stored.
      * @throws HeapMemoryExhaustedException if the heap
      *         cannot store any more object.
      */
-    long addNew(Objekt item) throws HeapMemoryExhaustedException {
+    long addNew(ObjektImpl item) throws HeapMemoryExhaustedException {
         if (this.objects.size() >= this.maxHeapSize) {
             throw new HeapMemoryExhaustedException();
         }
@@ -56,7 +122,7 @@ final class Heap implements Cloneable {
      * @return the position in the heap  
      *         where {@code item} is stored.
      */
-    long addNewSurely(Objekt item) {
+    long addNewSurely(ObjektImpl item) {
         this.objects.put(this.nextIndex, item);
         long retVal = this.nextIndex;
         while (this.objects.containsKey(this.nextIndex)) {
@@ -92,7 +158,26 @@ final class Heap implements Cloneable {
      *         {@code null} if nothing is stored at {@code pos}.
      **/
     Objekt getObject(long pos) {
-        return this.objects.get(pos);
+        final Objekt localObjekt = this.objects.get(pos);
+        if (localObjekt == PleaseLookInDelegateHeap.instance()) {
+        	final ObjektImpl trueObjekt = getTheRealThing(pos);
+        	final ObjektWrapper<?> delegateObjekt = trueObjekt.makeWrapper(this, pos);
+        	set(pos, delegateObjekt);
+        	return delegateObjekt;
+        } else {
+        	return localObjekt;
+        }
+    }
+    
+    private ObjektImpl getTheRealThing(long pos) {
+        final Objekt localObjekt = this.objects.get(pos);
+        if (localObjekt == PleaseLookInDelegateHeap.instance()) {
+        	return this.delegate.getTheRealThing(pos);
+        } else if (localObjekt instanceof ObjektWrapper<?>) {
+        	return ((ObjektWrapper<?>) localObjekt).getDelegate();
+        } else {
+        	return (ObjektImpl) localObjekt;
+        }
     }
 
     /**
@@ -133,6 +218,24 @@ final class Heap implements Cloneable {
         }
     }
 
+    Heap lazyClone() {
+        final Heap h;
+        try {
+            h = (Heap) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new InternalError(e);
+        }
+
+        h.delegate = this;
+        final SortedMap<Long, Objekt> objectsClone = new TreeMap<>();
+        for (Map.Entry<Long, Objekt> e : this.objects.entrySet()) {
+            objectsClone.put(e.getKey(), PleaseLookInDelegateHeap.instance());
+        }
+        h.objects = objectsClone;
+        
+        return h;
+    }
+
     @Override
     public String toString() {
         final StringBuilder buf = new StringBuilder();
@@ -161,13 +264,13 @@ final class Heap implements Cloneable {
             throw new InternalError(e);
         }
 
-        final SortedMap<Long, Objekt> objListClone = new TreeMap<>();
-
+        h.delegate = null;
+        final SortedMap<Long, Objekt> objectsClone = new TreeMap<>();
         for (Map.Entry<Long, Objekt> e : this.objects.entrySet()) {
-            final Objekt val = e.getValue();
-            objListClone.put(e.getKey(), val.clone());
+            objectsClone.put(e.getKey(), getTheRealThing(e.getKey()).clone());
         }
-        h.objects = objListClone;
+        h.objects = objectsClone;
+        
         return h;
     }
 }

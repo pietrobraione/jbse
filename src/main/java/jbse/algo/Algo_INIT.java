@@ -91,6 +91,7 @@ import jbse.jvm.exc.InitializationException;
 import jbse.mem.State;
 import jbse.mem.exc.CannotAssumeSymbolicObjectException;
 import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
@@ -319,7 +320,7 @@ public final class Algo_INIT {
             throw new ClasspathException(e);
         } catch (MissingTriggerParameterException | HeapMemoryExhaustedException | CannotAssumeSymbolicObjectException e) {
             throw new InitializationException(e);
-        } catch (ThreadStackEmptyException e) {
+        } catch (ThreadStackEmptyException | FrozenStateException e) {
             //this should not happen at this point
             failExecution(e);
         }
@@ -370,7 +371,7 @@ public final class Algo_INIT {
                 .op_return()
                 .mk();
             state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang");
-        } catch (ThreadStackEmptyException | InvalidProgramCounterException e) {
+        } catch (ThreadStackEmptyException | InvalidProgramCounterException | FrozenStateException e) {
             //this should not happen now
             failExecution(e);
         }

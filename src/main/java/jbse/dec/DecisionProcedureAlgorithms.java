@@ -1227,14 +1227,14 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * and removing the unsatisfiable ones.
 	 * 
 	 * @param hier a {@link ClassHierarchy}.
-	 * @param entries an {@link Iterator}{@code <}{@link AccessOutcomeIn}{@code >}. The method
+	 * @param entries an {@link Iterator}{@code <? extends }{@link AccessOutcomeIn}{@code >}. The method
 	 *        will determine the entries affected by the set operation, constrain them, and 
 	 *        delete the entries that become unsatisfiable.
 	 * @param index a {@link Primitive}, the position in the {@link Array} which is set.
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
 	 */
-	public void constrainArrayForSet(ClassHierarchy hier, Iterator<Array.AccessOutcomeIn> entries, Primitive index) 
+	public void constrainArrayForSet(ClassHierarchy hier, Iterator<? extends Array.AccessOutcomeIn> entries, Primitive index) 
 	throws InvalidInputException, DecisionException {
 	    if (hier == null || entries == null || index == null) {
 	        throw new InvalidInputException("completeArraySet invoked with a null parameter.");
@@ -1278,7 +1278,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * the unsatisfiable ones.
 	 * 
 	 * @param hier a {@link ClassHierarchy}.
-	 * @param entries an {@link Iterator}{@code <}{@link AccessOutcomeIn}{@code >}. The method
+	 * @param entries an {@link Iterator}{@code <? extends }{@link AccessOutcomeIn}{@code >}. The method
 	 *        will determine the entries affected by the copy operation, constrain them, and 
 	 *        delete the entries that become unsatisfiable.
 	 * @param srcPos The source initial position.
@@ -1287,7 +1287,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
 	 */
-	public void completeArraycopy(ClassHierarchy hier, Iterator<Array.AccessOutcomeIn> entries, Primitive srcPos, Primitive destPos, Primitive length) 
+	public void completeArraycopy(ClassHierarchy hier, Iterator<? extends Array.AccessOutcomeIn> entries, Primitive srcPos, Primitive destPos, Primitive length) 
 	throws InvalidInputException, DecisionException {
 	    if (hier == null || entries == null || srcPos == null || destPos == null || length == null) {
 	        throw new InvalidInputException("completeArraycopy invoked with a null parameter.");

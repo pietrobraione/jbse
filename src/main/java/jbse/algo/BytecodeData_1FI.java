@@ -2,6 +2,7 @@ package jbse.algo;
 
 import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 
 /**
  * Zero implicits, 
@@ -11,7 +12,8 @@ import jbse.mem.State;
  */
 public final class BytecodeData_1FI extends BytecodeData {
     @Override
-    protected void readImmediates(State state) throws InterruptException, ClasspathException {
+    protected void readImmediates(State state) 
+    throws InterruptException, ClasspathException, FrozenStateException {
         readImmediateUnsignedWord(state, 1);
         readFieldSignature(state, immediateUnsignedWord());
     }

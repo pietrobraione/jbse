@@ -16,6 +16,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 
 /**
@@ -44,7 +45,8 @@ final class Algo_GETSTATIC extends Algo_GETX {
 
     @Override
     protected Objekt source(State state)
-    throws ClasspathException, DecisionException, InterruptException, ContradictionException {
+    throws ClasspathException, DecisionException, InterruptException, 
+    ContradictionException, FrozenStateException {
         //possibly initializes the class of the field
         try {
             ensureClassInitialized(state, this.fieldClassResolved, this.ctx);

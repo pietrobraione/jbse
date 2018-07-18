@@ -17,6 +17,7 @@ import jbse.bc.ClassFile;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.Frame;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
@@ -31,7 +32,8 @@ public final class Algo_SUN_REFLECTION_GETCALLERCLASS extends Algo_INVOKEMETA_No
 
     @Override
     protected void cookMore(State state)
-    throws ClasspathException, CannotInvokeMethodInCurrentContext, InterruptException {
+    throws ClasspathException, CannotInvokeMethodInCurrentContext, 
+    InterruptException, FrozenStateException {
         final List<Frame> stack = state.getStack();
         final ListIterator<Frame> it = stack.listIterator(stack.size());
         boolean firstSkipped = false;

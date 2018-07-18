@@ -4,6 +4,7 @@ import java.util.function.Supplier;
 
 import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
+import jbse.mem.exc.FrozenStateException;
 
 /**
  * One implicit (kind, where is the method declared?), 
@@ -20,7 +21,8 @@ public final class BytecodeData_1KME extends BytecodeData {
     private final Kind kind;
 
     @Override
-    protected void readImmediates(State state) throws InterruptException, ClasspathException {
+    protected void readImmediates(State state) 
+    throws InterruptException, ClasspathException, FrozenStateException {
         readImmediateUnsignedWord(state, 1);
         switch (kind) {
         case NONINTERFACE:

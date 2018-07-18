@@ -27,12 +27,14 @@ import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.mem.Array;
 import jbse.mem.State;
 import jbse.mem.exc.CannotAssumeSymbolicObjectException;
 import jbse.mem.exc.ContradictionException;
+import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_XLOAD_GETX;
 import jbse.tree.DecisionAlternative_XLOAD_GETX_Aliases;
@@ -155,7 +157,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
 
     protected final void refineRefExpands(State state, DecisionAlternative_XYLOAD_GETX_Expands drc) 
     throws ContradictionException, InvalidTypeException, InterruptException, 
-    SymbolicValueNotAllowedException, ClasspathException {
+    SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
         final ReferenceSymbolic referenceToExpand = drc.getValueToLoad();
         final ClassFile classNameOfTargetObject = drc.getClassFileOfTargetObject();
         try {
@@ -181,7 +183,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
     }
 
     protected final void refineRefNull(State state, DecisionAlternative_XYLOAD_GETX_Null altNull)
-    throws ContradictionException {
+    throws ContradictionException, FrozenStateException {
         final ReferenceSymbolic referenceToResolve = altNull.getValueToLoad();
         state.assumeNull(referenceToResolve);
     }
@@ -192,7 +194,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
             @Override
             public void refineRefExpands(State s, DecisionAlternative_XLOAD_GETX_Expands drc)
             throws ContradictionException, InvalidTypeException, SymbolicValueNotAllowedException, 
-            InterruptException, ClasspathException {
+            InterruptException, ClasspathException, InvalidInputException {
                 Algo_INVOKEUNINTERPRETED.this.refineRefExpands(s, drc);
             }
 
@@ -204,7 +206,8 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
             }
 
             @Override
-            public void refineRefNull(State s, DecisionAlternative_XLOAD_GETX_Null drn) throws ContradictionException {
+            public void refineRefNull(State s, DecisionAlternative_XLOAD_GETX_Null drn) 
+            throws ContradictionException, FrozenStateException {
                 Algo_INVOKEUNINTERPRETED.this.refineRefNull(s, drn);
             }
 

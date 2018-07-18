@@ -66,7 +66,7 @@ final class ClassFileStore implements Cloneable {
      *        a classloader.
      * @param classFile a {@link ClassFile}.
      * @throws InvalidInputException if {@code initiatingLoader} is invalid (negative),
-     *         or {@code classFile == null}, or {@code classFile.}{@link ClassFile#isPrimitive()}, or 
+     *         or {@code classFile == null}, or {@code classFile.}{@link ClassFile#isPrimitiveOrVoid()}, or 
      *         {@code classFile.}{@link ClassFile#isAnonymousUnregistered()}, or there is already a different
      *         {@link ClassFile} in the loaded class cache for the pair
      *         {@code (initiatingLoader, classFile.}{@link ClassFile#getClassName() getClassName}{@code ())}.
@@ -80,7 +80,7 @@ final class ClassFileStore implements Cloneable {
         if (classFile == null) {
             throw new InvalidInputException("Attemped to invoke " + ClassFileStore.class.getName() + ".putLoadedClassCache with an invalid (null) classFile value.");
         }
-        if (classFile.isPrimitive()) {
+        if (classFile.isPrimitiveOrVoid()) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".addClassFile() with a classFile parameter that the classfile for the primitive type " + classFile.getClassName() + ".");
         }
         if (classFile.isAnonymousUnregistered()) {
