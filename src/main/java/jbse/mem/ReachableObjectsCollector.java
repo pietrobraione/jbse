@@ -112,6 +112,14 @@ public final class ReachableObjectsCollector {
             }
         }
         
+        //visits the path condition
+        for (Clause c : s.getPathCondition()) {
+        	if (c instanceof ClauseAssumeReferenceSymbolic) {
+        		final ReferenceSymbolic r = ((ClauseAssumeReferenceSymbolic) c).getReference();
+                addIfReference(reachable, s, r);
+        	}
+        }
+        
         //visits the stack
         for (Frame f : s.getStack()) {
             //variables
