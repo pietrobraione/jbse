@@ -448,7 +448,8 @@ public class Runner {
         final boolean retVal = (this.identifierSubregion.equals(currentRegion) ||
                                 currentRegion.startsWith(this.identifierSubregion + BRANCH_IDENTIFIER_SEPARATOR_COMPACT) || 
                                 currentRegion.startsWith(this.identifierSubregion + BRANCH_IDENTIFIER_SEPARATOR_LONG) || 
-                                this.identifierSubregion.startsWith(currentRegion));
+                                this.identifierSubregion.startsWith(currentRegion + BRANCH_IDENTIFIER_SEPARATOR_COMPACT) ||
+                                this.identifierSubregion.startsWith(currentRegion + BRANCH_IDENTIFIER_SEPARATOR_LONG));
         return retVal;
     }
 
