@@ -179,6 +179,17 @@ final class Heap implements Cloneable {
         	return (ObjektImpl) localObjekt;
         }
     }
+    
+    private void makeAllWrappers() {
+        for (Map.Entry<Long, Objekt> e : this.objects.entrySet()) {
+            if (e.getValue() == PleaseLookInDelegateHeap.instance()) {
+            	final long pos = e.getKey();
+            	final ObjektImpl trueObjekt = getTheRealThing(pos);
+            	final ObjektWrapper<?> delegateObjekt = trueObjekt.makeWrapper(this, pos);
+            	e.setValue(delegateObjekt);
+            }
+        }
+    }
 
     /**
      * Returns the objects in the heap as a {@link Map}.
@@ -189,6 +200,7 @@ final class Heap implements Cloneable {
      * at them.
      */
     SortedMap<Long, Objekt> getObjects() {
+    	makeAllWrappers();
         return new TreeMap<>(this.objects);
     }    
 
