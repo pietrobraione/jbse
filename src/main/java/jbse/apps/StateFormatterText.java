@@ -151,8 +151,6 @@ public final class StateFormatterText implements Formatter {
                 final StringBuilder referenceFormatted = new StringBuilder();
                 final boolean someText = formatValueForPathCondition(ref, referenceFormatted, breakLines, indentTxt, indentCurrent, doneSymbols); 
                 if (someText) {
-                    //does nothing
-                } else {
                     if (doneFirstWhere) {
                         where.append(" &&"); where.append(lineSep);
                     }
