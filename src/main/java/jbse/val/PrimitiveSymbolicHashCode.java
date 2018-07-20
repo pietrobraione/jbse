@@ -6,7 +6,7 @@ import jbse.val.exc.InvalidTypeException;
 
 /**
  * Class that represent a {@link PrimitiveSymbolicAtomic} whose origin is
- * the hash code of an object. 
+ * the default hash code of an object. 
  */
 public final class PrimitiveSymbolicHashCode extends PrimitiveSymbolicAtomic {
     /** 
