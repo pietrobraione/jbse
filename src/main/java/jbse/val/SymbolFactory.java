@@ -136,8 +136,8 @@ public final class SymbolFactory implements Cloneable {
         
         /**
          * A Factory Method for creating symbolic values. The symbol
-         * has as origin the default hash code of an object 
-         * (the object exists in the initial heap).  
+         * has as origin the hash code of an object (the object exists
+         * in the initial heap).  
          * 
          * @param container a {@link ReferenceSymbolic}, the container object
          *        the symbol originates from.
@@ -155,8 +155,8 @@ public final class SymbolFactory implements Cloneable {
         
         /**
          * A Factory Method for creating symbolic values. The symbol
-         * has as origin the default hash code of an object 
-         * (the object does not exist in the initial heap).  
+         * has as origin the hash code of an object (the object does
+         * not exist in the initial heap).  
          * 
          * @param historyPoint the current {@link HistoryPoint}.
          * @return a {@link PrimitiveSymbolic}.
