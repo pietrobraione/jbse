@@ -326,9 +326,21 @@ public class Engine implements AutoCloseable {
      * @return the number of objects with class {@code className}
      * assumed in the current state.
      */
-	public int getNumAssumed(String className) {
-		return this.currentState.getNumAssumed(className);
-	}
+    public int getNumAssumed(String className) {
+        return this.currentState.getNumAssumed(className);
+    }
+    
+    /**
+     * Returns the number of states that remain to be explored
+     * at a given branch.
+     * 
+     * @param bp a {@link BranchPoint}.
+     * @return the number of states at the branch identified by {@code bp} 
+     *         that were not yet analyzed.
+     */
+    public int getNumOfStatesAtBranch(BranchPoint bp) {
+    	return this.ctx.stateTree.getNumOfStatesAtBranch(bp);
+    }
 
 	/** 
 	 * Adds a branch point to the symbolic execution.
@@ -361,21 +373,6 @@ public class Engine implements AutoCloseable {
 	}
 	
 	/**
-	 * Checks whether a subsequent call to {@link #backtrack()} 
-	 * will yield the last state in a branch.
-	 * 
-	 * @return {@code true} iff it will yield the last state in a branch.
-	 * @throws CannotBacktrackException iff <code>this.</code>{@link #canBacktrack}()<code> == false</code> 
-	 *         before the method is invoked.
-	 */
-	public boolean willBacktrackToLastInBranch() throws CannotBacktrackException {
-		if (!this.canBacktrack()) {
-			throw new CannotBacktrackException();
-		}
-		return this.ctx.stateTree.nextIsLastInCurrentBranch();
-	}
-
-	/**
 	 * Backtracks the execution to the next pending branch.
 	 * 
 	 * @return the {@link BranchPoint} of the next pending branch.
@@ -387,13 +384,13 @@ public class Engine implements AutoCloseable {
 	public BranchPoint backtrack() 
 	throws CannotBacktrackException, DecisionBacktrackException {
 		//TODO dubious correctness of this implementation
-		if (!this.canBacktrack()) {
-			throw new CannotBacktrackException();
-		}
+        if (!canBacktrack()) {
+            throw new CannotBacktrackException();
+        }
 
-		final boolean isLast = this.ctx.stateTree.nextIsLastInCurrentBranch();
-		final BranchPoint bp = this.ctx.stateTree.nextBranch();
-		
+        final BranchPoint bp = this.ctx.stateTree.nextBranch();
+        final boolean isLast = (getNumOfStatesAtBranch(bp) == 1);
+
         try {
 			this.currentState = this.ctx.stateTree.nextState();
 			final Collection<Clause> currentAssumptions = this.currentState.getPathCondition();

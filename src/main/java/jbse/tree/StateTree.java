@@ -218,15 +218,20 @@ public class StateTree {
     }
     
     /**
-     * Checks whether the next state in this {@link StateTree} is the last in a branch.
-     *  
-     * @return {@code true} iff the next state in the store, that would be returned by a 
-     *         call to {@link #nextState()}, is the last state of its branch.
-     * @throws NoSuchElementException if {@link #hasStates()} {@code == false}.
+     * Returns the number of states that remain to be explored
+     * at a given branch.
+     * 
+     * @param bp a {@link BranchPoint}.
+     * @return the number of states at the branch identified by {@code bp} 
+     *         that must be emitted.
      */
-    public boolean nextIsLastInCurrentBranch() {
-        final BranchInfo b = this.branchList.getFirst();
-        return (b.emittedStates == b.totalStates - 1);
+    public int getNumOfStatesAtBranch(BranchPoint bp) {
+    	for (BranchInfo info : this.branchList) {
+    		if (info.branch == bp) {
+    			return info.totalStates - info.emittedStates;
+    		}
+    	}
+    	return 0;
     }
     
     /**
@@ -331,10 +336,11 @@ public class StateTree {
     /**
      * Returns the next branch point.
      * 
-     * @return the {@link BranchPoint} associated to the next initial 
-     *         state stored in the initializer, as it would be returned 
-     *         by a call to {@link nextState}, 
-     *         or {@code null} in the case such state exists.  
+     * @return the {@link BranchPoint} associated to the next
+     *         state as it would be returned 
+     *         by a call to {@link #nextState}, 
+     *         or {@code null} in the case such state does not 
+     *         exist.  
      */
     public BranchPoint nextBranch() {
         if (this.branchList.isEmpty()) {
