@@ -432,7 +432,8 @@ public final class ArrayImpl extends ObjektImpl implements Array {
         //is better having more, restrictive entries than less, liberal entries, since 
         //most workload is on the theorem prover side, and with restrictive entries 
         //we may hope that normalization will succeed upon array access, thus reducing 
-        //the calls to the prover.
+        //the calls to the prover. Of course there is a complementary risk, i.e., that
+        //having many entries results in the creation of many branches. 
         this.entries = new LinkedList<>();
         if (getLength() instanceof Simplex) {
             final int ln = ((Integer) ((Simplex) getLength()).getActualValue()).intValue();
