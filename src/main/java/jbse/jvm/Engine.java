@@ -417,6 +417,18 @@ public class Engine implements AutoCloseable {
     public int getNumAssumed(String className) {
         return this.currentState.getNumAssumed(className);
     }
+    
+    /**
+     * Returns the number of states that remain to be explored
+     * at a given branch.
+     * 
+     * @param bp a {@link BranchPoint}.
+     * @return the number of states at the branch identified by {@code bp} 
+     *         that were not yet analyzed.
+     */
+    public int getNumOfStatesAtBranch(BranchPoint bp) {
+    	return this.ctx.stateTree.getNumOfStatesAtBranch(bp);
+    }
 
     /**
      * Stops the execution along the current trace.
@@ -441,25 +453,10 @@ public class Engine implements AutoCloseable {
     }
 
     /**
-     * Checks whether a subsequent call to {@link #backtrack()} 
-     * will yield the last state in a branch.
-     * 
-     * @return {@code true} iff it will yield the last state in a branch.
-     * @throws CannotBacktrackException iff {@code this.}{@link #canBacktrack()}{@code  == false} 
-     *         before the method is invoked.
-     */
-    public boolean willBacktrackToLastInBranch() throws CannotBacktrackException {
-        if (!this.canBacktrack()) {
-            throw new CannotBacktrackException();
-        }
-        return this.ctx.stateTree.nextIsLastInCurrentBranch();
-    }
-
-    /**
      * Backtracks the execution to the next pending branch.
      * 
      * @return the {@link BranchPoint} of the next pending branch.
-     * @throws CannotBacktrackException iff {@code this.}{@link #canBacktrack}{@code () == false} 
+     * @throws CannotBacktrackException iff {@link #canBacktrack}{@code () == false} 
      *         before the method is invoked.
      * @throws DecisionBacktrackException iff the decision procedure fails for 
      *         any reason. 
@@ -467,12 +464,12 @@ public class Engine implements AutoCloseable {
     public BranchPoint backtrack() 
     throws CannotBacktrackException, DecisionBacktrackException {
         //TODO dubious correctness of this implementation
-        if (!this.canBacktrack()) {
+        if (!canBacktrack()) {
             throw new CannotBacktrackException();
         }
 
-        final boolean isLast = this.ctx.stateTree.nextIsLastInCurrentBranch();
         final BranchPoint bp = this.ctx.stateTree.nextBranch();
+        final boolean isLast = (getNumOfStatesAtBranch(bp) == 1);
 
         try {
             this.currentState = this.ctx.stateTree.nextState();
