@@ -73,16 +73,19 @@ public class Algo_INVOKEMETA_OnlyReturn extends Algo_INVOKEMETA_Nonbranching {
             this.returnValue = null;
         } else {
             //checks the parameters
-            boolean allSimplex = true;
+            boolean allConcrete = true;
+            boolean allPrimitive = true;
             for (int i = 0; i < args.length; ++i) {
-                if (!(args[i] instanceof Simplex)) {
-                    allSimplex = false;
-                    break;
+                if (args[i].isSymbolic()) {
+                    allConcrete = false;
+                }
+                if (args[i] instanceof Primitive) {
+                    allPrimitive = false;
                 }
             }
             
-            if (allSimplex && Type.isPrimitive(returnType)) {
-                //delegates to metacircular invocation
+            if (allConcrete && allPrimitive && Type.isPrimitive(returnType)) {
+                //delegates if all parameters are concrete and primitive, and if returns a primitive
                 invokeMetacircularly(state, Arrays.stream(args).map(p -> (Simplex) p).toArray(Simplex[]::new));
             } else {
                 //otherwise, builds a term
