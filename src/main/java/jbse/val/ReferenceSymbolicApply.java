@@ -86,6 +86,11 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic {
 	}
 	
 	@Override
+	public ReferenceSymbolic root() {
+		return this;
+	}
+	
+	@Override
 	public String asOriginString() {
             final StringBuilder buf = new StringBuilder();
             buf.append(this.operator + "(");

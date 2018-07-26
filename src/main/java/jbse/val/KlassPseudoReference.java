@@ -20,6 +20,11 @@ public final class KlassPseudoReference extends ReferenceSymbolic {
     	this.className = className;
     }
     
+    @Override
+    public ReferenceSymbolic root() {
+    	return this;
+    }
+    
     public String getClassName() {
         return this.className;
     }

@@ -97,7 +97,6 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
     protected StrategyDecide<DecisionAlternative_XLOAD_GETX> decider() {
         return (state, result) -> {
             final Outcome o = this.ctx.decisionProcedure.resolve_XLOAD_GETX(state, this.valToLoad, result);
-            result.removeIf(da -> da instanceof DecisionAlternative_XLOAD_GETX_Aliases); //no aliases please!
             this.someRefNotExpanded = o.noReferenceExpansion();
             if (this.someRefNotExpanded) {
                 try {

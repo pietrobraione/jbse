@@ -22,6 +22,11 @@ public abstract class ReferenceSymbolicMember extends ReferenceSymbolicAtomic im
     	super(id, staticType, container.historyPoint());
     	this.container = container;
     }
+    
+    @Override
+    public final ReferenceSymbolic root() {
+    	return this.container.root();
+    }
 
     @Override
     public final ReferenceSymbolic getContainer() {
