@@ -55,6 +55,7 @@ import jbse.val.Operator;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.ReferenceSymbolic;
+import jbse.val.ReferenceSymbolicApply;
 import jbse.val.Simplex;
 import jbse.val.Value;
 import jbse.val.WideningConversion;
@@ -1129,7 +1130,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	            
 	            //if it is time and epoch compatible, adds the object
 	            //to the result
-	            if (isTypeAndEpochCompatible(o, ref, refClass, classHierarchy)) {
+	            if (isAliasCompatible(o, ref, refClass, classHierarchy)) {
 	                retVal.put(i, o);
 	            }
 	        }
@@ -1139,23 +1140,27 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	
 	/**
 	 * Checks whether an {@link Objekt} can be used 
-	 * to resolve of a symbolic reference.
+	 * to resolve of a symbolic reference by aliasing.
 	 * 
 	 * @param o an {@link Objekt}.
 	 * @param ref a {@link ReferenceSymbolic} to be resolved.
 	 * @param refClass the {@link ClassFile} for the static type of {@code ref}.
 	 * @param classHierarchy a {@link ClassHierarchy}.
-	 * @return {@code true} iff {@code refClass} can be resolved by {@code o}. 
+	 * @return {@code true} iff {@code refClass} can be resolved by alias to 
+	 *         {@code o}. 
 	 *         More precisely, returns {@code true} iff the creation epoch of 
 	 *         {@code o} comes before that of the symbolic reference, and {@code o}'s type 
-	 *         is a subclass of {@code refClass}.
+	 *         is a subclass of {@code refClass}. If {@code ref} is a member of a 
+	 *         {@link ReferenceSymbolicApply} it also check that {@code o} has as
+	 *         origin the same {@link ReferenceSymbolicApply}.
 	 */
-	private boolean isTypeAndEpochCompatible(Objekt o, ReferenceSymbolic ref, ClassFile refClass, ClassHierarchy classHierarchy) {
+	private boolean isAliasCompatible(Objekt o, ReferenceSymbolic ref, ClassFile refClass, ClassHierarchy classHierarchy) {
 	    final boolean isTypeCompatible = classHierarchy.isSubclass(o.getType(), refClass);
 	    final HistoryPoint oEpoch = (o.historyPoint() == null ? this.initialHistoryPoint : o.historyPoint());
             final HistoryPoint refEpoch = (ref.historyPoint() == null ? this.initialHistoryPoint : ref.historyPoint());
 	    final boolean isEpochCompatible = oEpoch.weaklyBefore(refEpoch);
-	    return (isTypeCompatible && isEpochCompatible); 
+	    final boolean isRootCompatible = !(ref.root() instanceof ReferenceSymbolicApply) || o.getOrigin().root().equals(ref.root());
+	    return (isTypeCompatible && isEpochCompatible && isRootCompatible); 
 	}
 
 	/**

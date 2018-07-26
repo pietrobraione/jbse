@@ -22,6 +22,11 @@ public final class ReferenceSymbolicLocalVariable extends ReferenceSymbolicAtomi
     	super(id, staticType, historyPoint);
     	this.variableName = variableName;
     }
+    
+    @Override
+    public ReferenceSymbolic root() {
+    	return this;
+    }
 
     @Override
     public final String getVariableName() {

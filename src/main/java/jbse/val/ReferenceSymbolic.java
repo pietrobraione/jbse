@@ -38,17 +38,23 @@ public abstract class ReferenceSymbolic extends Reference implements Symbolic {
     public final String getStaticType() {
     	return this.staticType;
     }
-
+    
     /**
-     * {@inheritDoc}
+     * Returns the root {@link ReferenceSymbolic} (i.e., the topmost
+     * contained) where this {@link ReferenceSymbolic} originates from.
+     * 
+     * @return a {@link KlassPseudoReference}, or a {@link ReferenceSymbolicApply}, 
+     *         or a {@link ReferenceSymbolicLocalVariable}.
      */
+    public abstract ReferenceSymbolic root();
+
     @Override
     public final String getValue() {
     	return toString();
     }
     
     @Override
-    public HistoryPoint historyPoint() {
+    public final HistoryPoint historyPoint() {
         return this.historyPoint;
     }
 

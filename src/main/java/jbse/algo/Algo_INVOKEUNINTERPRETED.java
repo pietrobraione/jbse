@@ -139,7 +139,6 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
                 throwVerifyError(state);
                 exitFromAlgorithm();
             }
-            result.removeIf(da -> da instanceof DecisionAlternative_XLOAD_GETX_Aliases); //no aliases please!
             this.someRefNotExpanded = o.noReferenceExpansion();
             if (this.someRefNotExpanded) {
                 try {

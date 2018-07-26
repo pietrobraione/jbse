@@ -21,6 +21,11 @@ public final class KlassPseudoReference extends ReferenceSymbolic {
     	this.classFile = classFile;
     }
     
+    @Override
+    public ReferenceSymbolic root() {
+    	return this;
+    }
+    
     public ClassFile getClassFile() {
         return this.classFile;
     }
