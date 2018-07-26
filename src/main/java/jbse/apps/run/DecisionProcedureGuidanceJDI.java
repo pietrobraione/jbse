@@ -8,7 +8,6 @@ import static jbse.common.Type.toPrimitiveOrVoidInternalName;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -18,16 +17,13 @@ import com.sun.jdi.BooleanValue;
 import com.sun.jdi.Bootstrap;
 import com.sun.jdi.ByteValue;
 import com.sun.jdi.CharValue;
-import com.sun.jdi.ClassNotLoadedException;
 import com.sun.jdi.DoubleValue;
 import com.sun.jdi.Field;
 import com.sun.jdi.FloatValue;
 import com.sun.jdi.IncompatibleThreadStateException;
 import com.sun.jdi.IntegerValue;
-import com.sun.jdi.InvocationException;
 import com.sun.jdi.LocalVariable;
 import com.sun.jdi.LongValue;
-import com.sun.jdi.Method;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ReferenceType;
 import com.sun.jdi.ShortValue;
@@ -346,14 +342,15 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                         throw new GuidanceException(ERROR_BAD_PATH);
                     }
                     final ObjectReference oRef = (ObjectReference) o;
-                    final Method hashCode = oRef.referenceType().methodsByName("hashCode", "()I").get(0);
-                    return oRef.invokeMethod(this.methodEntryEvent.thread(), hashCode, Collections.emptyList(), 0);
+                    return this.vm.mirrorOf(oRef.hashCode()); //TODO is this the identity (default) hash code?
+                /*} else if (origin instanceof PrimitiveSymbolicApply) {
+                	//TODO assuming the symbol has shape f(arg1, ..., argn)@historyPoint, do guided execution up to historyPoint, then concretely exec f, and get the return value 
+                } else if (origin instanceof ReferenceSymbolicApply) {
+                	//TODO assuming the symbol has shape f(arg1, ..., argn)@historyPoint, do guided execution up to historyPoint, then concretely exec f, and get the return value*/
                 } else {
                     throw new GuidanceException(ERROR_BAD_PATH);
                 }
-            } catch (IncompatibleThreadStateException | AbsentInformationException | 
-            com.sun.jdi.InvalidTypeException | ClassNotLoadedException | 
-            InvocationException e) {
+            } catch (IncompatibleThreadStateException | AbsentInformationException e) {
                 throw new GuidanceException(e);
             }
         }

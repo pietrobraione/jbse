@@ -52,11 +52,11 @@ public abstract class ObjektImpl implements Objekt {
     private final List<Signature> fieldSignatures;
 
     /** 
-     * The hash code of this {@link ObjektImpl}. Mutable only
+     * The identity hash code of this {@link ObjektImpl}. Mutable only
      * because it must be set after creation, but should not
      * be changed after its initialization.
      */
-    private Primitive defaultHashCode;
+    private Primitive identityHashCode;
 
     /** 
      * The fields as a map of signatures (as strings) to variables.
@@ -127,15 +127,15 @@ public abstract class ObjektImpl implements Objekt {
     }
 
     @Override
-    public final void setObjektDefaultHashCode(Primitive defaultHashCode) {
-        //TODO check that the type of defaultHashCode is INT.
-        this.defaultHashCode = defaultHashCode;
+    public final void setIdentityHashCode(Primitive identityHashCode) {
+        //TODO check that the type of identityHashCode is INT.
+        this.identityHashCode = identityHashCode;
     }
 
     @Override
-    public final Primitive getObjektDefaultHashCode() {
-        //TODO check that this.defaultHashCode is not null.
-        return this.defaultHashCode;
+    public final Primitive getIdentityHashCode() {
+        //TODO check that this.identityHashCode is not null.
+        return this.identityHashCode;
     }
 
     @Override

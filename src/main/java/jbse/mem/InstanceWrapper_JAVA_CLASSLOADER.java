@@ -57,14 +57,14 @@ final class InstanceWrapper_JAVA_CLASSLOADER extends ObjektWrapper<InstanceImpl_
 	}
 
 	@Override
-	public void setObjektDefaultHashCode(Primitive defaultHashCode) {
+	public void setIdentityHashCode(Primitive identityHashCode) {
 		possiblyCloneDelegate();
-		getDelegate().setObjektDefaultHashCode(defaultHashCode);
+		getDelegate().setIdentityHashCode(identityHashCode);
 	}
 
 	@Override
-	public Primitive getObjektDefaultHashCode() {
-		return getDelegate().getObjektDefaultHashCode();
+	public Primitive getIdentityHashCode() {
+		return getDelegate().getIdentityHashCode();
 	}
 
 	@Override

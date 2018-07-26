@@ -46,10 +46,10 @@ final class Heap implements Cloneable {
 		public boolean isSymbolic() { throw new UnexpectedInternalException(ERROR_USE); }
 		
 		@Override
-		public void setObjektDefaultHashCode(Primitive defaultHashCode) { throw new UnexpectedInternalException(ERROR_USE); }
+		public void setIdentityHashCode(Primitive identityHashCode) { throw new UnexpectedInternalException(ERROR_USE); }
 
 		@Override
-		public Primitive getObjektDefaultHashCode() { throw new UnexpectedInternalException(ERROR_USE); }
+		public Primitive getIdentityHashCode() { throw new UnexpectedInternalException(ERROR_USE); }
 
 		@Override
 		public Collection<Signature> getStoredFieldSignatures() { throw new UnexpectedInternalException(ERROR_USE); }

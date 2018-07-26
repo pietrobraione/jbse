@@ -47,19 +47,19 @@ public interface Objekt extends Cloneable {
     boolean isSymbolic();
 
     /**
-     * Sets the default hash code of this {@link Objekt}.
+     * Sets the identity hash code of this {@link Objekt}.
      * 
-     * @param defaultHashCode a {@link Primitive} with type {@code int} 
-     *        for the default hash code of this {@link Objekt}.
+     * @param identityHashCode a {@link Primitive} with type {@code int} 
+     *        for the identity hash code of this {@link Objekt}.
      */
-    void setObjektDefaultHashCode(Primitive defaultHashCode);
+    void setIdentityHashCode(Primitive identityHashCode);
 
     /**
-     * Returns the default hash code of this {@code Objekt}.
+     * Returns the identity hash code of this {@code Objekt}.
      * 
      * @return a {@code Primitive}.
      */
-    Primitive getObjektDefaultHashCode();
+    Primitive getIdentityHashCode();
 
     /**
      * Returns the {@link Signature}s of all the fields

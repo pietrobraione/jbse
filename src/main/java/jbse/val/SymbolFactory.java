@@ -143,7 +143,7 @@ public final class SymbolFactory implements Cloneable {
          *        the symbol originates from.
          * @return a {@link PrimitiveSymbolic}.
          */
-        public PrimitiveSymbolic createSymbolHashCode(ReferenceSymbolic container) {
+        public PrimitiveSymbolic createSymbolIdentityHashCode(ReferenceSymbolic container) {
         try {
             final PrimitiveSymbolicHashCode retVal = new PrimitiveSymbolicHashCode(container, this.getNextIdPrimitiveSymbolic(), null, this.calc);
             return retVal;
@@ -161,7 +161,7 @@ public final class SymbolFactory implements Cloneable {
          * @param historyPoint the current {@link HistoryPoint}.
          * @return a {@link PrimitiveSymbolic}.
          */
-        public PrimitiveSymbolic createSymbolHashCode(HistoryPoint historyPoint) {
+        public PrimitiveSymbolic createSymbolIdentityHashCode(HistoryPoint historyPoint) {
         try {
             final PrimitiveSymbolicHashCode retVal = new PrimitiveSymbolicHashCode(null, this.getNextIdPrimitiveSymbolic(), historyPoint, this.calc);
             return retVal;

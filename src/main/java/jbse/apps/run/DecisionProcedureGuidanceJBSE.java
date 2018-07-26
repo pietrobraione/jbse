@@ -318,10 +318,14 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
         				throw new GuidanceException(ERROR_BAD_PATH);
         			}
         			if (o instanceof Reference) {
-        				return this.initialStateConcrete.getObject((Reference) o).getObjektDefaultHashCode(); //TODO or the true hash code?
+        				return this.initialStateConcrete.getObject((Reference) o).getIdentityHashCode();
         			} else { //(o is a Klass or a primitive)
         				throw new GuidanceException(ERROR_BAD_PATH);
         			}
+        		/*} else if (origin instanceof PrimitiveSymbolicApply) {
+                	//TODO assuming the symbol has shape f(arg1, ..., argn)@historyPoint, do guided execution up to historyPoint, then concretely exec f, and get the return value 
+                } else if (origin instanceof ReferenceSymbolicApply) {
+                	//TODO assuming the symbol has shape f(arg1, ..., argn)@historyPoint, do guided execution up to historyPoint, then concretely exec f, and get the return value*/
         		} else {
         			throw new GuidanceException(ERROR_BAD_PATH);
         		}

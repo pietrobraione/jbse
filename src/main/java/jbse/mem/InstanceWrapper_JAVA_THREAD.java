@@ -63,14 +63,14 @@ final class InstanceWrapper_JAVA_THREAD extends ObjektWrapper<InstanceImpl_JAVA_
 	}
 
 	@Override
-	public void setObjektDefaultHashCode(Primitive defaultHashCode) {
+	public void setIdentityHashCode(Primitive identityHashCode) {
 		possiblyCloneDelegate();
-		this.setObjektDefaultHashCode(defaultHashCode);
+		this.setIdentityHashCode(identityHashCode);
 	}
 
 	@Override
-	public Primitive getObjektDefaultHashCode() {
-		return getDelegate().getObjektDefaultHashCode();
+	public Primitive getIdentityHashCode() {
+		return getDelegate().getIdentityHashCode();
 	}
 
 	@Override

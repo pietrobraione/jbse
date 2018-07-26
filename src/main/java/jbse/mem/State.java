@@ -1470,7 +1470,7 @@ public final class State implements Cloneable {
     	}
         final ArrayImpl a = new ArrayImpl(false, this.calc, false, initValue, length, arrayClass, null, this.historyPoint, false, this.maxSimpleArrayLength);
         final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(a));
-        initDefaultHashCodeConcrete(a, retVal);
+        initIdentityHashCodeConcrete(a, retVal);
         return retVal;
     }
 
@@ -1503,7 +1503,7 @@ public final class State implements Cloneable {
         if (myObj instanceof Instance_JAVA_CLASSLOADER) {
             this.classLoaders.add(retVal);
         }
-        initDefaultHashCodeConcrete(myObj, retVal);
+        initIdentityHashCodeConcrete(myObj, retVal);
         return retVal;
     }
     
@@ -1531,7 +1531,7 @@ public final class State implements Cloneable {
         }
         final InstanceImpl myObj = doCreateInstance(classFile);
         final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNewSurely(myObj));
-        initDefaultHashCodeConcrete(myObj, retVal);
+        initIdentityHashCodeConcrete(myObj, retVal);
         return retVal;
     }
     
@@ -1602,7 +1602,7 @@ public final class State implements Cloneable {
             //the same way.
             
             //hash code
-            initDefaultHashCodeConcrete(myObj, retVal);
+            initIdentityHashCodeConcrete(myObj, retVal);
             
             //class loader
             final int classLoader = (representedClass.isAnonymousUnregistered() ? CLASSLOADER_BOOT : representedClass.getDefiningClassLoader()); //Instance_JAVA_CLASS for anonymous classfiles have the classloader field set to null
@@ -1638,7 +1638,7 @@ public final class State implements Cloneable {
         final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
         final KlassImpl k = new KlassImpl(false, this.calc, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
-        k.setObjektDefaultHashCode(this.calc.valInt(0)); //doesn't care because it is not used
+        k.setIdentityHashCode(this.calc.valInt(0)); //doesn't care because it is not used
         this.staticMethodArea.set(classFile, k);
     }
 
@@ -1669,7 +1669,7 @@ public final class State implements Cloneable {
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
         final KlassImpl k = new KlassImpl(true, this.calc, createSymbolKlassPseudoReference(classFile), this.initialHistoryPoint, numOfStaticFields, fieldsSignatures);
         initWithSymbolicValues(k);
-        k.setObjektDefaultHashCode(this.calc.valInt(0)); //doesn't care because it is not used
+        k.setIdentityHashCode(this.calc.valInt(0)); //doesn't care because it is not used
         this.staticMethodArea.set(classFile, k);
     }
 
@@ -1707,7 +1707,7 @@ public final class State implements Cloneable {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
             }
-            initDefaultHashCodeSymbolic(myObj);
+            initIdentityHashCodeSymbolic(myObj);
         } else if (classFile.isReference()) {
             try {
                 myObj = newInstanceSymbolic(classFile, origin);
@@ -1726,7 +1726,7 @@ public final class State implements Cloneable {
     throws InvalidTypeException, FrozenStateException {
         final Primitive length = (Primitive) createSymbolMemberArrayLength(origin);
         final ArrayImpl obj = new ArrayImpl(true, this.calc, true, null, length, arrayClass, origin, origin.historyPoint(), isInitial, this.maxSimpleArrayLength);
-        initDefaultHashCodeSymbolic(obj);
+        initIdentityHashCodeSymbolic(obj);
         return obj;
     }
 
@@ -1739,7 +1739,7 @@ public final class State implements Cloneable {
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
         final InstanceImpl obj = new InstanceImpl(true, this.calc, classFile, origin, origin.historyPoint(), numOfStaticFields, fieldsSignatures);
         initWithSymbolicValues(obj);
-        initDefaultHashCodeSymbolic(obj);
+        initIdentityHashCodeSymbolic(obj);
         return obj;
     }
 
@@ -1764,24 +1764,24 @@ public final class State implements Cloneable {
     }
 
     /**
-     * Initializes the hash code of an {@link Objekt} with a concrete value, 
+     * Initializes the identity hash code of an {@link Objekt} with a concrete value, 
      * the heap position of the object.
      * 
-     * @param myObj the {@link Objekt} whose hash code will be initialized.
+     * @param myObj the {@link Objekt} whose identity hash code will be initialized.
      * @param myRef a {@link ReferenceConcrete} to {@code myObj}.
      */
-    private void initDefaultHashCodeConcrete(Objekt myObj, ReferenceConcrete myRef) {
-        myObj.setObjektDefaultHashCode(this.calc.valInt((int) myRef.getHeapPosition()));
+    private void initIdentityHashCodeConcrete(Objekt myObj, ReferenceConcrete myRef) {
+        myObj.setIdentityHashCode(this.calc.valInt((int) myRef.getHeapPosition()));
     }
     
     /**
-     * Initializes the hash code of an {@link Objekt} with a symbolic value.
+     * Initializes the identity hash code of an {@link Objekt} with a symbolic value.
      * 
-     * @param myObj the {@link Objekt} whose hash code will be initialized.
+     * @param myObj the {@link Objekt} whose identity hash code will be initialized.
      * @throws FrozenStateException if the state is frozen.
      */
-    private void initDefaultHashCodeSymbolic(Objekt myObj) throws FrozenStateException {
-        myObj.setObjektDefaultHashCode((PrimitiveSymbolic) createSymbolHashCode(myObj.getOrigin()));
+    private void initIdentityHashCodeSymbolic(Objekt myObj) throws FrozenStateException {
+        myObj.setIdentityHashCode((PrimitiveSymbolic) createSymbolIdentityHashCode(myObj.getOrigin()));
     }
 
     /**
@@ -3457,7 +3457,7 @@ public final class State implements Cloneable {
 
     /**
      * A Factory Method for creating symbolic values. The symbol
-     * has as origin the hash code of an object (the object exists
+     * has as origin the identity hash code of an object (the object exists
      * in the initial heap).  
      * 
      * @param container a {@link ReferenceSymbolic}, the container object
@@ -3465,29 +3465,29 @@ public final class State implements Cloneable {
      * @return a {@link PrimitiveSymbolic}.
      * @throws FrozenStateException if the state is frozen.
      */
-    public PrimitiveSymbolic createSymbolHashCode(ReferenceSymbolic container) 
+    public PrimitiveSymbolic createSymbolIdentityHashCode(ReferenceSymbolic container) 
     throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        return this.symbolFactory.createSymbolHashCode(container);
+        return this.symbolFactory.createSymbolIdentityHashCode(container);
     }
 
     /**
      * A Factory Method for creating symbolic values. The symbol
-     * has as origin the hash code of an object (the object does
+     * has as origin the identity hash code of an object (the object does
      * not exist in the initial heap).  
      * 
      * @param historyPoint the current {@link HistoryPoint}.
      * @return a {@link PrimitiveSymbolic}.
      * @throws FrozenStateException if the state is frozen.
      */
-    public PrimitiveSymbolic createSymbolHashCode(HistoryPoint historyPoint) 
+    public PrimitiveSymbolic createSymbolIdentityHashCode(HistoryPoint historyPoint) 
     throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        return this.symbolFactory.createSymbolHashCode(historyPoint);
+        return this.symbolFactory.createSymbolIdentityHashCode(historyPoint);
     }
 
     /**

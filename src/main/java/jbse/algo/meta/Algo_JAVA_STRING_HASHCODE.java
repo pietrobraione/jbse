@@ -49,8 +49,8 @@ public final class Algo_JAVA_STRING_HASHCODE extends Algo_INVOKEMETA_Nonbranchin
                 //executes the String.hashCode implementation
                 continueWithBaseLevelImpl(state, this.isInterface, this.isSpecial, this.isStatic); 
             } else {
-                //here the only sensible thing that we can do is to return the default hash code
-                this.hash = thisObject.getObjektDefaultHashCode();
+                //here the only sensible thing that we can do is to return the identity hash code
+                this.hash = thisObject.getIdentityHashCode();
                 //TODO possibly refine the state to ensure hash code semantics for strings based on potential equality
                 //TODO possibly refine the state to ensure hash code is different to zero (?)
                 //TODO possibly store the hashcode in JAVA_STRING_HASH

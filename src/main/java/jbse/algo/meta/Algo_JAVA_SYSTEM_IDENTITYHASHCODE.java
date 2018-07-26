@@ -31,7 +31,7 @@ public final class Algo_JAVA_SYSTEM_IDENTITYHASHCODE extends Algo_INVOKEMETA_Non
                 final Objekt thisObjekt = state.getObject(thisReference);
 
                 //gets the hash code stored in the objekt and returns it
-                final Primitive hashCode = thisObjekt.getObjektDefaultHashCode();
+                final Primitive hashCode = thisObjekt.getIdentityHashCode();
                 state.pushOperand(hashCode);
             } catch (ClassCastException e) {
                 throwVerifyError(state);
