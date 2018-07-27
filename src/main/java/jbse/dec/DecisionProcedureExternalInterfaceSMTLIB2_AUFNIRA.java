@@ -697,51 +697,57 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
             } else if (x.getType() != Type.BOOLEAN && this.isBooleanExpression) {
                 throw new UnexpectedInternalException("error while parsing expression (expected a numeric expression but it is not): " + x.toString());
             }
-            final String operator = x.getOperator().split(":")[2];
-            final char type = x.getType();
-            final StringBuilder clause = new StringBuilder();
-            final StringBuilder smtlib2Signature = new StringBuilder();
-            boolean builtIn = false;
-            if (operator.equals(PrimitiveSymbolicApply.ABS)) {
-                if (Type.isPrimitiveIntegral(x.getType())) {
-                    builtIn = true;
-                    clause.append("(abs ");
-                    smtlib2Signature.append("abs ("); //useless, but we keep it
-                } else {
-                    clause.append("(absReals ");
-                    smtlib2Signature.append("absReals (");
-                }
-            } else {
-                clause.append("(" + operator + " ");
-                smtlib2Signature.append(operator + " (");
-            }
+            boolean allArgsPrimitive = true;
             for (Value v : x.getArgs()) {
-                if (v instanceof Primitive) {
-                    final Primitive p = (Primitive) v;
-                    p.accept(new SMTLIB2ExpressionVisitor(this, false));
-                    clause.append(this.clauseStack.pop());
-                    clause.append(" ");
-                    final String smtlib2Type = toSMTLIB2Type(p.getType());
-                    smtlib2Signature.append(smtlib2Type);
-                    smtlib2Signature.append(" ");
-                } else {
-                    throw new ExternalProtocolInterfaceException("function applications with reference arguments should not reach the SMT solver");
-                    //TODO mangle?
+                if (!(v instanceof Primitive)) {
+                	allArgsPrimitive = false;
+                	break;
                 }
             }
-            clause.append(")");
-            this.clauseStack.push(clause.toString());
-            smtlib2Signature.append(") ");
-            smtlib2Signature.append(toSMTLIB2Type(type));
+            if (allArgsPrimitive) {
+            	final String operator = x.getOperator().split(":")[2];
+            	final char type = x.getType();
+            	final StringBuilder clause = new StringBuilder();
+            	final StringBuilder smtlib2Signature = new StringBuilder();
+            	boolean builtIn = false;
+            	if (operator.equals(PrimitiveSymbolicApply.ABS)) {
+            		if (Type.isPrimitiveIntegral(x.getType())) {
+            			builtIn = true;
+            			clause.append("(abs ");
+            			smtlib2Signature.append("abs ("); //useless, but we keep it
+            		} else {
+            			clause.append("(absReals ");
+            			smtlib2Signature.append("absReals (");
+            		}
+            	} else {
+            		clause.append("(" + operator + " ");
+            		smtlib2Signature.append(operator + " (");
+            	}
+            	for (Value v : x.getArgs()) {
+            		final Primitive p = (Primitive) v;
+            		p.accept(new SMTLIB2ExpressionVisitor(this, false));
+            		clause.append(this.clauseStack.pop());
+            		clause.append(" ");
+            		final String smtlib2Type = toSMTLIB2Type(p.getType());
+            		smtlib2Signature.append(smtlib2Type);
+            		smtlib2Signature.append(" ");
+            	}
+            	clause.append(")");
+            	this.clauseStack.push(clause.toString());
+            	smtlib2Signature.append(") ");
+            	smtlib2Signature.append(toSMTLIB2Type(type));
 
-            if (this.smtlib2DeclaredSymbols.contains(operator) || builtIn) {
-                // does nothing
+            	if (this.smtlib2DeclaredSymbols.contains(operator) || builtIn) {
+            		// does nothing
+            	} else {
+            		this.smtlib2DeclaredSymbols.add(operator);
+            		//not added to smtlib2VarsToJBSESymbols, sorry, no model for this
+            		this.queryDeclarations.append("(declare-fun " + smtlib2Signature + " )\n");
+            		nSymCurrent = nSymCurrent + 1;
+            		nTotalSymbols = nTotalSymbols + 1;
+            	}
             } else {
-                this.smtlib2DeclaredSymbols.add(operator);
-                //not added to smtlib2VarsToJBSESymbols, sorry, no model for this
-                this.queryDeclarations.append("(declare-fun " + smtlib2Signature + " )\n");
-                nSymCurrent = nSymCurrent + 1;
-                nTotalSymbols = nTotalSymbols + 1;
+                m.mangle(x).accept(this);
             }
         }
 
@@ -753,7 +759,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
                 throw new UnexpectedInternalException("Error while parsing expression (context expected a boolean expression but it is numeric): " + x.toString());
             }
             final Primitive arg = x.getArg();
-            arg.accept(new SMTLIB2ExpressionVisitor(this, false));
+            arg.accept(new SMTLIB2ExpressionVisitor(this, arg.getType() == Type.BOOLEAN));
             if (Type.isPrimitiveIntegral(x.getType()) != Type.isPrimitiveIntegral(arg.getType())) {
                 this.clauseStack.push("(to_real " + this.clauseStack.pop() + ")");
             }
