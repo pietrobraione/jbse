@@ -348,6 +348,15 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                     final ObjectReference oRef = (ObjectReference) o;
                     final Method hashCode = oRef.referenceType().methodsByName("hashCode", "()I").get(0);
                     return oRef.invokeMethod(this.methodEntryEvent.thread(), hashCode, Collections.emptyList(), 0);
+                /*} else if (origin instanceof PrimitiveSymbolicApply) {
+                    * 1- let's assume the symbol is f(arg1, ..., argn)@historyPoint
+                    * 2- see if we have a JDI VirtualMachine that is stopped at historyPoint
+                    * 3- if not, create a new JDI VirtualMachine and a new JBSE, make them start at the initial state, then step both until we arrive at history point
+                    * 4- now concretely execute f(arg1, ..., argn) and get the return value
+                    * 5- finally, return it
+                    *
+                } else if (origin instanceof ReferenceSymbolicApply) {
+                    TODO same as above */
                 } else {
                     throw new GuidanceException(ERROR_BAD_PATH);
                 }
