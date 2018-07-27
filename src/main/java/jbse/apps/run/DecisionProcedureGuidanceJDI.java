@@ -344,9 +344,15 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                     final ObjectReference oRef = (ObjectReference) o;
                     return this.vm.mirrorOf(oRef.hashCode()); //TODO is this the identity (default) hash code?
                 /*} else if (origin instanceof PrimitiveSymbolicApply) {
-                	//TODO assuming the symbol has shape f(arg1, ..., argn)@historyPoint, do guided execution up to historyPoint, then concretely exec f, and get the return value 
+                	TODO 
+                	 * 1- let's assume the symbol is f(arg1, ..., argn)@historyPoint
+                	 * 2- see if we have a JDI VirtualMachine that is stopped at historyPoint
+                	 * 3- if not, create a new JDI VirtualMachine and a new JBSE, make them start at the initial state, then step both until we arrive at history point
+                	 * 4- now concretely execute f(arg1, ..., argn) and get the return value
+                	 * 5- finally, return it
+                	 *
                 } else if (origin instanceof ReferenceSymbolicApply) {
-                	//TODO assuming the symbol has shape f(arg1, ..., argn)@historyPoint, do guided execution up to historyPoint, then concretely exec f, and get the return value*/
+                	TODO same as above */
                 } else {
                     throw new GuidanceException(ERROR_BAD_PATH);
                 }
