@@ -91,7 +91,8 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     @Override
     protected final Outcome decide_IFX_Nonconcrete(ClassHierarchy hier, Primitive condition, SortedSet<DecisionAlternative_IFX> result) 
     throws DecisionException {
-        final Outcome retVal = super.decide_IFX_Nonconcrete(hier, condition, result);
+
+    	final Outcome retVal = super.decide_IFX_Nonconcrete(hier, condition, result);
         if (!this.ended) {
             try {
                 final Iterator<DecisionAlternative_IFX> it = result.iterator();
@@ -458,19 +459,12 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
 
             @Override
             public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) throws Exception {
-                final Value[] args = x.getArgs();
-                final Primitive[] argValues = new Primitive[args.length];
-                for (int i = 0; i < args.length; ++i) {
-                    if (args[i] instanceof Primitive) {
-                        ((Primitive) args[i]).accept(this);
-                    }
-                    argValues[i] = this.value;
-                    if (argValues[i] == null) {
-                        this.value = null;
-                        return;
-                    }
+                final Object funValue = this.jvm.getValue(x);
+                if (funValue instanceof Primitive) {
+                    this.value = (Primitive) funValue;
+                } else {
+                    this.value = null;
                 }
-                this.value = this.calc.applyFunctionPrimitive(x.getType(), x.historyPoint(), x.getOperator(), argValues);
             }
 
             @Override
