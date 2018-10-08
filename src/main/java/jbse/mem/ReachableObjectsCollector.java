@@ -37,7 +37,9 @@ public final class ReachableObjectsCollector {
      * @param s a {@link State}. It must not be {@code null}.
      * @param precise a {@code boolean}, if {@code true}, 
      *        then it includes in the roots for collection all 
-     *        the static fields, the string literals.
+     *        the static fields, the string literals, the classes,
+     *        including the primitive ones, the classloaders, the
+     *        method types, the threads and the thread groups.
      * @return a {@link Set}{@code <}{@link Long}{@code >}
      *         containing all the heap positions of the objects
      *         reachable from the collection roots.
@@ -89,6 +91,13 @@ public final class ReachableObjectsCollector {
         }
         
         final HashSet<Long> reachable = new HashSet<>();
+        
+        //if the state is stuck, possibly adds the return
+        //value and/or the thrown exception
+        if (s.isStuck()) {
+    		addIfReference(reachable, s, s.getStuckException());
+    		addIfReference(reachable, s, s.getStuckReturn());
+        }
         
         //possibly adds the root object and its static fields
         if (rootObject >= 0) {

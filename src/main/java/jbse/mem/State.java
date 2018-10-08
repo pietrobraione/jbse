@@ -3044,7 +3044,7 @@ public final class State implements Cloneable {
      * 
      * @return the {@link Value} set by a 
      *         previous call to {@link #setStuckReturn(Value)}, or {@code null} 
-     *         if <code>!this.</code>{@link #isStuck()}
+     *         if {@code !this.}{@link #isStuck()}
      *         or it has not been set stuck with a call to 
      *         {@link #setStuckReturn(Value)}. 
      */
