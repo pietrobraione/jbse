@@ -15,12 +15,12 @@ JBSE allows the inputs of a Java program to be either concrete values (usual Jav
 Installing JBSE
 ---------------
 
-Right now JBSE can be installed only by building it from source. Formal releases will be done when JBSE will be more feature-ready and stable.
+Right now JBSE can be installed only by building it from source. Formal releases will be available when JBSE will be more feature-ready and stable.
 
 Building JBSE
 -------------
 
-JBSE is built with Maven. This repository contains the POM file that must be used to build JBSE. If you work on the command line, once ensured the dependencies, it should be enough to clone the git repository and then run `mvn compile`. The supported Maven goals are:
+JBSE is built with Maven. This repository contains the POM file that must be used to build JBSE. If you work on the command line, once ensured the dependencies, it should be enough to clone the git repository and then run some Maven goal. The supported Maven goals are:
 
 * clean
 * compile
@@ -45,7 +45,7 @@ There is a known bug that prevents JBSE to interact with the solver if it is ins
 
 ### Working under Eclipse ###
 
-If you work (as us) under Eclipse 2018-09, you must install the egit Eclipse plugin (you will find it in the Eclipse Marketplace), the m2e plugin (also in the Eclipse Marketplace), and the m2e connector for javacc-maven-plugin. The last one must be installed manually: Select the menu Help > Install new software..., click the "Add" button to add a new site, and insert the URL `http://objectledge.github.io/maven-extensions/connectors/updates/development/` in the field "Location" (in the field "Name" you can give any name you want, but we advise to call it "Objectledge Maven extensions update site"). Press "OK", and then select the newly added update site in the "Work with" box. Finally, select "objectledge.org m2e connectors" > "m2e connector for javacc-maven-plugin": The version must be at least 1.2.0.x, or it will not work with the current version of m2e.
+If you work (as us) under Eclipse 2018-09, you must install the egit Eclipse plugin (you will find it in the Eclipse Marketplace), the m2e plugin (also in the Eclipse Marketplace), and the m2e connector for javacc-maven-plugin. The last one must be installed manually: Select the menu Help > Install new software..., click on the Add button to add a new site, and insert the URL `http://objectledge.github.io/maven-extensions/connectors/updates/development/` in the field Location (in the field Name you can give any name you want, but we advise to call it "Objectledge Maven extensions update site"). Press OK, and then select the newly added update site in the "Work with" box. Finally, select "objectledge.org m2e connectors" > "m2e connector for javacc-maven-plugin": The version must be at least 1.2.0.x, or it will not work with the current version of m2e.
 
 Before importing JBSE under Eclipse, be sure that the default Eclipse JRE is the JRE subdirectory of a full JDK 8 setup, *not* a standalone (i.e., not part of a JDK) JRE. Otherwise, Eclipse will compile JBSE but fail to run it.
 
