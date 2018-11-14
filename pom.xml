@@ -45,7 +45,7 @@
         <version>2.6</version>
         <executions>
           <execution>
-          <?m2e execute?>
+          <?m2e configurator org.objectledge.maven.connectors.javacc?>
             <id>javacc</id>
             <phase>generate-sources</phase>
             <goals>
