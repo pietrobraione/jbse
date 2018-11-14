@@ -15,22 +15,12 @@ JBSE allows the inputs of a Java program to be either concrete values (usual Jav
 Installing JBSE
 ---------------
 
-Right now JBSE can be installed only by building it from source.
+Right now JBSE can be installed only by building it from source. Formal releases will be done when JBSE will be more feature-ready and stable.
 
-### Building JBSE ###
+Building JBSE
+-------------
 
-This repository provides a Maven POM file that must be used to build JBSE. It should be enough to clone the git repository and then run `mvn compile`. If you work (as us) under Eclipse 2018-09, you must install the egit Eclipse plugin (you will find it in the Eclipse Marketplace), the m2e plugin (also in the Eclipse Marketplace), the m2e connector for git, and the m2e connector for javacc-maven-plugin. The last two are  more complex to install than just downloading them from the Eclipse Marketplace. 
-
-* For the m2e connector for git, after having installed m2e go to the Eclipse preferences menu (under Windows select the menu Windows > Preferences..., under Mac select Eclipse > Preferences...), then go to Maven > Discovery and press the "Open catalog" button: A special marketplace window will be opened, then go to "m2e Team providers" and select "m2e-git". 
-* The m2e connector for javacc-maven-plugin is not found under any marketplace, so you need to select the menu Help > Install new software..., click the "Add" button to add a new site, and insert the URL `http://objectledge.github.io/maven-extensions/connectors/updates/development/` in the field "Location" (in the field "Name" you can give any name you want, but we advise to call it "Objectledge Maven extensions update site"). Press "OK", and then select the newly added update site in the "Work with" box. Finally, select "objectledge.org m2e connectors" > "m2e connector for javacc-maven-plugin": The version must be at least 1.2.0.*, or it will not work with the current version of m2e. 
-
-Once done this setup, you are ready to import JBSE under Eclipse:
-
-* Clone the Github JBSE repository by switching to the git perspective and selecting the clone button under the Git Repositories view. Alternatively, open a console and clone the repository from the command line. Remember that Eclipse does *not* want you to clone the repository under your Eclipse workspace, and instead wants you to follow the standard git convention of putting the git repositories in a `git` subdirectory of your home directory. If you clone the repository from a console, please follow this standard (if you do it from the git perspective Eclipse will do this for you).
-* Click on the icon of the cloned repository, and right-click the Working Tree folder, then select Import Projects...: You should see a window with a progress bar, and after a while Eclipse will tell you that it has found one project named jbse, and that it will import it as a Maven project. Press Finish to confirm, and then switch back to the Java perspective: Now your current workspace should have a Java project named `jbse`. If you chose to clone the repositories from the console, select from the main menu File > Import... and then select Maven > Existing Maven Projects, press Next and then provide as root directory the directory where you cloned the JBSE repository: Eclipse will, again, detect the project automatically.
-* You may see some compilation errors emerge while Eclipse builds the workspace (it usually takes a while after the JBSE project has been created), but in the end there should be none. It could however be the case that Eclipse generates some compilation errors caused by the fact that JBSE uses the reserved `sun.misc.Unsafe` class. By default this should generate only warnings, but if it generates errors you shall modify the JBSE project settings by hand so it does not. Right-click the jbse project in the Package Explorer, select Properties, and then Java Compiler > Errors/Warnings. Click on "Enable project specific settings", then open the option group "Deprecated and restricted API", and for the option "Forbidden reference" select the value "Warning".
-
-The supported Maven goals are:
+JBSE is built with Maven. This repository contains the POM file that must be used to build JBSE. If you work on the command line, once ensured the dependencies, it should be enough to clone the git repository and then run `mvn compile`. The supported Maven goals are:
 
 * clean
 * compile
@@ -39,13 +29,31 @@ The supported Maven goals are:
 
 ### Dependencies ###
 
-JBSE has several build dependencies, that are automatically resolved by Maven:
+JBSE has several dependencies. JBSE must be built using a JDK version 8 - neither less, nor more - and Maven version 3.5.0 or above. Maven will automatically resolve and use the following build-time dependency:
 
-* [Javassist](http://jboss-javassist.github.io/javassist/): JBSE uses Javassist at runtime for all the bytecode manipulation tasks. It is also needed at runtime.
-* [JavaCC](https://javacc.org): Necessary for compiling the parser for the JBSE settings files. It is not needed at runtime.
-* [JUnit](http://junit.org): Necessary for running the tests. It is not needed at runtime.
+* [JavaCC](https://javacc.org) is used by Maven for compiling the parser for the JBSE settings files. It is not needed at runtime.
+* [JUnit](http://junit.org) is used by Maven for running the tests. It is not needed at runtime.
 
-JBSE also needs to interact at runtime an external numeric solver for pruning infeasible program paths. JBSE works well with [Z3](https://github.com/Z3Prover/z3) and, to a less extent, with [CVC4](http://cvc4.cs.stanford.edu/), but any SMT solver that supports the AUFNIRA logic should work. The dependency on the solver is not handled by Maven so you need to download and install at least one of them on the machine that runs JBSE. We strongly advise to use Z3 because it is what we routinely use.
+The runtime dependencies that are automatically resolved by Maven and included in the build path are:
+
+* [Javassist](http://jboss-javassist.github.io/javassist/) is used by JBSE for all the bytecode manipulation tasks.
+* The `tools.jar` library, that is part of every JDK 8 setup (note, *not* of the JRE).
+
+Finally JBSE also needs to interact at runtime an external numeric solver for pruning infeasible program paths. JBSE works well with [Z3](https://github.com/Z3Prover/z3) and, to a less extent, with [CVC4](http://cvc4.cs.stanford.edu/), but any SMT solver that supports the AUFNIRA logic should work. The dependency on the solver is not handled by Maven so you need to download and install at least one of them on the machine that runs JBSE. We strongly advise to use Z3 because it is what we routinely use.
+
+There is a known bug that prevents JBSE to interact with the solver if it is installed in a path containing spaces. Please don't do that until the bug is fixed.
+
+### Working under Eclipse ###
+
+If you work (as us) under Eclipse 2018-09, you must install the egit Eclipse plugin (you will find it in the Eclipse Marketplace), the m2e plugin (also in the Eclipse Marketplace), and the m2e connector for javacc-maven-plugin. The last one must be installed manually: Select the menu Help > Install new software..., click the "Add" button to add a new site, and insert the URL `http://objectledge.github.io/maven-extensions/connectors/updates/development/` in the field "Location" (in the field "Name" you can give any name you want, but we advise to call it "Objectledge Maven extensions update site"). Press "OK", and then select the newly added update site in the "Work with" box. Finally, select "objectledge.org m2e connectors" > "m2e connector for javacc-maven-plugin": The version must be at least 1.2.0.*, or it will not work with the current version of m2e.
+
+Before importing JBSE under Eclipse, be sure that the default Eclipse JRE is the JRE subdirectory of a full JDK 8 setup, *not* a standalone (i.e., not part of a JDK) JRE. Otherwise, Maven will not be able to find the `tools.jar` according to the recipe indicated in the POM file.
+
+Once done all of the above, you are ready to import JBSE under Eclipse:
+
+* Clone the Github JBSE repository by switching to the git perspective and selecting the clone button under the Git Repositories view. Alternatively, open a console and clone the repository from the command line. Remember that Eclipse does *not* want you to clone the repository under your Eclipse workspace, and instead wants you to follow the standard git convention of putting the git repositories in a `git` subdirectory of your home directory. If you clone the repository from a console, please follow this standard (if you do it from the git perspective Eclipse will do this for you).
+* Click on the icon of the cloned repository, and right-click the Working Tree folder, then select Import Projects...: You should see a window with a progress bar, and after a while Eclipse will tell you that it has found one project named jbse, and that it will import it as a Maven project. Press Finish to confirm, and then switch back to the Java perspective: Now your current workspace should have a Java project named `jbse`. If you chose to clone the repositories from the console, select from the main menu File > Import... and then select Maven > Existing Maven Projects, press Next and then provide as root directory the directory where you cloned the JBSE repository: Eclipse will, again, detect the project automatically.
+* You may see some compilation errors emerge while Eclipse builds the workspace (it usually takes a while after the JBSE project has been created), but in the end there should be none. It could however be the case that Eclipse generates some compilation errors caused by the fact that JBSE uses the reserved `sun.misc.Unsafe` class. By default this should generate only warnings, but if it generates errors you shall modify the JBSE project settings by hand so it does not. Right-click the jbse project in the Package Explorer, select Properties, and then Java Compiler > Errors/Warnings. Click on "Enable project specific settings", then open the option group "Deprecated and restricted API", and for the option "Forbidden reference" select the value "Warning".
 
 ### Testing JBSE ###
 
@@ -53,7 +61,7 @@ When you are done you may try the (very small) JUnit test suite under the `src/t
 
 ### Deploying JBSE ###
 
-Once JBSE is compiled, you can export JBSE as a jar file to be used in your project by running `mvn package`. The command will generate a `jbse-<VERSION>.jar` file in the `target` directory of the project. Note that `jbse-<VERSION>.jar` also includes the `jbse.meta` package and its subpackages, containing the API that the code under analysis can invoke to issue assertions, assumptions, and otherwise control the analysis process itself. The jar file does not include the runtime dependencies (Javassist), so you need to deploy the Javassist jar together with it. To ease deployment, Maven will also build an uber jar containing all the runtime dependencies. You will find it in the `target` directory as the file `jbse-shaded-<VERSION>.jar`. To avoid conflicts the uber jar renames the `javassist` package as `jbse.javassist`.
+Once JBSE is compiled, you can export JBSE as a jar file to be used in your project by running `mvn package`. The command will generate a `jbse-<VERSION>.jar` file in the `target` directory of the project. Note that `jbse-<VERSION>.jar` also includes the `jbse.meta` package and its subpackages, containing the API that the code under analysis can invoke to issue assertions, assumptions, and otherwise control the analysis process itself. The jar file does not include the runtime dependencies (Javassist and `tools.jar`), so you need to deploy them together with it. To ease deployment, Maven will also build an uber jar containing Javassist (but not `tools.jar`). You will find it in the `target` directory as the file `jbse-shaded-<VERSION>.jar`. To avoid conflicts the uber jar renames the `javassist` package as `jbse.javassist`.
 
 Using JBSE
 ----------
