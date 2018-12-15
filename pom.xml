@@ -11,8 +11,8 @@
 
   <licenses>
     <license>
-      <name> GNU Lesser General Public License (LGPL), version 3</name>
-      <url>http://www.gnu.org/licenses/lgpl-3.0.en.html</url>
+      <name>GNU General Public License (GPL), version 3</name>
+      <url>http://www.gnu.org/licenses/gpl-3.0.en.html</url>
       <distribution>repo</distribution>
     </license>
   </licenses>
@@ -45,7 +45,9 @@
         <version>2.6</version>
         <executions>
           <execution>
+          <?m2e configurator org.objectledge.maven.connectors.javacc?>
             <id>javacc</id>
+            <phase>generate-sources</phase>
             <goals>
               <goal>javacc</goal>
             </goals>
@@ -77,36 +79,6 @@
         </executions>
       </plugin>
     </plugins>
-    <pluginManagement>
-      <plugins>
-        <!--This plugin's configuration is used to store Eclipse
-        m2e settings only. It has no influence on the Maven build itself. -->
-        <plugin>
-          <groupId>org.eclipse.m2e</groupId>
-          <artifactId>lifecycle-mapping</artifactId>
-          <version>1.0.0</version>
-          <configuration>
-            <lifecycleMappingMetadata>
-              <pluginExecutions>
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>javacc-maven-plugin</artifactId>
-                    <versionRange>[1.0,)</versionRange>
-                    <goals>
-                      <goal>javacc</goal>
-                    </goals>
-                    </pluginExecutionFilter>
-                   <action>
-                    <execute />
-                  </action>
-                </pluginExecution>
-              </pluginExecutions>
-            </lifecycleMappingMetadata>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
   </build>
 
   <reporting>
