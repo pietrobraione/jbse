@@ -55,8 +55,6 @@ Once done all of the above, you are ready to import JBSE under Eclipse:
 * Click on the icon of the cloned repository, and right-click the Working Tree folder, then select Import Projects...: You should see a window with a progress bar, and after a while Eclipse will tell you that it has found one project named jbse, and that it will import it as a Maven project. Press Finish to confirm, and then switch back to the Java perspective: Now your current workspace should have a Java project named `jbse`. If you chose to clone the repositories from the console, select from the main menu File > Import... and then select Maven > Existing Maven Projects, press Next and then provide as root directory the directory where you cloned the JBSE repository: Eclipse will, again, detect the project automatically.
 * You may see some compilation errors emerge while Eclipse builds the workspace (it usually takes a while after the JBSE project has been created), but in the end there should be none. It could however be the case that Eclipse generates some compilation errors caused by the fact that JBSE uses the reserved `sun.misc.Unsafe` class. By default this should generate only warnings, but if it generates errors you shall modify the JBSE project settings by hand so it does not. Right-click the jbse project in the Package Explorer, select Properties, and then Java Compiler > Errors/Warnings. Click on "Enable project specific settings", then open the option group "Deprecated and restricted API", and for the option "Forbidden reference" select the value "Warning".
 
-The supported Maven goals are:
-
 ### Testing JBSE ###
 
 When you are done you may try the (very small) JUnit test suite under the `src/test` directory by running `mvn test`. As said before, running the tests depends on the presence of JUnit 4, a dependency that Maven fixes automatically. All tests should pass, with the possible exception of the tests in the class `jbse.dec.DecisionProcedureTest` that require that you fix the path to the Z3 executable. You must modify line 54 and replace `/opt/local/bin/z3` with your local path to the Z3 executable.
@@ -137,7 +135,7 @@ public class RunIf {
 }
 ``` 
 
-Note that `addClasspath` is a varargs method, so you can list as many path strings as you want. Next, we must specify which method JBSE must run (remember, JBSE can symbolically execute *any* method). We do it by setting the method's *signature*:
+Note that `addUserClasspath` is a varargs method, so you can list as many path strings as you want. Next, we must specify which method JBSE must run (remember, JBSE can symbolically execute *any* method). We do it by setting the method's *signature*:
 
 ```Java
 ...
@@ -157,14 +155,14 @@ Another essential parameter is the specification of which decision procedure JBS
 
 ```Java
 ...
-import jbse.apps.run.RunParameters.DecisionProcedureType;
+import static jbse.apps.run.RunParameters.DecisionProcedureType.Z3;
 
 public class RunIf {
     ...
     private static void set(RunParameters p) {
         p.addUserClasspath("./bin", "/home/guest/jbse/target/classes");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
-        p.setDecisionProcedureType(DecisionProcedureType.Z3);
+        p.setDecisionProcedureType(Z3);
         p.setExternalDecisionProcedurePath("/opt/local/bin/z3");
         ...
     }
@@ -175,14 +173,12 @@ Now that we have set the essential parameters we turn to the parameters that cus
 
 ```Java
 ...
-import jbse.apps.run.RunParameters.DecisionProcedureType;
-
 public class RunIf {
     ...
     private static void set(RunParameters p) {
         p.addUserClasspath("./bin", "/home/guest/jbse/target/classes");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
-        p.setDecisionProcedureType(DecisionProcedureType.Z3);
+        p.setDecisionProcedureType(Z3);
         p.setExternalDecisionProcedurePath("/opt/local/bin/z3");
         p.setOutputFileName("./out/runIf_z3.txt");
         ...
@@ -194,19 +190,19 @@ Then, we specify which execution steps `Run` must show on the output. By default
 
 ```Java
 ...
-import jbse.apps.run.RunParameters.DecisionProcedureType;
-import jbse.apps.run.RunParameters.StepShowMode;
+import static jbse.apps.run.RunParameters.StateFormatMode.TEXT;
+import static jbse.apps.run.RunParameters.StepShowMode.LEAVES;
 
 public class RunIf {
     ...
     private static void set(RunParameters p) {
         p.addUserClasspath("./bin", "/home/guest/jbse/target/classes");
         p.setMethodSignature("smalldemos/ifx/IfExample", "(I)V", "m");
-        p.setDecisionProcedureType(DecisionProcedureType.Z3);
+        p.setDecisionProcedureType(Z3);
         p.setExternalDecisionProcedurePath("/opt/local/bin/z3");
         p.setOutputFileName("./out/runIf_z3.txt");
-        p.setStepShowMode(StepShowMode.LEAVES);
-        p.setStateFormatMode(StateFormatMode.TEXT);
+        p.setStateFormatMode(TEXT);
+        p.setStepShowMode(LEAVES);
     }
 }
 ``` 
