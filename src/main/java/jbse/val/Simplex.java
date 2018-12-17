@@ -1,6 +1,7 @@
 package jbse.val;
 
 import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
@@ -17,6 +18,20 @@ public final class Simplex extends Primitive implements Cloneable {
     /** The string representation of this object. */
     private final String toString;
 
+    /**
+     * Constructor.
+     * 
+     * @param type a {@code char}, the type of this value.
+     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * @param value a (boxed) value with primitive type.
+     * @throws InvalidOperandException if {@code value} is not a 
+     *         primitive value (i.e., an instance of {@link Boolean}, {@link Byte}, 
+     *         {@link Character}, {@link Double}, {@link Float}, {@link Integer}, 
+     *         {@link Long}, or {@link Short}).
+     * @throws InvalidTypeException if {@code type} is not primitive or is
+     *         not the type of {@code value}.
+     * @throws NullPointerException if {@code calc == null}.
+     */
     private Simplex(char type, Calculator calc, Object value) 
     throws InvalidOperandException, InvalidTypeException {
         super(type, calc);
@@ -57,10 +72,14 @@ public final class Simplex extends Primitive implements Cloneable {
     /**
      * Factory method for {@link Simplex} values.
      * 
-     * @param calc a {@link Calculator}.
-     * @param value the value as {@link Object}, either {@link Boolean},
-     *         {@link Byte}, {@link Short}, {@link Integer}, {@link Long},
-     *         {@link Float}, {@link Double}, or {@link Character}. 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * @param value a (boxed) value with primitive type. 
+     * @throws InvalidOperandException if {@code value} is not a 
+     *         primitive value (i.e., an instance of {@link Boolean}, {@link Byte}, 
+     *         {@link Character}, {@link Double}, {@link Float}, {@link Integer}, 
+     *         {@link Long}, or {@link Short}).
+     * @throws InvalidTypeException if {@code type} is not primitive.
+     * @throws NullPointerException if {@code calc == null}.
      */
     public static Simplex make(Calculator calc, Object n) 
     throws InvalidTypeException, InvalidOperandException {
@@ -84,9 +103,9 @@ public final class Simplex extends Primitive implements Cloneable {
     }
 
     /**
-     * Returns the value of the simplex value.
+     * Returns the (Java) value of this {@link Simplex} value.
      * 
-     * @return the value as {@link Object}, either of {@link Boolean},
+     * @return the value as {@link Object}, either {@link Boolean},
      *         {@link Byte}, {@link Short}, {@link Integer}, {@link Long},
      *         {@link Float}, {@link Double}, or {@link Character}. 
      */
@@ -103,45 +122,60 @@ public final class Simplex extends Primitive implements Cloneable {
      *        against one.
      * @return {@code true} iff this object is equal to zero or one, 
      *         according to the value of the parameter {@code zero}, 
-     *         for its type.
+     *         for its type. If this object is a boolean, it will be
+     *         compared against {@code false} when {@code zero == true}
+     *         and against {@code true} when {@code zero == false}.
      */
     public boolean isZeroOne(boolean zero) {
         byte b;
+        short s;
         char c;
         int i;
         long l;
         float f;
         double d;
+        boolean z;
 
         if (zero) {
             b = 0;
+            s = 0;
             c = 0;
             i = 0;
             l = 0L;
             f = 0F; //TODO negative zero
             d = 0D; //TODO negative zero
+            z = false;
         } else {
             b = 1;
+            s = 1;
             c = 1;
             i = 1;
             l = 1L;
             f = 1F;
             d = 1D;
+            z = true;
         }
 
         boolean retVal = false;
-        if (this.getType() == Type.BYTE) {
-            retVal = (((Byte) this.getActualValue()) == b);
-        } else if (this.getType() == Type.CHAR) {
-            retVal = (((Character) this.getActualValue()) == c);
-        } else if (this.getType() == Type.INT) {
-            retVal = (((Integer) this.getActualValue()) == i);
-        } else if (this.getType() == Type.LONG) {
-            retVal = (((Long) this.getActualValue()) == l);
-        } else if (this.getType() == Type.FLOAT) {
-            retVal = (((Float) this.getActualValue()) == f);
-        } else if (this.getType() == Type.DOUBLE) {
-            retVal = (((Double) this.getActualValue()) == d);
+        if (getType() == Type.BYTE) {
+            retVal = (((Byte) getActualValue()).byteValue() == b);
+        } else if (getType() == Type.SHORT) {
+            retVal = (((Short) getActualValue()).shortValue() == s);
+        } else if (getType() == Type.CHAR) {
+            retVal = (((Character) getActualValue()).charValue() == c);
+        } else if (getType() == Type.INT) {
+            retVal = (((Integer) getActualValue()).intValue() == i);
+        } else if (getType() == Type.LONG) {
+            retVal = (((Long) getActualValue()).longValue() == l);
+        } else if (getType() == Type.FLOAT) {
+            retVal = (((Float) getActualValue()).floatValue() == f);
+        } else if (getType() == Type.DOUBLE) {
+            retVal = (((Double) getActualValue()).doubleValue() == d);
+        } else if (getType() == Type.BOOLEAN) {
+            retVal = (((Boolean) getActualValue()).booleanValue() == z);
+        } else {
+        	//this should never happen
+        	throw new UnexpectedInternalException("Found a Simplex object with type " + getType() + ".");
         }
 
         return retVal;

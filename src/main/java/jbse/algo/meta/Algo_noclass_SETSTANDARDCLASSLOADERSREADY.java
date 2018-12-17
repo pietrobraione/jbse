@@ -9,7 +9,7 @@ import jbse.tree.DecisionAlternative_NONE;
 
 /**
  * An {@link Algorithm} for an auxiliary method for the implementation of
- * {@link Algo_INIT}. It sets the current state by asserting that the standard
+ * {@link Action_INIT}. It sets the current state by asserting that the standard
  * (extensions and application) classloaders are ready to be used.
  * 
  * @author Pietro Braione

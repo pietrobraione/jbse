@@ -161,7 +161,8 @@ UP extends StrategyUpdate<R>> implements Action {
      *         standard class is missing from the classpath of ill-formed.
      * @throws CannotManageStateException possibly raised if the 
      *         action cannot be executed due to limitations of JBSE.
-     * @throws FailureException
+     * @throws FailureException possibly raised to signal the violation
+     *         of an assertion.
      * @throws ContinuationException if the execution of this action must
      *         be interrupted, and possibly followed by the execution of another
      *         action.
@@ -304,7 +305,7 @@ UP extends StrategyUpdate<R>> implements Action {
 
             //updates the program counter
             try {
-                if (stateCurrent.isStuck()) {
+                if (stateCurrent.isStuck() || stateCurrent.getStackSize() == 0) {
                     //nothing to do
                 } else if (interrupt == null) {
                     if (this.isProgramCounterUpdateAnOffset.get()) {

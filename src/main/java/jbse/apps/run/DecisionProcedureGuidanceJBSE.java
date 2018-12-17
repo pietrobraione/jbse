@@ -174,7 +174,7 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
                 throw new GuidanceException(e);
             } catch (CannotBacktrackException | EngineStuckException | CannotManageStateException | 
                      ContradictionException | FailureException | DecisionException | 
-                     ThreadStackEmptyException e) {
+                     ThreadStackEmptyException | NonexistingObservedVariablesException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
             }

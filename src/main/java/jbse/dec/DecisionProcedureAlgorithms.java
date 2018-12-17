@@ -232,12 +232,6 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		this.calc = calc;
 	}
 	
-	private HistoryPoint initialHistoryPoint;
-	
-	public void setInitialHistoryPoint(HistoryPoint initialHistoryPoint) {
-	    this.initialHistoryPoint = initialHistoryPoint;
-	}
-
 	/**
 	 * Decides a condition for "branch if integer comparison" bytecodes.
 	 * 
@@ -1128,7 +1122,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	            final Long i = cExp.getHeapPosition();
 	            final Objekt o = cExp.getObjekt();
 	            
-	            //if it is time and epoch compatible, adds the object
+	            //if it is type and epoch compatible, adds the object
 	            //to the result
 	            if (isAliasCompatible(o, ref, refClass, classHierarchy)) {
 	                retVal.put(i, o);
@@ -1156,8 +1150,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 */
 	private boolean isAliasCompatible(Objekt o, ReferenceSymbolic ref, ClassFile refClass, ClassHierarchy classHierarchy) {
 	    final boolean isTypeCompatible = classHierarchy.isSubclass(o.getType(), refClass);
-	    final HistoryPoint oEpoch = (o.historyPoint() == null ? this.initialHistoryPoint : o.historyPoint());
-            final HistoryPoint refEpoch = (ref.historyPoint() == null ? this.initialHistoryPoint : ref.historyPoint());
+	    final HistoryPoint oEpoch = o.historyPoint();
+	    final HistoryPoint refEpoch = ref.historyPoint();
 	    final boolean isEpochCompatible = oEpoch.weaklyBefore(refEpoch);
 	    final boolean isRootCompatible = !(ref.root() instanceof ReferenceSymbolicApply) || o.getOrigin().root().equals(ref.root());
 	    return (isTypeCompatible && isEpochCompatible && isRootCompatible); 

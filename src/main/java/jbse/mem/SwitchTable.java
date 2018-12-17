@@ -38,9 +38,24 @@ public class SwitchTable implements Iterable<Integer> {
     /** The default jump offset. */
     private final int deflt;
 
+    /** The lowest possible value for the index. */
     private final int low; 
+    
+    /** The highest possible value for the index. */
     private final int high;
+    
+    /** 
+     * The offset in code of the start of the table
+     * (the match-offset pairs in case of lookupswitch, 
+     * the jump offsets in case of tableswitch). 
+     */
     private final int tableStart; 
+    
+    /** 
+     * The offset in code of the end of the table
+     * (i.e., the offset of the bytecode instruction 
+     * next to this switch instruction). 
+     */
     private final int tableEnd; 
 
     /**
@@ -64,14 +79,15 @@ public class SwitchTable implements Iterable<Integer> {
         final byte[] ops = (this.ts ? new byte[12] : new byte[8]);
         int ofst = 0;
         do {
-            ofst++;
+            ++ofst;
         } while ((f.getProgramCounter() + ofst) % 4 != 0);
 
-        //gets the default offset bytes and (in case of lookupswitch) 
-        //the number of pairs
+        //gets the default offset bytes and the number of pairs
+        //(in case of lookupswitch) or the low/high indices 
+        //(in case of tableswitch)
         for (int i = 0; i < ops.length; i++) {
             ops[i] = f.getInstruction(ofst);
-            ofst++;
+            ++ofst;
         }
 
         this.entrySizeInBytes = (this.ts ? 4 : 8);
@@ -79,7 +95,7 @@ public class SwitchTable implements Iterable<Integer> {
         this.low = (this.ts ? Util.byteCat(ops[4], ops[5], ops[6], ops[7]) : 1);
         this.high = (this.ts ? Util.byteCat(ops[8], ops[9], ops[10], ops[11]) : Util.byteCat(ops[4], ops[5], ops[6], ops[7]));
         this.tableStart = f.getProgramCounter() + ofst;
-        this.tableEnd = this.tableStart + (this.high - this.low + 1) * entrySizeInBytes;
+        this.tableEnd = this.tableStart + (this.high - this.low + 1) * this.entrySizeInBytes;
     }
 
     private class SwitchTableIterator implements Iterator<Integer> {

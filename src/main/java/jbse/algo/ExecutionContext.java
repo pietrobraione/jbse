@@ -77,6 +77,8 @@ import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ENDGUIDANCE;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_FAIL;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_IGNORE;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ISRESOLVED;
+import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ISRESOLVEDBYALIAS;
+import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ISRESOLVEDBYEXPANSION;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ISSYMBOLIC;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_SUCCEED;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_SYMBOLNAME;
@@ -285,6 +287,8 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_ENDGUIDANCE;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_FAIL;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_IGNORE;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRESOLVED;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRESOLVEDBYALIAS;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRESOLVEDBYEXPANSION;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISRUNBYJBSE;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISSYMBOLIC_BOOLEAN;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISSYMBOLIC_BYTE;
@@ -293,6 +297,7 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_ISSYMBOLIC_DOUBLE;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISSYMBOLIC_FLOAT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISSYMBOLIC_INT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISSYMBOLIC_LONG;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_ISSYMBOLIC_OBJECT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_ISSYMBOLIC_SHORT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SUCCEED;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_BOOLEAN;
@@ -302,6 +307,7 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_DOUBLE;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_FLOAT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_INT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_LONG;
+import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_OBJECT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_SHORT;
 import static jbse.bc.Signatures.SUN_ASCIICASEINSENSITIVECOMPARATOR;
 import static jbse.bc.Signatures.SUN_JARINDEX;
@@ -368,6 +374,7 @@ import jbse.tree.StateTree;
 import jbse.tree.StateTree.BreadthMode;
 import jbse.tree.StateTree.StateIdentificationMode;
 import jbse.val.Calculator;
+import jbse.val.SymbolFactory;
 
 /**
  * Class containing an execution context, i.e., everything 
@@ -421,6 +428,9 @@ public final class ExecutionContext {
 
     /** The symbolic execution's {@link DecisionProcedureAlgorithms}. */
     public final DecisionProcedureAlgorithms decisionProcedure;
+    
+    /** The {@link SymbolFactory}. */
+    public final SymbolFactory symbolFactory;
 
     /** The symbolic execution's {@link StateTree}. */
     public final StateTree stateTree;
@@ -508,6 +518,7 @@ public final class ExecutionContext {
         this.comparators = comparators;
         this.rootMethodSignature = rootMethodSignature;
         this.decisionProcedure = decisionProcedure;
+        this.symbolFactory = new SymbolFactory(this.calc);
         this.stateTree = new StateTree(stateIdentificationMode, breadthMode);
         this.triggerManager = new TriggerManager(rulesTrigger.clone()); //safety copy
 
@@ -682,6 +693,8 @@ public final class ExecutionContext {
             addMetaOverridden(JBSE_ANALYSIS_FAIL,                      ALGO_JBSE_ANALYSIS_FAIL);
             addMetaOverridden(JBSE_ANALYSIS_IGNORE,                    ALGO_JBSE_ANALYSIS_IGNORE);
             addMetaOverridden(JBSE_ANALYSIS_ISRESOLVED,                ALGO_JBSE_ANALYSIS_ISRESOLVED);
+            addMetaOverridden(JBSE_ANALYSIS_ISRESOLVEDBYALIAS,         ALGO_JBSE_ANALYSIS_ISRESOLVEDBYALIAS);
+            addMetaOverridden(JBSE_ANALYSIS_ISRESOLVEDBYEXPANSION,     ALGO_JBSE_ANALYSIS_ISRESOLVEDBYEXPANSION);
             addBaseOverridden(JBSE_ANALYSIS_ISRUNBYJBSE,               BASE_JBSE_ANALYSIS_ISRUNBYJBSE);
             addMetaOverridden(JBSE_ANALYSIS_ISSYMBOLIC_BOOLEAN,        ALGO_JBSE_ANALYSIS_ISSYMBOLIC);
             addMetaOverridden(JBSE_ANALYSIS_ISSYMBOLIC_BYTE,           ALGO_JBSE_ANALYSIS_ISSYMBOLIC);
@@ -690,6 +703,7 @@ public final class ExecutionContext {
             addMetaOverridden(JBSE_ANALYSIS_ISSYMBOLIC_FLOAT,          ALGO_JBSE_ANALYSIS_ISSYMBOLIC);
             addMetaOverridden(JBSE_ANALYSIS_ISSYMBOLIC_INT,            ALGO_JBSE_ANALYSIS_ISSYMBOLIC);
             addMetaOverridden(JBSE_ANALYSIS_ISSYMBOLIC_LONG,           ALGO_JBSE_ANALYSIS_ISSYMBOLIC);
+            addMetaOverridden(JBSE_ANALYSIS_ISSYMBOLIC_OBJECT,         ALGO_JBSE_ANALYSIS_ISSYMBOLIC);
             addMetaOverridden(JBSE_ANALYSIS_ISSYMBOLIC_SHORT,          ALGO_JBSE_ANALYSIS_ISSYMBOLIC);
             addMetaOverridden(JBSE_ANALYSIS_SUCCEED,                   ALGO_JBSE_ANALYSIS_SUCCEED);
             addMetaOverridden(JBSE_ANALYSIS_SYMBOLNAME_BOOLEAN,        ALGO_JBSE_ANALYSIS_SYMBOLNAME);
@@ -699,6 +713,7 @@ public final class ExecutionContext {
             addMetaOverridden(JBSE_ANALYSIS_SYMBOLNAME_FLOAT,          ALGO_JBSE_ANALYSIS_SYMBOLNAME);
             addMetaOverridden(JBSE_ANALYSIS_SYMBOLNAME_INT,            ALGO_JBSE_ANALYSIS_SYMBOLNAME);
             addMetaOverridden(JBSE_ANALYSIS_SYMBOLNAME_LONG,           ALGO_JBSE_ANALYSIS_SYMBOLNAME);
+            addMetaOverridden(JBSE_ANALYSIS_SYMBOLNAME_OBJECT,         ALGO_JBSE_ANALYSIS_SYMBOLNAME);
             addMetaOverridden(JBSE_ANALYSIS_SYMBOLNAME_SHORT,          ALGO_JBSE_ANALYSIS_SYMBOLNAME);
             
             //jbse classless (pseudo)methods
@@ -712,7 +727,7 @@ public final class ExecutionContext {
     }
     
     /**
-     * Factory method. It creates a virgin initial 
+     * Factory method. It creates a virgin pre-initial 
      * state, with incomplete initialization.
      * 
      * @return a {@link State}.
@@ -722,7 +737,7 @@ public final class ExecutionContext {
      *         unaccessible constructor...).
      */
     public State createVirginPreInitialState() throws InvalidClassFileFactoryClassException {
-        return new State(this.bypassStandardLoading, this.maxSimpleArrayLength, this.maxHeapSize, this.classpath, this.classFileFactoryClass, this.expansionBackdoor, this.calc);
+        return new State(this.bypassStandardLoading, this.maxSimpleArrayLength, this.maxHeapSize, this.classpath, this.classFileFactoryClass, this.expansionBackdoor, this.calc, this.symbolFactory);
     }
 
     /**
@@ -736,7 +751,6 @@ public final class ExecutionContext {
      */
     public void setInitialState(State initialState) {
         this.initialState = initialState.clone();
-        this.decisionProcedure.setInitialHistoryPoint(this.initialState.getHistoryPoint());
     }
 
     /**

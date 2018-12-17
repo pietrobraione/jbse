@@ -61,8 +61,9 @@ import jbse.mem.Array;
 import jbse.mem.Frame;
 import jbse.mem.Instance;
 import jbse.mem.Klass;
-import jbse.mem.SnippetFrameNoContext;
+import jbse.mem.SnippetFrameNoWrap;
 import jbse.mem.State;
+import jbse.mem.State.Phase;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.FrozenStateException;
@@ -344,7 +345,7 @@ public class Util {
             final ClassFile excClass = exc.getType();
             int stackDepth = 0;
             for (Frame f : state.getStack()) {
-                if (f instanceof SnippetFrameNoContext) {
+                if (f instanceof SnippetFrameNoWrap) {
                     continue; //skips
                 }
                 final ClassFile fClass = f.getCurrentClass();
@@ -369,7 +370,7 @@ public class Util {
             int i = 0;
             final Calculator calc = state.getCalculator();
             for (Frame f : state.getStack()) {
-                if (f instanceof SnippetFrameNoContext) {
+                if (f instanceof SnippetFrameNoWrap) {
                     continue; //skips
                 }
                 
@@ -846,7 +847,7 @@ public class Util {
                 final int definingLoader = classFile.getDefiningClassLoader();
                 final boolean createSymbolicKlass;
                 final Assumption assumeInitialized;
-                if (this.s.isPhasePreInit()) {
+                if (this.s.phase() == Phase.PRE_INITIAL) {
                     if (this.ctx.decisionProcedure.isSatInitialized(hier, classFile)) {
                         createSymbolicKlass = false;
                         assumeInitialized = Assumption.INITIALIZED;
@@ -953,6 +954,10 @@ public class Util {
             }
         }
 
+        private boolean root() throws FrozenStateException {
+        	return (this.s.getStackSize() == 0);
+        }
+        
         /**
          * Phase 3 pushes the {@code <clinit>} frames for all the initialized 
          * classes that have it.
@@ -962,12 +967,12 @@ public class Util {
         private void phase3() throws FrozenStateException {
             try {
                 if (this.boxExceptionMethodSignature != null) {
-                    this.s.pushFrame(this.cf_JBSE_BASE, this.boxExceptionMethodSignature, false, 0);                    
+                    this.s.pushFrame(this.cf_JBSE_BASE, this.boxExceptionMethodSignature, root(), 0);                    
                 }
                 for (ClassFile classFile : this.classesForPhase3) {
                     final Signature sigClinit = new Signature(classFile.getClassName(), "()" + Type.VOID, "<clinit>");
                     if (classFile.hasMethodImplementation(sigClinit)) {
-                        this.s.pushFrame(classFile, sigClinit, false, 0);
+                        this.s.pushFrame(classFile, sigClinit, root(), 0);
                         ++this.createdFrames;
                     }
                 }
@@ -975,7 +980,7 @@ public class Util {
                     try {
                         final Signature sigClinit_JAVA_OBJECT = new Signature(JAVA_OBJECT, "()" + Type.VOID, "<clinit>");
                         final ClassFile cf_JAVA_OBJECT = this.s.getClassHierarchy().loadCreateClass(JAVA_OBJECT);
-                        this.s.pushFrame(cf_JAVA_OBJECT, sigClinit_JAVA_OBJECT, false, 0);
+                        this.s.pushFrame(cf_JAVA_OBJECT, sigClinit_JAVA_OBJECT, root(), 0);
                     } catch (ClassFileNotFoundException | IncompatibleClassFileException | 
                              ClassFileIllFormedException | BadClassFileVersionException | 
                              WrongClassNameException | InvalidInputException | 
@@ -1086,7 +1091,7 @@ public class Util {
 
             //upcalls ClassLoader.loadClass
             //first, creates the snippet
-            final Snippet snippet = state.snippetFactory()
+            final Snippet snippet = state.snippetFactoryNoWrap()
                 .op_invokevirtual(JAVA_CLASSLOADER_LOADCLASS) //loads the class...
                 .op_invokestatic(noclass_REGISTERLOADEDCLASS) //...and registers it with the initiating loader
                 .op_return()

@@ -47,7 +47,7 @@ public final class Algo_JAVA_STRINGBUILDER_APPEND extends Algo_INVOKEMETA_Nonbra
                 final ReferenceConcrete refStringifiedSymbol = state.referenceToStringLiteral(stringifiedSymbol);
                 state.pushOperand(this.data.operand(0)); //this
                 state.pushOperand(refStringifiedSymbol);
-                final Snippet snippet = state.snippetFactory()
+                final Snippet snippet = state.snippetFactoryWrap()
                     .op_invokevirtual(JAVA_STRINGBUILDER_APPEND_STRING)
                     .op_return()
                     .mk();

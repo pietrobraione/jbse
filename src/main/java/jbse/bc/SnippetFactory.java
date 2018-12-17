@@ -4,27 +4,83 @@ import static jbse.bc.Opcodes.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 public class SnippetFactory {
-    private final HashMap<Integer, ConstantPoolValue> constants = new HashMap<>();
     private final HashMap<Integer, Signature> signatures = new HashMap<>();
+    private final HashMap<Integer, Integer> integers = new HashMap<>();
+    private final HashMap<Integer, Long> longs = new HashMap<>();
+    private final HashMap<Integer, Float> floats = new HashMap<>();
+    private final HashMap<Integer, Double> doubles = new HashMap<>();
+    private final HashMap<Integer, String> utf8s = new HashMap<>();
+    private final HashMap<Integer, String> strings = new HashMap<>();    
     private final HashMap<Integer, String> classes = new HashMap<>();
-    private ArrayList<Byte> bytecode = new ArrayList<>();
+    private final HashMap<Signature, Integer> signaturesInverse = new HashMap<>();
+    private final HashMap<Integer, Integer> integersInverse = new HashMap<>();
+    private final HashMap<Long, Integer> longsInverse = new HashMap<>();
+    private final HashMap<Float, Integer> floatsInverse = new HashMap<>();
+    private final HashMap<Double, Integer> doublesInverse = new HashMap<>();
+    private final HashMap<String, Integer> utf8sInverse = new HashMap<>();
+    private final HashMap<String, Integer> stringsInverse = new HashMap<>();    
+    private final HashMap<String, Integer> classesInverse = new HashMap<>();
+    private final ArrayList<Byte> bytecode = new ArrayList<>();
     private int nextIndex;
     
     public SnippetFactory() {
         this.nextIndex = 1; 
     }
     
-    private void addIndex() {
-        this.bytecode.add((byte) (this.nextIndex >>> 8));
-        this.bytecode.add((byte) (this.nextIndex & 0x0000_0000_0000_00FF));
-        ++this.nextIndex;
+    public SnippetFactory(ClassFile cf) {
+        this.nextIndex = cf.constantPoolSize() + 1; 
+    }
+    
+    private void addIndex(int index) {
+        this.bytecode.add((byte) (index >>> 8));
+        this.bytecode.add((byte) (index & 0x0000_0000_0000_00FF));
+    }
+    
+    private <V> void addConstantPoolItem(Map<Integer, V> map, Map<V, Integer> mapInverse, V value) {
+    	if (mapInverse.containsKey(value)) {
+    		final int index = mapInverse.get(value);
+    		addIndex(index);
+    	} else {
+    		map.put(this.nextIndex, value);
+    		mapInverse.put(value, this.nextIndex);
+    		addIndex(this.nextIndex);
+    		++this.nextIndex;
+    	}
     }
     
     private void addSignature(Signature sig) {
-        this.signatures.put(this.nextIndex, sig);
-        addIndex();
+    	addConstantPoolItem(this.signatures, this.signaturesInverse, sig);
+    }
+    
+    private void addInteger(int value) {
+    	addConstantPoolItem(this.integers, this.integersInverse, value);
+    }
+    
+    private void addLong(long value) {
+    	addConstantPoolItem(this.longs, this.longsInverse, value);
+    }
+    
+    private void addFloat(float value) {
+    	addConstantPoolItem(this.floats, this.floatsInverse, value);
+    }
+    
+    private void addDouble(double value) {
+    	addConstantPoolItem(this.doubles, this.doublesInverse, value);
+    }
+    
+    private void addUtf8(String value) {
+    	addConstantPoolItem(this.utf8s, this.utf8sInverse, value);
+    }
+    
+    private void addString(String value) {
+    	addConstantPoolItem(this.strings, this.stringsInverse, value);
+    }
+    
+    private void addClass(String value) {
+    	addConstantPoolItem(this.classes, this.classesInverse, value);
     }
     
     public SnippetFactory op_dup() {
@@ -76,10 +132,11 @@ public class SnippetFactory {
     
     public Snippet mk() {
         //no way to do it with streams or other conversion functions
-        final byte[] code = new byte[this.bytecode.size()];
-        for (int i = 0; i < code.length; ++i) {
-            code[i] = this.bytecode.get(i).byteValue();
+        final byte[] bytecode = new byte[this.bytecode.size()];
+        for (int i = 0; i < bytecode.length; ++i) {
+            bytecode[i] = this.bytecode.get(i).byteValue();
         }
-        return new Snippet(this.constants, this.signatures, this.classes, code);
+        return new Snippet(this.signatures, this.integers, this.longs, this.floats, 
+        		this.doubles, this.utf8s, this.strings, this.classes, bytecode);
     }
 }

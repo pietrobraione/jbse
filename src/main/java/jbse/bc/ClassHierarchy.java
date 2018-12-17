@@ -456,17 +456,18 @@ public final class ClassHierarchy implements Cloneable {
      * Checks whether a class/interface is a subclass of/implements another one.
      * 
      * @param sub a {@link ClassFile}.
-     * @param sup anothe {@link ClassFile}.
-     * @return {@code true} if {@code sub == sup}, or {@code sub} 
+     * @param sup another {@link ClassFile}.
+     * @return {@code true} if {@code sub.}{@link #equals(Object) equals}{@code (sup)}, or {@code sub} 
      *         extends {@code sup}, or {@code sub} implements {@code sup}, 
      *         {@code false} otherwise.
      */
     public boolean isSubclass(ClassFile sub, ClassFile sup) {
+    	//TODO check that sub and sup are not null
         if (sub.isArray() && sup.isArray()) {
             final ClassFile subMember = sub.getMemberClass(); 
             final ClassFile supMember = sup.getMemberClass();
             if (subMember.isPrimitiveOrVoid() && supMember.isPrimitiveOrVoid()) {
-                return (subMember == supMember);
+                return (subMember.equals(supMember));
             } else if (subMember.isReference() && supMember.isReference()) {
                 return isSubclass(subMember, supMember);
             } else if (subMember.isArray() && supMember.isArray()) {
@@ -476,12 +477,12 @@ public final class ClassHierarchy implements Cloneable {
             }
         } else {
             for (ClassFile f : superclasses(sub)) { 
-                if (f == sup) {
+                if (sup.equals(f)) {
                     return true;
                 } 
             }
             for (ClassFile f : superinterfaces(sub)) {
-                if (f == sup) {
+                if (sup.equals(f)) {
                     return true;
                 }
             }
@@ -1531,7 +1532,7 @@ public final class ClassHierarchy implements Cloneable {
         } else if (accessed.isFieldPackage(fieldSignature)) {
             return sameRuntimePackage; 
         } else { //accessed.isFieldPrivate(fieldSignature)
-            return (accessed == accessor); 
+            return (accessed.equals(accessor)); 
             //TODO there was a || accessor.isInner(accessed) clause but it is *wrong*!
         }
     }
@@ -1569,7 +1570,7 @@ public final class ClassHierarchy implements Cloneable {
         } else if (accessed.isMethodPackage(methodSignature)) {
             return sameRuntimePackage;
         } else { //accessed.isMethodPrivate(methodSignature)
-            return (accessed == accessor);
+            return (accessed.equals(accessor));
             //TODO there was a || accessor.isInner(accessed) clause but it is *wrong*!
         }
     }
@@ -1830,16 +1831,16 @@ public final class ClassHierarchy implements Cloneable {
             } else if (target.isArray()) {
                 return false; //should not happen (verify error)
             } else {
-                return (target == cf_JAVA_OBJECT);
+                return (cf_JAVA_OBJECT.equals(target));
             }
         } else if (source.isArray()) {
             if (target.isInterface()) {
-                return (target == cf_JAVA_CLONEABLE || target == cf_JAVA_SERIALIZABLE);
+                return (cf_JAVA_CLONEABLE.equals(target) || cf_JAVA_SERIALIZABLE.equals(target));
             } else if (target.isArray()) {
                 final ClassFile sourceComponent = source.getMemberClass();
                 final ClassFile targetComponent = target.getMemberClass();
                 if (sourceComponent.isPrimitiveOrVoid() && targetComponent.isPrimitiveOrVoid()) {
-                    return (sourceComponent == targetComponent);
+                    return (sourceComponent.equals(targetComponent));
                 } else if ((sourceComponent.isReference() && targetComponent.isReference()) ||
                            (sourceComponent.isArray() && targetComponent.isArray())) {
                     return isAssignmentCompatible(sourceComponent, targetComponent);
@@ -1847,7 +1848,7 @@ public final class ClassHierarchy implements Cloneable {
                     return false;
                 }
             } else {
-                return (target == cf_JAVA_OBJECT);
+                return (cf_JAVA_OBJECT.equals(target));
             }
         } else {
             if (target.isArray()) {
@@ -1878,7 +1879,7 @@ public final class ClassHierarchy implements Cloneable {
     public boolean overrides(ClassFile sub, ClassFile sup, Signature subMethodSignature, Signature supMethodSignature) 
     throws MethodNotFoundException {
         //first case: same method
-        if (sub == sup && 
+        if (sub.equals(sup) && 
             subMethodSignature.getDescriptor().equals(supMethodSignature.getDescriptor()) &&
             subMethodSignature.getName().equals(supMethodSignature.getName()) ) {
             return true;
@@ -1920,7 +1921,7 @@ public final class ClassHierarchy implements Cloneable {
         //m and m overrides supMethod; we look for such m in subMethod's 
         //superclasses up to supMethods
         for (ClassFile cf : superclasses(sub.getSuperclass())) {
-            if (cf == sup) {
+            if (sup.equals(cf)) {
                 break;
             }
             if (cf.hasMethodDeclaration(subMethodSignature)) {

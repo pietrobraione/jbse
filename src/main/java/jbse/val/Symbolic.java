@@ -28,11 +28,9 @@ public interface Symbolic {
     
     /**
      * Returns the {@link HistoryPoint} of
-     * creation of this symbol. It may
-     * return {@code null} to signify existence
-     * at the initial state.
+     * creation of this symbol.
      * 
-     * @return a {@link HistoryPoint} or {@code null}.
+     * @return a {@link HistoryPoint}.
      */
     HistoryPoint historyPoint();
 }

@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Array;
 import jbse.mem.Clause;
 import jbse.mem.ClauseAssume;
@@ -26,7 +27,7 @@ import jbse.mem.Instance;
 import jbse.mem.Klass;
 import jbse.mem.Objekt;
 import jbse.mem.ReachableObjectsCollector;
-import jbse.mem.SnippetFrameContext;
+import jbse.mem.SnippetFrameWrap;
 import jbse.mem.State;
 import jbse.mem.Variable;
 import jbse.mem.exc.FrozenStateException;
@@ -91,6 +92,8 @@ public final class StateFormatterText implements Formatter {
                 sb.append(", returned value: "); sb.append(state.getStuckReturn().toString());
             } //else, append nothing
             sb.append(lineSep);
+        } else if (state.getStackSize() == 0) {
+        	sb.append("(empty stack)"); sb.append(lineSep);
         } else {
             try {
                 sb.append("Method signature: "); sb.append(state.getCurrentMethodSignature()); sb.append(lineSep);
@@ -99,9 +102,8 @@ public final class StateFormatterText implements Formatter {
                 sb.append("Next bytecode: "); sb.append(bfmt.format(state)); sb.append(lineSep); 
                 sb.append("Source line: "); sourceLine(state.getCurrentFrame(), sb, srcPath); sb.append(lineSep);
             } catch (ThreadStackEmptyException e) {
-                //the state is not stuck but it has no frames:
-                //this case is not common but it can mean a state
-                //not completely ready to run
+            	//this should never happen
+            	throw new UnexpectedInternalException(e);
             }
         }
         sb.append("Path condition: "); formatPathCondition(state, sb, fullPrint, breakLines, indentTxt, indentCurrent + indentTxt); sb.append(lineSep);
@@ -129,14 +131,12 @@ public final class StateFormatterText implements Formatter {
                 doneFirstExpression = true;
                 final Primitive cond = ((ClauseAssume) c).getCondition();
                 formatValue(s, expression, cond);
-                final StringBuilder expressionFormatted = new StringBuilder();
-                formatValueForPathCondition(cond, expressionFormatted, breakLines, indentTxt, indentCurrent, doneSymbols);
-                if (expressionFormatted.length() == 0) {
-                    //does nothing
-                } else {
-                    where.append(doneFirstWhere ? (" &&" + lineSep) : ""); where.append(indentCurrent); where.append(expressionFormatted);
+                final StringBuilder expressionWhereCondition = new StringBuilder();
+                final boolean some = formatValueForPathCondition(cond, expressionWhereCondition, breakLines, indentTxt, indentCurrent, doneSymbols);
+                if (some) {
+                    where.append(doneFirstWhere ? (" &&" + lineSep) : ""); where.append(indentCurrent); where.append(expressionWhereCondition);
                     doneFirstWhere = true;
-                }
+                } //else does nothing
             } else if (c instanceof ClauseAssumeReferenceSymbolic) {
                 expression.append(doneFirstExpression ? (" &&" + lineSep) : ""); expression.append(indentCurrent);
                 doneFirstExpression = true;
@@ -224,21 +224,20 @@ public final class StateFormatterText implements Formatter {
     }
 
     private static boolean formatFunctionApplicationForPathCondition(PrimitiveSymbolicApply a, StringBuilder sb, boolean breakLines, String indentTxt, String indentCurrent, HashSet<String> done) {
-        boolean first = true;
         boolean some = false;
+        boolean firstDone = false;
         final String lineSep = (breakLines ? LINE_SEP : "");
         for (Value v : a.getArgs()) {
             final StringBuilder arg = new StringBuilder();
             final boolean argSome = formatValueForPathCondition(v, arg, breakLines, indentTxt, indentCurrent, done);
             some = some || argSome;
             if (argSome) {
-                //does nothing
-            } else { 
-                if (!first) {
-                    sb.append(" &&"); sb.append(lineSep); sb.append(indentCurrent);
-                }
-                sb.append(arg);
-                first = false;
+            	if (firstDone) {
+            		sb.append(" &&"); sb.append(lineSep); sb.append(indentCurrent); 
+            	} else {
+            		firstDone = true;
+            	}
+            	sb.append(arg);
             }
         }
         return some;
@@ -340,9 +339,6 @@ public final class StateFormatterText implements Formatter {
 
     private static void formatArray(State s, StringBuilder sb, Array a, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
-        if (a.isSymbolic() && a.isInitial()) {
-            sb.append(" (initial)");
-        }
         sb.append(lineSep); sb.append(indentCurrent); sb.append("Type: "); sb.append(a.getType());
         sb.append(lineSep); sb.append(indentCurrent); sb.append("Length: "); sb.append(a.getLength()); 
         sb.append(lineSep); sb.append(indentCurrent); sb.append("Items: {");
@@ -523,8 +519,8 @@ public final class StateFormatterText implements Formatter {
     private static void formatFrame(State s, StringBuilder sb, Frame f, List<String> srcPath, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
         sb.append(indentCurrent); sb.append("Method signature: "); sb.append(f.getCurrentMethodSignature().toString());
-        if (f instanceof SnippetFrameContext) {
-            sb.append(" (executing snippet, will resume with program counter "); sb.append(((SnippetFrameContext) f).getContextFrame().getReturnProgramCounter()); sb.append(")");
+        if (f instanceof SnippetFrameWrap) {
+            sb.append(" (executing snippet, will resume with program counter "); sb.append(((SnippetFrameWrap) f).getContextFrame().getReturnProgramCounter()); sb.append(")");
         }
         sb.append(lineSep);
         sb.append(indentCurrent); sb.append("Program counter: "); sb.append(f.getProgramCounter()); sb.append(lineSep);

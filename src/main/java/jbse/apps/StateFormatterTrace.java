@@ -5,7 +5,7 @@ import static jbse.mem.Frame.UNKNOWN_PC;
 import static jbse.mem.Frame.UNKNOWN_SOURCE_ROW;
 
 import jbse.common.exc.UnexpectedInternalException;
-import jbse.mem.SnippetFrameNoContext;
+import jbse.mem.SnippetFrameNoWrap;
 import jbse.mem.State;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -48,17 +48,19 @@ public final class StateFormatterTrace implements Formatter {
         		} else if (s.getStuckReturn() != null) {
         			this.output += "return" + FIELD_SEP + formatReturn(s, s.getStuckReturn());
         		}
+        	} else if (s.getStackSize() == 0) {
+        		//we are at the initial state
+        		this.output += "(no stack)";
         	} else {
         		try {
-        			final boolean snippet = (s.getCurrentFrame() instanceof SnippetFrameNoContext);
+        			final boolean snippet = (s.getCurrentFrame() instanceof SnippetFrameNoWrap);
         			this.output += (snippet ? "(snippet)" : s.getCurrentMethodSignature()) + FIELD_SEP + 
         					(s.getSourceRow() == UNKNOWN_SOURCE_ROW ? "*" : s.getSourceRow()) + FIELD_SEP +
         					(s.getPC() == UNKNOWN_PC ? "*" : s.getPC()) + FIELD_SEP +
         					this.bcf.format(s);
         		} catch (ThreadStackEmptyException e) {
-        			//the state is not stuck but it has no frames:
-        			//this case is not common but it can mean a state
-        			//not completely ready to run
+        			//this should never happen
+        			throw new UnexpectedInternalException(e);
         		}
         	}
             this.output += "\n";

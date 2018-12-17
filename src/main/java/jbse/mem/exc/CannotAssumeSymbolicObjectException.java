@@ -1,5 +1,7 @@
 package jbse.mem.exc;
 
+import jbse.algo.exc.CannotManageStateException;
+
 /**
  * Exception thrown whenever the assumption of the existence of 
  * a symbolic object in the initial heap fails. This currently
@@ -9,7 +11,7 @@ package jbse.mem.exc;
  * 
  * @author Pietro Braione
  */
-public class CannotAssumeSymbolicObjectException extends Exception {
+public class CannotAssumeSymbolicObjectException extends CannotManageStateException {
     public CannotAssumeSymbolicObjectException(String msg) {
         super(msg);
     }

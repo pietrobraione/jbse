@@ -8,6 +8,7 @@ import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.mem.Frame;
 import jbse.mem.Klass;
 import jbse.mem.MethodFrame;
+import jbse.mem.State.Phase;
 import jbse.tree.DecisionAlternative_NONE;
 
 /**
@@ -65,7 +66,9 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             final Signature returnedMethod = poppedFrame.getCurrentMethodSignature();
             final ClassFile returnedCurrentClass = poppedFrame.getCurrentClass();
             if (state.getStackSize() == 0) {
-                state.setStuckReturn();
+            	if (state.phase() == Phase.POST_INITIAL) {
+            		state.setStuckReturn();
+            	}
             } else {
                 this.pcReturn = state.getReturnPC();
             }

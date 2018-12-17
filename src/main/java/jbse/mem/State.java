@@ -212,8 +212,8 @@ public final class State implements Cloneable {
     /** If {@code true} the state is immutable. */
     private boolean frozen;
 
-    /** The {@link HistoryPoint} of the initial state. */
-    private HistoryPoint initialHistoryPoint = null;
+    /** The {@link HistoryPoint} of the state before the initial one. */
+    private HistoryPoint lastPreInitialHistoryPoint = null;
 
     /** The {@link HistoryPoint} of this state. */
     private HistoryPoint historyPoint = null;
@@ -293,8 +293,24 @@ public final class State implements Cloneable {
     /** The JVM static method area. */
     private StaticMethodArea staticMethodArea = new StaticMethodArea();
     
-    /** {@code true} iff the state is in the initialization phase. */
-    private boolean isPhasePreInit = true;
+    /**
+     * The phase types of the symbolic execution.
+     * 
+     * @author Pietro Braione
+     */
+    public enum Phase { 
+    	/** This state comes strictly before the initial state. */
+    	PRE_INITIAL, 
+    	
+    	/** This state is the initial state. */
+    	INITIAL, 
+    	
+    	/** This state comes strictly after the initial state. */
+    	POST_INITIAL 
+    }
+    
+    /** The current phase of symbolic execution. */
+    private Phase phase = Phase.PRE_INITIAL;
 
     /** The path condition of the state in the execution tree. */
     private PathCondition pathCondition = new PathCondition();
@@ -357,7 +373,7 @@ public final class State implements Cloneable {
     private ReferenceConcrete mainThread;
 
     /**
-     * Constructor of an empty State.
+     * Constructor. It returns a virgin, pre-initial {@link State}.
      * 
      * @param bypassStandardLoading a {@code boolean}, {@code true} iff the bootstrap 
      *        classloader should also load the classed defined by the extensions 
@@ -376,6 +392,8 @@ public final class State implements Cloneable {
      *        is used in place of the class hierarchy to perform expansion.
      * @param calc a {@link Calculator}. It will be used to do all kinds of calculations
      *        on concrete and symbolic values.
+     * @param symbolFactory a {@link SymbolFactory}. It will be used to generate
+     *        symbolic values to be injected in this state.
      * @throws InvalidClassFileFactoryClassException in the case {@link fClass}
      *         has not the expected features (missing constructor, unaccessible 
      *         constructor...).
@@ -386,7 +404,8 @@ public final class State implements Cloneable {
                  Classpath cp, 
                  Class<? extends ClassFileFactory> fClass, 
                  Map<String, Set<String>> expansionBackdoor, 
-                 Calculator calc) 
+                 Calculator calc,
+                 SymbolFactory symbolFactory) 
                  throws InvalidClassFileFactoryClassException {
     	this.frozen = false;
         this.bypassStandardLoading = bypassStandardLoading;
@@ -396,7 +415,7 @@ public final class State implements Cloneable {
         this.classHierarchy = new ClassHierarchy(cp, fClass, expansionBackdoor);
         this.maxSimpleArrayLength = maxSimpleArrayLength;
         this.calc = calc;
-        this.symbolFactory = new SymbolFactory(this.calc);
+        this.symbolFactory = symbolFactory;
     }
     
     private void setStandardFiles() {
@@ -922,26 +941,37 @@ public final class State implements Cloneable {
     }
     
     /**
-     * Checks if this {@link State} is in its
-     * pre-initialization phase.
+     * Returns this {@link State}'s phase of symbolic execution.
      * 
-     * @return {@code true} until the {@link #setPhasePostInit()}
-     *         method is invoked.
+     * @return a {@link Phase}.
      */
-    public boolean isPhasePreInit() {
-        return this.isPhasePreInit;
+    public Phase phase() {
+        return this.phase;
+    }
+    
+    /**
+     * Sets this state to its initial phase.
+     * 
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public void setPhaseInitial() throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        this.phase = Phase.INITIAL;
     }
     
     /**
      * Sets this state to its post-initizialization
      * phase.
+     * 
      * @throws FrozenStateException if the state is frozen.
      */
-    public void setPhasePostInit() throws FrozenStateException {
+    public void setPhasePostInitial() throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        this.isPhasePreInit = false;
+        this.phase = Phase.POST_INITIAL;
     }
 
     /**
@@ -1667,7 +1697,7 @@ public final class State implements Cloneable {
         }
         final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
-        final KlassImpl k = new KlassImpl(true, this.calc, createSymbolKlassPseudoReference(classFile), this.initialHistoryPoint, numOfStaticFields, fieldsSignatures);
+        final KlassImpl k = new KlassImpl(true, this.calc, createSymbolKlassPseudoReference(classFile), this.lastPreInitialHistoryPoint, numOfStaticFields, fieldsSignatures);
         initWithSymbolicValues(k);
         k.setIdentityHashCode(this.calc.valInt(0)); //doesn't care because it is not used
         this.staticMethodArea.set(classFile, k);
@@ -1729,11 +1759,42 @@ public final class State implements Cloneable {
         initIdentityHashCodeSymbolic(obj);
         return obj;
     }
+    
+    /**
+     * Checks whether a class cannot be executed symbolically. 
+     * JBSE forbids symbolic execution of (the methods in)
+     * some standard classes. Currently these classes are
+     * {@code java.lang.Class} and all the subclasses of 
+     * {@code java.lang.ClassLoader}.
+     * 
+     * @param className a {@link String}.
+     * @return {@code true} iff the class cannot be executed
+     *         symbolically. 
+     */
+    public boolean cannotExecuteSymbolically(ClassFile classFile) {
+    	if (JAVA_CLASS.equals(classFile.getClassName())) {
+    		return true;
+    	}
+        final ClassFile cf_JAVA_CLASSLOADER;
+        try {
+            cf_JAVA_CLASSLOADER = this.classHierarchy.loadCreateClass(JAVA_CLASSLOADER);
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException | 
+                 WrongClassNameException | IncompatibleClassFileException |
+                 InvalidInputException | ClassFileNotAccessibleException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
+    	if (this.classHierarchy.isSubclass(classFile, cf_JAVA_CLASSLOADER)) {
+    		return true;
+    	}
+    	
+    	return false;
+    }
 
     private InstanceImpl newInstanceSymbolic(ClassFile classFile, ReferenceSymbolic origin) 
     throws CannotAssumeSymbolicObjectException, InvalidTypeException, FrozenStateException {
-        if (JAVA_CLASS.equals(classFile.getClassName()) || JAVA_CLASSLOADER.equals(classFile.getClassName())) {
-            throw new CannotAssumeSymbolicObjectException(classFile.getClassName());
+        if (cannotExecuteSymbolically(classFile)) {
+            throw new CannotAssumeSymbolicObjectException("JBSE does not allow to execute symbolically the methods of class " + classFile.getClassName() + ".");
         }
         final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
@@ -1770,6 +1831,7 @@ public final class State implements Cloneable {
      * @param myObj the {@link Objekt} whose identity hash code will be initialized.
      * @param myRef a {@link ReferenceConcrete} to {@code myObj}.
      */
+    //TODO delete - all the objects should have a symbolic identity hash code for genericity (currently this does not play well with hash maps and thus with all the JVM bootstrap code).
     private void initIdentityHashCodeConcrete(Objekt myObj, ReferenceConcrete myRef) {
         myObj.setIdentityHashCode(this.calc.valInt((int) myRef.getHeapPosition()));
     }
@@ -1781,7 +1843,7 @@ public final class State implements Cloneable {
      * @throws FrozenStateException if the state is frozen.
      */
     private void initIdentityHashCodeSymbolic(Objekt myObj) throws FrozenStateException {
-        myObj.setIdentityHashCode((PrimitiveSymbolic) createSymbolIdentityHashCode(myObj.getOrigin()));
+        myObj.setIdentityHashCode((PrimitiveSymbolic) createSymbolIdentityHashCode(myObj));
     }
 
     /**
@@ -2178,10 +2240,12 @@ public final class State implements Cloneable {
         try {
             while (true) {
                 if (this.stack.isEmpty()) {
-                    setStuckException(exceptionToThrow);
+                	if (phase() == Phase.POST_INITIAL) {
+                		setStuckException(exceptionToThrow);
+                	}
                     return;
                 }
-                if (getCurrentFrame() instanceof SnippetFrameNoContext) {
+                if (getCurrentFrame() instanceof SnippetFrameNoWrap) {
                     //cannot catch anything and has no current method either
                     popCurrentFrame();
                     continue; 
@@ -2281,21 +2345,36 @@ public final class State implements Cloneable {
     /**
      * Creates a {@link SnippetFactory} for snippets
      * that can be pushed on the current stack with
-     * {@link #pushSnippetFrame(Snippet, int) pushSnippetFrame}.
+     * {@link #pushSnippetFrameNoWrap(Snippet, int, int, String) pushSnippetFrameNoWrap}.
      * 
      * @return a {@link SnippetFactory}.
      */
-    public SnippetFactory snippetFactory() {
+    public SnippetFactory snippetFactoryNoWrap() {
         return new SnippetFactory();
+    }
+    
+    /**
+     * Creates a {@link SnippetFactory} for snippets
+     * that can be pushed on the current stack with
+     * {@link #pushSnippetFrameWrap(Snippet, int) pushSnippetFrameWrap}.
+     * 
+     * @return a {@link SnippetFactory}.
+     * @throws ThreadStackEmptyException if the stack is empty.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public SnippetFactory snippetFactoryWrap() 
+    throws FrozenStateException, ThreadStackEmptyException {
+        return new SnippetFactory(getCurrentClass());
     }
     
     /**
      * Creates a new frame for a {@link Snippet} and
      * pushes it on this state's stack. The created frame 
-     * will inherit the context of the current frame, and 
-     * will operate on its operand stack and local variables.
-     * Note that it is possible to wrap only a {@link MethodFrame}, 
-     * not another snippet frame.
+     * will inherit the context of the current frame, including
+     * the current class (on which the additional constant pool
+     * items will be injected), will operate on its operand stack 
+     * and local variables. Note that it is possible to wrap only 
+     * a {@link MethodFrame}, not another snippet frame.
      * 
      * @param snippet a {@link Snippet}.
      * @param returnPCOffset the offset from the current 
@@ -2304,7 +2383,7 @@ public final class State implements Cloneable {
      *         is not a valid program count offset for the state's current frame.
      * @throws ThreadStackEmptyException if the state's thread stack is empty.
      * @throws InvalidInputException if the state is frozen, or 
-     *         {@link #getCurrentFrame()} does not return a {@link MethodFrame}.
+     *         {@link #getCurrentFrame()} is not a {@link MethodFrame}.
      */
     public void pushSnippetFrameWrap(Snippet snippet, int returnPCOffset) 
     throws InvalidProgramCounterException, ThreadStackEmptyException, InvalidInputException {
@@ -2316,12 +2395,14 @@ public final class State implements Cloneable {
             setReturnProgramCounter(returnPCOffset);
 
             //creates the new snippet frame
-            final Frame f = new SnippetFrameContext(snippet, (MethodFrame) getCurrentFrame());
+            final Frame f = new SnippetFrameWrap(snippet, (MethodFrame) getCurrentFrame());
 
             //replaces the current frame with the snippet frame
             //that wraps it
             this.stack.pop();
             this.stack.push(f);
+        } catch (InvalidInputException e) {
+        	throw new UnexpectedInternalException("Found a method frame with a snippet classfile.");
         } catch (ClassCastException e) {
             throw new InvalidInputException("Cannot push a snippet frame whose context is not a method frame.");
         }
@@ -2356,7 +2437,7 @@ public final class State implements Cloneable {
         setReturnProgramCounter(returnPCOffset);
 
         //creates the new snippet frame
-        final Frame f = new SnippetFrameNoContext(snippet, definingClassLoader, packageName);
+        final Frame f = new SnippetFrameNoWrap(snippet, definingClassLoader, packageName);
 
         this.stack.push(f);
     }
@@ -2528,9 +2609,9 @@ public final class State implements Cloneable {
     		throw new FrozenStateException();
     	}
         final Frame popped = this.stack.pop();
-        if (popped instanceof SnippetFrameContext) {
+        if (popped instanceof SnippetFrameWrap) {
             //reinstates the activation context of the popped frame
-            this.stack.push(((SnippetFrameContext) popped).getContextFrame());
+            this.stack.push(((SnippetFrameWrap) popped).getContextFrame());
         }
         return popped;
     }
@@ -3100,7 +3181,7 @@ public final class State implements Cloneable {
     
     /**
      * Sets the state's {@link HistoryPoint} as the
-     * starting pre-initial one.
+     * first pre-initial one.
      * 
      * @param compact a {@code boolean}, whether the stringified
      *        history point should be compact.
@@ -3110,12 +3191,14 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        this.historyPoint = HistoryPoint.preInitial(compact);
+        this.historyPoint = HistoryPoint.startingPreInitial(compact);
     }
 
     /**
      * Sets the state's {@link HistoryPoint} as the
-     * initial one.
+     * initial one. Also saves the current {@link HistoryPoint}
+     * (the last pre-initial one) to be used later as the 
+     * history point of symbolic (references to) klasses.
      * 
      * @param compact a {@code boolean}, whether the stringified
      * history point should be compact.
@@ -3125,7 +3208,8 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        this.initialHistoryPoint = this.historyPoint = this.historyPoint.initial();
+        this.lastPreInitialHistoryPoint = this.historyPoint;
+        this.historyPoint = this.historyPoint.startingInitial();
     }
 
     /**
@@ -3375,7 +3459,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        return this.symbolFactory.createSymbolLocalVariable(staticType, variableName);
+        return this.symbolFactory.createSymbolLocalVariable(this.historyPoint, staticType, variableName);
     }
 	
     /**
@@ -3391,7 +3475,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        return this.symbolFactory.createSymbolKlassPseudoReference(classFile);
+        return this.symbolFactory.createSymbolKlassPseudoReference(this.lastPreInitialHistoryPoint, classFile);
     }
 
     /**
@@ -3457,37 +3541,19 @@ public final class State implements Cloneable {
 
     /**
      * A Factory Method for creating symbolic values. The symbol
-     * has as origin the identity hash code of an object (the object exists
-     * in the initial heap).  
+     * has as origin the identity hash code of an object.  
      * 
-     * @param container a {@link ReferenceSymbolic}, the container object
-     *        the symbol originates from.
+     * @param object an {@link Objekt}, the object whose identity hash 
+     *        code is this symbol. It must refer an instance or an array.
      * @return a {@link PrimitiveSymbolic}.
      * @throws FrozenStateException if the state is frozen.
      */
-    public PrimitiveSymbolic createSymbolIdentityHashCode(ReferenceSymbolic container) 
+    public PrimitiveSymbolic createSymbolIdentityHashCode(Objekt object) 
     throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        return this.symbolFactory.createSymbolIdentityHashCode(container);
-    }
-
-    /**
-     * A Factory Method for creating symbolic values. The symbol
-     * has as origin the identity hash code of an object (the object does
-     * not exist in the initial heap).  
-     * 
-     * @param historyPoint the current {@link HistoryPoint}.
-     * @return a {@link PrimitiveSymbolic}.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public PrimitiveSymbolic createSymbolIdentityHashCode(HistoryPoint historyPoint) 
-    throws FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        return this.symbolFactory.createSymbolIdentityHashCode(historyPoint);
+        return this.symbolFactory.createSymbolIdentityHashCode(object);
     }
 
     /**

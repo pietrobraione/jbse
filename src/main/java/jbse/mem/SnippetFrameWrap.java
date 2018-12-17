@@ -3,9 +3,10 @@ package jbse.mem;
 import java.util.Collection;
 import java.util.SortedMap;
 
-import jbse.bc.ClassFileSnippet;
+import jbse.bc.ClassFileSnippetWrap;
 import jbse.bc.Signature;
 import jbse.bc.Snippet;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.mem.exc.InvalidNumberOfOperandsException;
 import jbse.val.Value;
@@ -15,7 +16,7 @@ import jbse.val.Value;
  * that is a subcontext of another activation {@link Frame}, of which takes
  * the local variables and the operand stack.
  */
-public final class SnippetFrameContext extends Frame implements Cloneable {
+public final class SnippetFrameWrap extends Frame implements Cloneable {
     /** The {@link Frame} context this {@link SnippetFrame} must execute. */ 
     private MethodFrame contextFrame; //not final only because it must be cloneable
     
@@ -24,15 +25,17 @@ public final class SnippetFrameContext extends Frame implements Cloneable {
      * 
      * @param snippet a {@link Snippet}.
      * @param contextFrame a {@link MethodFrame}, the activation context 
-     *        this {@link SnippetFrameContext} is a subcontext of. 
+     *        this {@link SnippetFrameWrap} is a subcontext of. 
+     * @throws InvalidInputException if {@code contextFrame.}{@link MethodFrame#getCurrentClass() getCurrentClass()} 
+     *         is a snippet classfile.
      */
-    public SnippetFrameContext(Snippet snippet, MethodFrame contextFrame) {
-        super(new ClassFileSnippet(snippet, contextFrame.getCurrentClass().getDefiningClassLoader(), contextFrame.getCurrentClass().getPackageName()), snippet.getBytecode());
+    public SnippetFrameWrap(Snippet snippet, MethodFrame contextFrame) throws InvalidInputException {
+        super(new ClassFileSnippetWrap(snippet, contextFrame.getCurrentClass()), snippet.getBytecode());
         this.contextFrame = contextFrame;
     }
     
     /**
-     * Returns the activation context this {@link SnippetFrameContext}
+     * Returns the activation context this {@link SnippetFrameWrap}
      * is a subcontext of.
      * 
      * @return a {@link Frame}.
@@ -118,8 +121,8 @@ public final class SnippetFrameContext extends Frame implements Cloneable {
     }
     
     @Override
-    public SnippetFrameContext clone() {
-        final SnippetFrameContext o = (SnippetFrameContext) super.clone();
+    public SnippetFrameWrap clone() {
+        final SnippetFrameWrap o = (SnippetFrameWrap) super.clone();
         o.contextFrame = this.contextFrame.clone();
         return o;
     }

@@ -79,7 +79,7 @@ class VariableObserverManager {
         final List<Integer> nonexistingVariables = new LinkedList<Integer>();
         if (hasObservers()) {
             for (int i = 0; i < this.numObservers(); ++i) {
-                this.values.add(this.getObservedVariableValue(i));
+                this.values.add(getObservedVariableValue(i));
                 if (this.values.get(i) == null) {
                     nonexistingVariables.add(i);
                     this.obs.add(null);
@@ -166,36 +166,30 @@ class VariableObserverManager {
      *        set by initialization.
      * @return the current value of {@code this.varSigs[i]}, or 
      *         {@code null} if the variable does not exist
-     *         neither in the root object nor in its class.
+     *         neither in the root object nor in the root class.
      */
     private Value getObservedVariableValue(int i) {
-        final State currentState = this.engine.getCurrentState();
-        final Signature obsVarSignature = this.varSigs.get(i);
-        Value retVal = null;
-        try {
-        	if (currentState.getStackSize() > 0) {
-        		//if the state is not stuck because of a return 
-        		//from the root method, looks in the root object
-        		final Instance rootObject = (Instance) currentState.getObject(this.rootObjectReference);
-        		retVal = rootObject.getFieldValue(obsVarSignature);
-        	}
-        	if (retVal == null) {
-        		//not in the root object? Let's see if it is a static variable 
-        		//in the root class 
-        		final ClassFile rootClass;
-        		try {
-        			rootClass = currentState.getRootClass();
-        		} catch (ThreadStackEmptyException e) {
-        			//this should not happen
-        			throw new UnexpectedInternalException(e);
-        		}
-        		final Klass rootKlass = currentState.getKlass(rootClass);
-        		retVal = rootKlass.getFieldValue(obsVarSignature);
-        	}
-        return retVal;
-		} catch (FrozenStateException e) {
-			//this should never happen
-			throw new UnexpectedInternalException(e);
+    	try {
+    		final State currentState = this.engine.getCurrentState();
+    		final Signature obsVarSignature = this.varSigs.get(i);
+    		Value retVal = null;
+    		if (currentState.getStackSize() > 0) {
+    			//if there is a root frame in the state, 
+    			//looks in the root object
+    			final Instance rootObject = (Instance) currentState.getObject(this.rootObjectReference);
+    			retVal = rootObject.getFieldValue(obsVarSignature);
+    			if (retVal == null) {
+    				//not in the root object? Let's see if it is a static variable 
+    				//in the root class 
+    				final ClassFile rootClass = currentState.getRootClass();
+    				final Klass rootKlass = currentState.getKlass(rootClass);
+    				retVal = rootKlass.getFieldValue(obsVarSignature);
+    			}
+    		}
+    		return retVal;
+    	} catch (FrozenStateException | ThreadStackEmptyException e) {
+    		//this should never happen
+    		throw new UnexpectedInternalException(e);
 		}
     }
 }

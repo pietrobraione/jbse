@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.State;
+import jbse.mem.State.Phase;
 import jbse.mem.exc.FrozenStateException;
 
 /**
@@ -52,29 +53,6 @@ public class StateTree {
         LONG;
     };
     
-    /**
-     * Enumeration of the different kinds of states that are
-     * extracted from this state tree.
-     * 
-     * @author Pietro Braione
-     */
-    private static enum StateKind {
-        /** 
-         * Before the initial state, there are all the states
-         * that bootstrap the JVM.
-         */
-        PRE_INITIAL, 
-        
-        /**
-         * The state where the next bytecode to be executed
-         * is the first bytecode of the root method.
-         */
-        INITIAL, 
-        
-        /** All the states after the initial one. */
-        POST_INITIAL 
-    }
-
     /**
      * Enumeration indicating how many branches will be created.
      * 
@@ -170,9 +148,6 @@ public class StateTree {
     private boolean createdBranch = false;
 
     
-    /** Which kind of state is the next that can be extracted? */
-    private StateKind nextStateIs = StateKind.INITIAL;
-
     /**
      * Constructor.
      */
@@ -191,17 +166,11 @@ public class StateTree {
     }
     
     /**
-     * The next state to be inserted/extracted 
-     * will be pre-initial.
-     */
-    public void nextIsPreInitial() {
-       this.nextStateIs = StateKind.PRE_INITIAL; 
-    }
-
-    /**
      * Adds a state to the store without specifying
      * its branch identification. This method works
-     * when the state identification mode is compact.
+     * for pre-initial and initial states (secretly also
+     * for post-initial states whose identification 
+     * mode is compact).
      * 
      * @param s the {@link State} to be added.
      * @throws InvalidInputException if this method is
@@ -210,34 +179,35 @@ public class StateTree {
      *         when there is a pre-initial or initial state to be emitted.
      */
     public void addState(State s) throws InvalidInputException {
-        if (this.stateIdMode == StateIdentificationMode.COMPACT) {
-            if (this.nextStateIs == StateKind.PRE_INITIAL) {
-                if (hasStates()) {
-                    throw new InvalidInputException("Tried to add a state with a not yet emitted pre-initial state.");
-                }
-                s.setPreInitialHistoryPoint(true);
-                s.resetDepth();
-                s.resetCount();
-                addBranchPoint();
-            } else if (this.nextStateIs == StateKind.INITIAL) {
-                if (hasStates()) {
-                    throw new InvalidInputException("Tried to add a state with a not yet emitted initial state.");
-                }
-                s.setInitialHistoryPoint();
-                s.resetDepth();
-                s.resetCount();
-                addBranchPoint();
-            } else { //(this.nextStateIs == StateKind.POST_INITIAL)
-                //does nothing, in compact mode nextState() will update it            
-            }
-            add(s);
-        } else {
-            throw new InvalidInputException("Tried to add a state without specifying its branch identification in replicable or long identification mode.");
-        }
+    	final Phase phase = s.phase();
+    	if (phase == Phase.PRE_INITIAL) {
+    		if (hasStates()) {
+    			throw new InvalidInputException("Tried to add a state with a not yet emitted pre-initial state.");
+    		}
+    		s.setPreInitialHistoryPoint(this.stateIdMode == StateIdentificationMode.COMPACT);
+    		s.resetDepth();
+    		s.resetCount();
+    		addBranchPoint();
+    	} else if (phase == Phase.INITIAL) {
+    		if (hasStates()) {
+    			throw new InvalidInputException("Tried to add a state with a not yet emitted initial state.");
+    		}
+    		s.setInitialHistoryPoint();
+    		s.resetDepth();
+    		s.resetCount();
+    		addBranchPoint();
+    	} else { //(phase == Phase.POST_INITIAL)
+    		if (this.stateIdMode == StateIdentificationMode.COMPACT) {
+        		//does nothing, in compact mode nextState() will update it            
+    		} else {
+        		throw new InvalidInputException("Tried to add a post-initial state in non-compact mode without specifing its branch identification.");
+    		}
+    	}
+    	add(s);
     }
 
     /**
-     * Adds a state to the store. This method works
+     * Adds a state to the store. This method works only
      * for the post-initial states.
      * 
      * @param s the {@link State} to be added.
@@ -249,22 +219,20 @@ public class StateTree {
      *         or initial state.
      */
     public void addState(State s, int branchNumber, String branchIdentifier) throws InvalidInputException {
-        if (this.stateIdMode == StateIdentificationMode.REPLICABLE || this.stateIdMode == StateIdentificationMode.LONG) {
-            if (this.nextStateIs == StateKind.POST_INITIAL) {
-                //updates the state identifier
-                if (this.stateIdMode == StateIdentificationMode.REPLICABLE) {
-                    s.addBranchToHistoryPoint(String.valueOf(branchNumber));
-                } else { // (this.stateIdMode == StateIdentificationMode.LONG)
-                    s.addBranchToHistoryPoint(branchIdentifier);
-                }
-                add(s);
-            } else { 
-                throw new InvalidInputException("Tried to add a pre-initial or initial state by specifing its branch identification.");
-            }
-        } else {
-            //falls back on compact mode method
-            addState(s);
-        }
+    	if (s.phase() == Phase.POST_INITIAL) {
+    		//updates the state identifier
+    		if (this.stateIdMode == StateIdentificationMode.COMPACT) {
+    			addState(s);
+    		} else if (this.stateIdMode == StateIdentificationMode.REPLICABLE) {
+    			s.addBranchToHistoryPoint(String.valueOf(branchNumber));
+        		add(s);
+    		} else { // (this.stateIdMode == StateIdentificationMode.LONG)
+    			s.addBranchToHistoryPoint(branchIdentifier);
+        		add(s);
+    		}
+    	} else { 
+    		throw new InvalidInputException("Tried to add a pre-initial or initial state by specifing its branch identification.");
+    	}
     }
 
     /**
@@ -309,15 +277,9 @@ public class StateTree {
             this.branchList.removeFirst();
         }
         
-        if (this.stateIdMode == StateIdentificationMode.COMPACT && this.nextStateIs == StateKind.POST_INITIAL) {
+        if (this.stateIdMode == StateIdentificationMode.COMPACT && s.phase() == Phase.POST_INITIAL) {
             s.addBranchToHistoryPoint(String.valueOf(b.emittedStates));
         } //else, the history point was already set by addState
-        
-        if (this.nextStateIs == StateKind.PRE_INITIAL) {
-            this.nextStateIs = StateKind.INITIAL;
-        } else if (this.nextStateIs == StateKind.INITIAL) {
-            this.nextStateIs = StateKind.POST_INITIAL;
-        } //else, this.nextStateIs does not change
 
         return s;
     }    

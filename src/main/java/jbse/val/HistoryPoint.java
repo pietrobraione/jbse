@@ -24,6 +24,15 @@ public final class HistoryPoint {
     private final int sequenceNumber;
     
     /**
+     * Constructor for the unknown history point.
+     */
+    private HistoryPoint() {
+        this.compact = true;
+        this.branchIdentifier = null;
+        this.sequenceNumber = 0;
+    }
+    
+    /**
      * Constructor for the root history point.
      * 
      * @param compact a {@code boolean}.
@@ -35,7 +44,7 @@ public final class HistoryPoint {
     }
     
     /**
-     * Private constructor.
+     * Constructor.
      * 
      * @param compact a {@code boolean}.
      * @param branchIdentifier an {@link ArrayList}{@code <}{@link String}{@code >}.
@@ -48,19 +57,30 @@ public final class HistoryPoint {
     }
     
     /**
-     * Factory method. Builds the starting pre-initial {@link HistoryPoint}.
+     * Factory method. Builds the unknown {@link HistoryPoint} (used only
+     * for the Any term).
+     * 
+     * @return a {@link HistoryPoint}.
      */
-    public static HistoryPoint preInitial(boolean compact) {
+    public static HistoryPoint unknown() {
+    	return new HistoryPoint();
+    }
+    
+    /**
+     * Factory method. Builds the starting pre-initial {@link HistoryPoint}.
+     * 
+     * @return a {@link HistoryPoint}.
+     */
+    public static HistoryPoint startingPreInitial(boolean compact) {
         return new HistoryPoint(compact);
     }
     
     /**
-     * Factory method. Builds the initial {@link HistoryPoint} next in time
-     * to this one.
+     * Factory method. Builds the starting initial {@link HistoryPoint}.
      * 
      * @return a {@link HistoryPoint}.
      */
-    public HistoryPoint initial() {
+    public HistoryPoint startingInitial() {
         final ArrayList<String> nextBranchIdentifier = new ArrayList<>();
         nextBranchIdentifier.add(this.compact ? BRANCH_IDENTIFIER_DEFAULT_COMPACT : BRANCH_IDENTIFIER_DEFAULT_LONG);
         return new HistoryPoint(this.compact, nextBranchIdentifier, 0);

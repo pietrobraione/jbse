@@ -39,6 +39,6 @@ public final class PrimitiveSymbolicHashCode extends PrimitiveSymbolicAtomic {
 
     @Override
     public String asOriginString() {
-        return this.container.asOriginString() + ".<hashCode>";
+        return this.container.asOriginString() + ".<identityHashCode>";
     }
 }

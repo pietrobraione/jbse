@@ -16,7 +16,8 @@ import jbse.val.Value;
  * {@link jbse.meta.Analysis#isSymbolic(double)},
  * {@link jbse.meta.Analysis#isSymbolic(float)},
  * {@link jbse.meta.Analysis#isSymbolic(int)},
- * {@link jbse.meta.Analysis#isSymbolic(long)}, and
+ * {@link jbse.meta.Analysis#isSymbolic(long)},
+ * {@link jbse.meta.Analysis#isSymbolic(Object)}, and
  * {@link jbse.meta.Analysis#isSymbolic(short)}.
  * 
  * @author Pietro Braione

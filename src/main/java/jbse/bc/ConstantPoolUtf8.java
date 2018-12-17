@@ -42,11 +42,11 @@ public final class ConstantPoolUtf8 extends ConstantPoolValue {
             return false;
         }
         final ConstantPoolUtf8 other = (ConstantPoolUtf8) obj;
-        if (value == null) {
+        if (this.value == null) {
             if (other.value != null) {
                 return false;
             }
-        } else if (!value.equals(other.value)) {
+        } else if (!this.value.equals(other.value)) {
             return false;
         }
         return true;

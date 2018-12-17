@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import jbse.bc.ClassFileSnippet;
+import jbse.bc.ClassFileSnippetNoWrap;
 import jbse.bc.Signature;
 import jbse.bc.Snippet;
 import jbse.mem.exc.InvalidSlotException;
@@ -15,7 +15,7 @@ import jbse.val.Value;
  * Class representing the activation {@link Frame} of a bytecode snippet.
  * This frame has no local variables and its own operand stack.
  */
-public final class SnippetFrameNoContext extends Frame implements Cloneable {
+public final class SnippetFrameNoWrap extends Frame implements Cloneable {
     /** The frame's operand stack. */ 
     private OperandStack operandStack; //not final because of clone
 
@@ -24,13 +24,13 @@ public final class SnippetFrameNoContext extends Frame implements Cloneable {
      * 
      * @param snippet a {@link Snippet}.
      * @param definingClassLoader an {@code int}, the defining classloader 
-     *        assumed for the {@link ClassFileSnippet} that will be
+     *        assumed for the {@link ClassFileSnippetNoWrap} that will be
      *        created.
      * @param packageName a {@code String}, the name of the package where the
-     *        created {@link ClassFileSnippet} must be assumed to reside.
+     *        created {@link ClassFileSnippetNoWrap} must be assumed to reside.
      */
-    public SnippetFrameNoContext(Snippet snippet, int definingClassLoader, String packageName) {
-        super(new ClassFileSnippet(snippet, definingClassLoader, packageName), snippet.getBytecode());
+    public SnippetFrameNoWrap(Snippet snippet, int definingClassLoader, String packageName) {
+        super(new ClassFileSnippetNoWrap(snippet, definingClassLoader, packageName), snippet.getBytecode());
         this.operandStack = new OperandStack();
     }
     
@@ -111,8 +111,8 @@ public final class SnippetFrameNoContext extends Frame implements Cloneable {
     }
     
     @Override
-    public SnippetFrameNoContext clone() {
-        final SnippetFrameNoContext o = (SnippetFrameNoContext) super.clone();
+    public SnippetFrameNoWrap clone() {
+        final SnippetFrameNoWrap o = (SnippetFrameNoWrap) super.clone();
         o.operandStack = o.operandStack.clone();
         return o;
     }

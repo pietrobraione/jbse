@@ -67,8 +67,6 @@ import java.util.HashSet;
 
 import static java.lang.Thread.NORM_PRIORITY;
 
-import jbse.algo.exc.MissingTriggerParameterException;
-import jbse.algo.exc.NotYetImplementedException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Snippet;
@@ -89,25 +87,23 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.exc.InitializationException;
 import jbse.mem.State;
-import jbse.mem.exc.CannotAssumeSymbolicObjectException;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.mem.exc.ThreadStackEmptyException;
-import jbse.tree.DecisionAlternative_XLOAD_GETX_Expands;
 import jbse.val.ReferenceConcrete;
-import jbse.val.ReferenceSymbolic;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * {@link Algorithm} for the first execution step.
+ * Action (does not implement {@link Action}) for the preparation 
+ * of the pre-initial execution phase.
  * 
  * @author Pietro Braione
  *
  */
-public final class Algo_INIT {
+public final class Action_PREINIT {
     /**
      * Class load inhibit set for initial loading.
      */
@@ -116,20 +112,20 @@ public final class Algo_INIT {
     /**
      * Constructor.
      */
-    public Algo_INIT() { }
+    public Action_PREINIT() { }
     
     public void exec(ExecutionContext ctx) 
     throws DecisionException, InitializationException, 
     InvalidClassFileFactoryClassException, ClasspathException, 
-    NotYetImplementedException, ContradictionException,
-    InvalidInputException {
+    ContradictionException, InvalidInputException {
         //TODO do checks and possibly raise exceptions
         
         //gets or creates the initial state
         State state = ctx.getInitialState();
         if (state == null) {
             state = createPreInitialState(ctx);
-            ctx.stateTree.nextIsPreInitial();
+        } else {
+    		state.setPhasePostInitial(); //to be safe
         }
 
         //adds the state to the state tree
@@ -138,7 +134,7 @@ public final class Algo_INIT {
 
     private State createPreInitialState(ExecutionContext ctx) 
     throws InvalidClassFileFactoryClassException, InitializationException, 
-    DecisionException, ClasspathException, NotYetImplementedException, ContradictionException {
+    DecisionException, ClasspathException, ContradictionException {
         final State state = ctx.createVirginPreInitialState();
         
         //lists all the classes that shall be explicitly initialized
@@ -147,18 +143,14 @@ public final class Algo_INIT {
         //(loads and) creates the essential classes that
         //will be initialized afterwards
         loadCreateEssentialClasses(state, ctx);
-
-        //pushes a frame for the root method (and possibly triggers)
-        invokeRootMethod(state, ctx);
         
-        //pushes a frame to initialize the root class
-        initializeRootClass(state, ctx);
+        //now starts pushing frames (in inverse order of execution)
 
+        //this part of the initialization mirrors stuff in sun.launcher.LauncherHelper
         //pushes frames to initialize classes for dynamic classloading
         initializeClass(state, JAVA_PACKAGE, ctx);
         initializeClass(state, JAVA_STRINGCODING, ctx);
         initializeClass(state, SUN_EXTENSIONDEPENDENCY, ctx);
-
         //TODO possibly more initialization assumption from sun.launcher.LauncherHelper
 
         //the rest of the initialization mirrors hotspot source code from openjdk v8, 
@@ -304,45 +296,6 @@ public final class Algo_INIT {
         }
     }
     
-    private void invokeRootMethod(State state, ExecutionContext ctx) 
-    throws ClasspathException, InitializationException, NotYetImplementedException {
-        try {
-            //TODO resolve rootMethodSignature and lookup implementation
-            //TODO instead of assuming that {ROOT}:this exists and create the frame, use lazy initialization also on {ROOT}:this, for homogeneity and to explore a wider range of alternatives
-            final ClassFile rootClass = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_APP, ctx.rootMethodSignature.getClassName());
-            final ReferenceSymbolic rootThis = state.pushFrameSymbolic(rootClass, ctx.rootMethodSignature);
-            if (rootThis != null) {
-                final ClassFile rootThisClass = state.getObject(rootThis).getType();
-                final DecisionAlternative_XLOAD_GETX_Expands rootExpansion = ctx.decisionProcedure.getRootDecisionAlternative(rootThis, rootThisClass);
-                ctx.triggerManager.loadTriggerFramesRoot(state, rootExpansion);
-            }
-        } catch (MethodNotFoundException | MethodCodeNotFoundException e) {
-            throw new ClasspathException(e);
-        } catch (MissingTriggerParameterException | HeapMemoryExhaustedException | CannotAssumeSymbolicObjectException e) {
-            throw new InitializationException(e);
-        } catch (ThreadStackEmptyException | FrozenStateException e) {
-            //this should not happen at this point
-            failExecution(e);
-        }
-    }
-    
-    private void initializeRootClass(State state, ExecutionContext ctx) 
-    throws DecisionException, ClasspathException, InitializationException, ContradictionException {
-        try {
-            this.doNotInitialize.remove(state.getRootClass().getClassName());
-            ensureClassInitialized(state, state.getRootClass(), ctx, this.doNotInitialize);
-        } catch (InterruptException e) {
-            //nothing to do: fall through
-        } catch (HeapMemoryExhaustedException e) {
-            throw new InitializationException(e);
-        } catch (ThreadStackEmptyException | InvalidInputException | ClassFileNotFoundException | 
-            ClassFileIllFormedException | BadClassFileVersionException | WrongClassNameException | 
-            IncompatibleClassFileException | ClassFileNotAccessibleException e) {
-            //this should not happen at this point
-            failExecution(e);
-        }
-    }
-    
     private void initializeClass(State state, String className, ExecutionContext ctx) 
     throws DecisionException, ClasspathException, InitializationException, ContradictionException {
         try {
@@ -364,7 +317,7 @@ public final class Algo_INIT {
     
     private void invokeGetSystemClassLoader(State state) {
         try {
-            final Snippet snippet = state.snippetFactory()
+            final Snippet snippet = state.snippetFactoryNoWrap()
                 .op_invokestatic(JAVA_CLASSLOADER_GETSYSTEMCLASSLOADER)
                 .op_pop() //discards the return value
                 .op_invokestatic(noclass_SETSTANDARDCLASSLOADERSREADY)

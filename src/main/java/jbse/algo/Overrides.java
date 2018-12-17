@@ -131,6 +131,8 @@ public final class Overrides {
     public static final String ALGO_JBSE_ANALYSIS_FAIL                      = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_FAIL.class.getName());
     public static final String ALGO_JBSE_ANALYSIS_IGNORE                    = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_IGNORE.class.getName());
     public static final String ALGO_JBSE_ANALYSIS_ISRESOLVED                = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ISRESOLVED.class.getName());
+    public static final String ALGO_JBSE_ANALYSIS_ISRESOLVEDBYALIAS         = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ISRESOLVEDBYALIAS.class.getName());
+    public static final String ALGO_JBSE_ANALYSIS_ISRESOLVEDBYEXPANSION     = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ISRESOLVEDBYEXPANSION.class.getName());
     public static final String ALGO_JBSE_ANALYSIS_ISSYMBOLIC                = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ISSYMBOLIC.class.getName());
     public static final String ALGO_JBSE_ANALYSIS_SUCCEED                   = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_SUCCEED.class.getName());
     public static final String ALGO_JBSE_ANALYSIS_SYMBOLNAME                = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_SYMBOLNAME.class.getName());

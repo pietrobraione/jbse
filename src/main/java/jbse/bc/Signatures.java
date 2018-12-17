@@ -322,6 +322,8 @@ public final class Signatures {
         new Signature(JAVA_METHODTYPE, "()" + REFERENCE + JAVA_STRING + TYPEEND, "toMethodDescriptorString");
     public static final Signature JAVA_OBJECT_CLONE =
         new Signature(JAVA_OBJECT, "()" + REFERENCE + JAVA_OBJECT + TYPEEND, "clone");
+    public static final Signature JAVA_OBJECT_EQUALS =
+        new Signature(JAVA_OBJECT, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + BOOLEAN, "equals");
     public static final Signature JAVA_OBJECT_GETCLASS =
         new Signature(JAVA_OBJECT, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getClass");
     public static final Signature JAVA_OBJECT_HASHCODE =
@@ -508,6 +510,10 @@ public final class Signatures {
         new Signature(JBSE_ANALYSIS, "()" + VOID, "ignore");
     public static final Signature JBSE_ANALYSIS_ISRESOLVED = 
         new Signature(JBSE_ANALYSIS, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_STRING + TYPEEND + ")" + BOOLEAN, "isResolved");
+    public static final Signature JBSE_ANALYSIS_ISRESOLVEDBYALIAS = 
+        new Signature(JBSE_ANALYSIS, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + BOOLEAN, "isResolvedByAlias");
+    public static final Signature JBSE_ANALYSIS_ISRESOLVEDBYEXPANSION = 
+        new Signature(JBSE_ANALYSIS, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + BOOLEAN, "isResolvedByExpansion");
     public static final Signature JBSE_ANALYSIS_ISRUNBYJBSE = 
         new Signature(JBSE_ANALYSIS, "()" + BOOLEAN, "isRunByJBSE");
     public static final Signature JBSE_ANALYSIS_ISSYMBOLIC_BOOLEAN = 
@@ -524,6 +530,8 @@ public final class Signatures {
         new Signature(JBSE_ANALYSIS, "(" + INT + ")" + BOOLEAN, "isSymbolic");
     public static final Signature JBSE_ANALYSIS_ISSYMBOLIC_LONG = 
         new Signature(JBSE_ANALYSIS, "(" + LONG + ")" + BOOLEAN, "isSymbolic");
+    public static final Signature JBSE_ANALYSIS_ISSYMBOLIC_OBJECT = 
+        new Signature(JBSE_ANALYSIS, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + BOOLEAN, "isSymbolic");
     public static final Signature JBSE_ANALYSIS_ISSYMBOLIC_SHORT = 
         new Signature(JBSE_ANALYSIS, "(" + SHORT + ")" + BOOLEAN, "isSymbolic");
     public static final Signature JBSE_ANALYSIS_SUCCEED = 
@@ -542,6 +550,8 @@ public final class Signatures {
         new Signature(JBSE_ANALYSIS, "(" + INT + ")" + REFERENCE + JAVA_STRING + TYPEEND, "symbolName");
     public static final Signature JBSE_ANALYSIS_SYMBOLNAME_LONG = 
         new Signature(JBSE_ANALYSIS, "(" + LONG + ")" + REFERENCE + JAVA_STRING + TYPEEND, "symbolName");
+    public static final Signature JBSE_ANALYSIS_SYMBOLNAME_OBJECT = 
+        new Signature(JBSE_ANALYSIS, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_STRING + TYPEEND, "symbolName");
     public static final Signature JBSE_ANALYSIS_SYMBOLNAME_SHORT = 
         new Signature(JBSE_ANALYSIS, "(" + SHORT + ")" + REFERENCE + JAVA_STRING + TYPEEND, "symbolName");
     public static final Signature JBSE_BASE_BOXEXCEPTIONININITIALIZERERROR = 

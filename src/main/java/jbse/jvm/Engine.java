@@ -18,9 +18,8 @@ import jbse.algo.Algorithm;
 import jbse.algo.ContinuationException;
 import jbse.algo.ExecutionContext;
 import jbse.algo.Action;
-import jbse.algo.Algo_INIT;
+import jbse.algo.Action_PREINIT;
 import jbse.algo.exc.CannotManageStateException;
-import jbse.algo.exc.NotYetImplementedException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -34,6 +33,7 @@ import jbse.jvm.exc.InitializationException;
 import jbse.jvm.exc.NonexistingObservedVariablesException;
 import jbse.mem.Clause;
 import jbse.mem.State;
+import jbse.mem.State.Phase;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -112,9 +112,6 @@ public class Engine implements AutoCloseable {
     /** The total number of {@link State}s analyzed by the {@link Engine}. */
     private long analyzedStates = 0L;
     
-    /** {@code true} iff the current state is the initial state. */
-    private boolean atInitialState;
-
     //Construction.
 
     /**
@@ -128,27 +125,25 @@ public class Engine implements AutoCloseable {
     }
 
     /**
-     * Steps the engine in a suitable initial state, either the one stored in 
-     * {@code this.ctx} or the state where:
+     * Steps the engine in a suitable state from which execution can be continued
+     * by invoking {@link #step()}. Such a state is either the one stored in 
+     * {@code this.ctx} or a <em>pre-initial</em> state that bootstraps the standard
+     * java classes before the symbolic execution of the target method. In the
+     * pre-initial state:
      * 
      * <ul>
-     * <li> the stack has one frame for an invocation of the root method;</li>
-     * <li> if the root method is not static, the heap has one object, an 
-     * instance for the {@code this} parameter of the method; this object 
-     * is the <emph>root object</emph>;</li>
-     * <li> all the local variables in the current frame and all the instance 
-     * variables of the root object (if present) are initialized with symbolic 
-     * values;</li>
-     * <li> the path condition assumes that the class of the root method is
-     * preloaded, and (if the method is not static) that the {@code this}
-     * parameter is resolved by expansion to the root object.</li>
+     * <li> the path condition is set to {@code true};</li>
+     * <li> the heap is empty;</li>
+     * <li> the stack has many frames loaded for the execution 
+     * of several methods that initialize the virtual machine.</li>
      * </ul>
      * 
      * @throws DecisionException in case initialization of the 
      *         decision procedure fails for some reason.
-     * @throws InitializationException in case the specified root method 
-     *         does not exist or cannot be symbolically executed for 
-     *         any reason (e.g., is native).
+     * @throws InitializationException in case this {@link Engine} is not
+     *         executed on a Java 8 runtime environment, or some error happened
+     *         while initializing some indispensable Java standard classes, 
+     *         or while creating the initial thread or thread group. 
      * @throws InvalidClassFileFactoryClassException in case the class object 
      *         provided to build a class file factory cannot be used
      *         (e.g., it has not a suitable constructor or it is not visible).
@@ -156,69 +151,47 @@ public class Engine implements AutoCloseable {
      *         observed variable names cannot be observed. This is the only exception
      *         that allows nevertheless to perform symbolic execution, in which case 
      *         only the observers to existing variables will be notified.
-     * @throws ClasspathException in case some essential standard JRE class is missing
-     *         from the bootstrap classpath, or is ill-formed, or cannot access one of its
-     *         superclasses/superinterfaces.
-     * @throws NotYetImplementedException if the trigger methods for the initial root 
-     *         object expansion (when present) are not in the root class.
-     * @throws ContradictionException  if some initialization assumption is
+     * @throws ClasspathException in case any of the indispensable standard Java 8 
+     *         Runtime Environment classes is missing from the bootstrap classpath, 
+     *         or is ill-formed.
+     * @throws ContradictionException if some initialization assumption is
      *         contradicted.
      */
     void init() 
     throws DecisionException, InitializationException, 
     InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, 
-    ClasspathException, NotYetImplementedException, ContradictionException {
-        //checks that the version of the meta-level JRE is ok
-        final String javaVersion = System.getProperty("java.version");
-        if (!javaVersion.startsWith("1.8.0")) {
-            throw new InitializationException("JBSE requires to be run on a Java 8 JVM.");
-        }
-        
-        //executes the first state setup step
-        final Algo_INIT algo = this.ctx.dispatcher.select();
-        try {
-            algo.exec(this.ctx);
-        } catch (InvalidInputException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
+    ClasspathException, ContradictionException {
+    	try {
+    		//checks that the version of the meta-level JRE is ok
+    		final String javaVersion = System.getProperty("java.version");
+    		if (!javaVersion.startsWith("1.8.0")) {
+    			throw new InitializationException("JBSE requires to be run on a Java 8 JVM.");
+    		}
 
-        //extracts the first state from the tree
-        try {
-        	if (this.ctx.stateTree.createdBranch()) { //we need the side effect of invoking createBranch
-        		this.currentState = this.ctx.stateTree.nextState();
-        	} else {
-        		//this should never happen
-        		throw new UnexpectedInternalException("The first state is missing from the state tree.");
-        	}
-        } catch (FrozenStateException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
+    		//steps
+    		final Action_PREINIT algo = this.ctx.dispatcher.selectPreInit();
+    		algo.exec(this.ctx);
+    		
+    		//updates the current state
+    		if (this.ctx.stateTree.createdBranch()) { //Algo_PREINIT always creates a branch, but we need the side effect of invoking createBranch
+    			this.currentState = this.ctx.stateTree.nextState();
+    		} else {
+    			//this should never happen
+    			throw new UnexpectedInternalException("The first state is missing from the state tree.");
+    		}
 
-        try {
-            //detects whether we are at the initial state
-        	if (this.currentState.getStackSize() == 1) {
-        		this.atInitialState = true;
-        		this.currentState.setPhasePostInit(); //possibly pleonastic, but doesn't hurt
-        		this.ctx.setInitialState(this.currentState);
-        	} else {
-        		this.atInitialState = false;
-        	}
+    		//determines then next phase of the state and
+    		//in the case the state is initial does some operations
+    		if (atInitialState()) {
+    			this.ctx.setInitialState(this.currentState);
+    			this.currentState.setPhasePostInitial();
+        		this.vom.init(this);
+    		}
 
-        	//synchronizes the decision procedure with the path condition
-            this.ctx.decisionProcedure.setAssumptions(this.currentState.getPathCondition());
-
-            this.currentState.resetLastPathConditionClauses();
-        } catch (InvalidInputException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
-
-        //inits the variable observer manager
-        try {
-            this.vom.init(this);
-        } catch (ThreadStackEmptyException e) {
+    		//synchronizes the decision procedure with the current path condition
+    		this.ctx.decisionProcedure.setAssumptions(this.currentState.getPathCondition());
+    		this.currentState.resetLastPathConditionClauses();
+        } catch (InvalidInputException | ThreadStackEmptyException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
@@ -228,12 +201,12 @@ public class Engine implements AutoCloseable {
     
     /** 
      * Checks whether the current state is the initial
-     * state.
+     * state, i.e., the first state of the post-init phase.
      * 
      * @return a {@code boolean}.
      */
     public boolean atInitialState() {
-        return this.atInitialState;
+        return (this.currentState.phase() == Phase.INITIAL);
     }
 
     /**
@@ -250,7 +223,7 @@ public class Engine implements AutoCloseable {
     /**
      * Checks whether the engine can step.
      * 
-     * @return <code>true</code> iff the engine can step. The engine can step unless 
+     * @return {@code true} iff the engine can step. The engine can step unless 
      *         the current {@link State} is stuck, or no backtrack has 
      *         been performed since the last invocation of the {@link #stopCurrentTrace}
      *         method.
@@ -260,7 +233,7 @@ public class Engine implements AutoCloseable {
     }
 
     /**
-     * Steps the execution by performing the current bytecode.
+     * Steps the execution.
      * 
      * @return the {@link BranchPoint} created after the execution of the 
      *         current bytecode, allowing to resume the execution from the states 
@@ -268,23 +241,28 @@ public class Engine implements AutoCloseable {
      *         does not produce more than one possible next state.
      * @throws CannotManageStateException iff the engine is unable to calculate 
      *         the next state because of some engine limitations.
-     * @throws ClasspathException iff the JRE standard libraries are missing from
-     *         the classpath or incompatible with the current JBSE.
+     * @throws NonexistingObservedVariablesException in case some of the provided 
+     *         observed variable names cannot be observed. This is the only exception
+     *         that allows nevertheless to perform symbolic execution, in which case 
+     *         only the observers to existing variables will be notified.
+     * @throws ClasspathException in case any of the indispensable standard Java 8 
+     *         Runtime Environment classes is missing from the bootstrap classpath, 
+     *         or is ill-formed.
      * @throws ContradictionException iff the step causes a violation of some assumption; 
      *         in this case after the step it is 
-     *         {@code this.}{@link #canStep()}{@code == false}.
+     *         {@link #canStep()}{@code  == false}.
      * @throws DecisionException iff the decision procedure fails for any reason.
      * @throws EngineStuckException when the method is invoked from a state where 
-     *         {@code this.}{@link #canStep()}{@code == false}.
+     *         {@link #canStep()}{@code  == false}.
      * @throws ThreadStackEmptyException when the execution of a step is attempted
      *         on a current state with an empty thread stack.
      * @throws FailureException iff the step causes a violation of some assertion; 
      *         in this case after the step it is 
-     *         {@code this.}{@link #canStep()}{@code == false}.
+     *         {@link #canStep()}{@code  == false}.
      */
     public BranchPoint step() 
-    throws EngineStuckException, CannotManageStateException, ClasspathException, 
-    ThreadStackEmptyException, ContradictionException, DecisionException, 
+    throws EngineStuckException, CannotManageStateException, NonexistingObservedVariablesException, 
+    ClasspathException, ThreadStackEmptyException, ContradictionException, DecisionException, 
     FailureException {
         try {
         	//sanity check
@@ -292,9 +270,19 @@ public class Engine implements AutoCloseable {
         		throw new EngineStuckException();
         	}
 
+        	//detects whether we ended the pre-initialization phase
+        	final boolean atLastPreInitialState = (this.currentState.phase() == Phase.PRE_INITIAL && this.currentState.getStackSize() == 0);
+
+        	//determines the next phase of the state
+        	if (atLastPreInitialState) {
+        		this.currentState.setPhaseInitial();
+        	} else if (atInitialState()) {
+        		this.currentState.setPhasePostInitial();
+        	}
+
         	//updates the information about the state before the step
-        	this.preStepSourceRow = this.currentState.getSourceRow();
         	this.preStepStackSize = this.currentState.getStackSize();
+        	this.preStepSourceRow = (this.preStepStackSize == 0 ? -1 : this.currentState.getSourceRow());
 
         	//steps
         	Action action;
@@ -302,9 +290,11 @@ public class Engine implements AutoCloseable {
         	final ArrayDeque<Action[]> continuations = new ArrayDeque<>();
         	final ArrayDeque<Integer> continuationCounters = new ArrayDeque<>();
         	do {
-        		action = (continuations.isEmpty() ? 
-        				this.ctx.dispatcher.select(this.currentState.getInstruction()) : 
-        					continuations.peek()[continuationCounter++]);
+        		action = (atLastPreInitialState ? 
+        				  this.ctx.dispatcher.selectInit() :
+        				  continuations.isEmpty() ? 
+        				  this.ctx.dispatcher.select(this.currentState.getInstruction()) : 
+        				  continuations.peek()[continuationCounter++]);
         		if (!continuations.isEmpty() && continuationCounter == continuations.peek().length) {
         			continuations.pop();
         			continuationCounter = continuationCounters.pop();
@@ -324,41 +314,31 @@ public class Engine implements AutoCloseable {
         		} 
         	} while (!continuations.isEmpty() && continuationCounter < continuations.peek().length);
 
+        	//possibly gets information about symbolic references that were not expanded
         	if (action instanceof Algorithm<?, ?, ?, ?, ?>) {
         		final Algorithm<?, ?, ?, ?, ?> algo = (Algorithm<?, ?, ?, ?, ?>) action;
         		this.someReferenceNotExpanded = algo.someReferenceNotExpanded();
         		this.nonExpandedReferencesOrigins = algo.nonExpandedReferencesOrigins();
         		this.nonExpandedReferencesTypes = algo.nonExpandedReferencesTypes();
         	}
+        	
+        	//cleans, stores and creates a branch for the initial state
+    	    if (atInitialState()) {
+    			this.currentState.gc();
+    			this.ctx.setInitialState(this.currentState);
+        		this.vom.init(this);
+    	    	this.ctx.stateTree.addState(this.currentState);
+    	    }
 
-        	//detects whether we are at the initial state
-        	if (this.currentState.isPhasePreInit() && this.currentState.getStackSize() == 1) {
-        		this.atInitialState = true;
-        		this.currentState.setPhasePostInit();
-        		try {
-        			this.ctx.stateTree.addState(this.currentState);
-        		} catch (InvalidInputException e) {
-        			//this should never happen
-        			throw new UnexpectedInternalException(e);
-        		}
-        	} else {
-        		this.atInitialState = false;
-        	}
-
-        	//updates the current state and calculates return value
-        	final BranchPoint retVal;
+        	//updates the current state and calculates the return value
+        	BranchPoint retVal = null;
         	if (this.ctx.stateTree.createdBranch()) {
         		retVal = this.ctx.stateTree.nextBranch();
         		this.currentState = this.ctx.stateTree.nextState();
-        		if (this.atInitialState) {
-        			this.currentState.gc(); //does a bit of cleanup to accelerate things
-        			this.ctx.setInitialState(this.currentState);
-        		}
         	} else {
-        		retVal = null;
         		this.currentState.incSequenceNumber();
         	}
-
+        	
         	//updates the counters for depth/count scope
         	if (this.currentState.branchingDecision()) {
         		this.currentState.incDepth();
@@ -371,8 +351,10 @@ public class Engine implements AutoCloseable {
         	this.ctx.decisionProcedure.addAssumptions(this.currentState.getLastPathConditionPushedClauses());
         	this.currentState.resetLastPathConditionClauses();
 
-        	//manages variable observation
-        	this.vom.notifyObservers(retVal);
+        	//notifies observers of variables
+        	if (this.currentState.phase() == Phase.POST_INITIAL) {
+        		this.vom.notifyObservers(retVal);
+        	}
 
         	//updates stats
         	if (this.analyzedStates < Long.MAX_VALUE) { 
@@ -401,7 +383,7 @@ public class Engine implements AutoCloseable {
      * Returns the number of analyzed symbolic states.
      * 
      * @return a {@code long}, the number of times the 
-     *         {@link #step} method has been invoked.  
+     *         {@link #step()} method has been invoked.  
      */
     public long getAnalyzedStates() {
         return this.analyzedStates;
@@ -542,8 +524,8 @@ public class Engine implements AutoCloseable {
      */
     public boolean sourceRowChanged() throws ThreadStackEmptyException {
         try {
-			return (this.currentState.isStuck() || 
-			        (this.currentState.getSourceRow() != this.preStepSourceRow));
+			return (this.currentState.isStuck() || this.currentState.getStackSize() == 0 ||
+			        this.currentState.getSourceRow() != this.preStepSourceRow);
 		} catch (FrozenStateException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
@@ -560,7 +542,7 @@ public class Engine implements AutoCloseable {
     public boolean currentMethodChanged() {
         try {
 			return (this.currentState.isStuck() || 
-			        (this.currentState.getStackSize() != this.preStepStackSize));
+			        this.currentState.getStackSize() != this.preStepStackSize);
 		} catch (FrozenStateException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);

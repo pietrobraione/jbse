@@ -554,11 +554,13 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     throws MethodNotFoundException;
 
     /**
-     * Gets the value of an annotation parameter on a method annotation. It must be a {@link String}.
+     * Gets the value of an annotation parameter on a method annotation, in the case
+     * the parameter's value is a {@link String}.
      * 
      * @param methodSignature the {@link Signature} of the method. Only the name and 
      *        descriptor are considered.
      * @param annotation a {@code String}, the name of the annotation to look for.
+     * @param parameter a {@code String}, the name of the annotation's parameter to look for.
      * @return a {@link String}, the value of parameter {@code parameter} for 
      *         annotation {@code annotation}, or {@code null} if {@code annotation}
      *         is not present, or is present and {@code parameter} is not present, 
@@ -885,12 +887,12 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     public abstract Signature getInterfaceMethodSignature(int methodRef) throws InvalidIndexException;
 
     /**
-     * Given an index of the constant table of CONSTANT_ClassRef type, returns the signature 
+     * Given an index of the constant table of CONSTANT_Class type, returns the signature 
      * of the class.
      * 
-     * @param classRef the CONSTANT_ClassRef of searched class.
+     * @param classRef the CONSTANT_Class of searched class.
      * @return a {@link String}, the name of a class.
-     * @throws InvalidIndexException iff {@code classRef} is not the index of a valid CONSTANT_ClassRef
+     * @throws InvalidIndexException iff {@code classRef} is not the index of a valid CONSTANT_Class
      *         in the class constant pool.
      */
     public abstract String getClassSignature(int classRef) throws InvalidIndexException;
@@ -1033,11 +1035,11 @@ public abstract class ClassFile implements Comparable<ClassFile> {
         if (o == null) {
             return false;
         }
-        if (this.getClass() != o.getClass()) {
+        if (!(o instanceof ClassFile)) { //not same class because of wrapped classfiles
             return false; 
         }
         final ClassFile ocf = (ClassFile) o;
-        return this.getClassName().equals(ocf.getClassName()) && this.getDefiningClassLoader() == ocf.getDefiningClassLoader();
+        return getClassName().equals(ocf.getClassName()) && getDefiningClassLoader() == ocf.getDefiningClassLoader();
     }
     
     @Override

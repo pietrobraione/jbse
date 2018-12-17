@@ -20,7 +20,7 @@ import jbse.val.Value;
  */
 public abstract class ObjektImpl implements Objekt {
     /** Whether this object is symbolic. Immutable. */
-    private boolean symbolic;
+    private final boolean symbolic;
 
     /** ClassFile for this object's class. Immutable. */
     protected final ClassFile classFile;

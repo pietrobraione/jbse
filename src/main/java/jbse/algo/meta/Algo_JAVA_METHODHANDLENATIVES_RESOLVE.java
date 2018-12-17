@@ -377,7 +377,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
         if (state.isNull(memberNameDescriptorStringReference)) {
             try {
                 state.pushOperand(this.memberNameObject.getFieldValue(JAVA_MEMBERNAME_TYPE));
-                final Snippet snippet = state.snippetFactory()
+                final Snippet snippet = state.snippetFactoryWrap()
                     .op_invokevirtual(JAVA_METHODTYPE_TOMETHODDESCRIPTORSTRING)
                     .op_pop() //we cannot use the return value so we need to clean the stack
                     .op_return()
@@ -500,7 +500,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             //parameters for JAVA_METHODHANDLENATIVES_FINDMETHODHANDLETYPE
             state.pushOperand(rtype);
             state.pushOperand(ptypes);
-            final Snippet snippet = state.snippetFactory()
+            final Snippet snippet = state.snippetFactoryWrap()
                 .op_invokestatic(JAVA_METHODHANDLENATIVES_FINDMETHODHANDLETYPE)
                 //let's populate the descriptor now
                 .op_dup()
@@ -611,7 +611,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             state.pushOperand(mhNameRef); //name of the method, either invoke or invokeExact
             state.pushOperand(mtRef); //java.lang.invoke.MethodType instance for the method's descriptor
             state.pushOperand(appendixBox); //appendix
-            final Snippet snippet = state.snippetFactory()
+            final Snippet snippet = state.snippetFactoryWrap()
                 .op_invokestatic(JAVA_METHODHANDLENATIVES_LINKMETHOD)
                 //the next call to getType ensures that the returned MemberName 
                 //is normalized, so that its type field is a MethodType

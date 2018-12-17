@@ -49,7 +49,6 @@ public abstract class DecisionAlternative_XALOAD implements DecisionAlternative 
         return false;
     }
 
-
     @Override
     public int hashCode() {
         return this.hashCode;

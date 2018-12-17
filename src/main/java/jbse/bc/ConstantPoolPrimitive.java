@@ -2,7 +2,7 @@ package jbse.bc;
 
 /**
  * A {@link ConstantPoolValue} representing a primitive value
- * from the constant pool.
+ * from the constant pool (int, float, long or double).
  * 
  * @author Pietro Braione
  *

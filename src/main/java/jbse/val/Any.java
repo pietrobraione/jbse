@@ -1,5 +1,7 @@
 package jbse.val;
 
+import static jbse.val.HistoryPoint.unknown;
+
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.PrimitiveSymbolic;
@@ -15,7 +17,7 @@ import jbse.val.exc.InvalidTypeException;
  */
 public final class Any extends PrimitiveSymbolic {
     private Any(Calculator calc) throws InvalidTypeException {
-        super(Type.BOOLEAN, null, calc);
+        super(Type.BOOLEAN, unknown(), calc);
     }
 
     public static Any make(Calculator calc) {

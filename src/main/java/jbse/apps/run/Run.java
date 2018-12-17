@@ -354,14 +354,9 @@ public final class Run {
             }
             
             //enables printing if we hit the root method execution
-            try {
-				if (currentState.getStackSize() == 1) {
-				    this.mayPrint = true;
-				}
-			} catch (FrozenStateException e) {
-				//this should never happen
-				throw new UnexpectedInternalException(e);
-			}
+            if (Run.this.engine.atInitialState()) {
+            	this.mayPrint = true;
+            }
 
             //prints/asks (all+bytecode and branches)
             boolean stop = false;
@@ -514,6 +509,18 @@ public final class Run {
             Run.this.err(e);
             return super.atCannotBacktrackException(e);
         }
+        
+        @Override
+        public boolean atNonexistingObservedVariablesException(NonexistingObservedVariablesException e)
+        throws NonexistingObservedVariablesException {
+            for (int i : e.getVariableIndices()) {
+                if (Run.this.parameters.getShowWarnings()) {
+                	Run.this.log(WARNING_PARAMETERS_UNRECOGNIZABLE_VARIABLE + i
+                        + (i == 1 ? "-st." : i == 2 ? "-nd." : i == 3 ? "-rd." : "-th."));
+                }
+            }
+        	return super.atNonexistingObservedVariablesException(e);
+        }
 
         private void checkFinalStateIsConcretizable(CounterKind ctr) {
             if (ctr == null) {
@@ -565,7 +572,8 @@ public final class Run {
             this.runner.run();
         } catch (ClasspathException | 
                  DecisionException | CannotManageStateException | 
-                 EngineStuckException | CannotBacktrackException e) {
+                 EngineStuckException | CannotBacktrackException | 
+                 NonexistingObservedVariablesException e) {
             //already reported
             retVal = 1;
         } catch (ThreadStackEmptyException | ContradictionException |
@@ -1265,7 +1273,7 @@ public final class Run {
     private static final String ERROR_UNDEF_DECISION_PROCEDURE = "Unexpected internal error: This decision procedure is unimplemented.";
 
     /** Error: no or bad JRE. */
-    private static final String ERROR_BAD_CLASSPATH = "No or incompatible JRE in the classpath.";
+    private static final String ERROR_BAD_CLASSPATH = "Cannot found item in the classpath.";
 
     /** Error: unexpected internal error (stepping while engine stuck). */
     private static final String ERROR_ENGINE_STUCK = "Unexpected internal error: Attempted step while in a stuck state.";

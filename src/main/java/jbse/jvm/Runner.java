@@ -12,7 +12,9 @@ import jbse.dec.exc.DecisionException;
 import jbse.jvm.exc.CannotBacktrackException;
 import jbse.jvm.exc.EngineStuckException;
 import jbse.jvm.exc.FailureException;
+import jbse.jvm.exc.NonexistingObservedVariablesException;
 import jbse.mem.State;
+import jbse.mem.State.Phase;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.StateTree.BranchPoint;
@@ -263,11 +265,10 @@ public class Runner {
          * @param e the {@link ContradictionException} thrown by the {@link Engine}.
          * @return {@code true} iff the {@link Runner} must stop
          *         {@link Runner#run run}ning.
-         * @throws ContradictionException.
+         * @throws ContradictionException by default.
          */
         public boolean atContradictionException(ContradictionException e) 
         throws ContradictionException { throw e; }
-
 
         /**
          * Invoked by a {@link Runner}'s {@link Runner#run run} method whenever a 
@@ -294,6 +295,19 @@ public class Runner {
          */
         public boolean atThreadStackEmptyException(ThreadStackEmptyException e) 
         throws ThreadStackEmptyException { return false; }
+
+        /**
+         * Invoked by a {@link Runner}'s {@link Runner#run run} method whenever a 
+         * {@link NonexistingObservedVariablesException} is thrown by the {@link Engine}. 
+         * By default rethrows the exception.
+         * 
+         * @param e the {@link NonexistingObservedVariablesException} thrown by the {@link Engine}.
+         * @return {@code true} iff the {@link Runner} must stop
+         *         {@link Runner#run run}ning.
+         * @throws NonexistingObservedVariablesException by default.
+         */
+        public boolean atNonexistingObservedVariablesException(NonexistingObservedVariablesException e) 
+        throws NonexistingObservedVariablesException { throw e; }
 
         /**
          * Invoked by a {@link Runner}'s {@link Runner#run run}  method whenever a 
@@ -474,7 +488,7 @@ public class Runner {
     }
 
     private boolean outOfScopeCount() {
-        final boolean retVal = (this.countScope > 0 && !this.engine.getCurrentState().isPhasePreInit() && this.engine.getCurrentState().getCount() > countScope);
+        final boolean retVal = (this.countScope > 0 && this.engine.getCurrentState().phase() == Phase.POST_INITIAL && this.engine.getCurrentState().getCount() > countScope);
         return retVal;
     }
 
@@ -489,12 +503,13 @@ public class Runner {
      * @throws DecisionException as in {@link Engine#step()} 
      * @throws EngineStuckException as in {@link Engine#step()} 
      * @throws FailureException as in {@link Engine#step()} 
+     * @throws NonexistingObservedVariablesException as in {@link Engine#step()} 
      */
     public void run() 
     throws CannotBacktrackException, CannotManageStateException, 
     ClasspathException, ThreadStackEmptyException, 
     ContradictionException, DecisionException, EngineStuckException, 
-    FailureException  {
+    FailureException, NonexistingObservedVariablesException  {
         this.startTime = System.currentTimeMillis();
 
         try {
@@ -508,7 +523,7 @@ public class Runner {
     throws CannotBacktrackException, CannotManageStateException, 
     ClasspathException, ThreadStackEmptyException, 
     ContradictionException, DecisionException, EngineStuckException, 
-    FailureException  {
+    FailureException, NonexistingObservedVariablesException  {
         if (this.actions.atRoot()) { return; }
         if (this.engine.atInitialState()) {
             if (this.actions.atInitial()) { return; }
@@ -547,7 +562,9 @@ public class Runner {
                     if (this.actions.atFailureException(e)) { return; }
                 } catch (ThreadStackEmptyException e) {
                     if (this.actions.atThreadStackEmptyException(e)) { return; }
-                } finally {
+                } catch (NonexistingObservedVariablesException e) {
+                    if (this.actions.atNonexistingObservedVariablesException(e)) { return; }
+				} finally {
                     if (this.actions.atStepFinally()) { return; }
                 }
                 

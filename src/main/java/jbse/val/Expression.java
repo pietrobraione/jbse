@@ -1,5 +1,7 @@
 package jbse.val;
 
+import static jbse.val.HistoryPoint.unknown;
+
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.exc.InvalidOperandException;
@@ -100,7 +102,7 @@ public final class Expression extends PrimitiveSymbolicComputed {
      */
     private Expression(char type, Calculator calc, Primitive firstOperand, Operator operator, Primitive secondOperand) 
     throws InvalidTypeException {
-    	super(type, null, calc); //TODO put sensible history point?
+    	super(type, unknown(), calc); //TODO put sensible history point?
         this.firstOp = firstOperand;
         this.operator = operator;
         this.secondOp = secondOperand;

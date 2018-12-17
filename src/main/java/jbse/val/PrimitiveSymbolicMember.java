@@ -13,12 +13,13 @@ public abstract class PrimitiveSymbolicMember extends PrimitiveSymbolicAtomic im
      * Constructor.
      * 
      * @param container a {@link ReferenceSymbolic}, the container object
-     *        this symbol originates from.
+     *        this symbol originates from. It must not be {@code null}.
      * @param id an {@link int}, the identifier of the symbol. Different
      *        object with same identifier will be treated as equal.
      * @param type the type of the represented value.
-     * @param calc a {@link Calculator}.
+     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @throws InvalidTypeException if {@code type} is not primitive.
+     * @throws NullPointerException if {@code calc == null || container == null}.
      */
     PrimitiveSymbolicMember(ReferenceSymbolic container, int id, char type, Calculator calc) throws InvalidTypeException {
     	super(id, type, container.historyPoint(), calc);

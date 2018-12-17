@@ -5,7 +5,6 @@ import static jbse.common.Type.TYPEEND;
 
 import java.lang.reflect.Modifier;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
 import jbse.bc.exc.AttributeNotFoundException;
@@ -13,6 +12,7 @@ import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
+import jbse.common.exc.UnexpectedInternalException;
 
 /**
  * A {@link ClassFile} that can be created on-the-fly for code
@@ -20,10 +20,8 @@ import jbse.bc.exc.MethodNotFoundException;
  * 
  * @author Pietro Braione
  */
-public class ClassFileSnippet extends ClassFile {
-    final HashMap<Integer, ConstantPoolValue> constants;
-    final HashMap<Integer, Signature> signatures;
-    final HashMap<Integer, String> classes;
+public class ClassFileSnippetNoWrap extends ClassFile {
+	final Snippet snippet;
     final int definingClassLoader;
     final String packageName;
     
@@ -32,14 +30,12 @@ public class ClassFileSnippet extends ClassFile {
      * 
      * @param snippet a {@link Snippet}.
      * @param definingClassLoader an {@code int}, the defining classloader 
-     *        assumed for this {@link ClassFileSnippet}.
+     *        assumed for this {@link ClassFileSnippetNoWrap}.
      * @param packageName a {@code String}, the name of the package where this
-     *        {@link ClassFileSnippet} must be assumed to reside.
+     *        {@link ClassFileSnippetNoWrap} must be assumed to reside.
      */
-    public ClassFileSnippet(Snippet snippet, int definingClassLoader, String packageName) {
-        this.constants = new HashMap<>(snippet.getConstants());
-        this.signatures = new HashMap<>(snippet.getSignatures());
-        this.classes = new HashMap<>(snippet.getClasses());
+    public ClassFileSnippetNoWrap(Snippet snippet, int definingClassLoader, String packageName) {
+        this.snippet = snippet;
         this.definingClassLoader = definingClassLoader;
         this.packageName = packageName;
     }
@@ -66,7 +62,7 @@ public class ClassFileSnippet extends ClassFile {
     
     @Override
     public String getClassName() {
-        return packageName + "/";
+        return this.packageName + "/$SNIPPET";
     }
     
     @Override
@@ -186,7 +182,7 @@ public class ClassFileSnippet extends ClassFile {
     
     @Override
     public int constantPoolSize() {
-        return this.constants.size() + this.signatures.size() + this.classes.size();
+        return this.snippet.size();
     }
 
     @Override
@@ -280,8 +276,9 @@ public class ClassFileSnippet extends ClassFile {
     }
     
     @Override
-    public String getMethodAnnotationParameterValueString(Signature methodSignature, String annotation, String parameter) {
-        return null;
+    public String getMethodAnnotationParameterValueString(Signature methodSignature, String annotation, String parameter) 
+    throws MethodNotFoundException {
+    	throw new MethodNotFoundException(methodSignature.toString());
     }
 
     @Override
@@ -309,10 +306,15 @@ public class ClassFileSnippet extends ClassFile {
 
     @Override
     public ConstantPoolValue getValueFromConstantPool(int index) throws InvalidIndexException {
-        if (this.constants.containsKey(index)) {
-            return this.constants.get(index);
+        if (this.snippet.containsValueFromConstantPool(index)) {
+    		try {
+    			return this.snippet.getValueFromConstantPool(index);
+    		} catch (InvalidIndexException e) {
+    			//this should never happen
+    			throw new UnexpectedInternalException(e);
+    		}
         } else {
-            throw new InvalidIndexException("index " + index + " not set");
+            throw new InvalidIndexException("Constant pool index " + index + " does not exist in snippet.");
         }
     }
 
@@ -399,11 +401,11 @@ public class ClassFileSnippet extends ClassFile {
     }
 
     @Override
-    public Signature getFieldSignature(int fieldRef) throws InvalidIndexException {
-        if (this.signatures.containsKey(fieldRef)) {
-            return this.signatures.get(fieldRef);
+    public Signature getFieldSignature(int index) throws InvalidIndexException {
+        if (this.snippet.getSignatures().containsKey(index)) {
+            return this.snippet.getSignatures().get(index);
         } else {
-            throw new InvalidIndexException("index " + fieldRef + " not set");
+            throw new InvalidIndexException("Constant pool index " + index + " does not exist in snippet.");
         }
     }
 
@@ -418,29 +420,29 @@ public class ClassFileSnippet extends ClassFile {
     }
 
     @Override
-    public Signature getMethodSignature(int methodRef) throws InvalidIndexException {
-        if (this.signatures.containsKey(methodRef)) {
-            return this.signatures.get(methodRef);
+    public Signature getMethodSignature(int index) throws InvalidIndexException {
+        if (this.snippet.getSignatures().containsKey(index)) {
+            return this.snippet.getSignatures().get(index);
         } else {
-            throw new InvalidIndexException("index " + methodRef + " not set");
+            throw new InvalidIndexException("Constant pool index " + index + " does not exist in snippet.");
         }
     }
 
     @Override
-    public Signature getInterfaceMethodSignature(int methodRef) throws InvalidIndexException {
-        if (this.signatures.containsKey(methodRef)) {
-            return this.signatures.get(methodRef);
+    public Signature getInterfaceMethodSignature(int index) throws InvalidIndexException {
+        if (this.snippet.getSignatures().containsKey(index)) {
+            return this.snippet.getSignatures().get(index);
         } else {
-            throw new InvalidIndexException("index " + methodRef + " not set");
+            throw new InvalidIndexException("Constant pool index " + index + " does not exist in snippet.");
         }
     }
 
     @Override
-    public String getClassSignature(int classRef) throws InvalidIndexException {
-        if (this.classes.containsKey(classRef)) {
-            return this.classes.get(classRef);
+    public String getClassSignature(int index) throws InvalidIndexException {
+        if (this.snippet.getClasses().containsKey(index)) {
+            return this.snippet.getClasses().get(index);
         } else {
-            throw new InvalidIndexException("index " + classRef + " not set");
+            throw new InvalidIndexException("Constant pool index " + index + " does not exist in snippet.");
         }
     }
     

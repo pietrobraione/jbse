@@ -29,6 +29,7 @@ import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.dec.DecisionProcedureAlgorithms;
+import jbse.mem.State.Phase;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -183,7 +184,9 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         return (state, alt) -> {
             state.popCurrentFrame();
             if (state.getStackSize() == 0) {
-                state.setStuckReturn(this.valueToReturn);
+            	if (state.phase() == Phase.POST_INITIAL) {
+            		state.setStuckReturn(this.valueToReturn);
+            	}
             } else {
                 state.pushOperand(this.valueToReturn);
                 this.pcReturn = state.getReturnPC();

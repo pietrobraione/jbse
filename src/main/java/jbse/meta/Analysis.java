@@ -264,6 +264,18 @@ final public class Analysis {
     }
     
     /**
+     * Checks if the argument is a symbolic value.
+     * When executed on a JVM different from JBSE
+     * always returns {@code false}.
+     * 
+     * @param o a (reference to an) {@link Object}.
+     * @return {@code true} iff {@code o} is symbolic.
+     */
+    public static boolean isSymbolic(Object o) {
+        return false;
+    }
+    
+    /**
      * Returns a {@link String} with the symbol name
      * if its argument is symbolic, or {@code null}
      * if it isn't. When executed on a JVM different 
@@ -384,6 +396,21 @@ final public class Analysis {
     }
 
     /**
+     * Returns a {@link String} with the symbol name
+     * if its argument is symbolic, or {@code null}
+     * if it isn't. When executed on a JVM different 
+     * from JBSE always returns {@code null}.
+     *  
+     * @param o a (reference to an) {@link Object}.
+     * @return if {@code o} is symbolic a {@link String} 
+     *         with {@code o}'s name, {@code null}
+     *         otherwise. 
+     */
+    public static String symbolName(Object o) {
+        return null;
+    }
+
+    /**
      * Asks the symbolic executor whether a field in an object, 
      * if its type is reference, it is resolved. When executed 
      * on a JVM different from JBSE it returns {@code true}.
@@ -397,6 +424,36 @@ final public class Analysis {
      */
     public static boolean isResolved(Object obj, String fieldName) {
         return true;
+    }
+    
+    //TODO isResolved also for array members
+    
+    /**
+     * Checks whether a reference is resolved by alias. Note that
+     * invocation of this method causes resolution, if the reference
+     * was not resolved before.
+     * When executed on a JVM different from JBSE it returns {@code false}.
+     * 
+     * @param o a (reference to an) {@link Object}.
+     * @return {@code true} if {@code o} is symbolic and resolved 
+     *         by alias, {@code false} otherwise.
+     */
+    public static boolean isResolvedByAlias(Object o) {
+    	return false;
+    }
+
+    /**
+     * Checks whether a reference is resolved by expansion. Note that
+     * invocation of this method causes resolution, if the reference
+     * was not resolved before.
+     * When executed on a JVM different from JBSE it returns {@code false}.
+     * 
+     * @param o a (reference to an) {@link Object}.
+     * @return {@code true} if {@code o} is symbolic and resolved 
+     *         by expansion, {@code false} otherwise.
+     */
+    public static boolean isResolvedByExpansion(Object o) {
+    	return false;
     }
 
     /**
