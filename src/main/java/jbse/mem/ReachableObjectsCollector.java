@@ -10,6 +10,7 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Reference;
+import jbse.val.ReferenceArrayImmaterial;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Value;
@@ -262,6 +263,8 @@ public final class ReachableObjectsCollector {
                     reachable.add(heapPosition);
                     next.add(heapPosition);
                 }
+            } else if (ref instanceof ReferenceArrayImmaterial) {
+            	//do nothing: the reference does not refer (yet) to any object
             } else if (s.resolved((ReferenceSymbolic) ref)) {
                 final long heapPosition = s.getResolution((ReferenceSymbolic) ref);
                 if (!reachable.contains(heapPosition)) {
