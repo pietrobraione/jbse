@@ -31,6 +31,8 @@ import jbse.val.ReferenceConcrete;
  * @author Pietro Braione
  */
 public final class Algo_JAVA_STRINGBUILDER_APPEND extends Algo_INVOKEMETA_Nonbranching {
+	private ReferenceConcrete refStringifiedSymbol; //set by cookMore
+	
     @Override
     protected Supplier<Integer> numOperands() {
         return () -> 2;
@@ -44,15 +46,7 @@ public final class Algo_JAVA_STRINGBUILDER_APPEND extends Algo_INVOKEMETA_Nonbra
             if (toAppend.isSymbolic()) {
                 final String stringifiedSymbol = toAppend.toString();
                 state.ensureStringLiteral(stringifiedSymbol);
-                final ReferenceConcrete refStringifiedSymbol = state.referenceToStringLiteral(stringifiedSymbol);
-                state.pushOperand(this.data.operand(0)); //this
-                state.pushOperand(refStringifiedSymbol);
-                final Snippet snippet = state.snippetFactoryWrap()
-                    .op_invokevirtual(JAVA_STRINGBUILDER_APPEND_STRING)
-                    .op_return()
-                    .mk();
-                state.pushSnippetFrameWrap(snippet, INVOKESPECIALSTATICVIRTUAL_OFFSET);
-                exitFromAlgorithm();
+                this.refStringifiedSymbol = state.referenceToStringLiteral(stringifiedSymbol);
             } else {
                 continueWithBaseLevelImpl(state, this.isInterface, this.isSpecial, this.isStatic); //executes the original StringBuilder.append implementation
             }
@@ -62,16 +56,31 @@ public final class Algo_JAVA_STRINGBUILDER_APPEND extends Algo_INVOKEMETA_Nonbra
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
-        } catch (InvalidProgramCounterException e) {
-            //this should never happen
-            failExecution(e);
         }
     }
 
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            //never used
+        	try {
+        		final Snippet snippet = state.snippetFactoryNoWrap()
+        				.addArg(this.data.operand(0)) //this
+        				.addArg(this.refStringifiedSymbol)
+        				.op_aload((byte) 0) //this
+        				.op_aload((byte) 1)
+        				.op_invokevirtual(JAVA_STRINGBUILDER_APPEND_STRING)
+        				.op_areturn()
+        				.mk();
+        		state.pushSnippetFrameNoWrap(snippet, INVOKESPECIALSTATICVIRTUAL_OFFSET);
+            } catch (InvalidProgramCounterException e) {
+                //this should never happen
+                failExecution(e);
+            }
         };
+    }
+
+    @Override
+    protected Supplier<Integer> programCounterUpdate() {
+        return () -> 0; //nothing to add to the program counter of the pushed frame
     }
 }

@@ -1,5 +1,6 @@
 package jbse.mem;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -13,11 +14,15 @@ import jbse.val.Value;
 
 /**
  * Class representing the activation {@link Frame} of a bytecode snippet.
- * This frame has no local variables and its own operand stack.
+ * This frame has its own operand stack and possibly a number of read-only 
+ * local variables initialized with the snippet's args.
  */
 public final class SnippetFrameNoWrap extends Frame implements Cloneable {
     /** The frame's operand stack. */ 
     private OperandStack operandStack; //not final because of clone
+
+    /** The frame's local variables (immutable) values. */ 
+    private final ArrayList<Value> localVariablesValues;
 
     /**
      * Constructor.
@@ -28,10 +33,13 @@ public final class SnippetFrameNoWrap extends Frame implements Cloneable {
      *        created.
      * @param packageName a {@code String}, the name of the package where the
      *        created {@link ClassFileSnippetNoWrap} must be assumed to reside.
+     * @param className a {@code String}, the name of the
+     *        created {@link ClassFileSnippetNoWrap}. It must be unique in the dynamic package.
      */
-    public SnippetFrameNoWrap(Snippet snippet, int definingClassLoader, String packageName) {
-        super(new ClassFileSnippetNoWrap(snippet, definingClassLoader, packageName), snippet.getBytecode());
+    public SnippetFrameNoWrap(Snippet snippet, int definingClassLoader, String packageName, String className) {
+        super(new ClassFileSnippetNoWrap(snippet, definingClassLoader, packageName, className), snippet.getBytecode());
         this.operandStack = new OperandStack();
+        this.localVariablesValues = new ArrayList<>(snippet.getArgs());
     }
     
     @Override
@@ -49,11 +57,23 @@ public final class SnippetFrameNoWrap extends Frame implements Cloneable {
         return new Signature(null, null, null);
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * A {@link SnippetFrameNoWrap} will always return 
+     * an empty map.
+     */
     @Override
     public SortedMap<Integer, Variable> localVariables() {
         return new TreeMap<>();
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * A {@link SnippetFrameNoWrap} will always return 
+     * {@code null}.
+     */
     @Override
     public String getLocalVariableDeclaredName(int slot) {
         return null;
@@ -61,18 +81,33 @@ public final class SnippetFrameNoWrap extends Frame implements Cloneable {
 
     @Override
     public Value getLocalVariableValue(int slot) throws InvalidSlotException {
-        throw new InvalidSlotException("A " + getClass().getName() + " has no local variables.");
+    	if (slot < 0 || slot >= this.localVariablesValues.size()) {
+    		throw new InvalidSlotException("This " + getClass().getName() + " has " + this.localVariablesValues.size() + " local variables, but an access was attempted with slot number " + slot + ".");
+    	}
+    	return this.localVariablesValues.get(slot);
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * A {@link SnippetFrameNoWrap} will always return 
+     * {@code null}.
+     */
     @Override
     public Value getLocalVariableValue(String name) {
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * A {@link SnippetFrameNoWrap} will always throw an 
+     * {@link InvalidSlotException}.
+     */
     @Override
     public void setLocalVariableValue(int slot, int currentPC, Value val) 
     throws InvalidSlotException {
-        throw new InvalidSlotException("A " + getClass().getName() + " has no local variables.");
+        throw new InvalidSlotException("The local variables of a " + getClass().getName() + " are immutable. Use the operand stack instead.");
     }
 
     @Override
@@ -107,7 +142,7 @@ public final class SnippetFrameNoWrap extends Frame implements Cloneable {
 
     @Override
     public void setArgs(Value... args) throws InvalidSlotException {
-        throw new InvalidSlotException("A " + getClass().getName() + " has no local variables.");
+        throw new InvalidSlotException("Cannot set the args of a " + getClass().getName() + " by invoking setArgs. Use the constructor instead.");
     }
     
     @Override

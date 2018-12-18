@@ -86,43 +86,49 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             //TODO this code is duplicated in Algo_PUTX: refactor! 
             try {
                 //checks/converts the type of the value to be returned
-                final ClassFile currentClass = state.getCurrentClass();    
-                final String destinationType = splitReturnValueDescriptor(state.getCurrentMethodSignature().getDescriptor());
-                if (isPrimitive(destinationType)) {
-                    final char destinationTypePrimitive = destinationType.charAt(0);
-                    if (isPrimitiveOpStack(destinationTypePrimitive)) {
-                        if (valueType != destinationTypePrimitive) {
-                            throwVerifyError(state);
-                            exitFromAlgorithm();
-                        }
-                    } else if (valueType == INT) {
-                    	//TODO the JVMS v8 does *not* say that in this case the value should be narrowed to the destination type: Rather, it should just be *reinterpreted*. Unfortunately JBSE cannot do that so it uses narrowing instead, and this is a bug. However in standard bytecode a value is narrowed before being reinterpreted, so it should not be an issue in the most typical case. 
-                        try {
-                            this.valueToReturn = ((Primitive) this.valueToReturn).narrow(destinationTypePrimitive);
-                        } catch (InvalidTypeException e) {
-                            //this should never happen
-                            failExecution(e);
-                        }
-                    } else {
-                        throwVerifyError(state);
-                        exitFromAlgorithm();
-                    }
-                } else if (isReference(valueType)) {
-                    final Reference refToReturn = (Reference) this.valueToReturn;
-                    if (!state.isNull(refToReturn)) {
-                        //TODO the JVMS v8, *return instruction, does not explicitly say how and when the return descriptor type is resolved  
-                        final ClassFile destinationTypeClass = state.getClassHierarchy().resolveClass(currentClass, className(destinationType), state.bypassStandardLoading());
-                        final ClassFile valueObjectType = state.getObject(refToReturn).getType();
-                        if (!state.getClassHierarchy().isAssignmentCompatible(valueObjectType, destinationTypeClass)) {
-                            throwVerifyError(state);
-                            exitFromAlgorithm();
-                        }
-                    }
-                } else if (valueType == NULLREF) {
-                    //nothing to do
-                } else { //destination has reference type, value has primitive type
-                    throwVerifyError(state);
-                    exitFromAlgorithm();
+                final ClassFile currentClass = state.getCurrentClass();
+                final String currentMethodDescriptor = state.getCurrentMethodSignature().getDescriptor();
+                if (currentMethodDescriptor == null) {
+                	//this happens with no-wrap snippet frames: just accept
+                	//the return value (i.e., do nothing)
+                } else {
+                	final String destinationType = splitReturnValueDescriptor(currentMethodDescriptor);
+                	if (isPrimitive(destinationType)) {
+                		final char destinationTypePrimitive = destinationType.charAt(0);
+                		if (isPrimitiveOpStack(destinationTypePrimitive)) {
+                			if (valueType != destinationTypePrimitive) {
+                				throwVerifyError(state);
+                				exitFromAlgorithm();
+                			}
+                		} else if (valueType == INT) {
+                			//TODO the JVMS v8 does *not* say that in this case the value should be narrowed to the destination type: Rather, it should just be *reinterpreted*. Unfortunately JBSE cannot do that so it uses narrowing instead, and this is a bug. However in standard bytecode a value is narrowed before being reinterpreted, so it should not be an issue in the most typical case. 
+                			try {
+                				this.valueToReturn = ((Primitive) this.valueToReturn).narrow(destinationTypePrimitive);
+                			} catch (InvalidTypeException e) {
+                				//this should never happen
+                				failExecution(e);
+                			}
+                		} else {
+                			throwVerifyError(state);
+                			exitFromAlgorithm();
+                		}
+                	} else if (isReference(valueType)) {
+                		final Reference refToReturn = (Reference) this.valueToReturn;
+                		if (!state.isNull(refToReturn)) {
+                			//TODO the JVMS v8, *return instruction, does not explicitly say how and when the return descriptor type is resolved  
+                			final ClassFile destinationTypeClass = state.getClassHierarchy().resolveClass(currentClass, className(destinationType), state.bypassStandardLoading());
+                			final ClassFile valueObjectType = state.getObject(refToReturn).getType();
+                			if (!state.getClassHierarchy().isAssignmentCompatible(valueObjectType, destinationTypeClass)) {
+                				throwVerifyError(state);
+                				exitFromAlgorithm();
+                			}
+                		}
+                	} else if (valueType == NULLREF) {
+                		//nothing to do
+                	} else { //destination has reference type, value has primitive type
+                		throwVerifyError(state);
+                		exitFromAlgorithm();
+                	}
                 }
             } catch (PleaseLoadClassException e) {
                 invokeClassLoaderLoadClass(state, e);

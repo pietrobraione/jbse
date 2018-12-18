@@ -418,7 +418,7 @@ public final class Type {
      * @return a {@link String}.
      */
     public static String splitReturnValueDescriptor(String methodDescriptor) {
-        int index = methodDescriptor.lastIndexOf(')') + 1;
+        final int index = methodDescriptor.lastIndexOf(')') + 1;
         if (index == 0) {
             return null;
         } else {

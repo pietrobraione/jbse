@@ -24,6 +24,7 @@ public class ClassFileSnippetNoWrap extends ClassFile {
 	final Snippet snippet;
     final int definingClassLoader;
     final String packageName;
+    final String className;
     
     /**
      * Constructor.
@@ -33,11 +34,14 @@ public class ClassFileSnippetNoWrap extends ClassFile {
      *        assumed for this {@link ClassFileSnippetNoWrap}.
      * @param packageName a {@code String}, the name of the package where this
      *        {@link ClassFileSnippetNoWrap} must be assumed to reside.
+     * @param className a {@code String}, the name of this
+     *        {@link ClassFileSnippetNoWrap}. It must be unique in the dynamic package.
      */
-    public ClassFileSnippetNoWrap(Snippet snippet, int definingClassLoader, String packageName) {
+    public ClassFileSnippetNoWrap(Snippet snippet, int definingClassLoader, String packageName, String className) {
         this.snippet = snippet;
         this.definingClassLoader = definingClassLoader;
         this.packageName = packageName;
+        this.className = className;
     }
     
     @Override
@@ -62,7 +66,7 @@ public class ClassFileSnippetNoWrap extends ClassFile {
     
     @Override
     public String getClassName() {
-        return this.packageName + "/$SNIPPET";
+        return this.packageName + "/" + this.className;
     }
     
     @Override

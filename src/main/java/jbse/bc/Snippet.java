@@ -1,8 +1,10 @@
 package jbse.bc;
 
+import java.util.List;
 import java.util.Map;
 
 import jbse.bc.exc.InvalidIndexException;
+import jbse.val.Value;
 
 public final class Snippet {
     private final Map<Integer, Signature> signatures;
@@ -13,10 +15,12 @@ public final class Snippet {
     private final Map<Integer, String> utf8s;
     private final Map<Integer, String> strings;    
     private final Map<Integer, String> classes;
+    private final List<Value> args;
     private final byte[] bytecode;
     
     Snippet(Map<Integer, Signature> signatures, Map<Integer, Integer> integers, Map<Integer, Long> longs, Map<Integer, Float> floats, 
-    		Map<Integer, Double> doubles, Map<Integer, String> utf8s, Map<Integer, String> strings, Map<Integer, String> classes, byte[] bytecode) {
+    		Map<Integer, Double> doubles, Map<Integer, String> utf8s, Map<Integer, String> strings, Map<Integer, String> classes, 
+    		List<Value> args, byte[] bytecode) {
         this.signatures = signatures;
         this.integers = integers;
         this.longs = longs;
@@ -25,6 +29,7 @@ public final class Snippet {
         this.utf8s = utf8s;
         this.strings = strings;
         this.classes = classes;
+        this.args = args;
         this.bytecode = bytecode;
     }
     
@@ -58,6 +63,10 @@ public final class Snippet {
     
     public Map<Integer, String> getClasses() {
         return this.classes;
+    }
+    
+    public List<Value> getArgs() {
+    	return this.args;
     }
     
     public byte[] getBytecode() {

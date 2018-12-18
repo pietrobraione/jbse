@@ -371,6 +371,9 @@ public final class State implements Cloneable {
     
     /** A {@link ReferenceConcrete} to the main thread created at init time. */
     private ReferenceConcrete mainThread;
+    
+    /** A counter for no-wrap snippet classfiles. */
+    private int snippetClassFileCounter = 0;
 
     /**
      * Constructor. It returns a virgin, pre-initial {@link State}.
@@ -2441,9 +2444,36 @@ public final class State implements Cloneable {
         setReturnProgramCounter(returnPCOffset);
 
         //creates the new snippet frame
-        final Frame f = new SnippetFrameNoWrap(snippet, definingClassLoader, packageName);
+        final Frame f = new SnippetFrameNoWrap(snippet, definingClassLoader, packageName, "$SNIPPET$" + this.snippetClassFileCounter++);
 
         this.stack.push(f);
+    }
+    
+    /**
+     * Creates a new frame for a {@link Snippet} and
+     * pushes it on this state's stack. The created frame
+     * will have its own operand stack and no local variables.
+     * The assumed dynamic package (i.e., defining class loader
+     * and package name) will be the same of the topmost frame
+     * present on the stack before the invocation of this method, 
+     * as if the current class were the same before and after the
+     * invocation of the method. Therefore, invoking this method is
+     * equivalent to invoking 
+     * {@link #pushSnippetFrameNoWrap(Snippet, int, int, String) pushSnippetFrameNoWrap}{@code (snippet, returnPCOffset, }
+     * {@link #getCurrentClass()}{@code .}{@link ClassFile#getDefiningClassLoader() getDefiningClassLoader()}{@code , }
+     * {@link #getCurrentClass()}{@code .}{@link ClassFile#getPackageName() getPackageName()}{@code ).}
+     * 
+     * @param snippet a {@link Snippet}.
+     * @param returnPCOffset the offset from the current 
+     *        program counter of the return program counter.
+     * @throws InvalidProgramCounterException if {@code returnPCOffset} 
+     *         is not a valid program count offset for the state's current frame.
+     * @throws ThreadStackEmptyException if the state's thread stack is empty.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public void pushSnippetFrameNoWrap(Snippet snippet, int returnPCOffset) 
+    throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
+    	pushSnippetFrameNoWrap(snippet, returnPCOffset, getCurrentClass().getDefiningClassLoader(), getCurrentClass().getPackageName());
     }
     
     private void narrowArgs(Value[] args, Signature methodSignatureImpl, boolean isStatic) throws InvalidTypeException {
@@ -2635,24 +2665,22 @@ public final class State implements Cloneable {
     /**
      * Returns the root frame.
      * 
-     * @return a {@link MethodFrame}, the root (first  
-     *         pushed) one.
+     * @return a {@link Frame}, the root (first pushed) one.
      * @throws ThreadStackEmptyException if the 
      *         thread stack is empty.
      * @throws FrozenStateException if the state is frozen.
      */
-    public MethodFrame getRootFrame() throws ThreadStackEmptyException, FrozenStateException {
+    public Frame getRootFrame() throws ThreadStackEmptyException, FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        return (MethodFrame) this.stack.rootFrame();
+        return this.stack.rootFrame();
     }
 
     /**
      * Returns the current frame.
      * 
-     * @return an {@link Frame}, the current (last 
-     * pushed) one.
+     * @return a {@link Frame}, the current (last pushed) one.
      * @throws ThreadStackEmptyException if the 
      *         thread stack is empty.
      * @throws FrozenStateException if the state is frozen.

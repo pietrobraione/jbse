@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import jbse.val.Value;
+
 public class SnippetFactory {
     private final HashMap<Integer, Signature> signatures = new HashMap<>();
     private final HashMap<Integer, Integer> integers = new HashMap<>();
@@ -24,6 +26,7 @@ public class SnippetFactory {
     private final HashMap<String, Integer> stringsInverse = new HashMap<>();    
     private final HashMap<String, Integer> classesInverse = new HashMap<>();
     private final ArrayList<Byte> bytecode = new ArrayList<>();
+    private final ArrayList<Value> args = new ArrayList<>();
     private int nextIndex;
     
     public SnippetFactory() {
@@ -83,6 +86,41 @@ public class SnippetFactory {
     	addConstantPoolItem(this.classes, this.classesInverse, value);
     }
     
+    public SnippetFactory addArg(Value arg) {
+    	this.args.add(arg);
+    	return this;
+    }
+    
+    public SnippetFactory op_aload(byte index) {
+        this.bytecode.add(OP_ALOAD);
+        this.bytecode.add(index);
+        return this;
+    }
+    
+    public SnippetFactory op_dload(byte index) {
+        this.bytecode.add(OP_DLOAD);
+        this.bytecode.add(index);
+        return this;
+    }
+    
+    public SnippetFactory op_fload(byte index) {
+        this.bytecode.add(OP_FLOAD);
+        this.bytecode.add(index);
+        return this;
+    }
+    
+    public SnippetFactory op_iload(byte index) {
+        this.bytecode.add(OP_ILOAD);
+        this.bytecode.add(index);
+        return this;
+    }
+    
+    public SnippetFactory op_lload(byte index) {
+        this.bytecode.add(OP_LLOAD);
+        this.bytecode.add(index);
+        return this;
+    }
+    
     public SnippetFactory op_dup() {
         this.bytecode.add(OP_DUP);
         return this;
@@ -130,6 +168,31 @@ public class SnippetFactory {
         return this;
     }
     
+    public SnippetFactory op_areturn() {
+        this.bytecode.add(OP_ARETURN);
+        return this;
+    }
+    
+    public SnippetFactory op_dreturn() {
+        this.bytecode.add(OP_DRETURN);
+        return this;
+    }
+    
+    public SnippetFactory op_freturn() {
+        this.bytecode.add(OP_FRETURN);
+        return this;
+    }
+    
+    public SnippetFactory op_ireturn() {
+        this.bytecode.add(OP_IRETURN);
+        return this;
+    }
+    
+    public SnippetFactory op_lreturn() {
+        this.bytecode.add(OP_LRETURN);
+        return this;
+    }
+    
     public Snippet mk() {
         //no way to do it with streams or other conversion functions
         final byte[] bytecode = new byte[this.bytecode.size()];
@@ -137,6 +200,6 @@ public class SnippetFactory {
             bytecode[i] = this.bytecode.get(i).byteValue();
         }
         return new Snippet(this.signatures, this.integers, this.longs, this.floats, 
-        		this.doubles, this.utf8s, this.strings, this.classes, bytecode);
+        		this.doubles, this.utf8s, this.strings, this.classes, this.args, bytecode);
     }
 }
