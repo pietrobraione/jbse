@@ -225,7 +225,7 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
                     exitFromAlgorithm();
                 }
             } else { //the formal parameter has reference type
-                if (state.getClassHierarchy().isAssignmentCompatible(typeFormal, typeActual)) {
+                if (state.getClassHierarchy().isAssignmentCompatible(typeActual, typeFormal)) {
                     return refValActual;
                 } else {
                     throwNew(state, ILLEGAL_ARGUMENT_EXCEPTION);
