@@ -145,34 +145,6 @@ public final class SymbolFactory implements Cloneable {
         
         /**
          * A Factory Method for creating symbolic values. The symbol
-         * has as origin the key slot of an entry in a map.  
-         * 
-         * @param container a {@link ReferenceSymbolic}, the container object
-         *        the symbol originates from. It must refer a map.
-         * @return a {@link ReferenceSymbolic}.
-         */
-        public ReferenceSymbolic createSymbolMemberMapKey(ReferenceSymbolic container) {
-        	final ReferenceSymbolic retVal = new ReferenceSymbolicMemberMapKey(container, getNextIdReferenceSymbolic());
-        	return retVal;
-        }
-        
-        /**
-         * A Factory Method for creating symbolic values. The symbol
-         * has as origin the value slot of an entry in a map.  
-         * 
-         * @param container a {@link ReferenceSymbolic}, the container object
-         *        the symbol originates from. It must refer a map.
-         * @param key a {@link Reference}, the key of the entry in the 
-         *        container this symbol originates from.
-         * @return a {@link ReferenceSymbolic}.
-         */
-        public ReferenceSymbolic createSymbolMemberMapValue(ReferenceSymbolic container, Reference key) {
-        	final ReferenceSymbolic retVal = new ReferenceSymbolicMemberMapValue(container, key, getNextIdReferenceSymbolic());
-        	return retVal;
-        }
-	
-        /**
-         * A Factory Method for creating symbolic values. The symbol
          * has as origin the identity hash code of an object.  
          * 
          * @param object an {@link Objekt}, the object whose identity hash 
@@ -181,12 +153,7 @@ public final class SymbolFactory implements Cloneable {
          */
         public PrimitiveSymbolic createSymbolIdentityHashCode(Objekt object) {
         try {
-        	final PrimitiveSymbolicHashCode retVal;
-        	if (object.isSymbolic()) {
-        		retVal = new PrimitiveSymbolicHashCode(object.getOrigin(), getNextIdPrimitiveSymbolic(), this.calc);
-        	} else {
-        		retVal = new PrimitiveSymbolicHashCode(object.historyPoint(), getNextIdPrimitiveSymbolic(), this.calc);
-        	}
+            final PrimitiveSymbolicHashCode retVal = new PrimitiveSymbolicHashCode(null, this.getNextIdPrimitiveSymbolic(), object.historyPoint(), this.calc);
             return retVal;
         } catch (InvalidTypeException e) {
             //this should never happen
