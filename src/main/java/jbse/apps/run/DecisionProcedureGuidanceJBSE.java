@@ -27,6 +27,7 @@ import jbse.mem.Frame;
 import jbse.mem.Klass;
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.State.Phase;
 import jbse.mem.Util;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.FrozenStateException;
@@ -116,7 +117,7 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
                 public boolean atMethodPre() {
                     try {
                         final State currentState = getEngine().getCurrentState();
-                        if (currentState.getCurrentMethodSignature().equals(stopSignature) && currentState.getPC() == 0) {
+                        if (currentState.phase() != Phase.PRE_INITIAL && currentState.getCurrentMethodSignature().equals(stopSignature) && currentState.getPC() == 0) {
                             ++this.hitCounter;
                         }
                         return (this.hitCounter == numberOfHits);
