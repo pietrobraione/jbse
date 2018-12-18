@@ -7,6 +7,7 @@ import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.State;
 import jbse.mem.State.Phase;
 import jbse.mem.exc.FrozenStateException;
+import jbse.val.HistoryPoint;
 
 /**
  * Class storing the {@link State}s in the symbolic execution
@@ -166,6 +167,16 @@ public class StateTree {
     }
     
     /**
+     * Returns the pre-initial history point, based
+     * on the branch identification mode.
+     * 
+     * @return a {@link HistoryPoint}.
+     */
+    public HistoryPoint getPreInitialHistoryPoint() {
+    	return HistoryPoint.startingPreInitial(this.stateIdMode == StateIdentificationMode.COMPACT);
+    }
+    
+    /**
      * Adds a state to the store without specifying
      * its branch identification. This method works
      * for pre-initial and initial states (secretly also
@@ -184,7 +195,6 @@ public class StateTree {
     		if (hasStates()) {
     			throw new InvalidInputException("Tried to add a state with a not yet emitted pre-initial state.");
     		}
-    		s.setPreInitialHistoryPoint(this.stateIdMode == StateIdentificationMode.COMPACT);
     		s.resetDepth();
     		s.resetCount();
     		addBranchPoint();
@@ -192,7 +202,6 @@ public class StateTree {
     		if (hasStates()) {
     			throw new InvalidInputException("Tried to add a state with a not yet emitted initial state.");
     		}
-    		s.setInitialHistoryPoint();
     		s.resetDepth();
     		s.resetCount();
     		addBranchPoint();

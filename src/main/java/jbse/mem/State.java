@@ -210,13 +210,13 @@ public final class State implements Cloneable {
     private final boolean bypassStandardLoading;
     
     /** If {@code true} the state is immutable. */
-    private boolean frozen;
+    private boolean frozen = false;
 
     /** The {@link HistoryPoint} of the state before the initial one. */
     private HistoryPoint lastPreInitialHistoryPoint = null;
 
     /** The {@link HistoryPoint} of this state. */
-    private HistoryPoint historyPoint = null;
+    private HistoryPoint historyPoint;
     
     /** 
      * Flag indicating whether the current state was produced by a
@@ -377,7 +377,8 @@ public final class State implements Cloneable {
      * 
      * @param bypassStandardLoading a {@code boolean}, {@code true} iff the bootstrap 
      *        classloader should also load the classed defined by the extensions 
-     *        and application classloaders. 
+     *        and application classloaders.
+     * @param preInitialHistoryPoint a {@link HistoryPoint}. 
      * @param maxSimpleArrayLength an {@code int}, the maximum length an array may have
      *        to be granted simple representation.
      * @param maxHeapSize the maximum size of the state's heap expressed as the
@@ -399,6 +400,7 @@ public final class State implements Cloneable {
      *         constructor...).
      */
     public State(boolean bypassStandardLoading,
+    		     HistoryPoint preInitialHistoryPoint,
                  int maxSimpleArrayLength,
                  long maxHeapSize,
                  Classpath cp, 
@@ -407,8 +409,9 @@ public final class State implements Cloneable {
                  Calculator calc,
                  SymbolFactory symbolFactory) 
                  throws InvalidClassFileFactoryClassException {
-    	this.frozen = false;
         this.bypassStandardLoading = bypassStandardLoading;
+    	this.frozen = false;
+        this.historyPoint = preInitialHistoryPoint;
         this.classLoaders.add(Null.getInstance()); //classloader 0 is the bootstrap classloader
         setStandardFiles();
         this.heap = new Heap(maxHeapSize);
@@ -959,6 +962,7 @@ public final class State implements Cloneable {
     		throw new FrozenStateException();
     	}
         this.phase = Phase.INITIAL;
+        setInitialHistoryPoint();
     }
     
     /**
@@ -3181,21 +3185,6 @@ public final class State implements Cloneable {
     
     /**
      * Sets the state's {@link HistoryPoint} as the
-     * first pre-initial one.
-     * 
-     * @param compact a {@code boolean}, whether the stringified
-     *        history point should be compact.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public void setPreInitialHistoryPoint(boolean compact) throws FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        this.historyPoint = HistoryPoint.startingPreInitial(compact);
-    }
-
-    /**
-     * Sets the state's {@link HistoryPoint} as the
      * initial one. Also saves the current {@link HistoryPoint}
      * (the last pre-initial one) to be used later as the 
      * history point of symbolic (references to) klasses.
@@ -3204,7 +3193,7 @@ public final class State implements Cloneable {
      * history point should be compact.
      * @throws FrozenStateException if the state is frozen.
      */
-    public void setInitialHistoryPoint() throws FrozenStateException {
+    private void setInitialHistoryPoint() throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}

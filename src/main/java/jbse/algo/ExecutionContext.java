@@ -737,7 +737,7 @@ public final class ExecutionContext {
      *         unaccessible constructor...).
      */
     public State createVirginPreInitialState() throws InvalidClassFileFactoryClassException {
-        return new State(this.bypassStandardLoading, this.maxSimpleArrayLength, this.maxHeapSize, this.classpath, this.classFileFactoryClass, this.expansionBackdoor, this.calc, this.symbolFactory);
+        return new State(this.bypassStandardLoading, this.stateTree.getPreInitialHistoryPoint(), this.maxSimpleArrayLength, this.maxHeapSize, this.classpath, this.classFileFactoryClass, this.expansionBackdoor, this.calc, this.symbolFactory);
     }
 
     /**
