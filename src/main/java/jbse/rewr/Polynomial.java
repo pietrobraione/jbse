@@ -598,12 +598,12 @@ class Polynomial {
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
-		Polynomial other = (Polynomial) obj;
-		if (rep == null) {
+		final Polynomial other = (Polynomial) obj;
+		if (this.rep == null) {
 			if (other.rep != null) {
 				return false;
 			}
-		} else if (!rep.equals(other.rep)) {
+		} else if (!this.rep.equals(other.rep)) {
 			return false;
 		}
 		return true;

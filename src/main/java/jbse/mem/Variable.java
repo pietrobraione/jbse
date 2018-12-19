@@ -96,11 +96,7 @@ public class Variable implements Cloneable {
 
     @Override
     public String toString() {
-        String tmp;
-        if (this.value == null)
-            tmp = "<UNASSIGNED>";
-        else
-            tmp = value.toString();
+        final String tmp = (this.value == null) ? "<UNASSIGNED>" : this.value.toString();
         return "[Name:" + this.name + ", Type:" + this.type + ", Value:" + tmp + "]";
     }
 }

@@ -41,7 +41,7 @@ public final class Any extends PrimitiveSymbolic {
 
     @Override
     public boolean equals(Object o) {
-        return this == o;
+        return this == o; //TODO should all any's be equal? Now they are all different.
     }
 
     @Override

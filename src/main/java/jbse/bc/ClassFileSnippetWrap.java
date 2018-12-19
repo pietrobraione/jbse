@@ -31,7 +31,7 @@ public class ClassFileSnippetWrap extends ClassFile {
      */
     public ClassFileSnippetWrap(Snippet snippet, ClassFile component) throws InvalidInputException {
     	if (component.isPrimitiveOrVoid() || component.isArray() || component.getClass() == ClassFileSnippetWrap.class || component.getClass() == ClassFileSnippetNoWrap.class) {
-    		throw new InvalidInputException("Tried to create a snippet wrapping class "  + component.getClassName() + ".");
+    		throw new InvalidInputException("Tried to create a snippet classfile wrapping another snippet classfile with class "  + component.getClassName() + ".");
     	}
         this.snippet = snippet;
         this.component = component;

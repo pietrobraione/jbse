@@ -37,7 +37,7 @@ public class ClauseAssume implements Clause {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((p == null) ? 0 : p.hashCode());
+		result = prime * result + ((this.p == null) ? 0 : this.p.hashCode());
 		return result;
 	}
 
@@ -53,11 +53,11 @@ public class ClauseAssume implements Clause {
 			return false;
 		}
 		ClauseAssume other = (ClauseAssume) obj;
-		if (p == null) {
+		if (this.p == null) {
 			if (other.p != null) {
 				return false;
 			}
-		} else if (!p.equals(other.p)) {
+		} else if (!this.p.equals(other.p)) {
 			return false;
 		}
 		return true;
@@ -65,7 +65,7 @@ public class ClauseAssume implements Clause {
 
 	@Override
 	public String toString() {
-		return p.toString();
+		return this.p.toString();
 	}
 	
 	@Override

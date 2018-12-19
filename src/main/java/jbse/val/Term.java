@@ -127,12 +127,12 @@ public final class Term extends Primitive implements Symbolic {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        Term other = (Term) obj;
-        if (value == null) {
+        final Term other = (Term) obj;
+        if (this.value == null) {
             if (other.value != null) { 
                 return false;
             }
-        } else if (!value.equals(other.value)) {
+        } else if (!this.value.equals(other.value)) {
             return false;
         }
         return true;

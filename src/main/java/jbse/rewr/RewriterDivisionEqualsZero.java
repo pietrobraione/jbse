@@ -56,7 +56,7 @@ public class RewriterDivisionEqualsZero extends Rewriter {
 		 * 
 		 * and it should be instead reduced to A != 0 && B != 0. Luckily normalization  
 		 * rewrites ! (A == B) to A != B. Either remove the ... && B != 0 clause
-		 * or cumulate all of them and append at the end.
+		 * or gather all of them and append them at the end.
 		 */
 	}
 }

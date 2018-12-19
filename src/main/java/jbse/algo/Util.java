@@ -221,7 +221,7 @@ public class Util {
         if (cf_JAVA_STRING == null) {
             failExecution("Could not find class java.lang.String.");
         }
-        if (i.getType() == cf_JAVA_STRING) {
+        if (cf_JAVA_STRING.equals(i.getType())) {
             final Reference valueRef = (Reference) i.getFieldValue(JAVA_STRING_VALUE);
             final Array value = (Array) s.getObject(valueRef);
             if (value == null) {
@@ -350,7 +350,7 @@ public class Util {
                 }
                 final ClassFile fClass = f.getCurrentClass();
                 final String methodName = f.getCurrentMethodSignature().getName();
-                if (excClass == fClass && "<init>".equals(methodName)) {
+                if (excClass.equals(fClass) && "<init>".equals(methodName)) {
                     break;
                 }
                 ++stackDepth;

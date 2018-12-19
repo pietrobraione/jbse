@@ -744,7 +744,7 @@ public final class RunnerParameters implements Cloneable {
      * to be explored.
      * 
      * @param identifierSubregion a {@link String}, the subregion identifier.
-     *        For example, if {@code identifierSubregion == ".1.2.1"} the 
+     *        For example, if {@code identifierSubregion.equals(".1.2.1")} the 
      *        execution will explore only the traces whose identifier starts
      *        with .1.2.1 (i.e., 1.2.1.1.2, 1.2.1.3.2.1.4, and not 1.2.2.1.2).
      * @throws NullPointerException if {@code identifierSubregion == null}.

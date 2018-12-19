@@ -466,18 +466,18 @@ class Monomial implements Comparable<Monomial> {
 			return false;
 		}
 		final Monomial other = (Monomial) obj;
-		if (scale == null) {
+		if (this.scale == null) {
 			if (other.scale != null) {
 				return false;
 			}
-		} else if (!scale.equals(other.scale)) {
+		} else if (!this.scale.equals(other.scale)) {
 			return false;
 		}
-		if (rep == null) {
+		if (this.rep == null) {
 			if (other.rep != null) {
 				return false;
 			}
-		} else if (!rep.equals(other.rep)) {
+		} else if (!this.rep.equals(other.rep)) {
 			return false;
 		}
 		return true;
@@ -489,8 +489,8 @@ class Monomial implements Comparable<Monomial> {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result
-				+ ((scale == null) ? 0 : scale.hashCode());
-		result = prime * result + ((rep == null) ? 0 : rep.hashCode());
+				+ ((this.scale == null) ? 0 : this.scale.hashCode());
+		result = prime * result + ((this.rep == null) ? 0 : this.rep.hashCode());
 		return result;
 		//alternative: return toPrimitiveNormalized().hashCode();
 	}

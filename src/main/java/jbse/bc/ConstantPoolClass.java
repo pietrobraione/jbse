@@ -41,11 +41,11 @@ public final class ConstantPoolClass extends ConstantPoolValue {
             return false;
         }
         final ConstantPoolClass other = (ConstantPoolClass) obj;
-        if (value == null) {
+        if (this.value == null) {
             if (other.value != null) {
                 return false;
             }
-        } else if (!value.equals(other.value)) {
+        } else if (!this.value.equals(other.value)) {
             return false;
         }
         return true;

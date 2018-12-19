@@ -48,8 +48,8 @@ public class ClauseAssumeClassInitialized implements Clause {
         final int prime = 89;
         int result = 1;
         result = prime * result
-        + ((classFile == null) ? 0 : classFile.hashCode());
-        result = prime * result + ((k == null) ? 0 : k.hashCode());
+        + ((this.classFile == null) ? 0 : this.classFile.hashCode());
+        result = prime * result + ((this.k == null) ? 0 : this.k.hashCode());
         return result;
     }
 
@@ -64,12 +64,12 @@ public class ClauseAssumeClassInitialized implements Clause {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        ClauseAssumeClassInitialized other = (ClauseAssumeClassInitialized) obj;
+        final ClauseAssumeClassInitialized other = (ClauseAssumeClassInitialized) obj;
         if (this.classFile == null) {
             if (other.classFile != null) {
                 return false;
             }
-        } else if (this.classFile != other.classFile) {
+        } else if (!this.classFile.equals(other.classFile)) {
             return false;
         }
         if (this.k == null) {

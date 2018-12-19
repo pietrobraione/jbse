@@ -316,8 +316,8 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      *         class is local or anonymous, and it is not immediately 
      *         enclosed (JVMS v8, section 4.7.7) by a method or constructor,
      *         it will return a {@link Signature} {@code retVal} such that
-     *         {@code retVal.}{@link Signature#getDescriptor() getDescriptor()}{@code == null},
-     *         {@code retVal.}{@link Signature#getName() getName()}{@code == null}, and
+     *         {@code retVal.}{@link Signature#getDescriptor() getDescriptor()}{@code  == null},
+     *         {@code retVal.}{@link Signature#getName() getName()}{@code  == null}, and
      *         {@code retVal.}{@link Signature#getClassName() getClassName()} is the name
      *         of the enclosing class.
      * @throws ClassFileNotFoundException if the enclosing class does not 

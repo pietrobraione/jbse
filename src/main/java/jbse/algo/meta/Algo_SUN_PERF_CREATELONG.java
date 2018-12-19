@@ -80,7 +80,7 @@ public final class Algo_SUN_PERF_CREATELONG extends Algo_INVOKEMETA_Nonbranching
             exitFromAlgorithm();
         }
         this.name = valueString(state, nameReference);
-        if (name == null) {
+        if (this.name == null) {
             throw new SymbolicValueNotAllowedException("The String name parameter to invocation of method sun.misc.Perf.createLong cannot be a symbolic String.");
         }
         

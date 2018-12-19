@@ -68,7 +68,7 @@ public final class DecisionAlternative_XALOAD_Expands extends DecisionAlternativ
             if (other.classFileOfTargetObject != null) {
                 return false;
             }
-        } else if (this.classFileOfTargetObject != other.classFileOfTargetObject) {
+        } else if (!this.classFileOfTargetObject.equals(other.classFileOfTargetObject)) {
             return false;
         }
         return true;

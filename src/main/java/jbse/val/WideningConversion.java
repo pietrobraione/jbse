@@ -97,11 +97,11 @@ public final class WideningConversion extends Primitive {
             return false;
         }
         final WideningConversion other = (WideningConversion) obj;
-        if (arg == null) {
+        if (this.arg == null) {
             if (other.arg != null) {
                 return false;
             }
-        } else if (!arg.equals(other.arg)) {
+        } else if (!this.arg.equals(other.arg)) {
             return false;
         }
         return true;

@@ -39,7 +39,7 @@ public class ClauseAssumeClassNotInitialized implements Clause {
     public int hashCode() {
         final int prime = 1283;
         int result = 1;
-        result = prime * result + ((classFile == null) ? 0 : classFile.hashCode());
+        result = prime * result + ((this.classFile == null) ? 0 : this.classFile.hashCode());
         return result;
     }
 
@@ -59,7 +59,7 @@ public class ClauseAssumeClassNotInitialized implements Clause {
             if (other.classFile != null) {
                 return false;
             }
-        } else if (this.classFile != other.classFile) {
+        } else if (!this.classFile.equals(other.classFile)) {
             return false;
         }
         return true;

@@ -55,8 +55,7 @@ public class ClauseAssumeExpands extends ClauseAssumeReferenceSymbolic {
 	@Override
 	public int hashCode() {
 		int result = super.hashCode();
-		result = 11 * result + this.object.hashCode();
-		result = 23 * result + (int) this.heapPosition;
+		result = 11 * result + this.object.getType().hashCode();
 		return result;
 	}
 
@@ -72,11 +71,11 @@ public class ClauseAssumeExpands extends ClauseAssumeReferenceSymbolic {
 			return false;
 		}
 		final ClauseAssumeExpands other = (ClauseAssumeExpands) obj;
-		if (object == null) {
+		if (this.object == null) {
 			if (other.object != null) {
 				return false;
 			}
-		} else if (!object.equals(other.object)) {
+		} else if (!this.object.getType().equals(other.object.getType())) {
 			return false;
 		}
 		return true;

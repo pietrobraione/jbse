@@ -73,7 +73,7 @@ public class Util {
 	 * @param s a {@link State}. It must not be {@code null}.
 	 * @param r1 a {@link Reference}. It must not be {@code null}.
 	 * @param r2 a {@link Reference}. It must not be {@code null}.
-	 * @return {@code true} if {@code r1} and {@code r2} denote 
+	 * @return {@code true} if {@code r1} and {@code r2} surely denote 
 	 *         the same heap position (i.e. either {@code r1 == r2}
 	 *         or they are both resolved to the same heap position), 
 	 *         {@code false} otherwise.
@@ -94,7 +94,7 @@ public class Util {
 	 * @param s a {@link State}. It must not be {@code null}.
 	 * @param r1 a {@link Reference}. It must not be {@code null}.
 	 * @param r2 a {@link Reference}. It must not be {@code null}.
-	 * @return {@code true} if {@code r1} and {@code r2} denote 
+	 * @return {@code true} if {@code r1} and {@code r2} surely denote 
 	 *         different heap position (i.e. they are both resolved 
 	 *         to different heap position), {@code false} otherwise.
 	 */
