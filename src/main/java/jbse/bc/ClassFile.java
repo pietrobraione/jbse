@@ -619,9 +619,11 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     throws MethodNotFoundException, MethodCodeNotFoundException;    
 
     /**
-     * Returns a value for the passed index of constant pool (only for some type
-     * of constants).
+     * Returns a constant pool value (only for primitive, String, Uf8 or Class constants).
      * 
+     * @param index an {@code int}, a constant pool index.
+     * @return a {@link ConstantPoolValue} for the value contained in the constant pool 
+     *         at the index, if such value is a primitive, String, Utf8 or Class.
      * @throws InvalidIndexException iff the constant pool has less entries than {@code index}, or
      *         {@code index} does not refer to a CONSTANT_Integer, CONSTANT_Long, CONSTANT_Float,
      *         CONSTANT_Double, CONSTANT_Utf8, CONSTANT_String, or CONSTANT_Class.
@@ -632,6 +634,7 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * Given a CONSTANT_Methodref index in the constant pool, returns the array 
      * of byte code; it is equivalent to 
      * {@code getMethodCodeBySignature(getMethodSignature(methodRef))}.
+     * 
      * @param methodRef the CONSTANT_Methodref of searched method
      * @return a {@code byte[]} containing the method's byte code.
      * @throws InvalidIndexException iff {@code methodRef} is not the index of a valid 

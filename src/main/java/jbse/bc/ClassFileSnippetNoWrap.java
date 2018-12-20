@@ -12,7 +12,6 @@ import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
-import jbse.common.exc.UnexpectedInternalException;
 
 /**
  * A {@link ClassFile} that can be created on-the-fly for code
@@ -310,16 +309,7 @@ public class ClassFileSnippetNoWrap extends ClassFile {
 
     @Override
     public ConstantPoolValue getValueFromConstantPool(int index) throws InvalidIndexException {
-        if (this.snippet.containsValueFromConstantPool(index)) {
-    		try {
-    			return this.snippet.getValueFromConstantPool(index);
-    		} catch (InvalidIndexException e) {
-    			//this should never happen
-    			throw new UnexpectedInternalException(e);
-    		}
-        } else {
-            throw new InvalidIndexException("Constant pool index " + index + " does not exist in snippet.");
-        }
+    	return this.snippet.getValueFromConstantPool(index);
     }
 
     @Override
@@ -409,7 +399,7 @@ public class ClassFileSnippetNoWrap extends ClassFile {
         if (this.snippet.getSignatures().containsKey(index)) {
             return this.snippet.getSignatures().get(index);
         } else {
-            throw new InvalidIndexException("Constant pool index " + index + " does not exist in snippet.");
+            throw new InvalidIndexException("Signature with constant pool index " + index + " does not exist in snippet.");
         }
     }
 
@@ -428,7 +418,7 @@ public class ClassFileSnippetNoWrap extends ClassFile {
         if (this.snippet.getSignatures().containsKey(index)) {
             return this.snippet.getSignatures().get(index);
         } else {
-            throw new InvalidIndexException("Constant pool index " + index + " does not exist in snippet.");
+            throw new InvalidIndexException("Signature with constant pool index " + index + " does not exist in snippet.");
         }
     }
 
@@ -437,7 +427,7 @@ public class ClassFileSnippetNoWrap extends ClassFile {
         if (this.snippet.getSignatures().containsKey(index)) {
             return this.snippet.getSignatures().get(index);
         } else {
-            throw new InvalidIndexException("Constant pool index " + index + " does not exist in snippet.");
+            throw new InvalidIndexException("Signature with constant pool index " + index + " does not exist in snippet.");
         }
     }
 
