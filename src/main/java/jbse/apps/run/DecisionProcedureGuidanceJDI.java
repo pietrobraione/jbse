@@ -138,8 +138,8 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         throws GuidanceException {
         	try {
         		final Iterable<Path> classPath = runnerParameters.getClasspath().classPath();
-        		final ArrayList<Path> listClassPath = new ArrayList<>();
-        		classPath.forEach(listClassPath::add);
+        		final ArrayList<String> listClassPath = new ArrayList<>();
+        		classPath.forEach(p -> listClassPath.add(p.toString()));
         		final String stringClassPath = String.join(File.pathSeparator, listClassPath.toArray(new String[0]));
         		final String mainClass = DecisionProcedureGuidanceJDILauncher.class.getName();
         		final String targetClass = binaryClassName(runnerParameters.getMethodSignature().getClassName());
