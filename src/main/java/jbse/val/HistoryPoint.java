@@ -57,8 +57,8 @@ public final class HistoryPoint {
     }
     
     /**
-     * Factory method. Builds the unknown {@link HistoryPoint} (used only
-     * for the Any term).
+     * Factory method. Builds the unknown {@link HistoryPoint} 
+     * (used only for the Any term).
      * 
      * @return a {@link HistoryPoint}.
      */
@@ -103,6 +103,8 @@ public final class HistoryPoint {
      * @param additionalBranch a {@link String} that identifies the
      *        subbranch.
      * @return a {@link HistoryPoint}.
+     * @throws NullPointerException if this {@link HistoryPoint} is
+     *         the unknown {@link HistoryPoint}.
      */
     public HistoryPoint nextBranch(String additionalBranch) {
         final ArrayList<String> nextBranchIdentifier = new ArrayList<>(this.branchIdentifier);
@@ -166,7 +168,7 @@ public final class HistoryPoint {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + this.branchIdentifier.hashCode();
+        result = prime * result + (this.branchIdentifier == null ? 0 : this.branchIdentifier.hashCode());
         result = prime * result + this.sequenceNumber;
         return result;
     }
@@ -183,6 +185,11 @@ public final class HistoryPoint {
             return false;
         }
         final HistoryPoint other = (HistoryPoint) obj;
+        if (this.branchIdentifier == null) {
+        	if (other.branchIdentifier != null) {
+        		return false;
+        	}
+        }
         if (!this.branchIdentifier.equals(other.branchIdentifier)) {
             return false;
         }
@@ -194,6 +201,10 @@ public final class HistoryPoint {
 
     @Override
     public String toString() {
-        return getBranchIdentifier() + "[" + getSequenceNumber() + "]";
+    	if (this.branchIdentifier == null) {
+    		return "?";
+    	} else {
+    		return getBranchIdentifier() + "[" + getSequenceNumber() + "]";
+    	}
     }
 }

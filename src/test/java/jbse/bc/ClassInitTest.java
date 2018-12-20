@@ -1,6 +1,9 @@
 package jbse.bc;
 
 import static org.junit.Assert.*;
+import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
+import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
+import static jbse.bc.Signatures.JAVA_ENUM;
 import static org.hamcrest.core.Is.*;
 
 import java.util.ArrayList;
@@ -45,7 +48,7 @@ public class ClassInitTest {
     private ExecutionContext ctx;
 
     @Before
-    public void setUp() throws InvalidClassFileFactoryClassException {
+    public void setUp() throws InvalidClassFileFactoryClassException, InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, IncompatibleClassFileException, PleaseLoadClassException, BadClassFileVersionException, WrongClassNameException {
         final ArrayList<String> userPaths = new ArrayList<>();
         userPaths.add("src/test/resources/jbse/bc/testdata");
         final Classpath cp = new Classpath(System.getProperty("java.home"), Collections.emptyList(), userPaths);
@@ -54,11 +57,12 @@ public class ClassInitTest {
         final DecisionProcedureAlgorithms dec = new DecisionProcedureAlgorithms(new DecisionProcedureClassInit(new DecisionProcedureAlwSat(), calc, new ClassInitRulesRepo()), calc);
         this.ctx = new ExecutionContext(null, true, 10, 10, cp, ClassFileFactoryJavassist.class, Collections.emptyMap(), calc, new DecisionAlternativeComparators(), new Signature("hier/A", "()V", "a"), dec, null, null, new TriggerRulesRepo());
         this.state = this.ctx.createVirginPreInitialState();
+        this.state.getClassHierarchy().loadCreateClass(CLASSLOADER_BOOT, JAVA_ENUM, true); //necessary when checking if a class has a pure initializer
     }
     
     @Test
     public void test1() throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, IncompatibleClassFileException, PleaseLoadClassException, BadClassFileVersionException, WrongClassNameException, DecisionException, ClasspathException, HeapMemoryExhaustedException, InterruptException, ContradictionException, MethodNotFoundException, MethodCodeNotFoundException, CannotAssumeSymbolicObjectException {
-        final ClassFile cf_A = this.state.getClassHierarchy().loadCreateClass(2, "hier/A", true);
+        final ClassFile cf_A = this.state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, "hier/A", true);
         this.state.pushFrameSymbolic(cf_A, this.ctx.rootMethodSignature); //or initialization will fail
         try {
             Util.ensureClassInitialized(this.state, cf_A, this.ctx);
