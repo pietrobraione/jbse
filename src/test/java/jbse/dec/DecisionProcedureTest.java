@@ -3,6 +3,8 @@ package jbse.dec;
 import static org.junit.Assert.*;
 import static org.hamcrest.CoreMatchers.instanceOf;
 
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.TreeSet;
@@ -43,10 +45,10 @@ public class DecisionProcedureTest {
     final DecisionAlternativeComparators cmp;
     DecisionProcedureAlgorithms dec;
 
-    public DecisionProcedureTest() throws InvalidClassFileFactoryClassException {
+    public DecisionProcedureTest() throws InvalidClassFileFactoryClassException, IOException {
         this.calc = new CalculatorRewriting();
         this.calc.addRewriter(new RewriterOperationOnSimplex());
-        this.hier = new ClassHierarchy(new Classpath("", Collections.emptyList(), Collections.emptyList()), ClassFileFactoryJavassist.class, new HashMap<>());
+        this.hier = new ClassHierarchy(new Classpath(Paths.get(System.getProperty("java.home")), Collections.emptyList(), Collections.emptyList()), ClassFileFactoryJavassist.class, new HashMap<>());
         this.cmp = new DecisionAlternativeComparators();
     }
 

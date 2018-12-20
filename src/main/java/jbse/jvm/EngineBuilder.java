@@ -1,5 +1,6 @@
 package jbse.jvm;
 
+import java.io.IOException;
 import java.util.List;
 
 import jbse.algo.ExecutionContext;
@@ -72,31 +73,35 @@ public class EngineBuilder {
 
     private static Engine bootEngineArchitecture(EngineParameters parameters) 
     throws CannotBuildEngineException {
-        final ExecutionContext ctx = 
-        new ExecutionContext(parameters.getInitialState(),
-                             parameters.getBypassStandardLoading(),
-                             parameters.getMaxSimpleArrayLength(),
-                             parameters.getMaxHeapSize(),
-                             parameters.getClasspath(),
-                             ClassFileFactoryJavassist.class,          //default
-                             parameters.getExpansionBackdoor(), 
-                             parameters.getCalculator(),
-                             new DecisionAlternativeComparators(),     //default 
-                             parameters.getMethodSignature(),
-                             parameters.getDecisionProcedure(),
-                             parameters.getStateIdentificationMode().toInternal(), 
-                             parameters.getBreadthMode().toInternal(),
-                             parameters.getTriggerRulesRepo());
-
-        //sets the meta-level directives
-        setOverrides(ctx, parameters);
-
-        final VariableObserverManager vom = new VariableObserverManager(parameters.getMethodSignature().getClassName());
-
-        //sets the observers
-        setObservers(vom, parameters);
-
-        return new Engine(ctx, vom);
+    	try {
+	        final ExecutionContext ctx = 
+	          new ExecutionContext(parameters.getInitialState(),
+	                               parameters.getBypassStandardLoading(),
+	                               parameters.getMaxSimpleArrayLength(),
+	                               parameters.getMaxHeapSize(),
+	                               parameters.getClasspath(),
+	                               ClassFileFactoryJavassist.class,          //default
+	                               parameters.getExpansionBackdoor(), 
+	                               parameters.getCalculator(),
+	                               new DecisionAlternativeComparators(),     //default 
+	                               parameters.getMethodSignature(),
+	                               parameters.getDecisionProcedure(),
+	                               parameters.getStateIdentificationMode().toInternal(), 
+	                               parameters.getBreadthMode().toInternal(),
+	                               parameters.getTriggerRulesRepo());
+	
+	        //sets the meta-level directives
+	        setOverrides(ctx, parameters);
+	
+	        final VariableObserverManager vom = new VariableObserverManager(parameters.getMethodSignature().getClassName());
+	
+	        //sets the observers
+	        setObservers(vom, parameters);
+	
+	        return new Engine(ctx, vom);
+    	} catch (IOException e) {
+    		throw new CannotBuildEngineException(e);
+    	}
     }
 
     private static void setOverrides(ExecutionContext ctx, EngineParameters parameters) {

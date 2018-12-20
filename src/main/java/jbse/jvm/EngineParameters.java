@@ -1,6 +1,10 @@
 package jbse.jvm;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import static jbse.bc.Signature.SIGNATURE_SEPARATOR;
 
 import java.util.ArrayList;
@@ -11,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import jbse.bc.Classpath;
 import jbse.bc.Signature;
@@ -169,19 +174,20 @@ public final class EngineParameters implements Cloneable {
      * {@code initialState}'s bootstrap path when 
      * {@code initialState != null}. 
      */
-    private String javaHome = System.getProperty("java.home");
+    private Path javaHome = Paths.get(System.getProperty("java.home"));
     
     /** 
      * The extensions directories; overridden by {@code initialState}'s 
      * extension directories when {@code initialState != null}. 
      */
-    private ArrayList<String> extPaths = new ArrayList<>(Arrays.asList(System.getProperty("java.ext.dirs").split(File.pathSeparator)));
+    private ArrayList<Path> extPaths = new ArrayList<>(Arrays.stream(System.getProperty("java.ext.dirs").split(File.pathSeparator))
+                                                       .map(s -> Paths.get(s)).collect(Collectors.toList()));
 
     /**  
      * The user classpath; overridden by {@code initialState}'s classpath
      * when {@code initialState != null}.
      */
-    private ArrayList<String> userPaths = new ArrayList<>();
+    private ArrayList<Path> userPaths = new ArrayList<>();
 
     /** 
      * The {@link Calculator}; overridden by {@code initialState}'s 
@@ -441,6 +447,21 @@ public final class EngineParameters implements Cloneable {
             throw new NullPointerException();
         }
         this.initialState = null; 
+        this.javaHome = Paths.get(javaHome);
+    }
+    
+    /**
+     * Sets the Java home, and cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
+     * 
+     * @param javaHome a {@link Path}.
+     * @throws NullPointerException if {@code javaHome == null}.
+     */
+    public void setJavaHome(Path javaHome) {
+        if (javaHome == null) {
+            throw new NullPointerException();
+        }
+        this.initialState = null; 
         this.javaHome = javaHome;
     }
     
@@ -452,16 +473,16 @@ public final class EngineParameters implements Cloneable {
      * of any previous call to {@link #setInitialState(State)}.
      */
     public void setDefaultJavaHome() {
-        this.javaHome = System.getProperty("java.home");
+        this.javaHome = Paths.get(System.getProperty("java.home"));
         this.initialState = null;
     }
 
     /**
      * Gets the Java home.
      * 
-     * @return a {@link String}, the Java home.
+     * @return a {@link Path}, the Java home.
      */
-    public String getJavaHome() {
+    public Path getJavaHome() {
         if (this.initialState == null) {
             return this.javaHome;
         } else {
@@ -473,11 +494,24 @@ public final class EngineParameters implements Cloneable {
      * Adds paths to the extensions classpath, and cancels the effect 
      * of any previous call to {@link #setInitialState(State)}.
      * 
-     * @param paths a varargs of {@link String}, 
+     * @param paths a varargs of {@link String}s, 
      *        the paths to be added to the extensions 
      *        classpath.
      */
     public void addExtClasspath(String... paths) { 
+        this.initialState = null; 
+        this.extPaths.addAll(Arrays.stream(paths).map(s -> Paths.get(s)).collect(Collectors.toList())); 
+    }
+
+    /**
+     * Adds paths to the extensions classpath, and cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
+     * 
+     * @param paths a varargs of {@link Path}s, 
+     *        the paths to be added to the extensions 
+     *        classpath.
+     */
+    public void addExtClasspath(Path... paths) { 
         this.initialState = null; 
         Collections.addAll(this.extPaths, paths); 
     }
@@ -497,18 +531,32 @@ public final class EngineParameters implements Cloneable {
      * {@code java.ext.dirs}.
      */
     public void setDefaultExtClasspath() {
-        this.extPaths = new ArrayList<>(Arrays.asList(System.getProperty("java.ext.dirs").split(File.pathSeparator)));
+        this.extPaths = new ArrayList<>(Arrays.stream(System.getProperty("java.ext.dirs").split(File.pathSeparator))
+                                        .map(s -> Paths.get(s)).collect(Collectors.toList()));
     }
 
     /**
      * Adds paths to the user classpath, and cancels the effect 
      * of any previous call to {@link #setInitialState(State)}.
      * 
-     * @param paths a varargs of {@link String}, 
+     * @param paths a varargs of {@link String}s, 
      *        the paths to be added to the user 
      *        classpath.
      */
     public void addUserClasspath(String... paths) { 
+        this.initialState = null; 
+        this.userPaths.addAll(Arrays.stream(paths).map(s -> Paths.get(s)).collect(Collectors.toList())); 
+    }
+
+    /**
+     * Adds paths to the user classpath, and cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
+     * 
+     * @param paths a varargs of {@link Path}s, 
+     *        the paths to be added to the user 
+     *        classpath.
+     */
+    public void addUserClasspath(Path... paths) { 
         this.initialState = null; 
         Collections.addAll(this.userPaths, paths); 
     }
@@ -525,8 +573,9 @@ public final class EngineParameters implements Cloneable {
      * Builds the classpath.
      * 
      * @return a {@link Classpath} object. 
+     * @throws IOException if an I/O error occurs while scanning the classpath.
      */
-    public Classpath getClasspath() {
+    public Classpath getClasspath() throws IOException {
         if (this.initialState == null) {
             return new Classpath(this.javaHome, this.extPaths, this.userPaths);
         } else {
@@ -910,7 +959,7 @@ public final class EngineParameters implements Cloneable {
         if (this.initialState != null) {
             o.initialState = this.initialState.clone();
         }
-        o.userPaths = (ArrayList<String>) this.userPaths.clone();
+        o.userPaths = (ArrayList<Path>) this.userPaths.clone();
         //calc and decisionProcedure are *not* cloned
         o.observedVars = (ArrayList<Signature>) this.observedVars.clone();
         o.repoTrigger = this.repoTrigger.clone();

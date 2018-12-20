@@ -1,6 +1,10 @@
 package jbse.common;
 
 import java.lang.reflect.Field;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 
 import jbse.common.exc.UnexpectedInternalException;
 import sun.misc.Unsafe;
@@ -60,12 +64,8 @@ public final class Util {
     }
 
     /**
-     * Do not instantiate it!
+     * Returns the {@link sun.misc.Unsafe} singleton instance.
      */
-    private Util() {
-        //intentionally empty
-    }
-
     public static Unsafe unsafe() {
         try {
             final Field fieldUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
@@ -75,5 +75,25 @@ public final class Util {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
+    }
+    
+	private static final PathMatcher JAR_EXTENSION = FileSystems.getDefault().getPathMatcher("glob:**.jar");
+	
+	/**
+	 * Checks if a path stands for a jar file.
+	 * 
+	 * @param path a {@link Path}.
+	 * @return {@code true} iff {@code path} is the path of a
+	 *         file with .jar extension.
+	 */
+	public static boolean isJarFile(Path path) {
+		return Files.exists(path) && !Files.isDirectory(path) && JAR_EXTENSION.matches(path);
+	}
+	
+    /**
+     * Do not instantiate it!
+     */
+    private Util() {
+        //intentionally empty
     }
 }

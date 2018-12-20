@@ -28,7 +28,7 @@ import jbse.val.ReferenceConcrete;
  * @author Pietro Braione
  */
 public final class Algo_JAVA_PACKAGE_GETSYSTEMPACKAGE0 extends Algo_INVOKEMETA_Nonbranching {
-    private ReferenceConcrete refFileName; //set by cookMore
+    private ReferenceConcrete refPathNameOfPackage; //set by cookMore
     
     @Override
     protected Supplier<Integer> numOperands() {
@@ -49,12 +49,12 @@ public final class Algo_JAVA_PACKAGE_GETSYSTEMPACKAGE0 extends Algo_INVOKEMETA_N
             if (name == null) {
                 throw new SymbolicValueNotAllowedException("The String name parameter to invocation of method java.lang.Package.getSystemPackage0 cannot be a symbolic String.");
             }
-            final String fileName = state.getClassHierarchy().getSystemPackageLoadedFrom(name);
-            if (fileName == null) {
-                this.refFileName = Null.getInstance();
+            final String oathNameOfPackage = state.getClassHierarchy().getSystemPackageLoadedFrom(name).toAbsolutePath().toString();
+            if (oathNameOfPackage == null) {
+                this.refPathNameOfPackage = Null.getInstance();
             } else {
-                state.ensureStringLiteral(fileName);
-                this.refFileName = state.referenceToStringLiteral(fileName);
+                state.ensureStringLiteral(oathNameOfPackage);
+                this.refPathNameOfPackage = state.referenceToStringLiteral(oathNameOfPackage);
             }
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, OUT_OF_MEMORY_ERROR);
@@ -68,7 +68,7 @@ public final class Algo_JAVA_PACKAGE_GETSYSTEMPACKAGE0 extends Algo_INVOKEMETA_N
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            state.pushOperand(this.refFileName);
+            state.pushOperand(this.refPathNameOfPackage);
         };
     }
 }

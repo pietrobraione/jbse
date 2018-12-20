@@ -7,6 +7,7 @@ import static jbse.common.Type.toPrimitiveOrVoidInternalName;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -135,13 +136,17 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         
         private VirtualMachine createVM(RunnerParameters runnerParameters, Signature stopSignature) 
         throws GuidanceException {
-            final Iterable<String> classPath = runnerParameters.getClasspath().classPath();
-            final ArrayList<String> listClassPath = new ArrayList<>();
-            classPath.forEach(listClassPath::add);
-            final String stringClassPath = String.join(File.pathSeparator, listClassPath.toArray(new String[0]));
-            final String mainClass = DecisionProcedureGuidanceJDILauncher.class.getName();
-            final String targetClass = binaryClassName(runnerParameters.getMethodSignature().getClassName());
-            return launchTarget("-classpath \"" + stringClassPath + "\" " + mainClass + " " + targetClass + " " + this.methodStart);
+        	try {
+        		final Iterable<Path> classPath = runnerParameters.getClasspath().classPath();
+        		final ArrayList<Path> listClassPath = new ArrayList<>();
+        		classPath.forEach(listClassPath::add);
+        		final String stringClassPath = String.join(File.pathSeparator, listClassPath.toArray(new String[0]));
+        		final String mainClass = DecisionProcedureGuidanceJDILauncher.class.getName();
+        		final String targetClass = binaryClassName(runnerParameters.getMethodSignature().getClassName());
+        		return launchTarget("-classpath \"" + stringClassPath + "\" " + mainClass + " " + targetClass + " " + this.methodStart);
+        	} catch (IOException e) {
+        		throw new GuidanceException(e);
+        	}
         }
         
         private VirtualMachine launchTarget(String mainArgs) throws GuidanceException {

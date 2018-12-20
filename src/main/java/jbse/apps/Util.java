@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -91,26 +92,26 @@ public class Util {
      * Returns a row in a source file.
      * 
      * @param className a {@link String}, the signature of a class.
-     * @param srcPath a {@link String}<code>[]</code>, the paths on the file system 
+     * @param srcPath a {@link List}{@code <}{@link Path}{@code >}, the paths on the file system 
      *        where the source files are found.
      * @param pathSep a {@link String}, the separator used to build the path.
      * @param row an {@code int}, the number of the row in the source.
      * @return a {@link String}, the source code row, or {@code null} if the
      *         source file is not found or some I/O error occurs.
      */
-    public static String getSrcFileRow(String className, List<String> srcPath, String pathSep, int row) {
+    public static String getSrcFileRow(String className, List<Path> srcPath, String pathSep, int row) {
         if (row == -1 || srcPath == null) {
             return null;
         }
         final String sourceFileNameRelative = className.split("\\$")[0] + SOURCE_FILE_EXTENSION;
-        for (String s: srcPath) {
-            final File f = new File(s);
+        for (Path s: srcPath) {
+            final File f = s.toFile();
             BufferedReader fr = null;
             try {
                 ZipFile zf = null;
                 if (f.isDirectory()) {
-                    final String sourceFilePathName = (s.endsWith(pathSep) ? s : s.concat(pathSep)) + sourceFileNameRelative;
-                    fr = new BufferedReader(new FileReader(sourceFilePathName));
+                    final Path sourceFilePath = s.resolve(sourceFileNameRelative);
+                    fr = new BufferedReader(new FileReader(sourceFilePath.toFile()));
                 } else if (f.isFile()) {
                     //let's try if it is a zipped file
                     zf = new ZipFile(f);

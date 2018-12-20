@@ -1,5 +1,6 @@
 package jbse.apps.run;
 
+import java.io.IOException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -517,6 +518,16 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
+     * Sets the Java home.
+     * 
+     * @param javaHome a {@link Path}.
+     * @throws NullPointerException if {@code javaHome == null}.
+     */
+    public void setJavaHome(Path javaHome) {
+        this.runnerParameters.setJavaHome(javaHome);
+    }
+
+    /**
      * Brings the Java home classpath back to the default,
      * i.e., the same bootstrap path of the JVM that
      * executes JBSE, as returned by the system property
@@ -529,20 +540,31 @@ public final class RunParameters implements Cloneable {
     /**
      * Gets the Java home.
      * 
-     * @return a {@link String}, the Java home.
+     * @return a {@link Path}, the Java home.
      */
-    public String getJavaHome() {
+    public Path getJavaHome() {
         return this.runnerParameters.getJavaHome();
     }
 
     /**
      * Adds paths to the extensions classpath.
      * 
-     * @param paths a varargs of {@link String}, 
+     * @param paths a varargs of {@link String}s, 
      *        the paths to be added to the extensions 
      *        classpath.
      */
     public void addExtClasspath(String... paths) {
+        this.runnerParameters.addExtClasspath(paths);
+    }
+    
+    /**
+     * Adds paths to the extensions classpath.
+     * 
+     * @param paths a varargs of {@link Path}s, 
+     *        the paths to be added to the extensions 
+     *        classpath.
+     */
+    public void addExtClasspath(Path... paths) {
         this.runnerParameters.addExtClasspath(paths);
     }
     
@@ -567,11 +589,22 @@ public final class RunParameters implements Cloneable {
     /**
      * Adds paths to the user classpath.
      * 
-     * @param paths a varargs of {@link String}, 
+     * @param paths a varargs of {@link String}s, 
      *        the paths to be added to the user 
      *        classpath.
      */
     public void addUserClasspath(String... paths) { 
+        this.runnerParameters.addUserClasspath(paths);
+    }
+
+    /**
+     * Adds paths to the user classpath.
+     * 
+     * @param paths a varargs of {@link Path}s, 
+     *        the paths to be added to the user 
+     *        classpath.
+     */
+    public void addUserClasspath(Path... paths) { 
         this.runnerParameters.addUserClasspath(paths);
     }
 
@@ -587,8 +620,9 @@ public final class RunParameters implements Cloneable {
      * Builds the classpath.
      * 
      * @return a {@link Classpath} object. 
+     * @throws IOException if an I/O error occurs while scanning the classpath.
      */
-    public Classpath getClasspath() {
+    public Classpath getClasspath() throws IOException {
         return this.runnerParameters.getClasspath();
     }
 
@@ -1858,21 +1892,20 @@ public final class RunParameters implements Cloneable {
         this.srcPath.clear();
     }
 
-    private static final String[] ARRAY_OF_STRING = { };
+    private static final Path[] ARRAY_OF_PATHS = { };
 
     /**
      * Gets the paths of the source files.
      * 
      * @return a {@link List}{@code <}{@link String}{@code >}
      */
-    public List<String> getSourcePath() {
-        final String[] sourcePathJRE = 
-        new String[] {
-                      Paths.get(getJavaHome(), "src.zip").toString()
-                      //TODO more?
+    public List<Path> getSourcePath() {
+        final Path[] sourcePathJRE = new Path[] {
+          getJavaHome().resolve("src.zip")
+          //TODO more?
         };
-        final String[] sourcePathUser = this.srcPath.toArray(ARRAY_OF_STRING);
-        final List<String> sourcePath = Stream.concat(Arrays.stream(sourcePathJRE), Arrays.stream(sourcePathUser)).collect(Collectors.toList());
+        final Path[] sourcePathUser = this.srcPath.toArray(ARRAY_OF_PATHS);
+        final List<Path> sourcePath = Stream.concat(Arrays.stream(sourcePathJRE), Arrays.stream(sourcePathUser)).collect(Collectors.toList());
 
         return sourcePath;
     }

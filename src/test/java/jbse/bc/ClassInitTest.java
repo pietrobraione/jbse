@@ -6,6 +6,9 @@ import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Signatures.JAVA_ENUM;
 import static org.hamcrest.core.Is.*;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -48,10 +51,10 @@ public class ClassInitTest {
     private ExecutionContext ctx;
 
     @Before
-    public void setUp() throws InvalidClassFileFactoryClassException, InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, IncompatibleClassFileException, PleaseLoadClassException, BadClassFileVersionException, WrongClassNameException {
-        final ArrayList<String> userPaths = new ArrayList<>();
-        userPaths.add("src/test/resources/jbse/bc/testdata");
-        final Classpath cp = new Classpath(System.getProperty("java.home"), Collections.emptyList(), userPaths);
+    public void setUp() throws InvalidClassFileFactoryClassException, InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, IncompatibleClassFileException, PleaseLoadClassException, BadClassFileVersionException, WrongClassNameException, IOException {
+        final ArrayList<Path> userPaths = new ArrayList<>();
+        userPaths.add(Paths.get("src/test/resources/jbse/bc/testdata"));
+        final Classpath cp = new Classpath(Paths.get(System.getProperty("java.home")), Collections.emptyList(), userPaths);
         final CalculatorRewriting calc = new CalculatorRewriting();
         calc.addRewriter(new RewriterOperationOnSimplex());
         final DecisionProcedureAlgorithms dec = new DecisionProcedureAlgorithms(new DecisionProcedureClassInit(new DecisionProcedureAlwSat(), calc, new ClassInitRulesRepo()), calc);

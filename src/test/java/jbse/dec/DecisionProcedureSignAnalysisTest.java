@@ -2,6 +2,8 @@ package jbse.dec;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -82,11 +84,11 @@ public class DecisionProcedureSignAnalysisTest {
 	}
 	
 	@Before
-	public void setUp() throws InvalidClassFileFactoryClassException {
+	public void setUp() throws InvalidClassFileFactoryClassException, IOException {
 		this.hist = HistoryPoint.unknown();
         this.calc = new CalculatorRewriting();
         this.calc.addRewriter(new RewriterOperationOnSimplex());
-        this.hier = new ClassHierarchy(new Classpath("", Collections.emptyList(), Collections.emptyList()), ClassFileFactoryJavassist.class, new HashMap<>());
+        this.hier = new ClassHierarchy(new Classpath(Paths.get(System.getProperty("java.home")), Collections.emptyList(), Collections.emptyList()), ClassFileFactoryJavassist.class, new HashMap<>());
 		this.dec = new DecisionProcedureSignAnalysis(new DecisionProcedureNoDecision(), this.calc);
 	}
 	

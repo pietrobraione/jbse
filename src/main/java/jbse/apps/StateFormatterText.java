@@ -3,6 +3,7 @@ package jbse.apps;
 import static jbse.apps.Util.LINE_SEP;
 import static jbse.apps.Util.PATH_SEP;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -52,11 +53,11 @@ import jbse.val.WideningConversion;
  * @author Pietro Braione
  */
 public final class StateFormatterText implements Formatter {
-    private final List<String> srcPath;
+    private final List<Path> srcPath;
     private final boolean fullPrint;
     private StringBuilder output = new StringBuilder();
 
-    public StateFormatterText(List<String> srcPath, boolean fullPrint) {
+    public StateFormatterText(List<Path> srcPath, boolean fullPrint) {
         this.srcPath = new ArrayList<>(srcPath);
         this.fullPrint = fullPrint;
     }
@@ -80,7 +81,7 @@ public final class StateFormatterText implements Formatter {
         this.output = new StringBuilder();
     }
 
-    private static void formatState(State state, StringBuilder sb, List<String> srcPath, boolean fullPrint, boolean breakLines, String indentTxt, String indentCurrent) 
+    private static void formatState(State state, StringBuilder sb, List<Path> srcPath, boolean fullPrint, boolean breakLines, String indentTxt, String indentCurrent) 
     throws FrozenStateException {
         final String lineSep = (breakLines ? LINE_SEP : "");
         sb.append(state.getIdentifier()); sb.append("["); sb.append(state.getSequenceNumber()); sb.append("] "); sb.append(lineSep);
@@ -499,7 +500,7 @@ public final class StateFormatterText implements Formatter {
         sb.append("(type: "); sb.append(val.getType()); sb.append(")");		
     }
 
-    private static void formatStack(State s, StringBuilder sb, List<String> srcPath, boolean breakLines, String indentTxt, String indentCurrent) 
+    private static void formatStack(State s, StringBuilder sb, List<Path> srcPath, boolean breakLines, String indentTxt, String indentCurrent) 
     throws FrozenStateException {
         final String lineSep = (breakLines ? LINE_SEP : "");
         final Iterable<Frame> stack = s.getStack();
@@ -516,7 +517,7 @@ public final class StateFormatterText implements Formatter {
         }
     }
 
-    private static void formatFrame(State s, StringBuilder sb, Frame f, List<String> srcPath, boolean breakLines, String indentTxt, String indentCurrent) {
+    private static void formatFrame(State s, StringBuilder sb, Frame f, List<Path> srcPath, boolean breakLines, String indentTxt, String indentCurrent) {
         final String lineSep = (breakLines ? LINE_SEP : "");
         sb.append(indentCurrent); sb.append("Method signature: "); sb.append(f.getCurrentMethodSignature().toString());
         if (f instanceof SnippetFrameWrap) {
@@ -574,7 +575,7 @@ public final class StateFormatterText implements Formatter {
         }
     }
 
-    private static void sourceLine(Frame f, StringBuilder sb, List<String> srcPath) {
+    private static void sourceLine(Frame f, StringBuilder sb, List<Path> srcPath) {
         int sourceRow = f.getSourceRow();
         if (sourceRow == -1) { 
             sb.append("<UNKNOWN>");

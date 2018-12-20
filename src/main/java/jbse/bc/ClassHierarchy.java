@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -56,6 +55,7 @@ import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.PleaseLoadClassException;
 import jbse.bc.exc.WrongClassNameException;
+import jbse.common.Util;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 
@@ -71,13 +71,13 @@ public final class ClassHierarchy implements Cloneable {
     private final HashMap<ClassFile, ArrayList<Signature>> allFieldsOf;
     private final ClassFileFactory f;
     private ClassFileStore cfs; //not final because of clone
-    private HashMap<String, String> systemPackages; //not final because of clone
+    private HashMap<String, Path> systemPackages; //not final because of clone
     
     private static class FindBytecodeResult {
         final byte[] bytecode;
-        final String loadedFrom;
+        final Path loadedFrom;
         
-        public FindBytecodeResult(byte[] bytecode, String loadedFrom) {
+        public FindBytecodeResult(byte[] bytecode, Path loadedFrom) {
             this.bytecode = bytecode;
             this.loadedFrom = loadedFrom;
         }
@@ -338,12 +338,12 @@ public final class ClassHierarchy implements Cloneable {
      * in a system package were loaded from.
      * 
      * @param packageName a {@link String}, the name of a package
-     * @return a {@link String}, the jar file or directory from which 
+     * @return the {@link Path} of the jar file or directory from which 
      *         the system classes in {@code packageName} were loaded from, 
      *         or {@code null} if no system class from {@code packageName}
      *         was loaded. 
      */
-    public String getSystemPackageLoadedFrom(String packageName) {
+    public Path getSystemPackageLoadedFrom(String packageName) {
         return this.systemPackages.get(packageName);
     }
     
@@ -987,10 +987,10 @@ public final class ClassHierarchy implements Cloneable {
      * 
      * @param classSignature a {@link String}, a signature of a loaded
      *        system class.
-     * @param loadedFrom a {@link String}, the name of the jar file
+     * @param loadedFrom the {@link Path} of the jar file
      *        or directory from where {@code classSignature} was loaded.
      */
-    private void registerSystemPackage(String classSignature, String loadedFrom) {
+    private void registerSystemPackage(String classSignature, Path loadedFrom) {
         final String packageName = classSignature.substring(0, classSignature.lastIndexOf('/') + 1);
         this.systemPackages.put(packageName, loadedFrom);  
         //note that replacing the origin of an already registered package
@@ -1010,17 +1010,16 @@ public final class ClassHierarchy implements Cloneable {
      *         in {@code paths}.
      */
     private FindBytecodeResult findBytecode(String className, int initiatingLoader) {
-        final Iterable<String> paths = (initiatingLoader == CLASSLOADER_BOOT ? this.cp.bootClassPath() :
-                                        initiatingLoader == CLASSLOADER_EXT ? this.cp.extClassPath() :
-                                        this.cp.userClassPath());
-        for (String _path : paths) {
+        final Iterable<Path> paths = (initiatingLoader == CLASSLOADER_BOOT ? this.cp.bootClassPath() :
+                                      initiatingLoader == CLASSLOADER_EXT ? this.cp.extClassPath() :
+                                      this.cp.userClassPath());
+        for (Path path : paths) {
             try {
-                final Path path = Paths.get(_path); 
                 if (Files.isDirectory(path)) {
                     final Path pathOfClass = path.resolve(className + ".class");
-                    return new FindBytecodeResult(Files.readAllBytes(pathOfClass), _path);
-                } else if (Files.isRegularFile(path) && _path.endsWith(".jar")) {
-                    try (final JarFile f = new JarFile(_path)) {
+                    return new FindBytecodeResult(Files.readAllBytes(pathOfClass), path);
+                } else if (Util.isJarFile(path)) {
+                    try (final JarFile f = new JarFile(path.toFile())) {
                         final JarEntry e = f.getJarEntry(className + ".class");
                         if (e == null) {
                             continue;
@@ -1032,9 +1031,9 @@ public final class ClassHierarchy implements Cloneable {
                         while ((nbytes = inStr.read(buf)) != -1) {
                             outStr.write(buf, 0, nbytes);
                         }
-                        return new FindBytecodeResult(outStr.toByteArray(), _path);
+                        return new FindBytecodeResult(outStr.toByteArray(), path);
                     }
-                }
+                } //else do nothing
             } catch (IOException e) {
                 continue;
             }

@@ -157,7 +157,7 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
         final Classpath cp = state.getClasspath();
         
         //initializes the paths
-        JAVA_HOME             = cp.javaHome();
+        JAVA_HOME             = cp.javaHome().toString();
         SUN_BOOT_CLASS_PATH   = String.join(PATH_SEPARATOR, stream(cp.bootClassPath()).map(Object::toString).toArray(String[]::new));
         JAVA_EXT_DIRS         = String.join(PATH_SEPARATOR, stream(cp.extDirs()).map(Object::toString).toArray(String[]::new));
         JAVA_CLASS_PATH       = String.join(PATH_SEPARATOR, stream(cp.classPath()).map(Object::toString).toArray(String[]::new));

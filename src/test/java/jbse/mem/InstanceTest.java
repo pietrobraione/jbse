@@ -3,6 +3,9 @@ package jbse.mem;
 import static jbse.bc.ClassLoaders.*;
 import static org.junit.Assert.*;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -32,11 +35,11 @@ public class InstanceTest {
     private static CalculatorRewriting calc;
 
     @BeforeClass
-    public static void setUpClass() throws InvalidClassFileFactoryClassException {
+    public static void setUpClass() throws InvalidClassFileFactoryClassException, IOException {
         //environment
-        final ArrayList<String> userPath = new ArrayList<>();
-        userPath.add("src/test/resources/jbse/bc/testdata");
-        final Classpath env = new Classpath(System.getProperty("java.home"), new ArrayList<>(), userPath);
+        final ArrayList<Path> userPath = new ArrayList<>();
+        userPath.add(Paths.get("src/test/resources/jbse/bc/testdata"));
+        final Classpath env = new Classpath(Paths.get(System.getProperty("java.home")), new ArrayList<>(), userPath);
 
         //class hierarchy
         hier = new ClassHierarchy(env, ClassFileFactoryJavassist.class, new HashMap<>());

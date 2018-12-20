@@ -1,5 +1,7 @@
 package jbse.jvm;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -215,6 +217,17 @@ public final class RunnerParameters implements Cloneable {
     public void setJavaHome(String javaHome) {
         this.engineParameters.setJavaHome(javaHome);
     }
+    
+    /**
+     * Sets the Java home, and cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
+     * 
+     * @param javaHome a {@link Path}.
+     * @throws NullPointerException if {@code javaHome == null}.
+     */
+    public void setJavaHome(Path javaHome) {
+        this.engineParameters.setJavaHome(javaHome);
+    }
 
     /**
      * Brings the Java home back to the default,
@@ -230,9 +243,9 @@ public final class RunnerParameters implements Cloneable {
     /**
      * Gets the Java home.
      * 
-     * @return a {@link String}, the Java home.
+     * @return a {@link Path}, the Java home.
      */
-    public String getJavaHome() {
+    public Path getJavaHome() {
         return this.engineParameters.getJavaHome();
     }
 
@@ -240,7 +253,7 @@ public final class RunnerParameters implements Cloneable {
      * Adds paths to the extensions classpath, and cancels the effect 
      * of any previous call to {@link #setInitialState(State)}.
      * 
-     * @param paths a varargs of {@link String}, 
+     * @param paths a varargs of {@link String}s, 
      *        the paths to be added to the extensions 
      *        classpath.
      */
@@ -248,6 +261,18 @@ public final class RunnerParameters implements Cloneable {
         this.engineParameters.addExtClasspath(paths);
     }
     
+    /**
+     * Adds paths to the extensions classpath, and cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
+     * 
+     * @param paths a varargs of {@link Path}s, 
+     *        the paths to be added to the extensions 
+     *        classpath.
+     */
+    public void addExtClasspath(Path... paths) { 
+        this.engineParameters.addExtClasspath(paths);
+    }
+
     /**
      * Sets the extensions classpath to
      * no path.
@@ -270,11 +295,23 @@ public final class RunnerParameters implements Cloneable {
      * Adds paths to the user classpath, and cancels the effect 
      * of any previous call to {@link #setInitialState(State)}.
      * 
-     * @param paths a varargs of {@link String}, 
+     * @param paths a varargs of {@link String}s, 
      *        the paths to be added to the user 
      *        classpath.
      */
     public void addUserClasspath(String... paths) { 
+        this.engineParameters.addUserClasspath(paths);
+    }
+
+    /**
+     * Adds paths to the user classpath, and cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
+     * 
+     * @param paths a varargs of {@link Path}s, 
+     *        the paths to be added to the user 
+     *        classpath.
+     */
+    public void addUserClasspath(Path... paths) { 
         this.engineParameters.addUserClasspath(paths);
     }
 
@@ -290,8 +327,9 @@ public final class RunnerParameters implements Cloneable {
      * Builds the classpath.
      * 
      * @return a {@link Classpath} object. 
+     * @throws IOException if an I/O error occurs while scanning the classpath.
      */
-    public Classpath getClasspath() {
+    public Classpath getClasspath() throws IOException  {
         return this.engineParameters.getClasspath();
     }
 
