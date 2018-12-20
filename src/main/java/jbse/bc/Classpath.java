@@ -3,6 +3,7 @@ package jbse.bc;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.NotDirectoryException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -107,7 +108,7 @@ public class Classpath implements Cloneable {
     private void addAllJars(List<Path> paths, Path path) throws IOException {
         try (final DirectoryStream<Path> stream = Files.newDirectoryStream(path, Util::isJarFile)) {
         	stream.forEach(jar -> addClassPath(paths, jar.toAbsolutePath()));
-        } catch (NotDirectoryException e) {
+        } catch (NoSuchFileException | NotDirectoryException e) {
         	return; //do nothing, path is not a path to a directory
         }
     }
