@@ -18,6 +18,7 @@ import jbse.val.Value;
  * 
  * @author Pietro Braione
  */
+@SuppressWarnings("restriction")
 public final class Algo_SUN_UNSAFE_COMPAREANDSWAPOBJECT extends Algo_SUN_UNSAFE_COMPAREANDSWAPX {
     public Algo_SUN_UNSAFE_COMPAREANDSWAPOBJECT() {
         super("Object");

@@ -34,6 +34,7 @@ import jbse.val.exc.InvalidTypeException;
  * 
  * @author Pietro Braione
  */
+@SuppressWarnings("restriction")
 public final class Algo_SUN_UNSAFE_PUTOBJECTVOLATILE_Array extends Algo_INVOKEMETA<
 DecisionAlternative_XASTORE,
 StrategyDecide<DecisionAlternative_XASTORE>, 

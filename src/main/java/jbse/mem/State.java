@@ -86,7 +86,6 @@ import jbse.val.SymbolFactory;
 import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
-import sun.misc.Unsafe;
 
 /**
  * Class that represents the state of execution.
@@ -102,7 +101,8 @@ public final class State implements Cloneable {
      * 
      * @author Pietro Braione
      */
-    private static final class MemoryBlock {
+    @SuppressWarnings("restriction")
+	private static final class MemoryBlock {
         /** The base address of the memory block. */
         final long address;
         
@@ -3662,7 +3662,8 @@ public final class State implements Cloneable {
         return this.methodTypes.values();
     }
     
-    private State deepCopyHeapExcluded() {
+    @SuppressWarnings("restriction")
+	private State deepCopyHeapExcluded() {
         final State o;
         try {
             o = (State) super.clone();
@@ -3721,13 +3722,12 @@ public final class State implements Cloneable {
         
         //allocatedMemory
         o.allocatedMemory = new HashMap<>();
-        final Unsafe unsafe = unsafe();
         for (Map.Entry<Long, MemoryBlock> entry : this.allocatedMemory.entrySet()) {
             final long baseLevelAddress = entry.getKey();
             final long oldMemoryBlockAddress = entry.getValue().address;
             final long size = entry.getValue().size;
-            final long newMemoryBlockAddress = unsafe.allocateMemory(size);
-            unsafe.copyMemory(oldMemoryBlockAddress, newMemoryBlockAddress, size);
+            final long newMemoryBlockAddress = unsafe().allocateMemory(size);
+            unsafe().copyMemory(oldMemoryBlockAddress, newMemoryBlockAddress, size);
             o.allocatedMemory.put(baseLevelAddress, new MemoryBlock(newMemoryBlockAddress, size));
         }
         
@@ -3837,7 +3837,8 @@ public final class State implements Cloneable {
         return o;
     }
     
-    @Override
+    @SuppressWarnings("restriction")
+	@Override
     protected void finalize() {
         //closes all files except stdin/out/err
         for (Map.Entry<Integer, Object> fileEntry : this.files.entrySet()) {
@@ -3858,9 +3859,8 @@ public final class State implements Cloneable {
         }
         
         //deallocates all memory blocks
-        final Unsafe unsafe = unsafe();
         for (MemoryBlock memoryBlock : this.allocatedMemory.values()) {
-            unsafe.freeMemory(memoryBlock.address);
+        	unsafe().freeMemory(memoryBlock.address);
         }
     }
 

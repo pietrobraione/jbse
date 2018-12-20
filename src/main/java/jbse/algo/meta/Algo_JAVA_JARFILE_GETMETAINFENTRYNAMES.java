@@ -84,7 +84,8 @@ public final class Algo_JAVA_JARFILE_GETMETAINFENTRYNAMES extends Algo_INVOKEMET
             final long jzfile = ((Long) ((Simplex) _jzfile).getActualValue()).longValue();
             
             //creates a mock JarFile with only the jzfile field set (this works with Hotspot)
-            final JarFile jarFile = (JarFile) unsafe().allocateInstance(JarFile.class);
+            @SuppressWarnings("restriction")
+			final JarFile jarFile = (JarFile) unsafe().allocateInstance(JarFile.class);
             final Field jzfileField = ZipFile.class.getDeclaredField("jzfile");
             jzfileField.setAccessible(true);
             jzfileField.set(jarFile, jzfile);

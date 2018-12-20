@@ -16,6 +16,7 @@ import jbse.val.Simplex;
  * 
  * @author Pietro Braione
  */
+@SuppressWarnings("restriction")
 public final class Algo_SUN_UNSAFE_ALLOCATEMEMORY extends Algo_INVOKEMETA_Nonbranching {
     private long bytes; //set by cookMore
     

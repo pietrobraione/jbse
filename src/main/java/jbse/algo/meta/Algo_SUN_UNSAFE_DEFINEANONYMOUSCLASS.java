@@ -55,6 +55,7 @@ import jbse.val.exc.InvalidTypeException;
  * 
  * @author Pietro Braione
  */
+@SuppressWarnings("restriction")
 public final class Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS extends Algo_INVOKEMETA_Nonbranching {
     private ClassFile hostClass; //set by cookMore
     private byte[] bytecode; //set by cookMore

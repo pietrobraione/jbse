@@ -21,6 +21,7 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  */
 //TODO merge with Algo_SUN_UNSAFE_COMPAREANDSWAPLONG
+@SuppressWarnings("restriction")
 public final class Algo_SUN_UNSAFE_COMPAREANDSWAPINT extends Algo_SUN_UNSAFE_COMPAREANDSWAPX {
     public Algo_SUN_UNSAFE_COMPAREANDSWAPINT() {
         super("Int");

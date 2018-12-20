@@ -16,6 +16,7 @@ import jbse.val.Simplex;
  * 
  * @author Pietro Braione
  */
+@SuppressWarnings("restriction")
 public final class Algo_SUN_UNSAFE_GETLONG extends Algo_INVOKEMETA_Nonbranching {
     private long value; //set by cookMore
     

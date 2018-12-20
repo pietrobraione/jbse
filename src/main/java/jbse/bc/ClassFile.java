@@ -123,7 +123,8 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      *  
      * @return an {@code int} codifying the access flags.
      */
-    public abstract int getAccessFlags();
+    @SuppressWarnings("restriction")
+	public abstract int getAccessFlags();
 
     /** 
      * Test whether the class is dummy, i.e., 
@@ -282,7 +283,8 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * 
      * @return {@code true} iff the class is anonymous.
      */
-    public abstract boolean isAnonymousUnregistered();
+    @SuppressWarnings("restriction")
+	public abstract boolean isAnonymousUnregistered();
     
     /**
      * Returns the host class name for an anonymous 
@@ -294,7 +296,8 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      *         for this class, or {@code null} if 
      *         {@link #isAnonymousUnregistered()}{@code  == false}
      */
-    public abstract ClassFile getHostClass();
+    @SuppressWarnings("restriction")
+	public abstract ClassFile getHostClass();
     
     /**
      * If this class is nested (statically nested, inner, anonymous 

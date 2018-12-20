@@ -24,6 +24,7 @@ import jbse.val.Simplex;
  * 
  * @author Pietro Braione
  */
+@SuppressWarnings("restriction")
 public final class Algo_SUN_UNSAFE_PUTOBJECTVOLATILE extends Algo_INVOKEMETA_Nonbranching {
     private final Algo_SUN_UNSAFE_PUTOBJECTVOLATILE_Array algoArray = new Algo_SUN_UNSAFE_PUTOBJECTVOLATILE_Array();
     private Objekt toModify; //set by cookMore
