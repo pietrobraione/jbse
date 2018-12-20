@@ -41,8 +41,6 @@ The runtime dependencies that are automatically resolved by Maven and included i
 
 Finally, JBSE also needs to interact at runtime with an external numeric solver for pruning infeasible program paths. JBSE works well with [Z3](https://github.com/Z3Prover/z3) and, to a less extent, with [CVC4](http://cvc4.cs.stanford.edu/), but any SMT solver that supports the AUFNIRA logic should work. The dependency on the solver is not handled by Maven so you need to download and install at least one of them on the machine that runs JBSE. We strongly advise to use Z3 because it is what we routinely use.
 
-There is a known bug that prevents JBSE to interact with the solver if it is installed in a path containing spaces. Please don't do that until the bug is fixed.
-
 ### Working under Eclipse ###
 
 If you work (as us) under Eclipse 2018-09, you must install the egit Eclipse plugin (you will find it in the Eclipse Marketplace), the m2e plugin (also in the Eclipse Marketplace), and the m2e connector for javacc-maven-plugin. The last one must be installed manually: Select the menu Help > Install new software..., click on the Add button to add a new site, and insert the URL `http://objectledge.github.io/maven-extensions/connectors/updates/development/` in the field Location (in the field Name you can give any name you want, but we advise to call it "Objectledge Maven extensions update site"). Press OK, and then select the newly added update site in the "Work with" box. Finally, select "objectledge.org m2e connectors" > "m2e connector for javacc-maven-plugin": The version must be at least 1.2.0.x, or it will not work with the current version of m2e. 
