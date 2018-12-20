@@ -5,6 +5,7 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.TreeSet;
@@ -38,7 +39,15 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class DecisionProcedureTest {
-    private static final String Z3_CMD = "/opt/local/bin/z3 -smt2 -in -t:10";
+	private static final String SWITCH_CHAR = System.getProperty("os.name").toLowerCase().contains("windows") ? "/" : "-";
+    private static final ArrayList<String> Z3_COMMAND_LINE = new ArrayList<>();
+    
+    static {
+    	Z3_COMMAND_LINE.add("/opt/local/bin/z3");
+    	Z3_COMMAND_LINE.add(SWITCH_CHAR + "smt2");
+    	Z3_COMMAND_LINE.add(SWITCH_CHAR + "in");
+    	Z3_COMMAND_LINE.add(SWITCH_CHAR + "t:10");
+    }
     
     final CalculatorRewriting calc;
     final ClassHierarchy hier;
@@ -56,7 +65,7 @@ public class DecisionProcedureTest {
     public void setUp() throws DecisionException {
         this.dec = 
         new DecisionProcedureAlgorithms(
-            new DecisionProcedureSMTLIB2_AUFNIRA(new DecisionProcedureAlwSat(), this.calc, Z3_CMD), 
+            new DecisionProcedureSMTLIB2_AUFNIRA(new DecisionProcedureAlwSat(), this.calc, Z3_COMMAND_LINE), 
             this.calc);
     }
 

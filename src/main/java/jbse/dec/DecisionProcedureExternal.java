@@ -69,7 +69,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
     private void resynch() throws DecisionException {
         try {
             this.extIf.clear();
-            final Iterable<Clause> i = () -> clauses.descendingIterator();
+            final Iterable<Clause> i = () -> this.clauses.descendingIterator();
             for (Clause c : i) {
                 super.pushAssumptionLocal(c);
                 this.extIf.pushAssumption(true);

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
@@ -84,13 +85,17 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
 
     /** 
      * Costructor.
+     * 
+     * @param calc a {@link CalculatorRewriting}.
+     * @param solverCommandLine a {@link List}{@code <}{@link String}{@code >}, the
+     *        command line to launch the external process for the decision procedure.
      */
-    public DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA(CalculatorRewriting calc, String solverBinaryPath) 
+    public DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA(CalculatorRewriting calc, List<String> solverCommandLine) 
     throws ExternalProtocolInterfaceException, IOException {
         this.calc = calc;
         this.m = new ExpressionMangler("X", "", this.calc);
         this.working = true;
-        final ProcessBuilder pb = new ProcessBuilder(solverBinaryPath.split(" "));
+        final ProcessBuilder pb = new ProcessBuilder(solverCommandLine);
         pb.redirectErrorStream(true);
         this.solver = pb.start();
         this.solverIn = new BufferedReader(new InputStreamReader(this.solver.getInputStream()));

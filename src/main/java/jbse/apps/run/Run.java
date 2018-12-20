@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
 
@@ -649,9 +650,6 @@ public final class Run {
         IO.printException(this.err, t);
     }
 
-    private static final String COMMANDLINE_LAUNCH_Z3   = System.getProperty("os.name").toLowerCase().contains("windows") ? " /smt2 /in /t:10" : " -smt2 -in -t:10";
-    private static final String COMMANDLINE_LAUNCH_CVC4 = " --lang=smt2 --output-lang=smt2 --no-interactive --incremental --tlimit-per=10000";
-
     /**
      * Processes the provided {@link RunParameters} and builds the {@link Engine}
      * which will be used by the runner to perform the symbolic execution.
@@ -882,13 +880,24 @@ public final class Run {
             if (type == DecisionProcedureType.ALL_SAT) {
                 //do nothing
             } else if (type == DecisionProcedureType.Z3) {
-                final String z3 = (path == null ? "z3" : path.toString()) + COMMANDLINE_LAUNCH_Z3;
-                core = new DecisionProcedureSMTLIB2_AUFNIRA(core, calc, z3);
-                coreNumeric = (needHeapCheck ? new DecisionProcedureSMTLIB2_AUFNIRA(coreNumeric, calc, z3) : null);
+            	final String switchChar = System.getProperty("os.name").toLowerCase().contains("windows") ? "/" : "-";
+                final ArrayList<String> z3CommandLine = new ArrayList<>();
+                z3CommandLine.add(path == null ? "z3" : path.toString());
+                z3CommandLine.add(switchChar + "smt2");
+                z3CommandLine.add(switchChar + "in");
+                z3CommandLine.add(switchChar + "t:10");
+                core = new DecisionProcedureSMTLIB2_AUFNIRA(core, calc, z3CommandLine);
+                coreNumeric = (needHeapCheck ? new DecisionProcedureSMTLIB2_AUFNIRA(coreNumeric, calc, z3CommandLine) : null);
             } else if (type == DecisionProcedureType.CVC4) {
-                final String cvc4 = (path == null ? "cvc4" : path.toString()) + COMMANDLINE_LAUNCH_CVC4;
-                core = new DecisionProcedureSMTLIB2_AUFNIRA(core, calc, cvc4);
-                coreNumeric = (needHeapCheck ? new DecisionProcedureSMTLIB2_AUFNIRA(coreNumeric, calc, cvc4) : null);
+                final ArrayList<String> cvc4CommandLine = new ArrayList<>();
+                cvc4CommandLine.add(path == null ? "cvc4" : path.toString());
+                cvc4CommandLine.add("--lang=smt2");
+                cvc4CommandLine.add("--output-lang=smt2");
+                cvc4CommandLine.add("--no-interactive");
+                cvc4CommandLine.add("--incremental");
+                cvc4CommandLine.add("--tlimit-per=10000");
+                core = new DecisionProcedureSMTLIB2_AUFNIRA(core, calc, cvc4CommandLine);
+                coreNumeric = (needHeapCheck ? new DecisionProcedureSMTLIB2_AUFNIRA(coreNumeric, calc, cvc4CommandLine) : null);
             } else {
                 core.close();
                 if (coreNumeric != null) {
