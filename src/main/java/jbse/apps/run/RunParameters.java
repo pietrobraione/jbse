@@ -914,6 +914,22 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
+     * Sets the pathname of the executable
+     * of the decision procedure (should match 
+     * {@link #setDecisionProcedureType(DecisionProcedureType)}).
+     * 
+     * @param externalDecisionProcedurePath a {@link Path} to the 
+     *        decision procedure executable.
+     * @throws NullPointerException if {@code externalDecisionProcedurePath == null}.
+     */
+    public void setExternalDecisionProcedurePath(Path externalDecisionProcedurePath) { 
+        if (externalDecisionProcedurePath == null) {
+            throw new NullPointerException();
+        }
+        this.externalDecisionProcedurePath = externalDecisionProcedurePath; 
+    }
+
+    /**
      * Gets the pathname of the executable
      * of the decision procedure set with 
      * {@link #setExternalDecisionProcedurePath(String)}.
