@@ -5,6 +5,7 @@ import static java.lang.System.arraycopy;
 import static jbse.algo.Util.failExecution;
 import static jbse.common.Type.binaryClassName;
 import static jbse.common.Type.isPrimitive;
+import static jbse.common.Type.isVoid;
 import static jbse.common.Type.parametersNumber;
 import static jbse.common.Type.splitParametersDescriptors;
 import static jbse.common.Type.splitReturnValueDescriptor;
@@ -35,23 +36,22 @@ import jbse.val.exc.ValueDoesNotSupportNativeException;
 
 /**
  * {@link Algo_INVOKEMETA_Nonbranching} implementing the effect of 
- * a method call assuming that the invoked method does not produce 
- * any effect other than returning a value. More precisely:
+ * a method call by performing a metacircular method call. More precisely:
  * <ul>
- * <li>If the method's return type is {@code void}, then the 
- *     method invocation has no effect;</li>
- * <li>If the method returns a {@link Primitive}, and all its parameters 
- *     are {@link Simplex}, then reflection is used
+ * <li>If the method returns a {@link Primitive} or {@code void}, and all its 
+ *     parameters are {@link Simplex}, then reflection is used
  *     is used to metacircularly invoke the native method on the reified 
- *     parameters, and the corresponding value is reflected back and pushed 
- *     on the operand stack;</li>
- * <li>Otherwise, a {@link PrimitiveSymbolicApply} or a {@link ReferenceSymbolicApply} 
- *     mirroring the method's invocation is pushed on the operand stack.</li>
+ *     parameters, and the corresponding return value (if any) is reflected 
+ *     back and pushed on the operand stack;</li>
+ * <li>Otherwise, if the method's return type is not {@code void}, a 
+ *     {@link PrimitiveSymbolicApply} or a {@link ReferenceSymbolicApply} 
+ *     mirroring the method's invocation is pushed on the operand stack;</li>
+ * <li>Otherwise, the method invocation has no effect.</li>
  * </ul>
  * 
  * @author Pietro Braione
  */
-public class Algo_INVOKEMETA_OnlyReturn extends Algo_INVOKEMETA_Nonbranching {
+public class Algo_INVOKEMETA_Metacircular extends Algo_INVOKEMETA_Nonbranching {
     private Value returnValue;
     
     @Override
@@ -67,37 +67,33 @@ public class Algo_INVOKEMETA_OnlyReturn extends Algo_INVOKEMETA_Nonbranching {
     CannotManageStateException, InterruptException {
         final Value[] args = this.data.operands();
         
+        //checks whether the parameters are all Simplex
+        boolean allSimplex = true;
+        for (int i = 0; i < args.length; ++i) {
+        	if (!(args[i] instanceof Simplex)) {
+        		allSimplex = false;
+        		break;
+        	}
+        }
+
         //determines the return value
         final String returnType = Type.splitReturnValueDescriptor(this.data.signature().getDescriptor());
-        if (Type.isVoid(returnType)) {
-            this.returnValue = null;
-        } else {
-            //checks the parameters
-            boolean allSimplex = true;
-            for (int i = 0; i < args.length; ++i) {
-                if (!(args[i] instanceof Simplex)) {
-                    allSimplex = false;
-                    break;
+        if (allSimplex && (isVoid(returnType) || isPrimitive(returnType))) {
+            //delegates to metacircular invocation
+            invokeMetacircularly(state, Arrays.stream(args).map(p -> (Simplex) p).toArray(Simplex[]::new));
+        } else if (!isVoid(returnType)) {
+            //builds a term
+            try {
+                if (isPrimitive(returnType)) {
+                    this.returnValue = state.getCalculator().applyFunctionPrimitive(returnType.charAt(0), state.getHistoryPoint(), this.data.signature().toString(), args);
+                } else {
+                    this.returnValue = new ReferenceSymbolicApply(returnType, state.getHistoryPoint(), this.data.signature().toString(), args);
                 }
+            } catch (InvalidOperandException | InvalidTypeException e) {
+                //this should never happen
+                failExecution(e);
             }
-            
-            if (allSimplex && Type.isPrimitive(returnType)) {
-                //delegates to metacircular invocation
-                invokeMetacircularly(state, Arrays.stream(args).map(p -> (Simplex) p).toArray(Simplex[]::new));
-            } else {
-                //otherwise, builds a term
-                try {
-                    if (isPrimitive(returnType)) {
-                        this.returnValue = state.getCalculator().applyFunctionPrimitive(returnType.charAt(0), state.getHistoryPoint(), this.data.signature().toString(), args);
-                    } else {
-                        this.returnValue = new ReferenceSymbolicApply(returnType, state.getHistoryPoint(), this.data.signature().toString(), args);
-                    }
-                } catch (InvalidOperandException | InvalidTypeException e) {
-                    //this should never happen
-                    failExecution(e);
-                }
-            }
-        }
+        } //else, do nothing
     }
     
     private void invokeMetacircularly(State state, Simplex[] args) throws CannotInvokeNativeException {
@@ -127,8 +123,12 @@ public class Algo_INVOKEMETA_OnlyReturn extends Algo_INVOKEMETA_Nonbranching {
             }
 
             //reifies the return value
-            final String retType =  splitReturnValueDescriptor(this.data.signature().getDescriptor());
-            this.returnValue = toValue(state.getCalculator(), retValRefl, retType);
+            final String returnType =  splitReturnValueDescriptor(this.data.signature().getDescriptor());
+            if (Type.isVoid(returnType)) {
+                this.returnValue = null;
+            } else {
+            	this.returnValue = toValue(state.getCalculator(), retValRefl, returnType);
+            }
         } catch (ClassNotFoundException | SecurityException | 
                  NoSuchMethodException | IllegalArgumentException | 
                  IllegalAccessException | InvocationTargetException e) {

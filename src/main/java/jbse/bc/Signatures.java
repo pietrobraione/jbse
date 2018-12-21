@@ -139,6 +139,7 @@ public final class Signatures {
     public static final String SUN_URLCLASSPATH_JARLOADER    = "sun/misc/URLClassPath$JarLoader";
     public static final String SUN_VERIFYACCESS              = "sun/invoke/util/VerifyAccess";
     public static final String SUN_VM                        = "sun/misc/VM";
+    public static final String SUN_WIN32ERRORMODE            = "sun/io/Win32ErrorMode";
     public static final String SUN_WRAPPER_FORMAT            = "sun/invoke/util/Wrapper$Format";
 
     //exceptions
@@ -265,6 +266,8 @@ public final class Signatures {
         new Signature(JAVA_DOUBLE, "(" + LONG + ")" + DOUBLE, "longBitsToDouble");
     public static final Signature JAVA_FILEDESCRIPTOR_INITIDS =
         new Signature(JAVA_FILEDESCRIPTOR, "()" + VOID, "initIDs");
+    public static final Signature JAVA_FILEDESCRIPTOR_SET =
+        new Signature(JAVA_FILEDESCRIPTOR, "(" + INT + ")" + LONG, "set");
     public static final Signature JAVA_FILEINPUTSTREAM_AVAILABLE =
         new Signature(JAVA_FILEINPUTSTREAM, "()" + INT, "available");
     public static final Signature JAVA_FILEINPUTSTREAM_CLOSE0 =
@@ -620,6 +623,8 @@ public final class Signatures {
         new Signature(SUN_URLCLASSPATH, "(" + REFERENCE + JAVA_CLASSLOADER + TYPEEND + ")" + ARRAYOF + REFERENCE + JAVA_URL + TYPEEND, "getLookupCacheURLs");
     public static final Signature SUN_VM_INITIALIZE = 
         new Signature(SUN_VM, "()" + VOID, "initialize");
+    public static final Signature SUN_WIN32ERRORMODE_SETERRORMODE = 
+            new Signature(SUN_WIN32ERRORMODE, "(" + LONG + ")" + LONG, "setErrorMode");
     public static final Signature noclass_REGISTERLOADEDCLASS =
         new Signature(null, "(" + INT + REFERENCE + JAVA_CLASSLOADER + TYPEEND + ")" + VOID, "registerLoadedClass");
     public static final Signature noclass_REGISTERMETHODTYPE =

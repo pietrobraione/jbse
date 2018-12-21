@@ -31,7 +31,7 @@ import jbse.bc.Signature;
  *
  */
 public final class Overrides {
-    public static final String ALGO_INVOKEMETA_ONLYRETURN                          = internalClassName(jbse.algo.Algo_INVOKEMETA_OnlyReturn.class.getName());
+    public static final String ALGO_INVOKEMETA_METACIRCULAR                        = internalClassName(jbse.algo.Algo_INVOKEMETA_Metacircular.class.getName());
     
     //Overriding meta-level implementations of standard methods
     public static final String ALGO_JAVA_CLASS_FORNAME0                            = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_FORNAME0.class.getName());
