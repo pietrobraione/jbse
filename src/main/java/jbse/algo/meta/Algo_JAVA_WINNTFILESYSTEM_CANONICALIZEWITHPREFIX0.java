@@ -29,17 +29,16 @@ import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 
 /**
- * Meta-level implementation of {@link java.io.UnixFileSystem#canonicalize0(String)} and
- * {@link java.io.WinNTFileSystem#canonicalize0(String)}.
+ * Meta-level implementation of {@link java.io.WinNTFileSystem#canonicalizeWithPrefix0(String, String)}.
  * 
  * @author Pietro Braione
  */
-public final class Algo_JAVA_XFILESYSTEM_CANONICALIZE0 extends Algo_INVOKEMETA_Nonbranching {
+public final class Algo_JAVA_WINNTFILESYSTEM_CANONICALIZEWITHPREFIX0 extends Algo_INVOKEMETA_Nonbranching {
     private ReferenceConcrete toPush; //set by cookMore
 
     @Override
     protected Supplier<Integer> numOperands() {
-        return () -> 2;
+        return () -> 3;
     }
 
     @Override
@@ -52,26 +51,37 @@ public final class Algo_JAVA_XFILESYSTEM_CANONICALIZE0 extends Algo_INVOKEMETA_N
             fileSystemField.setAccessible(true);
             final Object fileSystem = fileSystemField.get(null);
             final Class<?> fileSystemClass = fileSystem.getClass();
-            final String methodName = "canonicalize0";
+            final String methodName = "canonicalizeWithPrefix0";
 
-            //gets the (String path) parameter
-            final Reference pathReference = (Reference) this.data.operand(1);
+            //gets the (String canonicalPrefixString) parameter
+            final Reference prefixReference = (Reference) this.data.operand(1);
+            if (state.isNull(prefixReference)) {
+                throwNew(state, NULL_POINTER_EXCEPTION);
+                exitFromAlgorithm();
+            }
+            final String prefix = valueString(state, prefixReference);
+            if (prefix == null) {
+                throw new SymbolicValueNotAllowedException("The String canonicalPrefixString parameter to invocation of method " + fileSystemClass.getName() + "." + methodName + " is not a simple String.");
+            }
+            
+            //gets the (String pathWithCanonicalPrefixString) parameter
+            final Reference pathReference = (Reference) this.data.operand(2);
             if (state.isNull(pathReference)) {
                 throwNew(state, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
             final String path = valueString(state, pathReference);
             if (path == null) {
-                throw new SymbolicValueNotAllowedException("The String parameter to invocation of method " + fileSystemClass.getName() + "." + methodName + "  is not a simple String.");
+                throw new SymbolicValueNotAllowedException("The String pathWithCanonicalPrefixString parameter to invocation of method " + fileSystemClass.getName() + "." + methodName + " is not a simple String.");
             }
             
-            //invokes metacircularly the canonicalize0
+            //invokes metacircularly the canonicalizeWithPrefix0
             //method to obtain the canonical path
-            final Method method = fileSystemClass.getDeclaredMethod(methodName, String.class);
+            final Method method = fileSystemClass.getDeclaredMethod(methodName, String.class, String.class);
             method.setAccessible(true);
             String pathCanonical = null; //to keep the compiler happy
             try {
-                pathCanonical = (String) method.invoke(fileSystem, path);
+                pathCanonical = (String) method.invoke(fileSystem, prefix, path);
             } catch (InvocationTargetException e) {
                 final String cause = internalClassName(e.getCause().getClass().getName());
                 throwNew(state, cause);

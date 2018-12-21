@@ -463,6 +463,8 @@ public final class Signatures {
         new Signature(JAVA_UNIXFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + ARRAYOF + REFERENCE + JAVA_STRING + TYPEEND, "list");
     public static final Signature JAVA_WINNTFILESYSTEM_CANONICALIZE0 = 
         new Signature(JAVA_WINNTFILESYSTEM, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_STRING + TYPEEND, "canonicalize0");
+    public static final Signature JAVA_WINNTFILESYSTEM_CANONICALIZEWITHPREFIX0 = 
+            new Signature(JAVA_WINNTFILESYSTEM, "(" + REFERENCE + JAVA_STRING + TYPEEND + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_STRING + TYPEEND, "canonicalizeWithPrefix0");
     public static final Signature JAVA_WINNTFILESYSTEM_GETBOOLEANATTRIBUTES = 
         new Signature(JAVA_WINNTFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + INT, "getBooleanAttributes");
     public static final Signature JAVA_WINNTFILESYSTEM_GETLASTMODIFIEDTIME = 
