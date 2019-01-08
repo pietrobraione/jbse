@@ -34,13 +34,19 @@ public class RewriterSqrt extends Rewriter {
 				return;
 			}
 			final Primitive arg = (Primitive) x.getArgs()[0];
+			if (arg.getType() != Type.DOUBLE) {
+				//sqrt function yielding double value but with nondouble arg; 
+				//since complaining is not our business we just give up
+				super.rewritePrimitiveSymbolicApply(x);
+				return;
+			}
 			final Polynomial[] argSqrt;
 			try {
 				argSqrt = Polynomial.of(this.calc, arg).sqrt();
 				if (argSqrt[0].isZeroOne(false)) {
 					super.rewritePrimitiveSymbolicApply(x);
 				} else {
-					setResult(this.calc.applyFunctionPrimitive(x.getType(), x.historyPoint(), PrimitiveSymbolicApply.ABS, argSqrt[0].toPrimitive())
+					setResult(this.calc.applyFunctionPrimitive(x.getType(), x.historyPoint(), PrimitiveSymbolicApply.ABS_DOUBLE, argSqrt[0].toPrimitive())
 							.mul(this.calc.applyFunctionPrimitive(x.getType(), x.historyPoint(), PrimitiveSymbolicApply.SQRT, argSqrt[1].toPrimitive())));
 				}
 			} catch (InvalidOperandException | InvalidTypeException e) {

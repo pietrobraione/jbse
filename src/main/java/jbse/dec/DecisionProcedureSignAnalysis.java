@@ -885,7 +885,10 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 			final String operator = x.getOperator();
 			if (operator.equals(PrimitiveSymbolicApply.EXP)) {
 				infoFromOperator = SignPredicate.GT; //does nothing, indeed
-			} else if (operator.equals(PrimitiveSymbolicApply.ABS) || 
+			} else if (operator.equals(PrimitiveSymbolicApply.ABS_DOUBLE) ||
+					operator.equals(PrimitiveSymbolicApply.ABS_FLOAT) || 
+					operator.equals(PrimitiveSymbolicApply.ABS_INT) || 
+					operator.equals(PrimitiveSymbolicApply.ABS_LONG) || 
 					operator.equals(PrimitiveSymbolicApply.SQRT) ||
 					operator.equals(PrimitiveSymbolicApply.ACOS)) {
 				infoFromOperator = SignPredicate.GE;

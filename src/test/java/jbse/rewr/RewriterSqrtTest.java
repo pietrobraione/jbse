@@ -31,7 +31,7 @@ public class RewriterSqrtTest {
 		//sqrt(A * A) -> abs(A)
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
 		final Primitive p_post = this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.SQRT, A.mul(A)); 
-		assertEquals(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ABS, A), p_post);
+		assertEquals(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ABS_DOUBLE, A), p_post);
 	}
 	
 	@Test
@@ -41,7 +41,7 @@ public class RewriterSqrtTest {
 		final Term B = this.calc.valTerm(Type.DOUBLE, "B");
 		final Primitive dmul = A.mul(B).mul(B.mul(A));
 		final Primitive p_post = this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.SQRT, dmul); 
-		assertEquals(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ABS, A.mul(B)), p_post);
+		assertEquals(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ABS_DOUBLE, A.mul(B)), p_post);
 	}
 	
 	@Test
@@ -49,7 +49,7 @@ public class RewriterSqrtTest {
 		//sqrt(A * sqrt(A * A)) -> sqrt(A * abs(A))
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
 		final Primitive p_post = this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.SQRT, A.mul(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.SQRT, A.mul(A)))); 
-		assertEquals(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.SQRT, A.mul(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ABS, A))), p_post);
+		assertEquals(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.SQRT, A.mul(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ABS_DOUBLE, A))), p_post);
 	}	
 	
 	@Test
@@ -57,7 +57,7 @@ public class RewriterSqrtTest {
 		//sqrt(A * 2 * A) -> abs(A) * sqrt(2)
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
 		final Primitive p_post = this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.SQRT, A.mul(this.calc.valDouble(2.0d).mul(A))); 
-		assertEquals(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ABS, A).mul(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.SQRT, this.calc.valDouble(2.0d))), p_post); 
+		assertEquals(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ABS_DOUBLE, A).mul(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.SQRT, this.calc.valDouble(2.0d))), p_post); 
 		//TODO the assertion check is quite fragile, make it more robust
 	}	
 	
@@ -68,7 +68,7 @@ public class RewriterSqrtTest {
 		final Term B = this.calc.valTerm(Type.DOUBLE, "B");
 		final Primitive binomial = A.mul(A).add(this.calc.valDouble(2.0d).mul(A).mul(B)).add(B.mul(B)); 
 		final Primitive p_post = this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.SQRT, binomial); 
-		assertEquals(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ABS, A.add(B)), p_post); 
+		assertEquals(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ABS_DOUBLE, A.add(B)), p_post); 
 		//this check works thanks to polynomial rewriter normalization of results
 	}	
 	
@@ -79,7 +79,7 @@ public class RewriterSqrtTest {
 		final Term B = this.calc.valTerm(Type.DOUBLE, "B");
 		final Primitive binomial = this.calc.valDouble(-2.0d).mul(A).mul(B).add(B.mul(B)).add(A.mul(A));
 		final Primitive p_post = this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.SQRT, binomial); 
-		assertEquals(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ABS, A.sub(B)), p_post); 
+		assertEquals(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ABS_DOUBLE, A.sub(B)), p_post); 
 		//TODO this check is fragile, as it does not verifies the OR part; it also depends on polynomial rewriter to normalize results
 	}	
 	
@@ -89,7 +89,7 @@ public class RewriterSqrtTest {
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
 		final Primitive binomial = this.calc.valDouble(2.0d).mul(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, "f", A)).mul(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, "g", A)).add(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, "f", A).mul(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, "f", A))).add(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, "g", A).mul(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, "g", A)));
 		final Primitive p_post = this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.SQRT, binomial); 
-		assertEquals(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ABS, this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, "f", A).add(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, "g", A))), p_post); 
+		assertEquals(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ABS_DOUBLE, this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, "f", A).add(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, "g", A))), p_post); 
 		//TODO this assertion check is fragile, as it does not verifies the OR part; it also depends on polynomial rewriter to normalize results
 	}	
 }

@@ -715,7 +715,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
             	final StringBuilder clause = new StringBuilder();
             	final StringBuilder smtlib2Signature = new StringBuilder();
             	boolean builtIn = false;
-            	if (operator.equals(PrimitiveSymbolicApply.ABS)) {
+            	if ("abs".equals(operator)) {
             		if (Type.isPrimitiveIntegral(x.getType())) {
             			builtIn = true;
             			clause.append("(abs ");

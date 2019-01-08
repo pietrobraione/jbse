@@ -126,7 +126,10 @@ public class RewriterAbsSum extends Rewriter {
 
 		@Override
 		public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) {
-			if (x.getOperator().equals(PrimitiveSymbolicApply.ABS)) {
+			if (x.getOperator().equals(PrimitiveSymbolicApply.ABS_DOUBLE) || 
+				x.getOperator().equals(PrimitiveSymbolicApply.ABS_FLOAT) || 
+				x.getOperator().equals(PrimitiveSymbolicApply.ABS_INT) ||
+				x.getOperator().equals(PrimitiveSymbolicApply.ABS_LONG)) {
 				this.abs = x;
 			}
 		}

@@ -267,30 +267,48 @@ public class RewriterOperationOnSimplex extends Rewriter {
     //private part: tons of manual dispatching
     //TODO simplify this huge mess
     private Primitive tryFunctionApplication(String function, Object[] args, char[] argsType) {
-        if (function.equals(ABS)) { //typing: T -> T
+        if (function.equals(ABS_DOUBLE)) { //typing: D -> D
             if(argsType[0] == Type.DOUBLE){return(this.calc.val_(Math.abs(((Double)args[0]).doubleValue())));}
+        }
+        if (function.equals(ABS_FLOAT)) { //typing: F -> F
             if(argsType[0] == Type.FLOAT) {return(this.calc.val_(Math.abs(((Float)args[0]).floatValue()))); }
+        }
+        if (function.equals(ABS_LONG)) { //typing: J -> J
             if(argsType[0] == Type.LONG)  {return(this.calc.val_(Math.abs(((Long)args[0]).longValue()))); }
+        }
+        if (function.equals(ABS_INT)) { //typing: T -> T
             if(argsType[0] == Type.INT)   {return(this.calc.val_(Math.abs(((Integer)args[0]).intValue()))); }
             if(argsType[0] == Type.SHORT) {return(this.calc.val_((short) Math.abs(((Short)args[0]).shortValue()))); }
             if(argsType[0] == Type.BYTE)  {return(this.calc.val_((byte) Math.abs(((Byte)args[0]).byteValue()))); }
             if(argsType[0] == Type.CHAR)  {return(this.calc.val_((char) Math.abs(((Character)args[0]).charValue()))); }
         }
 
-        if (function.equals(MIN)) { //typing: T x T -> T
+        if (function.equals(MIN_DOUBLE)) { //typing: D x D -> D
             if(argsType[0] == Type.DOUBLE)    { return(this.calc.val_(Math.min(((Double)args[0]).doubleValue(), ((Double)args[1]).doubleValue()))); }
+        }
+        if (function.equals(MIN_FLOAT)) { //typing: F x F -> F
             if(argsType[0]== Type.FLOAT)      { return(this.calc.val_(Math.min(((Float)args[0]).floatValue(), ((Float)args[1]).floatValue()))); }
+        }
+        if (function.equals(MIN_LONG)) { //typing: J x J -> J
             if(argsType[0]==Type.LONG)        { return(this.calc.val_(Math.min(((Long)args[0]).longValue(), ((Long)args[1]).longValue()))); }
+        }
+        if (function.equals(MIN_INT)) { //typing: T x T -> T
             if(argsType[0]==Type.INT)         { return(this.calc.val_(Math.min(((Integer)args[0]).intValue(), ((Integer)args[1]).intValue()))); }
             if(argsType[0]==Type.SHORT)       { return(this.calc.val_((short) Math.min(((Short)args[0]).shortValue(), ((Short)args[1]).shortValue()))); }
             if(argsType[0]==Type.BYTE)        { return(this.calc.val_((byte)  Math.min(((Byte)args[0]).byteValue(), ((Byte)args[1]).byteValue()))); }
             if(argsType[0]==Type.CHAR)        { return(this.calc.val_((char)  Math.min(((Character)args[0]).charValue(), ((Character)args[1]).charValue()))); }
         }
 
-        if (function.equals(MAX)) { //typing: T x T -> T
+        if (function.equals(MAX_DOUBLE)) { //typing: D x D -> D
             if(argsType[0] == Type.DOUBLE)    { return(this.calc.val_(Math.max(((Double)args[0]).doubleValue(), ((Double)args[1]).doubleValue()))); }
+        }
+        if (function.equals(MAX_FLOAT)) { //typing: F x F -> F
             if(argsType[0]== Type.FLOAT)      { return(this.calc.val_(Math.max(((Float)args[0]).floatValue(), ((Float)args[1]).floatValue()))); }
+        }
+        if (function.equals(MAX_LONG)) { //typing: J x J -> J
             if(argsType[0]==Type.LONG)        { return(this.calc.val_(Math.max(((Long)args[0]).longValue(), ((Long)args[1]).longValue()))); }
+        }
+        if (function.equals(MAX_INT)) { //typing: T x T -> T
             if(argsType[0]==Type.INT)         { return(this.calc.val_(Math.max(((Integer)args[0]).intValue(), ((Integer)args[1]).intValue()))); }
             if(argsType[0]==Type.SHORT)       { return(this.calc.val_((short) Math.max(((Short)args[0]).shortValue(), ((Short)args[1]).shortValue()))); }
             if(argsType[0]==Type.BYTE)        { return(this.calc.val_((byte)  Math.max(((Byte)args[0]).byteValue(), ((Byte)args[1]).byteValue()))); }

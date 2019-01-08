@@ -1,5 +1,27 @@
 package jbse.val;
 
+import static jbse.bc.Signatures.JAVA_STRICTMATH_ABS_DOUBLE;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_ABS_FLOAT;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_ABS_INT;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_ABS_LONG;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_ACOS;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_ASIN;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_ATAN;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_COS;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_EXP;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_MAX_DOUBLE;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_MAX_FLOAT;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_MAX_INT;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_MAX_LONG;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_MIN_DOUBLE;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_MIN_FLOAT;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_MIN_INT;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_MIN_LONG;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_POW;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_SQRT;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_SIN;
+import static jbse.bc.Signatures.JAVA_STRICTMATH_TAN;
+
 import java.util.Arrays;
 
 import jbse.common.exc.UnexpectedInternalException;
@@ -14,43 +36,72 @@ import jbse.val.exc.InvalidTypeException;
  */
 public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed {
     //pure functions implemented in java.lang.StrictMath 
-    //TODO move them elsewhere? should make an enum? (no special advantage in both)
     
-    /** Absolute value */
-    public static final String ABS = "abs";
+    /** Absolute value (double) */
+    public static final String ABS_DOUBLE = JAVA_STRICTMATH_ABS_DOUBLE.toString();
+    
+    /** Absolute value (float) */
+    public static final String ABS_FLOAT = JAVA_STRICTMATH_ABS_FLOAT.toString();
+    
+    /** Absolute value (int) */
+    public static final String ABS_INT = JAVA_STRICTMATH_ABS_INT.toString();
+    
+    /** Absolute value (long) */
+    public static final String ABS_LONG = JAVA_STRICTMATH_ABS_LONG.toString();
     
     /** Trigonometric sine */
-    public static final String SIN = "sin";
+    public static final String SIN = JAVA_STRICTMATH_SIN.toString();
     
     /** Trigonometric cosine */
-    public static final String COS = "cos";
+    public static final String COS = JAVA_STRICTMATH_COS.toString();
     
     /** Trigonometric tangent */
-    public static final String TAN = "tan";
+    public static final String TAN = JAVA_STRICTMATH_TAN.toString();
     
     /** Trigonometric arc sine */
-    public static final String ASIN = "asin";
+    public static final String ASIN = JAVA_STRICTMATH_ASIN.toString();
     
     /** Trigonometric arc cosine */
-    public static final String ACOS = "acos";
+    public static final String ACOS = JAVA_STRICTMATH_ACOS.toString();
     
     /** Trigonometric arc tangent */
-    public static final String ATAN = "atan";
+    public static final String ATAN = JAVA_STRICTMATH_ATAN.toString();
     
     /** Square root */
-    public static final String SQRT = "sqrt";
+    public static final String SQRT = JAVA_STRICTMATH_SQRT.toString();
     
     /** Power */
-    public static final String POW = "pow";
+    public static final String POW = JAVA_STRICTMATH_POW.toString();
     
     /** Exponential */
-	public static final String EXP = "exp";
+	public static final String EXP = JAVA_STRICTMATH_EXP.toString();
     
-    /** Minimum */
-    public static final String MIN = "min";
+    /** Minimum (double) */
+    public static final String MIN_DOUBLE = JAVA_STRICTMATH_MIN_DOUBLE.toString();
+    
+    /** Minimum (float) */
+    public static final String MIN_FLOAT = JAVA_STRICTMATH_MIN_FLOAT.toString();
+    
+    /** Minimum (int) */
+    public static final String MIN_INT = JAVA_STRICTMATH_MIN_INT.toString();
+    
+    /** Minimum (long) */
+    public static final String MIN_LONG = JAVA_STRICTMATH_MIN_LONG.toString();
     
     /** Maximum */
     public static final String MAX = "max";
+    
+    /** Maximum (double) */
+    public static final String MAX_DOUBLE = JAVA_STRICTMATH_MAX_DOUBLE.toString();
+    
+    /** Maximum (float) */
+    public static final String MAX_FLOAT = JAVA_STRICTMATH_MAX_FLOAT.toString();
+    
+    /** Maximum (int) */
+    public static final String MAX_INT = JAVA_STRICTMATH_MAX_INT.toString();
+    
+    /** Maximum (long) */
+    public static final String MAX_LONG = JAVA_STRICTMATH_MAX_LONG.toString();
     
     /** The function name. */
 	private final String operator;

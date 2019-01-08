@@ -341,6 +341,14 @@ public final class Signatures {
         new Signature(JAVA_REFLECT_ARRAY, "(" + REFERENCE + JAVA_CLASS + TYPEEND + INT + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "newArray");
     public static final Signature JAVA_RUNTIME_AVAILABLEPROCESSORS = 
         new Signature(JAVA_RUNTIME, "()" + INT, "availableProcessors");
+    public static final Signature JAVA_STRICTMATH_ABS_DOUBLE = 
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "abs");
+    public static final Signature JAVA_STRICTMATH_ABS_FLOAT = 
+        new Signature(JAVA_STRICTMATH, "(" + FLOAT + ")" + FLOAT, "abs");
+    public static final Signature JAVA_STRICTMATH_ABS_INT = 
+        new Signature(JAVA_STRICTMATH, "(" + INT + ")" + INT, "abs");
+    public static final Signature JAVA_STRICTMATH_ABS_LONG = 
+        new Signature(JAVA_STRICTMATH, "(" + LONG + ")" + LONG, "abs");
     public static final Signature JAVA_STRICTMATH_ACOS = 
         new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "acos");
     public static final Signature JAVA_STRICTMATH_ASIN = 
@@ -369,6 +377,22 @@ public final class Signatures {
         new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "log10");
     public static final Signature JAVA_STRICTMATH_LOG1P = 
         new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "log1p");
+    public static final Signature JAVA_STRICTMATH_MAX_DOUBLE = 
+            new Signature(JAVA_STRICTMATH, "(" + DOUBLE + DOUBLE + ")" + DOUBLE, "max");
+    public static final Signature JAVA_STRICTMATH_MAX_FLOAT = 
+            new Signature(JAVA_STRICTMATH, "(" + FLOAT + FLOAT + ")" + FLOAT, "max");
+    public static final Signature JAVA_STRICTMATH_MAX_INT = 
+            new Signature(JAVA_STRICTMATH, "(" + INT + INT + ")" + INT, "max");
+    public static final Signature JAVA_STRICTMATH_MAX_LONG = 
+            new Signature(JAVA_STRICTMATH, "(" + LONG + LONG + ")" + LONG, "max");
+    public static final Signature JAVA_STRICTMATH_MIN_DOUBLE = 
+            new Signature(JAVA_STRICTMATH, "(" + DOUBLE + DOUBLE + ")" + DOUBLE, "min");
+    public static final Signature JAVA_STRICTMATH_MIN_FLOAT = 
+            new Signature(JAVA_STRICTMATH, "(" + FLOAT + FLOAT + ")" + FLOAT, "min");
+    public static final Signature JAVA_STRICTMATH_MIN_INT = 
+            new Signature(JAVA_STRICTMATH, "(" + INT + INT + ")" + INT, "min");
+    public static final Signature JAVA_STRICTMATH_MIN_LONG = 
+            new Signature(JAVA_STRICTMATH, "(" + LONG + LONG + ")" + LONG, "min");
     public static final Signature JAVA_STRICTMATH_POW = 
         new Signature(JAVA_STRICTMATH, "(" + DOUBLE + DOUBLE + ")" + DOUBLE, "pow");
     public static final Signature JAVA_STRICTMATH_SIN = 
