@@ -125,7 +125,7 @@ public final class Action_PREINIT {
         if (state == null) {
             state = createPreInitialState(ctx);
         } else {
-    		state.setPhasePostInitial(); //to be safe
+    		state.setPhaseInitial();
         }
 
         //adds the state to the state tree
