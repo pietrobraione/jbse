@@ -3,6 +3,7 @@
  */
 
 plugins {
+    id 'com.github.johnrengelman.shadow' version '4.0.3'
     id 'java'
     id 'maven'
     id 'ca.coglinc2.javacc' version '3.0.0'
@@ -44,3 +45,11 @@ sourceSets {
 }
 
 eclipseClasspath.dependsOn('compileJavacc')
+
+shadowJar {
+    classifier = 'shaded'
+    exclude 'tools.jar'
+    relocate 'javassist', 'jbse.javassist'
+}
+
+build.dependsOn 'shadowJar'
