@@ -32,8 +32,9 @@ tasks.withType(JavaCompile) {
 }
 
 compileJavacc {
-    outputDirectory = file(project.buildDir.absolutePath + '/generated/javacc/jbse/apps/settings')
+    arguments = [output_directory: compileJavacc.outputDirectory.absolutePath + '/jbse/apps/settings']
 }
+
 sourceSets {
     main {
         java {
