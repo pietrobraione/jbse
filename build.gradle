@@ -5,6 +5,8 @@
 plugins {
     id 'java'
     id 'maven'
+    id 'ca.coglinc2.javacc' version '3.0.0'
+    id 'eclipse'
 }
 
 repositories {
@@ -15,9 +17,9 @@ repositories {
 }
 
 dependencies {
-    compile 'org.javassist:javassist:3.22.0-GA'
-    testCompile 'junit:junit:4.11'
-    system 'com.sun:tools:1.8'
+    implementation 'org.javassist:javassist:3.22.0-GA'
+    implementation files("${System.getProperty('java.home')}/../lib/tools.jar")
+    testImplementation 'junit:junit:4.11'
 }
 
 group = 'jbse'
@@ -28,3 +30,16 @@ sourceCompatibility = '1.8'
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
+
+compileJavacc {
+    outputDirectory = file(project.buildDir.absolutePath + '/generated/javacc/jbse/apps/settings')
+}
+sourceSets {
+    main {
+        java {
+            srcDir compileJavacc.outputDirectory
+        }
+    }
+}
+
+eclipseClasspath.dependsOn('compileJavacc')
