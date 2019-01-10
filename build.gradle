@@ -40,8 +40,6 @@ sourceSets {
     }
 }
 
-eclipseClasspath.dependsOn('compileJavacc')
-
 shadowJar {
     classifier = 'shaded'
     exclude 'tools.jar'
@@ -49,3 +47,4 @@ shadowJar {
 }
 
 build.dependsOn 'shadowJar'
+eclipseClasspath.dependsOn 'compileJavacc'
