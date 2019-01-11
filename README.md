@@ -1,70 +1,58 @@
-JBSE
-====
-
+# JBSE
 
 [![Project stats at https://www.openhub.net/p/JBSE](https://www.openhub.net/p/JBSE/widgets/project_thin_badge.gif)](https://www.openhub.net/p/JBSE) [![Join the chat at https://gitter.im/pietrobraione/jbse](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/pietrobraione/jbse?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Flattr this](http://button.flattr.com/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=pietro.braione&url=https%3A%2F%2Fgithub.com%2Fpietrobraione%2Fjbse)
 
 
-Introduction
-------------
+## About
 
 JBSE is a symbolic Java Virtual Machine for automated program analysis, verification and test generation. If you are not sure about what "symbolic execution" is you can refer to the corresponding [Wikipedia article](https://en.wikipedia.org/wiki/Symbolic_execution) or to some [textbook](https://ix.cs.uoregon.edu/~michal/book/). But if you are really impatient, symbolic execution is to testing what symbolic equation solving is to numeric equation solving. While numeric equations, e.g. `x^2 - 2 x + 1 = 0`, have numbers as their parameters, symbolic equations, e.g. `x^2 - b x + 1 = 0` may have numbers *or symbols* as their parameters. A symbol stands for an infinite, arbitrary set of possible numeric values, e.g., `b` in the previous example stands for an arbitrary real value. Solving a symbolic equation is therefore equivalent to solving a possibly infinite set of numeric equations, that is, the set of all the equations that we obtain by replacing its symbolic parameters with arbitrary numbers. When solving an equation, be it numeric or symbolic, we may need to split cases: For example, a quadratic equation in one variable may have two, one or zero real solutions, depending on the sign of the discriminant. Solving a numeric equation means following exactly one of the possible cases, while symbolic equation solving may require to follow more than one of them. For example, the `x^2 - 2 x + 1 = 0` equation falls in the "zero discriminant" case and thus has one solution, while the `x^2 - b x + 1 = 0` equation may fall in any of the three cases depending on the possible values of `b`: If `|b| > 2` the discriminant is greater than zero and the equation has two real solutions, if `b = 2` or `b = -2` the discriminant is zero and the equation has one real solution. Finally, if `-2 < b < 2`, the discriminant is less than zero and the equation has no real solutions. Since all the three subsets for `b` are nonempty any of the three cases may hold. As a consequence, the solution of a symbolic equation is usually expressed as a set of *summaries*. A summary associates a condition on the symbolic parameters with a corresponding possible result of the equation, where the result can be a number *or* an expression in the symbols. For our running example the solution produces as summaries `|b| > 2 => x = [b + sqrt(b^2 - 4)] / 2`, `|b| > 2 => x = [b - sqrt(b^2 - 4)] / 2`, `b = 2 => x = 1`, and `b = -2 => x = -1`. Note that summaries overlap where a combination of parameters values (`|b| > 2` in the previous case) yield multiple results, and that the union of the summaries does not span the whole domain for `b`, because some values for `b` yield no result.
 
 JBSE allows the inputs of a Java program to be either concrete values (usual Java primitive or reference values) *or symbols*. A symbol stands for an arbitrary primitive or reference value on which JBSE does not make any initial assumption. During the execution JBSE may *need* to make assumptions on the symbolic inputs, e.g. to decide whether it must follow the "then" or "else" branch of a conditional statement, or to decide whether accessing a field with a symbolic reference yields a value or raises a `NullPointerException`. In these situations JBSE splits the possible cases and analyzes *all* of them. In the case of the symbolic reference it first assumes that it is null, and continues the execution by raising the exception. At the end of the execution it backtracks and assumes the opposite, i.e., that the symbolic reference refers to some (nonnull) object. This way JBSE can explore how a Java program behaves when fed with possibly infinite classes of inputs, while testing is always limited in investigating a single behavior a time.
 
-Installing JBSE
----------------
+## Installing JBSE
 
 Right now JBSE can be installed only by building it from source. Formal releases will be available when JBSE will be more feature-ready and stable.
 
-Building JBSE
--------------
+## Building JBSE
 
-JBSE is built with Maven. This repository contains the POM file that must be used to build JBSE. If you work on the command line, once ensured the dependencies, it should be enough to clone the git repository and then run some Maven goal. The supported Maven goals are:
+JBSE is built with Gradle. Once cloned the git repository and ensured the dependencies (see section "Dependencies"), it should be enough to run the build Gradle task by invoking `gradlew build`.
 
-* clean
-* compile
-* test
-* package
+## Dependencies
 
-### Dependencies ###
+JBSE has several dependencies. It must be built using a JDK version 8 - neither less, nor more. The Gradle wrapper `gradlew` included in the repository will take care to select the right version of Gradle. Gradle will automatically resolve and use the following compile-time-only dependency:
 
-JBSE has several dependencies. JBSE must be built using a JDK version 8 - neither less, nor more - and Maven version 3.5.0 or above. Maven will automatically resolve and use the following build-time dependency:
+* [JavaCC](https://javacc.org) is used for compiling the parser for the JBSE settings files.
+* [JUnit](http://junit.org) is used for running the test suite.
 
-* [JavaCC](https://javacc.org) is used by Maven for compiling the parser for the JBSE settings files. It is not needed at runtime.
-* [JUnit](http://junit.org) is used by Maven for running the tests. It is not needed at runtime.
+The runtime dependencies that are automatically resolved by Gradle and included in the build path are:
 
-The runtime dependencies that are automatically resolved by Maven and included in the build path are:
-
-* [Javassist](http://jboss-javassist.github.io/javassist/), that is used by JBSE for all the bytecode manipulation tasks.
 * The `tools.jar` library, that is part of every JDK 8 setup (note, *not* of the JRE).
+* [Javassist](http://jboss-javassist.github.io/javassist/), that is used by JBSE for all the bytecode manipulation tasks.
 
-Finally, JBSE also needs to interact at runtime with an external numeric solver for pruning infeasible program paths. JBSE works well with [Z3](https://github.com/Z3Prover/z3) and, to a less extent, with [CVC4](http://cvc4.cs.stanford.edu/), but any SMT solver that supports the AUFNIRA logic should work. The dependency on the solver is not handled by Maven so you need to download and install at least one of them on the machine that runs JBSE. We strongly advise to use Z3 because it is what we routinely use.
+There is an additional runtime dependencies that is not handled by Gradle so you will need to fix it manually. JBSE needs to interact at runtime with an external numeric solver for pruning infeasible program paths. JBSE works well with [Z3](https://github.com/Z3Prover/z3) and, to a less extent, with [CVC4](https://cvc4.cs.stanford.edu/), but any SMT solver that supports the AUFNIRA logic should work. Both are standalone binaries and can be installed almost everywhere. We strongly advise to use Z3 because it is what we routinely use.
 
-### Working under Eclipse ###
+## Working under Eclipse
 
-To work under Eclipse you need to have installed the egit and the m2e plugins. If you work (as us) under Eclipse 2018-12 you will have both of them already installed by default, at least with the Eclipse for Java Developer version. Otherwise, you will find them in the Eclipse Marketplace. You also need to install the m2e connector for javacc-maven-plugin, that is not available under the Eclipse Marketplace, and therefore must be installed manually: Select the menu Help > Install new software..., click on the Add button to add a new site, and insert the URL `http://objectledge.github.io/maven-extensions/connectors/updates/development/` in the field Location (in the field Name you can give any name you want, but we advise to call it "Objectledge Maven extensions update site"). Press OK, and then select the newly added update site in the "Work with" box. Finally, select "objectledge.org m2e connectors" > "m2e connector for javacc-maven-plugin": The version must be at least 1.2.0.x, or it will not work with the current version of m2e. 
+If you want to work (as us) under Eclipse 2018-12 for Java Developers, you are lucky: All the plugins that are necessary to import JBSE under Eclipse and make it work are already present in the distribution. If you use another version of Eclipse you must install the egit and the Buildship plugins, both available in the Eclipse Marketplace. After that, you are ready to import SUSHI under Eclipse:
 
-Before importing JBSE under Eclipse, be sure that the default Eclipse JRE is the JRE subdirectory of a full JDK 8 setup, *not* a standalone (i.e., not part of a JDK) JRE. Otherwise, Eclipse will compile JBSE but fail to run it.
+* To avoid conflicts we advise to import JBSE under an empty workspace.
+* Be sure that the default Eclipse JRE is the JRE subdirectory of a full JDK 8 setup, *not* a standalone (i.e., not part of a JDK) JRE.
+* JBSE uses the reserved `sun.misc.Unsafe` class, a thing that Eclipse forbids by default. To avoid Eclipse complaining about that you must modify the workspace preferences as follows: From the main menu choose Eclipse > Preferences... under macOS, or Window > Preferences... under Windows and Linux. On the left panel select Java > Compiler > Errors/Warnings, then on the right panel open the option group "Deprecated and restricted API", and for the option "Forbidden reference (access rules)" select the value "Warning" or "Info" or "Ignore".
+* Switch to the Git perspective. If you cloned the Github JBSE repository from the command line, you can import the clone under Eclipse by clicking under the Git Repositories view the button for adding an existing repository. Otherwise you can clone the  repository by clicking the clone button, again available under the Git Repositories view. Eclipse does *not* want you to clone the repository under your Eclipse workspace, and instead wants you to follow the standard git convention of putting the git repositories in a `git` subdirectory of your home directory. If you clone the repository from a console, please follow this standard (if you clone the repository from the git perspective Eclipse will do this for you).
+* Switch back to the Java perspective and from the main menu select File > Import... In the Select the Import Wizard window that pops up choose the Gradle > Existing Gradle Project wizard and press the Next button twice. In the Import Gradle Project window that is displayed, enter in the Project root directory field the path to the JBSE cloned git repository, and then press the Finish button to confirm. Now your workspace should have one Java project named `jbse`.
+* Unfortunately the Buildship Gradle plugin is not able to fully configure the imported projects: As a consequence, after the import you will see some compilation errors due to the fact that the JBSE project did not generate some source files yet. Fix the situation by following this procedure: In the Gradle Tasks view double-click on the sushi > build > build task to build all the projects. Then, right-click the jbse project in the Package Explorer, and in the contextual menu that pops up select Gradle > Refresh Gradle Project. After that, you should see no more errors.
 
-Once done all of the above, you are ready to import JBSE under Eclipse:
+## Testing JBSE
 
-* Clone the Github JBSE repository by switching to the git perspective and selecting the clone button under the Git Repositories view. Alternatively, open a console and clone the repository from the command line. Remember that Eclipse does *not* want you to clone the repository under your Eclipse workspace, and instead wants you to follow the standard git convention of putting the git repositories in a `git` subdirectory of your home directory. If you clone the repository from a console, please follow this standard (if you do it from the git perspective Eclipse will do this for you).
-* Click on the icon of the cloned repository, and right-click the Working Tree folder, then select Import Projects...: You should see a window with a progress bar, and after a while Eclipse will tell you that it has found one project named jbse, and that it will import it as a Maven project. Press Finish to confirm, and then switch back to the Java perspective: Now your current workspace should have a Java project named `jbse`. If you chose to clone the repositories from the console, select from the main menu File > Import... and then select Maven > Existing Maven Projects, press Next and then provide as root directory the directory where you cloned the JBSE repository: Eclipse will, again, detect the project automatically.
-* You may see some compilation errors emerge while Eclipse builds the workspace (it usually takes a while after the JBSE project has been created), but in the end there should be none. It could however be the case that Eclipse generates some compilation errors caused by the fact that JBSE uses the reserved `sun.misc.Unsafe` class. In this case you shall modify the JBSE project settings by hand so it does not. Right-click the jbse project in the Package Explorer, select Properties, and then Java Compiler > Errors/Warnings. Click on "Enable project specific settings", then open the option group "Deprecated and restricted API", and for the option "Forbidden reference" select the value "Warning" (note that this kind of warnings are suppressed in JBSE, so you will not actually see them).
+When you are done you may try the (very small) JUnit test suite under the `src/test` directory by running `gradlew test`. As said before, running the tests depends on the presence of JUnit 4, a dependency that Gradle fixes automatically. All tests should pass, with the possible exception of the tests in the class `jbse.dec.DecisionProcedureTest` that require that you fix the path to the Z3 executable. You must modify line 46 and replace `/opt/local/bin/z3` with your local path to the Z3 executable.
 
-### Testing JBSE ###
+## Deploying JBSE
 
-When you are done you may try the (very small) JUnit test suite under the `src/test` directory by running `mvn test`. As said before, running the tests depends on the presence of JUnit 4, a dependency that Maven fixes automatically. All tests should pass, with the possible exception of the tests in the class `jbse.dec.DecisionProcedureTest` that require that you fix the path to the Z3 executable. You must modify line 46 and replace `/opt/local/bin/z3` with your local path to the Z3 executable.
+The `gradlew build` command will produce a jar file `build/libs/jbse-<VERSION>.jar` that also includes the `jbse.meta` package and its subpackages, containing the API that the code under analysis can invoke to issue assertions, assumptions, and otherwise control the analysis process itself. The jar file does not include the runtime dependencies (Javassist and `tools.jar`), so you need to deploy them together with it. To ease deployment, Gradle will also build an uber-jar `build/libs/jbse-<VERSION>-shaded.jar` containing Javassist (but not `tools.jar`). To avoid conflicts the uber jar renames the `javassist` package as `jbse.javassist`.
 
-### Deploying JBSE ###
+## Usage
 
-Once JBSE is compiled, you can export JBSE as a jar file to be used in your project by running `mvn package`. The command will generate a `jbse-<VERSION>.jar` file in the `target` directory of the project. Note that `jbse-<VERSION>.jar` also includes the `jbse.meta` package and its subpackages, containing the API that the code under analysis can invoke to issue assertions, assumptions, and otherwise control the analysis process itself. The jar file does not include the runtime dependencies (Javassist and `tools.jar`), so you need to deploy them together with it. To ease deployment, Maven will also build an uber jar containing Javassist (but not `tools.jar`). You will find it in the `target` directory as the file `jbse-shaded-<VERSION>.jar`. To avoid conflicts the uber jar renames the `javassist` package as `jbse.javassist`.
-
-Using JBSE
-----------
-
-### Basic example ###
+### Basic example
 
 We now illustrate how to set up a basic symbolic execution session with JBSE. Create a new project with name `example` in the same Eclipse workspace where JBSE resides, and set its project dependencies to include JBSE. Add to the new project this class:
 
@@ -259,7 +247,7 @@ Let's analyze the output.
 * Beware! The dump shows the *final*, not the *initial* state of the symbolic execution. For example, `Object[0]` is the initial `this` object (the path clause `{R0} == Object[0]` states this), but the values of its fields displayed at `.1.1[22]` and `.1.2[20]` are the values of the fields at that final states. The initial, symbolic values of these fields are lost because the code under analysis never uses them. If you want to display all the details of the initial state you should select a step show mode that also prints the initial state.
 * The last rows report some statistics. Here we are interested in the total number of traces (two traces, as discussed above), the number of safe traces, i.e., the traces that pass all the assertions (also two as expected), and the number of unsafe traces, that falsify some assertion (zero as expected).
 
-### Introducing assumptions ###
+### Introducing assumptions
 
 An area where JBSE stands apart from all the other symbolic executors is its support to specifying custom *assumptions* on the symbolic inputs. Assumptions are indispensable to express preconditions over the input parameters of a method, invariants of data structures, and in general to constrain the range of the possible values of the symbolic inputs, either to exclude meaningless inputs, or just to reduce the scope of the analysis. Let us reconsider our running example and suppose that the method `m` has a precondition stating that it cannot be invoked with a value for `x` that is less than zero. Let us also suppose that we are interested in proving the correctness of `m` alone, thus we are not interested to analyze how `m` behaves when we invoke it violating its precondition. The easiest way to constrain the initial value of `x` is by injecting at the entry point of `m` a call to the `jbse.meta.Analysis.assume` method as follows:
 
@@ -336,6 +324,6 @@ and to instruct JBSE by the following trigger rules (the syntax is simplified fo
 
 The first trigger rule states that, when JBSE assumes the existence of the `{ROOT}:list` object it must run the `_triggerAssumeList` method. This method stores the symbolic initial list size in `_initialSize`, and initializes a counter for the assumed list nodes in `_initialSizeBound`. The second trigger rule fires the `_triggerAssumeListNode` method, that increments `_initialSizeBounds`, whenever JBSE assumes the existence of another node in the list. Both triggers enforce the invariant that the initial list size is greater or equal to the total number of list nodes assumed by JBSE. Finally, JBSE fires the `_triggerAssumeListComplete` method after assuming that the chain of list nodes is terminated by a `null`, which is tantamount to assuming that there are no more nodes in the list. The trigger enforces the initial list size to be exactly equal to the number of assumed nodes.
 
-### More goodies ###
+### More goodies
 
 JBSE has many more features. You will find a comprehensive description of JBSE and instructions for using it in its user manual (currently under development). For a showcase of some of JBSE's capabilities you can checkout the [JBSE examples](https://github.com/pietrobraione/jbse-examples) project.
