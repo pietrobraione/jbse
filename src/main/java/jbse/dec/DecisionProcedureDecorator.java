@@ -116,7 +116,7 @@ public class DecisionProcedureDecorator implements DecisionProcedure {
     }
 
     @Override
-    public Primitive simplify(Primitive c) {
+    public Primitive simplify(Primitive c) throws DecisionException {
         return this.component.simplify(c);
     }
 

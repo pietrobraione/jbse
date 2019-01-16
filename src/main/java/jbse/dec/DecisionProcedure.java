@@ -230,8 +230,11 @@ public interface DecisionProcedure extends AutoCloseable {
      * @param p a boolean {@link Primitive}.
      * @return a {@link Primitive} equivalent to {@code p}
      *         under the current assumption (possibly {@code p} itself).
+     * @throws DecisionException  if simplification returned {@code null}
+     *         or a {@link Primitive} that is neither a {@link Simplex} 
+     *         nor an {@link Expression}.
      */
-    default Primitive simplify(Primitive p) {
+    default Primitive simplify(Primitive p) throws DecisionException { //TODO throw a better exception
         return p; //no simplification by default
     }
 

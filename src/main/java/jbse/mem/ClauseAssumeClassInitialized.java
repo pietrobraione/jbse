@@ -22,7 +22,7 @@ public class ClauseAssumeClassInitialized implements Clause {
      * @param k the symbolic {@link Klass} corresponding to {@code classFile},
      *        or {@code null} if the initial class was not symbolic.
      */
-    ClauseAssumeClassInitialized(ClassFile classFile, Klass k) { 
+    public ClauseAssumeClassInitialized(ClassFile classFile, Klass k) { 
         this.classFile = classFile; 
         this.k = (k == null ? null : k.clone()); //safety copy
     }

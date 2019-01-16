@@ -446,14 +446,13 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
         final Primitive expSimpl = simplifyLocal(expression);
         if (expSimpl instanceof Simplex) {
             return ((Simplex) expSimpl).surelyTrue();
-        } else if (expSimpl instanceof Expression) {
+        } else { // (expSimpl instanceof Expression)
             final boolean localDecidesSat = isSatLocal(hier, expression, (Expression) expSimpl);
             if (localDecidesSat) {
                 return delegateIsSat(hier, expression);  //TODO shouldn't we pass expSimpl instead? do we really need to pass the original exp to the next in chain?
             }
             return false; //surely unsat
         }
-        throw new DecisionException("the simplified " + expSimpl + " is neither a Simplex nor an Expression"); //TODO throw a better exception
     }
 
     /**
@@ -837,7 +836,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
     }
 
     @Override
-    public final Primitive simplify(Primitive p) {
+    public final Primitive simplify(Primitive p) throws DecisionException {
         final Primitive pSimpl = simplifyLocal(p);
         if (this.next == null) {
             return pSimpl;
@@ -852,12 +851,19 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @param c a {@link Clause}.
      * @return a {@link Clause} equivalent to {@code c}
      *         under the current assumption (possibly {@code c} itself).
+     * @throws DecisionException  if simplification returned {@code null}
+     *         or a {@link Primitive} that is neither a {@link Simplex} 
+     *         nor an {@link Expression}.
      */
-    private final Clause simplifyLocal(Clause c) {
+    private final Clause simplifyLocal(Clause c) throws DecisionException {
         if (c instanceof ClauseAssume) {
             final Primitive p = ((ClauseAssume) c).getCondition();
             final Primitive pSimpl = simplifyLocal(p);
-            return new ClauseAssume(pSimpl);
+            try {
+				return new ClauseAssume(pSimpl);
+			} catch (InvalidInputException e) {
+				throw new UnexpectedInternalException(e);
+			}
         } else {
             return c;
         }
@@ -869,10 +875,19 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * 
      * @param p The {@link Primitive}.
      * @return Another {@link Primitive} equivalent to {@code p} 
-     * (possibly {@code p} itself).
+     *         (possibly {@code p} itself).
+     * @throws DecisionException if simplification returned {@code null}
+     *         or a {@link Primitive} that is neither a {@link Simplex} 
+     *         nor an {@link Expression}.
      */
-    protected final Primitive simplifyLocal(Primitive p) {
-        return this.calc.applyRewriters(p, this.rewriters);
+    protected final Primitive simplifyLocal(Primitive p) throws DecisionException {
+        final Primitive retVal = this.calc.applyRewriters(p, this.rewriters);
+        if (retVal == null || retVal.getType() != Type.BOOLEAN || 
+        	!(retVal instanceof Simplex || retVal instanceof Expression)) {
+        	//TODO throw a better exception
+            throw new DecisionException("The simplification of " + p + " returned " + retVal + " that is neither a boolean Simplex nor a boolean Expression.");
+        }
+        return retVal;
     }
 
     @Override

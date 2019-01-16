@@ -30,6 +30,7 @@ import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.Type;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
@@ -287,8 +288,8 @@ StrategyUpdate_XALOAD> {
         return new StrategyRefine_XALOAD() {
             @Override
             public void refineRefExpands(State state, DecisionAlternative_XALOAD_Expands altExpands) 
-            throws DecisionException, ContradictionException, InvalidTypeException, InterruptException, 
-            SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
+            throws DecisionException, ContradictionException, InvalidTypeException, InvalidInputException, 
+            InterruptException, SymbolicValueNotAllowedException, ClasspathException {
                 //handles all the assumptions for reference resolution by expansion
                 Algo_XALOAD.this.refineRefExpands(state, altExpands); //implemented in Algo_XYLOAD_GETX
 
@@ -306,7 +307,7 @@ StrategyUpdate_XALOAD> {
 
             @Override
             public void refineRefAliases(State state, DecisionAlternative_XALOAD_Aliases altAliases)
-            throws DecisionException, ContradictionException, FrozenStateException {
+            throws DecisionException, ContradictionException, InvalidInputException {
                 //handles all the assumptions for reference resolution by aliasing
                 Algo_XALOAD.this.refineRefAliases(state, altAliases); //implemented in Algo_XYLOAD_GETX
 
@@ -324,7 +325,7 @@ StrategyUpdate_XALOAD> {
 
             @Override
             public void refineRefNull(State state, DecisionAlternative_XALOAD_Null altNull) 
-            throws DecisionException, ContradictionException, FrozenStateException {
+            throws DecisionException, ContradictionException, InvalidInputException {
                 Algo_XALOAD.this.refineRefNull(state, altNull); //implemented in Algo_XYLOAD_GETX
 
                 //further augments the path condition 
@@ -341,7 +342,7 @@ StrategyUpdate_XALOAD> {
 
             @Override
             public void refineResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved)
-            throws DecisionException, FrozenStateException {
+            throws DecisionException, InvalidInputException {
                 //augments the path condition
                 state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(altResolved.getArrayAccessExpression()));
 
@@ -355,9 +356,14 @@ StrategyUpdate_XALOAD> {
 
             @Override
             public void refineOut(State state, DecisionAlternative_XALOAD_Out altOut) 
-            throws FrozenStateException {
+            throws InvalidInputException {
                 //augments the path condition
-                state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(altOut.getArrayAccessExpression()));
+                try {
+					state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(altOut.getArrayAccessExpression()));
+				} catch (DecisionException e) { //TODO propagate this exception (...and replace with a better exception)
+					//this should never happen
+					failExecution(e);
+				}
             }
         };
     }

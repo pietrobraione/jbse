@@ -8,8 +8,11 @@ import java.util.Iterator;
 import java.util.List;
 
 import jbse.bc.ClassFile;
+import jbse.common.exc.InvalidInputException;
+import jbse.val.Expression;
 import jbse.val.Primitive;
 import jbse.val.ReferenceSymbolic;
+import jbse.val.Simplex;
 
 /**
  * A path condition. It retains all the clauses gathered at the 
@@ -46,8 +49,13 @@ final class PathCondition implements Cloneable {
      * over primitive values.
      * 
      * @param condition the additional condition as a {@link Primitive}.
+     * It must not be {@code null}, it must be an instance of either 
+     * {@link Simplex} or {@link Expression}, and must have boolean type.
+	 * @throws NullPointerException if {@code condition == null}.
+	 * @throws InvalidInputException if {@code condition} has not boolean type, or
+	 * is not an instance of either {@link Simplex} or {@link Expression}.
      */
-    void addClauseAssume(Primitive condition) {
+    void addClauseAssume(Primitive condition) throws InvalidInputException {
         this.clauses.add(new ClauseAssume(condition));
     }
 

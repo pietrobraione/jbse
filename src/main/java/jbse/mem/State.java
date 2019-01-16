@@ -2919,19 +2919,16 @@ public final class State implements Cloneable {
      * 
      * @param p the primitive clause which must be added to the state's 
      *          path condition. It must be {@code p != null && 
-     *          ( p instanceof }{@link Expression} {@code || p instanceof }{@link Simplex}
+     *          (p instanceof }{@link Expression} {@code || p instanceof }{@link Simplex}
      *          {@code ) && p.}{@link Value#getType() getType()} {@code  == }{@link Type#BOOLEAN BOOLEAN}.
-     * @throws FrozenStateException if the state is frozen.
-     * @throws NullPointerException if {@code p} violates preconditions.
+     * @throws NullPointerException if {@code p == null}.
+     * @throws InvalidInputException if {@code (!(p instanceof }{@link Expression} {@code ) && !( p instanceof }{@link Simplex}
+     *          {@code )) || p.}{@link Value#getType() getType()} {@code  != }{@link Type#BOOLEAN BOOLEAN}.
      */
-    public void assume(Primitive p) throws FrozenStateException {
+    public void assume(Primitive p) throws InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (p == null || p.getType() != Type.BOOLEAN || 
-        (! (p instanceof Simplex) && ! (p instanceof Expression))) { 
-            throw new NullPointerException(); //TODO throw a better exception
-        }
         this.pathCondition.addClauseAssume(p);
         ++this.nPushedClauses;
     }

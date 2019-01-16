@@ -1,7 +1,10 @@
 package jbse.mem;
 
+import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.val.Expression;
 import jbse.val.Primitive;
+import jbse.val.Simplex;
 
 /**
  * A path condition {@link Clause}, an assumption 
@@ -16,10 +19,22 @@ public class ClauseAssume implements Clause {
 	/**
 	 * Constructor.
 	 * 
-	 * @param p a {@link Primitive}. It must not be {@code null}
+	 * @param p a {@link Primitive}. It must not be {@code null},
+	 * it must be an instance of either {@link Simplex} or {@link Expression}, 
 	 * and must have boolean type.
+	 * @throws NullPointerException if {@code p == null}.
+	 * @throws InvalidInputException if {@code p} has not boolean type, or
+	 * is not an instance of either {@link Simplex} or {@link Expression}.
 	 */
-	public ClauseAssume(Primitive p) { this.p = p; }
+	public ClauseAssume(Primitive p) throws InvalidInputException {
+		if (p == null) {
+			throw new NullPointerException("Tried to build a ClauseAssume with null Primitive value.");
+		}
+		if (p.getType() != Type.BOOLEAN || (! (p instanceof Simplex) && ! (p instanceof Expression))) {
+			throw new InvalidInputException("Tried to build a ClauseAssume with Primitive value " + p.toString() + ".");
+		}
+		this.p = p; 
+	}
 	
 	/**
 	 * Gets the assumption.
