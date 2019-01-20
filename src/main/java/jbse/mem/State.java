@@ -381,7 +381,7 @@ public final class State implements Cloneable {
      * @param bypassStandardLoading a {@code boolean}, {@code true} iff the bootstrap 
      *        classloader should also load the classed defined by the extensions 
      *        and application classloaders.
-     * @param preInitialHistoryPoint a {@link HistoryPoint}. 
+     * @param historyPoint a {@link HistoryPoint}. 
      * @param maxSimpleArrayLength an {@code int}, the maximum length an array may have
      *        to be granted simple representation.
      * @param maxHeapSize the maximum size of the state's heap expressed as the
@@ -403,7 +403,7 @@ public final class State implements Cloneable {
      *         constructor...).
      */
     public State(boolean bypassStandardLoading,
-    		     HistoryPoint preInitialHistoryPoint,
+    		     HistoryPoint historyPoint,
                  int maxSimpleArrayLength,
                  long maxHeapSize,
                  Classpath cp, 
@@ -414,7 +414,7 @@ public final class State implements Cloneable {
                  throws InvalidClassFileFactoryClassException {
         this.bypassStandardLoading = bypassStandardLoading;
     	this.frozen = false;
-        this.historyPoint = preInitialHistoryPoint;
+        this.historyPoint = historyPoint;
         this.classLoaders.add(Null.getInstance()); //classloader 0 is the bootstrap classloader
         setStandardFiles();
         this.heap = new Heap(maxHeapSize);

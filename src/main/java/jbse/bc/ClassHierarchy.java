@@ -101,7 +101,7 @@ public final class ClassHierarchy implements Cloneable {
     throws InvalidClassFileFactoryClassException {
         this.cp = cp.clone(); //safety copy
         this.cfs = new ClassFileStore();
-        this.expansionBackdoor = expansionBackdoor;
+        this.expansionBackdoor = new HashMap<>(expansionBackdoor); //safety copy
         this.allFieldsOf = new HashMap<>();
         try {
             this.f = fClass.newInstance();

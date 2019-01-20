@@ -191,16 +191,9 @@ public class StateTree {
      */
     public void addState(State s) throws InvalidInputException {
     	final Phase phase = s.phase();
-    	if (phase == Phase.PRE_INITIAL) {
+    	if (phase == Phase.PRE_INITIAL || phase == Phase.INITIAL) {
     		if (hasStates()) {
-    			throw new InvalidInputException("Tried to add a state with a not yet emitted pre-initial state.");
-    		}
-    		s.resetDepth();
-    		s.resetCount();
-    		addBranchPoint();
-    	} else if (phase == Phase.INITIAL) {
-    		if (hasStates()) {
-    			throw new InvalidInputException("Tried to add a state with a not yet emitted initial state.");
+    			throw new InvalidInputException("Tried to add a state with a not yet emitted " + (phase == Phase.PRE_INITIAL ? "pre-" : "") + "initial state.");
     		}
     		s.resetDepth();
     		s.resetCount();
@@ -240,7 +233,7 @@ public class StateTree {
         		add(s);
     		}
     	} else { 
-    		throw new InvalidInputException("Tried to add a pre-initial or initial state by specifing its branch identification.");
+    		throw new InvalidInputException("Tried to add a " + (s.phase() == Phase.PRE_INITIAL ? "pre-" : "") + "initial state by specifing its branch identification.");
     	}
     }
 
@@ -260,7 +253,7 @@ public class StateTree {
      * 
      * @param bp a {@link BranchPoint}.
      * @return the number of states at the branch identified by {@code bp} 
-     *         that must be emitted.
+     *         that must be emitted yet.
      */
     public int getNumOfStatesAtBranch(BranchPoint bp) {
     	for (BranchInfo info : this.branchList) {
@@ -269,6 +262,35 @@ public class StateTree {
     		}
     	}
     	return 0;
+    }
+
+    /**
+     * Returns the number of states that remain to be explored
+     * at a given branch.
+     * 
+     * @param bp a {@link BranchPoint}.
+     * @return the number of states at the branch identified by {@code bp} 
+     *         that must be emitted.
+     * @throws InvalidInputException if
+     */
+    public State getStateAtBranch(BranchPoint bp, int index) throws InvalidInputException {
+    	if (index < 0 || index > getNumOfStatesAtBranch(bp)) {
+    		throw new InvalidInputException("Tried to get state at branch " + bp + " with index " + index + " (total number of states at branch is " + getNumOfStatesAtBranch(bp) + ").");
+    	}
+    	int position = 0;
+    	boolean found = false;
+    	for (BranchInfo info : this.branchList) {
+    		if (info.branch == bp) {
+    			found = true;
+    			break;
+    		}
+    		position += info.totalStates - info.emittedStates;
+    	}
+    	if (found) {
+    		return this.stateBuffer.get(position + index);
+    	} else {
+    		throw new InvalidInputException("Tried to get state at branch " + bp + " but no state seems to exist at branch.");
+    	}
     }
 
     /**
@@ -299,8 +321,8 @@ public class StateTree {
      * Note that increasing the level without adding a 
      * {@code State} will crash the engine.
      * 
-     * @param moreThanOneResult {@code true} iff the 
-     *        created branch will have than one state. 
+     * @param moreThanOne {@code true} iff the 
+     *        created branch will have more than one state. 
      * @param trivial iff the branch originates from a 
      *        trivial decision.
      * @param concrete iff the branch originates from a 
@@ -310,8 +332,8 @@ public class StateTree {
      * @return {@code true} iff the method has increased
      *         the tree level.
      */
-    public boolean possiblyAddBranchPoint(boolean moreThanOneResult, boolean trivial, boolean concrete, boolean noDecision) {
-        boolean retVal = moreThanOneResult;
+    public boolean possiblyAddBranchPoint(boolean moreThanOne, boolean trivial, boolean concrete, boolean noDecision) {
+        boolean retVal = moreThanOne;
         switch (this.breadthMode) {
         case MORE_THAN_ONE:
             break;

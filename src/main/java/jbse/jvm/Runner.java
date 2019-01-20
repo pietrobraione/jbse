@@ -453,6 +453,10 @@ public class Runner {
         this.tracesOutOfScope = 0;
         this.tracesTot = 0;
     }
+    
+    public Engine getEngine() {
+    	return this.engine;
+    }
 
     private boolean currentStateIsInRunSubregion() {
         if (this.identifierSubregion == null) {

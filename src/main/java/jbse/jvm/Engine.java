@@ -413,6 +413,20 @@ public class Engine implements AutoCloseable {
     }
 
     /**
+     * Returns a state at a given branch.
+     * 
+     * @param bp a {@link BranchPoint}.
+     * @param index an {@code int}.
+     * @return the state at the branch identified by {@code bp} 
+     *         with position {@code index} in the branch.
+     * @throws InvalidInputException if 
+     *         {@code index < 0 || index > }{@link #getNumOfStatesAtBranch(BranchPoint) getNumOfStatesAtBranch}{@code (bp)}. 
+     */
+    public State getStateAtBranch(BranchPoint bp, int index) throws InvalidInputException {
+    	return this.ctx.stateTree.getStateAtBranch(bp, index);
+    }
+
+    /**
      * Stops the execution along the current trace.
      */
     public void stopCurrentTrace() {
