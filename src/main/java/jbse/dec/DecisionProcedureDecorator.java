@@ -75,9 +75,9 @@ public class DecisionProcedureDecorator implements DecisionProcedure {
     }
 
     @Override
-    public boolean isSat(ClassHierarchy hier, Expression exp) 
+    public boolean isSat(Expression exp) 
     throws InvalidInputException, DecisionException {
-        return this.component.isSat(hier, exp);
+        return this.component.isSat(exp);
     }
 
     @Override

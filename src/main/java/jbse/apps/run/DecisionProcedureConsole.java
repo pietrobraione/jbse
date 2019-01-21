@@ -54,7 +54,7 @@ public final class DecisionProcedureConsole extends DecisionProcedureAlgorithms 
     }
 
     @Override
-    public boolean isSat(ClassHierarchy hier, Expression exp) {
+    public boolean isSat(Expression exp) {
         boolean retVal;
         IO.println(this.ps, CLASS_NAME + ": Please solve the following clause:");
         IO.print(this.ps, CLASS_NAME + ": "); 

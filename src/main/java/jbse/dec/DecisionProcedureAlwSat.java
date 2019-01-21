@@ -155,7 +155,7 @@ public class DecisionProcedureAlwSat implements DecisionProcedure {
     }
 
     @Override
-    public boolean isSat(ClassHierarchy hier, Expression exp) {
+    public boolean isSat(Expression exp) {
         return true;
     }
 

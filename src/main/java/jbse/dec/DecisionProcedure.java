@@ -119,14 +119,13 @@ public interface DecisionProcedure extends AutoCloseable {
      * Determines the satisfiability of an {@link Expression} under the
      * current assumption.
      * 
-     * @param hier a {@link ClassHierarchy}. It must not be {@code null}.
      * @param expression a boolean {@link Expression}. It must not be {@code null}.
      * @return {@code true} iff {@code expression} is satisfiable under
      *         the current assumptions.
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
      */
-    boolean isSat(ClassHierarchy hier, Expression expression) 
+    boolean isSat(Expression expression) 
     throws InvalidInputException, DecisionException;
 
     /**

@@ -292,10 +292,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		        result.add(T);
 		        result.add(F);
 		        shouldRefine = false; //"don't care" does not require refinement
-		    } else if (isSat(hier, exp)) {
+		    } else if (isSat(exp)) {
 		        result.add(T);
 		        final Expression expNot = (Expression) condition.not(); 
-		        if (isSat(hier, expNot)) {
+		        if (isSat(expNot)) {
 		            result.add(F);
 		        }
 		        shouldRefine = (result.size() > 1);
@@ -392,17 +392,17 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	            //this implementation saves one sat check in 33% cases
 	            //(it exploits the fact that if both val1 > val2 and 
 	            //val1 = val2 are unsat, then val1 < val2 is valid)
-	            if (isSat(hier, expGT)) {
+	            if (isSat(expGT)) {
 	                result.add(GT);
-	                if (isSat(hier, expEQ)) {
+	                if (isSat(expEQ)) {
 	                    result.add(EQ);
 	                }
-	                if (isSat(hier, expLT)) {
+	                if (isSat(expLT)) {
 	                    result.add(LT); 
 	                }
-	            } else if (isSat(hier, expEQ)) { //expGT is unsat, so either expEQ or expLT, or both, are SAT 
+	            } else if (isSat(expEQ)) { //expGT is unsat, so either expEQ or expLT, or both, are SAT 
 	                result.add(EQ);
-	                if (isSat(hier, expLT)) {
+	                if (isSat(expLT)) {
 	                    result.add(LT); 
 	                }
 	            } else {
@@ -472,13 +472,13 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	        boolean noEntryIsSat = true; //allows to skip the last sat check
 			for (int i : tab) {
 				final Expression exp = (isAny ? null : (Expression) selector.eq(this.calc.valInt(i)));
-				if (isAny || isSat(hier, exp)) { 
+				if (isAny || isSat(exp)) { 
 					result.add(DecisionAlternative_XSWITCH.toNonconcrete(i, branchCounter));
 					noEntryIsSat = false;
 				}
 				++branchCounter;
 			}
-			if (isAny || noEntryIsSat || isSat(hier, tab.getDefaultClause(selector))) { 
+			if (isAny || noEntryIsSat || isSat(tab.getDefaultClause(selector))) { 
 				result.add(DecisionAlternative_XSWITCH.toNonconcreteDefault(branchCounter));
 			}
 			final boolean shouldRefine = (!isAny && (result.size() > 1));
@@ -546,10 +546,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 				//(it exploits the fact that if exp is unsat 
 				//exp.not() is valid)
 				final Expression negative = (Expression) countsNonNegative.not(); 
-				if (isSat(hier, negative)) {
+				if (isSat(negative)) {
 					result.add(WRONG);
 					final Expression nonNegative = (Expression) countsNonNegative;
-					if (isSat(hier, nonNegative)) {
+					if (isSat(nonNegative)) {
 						result.add(OK);
 					}
 				} else {
@@ -618,10 +618,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 				//(it exploits the fact that if exp is unsat 
 				//exp.not() is valid)
 				final Expression outOfRangeExp = (Expression) inRange.not();
-				if (isSat(hier, outOfRangeExp)) {
+				if (isSat(outOfRangeExp)) {
 					result.add(OUT);
 					final Expression inRangeExp = (Expression) inRange;
-					if (isSat(hier, inRangeExp)) {
+					if (isSat(inRangeExp)) {
 						result.add(IN);
 					}
 				} else {
@@ -886,7 +886,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	throws DecisionException {
 	    try {
 	        final boolean shouldRefine;
-	        if (isSat(hier, accessExpression)) {
+	        if (isSat(accessExpression)) {
 	            shouldRefine = fresh; //a fresh value to load requires refinement of the source array
 	            final boolean accessOutOfBounds = (valToLoad == null);
 	            final int branchNumber = result.size() + 1;
@@ -962,7 +962,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	        final boolean accessConcrete = (accessExpression == null);
 	        final boolean shouldRefine;
 	        final boolean noReferenceExpansion;
-	        if (accessConcrete || isSat(state.getClassHierarchy(), accessExpression)) {
+	        if (accessConcrete || isSat(accessExpression)) {
 	            shouldRefine = true; //unresolved symbolic references always require a refinement action
 	            noReferenceExpansion =
 	                doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFactory_XALOAD(accessExpression, fresh, arrayReference), result);
@@ -1249,14 +1249,14 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	            if (indexInRange instanceof Simplex) {
 	            	entryAffected = indexInRange.surelyTrue();
 	            } else {
-	            	entryAffected = isSat(hier, (Expression) indexInRange);
+	            	entryAffected = isSat((Expression) indexInRange);
 	            }
 
 	            //if the entry is affected, it is constrained and possibly removed
 	            if (entryAffected) {
 	                e.excludeIndexFromAccessCondition(index); //TODO possibly move this back to Array?
 	                final Expression accessCondition = e.getAccessCondition();
-	                if (isSat(hier, accessCondition)) {
+	                if (isSat(accessCondition)) {
 	                    //do nothing
 	                } else {
 	                    entries.remove();
@@ -1276,7 +1276,6 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * constraining the affected entries and removing 
 	 * the unsatisfiable ones.
 	 * 
-	 * @param hier a {@link ClassHierarchy}.
 	 * @param entries an {@link Iterator}{@code <? extends }{@link AccessOutcomeIn}{@code >}. The method
 	 *        will determine the entries affected by the copy operation, constrain them, and 
 	 *        delete the entries that become unsatisfiable.
@@ -1286,9 +1285,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
 	 */
-	public void completeArraycopy(ClassHierarchy hier, Iterator<? extends Array.AccessOutcomeIn> entries, Primitive srcPos, Primitive destPos, Primitive length) 
+	public void completeArraycopy(Iterator<? extends Array.AccessOutcomeIn> entries, Primitive srcPos, Primitive destPos, Primitive length) 
 	throws InvalidInputException, DecisionException {
-	    if (hier == null || entries == null || srcPos == null || destPos == null || length == null) {
+	    if (entries == null || srcPos == null || destPos == null || length == null) {
 	        throw new InvalidInputException("completeArraycopy invoked with a null parameter.");
 	    }
 	    if (srcPos.getType() != Type.INT || destPos.getType() != Type.INT || length.getType() != Type.INT) {
@@ -1297,7 +1296,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	    while (entries.hasNext()) {
 	        final Array.AccessOutcomeIn e = entries.next();
 	        final Expression accessCondition = e.getAccessCondition();
-	        if (isSat(hier, accessCondition)) {
+	        if (isSat(accessCondition)) {
 	            //do nothing
 	        } else {
 	            entries.remove();

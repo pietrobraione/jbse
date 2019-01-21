@@ -3,18 +3,13 @@ package jbse.dec;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import jbse.bc.ClassFile;
-import jbse.bc.ClassFileFactoryJavassist;
 import jbse.bc.ClassHierarchy;
-import jbse.bc.Classpath;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
@@ -34,7 +29,6 @@ import jbse.val.exc.InvalidTypeException;
 public class DecisionProcedureEqualityTest {
 	HistoryPoint hist;
     CalculatorRewriting calc;
-    ClassHierarchy hier;
     DecisionProcedureEquality dec;
 
     static class NoDecisionException extends DecisionException {
@@ -55,7 +49,7 @@ public class DecisionProcedureEqualityTest {
         throws DecisionException { return null; }
 
         @Override
-        public boolean isSat(ClassHierarchy hier, Expression exp) 
+        public boolean isSat(Expression exp) 
         throws DecisionException { throw new NoDecisionException(); }
 
         @Override
@@ -84,7 +78,6 @@ public class DecisionProcedureEqualityTest {
 		this.hist = HistoryPoint.unknown();
         this.calc = new CalculatorRewriting();
         this.calc.addRewriter(new RewriterOperationOnSimplex());
-        this.hier = new ClassHierarchy(new Classpath(Paths.get(System.getProperty("java.home")), Collections.emptyList(), Collections.emptyList()), ClassFileFactoryJavassist.class, new HashMap<>());
         this.dec = new DecisionProcedureEquality(new DecisionProcedureNoDecision(), this.calc);
     }
 
@@ -95,7 +88,7 @@ public class DecisionProcedureEqualityTest {
         final Term A = this.calc.valTerm(Type.INT, "A");
         final Term B = this.calc.valTerm(Type.INT, "B");
         this.dec.pushAssumption(new ClauseAssume((Expression) A.eq(B)));
-        this.dec.isSat(this.hier, (Expression) B.eq(A));
+        this.dec.isSat((Expression) B.eq(A));
     }	
 
     @Test(expected=NoDecisionException.class)
@@ -105,7 +98,7 @@ public class DecisionProcedureEqualityTest {
     	final Term A = this.calc.valTerm(Type.INT, "A");
     	final Term B = this.calc.valTerm(Type.INT, "B");
         this.dec.pushAssumption(new ClauseAssume((Expression) A.eq(B)));
-        this.dec.isSat(this.hier, (Expression) this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", A).eq(this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", B)));
+        this.dec.isSat((Expression) this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", A).eq(this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", B)));
     }
 
     @Test(expected=NoDecisionException.class)
@@ -124,7 +117,7 @@ public class DecisionProcedureEqualityTest {
         this.dec.pushAssumption(new ClauseAssume((Expression) B.eq(F)));
         this.dec.pushAssumption(new ClauseAssume((Expression) C.eq(G)));
         this.dec.pushAssumption(new ClauseAssume((Expression) D.eq(H)));
-        this.dec.isSat(this.hier, (Expression) this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", A.sub(B).div(C.sub(D))).eq(this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", E.sub(F).div(G.sub(H)))));
+        this.dec.isSat((Expression) this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", A.sub(B).div(C.sub(D))).eq(this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", E.sub(F).div(G.sub(H)))));
     }	
 
     @Test
@@ -143,7 +136,7 @@ public class DecisionProcedureEqualityTest {
         this.dec.pushAssumption(new ClauseAssume((Expression) B.eq(F)));
         this.dec.pushAssumption(new ClauseAssume((Expression) C.eq(G)));
         this.dec.pushAssumption(new ClauseAssume((Expression) D.eq(H)));
-        assertFalse(dec.isSat(this.hier, (Expression) this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", A.sub(B).div(C.sub(D))).ne(this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", E.sub(F).div(G.sub(H))))));
+        assertFalse(dec.isSat((Expression) this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", A.sub(B).div(C.sub(D))).ne(this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", E.sub(F).div(G.sub(H))))));
     }	
 
     @Test(expected=NoDecisionException.class)
@@ -162,7 +155,7 @@ public class DecisionProcedureEqualityTest {
         this.dec.pushAssumption(new ClauseAssume((Expression) B.eq(F)));
         this.dec.pushAssumption(new ClauseAssume((Expression) C.eq(G)));
         this.dec.pushAssumption(new ClauseAssume((Expression) D.eq(H)));
-        this.dec.isSat(this.hier, (Expression) this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", A.sub(B).div(C.sub(D))).ne(this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", E.sub(F).div(G.sub(H)))).not());
+        this.dec.isSat((Expression) this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", A.sub(B).div(C.sub(D))).ne(this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", E.sub(F).div(G.sub(H)))).not());
     }	
 
     @Test(expected=NoDecisionException.class)
@@ -172,7 +165,7 @@ public class DecisionProcedureEqualityTest {
     	final Term A = this.calc.valTerm(Type.INT, "A");
     	final Term B = this.calc.valTerm(Type.INT, "B");
         this.dec.pushAssumption(new ClauseAssume((Expression) this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", A).eq(this.calc.applyFunctionPrimitive(Type.INT, this.hist, "g", B))));
-        this.dec.isSat(this.hier, (Expression) A.add(this.calc.applyFunctionPrimitive(Type.INT, this.hist, "g", this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", A))).eq(A.add(this.calc.applyFunctionPrimitive(Type.INT, this.hist, "g", this.calc.applyFunctionPrimitive(Type.INT, this.hist, "g", B)))));
+        this.dec.isSat((Expression) A.add(this.calc.applyFunctionPrimitive(Type.INT, this.hist, "g", this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", A))).eq(A.add(this.calc.applyFunctionPrimitive(Type.INT, this.hist, "g", this.calc.applyFunctionPrimitive(Type.INT, this.hist, "g", B)))));
     }
 
     @Test(expected=NoDecisionException.class)
@@ -184,7 +177,7 @@ public class DecisionProcedureEqualityTest {
     	final Term C = this.calc.valTerm(Type.INT, "C");
         this.dec.pushAssumption(new ClauseAssume((Expression) A.eq(B)));
         this.dec.pushAssumption(new ClauseAssume((Expression) B.eq(C)));
-        this.dec.isSat(this.hier, (Expression) A.eq(C));
+        this.dec.isSat((Expression) A.eq(C));
     }	
 
     @Test
@@ -194,6 +187,6 @@ public class DecisionProcedureEqualityTest {
     	final Term A = this.calc.valTerm(Type.INT, "A");
     	final Term B = this.calc.valTerm(Type.INT, "B");
         this.dec.pushAssumption(new ClauseAssume((Expression) A.add(this.calc.valInt(-1).mul(B)).eq(this.calc.valInt(0))));
-        assertFalse(this.dec.isSat(this.hier, (Expression) A.add(this.calc.valInt(-1).mul(B)).ne(this.calc.valInt(0))));
+        assertFalse(this.dec.isSat((Expression) A.add(this.calc.valInt(-1).mul(B)).ne(this.calc.valInt(0))));
     }	
 }

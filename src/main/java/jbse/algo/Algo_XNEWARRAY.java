@@ -10,7 +10,6 @@ import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import java.util.function.Supplier;
 
 import jbse.bc.ClassFile;
-import jbse.bc.ClassHierarchy;
 import jbse.common.Type;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -212,9 +211,8 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
                 try {
                     final Expression currentLayerLengthZero = (Expression) currentLayerLength.eq(calc.valInt(0));
                     final Expression currentLayerLengthNonzero = (Expression) currentLayerLengthZero.not();
-                    final ClassHierarchy hier = state.getClassHierarchy();
-                    zeroBreak = this.ctx.decisionProcedure.isSat(hier, currentLayerLengthZero); 
-                    zeroBreak = zeroBreak && !this.ctx.decisionProcedure.isSat(hier, currentLayerLengthNonzero);
+                    zeroBreak = this.ctx.decisionProcedure.isSat(currentLayerLengthZero); 
+                    zeroBreak = zeroBreak && !this.ctx.decisionProcedure.isSat(currentLayerLengthNonzero);
                 } catch (ClassCastException | InvalidOperandException | 
                          InvalidTypeException | InvalidInputException e) {
                     //this should never happen

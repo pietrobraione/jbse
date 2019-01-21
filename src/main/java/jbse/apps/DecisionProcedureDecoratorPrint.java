@@ -65,9 +65,9 @@ public class DecisionProcedureDecoratorPrint extends DecisionProcedureDecorator 
     }
 
     @Override
-    public boolean isSat(ClassHierarchy hier, Expression exp) 
+    public boolean isSat(Expression exp) 
     throws InvalidInputException, DecisionException {
-        final boolean retVal = super.isSat(hier, exp);
+        final boolean retVal = super.isSat(exp);
         IO.print(this.out, ":: Decided: ");
         IO.print(this.out, formatClauses(this.getAssumptions())); 
         IO.println(this.out, TURNSTILE + formatExpression(exp) + ". Result: " + Boolean.toString(retVal));

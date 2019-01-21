@@ -75,10 +75,10 @@ public class DecisionProcedureDecoratorTimer extends DecisionProcedureDecorator 
     }
 
     @Override
-    public boolean isSat(ClassHierarchy hier, Expression exp) 
+    public boolean isSat(Expression exp) 
     throws InvalidInputException, DecisionException {
         this.startTimer();
-        final boolean result = super.isSat(hier, exp);
+        final boolean result = super.isSat(exp);
         this.stopTimer();
         return result;
     }

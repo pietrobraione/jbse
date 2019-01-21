@@ -155,7 +155,7 @@ public class DecisionProcedureTest {
         e = (Expression) e.and(A.eq(this.calc.valInt(3)).not());
 
         //expected satisfiable (by A == 4)
-        assertTrue(this.dec.isSat(this.hier, e));
+        assertTrue(this.dec.isSat(e));
     }
 
     @Test
@@ -169,7 +169,7 @@ public class DecisionProcedureTest {
         e = (Expression) e.and(A.eq(this.calc.valInt(-1)));
 
         //expected unsatisfiable
-        assertFalse(this.dec.isSat(this.hier, (Expression) e));
+        assertFalse(this.dec.isSat((Expression) e));
     }
 
     @Test
@@ -191,7 +191,7 @@ public class DecisionProcedureTest {
         Primitive e = e0.or(e1);
 
         //expected satisfiable
-        assertTrue(this.dec.isSat(this.hier, (Expression) e));
+        assertTrue(this.dec.isSat((Expression) e));
     }
 
     @Test
@@ -235,7 +235,7 @@ public class DecisionProcedureTest {
 
         //Expression ee = (Expression) X0.ne(zero);
 
-        assertTrue(this.dec.isSat(this.hier, (Expression) e));
+        assertTrue(this.dec.isSat((Expression) e));
     }
 
     @Test
@@ -256,7 +256,7 @@ public class DecisionProcedureTest {
         e = e.and(B.neg().le(C));
         e = e.and(B.add(A.mul(ten)).eq(zero));
 
-        assertTrue(this.dec.isSat(this.hier, (Expression) e));
+        assertTrue(this.dec.isSat((Expression) e));
         //shows a past bug: the Sicstus server first simplifies the expression with the clpqr solver, 
         //which simplifies the third constraint as B - 1/10*C <= 0 , then reuses the simplified constraint
         //to feed the integer solver. The latter apparently solves 1/10 as 0, yielding an unsatisfiable set 
@@ -268,7 +268,7 @@ public class DecisionProcedureTest {
     public void testBoundary1() 
     throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
         Expression e = (Expression) this.calc.valTerm(Type.INT, "A").eq(this.calc.valInt(Integer.MIN_VALUE));
-        assertTrue(this.dec.isSat(this.hier, e));
+        assertTrue(this.dec.isSat(e));
     }
 
     //Other boundary value for integers
@@ -276,7 +276,7 @@ public class DecisionProcedureTest {
     public void testBoundary2() 
     throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
         Expression e = (Expression) this.calc.valTerm(Type.INT, "A").eq(this.calc.valInt(Integer.MAX_VALUE));
-        assertTrue(this.dec.isSat(this.hier, e));
+        assertTrue(this.dec.isSat(e));
     }
 
     //Test floats
@@ -284,7 +284,7 @@ public class DecisionProcedureTest {
     public void testType1() 
     throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
         Expression e = (Expression) this.calc.valTerm(Type.FLOAT, "A").gt(this.calc.valInt(0)).and(this.calc.valTerm(Type.FLOAT, "A").lt(this.calc.valInt(1)));
-        assertTrue(this.dec.isSat(this.hier, e));
+        assertTrue(this.dec.isSat(e));
     }
 
     //Test ints
@@ -292,7 +292,7 @@ public class DecisionProcedureTest {
     public void testType2() 
     throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
         Expression e = (Expression) this.calc.valTerm(Type.INT, "A").gt(this.calc.valInt(0)).and(this.calc.valTerm(Type.FLOAT, "A").lt(this.calc.valInt(1)));
-        assertFalse(this.dec.isSat(this.hier, e));
+        assertFalse(this.dec.isSat(e));
     }
 
     //Test integer division (Sicstus bug)
@@ -303,7 +303,7 @@ public class DecisionProcedureTest {
         final Term A = this.calc.valTerm(Type.INT, "A");
         final Term B = this.calc.valTerm(Type.INT, "B");
         final Expression e = (Expression) A.ge(this.calc.valInt(0)).and(A.lt(B)).and(A.ge(B.div(this.calc.valInt(2)))).and(B.eq(this.calc.valInt(1)));
-        assertTrue(this.dec.isSat(this.hier, e));
+        assertTrue(this.dec.isSat(e));
     }
 
     //Old Sicstus bug
@@ -321,7 +321,7 @@ public class DecisionProcedureTest {
         e = e.and(A.div(B).add(C.sub(C).div(D)).lt(E));
 
         //expected satisfiable
-        assertTrue(this.dec.isSat(this.hier, (Expression) e));
+        assertTrue(this.dec.isSat((Expression) e));
     }
 
     @Test
@@ -336,7 +336,7 @@ public class DecisionProcedureTest {
         e = e.and(two.sub(three.add(A)).le(A));
 
         //expected satisfiable
-        assertTrue(this.dec.isSat(this.hier, (Expression) e));
+        assertTrue(this.dec.isSat((Expression) e));
     }
 
     @Test
@@ -349,6 +349,6 @@ public class DecisionProcedureTest {
         e = e.and(A.div(two).lt(two));
 
         //expected satisfiable
-        assertTrue(this.dec.isSat(this.hier, (Expression) e));
+        assertTrue(this.dec.isSat((Expression) e));
     }	
 }

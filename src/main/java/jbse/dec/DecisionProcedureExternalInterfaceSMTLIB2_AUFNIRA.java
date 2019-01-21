@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-import jbse.bc.ClassHierarchy;
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.ExternalProtocolInterfaceException;
@@ -203,7 +202,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
     }
 
     @Override
-    public boolean checkSat(ClassHierarchy hier, boolean value) 
+    public boolean checkSat(boolean value) 
     throws ExternalProtocolInterfaceException, IOException {
         if (!this.hasCurrentClause) {
             throw new ExternalProtocolInterfaceException("Attempted to check satisfiability with no current clause.");

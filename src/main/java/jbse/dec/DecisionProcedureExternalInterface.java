@@ -138,7 +138,6 @@ public abstract class DecisionProcedureExternalInterface {
      * when put in logical and with the (possibly negated) 
      * current predicate.
      * 
-     * @param hier a {@link ClassHierarchy}.
      * @param positive if {@code false} the current predicate must 
      *        be negated before checking satisfiability, otherwise not.
      * @return {@code false} if the decision procedure proves that the 
@@ -149,7 +148,7 @@ public abstract class DecisionProcedureExternalInterface {
      * @throws IOException if communication with the external 
      *         decision procedure fails. 
      */
-    public abstract boolean checkSat(ClassHierarchy hier, boolean positive)
+    public abstract boolean checkSat(boolean positive)
     throws ExternalProtocolInterfaceException, IOException;
 
     /**

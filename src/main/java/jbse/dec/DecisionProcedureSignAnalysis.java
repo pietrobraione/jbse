@@ -2,7 +2,6 @@ package jbse.dec;
 
 import java.util.HashMap;
 
-import jbse.bc.ClassHierarchy;
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
@@ -515,7 +514,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 	}
 	
 	@Override
-	protected boolean isSatLocal(ClassHierarchy hier, Expression exp, Expression expSimpl) 
+	protected boolean isSatLocal(Expression exp, Expression expSimpl) 
 	throws DecisionException {
 		if (isTrivial(expSimpl)) {
 			final SignPredicate predicateOperand = deduceSignPredicate(getOperand(expSimpl));
