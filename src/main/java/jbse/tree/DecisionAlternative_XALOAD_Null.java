@@ -1,6 +1,6 @@
 package jbse.tree;
 
-import jbse.val.Expression;
+import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.ReferenceSymbolic;
 
@@ -16,7 +16,7 @@ public final class DecisionAlternative_XALOAD_Null extends DecisionAlternative_X
     /**
      * Constructor.
      * 
-     * @param arrayAccessExpression the array access {@link Expression}.
+     * @param arrayAccessExpression the array access {@link Primitive}.
      * @param referenceToResolve the {@link ReferenceSymbolic} loaded from the array.
      * @param fresh {@code true} iff {@code referenceToResolve} is fresh, i.e., 
      *        is not stored in the array and, therefore, must be written
@@ -25,7 +25,7 @@ public final class DecisionAlternative_XALOAD_Null extends DecisionAlternative_X
      *        where {@code referenceToResolve} originates from.
      * @param branchNumber an {@code int}, the branch number.
      */
-    public DecisionAlternative_XALOAD_Null(Expression arrayAccessExpression, ReferenceSymbolic referenceToResolve, boolean fresh, Reference arrayReference, int branchNumber) {
+    public DecisionAlternative_XALOAD_Null(Primitive arrayAccessExpression, ReferenceSymbolic referenceToResolve, boolean fresh, Reference arrayReference, int branchNumber) {
         super(ALT_CODE + "_Null:" + arrayAccessExpression, arrayAccessExpression, referenceToResolve, fresh, arrayReference, branchNumber);
         final int prime = 3331;
         int result = super.hashCode();

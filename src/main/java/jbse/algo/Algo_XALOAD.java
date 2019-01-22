@@ -344,7 +344,8 @@ StrategyUpdate_XALOAD> {
             public void refineResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved)
             throws DecisionException, InvalidInputException {
                 //augments the path condition
-                state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(altResolved.getArrayAccessExpression()));
+            	final Primitive accessExpression = altResolved.getArrayAccessExpression();
+                state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
 
                 //if the value is fresh, writes it back in the array
                 if (altResolved.isValueFresh()) {

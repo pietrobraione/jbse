@@ -56,6 +56,10 @@ final class PathCondition implements Cloneable {
 	 * is not an instance of either {@link Simplex} or {@link Expression}.
      */
     void addClauseAssume(Primitive condition) throws InvalidInputException {
+    	if (condition.surelyTrue()) {
+    		return; //nothing to add
+    	}
+    	//TODO what if condition.surelyFalse? Throw a ContradictionException?
         this.clauses.add(new ClauseAssume(condition));
     }
 

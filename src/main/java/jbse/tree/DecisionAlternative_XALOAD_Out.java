@@ -1,6 +1,6 @@
 package jbse.tree;
 
-import jbse.val.Expression;
+import jbse.val.Primitive;
 
 /**
  * {@link DecisionAlternative_XALOAD} for the case the array access
@@ -15,10 +15,10 @@ public final class DecisionAlternative_XALOAD_Out extends DecisionAlternative_XA
 	/**
 	 * Constructor, nonconcrete.
 	 * 
-	 * @param arrayAccessExpression the array access {@link Expression}.
+	 * @param arrayAccessExpression the array access {@link Primitive}.
 	 * @param branchNumber an {@code int}, the branch number.
 	 */
-	public DecisionAlternative_XALOAD_Out(Expression arrayAccessExpression, int branchNumber) {
+	public DecisionAlternative_XALOAD_Out(Primitive arrayAccessExpression, int branchNumber) {
 		super(ALT_CODE + "_Out", arrayAccessExpression, branchNumber);
 		this.isTrivial = (arrayAccessExpression == null);
         final int prime = 1217;

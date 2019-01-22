@@ -887,20 +887,21 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	    try {
 	        final boolean shouldRefine;
 	        if (isSat(accessExpression)) {
+	        	final boolean accessExpressionRedundant = !isSat((Expression) accessExpression.not());
 	            shouldRefine = fresh; //a fresh value to load requires refinement of the source array
 	            final boolean accessOutOfBounds = (valToLoad == null);
 	            final int branchNumber = result.size() + 1;
 	            if (accessOutOfBounds) {
-	                result.add(new DecisionAlternative_XALOAD_Out(accessExpression, branchNumber));
+	                result.add(new DecisionAlternative_XALOAD_Out((accessExpressionRedundant ? this.calc.valBoolean(true) : accessExpression), branchNumber));
 	            } else {
-	                result.add(new DecisionAlternative_XALOAD_Resolved(accessExpression, valToLoad, fresh, arrayToWriteBack, branchNumber));
+	                result.add(new DecisionAlternative_XALOAD_Resolved((accessExpressionRedundant ? this.calc.valBoolean(true) : accessExpression), valToLoad, fresh, arrayToWriteBack, branchNumber));
 	            }
 	        } else {
 	            //accessExpression is unsatisfiable: nothing to do
 	            shouldRefine = false;
 	        }
 	        return Outcome.val(shouldRefine, false, true);
-	    } catch (InvalidInputException e) {
+	    } catch (InvalidInputException | InvalidTypeException e) {
 	        //this should never happen as arguments have been checked by the caller
 	        throw new UnexpectedInternalException(e);
 	    }

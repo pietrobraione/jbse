@@ -1,6 +1,6 @@
 package jbse.tree;
 
-import jbse.val.Expression;
+import jbse.val.Primitive;
 
 /**
  * {@link DecisionAlternative} for the load from array (*aload) bytecodes:
@@ -12,12 +12,12 @@ import jbse.val.Expression;
 public abstract class DecisionAlternative_XALOAD implements DecisionAlternative {
     protected static final String ALT_CODE = "XALOAD";
 
-    private final Expression arrayAccessExpression;
+    private final Primitive arrayAccessExpression;
     private final String branchId;
     private final int branchNumber;
     private final int hashCode;
 
-    protected DecisionAlternative_XALOAD(String branchId, Expression arrayAccessExpression, int branchNumber) {
+    protected DecisionAlternative_XALOAD(String branchId, Primitive arrayAccessExpression, int branchNumber) {
         this.branchId = branchId;
         this.arrayAccessExpression = arrayAccessExpression;
         this.branchNumber = branchNumber;
@@ -30,7 +30,7 @@ public abstract class DecisionAlternative_XALOAD implements DecisionAlternative 
 
     public abstract void accept(VisitorDecisionAlternative_XALOAD v) throws Exception;
 
-    public final Expression getArrayAccessExpression() {
+    public final Primitive getArrayAccessExpression() {
         return this.arrayAccessExpression;
     }
 
