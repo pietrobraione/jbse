@@ -101,7 +101,7 @@ StrategyUpdate<DecisionAlternative_XCMPY>> {
     @Override
     protected StrategyDecide<DecisionAlternative_XCMPY> decider() {
         return (state, result) -> {
-            final Outcome o = ctx.decisionProcedure.decide_XCMPY(state.getClassHierarchy(), this.val1, this.val2, result);
+            final Outcome o = ctx.decisionProcedure.decide_XCMPY(this.val1, this.val2, result);
             return o;
         };
     }

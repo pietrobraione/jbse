@@ -5,7 +5,6 @@ import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import java.util.ArrayList;
 
 import jbse.bc.ClassFile;
-import jbse.bc.ClassHierarchy;
 import jbse.mem.ClauseAssumeClassNotInitialized;
 import jbse.rules.ClassInitRulesRepo;
 import jbse.val.Calculator;
@@ -43,14 +42,14 @@ public final class DecisionProcedureClassInit extends DecisionProcedureChainOfRe
     //TODO support pop of assumptions
 
     @Override
-    protected boolean isSatInitializedLocal(ClassHierarchy hier, ClassFile classFile) {
+    protected boolean isSatInitializedLocal(ClassFile classFile) {
         //we only support mutually exclusive initialized/not-initialized cases
         //TODO drop mutual exclusion of class initialized/not-initialized cases and branch bytecodes during initialization based on assumptions
-        return !isSatNotInitializedLocal(hier, classFile);
+        return !isSatNotInitializedLocal(classFile);
     }
 
     @Override
-    protected boolean isSatNotInitializedLocal(ClassHierarchy hier, ClassFile classFile) {
+    protected boolean isSatNotInitializedLocal(ClassFile classFile) {
         return (classFile.getDefiningClassLoader() > CLASSLOADER_APP || this.rulesRepo.notInitializedClassesContains(classFile.getClassName()) || this.notInit.contains(classFile));
     }
 }

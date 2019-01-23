@@ -1,6 +1,7 @@
 package jbse.dec;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -9,7 +10,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import jbse.bc.ClassFile;
-import jbse.bc.ClassHierarchy;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
@@ -57,23 +57,23 @@ public class DecisionProcedureSignAnalysisTest {
 		throws DecisionException { throw new NoDecisionException(); }
 
 		@Override
-		public boolean isSatNull(ClassHierarchy hier, ReferenceSymbolic r) 
+		public boolean isSatNull(ReferenceSymbolic r) 
 		throws DecisionException { throw new NoDecisionException(); }
 
 		@Override
-		public boolean isSatAliases(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o)
+		public boolean isSatAliases(ReferenceSymbolic r, long heapPos, Objekt o)
 		throws DecisionException { throw new NoDecisionException(); }
 
 		@Override
-		public boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, ClassFile classFile)
+		public boolean isSatExpands(ReferenceSymbolic r, ClassFile classFile)
 		throws DecisionException { throw new NoDecisionException(); }
 
 		@Override
-		public boolean isSatInitialized(ClassHierarchy hier, ClassFile classFile)
+		public boolean isSatInitialized(ClassFile classFile)
 		throws DecisionException { throw new NoDecisionException(); }
 
 		@Override
-		public boolean isSatNotInitialized(ClassHierarchy hier, ClassFile classFile)
+		public boolean isSatNotInitialized(ClassFile classFile)
 		throws DecisionException { throw new NoDecisionException(); }
 	}
 	

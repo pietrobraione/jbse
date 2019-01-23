@@ -72,7 +72,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     //gets the object's class
                     final Objekt obj = state.getObject(tmpValue);
                     final ClassFile classSub = obj.getType();
-                    this.isSubclass = state.getClassHierarchy().isSubclass(classSub, classSuper);
+                    this.isSubclass = classSub.isSubclass(classSuper);
                 }
             } catch (PleaseLoadClassException e) {
                 invokeClassLoaderLoadClass(state, e);

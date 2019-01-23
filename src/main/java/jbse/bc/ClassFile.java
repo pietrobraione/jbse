@@ -8,7 +8,12 @@ import static jbse.common.Type.className;
 import static jbse.common.Type.isCat_1;
 import static jbse.common.Type.splitParametersDescriptors;
 
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 import jbse.bc.exc.AttributeNotFoundException;
 import jbse.bc.exc.FieldNotFoundException;
@@ -16,6 +21,7 @@ import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 
 /**
@@ -940,6 +946,220 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      */
     public abstract List<String> getSuperInterfaceNames();
 
+    /**
+     * Checks whether this class (nonstrictly) extends/implements another one.
+     * 
+     * @param sup a {@link ClassFile}.
+     * @return {@code true} if {@code this.}{@link #equals(Object) equals}{@code (sup)}, or {@code this} 
+     *         extends {@code sup}, or {@code this} implements {@code sup}, 
+     *         {@code false} otherwise.
+     * @throws InvalidInputException if {@code sup == null}.
+     */
+    public boolean isSubclass(ClassFile sup) throws InvalidInputException {
+    	if (sup == null) {
+    		throw new InvalidInputException("Invoked ClassFile.isSubclass with null parameter.");
+    	}
+        if (isArray() && sup.isArray()) {
+            final ClassFile subMember = getMemberClass(); 
+            final ClassFile supMember = sup.getMemberClass();
+            if (subMember.isPrimitiveOrVoid() && supMember.isPrimitiveOrVoid()) {
+                return (subMember.equals(supMember));
+            } else if (subMember.isReference() && supMember.isReference()) {
+                return subMember.isSubclass(supMember);
+            } else if (subMember.isArray() && supMember.isArray()) {
+                return subMember.isSubclass(supMember);
+            } else {
+                return false;
+            }
+        } else {
+            for (ClassFile f : superclasses()) { 
+                if (sup.equals(f)) {
+                    return true;
+                } 
+            }
+            for (ClassFile f : superinterfaces()) {
+                if (sup.equals(f)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+    
+    /**
+     * Produces all the superclasses of this class.
+     * 
+     * @return an {@link Iterable}{@code <}{@link ClassFile}{@code >} containing 
+     *         all the superclasses of {@code this} (included).
+     */
+    public Iterable<ClassFile> superclasses() {
+        return new IterableSuperclasses(this);
+    }
+
+    /**
+     * Produces all the superinterfaces of a given class.
+     * 
+     * @param startClass the {@link ClassFile} of the class whose superinterfaces 
+     *        are returned.
+     * @return an {@link Iterable}{@code <}{@link ClassFile}{@code >} containing 
+     *         all the superinterfaces of {@code startClassName} (included if
+     *         it is an interface). If {@code startClass == null} an empty 
+     *         {@link Iterable} is returned. A same superinterface is not iterated
+     *         more than once even if the class inherits it more than once. 
+     */
+    public Iterable<ClassFile> superinterfaces() {
+        return new IterableSuperinterfaces(this);
+    }
+
+    /**
+     * {@link Iterable}{@code <}{@link ClassFile}{@code >} for upwardly 
+     * scanning a class hierarchy.
+     *  
+     * @author Pietro Braione
+     */
+    private class IterableSuperclasses implements Iterable<ClassFile> {
+        private ClassFile startClassName;
+
+        /**
+         * Constructor.
+         * 
+         * @param startClass The {@link ClassFile} of the 
+         *        class from where the iteration is started. 
+         */
+        public IterableSuperclasses(ClassFile startClass) {
+            this.startClassName = startClass;
+        }
+
+        public Iterator<ClassFile> iterator() {
+            return new MyIterator(this.startClassName);
+        }        
+
+        /**
+         * {@link Iterator}{@code <}{@link ClassFile}{@code >} for
+         * upwardly scanning a class hierarchy.
+         * 
+         * @author Pietro Braione
+         */
+        private class MyIterator implements Iterator<ClassFile> {
+            private ClassFile nextClass;
+
+            public MyIterator(ClassFile startClass) {
+                this.nextClass = startClass;
+            }
+
+            public boolean hasNext() {
+                return (this.nextClass != null);
+            }
+
+            public ClassFile next() {
+                //ensures the method precondition
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
+
+                //stores the return value
+                final ClassFile retval = this.nextClass;
+
+                //gets the classfile of the superclass
+                this.nextClass = retval.getSuperclass();
+
+                //returns
+                return retval;
+            }
+
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        }
+    }
+
+    /**
+     * {@link Iterable}{@code <}{@link ClassFile}{@code >} 
+     * for upwardly scanning an interface hierarchy.
+     *  
+     * @author Pietro Braione
+     */
+    private class IterableSuperinterfaces implements Iterable<ClassFile> {
+        private ClassFile startClass;
+
+        /**
+         * Constructor.
+         * 
+         * @param startClassName 
+         *        The name of the class from where the iteration is started. 
+         *        Note that the first call to {@code hasNext()} 
+         *        will return {@code true} iff {@code startClassName != null} and 
+         *        {@code startClassName} exists in the environment 
+         *        defined by {@link Classpath}{@code .this.env}, and it is an 
+         *        interface.
+         */
+        public IterableSuperinterfaces(ClassFile startClass) {
+            this.startClass = startClass;
+        }
+
+        public Iterator<ClassFile> iterator() {
+            return new MyIterator(this.startClass);
+        }        
+
+        /**
+         * {@link Iterator}{@code <}{@link ClassFile}{@code >} for
+         * upwardly scanning the superinterfaces of a class/interface. 
+         * For the sake of simplicity it scans in breadth-first 
+         * order. It does not visit a same interface twice. 
+         * 
+         * @author Pietro Braione
+         */
+        private class MyIterator implements Iterator<ClassFile> {
+            private final LinkedList<ClassFile> nextClassFiles;
+            private final HashSet<ClassFile> visitedClassFiles;
+
+            public MyIterator(ClassFile startClass) {
+                this.visitedClassFiles = new HashSet<>();
+                this.nextClassFiles = new LinkedList<>();
+                if (startClass == null) {
+                    return; //keeps the iterator empty
+                }
+                if (startClass.isInterface()) {
+                    this.nextClassFiles.add(startClass);
+                } else { //is not interface and is not ClassFileBad
+                    for (ClassFile cfSuper : startClass.superclasses()) {
+                        this.nextClassFiles.addAll(nonVisitedImmediateSuperinterfaces(cfSuper));
+                    }
+                }
+            }
+
+            public boolean hasNext() {
+                return !(this.nextClassFiles.isEmpty());
+            }
+
+            public ClassFile next() {
+                //ensures the method precondition
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
+
+                //gets the next interface into the return value
+                //and updates the iteration state
+                final ClassFile retVal = this.nextClassFiles.removeFirst(); 
+                this.visitedClassFiles.add(retVal);
+                this.nextClassFiles.addAll(nonVisitedImmediateSuperinterfaces(retVal));
+
+                //returns the result
+                return retVal;
+            }
+
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+
+            private List<ClassFile> nonVisitedImmediateSuperinterfaces(ClassFile base) {
+                return base.getSuperInterfaces().stream()
+                       .filter(cf -> !this.visitedClassFiles.contains(cf))
+                       .collect(Collectors.toList());
+            }
+        }
+    }
+    
     /**
      * Returns the length of the local variable table of a method.
      * 

@@ -125,7 +125,7 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
     protected StrategyDecide<DecisionAlternative_XNEWARRAY> decider() {
         return (state, result) -> {
             //invokes the decision procedure
-            final Outcome o = this.ctx.decisionProcedure.decide_XNEWARRAY(state.getClassHierarchy(), this.countsNonNegative, result);
+            final Outcome o = this.ctx.decisionProcedure.decide_XNEWARRAY(this.countsNonNegative, result);
             return o;
         };
     }

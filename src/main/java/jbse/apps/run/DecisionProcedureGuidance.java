@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.SortedSet;
 
-import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
@@ -96,10 +95,10 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     @Override
-    protected final Outcome decide_IFX_Nonconcrete(ClassHierarchy hier, Primitive condition, SortedSet<DecisionAlternative_IFX> result) 
+    protected final Outcome decide_IFX_Nonconcrete(Primitive condition, SortedSet<DecisionAlternative_IFX> result) 
     throws DecisionException {
 
-    	final Outcome retVal = super.decide_IFX_Nonconcrete(hier, condition, result);
+    	final Outcome retVal = super.decide_IFX_Nonconcrete(condition, result);
         if (!this.ended) {
             try {
                 final Iterator<DecisionAlternative_IFX> it = result.iterator();
@@ -121,9 +120,9 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     @Override
-    protected final Outcome decide_XCMPY_Nonconcrete(ClassHierarchy hier, Primitive val1, Primitive val2, SortedSet<DecisionAlternative_XCMPY> result)
+    protected final Outcome decide_XCMPY_Nonconcrete(Primitive val1, Primitive val2, SortedSet<DecisionAlternative_XCMPY> result)
     throws DecisionException {
-        final Outcome retVal = super.decide_XCMPY_Nonconcrete(hier, val1, val2, result);
+        final Outcome retVal = super.decide_XCMPY_Nonconcrete(val1, val2, result);
         if (!this.ended) {
             try {
                 final Primitive comparisonGT = val1.gt(val2);
@@ -150,9 +149,9 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     @Override
-    protected final Outcome decide_XSWITCH_Nonconcrete(ClassHierarchy hier, Primitive selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result)
+    protected final Outcome decide_XSWITCH_Nonconcrete(Primitive selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result)
     throws DecisionException {
-        final Outcome retVal = super.decide_XSWITCH_Nonconcrete(hier, selector, tab, result);
+        final Outcome retVal = super.decide_XSWITCH_Nonconcrete(selector, tab, result);
         if (!this.ended) {
             try {
                 final Iterator<DecisionAlternative_XSWITCH> it = result.iterator();
@@ -176,9 +175,9 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     @Override
-    protected final Outcome decide_XNEWARRAY_Nonconcrete(ClassHierarchy hier, Primitive countsNonNegative, SortedSet<DecisionAlternative_XNEWARRAY> result)
+    protected final Outcome decide_XNEWARRAY_Nonconcrete(Primitive countsNonNegative, SortedSet<DecisionAlternative_XNEWARRAY> result)
     throws DecisionException {
-        final Outcome retVal = super.decide_XNEWARRAY_Nonconcrete(hier, countsNonNegative, result);
+        final Outcome retVal = super.decide_XNEWARRAY_Nonconcrete(countsNonNegative, result);
         if (!this.ended) {
             try {
                 final Iterator<DecisionAlternative_XNEWARRAY> it = result.iterator();
@@ -199,9 +198,9 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     @Override
-    protected final Outcome decide_XASTORE_Nonconcrete(ClassHierarchy hier, Primitive inRange, SortedSet<DecisionAlternative_XASTORE> result)
+    protected final Outcome decide_XASTORE_Nonconcrete(Primitive inRange, SortedSet<DecisionAlternative_XASTORE> result)
     throws DecisionException {
-        final Outcome retVal = super.decide_XASTORE_Nonconcrete(hier, inRange, result);
+        final Outcome retVal = super.decide_XASTORE_Nonconcrete(inRange, result);
         if (!this.ended) {
             try {
                 final Iterator<DecisionAlternative_XASTORE> it = result.iterator();
@@ -239,9 +238,9 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     @Override
-    protected final Outcome resolve_XALOAD_ResolvedNonconcrete(ClassHierarchy hier, Expression accessExpression, Value valueToLoad, boolean fresh, Reference arrayToWriteBack,SortedSet<DecisionAlternative_XALOAD> result)
+    protected final Outcome resolve_XALOAD_ResolvedNonconcrete(Expression accessExpression, Value valueToLoad, boolean fresh, Reference arrayToWriteBack,SortedSet<DecisionAlternative_XALOAD> result)
     throws DecisionException {
-        final Outcome retVal = super.resolve_XALOAD_ResolvedNonconcrete(hier, accessExpression, valueToLoad, fresh, arrayToWriteBack, result);
+        final Outcome retVal = super.resolve_XALOAD_ResolvedNonconcrete(accessExpression, valueToLoad, fresh, arrayToWriteBack, result);
         if (!this.ended) {
             final Iterator<DecisionAlternative_XALOAD> it = result.iterator();
             while (it.hasNext()) {

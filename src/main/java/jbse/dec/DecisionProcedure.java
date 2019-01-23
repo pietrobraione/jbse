@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Map;
 
 import jbse.bc.ClassFile;
-import jbse.bc.ClassHierarchy;
 import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.NoModelException;
@@ -132,21 +131,19 @@ public interface DecisionProcedure extends AutoCloseable {
      * Determines the satisfiability of a resolution by null under the
      * current assumptions.
      * 
-     * @param hier a {@link ClassHierarchy}. It must not be {@code null}.
      * @param r a {@link ReferenceSymbolic}. It must not be {@code null}.
      * @return {@code true} iff {@code r} can be resolved by null under
      *         the current assumption.
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
      */
-    boolean isSatNull(ClassHierarchy hier, ReferenceSymbolic r) 
+    boolean isSatNull(ReferenceSymbolic r) 
     throws InvalidInputException, DecisionException;
 
     /**
      * Determines the satisfiability of a resolution by aliasing under the
      * current assumptions.
      * 
-     * @param hier a {@link ClassHierarchy}. It must not be {@code null}.
      * @param r a {@link ReferenceSymbolic}. It must not be {@code null}.
      * @param heapPos a {@code long} value, the position of {@code o} in the heap.
      * @param o an {@link Objekt}, the object to which {@code r} refers.
@@ -156,14 +153,13 @@ public interface DecisionProcedure extends AutoCloseable {
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
      */
-    boolean isSatAliases(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o) 
+    boolean isSatAliases(ReferenceSymbolic r, long heapPos, Objekt o) 
     throws InvalidInputException, DecisionException;
 
     /**
      * Determines the satisfiability of a resolution by expansion under the
      * current assumptions.
      * 
-     * @param hier a {@link ClassHierarchy}. It must not be {@code null}.
      * @param r a {@link ReferenceSymbolic}. It must not be {@code null}.
      * @param classFile a {@link ClassFile}. It must not be {@code null}.
      * @return {@code true} iff {@code r} can be resolved by aliasing to 
@@ -172,7 +168,7 @@ public interface DecisionProcedure extends AutoCloseable {
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
      */
-    boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, ClassFile classFile) 
+    boolean isSatExpands(ReferenceSymbolic r, ClassFile classFile) 
     throws InvalidInputException, DecisionException;
 
     /**
@@ -180,7 +176,6 @@ public interface DecisionProcedure extends AutoCloseable {
      * initialized when symbolic execution starts, under the current
      * assumptions.
      * 
-     * @param hier a {@link ClassHierarchy}. It must not be {@code null}.
      * @param classFile a {@link ClassFile}. It must not be {@code null}.
      * @return {@code true} iff the assumption that {@code classFile} is
      *         initialized at the start of the symbolic execution is 
@@ -188,7 +183,7 @@ public interface DecisionProcedure extends AutoCloseable {
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
      */
-    boolean isSatInitialized(ClassHierarchy hier, ClassFile classFile) 
+    boolean isSatInitialized(ClassFile classFile) 
     throws InvalidInputException, DecisionException;
 
     /**
@@ -196,7 +191,6 @@ public interface DecisionProcedure extends AutoCloseable {
      * not initialized when symbolic execution starts, under the current
      * assumptions.
      * 
-     * @param hier a {@link ClassHierarchy}. It must not be {@code null}.
      * @param classFile a {@link ClassFile}. It must not be {@code null}.
      * @return {@code true} iff the assumption that {@code classFile} is
      *         not initialized at the start of the symbolic execution is 
@@ -204,7 +198,7 @@ public interface DecisionProcedure extends AutoCloseable {
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure. 
      */
-    boolean isSatNotInitialized(ClassHierarchy hier, ClassFile classFile) 
+    boolean isSatNotInitialized(ClassFile classFile) 
     throws InvalidInputException, DecisionException;
 
     /**

@@ -112,7 +112,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
     @Override
     protected StrategyDecide<DecisionAlternative_XASTORE> decider() {
         return (state, result) -> {
-            final Outcome o = this.ctx.decisionProcedure.decide_XASTORE(state.getClassHierarchy(), this.inRange, result);
+            final Outcome o = this.ctx.decisionProcedure.decide_XASTORE(this.inRange, result);
             return o;
         };
     }

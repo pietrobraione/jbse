@@ -1,19 +1,14 @@
 package jbse.dec;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.hamcrest.CoreMatchers.instanceOf;
 
-import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.TreeSet;
 
-import jbse.bc.ClassFileFactoryJavassist;
-import jbse.bc.ClassHierarchy;
-import jbse.bc.Classpath;
-import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
@@ -50,14 +45,12 @@ public class DecisionProcedureTest {
     }
     
     final CalculatorRewriting calc;
-    final ClassHierarchy hier;
     final DecisionAlternativeComparators cmp;
     DecisionProcedureAlgorithms dec;
 
-    public DecisionProcedureTest() throws InvalidClassFileFactoryClassException, IOException {
+    public DecisionProcedureTest() {
         this.calc = new CalculatorRewriting();
         this.calc.addRewriter(new RewriterOperationOnSimplex());
-        this.hier = new ClassHierarchy(new Classpath(Paths.get(System.getProperty("java.home")), Collections.emptyList(), Collections.emptyList()), ClassFileFactoryJavassist.class, new HashMap<>());
         this.cmp = new DecisionAlternativeComparators();
     }
 
@@ -75,7 +68,7 @@ public class DecisionProcedureTest {
         // 2 > 4
         Primitive p = this.calc.valInt(2).gt(this.calc.valInt(4));
         TreeSet<DecisionAlternative_IFX> d = new TreeSet<>(this.cmp.get(DecisionAlternative_IFX.class));
-        this.dec.decide_IFX(this.hier, p, d);
+        this.dec.decide_IFX(p, d);
 
         //expected: {F_concrete}
         assertEquals(1, d.size());
@@ -92,7 +85,7 @@ public class DecisionProcedureTest {
         Expression e = (Expression) A.gt(this.calc.valInt(0));
         e = (Expression) e.and(A.le(this.calc.valInt(1)));
         TreeSet<DecisionAlternative_IFX> d = new TreeSet<>(this.cmp.get(DecisionAlternative_IFX.class));
-        this.dec.decide_IFX(this.hier, e, d);
+        this.dec.decide_IFX(e, d);
 
         //expected: {T_nonconcrete, F_nonconcrete}
         assertEquals(2, d.size());
@@ -112,7 +105,7 @@ public class DecisionProcedureTest {
         Simplex two = this.calc.valInt(2);
         Simplex five = this.calc.valInt(5);
         TreeSet<DecisionAlternative_XCMPY> d = new TreeSet<>(this.cmp.get(DecisionAlternative_XCMPY.class));
-        this.dec.decide_XCMPY(this.hier, two, five, d);
+        this.dec.decide_XCMPY(two, five, d);
 
         //expected {LT_concrete}
         assertEquals(1, d.size());
@@ -130,7 +123,7 @@ public class DecisionProcedureTest {
         Expression Atwice = (Expression) A.mul(this.calc.valInt(2));
         TreeSet<DecisionAlternative_XCMPY> d = new TreeSet<>(this.cmp.get(DecisionAlternative_XCMPY.class));
         this.dec.pushAssumption(new ClauseAssume(Agezero));
-        this.dec.decide_XCMPY(this.hier, Atwice, A, d);
+        this.dec.decide_XCMPY(Atwice, A, d);
 
         //expected {GT_nonconcrete, EQ_nonconcrete}
         assertEquals(2, d.size());

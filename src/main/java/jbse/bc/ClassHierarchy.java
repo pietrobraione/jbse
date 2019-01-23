@@ -29,11 +29,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -412,7 +409,7 @@ public final class ClassHierarchy implements Cloneable {
             for (String subclassName : moreSubclasses) {
                 try {
                     final ClassFile subclass = loadCreateClass(CLASSLOADER_APP, subclassName, true);
-                    if (isSubclass(subclass, classFile)) {
+                    if (subclass.isSubclass(classFile)) {
                         retVal.add(subclass);
                     }
                 } catch (PleaseLoadClassException e) {
@@ -424,222 +421,6 @@ public final class ClassHierarchy implements Cloneable {
         return retVal;
     }
     
-    /**
-     * Produces all the superclasses of a given class.
-     * 
-     * @param startClass the {@link ClassFile} of the class whose superclasses 
-     *        are returned.
-     * @return an {@link Iterable}{@code <}{@link ClassFile}{@code >} containing 
-     *         all the superclasses of {@code startClass} (included). If
-     *         {@code startClass == null} an empty {@link Iterable} is
-     *         returned.
-     */
-    public Iterable<ClassFile> superclasses(ClassFile startClass) {
-        return new IterableSuperclasses(startClass);
-    }
-
-    /**
-     * Produces all the superinterfaces of a given class.
-     * 
-     * @param startClass the {@link ClassFile} of the class whose superinterfaces 
-     *        are returned.
-     * @return an {@link Iterable}{@code <}{@link ClassFile}{@code >} containing 
-     *         all the superinterfaces of {@code startClassName} (included if
-     *         it is an interface). If {@code startClass == null} an empty 
-     *         {@link Iterable} is returned. A same superinterface is not iterated
-     *         more than once even if the class inherits it more than once. 
-     */
-    public Iterable<ClassFile> superinterfaces(ClassFile startClass) {
-        return new IterableSuperinterfaces(startClass);
-    }
-
-    /**
-     * Checks whether a class/interface is a subclass of/implements another one.
-     * 
-     * @param sub a {@link ClassFile}.
-     * @param sup another {@link ClassFile}.
-     * @return {@code true} if {@code sub.}{@link #equals(Object) equals}{@code (sup)}, or {@code sub} 
-     *         extends {@code sup}, or {@code sub} implements {@code sup}, 
-     *         {@code false} otherwise.
-     */
-    public boolean isSubclass(ClassFile sub, ClassFile sup) {
-    	//TODO check that sub and sup are not null
-        if (sub.isArray() && sup.isArray()) {
-            final ClassFile subMember = sub.getMemberClass(); 
-            final ClassFile supMember = sup.getMemberClass();
-            if (subMember.isPrimitiveOrVoid() && supMember.isPrimitiveOrVoid()) {
-                return (subMember.equals(supMember));
-            } else if (subMember.isReference() && supMember.isReference()) {
-                return isSubclass(subMember, supMember);
-            } else if (subMember.isArray() && supMember.isArray()) {
-                return isSubclass(subMember, supMember);
-            } else {
-                return false;
-            }
-        } else {
-            for (ClassFile f : superclasses(sub)) { 
-                if (sup.equals(f)) {
-                    return true;
-                } 
-            }
-            for (ClassFile f : superinterfaces(sub)) {
-                if (sup.equals(f)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-    }
-
-    /**
-     * {@link Iterable}{@code <}{@link ClassFile}{@code >} for upwardly 
-     * scanning a class hierarchy.
-     *  
-     * @author Pietro Braione
-     */
-    private class IterableSuperclasses implements Iterable<ClassFile> {
-        private ClassFile startClassName;
-
-        /**
-         * Constructor.
-         * 
-         * @param startClass The {@link ClassFile} of the 
-         *        class from where the iteration is started. 
-         */
-        public IterableSuperclasses(ClassFile startClass) {
-            this.startClassName = startClass;
-        }
-
-        public Iterator<ClassFile> iterator() {
-            return new MyIterator(this.startClassName);
-        }        
-
-        /**
-         * {@link Iterator}{@code <}{@link ClassFile}{@code >} for
-         * upwardly scanning a class hierarchy.
-         * 
-         * @author Pietro Braione
-         */
-        private class MyIterator implements Iterator<ClassFile> {
-            private ClassFile nextClass;
-
-            public MyIterator(ClassFile startClass) {
-                this.nextClass = startClass;
-            }
-
-            public boolean hasNext() {
-                return (this.nextClass != null);
-            }
-
-            public ClassFile next() {
-                //ensures the method precondition
-                if (!hasNext()) {
-                    throw new NoSuchElementException();
-                }
-
-                //stores the return value
-                final ClassFile retval = this.nextClass;
-
-                //gets the classfile of the superclass
-                this.nextClass = retval.getSuperclass();
-
-                //returns
-                return retval;
-            }
-
-            public void remove() {
-                throw new UnsupportedOperationException();
-            }
-        }
-    }
-
-    /**
-     * {@link Iterable}{@code <}{@link ClassFile}{@code >} 
-     * for upwardly scanning an interface hierarchy.
-     *  
-     * @author Pietro Braione
-     */
-    private class IterableSuperinterfaces implements Iterable<ClassFile> {
-        private ClassFile startClass;
-
-        /**
-         * Constructor.
-         * 
-         * @param startClassName 
-         *        The name of the class from where the iteration is started. 
-         *        Note that the first call to {@code hasNext()} 
-         *        will return {@code true} iff {@code startClassName != null} and 
-         *        {@code startClassName} exists in the environment 
-         *        defined by {@link Classpath}{@code .this.env}, and it is an 
-         *        interface.
-         */
-        public IterableSuperinterfaces(ClassFile startClass) {
-            this.startClass = startClass;
-        }
-
-        public Iterator<ClassFile> iterator() {
-            return new MyIterator(this.startClass);
-        }        
-
-        /**
-         * {@link Iterator}{@code <}{@link ClassFile}{@code >} for
-         * upwardly scanning the superinterfaces of a class/interface. 
-         * For the sake of simplicity it scans in breadth-first 
-         * order. It does not visit a same interface twice. 
-         * 
-         * @author Pietro Braione
-         */
-        private class MyIterator implements Iterator<ClassFile> {
-            private final LinkedList<ClassFile> nextClassFiles;
-            private final HashSet<ClassFile> visitedClassFiles;
-
-            public MyIterator(ClassFile startClass) {
-                this.visitedClassFiles = new HashSet<>();
-                this.nextClassFiles = new LinkedList<>();
-                if (startClass == null) {
-                    return; //keeps the iterator empty
-                }
-                if (startClass.isInterface()) {
-                    this.nextClassFiles.add(startClass);
-                } else { //is not interface and is not ClassFileBad
-                    for (ClassFile cfSuper : superclasses(startClass)) {
-                        this.nextClassFiles.addAll(nonVisitedImmediateSuperinterfaces(cfSuper));
-                    }
-                }
-            }
-
-            public boolean hasNext() {
-                return !(this.nextClassFiles.isEmpty());
-            }
-
-            public ClassFile next() {
-                //ensures the method precondition
-                if (!hasNext()) {
-                    throw new NoSuchElementException();
-                }
-
-                //gets the next interface into the return value
-                //and updates the iteration state
-                final ClassFile retVal = this.nextClassFiles.removeFirst(); 
-                this.visitedClassFiles.add(retVal);
-                this.nextClassFiles.addAll(nonVisitedImmediateSuperinterfaces(retVal));
-
-                //returns the result
-                return retVal;
-            }
-
-            public void remove() {
-                throw new UnsupportedOperationException();
-            }
-
-            private List<ClassFile> nonVisitedImmediateSuperinterfaces(ClassFile base) {
-                return base.getSuperInterfaces().stream()
-                       .filter(cf -> !this.visitedClassFiles.contains(cf))
-                       .collect(Collectors.toList());
-            }
-        }
-    }
-
     private static final Signature[] SIGNATURE_ARRAY = new Signature[0];
 
     /**
@@ -658,7 +439,7 @@ public final class ClassHierarchy implements Cloneable {
             signatures = new ArrayList<Signature>(0);
             this.allFieldsOf.put(classFile, signatures);
             boolean isStartClass = true;
-            for (ClassFile c : superclasses(classFile)) {
+            for (ClassFile c : classFile.superclasses()) {
                 if (isStartClass) {
                     signatures.addAll(Arrays.asList(c.getDeclaredFieldsStatic()));
                     isStartClass = false;
@@ -1270,7 +1051,7 @@ public final class ClassHierarchy implements Cloneable {
         //searches for the method declaration in the superclasses; for
         //interfaces this means searching only in the interface
         //(JVMS v8, section 5.4.3.3 step 2 and section 5.4.3.4 step 2)
-        for (ClassFile cf : superclasses(methodSignatureClass)) {
+        for (ClassFile cf : methodSignatureClass.superclasses()) {
             if (!isInterface && cf.hasOneSignaturePolymorphicMethodDeclaration(methodSignature.getName())) {
                 accessed = cf;
                 methodSignaturePolymorphic = new Signature(methodSignature.getClassName(), SIGNATURE_POLYMORPHIC_DESCRIPTOR, methodSignature.getName());
@@ -1307,7 +1088,7 @@ public final class ClassHierarchy implements Cloneable {
         //searches in the superinterfaces
         //(JVMS v8, section 5.4.3.3 step 3b and 5.4.3.4 step 5)
         if (accessed == null) {
-            for (ClassFile cf : superinterfaces(methodSignatureClass)) {
+            for (ClassFile cf : methodSignatureClass.superinterfaces()) {
                 if (cf.hasMethodDeclaration(methodSignature) && 
                     !cf.isMethodPrivate(methodSignature) && 
                     !cf.isMethodStatic(methodSignature)) {
@@ -1369,7 +1150,7 @@ public final class ClassHierarchy implements Cloneable {
 
             //determine all the (strict) superinterfaces of the superinterface
             final Set<ClassFile> superinterfaceSuperinterfaces = 
-                stream(superinterfaces(superinterface))
+                stream(superinterface.superinterfaces())
                 .collect(Collectors.toSet());
             superinterfaceSuperinterfaces.remove(superinterface);            
             
@@ -1516,25 +1297,30 @@ public final class ClassHierarchy implements Cloneable {
      */
     private boolean isFieldAccessible(ClassFile accessor, ClassFile accessed, ClassFile fieldSignatureClass, Signature fieldSignature) 
     throws FieldNotFoundException {
-        final boolean sameRuntimePackage = (accessor.getDefiningClassLoader() == accessed.getDefiningClassLoader() && accessed.getPackageName().equals(accessor.getPackageName()));
-        if (accessed.isFieldPublic(fieldSignature)) {
-            return true;
-        } else if (accessed.isFieldProtected(fieldSignature)) {
-            if (sameRuntimePackage) {
-                return true;
-            } else if (!isSubclass(accessor, accessed)) {
-                return false;
-            } else if (accessed.isFieldStatic(fieldSignature)) {
-                return true;
-            } else {
-                return isSubclass(accessor, fieldSignatureClass) || isSubclass(fieldSignatureClass, accessor);
-            }
-        } else if (accessed.isFieldPackage(fieldSignature)) {
-            return sameRuntimePackage; 
-        } else { //accessed.isFieldPrivate(fieldSignature)
-            return (accessed.equals(accessor)); 
-            //TODO there was a || accessor.isInner(accessed) clause but it is *wrong*!
-        }
+    	try {
+	        final boolean sameRuntimePackage = (accessor.getDefiningClassLoader() == accessed.getDefiningClassLoader() && accessed.getPackageName().equals(accessor.getPackageName()));
+	        if (accessed.isFieldPublic(fieldSignature)) {
+	            return true;
+	        } else if (accessed.isFieldProtected(fieldSignature)) {
+	            if (sameRuntimePackage) {
+	                return true;
+	            } else if (!accessor.isSubclass(accessed)) {
+	                return false;
+	            } else if (accessed.isFieldStatic(fieldSignature)) {
+	                return true;
+	            } else {
+	                return accessor.isSubclass(fieldSignatureClass) || fieldSignatureClass.isSubclass(accessor);
+	            }
+	        } else if (accessed.isFieldPackage(fieldSignature)) {
+	            return sameRuntimePackage; 
+	        } else { //accessed.isFieldPrivate(fieldSignature)
+	            return (accessed.equals(accessor)); 
+	            //TODO there was a || accessor.isInner(accessed) clause but it is *wrong*!
+	        }
+    	} catch (InvalidInputException e) {
+    		//this should never happen, NullPointerException shall be thrown before
+    		throw new UnexpectedInternalException(e);
+    	}
     }
 
     /**
@@ -1554,25 +1340,30 @@ public final class ClassHierarchy implements Cloneable {
      */
     private boolean isMethodAccessible(ClassFile accessor, ClassFile accessed, ClassFile methodSignatureClass, Signature methodSignature) 
     throws MethodNotFoundException {
-        final boolean sameRuntimePackage = (accessor.getDefiningClassLoader() == accessed.getDefiningClassLoader() && accessed.getPackageName().equals(accessor.getPackageName()));
-        if (accessed.isMethodPublic(methodSignature)) {
-            return true;
-        } else if (accessed.isMethodProtected(methodSignature)) {
-            if (sameRuntimePackage) {
-                return true;
-            } else if (!isSubclass(accessor, accessed)) {
-                return false;
-            } else if (accessed.isMethodStatic(methodSignature)) {
-                return true;
-            } else {
-                return isSubclass(accessor, methodSignatureClass) || isSubclass(methodSignatureClass, accessor);
-            }
-        } else if (accessed.isMethodPackage(methodSignature)) {
-            return sameRuntimePackage;
-        } else { //accessed.isMethodPrivate(methodSignature)
-            return (accessed.equals(accessor));
-            //TODO there was a || accessor.isInner(accessed) clause but it is *wrong*!
-        }
+    	try {
+    		final boolean sameRuntimePackage = (accessor.getDefiningClassLoader() == accessed.getDefiningClassLoader() && accessed.getPackageName().equals(accessor.getPackageName()));
+    		if (accessed.isMethodPublic(methodSignature)) {
+    			return true;
+    		} else if (accessed.isMethodProtected(methodSignature)) {
+    			if (sameRuntimePackage) {
+    				return true;
+    			} else if (!accessor.isSubclass(accessed)) {
+    				return false;
+    			} else if (accessed.isMethodStatic(methodSignature)) {
+    				return true;
+    			} else {
+    				return accessor.isSubclass(methodSignatureClass) || methodSignatureClass.isSubclass(accessor);
+    			}
+    		} else if (accessed.isMethodPackage(methodSignature)) {
+    			return sameRuntimePackage;
+    		} else { //accessed.isMethodPrivate(methodSignature)
+    			return (accessed.equals(accessor));
+    			//TODO there was a || accessor.isInner(accessed) clause but it is *wrong*!
+    		}
+    	} catch (InvalidInputException e) {
+    		//this should never happen, NullPointerException shall be thrown before
+    		throw new UnexpectedInternalException(e);
+    	}
     }
 
     /**
@@ -1596,7 +1387,7 @@ public final class ClassHierarchy implements Cloneable {
         
         try {
             //step 1 and 2
-            for (ClassFile f : superclasses(receiverClass)) {
+            for (ClassFile f : receiverClass.superclasses()) {
                 if (f.hasMethodDeclaration(methodSignature) && !f.isMethodStatic(methodSignature)) {
                     retVal = f;
                     
@@ -1648,16 +1439,17 @@ public final class ClassHierarchy implements Cloneable {
      *         {@code methodSignature}.
      * @throws MethodAbstractException if lookup fails and {@link java.lang.AbstractMethodError} should be thrown.
      * @throws IncompatibleClassFileException if lookup fails and {@link java.lang.IncompatibleClassChangeError} should be thrown.
+     * @throws InvalidInputException if {@code resolutionClass == null}
      */
     public ClassFile lookupMethodImplSpecial(ClassFile currentClass, ClassFile resolutionClass, Signature methodSignature) 
-    throws MethodAbstractException, IncompatibleClassFileException {
+    throws MethodAbstractException, IncompatibleClassFileException, InvalidInputException {
         //determines whether should start looking for the implementation in 
         //the superclass of the current class (virtual semantics, for super 
         //calls) or in the class of the resolved method (nonvirtual semantics, 
         //for <init> and private methods)
         final boolean useVirtualSemantics = 
             (!"<init>".equals(methodSignature.getName()) &&
-             (resolutionClass.isInterface() || isSubclass(currentClass.getSuperclass(), resolutionClass)) && 
+             (resolutionClass.isInterface() || currentClass.getSuperclass().isSubclass(resolutionClass)) && 
              currentClass.isSuperInvoke());
         final ClassFile c = (useVirtualSemantics ? currentClass.getSuperclass() : resolutionClass);
         
@@ -1676,7 +1468,7 @@ public final class ClassHierarchy implements Cloneable {
 
             //step 2
             if (retVal == null && !c.isInterface() && c.getSuperclassName() != null) {
-                for (ClassFile f : superclasses(c.getSuperclass())) {
+                for (ClassFile f : c.getSuperclass().superclasses()) {
                     if (f.hasMethodDeclaration(methodSignature)) {
                         retVal = f;
                         //third run-time exception
@@ -1753,20 +1545,24 @@ public final class ClassHierarchy implements Cloneable {
      * @return the {@link ClassFile} which contains the implementation of 
      *         {@code methodSignature}. In the case the method is signature polymorphic returns
      *         {@code resolutionClass}.
+     * @throws InvalidInputException if any parameter is {@code null}.
      * @throws MethodNotFoundException if no declaration of {@code methodSignature} is found in 
      *         {@code resolutionClass}. 
      * @throws MethodAbstractException if lookup fails and {@link java.lang.AbstractMethodError} should be thrown.
      * @throws IncompatibleClassFileException if lookup fails and {@link java.lang.IncompatibleClassChangeError} should be thrown.
      */
     public ClassFile lookupMethodImplVirtual(ClassFile receiverClass, ClassFile resolutionClass, Signature methodSignature) 
-    throws MethodNotFoundException, MethodAbstractException, IncompatibleClassFileException {
+    throws InvalidInputException, MethodNotFoundException, MethodAbstractException, IncompatibleClassFileException {
+    	if (receiverClass == null || resolutionClass == null || methodSignature == null) {
+    		throw new InvalidInputException("Invoked ClassHierarchy.lookupMethodImplVirtual with a null parameter.");
+    	}
         if (resolutionClass.isMethodSignaturePolymorphic(methodSignature)) {
             return resolutionClass;
         } else {
             ClassFile retVal = null;
             
             //step 1 and 2
-            for (ClassFile f : superclasses(receiverClass)) {
+            for (ClassFile f : receiverClass.superclasses()) {
                 if (f.hasMethodDeclaration(methodSignature) && !f.isMethodStatic(methodSignature)) {
                     if (overrides(f, resolutionClass, methodSignature, methodSignature)) {
                         retVal = f;
@@ -1825,38 +1621,43 @@ public final class ClassHierarchy implements Cloneable {
             throw new UnexpectedInternalException("Method " + this.getClass().getName() + ".createClassFileArrays was unable to find standard class java.lang.Cloneable.");
         }
         
-        if (source.isInterface()) {
-            if (target.isInterface()) {
-                return isSubclass(source, target);
-            } else if (target.isArray()) {
-                return false; //should not happen (verify error)
-            } else {
-                return (cf_JAVA_OBJECT.equals(target));
-            }
-        } else if (source.isArray()) {
-            if (target.isInterface()) {
-                return (cf_JAVA_CLONEABLE.equals(target) || cf_JAVA_SERIALIZABLE.equals(target));
-            } else if (target.isArray()) {
-                final ClassFile sourceComponent = source.getMemberClass();
-                final ClassFile targetComponent = target.getMemberClass();
-                if (sourceComponent.isPrimitiveOrVoid() && targetComponent.isPrimitiveOrVoid()) {
-                    return (sourceComponent.equals(targetComponent));
-                } else if ((sourceComponent.isReference() && targetComponent.isReference()) ||
-                           (sourceComponent.isArray() && targetComponent.isArray())) {
-                    return isAssignmentCompatible(sourceComponent, targetComponent);
-                } else {
-                    return false;
-                }
-            } else {
-                return (cf_JAVA_OBJECT.equals(target));
-            }
-        } else {
-            if (target.isArray()) {
-                return false; //should not happen (verify error)
-            } else {
-                return isSubclass(source, target);
-            }
-        }
+        try {
+        	if (source.isInterface()) {
+        		if (target.isInterface()) {
+        			return source.isSubclass(target);
+        		} else if (target.isArray()) {
+        			return false; //should not happen (verify error)
+        		} else {
+        			return (cf_JAVA_OBJECT.equals(target));
+        		}
+        	} else if (source.isArray()) {
+        		if (target.isInterface()) {
+        			return (cf_JAVA_CLONEABLE.equals(target) || cf_JAVA_SERIALIZABLE.equals(target));
+        		} else if (target.isArray()) {
+        			final ClassFile sourceComponent = source.getMemberClass();
+        			final ClassFile targetComponent = target.getMemberClass();
+        			if (sourceComponent.isPrimitiveOrVoid() && targetComponent.isPrimitiveOrVoid()) {
+        				return (sourceComponent.equals(targetComponent));
+        			} else if ((sourceComponent.isReference() && targetComponent.isReference()) ||
+        					(sourceComponent.isArray() && targetComponent.isArray())) {
+        				return isAssignmentCompatible(sourceComponent, targetComponent);
+        			} else {
+        				return false;
+        			}
+        		} else {
+        			return (cf_JAVA_OBJECT.equals(target));
+        		}
+        	} else {
+        		if (target.isArray()) {
+        			return false; //should not happen (verify error)
+        		} else {
+        			return source.isSubclass(target);
+        		}
+        	}
+		} catch (InvalidInputException e) {
+			//this should never happen (NullPointerException shall be raised before)
+			throw new UnexpectedInternalException(e);
+		}
     }
     
     /**
@@ -1875,9 +1676,13 @@ public final class ClassHierarchy implements Cloneable {
      *         {@code supMethodSignature} do not exist in their respective 
      *         classfiles (note that the exception is not always raised 
      *         in this case).
+     * @throws InvalidInputException if any parameter is {@code null}.
      */
     public boolean overrides(ClassFile sub, ClassFile sup, Signature subMethodSignature, Signature supMethodSignature) 
-    throws MethodNotFoundException {
+    throws MethodNotFoundException, InvalidInputException {
+    	if (sub == null || sup == null || subMethodSignature == null || supMethodSignature == null) {
+    		throw new InvalidInputException("Invoked ClassHierarchy.overrides with a null parameter.");
+    	}
         //first case: same method
         if (sub.equals(sup) && 
             subMethodSignature.getDescriptor().equals(supMethodSignature.getDescriptor()) &&
@@ -1887,7 +1692,7 @@ public final class ClassHierarchy implements Cloneable {
         
         //second case: all of the following must be true
         //1- subMethod's class is a subclass of supMethod's class 
-        if (!isSubclass(sub.getSuperclass(), sup)) {
+        if (!sub.getSuperclass().isSubclass(sup)) {
             return false;
         }
         
@@ -1920,7 +1725,7 @@ public final class ClassHierarchy implements Cloneable {
         //4b- there is another method m such that subMethod overrides 
         //m and m overrides supMethod; we look for such m in subMethod's 
         //superclasses up to supMethods
-        for (ClassFile cf : superclasses(sub.getSuperclass())) {
+        for (ClassFile cf : sub.getSuperclass().superclasses()) {
             if (sup.equals(cf)) {
                 break;
             }
