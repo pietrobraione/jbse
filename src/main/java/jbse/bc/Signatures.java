@@ -7,7 +7,6 @@ import static jbse.common.Type.CHAR;
 import static jbse.common.Type.DOUBLE;
 import static jbse.common.Type.FLOAT;
 import static jbse.common.Type.INT;
-import static jbse.common.Type.internalClassName;
 import static jbse.common.Type.LONG;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.SHORT;
