@@ -424,7 +424,7 @@ public final class RunParameters implements Cloneable {
     /**  
      * The source code path. 
      */
-    private ArrayList<Path> srcPath = new ArrayList<>();
+    private ArrayList<Path> srcPaths = new ArrayList<>();
 
     /** Whether the symbolic execution is guided along a concrete one. */
     private boolean guided = false;
@@ -1885,26 +1885,40 @@ public final class RunParameters implements Cloneable {
     public StateFormatMode getStateFormatMode() {
         return this.stateFormatMode;
     }
+    
+    /**
+     * Sets the path of the source files.
+     * 
+     * @param paths a varargs of {@link String}, the 
+     *        paths to be added to the list of source paths.
+     * @throws NullPointerException if {@code paths == null}.
+     */
+    public void addSourcePath(String... paths) { 
+        if (paths == null) {
+            throw new NullPointerException();
+        }
+        this.srcPaths.addAll(Arrays.stream(paths).map(s -> Paths.get(s)).collect(Collectors.toList())); 
+    }
 
     /**
      * Sets the path of the source files.
      * 
-     * @param srcPath a varargs of {@link Path}, the 
+     * @param paths a varargs of {@link Path}, the 
      *        paths to be added to the list of source paths.
-     * @throws NullPointerException if {@code srcPath == null}.
+     * @throws NullPointerException if {@code paths == null}.
      */
-    public void addSourcePath(Path... srcPath) { 
-        if (srcPath == null) {
+    public void addSourcePath(Path... paths) { 
+        if (paths == null) {
             throw new NullPointerException();
         }
-        Collections.addAll(this.srcPath, srcPath); 
+        Collections.addAll(this.srcPaths, paths); 
     }
 
     /**
      * Clears the paths of the source files.
      */
     public void clearSourcePath() {
-        this.srcPath.clear();
+        this.srcPaths.clear();
     }
 
     private static final Path[] ARRAY_OF_PATHS = { };
@@ -1919,7 +1933,7 @@ public final class RunParameters implements Cloneable {
           getJavaHome().resolve("src.zip")
           //TODO more?
         };
-        final Path[] sourcePathUser = this.srcPath.toArray(ARRAY_OF_PATHS);
+        final Path[] sourcePathUser = this.srcPaths.toArray(ARRAY_OF_PATHS);
         final List<Path> sourcePath = Stream.concat(Arrays.stream(sourcePathJRE), Arrays.stream(sourcePathUser)).collect(Collectors.toList());
 
         return sourcePath;
@@ -2133,7 +2147,7 @@ public final class RunParameters implements Cloneable {
         o.creationStrategies = (ArrayList<DecisionProcedureCreationStrategy>) this.creationStrategies.clone();
         o.tracesToShow = this.tracesToShow.clone();
         o.concretizationMethods = (HashMap<String, String>) this.concretizationMethods.clone();
-        o.srcPath = (ArrayList<Path>) this.srcPath.clone();
+        o.srcPaths = (ArrayList<Path>) this.srcPaths.clone();
         return o;
     }
 }

@@ -256,6 +256,7 @@ public final class RunnerParameters implements Cloneable {
      * @param paths a varargs of {@link String}s, 
      *        the paths to be added to the extensions 
      *        classpath.
+     * @throws NullPointerException if {@code paths == null}.
      */
     public void addExtClasspath(String... paths) {
         this.engineParameters.addExtClasspath(paths);
@@ -268,6 +269,7 @@ public final class RunnerParameters implements Cloneable {
      * @param paths a varargs of {@link Path}s, 
      *        the paths to be added to the extensions 
      *        classpath.
+     * @throws NullPointerException if {@code paths == null}.
      */
     public void addExtClasspath(Path... paths) { 
         this.engineParameters.addExtClasspath(paths);
@@ -298,6 +300,7 @@ public final class RunnerParameters implements Cloneable {
      * @param paths a varargs of {@link String}s, 
      *        the paths to be added to the user 
      *        classpath.
+     * @throws NullPointerException if {@code paths == null}.
      */
     public void addUserClasspath(String... paths) { 
         this.engineParameters.addUserClasspath(paths);
@@ -310,6 +313,7 @@ public final class RunnerParameters implements Cloneable {
      * @param paths a varargs of {@link Path}s, 
      *        the paths to be added to the user 
      *        classpath.
+     * @throws NullPointerException if {@code paths == null}.
      */
     public void addUserClasspath(Path... paths) { 
         this.engineParameters.addUserClasspath(paths);

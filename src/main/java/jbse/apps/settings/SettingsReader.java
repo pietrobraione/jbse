@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +33,20 @@ public class SettingsReader {
     /**
      * Constructor.
      * 
-     * @param filePath the path of the file containing the settings.
+     * @param filePath a {@link String}, the path of the file containing the settings.
+     * @throws FileNotFoundException if the file does not exist.
+     * @throws ParseException if the content of the file is not correct.
+     * @throws IOException (other than {@link FileNotFoundException}) 
+     *         if some error occurs while closing the file.
+     */
+    public SettingsReader(String filePath) throws IOException, FileNotFoundException, ParseException {
+        this(Paths.get(filePath));
+    }
+
+    /**
+     * Constructor.
+     * 
+     * @param filePath the {@link Path} of the file containing the settings.
      * @throws FileNotFoundException if the file does not exist.
      * @throws ParseException if the content of the file is not correct.
      * @throws IOException (other than {@link FileNotFoundException}) 
