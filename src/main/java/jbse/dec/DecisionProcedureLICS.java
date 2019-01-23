@@ -6,10 +6,10 @@ import java.util.Iterator;
 import jbse.bc.ClassFile;
 import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.Objekt;
-import jbse.rewr.CalculatorRewriting;
 import jbse.rules.LICSRuleExpandsTo;
 import jbse.rules.LICSRuleAliases;
 import jbse.rules.LICSRulesRepo;
+import jbse.val.Calculator;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -23,7 +23,7 @@ public final class DecisionProcedureLICS extends DecisionProcedureChainOfRespons
     /** Stores all the {@link ClauseAssumeExpands} that are pushed. */
     private final ArrayList<ClauseAssumeExpands> expansions = new ArrayList<>();
 
-    public DecisionProcedureLICS(DecisionProcedure next, CalculatorRewriting calc, LICSRulesRepo rulesRepo) {
+    public DecisionProcedureLICS(DecisionProcedure next, Calculator calc, LICSRulesRepo rulesRepo) {
         super(next, calc);
         this.rulesRepo = rulesRepo.clone(); //safety copy
     }

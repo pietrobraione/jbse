@@ -422,10 +422,9 @@ public final class RunParameters implements Cloneable {
     private boolean showDecisionProcedureInteraction = false;
 
     /**  
-     * The source code path, or {@code null} iff no path is specified, 
-     * which is the default. 
+     * The source code path. 
      */
-    private ArrayList<String> srcPath = new ArrayList<String>();
+    private ArrayList<Path> srcPath = new ArrayList<>();
 
     /** Whether the symbolic execution is guided along a concrete one. */
     private boolean guided = false;
@@ -1890,11 +1889,11 @@ public final class RunParameters implements Cloneable {
     /**
      * Sets the path of the source files.
      * 
-     * @param srcPath a varargs of {@link String}, the 
+     * @param srcPath a varargs of {@link Path}, the 
      *        paths to be added to the list of source paths.
      * @throws NullPointerException if {@code srcPath == null}.
      */
-    public void addSourcePath(String... srcPath) { 
+    public void addSourcePath(Path... srcPath) { 
         if (srcPath == null) {
             throw new NullPointerException();
         }
@@ -2134,7 +2133,7 @@ public final class RunParameters implements Cloneable {
         o.creationStrategies = (ArrayList<DecisionProcedureCreationStrategy>) this.creationStrategies.clone();
         o.tracesToShow = this.tracesToShow.clone();
         o.concretizationMethods = (HashMap<String, String>) this.concretizationMethods.clone();
-        o.srcPath = (ArrayList<String>) this.srcPath.clone();
+        o.srcPath = (ArrayList<Path>) this.srcPath.clone();
         return o;
     }
 }

@@ -10,6 +10,7 @@ import java.util.TreeSet;
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.Any;
+import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.PrimitiveSymbolicAtomic;
@@ -25,8 +26,8 @@ import jbse.val.exc.InvalidOperatorException;
 import jbse.val.exc.InvalidTypeException;
 
 class Polynomial {
-	/** {@link CalculatorRewriting} for the {@link Primitive} it represents. */
-	private final CalculatorRewriting calc;
+	/** {@link Calculator} for the {@link Primitive} it represents. */
+	private final Calculator calc;
 	
 	/** The type. */
 	private final char type;
@@ -37,13 +38,13 @@ class Polynomial {
 	 */
 	private final Map<Monomial, Simplex> rep;
 
-	private Polynomial(CalculatorRewriting calc, char type, Map<Monomial, Simplex> rep) {
+	private Polynomial(Calculator calc, char type, Map<Monomial, Simplex> rep) {
 		this.calc = calc;
 		this.type = type;
 		this.rep = rep;
 	}
 
-	public static Polynomial of(CalculatorRewriting calc, Primitive p) {
+	public static Polynomial of(Calculator calc, Primitive p) {
 		return new PolynomialBuilder(calc, makeRep()).of(p).make();
 	}
 
@@ -56,11 +57,11 @@ class Polynomial {
 	}
 
 	public static class PolynomialBuilder {
-		private final CalculatorRewriting calc;
+		private final Calculator calc;
 		private char type = Type.UNKNOWN;
 		private final Map<Monomial, Simplex> rep;
 
-		private PolynomialBuilder(CalculatorRewriting calc, Map<Monomial, Simplex> rep) {
+		private PolynomialBuilder(Calculator calc, Map<Monomial, Simplex> rep) {
 			this.calc = calc;
 			this.rep = rep;
 		}

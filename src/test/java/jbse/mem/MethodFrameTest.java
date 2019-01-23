@@ -9,7 +9,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 
 import jbse.bc.ClassFile;
@@ -34,17 +34,17 @@ import jbse.val.ReferenceConcrete;
 import jbse.val.Value;
 
 public class MethodFrameTest {
-    private static ClassHierarchy hier;
+    private ClassHierarchy hier;
 
-    @BeforeClass
-    public static void setUpClass() throws InvalidClassFileFactoryClassException, IOException {
+    @Before
+    public void setUp() throws InvalidClassFileFactoryClassException, IOException {
         //environment
         final ArrayList<Path> userPath = new ArrayList<>();
         userPath.add(Paths.get("src/test/resources/jbse/bc/testdata"));
-        Classpath env = new Classpath(Paths.get(System.getProperty("java.home")), new ArrayList<>(), userPath);
+        final Classpath env = new Classpath(Paths.get(System.getProperty("java.home")), new ArrayList<>(), userPath);
 
         //class hierarchy
-        hier = new ClassHierarchy(env, ClassFileFactoryJavassist.class, new HashMap<>());
+        this.hier = new ClassHierarchy(env, ClassFileFactoryJavassist.class, new HashMap<>());
     }
 
     @Test
@@ -52,7 +52,7 @@ public class MethodFrameTest {
     InvalidInputException, BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, 
     ClassFileNotAccessibleException, PleaseLoadClassException, MethodNotFoundException, MethodCodeNotFoundException {
         final String className = "tsafe/engine/TsafeEngine";
-        final ClassFile cf = hier.loadCreateClass(CLASSLOADER_APP, className, true);
+        final ClassFile cf = this.hier.loadCreateClass(CLASSLOADER_APP, className, true);
         final Signature sigMethod = new Signature(className, "()V", "start");
         final MethodFrame f = new MethodFrame(sigMethod, cf);
         assertEquals(f.getCurrentMethodSignature(), sigMethod);
@@ -64,7 +64,7 @@ public class MethodFrameTest {
     ClassFileNotAccessibleException, PleaseLoadClassException, MethodNotFoundException, MethodCodeNotFoundException, 
     InvalidSlotException {
         final String className = "tsafe/engine/TsafeEngine";
-        final ClassFile cf = hier.loadCreateClass(CLASSLOADER_APP, className, true);
+        final ClassFile cf = this.hier.loadCreateClass(CLASSLOADER_APP, className, true);
         final Signature sigMethod = new Signature(className, "()V", "start");
         final MethodFrame f = new MethodFrame(sigMethod, cf);
         f.setArgs(Null.getInstance());
@@ -78,7 +78,7 @@ public class MethodFrameTest {
     ClassFileNotAccessibleException, PleaseLoadClassException, MethodNotFoundException, MethodCodeNotFoundException, 
     InvalidSlotException {
         final String className = "tsafe/engine/TsafeEngine";
-        final ClassFile cf = hier.loadCreateClass(CLASSLOADER_APP, className, true);
+        final ClassFile cf = this.hier.loadCreateClass(CLASSLOADER_APP, className, true);
         final Signature sigMethod = new Signature(className, "()V", "start");
         final MethodFrame f = new MethodFrame(sigMethod, cf);
         f.setArgs(Null.getInstance());
@@ -92,7 +92,7 @@ public class MethodFrameTest {
     ClassFileNotAccessibleException, PleaseLoadClassException, MethodNotFoundException, MethodCodeNotFoundException, 
     InvalidSlotException {
         final String className = "tsafe/engine/TsafeEngine";
-        final ClassFile cf = hier.loadCreateClass(CLASSLOADER_APP, className, true);
+        final ClassFile cf = this.hier.loadCreateClass(CLASSLOADER_APP, className, true);
         final Signature sigMethod = new Signature(className, "()V", "start");
         final MethodFrame f = new MethodFrame(sigMethod, cf);
         f.setArgs(Null.getInstance());

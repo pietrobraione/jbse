@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import jbse.common.exc.UnexpectedInternalException;
-import jbse.rewr.CalculatorRewriting;
+import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.Primitive;
 import jbse.val.Term;
@@ -24,10 +24,12 @@ public class ExpressionMangler {
 	private HashMap<Primitive, Term> mangling = new HashMap<Primitive, Term>();
 	private int symId = 0;
 	private String pre, post;
-	private CalculatorRewriting calc;
+	private Calculator calc;
 	
-	public ExpressionMangler(String pre, String post, CalculatorRewriting calc) {
-		this.pre = pre; this.post = post; this.calc = calc;
+	public ExpressionMangler(String pre, String post, Calculator calc) {
+		this.pre = pre; 
+		this.post = post; 
+		this.calc = calc;
 	}
 	
 	/**

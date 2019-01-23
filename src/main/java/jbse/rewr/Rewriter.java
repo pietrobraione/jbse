@@ -3,6 +3,7 @@ package jbse.rewr;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.rewr.exc.NoResultException;
 import jbse.val.Any;
+import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.PrimitiveSymbolicAtomic;
@@ -28,7 +29,7 @@ public class Rewriter {
 	private Primitive value;
 	private RewriteVisitor visitor;
 	
-	protected CalculatorRewriting calc;
+	protected Calculator calc;
 	
 	public Rewriter() {
 		this.calc = null;
@@ -36,9 +37,19 @@ public class Rewriter {
 		this.visitor = new RewriteVisitor();
 	}
 	
-	void setCalculator(CalculatorRewriting calc) {
+	void setCalculator(Calculator calc) {
 		this.calc = calc;
 	}
+	
+    public static Primitive applyRewriters(Primitive p, Calculator calc, Rewriter...rewriters)
+    throws NoResultException {
+        Primitive retVal = p;
+        for (Rewriter r : rewriters) {
+        	r.setCalculator(calc);
+        	retVal = r.rewrite(retVal);
+        }
+        return retVal;
+    }
 
 	protected final Primitive rewrite(Primitive p) throws NoResultException {
 		if (p == null || this.calc == null) {
@@ -114,11 +125,11 @@ public class Rewriter {
 		try {
 			if (x.isUnary()) {
 				final Primitive operand = rewrite(x.getOperand());
-				result = Expression.makeExpressionUnary(calc, operator, operand);
+				result = Expression.makeExpressionUnary(this.calc, operator, operand);
 			} else {
 				final Primitive firstOperand = rewrite(x.getFirstOperand());
 				final Primitive secondOperand = rewrite(x.getSecondOperand());
-				result = Expression.makeExpressionBinary(calc, firstOperand, operator, secondOperand);
+				result = Expression.makeExpressionBinary(this.calc, firstOperand, operator, secondOperand);
 			}
 		} catch (InvalidTypeException | InvalidOperandException e) {
 			//rewriting of operands yielded bad results: fails
@@ -135,7 +146,7 @@ public class Rewriter {
 		final Primitive arg = rewrite(x.getArg());
 		final WideningConversion result;
 		try {
-			result = WideningConversion.make(x.getType(), calc, arg);
+			result = WideningConversion.make(x.getType(), this.calc, arg);
 		} catch (InvalidOperandException | InvalidTypeException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
@@ -148,7 +159,7 @@ public class Rewriter {
 		final Primitive arg = rewrite(x.getArg());
 		final NarrowingConversion result;
 		try {
-			result = NarrowingConversion.make(x.getType(), calc, arg);
+			result = NarrowingConversion.make(x.getType(), this.calc, arg);
 		} catch (InvalidOperandException | InvalidTypeException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);

@@ -5,10 +5,10 @@ import java.util.LinkedHashMap;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.ClauseAssume;
-import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.Rewriter;
 import jbse.rewr.exc.NoResultException;
 import jbse.val.Any;
+import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.PrimitiveSymbolicAtomic;
@@ -21,7 +21,6 @@ import jbse.val.Simplex;
 import jbse.val.Term;
 import jbse.val.WideningConversion;
 
-
 /**
  * A poor man decision procedure for equalities and inequalities 
  * (not really congruence closure).
@@ -32,7 +31,7 @@ import jbse.val.WideningConversion;
 public final class DecisionProcedureEquality extends DecisionProcedureChainOfResponsibility {
 	private final Partition equivalence = new Partition();
 
-	public DecisionProcedureEquality(DecisionProcedure component, CalculatorRewriting calc) {
+	public DecisionProcedureEquality(DecisionProcedure component, Calculator calc) {
 		super(component, calc);
 		this.rewriters = new Rewriter[] { new RewriterUnify() }; //explicit assignment: no constructor call is allowed before super()
 	}

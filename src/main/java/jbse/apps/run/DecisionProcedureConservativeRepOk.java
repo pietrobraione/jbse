@@ -17,7 +17,7 @@ import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.meta.annotations.ConservativeRepOk;
-import jbse.rewr.CalculatorRewriting;
+import jbse.val.Calculator;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.exc.InvalidTypeException;
 
@@ -33,7 +33,7 @@ import jbse.val.exc.InvalidTypeException;
 public final class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOfResponsibility {
     private final InitialHeapChecker checker;
 
-    public DecisionProcedureConservativeRepOk(DecisionProcedure next, CalculatorRewriting calc, 
+    public DecisionProcedureConservativeRepOk(DecisionProcedure next, Calculator calc, 
                                               RunnerParameters checkerParameters, Map<String, String> checkMethods) {
         super(next, calc);
         this.checker = new InitialHeapChecker(checkerParameters, ConservativeRepOk.class, checkMethods);

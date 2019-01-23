@@ -23,7 +23,7 @@ public class RewriterArcTan extends Rewriter {
 			if (arg instanceof PrimitiveSymbolicApply) {
 				final PrimitiveSymbolicApply argFA = (PrimitiveSymbolicApply) arg;
 				if (argFA.getOperator().equals(PrimitiveSymbolicApply.ATAN)) {
-					setResult(this.calc.applyRewriters((Primitive) argFA.getArgs()[0]));
+					setResult(this.calc.simplify((Primitive) argFA.getArgs()[0]));
 					return;
 				}
 			}

@@ -22,6 +22,8 @@ import jbse.mem.ClauseVisitor;
 import jbse.mem.Objekt;
 import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.Rewriter;
+import jbse.rewr.exc.NoResultException;
+import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.Primitive;
 import jbse.val.PrimitiveSymbolic;
@@ -41,8 +43,8 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
     /** The next {@link DecisionProcedure} in the Chain Of Responsibility */
     protected final DecisionProcedure next;
 
-    /** The {@link CalculatorRewriting}; it is set by the constructor. */
-    protected final CalculatorRewriting calc;
+    /** The {@link Calculator}; it is set by the constructor. */
+    protected final Calculator calc;
 
     /** 
      * The {@link Rewriter}s for the (possible) simplification of expressions. 
@@ -56,11 +58,11 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * 
      * @param next The next {@link DecisionProcedure} in the 
      *        Chain Of Responsibility.
-     * @param calc a {@link CalculatorRewriting}. It must not be {@code null}.
+     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param rewriters a vararg of {@link Rewriter}s for the 
      *        (possible) simplification of expressions.
      */
-    protected DecisionProcedureChainOfResponsibility(DecisionProcedure next, CalculatorRewriting calc, Rewriter... rewriters) {
+    protected DecisionProcedureChainOfResponsibility(DecisionProcedure next, Calculator calc, Rewriter... rewriters) {
         this.next = next;
         this.calc = calc;
         this.rewriters = rewriters;
@@ -876,13 +878,17 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      *         nor an {@link Expression}.
      */
     protected final Primitive simplifyLocal(Primitive p) throws DecisionException {
-        final Primitive retVal = this.calc.applyRewriters(p, this.rewriters);
-        if (retVal == null || retVal.getType() != Type.BOOLEAN || 
-        	!(retVal instanceof Simplex || retVal instanceof Expression)) {
-        	//TODO throw a better exception
-            throw new DecisionException("The simplification of " + p + " returned " + retVal + " that is neither a boolean Simplex nor a boolean Expression.");
-        }
-        return retVal;
+    	try {
+    		final Primitive retVal = this.calc.simplify(Rewriter.applyRewriters(p, this.calc, this.rewriters));
+    		if (retVal == null || retVal.getType() != Type.BOOLEAN || 
+    				!(retVal instanceof Simplex || retVal instanceof Expression)) {
+    			//TODO throw a better exception
+    			throw new DecisionException("The simplification of " + p + " returned " + retVal + " that is neither a boolean Simplex nor a boolean Expression.");
+    		}
+    		return retVal;
+    	} catch (NoResultException e) {
+    		throw new DecisionException(e);
+    	}
     }
 
     @Override

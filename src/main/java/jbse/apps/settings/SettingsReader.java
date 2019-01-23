@@ -2,8 +2,9 @@ package jbse.apps.settings;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -31,15 +32,14 @@ public class SettingsReader {
     /**
      * Constructor.
      * 
-     * @param fname the name of the file containing the settings. The
-     *        constructor will read the file.
+     * @param filePath the path of the file containing the settings.
      * @throws FileNotFoundException if the file does not exist.
      * @throws ParseException if the content of the file is not correct.
      * @throws IOException (other than {@link FileNotFoundException}) 
      *         if some error occurs while closing the file.
      */
-    public SettingsReader(String fname) throws IOException, FileNotFoundException, ParseException {
-        try (final BufferedReader reader = new BufferedReader(new FileReader(fname))) {
+    public SettingsReader(Path filePath) throws IOException, FileNotFoundException, ParseException {
+        try (final BufferedReader reader = Files.newBufferedReader(filePath)) {
             this.parser = new SettingsParser(reader);
             this.parser.start();
         }

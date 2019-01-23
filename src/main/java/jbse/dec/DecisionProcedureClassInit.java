@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.mem.ClauseAssumeClassNotInitialized;
-import jbse.rewr.CalculatorRewriting;
 import jbse.rules.ClassInitRulesRepo;
+import jbse.val.Calculator;
 
 /**
  * A decision procedure based on the specification of class initializations.
@@ -25,7 +25,7 @@ public final class DecisionProcedureClassInit extends DecisionProcedureChainOfRe
      */
     private final ArrayList<ClassFile> notInit = new ArrayList<>();
 
-    public DecisionProcedureClassInit(DecisionProcedure next, CalculatorRewriting calc, ClassInitRulesRepo rulesRepo) {
+    public DecisionProcedureClassInit(DecisionProcedure next, Calculator calc, ClassInitRulesRepo rulesRepo) {
         super(next, calc);
         this.rulesRepo = rulesRepo.clone(); //safety copy
     }

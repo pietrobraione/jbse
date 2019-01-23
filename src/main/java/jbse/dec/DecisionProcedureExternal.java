@@ -15,8 +15,8 @@ import jbse.mem.ClauseAssumeClassNotInitialized;
 import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.ClauseAssumeNull;
 import jbse.mem.Objekt;
-import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.Rewriter;
+import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolic;
 import jbse.val.ReferenceSymbolic;
@@ -55,7 +55,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
     /** true iff the external decision procedure has not yet received the current assumption. */
     private boolean notInSynch = false;
 
-    protected DecisionProcedureExternal(DecisionProcedure next, CalculatorRewriting calc, Rewriter... rewriters) {
+    protected DecisionProcedureExternal(DecisionProcedure next, Calculator calc, Rewriter... rewriters) {
         super(next, calc, rewriters);
         this.clauses = new ArrayDeque<>();
     }

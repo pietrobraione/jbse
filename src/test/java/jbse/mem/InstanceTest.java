@@ -9,7 +9,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 
 import jbse.bc.ClassFile;
@@ -31,21 +31,21 @@ import jbse.val.Value;
 import jbse.val.exc.InvalidTypeException;
 
 public class InstanceTest {
-    private static ClassHierarchy hier;
-    private static CalculatorRewriting calc;
+    private ClassHierarchy hier;
+    private CalculatorRewriting calc;
 
-    @BeforeClass
-    public static void setUpClass() throws InvalidClassFileFactoryClassException, IOException {
+    @Before
+    public void setUp() throws InvalidClassFileFactoryClassException, IOException {
         //environment
         final ArrayList<Path> userPath = new ArrayList<>();
         userPath.add(Paths.get("src/test/resources/jbse/bc/testdata"));
         final Classpath env = new Classpath(Paths.get(System.getProperty("java.home")), new ArrayList<>(), userPath);
 
         //class hierarchy
-        hier = new ClassHierarchy(env, ClassFileFactoryJavassist.class, new HashMap<>());
+        this.hier = new ClassHierarchy(env, ClassFileFactoryJavassist.class, new HashMap<>());
         
         //calculator
-        calc = new CalculatorRewriting();
+        this.calc = new CalculatorRewriting();
     }
 
     @Test
@@ -53,13 +53,13 @@ public class InstanceTest {
     BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, 
     PleaseLoadClassException, InvalidTypeException {
         final String className = "tsafe/main/SimpleCalculator";
-        final ClassFile classFile = hier.loadCreateClass(CLASSLOADER_APP, className, true);
-        final int numOfStaticFields = hier.numOfStaticFields(classFile);
-        final Signature[] fieldsSignatures = hier.getAllFields(classFile);
-        final Instance i = new InstanceImpl(false, calc, classFile, null, null, numOfStaticFields, fieldsSignatures);
+        final ClassFile classFile = this.hier.loadCreateClass(CLASSLOADER_APP, className, true);
+        final int numOfStaticFields = this.hier.numOfStaticFields(classFile);
+        final Signature[] fieldsSignatures = this.hier.getAllFields(classFile);
+        final Instance i = new InstanceImpl(false, this.calc, classFile, null, null, numOfStaticFields, fieldsSignatures);
         final Signature sigMinLat = new Signature(className, "D", "minLat");
         final Value valMinLat = i.getFieldValue(sigMinLat);
-        assertEquals(valMinLat, calc.valDouble(0));
+        assertEquals(valMinLat, this.calc.valDouble(0));
     }
 
     @Test
@@ -67,10 +67,10 @@ public class InstanceTest {
     BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, 
     PleaseLoadClassException, InvalidTypeException {
         final String className = "tsafe/main/SimpleCalculator";
-        final ClassFile classFile = hier.loadCreateClass(CLASSLOADER_APP, className, true);
-        final int numOfStaticFields = hier.numOfStaticFields(classFile);
-        final Signature[] fieldsSignatures = hier.getAllFields(classFile);
-        final Instance i = new InstanceImpl(false, calc, classFile, null, null, numOfStaticFields, fieldsSignatures);
+        final ClassFile classFile = this.hier.loadCreateClass(CLASSLOADER_APP, className, true);
+        final int numOfStaticFields = this.hier.numOfStaticFields(classFile);
+        final Signature[] fieldsSignatures = this.hier.getAllFields(classFile);
+        final Instance i = new InstanceImpl(false, this.calc, classFile, null, null, numOfStaticFields, fieldsSignatures);
         final Signature sigMinLat = new Signature(className, "D", "minLat");
         final Value valMinLat = i.getFieldValue(sigMinLat);
         final Value valMinLat2 = i.getFieldValue("minLat");
@@ -82,14 +82,14 @@ public class InstanceTest {
     BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, 
     PleaseLoadClassException, InvalidTypeException {
         final String className = "tsafe/main/SimpleCalculator";
-        final ClassFile classFile = hier.loadCreateClass(CLASSLOADER_APP, className, true);
-        final int numOfStaticFields = hier.numOfStaticFields(classFile);
-        final Signature[] fieldsSignatures = hier.getAllFields(classFile);
-        final Instance i = new InstanceImpl(false, calc, classFile, null, null, numOfStaticFields, fieldsSignatures);
+        final ClassFile classFile = this.hier.loadCreateClass(CLASSLOADER_APP, className, true);
+        final int numOfStaticFields = this.hier.numOfStaticFields(classFile);
+        final Signature[] fieldsSignatures = this.hier.getAllFields(classFile);
+        final Instance i = new InstanceImpl(false, this.calc, classFile, null, null, numOfStaticFields, fieldsSignatures);
         final Signature sigMinLat = new Signature(className, "D", "minLat");
-        i.setFieldValue(sigMinLat, calc.valDouble(1.0d));
+        i.setFieldValue(sigMinLat, this.calc.valDouble(1.0d));
         final Value valMinLat = i.getFieldValue("minLat");
-        assertEquals(valMinLat, calc.valDouble(1.0d));
+        assertEquals(valMinLat, this.calc.valDouble(1.0d));
     }
 
     @Test
@@ -97,14 +97,14 @@ public class InstanceTest {
     BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, 
     PleaseLoadClassException, InvalidTypeException {
         final String className = "tsafe/main/SimpleCalculator";
-        final ClassFile classFile = hier.loadCreateClass(CLASSLOADER_APP, className, true);
-        final int numOfStaticFields = hier.numOfStaticFields(classFile);
-        final Signature[] fieldsSignatures = hier.getAllFields(classFile);
-        final Instance i = new InstanceImpl(false, calc, classFile, null, null, numOfStaticFields, fieldsSignatures);
+        final ClassFile classFile = this.hier.loadCreateClass(CLASSLOADER_APP, className, true);
+        final int numOfStaticFields = this.hier.numOfStaticFields(classFile);
+        final Signature[] fieldsSignatures = this.hier.getAllFields(classFile);
+        final Instance i = new InstanceImpl(false, this.calc, classFile, null, null, numOfStaticFields, fieldsSignatures);
         final Instance iClone = i.clone();
         final Signature sigMinLat = new Signature(className, "D", "minLat");
-        i.setFieldValue(sigMinLat, calc.valDouble(1.0d));
+        i.setFieldValue(sigMinLat, this.calc.valDouble(1.0d));
         final Value valMinLatClone = iClone.getFieldValue("minLat");
-        assertEquals(valMinLatClone, calc.valDouble(0));
+        assertEquals(valMinLatClone, this.calc.valDouble(0));
     }
 }
