@@ -122,8 +122,8 @@ public final class Signatures {
     public static final String JAVA_WINNTFILESYSTEM          = "java/io/WinNTFileSystem";
     public static final String JAVA_ZIPFILE                  = "java/util/zip/ZipFile";
     public static final String JAVA_ZSTREAMREF               = "java/util/zip/ZStreamRef";
-    public static final String JBSE_ANALYSIS                 = internalClassName(jbse.meta.Analysis.class.getCanonicalName());
-    public static final String JBSE_BASE                     = internalClassName(jbse.base.Base.class.getCanonicalName());
+    public static final String JBSE_ANALYSIS                 = "jbse/meta/Analysis";
+    public static final String JBSE_BASE                     = "jbse/base/Base";
     public static final String SUN_ASCIICASEINSENSITIVECOMPARATOR = "sun/misc/ASCIICaseInsensitiveComparator";
     public static final String SUN_CALLERSENSITIVE           = "sun/reflect/CallerSensitive";
     public static final String SUN_EXTENSIONDEPENDENCY       = "sun/misc/ExtensionDependency";
