@@ -24,6 +24,7 @@ import com.sun.jdi.Field;
 import com.sun.jdi.FloatValue;
 import com.sun.jdi.IncompatibleThreadStateException;
 import com.sun.jdi.IntegerValue;
+import com.sun.jdi.InvalidTypeException;
 import com.sun.jdi.InvocationException;
 import com.sun.jdi.LocalVariable;
 import com.sun.jdi.LongValue;
@@ -32,6 +33,7 @@ import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ReferenceType;
 import com.sun.jdi.ShortValue;
 import com.sun.jdi.StackFrame;
+import com.sun.jdi.ThreadReference;
 import com.sun.jdi.VMDisconnectedException;
 import com.sun.jdi.VirtualMachine;
 import com.sun.jdi.connect.Connector;
@@ -44,29 +46,49 @@ import com.sun.jdi.event.EventQueue;
 import com.sun.jdi.event.EventSet;
 import com.sun.jdi.event.MethodEntryEvent;
 import com.sun.jdi.event.MethodExitEvent;
+import com.sun.jdi.event.StepEvent;
 import com.sun.jdi.request.EventRequest;
 import com.sun.jdi.request.EventRequestManager;
 import com.sun.jdi.request.MethodEntryRequest;
 import com.sun.jdi.request.MethodExitRequest;
+import com.sun.jdi.request.StepRequest;
+import com.sun.tools.jdi.StringReferenceImpl;
 
+import jbse.algo.exc.CannotManageStateException;
+//import jbse.apps.run.Run.ActionsRun;
 import jbse.bc.Signature;
 import jbse.dec.DecisionProcedure;
 import jbse.jvm.Runner;
 import jbse.jvm.RunnerParameters;
+import jbse.mem.Array;
+import jbse.mem.Array.AccessOutcomeIn;
+import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.mem.Frame;
+import jbse.mem.Objekt;
+import jbse.mem.State;
+import jbse.mem.Variable;
 import jbse.val.Calculator;
+import jbse.val.HistoryPoint;
 import jbse.val.KlassPseudoReference;
+import jbse.val.Primitive;
+import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.PrimitiveSymbolicHashCode;
 import jbse.val.PrimitiveSymbolicMemberArrayLength;
+import jbse.val.Reference;
 import jbse.val.ReferenceSymbolic;
+import jbse.val.ReferenceSymbolicApply;
+import jbse.val.ReferenceConcrete;
 import jbse.val.Simplex;
 import jbse.val.Symbolic;
 import jbse.val.SymbolicLocalVariable;
 import jbse.val.SymbolicMemberArray;
 import jbse.val.SymbolicMemberField;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.ValueDoesNotSupportNativeException;
 
 /**
- * {@link DecisionProcedureGuidance} that uses the installed JVM accessed via JDI to 
- * perform concrete execution. 
+ * {@link DecisionProcedureGuidance} that uses the installed JVM accessed via
+ * JDI to perform concrete execution.
  */
 public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidance {
     /**
@@ -110,7 +132,12 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         super(component, calc, new JVMJDI(calc, runnerParameters, stopSignature, numberOfHits));
     }
 
-    private static class JVMJDI extends JVM {
+	/*
+	 * MAME: ho modificato la visibilità della classe (da private a public):
+	 * questo per avere a disposizione gli stati.
+	 */
+     
+    public static class JVMJDI extends JVM {
         private static final String ERROR_BAD_PATH = "Failed accessing through a memory access path.";
         private static final String[] EXCLUDES = {"java.*", "javax.*", "sun.*", "com.sun.*", "org.*"};
         
@@ -121,7 +148,66 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         private boolean intoMethodRunnPar = false;
         private int hitCounter = 0;
         private MethodEntryEvent methodEntryEvent;
+		private boolean oneStepAhead = false;
+		private boolean lastConcreteDecision;
+		
+		
+		//LUCA: varibile di classe per memorizzare info sullo stato corrente dello step
+		private StepEvent currentStepEvent;
+		
+		//LUCA: ridefinito metodo eval per fare la valutazione in base al nextBytecode nel concreto
+		@Override
+		public Primitive eval(boolean branchToEval, Primitive toEval) throws GuidanceException {
+			if (!oneStepAhead) {
+				try {
+					lastConcreteDecision = ConcreteDecision();
+					oneStepAhead = true;
+				} catch (CannotManageStateException | ThreadStackEmptyException e) {
+					throw new GuidanceException(e);
+				}
+			}
 
+			try {
+				return Simplex.make(calc, new Boolean(branchToEval == lastConcreteDecision));
+			} catch (jbse.val.exc.InvalidTypeException | InvalidOperandException e) {
+				throw new GuidanceException (e);
+			}
+
+		}
+		
+		// LUCA: metodo ConcreteDecision esegue la valutazione sul next bytecode
+		private boolean ConcreteDecision() throws CannotManageStateException, ThreadStackEmptyException, GuidanceException {
+        	
+			 byte[] bc = currentStepEvent.location().method().bytecodes();
+			 int currentCodeIndex = (int) currentStepEvent.location().codeIndex();
+        	 byte b1 = bc[currentCodeIndex + 1];
+             byte b2=bc[currentCodeIndex+2];
+             short offset=(short) ((b1 << 8) + b2);
+             
+             long codeIndexJump=  currentCodeIndex + offset;
+             
+             step();
+             if(codeIndexJump==currentStepEvent.location().codeIndex()) {
+            	 return true;
+             }else{
+            	 return false;
+             }
+ 		
+		 }
+
+		/*
+		 *MAME: metodo saveState che permette di salvare gli stati attraversati
+		 * durante l'esecuzione.
+		 */
+		private static ArrayList<State> allStates = new ArrayList<State>();
+
+		public static void saveState(State state) {
+			State cloneState = state.clone();
+			allStates.add(cloneState);
+		}
+
+		/* CODICE ORIGINALE: */
+        
         public JVMJDI(Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits) 
         throws GuidanceException {
             super(calc, runnerParameters, stopSignature, numberOfHits);
@@ -133,6 +219,62 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             run();
         }
         
+		//LUCA : definito le seguenti variabili d'istanza
+				private  ThreadReference thread;
+				private  int stepSize;
+				private  int stepDepth;
+		       
+		//LUCA: metodo step() per gestire le richieste di step per JDI
+				
+		@Override
+		public void step() 
+				throws GuidanceException, CannotManageStateException, ThreadStackEmptyException {
+			
+			if (oneStepAhead) {
+				oneStepAhead = false;
+				return;
+			}
+			
+            
+            this.thread = this.methodEntryEvent.thread();
+			this.stepSize = StepRequest.STEP_MIN;
+			this.stepDepth = StepRequest.STEP_INTO;
+					
+			StepRequest sr = this.vm.eventRequestManager().createStepRequest(this.thread, this.stepSize,
+					this.stepDepth);
+		
+		    sr.enable();
+			this.vm.resume();
+			EventQueue queue1 = this.vm.eventQueue();
+			boolean stepFound = false;
+			while (!stepFound) {
+				try {
+					final EventSet eventSet = queue1.remove();
+					final EventIterator it = eventSet.eventIterator();
+					while (!stepFound && it.hasNext()) {
+						Event event = it.nextEvent();
+						
+						if (event instanceof StepEvent) {
+								currentStepEvent = (StepEvent) event;
+								stepFound= true;
+						}
+
+					}
+					if (!stepFound) {
+						eventSet.resume();
+					}
+				} catch (InterruptedException e) {
+					// TODO
+				} catch (VMDisconnectedException e) {
+					break;
+				}
+			}
+			sr.disable();
+            
+		}
+		
+		//CODICE ORIGINALE
+		
         private StackFrame rootFrameConcrete() throws IncompatibleThreadStateException {
         	return this.methodEntryEvent.thread().frames().get(0);
         }
@@ -157,90 +299,105 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                 throw new GuidanceException(exc);
             }
         }
-        
-        private Map<String, Connector.Argument> connectorArguments(LaunchingConnector connector, String mainArgs) {
-            final Map<String, Connector.Argument> arguments = connector.defaultArguments();
-            final Connector.Argument mainArg = arguments.get("main");
-            if (mainArg == null) {
-                throw new Error("Bad launching connector");
-            }
-            mainArg.setValue(mainArgs);
-            return arguments;
-        }
+		
+		private Map<String, Connector.Argument> connectorArguments(
+				LaunchingConnector connector, String mainArgs) {
+			final Map<String, Connector.Argument> arguments = connector
+					.defaultArguments();
+			final Connector.Argument mainArg = arguments.get("main");
+			if (mainArg == null) {
+				throw new Error("Bad launching connector");
+			}
+			mainArg.setValue(mainArgs);
+			return arguments;
+		}
 
-        private void setEventRequests() {
-            final EventRequestManager mgr = this.vm.eventRequestManager();
-            final MethodEntryRequest menr = mgr.createMethodEntryRequest();
-            for (String exclude : EXCLUDES) {
-                menr.addClassExclusionFilter(exclude);
-            }
-            menr.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-            menr.enable();
-            final MethodExitRequest mexr = mgr.createMethodExitRequest();
-            for (String exclude : EXCLUDES) {
-                mexr.addClassExclusionFilter(exclude);
-            }
-            mexr.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
-            mexr.enable();
-        }
+		private void setEventRequests() {
+			final EventRequestManager mgr = this.vm.eventRequestManager();
+			
+			//CODICE ORIGINALE
+			
+			final MethodEntryRequest menr = mgr.createMethodEntryRequest();
+			for (String exclude : EXCLUDES) {
+					menr.addClassExclusionFilter(exclude);
+			}
+			menr.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
+			menr.enable();
+			final MethodExitRequest mexr = mgr.createMethodExitRequest();
+			for (String exclude : EXCLUDES) {
+				mexr.addClassExclusionFilter(exclude);
+			}
+			mexr.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD);
+			mexr.enable();
+			
+		}
 
-        private void run() {
-            final EventQueue queue = this.vm.eventQueue();
-            boolean testMethodEntryFound = false;
-            while (!testMethodEntryFound) {
-                try {
-                    final EventSet eventSet = queue.remove();
-                    final EventIterator it = eventSet.eventIterator();
-                    while (!testMethodEntryFound && it.hasNext()) {
-                        testMethodEntryFound = checkIfMethodEntry(it.nextEvent());
-                    }
-                    if (!testMethodEntryFound) {
-                        eventSet.resume();
-                    }
-                } catch (InterruptedException e) {
-                    //TODO
-                } catch (VMDisconnectedException e) {
-                    break;
-                }
-            }
-        }
+		private void run() {
+			final EventQueue queue = this.vm.eventQueue();
+				boolean testMethodEntryFound = false;
+			while (!testMethodEntryFound) {
+				try {
+					final EventSet eventSet = queue.remove();
+					final EventIterator it = eventSet.eventIterator();
+					while (!testMethodEntryFound && it.hasNext()) {
+						testMethodEntryFound = checkIfMethodEntry(it
+								.nextEvent());
+					}
+					if (!testMethodEntryFound) {
+						eventSet.resume();
+					}
+				} catch (InterruptedException e) {
+					// TODO
+				} catch (VMDisconnectedException e) {
+					break;
+				}
+			}
+		   
+		 		}
+                    
+		private boolean checkIfMethodEntry(Event event) {
 
-        private boolean checkIfMethodEntry(Event event) {
-            if (event instanceof MethodExitEvent && 
-                (((MethodExitEvent) event).method().name().equals(this.methodStart))) {
-                this.intoMethodRunnPar = false;
-            }
-            if (event instanceof MethodEntryEvent) {
-                if (((MethodEntryEvent) event).method().name().equals(this.methodStart)) {
-                    this.hitCounter = 0;
-                    this.intoMethodRunnPar = true;
-                }
-                if (((MethodEntryEvent) event).method().name().equals(this.methodStop) && (this.intoMethodRunnPar)) {
-                    ++this.hitCounter;
-                    if (this.hitCounter == this.numberOfHits){
-                        this.methodEntryEvent = (MethodEntryEvent) event;
-                        return true;
-                    }
-                    return false;
-                }
-            }
-            return false;
-        }
+			if (event instanceof MethodExitEvent
+					&& (((MethodExitEvent) event).method().name()
+							.equals(this.methodStart))) {
+					this.intoMethodRunnPar = false;
+			}
+			if (event instanceof MethodEntryEvent) {
+				if (((MethodEntryEvent) event).method().name()
+						.equals(this.methodStart)) {
+					this.hitCounter = 0;
+					this.intoMethodRunnPar = true;
+				}
+				if (((MethodEntryEvent) event).method().name()
+						.equals(this.methodStop)
+						&& (this.intoMethodRunnPar)) {
+					++this.hitCounter;
+					if (this.hitCounter == this.numberOfHits) {
+						this.methodEntryEvent = (MethodEntryEvent) event;
+						return true;
+					}
+					return false;
+				}
+			}
+			return false;
+		}
 
-        private LaunchingConnector findLaunchingConnector() {
-            final List<Connector> connectors = Bootstrap.virtualMachineManager().allConnectors();
-            for (Connector connector : connectors) {
-                if (connector.name().equals("com.sun.jdi.CommandLineLaunch")) {
-                    return (LaunchingConnector) connector;
-                }
-            }
-            throw new Error("No launching connector");
-        }
-        
-        @Override
-        public boolean isCurrentMethodNonStatic() throws GuidanceException {
-            try {
-				return !rootFrameConcrete().location().method().declaringType().isStatic();
+		private LaunchingConnector findLaunchingConnector() {
+			final List<Connector> connectors = Bootstrap
+					.virtualMachineManager().allConnectors();
+			for (Connector connector : connectors) {
+				if (connector.name().equals("com.sun.jdi.CommandLineLaunch")) {
+					return (LaunchingConnector) connector;
+				}
+			}
+			throw new Error("No launching connector");
+		}
+
+		@Override
+		public boolean isCurrentMethodNonStatic() throws GuidanceException {
+			try {
+				return !rootFrameConcrete().location().method().declaringType()
+						.isStatic();
 			} catch (IncompatibleThreadStateException e) {
 				throw new GuidanceException(e);
 			}
@@ -295,7 +452,22 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                 return this.calc.valLong(((LongValue) val).longValue());
             } else if (val instanceof ShortValue) {
                 return this.calc.valShort(((ShortValue) val).shortValue());
-            } else if (val instanceof ObjectReference) {
+            } 
+			/* MAME: per metodo toString() */
+			else if (origin instanceof ReferenceSymbolicApply) {
+				ReferenceSymbolicApply rsa = (ReferenceSymbolicApply) origin;
+				if (rsa.getOperator().equals("TO_STRING")) {
+					if (val instanceof ObjectReference) {
+						return new Object();
+					} else {
+						return null;
+					}
+				} else {
+					return null;
+				}
+			}
+			/* MAME FINE */
+			else if (val instanceof ObjectReference) {
                 return val;
             } else { //val instanceof VoidValue || val == null
                 return null;
@@ -357,7 +529,100 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                     *
                 } else if (origin instanceof ReferenceSymbolicApply) {
                     TODO same as above */
-                } else {
+ 				/*
+				 * MAME: gestione del metodo equals (per stringhe): si recupera
+				 * historyPoint e i valori (che nel caso di equals saranno
+				 * sempre due). Si valuta quanto valgono le due stringhe e si
+				 * effettua equals, restituendo 1 o 0 a seconda del risultato di
+				 * equals.
+				 */
+
+				/*
+				 * da risolvere: gestione dei null nel secondo elemento (se
+				 * l'elemento è concreto). da fare: gestione equals con oggetti.
+				 */
+
+				} else if (origin instanceof PrimitiveSymbolicApply) {
+					String operator = ((PrimitiveSymbolicApply) origin)
+							.getOperator();
+					HistoryPoint hp = origin.historyPoint();
+					PrimitiveSymbolicApply value = ((PrimitiveSymbolicApply) origin);
+
+					Object obj = this.vm.mirrorOf(0);
+
+					jbse.val.Value[] v = value.getArgs();
+					if (operator.equals("EQUALS")) {
+
+						jbse.val.Value first_v = v[0];
+						Object first = getValueArgs(hp, first_v);
+
+						jbse.val.Value second_v = v[1];
+						Object second = getValueArgs(hp, second_v);
+
+						
+						if (second != null) {
+							String new_first = first.toString().replace("\"",
+									"");
+							String new_second = second.toString().replace("\"",
+									"");
+
+							boolean checkEquals = new_first.equals(new_second);
+							if (checkEquals) {
+								obj = this.vm.mirrorOf(1);
+							}
+						}
+					}
+
+					return obj;
+				}
+
+				/*
+				 * MAME: gestione del metodo toString: se si lavora con un
+				 * simbolo, si riesce ad eseguire il metodo toString() per ogni
+				 * oggetto. Se si ha un riferimento concreto, si può ottenere
+				 * manualmente il toString() soltanto per le stringhe (comunque,
+				 * non per tutte le classi: potrebbe in ogni caso essere una
+				 * situazione non così ricorrente nei programmi che si possono
+				 * testare).
+				 */
+
+				else if (origin instanceof ReferenceSymbolicApply) {
+
+					String operator = ((ReferenceSymbolicApply) origin)
+							.getOperator();
+					HistoryPoint hp = origin.historyPoint();
+					ReferenceSymbolicApply value = ((ReferenceSymbolicApply) origin);
+					jbse.val.Value[] v = value.getArgs();
+					Object obj = null;
+					ObjectReference oRef;
+					jbse.val.Value val = v[0];
+
+					if (operator.equals("TO_STRING")) {
+						if (val.isSymbolic()) {
+							Symbolic s = (Symbolic) val;
+							obj = getJDIValue(s);
+							oRef = (ObjectReference) obj;
+							Method toString = oRef
+									.referenceType()
+									.methodsByName("toString",
+											"()Ljava/lang/String;").get(0);
+							obj = oRef.invokeMethod(
+									this.methodEntryEvent.thread(), toString,
+									Collections.emptyList(), 0);
+						}
+
+						else {
+							String obj2 = (String) getValueReferenceConcrete(
+									hp, val);
+							if (obj2 != null)
+								obj = this.vm.mirrorOf(obj2);
+						}
+					}
+					return obj;
+				}
+
+				/* CODICE ORIGINALE */
+                else {
                     throw new GuidanceException(ERROR_BAD_PATH);
                 }
             } catch (IncompatibleThreadStateException | AbsentInformationException | 
@@ -366,6 +631,76 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                 throw new GuidanceException(e);
             }
         }
+		/*
+		 * MAME: metodo getValueArgs che restituisce il valore concreto di
+		 * value: se è un simbolo, si chiama getJDIValue. Se è un reference
+		 * concreto, si preleva lo stato a cui si è giunti (con history point),
+		 * si prende l'heap di quello stato, si prende la posizione dell'oggetto
+		 * (Object[4] avrà posizione 4) e si recupera l'objekt nello heap alla
+		 * posizione individuata (meno uno; con 4, la posizione è 3). Se si
+		 * tratta di stringhe, trasformo l'objekt in array, mi recupero i suoi
+		 * valori e mi costruisco la stringa che compone l'array, restituendo
+		 * quella stringa.
+		 */
+
+		/*
+		 * DA FARE: capire come restituire una copia dell'oggetto se questo non
+		 * è una stringa (ad esempio, se ho un reference concreto di tipo
+		 * java/lang/Object, avendo una copia si può restituire e si ha un
+		 * risultato finale).
+		 */
+
+		private Object getValueArgs(HistoryPoint hp, jbse.val.Value value)
+				throws GuidanceException {
+			if (value.isSymbolic()) {
+
+				Symbolic s1 = (Symbolic) value;
+				Object obj_first = getJDIValue(s1);
+
+				return obj_first;
+
+			} else {
+				return getValueReferenceConcrete(hp, value);
+			}
+		}
+
+		private Object getValueReferenceConcrete(HistoryPoint hp,
+				jbse.val.Value value) {
+			ReferenceConcrete rc = (ReferenceConcrete) value;
+			if (!(rc.isNull())) {
+				for (State st : allStates) {
+					if (st.getHistoryPoint().equals(hp)) {
+					long heapPosition = rc.getHeapPosition();
+						Map<Long, Objekt> heap = st.getHeap();
+						Objekt objekt = heap.get(heapPosition - 1);
+						if (objekt.getType().equals("[C")) {
+							Array a = (Array) objekt;
+							List<AccessOutcomeIn> values = a.values();
+							String obj_second = buildString(values);
+							return obj_second;
+						}
+					}
+				}
+			}
+			return null;
+		}
+
+		/*
+		 * MAME: metodo buildString che permette di costruire la stringa di un
+		 * elemento Object[2] (solo se questo è una stringa).
+		 */
+
+		private String buildString(List<AccessOutcomeIn> values) {
+
+			String p1 = "";
+			for (AccessOutcomeIn accOut : values) {
+				p1 = p1.concat(accOut.getValue().toString());
+			}
+			return p1;
+		}
+
+		/* CODICE ORIGINALE */
+
         
         private com.sun.jdi.Value getJDIValueLocalVariable(String var) 
         throws GuidanceException, IncompatibleThreadStateException, AbsentInformationException {
@@ -412,4 +747,3 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         }
     }
 }
-

@@ -188,7 +188,7 @@ public abstract class Objekt implements Cloneable {
      *         backed by this {@link Objekt}'s fields map.
      */
     public Map<String, Variable> fields() {
-        return Collections.unmodifiableMap(this.fields);
+    	return Collections.unmodifiableMap(this.fields);
     }
    
     /**

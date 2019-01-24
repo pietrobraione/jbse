@@ -3,23 +3,31 @@ package jbse.algo;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwVerifyError;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 
 import jbse.algo.exc.CannotManageStateException;
+import jbse.apps.StateFormatterText;
+import jbse.apps.run.DecisionProcedureGuidanceJDI;
+import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileException;
+import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.InvalidInputException;
 import jbse.jvm.exc.FailureException;
+import jbse.mem.Clause;
+import jbse.mem.ClauseVisitor;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.InvalidNumberOfOperandsException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative;
+import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -33,7 +41,8 @@ D extends BytecodeData,
 R extends DecisionAlternative, 
 DE extends StrategyDecide<R>, 
 RE extends StrategyRefine<R>, 
-UP extends StrategyUpdate<R>> {
+UP extends StrategyUpdate<R>>
+{
     /**
      * The number of operands in the operand stack
      * consumed by the bytecode.
@@ -136,6 +145,8 @@ UP extends StrategyUpdate<R>> {
     protected final Supplier<Integer> programCounterUpdate; //just caches
     protected final Supplier<Boolean> isProgramCounterUpdateAnOffset; //just caches
     
+    /* MAME */
+    
     public Algorithm() {
         this.numOperands = numOperands();
         this.data = null; //to be initialized lazily
@@ -220,6 +231,7 @@ UP extends StrategyUpdate<R>> {
      * @throws CannotManageStateException
      * @throws FailureException
      * @throws ContinuationException
+     * @throws InvalidClassFileFactoryClassException 
      */
     public final void exec(State state, ExecutionContext ctx) 
     throws DecisionException, ContradictionException, 
@@ -236,6 +248,8 @@ UP extends StrategyUpdate<R>> {
             onBadClassFileException(state, e);
         }
     }
+    
+   
 
     private void doExec(State state) 
     throws DecisionException, ContradictionException, 
@@ -245,7 +259,7 @@ UP extends StrategyUpdate<R>> {
     ContinuationException {
         if (this.data == null) {
             this.data = bytecodeData().get();
-        }
+       }
         try {
             this.data.read(state, this.numOperands);
             this.cooker.cook(state);
@@ -256,11 +270,19 @@ UP extends StrategyUpdate<R>> {
                 return;
             }
         }
-
+       
         //decides the satisfiability of the different alternatives
         final SortedSet<R> decisionResults = this.ctx.mkDecisionResultSet(classDecisionAlternative());     
-        final Outcome outcome = this.decider.decide(state, decisionResults);
+        
+        /* MAME: metodo saveState che permette di salvare gli stati. */
 
+        DecisionProcedureGuidanceJDI.JVMJDI.saveState(state);
+   
+        /* CODICE ORIGINALE. */
+        
+        final Outcome outcome;
+        outcome = this.decider.decide(state, decisionResults);
+        	
         //checks if at least one alternative is satisfiable
         final int tot = decisionResults.size();
         if (tot == 0) {
@@ -327,8 +349,8 @@ UP extends StrategyUpdate<R>> {
             }
 
             ++cur;
-        }
-    }
+        }}
+    
     
     private boolean possiblyAddBranchPoint(Collection<R> decisionResults) {
         final boolean moreThanOneResult = (decisionResults.size() > 1);
@@ -338,4 +360,5 @@ UP extends StrategyUpdate<R>> {
         final boolean noDecision = d.noDecision();
         return this.ctx.stateTree.possiblyAddBranchPoint(moreThanOneResult, trivial, concrete, noDecision);
     }
+   
 }

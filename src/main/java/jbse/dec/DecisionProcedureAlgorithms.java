@@ -243,8 +243,16 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @throws DecisionException upon failure.
 	 */
 	//TODO should be final?
-	public Outcome decide_IFX(ClassHierarchy hier, Primitive condition, SortedSet<DecisionAlternative_IFX> result)
+	
+	/* MAME: aggiunta state */
+	public Outcome decide_IFX( ClassHierarchy hier, Primitive condition, SortedSet<DecisionAlternative_IFX> result)
 	throws InvalidInputException, DecisionException {
+		/* MAME */
+	/*	if (condition.toString().contains("EQUALS")) {
+			final Outcome o = decide_IFX_Nonconcrete(hier, condition, result);
+			return o;
+		}
+		else {*/
 		if (condition == null || result == null) {
 			throw new InvalidInputException("decide_IFX invoked with a null parameter.");
 		}
@@ -255,16 +263,20 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 			decide_IFX_Concrete((Simplex) condition, result);
 			return Outcome.FF;
 		} else {		
+			
+			
 			final Outcome o = decide_IFX_Nonconcrete(hier, condition, result);
 			return o;
-		}
-	}
+		}}
+	
 	
 	private void decide_IFX_Concrete(Simplex condition, SortedSet<DecisionAlternative_IFX> result) {
 		final boolean conditionBoolean = (Boolean) condition.getActualValue();
 		result.add(DecisionAlternative_IFX.toConcrete(conditionBoolean));
 	}
 
+	/* MAME: aggiunta state */
+	
 	protected Outcome decide_IFX_Nonconcrete(ClassHierarchy hier, Primitive condition, SortedSet<DecisionAlternative_IFX> result) 
 	throws DecisionException {	
 		final boolean shouldRefine;
@@ -293,6 +305,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 					result.add(F);
 				}
 				shouldRefine = (result.size() > 1);
+			/*} catch (InvalidInputException e) {
+				//this should never happen as arguments have been checked by the caller
+				throw new UnexpectedInternalException(e);	*/
 			} catch (InvalidTypeException | InvalidInputException e) {
 				//this should never happen as arguments have been checked by the caller
 				throw new UnexpectedInternalException(e);

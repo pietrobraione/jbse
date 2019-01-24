@@ -70,6 +70,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
+        	
             final String returnType = splitReturnValueDescriptor(this.methodSignatureImpl.getDescriptor());
 
             //pops the args

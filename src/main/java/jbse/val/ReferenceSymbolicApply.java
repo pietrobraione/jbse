@@ -16,7 +16,8 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic {
     
     /** java.lang.Object.toString */
     public static final String TO_STRING = "toString";
-
+    public static final String EQUALS = "equals";
+    
     /** The function name. */
     private final String operator;
     
@@ -158,4 +159,4 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic {
                 }
 		return true;
 	}
-}
+	}

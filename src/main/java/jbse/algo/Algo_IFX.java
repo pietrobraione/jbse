@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
+import jbse.mem.State;
 import jbse.tree.DecisionAlternative_IFX;
 import jbse.val.Operator;
 import jbse.val.Primitive;
@@ -65,6 +66,7 @@ StrategyUpdate<DecisionAlternative_IFX>> {
                     //the next conversion is necessary because  
                     //Algo_XCMPY_FAST spills nonint values 
                     //to the operand stack.
+
                     if (widens(val1.getType(), INT)) {
                         val2 = val2.to(val1.getType());
                     } else {
@@ -82,8 +84,11 @@ StrategyUpdate<DecisionAlternative_IFX>> {
             }
             
             //builds the comparison condition
+            
             try {
+          
                 this.comparison = state.getCalculator().applyBinary(val1, this.operator, val2);
+       
             } catch (InvalidOperandException | InvalidTypeException e) {
                 throwVerifyError(state);
                 exitFromAlgorithm();
@@ -100,10 +105,14 @@ StrategyUpdate<DecisionAlternative_IFX>> {
     
     @Override
     protected StrategyDecide<DecisionAlternative_IFX> decider() {
-        return (state, result) -> {
+    	
+    	
+    	return (state, result) -> {
             final Outcome o = this.ctx.decisionProcedure.decide_IFX(state.getClassHierarchy(), this.comparison, result);
             return o;
         };
+        
+      
     }
     
     @Override

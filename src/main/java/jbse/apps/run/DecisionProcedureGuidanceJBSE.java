@@ -259,20 +259,20 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
                 final SymbolicMemberField af = (SymbolicMemberField) origin;
                 final Object o = getValue(af.getContainer());
                 if (o == null) {
-                    throw new GuidanceException(ERROR_BAD_PATH);
+                     throw new GuidanceException(ERROR_BAD_PATH);
                 }
                 if (o instanceof Reference) {
                     return this.initialStateConcrete.getObject((Reference) o).getFieldValue(af.getFieldName());
                 } else if (o instanceof Klass) {
                     return ((Klass) o).getFieldValue(af.getFieldName());
                 } else { //(o is a primitive)
-                    throw new GuidanceException(ERROR_BAD_PATH);
+                     throw new GuidanceException(ERROR_BAD_PATH);
                 }
             } else if (origin instanceof PrimitiveSymbolicMemberArrayLength) {
                 final PrimitiveSymbolicMemberArrayLength al = (PrimitiveSymbolicMemberArrayLength) origin;
                 final Object o = getValue(al.getContainer());
                 if (o == null) {
-                    throw new GuidanceException(ERROR_BAD_PATH);
+                  throw new GuidanceException(ERROR_BAD_PATH);
                 }
                 if (o instanceof Reference) {
                     return ((Array) this.initialStateConcrete.getObject((Reference) o)).getLength();
@@ -289,7 +289,7 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
                 if (o instanceof Reference) {
                     a = ((Array) this.initialStateConcrete.getObject((Reference) o));
                 } else { //(o is a Klass or a primitive)
-                    throw new GuidanceException(ERROR_BAD_PATH);
+                     throw new GuidanceException(ERROR_BAD_PATH);
                 }
                 try {
                     for (AccessOutcome ao : a.get(eval(aa.getIndex()))) {
@@ -300,21 +300,21 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
                     }
                     throw new GuidanceException(ERROR_BAD_PATH);
                 } catch (InvalidOperandException | InvalidTypeException e) {
-                    throw new GuidanceException(e);
+                     throw new GuidanceException(e);
                 }
             } else if (origin instanceof PrimitiveSymbolicHashCode) {
                 final PrimitiveSymbolicHashCode ah = (PrimitiveSymbolicHashCode) origin;
                 final Object o = getValue(ah.getContainer());
                 if (o == null) {
-                    throw new GuidanceException(ERROR_BAD_PATH);
+                   throw new GuidanceException(ERROR_BAD_PATH);
                 }
                 if (o instanceof Reference) {
                     return this.initialStateConcrete.getObject((Reference) o).getObjektHashCode();
                 } else { //(o is a Klass or a primitive)
-                    throw new GuidanceException(ERROR_BAD_PATH);
+                	  throw new GuidanceException(ERROR_BAD_PATH);
                 }
             } else {
-                throw new GuidanceException(ERROR_BAD_PATH);
+               throw new GuidanceException(ERROR_BAD_PATH);
             }
         }
     }

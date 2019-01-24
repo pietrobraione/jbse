@@ -162,6 +162,7 @@ public final class State implements Cloneable {
 	 *         has not the expected features (missing constructor, unaccessible 
 	 *         constructor...).
 	 */
+    
 	public State(Classpath cp, 
 	             Class<? extends ClassFileFactory> fClass, 
 	             Map<String, Set<String>> expansionBackdoor, 

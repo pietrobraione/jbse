@@ -274,6 +274,6 @@ public class Util {
 	}
 	
 	public static String formatWideningConversion(WideningConversion c) {
-		return "WIDEN-"+ c.getType() + "(" + formatPrimitive(c.getArg()) + ")";
+		return "WiDEN-"+ c.getType() + "(" + formatPrimitive(c.getArg()) + ")";
 	}
 }

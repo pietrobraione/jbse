@@ -9,6 +9,9 @@ import java.nio.file.Path;
 import java.util.Date;
 import java.util.Map;
 
+import com.sun.jdi.request.StepRequest;
+import com.sun.tools.jdi.resources.jdi;
+
 import jbse.JBSE;
 import jbse.algo.exc.CannotInvokeNativeException;
 import jbse.algo.exc.CannotManageStateException;
@@ -25,6 +28,7 @@ import jbse.apps.StateFormatterText;
 import jbse.apps.StateFormatterTrace;
 import jbse.apps.Timer;
 import jbse.apps.Util;
+import jbse.apps.run.DecisionProcedureGuidanceJDI.JVMJDI;
 import jbse.apps.run.RunParameters.DecisionProcedureCreationStrategy;
 import jbse.apps.run.RunParameters.DecisionProcedureType;
 import jbse.apps.run.RunParameters.GuidanceType;
@@ -33,6 +37,10 @@ import jbse.apps.run.RunParameters.StateFormatMode;
 import jbse.apps.run.RunParameters.StepShowMode;
 import jbse.apps.run.RunParameters.TextMode;
 import jbse.apps.run.RunParameters.TraceTypes;
+import jbse.apps.run.DecisionProcedureGuidance;
+import jbse.apps.run.DecisionProcedureGuidanceJDI;
+import jbse.apps.run.DecisionProcedureGuidance.JVM;
+import jbse.bc.Signature;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
@@ -66,6 +74,7 @@ import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.Rewriter;
 import jbse.rewr.RewriterOperationOnSimplex;
 import jbse.tree.StateTree.BranchPoint;
+import jbse.val.Calculator;
 import jbse.val.PrimitiveSymbolic;
 import jbse.val.Simplex;
 
@@ -335,7 +344,36 @@ public final class Run {
 				return true;
 			}
 		}
-
+		/*LUCA ridefinito metodo atStepPre() in modo tale che quando JBSE fa uno step notifica JDI,
+		       attraverso il metodo step() JDI esegue uno step (allineamento jbse e JDI)*/
+		/*
+		@Override
+		public boolean atStepPre() {
+            //steps the guidance
+	
+            if (Run.this.guidance != null) {  
+            	try {
+                      /* if (Run.this.engine.getCurrentState().getCurrentMethodSignature().equals( 
+                                Run.this.guidance.getCurrentMethodSignature())) { 
+                           Run.this.guidance.step();
+                        }*/
+            		/*Run.this.guidance.step();  
+                    	
+            	} catch (GuidanceException e) {
+            		Run.this.err(ERROR_GUIDANCE_FAILED);
+            		Run.this.err(e);
+            		return true;
+            	} catch (CannotManageStateException | ThreadStackEmptyException e) {
+            		throw new UnexpectedInternalException(e);
+            	}
+            }
+            
+            return super.atStepPre();
+   
+		}*/
+		
+		//CODICE ORIGINALE
+		
 		@Override
 		public boolean atStepPost() {
 		    //if a resolved reference has not been expanded, prints a warning
@@ -969,7 +1007,7 @@ public final class Run {
 			    if (this.parameters.getGuidanceType() == GuidanceType.JBSE) {
                                 this.guidance = new DecisionProcedureGuidanceJBSE(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
 			    } else if (this.parameters.getGuidanceType() == GuidanceType.JDI) {
-				this.guidance = new DecisionProcedureGuidanceJDI(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
+			    	this.guidance = new DecisionProcedureGuidanceJDI(core, calc, guidanceDriverParameters, this.parameters.getMethodSignature());
 			    } else {
 			        
 			    }

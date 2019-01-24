@@ -15,6 +15,7 @@ import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.DecisionProcedureAlwSat;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Clause;
+import jbse.mem.State;
 import jbse.mem.SwitchTable;
 import jbse.rewr.CalculatorRewriting;
 import jbse.tree.DecisionAlternative_XCMPY;
@@ -65,6 +66,8 @@ public final class DecisionProcedureConsole extends DecisionProcedureAlgorithms 
 	}
 
 	@Override
+	
+	
 	protected Outcome decide_IFX_Nonconcrete(ClassHierarchy hier, Primitive exp, SortedSet<DecisionAlternative_IFX> result) {
 		final DecisionAlternative_IFX T = DecisionAlternative_IFX.toNonconcrete(true);
 		final DecisionAlternative_IFX F = DecisionAlternative_IFX.toNonconcrete(false);

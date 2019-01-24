@@ -6,6 +6,16 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.SortedSet;
 
+import com.sun.jdi.ThreadReference;
+import com.sun.jdi.VMDisconnectedException;
+import com.sun.jdi.event.Event;
+import com.sun.jdi.event.EventIterator;
+import com.sun.jdi.event.EventQueue;
+import com.sun.jdi.event.EventSet;
+import com.sun.jdi.event.StepEvent;
+import com.sun.jdi.request.StepRequest;
+
+import jbse.algo.exc.CannotManageStateException;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileException;
@@ -16,6 +26,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.jvm.RunnerParameters;
 import jbse.mem.State;
 import jbse.mem.SwitchTable;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XALOAD;
 import jbse.tree.DecisionAlternative_XALOAD_Unresolved;
 import jbse.tree.DecisionAlternative_XASTORE;
@@ -89,6 +100,8 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     @Override
+    
+ // LUCA: ridefinito il metodo eval in DecisionProcedureGuidanceJDI
     protected final Outcome decide_IFX_Nonconcrete(ClassHierarchy hier, Primitive condition, SortedSet<DecisionAlternative_IFX> result) 
     throws DecisionException {
 
@@ -100,11 +113,12 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                 while (it.hasNext()) {
                     final DecisionAlternative_IFX da = it.next();
                     final Primitive conditionToCheck  = (da.value() ? condition : conditionNot);
-                    final Primitive valueInConcreteState = this.jvm.eval(conditionToCheck);
+                    final Primitive valueInConcreteState = this.jvm.eval(da.value(), conditionToCheck);
                     if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
                         it.remove();
                     }
                 }
+            
             } catch (InvalidTypeException e) {
                 //this should never happen as arguments have been checked by the caller
                 throw new UnexpectedInternalException(e);
@@ -112,7 +126,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         }
         return retVal;
     }
-
+   
     @Override
     protected final Outcome decide_XCMPY_Nonconcrete(ClassHierarchy hier, Primitive val1, Primitive val2, SortedSet<DecisionAlternative_XCMPY> result)
     throws DecisionException {
@@ -269,7 +283,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     private void updateExpansionBackdoor(State state, ReferenceSymbolic refToLoad) throws GuidanceException {
-        final String refType = className(refToLoad.getStaticType());
+     	final String refType = className(refToLoad.getStaticType());
         final String objType = this.jvm.typeOfObject(refToLoad);
         if (objType != null && !refType.equals(objType)) {
             state.getClassHierarchy().addToExpansionBackdoor(refType, objType);
@@ -389,10 +403,13 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
          *         then {@link #getValue(Symbolic) getValue}{@code (first).}{@link Object#equals(Object) equals}{@code (}{@link #getValue(Symbolic) getValue}{@code (second))}.
          * @throws GuidanceException if {@code origin} does not refer to an object.
          */
+        
+       
         public abstract Object getValue(Symbolic origin) throws GuidanceException;
         
         /**
          * Evaluates a {@link Primitive} in the reached concrete state.
+         * @param branchToEval 
          * 
          * @param toEval a {@link Primitive}.
          * @return the {@link Primitive} corresponding to the concrete
@@ -415,6 +432,11 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             return evaluator.value;
         }
 
+        //LUCA da ridefinire solo nel JDI nuovo
+        public Primitive eval(boolean branchToEval, Primitive toEval) throws GuidanceException {
+        	return eval(toEval);
+        }
+        //CODICE ORIGINALE
         private static final class Evaluator implements PrimitiveVisitor {
             private final Calculator calc;
             private final JVM jvm;
@@ -441,7 +463,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                     }
                     this.value = this.calc.applyUnary(e.getOperator(), operandValue);
                 } else {
-                    e.getFirstOperand().accept(this);
+                     e.getFirstOperand().accept(this);
                     final Primitive firstOperandValue = this.value;
                     if (firstOperandValue == null) {
                         this.value = null;
@@ -503,5 +525,13 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             }
 
         }
+        
+        
+        //LUCA: Metodo step() con implementazione vuota per la classe interna JVM 
+		public void step() throws GuidanceException, CannotManageStateException, ThreadStackEmptyException {}
     }
+    // LUCA: metodo per gestire gli step nelle procedure di decisione
+	public void step() throws GuidanceException, CannotManageStateException, ThreadStackEmptyException {
+		this.jvm.step();
+	}
 }

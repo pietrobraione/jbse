@@ -67,5 +67,5 @@ public final class KlassPseudoReference extends ReferenceSymbolic {
     @Override
     public String toString() {
         return "[" + this.className + "]";
-    }
+    }    
 }

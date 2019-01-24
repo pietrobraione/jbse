@@ -55,7 +55,7 @@ public abstract class PrimitiveSymbolicAtomic extends PrimitiveSymbolic implemen
     
     @Override
     public final void accept(PrimitiveVisitor v) throws Exception {
-        v.visitPrimitiveSymbolicAtomic(this);
+    	v.visitPrimitiveSymbolicAtomic(this);
     }
 
     /**

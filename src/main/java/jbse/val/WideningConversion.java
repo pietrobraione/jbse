@@ -30,7 +30,6 @@ public final class WideningConversion extends Primitive {
 		result = prime * result + type;
 		this.hashCode = result;
 		
-		//calculates toString
 		this.toString = "WIDEN-"+ this.getType() + "(" + arg.toString() + ")";
 	}
 	

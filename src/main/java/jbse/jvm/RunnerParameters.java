@@ -206,7 +206,6 @@ public final class RunnerParameters implements Cloneable {
 	public void setMethodSignature(String className, String descriptor, String methodName) { 
 		this.engineParameters.setMethodSignature(className, descriptor, methodName); 
 	}
-	
 	/**
 	 * Gets the signature of the method which must be symbolically executed.
 	 * 

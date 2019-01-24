@@ -3,6 +3,7 @@ package jbse.jvm;
 import java.util.Map;
 
 import jbse.algo.exc.CannotManageStateException;
+import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionBacktrackException;
 import jbse.dec.exc.DecisionException;
@@ -472,17 +473,18 @@ public class Runner {
 	 * @throws DecisionException as in {@link Engine#step()} 
 	 * @throws EngineStuckException as in {@link Engine#step()} 
 	 * @throws FailureException as in {@link Engine#step()} 
+	 * @throws InvalidClassFileFactoryClassException 
 	 */
 	public void run() 
 	throws CannotBacktrackException, CannotManageStateException, 
 	ClasspathException, ThreadStackEmptyException, 
 	ContradictionException, DecisionException, EngineStuckException, 
-	FailureException  {
+	FailureException {
 		this.startTime = System.currentTimeMillis();
 		
 		try {
 		    doRun();
-		} finally {
+		  	} finally {
 		    this.stopTime = System.currentTimeMillis();
 		}
 	}
@@ -491,7 +493,7 @@ public class Runner {
     throws CannotBacktrackException, CannotManageStateException, 
     ClasspathException, ThreadStackEmptyException, 
     ContradictionException, DecisionException, EngineStuckException, 
-    FailureException  {
+    FailureException {
 		if (this.actions.atRoot()) { return; }
 		
 		//performs the symbolic execution loop
@@ -509,29 +511,39 @@ public class Runner {
 				if (this.actions.atStepPre()) { return; }
 				try {
 					final BranchPoint bp = this.engine.step();
+					
 					if (bp != null) {
 						if (!currentStateIsInRunSubregion()) { break; }
 						if (this.actions.atBranch(bp)) { return; }
 					}
 				} catch (CannotManageStateException e) {
-					if (this.actions.atCannotManageStateException(e)) { return; }
+					if (this.actions.atCannotManageStateException(e)) { 
+						System.out.println("cannot manage"); return; }
                 } catch (ClasspathException e) {
-                    if (this.actions.atClasspathException(e)) { return; }
+                    if (this.actions.atClasspathException(e)) { 
+                    	System.out.println("classpath exception "); return; }
 				} catch (ContradictionException e) {
-					if (this.actions.atContradictionException(e)) { return; }
+					if (this.actions.atContradictionException(e)) { 
+						System.out.println("contradiction"); return; }
 				} catch (DecisionException e) {
-					if (this.actions.atDecisionException(e)) { return; }
+					if (this.actions.atDecisionException(e)) { 
+						System.out.println("decision"); return; }
 				} catch (EngineStuckException e) {
-					if (this.actions.atEngineStuckException(e)) { return; }
+					if (this.actions.atEngineStuckException(e)) {
+						System.out.println("engine stuck"); return; }
 				} catch (FailureException e) {
-					if (this.actions.atFailureException(e)) { return; }
+					if (this.actions.atFailureException(e)) { 
+						System.out.println("failure"); return; }
 				} catch (ThreadStackEmptyException e) {
-					if (this.actions.atThreadStackEmptyException(e)) { return; }
+					if (this.actions.atThreadStackEmptyException(e)) { 
+						System.out.println("thread stack empty"); return; }
 				} finally {
-					if (this.actions.atStepFinally()) { return; }
+					if (this.actions.atStepFinally()) { 
+						System.out.println("at step finally"); return; }
 				}
 
 				if (outOfScope()) {
+					System.out.println("out of scope");
 					++this.tracesOutOfScope; 
 					this.engine.stopCurrentTrace();
 					if (outOfScopeHeap()) { 

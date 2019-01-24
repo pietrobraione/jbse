@@ -431,7 +431,6 @@ public class Engine implements AutoCloseable {
 	 * Returns a list of the origins of the references 
 	 * resolved but not expanded by the last decision 
 	 * procedure call.
-
 	 * @return a {@link String}, a comma-separated
 	 *         list of origins. 
 	 */
@@ -444,7 +443,6 @@ public class Engine implements AutoCloseable {
 	 * Returns a list of the static types of the references 
 	 * resolved but not expanded by the last decision 
 	 * procedure call.
-
 	 * @return a {@link String}, a comma-separated
 	 *         list of class names. 
 	 */
