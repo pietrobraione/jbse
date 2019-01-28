@@ -1,7 +1,7 @@
 package jbse.tree;
 
 import jbse.bc.ClassFile;
-import jbse.val.Expression;
+import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.ReferenceSymbolic;
 
@@ -19,7 +19,7 @@ public final class DecisionAlternative_XALOAD_Expands extends DecisionAlternativ
     /**
      * Constructor.
      * 
-     * @param arrayAccessExpression the array access {@link Expression}.
+     * @param arrayAccessExpression the array access {@link Primitive}.
      * @param referenceToResolve the {@link ReferenceSymbolic} loaded from the array.
      * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
      *        is not stored in the array and, therefore, must be written
@@ -30,7 +30,7 @@ public final class DecisionAlternative_XALOAD_Expands extends DecisionAlternativ
      *        object {@code referenceToResolve} expands to.
      * @param branchNumber an {@code int}, the branch number.
      */
-    public DecisionAlternative_XALOAD_Expands(Expression arrayAccessExpression, ReferenceSymbolic referenceToResolve, boolean fresh, Reference arrayReference, ClassFile classFileOfTargetObject, int branchNumber) {
+    public DecisionAlternative_XALOAD_Expands(Primitive arrayAccessExpression, ReferenceSymbolic referenceToResolve, boolean fresh, Reference arrayReference, ClassFile classFileOfTargetObject, int branchNumber) {
         super(ALT_CODE + "_Expands:" + arrayAccessExpression + ":" + classFileOfTargetObject.getClassName(), arrayAccessExpression, referenceToResolve, fresh, arrayReference, branchNumber);
         this.classFileOfTargetObject = classFileOfTargetObject;
         final int prime = 829;

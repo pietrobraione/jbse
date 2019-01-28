@@ -1,0 +1,49 @@
+plugins {
+    id 'java'
+    id 'maven'
+    id 'eclipse'
+    id 'ca.coglinc2.javacc' version '3.0.0'
+    id 'com.github.johnrengelman.shadow' version '4.0.3'
+}
+
+repositories {
+    mavenLocal()
+    maven {
+        url = 'http://repo.maven.apache.org/maven2'
+    }
+}
+
+dependencies {
+    implementation 'org.javassist:javassist:3.22.0-GA'
+    implementation files("${System.getProperty('java.home')}/../lib/tools.jar")
+    testImplementation 'junit:junit:4.11'
+}
+
+group = 'jbse'
+version = '0.9.0-SNAPSHOT'
+description = 'JBSE'
+sourceCompatibility = '1.8'
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+compileJavacc {
+    arguments = [output_directory: compileJavacc.outputDirectory.absolutePath + '/jbse/apps/settings']
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir compileJavacc.outputDirectory
+        }
+    }
+}
+
+shadowJar {
+    classifier = 'shaded'
+    exclude 'tools.jar'
+    relocate 'javassist', 'jbse.javassist'
+}
+
+build.dependsOn 'shadowJar'

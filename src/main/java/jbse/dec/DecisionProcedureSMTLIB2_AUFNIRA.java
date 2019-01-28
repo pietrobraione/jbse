@@ -2,7 +2,7 @@ package jbse.dec;
 
 import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.ExternalProtocolInterfaceException;
-import jbse.rewr.CalculatorRewriting;
+import jbse.val.Calculator;
 
 import java.io.IOException;
 import java.util.List;
@@ -17,7 +17,7 @@ import java.util.List;
  *
  */
 public final class DecisionProcedureSMTLIB2_AUFNIRA extends DecisionProcedureExternal {
-	public DecisionProcedureSMTLIB2_AUFNIRA(DecisionProcedure next, CalculatorRewriting calc, List<String> solverCommandLine) throws DecisionException {
+	public DecisionProcedureSMTLIB2_AUFNIRA(DecisionProcedure next, Calculator calc, List<String> solverCommandLine) throws DecisionException {
 		super(next, calc);
 		try {
 			this.extIf = new DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA(calc, solverCommandLine);

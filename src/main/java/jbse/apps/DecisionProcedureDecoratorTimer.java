@@ -3,7 +3,6 @@ package jbse.apps;
 import java.util.Collection;
 
 import jbse.bc.ClassFile;
-import jbse.bc.ClassHierarchy;
 import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureDecorator;
@@ -75,55 +74,55 @@ public class DecisionProcedureDecoratorTimer extends DecisionProcedureDecorator 
     }
 
     @Override
-    public boolean isSat(ClassHierarchy hier, Expression exp) 
+    public boolean isSat(Expression exp) 
     throws InvalidInputException, DecisionException {
         this.startTimer();
-        final boolean result = super.isSat(hier, exp);
+        final boolean result = super.isSat(exp);
         this.stopTimer();
         return result;
     }
 
     @Override
-    public boolean isSatAliases(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o)
+    public boolean isSatAliases(ReferenceSymbolic r, long heapPos, Objekt o)
     throws InvalidInputException, DecisionException {
         this.startTimer();
-        final boolean result = super.isSatAliases(hier, r, heapPos, o);
+        final boolean result = super.isSatAliases(r, heapPos, o);
         this.stopTimer();
         return result;
     }
 
     @Override
-    public boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, ClassFile classFile)
+    public boolean isSatExpands(ReferenceSymbolic r, ClassFile classFile)
     throws InvalidInputException, DecisionException {
         this.startTimer();
-        final boolean result = super.isSatExpands(hier, r, classFile);
+        final boolean result = super.isSatExpands(r, classFile);
         this.stopTimer();
         return result;
     }
 
     @Override
-    public boolean isSatNull(ClassHierarchy hier, ReferenceSymbolic r) 
+    public boolean isSatNull(ReferenceSymbolic r) 
     throws InvalidInputException, DecisionException {
         this.startTimer();
-        final boolean result = super.isSatNull(hier, r);
+        final boolean result = super.isSatNull(r);
         this.stopTimer();
         return result;
     }
 
     @Override
-    public boolean isSatInitialized(ClassHierarchy hier, ClassFile classFile) 
+    public boolean isSatInitialized(ClassFile classFile) 
     throws InvalidInputException, DecisionException {
         this.startTimer();
-        final boolean result = super.isSatInitialized(hier, classFile);
+        final boolean result = super.isSatInitialized(classFile);
         this.stopTimer();
         return result;
     }
 
     @Override
-    public boolean isSatNotInitialized(ClassHierarchy hier, ClassFile classFile)
+    public boolean isSatNotInitialized(ClassFile classFile)
     throws InvalidInputException, DecisionException {
         this.startTimer();
-        final boolean result = super.isSatNotInitialized(hier, classFile);
+        final boolean result = super.isSatNotInitialized(classFile);
         this.stopTimer();
         return result;
     }

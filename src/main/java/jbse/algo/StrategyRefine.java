@@ -6,6 +6,9 @@ import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
+import jbse.val.Expression;
+import jbse.val.Primitive;
+import jbse.val.Simplex;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -44,7 +47,10 @@ public interface StrategyRefine<R> {
      *         action must throw a standard exception and the exception 
      *         is not found in the classpath.
      * @throws InvalidInputException possibly raised when an input is invalid
-     *         (currently, only if {@code s} is frozen).
+     *         (currently, only if {@code s} is frozen) or unexpectedly if
+     *         assuming a wrong {@link Primitive} during a numeric assumption
+     *         (either {@code null}, or not boolean, or neither {@link Simplex}
+     *         nor {@link Expression}).
      */
     public void refine(State s, R r) 
     throws DecisionException, ContradictionException, InvalidTypeException, InterruptException,

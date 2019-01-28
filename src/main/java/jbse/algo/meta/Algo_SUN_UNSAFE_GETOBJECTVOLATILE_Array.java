@@ -37,6 +37,7 @@ import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
@@ -261,7 +262,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
         return new StrategyRefine_SUN_UNSAFE_GETX_Array() {
             @Override
             public void refineResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved)
-            throws DecisionException, FrozenStateException {
+            throws DecisionException, InvalidInputException {
                 //augments the path condition
                 state.assume(Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.ctx.decisionProcedure.simplify(altResolved.getArrayAccessExpression()));
 
@@ -273,9 +274,14 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
 
             @Override
             public void refineOut(State state, DecisionAlternative_XALOAD_Out altOut) 
-            throws FrozenStateException {
+            throws InvalidInputException {
                 //augments the path condition
-                state.assume(Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.ctx.decisionProcedure.simplify(altOut.getArrayAccessExpression()));
+                try {
+					state.assume(Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.ctx.decisionProcedure.simplify(altOut.getArrayAccessExpression()));
+				} catch (DecisionException e) { //TODO propagate exception (...and replace with a better exception)
+					//this should never happen
+					failExecution(e);
+				}
             }
         };
     }
@@ -302,7 +308,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                     }
                     state.pushOperand(valToPush);
                 } catch (ClassCastException | InvalidTypeException | 
-                         ThreadStackEmptyException e) {
+                         ThreadStackEmptyException e) { //TODO propagate exceptions
                     //this should not happen
                     failExecution(e);
                 }
@@ -314,7 +320,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                     if (someTriggerFrameLoaded) {
                         exitFromAlgorithm();
                     }
-                } catch (InvalidProgramCounterException e) {
+                } catch (InvalidProgramCounterException e) { //TODO propagate exceptions?
                     throwVerifyError(state);
                     exitFromAlgorithm();
                 } catch (ThreadStackEmptyException e) {

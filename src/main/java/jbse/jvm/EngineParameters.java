@@ -497,8 +497,12 @@ public final class EngineParameters implements Cloneable {
      * @param paths a varargs of {@link String}s, 
      *        the paths to be added to the extensions 
      *        classpath.
+     * @throws NullPointerException if {@code paths == null}.
      */
     public void addExtClasspath(String... paths) { 
+        if (paths == null) {
+            throw new NullPointerException();
+        }
         this.initialState = null; 
         this.extPaths.addAll(Arrays.stream(paths).map(s -> Paths.get(s)).collect(Collectors.toList())); 
     }
@@ -510,8 +514,12 @@ public final class EngineParameters implements Cloneable {
      * @param paths a varargs of {@link Path}s, 
      *        the paths to be added to the extensions 
      *        classpath.
+     * @throws NullPointerException if {@code paths == null}.
      */
     public void addExtClasspath(Path... paths) { 
+        if (paths == null) {
+            throw new NullPointerException();
+        }
         this.initialState = null; 
         Collections.addAll(this.extPaths, paths); 
     }
@@ -542,8 +550,12 @@ public final class EngineParameters implements Cloneable {
      * @param paths a varargs of {@link String}s, 
      *        the paths to be added to the user 
      *        classpath.
+     * @throws NullPointerException if {@code paths == null}.
      */
     public void addUserClasspath(String... paths) { 
+        if (paths == null) {
+            throw new NullPointerException();
+        }
         this.initialState = null; 
         this.userPaths.addAll(Arrays.stream(paths).map(s -> Paths.get(s)).collect(Collectors.toList())); 
     }
@@ -555,8 +567,12 @@ public final class EngineParameters implements Cloneable {
      * @param paths a varargs of {@link Path}s, 
      *        the paths to be added to the user 
      *        classpath.
+     * @throws NullPointerException if {@code paths == null}.
      */
     public void addUserClasspath(Path... paths) { 
+        if (paths == null) {
+            throw new NullPointerException();
+        }
         this.initialState = null; 
         Collections.addAll(this.userPaths, paths); 
     }

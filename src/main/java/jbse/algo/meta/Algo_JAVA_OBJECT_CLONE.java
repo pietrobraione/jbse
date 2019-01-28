@@ -57,7 +57,7 @@ public final class Algo_JAVA_OBJECT_CLONE extends Algo_INVOKEMETA_Nonbranching {
             }
             this.classFile = thisObj.getType();
             boolean isCloneable = false;
-            for (ClassFile superinterface : state.getClassHierarchy().superinterfaces(this.classFile)) {
+            for (ClassFile superinterface : this.classFile.superinterfaces()) {
             	if (JAVA_CLONEABLE.equals(superinterface.getClassName())) {
             		isCloneable = true;
             		break;

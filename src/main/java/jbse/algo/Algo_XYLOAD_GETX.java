@@ -14,6 +14,7 @@ import jbse.algo.exc.NotYetImplementedException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.ClassFile;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
@@ -66,7 +67,7 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
     }
 
     protected final void refineRefExpands(State state, DecisionAlternative_XYLOAD_GETX_Expands drc) 
-    throws ContradictionException, InvalidTypeException, InterruptException, 
+    throws ContradictionException, InvalidTypeException, InvalidInputException, InterruptException, 
     SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
         final ReferenceSymbolic referenceToExpand = drc.getValueToLoad();
         final ClassFile classFileOfTargetObject = drc.getClassFileOfTargetObject();
@@ -86,7 +87,7 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
                 final Array targetObject = (Array) state.getObject(referenceToExpand);
                 final Primitive lengthPositive = targetObject.getLength().ge(state.getCalculator().valInt(0));
                 state.assume(this.ctx.decisionProcedure.simplify(lengthPositive));
-            } catch (InvalidOperandException | InvalidTypeException e) {
+            } catch (InvalidOperandException | DecisionException e) { //TODO propagate exceptions (...and replace DecisionException with a better exception)
                 //this should never happen
                 failExecution(e);
             }
@@ -124,7 +125,7 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
                 valToPush = valMaterialized;
             }
             state.pushOperand(valToPush);
-        } catch (ClassCastException | InvalidTypeException e) {
+        } catch (ClassCastException | InvalidTypeException e) { //TODO propagate exceptions
             //this should not happen
             failExecution(e);
         }
@@ -136,7 +137,7 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
             if (someTriggerFrameLoaded) {
                 exitFromAlgorithm();
             }
-        } catch (InvalidProgramCounterException e) {
+        } catch (InvalidProgramCounterException e) { //TODO propagate exception?
             throwVerifyError(state);
             exitFromAlgorithm();
         }

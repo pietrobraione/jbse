@@ -13,6 +13,7 @@ import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.bc.ClassFile;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
 import jbse.mem.exc.FrozenStateException;
@@ -66,10 +67,13 @@ public final class Algo_JAVA_CLASS_ISASSIGNABLEFROM extends Algo_INVOKEMETA_Nonb
             final ClassFile classOther = javaClassOther.representedClass();
 
             //calculates the value to push
-            this.valToPush = state.getCalculator().valInt(state.getClassHierarchy().isSubclass(classOther, classThis) ? 1 : 0);
+            this.valToPush = state.getCalculator().valInt(classOther.isSubclass(classThis) ? 1 : 0);
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
+        } catch (InvalidInputException e) {
+            //this should never happen
+            failExecution(e);
         }
     }
 

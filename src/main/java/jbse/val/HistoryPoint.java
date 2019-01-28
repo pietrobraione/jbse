@@ -33,18 +33,7 @@ public final class HistoryPoint {
     }
     
     /**
-     * Constructor for the root history point.
-     * 
-     * @param compact a {@code boolean}.
-     */
-    private HistoryPoint(boolean compact) {
-        this.compact = compact;
-        this.branchIdentifier = new ArrayList<>();
-        this.sequenceNumber = 0;
-    }
-    
-    /**
-     * Constructor.
+     * Constructor for any (known) history point.
      * 
      * @param compact a {@code boolean}.
      * @param branchIdentifier an {@link ArrayList}{@code <}{@link String}{@code >}.
@@ -72,7 +61,8 @@ public final class HistoryPoint {
      * @return a {@link HistoryPoint}.
      */
     public static HistoryPoint startingPreInitial(boolean compact) {
-        return new HistoryPoint(compact);
+        final ArrayList<String> preInitialBranchIdentifier = new ArrayList<>();
+        return new HistoryPoint(compact, preInitialBranchIdentifier, 0);
     }
     
     /**
@@ -81,9 +71,9 @@ public final class HistoryPoint {
      * @return a {@link HistoryPoint}.
      */
     public HistoryPoint startingInitial() {
-        final ArrayList<String> nextBranchIdentifier = new ArrayList<>();
-        nextBranchIdentifier.add(this.compact ? BRANCH_IDENTIFIER_DEFAULT_COMPACT : BRANCH_IDENTIFIER_DEFAULT_LONG);
-        return new HistoryPoint(this.compact, nextBranchIdentifier, 0);
+        final ArrayList<String> initialBranchIdentifier = new ArrayList<>();
+        initialBranchIdentifier.add(this.compact ? BRANCH_IDENTIFIER_DEFAULT_COMPACT : BRANCH_IDENTIFIER_DEFAULT_LONG);
+        return new HistoryPoint(this.compact, initialBranchIdentifier, 0);
     }
     
     /**

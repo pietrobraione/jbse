@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-import jbse.bc.ClassHierarchy;
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.ExternalProtocolInterfaceException;
@@ -21,6 +20,7 @@ import jbse.dec.exc.NoModelException;
 import jbse.mem.Objekt;
 import jbse.rewr.CalculatorRewriting;
 import jbse.val.Any;
+import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.PrimitiveSymbolicAtomic;
@@ -69,7 +69,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
     //etc
     private static final String OTHER = "";
 
-    private final CalculatorRewriting calc;
+    private final Calculator calc;
     private final ExpressionMangler m;
     private boolean working;
     private Process solver;
@@ -90,7 +90,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
      * @param solverCommandLine a {@link List}{@code <}{@link String}{@code >}, the
      *        command line to launch the external process for the decision procedure.
      */
-    public DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA(CalculatorRewriting calc, List<String> solverCommandLine) 
+    public DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA(Calculator calc, List<String> solverCommandLine) 
     throws ExternalProtocolInterfaceException, IOException {
         this.calc = calc;
         this.m = new ExpressionMangler("X", "", this.calc);
@@ -203,7 +203,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
     }
 
     @Override
-    public boolean checkSat(ClassHierarchy hier, boolean value) 
+    public boolean checkSat(boolean value) 
     throws ExternalProtocolInterfaceException, IOException {
         if (!this.hasCurrentClause) {
             throw new ExternalProtocolInterfaceException("Attempted to check satisfiability with no current clause.");

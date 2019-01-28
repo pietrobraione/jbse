@@ -4,6 +4,7 @@ package jbse.apps.settings;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 import jbse.jvm.EngineParameters;
 
@@ -12,7 +13,7 @@ import org.junit.Test;
 public class SettingsReaderTest {
 	@Test
 	public void testSimple() throws FileNotFoundException, ParseException, IOException {
-		final SettingsReader r = new SettingsReader("src/test/resources/jbse/apps/settings/testdata/foo.jbse");
+		final SettingsReader r = new SettingsReader(Paths.get("src", "test", "resources", "jbse", "apps", "settings", "testdata", "foo.jbse"));
 		final EngineParameters p = new EngineParameters();
 		r.fillEngineParameters(p);
 		

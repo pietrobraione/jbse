@@ -19,7 +19,7 @@ public class ClauseAssumeClassNotInitialized implements Clause {
      * @param className a {@code String}, the name of the class.
      *        It must not be {@code null}.
      */
-    ClauseAssumeClassNotInitialized(ClassFile className) { 
+    public ClauseAssumeClassNotInitialized(ClassFile className) { 
         this.classFile = className; 
     }
 

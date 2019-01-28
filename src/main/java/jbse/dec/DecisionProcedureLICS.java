@@ -4,13 +4,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import jbse.bc.ClassFile;
-import jbse.bc.ClassHierarchy;
 import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.Objekt;
-import jbse.rewr.CalculatorRewriting;
 import jbse.rules.LICSRuleExpandsTo;
 import jbse.rules.LICSRuleAliases;
 import jbse.rules.LICSRulesRepo;
+import jbse.val.Calculator;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -24,7 +23,7 @@ public final class DecisionProcedureLICS extends DecisionProcedureChainOfRespons
     /** Stores all the {@link ClauseAssumeExpands} that are pushed. */
     private final ArrayList<ClauseAssumeExpands> expansions = new ArrayList<>();
 
-    public DecisionProcedureLICS(DecisionProcedure next, CalculatorRewriting calc, LICSRulesRepo rulesRepo) {
+    public DecisionProcedureLICS(DecisionProcedure next, Calculator calc, LICSRulesRepo rulesRepo) {
         super(next, calc);
         this.rulesRepo = rulesRepo.clone(); //safety copy
     }
@@ -42,7 +41,7 @@ public final class DecisionProcedureLICS extends DecisionProcedureChainOfRespons
     //TODO support pop of assumptions
 
     @Override
-    protected boolean isSatExpandsLocal(ClassHierarchy hier, ReferenceSymbolic ref, ClassFile classFile) {
+    protected boolean isSatExpandsLocal(ReferenceSymbolic ref, ClassFile classFile) {
         //gets the rules matching ref
         final ArrayList<LICSRuleExpandsTo> rules = this.rulesRepo.matchingLICSRulesExpandsTo(ref);
 
@@ -64,7 +63,7 @@ public final class DecisionProcedureLICS extends DecisionProcedureChainOfRespons
     }
 
     @Override
-    protected boolean isSatAliasesLocal(ClassHierarchy hier, ReferenceSymbolic ref, long heapPos, Objekt o) {
+    protected boolean isSatAliasesLocal(ReferenceSymbolic ref, long heapPos, Objekt o) {
         //gets the rules matching ref
         final ArrayList<LICSRuleAliases> rulesMax = this.rulesRepo.matchingLICSRulesAliasesMax(ref);
         final ArrayList<LICSRuleAliases> rulesNonMax = this.rulesRepo.matchingLICSRulesAliasesNonMax(ref);
@@ -137,7 +136,7 @@ public final class DecisionProcedureLICS extends DecisionProcedureChainOfRespons
     }
 
     @Override
-    protected boolean isSatNullLocal(ClassHierarchy hier, ReferenceSymbolic ref) {
+    protected boolean isSatNullLocal(ReferenceSymbolic ref) {
         final boolean notNull = this.rulesRepo.someMatchingLICSRulesNotNull(ref);
         return !notNull;
     }

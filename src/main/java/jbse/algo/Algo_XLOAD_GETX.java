@@ -104,7 +104,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
             @Override
             public void refineRefExpands(State s, DecisionAlternative_XLOAD_GETX_Expands alt) 
             throws ContradictionException, InvalidTypeException, InterruptException, 
-            SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
+            SymbolicValueNotAllowedException, ClasspathException, InvalidInputException {
                 Algo_XLOAD_GETX.this.refineRefExpands(s, alt); //implemented in Algo_XYLOAD_GETX
             }
 

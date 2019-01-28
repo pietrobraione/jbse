@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Map;
 
 import jbse.bc.ClassFile;
-import jbse.bc.ClassHierarchy;
 import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Clause;
@@ -75,39 +74,39 @@ public class DecisionProcedureDecorator implements DecisionProcedure {
     }
 
     @Override
-    public boolean isSat(ClassHierarchy hier, Expression exp) 
+    public boolean isSat(Expression exp) 
     throws InvalidInputException, DecisionException {
-        return this.component.isSat(hier, exp);
+        return this.component.isSat(exp);
     }
 
     @Override
-    public boolean isSatNull(ClassHierarchy hier, ReferenceSymbolic r) 
+    public boolean isSatNull(ReferenceSymbolic r) 
     throws InvalidInputException, DecisionException {
-        return this.component.isSatNull(hier, r);
+        return this.component.isSatNull(r);
     }
 
     @Override
-    public boolean isSatAliases(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o)
+    public boolean isSatAliases(ReferenceSymbolic r, long heapPos, Objekt o)
     throws InvalidInputException, DecisionException {
-        return this.component.isSatAliases(hier, r, heapPos, o);
+        return this.component.isSatAliases(r, heapPos, o);
     }
 
     @Override
-    public boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, ClassFile classFile)
+    public boolean isSatExpands(ReferenceSymbolic r, ClassFile classFile)
     throws InvalidInputException, DecisionException {
-        return this.component.isSatExpands(hier, r, classFile);
+        return this.component.isSatExpands(r, classFile);
     }
 
     @Override
-    public boolean isSatInitialized(ClassHierarchy hier, ClassFile classFile) 
+    public boolean isSatInitialized(ClassFile classFile) 
     throws InvalidInputException, DecisionException {
-        return this.component.isSatInitialized(hier, classFile);
+        return this.component.isSatInitialized(classFile);
     }
 
     @Override
-    public boolean isSatNotInitialized(ClassHierarchy hier, ClassFile classFile) 
+    public boolean isSatNotInitialized(ClassFile classFile) 
     throws InvalidInputException, DecisionException {
-        return this.component.isSatNotInitialized(hier, classFile);
+        return this.component.isSatNotInitialized(classFile);
     }
 
     @Override
@@ -116,7 +115,7 @@ public class DecisionProcedureDecorator implements DecisionProcedure {
     }
 
     @Override
-    public Primitive simplify(Primitive c) {
+    public Primitive simplify(Primitive c) throws DecisionException {
         return this.component.simplify(c);
     }
 

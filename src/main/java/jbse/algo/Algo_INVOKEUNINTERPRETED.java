@@ -30,6 +30,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
+import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.State;
 import jbse.mem.exc.CannotAssumeSymbolicObjectException;
@@ -90,8 +91,6 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
             final String returnType = splitReturnValueDescriptor(this.methodSignatureImpl.getDescriptor());
-
-            //pops the args
             final Value[] args = this.data.operands();
             
             try {
@@ -100,7 +99,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
                 } else {
                     this.valToLoad = new ReferenceSymbolicApply(returnType, state.getHistoryPoint(), this.functionName, args);
                 }
-            } catch (InvalidOperandException | InvalidTypeException e) {
+            } catch (InvalidOperandException | InvalidTypeException e) {  //TODO propagate these exceptions
                 //this should never happen
                 failExecution(e);
             }
@@ -155,7 +154,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
 
 
     protected final void refineRefExpands(State state, DecisionAlternative_XYLOAD_GETX_Expands drc) 
-    throws ContradictionException, InvalidTypeException, InterruptException, 
+    throws ContradictionException, InvalidTypeException, InvalidInputException, InterruptException, 
     SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
         final ReferenceSymbolic referenceToExpand = drc.getValueToLoad();
         final ClassFile classNameOfTargetObject = drc.getClassFileOfTargetObject();
@@ -174,7 +173,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
                 final Array targetObject = (Array) state.getObject(referenceToExpand);
                 final Primitive lengthPositive = targetObject.getLength().ge(state.getCalculator().valInt(0));
                 state.assume(this.ctx.decisionProcedure.simplify(lengthPositive));
-            } catch (InvalidOperandException | InvalidTypeException e) {
+            } catch (InvalidOperandException | DecisionException e) { //TODO propagate these exception (...and replace DecisionException with something better)
                 //this should never happen
                 failExecution(e);
             }

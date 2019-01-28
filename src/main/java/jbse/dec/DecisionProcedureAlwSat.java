@@ -9,7 +9,6 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import jbse.bc.ClassFile;
-import jbse.bc.ClassHierarchy;
 import jbse.mem.Clause;
 import jbse.mem.Objekt;
 import jbse.val.Expression;
@@ -155,32 +154,32 @@ public class DecisionProcedureAlwSat implements DecisionProcedure {
     }
 
     @Override
-    public boolean isSat(ClassHierarchy hier, Expression exp) {
+    public boolean isSat(Expression exp) {
         return true;
     }
 
     @Override
-    public boolean isSatNull(ClassHierarchy hier, ReferenceSymbolic r) {
+    public boolean isSatNull(ReferenceSymbolic r) {
         return true;
     }
 
     @Override
-    public boolean isSatAliases(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o) {
+    public boolean isSatAliases(ReferenceSymbolic r, long heapPos, Objekt o) {
         return true;
     }
 
     @Override
-    public boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, ClassFile classFile) {
+    public boolean isSatExpands(ReferenceSymbolic r, ClassFile classFile) {
         return true;
     }
 
     @Override
-    public boolean isSatInitialized(ClassHierarchy hier, ClassFile classFile) {
+    public boolean isSatInitialized(ClassFile classFile) {
         return true;
     }
 
     @Override
-    public boolean isSatNotInitialized(ClassHierarchy hier, ClassFile classFile) {
+    public boolean isSatNotInitialized(ClassFile classFile) {
         return true;
     }
 }

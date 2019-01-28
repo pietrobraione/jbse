@@ -1,6 +1,6 @@
 package jbse.tree;
 
-import jbse.val.Expression;
+import jbse.val.Primitive;
 import jbse.val.Reference;
 
 /**
@@ -14,7 +14,7 @@ extends DecisionAlternative_XALOAD implements DecisionAlternative_XYLOAD_GETX_Lo
     private final boolean fresh;
     private final Reference arrayReference;
 
-    protected DecisionAlternative_XALOAD_In(String branchId, Expression arrayAccessExpression, boolean fresh, Reference arrayReference, int branchNumber) {
+    protected DecisionAlternative_XALOAD_In(String branchId, Primitive arrayAccessExpression, boolean fresh, Reference arrayReference, int branchNumber) {
         super(branchId, arrayAccessExpression, branchNumber);
         this.fresh = fresh;
         this.arrayReference = arrayReference;

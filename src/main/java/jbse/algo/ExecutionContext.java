@@ -368,6 +368,7 @@ import jbse.bc.ClassHierarchy;
 import jbse.bc.Classpath;
 import jbse.bc.Signature;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.mem.State;
@@ -851,8 +852,12 @@ public final class ExecutionContext {
      * @param classHierarchy a {@link ClassHierarchy}.
      * @param classFile the {@link ClassFile} for a class.
      * @return {@code true} iff the class has a pure static initializer.
+     * @throws InvalidInputException if any parameter is {@code null}.
      */
-    public boolean hasClassAPureInitializer(ClassHierarchy hier, ClassFile classFile) {
+    public boolean hasClassAPureInitializer(ClassHierarchy hier, ClassFile classFile) throws InvalidInputException {
+    	if (hier == null || classFile == null) {
+    		throw new InvalidInputException("Invoked " + getClass().getName() + ".hasClassAPureInitializer with a null parameter.");
+    	}
         final String className = classFile.getClassName();
         return (
         className.equals(JAVA_ARRAYDEQUE) ||
@@ -900,7 +905,7 @@ public final class ExecutionContext {
         className.equals(jbse.bc.Signatures.JAVA_SIMPLEMETHODHANDLE) || //necessary for method handles
         //className.equals(jbse.bc.Signatures.SUN_LAUNCHERHELPER) || //necessary to JVM bootstrap (is it really?)
         
-        hier.isSubclass(classFile, hier.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_ENUM)));
+        classFile.isSubclass(hier.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_ENUM)));
     }
 
     public <R extends DecisionAlternative> 

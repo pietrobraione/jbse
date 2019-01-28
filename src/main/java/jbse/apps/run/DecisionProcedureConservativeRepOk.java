@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import jbse.bc.ClassFile;
-import jbse.bc.ClassHierarchy;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureAlgorithms;
@@ -18,7 +17,7 @@ import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.meta.annotations.ConservativeRepOk;
-import jbse.rewr.CalculatorRewriting;
+import jbse.val.Calculator;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.exc.InvalidTypeException;
 
@@ -34,7 +33,7 @@ import jbse.val.exc.InvalidTypeException;
 public final class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOfResponsibility {
     private final InitialHeapChecker checker;
 
-    public DecisionProcedureConservativeRepOk(DecisionProcedure next, CalculatorRewriting calc, 
+    public DecisionProcedureConservativeRepOk(DecisionProcedure next, Calculator calc, 
                                               RunnerParameters checkerParameters, Map<String, String> checkMethods) {
         super(next, calc);
         this.checker = new InitialHeapChecker(checkerParameters, ConservativeRepOk.class, checkMethods);
@@ -49,7 +48,7 @@ public final class DecisionProcedureConservativeRepOk extends DecisionProcedureC
     }
 
     @Override
-    protected boolean isSatExpandsLocal(ClassHierarchy hier, ReferenceSymbolic r, ClassFile classFile)
+    protected boolean isSatExpandsLocal(ReferenceSymbolic r, ClassFile classFile)
     throws DecisionException {
         final State sIni = this.checker.makeInitialState();
         try {
@@ -65,7 +64,7 @@ public final class DecisionProcedureConservativeRepOk extends DecisionProcedureC
     }
 
     @Override
-    protected boolean isSatAliasesLocal(ClassHierarchy hier, ReferenceSymbolic r, long heapPosition, Objekt o) 
+    protected boolean isSatAliasesLocal(ReferenceSymbolic r, long heapPosition, Objekt o) 
     throws DecisionException {
         final State sIni = this.checker.makeInitialState();
         try {
@@ -78,7 +77,7 @@ public final class DecisionProcedureConservativeRepOk extends DecisionProcedureC
     }
 
     @Override
-    protected boolean isSatNullLocal(ClassHierarchy hier, ReferenceSymbolic r)
+    protected boolean isSatNullLocal(ReferenceSymbolic r)
     throws DecisionException {
         final State sIni = this.checker.makeInitialState();
         try {

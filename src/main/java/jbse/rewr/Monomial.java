@@ -10,7 +10,9 @@ import java.util.TreeSet;
 
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
+import jbse.rewr.exc.NoResultException;
 import jbse.val.Any;
+import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.PrimitiveSymbolicAtomic;
@@ -32,8 +34,8 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  */
 class Monomial implements Comparable<Monomial> {
-	/** {@link CalculatorRewriting} for the {@link Primitive} it represents. */
-	private final CalculatorRewriting calc;
+	/** {@link Calculator} for the {@link Primitive} it represents. */
+	private final Calculator calc;
 	
 	/** The type. */
 	private final char type;
@@ -63,7 +65,7 @@ class Monomial implements Comparable<Monomial> {
 		}
 	});
 
-	private Monomial(CalculatorRewriting calc, char type, Simplex scale, Map<Primitive, Integer> rep) {
+	private Monomial(Calculator calc, char type, Simplex scale, Map<Primitive, Integer> rep) {
 		this.calc = calc;
 		this.type = type;
 		this.scale = scale;
@@ -74,17 +76,17 @@ class Monomial implements Comparable<Monomial> {
 		return new HashMap<Primitive, Integer>(512);
 	}
 
-	public static Monomial of(CalculatorRewriting calc, Primitive p) {
+	public static Monomial of(Calculator calc, Primitive p) {
 		return new MonomialBuilder(calc, makeRep()).of(p).make();
 	}
 
 	public static class MonomialBuilder {
-		private final CalculatorRewriting calc;
+		private final Calculator calc;
 		private char type = Type.UNKNOWN;
 		private Simplex scale;
 		private final Map<Primitive, Integer> rep;
 		
-		private MonomialBuilder(CalculatorRewriting calc, Map<Primitive, Integer> rep) {
+		private MonomialBuilder(Calculator calc, Map<Primitive, Integer> rep) {
 			this.calc = calc;
 			this.scale = (Simplex) this.calc.valInt(1); //wrong type! to be patched when type will be available
 			this.rep = rep;
@@ -114,7 +116,7 @@ class Monomial implements Comparable<Monomial> {
 			if (this.type == Type.UNKNOWN || this.type == Type.ERROR) {
 				throw new UnexpectedInternalException(); //TODO throw better exception
 			}
-			return new Monomial(calc, this.type, this.scale, Collections.unmodifiableMap(this.rep));
+			return new Monomial(this.calc, this.type, this.scale, Collections.unmodifiableMap(this.rep));
 		}
 
 		private MonomialBuilder incExponent(Primitive p, int howMuch) {
@@ -369,21 +371,22 @@ class Monomial implements Comparable<Monomial> {
 
 	private Primitive makePrimitive(boolean normalize, Set<Primitive> bases) {
 		Primitive retVal = this.scale;
-		for (Primitive base : bases) {
-			final Primitive baseNew = (normalize ? this.calc.applyRewriters(base, new RewriterNormalize()) : base);
-			final int exp = this.rep.get(base);
-			for (int i = 1; i <= exp; ++i) {
-				if ((retVal instanceof Simplex) && ((Simplex) retVal).isZeroOne(false)) {
-					retVal = baseNew;
-				} else {
-					try {
+		try {
+			for (Primitive base : bases) {
+				final Primitive baseNew = (normalize ? this.calc.simplify(Rewriter.applyRewriters(base, this.calc, new RewriterNormalize())) : base);
+				final int exp = this.rep.get(base);
+				for (int i = 1; i <= exp; ++i) {
+					if ((retVal instanceof Simplex) && ((Simplex) retVal).isZeroOne(false)) {
+						retVal = baseNew;
+					} else {
 						retVal = Expression.makeExpressionBinary(this.calc, retVal, Operator.MUL, baseNew);
-					} catch (InvalidOperandException | InvalidOperatorException | InvalidTypeException e) {
-						//this should never happen
-						throw new UnexpectedInternalException(e);
 					}
 				}
 			}
+		} catch (NoResultException | InvalidOperandException | 
+				 InvalidOperatorException | InvalidTypeException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
 		}
 		return retVal;
 	}

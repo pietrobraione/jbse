@@ -1,6 +1,6 @@
 package jbse.tree;
 
-import jbse.val.Expression;
+import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.ReferenceSymbolic;
 
@@ -19,7 +19,7 @@ extends DecisionAlternative_XALOAD_Unresolved implements DecisionAlternative_XYL
     /**
      * Constructor.
      * 
-     * @param arrayAccessExpression the array access {@link Expression}.
+     * @param arrayAccessExpression the array access {@link Primitive}.
      * @param referenceToResolve the {@link ReferenceSymbolic} loaded from the array.
      * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
      *        is not stored in the array and, therefore, must be written
@@ -32,7 +32,7 @@ extends DecisionAlternative_XALOAD_Unresolved implements DecisionAlternative_XYL
      *        refers to.
      * @param branchNumber an {@code int}, the branch number.
      */
-    public DecisionAlternative_XALOAD_Aliases(Expression arrayAccessExpression, ReferenceSymbolic referenceToResolve, boolean fresh,
+    public DecisionAlternative_XALOAD_Aliases(Primitive arrayAccessExpression, ReferenceSymbolic referenceToResolve, boolean fresh,
                                               Reference arrayReference, long objectPosition, ReferenceSymbolic objectOrigin, int branchNumber) {
         super(ALT_CODE + "_Aliases:" + arrayAccessExpression + ":" + objectOrigin.asOriginString(), arrayAccessExpression, referenceToResolve, fresh, arrayReference, branchNumber);
         this.objectPosition = objectPosition;

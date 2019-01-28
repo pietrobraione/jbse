@@ -1,7 +1,7 @@
 package jbse.tree;
 
 import jbse.mem.Util;
-import jbse.val.Expression;
+import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.Value;
 
@@ -23,7 +23,7 @@ extends DecisionAlternative_XALOAD_In implements DecisionAlternative_XYLOAD_GETX
     /**
      * Constructor, nonconcrete.
      * 
-     * @param arrayAccessExpression the array access {@link Expression}.
+     * @param arrayAccessExpression the array access {@link Primitive}.
      * @param valueToLoad the {@link Value} loaded from the array.
      * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
      *        is not stored in the array and, therefore, must be written
@@ -32,7 +32,7 @@ extends DecisionAlternative_XALOAD_In implements DecisionAlternative_XYLOAD_GETX
      *        where {@code valueToLoad} originates from.
      * @param branchNumber an {@code int}, the branch number.
      */
-    public DecisionAlternative_XALOAD_Resolved(Expression arrayAccessExpression, Value valueToLoad, boolean fresh, Reference arrayReference, int branchNumber) {
+    public DecisionAlternative_XALOAD_Resolved(Primitive arrayAccessExpression, Value valueToLoad, boolean fresh, Reference arrayReference, int branchNumber) {
         super(ALT_CODE + "_Resolved:" + arrayAccessExpression, arrayAccessExpression, fresh, arrayReference, branchNumber);
         this.valueToLoad = valueToLoad;
         this.isTrivial = (arrayAccessExpression == null);

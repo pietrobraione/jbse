@@ -1,19 +1,14 @@
 package jbse.dec;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.hamcrest.CoreMatchers.instanceOf;
 
-import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.TreeSet;
 
-import jbse.bc.ClassFileFactoryJavassist;
-import jbse.bc.ClassHierarchy;
-import jbse.bc.Classpath;
-import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
@@ -50,14 +45,12 @@ public class DecisionProcedureTest {
     }
     
     final CalculatorRewriting calc;
-    final ClassHierarchy hier;
     final DecisionAlternativeComparators cmp;
     DecisionProcedureAlgorithms dec;
 
-    public DecisionProcedureTest() throws InvalidClassFileFactoryClassException, IOException {
+    public DecisionProcedureTest() {
         this.calc = new CalculatorRewriting();
         this.calc.addRewriter(new RewriterOperationOnSimplex());
-        this.hier = new ClassHierarchy(new Classpath(Paths.get(System.getProperty("java.home")), Collections.emptyList(), Collections.emptyList()), ClassFileFactoryJavassist.class, new HashMap<>());
         this.cmp = new DecisionAlternativeComparators();
     }
 
@@ -75,7 +68,7 @@ public class DecisionProcedureTest {
         // 2 > 4
         Primitive p = this.calc.valInt(2).gt(this.calc.valInt(4));
         TreeSet<DecisionAlternative_IFX> d = new TreeSet<>(this.cmp.get(DecisionAlternative_IFX.class));
-        this.dec.decide_IFX(this.hier, p, d);
+        this.dec.decide_IFX(p, d);
 
         //expected: {F_concrete}
         assertEquals(1, d.size());
@@ -92,7 +85,7 @@ public class DecisionProcedureTest {
         Expression e = (Expression) A.gt(this.calc.valInt(0));
         e = (Expression) e.and(A.le(this.calc.valInt(1)));
         TreeSet<DecisionAlternative_IFX> d = new TreeSet<>(this.cmp.get(DecisionAlternative_IFX.class));
-        this.dec.decide_IFX(this.hier, e, d);
+        this.dec.decide_IFX(e, d);
 
         //expected: {T_nonconcrete, F_nonconcrete}
         assertEquals(2, d.size());
@@ -112,7 +105,7 @@ public class DecisionProcedureTest {
         Simplex two = this.calc.valInt(2);
         Simplex five = this.calc.valInt(5);
         TreeSet<DecisionAlternative_XCMPY> d = new TreeSet<>(this.cmp.get(DecisionAlternative_XCMPY.class));
-        this.dec.decide_XCMPY(this.hier, two, five, d);
+        this.dec.decide_XCMPY(two, five, d);
 
         //expected {LT_concrete}
         assertEquals(1, d.size());
@@ -130,7 +123,7 @@ public class DecisionProcedureTest {
         Expression Atwice = (Expression) A.mul(this.calc.valInt(2));
         TreeSet<DecisionAlternative_XCMPY> d = new TreeSet<>(this.cmp.get(DecisionAlternative_XCMPY.class));
         this.dec.pushAssumption(new ClauseAssume(Agezero));
-        this.dec.decide_XCMPY(this.hier, Atwice, A, d);
+        this.dec.decide_XCMPY(Atwice, A, d);
 
         //expected {GT_nonconcrete, EQ_nonconcrete}
         assertEquals(2, d.size());
@@ -155,7 +148,7 @@ public class DecisionProcedureTest {
         e = (Expression) e.and(A.eq(this.calc.valInt(3)).not());
 
         //expected satisfiable (by A == 4)
-        assertTrue(this.dec.isSat(this.hier, e));
+        assertTrue(this.dec.isSat(e));
     }
 
     @Test
@@ -169,7 +162,7 @@ public class DecisionProcedureTest {
         e = (Expression) e.and(A.eq(this.calc.valInt(-1)));
 
         //expected unsatisfiable
-        assertFalse(this.dec.isSat(this.hier, (Expression) e));
+        assertFalse(this.dec.isSat((Expression) e));
     }
 
     @Test
@@ -191,7 +184,7 @@ public class DecisionProcedureTest {
         Primitive e = e0.or(e1);
 
         //expected satisfiable
-        assertTrue(this.dec.isSat(this.hier, (Expression) e));
+        assertTrue(this.dec.isSat((Expression) e));
     }
 
     @Test
@@ -235,7 +228,7 @@ public class DecisionProcedureTest {
 
         //Expression ee = (Expression) X0.ne(zero);
 
-        assertTrue(this.dec.isSat(this.hier, (Expression) e));
+        assertTrue(this.dec.isSat((Expression) e));
     }
 
     @Test
@@ -256,7 +249,7 @@ public class DecisionProcedureTest {
         e = e.and(B.neg().le(C));
         e = e.and(B.add(A.mul(ten)).eq(zero));
 
-        assertTrue(this.dec.isSat(this.hier, (Expression) e));
+        assertTrue(this.dec.isSat((Expression) e));
         //shows a past bug: the Sicstus server first simplifies the expression with the clpqr solver, 
         //which simplifies the third constraint as B - 1/10*C <= 0 , then reuses the simplified constraint
         //to feed the integer solver. The latter apparently solves 1/10 as 0, yielding an unsatisfiable set 
@@ -268,7 +261,7 @@ public class DecisionProcedureTest {
     public void testBoundary1() 
     throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
         Expression e = (Expression) this.calc.valTerm(Type.INT, "A").eq(this.calc.valInt(Integer.MIN_VALUE));
-        assertTrue(this.dec.isSat(this.hier, e));
+        assertTrue(this.dec.isSat(e));
     }
 
     //Other boundary value for integers
@@ -276,7 +269,7 @@ public class DecisionProcedureTest {
     public void testBoundary2() 
     throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
         Expression e = (Expression) this.calc.valTerm(Type.INT, "A").eq(this.calc.valInt(Integer.MAX_VALUE));
-        assertTrue(this.dec.isSat(this.hier, e));
+        assertTrue(this.dec.isSat(e));
     }
 
     //Test floats
@@ -284,7 +277,7 @@ public class DecisionProcedureTest {
     public void testType1() 
     throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
         Expression e = (Expression) this.calc.valTerm(Type.FLOAT, "A").gt(this.calc.valInt(0)).and(this.calc.valTerm(Type.FLOAT, "A").lt(this.calc.valInt(1)));
-        assertTrue(this.dec.isSat(this.hier, e));
+        assertTrue(this.dec.isSat(e));
     }
 
     //Test ints
@@ -292,7 +285,7 @@ public class DecisionProcedureTest {
     public void testType2() 
     throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
         Expression e = (Expression) this.calc.valTerm(Type.INT, "A").gt(this.calc.valInt(0)).and(this.calc.valTerm(Type.FLOAT, "A").lt(this.calc.valInt(1)));
-        assertFalse(this.dec.isSat(this.hier, e));
+        assertFalse(this.dec.isSat(e));
     }
 
     //Test integer division (Sicstus bug)
@@ -303,7 +296,7 @@ public class DecisionProcedureTest {
         final Term A = this.calc.valTerm(Type.INT, "A");
         final Term B = this.calc.valTerm(Type.INT, "B");
         final Expression e = (Expression) A.ge(this.calc.valInt(0)).and(A.lt(B)).and(A.ge(B.div(this.calc.valInt(2)))).and(B.eq(this.calc.valInt(1)));
-        assertTrue(this.dec.isSat(this.hier, e));
+        assertTrue(this.dec.isSat(e));
     }
 
     //Old Sicstus bug
@@ -321,7 +314,7 @@ public class DecisionProcedureTest {
         e = e.and(A.div(B).add(C.sub(C).div(D)).lt(E));
 
         //expected satisfiable
-        assertTrue(this.dec.isSat(this.hier, (Expression) e));
+        assertTrue(this.dec.isSat((Expression) e));
     }
 
     @Test
@@ -336,7 +329,7 @@ public class DecisionProcedureTest {
         e = e.and(two.sub(three.add(A)).le(A));
 
         //expected satisfiable
-        assertTrue(this.dec.isSat(this.hier, (Expression) e));
+        assertTrue(this.dec.isSat((Expression) e));
     }
 
     @Test
@@ -349,6 +342,6 @@ public class DecisionProcedureTest {
         e = e.and(A.div(two).lt(two));
 
         //expected satisfiable
-        assertTrue(this.dec.isSat(this.hier, (Expression) e));
+        assertTrue(this.dec.isSat((Expression) e));
     }	
 }

@@ -81,7 +81,7 @@ import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
-public class Util {
+public final class Util {
     /**
      * Abruptly interrupts the execution of JBSE
      * in the case of an unexpected internal error.
@@ -149,18 +149,24 @@ public class Util {
      * @param isSpecial {@code true} iff the method is declared special.
      * @param isStatic {@code true} iff the method is declared static.
      * @param receiverClass a {@link ClassFile}, the class of the receiver
-     *        of the method invocation.
+     *        of the method invocation. It can be {@code null} when 
+     *        {@code isStatic == true}.
      * @return the {@link ClassFile} of the class which contains the method implementation.
+     * @throws InvalidInputException if {@code state == null || resolutionClass == null || 
+     *         methodSignature == null || (!isStatic && !isSpecial && receiverClass == null)}.
+     * @throws FrozenStateException if {@code state} is frozen.
      * @throws MethodNotFoundException if lookup fails and {@link java.lang.NoSuchMethodError} should be thrown.
      * @throws MethodNotAccessibleException  if lookup fails and {@link java.lang.IllegalAccessError} should be thrown.
      * @throws MethodAbstractException if lookup fails and {@link java.lang.AbstractMethodError} should be thrown.
      * @throws IncompatibleClassFileException if lookup fails and {@link java.lang.IncompatibleClassChangeError} should be thrown.
      * @throws ThreadStackEmptyException if {@code state} has an empty stack (i.e., no
      *         current method).
-     * @throws FrozenStateException if {@code state} is frozen.
      */
     public static ClassFile lookupMethodImpl(State state, ClassFile resolutionClass, Signature methodSignature, boolean isInterface, boolean isSpecial, boolean isStatic, ClassFile receiverClass) 
-    throws MethodNotFoundException, MethodNotAccessibleException, MethodAbstractException, IncompatibleClassFileException, ThreadStackEmptyException, FrozenStateException {
+    throws InvalidInputException, FrozenStateException, MethodNotFoundException, MethodNotAccessibleException, MethodAbstractException, IncompatibleClassFileException, ThreadStackEmptyException {
+    	if (state == null || resolutionClass == null || methodSignature == null || (!isStatic && !isSpecial && receiverClass == null)) {
+    		throw new InvalidInputException("Invoked " + Util.class.getName() + ".lookupMethodImpl with a null parameter.");
+    	}
         final ClassFile retVal;
         final ClassHierarchy hier = state.getClassHierarchy();
         if (isInterface) { 
@@ -689,10 +695,10 @@ public class Util {
             for (String className : skip) {
                 this.skip.add(className);
                 final ClassFile  classFile = hier.loadCreateClass(className);
-                for (ClassFile superClass : hier.superclasses(classFile)) {
+                for (ClassFile superClass : classFile.superclasses()) {
                     this.skip.add(superClass.getClassName());
                 }
-                for (ClassFile superInterface : hier.superinterfaces(classFile)) {
+                for (ClassFile superInterface : classFile.superinterfaces()) {
                     this.skip.add(superInterface.getClassName());
                 }
             }
@@ -848,7 +854,7 @@ public class Util {
                 final boolean createSymbolicKlass;
                 final Assumption assumeInitialized;
                 if (this.s.phase() == Phase.PRE_INITIAL) {
-                    if (this.ctx.decisionProcedure.isSatInitialized(hier, classFile)) {
+                    if (this.ctx.decisionProcedure.isSatInitialized(classFile)) {
                         createSymbolicKlass = false;
                         assumeInitialized = Assumption.INITIALIZED;
                     } else {
@@ -859,7 +865,7 @@ public class Util {
                     assumeInitialized = Assumption.NONE;
                 //TODO here we assume mutual exclusion of the initialized/not initialized assumptions. Withdraw this assumption and branch.
                 } else if (CLASSLOADER_BOOT <= definingLoader && definingLoader <= CLASSLOADER_APP && 
-                           this.ctx.decisionProcedure.isSatInitialized(hier, classFile)) { 
+                           this.ctx.decisionProcedure.isSatInitialized(classFile)) { 
                     createSymbolicKlass = true;
                     assumeInitialized = Assumption.INITIALIZED;
                 } else {

@@ -381,7 +381,7 @@ public final class State implements Cloneable {
      * @param bypassStandardLoading a {@code boolean}, {@code true} iff the bootstrap 
      *        classloader should also load the classed defined by the extensions 
      *        and application classloaders.
-     * @param preInitialHistoryPoint a {@link HistoryPoint}. 
+     * @param historyPoint a {@link HistoryPoint}. 
      * @param maxSimpleArrayLength an {@code int}, the maximum length an array may have
      *        to be granted simple representation.
      * @param maxHeapSize the maximum size of the state's heap expressed as the
@@ -403,7 +403,7 @@ public final class State implements Cloneable {
      *         constructor...).
      */
     public State(boolean bypassStandardLoading,
-    		     HistoryPoint preInitialHistoryPoint,
+    		     HistoryPoint historyPoint,
                  int maxSimpleArrayLength,
                  long maxHeapSize,
                  Classpath cp, 
@@ -414,7 +414,7 @@ public final class State implements Cloneable {
                  throws InvalidClassFileFactoryClassException {
         this.bypassStandardLoading = bypassStandardLoading;
     	this.frozen = false;
-        this.historyPoint = preInitialHistoryPoint;
+        this.historyPoint = historyPoint;
         this.classLoaders.add(Null.getInstance()); //classloader 0 is the bootstrap classloader
         setStandardFiles();
         this.heap = new Heap(maxHeapSize);
@@ -1519,12 +1519,13 @@ public final class State implements Cloneable {
      * 
      * @param classFile the {@link ClassFile} for the class of the new object.
      * @return a {@link ReferenceConcrete} to the newly created object.
+     * @throws FrozenStateException if the state is frozen.
+     * @throws InvalidInputException if {@code classFile == null} or is 
+     *         invalid, i.e., is the classfile for {@code java.lang.Class}.
      * @throws HeapMemoryExhaustedException if the heap is full.
-     * @throws InvalidInputException  if the state is frozen, or 
-     *         {@code classFile} is invalid.
      */
     public ReferenceConcrete createInstance(ClassFile classFile) 
-    throws HeapMemoryExhaustedException, InvalidInputException {
+    throws FrozenStateException, InvalidInputException, HeapMemoryExhaustedException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
@@ -1535,6 +1536,7 @@ public final class State implements Cloneable {
             //use createInstance_JAVA_CLASS instead
             throw new InvalidInputException("Cannot use method " + getClass().getName() + ".createInstance to create an instance of java.lang.Class.");
         }
+        
         final InstanceImpl myObj = doCreateInstance(classFile);
         final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(myObj));
         if (myObj instanceof Instance_JAVA_CLASSLOADER) {
@@ -1552,20 +1554,40 @@ public final class State implements Cloneable {
      * 
      * @param classFile the {@link ClassFile} for the class of the new object.
      * @return a {@link ReferenceConcrete} to the newly created object.
-     * @throws InvalidInputException if the state is frozen, or 
-     *         {@code classFile} is invalid.
+     * @throws FrozenStateException if the state is frozen.
+     * @throws InvalidInputException if {@code classFile == null} or is 
+     *         invalid, i.e., is the classfile for {@code java.lang.Class}, 
+     *         or for a subclass of {@code java.lang.ClassLoader}, or 
+     *         for a subclass of {@code java.lang.Thread}.
      */
-    public ReferenceConcrete createInstanceSurely(ClassFile classFile) throws InvalidInputException {
+    public ReferenceConcrete createInstanceSurely(ClassFile classFile) 
+    throws FrozenStateException, InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
         if (classFile == null) {
             throw new InvalidInputException("Invoked method " + getClass().getName() + ".createInstanceSurely with null ClassFile classFile parameter.");
         }
-        if (JAVA_CLASS.equals(classFile.getClassName()) || JAVA_CLASSLOADER.equals(classFile.getClassName()) || JAVA_THREAD.equals(classFile.getClassName())) {
+        if (JAVA_CLASS.equals(classFile.getClassName())) {
             //cannot be used for that
-            throw new InvalidInputException("Cannot use method " + getClass().getName() + ".createInstanceSurely to create an instance of java.lang.Class or java.lang.Classloader or java.lang.Thread.");
+            throw new InvalidInputException("Cannot use method " + getClass().getName() + ".createInstanceSurely to create an instance of java.lang.Class.");
         }
+        final ClassFile cf_JAVA_CLASSLOADER;
+        final ClassFile cf_JAVA_THREAD;
+        try {
+            cf_JAVA_CLASSLOADER = this.classHierarchy.loadCreateClass(JAVA_CLASSLOADER);
+            cf_JAVA_THREAD = this.classHierarchy.loadCreateClass(JAVA_THREAD);
+        } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException | 
+                 WrongClassNameException | IncompatibleClassFileException |
+                 InvalidInputException | ClassFileNotAccessibleException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
+        if (classFile.isSubclass(cf_JAVA_CLASSLOADER) || classFile.isSubclass(cf_JAVA_THREAD)) {
+            //cannot be used for that
+            throw new InvalidInputException("Cannot use method " + getClass().getName() + ".createInstanceSurely to create an instance of (a subclass of) java.lang.Classloader or java.lang.Thread.");
+        }
+        
         final InstanceImpl myObj = doCreateInstance(classFile);
         final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNewSurely(myObj));
         initIdentityHashCodeConcrete(myObj, retVal);
@@ -1587,14 +1609,14 @@ public final class State implements Cloneable {
             throw new UnexpectedInternalException(e);
         }
         try {
-            if (this.classHierarchy.isSubclass(classFile, cf_JAVA_CLASSLOADER)) {
+            if (classFile.isSubclass(cf_JAVA_CLASSLOADER)) {
                 return new InstanceImpl_JAVA_CLASSLOADER(this.calc, classFile, null, this.historyPoint, this.nextClassLoaderIdentifier++, numOfStaticFields, fieldsSignatures);
-            } else if (this.classHierarchy.isSubclass(classFile, cf_JAVA_THREAD)) {
+            } else if (classFile.isSubclass(cf_JAVA_THREAD)) {
                 return new InstanceImpl_JAVA_THREAD(this.calc, classFile, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
             } else {
                 return new InstanceImpl(false, this.calc, classFile, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
             }
-        } catch (InvalidTypeException e) {
+        } catch (InvalidTypeException | InvalidInputException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
@@ -1664,11 +1686,16 @@ public final class State implements Cloneable {
      *        creates a {@link Klass} object only for {@code classFile}, 
      *        not for its superclasses in the hierarchy.
      * @throws FrozenStateException if the state is frozen.
+     * @throws InvalidInputException if {@code classFile == null}.
      */
-    public void ensureKlass(ClassFile classFile) throws FrozenStateException {
+    public void ensureKlass(ClassFile classFile) 
+    throws FrozenStateException, InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
+        if (classFile == null) {
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".ensureKlass with null ClassFile classFile parameter.");
+        }
         if (existsKlass(classFile)) {
             return;
         }
@@ -1690,15 +1717,19 @@ public final class State implements Cloneable {
      *        the {@link Klass} object must be created. The method 
      *        creates a {@link Klass} object only for {@code classFile}, 
      *        not for its superclasses in the hierarchy.
+     * @throws FrozenStateException if the state is frozen.
+     * @throws InvalidInputException if {@code classFile == null}.
      * @throws InvalidIndexException if the access to the class 
      *         constant pool fails.
-     * @throws FrozenStateException if the state is frozen.
      */
     public void ensureKlassSymbolic(ClassFile classFile) 
-    throws InvalidIndexException, FrozenStateException {
+    throws FrozenStateException, InvalidInputException, InvalidIndexException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
+        if (classFile == null) {
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".ensureKlassSymbolic with null ClassFile classFile parameter.");
+        }
         if (existsKlass(classFile)) {
             return;
         }
@@ -1748,7 +1779,7 @@ public final class State implements Cloneable {
         } else if (classFile.isReference()) {
             try {
                 myObj = newInstanceSymbolic(classFile, origin);
-            } catch (InvalidTypeException e) {
+            } catch (InvalidTypeException | InvalidInputException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
             }
@@ -1777,8 +1808,12 @@ public final class State implements Cloneable {
      * @param className a {@link String}.
      * @return {@code true} iff the class cannot be executed
      *         symbolically. 
+     * @throws InvalidInputException if {@code classFile == null}.
      */
-    public boolean cannotExecuteSymbolically(ClassFile classFile) {
+    public boolean cannotExecuteSymbolically(ClassFile classFile) throws InvalidInputException {
+    	if (classFile == null) {
+    		throw new InvalidInputException("Invoked method " + getClass().getName() + ".cannotExecuteSymbolically with null ClassFile classFile parameter.");
+    	}
     	if (JAVA_CLASS.equals(classFile.getClassName())) {
     		return true;
     	}
@@ -1791,7 +1826,7 @@ public final class State implements Cloneable {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-    	if (this.classHierarchy.isSubclass(classFile, cf_JAVA_CLASSLOADER)) {
+    	if (classFile.isSubclass(cf_JAVA_CLASSLOADER)) {
     		return true;
     	}
     	
@@ -1799,7 +1834,7 @@ public final class State implements Cloneable {
     }
 
     private InstanceImpl newInstanceSymbolic(ClassFile classFile, ReferenceSymbolic origin) 
-    throws CannotAssumeSymbolicObjectException, InvalidTypeException, FrozenStateException {
+    throws CannotAssumeSymbolicObjectException, InvalidTypeException, InvalidInputException {
         if (cannotExecuteSymbolically(classFile)) {
             throw new CannotAssumeSymbolicObjectException("JBSE does not allow to execute symbolically the methods of class " + classFile.getClassName() + ".");
         }
@@ -2233,13 +2268,13 @@ public final class State implements Cloneable {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-        if (myException == null || !this.classHierarchy.isSubclass(myException.getType(), cf_JAVA_THROWABLE)) {
+        if (myException == null || !myException.getType().isSubclass(cf_JAVA_THROWABLE)) {
             throw new InvalidInputException("Attempted to throw an unresolved or null reference, or a reference to an object that is not Throwable.");
         }
 
         //fills a vector with all the superclass names of the exception
         final ArrayList<String> excTypes = new ArrayList<String>();
-        for (ClassFile f : this.classHierarchy.superclasses(myException.getType())) {
+        for (ClassFile f : myException.getType().superclasses()) {
             excTypes.add(f.getClassName());
         }
 
@@ -2919,19 +2954,16 @@ public final class State implements Cloneable {
      * 
      * @param p the primitive clause which must be added to the state's 
      *          path condition. It must be {@code p != null && 
-     *          ( p instanceof }{@link Expression} {@code || p instanceof }{@link Simplex}
+     *          (p instanceof }{@link Expression} {@code || p instanceof }{@link Simplex}
      *          {@code ) && p.}{@link Value#getType() getType()} {@code  == }{@link Type#BOOLEAN BOOLEAN}.
-     * @throws FrozenStateException if the state is frozen.
-     * @throws NullPointerException if {@code p} violates preconditions.
+     * @throws NullPointerException if {@code p == null}.
+     * @throws InvalidInputException if {@code (!(p instanceof }{@link Expression} {@code ) && !( p instanceof }{@link Simplex}
+     *          {@code )) || p.}{@link Value#getType() getType()} {@code  != }{@link Type#BOOLEAN BOOLEAN}.
      */
-    public void assume(Primitive p) throws FrozenStateException {
+    public void assume(Primitive p) throws InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (p == null || p.getType() != Type.BOOLEAN || 
-        (! (p instanceof Simplex) && ! (p instanceof Expression))) { 
-            throw new NullPointerException(); //TODO throw a better exception
-        }
         this.pathCondition.addClauseAssume(p);
         ++this.nPushedClauses;
     }

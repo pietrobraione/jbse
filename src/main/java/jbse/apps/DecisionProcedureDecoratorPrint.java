@@ -8,7 +8,6 @@ import java.io.PrintStream;
 import java.util.Collection;
 
 import jbse.bc.ClassFile;
-import jbse.bc.ClassHierarchy;
 import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureDecorator;
@@ -65,9 +64,9 @@ public class DecisionProcedureDecoratorPrint extends DecisionProcedureDecorator 
     }
 
     @Override
-    public boolean isSat(ClassHierarchy hier, Expression exp) 
+    public boolean isSat(Expression exp) 
     throws InvalidInputException, DecisionException {
-        final boolean retVal = super.isSat(hier, exp);
+        final boolean retVal = super.isSat(exp);
         IO.print(this.out, ":: Decided: ");
         IO.print(this.out, formatClauses(this.getAssumptions())); 
         IO.println(this.out, TURNSTILE + formatExpression(exp) + ". Result: " + Boolean.toString(retVal));
@@ -75,9 +74,9 @@ public class DecisionProcedureDecoratorPrint extends DecisionProcedureDecorator 
     }
 
     @Override
-    public boolean isSatAliases(ClassHierarchy hier, ReferenceSymbolic r, long heapPos, Objekt o)
+    public boolean isSatAliases(ReferenceSymbolic r, long heapPos, Objekt o)
     throws InvalidInputException, DecisionException {
-        final boolean retVal = super.isSatAliases(hier, r, heapPos, o);
+        final boolean retVal = super.isSatAliases(r, heapPos, o);
         IO.print(this.out, ":: Decided: ");
         IO.print(this.out, formatClauses(this.getAssumptions())); 
         IO.println(this.out, TURNSTILE + r.asOriginString() + " == " + o.getOrigin().asOriginString() + ". Result: " + Boolean.toString(retVal));
@@ -85,9 +84,9 @@ public class DecisionProcedureDecoratorPrint extends DecisionProcedureDecorator 
     }
 
     @Override
-    public boolean isSatExpands(ClassHierarchy hier, ReferenceSymbolic r, ClassFile classFile)
+    public boolean isSatExpands(ReferenceSymbolic r, ClassFile classFile)
     throws InvalidInputException, DecisionException {
-        final boolean retVal = super.isSatExpands(hier, r, classFile);
+        final boolean retVal = super.isSatExpands(r, classFile);
         IO.print(this.out, ":: Decided: ");
         IO.print(this.out, formatClauses(this.getAssumptions())); 
         IO.println(this.out, TURNSTILE + r.asOriginString() + " == fresh " + classFile.getClassName() + ". Result: " + Boolean.toString(retVal));
@@ -95,9 +94,9 @@ public class DecisionProcedureDecoratorPrint extends DecisionProcedureDecorator 
     }
 
     @Override
-    public boolean isSatNull(ClassHierarchy hier, ReferenceSymbolic r) 
+    public boolean isSatNull(ReferenceSymbolic r) 
     throws InvalidInputException, DecisionException {
-        final boolean retVal = super.isSatNull(hier, r);
+        final boolean retVal = super.isSatNull(r);
         IO.print(this.out, ":: Decided: ");
         IO.print(this.out, formatClauses(this.getAssumptions())); 
         IO.println(this.out, TURNSTILE + r.asOriginString() + " == null. Result: " + Boolean.toString(retVal));
@@ -105,9 +104,9 @@ public class DecisionProcedureDecoratorPrint extends DecisionProcedureDecorator 
     }
 
     @Override
-    public boolean isSatInitialized(ClassHierarchy hier, ClassFile classFile) 
+    public boolean isSatInitialized(ClassFile classFile) 
     throws InvalidInputException, DecisionException {
-        final boolean retVal = super.isSatInitialized(hier, classFile);
+        final boolean retVal = super.isSatInitialized(classFile);
         IO.print(this.out, ":: Decided: ");
         IO.print(this.out, formatClauses(this.getAssumptions())); 
         IO.println(this.out, TURNSTILE + "pre_init(" + classFile.getClassName() + "). Result: " + Boolean.toString(retVal));
@@ -115,9 +114,9 @@ public class DecisionProcedureDecoratorPrint extends DecisionProcedureDecorator 
     }
 
     @Override
-    public boolean isSatNotInitialized(ClassHierarchy hier, ClassFile classFile)
+    public boolean isSatNotInitialized(ClassFile classFile)
     throws InvalidInputException, DecisionException {
-        final boolean retVal = super.isSatNotInitialized(hier, classFile);
+        final boolean retVal = super.isSatNotInitialized(classFile);
         IO.print(this.out, ":: Decided: ");
         IO.print(this.out, formatClauses(this.getAssumptions())); 
         IO.println(this.out, TURNSTILE + "!pre_init(" + classFile.getClassName() + "). Result: " + Boolean.toString(retVal));

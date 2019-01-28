@@ -11,6 +11,7 @@ import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.bc.ClassFile;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.Objekt;
 import jbse.mem.State;
@@ -63,11 +64,14 @@ public final class Algo_JAVA_CLASS_ISINSTANCE extends Algo_INVOKEMETA_Nonbranchi
                 //of the class name from the constant pool
                 final Objekt obj = state.getObject(objRef);
                 final ClassFile objClass = obj.getType();
-                this.valToPush = state.getCalculator().valInt(state.getClassHierarchy().isSubclass(objClass, representedClass) ? 1 : 0);
+                this.valToPush = state.getCalculator().valInt(objClass.isSubclass(representedClass) ? 1 : 0);
             }
         } catch (ClassCastException e) {
             throwVerifyError(state);
             exitFromAlgorithm();
+        } catch (InvalidInputException e) {
+            //this should never happen
+            failExecution(e);
         }
     }
 

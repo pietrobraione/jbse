@@ -1,7 +1,6 @@
 package jbse.rewr;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.rewr.exc.NoResultException;
@@ -18,7 +17,6 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidOperatorException;
 import jbse.val.exc.InvalidTypeException;
 
-
 /**
  * A {@link Calculator} based on {@link Rewriter}s.
  * 
@@ -34,6 +32,15 @@ public class CalculatorRewriting extends Calculator {
     public CalculatorRewriting() {
         super();
     }
+    
+    /**
+     * Adds a rewriter.
+     * 
+     * @param r the {@link Rewriter} to add.
+     */
+    public void addRewriter(Rewriter r) {
+        this.rewriters.add(r);
+    }
 
     /**
      * {@inheritDoc}
@@ -42,7 +49,7 @@ public class CalculatorRewriting extends Calculator {
     public Primitive add(Primitive firstOperand, Primitive secondOperand) 
     throws InvalidOperandException, InvalidTypeException {
         try {
-            return applyRewriters(Expression.makeExpressionBinary(this, firstOperand, Operator.ADD, secondOperand));
+            return simplify(Expression.makeExpressionBinary(this, firstOperand, Operator.ADD, secondOperand));
         } catch (InvalidOperatorException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -56,7 +63,7 @@ public class CalculatorRewriting extends Calculator {
     public Primitive mul(Primitive firstOperand, Primitive secondOperand)
     throws InvalidOperandException, InvalidTypeException {
         try {
-            return applyRewriters(Expression.makeExpressionBinary(this, firstOperand, Operator.MUL, secondOperand));
+            return simplify(Expression.makeExpressionBinary(this, firstOperand, Operator.MUL, secondOperand));
         } catch (InvalidOperatorException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -70,7 +77,7 @@ public class CalculatorRewriting extends Calculator {
     public Primitive sub(Primitive firstOperand, Primitive secondOperand)
     throws InvalidOperandException, InvalidTypeException {
         try {
-            return applyRewriters(Expression.makeExpressionBinary(this, firstOperand, Operator.SUB, secondOperand));
+            return simplify(Expression.makeExpressionBinary(this, firstOperand, Operator.SUB, secondOperand));
         } catch (InvalidOperatorException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -84,7 +91,7 @@ public class CalculatorRewriting extends Calculator {
     public Primitive div(Primitive firstOperand, Primitive secondOperand)
     throws InvalidOperandException, InvalidTypeException {
         try {
-            return applyRewriters(Expression.makeExpressionBinary(this, firstOperand, Operator.DIV, secondOperand));
+            return simplify(Expression.makeExpressionBinary(this, firstOperand, Operator.DIV, secondOperand));
         } catch (InvalidOperatorException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -98,7 +105,7 @@ public class CalculatorRewriting extends Calculator {
     public Primitive rem(Primitive firstOperand, Primitive secondOperand)
     throws InvalidOperandException, InvalidTypeException {
         try {
-            return applyRewriters(Expression.makeExpressionBinary(this, firstOperand, Operator.REM, secondOperand));
+            return simplify(Expression.makeExpressionBinary(this, firstOperand, Operator.REM, secondOperand));
         } catch (InvalidOperatorException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -112,7 +119,7 @@ public class CalculatorRewriting extends Calculator {
     public Primitive neg(Primitive operand)
     throws InvalidOperandException, InvalidTypeException {
         try {
-            return applyRewriters(Expression.makeExpressionUnary(this, Operator.NEG, operand));
+            return simplify(Expression.makeExpressionUnary(this, Operator.NEG, operand));
         } catch (InvalidOperatorException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -126,7 +133,7 @@ public class CalculatorRewriting extends Calculator {
     public Primitive andBitwise(Primitive firstOperand, Primitive secondOperand) 
     throws InvalidOperandException, InvalidTypeException {
         try {
-            return applyRewriters(Expression.makeExpressionBinary(this, firstOperand, Operator.ANDBW, secondOperand));
+            return simplify(Expression.makeExpressionBinary(this, firstOperand, Operator.ANDBW, secondOperand));
         } catch (InvalidOperatorException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -140,7 +147,7 @@ public class CalculatorRewriting extends Calculator {
     public Primitive orBitwise(Primitive firstOperand, Primitive secondOperand) 
     throws InvalidOperandException, InvalidTypeException {
         try {
-            return applyRewriters(Expression.makeExpressionBinary(this, firstOperand, Operator.ORBW, secondOperand));
+            return simplify(Expression.makeExpressionBinary(this, firstOperand, Operator.ORBW, secondOperand));
         } catch (InvalidOperatorException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -154,7 +161,7 @@ public class CalculatorRewriting extends Calculator {
     public Primitive xorBitwise(Primitive first, Primitive param) 
     throws InvalidOperandException, InvalidTypeException {
         try {
-            return applyRewriters(Expression.makeExpressionBinary(this, first, Operator.XORBW, param));
+            return simplify(Expression.makeExpressionBinary(this, first, Operator.XORBW, param));
         } catch (InvalidOperatorException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -168,7 +175,7 @@ public class CalculatorRewriting extends Calculator {
     public Primitive and(Primitive firstOperand, Primitive secondOperand) 
     throws InvalidOperandException, InvalidTypeException {
         try {
-            return applyRewriters(Expression.makeExpressionBinary(this, firstOperand, Operator.AND, secondOperand));
+            return simplify(Expression.makeExpressionBinary(this, firstOperand, Operator.AND, secondOperand));
         } catch (InvalidOperatorException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -182,7 +189,7 @@ public class CalculatorRewriting extends Calculator {
     public Primitive or(Primitive firstOperand, Primitive secondOperand) 
     throws InvalidOperandException, InvalidTypeException {
         try {
-            return applyRewriters(Expression.makeExpressionBinary(this, firstOperand, Operator.OR, secondOperand));
+            return simplify(Expression.makeExpressionBinary(this, firstOperand, Operator.OR, secondOperand));
         } catch (InvalidOperatorException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -196,7 +203,7 @@ public class CalculatorRewriting extends Calculator {
     public Primitive not(Primitive operand)
     throws InvalidOperandException, InvalidTypeException {
         try {
-            return applyRewriters(Expression.makeExpressionUnary(this, Operator.NOT, operand));
+            return simplify(Expression.makeExpressionUnary(this, Operator.NOT, operand));
         } catch (InvalidOperatorException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -210,7 +217,7 @@ public class CalculatorRewriting extends Calculator {
     public Primitive shl(Primitive firstOperand, Primitive secondOperand)
     throws InvalidOperandException, InvalidTypeException {
         try {
-            return applyRewriters(Expression.makeExpressionBinary(this, firstOperand, Operator.SHL, secondOperand));
+            return simplify(Expression.makeExpressionBinary(this, firstOperand, Operator.SHL, secondOperand));
         } catch (InvalidOperatorException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -225,7 +232,7 @@ public class CalculatorRewriting extends Calculator {
     public Primitive shr(Primitive firstOperand, Primitive secondOperand)
     throws InvalidOperandException, InvalidTypeException {
         try {
-            return applyRewriters(Expression.makeExpressionBinary(this, firstOperand, Operator.SHR, secondOperand));
+            return simplify(Expression.makeExpressionBinary(this, firstOperand, Operator.SHR, secondOperand));
         } catch (InvalidOperatorException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -239,7 +246,7 @@ public class CalculatorRewriting extends Calculator {
     public Primitive ushr(Primitive firstOperand, Primitive secondOperand)
     throws InvalidOperandException, InvalidTypeException {
         try {
-            return applyRewriters(Expression.makeExpressionBinary(this, firstOperand, Operator.USHR, secondOperand));
+            return simplify(Expression.makeExpressionBinary(this, firstOperand, Operator.USHR, secondOperand));
         } catch (InvalidOperatorException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -253,7 +260,7 @@ public class CalculatorRewriting extends Calculator {
     public Primitive eq(Primitive firstOperand, Primitive secondOperand)
     throws InvalidOperandException, InvalidTypeException {
         try {
-            return applyRewriters(Expression.makeExpressionBinary(this, firstOperand, Operator.EQ, secondOperand));
+            return simplify(Expression.makeExpressionBinary(this, firstOperand, Operator.EQ, secondOperand));
         } catch (InvalidOperatorException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -267,7 +274,7 @@ public class CalculatorRewriting extends Calculator {
     public Primitive ne(Primitive firstOperand, Primitive secondOperand)
     throws InvalidOperandException, InvalidTypeException {
         try {
-            return applyRewriters(Expression.makeExpressionBinary(this, firstOperand, Operator.NE, secondOperand));
+            return simplify(Expression.makeExpressionBinary(this, firstOperand, Operator.NE, secondOperand));
         } catch (InvalidOperatorException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -281,7 +288,7 @@ public class CalculatorRewriting extends Calculator {
     public Primitive le(Primitive firstOperand, Primitive secondOperand)
     throws InvalidOperandException, InvalidTypeException {
         try {
-            return applyRewriters(Expression.makeExpressionBinary(this, firstOperand, Operator.LE, secondOperand));
+            return simplify(Expression.makeExpressionBinary(this, firstOperand, Operator.LE, secondOperand));
         } catch (InvalidOperatorException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -295,7 +302,7 @@ public class CalculatorRewriting extends Calculator {
     public Primitive lt(Primitive firstOperand, Primitive secondOperand)
     throws InvalidOperandException, InvalidTypeException {
         try {
-            return applyRewriters(Expression.makeExpressionBinary(this, firstOperand, Operator.LT, secondOperand));
+            return simplify(Expression.makeExpressionBinary(this, firstOperand, Operator.LT, secondOperand));
         } catch (InvalidOperatorException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -309,7 +316,7 @@ public class CalculatorRewriting extends Calculator {
     public Primitive ge(Primitive firstOperand, Primitive secondOperand)
     throws InvalidOperandException, InvalidTypeException {
         try {
-            return applyRewriters(Expression.makeExpressionBinary(this, firstOperand, Operator.GE, secondOperand));
+            return simplify(Expression.makeExpressionBinary(this, firstOperand, Operator.GE, secondOperand));
         } catch (InvalidOperatorException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -323,7 +330,7 @@ public class CalculatorRewriting extends Calculator {
     public Primitive gt(Primitive firstOperand, Primitive secondOperand)
     throws InvalidOperandException, InvalidTypeException {
         try {
-            return applyRewriters(Expression.makeExpressionBinary(this, firstOperand, Operator.GT, secondOperand));
+            return simplify(Expression.makeExpressionBinary(this, firstOperand, Operator.GT, secondOperand));
         } catch (InvalidOperatorException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -336,7 +343,7 @@ public class CalculatorRewriting extends Calculator {
     @Override
     public Primitive applyFunctionPrimitive(char type, HistoryPoint historyPoint, String operator, Value... args) 
     throws InvalidOperandException, InvalidTypeException {
-        return applyRewriters(new PrimitiveSymbolicApply(type, historyPoint, this, operator, args));
+        return simplify(new PrimitiveSymbolicApply(type, historyPoint, this, operator, args));
     }
 
     /**
@@ -345,7 +352,7 @@ public class CalculatorRewriting extends Calculator {
     @Override
     public Primitive widen(char type, Primitive arg) 
     throws InvalidTypeException, InvalidOperandException {
-        return applyRewriters(WideningConversion.make(type, this, arg));
+        return simplify(WideningConversion.make(type, this, arg));
     }
 
     /**
@@ -354,42 +361,18 @@ public class CalculatorRewriting extends Calculator {
     @Override
     public Primitive narrow(char type, Primitive arg) 
     throws InvalidTypeException, InvalidOperandException {
-        return applyRewriters(NarrowingConversion.make(type, this, arg));
+        return simplify(NarrowingConversion.make(type, this, arg));
     }
-
-    /**
-     * Adds a rewriter.
-     * 
-     * @param r the {@link Rewriter} to add.
-     */
-    public void addRewriter(Rewriter r) {
-        this.rewriters.add(r);
-    }
-
-    /**
-     * Applies a sequence of rewriters to a {@link Primitive}.
-     * 
-     * @param p a {@link Primitive}.
-     * @param rewriters a {@link Rewriter}{@code []}.
-     * @return the {@link Primitive} obtained by applying to {@code p} first all 
-     *         the {@link Rewriter}s in {@code rewriters}, in their
-     *         parameter order, then all the {@link Rewriter}s registered
-     *         by subsequent invocations of {@link #addRewriter(Rewriter)}, 
-     *         in their invocation order.
-     */
-    public Primitive applyRewriters(Primitive p, Rewriter...rewriters) {
-        Primitive retVal = p;
-        final ArrayList<Rewriter> toApply = new ArrayList<Rewriter>(Arrays.asList(rewriters));
-        toApply.addAll(this.rewriters);
-        for (Rewriter r : toApply) {
-            try {
-                r.setCalculator(this);
-                retVal = r.rewrite(retVal);
-            } catch (NoResultException e) {
-                //this should not happen
-                throw new UnexpectedInternalException(e);
-            }
-        }
-        return retVal;
+    
+    @Override
+    public Primitive simplify(Primitive p) {
+    	final Rewriter[] rewritersArray = this.rewriters.toArray(new Rewriter[this.rewriters.size()]);
+    	try {
+    		final Primitive retVal =  Rewriter.applyRewriters(p, this, rewritersArray);
+    		return retVal;
+    	} catch (NoResultException e) {
+    		//this should not happen
+    		throw new UnexpectedInternalException(e);
+    	}
     }
 }

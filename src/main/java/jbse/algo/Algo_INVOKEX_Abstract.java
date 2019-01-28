@@ -127,7 +127,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 }
                 
                 //second run-time exception
-                if (!state.getClassHierarchy().isSubclass(state.getObject(receiver).getType(), this.methodResolvedClass)) {
+                if (!state.getObject(receiver).getType().isSubclass(this.methodResolvedClass)) {
                     throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
                     exitFromAlgorithm();
                 }
@@ -160,12 +160,11 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 
                 //second run-time exception (identical to second run-time exception of invokevirtual case)
                 final ClassFile currentClass = state.getCurrentClass();
-                final ClassHierarchy hier = state.getClassHierarchy();
                 if (this.methodResolvedClass.isMethodProtected(this.data.signature()) &&
-                    hier.isSubclass(currentClass, this.methodResolvedClass)) {
+                	currentClass.isSubclass(this.methodResolvedClass)) {
                     final boolean sameRuntimePackage = (currentClass.getDefiningClassLoader() == this.methodResolvedClass.getDefiningClassLoader() && currentClass.getPackageName().equals(this.methodResolvedClass.getPackageName()));
                     final ClassFile receiverClass = state.getObject(receiver).getType();                    
-                    if (!sameRuntimePackage && !hier.isSubclass(receiverClass, currentClass)) {
+                    if (!sameRuntimePackage && !receiverClass.isSubclass(currentClass)) {
                         throwNew(state, ILLEGAL_ACCESS_ERROR);
                         exitFromAlgorithm();
                     }
@@ -212,12 +211,11 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 
                 //second run-time exception (identical to second run-time exception of invokespecial case)
                 final ClassFile currentClass = state.getCurrentClass();
-                final ClassHierarchy hier = state.getClassHierarchy();
                 if (this.methodResolvedClass.isMethodProtected(this.data.signature()) &&
-                    hier.isSubclass(currentClass, this.methodResolvedClass)) {
+                	currentClass.isSubclass(this.methodResolvedClass)) {
                     final boolean sameRuntimePackage = (currentClass.getDefiningClassLoader() == this.methodResolvedClass.getDefiningClassLoader() && currentClass.getPackageName().equals(this.methodResolvedClass.getPackageName()));
                     final ClassFile receiverClass = state.getObject(receiver).getType();                    
-                    if (!sameRuntimePackage && !hier.isSubclass(receiverClass, currentClass)) {
+                    if (!sameRuntimePackage && !receiverClass.isSubclass(currentClass)) {
                         throwNew(state, ILLEGAL_ACCESS_ERROR);
                         exitFromAlgorithm();
                     }
@@ -227,7 +225,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 
                 //the seventh and eighth run-time exceptions pertain to the code after method type resolution
             }            
-        } catch (MethodNotFoundException e) {
+        } catch (MethodNotFoundException | InvalidInputException e) {
             //this should never happen after resolution
             failExecution(e);
         }
@@ -235,7 +233,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
 
     protected final void findImpl(State state) 
     throws IncompatibleClassFileException, MethodNotAccessibleException, 
-    MethodAbstractException, InterruptException, ThreadStackEmptyException, FrozenStateException {
+    MethodAbstractException, InterruptException, ThreadStackEmptyException, 
+    FrozenStateException, InvalidInputException {
         if (this.methodResolvedClass == null) {
             this.methodImplClass = null;
             this.methodImplSignature = this.data.signature();

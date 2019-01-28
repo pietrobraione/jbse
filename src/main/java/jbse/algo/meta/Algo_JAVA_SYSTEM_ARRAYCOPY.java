@@ -112,7 +112,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
     @Override
     protected StrategyDecide<DecisionAlternative_XASTORE> decider() {
         return (state, result) -> {
-            final Outcome o = this.ctx.decisionProcedure.decide_XASTORE(state.getClassHierarchy(), this.inRange, result);
+            final Outcome o = this.ctx.decisionProcedure.decide_XASTORE(this.inRange, result);
             return o;
         };
     }
@@ -169,7 +169,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                     if (_eFS[0] != null) {
                         throw _eFS[0];
                     }
-                    this.ctx.decisionProcedure.completeArraycopy(state.getClassHierarchy(), entries, this.srcPos, this.destPos, this.length);
+                    this.ctx.decisionProcedure.completeArraycopy(entries, this.srcPos, this.destPos, this.length);
                 } catch (InvalidOperandException | InvalidTypeException | 
                          InvalidInputException | ClassCastException e) {
                     //this should never happen

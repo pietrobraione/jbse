@@ -61,23 +61,23 @@ public abstract class Calculator {
 
     public Calculator() {
         try {
-            this.ANY = Any.make(this);
-            this.TRUE = Simplex.make(this, Boolean.valueOf(true));
-            this.FALSE = Simplex.make(this, Boolean.valueOf(false));
-            this.INT_ZERO = Simplex.make(this, Integer.valueOf(0));
+            this.ANY               = Any.make(this);
+            this.TRUE              = Simplex.make(this, Boolean.valueOf(true));
+            this.FALSE             = Simplex.make(this, Boolean.valueOf(false));
+            this.INT_ZERO          = Simplex.make(this, Integer.valueOf(0));
+            this.DEFAULT_BOOL      = this.FALSE;
+            this.DEFAULT_BYTE      = Simplex.make(this, Byte.valueOf((byte) 0));
+            this.DEFAULT_SHORT     = Simplex.make(this, Short.valueOf((short) 0));
+            this.DEFAULT_INT       = this.INT_ZERO;
+            this.DEFAULT_LONG      = Simplex.make(this, Long.valueOf(0L));
+            this.DEFAULT_FLOAT     = Simplex.make(this, Float.valueOf(0.0f));
+            this.DEFAULT_DOUBLE    = Simplex.make(this, Double.valueOf(0.0d));
+            this.DEFAULT_CHAR      = Simplex.make(this, Character.valueOf('\u0000'));
+            this.DEFAULT_REFERENCE = Null.getInstance();
         } catch (InvalidOperandException | InvalidTypeException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-        this.DEFAULT_BOOL      = valBoolean(false);
-        this.DEFAULT_BYTE      = valByte((byte) 0);
-        this.DEFAULT_SHORT     = valShort((short) 0);
-        this.DEFAULT_INT       = valInt(0);
-        this.DEFAULT_LONG      = valLong(0L);
-        this.DEFAULT_FLOAT     = valFloat(0.0f);
-        this.DEFAULT_DOUBLE    = valDouble(0.0d);
-        this.DEFAULT_CHAR      = valChar('\u0000');
-        this.DEFAULT_REFERENCE = Null.getInstance();
     }
 
     /**
@@ -86,7 +86,7 @@ public abstract class Calculator {
      * @return an {@link Any}.
      */
     public Any valAny() {
-        return ANY;
+        return this.ANY;
     }
 
     /**
@@ -96,7 +96,7 @@ public abstract class Calculator {
      * @return a {@link Simplex} representing {@code value}.
      */
     public Simplex valBoolean(boolean value) {
-        return (value ? TRUE : FALSE);
+        return (value ? this.TRUE : this.FALSE);
     }
 
     /**
@@ -137,7 +137,7 @@ public abstract class Calculator {
      */
     public Simplex valInt(int value) {
         if (value == 0) {
-            return INT_ZERO;
+            return this.INT_ZERO;
         }
         try {
             return Simplex.make(this, Integer.valueOf(value));
@@ -292,25 +292,25 @@ public abstract class Calculator {
     public Value createDefault(char type) {
         switch (type) {
         case BYTE:
-            return DEFAULT_BYTE;
+            return this.DEFAULT_BYTE;
         case SHORT:
-            return DEFAULT_SHORT;
+            return this.DEFAULT_SHORT;
         case INT:
-            return DEFAULT_INT;
+            return this.DEFAULT_INT;
         case LONG:
-            return DEFAULT_LONG;
+            return this.DEFAULT_LONG;
         case FLOAT:
-            return DEFAULT_FLOAT;
+            return this.DEFAULT_FLOAT;
         case DOUBLE:
-            return DEFAULT_DOUBLE;
+            return this.DEFAULT_DOUBLE;
         case CHAR:
-            return DEFAULT_CHAR;
+            return this.DEFAULT_CHAR;
         case BOOLEAN:
-            return DEFAULT_BOOL;
+            return this.DEFAULT_BOOL;
         case ARRAYOF:
         case NULLREF:
         case REFERENCE:
-            return DEFAULT_REFERENCE;
+            return this.DEFAULT_REFERENCE;
         default: //Type.VOID
             return null;
         }
@@ -754,5 +754,16 @@ public abstract class Calculator {
             return narrow(type, arg);
         }
         throw new InvalidTypeException("cannot convert type " + argType + " to type " + type);
+    }
+    
+    /**
+     * Simplifies a {@link Primitive} to another equivalent {@link Primitive}.
+     * 
+     * @param arg a {@link Primitive}.
+     * @return a {@link Primitive} equivalent to {@code arg}.
+     *         The default implementation returns {@code arg}.
+     */
+    public Primitive simplify(Primitive arg) {
+    	return arg;
     }
 }
