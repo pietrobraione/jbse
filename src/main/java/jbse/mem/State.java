@@ -2967,7 +2967,7 @@ public final class State implements Cloneable {
      *          (p instanceof }{@link Expression} {@code || p instanceof }{@link Simplex}
      *          {@code ) && p.}{@link Value#getType() getType()} {@code  == }{@link Type#BOOLEAN BOOLEAN}.
      * @throws NullPointerException if {@code p == null}.
-     * @throws InvalidInputException if {@code (!(p instanceof }{@link Expression} {@code ) && !( p instanceof }{@link Simplex}
+     * @throws InvalidInputException if {@code (!( p instanceof }{@link Expression} {@code ) && !( p instanceof }{@link Simplex}
      *          {@code )) || p.}{@link Value#getType() getType()} {@code  != }{@link Type#BOOLEAN BOOLEAN}.
      */
     public void assume(Primitive p) throws InvalidInputException {
