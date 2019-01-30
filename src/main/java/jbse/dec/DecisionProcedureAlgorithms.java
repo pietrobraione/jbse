@@ -880,24 +880,44 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	    try {
 	        final boolean shouldRefine;
 	        if (isSat(accessExpression)) {
-	        	final boolean accessExpressionRedundant = !isSat((Expression) accessExpression.not());
 	            shouldRefine = fresh; //a fresh value to load requires refinement of the source array
+	        	final Primitive accessExpressionSimplified = deleteRedundantConjuncts(accessExpression);
 	            final boolean accessOutOfBounds = (valToLoad == null);
 	            final int branchNumber = result.size() + 1;
 	            if (accessOutOfBounds) {
-	                result.add(new DecisionAlternative_XALOAD_Out((accessExpressionRedundant ? this.calc.valBoolean(true) : accessExpression), branchNumber));
+	                result.add(new DecisionAlternative_XALOAD_Out(accessExpressionSimplified, branchNumber));
 	            } else {
-	                result.add(new DecisionAlternative_XALOAD_Resolved((accessExpressionRedundant ? this.calc.valBoolean(true) : accessExpression), valToLoad, fresh, arrayToWriteBack, branchNumber));
+	                result.add(new DecisionAlternative_XALOAD_Resolved(accessExpressionSimplified, valToLoad, fresh, arrayToWriteBack, branchNumber));
 	            }
 	        } else {
 	            //accessExpression is unsatisfiable: nothing to do
 	            shouldRefine = false;
 	        }
 	        return Outcome.val(shouldRefine, false, true);
-	    } catch (InvalidInputException | InvalidTypeException e) {
+	    } catch (InvalidInputException | InvalidTypeException | InvalidOperandException e) {
 	        //this should never happen as arguments have been checked by the caller
 	        throw new UnexpectedInternalException(e);
 	    }
+	}
+	
+	private Primitive deleteRedundantConjuncts(Primitive p) throws DecisionException, InvalidInputException, InvalidTypeException, InvalidOperandException {
+		if (p instanceof Expression) {
+			final Expression pExpr = (Expression) p;
+			if (pExpr.getOperator() == Operator.AND) {
+				final Primitive firstConjunctSimplified = deleteRedundantConjuncts(pExpr.getFirstOperand());
+				final Primitive secondConjunctSimplified = deleteRedundantConjuncts(pExpr.getSecondOperand());
+				return firstConjunctSimplified.and(secondConjunctSimplified);
+			} else {
+	        	final boolean subExpressionRedundant = !isSat((Expression) pExpr.not());
+	        	if (subExpressionRedundant) {
+	        		return this.calc.valBoolean(true);
+	        	} else {
+	        		return pExpr;
+	        	}
+			}
+		} else {
+			return p;
+		}
 	}
 
 	/**

@@ -37,15 +37,11 @@ public class Rewriter {
 		this.visitor = new RewriteVisitor();
 	}
 	
-	void setCalculator(Calculator calc) {
-		this.calc = calc;
-	}
-	
     public static Primitive applyRewriters(Primitive p, Calculator calc, Rewriter...rewriters)
     throws NoResultException {
         Primitive retVal = p;
         for (Rewriter r : rewriters) {
-        	r.setCalculator(calc);
+        	r.calc = calc;
         	retVal = r.rewrite(retVal);
         }
         return retVal;
