@@ -90,6 +90,26 @@ public interface DecisionProcedure extends AutoCloseable {
     }
 
     /**
+     * Adds to the current assumptions more assumptions.  
+     * 
+     * @param assumptionsToAdd a varargs of {@link Clause}s, the
+     *        new assumptions that must be added to the current ones, iterable in FIFO order 
+     *        w.r.t. pushes. It must not be {@code null}, nor have 
+     *        {@code null} as one of its elements.
+     * @throws InvalidInputException when one of the parameters is incorrect.
+     * @throws DecisionException upon failure.
+     */	
+    default void addAssumptions(Clause... assumptionsToAdd) 
+    throws InvalidInputException, DecisionException {
+        if (assumptionsToAdd == null) {
+            throw new InvalidInputException("addAssumptions invoked with a null parameter.");
+        }
+        for (Clause c : assumptionsToAdd) {
+            pushAssumption(c);
+        }
+    }
+
+    /**
      * Changes the current assumptions.  
      * 
      * @param newAssumptions a {@link Collection}{@code <}{@link Clause}{@code >}, the
