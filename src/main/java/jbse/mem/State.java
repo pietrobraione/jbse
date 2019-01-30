@@ -315,6 +315,9 @@ public final class State implements Cloneable {
     /** The path condition of the state in the execution tree. */
     private PathCondition pathCondition = new PathCondition();
 
+    /** Whether a reset operation was invoked. */ 
+    private boolean wereResetLastPathConditionClauses = false;
+
     /** The number of pushed path condition clauses from the last reset. */ 
     private int nPushedClauses = 0;
 
@@ -2947,6 +2950,13 @@ public final class State implements Cloneable {
     throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
         getCurrentFrame().setProgramCounter(newPC);
     }
+    
+    private void possiblyReset() {
+        if (this.wereResetLastPathConditionClauses) {
+        	this.nPushedClauses = 0;
+        	this.wereResetLastPathConditionClauses = false;
+        }
+    }
 
     /**
      * Assumes a predicate over primitive values (numeric assumption).
@@ -2964,6 +2974,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
+    	possiblyReset();
         this.pathCondition.addClauseAssume(p);
         ++this.nPushedClauses;
     }
@@ -2999,6 +3010,8 @@ public final class State implements Cloneable {
         if (resolved(r)) {
             throw new ContradictionException();
         }
+        
+    	possiblyReset();
         final long pos = createObjectSymbolic(classFile, r);
         final Objekt o = this.heap.getObject(pos);
         this.pathCondition.addClauseAssumeExpands(r, pos, o);
@@ -3034,6 +3047,8 @@ public final class State implements Cloneable {
         if (this.resolved(r)) {
             throw new ContradictionException();
         }
+        
+    	possiblyReset();
         this.pathCondition.addClauseAssumeAliases(r, heapPosition, o.clone());
         ++this.nPushedClauses;
     }
@@ -3060,6 +3075,8 @@ public final class State implements Cloneable {
         if (this.resolved(r)) {
             throw new ContradictionException();
         }
+        
+    	possiblyReset();
         this.pathCondition.addClauseAssumeNull(r);
         ++this.nPushedClauses;
     }
@@ -3085,6 +3102,8 @@ public final class State implements Cloneable {
         if (classFile == null) {
             throw new NullPointerException();
         }
+        
+    	possiblyReset();
         this.pathCondition.addClauseAssumeClassInitialized(classFile, k);
         ++this.nPushedClauses;
     }
@@ -3105,6 +3124,8 @@ public final class State implements Cloneable {
         if (classFile == null) {
             throw new NullPointerException();
         }
+        
+    	possiblyReset();
         this.pathCondition.addClauseAssumeClassNotInitialized(classFile);
         ++this.nPushedClauses;
     }
@@ -3138,12 +3159,25 @@ public final class State implements Cloneable {
         }
         return () -> it;
     }
+    
+    /**
+     * Determines whether some clauses have been pushed
+     * after the last call to {@link #resetLastPathConditionClauses()}.
+     * 
+     * @return {@code true} iff after the last call to 
+     *         {@link #resetLastPathConditionClauses()}
+     *         some clauses have been pushed by invoking some 
+     *         {@code assumeXXX} method.
+     */
+    public boolean areThereNewPathConditionClauses() {
+    	return (!this.wereResetLastPathConditionClauses) && this.nPushedClauses > 0;
+    }
 
     /**
-     * Resets to zero the number of clause pushed to the 
-     * state's path condition that is returned by a call
-     * to {@link #getLastPathConditionPushedClauses()}.
-     * This method is invoked whenever the decision
+     * Resets the bookkeeping of the clauses pushed by 
+     * some {@code assumeXXX} method invocation to the 
+     * state's path condition.
+     * This method must be invoked whenever the decision
      * procedure's current assumptions are synchronized with 
      * the state's path condition. 
      * 
@@ -3153,7 +3187,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        this.nPushedClauses = 0;
+        this.wereResetLastPathConditionClauses = true;
     }
 
     /**

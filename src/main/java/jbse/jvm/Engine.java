@@ -189,7 +189,8 @@ public class Engine implements AutoCloseable {
     		}
 
     		//synchronizes the decision procedure with the current path condition
-    		this.ctx.decisionProcedure.setAssumptions(this.currentState.getPathCondition());
+            final Collection<Clause> currentAssumptions = this.currentState.getPathCondition();
+    		this.ctx.decisionProcedure.setAssumptions(currentAssumptions);
     		this.currentState.resetLastPathConditionClauses();
         } catch (InvalidInputException | ThreadStackEmptyException e) {
             //this should never happen
@@ -348,8 +349,10 @@ public class Engine implements AutoCloseable {
         	}
 
         	//synchronizes the decision procedure with the current path condition
-        	this.ctx.decisionProcedure.addAssumptions(this.currentState.getLastPathConditionPushedClauses());
-        	this.currentState.resetLastPathConditionClauses();
+        	if (this.currentState.areThereNewPathConditionClauses()) {
+        		this.ctx.decisionProcedure.addAssumptions(this.currentState.getLastPathConditionPushedClauses());
+        		this.currentState.resetLastPathConditionClauses();
+        	}
 
         	//notifies observers of variables
         	if (this.currentState.phase() == Phase.POST_INITIAL) {

@@ -887,6 +887,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
         while (this.solverIn.readLine() != null) {
             //do nothing
         }
+        this.solverIn.close();
         this.solverOut.close();
         try {
             //we don't check the exit code because Z3 seems to 
@@ -903,6 +904,38 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
     @Override
     public void fail() {
         this.working = false;
-        this.solver.destroy();
+        try {
+			while (this.solverIn.readLine() != null) {
+			    //do nothing
+			}
+		} catch (IOException e) {
+			//do nothing
+		}
+        try {
+			this.solverIn.close();
+		} catch (IOException e) {
+			//do nothing
+		}
+        try {
+			this.solverOut.close();
+		} catch (IOException e) {
+			//do nothing
+		}
+        try {
+			this.solver.getInputStream().close();
+		} catch (IOException e) {
+			//do nothing
+		}
+        try {
+			this.solver.getOutputStream().close();
+		} catch (IOException e) {
+			//do nothing
+		}
+        try {
+			this.solver.getErrorStream().close();
+		} catch (IOException e) {
+			//do nothing
+		}
+        this.solver.destroyForcibly();
     }
 }
