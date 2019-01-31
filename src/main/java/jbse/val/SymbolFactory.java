@@ -2,6 +2,7 @@ package jbse.val;
 
 import jbse.bc.ClassFile;
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Klass;
 import jbse.mem.Objekt;
@@ -145,17 +146,17 @@ public final class SymbolFactory implements Cloneable {
         
         /**
          * A Factory Method for creating symbolic values. The symbol
-         * has as origin the identity hash code of an object.  
+         * has as origin the identity hash code of a symbolic object.  
          * 
-         * @param object an {@link Objekt}, the object whose identity hash 
+         * @param object a symbolic  {@link Objekt}, the object whose identity hash 
          *        code is this symbol. It must refer an instance or an array.
          * @return a {@link PrimitiveSymbolic}.
          */
         public PrimitiveSymbolic createSymbolIdentityHashCode(Objekt object) {
         try {
-            final PrimitiveSymbolicHashCode retVal = new PrimitiveSymbolicHashCode(null, this.getNextIdPrimitiveSymbolic(), object.historyPoint(), this.calc);
+            final PrimitiveSymbolicHashCode retVal = new PrimitiveSymbolicHashCode(object.getOrigin(), this.getNextIdPrimitiveSymbolic(), object.historyPoint(), this.calc);
             return retVal;
-        } catch (InvalidTypeException e) {
+        } catch (InvalidTypeException | InvalidInputException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }

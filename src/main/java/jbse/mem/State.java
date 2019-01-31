@@ -1882,13 +1882,14 @@ public final class State implements Cloneable {
     }
     
     /**
-     * Initializes the identity hash code of an {@link Objekt} with a symbolic value.
+     * Initializes the identity hash code of a symbolic {@link Objekt} with a symbolic 
+     * value.
      * 
-     * @param myObj the {@link Objekt} whose identity hash code will be initialized.
+     * @param myObj the symbolic {@link Objekt} whose identity hash code will be initialized.
      * @throws FrozenStateException if the state is frozen.
      */
     private void initIdentityHashCodeSymbolic(Objekt myObj) throws FrozenStateException {
-        myObj.setIdentityHashCode((PrimitiveSymbolic) createSymbolIdentityHashCode(myObj));
+        myObj.setIdentityHashCode(createSymbolIdentityHashCode(myObj));
     }
 
     /**
@@ -3624,10 +3625,10 @@ public final class State implements Cloneable {
 
     /**
      * A Factory Method for creating symbolic values. The symbol
-     * has as origin the identity hash code of an object.  
+     * has as origin the identity hash code of a symbolic object.  
      * 
-     * @param object an {@link Objekt}, the object whose identity hash 
-     *        code is this symbol. It must refer an instance or an array.
+     * @param object a symbolic {@link Objekt}, the object whose identity hash 
+     *        code is this symbol. It must be an instance or an array.
      * @return a {@link PrimitiveSymbolic}.
      * @throws FrozenStateException if the state is frozen.
      */
