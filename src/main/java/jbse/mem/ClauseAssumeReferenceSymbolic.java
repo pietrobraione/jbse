@@ -28,7 +28,7 @@ public abstract class ClauseAssumeReferenceSymbolic implements Clause {
 
 	@Override
 	public int hashCode() {
-		int result = super.hashCode();
+		int result = 103;
 		result = 53 * result + ((this.r == null) ? 0 : this.r.hashCode());
 		return result;
 	}
@@ -38,7 +38,7 @@ public abstract class ClauseAssumeReferenceSymbolic implements Clause {
 		if (this == obj) {
 			return true;
 		}
-		if (!super.equals(obj)) {
+		if (obj == null) {
 			return false;
 		}
 		if (getClass() != obj.getClass()) {
