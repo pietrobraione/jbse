@@ -100,21 +100,14 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
 
     	final Outcome retVal = super.decide_IFX_Nonconcrete(condition, result);
         if (!this.ended) {
-            try {
-                final Iterator<DecisionAlternative_IFX> it = result.iterator();
-                final Primitive conditionNot = condition.not();
-                while (it.hasNext()) {
-                    final DecisionAlternative_IFX da = it.next();
-                    final Primitive conditionToCheck  = (da.value() ? condition : conditionNot);
-                    final Primitive valueInConcreteState = this.jvm.eval(conditionToCheck);
-                    if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-                        it.remove();
-                    }
-                }
-            } catch (InvalidTypeException e) {
-                //this should never happen as arguments have been checked by the caller
-                throw new UnexpectedInternalException(e);
-            }
+        	final Iterator<DecisionAlternative_IFX> it = result.iterator();
+        	while (it.hasNext()) {
+        		final DecisionAlternative_IFX da = it.next();
+        		final Primitive valueInConcreteState = this.jvm.eval_IFX(da, condition);
+        		if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+        			it.remove();
+        		}
+        	}
         }
         return retVal;
     }
@@ -124,26 +117,14 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     throws DecisionException {
         final Outcome retVal = super.decide_XCMPY_Nonconcrete(val1, val2, result);
         if (!this.ended) {
-            try {
-                final Primitive comparisonGT = val1.gt(val2);
-                final Primitive comparisonEQ = val1.eq(val2);
-                final Primitive comparisonLT = val1.lt(val2);
-                final Iterator<DecisionAlternative_XCMPY> it = result.iterator();
-                while (it.hasNext()) {
-                    final DecisionAlternative_XCMPY da = it.next();
-                    final Primitive conditionToCheck  = 
-                        (da.operator() == Operator.GT ? comparisonGT :
-                         da.operator() == Operator.EQ ? comparisonEQ :
-                         comparisonLT);
-                    final Primitive valueInConcreteState = this.jvm.eval(conditionToCheck);
-                    if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-                        it.remove();
-                    }
-                }
-            } catch (InvalidTypeException | InvalidOperandException e) {
-                //this should never happen as arguments have been checked by the caller
-                throw new UnexpectedInternalException(e);
-            }
+        	final Iterator<DecisionAlternative_XCMPY> it = result.iterator();
+        	while (it.hasNext()) {
+        		final DecisionAlternative_XCMPY da = it.next();
+        		final Primitive valueInConcreteState = this.jvm.eval_XCMPY(da, val1, val2);
+        		if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+        			it.remove();
+        		}
+        	}
         }
         return retVal;
     }
@@ -153,23 +134,14 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     throws DecisionException {
         final Outcome retVal = super.decide_XSWITCH_Nonconcrete(selector, tab, result);
         if (!this.ended) {
-            try {
-                final Iterator<DecisionAlternative_XSWITCH> it = result.iterator();
-                while (it.hasNext()) {
-                    final DecisionAlternative_XSWITCH da = it.next();
-                    final Primitive conditionToCheck;
-                    conditionToCheck = (da.isDefault() ?
-                                        tab.getDefaultClause(selector) :
-                                        selector.eq(this.calc.valInt(da.value())));
-                    final Primitive valueInConcreteState = this.jvm.eval(conditionToCheck);
-                    if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-                        it.remove();
-                    }
-                }
-            } catch (InvalidOperandException | InvalidTypeException e) {
-                //this should never happen as arguments have been checked by the caller
-                throw new UnexpectedInternalException(e);
-            }
+        	final Iterator<DecisionAlternative_XSWITCH> it = result.iterator();
+        	while (it.hasNext()) {
+        		final DecisionAlternative_XSWITCH da = it.next();
+        		final Primitive valueInConcreteState = this.jvm.eval_XSWITCH(da, selector, tab);
+        		if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+        			it.remove();
+        		}
+        	}
         }
         return retVal;
     }
@@ -179,20 +151,14 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     throws DecisionException {
         final Outcome retVal = super.decide_XNEWARRAY_Nonconcrete(countsNonNegative, result);
         if (!this.ended) {
-            try {
-                final Iterator<DecisionAlternative_XNEWARRAY> it = result.iterator();
-                while (it.hasNext()) {
-                    final DecisionAlternative_XNEWARRAY da = it.next();
-                    final Primitive conditionToCheck = (da.ok() ? countsNonNegative : countsNonNegative.not());
-                    final Primitive valueInConcreteState = this.jvm.eval(conditionToCheck);
-                    if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-                        it.remove();
-                    }
-                }
-            } catch (InvalidTypeException e) {
-                //this should never happen as arguments have been checked by the caller
-                throw new UnexpectedInternalException(e);
-            }
+        	final Iterator<DecisionAlternative_XNEWARRAY> it = result.iterator();
+        	while (it.hasNext()) {
+        		final DecisionAlternative_XNEWARRAY da = it.next();
+        		final Primitive valueInConcreteState = this.jvm.eval_XNEWARRAY(da, countsNonNegative);
+        		if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+        			it.remove();
+        		}
+        	}
         }
         return retVal;
     }
@@ -202,20 +168,14 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     throws DecisionException {
         final Outcome retVal = super.decide_XASTORE_Nonconcrete(inRange, result);
         if (!this.ended) {
-            try {
-                final Iterator<DecisionAlternative_XASTORE> it = result.iterator();
-                while (it.hasNext()) {
-                    final DecisionAlternative_XASTORE da = it.next();
-                    final Primitive conditionToCheck = (da.isInRange() ? inRange : inRange.not());
-                    final Primitive valueInConcreteState = this.jvm.eval(conditionToCheck);
-                    if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-                        it.remove();
-                    }
-                }
-            } catch (InvalidTypeException e) {
-                //this should never happen as arguments have been checked by the caller
-                throw new UnexpectedInternalException(e);
-            }
+        	final Iterator<DecisionAlternative_XASTORE> it = result.iterator();
+        	while (it.hasNext()) {
+        		final DecisionAlternative_XASTORE da = it.next();
+        		final Primitive valueInConcreteState = this.jvm.eval_XASTORE(da, inRange);
+        		if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+        			it.remove();
+        		}
+        	}
         }
         return retVal;
     }
@@ -245,8 +205,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             final Iterator<DecisionAlternative_XALOAD> it = result.iterator();
             while (it.hasNext()) {
                 final DecisionAlternative_XALOAD da = it.next();
-                final Primitive conditionToCheck = da.getArrayAccessExpression();
-                final Primitive valueInConcreteState = this.jvm.eval(conditionToCheck);
+                final Primitive valueInConcreteState = this.jvm.eval_XALOAD(da);
                 if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
                     it.remove();
                 }
@@ -266,8 +225,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             final Iterator<DecisionAlternative_XALOAD> it = result.iterator();
             while (it.hasNext()) {
                 final DecisionAlternative_XALOAD_Unresolved dar = (DecisionAlternative_XALOAD_Unresolved) it.next();
-                final Primitive conditionToCheck = dar.getArrayAccessExpression();
-                final Primitive valueInConcreteState = this.jvm.eval(conditionToCheck);
+                final Primitive valueInConcreteState = this.jvm.eval_XALOAD(dar);
                 if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
                     it.remove();
                 } else {
@@ -413,6 +371,71 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
          */
         public abstract Object getValue(Symbolic origin) throws GuidanceException;
         
+
+        public Primitive eval_IFX(DecisionAlternative_IFX da, Primitive condition) throws GuidanceException {
+        	try {
+        		final Primitive conditionNot = condition.not();
+        		final Primitive conditionToCheck  = (da.value() ? condition : conditionNot);
+        		return eval(conditionToCheck);
+        	} catch (InvalidTypeException e) {
+        		//this should never happen as arguments have been checked by the caller
+        		throw new UnexpectedInternalException(e);
+        	}
+        }
+        
+        public Primitive eval_XCMPY(DecisionAlternative_XCMPY da, Primitive val1, Primitive val2) throws GuidanceException {
+        	try{
+        		final Primitive comparisonGT = val1.gt(val2);
+        		final Primitive comparisonEQ = val1.eq(val2);
+        		final Primitive comparisonLT = val1.lt(val2);
+        		final Primitive conditionToCheck  = 
+        				(da.operator() == Operator.GT ? comparisonGT :
+        				 da.operator() == Operator.EQ ? comparisonEQ :
+        				 comparisonLT);
+        		return eval(conditionToCheck);
+        	} catch (InvalidTypeException | InvalidOperandException e) {
+        		//this should never happen as arguments have been checked by the caller
+        		throw new UnexpectedInternalException(e);
+        	}
+        }
+        
+        public Primitive eval_XSWITCH(DecisionAlternative_XSWITCH da, Primitive selector, SwitchTable tab) throws GuidanceException {
+        	try{
+        		final Primitive conditionToCheck = (da.isDefault() ?
+        											tab.getDefaultClause(selector) :
+        											selector.eq(this.calc.valInt(da.value())));
+        		return eval(conditionToCheck);
+        	} catch (InvalidOperandException | InvalidTypeException e) {
+        		//this should never happen as arguments have been checked by the caller
+        		throw new UnexpectedInternalException(e);
+        	}
+        }
+        
+        public Primitive eval_XNEWARRAY(DecisionAlternative_XNEWARRAY da, Primitive countsNonNegative) throws GuidanceException {
+			try {
+	            Primitive conditionToCheck = (da.ok() ? countsNonNegative : countsNonNegative.not());
+	        	return eval(conditionToCheck);
+            } catch (InvalidTypeException e) {
+                //this should never happen as arguments have been checked by the caller
+                throw new UnexpectedInternalException(e);
+            }
+        }
+
+        public Primitive eval_XASTORE(DecisionAlternative_XASTORE da, Primitive inRange) throws GuidanceException {
+			try {
+	            Primitive conditionToCheck = (da.isInRange() ? inRange : inRange.not());
+	        	return eval(conditionToCheck);
+            } catch (InvalidTypeException e) {
+                //this should never happen as arguments have been checked by the caller
+                throw new UnexpectedInternalException(e);
+            }
+        }
+
+        public Primitive eval_XALOAD(DecisionAlternative_XALOAD da) throws GuidanceException {
+            final Primitive conditionToCheck = da.getArrayAccessExpression();
+        	return eval(conditionToCheck);
+        }
+        
         /**
          * Evaluates a {@link Primitive} in the reached concrete state.
          * 
@@ -524,7 +547,13 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                 //through operand stack, see JVMSpec 2.11.1, tab. 2.3
             }
         }
+        
+        protected abstract void step(State state) throws GuidanceException;
 
         protected void close() { }
+    }
+    
+    public final void step(State state) throws GuidanceException {
+    	this.jvm.step(state);
     }
 }

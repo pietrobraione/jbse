@@ -335,5 +335,11 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
         		throw new UnexpectedInternalException(e);
         	}
         }
+        
+        @Override
+        protected void step(State state) throws GuidanceException {
+        	//do nothing - sorry, not yet supported
+        	//TODO update
+        }
     }
 }
