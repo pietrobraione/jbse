@@ -93,6 +93,16 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         this.ended = true;
         stopFastAndImprecise();
     }
+    
+    /**
+     * Checks if guidance decision was ended.
+     * 
+     * @return {@code true} iff {@link #endGuidance()}
+     *         was invoked.
+     */
+    public final boolean isGuidanceEnded() {
+    	return this.ended;
+    }
 
     @Override
     protected final Outcome decide_IFX_Nonconcrete(Primitive condition, SortedSet<DecisionAlternative_IFX> result) 
