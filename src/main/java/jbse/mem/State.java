@@ -2443,9 +2443,7 @@ public final class State implements Cloneable {
             //creates the new snippet frame
             final Frame f = new SnippetFrameWrap(snippet, (MethodFrame) getCurrentFrame());
 
-            //replaces the current frame with the snippet frame
-            //that wraps it
-            this.stack.pop();
+            //pushes the frame
             this.stack.push(f);
         } catch (InvalidInputException e) {
         	throw new UnexpectedInternalException("Found a method frame with a snippet classfile.");
@@ -2681,12 +2679,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        final Frame popped = this.stack.pop();
-        if (popped instanceof SnippetFrameWrap) {
-            //reinstates the activation context of the popped frame
-            this.stack.push(((SnippetFrameWrap) popped).getContextFrame());
-        }
-        return popped;
+    	return this.stack.pop();
     }
 
     /**

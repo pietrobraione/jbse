@@ -20,6 +20,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.jvm.RunnerParameters;
 import jbse.mem.State;
 import jbse.mem.SwitchTable;
+import jbse.mem.State.Phase;
 import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_XALOAD;
 import jbse.tree.DecisionAlternative_XALOAD_Unresolved;
@@ -94,16 +95,6 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         stopFastAndImprecise();
     }
     
-    /**
-     * Checks if guidance decision was ended.
-     * 
-     * @return {@code true} iff {@link #endGuidance()}
-     *         was invoked.
-     */
-    public final boolean isGuidanceEnded() {
-    	return this.ended;
-    }
-
     @Override
     protected final Outcome decide_IFX_Nonconcrete(Primitive condition, SortedSet<DecisionAlternative_IFX> result) 
     throws DecisionException {
@@ -564,6 +555,8 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
     
     public final void step(State state) throws GuidanceException {
-    	this.jvm.step(state);
+    	if (state.phase() == Phase.POST_INITIAL && !this.ended) {
+    		this.jvm.step(state);
+    	}
     }
 }

@@ -1,5 +1,6 @@
 package jbse.algo;
 
+import static jbse.algo.Util.continueWithBaseLevelImpl;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
@@ -33,6 +34,7 @@ import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.State;
+import jbse.mem.State.Phase;
 import jbse.mem.exc.CannotAssumeSymbolicObjectException;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.FrozenStateException;
@@ -90,6 +92,9 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
+        	if (state.phase() == Phase.PRE_INITIAL) {
+        		continueWithBaseLevelImpl(state, this.isInterface, this.isSpecial, this.isStatic);
+        	}
             final String returnType = splitReturnValueDescriptor(this.methodSignatureImpl.getDescriptor());
             final Value[] args = this.data.operands();
             

@@ -144,10 +144,10 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         private MethodEntryEvent methodEntryEvent;
         private int numOfFramesAtMethodEntry;
         private StepEvent currentStepEvent;        
-		private boolean jdiIsWaitingForJbseTerminateCustomExecution = false;
+		private boolean jdiIsWaitingForJBSE = false;
 		
 		private Map<ReferenceSymbolicApply, Object> unintFuncsNonPrimitiveRetValues = new HashMap<>();
-        private boolean lookAheadAlreadyDone = false;
+        private boolean lookAheadDone = false;
 		private boolean lookAheadDecisionBoolean;
 		private boolean lookAheadDecisionIsDefaultCase;
 		private int lookAheadDecisionCaseValue;
@@ -455,7 +455,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         
 		@Override
 		public Primitive eval_IFX(DecisionAlternative_IFX da, Primitive condToEval) throws GuidanceException {			
-			if (this.jdiIsWaitingForJbseTerminateCustomExecution) {
+			if (this.jdiIsWaitingForJBSE) {
 				return super.eval_IFX(da, condToEval);
 			}
 
@@ -466,7 +466,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 
         @Override
 		public Primitive eval_XCMPY(DecisionAlternative_XCMPY da, Primitive val1, Primitive val2) throws GuidanceException {
-			if (this.jdiIsWaitingForJbseTerminateCustomExecution) {
+			if (this.jdiIsWaitingForJBSE) {
 				return super.eval_XCMPY(da, val1, val2);
 			}
 
@@ -487,11 +487,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         
         @Override
         public Primitive eval_XSWITCH(DecisionAlternative_XSWITCH da, Primitive selector, SwitchTable tab) throws GuidanceException {
-			if (this.jdiIsWaitingForJbseTerminateCustomExecution) {
+			if (this.jdiIsWaitingForJBSE) {
 				return super.eval_XSWITCH(da, selector, tab);
 			}
 
-			if (!this.lookAheadAlreadyDone) {
+			if (!this.lookAheadDone) {
 				exec_XSWITCH_lookAhead();
 			}
 				
@@ -500,11 +500,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         
         @Override
         public Primitive eval_XNEWARRAY(DecisionAlternative_XNEWARRAY da, Primitive countsNonNegative) throws GuidanceException {
-        	if (this.jdiIsWaitingForJbseTerminateCustomExecution) {
+        	if (this.jdiIsWaitingForJBSE) {
 				return super.eval_XNEWARRAY(da, countsNonNegative);
 			}
 
-			if (!this.lookAheadAlreadyDone) {
+			if (!this.lookAheadDone) {
 				exec_XNEWARRAY_lookAhead();
 			}
 				
@@ -513,11 +513,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 
         @Override
         public Primitive eval_XASTORE(DecisionAlternative_XASTORE da, Primitive inRange) throws GuidanceException {
-        	if (this.jdiIsWaitingForJbseTerminateCustomExecution) {
+        	if (this.jdiIsWaitingForJBSE) {
 				return super.eval_XASTORE(da, inRange);
 			}
 
-			if (!this.lookAheadAlreadyDone) {
+			if (!this.lookAheadDone) {
 				exec_XASTORE_lookAhead();
 			}
 				
@@ -526,11 +526,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 
         @Override
         public Primitive eval_XALOAD(DecisionAlternative_XALOAD da) throws GuidanceException {
-        	if (this.jdiIsWaitingForJbseTerminateCustomExecution) {
+        	if (this.jdiIsWaitingForJBSE) {
 				return super.eval_XALOAD(da);
 			}
 
-			if (!this.lookAheadAlreadyDone) {
+			if (!this.lookAheadDone) {
 				exec_XALOAD_lookAhead();
 			}
 				
@@ -586,37 +586,38 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		}        
         
         private void exec_INVOKEX_lookAhead() throws GuidanceException {
-			if (!this.lookAheadAlreadyDone) {
-				final byte[] bc = getCurrentBytecode();
-				final int currentCodeIndex = getCurrentCodeIndex();
-
-				if (bc[currentCodeIndex] < Opcodes.OP_INVOKEVIRTUAL && bc[currentCodeIndex] > Opcodes.OP_INVOKEDYNAMIC) {
-					throw new GuidanceException("Wrong step alignment: JBSE is at INVOKE statement, while JDI's OPCODE is " + bc[currentCodeIndex]);
-				}
-
-				try {
-					final int intialFrames = this.currentStepEvent.thread().frameCount();
-
-					doStep(true); //true -> StepInto  
-					final int currFrames = this.currentStepEvent.thread().frameCount();
-					if (currFrames <= intialFrames) {
-						throw new GuidanceException("Problem with INVOKE: I expected to step into a new frame");
-					}
-
-					this.lookAheadUnintFuncNonPrimitiveRetValue = (ObjectReference) stepUpToMethodExit();
-
-					doStep(false); //false -> StepOver  
-					final int currFrames2 = this.currentStepEvent.thread().frameCount();
-					if (currFrames2 != intialFrames) {
-						throw new GuidanceException("Problem with INVOKE: I expected to step into a new frame");
-					}
-
-				} catch (IncompatibleThreadStateException e) {
-					throw new GuidanceException(e);
-				}
-
-				this.lookAheadAlreadyDone = true;
+			if (this.lookAheadDone) {
+				return;
 			}
+			
+			final byte[] bc = getCurrentBytecode();
+			final int currentCodeIndex = getCurrentCodeIndex();
+
+			if (bc[currentCodeIndex] < Opcodes.OP_INVOKEVIRTUAL && bc[currentCodeIndex] > Opcodes.OP_INVOKEDYNAMIC) {
+				throw new GuidanceException("Wrong step alignment: JBSE is at INVOKE statement, while JDI's OPCODE is " + bc[currentCodeIndex]);
+			}
+
+			try {
+				final int intialFrames = this.currentStepEvent.thread().frameCount();
+				doStep(true); //true -> StepInto  
+				final int currFrames = this.currentStepEvent.thread().frameCount();
+				if (currFrames <= intialFrames) {
+					throw new GuidanceException("Problem with INVOKE: I expected to step into a new frame");
+				}
+
+				this.lookAheadUnintFuncNonPrimitiveRetValue = (ObjectReference) stepUpToMethodExit();
+
+				doStep(false); //false -> StepOver  
+				final int currFrames2 = this.currentStepEvent.thread().frameCount();
+				if (currFrames2 != intialFrames) {
+					throw new GuidanceException("Problem with INVOKE: I expected to step into a new frame");
+				}
+
+			} catch (IncompatibleThreadStateException e) {
+				throw new GuidanceException(e);
+			}
+
+			this.lookAheadDone = true;
         }
 
 
@@ -662,111 +663,116 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		}
         
         private void exec_IFX_lookAhead() throws GuidanceException {
-			if (!this.lookAheadAlreadyDone) {
-				final byte[] bc = getCurrentBytecode();
-				final int currentCodeIndex = getCurrentCodeIndex();
-
-				if (bc[currentCodeIndex] < Opcodes.OP_IFEQ && bc[currentCodeIndex] > Opcodes.OP_IF_ACMPNE) {
-					throw new GuidanceException("Wrong step alignment: JBSE is at IF statement, while JDI's OPCODE is " + bc[currentCodeIndex]);
-				}
-
-				final int jumpOffset = currentCodeIndex + bytecodesToInt(bc, currentCodeIndex + 1, 2);
-				final int newOffset = lookAhead();
-				this.lookAheadDecisionBoolean = (newOffset == jumpOffset); 
+			if (this.lookAheadDone) {
+				return;
 			}
+			final byte[] bc = getCurrentBytecode();
+			final int currentCodeIndex = getCurrentCodeIndex();
+
+			if (bc[currentCodeIndex] < Opcodes.OP_IFEQ && bc[currentCodeIndex] > Opcodes.OP_IF_ACMPNE) {
+				throw new GuidanceException("Wrong step alignment: JBSE is at IF statement, while JDI's OPCODE is " + bc[currentCodeIndex]);
+			}
+
+			final int jumpOffset = currentCodeIndex + bytecodesToInt(bc, currentCodeIndex + 1, 2);
+			final int newOffset = lookAhead();
+			this.lookAheadDecisionBoolean = (newOffset == jumpOffset); 
         }
                 
         private void exec_XSWITCH_lookAhead() throws GuidanceException {
-			if (!this.lookAheadAlreadyDone) {
-				final byte[] bc = getCurrentBytecode();
-				final int currentCodeIndex = getCurrentCodeIndex();
-
-				if (bc[currentCodeIndex] != Opcodes.OP_LOOKUPSWITCH && bc[currentCodeIndex] != Opcodes.OP_TABLESWITCH) {
-					throw new GuidanceException("Wrong step alignment: JBSE is at SWITCH statament, while JDI's OPCODE is " + bc[currentCodeIndex]);
-				}
-
-				final int newOffset = lookAhead();
-				final int padding = 3 - (currentCodeIndex % 4);
-				int nextParamStartIndex = currentCodeIndex + padding + 1;
-
-				final int defaultCaseOffset = currentCodeIndex + bytecodesToInt(bc, nextParamStartIndex, 4);
-				nextParamStartIndex += 4;
-				if (newOffset == defaultCaseOffset) {
-					this.lookAheadDecisionIsDefaultCase = true; 
-					return;
-				} 
-				this.lookAheadDecisionIsDefaultCase = false; 
-
-				if (bc[currentCodeIndex] == Opcodes.OP_LOOKUPSWITCH) {
-					int npairs = bytecodesToInt(bc, nextParamStartIndex, 4); 
-					nextParamStartIndex += 4;		
-
-					for (int i = 0; i < npairs; i++, nextParamStartIndex += 8) {
-						final int caseValue = bytecodesToInt(bc, nextParamStartIndex, 4); 
-						final int caseOffset = currentCodeIndex + bytecodesToInt(bc, nextParamStartIndex + 4, 4); 
-
-						if (newOffset == caseOffset) {
-							this.lookAheadDecisionCaseValue = caseValue;
-							return;
-						}
-					}
-				} else { //Opcodes.TABLESWITCH
-					final int low = bytecodesToInt(bc, nextParamStartIndex, 4); 
-					final int high = bytecodesToInt(bc, nextParamStartIndex + 4, 4); 
-					final int entries = high - low; 
-					nextParamStartIndex += 8;
-
-					for (int i = 0; i < entries; i++, nextParamStartIndex += 4) {
-						final int caseValue = low + i; 
-						final int caseOffset = currentCodeIndex + bytecodesToInt(bc, nextParamStartIndex, 4); 
-						if (newOffset == caseOffset) {
-							this.lookAheadDecisionCaseValue = caseValue;
-							return;
-						}
-					}
-				}
-
-				throw new GuidanceException("Wrong step at SWITCH: offset " + newOffset + " does not correspond to any case/default jump");
+			if (this.lookAheadDone) {
+				return;
 			}
+			final byte[] bc = getCurrentBytecode();
+			final int currentCodeIndex = getCurrentCodeIndex();
+
+			if (bc[currentCodeIndex] != Opcodes.OP_LOOKUPSWITCH && bc[currentCodeIndex] != Opcodes.OP_TABLESWITCH) {
+				throw new GuidanceException("Wrong step alignment: JBSE is at SWITCH statament, while JDI's OPCODE is " + bc[currentCodeIndex]);
+			}
+
+			final int newOffset = lookAhead();
+			final int padding = 3 - (currentCodeIndex % 4);
+			int nextParamStartIndex = currentCodeIndex + padding + 1;
+
+			final int defaultCaseOffset = currentCodeIndex + bytecodesToInt(bc, nextParamStartIndex, 4);
+			nextParamStartIndex += 4;
+			if (newOffset == defaultCaseOffset) {
+				this.lookAheadDecisionIsDefaultCase = true; 
+				return;
+			} 
+			this.lookAheadDecisionIsDefaultCase = false; 
+
+			if (bc[currentCodeIndex] == Opcodes.OP_LOOKUPSWITCH) {
+				int npairs = bytecodesToInt(bc, nextParamStartIndex, 4); 
+				nextParamStartIndex += 4;		
+
+				for (int i = 0; i < npairs; i++, nextParamStartIndex += 8) {
+					final int caseValue = bytecodesToInt(bc, nextParamStartIndex, 4); 
+					final int caseOffset = currentCodeIndex + bytecodesToInt(bc, nextParamStartIndex + 4, 4); 
+
+					if (newOffset == caseOffset) {
+						this.lookAheadDecisionCaseValue = caseValue;
+						return;
+					}
+				}
+			} else { //Opcodes.TABLESWITCH
+				final int low = bytecodesToInt(bc, nextParamStartIndex, 4); 
+				final int high = bytecodesToInt(bc, nextParamStartIndex + 4, 4); 
+				final int entries = high - low; 
+				nextParamStartIndex += 8;
+
+				for (int i = 0; i < entries; i++, nextParamStartIndex += 4) {
+					final int caseValue = low + i; 
+					final int caseOffset = currentCodeIndex + bytecodesToInt(bc, nextParamStartIndex, 4); 
+					if (newOffset == caseOffset) {
+						this.lookAheadDecisionCaseValue = caseValue;
+						return;
+					}
+				}
+			}
+
+			throw new GuidanceException("Wrong step at SWITCH: offset " + newOffset + " does not correspond to any case/default jump");
         }
 
         private void exec_XALOAD_lookAhead() throws GuidanceException {
-			if (!this.lookAheadAlreadyDone) {
-				final byte[] bc = getCurrentBytecode();
-				final int currentCodeIndex = getCurrentCodeIndex();
-
-				if (bc[currentCodeIndex] < Opcodes.OP_IALOAD && bc[currentCodeIndex] > Opcodes.OP_SALOAD) {
-					throw new GuidanceException("Wrong step alignment: JBSE is at XALOAD statement, while JDI's OPCODE is " + bc[currentCodeIndex]);
-				}
-
-				checkAdvanceToImmediateSuccessor(currentCodeIndex + 1);
+			if (this.lookAheadDone) {
+				return;
 			}
+			final byte[] bc = getCurrentBytecode();
+			final int currentCodeIndex = getCurrentCodeIndex();
+
+			if (bc[currentCodeIndex] < Opcodes.OP_IALOAD && bc[currentCodeIndex] > Opcodes.OP_SALOAD) {
+				throw new GuidanceException("Wrong step alignment: JBSE is at XALOAD statement, while JDI's OPCODE is " + bc[currentCodeIndex]);
+			}
+
+			checkAdvanceToImmediateSuccessor(currentCodeIndex + 1);
         }
 
         private void exec_XNEWARRAY_lookAhead() throws GuidanceException {
-			if (!this.lookAheadAlreadyDone) {
-				final byte[] bc = getCurrentBytecode();
-				final int currentCodeIndex = getCurrentCodeIndex();
-
-				if (bc[currentCodeIndex] != Opcodes.OP_NEWARRAY && bc[currentCodeIndex] != Opcodes.OP_ANEWARRAY) {
-					throw new GuidanceException("Wrong step alignment: JBSE is at XNEWARRAY statement, while JDI's OPCODE is " + bc[currentCodeIndex]);
-				}
-
-				checkAdvanceToImmediateSuccessor(currentCodeIndex + (bc[currentCodeIndex] == Opcodes.OP_NEWARRAY ? 2 : 3));
+			if (this.lookAheadDone) {
+				return;
 			}
+			
+			final byte[] bc = getCurrentBytecode();
+			final int currentCodeIndex = getCurrentCodeIndex();
+			if (bc[currentCodeIndex] != Opcodes.OP_NEWARRAY && bc[currentCodeIndex] != Opcodes.OP_ANEWARRAY) {
+				throw new GuidanceException("Wrong step alignment: JBSE is at XNEWARRAY statement, while JDI's OPCODE is " + bc[currentCodeIndex]);
+			}
+
+			checkAdvanceToImmediateSuccessor(currentCodeIndex + (bc[currentCodeIndex] == Opcodes.OP_NEWARRAY ? 2 : 3));
         }
 
         private void exec_XASTORE_lookAhead() throws GuidanceException {
-			if (!this.lookAheadAlreadyDone) {
-				final byte[] bc = getCurrentBytecode();
-				final int currentCodeIndex = getCurrentCodeIndex();
-
-				if (bc[currentCodeIndex] < Opcodes.OP_IASTORE && bc[currentCodeIndex] > Opcodes.OP_SASTORE) {
-					throw new GuidanceException("Wrong step alignment: JBSE is at XASTORE statement, while JDI's OPCODE is " + bc[currentCodeIndex]);
-				}
-
-				checkAdvanceToImmediateSuccessor(currentCodeIndex + 1);
+			if (this.lookAheadDone) {
+				return;
 			}
+			
+			final byte[] bc = getCurrentBytecode();
+			final int currentCodeIndex = getCurrentCodeIndex();
+			if (bc[currentCodeIndex] < Opcodes.OP_IASTORE && bc[currentCodeIndex] > Opcodes.OP_SASTORE) {
+				throw new GuidanceException("Wrong step alignment: JBSE is at XASTORE statement, while JDI's OPCODE is " + bc[currentCodeIndex]);
+			}
+
+			checkAdvanceToImmediateSuccessor(currentCodeIndex + 1);
         }
         
         private void checkAdvanceToImmediateSuccessor(long successorOffset) throws GuidanceException {
@@ -776,7 +782,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 
         private int lookAhead() {
         	doStep(false); //false -> StepOver
-        	this.lookAheadAlreadyDone = true;
+        	this.lookAheadDone = true;
         	return getCurrentCodeIndex();
         } 
                 
@@ -806,57 +812,38 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         	}
 		}
 
-        private boolean jdiSameMethodAsJBSE(State jbseState) throws FrozenStateException, ThreadStackEmptyException, IncompatibleThreadStateException {
-			final int jbseStackSize = jbseState.getStackSize();
-			final Signature jbseMeth = jbseState.getCurrentMethodSignature();
-        	final String jbseMethClassname = jbseMeth.getClassName() == null ? null : jbseMeth.getClassName().replace('/', '.');
-        	final String jbseMethName = jbseMeth.getName() == null ? null : jbseMeth.getName();
-        	final String jbseMethDescr = jbseMeth.getDescriptor() == null ? null : jbseMeth.getDescriptor();
-        	
-        	final int jdiStackSize = numFramesFromRootFrameConcrete();
-        	final Method jdiMeth = currentStepEvent.location().method();
-        	final String jdiMethName = jdiMeth.name();
-        	final String jdiMethDescr = jdiMeth.signature();
-        	final String jdiMethClassname = jdiMeth.toString().substring(0, jdiMeth.toString().indexOf(jdiMethName) - 1);
-
-        	return jdiStackSize == jbseStackSize && jdiMethName.equals(jbseMethName) && 
-        		   jdiMethDescr.equals(jbseMethDescr) && jdiMethClassname.equals(jbseMethClassname);
-        }
-        
         @Override
 		public void step(State jbseState) throws GuidanceException {
 			try {
-				if (!this.jdiIsWaitingForJbseTerminateCustomExecution) {
-					if (this.lookAheadAlreadyDone) { 
-						this.lookAheadAlreadyDone = false; // re-alignment after lookahead
+				final int jbseStackSize = jbseState.getStackSize();
+				final int jdiStackSizeBeforeStep = numFramesFromRootFrameConcrete();
+				if (this.jdiIsWaitingForJBSE) {
+					if (jbseStackSize == jdiStackSizeBeforeStep) {
+						//JBSE exited from the trigger/snippet: check alignment
+						this.jdiIsWaitingForJBSE = false; 
+						checkAlignmentWithJbseOrThrowException(jbseState); 
+					} //else, JBSE is not yet aligned: do not step and wait again
+				} else if (this.lookAheadDone) {
+					//finished lookahead: check alignment
+					this.lookAheadDone = false; 
+					checkAlignmentWithJbseOrThrowException(jbseState);
+				} else {
+					if (jbseStackSize == 0) {
+						return; //avoid stepping JDI since JBSE terminated
+					}
+					
+					//do step into or step over according to JBSE stack size
+					final boolean doStepInto = jbseStackSize > jdiStackSizeBeforeStep;
+					doStep(doStepInto);
+
+					final int jdiStackSizeAfterStep = numFramesFromRootFrameConcrete();
+					if (jbseStackSize == jdiStackSizeAfterStep) {
+						//JDI should be aligned with JBSE
 						checkAlignmentWithJbseOrThrowException(jbseState);
 					} else {
-
-						final int jbseStackSize = jbseState.getStackSize();
-						if (jbseStackSize == 0) {
-							return; //avoid stepping JDI since JBSE terminated
-						}
-						final int jdiStackSizeBeforeStep = numFramesFromRootFrameConcrete();
-						final boolean doStepInto = jbseStackSize > jdiStackSizeBeforeStep;
-						doStep(doStepInto);  //true -> StepInto, false -> StepOver
-
-						if (!jdiSameMethodAsJBSE(jbseState)) {
-							// PANIC: optimistically, we may assume that JBSE is doing some operations related
-							//	  with a customized handling of what is happening in the current method,
-							//	  and thus we try to wait until it terminates with executing this method, and
-							//	  returns back to the preceding stack frame. If JBSE aligns with
-							//	  JDI at that point (see else case below), we believe it is again safe to proceed.
-							stepUpToMethodExit();
-							doStep(false); //false -> StepOver
-							this.jdiIsWaitingForJbseTerminateCustomExecution = true;
-						} else {
-							checkAlignmentWithJbseOrThrowException(jbseState);						}
-						}
-				} else  {
-					// This is the optimistic handling in case of PANIC
-					if (jdiSameMethodAsJBSE(jbseState)) {
-						checkAlignmentWithJbseOrThrowException(jbseState); // Exception -> Yes, PANIC! 
-						this.jdiIsWaitingForJbseTerminateCustomExecution = false; // No more PANIC 
+						//JDI became disaligned with JBSE: this happens when JBSE is running a
+						//trigger or a snippet. JDI waits until JBSE terminates the execution
+						this.jdiIsWaitingForJBSE = true;
 					}
 				}
         	} catch (ThreadStackEmptyException | IncompatibleThreadStateException | FrozenStateException e) {
@@ -864,9 +851,32 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         	}
 		}
 
-        private void checkAlignmentWithJbseOrThrowException(State jbseState) throws FrozenStateException, GuidanceException, ThreadStackEmptyException {
-        	if (getCurrentCodeIndex() != jbseState.getPC()) {
-				throw new GuidanceException("JDI alignment with JBSE failed: JBSE is at " + jbseState.getCurrentMethodSignature() + ":" + jbseState.getPC() + ", while JDI is at " + this.currentStepEvent.location().method() + ":" + getCurrentCodeIndex());
+        private void checkAlignmentWithJbseOrThrowException(State jbseState) 
+        throws FrozenStateException, GuidanceException, ThreadStackEmptyException, IncompatibleThreadStateException {
+        	//TODO pedantically walk the whole stack and check all frames; by now we are less paranoid and just check the stack depth and the topmost frame
+        	
+        	//gets JDI stack data
+        	final int jdiStackSize = numFramesFromRootFrameConcrete();
+        	final Method jdiMeth = this.currentStepEvent.location().method();
+        	final String jdiMethClassname = jdiMeth.toString().substring(0, jdiMeth.toString().indexOf(jdiMeth.name()) - 1);
+        	final String jdiMethDescr = jdiMeth.signature();
+        	final String jdiMethName = jdiMeth.name();
+        	final int jdiProgramCounter = getCurrentCodeIndex();
+
+        	//gets JBSE stack data
+			final int jbseStackSize = jbseState.getStackSize();
+			final Signature jbseMeth = jbseState.getCurrentMethodSignature();
+        	final String jbseMethClassname = jbseMeth.getClassName() == null ? null : jbseMeth.getClassName().replace('/', '.');
+        	final String jbseMethDescr = jbseMeth.getDescriptor() == null ? null : jbseMeth.getDescriptor();
+        	final String jbseMethName = jbseMeth.getName() == null ? null : jbseMeth.getName();
+        	final int jbseProgramCounter = jbseState.getPC();
+        	
+        	if (jdiStackSize == jbseStackSize && jdiMethName.equals(jbseMethName) && 
+        		jdiMethDescr.equals(jbseMethDescr) && jdiMethClassname.equals(jbseMethClassname) &&
+        		jdiProgramCounter == jbseProgramCounter) {
+        		return;
+        	} else {
+				throw new GuidanceException("JDI alignment with JBSE failed unexpectedly: JBSE is at " + jbseState.getCurrentMethodSignature() + ":" + jbseProgramCounter + ", while JDI is at " + jdiMethClassname + ":" + jdiMethDescr + ":" + jdiMethName + ":" + jdiProgramCounter);
 			}	
         }
 

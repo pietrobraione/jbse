@@ -167,7 +167,7 @@ class DispatcherMeta extends Dispatcher<Signature, Algo_INVOKEMETA<?, ?, ?, ?>> 
         final String functionNameDflt = 
             (functionName == null ? methodSignatureResolved.getName().toUpperCase() : functionName);
         final Algo_INVOKEUNINTERPRETED metaDelegate = 
-        new Algo_INVOKEUNINTERPRETED(methodSignatureResolved, functionNameDflt);
+            new Algo_INVOKEUNINTERPRETED(methodSignatureResolved, functionNameDflt);
         loadMetaDelegate(methodSignatureResolved, metaDelegate);
     }
 

@@ -179,7 +179,6 @@ public final class Run {
         private TraceTypes traceKind;
         private boolean isBranch;
         private boolean mayPrint;
-        private boolean postInitial = false;
 
         /**
          * Determines whether the stack size of the current state 
@@ -244,12 +243,6 @@ public final class Run {
             return stop;
         }
         
-        @Override
-        public boolean atInitial() {
-        	this.postInitial = true;
-        	return super.atInitial();
-        }
-
         @Override
         public boolean atTraceStart() {
             //scope not yet exhausted
@@ -353,14 +346,14 @@ public final class Run {
         public boolean atStepPost() {
             final State currentState = Run.this.engine.getCurrentState();
             
-            if (this.postInitial && !Run.this.guidance.isGuidanceEnded()) {
-            	try {
-					Run.this.guidance.step(currentState);
-				} catch (GuidanceException e) {
-	                Run.this.err(ERROR_UNEXPECTED);
-	                Run.this.err(e);
-	                return true;
-				}
+            try {
+            	if (Run.this.guidance != null) {
+            		Run.this.guidance.step(currentState);
+            	}
+            } catch (GuidanceException e) {
+            	Run.this.err(ERROR_UNEXPECTED);
+            	Run.this.err(e);
+            	return true;
             }
             
             //if a resolved reference has not been expanded, prints a warning
