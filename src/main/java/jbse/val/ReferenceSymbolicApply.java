@@ -10,7 +10,7 @@ import jbse.val.exc.InvalidOperandException;
  * 
  * @author Pietro Braione
  */
-public final class ReferenceSymbolicApply extends ReferenceSymbolic {
+public final class ReferenceSymbolicApply extends ReferenceSymbolic implements SymbolicApply {
     //pure functions 
     //TODO move them elsewhere? should make an enum? (no special advantage in both)
     
@@ -77,10 +77,12 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic {
 		this.toString = buf.toString();
 	}
 
+	@Override
 	public String getOperator() {
 		return this.operator;
 	}
 
+	@Override
 	public Value[] getArgs() {
 		return this.args.clone();
 	}

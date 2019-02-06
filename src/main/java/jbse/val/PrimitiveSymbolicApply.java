@@ -34,7 +34,7 @@ import jbse.val.exc.InvalidTypeException;
  * 
  * @author Pietro Braione
  */
-public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed {
+public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed implements SymbolicApply {
     //pure functions implemented in java.lang.StrictMath 
     
     /** Absolute value (double) */
@@ -163,17 +163,16 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed {
 		this.toString = buf.toString();
 	}
 	
+	@Override
 	public String getOperator() {
 		return this.operator;
 	}
 
+	@Override
 	public Value[] getArgs() {
 		return this.args.clone();
 	}
 	
-	    /**
-	     * {@inheritDoc}
-	     */
 	@Override
 	public Primitive doReplace(Primitive from, Primitive to) {
 	    final Value[] argsNew = new Value[this.args.length];
