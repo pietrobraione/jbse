@@ -65,7 +65,8 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 		buf.append(this.operator + "(");
 		boolean first = true;
 		for (Value v : this.args) {
-			buf.append((first ? "" : ",") + v.toString());
+			buf.append(first ? "" : ",");
+			buf.append(v.toString());
 			first = false;
 		}
 		if (historyPoint == null) {

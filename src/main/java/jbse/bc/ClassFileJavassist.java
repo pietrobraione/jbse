@@ -316,7 +316,7 @@ public class ClassFileJavassist extends ClassFile {
     }
     
     @Override
-    byte[] getBinaryFileContent() {
+    public byte[] getBinaryFileContent() {
         return this.bytecode;
     }
     

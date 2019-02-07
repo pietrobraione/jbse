@@ -63,7 +63,7 @@ abstract class ClassFilePrimitive extends ClassFile {
     }
 
     @Override
-    byte[] getBinaryFileContent() {
+    public byte[] getBinaryFileContent() {
         return null;
     }
 

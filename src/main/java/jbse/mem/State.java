@@ -83,6 +83,7 @@ import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
 import jbse.val.SymbolFactory;
+import jbse.val.Symbolic;
 import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
@@ -1865,7 +1866,7 @@ public final class State implements Cloneable {
             //builds a symbolic value from signature and name 
             //and assigns it to the field
             myObj.setFieldValue(fieldSignature, 
-                                createSymbolMemberField(fieldType, myObj.getOrigin(), fieldName));
+                                (Value) createSymbolMemberField(fieldType, myObj.getOrigin(), fieldName));
         }
     }
 
@@ -2552,7 +2553,7 @@ public final class State implements Cloneable {
             //builds a symbolic value from signature and name
             final String variableName = f.getLocalVariableDeclaredName(slot);
             if (slot == ROOT_THIS_SLOT && !isStatic) {
-                args[i] = createSymbolLocalVariable(Type.REFERENCE + currentClassName + Type.TYPEEND, variableName);
+                args[i] = (Value) createSymbolLocalVariable(Type.REFERENCE + currentClassName + Type.TYPEEND, variableName);
                 //must assume {ROOT}:this expands to nonnull object (were it null the frame would not exist!)
                 try {
                     assumeExpands((ReferenceSymbolic) args[i], currentClass);
@@ -2561,7 +2562,7 @@ public final class State implements Cloneable {
                     throw new UnexpectedInternalException(e);
                 }
             } else {
-                args[i] = createSymbolLocalVariable(paramsDescriptors[(isStatic ? i : i - 1)], variableName);
+                args[i] = (Value) createSymbolLocalVariable(paramsDescriptors[(isStatic ? i : i - 1)], variableName);
             }
 
             //next slot
@@ -3531,7 +3532,7 @@ public final class State implements Cloneable {
      *         according to {@code staticType}.
      * @throws FrozenStateException if the state is frozen.
      */
-    public Value createSymbolLocalVariable(String staticType, String variableName) 
+    public Symbolic createSymbolLocalVariable(String staticType, String variableName) 
     throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
@@ -3569,7 +3570,7 @@ public final class State implements Cloneable {
      *         according to {@code staticType}.
      * @throws FrozenStateException if the state is frozen.
      */
-    public Value createSymbolMemberField(String staticType, ReferenceSymbolic container, String fieldName) 
+    public Symbolic createSymbolMemberField(String staticType, ReferenceSymbolic container, String fieldName) 
     throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
@@ -3591,7 +3592,7 @@ public final class State implements Cloneable {
      *         according to {@code staticType}.
      * @throws FrozenStateException if the state is frozen.
      */
-    public Value createSymbolMemberArray(String staticType, ReferenceSymbolic container, Primitive index) 
+    public Symbolic createSymbolMemberArray(String staticType, ReferenceSymbolic container, Primitive index) 
     throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();

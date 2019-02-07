@@ -106,7 +106,7 @@ public final class ClassFileArray extends ClassFile {
     }
     
     @Override
-    byte[] getBinaryFileContent() {
+    public byte[] getBinaryFileContent() {
         return null;
     }
 

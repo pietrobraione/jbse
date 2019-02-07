@@ -9,7 +9,7 @@ import jbse.mem.Objekt;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * A SymbolFactory creates symbolic values for all the possible
+ * A SymbolFactory creates {@link Symbolic} values for all the possible
  * origin sources of symbols.
  * 
  * @author Pietro Braione
@@ -42,9 +42,9 @@ public final class SymbolFactory implements Cloneable {
 	 * @return a {@link PrimitiveSymbolic} or a {@link ReferenceSymbolic}
 	 *         according to {@code staticType}.
 	 */
-        public Value createSymbolLocalVariable(HistoryPoint historyPoint, String staticType, String variableName) {
+        public Symbolic createSymbolLocalVariable(HistoryPoint historyPoint, String staticType, String variableName) {
         try {
-            final Value retVal;
+            final Symbolic retVal;
             if (Type.isPrimitive(staticType)) {
                 retVal = new PrimitiveSymbolicLocalVariable(variableName, getNextIdPrimitiveSymbolic(), staticType.charAt(0), historyPoint, this.calc);
             } else {
@@ -83,9 +83,9 @@ public final class SymbolFactory implements Cloneable {
          * @return a {@link PrimitiveSymbolic} or a {@link ReferenceSymbolic}
          *         according to {@code staticType}.
          */
-	public Value createSymbolMemberField(String staticType, ReferenceSymbolic container, String fieldName) {
+	public Symbolic createSymbolMemberField(String staticType, ReferenceSymbolic container, String fieldName) {
         try {
-            final Value retVal;
+            final Symbolic retVal;
             if (Type.isPrimitive(staticType)) {
                 retVal = new PrimitiveSymbolicMemberField(container, fieldName, getNextIdPrimitiveSymbolic(), staticType.charAt(0), this.calc);
             } else {
@@ -111,9 +111,9 @@ public final class SymbolFactory implements Cloneable {
          * @return a {@link PrimitiveSymbolic} or a {@link ReferenceSymbolic}
          *         according to {@code staticType}.
          */
-        public Value createSymbolMemberArray(String staticType, ReferenceSymbolic container, Primitive index) {
+        public Symbolic createSymbolMemberArray(String staticType, ReferenceSymbolic container, Primitive index) {
         try {
-            final Value retVal;
+            final Symbolic retVal;
             if (Type.isPrimitive(staticType)) {
                 retVal = new PrimitiveSymbolicMemberArray(container, index, getNextIdPrimitiveSymbolic(), staticType.charAt(0), this.calc);
             } else {

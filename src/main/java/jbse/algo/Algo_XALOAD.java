@@ -175,7 +175,7 @@ StrategyUpdate_XALOAD> {
                                 try {
                                     final ClassFile memberClass = arrayToProcess.getType().getMemberClass();
                                     final String memberType = memberClass.getInternalTypeName(); 
-                                    val = state.createSymbolMemberArray(memberType, arrayToProcess.getOrigin(), this.index.add(arrayOffset));
+                                    val = (Value) state.createSymbolMemberArray(memberType, arrayToProcess.getOrigin(), this.index.add(arrayOffset));
                                 } catch (InvalidOperandException | InvalidTypeException exc) {
                                     //this should never happen
                                     failExecution(exc);

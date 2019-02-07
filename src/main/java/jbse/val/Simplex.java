@@ -66,7 +66,23 @@ public final class Simplex extends Primitive implements Cloneable {
         this.hashCode = result;
 
         //calculates toString
-        this.toString = this.value.toString();
+        if (type == Type.BOOLEAN) {
+        	this.toString = this.value.toString();
+        } else if (type == Type.BYTE) {
+        	this.toString = "(byte) " + this.value.toString();
+        } else if (type == Type.CHAR) {
+        	this.toString = "'" + this.value.toString() + "'";
+        } else if (type == Type.DOUBLE) {
+        	this.toString = this.value.toString() + "d";
+        } else if (type == Type.FLOAT) {
+        	this.toString = this.value.toString() + "f";
+        } else if (type == Type.INT) {
+        	this.toString = this.value.toString();
+        } else if (type == Type.LONG) {
+        	this.toString = this.value.toString() + "L";
+        } else { //type == Type.SHORT
+            this.toString = "(short) " + this.value.toString();
+        }
     }
 
     /**

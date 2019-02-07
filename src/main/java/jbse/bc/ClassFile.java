@@ -47,7 +47,7 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * @return a {@code byte[]} if {@link #isDummy()}, otherwise
      *         it may be {@code null}.
      */
-    abstract byte[] getBinaryFileContent();
+    public abstract byte[] getBinaryFileContent();
 
     /**
      * Returns the name of the source code file where this 

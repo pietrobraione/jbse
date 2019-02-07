@@ -155,11 +155,11 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed impl
 			buf.append((first ? "" : ",") + v.toString());
 			first = false;
 		}
-                buf.append(")");
-                if (historyPoint != null) {
-                    buf.append("@");
-                    buf.append(historyPoint.toString());
-                }
+		buf.append(")");
+		if (historyPoint != null) {
+			buf.append("@");
+			buf.append(historyPoint.toString());
+		}
 		this.toString = buf.toString();
 	}
 	

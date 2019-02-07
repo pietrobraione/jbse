@@ -161,7 +161,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                             val = ((Array.AccessOutcomeInValue) e).getValue();
                             if (val == null) {
                                 try {
-                                    val = state.createSymbolMemberArray(arrayToProcess.getType().getMemberClass().getClassName(), 
+                                    val = (Value) state.createSymbolMemberArray(arrayToProcess.getType().getMemberClass().getClassName(), 
                                                              arrayToProcess.getOrigin(), this.index.add(arrayOffset));
                                 } catch (InvalidOperandException | InvalidTypeException exc) {
                                     //this should never happen
