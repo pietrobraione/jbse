@@ -33,7 +33,7 @@ public final class KlassPseudoReference extends ReferenceSymbolic {
     
     @Override
     public String asOriginString() {
-        return "[" + this.classFile.toString() + "]";
+        return "[" + this.classFile.getClassName() + "]";
     }
 
     @Override

@@ -197,7 +197,9 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed impl
 	@Override
 	public String asOriginString() {
             final StringBuilder buf = new StringBuilder();
-            buf.append(this.operator + "(");
+            buf.append('<');
+            buf.append(this.operator);
+            buf.append('(');
             boolean first = true;
             for (Value v : this.args) {
                     buf.append((first ? "" : ",") + (v.isSymbolic() ? ((Symbolic) v).asOriginString() : v.toString()));
@@ -209,6 +211,7 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed impl
                 buf.append(")@");
                 buf.append(historyPoint().toString());
             }
+            buf.append('>');
             return buf.toString();
 	}
 	

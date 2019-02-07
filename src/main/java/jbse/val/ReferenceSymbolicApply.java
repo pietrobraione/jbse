@@ -95,7 +95,9 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 	@Override
 	public String asOriginString() {
             final StringBuilder buf = new StringBuilder();
-            buf.append(this.operator + "(");
+            buf.append('<');
+            buf.append(this.operator);
+            buf.append('(');
             boolean first = true;
             for (Value v : this.args) {
                     buf.append(first ? "" : ",");
@@ -108,6 +110,7 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
                 buf.append(")@");
                 buf.append(historyPoint().toString());
             }
+            buf.append('>');
             return buf.toString();
 	}
 	
