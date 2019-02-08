@@ -858,7 +858,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         	//gets JDI stack data
         	final int jdiStackSize = numFramesFromRootFrameConcrete();
         	final Method jdiMeth = this.currentStepEvent.location().method();
-        	final String jdiMethClassname = jdiMeth.toString().substring(0, jdiMeth.toString().indexOf(jdiMeth.name()) - 1);
+        	final String jdiMethClassname = jdiMeth.toString().substring(0, jdiMeth.toString().indexOf(jdiMeth.name() + '(') - 1).replace('.', '/');
         	final String jdiMethDescr = jdiMeth.signature();
         	final String jdiMethName = jdiMeth.name();
         	final int jdiProgramCounter = getCurrentCodeIndex();
@@ -866,7 +866,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         	//gets JBSE stack data
 			final int jbseStackSize = jbseState.getStackSize();
 			final Signature jbseMeth = jbseState.getCurrentMethodSignature();
-        	final String jbseMethClassname = jbseMeth.getClassName() == null ? null : jbseMeth.getClassName().replace('/', '.');
+        	final String jbseMethClassname = jbseMeth.getClassName() == null ? null : jbseMeth.getClassName();
         	final String jbseMethDescr = jbseMeth.getDescriptor() == null ? null : jbseMeth.getDescriptor();
         	final String jbseMethName = jbseMeth.getName() == null ? null : jbseMeth.getName();
         	final int jbseProgramCounter = jbseState.getPC();
