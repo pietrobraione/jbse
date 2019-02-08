@@ -811,7 +811,7 @@ public final class ArrayImpl extends ObjektImpl implements Array {
     	if (this.classFile.getMemberClass().getClassName().equals("char") && isSimple()) {
     		final StringBuilder buf = new StringBuilder();
     		for (AccessOutcomeIn e : this.entries) {
-    			buf.append(((AccessOutcomeInValue) e).getValue().toString());
+    			buf.append(((AccessOutcomeInValue) e).getValue().toString().substring(1, 2));
     		}
     		return buf.toString();
     	} else {
