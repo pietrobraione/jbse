@@ -152,7 +152,8 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed impl
 		buf.append(this.operator + "(");
 		boolean first = true;
 		for (Value v : this.args) {
-			buf.append((first ? "" : ",") + v.toString());
+			buf.append(first ? "" : ",");
+			buf.append(v.toString());
 			first = false;
 		}
 		buf.append(")");
@@ -202,7 +203,8 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed impl
             buf.append('(');
             boolean first = true;
             for (Value v : this.args) {
-                    buf.append((first ? "" : ",") + (v.isSymbolic() ? ((Symbolic) v).asOriginString() : v.toString()));
+                    buf.append(first ? "" : ",");
+                    buf.append(v.isSymbolic() ? ((Symbolic) v).asOriginString() : v.toString());
                     first = false;
             }
             if (historyPoint() == null) {

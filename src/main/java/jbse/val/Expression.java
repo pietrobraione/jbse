@@ -121,12 +121,11 @@ public final class Expression extends PrimitiveSymbolicComputed {
     
     private String stringify(boolean toString) {
         final StringBuilder retVal = new StringBuilder();
-        boolean parentheses = false;
+        boolean parentheses = true; //default
         if (this.firstOp != null) {
             if (this.firstOp instanceof Expression) {
-                parentheses = true; //default
                 final Operator firstOpOperator = ((Expression) this.firstOp).operator;
-                if (firstOpOperator.precedence() >= operator.precedence()) {
+                if (toString && firstOpOperator.precedence() >= operator.precedence()) {
                     parentheses = false;
                 } 
             }
@@ -134,27 +133,32 @@ public final class Expression extends PrimitiveSymbolicComputed {
             retVal.append((toString || !this.firstOp.isSymbolic()) ? this.firstOp.toString() : ((Symbolic) this.firstOp).asOriginString());
             retVal.append(parentheses ? ")" : "");
         }
-        retVal.append(" ");
+        if (toString) {
+        	retVal.append(" ");
+        }
         retVal.append(this.operator.toString());
-        retVal.append(" ");
-        parentheses = false;
+        if (toString) {
+        	retVal.append(" ");
+        }
+        parentheses = true; //default
         if (this.secondOp instanceof Expression) {
-            parentheses = true; //default
-            final Operator secondOpOperator = ((Expression) this.secondOp).operator;
-            if (secondOpOperator.precedence() > this.operator.precedence()) {
-                parentheses = false;
-            } else if (secondOpOperator.precedence() == this.operator.precedence()) {
-                if (secondOpOperator == this.operator) {
-                    if (this.operator == Operator.ADD || this.operator == Operator.SUB || this.operator == Operator.MUL) {
-                        parentheses = false;
-                    }
-                } else if (operator == Operator.MUL && secondOpOperator == Operator.DIV) {
-                    parentheses = false;
-                }
-            } else if (operator == Operator.ADD && secondOpOperator == Operator.SUB) {
-                parentheses = false;
-            } else if (operator == Operator.SUB && secondOpOperator == Operator.ADD) {
-                parentheses = false;
+            if (toString) {
+            	final Operator secondOpOperator = ((Expression) this.secondOp).operator;
+            	if (secondOpOperator.precedence() > this.operator.precedence()) {
+            		parentheses = false;
+            	} else if (secondOpOperator.precedence() == this.operator.precedence()) {
+            		if (secondOpOperator == this.operator) {
+            			if (this.operator == Operator.ADD || this.operator == Operator.SUB || this.operator == Operator.MUL) {
+            				parentheses = false;
+            			}
+            		} else if (operator == Operator.MUL && secondOpOperator == Operator.DIV) {
+            			parentheses = false;
+            		}
+            	} else if (operator == Operator.ADD && secondOpOperator == Operator.SUB) {
+            		parentheses = false;
+            	} else if (operator == Operator.SUB && secondOpOperator == Operator.ADD) {
+            		parentheses = false;
+            	}
             }
         }               
         retVal.append(parentheses ? "(" : "");
