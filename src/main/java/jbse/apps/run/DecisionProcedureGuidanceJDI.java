@@ -120,8 +120,8 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
      *        necessary to the execution.
      * @param stopSignature the {@link Signature} of a method. The guiding concrete execution 
      *        will stop at the entry of the {@code numberOfHits}-th invocation of the 
-     *        method whose signature is {@code stopSignature}, and the reached state will be used 
-     *        to answer queries.
+     *        method whose signature is {@code stopSignature}, and the reached state will be 
+     *        used as the initial one.
      * @param numberOfHits an {@code int} greater or equal to one.
      * @throws GuidanceException if something fails during creation (and the caller
      *         is to blame).
@@ -133,7 +133,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 
     private static final class JVMJDI extends JVM {
         private static final String ERROR_BAD_PATH = "Failed accessing through a memory access path.";
-        private static final String[] EXCLUDES = {"java.*", "javax.*", "sun.*", "com.sun.*", "org.*"};
+        private static final String[] EXCLUDES = {"java.*", "javax.*", "sun.*", "com.sun.*"};
         
         private final String methodStart;
         private final String methodStop;  
@@ -198,7 +198,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             return arguments;
         }
 
-        private void run() {
+        private void run() throws GuidanceException {
         	//sets event requests
             final EventRequestManager mgr = this.vm.eventRequestManager();
             final MethodEntryRequest menr = mgr.createMethodEntryRequest();
@@ -228,15 +228,20 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                         eventSet.resume();
                     }
                 } catch (InterruptedException e) {
-                    //TODO
+            		throw new GuidanceException(e);
+                    //TODO is it ok?
                 } catch (VMDisconnectedException e) {
-                    break;
+                	if (testMethodEntryFound) {
+                		return; //must not try to disable event requests
+                	} else {
+                		throw new GuidanceException(e);
+                	}
                 }
             }
             
             //disables event requests
-            menr.disable();
             mexr.disable();
+            menr.disable();
         }
 
         private boolean checkIfMethodEntry(Event event) {
