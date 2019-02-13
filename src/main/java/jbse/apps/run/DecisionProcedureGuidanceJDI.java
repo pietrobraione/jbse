@@ -334,11 +334,13 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             }
             final StringBuilder buf = new StringBuilder();
             String name = object.referenceType().name();
+            boolean isArray = false;
             while (name.endsWith("[]")) {
+            	isArray = true;
                 buf.append("[");
                 name = name.substring(0, name.length() - 2);
             }
-            buf.append(isPrimitiveOrVoidCanonicalName(name) ? toPrimitiveOrVoidInternalName(name) : (REFERENCE + internalClassName(name) + TYPEEND));
+            buf.append(isPrimitiveOrVoidCanonicalName(name) ? toPrimitiveOrVoidInternalName(name) : (isArray ? REFERENCE : "") + internalClassName(name) + (isArray ? TYPEEND : ""));
             return buf.toString();
         }
         

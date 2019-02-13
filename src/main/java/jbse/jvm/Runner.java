@@ -531,14 +531,13 @@ public class Runner {
         if (this.actions.atRoot()) { return; }
         //performs the symbolic execution loop
         while (true) {
-            if (this.engine.atInitialState()) {
-                if (this.actions.atInitial()) { return; }
-            }
-
             if (this.actions.atTraceStart()) { return; }
 
             //explores the trace
             while (this.engine.canStep() && currentStateIsInRunSubregion()) {
+                if (this.engine.atInitialState()) {
+                    if (this.actions.atInitial()) { return; }
+                }
                 if (this.engine.currentMethodChanged()) {
                     if (this.actions.atMethodPre()) { return; }
                 }
@@ -570,10 +569,6 @@ public class Runner {
                     if (this.actions.atNonexistingObservedVariablesException(e)) { return; }
 				} finally {
                     if (this.actions.atStepFinally()) { return; }
-                }
-                
-                if (this.engine.atInitialState()) {
-                    if (this.actions.atInitial()) { return; }
                 }
 
                 if (outOfScope()) {
