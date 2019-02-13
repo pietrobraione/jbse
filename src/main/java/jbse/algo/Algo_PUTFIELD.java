@@ -54,11 +54,13 @@ final class Algo_PUTFIELD extends Algo_PUTX {
         final boolean sameRuntimePackage = 
             currentClass.getDefiningClassLoader() == this.fieldClassResolved.getDefiningClassLoader() && currentClass.getPackageName().equals(this.fieldClassResolved.getPackageName());
         boolean isMemberOfASuperclassOfCurrentClass = false;
-        for (ClassFile cf : currentClass.getSuperclass().superclasses()) {
-            if (this.fieldClassResolved.equals(cf)) {
-                isMemberOfASuperclassOfCurrentClass = true;
-                break;
-            }
+        if (currentClass.getSuperclass() != null) {
+        	for (ClassFile cf : currentClass.getSuperclass().superclasses()) {
+        		if (this.fieldClassResolved.equals(cf)) {
+        			isMemberOfASuperclassOfCurrentClass = true;
+        			break;
+        		}
+        	}
         }
         if (this.fieldClassResolved.isFieldProtected(this.data.signature()) &&
             isMemberOfASuperclassOfCurrentClass && !sameRuntimePackage) {
