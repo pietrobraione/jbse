@@ -1,5 +1,7 @@
 package jbse.apps.run;
 
+import static jbse.common.Type.REFERENCE;
+import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.binaryClassName;
 import static jbse.common.Type.internalClassName;
 import static jbse.common.Type.isPrimitiveOrVoidCanonicalName;
@@ -135,8 +137,12 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         private static final String ERROR_BAD_PATH = "Failed accessing through a memory access path.";
         private static final String[] EXCLUDES = {"java.*", "javax.*", "sun.*", "com.sun.*"};
         
-        private final String methodStart;
-        private final String methodStop;  
+        private final String startMethodClassName;
+        private final String startMethodDescriptor;
+        private final String startMethodName;
+        private final String stopMethodClassName;
+        private final String stopMethodDescriptor;
+        private final String stopMethodName;  
         private final int numberOfHits;
         private final VirtualMachine vm;
         private boolean intoMethodRunnPar = false;
@@ -156,8 +162,12 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         public JVMJDI(Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits) 
         throws GuidanceException {
             super(calc, runnerParameters, stopSignature, numberOfHits);
-            this.methodStart = runnerParameters.getMethodSignature().getName();
-            this.methodStop = stopSignature.getName();
+            this.startMethodClassName = runnerParameters.getMethodSignature().getClassName();
+            this.startMethodDescriptor = runnerParameters.getMethodSignature().getDescriptor();
+            this.startMethodName = runnerParameters.getMethodSignature().getName();
+            this.stopMethodClassName = stopSignature.getClassName();
+            this.stopMethodDescriptor = stopSignature.getDescriptor();
+            this.stopMethodName = stopSignature.getName();
             this.numberOfHits = numberOfHits;
             this.vm = createVM(runnerParameters, stopSignature);
             run();
@@ -172,7 +182,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         		final String stringClassPath = String.join(File.pathSeparator, listClassPath.toArray(new String[0]));
         		final String mainClass = DecisionProcedureGuidanceJDILauncher.class.getName();
         		final String targetClass = binaryClassName(runnerParameters.getMethodSignature().getClassName());
-        		return launchTarget("-classpath \"" + stringClassPath + "\" " + mainClass + " " + targetClass + " " + this.methodStart);
+        		return launchTarget("-classpath \"" + stringClassPath + "\" " + mainClass + " " + targetClass + " " + this.startMethodName);
         	} catch (IOException e) {
         		throw new GuidanceException(e);
         	}
@@ -245,21 +255,37 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         }
 
         private boolean checkIfMethodEntry(Event event) {
-            if (event instanceof MethodExitEvent && 
-                (((MethodExitEvent) event).method().name().equals(this.methodStart))) {
-                this.intoMethodRunnPar = false;
+            if (event instanceof MethodExitEvent) {
+            	final Method jdiMeth = ((MethodExitEvent) event).method();
+            	final String jdiMethClassName = jdiMethodClassName(jdiMeth);
+            	final String jdiMethDescr = jdiMeth.signature();
+            	final String jdiMethName = jdiMeth.name();
+                if (this.startMethodClassName.equals(jdiMethClassName) &&
+                	this.startMethodDescriptor.equals(jdiMethDescr) &&
+                	this.startMethodName.equals(jdiMethName)) {
+                	this.intoMethodRunnPar = false;
+                }
             }
             if (event instanceof MethodEntryEvent) {
-                if (((MethodEntryEvent) event).method().name().equals(this.methodStart)) {
+            	final Method jdiMeth = ((MethodEntryEvent) event).method();
+            	final String jdiMethClassName = jdiMethodClassName(jdiMeth);
+            	final String jdiMethDescr = jdiMeth.signature();
+            	final String jdiMethName = jdiMeth.name();
+                if (this.startMethodClassName.equals(jdiMethClassName) &&
+                	this.startMethodDescriptor.equals(jdiMethDescr) &&
+                	this.startMethodName.equals(jdiMethName)) {
                     this.hitCounter = 0;
                     this.intoMethodRunnPar = true;
                 }
-                if (((MethodEntryEvent) event).method().name().equals(this.methodStop) && (this.intoMethodRunnPar)) {
+                if (this.stopMethodClassName.equals(jdiMethClassName) &&
+                    this.stopMethodDescriptor.equals(jdiMethDescr) &&
+                    this.stopMethodName.equals(jdiMethName) && 
+                    this.intoMethodRunnPar) {
                     ++this.hitCounter;
-                    if (this.hitCounter == this.numberOfHits){
+                    if (this.hitCounter == this.numberOfHits) {
                         this.methodEntryEvent = (MethodEntryEvent) event;
                         try {
-                        	this.numOfFramesAtMethodEntry = methodEntryEvent.thread().frameCount();
+                        	this.numOfFramesAtMethodEntry = this.methodEntryEvent.thread().frameCount();
 						} catch (IncompatibleThreadStateException e) {
 							throw new UnexpectedInternalException(e); 
 						}
@@ -312,7 +338,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                 buf.append("[");
                 name = name.substring(0, name.length() - 2);
             }
-            buf.append(isPrimitiveOrVoidCanonicalName(name) ? toPrimitiveOrVoidInternalName(name) : internalClassName(name));
+            buf.append(isPrimitiveOrVoidCanonicalName(name) ? toPrimitiveOrVoidInternalName(name) : (REFERENCE + internalClassName(name) + TYPEEND));
             return buf.toString();
         }
         
@@ -855,6 +881,10 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 				throw new GuidanceException(e); //TODO better exception!
         	}
 		}
+        
+        private static String jdiMethodClassName(Method jdiMeth) {
+        	return jdiMeth.toString().substring(0, jdiMeth.toString().indexOf(jdiMeth.name() + '(') - 1).replace('.', '/');
+        }
 
         private void checkAlignmentWithJbseOrThrowException(State jbseState) 
         throws FrozenStateException, GuidanceException, ThreadStackEmptyException, IncompatibleThreadStateException {
@@ -863,7 +893,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         	//gets JDI stack data
         	final int jdiStackSize = numFramesFromRootFrameConcrete();
         	final Method jdiMeth = this.currentStepEvent.location().method();
-        	final String jdiMethClassname = jdiMeth.toString().substring(0, jdiMeth.toString().indexOf(jdiMeth.name() + '(') - 1).replace('.', '/');
+        	final String jdiMethClassName = jdiMethodClassName(jdiMeth);
         	final String jdiMethDescr = jdiMeth.signature();
         	final String jdiMethName = jdiMeth.name();
         	final int jdiProgramCounter = getCurrentCodeIndex();
@@ -877,11 +907,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         	final int jbseProgramCounter = jbseState.getPC();
         	
         	if (jdiStackSize == jbseStackSize && jdiMethName.equals(jbseMethName) && 
-        		jdiMethDescr.equals(jbseMethDescr) && jdiMethClassname.equals(jbseMethClassname) &&
+        		jdiMethDescr.equals(jbseMethDescr) && jdiMethClassName.equals(jbseMethClassname) &&
         		jdiProgramCounter == jbseProgramCounter) {
         		return;
         	} else {
-				throw new GuidanceException("JDI alignment with JBSE failed unexpectedly: JBSE is at " + jbseState.getCurrentMethodSignature() + ":" + jbseProgramCounter + ", while JDI is at " + jdiMethClassname + ":" + jdiMethDescr + ":" + jdiMethName + ":" + jdiProgramCounter);
+				throw new GuidanceException("JDI alignment with JBSE failed unexpectedly: JBSE is at " + jbseState.getCurrentMethodSignature() + ":" + jbseProgramCounter + ", while JDI is at " + jdiMethClassName + ":" + jdiMethDescr + ":" + jdiMethName + ":" + jdiProgramCounter);
 			}	
         }
 
