@@ -529,12 +529,12 @@ public class Runner {
     ContradictionException, DecisionException, EngineStuckException, 
     FailureException, NonexistingObservedVariablesException  {
         if (this.actions.atRoot()) { return; }
-        if (this.engine.atInitialState()) {
-            if (this.actions.atInitial()) { return; }
-        }
-
         //performs the symbolic execution loop
         while (true) {
+            if (this.engine.atInitialState()) {
+                if (this.actions.atInitial()) { return; }
+            }
+
             if (this.actions.atTraceStart()) { return; }
 
             //explores the trace
