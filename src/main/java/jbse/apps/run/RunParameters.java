@@ -1378,12 +1378,16 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
-     * Adds class names to the set of not initialized classes.
+     * Adds class name patterns to the set of not initialized classes.
      * 
-     * @param notInitializedClasses a list of class names as a {@link String} varargs.
+     * @param notInitializedClasses a list of regular expressions indicating 
+     * class name patterns as a {@link String} varargs. All the classes matching
+     * at least one of the patterns will be assumed to be not inizialized before
+     * the initial symbolic execution state, with the exclusion of those that
+     * are explicitly initialized during the initialization phase.
      */
     public void addNotInitializedClasses(String... notInitializedClasses) {
-        this.repoInit.addNotInitializedClass(notInitializedClasses);
+        this.repoInit.addNotInitializedClassPattern(notInitializedClasses);
     }
 
     /**

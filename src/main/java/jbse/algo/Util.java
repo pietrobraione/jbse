@@ -854,12 +854,10 @@ public final class Util {
                 final boolean createSymbolicKlass;
                 final Assumption assumeInitialized;
                 if (this.s.phase() == Phase.PRE_INITIAL) {
-                    if (this.ctx.decisionProcedure.isSatInitialized(classFile)) {
-                        createSymbolicKlass = false;
-                        assumeInitialized = Assumption.INITIALIZED;
-                    } else {
-                        throw new ContradictionException("According to path condition class " + classFile.getClassName() + " should not be initialized before start of symbolic execution, but the initialization phase wants to initialize it.");
-                    }
+                	//every class in this phase must be assumed as initialized
+                	//before symbolic execution
+                	createSymbolicKlass = false;
+                	assumeInitialized = Assumption.INITIALIZED;
                 } else if (pure) {
                     createSymbolicKlass = false;
                     assumeInitialized = Assumption.NONE;
