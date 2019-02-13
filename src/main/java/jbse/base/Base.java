@@ -129,6 +129,16 @@ public final class Base {
     }
 
     /**
+     * Overriding implementation of {@link java.security.AccessController#doPrivileged(PrivilegedExceptionAction, AccessControlContext)}.
+     * @see java.security.AccessController#doPrivileged(PrivilegedExceptionAction, AccessControlContext)
+     */
+    private static Object base_JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION(PrivilegedAction<?> action, AccessControlContext context)
+    throws PrivilegedActionException {
+        //since JBSE does not enforce access control we just execute the action
+    	return action.run();
+    }
+
+    /**
      * Overriding implementation of {@link java.security.AccessController#getStackAccessControlContext()}.
      * @see java.security.AccessController#getStackAccessControlContext()
      */
