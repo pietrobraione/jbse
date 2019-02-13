@@ -1691,8 +1691,8 @@ public final class ClassHierarchy implements Cloneable {
         }
         
         //second case: all of the following must be true
-        //1- subMethod's class is a subclass of supMethod's class 
-        if (!sub.getSuperclass().isSubclass(sup)) {
+        //1- subMethod's class is a (proper) subclass of supMethod's class 
+        if (sub.getSuperclass() == null || !sub.getSuperclass().isSubclass(sup)) {
             return false;
         }
         
