@@ -127,6 +127,7 @@ StrategyUpdate_XALOAD> {
     @Override
     protected StrategyDecide<DecisionAlternative_XALOAD> decider() {
         return (state, result) -> { 
+            //TODO unify with Algo_SUN_UNSAFE_GETINTVOLATILE_Array and Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array
             boolean shouldRefine = false;
             boolean branchingDecision = false;
             boolean first = true; //just for formatting
@@ -151,9 +152,11 @@ StrategyUpdate_XALOAD> {
                     //this should never happen
                     failExecution("an initial array that backs another array is null");
                 }
+                Primitive indexPlusOffset = null;  //to keep the compiler happy
                 Collection<Array.AccessOutcome> entries = null; //to keep the compiler happy
                 try {
-                    entries = arrayToProcess.get(this.index.add(arrayOffset));
+                	indexPlusOffset = this.index.add(arrayOffset);
+                    entries = arrayToProcess.get(indexPlusOffset);
                 } catch (InvalidOperandException | InvalidTypeException e) {
                     //this should never happen
                     failExecution(e);
@@ -191,7 +194,7 @@ StrategyUpdate_XALOAD> {
                             final Expression accessCondition = (arrayAccessCondition == null ? 
                                                                 e.getAccessCondition() : 
                                                                 (Expression) arrayAccessCondition.and(e.getAccessCondition()));
-                            o = this.ctx.decisionProcedure.resolve_XALOAD(state, accessCondition, val, fresh, refToArrayToProcess, result);
+                            o = this.ctx.decisionProcedure.resolve_XALOAD(state, accessCondition, arrayToProcess.getIndex(), indexPlusOffset, val, fresh, refToArrayToProcess, result);
                         //TODO the next catch blocks should disappear, see comments on removing exceptions in jbse.dec.DecisionProcedureAlgorithms.doResolveReference
                         } catch (ClassFileNotFoundException exc) {
                             //TODO this exception should wrap a ClassNotFoundException
@@ -294,8 +297,10 @@ StrategyUpdate_XALOAD> {
                 Algo_XALOAD.this.refineRefExpands(state, altExpands); //implemented in Algo_XYLOAD_GETX
 
                 //assumes the array access expression (index in range)
-                final Primitive accessExpression = altExpands.getArrayAccessExpression();
-                state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
+                final Expression accessExpression = altExpands.getArrayAccessExpressionSimplified();
+            	if (accessExpression != null) {
+            		state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
+            	}
 
                 //if the value is fresh, writes it back in the array
                 if (altExpands.isValueFresh()) { //pleonastic: all unresolved symbolic references from an array are fresh
@@ -312,8 +317,10 @@ StrategyUpdate_XALOAD> {
                 Algo_XALOAD.this.refineRefAliases(state, altAliases); //implemented in Algo_XYLOAD_GETX
 
                 //assumes the array access expression (index in range)
-                final Primitive accessExpression = altAliases.getArrayAccessExpression();
-                state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));             
+                final Expression accessExpression = altAliases.getArrayAccessExpressionSimplified();
+            	if (accessExpression != null) {
+            		state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
+            	}
 
                 //if the value is fresh, writes it back in the array
                 if (altAliases.isValueFresh()) { //pleonastic: all unresolved symbolic references from an array are fresh
@@ -329,8 +336,10 @@ StrategyUpdate_XALOAD> {
                 Algo_XALOAD.this.refineRefNull(state, altNull); //implemented in Algo_XYLOAD_GETX
 
                 //further augments the path condition 
-                final Primitive accessExpression = altNull.getArrayAccessExpression();
-                state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
+                final Expression accessExpression = altNull.getArrayAccessExpressionSimplified();
+            	if (accessExpression != null) {
+            		state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
+            	}
 
                 //if the value is fresh, writes it back in the array
                 if (altNull.isValueFresh()) { //pleonastic: all unresolved symbolic references from an array are fresh
@@ -344,8 +353,10 @@ StrategyUpdate_XALOAD> {
             public void refineResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved)
             throws DecisionException, InvalidInputException {
                 //augments the path condition
-            	final Primitive accessExpression = altResolved.getArrayAccessExpression();
-                state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
+            	final Expression accessExpression = altResolved.getArrayAccessExpressionSimplified();
+            	if (accessExpression != null) {
+            		state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
+            	}
 
                 //if the value is fresh, writes it back in the array
                 if (altResolved.isValueFresh()) {
@@ -360,7 +371,10 @@ StrategyUpdate_XALOAD> {
             throws InvalidInputException {
                 //augments the path condition
                 try {
-					state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(altOut.getArrayAccessExpression()));
+                	final Expression accessExpression = altOut.getArrayAccessExpressionSimplified();
+                	if (accessExpression != null) {
+                		state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
+                	}
 				} catch (DecisionException e) { //TODO propagate this exception (...and replace with a better exception)
 					//this should never happen
 					failExecution(e);

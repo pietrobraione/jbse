@@ -120,8 +120,8 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
             //reconstructs the descriptor of the constructor
             final StringBuilder sbDescriptor = new StringBuilder("(");
             for (int i = 0; i < numOfConstructorParametersFormal; ++i) {
-                final AccessOutcomeInValue typeFormalAccess = (AccessOutcomeInValue) constructorParameterTypes.getFast(calc.valInt(i));
-                final Instance_JAVA_CLASS typeFormalJavaClass = (Instance_JAVA_CLASS) state.getObject((Reference) typeFormalAccess.getValue());
+                final Reference typeFormalJavaClassReference = (Reference) ((AccessOutcomeInValue) constructorParameterTypes.getFast(calc.valInt(i))).getValue();
+                final Instance_JAVA_CLASS typeFormalJavaClass = (Instance_JAVA_CLASS) state.getObject(typeFormalJavaClassReference);
                 final ClassFile typeFormal = typeFormalJavaClass.representedClass();
                 sbDescriptor.append(typeFormal.getInternalTypeName());
             }
@@ -148,9 +148,9 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
                 if (numOfConstructorParametersFormal == numOfConstructorParametersActual) {
                     this.params = new Value[numOfConstructorParametersActual + 1]; //one more for 'this' (the new object)
                     for (int i = 0; i < numOfConstructorParametersActual; ++i) {
-                        final AccessOutcomeInValue typeFormal = (AccessOutcomeInValue) constructorParameterTypes.getFast(calc.valInt(i));
-                        final AccessOutcomeInValue actual = (AccessOutcomeInValue) constructorParameters.getFast(calc.valInt(i));
-                        final Value actualConverted = checkAndConvert(state, (Reference) typeFormal.getValue(), (Reference) actual.getValue());
+                        final Reference refTypeFormal = (Reference) ((AccessOutcomeInValue) constructorParameterTypes.getFast(calc.valInt(i))).getValue();
+                        final Reference refValActual = (Reference) ((AccessOutcomeInValue) constructorParameters.getFast(calc.valInt(i))).getValue();
+                        final Value actualConverted = checkAndConvert(state, refTypeFormal, refValActual);
                         this.params[i + 1] = actualConverted;
                     }
                 } else {

@@ -465,6 +465,11 @@ public final class ArrayImpl extends ObjektImpl implements Array {
     public Primitive getLength() {
         return (Primitive) getFieldValue(this.lengthSignature);
     }
+    
+    @Override
+    public Term getIndex() {
+    	return this.INDEX;
+    }
 
     @Override
     public boolean hasSimpleRep() {
@@ -538,13 +543,14 @@ public final class ArrayImpl extends ObjektImpl implements Array {
                         retVal.add(new AccessOutcomeInInitialArrayImpl(eCast.getInitialArray(), eCast.getOffset()));						
                     }
                 } else if (inRangeEntry.surelyFalse()) {
-                    //do nothing
+                    //do nothing (not returned in the result)
                 } else { //inRangeEntry is possibly satisfiable
+                	//TODO is the next block equivalent to just cloning e?
                     if (e instanceof AccessOutcomeInValue) {
-                        retVal.add(new AccessOutcomeInValueImpl((Expression) inRangeEntry, ((AccessOutcomeInValue) e).getValue()));
+                        retVal.add(new AccessOutcomeInValueImpl(e.getAccessCondition(), ((AccessOutcomeInValue) e).getValue()));
                     } else { //e instanceof AccessOutcomeInInitialArray
                         final AccessOutcomeInInitialArray eCast = (AccessOutcomeInInitialArray) e;
-                        retVal.add(new AccessOutcomeInInitialArrayImpl((Expression) inRangeEntry, eCast.getInitialArray(), eCast.getOffset()));						
+                        retVal.add(new AccessOutcomeInInitialArrayImpl(e.getAccessCondition(), eCast.getInitialArray(), eCast.getOffset()));						
                     }
                 }
             }

@@ -1,8 +1,10 @@
 package jbse.tree;
 
 import jbse.mem.Util;
+import jbse.val.Expression;
 import jbse.val.Primitive;
 import jbse.val.Reference;
+import jbse.val.Term;
 import jbse.val.Value;
 
 /**
@@ -23,7 +25,16 @@ extends DecisionAlternative_XALOAD_In implements DecisionAlternative_XYLOAD_GETX
     /**
      * Constructor, nonconcrete.
      * 
-     * @param arrayAccessExpression the array access {@link Primitive}.
+	 * @param arrayAccessExpression an {@link Expression} containing {@code indexFormal}, 
+	 *        signifying the condition under which the array access yields {@code valToLoad} 
+	 *        as result. It can be {@code null}, in which case it is equivalent to {@code true} but 
+	 *        additionally denotes the fact that the array was accessed by a concrete index.
+	 * @param indexFormal the {@link Term} used in {@code accessExpression} to indicate
+	 *        the array index. It must not be {@code null}.
+	 * @param indexActual a {@link Primitive}, the actual index used to access the array.
+	 *        It must not be {@code null}.
+	 * @param arrayAccessExpressionSimplified a simplification of {@code arrayAccessExpression}, 
+	 *        or {@code null} if {@code arrayAccessExpression} simplifies to {@code true}.
      * @param valueToLoad the {@link Value} loaded from the array.
      * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
      *        is not stored in the array and, therefore, must be written
@@ -32,8 +43,8 @@ extends DecisionAlternative_XALOAD_In implements DecisionAlternative_XYLOAD_GETX
      *        where {@code valueToLoad} originates from.
      * @param branchNumber an {@code int}, the branch number.
      */
-    public DecisionAlternative_XALOAD_Resolved(Primitive arrayAccessExpression, Value valueToLoad, boolean fresh, Reference arrayReference, int branchNumber) {
-        super(ALT_CODE + "_Resolved:" + arrayAccessExpression, arrayAccessExpression, fresh, arrayReference, branchNumber);
+    public DecisionAlternative_XALOAD_Resolved(Expression arrayAccessExpression, Term indexFormal, Primitive indexActual, Expression arrayAccessExpressionSimplified, Value valueToLoad, boolean fresh, Reference arrayReference, int branchNumber) {
+        super(ALT_CODE + "_Resolved:" + arrayAccessExpression, arrayAccessExpression, indexFormal, indexActual, arrayAccessExpressionSimplified, fresh, arrayReference, branchNumber);
         this.valueToLoad = valueToLoad;
         this.isTrivial = (arrayAccessExpression == null);
         this.isConcrete = this.isTrivial && !Util.isSymbolicReference(valueToLoad);
@@ -51,10 +62,12 @@ extends DecisionAlternative_XALOAD_In implements DecisionAlternative_XYLOAD_GETX
      * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
      *        is not stored in the array and, therefore, must be written
      *        back to the array.
+     * @param arrayReference when {@code fresh == true} is a {@link Reference} to the array 
+     *        where {@code valueToLoad} originates from.
      * @param branchNumber an {@code int}, the branch number.
      */
-    public DecisionAlternative_XALOAD_Resolved(Value valueToLoad, boolean fresh, Reference arrayToWriteBack, int branchNumber) {
-        this(null, valueToLoad, fresh, arrayToWriteBack, branchNumber);
+    public DecisionAlternative_XALOAD_Resolved(Value valueToLoad, boolean fresh, Reference arrayReference, int branchNumber) {
+        this(null, null, null, null, valueToLoad, fresh, arrayReference, branchNumber);
     }
 
     @Override

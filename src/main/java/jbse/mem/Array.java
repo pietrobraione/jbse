@@ -206,6 +206,14 @@ public interface Array extends Objekt {
      *         of the array.
      */
     Primitive getLength();
+    
+    /**
+     * Returns the {@link Term} used to indicate the 
+     * index in the entries.
+     * 
+     * @return a {@link Term}.
+     */
+    Term getIndex();
 
     /**
      * Checks whether the array has a simple representation, allowing
@@ -255,8 +263,9 @@ public interface Array extends Objekt {
      * @param index the index of the element in the array, a {@code Primitive}
      *        with type {@code int}.
      * @return a {@link Collection}{@code <}{@link AccessOutcome}{@code >}, 
-     *         whose {@link AccessOutcome#getExpression}s are specialized on 
-     *         {@code index} but are possibly not satisfiable.
+     *         whose {@link AccessOutcome#getAccessCondition}s might be
+     *         set to {@code null} if they can be trivially decided to be
+     *         satified.
      * @throws InvalidOperandException if {@code index} is {@code null}.
      * @throws InvalidTypeException if {@code index} has not {@code int} type.
      */

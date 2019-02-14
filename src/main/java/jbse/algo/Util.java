@@ -916,8 +916,8 @@ public final class Util {
         /**
          * Phase 2 inits the constant fields for all the {@link Klass} objects
          * created during phase 1; Note that we do not care about the initialization  
-         * of {@code java.lang.String} if we meet some {@code String} constant, since
-         * the class is explicitly initialized by the init algorithm.
+         * of the {@code java.lang.String} class if we meet some {@code String} constant, 
+         * since the class is explicitly initialized by the init algorithm.
          * 
          * @throws DecisionException if the decision procedure fails.
          * @throws HeapMemoryExhaustedException if during phase 2 heap memory ends.

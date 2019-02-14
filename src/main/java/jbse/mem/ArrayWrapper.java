@@ -15,6 +15,7 @@ import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
+import jbse.val.Term;
 import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
@@ -119,6 +120,11 @@ final class ArrayWrapper extends ObjektWrapper<ArrayImpl> implements Array {
 	@Override
 	public Primitive getLength() {
 		return getDelegate().getLength();
+	}
+	
+	@Override
+	public Term getIndex() {
+		return getDelegate().getIndex();
 	}
 
 	@Override

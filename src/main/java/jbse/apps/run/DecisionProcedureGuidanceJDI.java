@@ -9,6 +9,9 @@ import static jbse.common.Type.toPrimitiveOrVoidInternalName;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -58,6 +61,8 @@ import com.sun.jdi.request.StepRequest;
 
 import jbse.bc.Opcodes;
 import jbse.bc.Signature;
+import jbse.common.Type;
+import jbse.common.Util;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.jvm.Runner;
@@ -158,6 +163,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		private boolean lookAheadDecisionIsDefaultCase;
 		private int lookAheadDecisionCaseValue;
 		private ObjectReference lookAheadUnintFuncNonPrimitiveRetValue;
+		private int previousCodeIndex, previousCodeIndex2; //one and two before
 
         public JVMJDI(Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits) 
         throws GuidanceException {
@@ -523,11 +529,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			if (this.jdiIsWaitingForJBSE) {
 				return super.eval_XSWITCH(da, selector, tab);
 			}
-
-			if (!this.lookAheadDone) {
-				exec_XSWITCH_lookAhead();
-			}
-				
+			exec_XSWITCH_lookAhead();	
         	return this.calc.valBoolean((da.isDefault() && this.lookAheadDecisionIsDefaultCase) || da.value() == this.lookAheadDecisionCaseValue);
         }
         
@@ -536,11 +538,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         	if (this.jdiIsWaitingForJBSE) {
 				return super.eval_XNEWARRAY(da, countsNonNegative);
 			}
-
-			if (!this.lookAheadDone) {
-				exec_XNEWARRAY_lookAhead();
-			}
-				
+        	exec_XNEWARRAY_lookAhead();	
 			return this.calc.valBoolean(da.ok() == this.lookAheadDecisionBoolean);
         }
 
@@ -549,29 +547,42 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         	if (this.jdiIsWaitingForJBSE) {
 				return super.eval_XASTORE(da, inRange);
 			}
-
-			if (!this.lookAheadDone) {
-				exec_XASTORE_lookAhead();
-			}
-				
+        	exec_XASTORE_lookAhead();
 			return this.calc.valBoolean(da.isInRange() == this.lookAheadDecisionBoolean);
         }
 
         @Override
         public Primitive eval_XALOAD(DecisionAlternative_XALOAD da) throws GuidanceException {
+			//Note that handling the identification of the actual array range that is being loaded is
+        	//hard because it cannot be inferred by performing lookahead (XALOAD bytecodes jump only
+        	//on out-of-range) and it is not possible to spy via JDI the top of the operand stack to
+        	//get the index and determine whether the access is ok.
+        	//Our partial solution is to perform lookahead nevertheless to distinguish the out-of-range
+        	//case, and if we are not in such case, to read the bytecode before the current one, in hope
+        	//that it reveals that the index was taken from a local variable.
         	if (this.jdiIsWaitingForJBSE) {
 				return super.eval_XALOAD(da);
 			}
-
-			if (!this.lookAheadDone) {
-				exec_XALOAD_lookAhead();
-			}
-				
-			return this.calc.valBoolean(
+        	exec_XALOAD_lookAhead();
+        	if (this.lookAheadDecisionBoolean) {
+        		//in range: tries to determine the index and to use it to 
+        		//decide the array access expression of da
+        		final Primitive index = tryGet_XALOAD_index();
+        		if (index != null) {
+        			final Primitive accessExpressionOnConcreteIndex = da.getArrayAccessExpression().doReplace(da.getIndexFormal(), index);
+        			if (accessExpressionOnConcreteIndex instanceof Simplex) {
+        				return accessExpressionOnConcreteIndex;
+        			}
+        		}
+        		//if fails, falls back on accepting all the DecisionAlternative_XALOAD_In
+        		return this.calc.valBoolean(da instanceof DecisionAlternative_XALOAD_In);
+        	} else {
+        		return this.calc.valBoolean(da instanceof DecisionAlternative_XALOAD_Out);
+        	}
+			/*return this.calc.valBoolean(
 					(da instanceof DecisionAlternative_XALOAD_In && this.lookAheadDecisionBoolean) ||
-					(da instanceof DecisionAlternative_XALOAD_Out && !this.lookAheadDecisionBoolean));
+					(da instanceof DecisionAlternative_XALOAD_Out && !this.lookAheadDecisionBoolean));*/
         
-			//TODO: currently we do not handle the identification of the actual array range that is being loaded, thus the decision procedure may produce more than one alternative
         }
 
         /**
@@ -580,8 +591,9 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
          * @param doStepInto if {@code true} and the current bytecode is an INVOKEX bytecode,
          *        steps into the invoked method; if {@code false} and the current bytecode is 
          *        an INVOKEX bytecode, steps over.
+         * @throws GuidanceException 
          */
-		private void doStep(boolean doStepInto) {
+		private void doStep(boolean doStepInto) throws GuidanceException {
 			final int stepDepth = doStepInto ? StepRequest.STEP_INTO : StepRequest.STEP_OVER;
 
 			final ThreadReference thread = this.methodEntryEvent.thread();
@@ -589,6 +601,8 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			final StepRequest sr = mgr.createStepRequest(thread, StepRequest.STEP_MIN, stepDepth);
 			sr.enable();
 
+			this.previousCodeIndex2 = this.previousCodeIndex;
+			this.previousCodeIndex = getCurrentCodeIndex();
 			this.vm.resume();
 			final EventQueue queue = this.vm.eventQueue();
 
@@ -608,10 +622,8 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 					if (!stepFound) {
 						eventSet.resume();
 					}
-				} catch (InterruptedException e) {
-					throw new UnexpectedInternalException(e);
-				} catch (VMDisconnectedException e) {
-					break;
+				} catch (InterruptedException | VMDisconnectedException e) {
+					throw new GuidanceException(e);
 				}
 			}
 
@@ -623,13 +635,14 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 				return;
 			}
 			
-			final byte[] bc = getCurrentBytecode();
+			//checks
 			final int currentCodeIndex = getCurrentCodeIndex();
-
+			final byte[] bc = getCurrentBytecode();
 			if (bc[currentCodeIndex] < Opcodes.OP_INVOKEVIRTUAL && bc[currentCodeIndex] > Opcodes.OP_INVOKEDYNAMIC) {
 				throw new GuidanceException("Wrong step alignment: JBSE is at INVOKE statement, while JDI's OPCODE is " + bc[currentCodeIndex]);
 			}
 
+			//steps and decides
 			try {
 				final int intialFrames = this.currentStepEvent.thread().frameCount();
 				doStep(true); //true -> StepInto  
@@ -649,12 +662,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			} catch (IncompatibleThreadStateException e) {
 				throw new GuidanceException(e);
 			}
-
 			this.lookAheadDone = true;
         }
 
 
-		private Value stepUpToMethodExit() throws IncompatibleThreadStateException {
+		private Value stepUpToMethodExit() throws IncompatibleThreadStateException, GuidanceException {
 			final int currFrames = this.currentStepEvent.thread().frameCount();
 			
         	final EventRequestManager mgr = this.vm.eventRequestManager();
@@ -685,9 +697,10 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         				eventSet.resume();
         			}
         		} catch (InterruptedException e) {
-        			// TODO
+            		throw new GuidanceException(e);
+                    //TODO is it ok?
         		} catch (VMDisconnectedException e) {
-        			break;
+            		throw new GuidanceException(e);
         		}
         	}
 
@@ -699,15 +712,20 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			if (this.lookAheadDone) {
 				return;
 			}
-			final byte[] bc = getCurrentBytecode();
-			final int currentCodeIndex = getCurrentCodeIndex();
 
+			//checks
+			final int currentCodeIndex = getCurrentCodeIndex();
+			final byte[] bc = getCurrentBytecode();
 			if (bc[currentCodeIndex] < Opcodes.OP_IFEQ && bc[currentCodeIndex] > Opcodes.OP_IF_ACMPNE) {
 				throw new GuidanceException("Wrong step alignment: JBSE is at IF statement, while JDI's OPCODE is " + bc[currentCodeIndex]);
 			}
 
+			//steps
+			lookAhead();
+			
+			//takes the decision
+			final int newOffset = getCurrentCodeIndex();
 			final int jumpOffset = currentCodeIndex + bytecodesToInt(bc, currentCodeIndex + 1, 2);
-			final int newOffset = lookAhead();
 			this.lookAheadDecisionBoolean = (newOffset == jumpOffset); 
         }
                 
@@ -715,17 +733,21 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			if (this.lookAheadDone) {
 				return;
 			}
-			final byte[] bc = getCurrentBytecode();
-			final int currentCodeIndex = getCurrentCodeIndex();
 
+			//checks
+			final int currentCodeIndex = getCurrentCodeIndex();
+			final byte[] bc = getCurrentBytecode();
 			if (bc[currentCodeIndex] != Opcodes.OP_LOOKUPSWITCH && bc[currentCodeIndex] != Opcodes.OP_TABLESWITCH) {
 				throw new GuidanceException("Wrong step alignment: JBSE is at SWITCH statament, while JDI's OPCODE is " + bc[currentCodeIndex]);
 			}
 
-			final int newOffset = lookAhead();
+			//steps
+			lookAhead();
+			
+			//takes the decision
+			final int newOffset = getCurrentCodeIndex();
 			final int padding = 3 - (currentCodeIndex % 4);
 			int nextParamStartIndex = currentCodeIndex + padding + 1;
-
 			final int defaultCaseOffset = currentCodeIndex + bytecodesToInt(bc, nextParamStartIndex, 4);
 			nextParamStartIndex += 4;
 			if (newOffset == defaultCaseOffset) {
@@ -733,7 +755,6 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 				return;
 			} 
 			this.lookAheadDecisionIsDefaultCase = false; 
-
 			if (bc[currentCodeIndex] == Opcodes.OP_LOOKUPSWITCH) {
 				int npairs = bytecodesToInt(bc, nextParamStartIndex, 4); 
 				nextParamStartIndex += 4;		
@@ -747,7 +768,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 						return;
 					}
 				}
-			} else { //Opcodes.TABLESWITCH
+			} else { //(bc[currentCodeIndex] == Opcodes.OP_TABLESWITCH)
 				final int low = bytecodesToInt(bc, nextParamStartIndex, 4); 
 				final int high = bytecodesToInt(bc, nextParamStartIndex + 4, 4); 
 				final int entries = high - low; 
@@ -770,28 +791,134 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			if (this.lookAheadDone) {
 				return;
 			}
-			final byte[] bc = getCurrentBytecode();
+			
+			//checks
 			final int currentCodeIndex = getCurrentCodeIndex();
-
+			final byte[] bc = getCurrentBytecode();
 			if (bc[currentCodeIndex] < Opcodes.OP_IALOAD && bc[currentCodeIndex] > Opcodes.OP_SALOAD) {
 				throw new GuidanceException("Wrong step alignment: JBSE is at XALOAD statement, while JDI's OPCODE is " + bc[currentCodeIndex]);
 			}
 
-			checkAdvanceToImmediateSuccessor(currentCodeIndex + 1);
+			//steps
+			lookAhead();
+			
+			//takes the decision
+			calcLookaheadDecision(currentCodeIndex + 1);
         }
 
+        private final static short JDWP_INVALID_SLOT = (short) 35;
+        
+        private Primitive tryGet_XALOAD_index() throws GuidanceException {
+			final byte[] bc = getCurrentBytecode();
+			if (bc[this.previousCodeIndex2] != Opcodes.OP_ILOAD && (bc[this.previousCodeIndex2] < Opcodes.OP_ILOAD_0 || bc[this.previousCodeIndex2] > Opcodes.OP_ILOAD_3)) {
+				return null; //gives up
+			}
+			
+			//determine the index of the local variable
+			final int localVariableIndex;
+			if (bc[this.previousCodeIndex2] == Opcodes.OP_ILOAD_0) {
+				localVariableIndex = 0;
+			} else if (bc[this.previousCodeIndex2] == Opcodes.OP_ILOAD_1) {
+				localVariableIndex = 1;
+			} else if (bc[this.previousCodeIndex2] == Opcodes.OP_ILOAD_2) {
+				localVariableIndex = 2;
+			} else if (bc[this.previousCodeIndex2] == Opcodes.OP_ILOAD_3) {
+				localVariableIndex = 3;
+			} else {
+				localVariableIndex = (this.previousCodeIndex2 + 2 == this.previousCodeIndex ? bc[this.previousCodeIndex2 + 1] : Util.byteCat(bc[this.previousCodeIndex2 + 1], bc[this.previousCodeIndex2 + 2]));
+			}
+			
+			//gets the index
+			try {
+				final String getValuesClassName = "com.sun.tools.jdi.JDWP$StackFrame$GetValues";
+				final Class<?> ourSlotInfoClass = Class.forName(getValuesClassName + "$SlotInfo");
+				final Constructor<?> slotInfoConstructor = ourSlotInfoClass.getDeclaredConstructor(int.class, byte.class);
+				slotInfoConstructor.setAccessible(true);
+
+				final Class<?> ourGetValuesClass = Class.forName(getValuesClassName);
+				final java.lang.reflect.Method ourEnqueueMethod = getDeclaredMethodByName(ourGetValuesClass, "enqueueCommand");
+				final java.lang.reflect.Method ourWaitForReplyMethod = getDeclaredMethodByName(ourGetValuesClass, "waitForReply");
+
+				final StackFrame frame = this.currentStepEvent.thread().frame(0);
+
+				final java.lang.reflect.Field frameIdField = frame.getClass().getDeclaredField("id");
+				frameIdField.setAccessible(true);
+				final Long frameId = frameIdField.getLong(frame);
+				final VirtualMachine vm = frame.virtualMachine();
+				final java.lang.reflect.Method stateMethod = vm.getClass().getDeclaredMethod("state");
+				stateMethod.setAccessible(true);
+
+				final Object slotInfoArray = Array.newInstance(ourSlotInfoClass, 1);
+				final Object info = slotInfoConstructor.newInstance(localVariableIndex, (byte) Type.INT);
+				Array.set(slotInfoArray, 0, info);
+				Object ps;
+				final Object vmState = stateMethod.invoke(vm);
+				synchronized(vmState) {
+					ps = ourEnqueueMethod.invoke(null, vm, frame.thread(), frameId, slotInfoArray);
+				}
+
+				final Object reply;
+				try {
+					reply = ourWaitForReplyMethod.invoke(null, vm, ps);
+				} catch (InvocationTargetException e) {
+					final String jdwpExceptionClassName = "com.sun.tools.jdi.JDWPException";
+					if (jdwpExceptionClassName.equals(e.getTargetException().getClass().getName())) {
+						final Class<?> jdwpExceptionClass = Class.forName(jdwpExceptionClassName);
+						final java.lang.reflect.Field errorCodeField = jdwpExceptionClass.getDeclaredField("errorCode");
+						errorCodeField.setAccessible(true);
+						final short errorCode = errorCodeField.getShort(e.getTargetException());
+						if (errorCode == JDWP_INVALID_SLOT) {
+							return null; //give up
+						}
+					}
+					throw new GuidanceException(e);
+				}
+				final java.lang.reflect.Field replyValuesField = reply.getClass().getDeclaredField("values");
+				replyValuesField.setAccessible(true);
+				final com.sun.jdi.Value[] values = (com.sun.jdi.Value[]) replyValuesField.get(reply);
+				if (values.length != 1) {
+					throw new GuidanceException("Wrong number of values returned from target VM");
+				}
+				com.sun.jdi.Value jdiIndex = values[0];
+			      
+				
+				return this.calc.valInt(((IntegerValue) jdiIndex).intValue());
+			} catch (IncompatibleThreadStateException | IndexOutOfBoundsException | ClassCastException e) {
+				throw new GuidanceException(e);
+			} catch (ClassNotFoundException | NoSuchMethodException | SecurityException | NoSuchFieldException | 
+					IllegalArgumentException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
+				//this should never happen
+				throw new UnexpectedInternalException(e);
+			}
+        }
+        
+        private static java.lang.reflect.Method getDeclaredMethodByName(Class<?> aClass, String methodName) throws NoSuchMethodException {
+        	for (java.lang.reflect.Method method : aClass.getDeclaredMethods()) {
+        		if (methodName.equals(method.getName())) {
+        			method.setAccessible(true);
+        			return method;
+        		}
+        	}
+        	throw new NoSuchMethodException(aClass.getName() + "." + methodName);
+        }
+        
         private void exec_XNEWARRAY_lookAhead() throws GuidanceException {
 			if (this.lookAheadDone) {
 				return;
 			}
-			
-			final byte[] bc = getCurrentBytecode();
+						
+			//check
 			final int currentCodeIndex = getCurrentCodeIndex();
+			final byte[] bc = getCurrentBytecode();
 			if (bc[currentCodeIndex] != Opcodes.OP_NEWARRAY && bc[currentCodeIndex] != Opcodes.OP_ANEWARRAY) {
 				throw new GuidanceException("Wrong step alignment: JBSE is at XNEWARRAY statement, while JDI's OPCODE is " + bc[currentCodeIndex]);
 			}
 
-			checkAdvanceToImmediateSuccessor(currentCodeIndex + (bc[currentCodeIndex] == Opcodes.OP_NEWARRAY ? 2 : 3));
+			//steps
+			lookAhead();
+			
+			//takes the decision
+			calcLookaheadDecision(currentCodeIndex + (bc[currentCodeIndex] == Opcodes.OP_NEWARRAY ? 2 : 3));
         }
 
         private void exec_XASTORE_lookAhead() throws GuidanceException {
@@ -799,24 +926,28 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 				return;
 			}
 			
-			final byte[] bc = getCurrentBytecode();
+			//check
 			final int currentCodeIndex = getCurrentCodeIndex();
+			final byte[] bc = getCurrentBytecode();
 			if (bc[currentCodeIndex] < Opcodes.OP_IASTORE && bc[currentCodeIndex] > Opcodes.OP_SASTORE) {
 				throw new GuidanceException("Wrong step alignment: JBSE is at XASTORE statement, while JDI's OPCODE is " + bc[currentCodeIndex]);
 			}
 
-			checkAdvanceToImmediateSuccessor(currentCodeIndex + 1);
+			//steps
+			lookAhead();
+			
+			//takes the decision
+			calcLookaheadDecision(currentCodeIndex + 1);
         }
         
-        private void checkAdvanceToImmediateSuccessor(long successorOffset) throws GuidanceException {
-        	final int newOffset = lookAhead();
+        private void calcLookaheadDecision(long successorOffset) throws GuidanceException {
+			final int newOffset = getCurrentCodeIndex();
         	this.lookAheadDecisionBoolean = (newOffset == successorOffset); 
         }
 
-        private int lookAhead() {
+        private void lookAhead() throws GuidanceException {
         	doStep(false); //false -> StepOver
         	this.lookAheadDone = true;
-        	return getCurrentCodeIndex();
         } 
                 
 		private int bytecodesToInt(byte[] bytecode, int firstByte, int numOfBytes) { //TODO numOfBytes can be 2 or 4, use Util functions instead

@@ -1,8 +1,10 @@
 package jbse.tree;
 
+import jbse.val.Expression;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.ReferenceSymbolic;
+import jbse.val.Term;
 
 /**
  * {@link DecisionAlternative_XALOAD} for the case a read access to an array
@@ -19,7 +21,16 @@ extends DecisionAlternative_XALOAD_Unresolved implements DecisionAlternative_XYL
     /**
      * Constructor.
      * 
-     * @param arrayAccessExpression the array access {@link Primitive}.
+	 * @param arrayAccessExpression an {@link Expression} containing {@code indexFormal}, 
+	 *        signifying the condition under which the array access yields {@code valToLoad} 
+	 *        as result. It can be {@code null}, in which case it is equivalent to {@code true} but 
+	 *        additionally denotes the fact that the array was accessed by a concrete index.
+	 * @param indexFormal the {@link Term} used in {@code accessExpression} to indicate
+	 *        the array index. It must not be {@code null}.
+	 * @param indexActual a {@link Primitive}, the actual index used to access the array.
+	 *        It must not be {@code null}.
+	 * @param arrayAccessExpressionSimplified a simplification of {@code arrayAccessExpression}, 
+	 *        or {@code null} if {@code arrayAccessExpression} simplifies to {@code true}.
      * @param referenceToResolve the {@link ReferenceSymbolic} loaded from the array.
      * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
      *        is not stored in the array and, therefore, must be written
@@ -32,9 +43,9 @@ extends DecisionAlternative_XALOAD_Unresolved implements DecisionAlternative_XYL
      *        refers to.
      * @param branchNumber an {@code int}, the branch number.
      */
-    public DecisionAlternative_XALOAD_Aliases(Primitive arrayAccessExpression, ReferenceSymbolic referenceToResolve, boolean fresh,
+    public DecisionAlternative_XALOAD_Aliases(Expression arrayAccessExpression, Term indexFormal, Primitive indexActual, Expression arrayAccessExpressionSimplified, ReferenceSymbolic referenceToResolve, boolean fresh,
                                               Reference arrayReference, long objectPosition, ReferenceSymbolic objectOrigin, int branchNumber) {
-        super(ALT_CODE + "_Aliases:" + arrayAccessExpression + ":" + objectOrigin.asOriginString(), arrayAccessExpression, referenceToResolve, fresh, arrayReference, branchNumber);
+        super(ALT_CODE + "_Aliases:" + arrayAccessExpressionSimplified + ":" + objectOrigin.asOriginString(), arrayAccessExpression, indexFormal, indexActual, arrayAccessExpressionSimplified, referenceToResolve, fresh, arrayReference, branchNumber);
         this.objectPosition = objectPosition;
         final int prime = 1733;
         int result = super.hashCode();

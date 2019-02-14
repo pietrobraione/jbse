@@ -98,7 +98,6 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     @Override
     protected final Outcome decide_IFX_Nonconcrete(Primitive condition, SortedSet<DecisionAlternative_IFX> result) 
     throws DecisionException {
-
     	final Outcome retVal = super.decide_IFX_Nonconcrete(condition, result);
         if (!this.ended) {
         	final Iterator<DecisionAlternative_IFX> it = result.iterator();
@@ -199,9 +198,9 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     @Override
-    protected final Outcome resolve_XALOAD_ResolvedNonconcrete(Expression accessExpression, Value valueToLoad, boolean fresh, Reference arrayToWriteBack,SortedSet<DecisionAlternative_XALOAD> result)
+    protected final Outcome resolve_XALOAD_ResolvedNonconcrete(Expression accessExpression, Term indexFormal, Primitive indexActual, Value valueToLoad, boolean fresh, Reference arrayToWriteBack,SortedSet<DecisionAlternative_XALOAD> result)
     throws DecisionException {
-        final Outcome retVal = super.resolve_XALOAD_ResolvedNonconcrete(accessExpression, valueToLoad, fresh, arrayToWriteBack, result);
+        final Outcome retVal = super.resolve_XALOAD_ResolvedNonconcrete(accessExpression, indexFormal, indexActual, valueToLoad, fresh, arrayToWriteBack, result);
         if (!this.ended) {
             final Iterator<DecisionAlternative_XALOAD> it = result.iterator();
             while (it.hasNext()) {
@@ -216,12 +215,12 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     @Override
-    protected final Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, Reference arrayReference, SortedSet<DecisionAlternative_XALOAD> result)
+    protected final Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, Term indexFormal, Primitive indexActual, ReferenceSymbolic refToLoad, boolean fresh, Reference arrayReference, SortedSet<DecisionAlternative_XALOAD> result)
     throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
     BadClassFileVersionException, WrongClassNameException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException {
         updateExpansionBackdoor(state, refToLoad);
-        final Outcome retVal = super.resolve_XALOAD_Unresolved(state, accessExpression, refToLoad, fresh, arrayReference, result);
+        final Outcome retVal = super.resolve_XALOAD_Unresolved(state, accessExpression, indexFormal, indexActual, refToLoad, fresh, arrayReference, result);
         if (!this.ended) {
             final Iterator<DecisionAlternative_XALOAD> it = result.iterator();
             while (it.hasNext()) {
@@ -414,7 +413,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         
         public Primitive eval_XNEWARRAY(DecisionAlternative_XNEWARRAY da, Primitive countsNonNegative) throws GuidanceException {
 			try {
-	            Primitive conditionToCheck = (da.ok() ? countsNonNegative : countsNonNegative.not());
+	            final Primitive conditionToCheck = (da.ok() ? countsNonNegative : countsNonNegative.not());
 	        	return eval(conditionToCheck);
             } catch (InvalidTypeException e) {
                 //this should never happen as arguments have been checked by the caller
@@ -424,7 +423,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
 
         public Primitive eval_XASTORE(DecisionAlternative_XASTORE da, Primitive inRange) throws GuidanceException {
 			try {
-	            Primitive conditionToCheck = (da.isInRange() ? inRange : inRange.not());
+	            final Primitive conditionToCheck = (da.isInRange() ? inRange : inRange.not());
 	        	return eval(conditionToCheck);
             } catch (InvalidTypeException e) {
                 //this should never happen as arguments have been checked by the caller
@@ -433,8 +432,8 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         }
 
         public Primitive eval_XALOAD(DecisionAlternative_XALOAD da) throws GuidanceException {
-            final Primitive conditionToCheck = da.getArrayAccessExpression();
-        	return eval(conditionToCheck);
+            final Expression conditionToCheck = da.getArrayAccessExpressionSimplified();
+        	return (conditionToCheck == null ? this.calc.valBoolean(true) : eval(conditionToCheck));
         }
         
         /**

@@ -114,7 +114,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
 
     @Override
     protected StrategyDecide<DecisionAlternative_XALOAD> decider() {
-        //copied from Algo_XALOAD
+        //TODO copied from Algo_XALOAD, unify with it and with Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array
         return (state, result) -> { 
             boolean shouldRefine = false;
             boolean branchingDecision = false;
@@ -139,9 +139,11 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                     //this should never happen
                     failExecution("an initial array that backs another array is null");
                 }
+                Primitive indexPlusOffset = null;  //to keep the compiler happy
                 Collection<Array.AccessOutcome> entries = null; //to keep the compiler happy
                 try {
-                    entries = arrayToProcess.get(this.index.add(arrayOffset));
+                	indexPlusOffset = this.index.add(arrayOffset);
+                    entries = arrayToProcess.get(indexPlusOffset);
                 } catch (InvalidOperandException | InvalidTypeException e) {
                     //this should never happen
                     failExecution(e);
@@ -175,8 +177,10 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
 
                         Outcome o = null; //to keep the compiler happy
                         try {
-                            final Expression accessCondition = (arrayAccessCondition == null ? e.getAccessCondition() : (Expression) arrayAccessCondition.and(e.getAccessCondition()));
-                            o = this.ctx.decisionProcedure.resolve_XALOAD(state, accessCondition, val, fresh, refToArrayToProcess, result);
+                            final Expression accessCondition = (arrayAccessCondition == null ? 
+                            		                            e.getAccessCondition() : 
+                            		                            (Expression) arrayAccessCondition.and(e.getAccessCondition()));
+                            o = this.ctx.decisionProcedure.resolve_XALOAD(state, accessCondition, arrayToProcess.getIndex(), indexPlusOffset, val, fresh, refToArrayToProcess, result);
                         //TODO the next catch blocks should disappear, see comments on removing exceptions in jbse.dec.DecisionProcedureAlgorithms.doResolveReference
                         } catch (ClassFileNotFoundException exc) {
                             throwNew(state, CLASS_NOT_FOUND_EXCEPTION);
@@ -264,7 +268,10 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             public void refineResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved)
             throws DecisionException, InvalidInputException {
                 //augments the path condition
-                state.assume(Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.ctx.decisionProcedure.simplify(altResolved.getArrayAccessExpression()));
+            	final Expression accessExpression = altResolved.getArrayAccessExpressionSimplified();
+            	if (accessExpression != null) {
+            		state.assume(Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.ctx.decisionProcedure.simplify(accessExpression));
+            	}
 
                 //if the value is fresh, it writes it back in the array
                 if (altResolved.isValueFresh()) {
@@ -277,7 +284,10 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             throws InvalidInputException {
                 //augments the path condition
                 try {
-					state.assume(Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.ctx.decisionProcedure.simplify(altOut.getArrayAccessExpression()));
+                	final Expression accessExpression = altOut.getArrayAccessExpressionSimplified();
+                	if (accessExpression != null) {
+                		state.assume(Algo_SUN_UNSAFE_GETINTVOLATILE_Array.this.ctx.decisionProcedure.simplify(accessExpression));
+                	}
 				} catch (DecisionException e) { //TODO propagate exception (...and replace with a better exception)
 					//this should never happen
 					failExecution(e);
