@@ -644,36 +644,36 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @return an {@link Outcome}.
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
-         * @throws ClassFileNotFoundException if {@code valToLoad} is a symbolic 
-         *         reference and 
-         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or the class name of one of its possibile expansions does 
-         *         not have a classfile in {@code state}'s classpath.
-         * @throws ClassFileIllFormedException if {@code valToLoad} is a symbolic 
-         *         reference and the classfile for
-         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or for the class name of one of its possibile expansions is ill-formed.
-         * @throws BadClassFileVersionException when {@code valToLoad} is a symbolic 
-         *         reference and the bytecode for
-         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or for the class name of one of its possibile expansions has a version
-         *         number that is unsupported by this version of JBSE.
-         * @throws WrongClassNameException when {@code valToLoad} is a symbolic 
-         *         reference and the bytecode for
-         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or for the class name of one of its possibile expansions has a 
-         *         class name different from the expected one ({@code valToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or the expansion's name).
-         * @throws IncompatibleClassFileException if {@code valToLoad} is a symbolic 
-         *         reference and the superclass of class
-         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
-         *         is resolved to an interface class, or any superinterface is resolved
-         *         to an object class.
-         * @throws ClassFileNotAccessibleException if {@code valToLoad} is a symbolic 
-         *         reference and the classfile for
-         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or for the class name of one of its possibile expansions cannot access
-         *         one of its superclass/superinterfaces.
+	 * @throws ClassFileNotFoundException if {@code valToLoad} is a symbolic 
+	 *         reference and 
+	 *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or the class name of one of its possibile expansions does 
+	 *         not have a classfile in {@code state}'s classpath.
+	 * @throws ClassFileIllFormedException if {@code valToLoad} is a symbolic 
+	 *         reference and the classfile for
+	 *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or for the class name of one of its possibile expansions is ill-formed.
+	 * @throws BadClassFileVersionException when {@code valToLoad} is a symbolic 
+	 *         reference and the bytecode for
+	 *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or for the class name of one of its possibile expansions has a version
+	 *         number that is unsupported by this version of JBSE.
+	 * @throws WrongClassNameException when {@code valToLoad} is a symbolic 
+	 *         reference and the bytecode for
+	 *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or for the class name of one of its possibile expansions has a 
+	 *         class name different from the expected one ({@code valToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or the expansion's name).
+	 * @throws IncompatibleClassFileException if {@code valToLoad} is a symbolic 
+	 *         reference and the superclass of class
+	 *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         is resolved to an interface class, or any superinterface is resolved
+	 *         to an object class.
+	 * @throws ClassFileNotAccessibleException if {@code valToLoad} is a symbolic 
+	 *         reference and the classfile for
+	 *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or for the class name of one of its possibile expansions cannot access
+	 *         one of its superclass/superinterfaces.
 	 */
 	public Outcome resolve_XLOAD_GETX(State state, Value valToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result) 
 	throws InvalidInputException, DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
@@ -690,42 +690,42 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	}
 	
 	/**
-         * Resolves loading a value from a local variable or a field to the operand stack,
+	 * Resolves loading a value from a local variable or a field to the operand stack,
 	 * in the case the value to load is an unresolved symbolic
-         * reference.
-         * 
+	 * reference.
+	 * 
 	 * @param state a {@link State}.
 	 * @param refToLoad the {@link ReferenceSymbolic} returned by the local variable access, 
-         *        that must be loaded on {@code state}'s operand stack. It must not be {@code null}.
-         * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XLOAD_GETX}{@code >}, 
-         *        where the method will put all the {@link DecisionAlternative_XLOAD_GETX}s 
-         *        representing all the satisfiable outcomes of the operation.
+	 *        that must be loaded on {@code state}'s operand stack. It must not be {@code null}.
+	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XLOAD_GETX}{@code >}, 
+	 *        where the method will put all the {@link DecisionAlternative_XLOAD_GETX}s 
+	 *        representing all the satisfiable outcomes of the operation.
 	 * @return an {@link Outcome}.
 	 * @throws DecisionException upon failure.
-         * @throws ClassFileNotFoundException if 
-         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or the class name of one of its possibile expansions does 
-         *         not have a classfile in {@code state}'s classpath.
-         * @throws ClassFileIllFormedException if the classfile for
-         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or for the class name of one of its possibile expansions is ill-formed.
-         * @throws BadClassFileVersionException when the bytecode for
-         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or for the class name of one of its possibile expansions has a version
-         *         number that is unsupported by this version of JBSE.
-         * @throws WrongClassNameException when the bytecode for
-         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or for the class name of one of its possibile expansions has a 
-         *         class name different from the expected one ({@code refToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or the expansion's name).
-         * @throws IncompatibleClassFileException if the superclass of
-         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or of one of its possible expansion is resolved to an interface class,
-         *         or any superinterface is resolved to an object class.
-         * @throws ClassFileNotAccessibleException if the classfile for
-         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or for the class name of one of its possibile expansions cannot access
-         *         one of its superclass/superinterfaces.
+	 * @throws ClassFileNotFoundException if 
+	 *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or the class name of one of its possibile expansions does 
+	 *         not have a classfile in {@code state}'s classpath.
+	 * @throws ClassFileIllFormedException if the classfile for
+	 *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or for the class name of one of its possibile expansions is ill-formed.
+	 * @throws BadClassFileVersionException when the bytecode for
+	 *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or for the class name of one of its possibile expansions has a version
+	 *         number that is unsupported by this version of JBSE.
+	 * @throws WrongClassNameException when the bytecode for
+	 *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or for the class name of one of its possibile expansions has a 
+	 *         class name different from the expected one ({@code refToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or the expansion's name).
+	 * @throws IncompatibleClassFileException if the superclass of
+	 *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or of one of its possible expansion is resolved to an interface class,
+	 *         or any superinterface is resolved to an object class.
+	 * @throws ClassFileNotAccessibleException if the classfile for
+	 *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or for the class name of one of its possibile expansions cannot access
+	 *         one of its superclass/superinterfaces.
 	 * @see {@link #resolve_XLOAD_GETX(State, Value, SortedSet) resolve_XLOAD_GETX}.
 	 */
 	protected Outcome resolve_XLOAD_GETX_Unresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)

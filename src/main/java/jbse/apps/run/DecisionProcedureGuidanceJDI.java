@@ -139,7 +139,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
     }
 
     private static final class JVMJDI extends JVM {
-        private static final String ERROR_BAD_PATH = "Failed accessing through a memory access path.";
+        private static final String ERROR_BAD_PATH = "Failed accessing through a memory access path: ";
         private static final String[] EXCLUDES = {"java.*", "javax.*", "sun.*", "com.sun.*"};
         
         private final String startMethodClassName;
@@ -408,19 +408,19 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                 } else if (origin instanceof SymbolicMemberField) {
                     final Object o = getJDIValue(((SymbolicMemberField) origin).getContainer());
                     if (!(o instanceof com.sun.jdi.ReferenceType) && !(o instanceof com.sun.jdi.ObjectReference)) {
-                        throw new GuidanceException(ERROR_BAD_PATH + ": " + origin.asOriginString());
+                        throw new GuidanceException(ERROR_BAD_PATH + origin.asOriginString());
                     }
-                    return getJDIValueField(((SymbolicMemberField) origin).getFieldName(), o);
+                    return getJDIValueField(((SymbolicMemberField) origin), o);
                 } else if (origin instanceof PrimitiveSymbolicMemberArrayLength) {
                     final Object o = getJDIValue(((PrimitiveSymbolicMemberArrayLength) origin).getContainer());
                     if (!(o instanceof ArrayReference)) {
-                        throw new GuidanceException(ERROR_BAD_PATH + ": " + origin.asOriginString());
+                        throw new GuidanceException(ERROR_BAD_PATH + origin.asOriginString());
                     }
                     return this.vm.mirrorOf(((ArrayReference) o).length());
                 } else if (origin instanceof SymbolicMemberArray) {
                     final Object o = getJDIValue(((SymbolicMemberArray) origin).getContainer());
                     if (!(o instanceof ArrayReference)) {
-                        throw new GuidanceException(ERROR_BAD_PATH + ": " + origin.asOriginString());
+                        throw new GuidanceException(ERROR_BAD_PATH + origin.asOriginString());
                     }
                     try {
                         final Simplex index = (Simplex) eval(((SymbolicMemberArray) origin).getIndex());
@@ -431,7 +431,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                 } else if (origin instanceof PrimitiveSymbolicHashCode) {
                     final Object o = getJDIValue(((PrimitiveSymbolicHashCode) origin).getContainer());
                     if (!(o instanceof ObjectReference)) {
-                        throw new GuidanceException(ERROR_BAD_PATH + ": " + origin.asOriginString());
+                        throw new GuidanceException(ERROR_BAD_PATH + origin.asOriginString());
                     }
                     final ObjectReference oRef = (ObjectReference) o;
                     return this.vm.mirrorOf(oRef.hashCode()); //TODO is this the identity (default) hash code?
@@ -446,7 +446,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             		}	
                 //else if (origin instanceof PrimitiveSymbolicApply): should never happen (primitive values are decided by stepping forward)
                 } else {
-                    throw new GuidanceException(ERROR_BAD_PATH + ": " + origin.asOriginString());
+                    throw new GuidanceException(ERROR_BAD_PATH + origin.asOriginString());
                 }
             } catch (IncompatibleThreadStateException | AbsentInformationException e) {
                 throw new GuidanceException(e);
@@ -461,7 +461,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             } else {
                 final LocalVariable variable = rootFrameConcrete().visibleVariableByName(var); 
                 if (variable == null) {
-                    throw new GuidanceException(ERROR_BAD_PATH);
+                    throw new GuidanceException(ERROR_BAD_PATH + "{ROOT}:" + var + ".");
                 }
                 val = rootFrameConcrete().getValue(variable);
             }
@@ -474,15 +474,16 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             if (classes.size() == 1) {
                 return classes.get(0);
             } else {
-                throw new GuidanceException(ERROR_BAD_PATH);
+                throw new GuidanceException(ERROR_BAD_PATH + "[" + className + "].");
             }
         }
         
-        private com.sun.jdi.Value getJDIValueField(String fieldName, Object o) 
+        private com.sun.jdi.Value getJDIValueField(SymbolicMemberField origin, Object o) 
         throws GuidanceException {
+        	final String fieldName = origin.getFieldName();
             final Field fld = (o instanceof com.sun.jdi.ObjectReference ? ((com.sun.jdi.ObjectReference) o).referenceType().fieldByName(fieldName) : ((com.sun.jdi.ReferenceType) o).fieldByName(fieldName));
             if (fld == null) {
-                throw new GuidanceException(ERROR_BAD_PATH);
+                throw new GuidanceException(ERROR_BAD_PATH + origin.asOriginString() + " (missing field " + fieldName + ").");
             }
             try {
                 return (o instanceof com.sun.jdi.ObjectReference ? ((com.sun.jdi.ObjectReference) o).getValue(fld) : ((com.sun.jdi.ReferenceType) o).getValue(fld));
