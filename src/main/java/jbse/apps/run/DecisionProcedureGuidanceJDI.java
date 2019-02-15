@@ -324,15 +324,6 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         }
         
         @Override
-        public boolean isCurrentMethodNonStatic() throws GuidanceException {
-            try {
-                return !rootFrameConcrete().location().method().declaringType().isStatic();
-            } catch (IncompatibleThreadStateException e) {
-                throw new GuidanceException(e);
-            }
-        }
-        
-        @Override
         public String typeOfObject(ReferenceSymbolic origin) throws GuidanceException {
             final ObjectReference object = (ObjectReference) getJDIValue(origin);
             if (object == null) {

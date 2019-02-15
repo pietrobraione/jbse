@@ -13,11 +13,14 @@ import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.WrongClassNameException;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.RunnerParameters;
+import jbse.mem.Clause;
+import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.State;
 import jbse.mem.SwitchTable;
 import jbse.mem.State.Phase;
@@ -63,7 +66,6 @@ import jbse.val.exc.InvalidTypeException;
  */
 public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
     private final JVM jvm;
-    private final boolean nonStatic;
     private final HashSet<Object> seen = new HashSet<>();
     private boolean ended;    
     
@@ -82,7 +84,6 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         super(component, calc);
         goFastAndImprecise(); //disables theorem proving of component until guidance ends
         this.jvm = jvm;
-        this.nonStatic = this.jvm.isCurrentMethodNonStatic();
         this.ended = false;
     }
     
@@ -93,6 +94,16 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     public final void endGuidance() {
         this.ended = true;
         stopFastAndImprecise();
+    }
+    
+    @Override
+    public void pushAssumption(Clause c) 
+    throws InvalidInputException, DecisionException {
+    	if (c instanceof ClauseAssumeExpands) {
+    		final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
+    		markAsSeen(cExp.getReference());
+    	}
+    	super.pushAssumption(c);
     }
     
     @Override
@@ -265,16 +276,11 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             if (this.jvm.isNull(refToLoad) || alreadySeen(refToLoad) ||
                !dare.getClassFileOfTargetObject().getClassName().equals(this.jvm.typeOfObject(refToLoad))) {
                 it.remove();
-            } else {
-                markAsSeen(refToLoad);
             }
         }
     }
     
     private boolean alreadySeen(ReferenceSymbolic m) throws GuidanceException {
-        if (this.nonStatic && "{ROOT}:this".equals(m.asOriginString())) {
-            return true;
-        }
         return this.seen.contains(this.jvm.getValue(m));
     }
     
@@ -313,15 +319,6 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             }
             this.calc = calc;
         }
-        
-        /**
-         * Checks if the current method in the reached concrete state
-         * is (not) static.
-         * 
-         * @return {@code true} iff the current method is not static. 
-         * @throws GuidanceException if something goes wrong.
-         */
-        public abstract boolean isCurrentMethodNonStatic() throws GuidanceException;
         
         /**
          * Returns the class of an object in the reached concrete state.
@@ -544,7 +541,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                 this.value = (x.getType() == this.value.getType() ? this.value : this.calc.widen(x.getType(), this.value));
                 //note that the concrete this.value could already be widened
                 //because of conversion of actual types to computational types
-                //through operand stack, see JVMSpec 2.11.1, tab. 2.3
+                //through operand stack, see JVM specification v8, section 2.11.1, table 2.11.1-B
             }
         }
         

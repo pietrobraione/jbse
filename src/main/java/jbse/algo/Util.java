@@ -900,7 +900,8 @@ public final class Util {
                 if (assumeInitialized == Assumption.INITIALIZED) {
                     final Klass k = this.s.getKlass(classFile);
                     this.s.assumeClassInitialized(classFile, k);
-                    if (this.makePreInitClassesSymbolic) {
+                    if (this.makePreInitClassesSymbolic
+                    		|| "java/util/ArrayList".equals(classFile.getClassName()) /* HACK */) {
                     	this.preInitializedClasses.add(classFile); //TODO shall we do it also when assumeInitialized == Assumption.NONE?
                     }
                 } else if (assumeInitialized == Assumption.NOT_INITIALIZED) {
