@@ -1,9 +1,11 @@
 package jbse.val;
 
+import static jbse.val.HistoryPoint.unknown;
+
 import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
-import jbse.val.exc.ValueDoesNotSupportNativeException;
 
 /**
  * Class representing the values resulting from a widening
@@ -12,23 +14,30 @@ import jbse.val.exc.ValueDoesNotSupportNativeException;
  * @author Pietro Braione
  *
  */
-public final class WideningConversion extends Primitive {
+public final class WideningConversion extends PrimitiveSymbolicComputed {
     private final Primitive arg;
     private final String toString;
+    private final String asOriginString;
     private final int hashCode;
 
     private WideningConversion(char type, Calculator calc, Primitive arg) 
     throws InvalidOperandException, InvalidTypeException {
-        super(type, calc);
+        super(type, unknown(), calc);
 
         //checks on parameters
         if (arg == null) {
-            throw new InvalidOperandException("null operand in widening construction");
+            throw new InvalidOperandException("Null operand in widening construction");
         }
         if (!Type.widens(type, arg.getType())) {
-            throw new InvalidTypeException("cannot widen type " + arg.getType() + " to type " + type);
+            throw new InvalidTypeException("Cannot widen type " + arg.getType() + " to type " + type + ".");
         }
         this.arg = arg;
+
+        //calculates toString
+        this.toString = "WIDEN-"+ getType() + "(" + arg.toString() + ")";
+
+        //calculates asOriginString
+        this.asOriginString = "WIDEN-"+ getType() + "(" + (arg.isSymbolic() ? ((Symbolic) arg).asOriginString(): arg.toString()) + ")";;
 
         //calculates hashCode
         final int prime = 281;
@@ -36,9 +45,6 @@ public final class WideningConversion extends Primitive {
         result = prime * result + arg.hashCode();
         result = prime * result + type;
         this.hashCode = result;
-
-        //calculates toString
-        this.toString = "WIDEN-"+ this.getType() + "(" + arg.toString() + ")";
     }
 
     public static WideningConversion make(char type, Calculator calc, Primitive arg) 
@@ -49,30 +55,34 @@ public final class WideningConversion extends Primitive {
     public Primitive getArg() {
         return this.arg;
     }
+    
+    @Override
+    public Primitive doReplace(Primitive from, Primitive to) {
+    	final Primitive newArg;
+    	if (this.arg.equals(from)) {
+    		newArg = to;
+    	} else if (this.arg instanceof PrimitiveSymbolicComputed) {
+    		newArg = ((PrimitiveSymbolicComputed) this.arg).doReplace(from, to);
+    	} else {
+    		newArg = this.arg;
+    	}
+    	
+    	try {
+			return this.calc.widen(getType(), newArg);
+		} catch (InvalidOperandException | InvalidTypeException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+
+	@Override
+	public String asOriginString() {
+		return this.asOriginString;
+	}
 
     @Override
     public void accept(PrimitiveVisitor v) throws Exception {
         v.visitWideningConversion(this);
-    }
-
-    @Override
-    public boolean surelyTrue() {
-        return false;
-    }
-
-    @Override
-    public boolean surelyFalse() {
-        return false;
-    }
-
-    @Override
-    public boolean isSymbolic() {
-        return true;
-    }
-
-    @Override
-    public Object getValueForNative() throws ValueDoesNotSupportNativeException {
-        throw new ValueDoesNotSupportNativeException();
     }
 
     @Override
@@ -97,11 +107,7 @@ public final class WideningConversion extends Primitive {
             return false;
         }
         final WideningConversion other = (WideningConversion) obj;
-        if (this.arg == null) {
-            if (other.arg != null) {
-                return false;
-            }
-        } else if (!this.arg.equals(other.arg)) {
+        if (!this.arg.equals(other.arg)) {
             return false;
         }
         return true;

@@ -1,34 +1,42 @@
 package jbse.val;
 
+import static jbse.val.HistoryPoint.unknown;
+
 import jbse.common.Type;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
-import jbse.val.exc.ValueDoesNotSupportNativeException;
 
 /**
  * Class representing the values resulting from a narrowing
  * conversion between numeric primitive types.
  * 
  * @author Pietro Braione
- *
  */
-public final class NarrowingConversion extends Primitive {
+public final class NarrowingConversion extends PrimitiveSymbolicComputed {
     private final Primitive arg;
     private final String toString;
+    private final String asOriginString;
     private final int hashCode;
 
     private NarrowingConversion(char type, Calculator calc, Primitive arg) 
     throws InvalidOperandException, InvalidTypeException {
-        super(type, calc);
+        super(type, unknown(), calc); //TODO put sensible history point?
 
         //checks on parameters
         if (arg == null) {
-            throw new InvalidOperandException("null operand in narrowing construction");
+            throw new InvalidOperandException("Null operand in narrowing construction.");
         }
         if (!Type.narrows(type, arg.getType())) {
-            throw new InvalidTypeException("cannot narrow type " + arg.getType() + " to type " + type);
+            throw new InvalidTypeException("Cannot narrow type " + arg.getType() + " to type " + type + ".");
         }
         this.arg = arg;
+
+        //calculates toString
+        this.toString = "NARROW-"+ getType() + "(" + arg.toString() + ")";
+
+        //calculates asOriginString
+        this.asOriginString = "NARROW-"+ getType() + "(" + (arg.isSymbolic() ? ((Symbolic) arg).asOriginString(): arg.toString()) + ")";
 
         //calculates hashCode
         final int prime = 311;
@@ -36,9 +44,6 @@ public final class NarrowingConversion extends Primitive {
         result = prime * result + arg.hashCode();
         result = prime * result + type;
         this.hashCode = result;
-
-        //calculates toString
-        this.toString = "NARROW-"+ this.getType() + "(" + arg.toString() + ")";
     }
 
     public static NarrowingConversion make(char type, Calculator calc, Primitive arg) 
@@ -49,30 +54,34 @@ public final class NarrowingConversion extends Primitive {
     public Primitive getArg() {
         return this.arg;
     }
+    
+    @Override
+    public Primitive doReplace(Primitive from, Primitive to) {
+    	final Primitive newArg;
+    	if (this.arg.equals(from)) {
+    		newArg = to;
+    	} else if (this.arg instanceof PrimitiveSymbolicComputed) {
+    		newArg = ((PrimitiveSymbolicComputed) this.arg).doReplace(from, to);
+    	} else {
+    		newArg = this.arg;
+    	}
+    	
+    	try {
+			return this.calc.narrow(getType(), newArg);
+		} catch (InvalidOperandException | InvalidTypeException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+
+	@Override
+	public String asOriginString() {
+		return this.asOriginString;
+	}
 
     @Override
     public void accept(PrimitiveVisitor v) throws Exception {
         v.visitNarrowingConversion(this);
-    }
-
-    @Override
-    public boolean surelyTrue() {
-        return false;
-    }
-
-    @Override
-    public boolean surelyFalse() {
-        return false;
-    }
-
-    @Override
-    public boolean isSymbolic() {
-        return true;
-    }
-
-    @Override
-    public Object getValueForNative() throws ValueDoesNotSupportNativeException {
-        throw new ValueDoesNotSupportNativeException();
     }
 
     @Override
@@ -97,14 +106,9 @@ public final class NarrowingConversion extends Primitive {
             return false;
         }
         final NarrowingConversion other = (NarrowingConversion) obj;
-        if (this.arg == null) {
-            if (other.arg != null) {
-                return false;
-            }
-        } else if (!this.arg.equals(other.arg)) {
+        if (!this.arg.equals(other.arg)) {
             return false;
         }
         return true;
     }
-
 }

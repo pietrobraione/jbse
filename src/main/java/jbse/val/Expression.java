@@ -27,6 +27,9 @@ public final class Expression extends PrimitiveSymbolicComputed {
 
     /** The string representation of this object. */
     private final String toString;
+    
+    /** The origin String representation of this object. */
+    private final String asOriginString;
 
     /**
      * Factory method for verbatim expressions (binary).
@@ -117,6 +120,8 @@ public final class Expression extends PrimitiveSymbolicComputed {
 
     	//calculates toString
     	this.toString = stringify(true);
+    	
+    	this.asOriginString = stringify(false);
     }
     
     private String stringify(boolean toString) {
@@ -248,7 +253,7 @@ public final class Expression extends PrimitiveSymbolicComputed {
     
     @Override
     public String asOriginString() {
-        return stringify(false);
+        return this.asOriginString;
     }
 
     /**
