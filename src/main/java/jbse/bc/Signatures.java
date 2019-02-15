@@ -178,10 +178,10 @@ public final class Signatures {
     public static final String VIRTUAL_MACHINE_ERROR               = "java/lang/VirtualMachineError";
     
     //method descriptors (for signature polymorphic methods)
-    public static final String SIGNATURE_POLYMORPHIC_DESCRIPTOR = "(" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND;
+    public static final String SIGNATURE_POLYMORPHIC_DESCRIPTOR     = "(" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND;
     
     //methods (empty signature)
-    public static final Signature EMPTY_METHOD_SIGNATURE           = new Signature(null, null, null);
+    public static final Signature EMPTY_METHOD_SIGNATURE            = new Signature(null, null, null);
     
     //methods (signature polymorphic)
     public static final Signature JAVA_METHODHANDLE_INVOKE          = new Signature(JAVA_METHODHANDLE, null, "invoke");
@@ -588,6 +588,10 @@ public final class Signatures {
         new Signature(JBSE_BASE, "()" + VOID, "boxExceptionInInitializerError");
     public static final Signature JBSE_BASE_BOXINVOCATIONTARGETEXCEPTION = 
         new Signature(JBSE_BASE, "()" + VOID, "boxInvocationTargetException");
+    public static final Signature JBSE_BASE_MAKEKLASSSYMBOLIC = 
+        new Signature(JBSE_BASE, "(" + INT + REFERENCE + JAVA_STRING + TYPEEND +")" + VOID, "makeKlassSymbolic");
+    public static final Signature JBSE_BASE_MAKEKLASSSYMBOLIC_DO = 
+        new Signature(JBSE_BASE, "(" + INT + REFERENCE + JAVA_STRING + TYPEEND +")" + VOID, "makeKlassSymbolic_do");
     public static final Signature SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 = 
         new Signature(SUN_NATIVECONSTRUCTORACCESSORIMPL, 
                       "(" + REFERENCE + JAVA_CONSTRUCTOR + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, 

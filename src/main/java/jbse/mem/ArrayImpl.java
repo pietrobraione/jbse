@@ -1,7 +1,12 @@
 package jbse.mem;
 
+import static jbse.common.Type.ARRAYOF;
+import static jbse.common.Type.INT;
+import static jbse.common.Type.NULLREF;
+import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.getArrayMemberType;
 import static jbse.common.Type.isPrimitive;
+import static jbse.common.Type.toPrimitiveOrVoidInternalName;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,7 +18,6 @@ import java.util.function.Consumer;
 
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
-import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Array.AccessOutcome;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
@@ -130,7 +134,7 @@ public final class ArrayImpl extends ObjektImpl implements Array {
         @Override
         public void excludeIndexFromAccessCondition(Primitive val)
         throws InvalidOperandException, InvalidTypeException {
-            if (val.getType() != Type.INT) {
+            if (val.getType() != INT) {
                 throw new InvalidTypeException("attempted array access with index of type " + val.getType());
             }
             final Expression indexIsDifferentFromVal = (Expression) INDEX.eq(val).not();
@@ -256,7 +260,7 @@ public final class ArrayImpl extends ObjektImpl implements Array {
          * array and no assumption is yet made on the value
          * returned by the access.
          */
-        protected Value returnedValue;
+        private Value returnedValue;
 
         /**
          * Constructor (outcome returned by a concrete get).
@@ -277,9 +281,9 @@ public final class ArrayImpl extends ObjektImpl implements Array {
          * Constructor (outcome returned by a nonconcrete get or
          * stored in array entries).
          * 
-         * @param accessCondition An {@link Expression} denoting a  
+         * @param accessCondition an {@link Expression} denoting a  
          *        condition over the array index. 
-         * @param returnedValue A {@link Value} denoting the value returned  
+         * @param returnedValue a {@link Value} denoting the value returned  
          *        by an array access with index satisfying {@code exp}. It 
          *        can be a {@link Value} of the array member type, 
          *        or the special {@link ReferenceArrayImmaterial} value denoting 
@@ -293,6 +297,12 @@ public final class ArrayImpl extends ObjektImpl implements Array {
 
         @Override
         public Value getValue() { return this.returnedValue; }
+        
+        @Override
+        public void setValue(Value newValue) throws InvalidTypeException {
+        	ArrayImpl.this.checkSetValue(newValue);
+        	this.returnedValue = newValue;
+        }
 
         @Override
         public AccessOutcomeInValueImpl clone() {
@@ -352,22 +362,22 @@ public final class ArrayImpl extends ObjektImpl implements Array {
      * @param epoch the creation {@link HistoryPoint} of the {@link ArrayImpl}.
      * @param isInitial {@code true} iff this array is not an array of the 
      *        current state, but a copy of an (immutable) symbolic array in
-     *        the initial state. Used only if {@code epoch == }{@link Epoch#EPOCH_AFTER_START}.
+     *        the initial state.
      * @param maxSimpleArrayLength an {@code int}, the maximum length an array may have
      *        to be granted simple representation.
      * @throws InvalidTypeException iff {@code classFile} is invalid. 
      */
     public ArrayImpl(boolean symbolic, Calculator calc, boolean initSymbolic, Value initValue, Primitive length, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, boolean isInitial, int maxSimpleArrayLength) 
     throws InvalidTypeException {
-        super(symbolic, calc, classFile, origin, epoch, false, 0, new Signature(classFile.getClassName(), "" + Type.INT, "length"));
+        super(symbolic, calc, classFile, origin, epoch, false, 0, new Signature(classFile.getClassName(), "" + INT, "length"));
         if (classFile == null || !classFile.isArray()) {
             throw new InvalidTypeException("Attempted creation of an array with type " + classFile.getClassName());
         }
         this.isInitial = isInitial;
-        this.lengthSignature = new Signature(classFile.getClassName(), "" + Type.INT, "length");
+        this.lengthSignature = new Signature(classFile.getClassName(), "" + INT, "length");
         this.calc = calc;
         try {
-            this.INDEX = this.calc.valTerm(Type.INT, INDEX_ID);
+            this.INDEX = this.calc.valTerm(INT, INDEX_ID);
         } catch (InvalidTypeException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -393,13 +403,13 @@ public final class ArrayImpl extends ObjektImpl implements Array {
      * @throws NullPointerException if {@code otherArray == null}.
      */
     public ArrayImpl(Reference referenceToOtherArray, ArrayImpl otherArray) throws InvalidOperandException {
-        super(otherArray.isSymbolic(), otherArray.calc, otherArray.classFile, otherArray.getOrigin(), otherArray.historyPoint(), false, 0, new Signature(otherArray.classFile.getClassName(), "" + Type.INT, "length"));
+        super(otherArray.isSymbolic(), otherArray.calc, otherArray.classFile, otherArray.getOrigin(), otherArray.historyPoint(), false, 0, new Signature(otherArray.classFile.getClassName(), "" + INT, "length"));
         //TODO assert other is an initial symbolic array
         this.isInitial = false;
-        this.lengthSignature = new Signature(this.classFile.getClassName(), "" + Type.INT, "length");
+        this.lengthSignature = new Signature(this.classFile.getClassName(), "" + INT, "length");
         this.calc = otherArray.calc;
         try {
-            this.INDEX = this.calc.valTerm(Type.INT, INDEX_ID);
+            this.INDEX = this.calc.valTerm(INT, INDEX_ID);
         } catch (InvalidTypeException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -422,7 +432,7 @@ public final class ArrayImpl extends ObjektImpl implements Array {
         if (initSymbolic) {
             entryValue = null;
         } else if (initValue == null) {
-            entryValue = this.calc.createDefault(Type.getArrayMemberType(this.classFile.getClassName()).charAt(0)); 
+            entryValue = this.calc.createDefault(getArrayMemberType(this.classFile.getClassName()).charAt(0)); 
         } else {
             entryValue = initValue;
         }
@@ -500,7 +510,7 @@ public final class ArrayImpl extends ObjektImpl implements Array {
         if (index == null) {
             throw new InvalidOperandException("attempted array access with null index");
         }
-        if (index.getType() != Type.INT) {
+        if (index.getType() != INT) {
             throw new InvalidTypeException("attempted array access with an index with type " + index.getType());
         }
         if (!this.simpleRep) {
@@ -568,45 +578,74 @@ public final class ArrayImpl extends ObjektImpl implements Array {
 
         return retVal;
     }
+    
+    /**
+     * Very lenient checks before setting the array.
+     *  
+     * @param newValue the Value which is to be written into the array.
+     * @throws InvalidTypeException if {@code newValue} has not a valid type.
+     */
+    private void checkSetValue(Value newValue) throws InvalidTypeException {
+    	if (newValue == null) {
+    		return; //in some cases means unknown value, so we accept it
+    	}
+		final ClassFile arrayMemberClass = ArrayImpl.this.getType().getMemberClass();
+		if (arrayMemberClass.isPrimitiveOrVoid() && newValue.getType() != toPrimitiveOrVoidInternalName(arrayMemberClass.getClassName())) {
+			throw new InvalidTypeException("Attempted to set an array with member type " + arrayMemberClass.getClassName() + " with a value with type " + newValue.getType() + ".");
+		}
+		if (arrayMemberClass.isArray() && newValue.getType() != ARRAYOF && newValue.getType() != NULLREF) {
+			throw new InvalidTypeException("Attempted to set an array with member type " + arrayMemberClass.getClassName() + " with a value with type " + newValue.getType() + ".");
+		}
+		if (arrayMemberClass.isReference() && newValue.getType() != REFERENCE && newValue.getType() != NULLREF) {
+			throw new InvalidTypeException("Attempted to set an array with member type " + arrayMemberClass.getClassName() + " with a value with type " + newValue.getType() + ".");
+		}
+    }
 
     @Override
-    public void setFast(Simplex index, Value item) 
+    public void setFast(Simplex index, Value newValue) 
     throws InvalidOperandException, InvalidTypeException, FastArrayAccessNotAllowedException {
         if (index == null) {
             throw new InvalidOperandException("attempted array access with null index");
         }
-        if (index.getType() != Type.INT) {
+        if (index.getType() != INT) {
             throw new InvalidTypeException("attempted array access with an index with type " + index.getType());
         }
         if (!this.simpleRep) {
             throw new FastArrayAccessNotAllowedException();
         }
+        checkSetValue(newValue);
         final int actualIndex = (Integer) index.getActualValue();
         final int actualLength = (Integer) ((Simplex) this.getLength()).getActualValue();
         if (actualIndex >= 0 && actualIndex < actualLength) {
             final AccessOutcomeIn e = this.entries.get(actualIndex);
             if (e instanceof AccessOutcomeInValueImpl) {
-                ((AccessOutcomeInValueImpl) e).returnedValue = item;
+                ((AccessOutcomeInValueImpl) e).returnedValue = newValue;
             } else {
-                final AccessOutcomeInValueImpl eNew = new AccessOutcomeInValueImpl(e.getAccessCondition(), item);
+                final AccessOutcomeInValueImpl eNew = new AccessOutcomeInValueImpl(e.getAccessCondition(), newValue);
                 this.entries.set(actualIndex, eNew);
             }
         } 	//TODO else throw an exception???
     }
 
     @Override
-    public void set(final Primitive index, final Value valToSet)
+    public void set(final Primitive index, final Value newValue)
     throws InvalidOperandException, InvalidTypeException {
         if (index == null) {
             throw new InvalidOperandException("attempted array access with null index");
         }
-        if (index.getType() != Type.INT) {
+        if (index.getType() != INT) {
             throw new InvalidTypeException("attempted array access with an index with type " + index.getType());
         }
+        checkSetValue(newValue);
         this.simpleRep = false;
         final Expression formalIndexIsSetIndex = (Expression) INDEX.eq(index);
         final Expression accessExpression = (Expression) this.indexInRange.and(formalIndexIsSetIndex); //if we assume that index may be in range, this is an Expression
-        this.entries.add(new AccessOutcomeInValueImpl(accessExpression, valToSet));
+        this.entries.add(new AccessOutcomeInValueImpl(accessExpression, newValue));
+    }
+    
+    @Override
+    public Iterator<? extends AccessOutcomeIn> entries() {
+    	return this.entries.iterator();
     }
     
     @Override

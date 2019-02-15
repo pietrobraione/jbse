@@ -299,36 +299,6 @@ public final class Base {
         return (_this == Thread.currentThread());
     }
     
-    private static void foo() throws Exception { }
-    
-    /**
-     * Helper method for {@link sun.reflect.NativeConstructorAccessorImpl#newInstanceFromConstructor(Constructor, Object[])}.
-     * Just boxes the exceptions that are raised by the execution of a constructor 
-     * into an {@link InvocationTargetException} and rethrows them.
-     */
-    private static void boxInvocationTargetException() 
-    throws InvocationTargetException {
-        try {
-            foo(); //does nothing, it's just to force the compiler to generate the catch block
-        } catch (Exception e) {
-            throw new InvocationTargetException(e);
-        }
-    }
-    
-    /**
-     * Helper method for {@link java.lang.Class#forName0(String, boolean, ClassLoader, Class)}.
-     * Just boxes the exceptions that are raised by the execution of a constructor 
-     * into an {@link InvocationTargetException} and rethrows them.
-     */
-    private static void boxExceptionInInitializerError()
-    throws ExceptionInInitializerError {
-        try {
-            foo(); //does nothing, it's just to force the compiler to generate the catch block
-        } catch (Exception e) {
-            throw new ExceptionInInitializerError(e);
-        }
-    }
-    
     /**
      * Overriding implementation of {@link jbse.meta.Analysis#isRunByJBSE()}.
      * @see jbse.meta.Analysis#isRunByJBSE()
@@ -408,6 +378,54 @@ public final class Base {
         //no caches, sorry
         return null;
     }
+    
+    private static void foo() throws Exception { }
+    
+    /**
+     * Helper method for {@link sun.reflect.NativeConstructorAccessorImpl#newInstanceFromConstructor(Constructor, Object[])}.
+     * Just boxes the exceptions that are raised by the execution of a constructor 
+     * into an {@link InvocationTargetException} and rethrows them.
+     */
+    private static void boxInvocationTargetException() 
+    throws InvocationTargetException {
+        try {
+            foo(); //does nothing, it's just to force the compiler to generate the catch block
+        } catch (Exception e) {
+            throw new InvocationTargetException(e);
+        }
+    }
+    
+    /**
+     * Helper method for {@link java.lang.Class#forName0(String, boolean, ClassLoader, Class)}.
+     * Just boxes the exceptions that are raised by the execution of a constructor 
+     * into an {@link InvocationTargetException} and rethrows them.
+     */
+    private static void boxExceptionInInitializerError()
+    throws ExceptionInInitializerError {
+        try {
+            foo(); //does nothing, it's just to force the compiler to generate the catch block
+        } catch (Exception e) {
+            throw new ExceptionInInitializerError(e);
+        }
+    }
+    
+    /**
+     * Helper method for class initialization. When a Klass 
+     * that is assumed to be pre-initialized is initialized by
+     * running the static initializer, it contains concrete 
+     * references and has no origin. This method makes it 
+     * symbolic.
+     * 
+     * @param definingClassLoader an {@code int}, the number of the defining
+     *        classloader of the class. 
+     * @param className a {@link String}, the name of the class 
+     *        in internal format.
+     */
+    private static void makeKlassSymbolic(int definingClassLoader, String className) {
+    	makeKlassSymbolic_do(definingClassLoader, className); //just redispatch to the meta implementation
+    }
+    
+    private static native void makeKlassSymbolic_do(int definingClassLoader, String className);
 
     private Base() {
         //do not instantiate!

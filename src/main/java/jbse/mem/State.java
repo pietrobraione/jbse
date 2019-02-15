@@ -912,7 +912,7 @@ public final class State implements Cloneable {
      * @throws FrozenStateException if the state is frozen.
      */
     //TODO eliminate this method!!!
-    public Objekt getObjectInitial(Reference ref) throws FrozenStateException {
+    private Objekt getObjectInitial(Reference ref) throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
@@ -1739,7 +1739,7 @@ public final class State implements Cloneable {
         }
         final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
-        final KlassImpl k = new KlassImpl(true, this.calc, createSymbolKlassPseudoReference(classFile), this.lastPreInitialHistoryPoint, numOfStaticFields, fieldsSignatures);
+        final KlassImpl k = new KlassImpl(true, this.calc, createSymbolKlassPseudoReference(this.lastPreInitialHistoryPoint, classFile), this.lastPreInitialHistoryPoint, numOfStaticFields, fieldsSignatures);
         initWithSymbolicValues(k);
         k.setIdentityHashCode(this.calc.valInt(0)); //doesn't care because it is not used
         this.staticMethodArea.set(classFile, k);
@@ -2318,8 +2318,7 @@ public final class State implements Cloneable {
 
     /**
      * Creates a new frame for a (nonnative) method and pushes it 
-     * on this state's stack. The actual parameters of the invocation are 
-     * initialized with values from the invoking frame's operand stack.
+     * on this state's stack.
      * 
      * @param classMethodImpl
      *        the {@link ClassFile} containing the bytecode for the method.
@@ -2333,7 +2332,7 @@ public final class State implements Cloneable {
      *        the offset from the current program counter of 
      *        the return program counter. It is ignored if 
      *        {@code isRoot == true}.
-     * @param args
+     * @param args 
      *        varargs of method call arguments.
      * @throws NullMethodReceiverException when the method is not static
      *         and the first argument in {@code args} is the null reference.
@@ -2553,16 +2552,16 @@ public final class State implements Cloneable {
             //builds a symbolic value from signature and name
             final String variableName = f.getLocalVariableDeclaredName(slot);
             if (slot == ROOT_THIS_SLOT && !isStatic) {
-                args[i] = (Value) createSymbolLocalVariable(Type.REFERENCE + currentClassName + Type.TYPEEND, variableName);
+                args[i] = (Value) createSymbolLocalVariable(this.historyPoint, Type.REFERENCE + currentClassName + Type.TYPEEND, variableName);
                 //must assume {ROOT}:this expands to nonnull object (were it null the frame would not exist!)
                 try {
                     assumeExpands((ReferenceSymbolic) args[i], currentClass);
-                } catch (InvalidTypeException | ContradictionException e) {
+                } catch (InvalidTypeException | ContradictionException | InvalidInputException e) {
                     //this should never happen
                     throw new UnexpectedInternalException(e);
                 }
             } else {
-                args[i] = (Value) createSymbolLocalVariable(paramsDescriptors[(isStatic ? i : i - 1)], variableName);
+                args[i] = (Value) createSymbolLocalVariable(this.historyPoint, paramsDescriptors[(isStatic ? i : i - 1)], variableName);
             }
 
             //next slot
@@ -2979,37 +2978,80 @@ public final class State implements Cloneable {
      * class. Its effects are adding the fresh object to the heap and refining
      * the path condition.
      * 
-     * @param r the {@link ReferenceSymbolic} which is resolved. It 
-     *          must be {@code r != null}.
+     * @param referenceSymbolic the {@link ReferenceSymbolic} which is resolved. It 
+     *        must be {@code referenceSymbolic != null}.
      * @param classFile a {@code ClassFile}, the class of the fresh 
-     *        object to which {@code r} must be expanded. It must be {@code classFile != null}.
-     * @throws NullPointerException if either {@code r} or {@code classFile} is
-     *         {@code null}.
+     *        object to which {@code referenceSymbolic} is expanded. 
+     *        It must be {@code classFile != null}.
+     * @throws InvalidInputException if either {@code referenceSymbolic} or 
+     *         {@code classFile} is {@code null}, or if the state is frozen.
+     * @throws ContradictionException if {@code referenceSymbolic} is already 
+     *         resolved.
      * @throws InvalidTypeException if {@code classFile} is invalid. 
-     * @throws ContradictionException if {@code r} is already resolved.
      * @throws HeapMemoryExhaustedException if the heap is full.
      * @throws CannotAssumeSymbolicObjectException if {@code classFile} is
      *         a class that cannot be assumed to be symbolic
      *         (currently {@code java.lang.Class} and {@code java.lang.ClassLoader}).
-     * @throws FrozenStateException if the state is frozen.
      */
-    public void assumeExpands(ReferenceSymbolic r, ClassFile classFile) 
+    public void assumeExpands(ReferenceSymbolic referenceSymbolic, ClassFile classFile) 
     throws InvalidTypeException, ContradictionException, HeapMemoryExhaustedException, 
-    CannotAssumeSymbolicObjectException, FrozenStateException {
+    CannotAssumeSymbolicObjectException, InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (r == null || classFile == null) {
-            throw new NullPointerException(); //TODO find a better exception
+        if (referenceSymbolic == null || classFile == null) {
+            throw new InvalidInputException("Attempted to invoke State.assumeExpands with a null referenceSymbolic or classFile.");
         }
-        if (resolved(r)) {
-            throw new ContradictionException();
+        if (resolved(referenceSymbolic)) {
+            throw new ContradictionException("Attempted to invoke State.assumeExpands with an already resolved referenceSymbolic.");
         }
         
     	possiblyReset();
-        final long pos = createObjectSymbolic(classFile, r);
-        final Objekt o = this.heap.getObject(pos);
-        this.pathCondition.addClauseAssumeExpands(r, pos, o);
+        final long objectPosition = createObjectSymbolic(classFile, referenceSymbolic);
+        final Objekt object = this.heap.getObject(objectPosition);
+        this.pathCondition.addClauseAssumeExpands(referenceSymbolic, objectPosition, object);
+        ++this.nPushedClauses;
+    }
+    
+    /**
+     * Assumes the expansion of a symbolic reference to a fresh object of some
+     * class, where the symbolic object is already present in the heap. Note that
+     * this method does <em>not</em> check that another symbolic reference
+     * 
+     * @param referenceSymbolic the {@link ReferenceSymbolic} which is resolved. It 
+     *        must be {@code referenceSymbolic != null} and {@code referenceSymbolic} 
+     *        must not be already resolved.
+     * @param freshObjectPosition a {@code long}, the position of the symbolic object in 
+     *        the heap to which {@code referenceSymbolic} is expanded. Note that
+     *        this method does <em>not</em> check that no other symbolic reference
+     *        exists that is expanded to the object at {@code freshObjectPosition}!
+     * @throws InvalidInputException if either {@code referenceSymbolic} is {@code null}, 
+     *         or no symbolic object is stored at {@code freshObjectPosition}, or the 
+     *         state is frozen.
+     * @throws ContradictionException if {@code referenceSymbolic} is already 
+     *         resolved. 
+     */
+    public void assumeExpandsAlreadyPresent(ReferenceSymbolic referenceSymbolic, long freshObjectPosition) 
+    throws InvalidInputException, ContradictionException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+        if (referenceSymbolic == null) {
+            throw new InvalidInputException("Attempted to invoke State.assumeExpandsAlreadyPresent with a null referenceSymbolic.");
+        }
+        if (resolved(referenceSymbolic)) {
+            throw new ContradictionException("Attempted to invoke State.assumeExpandsAlreadyPresent with an already resolved referenceSymbolic.");
+        }
+        final Objekt freshObject = this.heap.getObject(freshObjectPosition);
+        if (freshObject == null) {
+            throw new InvalidInputException("Attempted to invoke State.assumeExpandsAlreadyPresent with a freshObjectPosition where no object is stored.");
+        }
+        if (!freshObject.isSymbolic()) {
+            throw new InvalidInputException("Attempted to invoke State.assumeExpandsAlreadyPresent with a freshObjectPosition where a concrete object is stored.");
+        }
+        
+    	possiblyReset();
+        this.pathCondition.addClauseAssumeExpands(referenceSymbolic, freshObjectPosition, freshObject);
         ++this.nPushedClauses;
     }
 
@@ -3018,33 +3060,37 @@ public final class State implements Cloneable {
      * Its effects are refining all the symbolic references with 
      * same origin, and adding a clause to the path condition.
      * 
-     * @param r the {@link ReferenceSymbolic} which is resolved. It 
-     *        must be {@code r != null} and {@code r} must not be
-     *        already resolved.
-     * @param heapPosition the heap position of the {@link Objekt} to which 
-     *        {@code r} is resolved. It must correspond to a heap position
-     *        where an object is effectively present.
-     * @param o the {@link Objekt} to which {@code r} is resolved. It will not
-     *        be modified nor stored.
-     * @throws ContradictionException if {@code r} is already resolved.
-     * @throws FrozenStateException if the state is frozen.
-     * @throws NullPointerException if either {@code r} or {@code heapPosition} 
-     *         violates preconditions.
+     * @param referenceSymbolic the {@link ReferenceSymbolic} which is resolved. It 
+     *        must be {@code referenceSymbolic != null} and {@code referenceSymbolic} 
+     *        must not be already resolved.
+     * @param aliasObjectPosition the position of the symbolic {@link Objekt} to which 
+     *        {@code referenceSymbolic} is resolved. It must correspond to a heap 
+     *        position where an object is effectively present. Note that
+     *        this method does <em>not</em> check that another symbolic reference
+     *        exists that is expanded to the object at {@code aliasObjectPosition}!
+     * @throws InvalidInputException if either {@code referenceSymbolic} is {@code null}, 
+     *         or no symbolic object is stored at {@code aliasObjectPosition}, or the 
+     *         state is frozen.
+     * @throws ContradictionException if {@code referenceSymbolic} is already resolved.
      */
-    public void assumeAliases(ReferenceSymbolic r, long heapPosition, Objekt o) 
-    throws ContradictionException, FrozenStateException {
+    public void assumeAliases(ReferenceSymbolic referenceSymbolic, long aliasObjectPosition) 
+    throws InvalidInputException, ContradictionException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (r == null || o == null) {
-            throw new NullPointerException(); //TODO find a better exception
+        if (referenceSymbolic == null) {
+            throw new InvalidInputException("Attempted to invoke State.assumeAliases with a null referenceSymbolic.");
         }
-        if (this.resolved(r)) {
-            throw new ContradictionException();
+        if (resolved(referenceSymbolic)) {
+            throw new ContradictionException("Attempted to invoke State.assumeAliases with an already resolved referenceSymbolic.");
+        }
+        final Objekt aliasObject = getObjectInitial(new ReferenceConcrete(aliasObjectPosition));
+        if (aliasObject == null) {
+            throw new InvalidInputException("Attempted to invoke State.assumeAliases with a null referenceSymbolic.");
         }
         
     	possiblyReset();
-        this.pathCondition.addClauseAssumeAliases(r, heapPosition, o.clone());
+        this.pathCondition.addClauseAssumeAliases(referenceSymbolic, aliasObjectPosition, aliasObject.clone());
         ++this.nPushedClauses;
     }
 
@@ -3053,26 +3099,27 @@ public final class State implements Cloneable {
      * Its effects are refining all the symbolic references with 
      * same origin, and adding a clause to the path condition.
      * 
-     * @param r the {@link ReferenceSymbolic} which is resolved. It 
-     *          must be {@code r != null} and {@code r} must not be
-     *          already resolved.
-     * @throws ContradictionException if {@code r} is already resolved.
-     * @throws FrozenStateException if the state is frozen.
-     * @throws NullPointerException if {@code r} violates preconditions.
+     * @param referenceSymbolic the {@link ReferenceSymbolic} which is resolved. It 
+     *        must be {@code referenceSymbolic != null} and {@code referenceSymbolic} 
+     *        must not be already resolved.
+     * @throws InvalidInputException if either {@code referenceSymbolic} is {@code null}, 
+     *         or the state is frozen.
+     * @throws ContradictionException if {@code referenceSymbolic} is already resolved.
      */
-    public void assumeNull(ReferenceSymbolic r) throws ContradictionException, FrozenStateException {
+    public void assumeNull(ReferenceSymbolic referenceSymbolic) 
+    throws InvalidInputException, ContradictionException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (r == null) {
-            throw new NullPointerException(); //TODO find a better exception
+        if (referenceSymbolic == null) {
+            throw new InvalidInputException("Attempted to invoke State.assumeNull with a null referenceSymbolic.");
         }
-        if (this.resolved(r)) {
-            throw new ContradictionException();
+        if (resolved(referenceSymbolic)) {
+            throw new ContradictionException("Attempted to invoke State.assumeNull with an already resolved referenceSymbolic.");
         }
         
     	possiblyReset();
-        this.pathCondition.addClauseAssumeNull(r);
+        this.pathCondition.addClauseAssumeNull(referenceSymbolic);
         ++this.nPushedClauses;
     }
 
@@ -3080,26 +3127,25 @@ public final class State implements Cloneable {
      * Assumes that a class is initialized before the 
      * start of symbolic execution.
      * 
-     * @param classFile the corresponding concrete class. 
+     * @param classFile the {@link ClassFile} for the class that
+     *        is assumed to be initialized. 
      *        It must be {@code classFile != null}.
-     * @param k the symbolic {@link Klass} for {@code classFile}, 
+     * @param klass the symbolic {@link Klass} for {@code classFile}, 
      *        or {@code null} if the initial class is not symbolic. 
-     * @throws NullPointerException if {@code classFile == null}.
-     * @throws InvalidIndexException if the access to the class 
-     *         constant pool fails.
-     * @throws FrozenStateException if the state is frozen.
+     * @throws InvalidInputException if {@code classFile == null}, or
+     *         the state is frozen.
      */
-    public void assumeClassInitialized(ClassFile classFile, Klass k) 
-    throws InvalidIndexException, FrozenStateException {
+    public void assumeClassInitialized(ClassFile classFile, Klass klass) 
+    throws InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
         if (classFile == null) {
-            throw new NullPointerException();
+            throw new InvalidInputException("Attempted to invoke State.assumeClassInitialized with a null classFile.");
         }
         
     	possiblyReset();
-        this.pathCondition.addClauseAssumeClassInitialized(classFile, k);
+        this.pathCondition.addClauseAssumeClassInitialized(classFile, klass);
         ++this.nPushedClauses;
     }
 
@@ -3107,17 +3153,19 @@ public final class State implements Cloneable {
      * Assumes that a class is not initialized before the 
      * start of symbolic execution.
      * 
-     * @param classFile a {@link ClassFile}.
-     * @throws FrozenStateException if the state is empty.
-     * @throws NullPointerException if {@code classFile} 
-     *         is {@code null}.
+     * @param classFile the {@link ClassFile} for the class that
+     *        is assumed to be not initialized. 
+     *        It must be {@code classFile != null}.
+     * @throws InvalidInputException if {@code classFile == null}, or
+     *         the state is frozen.
      */
-    public void assumeClassNotInitialized(ClassFile classFile) throws FrozenStateException {
+    public void assumeClassNotInitialized(ClassFile classFile) 
+    throws InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
         if (classFile == null) {
-            throw new NullPointerException();
+            throw new InvalidInputException("Attempted to invoke State.assumeClassNotInitialized with a null classFile.");
         }
         
     	possiblyReset();
@@ -3524,6 +3572,7 @@ public final class State implements Cloneable {
      * A Factory Method for creating symbolic values. The symbol
      * has as origin a local variable in the root frame.
      * 
+	 * @param historyPoint the {@link HistoryPoint} of the symbol.
      * @param staticType a {@link String}, the static type of the
      *        local variable from which the symbol originates.
      * @param variableName a {@link String}, the name of the local 
@@ -3532,28 +3581,30 @@ public final class State implements Cloneable {
      *         according to {@code staticType}.
      * @throws FrozenStateException if the state is frozen.
      */
-    public Symbolic createSymbolLocalVariable(String staticType, String variableName) 
+    public Symbolic createSymbolLocalVariable(HistoryPoint historyPoint, String staticType, String variableName) 
     throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        return this.symbolFactory.createSymbolLocalVariable(this.historyPoint, staticType, variableName);
+        return this.symbolFactory.createSymbolLocalVariable(historyPoint, staticType, variableName);
     }
 	
     /**
      * A Factory Method for creating symbolic values. The symbol
      * is a (pseudo)reference to a {@link Klass}.
      * 
-     * @param classFile the {@link ClassFile} for the {@link Klass} to be referred.
+	 * @param historyPoint the {@link HistoryPoint} of the symbol.
+     * @param classFile the {@link ClassFile} for the {@link Klass} 
+     *        to be referred.
      * @return a {@link KlassPseudoReference}.
      * @throws FrozenStateException if the state is frozen.
      */
-    public KlassPseudoReference createSymbolKlassPseudoReference(ClassFile classFile) 
+    public KlassPseudoReference createSymbolKlassPseudoReference(HistoryPoint historyPoint, ClassFile classFile) 
     throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        return this.symbolFactory.createSymbolKlassPseudoReference(this.lastPreInitialHistoryPoint, classFile);
+        return this.symbolFactory.createSymbolKlassPseudoReference(historyPoint, classFile);
     }
 
     /**

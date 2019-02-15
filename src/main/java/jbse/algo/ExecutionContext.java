@@ -83,6 +83,7 @@ import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ISRESOLVEDBYEXPANSION;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ISSYMBOLIC;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_SUCCEED;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_SYMBOLNAME;
+import static jbse.algo.Overrides.ALGO_JBSE_BASE_MAKEKLASSSYMBOLIC_DO;
 import static jbse.algo.Overrides.ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
 import static jbse.algo.Overrides.ALGO_SUN_PERF_CREATELONG;
 import static jbse.algo.Overrides.ALGO_SUN_REFLECTION_GETCALLERCLASS;
@@ -314,6 +315,7 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_INT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_LONG;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_OBJECT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_SHORT;
+import static jbse.bc.Signatures.JBSE_BASE_MAKEKLASSSYMBOLIC_DO;
 import static jbse.bc.Signatures.SUN_ASCIICASEINSENSITIVECOMPARATOR;
 import static jbse.bc.Signatures.SUN_JARINDEX;
 import static jbse.bc.Signatures.SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
@@ -409,9 +411,16 @@ public final class ExecutionContext {
     /** The maximum heap size expressed as maximum number of objects. Used during initialization. */
     private final long maxHeapSize;
     
+    /**
+     * Whether all the classes created during
+     * the pre-inizialization phase shall be made 
+     * symbolic. 
+     */
+    private final boolean makePreInitClassesSymbolic;
+
     /** The {@link Classpath}. Used during initialization. */
     private final Classpath classpath;
-
+    
     /** 
      * The class for the symbolic execution's {@link ClassFileFactory} 
      * (injected dependency). Used during initialization.
@@ -504,6 +513,7 @@ public final class ExecutionContext {
                             boolean bypassStandardLoading,
                             int maxSimpleArrayLength,
                             long maxHeapSize,
+                            boolean makePreInitClassesSymbolic,
                             Classpath classpath,
                             Class<? extends ClassFileFactory> classFileFactoryClass,
                             Map<String, Set<String>> expansionBackdoor, 
@@ -518,6 +528,7 @@ public final class ExecutionContext {
         this.bypassStandardLoading = bypassStandardLoading;
         this.maxSimpleArrayLength = maxSimpleArrayLength;
         this.maxHeapSize = maxHeapSize;
+        this.makePreInitClassesSymbolic = makePreInitClassesSymbolic;
         this.classpath = classpath;
         this.classFileFactoryClass = classFileFactoryClass;
         this.expansionBackdoor = new HashMap<>(expansionBackdoor);      //safety copy
@@ -727,6 +738,9 @@ public final class ExecutionContext {
             addMetaOverridden(JBSE_ANALYSIS_SYMBOLNAME_OBJECT,         ALGO_JBSE_ANALYSIS_SYMBOLNAME);
             addMetaOverridden(JBSE_ANALYSIS_SYMBOLNAME_SHORT,          ALGO_JBSE_ANALYSIS_SYMBOLNAME);
             
+            //jbse.base.Base methods
+            addMetaOverridden(JBSE_BASE_MAKEKLASSSYMBOLIC_DO,          ALGO_JBSE_BASE_MAKEKLASSSYMBOLIC_DO);
+            
             //jbse classless (pseudo)methods
             addMetaOverridden(noclass_REGISTERLOADEDCLASS,          ALGO_noclass_REGISTERLOADEDCLASS);
             addMetaOverridden(noclass_REGISTERMETHODTYPE,           ALGO_noclass_REGISTERMETHODTYPE);
@@ -735,6 +749,17 @@ public final class ExecutionContext {
         } catch (MetaUnsupportedException e) {
             throw new UnexpectedInternalException(e);
         }
+    }
+    
+    /**
+     * Returns whether the classes created during
+     * the pre-initialization phase shall be (pedantically)
+     * considered symbolic.
+     * 
+     * @return a {@code boolean}.
+     */
+    public boolean getMakePreInitClassesSymbolic() {
+    	return this.makePreInitClassesSymbolic;
     }
     
     /**

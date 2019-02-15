@@ -6,6 +6,7 @@ package jbse.val;
  */
 public final class ReferenceSymbolicMemberArray extends ReferenceSymbolicMember implements SymbolicMemberArray {
     private final Primitive index;
+    private final String asOriginString;
     
     /**
      * Constructor.
@@ -22,6 +23,7 @@ public final class ReferenceSymbolicMemberArray extends ReferenceSymbolicMember 
     ReferenceSymbolicMemberArray(ReferenceSymbolic container, Primitive index, int id, String staticType) {
     	super(container, id, staticType);
     	this.index = index;
+    	this.asOriginString = getContainer().asOriginString() + "[" + (this.index.isSymbolic() ? ((Symbolic) this.index).asOriginString() : this.index.toString()) + "]";
     }
 
     @Override
@@ -31,6 +33,6 @@ public final class ReferenceSymbolicMemberArray extends ReferenceSymbolicMember 
     
     @Override
     public String asOriginString() {
-        return this.getContainer().asOriginString() + "[" + (this.index.isSymbolic() ? ((Symbolic) this.index).asOriginString() : this.index.toString()) + "]";
+        return this.asOriginString;
     }
 }

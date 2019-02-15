@@ -138,6 +138,16 @@ public interface Array extends Objekt {
          *        or {@code null} if the value is unknown.
          */
         Value getValue();
+        
+        /**
+         * Sets the value obtained by accessing the array.
+         * 
+         * @param newValue a {@link Value} of the array member type,
+         *        or {@code null} if the value is unknown.
+         * @throws InvalidTypeException if {@code newValue} does not
+         *         agree with the array's type.
+         */
+        void setValue(Value newValue) throws InvalidTypeException;
     }
 
     /**
@@ -219,16 +229,18 @@ public interface Array extends Objekt {
      * Checks whether the array has a simple representation, allowing
      * fast array access.
      * 
-     * @return {@code true} iff the array has a simple representation
-     *         (this happens only when its length is a {@link Simplex}).
+     * @return {@code true} iff the array has a simple representation.
+     *         This happens only if (but not necessarily if) its length 
+     *         is a {@link Simplex}.
      */
     boolean hasSimpleRep();
 
     /**
      * Checks whether the array is simple.
      * 
-     * @return {@code true} iff the array is simple, i.e. {@link #hasSimpleRep()}
-     *         and all its elements are concrete values.
+     * @return {@code true} iff the array is simple, i.e. 
+     *         {@link #hasSimpleRep()} and all its elements are 
+     *         concrete values.
      */
     boolean isSimple();
 
@@ -279,13 +291,14 @@ public interface Array extends Objekt {
      * 
      * @param index the position of the array element to set. It must
      *        denote an {@code int}.  
-     * @param valToSet the new {@link Value} to be set at {@code index}.
+     * @param newValue the new {@link Value} to be set at {@code index}.
      * @throws InvalidOperandException if {@code index} is {@code null}.
-     * @throws InvalidTypeException if {@code index} is not an {@code int}.
+     * @throws InvalidTypeException if {@code index} is not an {@code int}
+     *         or {@code newValue} is incompatible with the array member type.
      * @throws FastArrayAccessNotAllowedException if the array has not
      * a simple representation.
      */
-    void setFast(Simplex index, Value valToSet) 
+    void setFast(Simplex index, Value newValue) 
     throws InvalidOperandException, InvalidTypeException, FastArrayAccessNotAllowedException;
 
     /**
@@ -297,12 +310,21 @@ public interface Array extends Objekt {
      * 
      * @param index the position of the array element to set, a {@code Primitive}
      *        denoting an {@code int}.  
-     * @param valToSet the new {@link Value} to be set at {@code index}.
+     * @param newValue the new {@link Value} to be set at {@code index}.
      * @throws InvalidOperandException if {@code index} is {@code null}.
-     * @throws InvalidTypeException if {@code index} is not an {@code int}. 
+     * @throws InvalidTypeException if {@code index} is not an {@code int} 
+     *         or {@code newValue} is incompatible with the array member type.
      */
-    void set(Primitive index, Value valToSet)
+    void set(Primitive index, Value newValue)
     throws InvalidOperandException, InvalidTypeException;
+
+    /**
+     * Returns an iterator to the entries of this array.
+     * 
+     * @return an {@link Iterator}{@code <? extends }{@link AccessOutcomeIn}{@code >}
+     *         to the entries of this {@link Array}, allowing their direct modification.
+     */
+    Iterator<? extends AccessOutcomeIn> entries();
 
     /**
      * Returns an iterator to the entries that are possibly affected by 

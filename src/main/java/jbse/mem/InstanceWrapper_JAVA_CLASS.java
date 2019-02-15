@@ -6,6 +6,7 @@ import java.util.Map;
 
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.HistoryPoint;
 import jbse.val.Primitive;
@@ -54,6 +55,11 @@ final class InstanceWrapper_JAVA_CLASS extends ObjektWrapper<InstanceImpl_JAVA_C
 	@Override
 	public boolean isSymbolic() {
 		return getDelegate().isSymbolic();
+	}
+	
+	@Override
+	public void makeSymbolic(ReferenceSymbolic origin) throws InvalidInputException {
+		throw new InvalidInputException("Attempted to makeSymbolic an instance of java.lang.Class.");
 	}
 
 	@Override

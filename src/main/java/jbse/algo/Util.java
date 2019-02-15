@@ -15,6 +15,7 @@ import static jbse.bc.Signatures.JAVA_STRING_VALUE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_BACKTRACE;
 import static jbse.bc.Signatures.JAVA_THROWABLE_STACKTRACE;
 import static jbse.bc.Signatures.JBSE_BASE;
+import static jbse.bc.Signatures.JBSE_BASE_MAKEKLASSSYMBOLIC;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import static jbse.bc.Signatures.VERIFY_ERROR;
 import static jbse.bc.Signatures.noclass_REGISTERLOADEDCLASS;
@@ -426,7 +427,7 @@ public final class Util {
      * frames for the {@code <clinit>} methods to initialize it, 
      * or initializing it symbolically. If necessary it also recursively 
      * initializes its superclasses. It is equivalent
-     * to {@link #ensureClassInitialized(State, String, ExecutionContext, Set, Signature) ensureClassInitialized}
+     * to {@link #ensureClassInitialized(State, ClassFile, ExecutionContext, Set, Signature) ensureClassInitialized}
      * {@code (state, classFile, ctx, null, null)}.
      * 
      * @param state a {@link State}. It must have a current frame.
@@ -468,7 +469,7 @@ public final class Util {
      * frames for the {@code <clinit>} methods to initialize it, 
      * or initializing it symbolically. If necessary it also recursively 
      * initializes its superclasses. It is equivalent
-     * to {@link #ensureClassInitialized(State, String, ExecutionContext, Set, Signature) ensureClassInitialized}
+     * to {@link #ensureClassInitialized(State, ClassFile, ExecutionContext, Set, Signature) ensureClassInitialized}
      * {@code (state, classFile, ctx, null, boxExceptionMethodSignature)}.
      * 
      * @param state a {@link State}. It must have a current frame.
@@ -613,7 +614,7 @@ public final class Util {
     BadClassFileVersionException, WrongClassNameException, ClassFileNotAccessibleException, 
     ContradictionException {
         final Set<String> _skip = (skip == null) ? new HashSet<>() : skip; //null safety
-        final ClassInitializer ci = new ClassInitializer(state, ctx, _skip, boxExceptionMethodSignature);
+        final ClassInitializer ci = new ClassInitializer(state, ctx, _skip, boxExceptionMethodSignature, ctx.getMakePreInitClassesSymbolic());
         final boolean failed = ci.initialize(classFile);
         if (failed) {
             return;
@@ -639,6 +640,19 @@ public final class Util {
          */
         private final Set<String> skip;
 
+        /** 
+         * The signature of the method that boxes exception, or null if exceptions
+         * shall not be boxed.
+         */
+        private final Signature boxExceptionMethodSignature;
+        
+        /**
+         * Whether all the classes created during
+         * the pre-inizialization phase shall be made 
+         * symbolic. 
+         */
+        private final boolean makePreInitClassesSymbolic;
+        
         /**
          * Counts the number of frames created during class initialization. 
          * Used in case {@link #initializeClass} fails to restore the stack.
@@ -653,6 +667,14 @@ public final class Util {
          * constant values).
          */
         private final ArrayList<ClassFile> classesForPhase2 = new ArrayList<>();
+
+        /**
+         * Stores the classes that are assumed to be initialized
+         * before the start of symbolic execution (if their static
+         * initialized is run, then the created Klass object must
+         * be made symbolic).
+         */
+        private final HashSet<ClassFile> preInitializedClasses = new HashSet<>();
 
         /**
          * Stores the classes for which the {@code <clinit>} 
@@ -673,21 +695,16 @@ public final class Util {
         /** What is the cause of the failure? (meaningless if failed == false) */
         private String failure = null;
         
-        /** 
-         * The signature of the method that boxes exception, or null if exceptions
-         * shall not be boxed.
-         */
-        private Signature boxExceptionMethodSignature;
-        
         /** ClassFile for jbse.base.Base. */
         private ClassFile cf_JBSE_BASE;
 
-        private ClassInitializer(State s, ExecutionContext ctx, Set<String> skip, Signature boxExceptionMethodSignature) 
+        private ClassInitializer(State s, ExecutionContext ctx, Set<String> skip, Signature boxExceptionMethodSignature, boolean makePreInitClassesSymbolic) 
         throws InvalidInputException, ClassFileNotFoundException, IncompatibleClassFileException, 
         ClassFileIllFormedException, BadClassFileVersionException, WrongClassNameException, ClassFileNotAccessibleException {
             this.s = s;
             this.ctx = ctx;
             this.boxExceptionMethodSignature = boxExceptionMethodSignature;
+            this.makePreInitClassesSymbolic = makePreInitClassesSymbolic;
             
             //closes skip w.r.t. superclasses
             this.skip = new HashSet<>();
@@ -704,19 +721,15 @@ public final class Util {
             }
             
             //gets classfile for jbse.base.Base and checks the method
-            if (this.boxExceptionMethodSignature == null) {
-                this.cf_JBSE_BASE = null;
-            } else {
-                try {
-                    this.cf_JBSE_BASE = s.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, JBSE_BASE, true);
-                } catch (ClassFileNotFoundException | IncompatibleClassFileException | ClassFileIllFormedException | 
-                         ClassFileNotAccessibleException | PleaseLoadClassException e) {
-                    //this should never happen
-                    failExecution("Could not find classfile for loaded class jbse.base.Base, or the classfile is ill-formed.");
-                }
-                if (!this.cf_JBSE_BASE.hasMethodImplementation(this.boxExceptionMethodSignature)) {
-                    throw new InvalidInputException("Could not find implementation of exception boxim method " + this.boxExceptionMethodSignature.toString() + ".");
-                }
+            try {
+                this.cf_JBSE_BASE = s.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, JBSE_BASE, true);
+            } catch (ClassFileNotFoundException | IncompatibleClassFileException | ClassFileIllFormedException | 
+                     ClassFileNotAccessibleException | PleaseLoadClassException e) {
+                //this should never happen
+                failExecution("Could not find classfile for loaded class jbse.base.Base, or the classfile is ill-formed.");
+            }
+            if (this.boxExceptionMethodSignature != null && !this.cf_JBSE_BASE.hasMethodImplementation(this.boxExceptionMethodSignature)) {
+                throw new InvalidInputException("Could not find implementation of exception boxing method " + this.boxExceptionMethodSignature.toString() + ".");
             }
         }
 
@@ -887,6 +900,9 @@ public final class Util {
                 if (assumeInitialized == Assumption.INITIALIZED) {
                     final Klass k = this.s.getKlass(classFile);
                     this.s.assumeClassInitialized(classFile, k);
+                    if (this.makePreInitClassesSymbolic) {
+                    	this.preInitializedClasses.add(classFile); //TODO shall we do it also when assumeInitialized == Assumption.NONE?
+                    }
                 } else if (assumeInitialized == Assumption.NOT_INITIALIZED) {
                     this.s.assumeClassNotInitialized(classFile);
                 } //else, do nothing
@@ -944,8 +960,13 @@ public final class Util {
                                 s.ensureStringLiteral(stringLit);
                                 v = s.referenceToStringLiteral(stringLit);
                             } else { //should never happen
-                                //TODO is it true with *all* the other constant pool values? Give another look at the JVMS for constant static fields
-                                failExecution("Unexpected constant from constant pool (neither primitive nor java.lang.String)."); 
+                                /* 
+                                 * TODO is it true that it should never happen? Especially, 
+                                 * what about ConstantPoolClass values? Give another look at the 
+                                 * JVMS and determine whether other kind of constant static fields
+                                 * may be present.
+                                 */
+                                failExecution("Unexpected constant from constant pool (neither primitive nor String)."); 
                                 //TODO put string in constant or throw better exception
                             }
                             k.setFieldValue(sig, v);
@@ -967,8 +988,9 @@ public final class Util {
          * classes that have it.
          * 
          * @throws FrozenStateException if {@code this.s} is frozen. 
+         * @throws HeapMemoryExhaustedException if the memory is exhausted.
          */
-        private void phase3() throws FrozenStateException {
+        private void phase3() throws FrozenStateException, HeapMemoryExhaustedException {
             try {
                 if (this.boxExceptionMethodSignature != null) {
                     this.s.pushFrame(this.cf_JBSE_BASE, this.boxExceptionMethodSignature, root(), 0);                    
@@ -976,6 +998,10 @@ public final class Util {
                 for (ClassFile classFile : this.classesForPhase3) {
                     final Signature sigClinit = new Signature(classFile.getClassName(), "()" + Type.VOID, "<clinit>");
                     if (classFile.hasMethodImplementation(sigClinit)) {
+                    	if (this.preInitializedClasses.contains(classFile)) {
+                    		this.s.ensureStringLiteral(classFile.getClassName());
+                    		this.s.pushFrame(this.cf_JBSE_BASE, JBSE_BASE_MAKEKLASSSYMBOLIC, root(), 0, this.s.getCalculator().valInt(classFile.getDefiningClassLoader()), this.s.referenceToStringLiteral(classFile.getClassName()));
+                    	}
                         this.s.pushFrame(classFile, sigClinit, root(), 0);
                         ++this.createdFrames;
                     }

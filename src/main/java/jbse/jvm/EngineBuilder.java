@@ -79,6 +79,7 @@ public class EngineBuilder {
 	                               parameters.getBypassStandardLoading(),
 	                               parameters.getMaxSimpleArrayLength(),
 	                               parameters.getMaxHeapSize(),
+	                               parameters.getMakePreInitClassesSymbolic(),
 	                               parameters.getClasspath(),
 	                               ClassFileFactoryJavassist.class,          //default
 	                               parameters.getExpansionBackdoor(), 

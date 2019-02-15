@@ -6,6 +6,7 @@ package jbse.val;
  */
 public final class ReferenceSymbolicLocalVariable extends ReferenceSymbolicAtomic implements SymbolicLocalVariable {
     private final String variableName;
+    private final String asOriginString;
 
     /**
      * Constructor.
@@ -21,6 +22,7 @@ public final class ReferenceSymbolicLocalVariable extends ReferenceSymbolicAtomi
     ReferenceSymbolicLocalVariable(String variableName, int id, String staticType, HistoryPoint historyPoint) {
     	super(id, staticType, historyPoint);
     	this.variableName = variableName;
+    	this.asOriginString = "{ROOT}:" + this.variableName;
     }
     
     @Override
@@ -35,6 +37,6 @@ public final class ReferenceSymbolicLocalVariable extends ReferenceSymbolicAtomi
     
     @Override
     public String asOriginString() {
-        return "{ROOT}:" + this.getVariableName();
+        return this.asOriginString;
     }
 }

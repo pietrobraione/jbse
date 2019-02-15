@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.val.HistoryPoint;
@@ -57,6 +58,12 @@ final class ArrayWrapper extends ObjektWrapper<ArrayImpl> implements Array {
 	@Override
 	public boolean isSymbolic() {
 		return getDelegate().isSymbolic();
+	}
+	
+	@Override
+	public void makeSymbolic(ReferenceSymbolic origin) throws InvalidInputException {
+		possiblyCloneDelegate();
+		getDelegate().makeSymbolic(origin);
 	}
 
 	@Override
@@ -166,6 +173,12 @@ final class ArrayWrapper extends ObjektWrapper<ArrayImpl> implements Array {
 	throws InvalidOperandException, InvalidTypeException {
 		possiblyCloneDelegate();
 		getDelegate().set(index, valToSet);
+	}
+
+	@Override
+	public Iterator<? extends AccessOutcomeIn> entries() {
+		possiblyCloneDelegate();
+		return getDelegate().entries();
 	}
 
 	@Override

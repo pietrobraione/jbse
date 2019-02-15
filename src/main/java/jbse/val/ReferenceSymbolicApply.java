@@ -26,8 +26,11 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 	/** The hash code of this object. */
     private final int hashCode;
 
-    /** The string representation of this object. */
+    /** The String representation of this object. */
 	private final String toString;
+	
+    /** The origin String representation of this object. */
+	private final String asOriginString;
 	
 	/**
 	 * Constructor. 
@@ -61,21 +64,45 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 		this.hashCode = tmpHashCode;
 		
 		//calculates toString
-		final StringBuilder buf = new StringBuilder();
-		buf.append(this.operator + "(");
-		boolean first = true;
-		for (Value v : this.args) {
-			buf.append(first ? "" : ",");
-			buf.append(v.toString());
-			first = false;
+		{
+			final StringBuilder buf = new StringBuilder();
+			buf.append(this.operator + "(");
+			boolean first = true;
+			for (Value v : this.args) {
+				buf.append(first ? "" : ",");
+				buf.append(v.toString());
+				first = false;
+			}
+			if (historyPoint == null) {
+				buf.append(")");
+			} else {
+				buf.append(")@");
+				buf.append(historyPoint.toString());
+			}
+			this.toString = buf.toString();
 		}
-		if (historyPoint == null) {
-		    buf.append(")");
-		} else {
-		    buf.append(")@");
-		    buf.append(historyPoint.toString());
+
+		//calculates asOriginString
+		{
+			final StringBuilder buf = new StringBuilder();
+			buf.append('<');
+			buf.append(this.operator);
+			buf.append('(');
+			boolean first = true;
+			for (Value v : this.args) {
+				buf.append(first ? "" : ",");
+				buf.append(v.isSymbolic() ? ((Symbolic) v).asOriginString() : v.toString());
+				first = false;
+			}
+			if (historyPoint() == null) {
+				buf.append(")");
+			} else {
+				buf.append(")@");
+				buf.append(historyPoint().toString());
+			}
+			buf.append('>');
+			this.asOriginString = buf.toString();
 		}
-		this.toString = buf.toString();
 	}
 
 	@Override
@@ -95,45 +122,19 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 	
 	@Override
 	public String asOriginString() {
-            final StringBuilder buf = new StringBuilder();
-            buf.append('<');
-            buf.append(this.operator);
-            buf.append('(');
-            boolean first = true;
-            for (Value v : this.args) {
-                    buf.append(first ? "" : ",");
-                    buf.append(v.isSymbolic() ? ((Symbolic) v).asOriginString() : v.toString());
-                    first = false;
-            }
-            if (historyPoint() == null) {
-                buf.append(")");
-            } else {
-                buf.append(")@");
-                buf.append(historyPoint().toString());
-            }
-            buf.append('>');
-            return buf.toString();
+		return this.asOriginString;
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public String toString() {
 		return this.toString;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public int hashCode() {
 		return this.hashCode;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -155,13 +156,13 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 		} else if (!this.operator.equals(other.operator)) {
 			return false;
 		}
-                if (historyPoint() == null) {
-                    if (other.historyPoint() != null) {
-                        return false;
-                    }
-                } else if (!historyPoint().equals(other.historyPoint())) {
-                    return false;
-                }
+		if (historyPoint() == null) {
+			if (other.historyPoint() != null) {
+				return false;
+			}
+		} else if (!historyPoint().equals(other.historyPoint())) {
+			return false;
+		}
 		return true;
 	}
 }

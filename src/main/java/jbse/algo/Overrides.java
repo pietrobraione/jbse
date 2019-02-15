@@ -137,7 +137,10 @@ public final class Overrides {
     public static final String ALGO_JBSE_ANALYSIS_ISSYMBOLIC                = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_ISSYMBOLIC.class.getName());
     public static final String ALGO_JBSE_ANALYSIS_SUCCEED                   = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_SUCCEED.class.getName());
     public static final String ALGO_JBSE_ANALYSIS_SYMBOLNAME                = internalClassName(jbse.algo.meta.Algo_JBSE_ANALYSIS_SYMBOLNAME.class.getName());
+
+  //Overriding meta-level implementations of jbse.base.Base methods
     public static final String ALGO_JBSE_BASE_CLINIT                        = internalClassName(jbse.algo.meta.Algo_JBSE_BASE_CLINIT.class.getName());
+    public static final String ALGO_JBSE_BASE_MAKEKLASSSYMBOLIC_DO          = internalClassName(jbse.algo.meta.Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO.class.getName());
 
     //Overriding meta-level implementations of JBSE classless (pseudo)methods
     public static final String ALGO_noclass_REGISTERLOADEDCLASS          = internalClassName(jbse.algo.meta.Algo_noclass_REGISTERLOADEDCLASS.class.getName());

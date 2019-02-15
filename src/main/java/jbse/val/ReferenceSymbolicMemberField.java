@@ -6,6 +6,7 @@ package jbse.val;
  */
 public final class ReferenceSymbolicMemberField extends ReferenceSymbolicMember implements SymbolicMemberField {
     private final String fieldName;
+    private final String asOriginString;
     
     /**
      * Constructor.
@@ -22,6 +23,7 @@ public final class ReferenceSymbolicMemberField extends ReferenceSymbolicMember 
     ReferenceSymbolicMemberField(ReferenceSymbolic container, String fieldName, int id, String staticType) {
     	super(container, id, staticType);
     	this.fieldName = fieldName;
+    	this.asOriginString = getContainer().asOriginString() + "." + this.fieldName;
     }
 
     @Override
@@ -31,6 +33,6 @@ public final class ReferenceSymbolicMemberField extends ReferenceSymbolicMember 
     
     @Override
     public String asOriginString() {
-        return this.getContainer().asOriginString() + "." + this.fieldName;
+        return this.asOriginString;
     }
 }

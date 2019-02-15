@@ -186,7 +186,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
     }
 
     protected final void refineRefNull(State state, DecisionAlternative_XYLOAD_GETX_Null altNull)
-    throws ContradictionException, FrozenStateException {
+    throws ContradictionException, InvalidInputException {
         final ReferenceSymbolic referenceToResolve = altNull.getValueToLoad();
         state.assumeNull(referenceToResolve);
     }
@@ -210,7 +210,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
 
             @Override
             public void refineRefNull(State s, DecisionAlternative_XLOAD_GETX_Null drn) 
-            throws ContradictionException, FrozenStateException {
+            throws ContradictionException, InvalidInputException {
                 Algo_INVOKEUNINTERPRETED.this.refineRefNull(s, drn);
             }
 

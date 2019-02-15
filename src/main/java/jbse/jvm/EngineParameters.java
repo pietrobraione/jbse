@@ -227,6 +227,8 @@ public final class EngineParameters implements Cloneable {
     
     /** The maximum size of the heap (number of objects). */
     private long maxHeapSize = 1_000_000;
+    
+    private boolean makePreInitClassesSymbolic = false;
 
     /**
      * Constructor.
@@ -961,6 +963,31 @@ public final class EngineParameters implements Cloneable {
      */
     public long getMaxHeapSize() {
         return this.maxHeapSize;
+    }
+    
+    /**
+     * Sets whether the classes created during
+     * the pre-initialization phase shall be (pedantically)
+     * considered symbolic.
+     * 
+     * @param makePreInitClassesSymbolic a {@code boolean}.
+     *        If {@code true} all the classes created during
+     *        the pre-inizialization phase will be made 
+     *        symbolic.
+     */
+    public void setMakePreInitClassesSymbolic(boolean makePreInitClassesSymbolic) {
+    	this.makePreInitClassesSymbolic = makePreInitClassesSymbolic;
+    }
+    
+    /**
+     * Returns whether the classes created during
+     * the pre-initialization phase shall be (pedantically)
+     * considered symbolic.
+     * 
+     * @return a {@code boolean}.
+     */
+    public boolean getMakePreInitClassesSymbolic() {
+    	return this.makePreInitClassesSymbolic;
     }
 
     @SuppressWarnings("unchecked")

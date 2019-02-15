@@ -3,7 +3,11 @@ package jbse.bc;
 import static org.junit.Assert.*;
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
+import static jbse.bc.Signatures.JAVA_CLONEABLE;
 import static jbse.bc.Signatures.JAVA_ENUM;
+import static jbse.bc.Signatures.JAVA_SERIALIZABLE;
+import static jbse.bc.Signatures.JAVA_STRING;
+import static jbse.bc.Signatures.JBSE_BASE_MAKEKLASSSYMBOLIC;
 import static org.hamcrest.core.Is.*;
 
 import java.io.IOException;
@@ -54,12 +58,16 @@ public class ClassInitTest {
     public void setUp() throws InvalidClassFileFactoryClassException, InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, IncompatibleClassFileException, PleaseLoadClassException, BadClassFileVersionException, WrongClassNameException, IOException {
         final ArrayList<Path> userPaths = new ArrayList<>();
         userPaths.add(Paths.get("src/test/resources/jbse/bc/testdata"));
+        userPaths.add(Paths.get("build/classes/java/main"));
         final Classpath cp = new Classpath(Paths.get(System.getProperty("java.home")), Collections.emptyList(), userPaths);
         final CalculatorRewriting calc = new CalculatorRewriting();
         calc.addRewriter(new RewriterOperationOnSimplex());
         final DecisionProcedureAlgorithms dec = new DecisionProcedureAlgorithms(new DecisionProcedureClassInit(new DecisionProcedureAlwSat(), calc, new ClassInitRulesRepo()), calc);
-        this.ctx = new ExecutionContext(null, true, 10, 10, cp, ClassFileFactoryJavassist.class, Collections.emptyMap(), calc, new DecisionAlternativeComparators(), new Signature("hier/A", "()V", "a"), dec, null, null, new TriggerRulesRepo());
+        this.ctx = new ExecutionContext(null, true, 20, 20, true, cp, ClassFileFactoryJavassist.class, Collections.emptyMap(), calc, new DecisionAlternativeComparators(), new Signature("hier/A", "()V", "a"), dec, null, null, new TriggerRulesRepo());
         this.state = this.ctx.createVirginPreInitialState();
+        this.state.getClassHierarchy().loadCreateClass(CLASSLOADER_BOOT, JAVA_CLONEABLE, true); //necessary when creating string literals
+        this.state.getClassHierarchy().loadCreateClass(CLASSLOADER_BOOT, JAVA_SERIALIZABLE, true); //necessary when creating string literals
+        this.state.getClassHierarchy().loadCreateClass(CLASSLOADER_BOOT, JAVA_STRING, true); //necessary when creating string literals
         this.state.getClassHierarchy().loadCreateClass(CLASSLOADER_BOOT, JAVA_ENUM, true); //necessary when checking if a class has a pure initializer
     }
     
@@ -73,18 +81,27 @@ public class ClassInitTest {
         } catch (InterruptException e) {
             //that's right, go on
         }
-        assertThat(this.state.getStackSize(), is(11));
+        assertThat(this.state.getStackSize(), is(20));
         final Iterator<Frame> itFrames = this.state.getStack().iterator();
         Frame f;
         f = itFrames.next(); assertThat(f.getCurrentMethodSignature(), is(this.ctx.rootMethodSignature)); 
+        f = itFrames.next(); assertThat(f.getCurrentMethodSignature(), is(JBSE_BASE_MAKEKLASSSYMBOLIC)); 
         f = itFrames.next(); assertThat(f.getCurrentMethodSignature(), is(new Signature("hier/A", "()V", "<clinit>"))); 
+        f = itFrames.next(); assertThat(f.getCurrentMethodSignature(), is(JBSE_BASE_MAKEKLASSSYMBOLIC)); 
         f = itFrames.next(); assertThat(f.getCurrentMethodSignature(), is(new Signature("hier/E", "()V", "<clinit>"))); 
+        f = itFrames.next(); assertThat(f.getCurrentMethodSignature(), is(JBSE_BASE_MAKEKLASSSYMBOLIC)); 
         f = itFrames.next(); assertThat(f.getCurrentMethodSignature(), is(new Signature("hier/G", "()V", "<clinit>"))); 
+        f = itFrames.next(); assertThat(f.getCurrentMethodSignature(), is(JBSE_BASE_MAKEKLASSSYMBOLIC)); 
         f = itFrames.next(); assertThat(f.getCurrentMethodSignature(), is(new Signature("hier/F", "()V", "<clinit>"))); 
+        f = itFrames.next(); assertThat(f.getCurrentMethodSignature(), is(JBSE_BASE_MAKEKLASSSYMBOLIC)); 
         f = itFrames.next(); assertThat(f.getCurrentMethodSignature(), is(new Signature("hier/H", "()V", "<clinit>"))); 
+        f = itFrames.next(); assertThat(f.getCurrentMethodSignature(), is(JBSE_BASE_MAKEKLASSSYMBOLIC)); 
         f = itFrames.next(); assertThat(f.getCurrentMethodSignature(), is(new Signature("hier/D", "()V", "<clinit>"))); 
+        f = itFrames.next(); assertThat(f.getCurrentMethodSignature(), is(JBSE_BASE_MAKEKLASSSYMBOLIC)); 
         f = itFrames.next(); assertThat(f.getCurrentMethodSignature(), is(new Signature("hier/B", "()V", "<clinit>"))); 
+        f = itFrames.next(); assertThat(f.getCurrentMethodSignature(), is(JBSE_BASE_MAKEKLASSSYMBOLIC)); 
         f = itFrames.next(); assertThat(f.getCurrentMethodSignature(), is(new Signature("hier/I", "()V", "<clinit>"))); 
+        f = itFrames.next(); assertThat(f.getCurrentMethodSignature(), is(JBSE_BASE_MAKEKLASSSYMBOLIC)); 
         f = itFrames.next(); assertThat(f.getCurrentMethodSignature(), is(new Signature("hier/C", "()V", "<clinit>"))); 
         f = itFrames.next(); assertThat(f.getCurrentMethodSignature(), is(new Signature("java/lang/Object", "()V", "<clinit>"))); 
     }

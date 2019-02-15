@@ -17,7 +17,6 @@ import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
-import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.CannotAssumeSymbolicObjectException;
 import jbse.mem.exc.ContradictionException;
@@ -31,7 +30,6 @@ import jbse.tree.DecisionAlternative_XYLOAD_GETX_Null;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Expands;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Loads;
 import jbse.val.Primitive;
-import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
@@ -95,15 +93,14 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
     }
 
     protected final void refineRefAliases(State state, DecisionAlternative_XYLOAD_GETX_Aliases altAliases)
-    throws ContradictionException, FrozenStateException {
+    throws ContradictionException, InvalidInputException {
         final ReferenceSymbolic referenceToResolve = altAliases.getValueToLoad();
         final long aliasPosition = altAliases.getObjectPosition();
-        final Objekt object = state.getObjectInitial(new ReferenceConcrete(aliasPosition));
-        state.assumeAliases(referenceToResolve, aliasPosition, object);
+        state.assumeAliases(referenceToResolve, aliasPosition);
     }
 
     protected final void refineRefNull(State state, DecisionAlternative_XYLOAD_GETX_Null altNull)
-    throws ContradictionException, FrozenStateException {
+    throws ContradictionException, InvalidInputException {
         final ReferenceSymbolic referenceToResolve = altNull.getValueToLoad();
         state.assumeNull(referenceToResolve);
     }

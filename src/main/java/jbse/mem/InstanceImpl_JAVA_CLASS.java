@@ -4,6 +4,7 @@ import static jbse.bc.Signatures.JAVA_CLASS;
 
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
+import jbse.common.exc.InvalidInputException;
 import jbse.val.Calculator;
 import jbse.val.HistoryPoint;
 import jbse.val.ReferenceSymbolic;
@@ -33,6 +34,11 @@ public final class InstanceImpl_JAVA_CLASS extends InstanceImpl implements Insta
     @Override
     public ClassFile representedClass() {
         return this.representedClass;
+    }
+    
+    @Override
+    public void makeSymbolic(ReferenceSymbolic origin) throws InvalidInputException {
+		throw new InvalidInputException("Attempted to makeSymbolic an instance of java.lang.Class.");
     }
     
     @Override

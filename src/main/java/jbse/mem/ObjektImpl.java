@@ -9,6 +9,7 @@ import java.util.Map;
 
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
+import jbse.common.exc.InvalidInputException;
 import jbse.val.Calculator;
 import jbse.val.HistoryPoint;
 import jbse.val.Primitive;
@@ -19,17 +20,17 @@ import jbse.val.Value;
  * Base class for all classes that implement {@link Objekt}s.
  */
 public abstract class ObjektImpl implements Objekt {
-    /** Whether this object is symbolic. Immutable. */
-    private final boolean symbolic;
-
     /** ClassFile for this object's class. Immutable. */
     protected final ClassFile classFile;
+
+    /** Whether this object is symbolic. */
+    private boolean symbolic;
 
     /**
      * The origin of the object in the case it is created by 
      * lazy initialization. Immutable.
      */
-    private final ReferenceSymbolic origin;
+    private ReferenceSymbolic origin;
 
     /** The creation {@link HistoryPoint} of this {@link ObjektImpl}. Immutable. */
     private final HistoryPoint epoch;
@@ -125,10 +126,19 @@ public abstract class ObjektImpl implements Objekt {
     public final boolean isSymbolic() {
     	return this.symbolic; 
     }
+    
+    @Override
+    public void makeSymbolic(ReferenceSymbolic origin) throws InvalidInputException {
+    	if (origin == null || this.symbolic == true) {
+    		throw new InvalidInputException("Attempted to invoke ObjektImpl.makeSymbolic with a null origin, or over an already symbolic Objekt.");
+    	}
+    	this.symbolic = true;
+    	this.origin = origin;
+    }
 
     @Override
     public final void setIdentityHashCode(Primitive identityHashCode) {
-        //TODO check that the type of identityHashCode is INT.
+        //TODO check that the type of identityHashCode is INT and that identityHashCode is not null.
         this.identityHashCode = identityHashCode;
     }
 
