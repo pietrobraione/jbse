@@ -593,10 +593,8 @@ public final class ArrayImpl extends ObjektImpl implements Array {
 		if (arrayMemberClass.isPrimitiveOrVoid() && newValue.getType() != toPrimitiveOrVoidInternalName(arrayMemberClass.getClassName())) {
 			throw new InvalidTypeException("Attempted to set an array with member type " + arrayMemberClass.getClassName() + " with a value with type " + newValue.getType() + ".");
 		}
-		if (arrayMemberClass.isArray() && newValue.getType() != ARRAYOF && newValue.getType() != NULLREF) {
-			throw new InvalidTypeException("Attempted to set an array with member type " + arrayMemberClass.getClassName() + " with a value with type " + newValue.getType() + ".");
-		}
-		if (arrayMemberClass.isReference() && newValue.getType() != REFERENCE && newValue.getType() != NULLREF) {
+		if ((arrayMemberClass.isArray() || arrayMemberClass.isReference()) && 
+			newValue.getType() != ARRAYOF && newValue.getType() != REFERENCE && newValue.getType() != NULLREF) {
 			throw new InvalidTypeException("Attempted to set an array with member type " + arrayMemberClass.getClassName() + " with a value with type " + newValue.getType() + ".");
 		}
     }
