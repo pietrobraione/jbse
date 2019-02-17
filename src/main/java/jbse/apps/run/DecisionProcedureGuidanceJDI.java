@@ -1,5 +1,21 @@
 package jbse.apps.run;
 
+import static jbse.bc.Opcodes.OP_IALOAD;
+import static jbse.bc.Opcodes.OP_ILOAD;
+import static jbse.bc.Opcodes.OP_ILOAD_0;
+import static jbse.bc.Opcodes.OP_ILOAD_1;
+import static jbse.bc.Opcodes.OP_ILOAD_2;
+import static jbse.bc.Opcodes.OP_ILOAD_3;
+import static jbse.bc.Opcodes.OP_INVOKEHANDLE;
+import static jbse.bc.Opcodes.OP_INVOKEDYNAMIC;
+import static jbse.bc.Opcodes.OP_INVOKEVIRTUAL;
+import static jbse.bc.Opcodes.OP_IRETURN;
+import static jbse.bc.Opcodes.OP_RETURN;
+import static jbse.bc.Opcodes.OP_SALOAD;
+import static jbse.bc.Opcodes.OP_WIDE;
+import static jbse.bc.Offsets.XLOADSTORE_IMMEDIATE_WIDE_OFFSET;
+import static jbse.bc.Offsets.XLOADSTORE_IMMEDIATE_OFFSET;
+import static jbse.bc.Offsets.XLOADSTORE_IMPLICIT_OFFSET;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.binaryClassName;
@@ -163,7 +179,8 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 		private boolean lookAheadDecisionIsDefaultCase;
 		private int lookAheadDecisionCaseValue;
 		private ObjectReference lookAheadUnintFuncNonPrimitiveRetValue;
-		private int previousCodeIndex, previousCodeIndex2; //one and two before
+		private int previousCodeIndex = -1;
+		private Primitive xaloadIndex = null;
 
         public JVMJDI(Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits) 
         throws GuidanceException {
@@ -557,25 +574,34 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			}
         	exec_XALOAD_lookAhead();
         	if (this.lookAheadDecisionBoolean) {
-        		//in range: tries to determine the index and to use it to 
-        		//decide the array access expression of da
-        		final Primitive index = tryGet_XALOAD_index();
-        		if (index != null) {
-        			final Primitive accessExpressionOnConcreteIndex = da.getArrayAccessExpression().doReplace(da.getIndexFormal(), index);
+        		//in range: looks whether an index is available and 
+        		//uses it to decide the array access expression of da
+        		if (this.xaloadIndex == null) {
+            		//no index: falls back on accepting all the DecisionAlternative_XALOAD_In
+            		return this.calc.valBoolean(da instanceof DecisionAlternative_XALOAD_In);
+        		} else {
+        			final Primitive accessExpressionOnConcreteIndex = da.getArrayAccessExpression().doReplace(da.getIndexFormal(), this.xaloadIndex);
         			if (accessExpressionOnConcreteIndex instanceof Simplex) {
         				return accessExpressionOnConcreteIndex;
+        			} else {
+                		//the access condition depends on more symbols than just the index: 
+        				//falls back on accepting all the DecisionAlternative_XALOAD_In
+                		return this.calc.valBoolean(da instanceof DecisionAlternative_XALOAD_In);
         			}
         		}
-        		//if fails, falls back on accepting all the DecisionAlternative_XALOAD_In
-        		return this.calc.valBoolean(da instanceof DecisionAlternative_XALOAD_In);
         	} else {
         		return this.calc.valBoolean(da instanceof DecisionAlternative_XALOAD_Out);
         	}
-			/*return this.calc.valBoolean(
-					(da instanceof DecisionAlternative_XALOAD_In && this.lookAheadDecisionBoolean) ||
-					(da instanceof DecisionAlternative_XALOAD_Out && !this.lookAheadDecisionBoolean));*/
-        
         }
+        
+        private static boolean isInvoke(byte currentOpcode) {
+    		return ((OP_INVOKEVIRTUAL <= currentOpcode && currentOpcode <= OP_INVOKEDYNAMIC) ||
+    				 currentOpcode == OP_INVOKEHANDLE);
+    	}
+
+        private static boolean isReturn(byte currentOpcode) {
+    		return (OP_IRETURN <= currentOpcode && currentOpcode <= OP_RETURN);
+    	}
 
         /**
          * Does a single execution step of the concrete state.
@@ -593,8 +619,50 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 			final StepRequest sr = mgr.createStepRequest(thread, StepRequest.STEP_MIN, stepDepth);
 			sr.enable();
 
-			this.previousCodeIndex2 = this.previousCodeIndex;
-			this.previousCodeIndex = getCurrentCodeIndex();
+			//if we are at an ILOAD bytecode followed by an XALOAD, 
+			//we store the value from the variable because it is used
+			//as XALOAD index
+			final int currentCodeIndex = getCurrentCodeIndex();
+			final byte[] bc = getCurrentBytecode();
+			final byte currentOpcode = bc[currentCodeIndex];
+			if (this.previousCodeIndex >= 0 &&
+					(currentOpcode == OP_ILOAD || 
+					(OP_ILOAD_0 <= currentOpcode && currentOpcode <= OP_ILOAD_3))) {
+				final boolean wide = (bc[this.previousCodeIndex] == OP_WIDE);
+				final int nextCodeIndex; 
+				if (currentOpcode == OP_ILOAD) {
+					nextCodeIndex = (wide ? XLOADSTORE_IMMEDIATE_WIDE_OFFSET : XLOADSTORE_IMMEDIATE_OFFSET);
+				} else {
+					nextCodeIndex = XLOADSTORE_IMPLICIT_OFFSET;
+				}
+				final byte opcodeNext = bc[nextCodeIndex];
+				if (OP_IALOAD <= opcodeNext && opcodeNext <= OP_SALOAD) {
+					//determines the index of the local variable
+					final int localVariableIndex;
+					if (currentOpcode == OP_ILOAD_0) {
+						localVariableIndex = 0;
+					} else if (currentOpcode == OP_ILOAD_1) {
+						localVariableIndex = 1;
+					} else if (currentOpcode == OP_ILOAD_2) {
+						localVariableIndex = 2;
+					} else if (currentOpcode == OP_ILOAD_3) {
+						localVariableIndex = 3;
+					} else {
+						localVariableIndex = (wide ? bc[currentCodeIndex + 1] : Util.byteCat(bc[currentCodeIndex + 1], bc[currentCodeIndex + 2]));
+					}
+					this.xaloadIndex = readLocalVariable(localVariableIndex);
+				} else {
+					this.xaloadIndex = null;
+				}
+			} else {
+				this.xaloadIndex = null;
+			}
+			if (isInvoke(currentOpcode) || isReturn(currentOpcode)) {
+				//no valid previous code index
+				this.previousCodeIndex = -1;
+			} else {
+				this.previousCodeIndex = currentCodeIndex;
+			}
 			this.vm.resume();
 			final EventQueue queue = this.vm.eventQueue();
 
@@ -800,27 +868,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 
         private final static short JDWP_INVALID_SLOT = (short) 35;
         
-        private Primitive tryGet_XALOAD_index() throws GuidanceException {
-			final byte[] bc = getCurrentBytecode();
-			if (bc[this.previousCodeIndex2] != Opcodes.OP_ILOAD && (bc[this.previousCodeIndex2] < Opcodes.OP_ILOAD_0 || bc[this.previousCodeIndex2] > Opcodes.OP_ILOAD_3)) {
-				return null; //gives up
-			}
-			
-			//determine the index of the local variable
-			final int localVariableIndex;
-			if (bc[this.previousCodeIndex2] == Opcodes.OP_ILOAD_0) {
-				localVariableIndex = 0;
-			} else if (bc[this.previousCodeIndex2] == Opcodes.OP_ILOAD_1) {
-				localVariableIndex = 1;
-			} else if (bc[this.previousCodeIndex2] == Opcodes.OP_ILOAD_2) {
-				localVariableIndex = 2;
-			} else if (bc[this.previousCodeIndex2] == Opcodes.OP_ILOAD_3) {
-				localVariableIndex = 3;
-			} else {
-				localVariableIndex = (this.previousCodeIndex2 + 2 == this.previousCodeIndex ? bc[this.previousCodeIndex2 + 1] : Util.byteCat(bc[this.previousCodeIndex2 + 1], bc[this.previousCodeIndex2 + 2]));
-			}
-			
-			//gets the index
+        private Primitive readLocalVariable(int localVariableIndex) throws GuidanceException {
 			try {
 				final String getValuesClassName = "com.sun.tools.jdi.JDWP$StackFrame$GetValues";
 				final Class<?> ourSlotInfoClass = Class.forName(getValuesClassName + "$SlotInfo");
@@ -872,8 +920,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 					throw new GuidanceException("Wrong number of values returned from target VM");
 				}
 				com.sun.jdi.Value jdiIndex = values[0];
-			      
-				
+
 				return this.calc.valInt(((IntegerValue) jdiIndex).intValue());
 			} catch (IncompatibleThreadStateException | IndexOutOfBoundsException | ClassCastException e) {
 				throw new GuidanceException(e);
@@ -997,8 +1044,8 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 						//JDI should be aligned with JBSE
 						checkAlignmentWithJbseOrThrowException(jbseState);
 					} else {
-						//JDI became disaligned with JBSE: this happens when JBSE is running a
-						//trigger or a snippet. JDI waits until JBSE terminates the execution
+						//JDI lost alignment with JBSE: this happens when JBSE is running a
+						//trigger or a snippet. JDI must wait until JBSE terminates the execution
 						this.jdiIsWaitingForJBSE = true;
 					}
 				}
