@@ -57,6 +57,7 @@ import jbse.val.Reference;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.ReferenceSymbolicApply;
 import jbse.val.Simplex;
+import jbse.val.Term;
 import jbse.val.Value;
 import jbse.val.WideningConversion;
 import jbse.val.exc.InvalidOperandException;
@@ -643,36 +644,36 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @return an {@link Outcome}.
 	 * @throws InvalidInputException when one of the parameters is incorrect.
 	 * @throws DecisionException upon failure.
-         * @throws ClassFileNotFoundException if {@code valToLoad} is a symbolic 
-         *         reference and 
-         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or the class name of one of its possibile expansions does 
-         *         not have a classfile in {@code state}'s classpath.
-         * @throws ClassFileIllFormedException if {@code valToLoad} is a symbolic 
-         *         reference and the classfile for
-         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or for the class name of one of its possibile expansions is ill-formed.
-         * @throws BadClassFileVersionException when {@code valToLoad} is a symbolic 
-         *         reference and the bytecode for
-         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or for the class name of one of its possibile expansions has a version
-         *         number that is unsupported by this version of JBSE.
-         * @throws WrongClassNameException when {@code valToLoad} is a symbolic 
-         *         reference and the bytecode for
-         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or for the class name of one of its possibile expansions has a 
-         *         class name different from the expected one ({@code valToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or the expansion's name).
-         * @throws IncompatibleClassFileException if {@code valToLoad} is a symbolic 
-         *         reference and the superclass of class
-         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
-         *         is resolved to an interface class, or any superinterface is resolved
-         *         to an object class.
-         * @throws ClassFileNotAccessibleException if {@code valToLoad} is a symbolic 
-         *         reference and the classfile for
-         *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or for the class name of one of its possibile expansions cannot access
-         *         one of its superclass/superinterfaces.
+	 * @throws ClassFileNotFoundException if {@code valToLoad} is a symbolic 
+	 *         reference and 
+	 *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or the class name of one of its possibile expansions does 
+	 *         not have a classfile in {@code state}'s classpath.
+	 * @throws ClassFileIllFormedException if {@code valToLoad} is a symbolic 
+	 *         reference and the classfile for
+	 *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or for the class name of one of its possibile expansions is ill-formed.
+	 * @throws BadClassFileVersionException when {@code valToLoad} is a symbolic 
+	 *         reference and the bytecode for
+	 *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or for the class name of one of its possibile expansions has a version
+	 *         number that is unsupported by this version of JBSE.
+	 * @throws WrongClassNameException when {@code valToLoad} is a symbolic 
+	 *         reference and the bytecode for
+	 *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or for the class name of one of its possibile expansions has a 
+	 *         class name different from the expected one ({@code valToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or the expansion's name).
+	 * @throws IncompatibleClassFileException if {@code valToLoad} is a symbolic 
+	 *         reference and the superclass of class
+	 *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         is resolved to an interface class, or any superinterface is resolved
+	 *         to an object class.
+	 * @throws ClassFileNotAccessibleException if {@code valToLoad} is a symbolic 
+	 *         reference and the classfile for
+	 *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or for the class name of one of its possibile expansions cannot access
+	 *         one of its superclass/superinterfaces.
 	 */
 	public Outcome resolve_XLOAD_GETX(State state, Value valToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result) 
 	throws InvalidInputException, DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
@@ -689,42 +690,42 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	}
 	
 	/**
-         * Resolves loading a value from a local variable or a field to the operand stack,
+	 * Resolves loading a value from a local variable or a field to the operand stack,
 	 * in the case the value to load is an unresolved symbolic
-         * reference.
-         * 
+	 * reference.
+	 * 
 	 * @param state a {@link State}.
 	 * @param refToLoad the {@link ReferenceSymbolic} returned by the local variable access, 
-         *        that must be loaded on {@code state}'s operand stack. It must not be {@code null}.
-         * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XLOAD_GETX}{@code >}, 
-         *        where the method will put all the {@link DecisionAlternative_XLOAD_GETX}s 
-         *        representing all the satisfiable outcomes of the operation.
+	 *        that must be loaded on {@code state}'s operand stack. It must not be {@code null}.
+	 * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XLOAD_GETX}{@code >}, 
+	 *        where the method will put all the {@link DecisionAlternative_XLOAD_GETX}s 
+	 *        representing all the satisfiable outcomes of the operation.
 	 * @return an {@link Outcome}.
 	 * @throws DecisionException upon failure.
-         * @throws ClassFileNotFoundException if 
-         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or the class name of one of its possibile expansions does 
-         *         not have a classfile in {@code state}'s classpath.
-         * @throws ClassFileIllFormedException if the classfile for
-         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or for the class name of one of its possibile expansions is ill-formed.
-         * @throws BadClassFileVersionException when the bytecode for
-         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or for the class name of one of its possibile expansions has a version
-         *         number that is unsupported by this version of JBSE.
-         * @throws WrongClassNameException when the bytecode for
-         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or for the class name of one of its possibile expansions has a 
-         *         class name different from the expected one ({@code refToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or the expansion's name).
-         * @throws IncompatibleClassFileException if the superclass of
-         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or of one of its possible expansion is resolved to an interface class,
-         *         or any superinterface is resolved to an object class.
-         * @throws ClassFileNotAccessibleException if the classfile for
-         *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
-         *         or for the class name of one of its possibile expansions cannot access
-         *         one of its superclass/superinterfaces.
+	 * @throws ClassFileNotFoundException if 
+	 *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or the class name of one of its possibile expansions does 
+	 *         not have a classfile in {@code state}'s classpath.
+	 * @throws ClassFileIllFormedException if the classfile for
+	 *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or for the class name of one of its possibile expansions is ill-formed.
+	 * @throws BadClassFileVersionException when the bytecode for
+	 *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or for the class name of one of its possibile expansions has a version
+	 *         number that is unsupported by this version of JBSE.
+	 * @throws WrongClassNameException when the bytecode for
+	 *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or for the class name of one of its possibile expansions has a 
+	 *         class name different from the expected one ({@code refToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or the expansion's name).
+	 * @throws IncompatibleClassFileException if the superclass of
+	 *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or of one of its possible expansion is resolved to an interface class,
+	 *         or any superinterface is resolved to an object class.
+	 * @throws ClassFileNotAccessibleException if the classfile for
+	 *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+	 *         or for the class name of one of its possibile expansions cannot access
+	 *         one of its superclass/superinterfaces.
 	 * @see {@link #resolve_XLOAD_GETX(State, Value, SortedSet) resolve_XLOAD_GETX}.
 	 */
 	protected Outcome resolve_XLOAD_GETX_Unresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)
@@ -746,10 +747,14 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * comes from an array.
 	 * 
 	 * @param state a {@link State}. It must not be {@code null}.
-	 * @param accessExpression an {@link Expression}, the condition under which the 
-	 *        array access yields {@code valToLoad} as result. It can be {@code null}, 
-	 *        that is equivalent to {@code true} but additionally denotes the fact that the 
-	 *        array was accessed by a concrete index.
+	 * @param accessExpression an {@link Expression} containing {@code indexFormal}, 
+	 *        signifying the condition under which the array access yields {@code valToLoad} 
+	 *        as result. It can be {@code null}, in which case it is equivalent to {@code true} but 
+	 *        additionally denotes the fact that the array was accessed by a concrete index.
+	 * @param indexFormal the {@link Term} used in {@code accessExpression} to indicate
+	 *        the array index. It must not be {@code null}.
+	 * @param indexActual a {@link Primitive}, the actual index used to access the array.
+	 *        It must not be {@code null}.
 	 * @param valToLoad the {@link Value} returned by the array access 
 	 *        when {@code accessExpression} is true,
 	 *        or {@code null} to denote an access out of the 
@@ -798,7 +803,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
          *         one of its superclass/superinterfaces.
 	 */
 	//TODO should be final?
-	public Outcome resolve_XALOAD(State state, Expression accessExpression, Value valToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result)
+	public Outcome resolve_XALOAD(State state, Expression accessExpression, Term indexFormal, Primitive indexActual, Value valToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result)
 	throws InvalidInputException, DecisionException, ClassFileNotFoundException, 
 	ClassFileIllFormedException, BadClassFileVersionException, WrongClassNameException, 
 	IncompatibleClassFileException, ClassFileNotAccessibleException {
@@ -811,9 +816,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		if (valToLoadResolved && accessConcrete) {
 		    return resolve_XALOAD_ResolvedConcrete(valToLoad, fresh, arrayToWriteBack, result);
 		} else if (valToLoadResolved && !accessConcrete) {
-		    return resolve_XALOAD_ResolvedNonconcrete(accessExpression, valToLoad, fresh, arrayToWriteBack, result);
-		} else {
-		    return resolve_XALOAD_Unresolved(state, accessExpression, (ReferenceSymbolic) valToLoad, fresh, arrayToWriteBack, result);
+		    return resolve_XALOAD_ResolvedNonconcrete(accessExpression, indexFormal, indexActual, valToLoad, fresh, arrayToWriteBack, result);
+		} else { //(!valToLoadResolved)
+		    return resolve_XALOAD_Unresolved(state, accessExpression, indexFormal, indexActual, (ReferenceSymbolic) valToLoad, fresh, arrayToWriteBack, result);
 		}
 	}
 	
@@ -856,8 +861,12 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * concrete, or a symbolic primitive, or a resolved symbolic
 	 * reference) and the index used for the access is symbolic.
 	 * 
-	 * @param accessExpression an {@link Expression}, the condition under
-	 *        which the array access yields {@code valToLoad} as result. 
+	 * @param accessExpression an {@link Expression} containing {@code indexFormal}, 
+	 *        signifying the condition under which the array access yields {@code valToLoad} 
+	 *        as result. It must not be {@code null}.
+	 * @param indexFormal the {@link Term} used in {@code accessExpression} to indicate
+	 *        the array index. It must not be {@code null}.
+	 * @param indexActual a {@link Primitive}, the actual index used to access the array.
 	 *        It must not be {@code null}.
 	 * @param valToLoad the {@link Value} returned by the array access 
 	 *        when {@code accessExpression} is true,
@@ -875,19 +884,20 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * @return an {@link Outcome}.
 	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, Reference, SortedSet) resolve_XALOAD}.
 	 */
-	protected Outcome resolve_XALOAD_ResolvedNonconcrete(Expression accessExpression, Value valToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result)
+	protected Outcome resolve_XALOAD_ResolvedNonconcrete(Expression accessExpression, Term indexFormal, Primitive indexActual, Value valToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result)
 	throws DecisionException {
 	    try {
 	        final boolean shouldRefine;
-	        if (isSat(accessExpression)) {
+	        final Expression accessExpressionSpecialized = (Expression) accessExpression.doReplace(indexFormal, indexActual);
+	        if (isSat(accessExpressionSpecialized)) {
 	            shouldRefine = fresh; //a fresh value to load requires refinement of the source array
-	        	final Primitive accessExpressionSimplified = deleteRedundantConjuncts(accessExpression);
+	        	final Primitive accessExpressionSimplified = deleteRedundantConjuncts(accessExpressionSpecialized);
 	            final boolean accessOutOfBounds = (valToLoad == null);
 	            final int branchNumber = result.size() + 1;
 	            if (accessOutOfBounds) {
-	                result.add(new DecisionAlternative_XALOAD_Out(accessExpressionSimplified, branchNumber));
+	                result.add(new DecisionAlternative_XALOAD_Out(accessExpression, indexFormal, indexActual, ((accessExpressionSimplified == null || accessExpressionSimplified.surelyTrue()) ? null : (Expression) accessExpressionSimplified), branchNumber));
 	            } else {
-	                result.add(new DecisionAlternative_XALOAD_Resolved(accessExpressionSimplified, valToLoad, fresh, arrayToWriteBack, branchNumber));
+	                result.add(new DecisionAlternative_XALOAD_Resolved(accessExpression, indexFormal, indexActual, ((accessExpressionSimplified == null || accessExpressionSimplified.surelyTrue()) ? null : (Expression) accessExpressionSimplified), valToLoad, fresh, arrayToWriteBack, branchNumber));
 	            }
 	        } else {
 	            //accessExpression is unsatisfiable: nothing to do
@@ -901,6 +911,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	}
 	
 	private Primitive deleteRedundantConjuncts(Primitive p) throws DecisionException, InvalidInputException, InvalidTypeException, InvalidOperandException {
+		if (p == null) {
+			return null;
+		}
 		if (p instanceof Expression) {
 			final Expression pExpr = (Expression) p;
 			if (pExpr.getOperator() == Operator.AND) {
@@ -926,8 +939,13 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 	 * reference.
 	 * 
          * @param state a {@link State}. 
-	 * @param accessExpression an {@link Expression}, the condition under
-	 *        which the array access yields {@code valToLoad} as result. 
+	 * @param accessExpression an {@link Expression} containing {@code indexFormal}, 
+	 *        signifying the condition under which the array access yields {@code valToLoad} 
+	 *        as result. It can be {@code null}, in which case it is equivalent to {@code true} but 
+	 *        additionally denotes the fact that the array was accessed by a concrete index.
+	 * @param indexFormal the {@link Term} used in {@code accessExpression} to indicate
+	 *        the array index. It must not be {@code null}.
+	 * @param indexActual a {@link Primitive}, the actual index used to access the array.
 	 *        It must not be {@code null}.
 	 * @param refToLoad the {@link ReferenceSymbolic} returned by the array access 
 	 *        when {@code accessExpression} is true, 
@@ -968,25 +986,27 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
          *         one of its superclass/superinterfaces.
 	 * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet) resolve_XALOAD}.
 	 */
-	protected Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, Reference arrayReference, SortedSet<DecisionAlternative_XALOAD> result)
+	protected Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, Term indexFormal, Primitive indexActual, ReferenceSymbolic refToLoad, boolean fresh, Reference arrayReference, SortedSet<DecisionAlternative_XALOAD> result)
 	throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
 	BadClassFileVersionException, WrongClassNameException, 
 	IncompatibleClassFileException, ClassFileNotAccessibleException {
 	    try {
 	        final boolean accessConcrete = (accessExpression == null);
+	        final Expression accessExpressionSpecialized = (accessExpression == null ? null : (Expression) accessExpression.doReplace(indexFormal, indexActual));
 	        final boolean shouldRefine;
 	        final boolean noReferenceExpansion;
-	        if (accessConcrete || isSat(accessExpression)) {
+	        if (accessConcrete || isSat(accessExpressionSpecialized)) {
 	            shouldRefine = true; //unresolved symbolic references always require a refinement action
+	        	final Primitive accessExpressionSimplified = deleteRedundantConjuncts(accessExpressionSpecialized);
 	            noReferenceExpansion =
-	                doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFactory_XALOAD(accessExpression, fresh, arrayReference), result);
+	                doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFactory_XALOAD(accessExpression, indexFormal, indexActual, ((accessExpressionSimplified == null || accessExpressionSimplified.surelyTrue()) ? null : (Expression) accessExpressionSimplified), fresh, arrayReference), result);
 	        } else {
 	            //accessExpression is unsatisfiable: nothing to do
 	            shouldRefine = false;
 	            noReferenceExpansion = false;
 	        }
 	        return Outcome.val(shouldRefine, noReferenceExpansion, true);
-	    } catch (InvalidInputException e) {
+	    } catch (InvalidInputException | InvalidTypeException | InvalidOperandException e) {
 	        //this should never happen as arguments have been checked by the caller
 	        throw new UnexpectedInternalException(e);
 	    }

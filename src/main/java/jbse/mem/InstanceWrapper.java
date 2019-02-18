@@ -5,6 +5,7 @@ import java.util.Map;
 
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.HistoryPoint;
 import jbse.val.Primitive;
@@ -48,6 +49,12 @@ final class InstanceWrapper extends ObjektWrapper<InstanceImpl> implements Insta
 	@Override
 	public boolean isSymbolic() {
 		return getDelegate().isSymbolic();
+	}
+
+	@Override
+	public void makeSymbolic(ReferenceSymbolic origin) throws InvalidInputException {
+		possiblyCloneDelegate();
+		getDelegate().makeSymbolic(origin);
 	}
 
 	@Override

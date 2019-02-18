@@ -61,7 +61,7 @@ public class SettingsReader {
 
     public void fillRulesClassInit(ClassInitRulesRepo repo) {
         for (String cname : this.parser.notInitializedClasses) {
-            repo.addNotInitializedClass(cname);
+            repo.addNotInitializedClassPattern(cname);
         }
     }
 

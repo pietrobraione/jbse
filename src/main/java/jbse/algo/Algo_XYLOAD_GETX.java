@@ -95,14 +95,14 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
     }
 
     protected final void refineRefAliases(State state, DecisionAlternative_XYLOAD_GETX_Aliases altAliases)
-    throws ContradictionException, FrozenStateException {
+    throws ContradictionException, InvalidInputException {
         final ReferenceSymbolic referenceToResolve = altAliases.getValueToLoad();
         final Objekt aliasObject = state.getObject(new ReferenceConcrete(altAliases.getObjectPosition()));
         state.assumeAliases(referenceToResolve, aliasObject.getOrigin());
     }
 
     protected final void refineRefNull(State state, DecisionAlternative_XYLOAD_GETX_Null altNull)
-    throws ContradictionException, FrozenStateException {
+    throws ContradictionException, InvalidInputException {
         final ReferenceSymbolic referenceToResolve = altNull.getValueToLoad();
         state.assumeNull(referenceToResolve);
     }

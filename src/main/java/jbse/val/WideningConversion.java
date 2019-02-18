@@ -4,6 +4,7 @@ import static jbse.val.HistoryPoint.unknown;
 
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
@@ -14,11 +15,11 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  *
  */
-public final class WideningConversion extends PrimitiveSymbolic {
+public final class WideningConversion extends PrimitiveSymbolicComputed {
     private final Primitive arg;
-    private final int hashCode;
     private final String toString;
-    private final String originString;
+    private final String asOriginString;
+    private final int hashCode;
 
     private WideningConversion(char type, Calculator calc, Primitive arg) 
     throws InvalidOperandException, InvalidTypeException, InvalidInputException {
@@ -34,18 +35,18 @@ public final class WideningConversion extends PrimitiveSymbolic {
         
         this.arg = arg;
 
+        //calculates toString
+        this.toString = "WIDEN-"+ getType() + "(" + arg.toString() + ")";
+
+        //calculates asOriginString
+        this.asOriginString = "WIDEN-"+ getType() + "(" + (arg.isSymbolic() ? ((Symbolic) arg).asOriginString(): arg.toString()) + ")";;
+
         //calculates hashCode
         final int prime = 281;
         int result = 1;
         result = prime * result + arg.hashCode();
         result = prime * result + type;
         this.hashCode = result;
-
-        //calculates toString
-        this.toString = "WIDEN-"+ getType() + "(" + arg.toString() + ")";
-
-        //calculates originString
-        this.originString = "WIDEN-"+ getType() + "(" + (arg.isSymbolic() ? ((Symbolic) arg).asOriginString() : arg.toString()) + ")";
     }
 
     /**
@@ -69,10 +70,29 @@ public final class WideningConversion extends PrimitiveSymbolic {
     public Primitive getArg() {
         return this.arg;
     }
+    
+    @Override
+    public Primitive doReplace(Primitive from, Primitive to) {
+    	final Primitive newArg;
+    	if (this.arg.equals(from)) {
+    		newArg = to;
+    	} else if (this.arg instanceof PrimitiveSymbolicComputed) {
+    		newArg = ((PrimitiveSymbolicComputed) this.arg).doReplace(from, to);
+    	} else {
+    		newArg = this.arg;
+    	}
+    	
+    	try {
+			return this.calc.widen(getType(), newArg);
+		} catch (InvalidOperandException | InvalidTypeException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
 
 	@Override
 	public String asOriginString() {
-		return this.originString;
+		return this.asOriginString;
 	}
 
 	@Override

@@ -13,11 +13,14 @@ import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.WrongClassNameException;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.RunnerParameters;
+import jbse.mem.Clause;
+import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.State;
 import jbse.mem.SwitchTable;
 import jbse.mem.State.Phase;
@@ -63,7 +66,6 @@ import jbse.val.exc.InvalidTypeException;
  */
 public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
     private final JVM jvm;
-    private final boolean nonStatic;
     private final HashSet<Object> seen = new HashSet<>();
     private boolean ended;    
     
@@ -82,7 +84,6 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         super(component, calc);
         goFastAndImprecise(); //disables theorem proving of component until guidance ends
         this.jvm = jvm;
-        this.nonStatic = this.jvm.isCurrentMethodNonStatic();
         this.ended = false;
     }
     
@@ -96,9 +97,18 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
     
     @Override
+    public void pushAssumption(Clause c) 
+    throws InvalidInputException, DecisionException {
+    	if (c instanceof ClauseAssumeExpands) {
+    		final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
+    		markAsSeen(cExp.getReference());
+    	}
+    	super.pushAssumption(c);
+    }
+    
+    @Override
     protected final Outcome decide_IFX_Nonconcrete(Primitive condition, SortedSet<DecisionAlternative_IFX> result) 
     throws DecisionException {
-
     	final Outcome retVal = super.decide_IFX_Nonconcrete(condition, result);
         if (!this.ended) {
         	final Iterator<DecisionAlternative_IFX> it = result.iterator();
@@ -199,9 +209,9 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     @Override
-    protected final Outcome resolve_XALOAD_ResolvedNonconcrete(Expression accessExpression, Value valueToLoad, boolean fresh, Reference arrayToWriteBack,SortedSet<DecisionAlternative_XALOAD> result)
+    protected final Outcome resolve_XALOAD_ResolvedNonconcrete(Expression accessExpression, Term indexFormal, Primitive indexActual, Value valueToLoad, boolean fresh, Reference arrayToWriteBack,SortedSet<DecisionAlternative_XALOAD> result)
     throws DecisionException {
-        final Outcome retVal = super.resolve_XALOAD_ResolvedNonconcrete(accessExpression, valueToLoad, fresh, arrayToWriteBack, result);
+        final Outcome retVal = super.resolve_XALOAD_ResolvedNonconcrete(accessExpression, indexFormal, indexActual, valueToLoad, fresh, arrayToWriteBack, result);
         if (!this.ended) {
             final Iterator<DecisionAlternative_XALOAD> it = result.iterator();
             while (it.hasNext()) {
@@ -216,12 +226,12 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     @Override
-    protected final Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, ReferenceSymbolic refToLoad, boolean fresh, Reference arrayReference, SortedSet<DecisionAlternative_XALOAD> result)
+    protected final Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, Term indexFormal, Primitive indexActual, ReferenceSymbolic refToLoad, boolean fresh, Reference arrayReference, SortedSet<DecisionAlternative_XALOAD> result)
     throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
     BadClassFileVersionException, WrongClassNameException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException {
         updateExpansionBackdoor(state, refToLoad);
-        final Outcome retVal = super.resolve_XALOAD_Unresolved(state, accessExpression, refToLoad, fresh, arrayReference, result);
+        final Outcome retVal = super.resolve_XALOAD_Unresolved(state, accessExpression, indexFormal, indexActual, refToLoad, fresh, arrayReference, result);
         if (!this.ended) {
             final Iterator<DecisionAlternative_XALOAD> it = result.iterator();
             while (it.hasNext()) {
@@ -266,16 +276,11 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             if (this.jvm.isNull(refToLoad) || alreadySeen(refToLoad) ||
                !dare.getClassFileOfTargetObject().getClassName().equals(this.jvm.typeOfObject(refToLoad))) {
                 it.remove();
-            } else {
-                markAsSeen(refToLoad);
             }
         }
     }
     
     private boolean alreadySeen(ReferenceSymbolic m) throws GuidanceException {
-        if (this.nonStatic && "{ROOT}:this".equals(m.asOriginString())) {
-            return true;
-        }
         return this.seen.contains(this.jvm.getValue(m));
     }
     
@@ -314,15 +319,6 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             }
             this.calc = calc;
         }
-        
-        /**
-         * Checks if the current method in the reached concrete state
-         * is (not) static.
-         * 
-         * @return {@code true} iff the current method is not static. 
-         * @throws GuidanceException if something goes wrong.
-         */
-        public abstract boolean isCurrentMethodNonStatic() throws GuidanceException;
         
         /**
          * Returns the class of an object in the reached concrete state.
@@ -414,7 +410,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         
         public Primitive eval_XNEWARRAY(DecisionAlternative_XNEWARRAY da, Primitive countsNonNegative) throws GuidanceException {
 			try {
-	            Primitive conditionToCheck = (da.ok() ? countsNonNegative : countsNonNegative.not());
+	            final Primitive conditionToCheck = (da.ok() ? countsNonNegative : countsNonNegative.not());
 	        	return eval(conditionToCheck);
             } catch (InvalidTypeException e) {
                 //this should never happen as arguments have been checked by the caller
@@ -424,7 +420,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
 
         public Primitive eval_XASTORE(DecisionAlternative_XASTORE da, Primitive inRange) throws GuidanceException {
 			try {
-	            Primitive conditionToCheck = (da.isInRange() ? inRange : inRange.not());
+	            final Primitive conditionToCheck = (da.isInRange() ? inRange : inRange.not());
 	        	return eval(conditionToCheck);
             } catch (InvalidTypeException e) {
                 //this should never happen as arguments have been checked by the caller
@@ -433,8 +429,8 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         }
 
         public Primitive eval_XALOAD(DecisionAlternative_XALOAD da) throws GuidanceException {
-            final Primitive conditionToCheck = da.getArrayAccessExpression();
-        	return eval(conditionToCheck);
+            final Expression conditionToCheck = da.getArrayAccessExpressionSimplified();
+        	return (conditionToCheck == null ? this.calc.valBoolean(true) : eval(conditionToCheck));
         }
         
         /**
@@ -545,7 +541,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                 this.value = (x.getType() == this.value.getType() ? this.value : this.calc.widen(x.getType(), this.value));
                 //note that the concrete this.value could already be widened
                 //because of conversion of actual types to computational types
-                //through operand stack, see JVMSpec 2.11.1, tab. 2.3
+                //through operand stack, see JVM specification v8, section 2.11.1, table 2.11.1-B
             }
         }
         

@@ -4,6 +4,7 @@ import static jbse.val.HistoryPoint.unknown;
 
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
+import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
@@ -12,13 +13,12 @@ import jbse.val.exc.InvalidTypeException;
  * conversion between numeric primitive types.
  * 
  * @author Pietro Braione
- *
  */
-public final class NarrowingConversion extends PrimitiveSymbolic {
+public final class NarrowingConversion extends PrimitiveSymbolicComputed {
     private final Primitive arg;
-    private final int hashCode;
     private final String toString;
-    private final String originString;
+    private final String asOriginString;
+    private final int hashCode;
 
     private NarrowingConversion(char type, Calculator calc, Primitive arg) 
     throws InvalidOperandException, InvalidTypeException, InvalidInputException {
@@ -31,8 +31,14 @@ public final class NarrowingConversion extends PrimitiveSymbolic {
         if (!Type.narrows(type, arg.getType())) {
             throw new InvalidTypeException("Cannot narrow type " + arg.getType() + " to type " + type + ".");
         }
-        
+
         this.arg = arg;
+
+        //calculates toString
+        this.toString = "NARROW-"+ getType() + "(" + arg.toString() + ")";
+
+        //calculates asOriginString
+        this.asOriginString = "NARROW-"+ getType() + "(" + (arg.isSymbolic() ? ((Symbolic) arg).asOriginString(): arg.toString()) + ")";
 
         //calculates hashCode
         final int prime = 311;
@@ -40,12 +46,6 @@ public final class NarrowingConversion extends PrimitiveSymbolic {
         result = prime * result + arg.hashCode();
         result = prime * result + type;
         this.hashCode = result;
-
-        //calculates toString
-        this.toString = "NARROW-"+ getType() + "(" + arg.toString() + ")";
-
-        //calculates originString
-        this.originString = "NARROW-"+ getType() + "(" + (arg.isSymbolic() ? ((Symbolic) arg).asOriginString() : arg.toString()) + ")";
     }
 
     /**
@@ -69,10 +69,29 @@ public final class NarrowingConversion extends PrimitiveSymbolic {
     public Primitive getArg() {
         return this.arg;
     }
+    
+    @Override
+    public Primitive doReplace(Primitive from, Primitive to) {
+    	final Primitive newArg;
+    	if (this.arg.equals(from)) {
+    		newArg = to;
+    	} else if (this.arg instanceof PrimitiveSymbolicComputed) {
+    		newArg = ((PrimitiveSymbolicComputed) this.arg).doReplace(from, to);
+    	} else {
+    		newArg = this.arg;
+    	}
+    	
+    	try {
+			return this.calc.narrow(getType(), newArg);
+		} catch (InvalidOperandException | InvalidTypeException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
 
 	@Override
 	public String asOriginString() {
-		return this.originString;
+		return this.asOriginString;
 	}
 
 	@Override
@@ -120,5 +139,4 @@ public final class NarrowingConversion extends PrimitiveSymbolic {
         }
         return true;
     }
-
 }

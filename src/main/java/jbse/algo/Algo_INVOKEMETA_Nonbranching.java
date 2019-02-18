@@ -51,7 +51,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     @Override
-    protected final StrategyDecide<DecisionAlternative_NONE> decider() {
+    protected StrategyDecide<DecisionAlternative_NONE> decider() {
         return (state, result) -> {
             result.add(DecisionAlternative_NONE.instance());
             return DecisionProcedureAlgorithms.Outcome.FF;
@@ -59,7 +59,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     }
 
     @Override
-    protected final StrategyRefine<DecisionAlternative_NONE> refiner() {
+    protected StrategyRefine<DecisionAlternative_NONE> refiner() {
         return (state, alt) -> { };
     }
 

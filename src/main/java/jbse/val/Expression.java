@@ -26,11 +26,11 @@ public final class Expression extends PrimitiveSymbolicComputed {
     /** The hash code of this object. */
     private final int hashCode;
 
-    /** The String representation of this object. */
+    /** The string representation of this object. */
     private final String toString;
     
     /** The origin String representation of this object. */
-    private final String originString;
+    private final String asOriginString;
 
     /**
      * Factory method for verbatim expressions (binary).
@@ -129,7 +129,7 @@ public final class Expression extends PrimitiveSymbolicComputed {
     	this.toString = stringify(true);
     	
     	//calculates originString
-    	this.originString = stringify(false);
+    	this.asOriginString = stringify(false);
     }
     
     private String stringify(boolean toString) {
@@ -261,7 +261,7 @@ public final class Expression extends PrimitiveSymbolicComputed {
     
     @Override
     public String asOriginString() {
-        return this.originString;
+        return this.asOriginString;
     }
     
     @Override

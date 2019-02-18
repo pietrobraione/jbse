@@ -6,6 +6,7 @@ import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
 import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 
+import java.nio.file.Path;
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
@@ -49,12 +50,13 @@ public final class Algo_JAVA_PACKAGE_GETSYSTEMPACKAGE0 extends Algo_INVOKEMETA_N
             if (name == null) {
                 throw new SymbolicValueNotAllowedException("The String name parameter to invocation of method java.lang.Package.getSystemPackage0 cannot be a symbolic String.");
             }
-            final String oathNameOfPackage = state.getClassHierarchy().getSystemPackageLoadedFrom(name).toAbsolutePath().toString();
-            if (oathNameOfPackage == null) {
+            final Path packagePath = state.getClassHierarchy().getSystemPackageLoadedFrom(name);
+            if (packagePath == null) {
                 this.refPathNameOfPackage = Null.getInstance();
             } else {
-                state.ensureStringLiteral(oathNameOfPackage);
-                this.refPathNameOfPackage = state.referenceToStringLiteral(oathNameOfPackage);
+            	final String packagePathName = packagePath.toAbsolutePath().toString();
+                state.ensureStringLiteral(packagePathName);
+                this.refPathNameOfPackage = state.referenceToStringLiteral(packagePathName);
             }
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, OUT_OF_MEMORY_ERROR);

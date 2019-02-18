@@ -9,7 +9,7 @@ import jbse.val.exc.InvalidTypeException;
  */
 public final class ReferenceSymbolicMemberField extends ReferenceSymbolicMember implements SymbolicMemberField {
     private final String fieldName;
-    private final String originString;
+    private final String asOriginString;
     private final int hashCode;
     
     /**
@@ -34,7 +34,7 @@ public final class ReferenceSymbolicMemberField extends ReferenceSymbolicMember 
     		throw new InvalidInputException("Attempted the creation of a ReferenceSymbolicMemberField with null fieldName.");
     	}
     	this.fieldName = fieldName;
-    	this.originString = getContainer().asOriginString() + "." + this.fieldName;
+    	this.asOriginString = getContainer().asOriginString() + "." + this.fieldName;
 
     	//calculates hashCode
 		final int prime = 3671;
@@ -51,7 +51,7 @@ public final class ReferenceSymbolicMemberField extends ReferenceSymbolicMember 
     
     @Override
     public String asOriginString() {
-        return this.originString;
+        return this.asOriginString;
     }
 
 	@Override

@@ -29,17 +29,11 @@ public abstract class PrimitiveSymbolic extends Primitive implements Symbolic {
         this.historyPoint = historyPoint;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public final String getValue() {
     	return toString();
     }
     
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public final HistoryPoint historyPoint() {
         return this.historyPoint;

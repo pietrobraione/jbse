@@ -2,6 +2,7 @@ package jbse.mem;
 
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
+import jbse.common.exc.InvalidInputException;
 import jbse.val.Calculator;
 import jbse.val.HistoryPoint;
 import jbse.val.ReferenceSymbolic;
@@ -34,6 +35,11 @@ public final class InstanceImpl_JAVA_CLASSLOADER extends InstanceImpl implements
         return this.classLoaderIdentifier;
     }
     
+	@Override
+	public void makeSymbolic(ReferenceSymbolic origin) throws InvalidInputException {
+		throw new InvalidInputException("Attempted to makeSymbolic an instance of java.lang.ClassLoader (or subclass).");
+	}
+
     @Override
     public InstanceImpl_JAVA_CLASSLOADER clone() {
     	return (InstanceImpl_JAVA_CLASSLOADER) super.clone();

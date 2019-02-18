@@ -31,7 +31,7 @@ final class Heap implements Cloneable {
 		
 		private PleaseLookInDelegateHeap() { }
 		
-		private static final String ERROR_USE = "Attempted to use class Heap.PleaseDelegate as it were a true Objekt.";
+		private static final String ERROR_USE = "Attempted to use class Heap.PleaseLookInDelegateHeap as it were a true Objekt.";
 
 		@Override
 		public ClassFile getType() { throw new UnexpectedInternalException(ERROR_USE); }
@@ -45,6 +45,9 @@ final class Heap implements Cloneable {
 		@Override
 		public boolean isSymbolic() { throw new UnexpectedInternalException(ERROR_USE); }
 		
+		@Override
+		public void makeSymbolic(ReferenceSymbolic origin) { throw new UnexpectedInternalException(ERROR_USE); }
+
 		@Override
 		public void setIdentityHashCode(Primitive identityHashCode) { throw new UnexpectedInternalException(ERROR_USE); }
 
@@ -190,6 +193,10 @@ final class Heap implements Cloneable {
             }
         }
     }
+
+	public long getNextFreePosition() {
+		return this.nextIndex;
+	}
 
     /**
      * Returns the objects in the heap as a {@link Map}.

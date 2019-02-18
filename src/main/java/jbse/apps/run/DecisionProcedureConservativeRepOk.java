@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import jbse.bc.ClassFile;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.DecisionProcedureAlgorithms;
@@ -14,7 +15,6 @@ import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.CannotAssumeSymbolicObjectException;
 import jbse.mem.exc.ContradictionException;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.meta.annotations.ConservativeRepOk;
 import jbse.val.Calculator;
@@ -55,8 +55,8 @@ public final class DecisionProcedureConservativeRepOk extends DecisionProcedureC
             sIni.assumeExpands(r, classFile);
         } catch (CannotAssumeSymbolicObjectException e) {
             return false;
-        } catch (InvalidTypeException | ContradictionException | 
-        		 HeapMemoryExhaustedException | FrozenStateException e) {
+        } catch (InvalidInputException | InvalidTypeException | 
+        		 ContradictionException | HeapMemoryExhaustedException e) {
             //this should not happen
             throw new UnexpectedInternalException(e);
         }
@@ -69,7 +69,7 @@ public final class DecisionProcedureConservativeRepOk extends DecisionProcedureC
         final State sIni = this.checker.makeInitialState();
         try {
             sIni.assumeAliases(r, o.getOrigin());
-        } catch (ContradictionException | FrozenStateException e) {
+        } catch (ContradictionException | InvalidInputException e) {
             //this should not happen
             throw new UnexpectedInternalException(e);
         }
@@ -82,7 +82,7 @@ public final class DecisionProcedureConservativeRepOk extends DecisionProcedureC
         final State sIni = this.checker.makeInitialState();
         try {
             sIni.assumeNull(r);
-        } catch (ContradictionException | FrozenStateException e) {
+        } catch (ContradictionException | InvalidInputException e) {
             //this should not happen
             throw new UnexpectedInternalException(e);
         }

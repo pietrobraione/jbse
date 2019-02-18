@@ -37,7 +37,7 @@ public final class SymbolFactory implements Cloneable {
 	 * A Factory Method for creating symbolic values. The symbol
 	 * has as origin a local variable in the current frame.
 	 * 
-	 * @param historyPoint the current {@link HistoryPoint}.
+	 * @param historyPoint the {@link HistoryPoint} of the symbol.
 	 * @param staticType a {@link String}, the static type of the
 	 *        local variable from which the symbol originates.
 	 * @param variableName a {@link String}, the name of the local 

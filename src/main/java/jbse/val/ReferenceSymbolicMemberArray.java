@@ -9,7 +9,7 @@ import jbse.val.exc.InvalidTypeException;
  */
 public final class ReferenceSymbolicMemberArray extends ReferenceSymbolicMember implements SymbolicMemberArray {
     private final Primitive index;
-    private final String originString;
+    private final String asOriginString;
     private final int hashCode;
     
     /**
@@ -36,7 +36,7 @@ public final class ReferenceSymbolicMemberArray extends ReferenceSymbolicMember 
     	}
     	
     	this.index = index;
-    	this.originString = getContainer().asOriginString() + "[" + (this.index.isSymbolic() ? ((Symbolic) this.index).asOriginString() : this.index.toString()) + "]";
+    	this.asOriginString = getContainer().asOriginString() + "[" + (this.index.isSymbolic() ? ((Symbolic) this.index).asOriginString() : this.index.toString()) + "]";
 
     	//calculates hashCode
 		final int prime = 677;
@@ -53,7 +53,7 @@ public final class ReferenceSymbolicMemberArray extends ReferenceSymbolicMember 
     
     @Override
     public String asOriginString() {
-        return this.originString;
+        return this.asOriginString;
     }
 
 	@Override

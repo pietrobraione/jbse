@@ -434,7 +434,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                 try {
                     final int UW = Util.byteCat(f.getInstruction(1), f.getInstruction(2));
                     final Signature sig;
-                    if (isInterface) {
+                    if (DispatchStrategyFormat1ME.this.isInterface) {
                         sig = f.getCurrentClass().getInterfaceMethodSignature(UW);
                     } else {
                         sig = f.getCurrentClass().getMethodSignature(UW);

@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.val.HistoryPoint;
@@ -15,6 +16,7 @@ import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
+import jbse.val.Term;
 import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
@@ -56,6 +58,12 @@ final class ArrayWrapper extends ObjektWrapper<ArrayImpl> implements Array {
 	@Override
 	public boolean isSymbolic() {
 		return getDelegate().isSymbolic();
+	}
+	
+	@Override
+	public void makeSymbolic(ReferenceSymbolic origin) throws InvalidInputException {
+		possiblyCloneDelegate();
+		getDelegate().makeSymbolic(origin);
 	}
 
 	@Override
@@ -120,6 +128,11 @@ final class ArrayWrapper extends ObjektWrapper<ArrayImpl> implements Array {
 	public Primitive getLength() {
 		return getDelegate().getLength();
 	}
+	
+	@Override
+	public Term getIndex() {
+		return getDelegate().getIndex();
+	}
 
 	@Override
 	public boolean hasSimpleRep() {
@@ -160,6 +173,12 @@ final class ArrayWrapper extends ObjektWrapper<ArrayImpl> implements Array {
 	throws InvalidOperandException, InvalidTypeException {
 		possiblyCloneDelegate();
 		getDelegate().set(index, valToSet);
+	}
+
+	@Override
+	public Iterator<? extends AccessOutcomeIn> entries() {
+		possiblyCloneDelegate();
+		return getDelegate().entries();
 	}
 
 	@Override

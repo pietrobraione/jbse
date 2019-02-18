@@ -24,6 +24,7 @@ import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.Simplex;
+import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
@@ -63,8 +64,8 @@ public final class Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT extends Algo_INVOKEM
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
             try {
-                final AccessOutcomeInValue outcome = (AccessOutcomeInValue) this.backtrace.get(this.index).iterator().next();
-                state.pushOperand(outcome.getValue());
+                final Value toPush = ((AccessOutcomeInValue) this.backtrace.get(this.index).iterator().next()).getValue();
+                state.pushOperand(toPush);
             } catch (InvalidOperandException | InvalidTypeException | ThreadStackEmptyException | ClassCastException e) {
                 //this should never happen
                 failExecution(e);

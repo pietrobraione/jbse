@@ -34,8 +34,8 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
     /** The String representation of this object. */
 	private final String toString;
 	
-	/** The origin String representation of this object. */
-	private final String originString;
+    /** The origin String representation of this object. */
+	private final String asOriginString;
 	
 	/**
 	 * Constructor. 
@@ -95,8 +95,8 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 			}
 			this.toString = buf.toString();
 		}
-		
-		//calculates originString
+
+		//calculates asOriginString
 		{
 			final StringBuilder buf = new StringBuilder();
 			buf.append('<');
@@ -115,7 +115,7 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 				buf.append(historyPoint().toString());
 			}
 			buf.append('>');
-			this.originString = buf.toString();
+			this.asOriginString = buf.toString();
 		}
 	}
 
@@ -131,7 +131,7 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 	
 	@Override
 	public String asOriginString() {
-		return this.originString;
+		return this.asOriginString;
 	}
 	
 	@Override

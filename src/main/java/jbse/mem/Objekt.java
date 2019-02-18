@@ -5,6 +5,7 @@ import java.util.Map;
 
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
+import jbse.common.exc.InvalidInputException;
 import jbse.val.HistoryPoint;
 import jbse.val.Primitive;
 import jbse.val.ReferenceSymbolic;
@@ -45,6 +46,17 @@ public interface Objekt extends Cloneable {
      *         by a {@code new*} bytecode, but rather assumed.
      */
     boolean isSymbolic();
+    
+    /**
+     * Turns a concrete object into a symbolic one.
+     * 
+     * @param origin a {@link ReferenceSymbolic}, the origin
+     *        of this {@link Objekt}.
+     * @throws InvalidInputException if {@code origin == null}
+     *         or if this {@link Objekt} cannot be turned into
+     *         a symbolic object (e.g., because it already is).
+     */
+    void makeSymbolic(ReferenceSymbolic origin) throws InvalidInputException;
 
     /**
      * Sets the identity hash code of this {@link Objekt}.

@@ -1,18 +1,23 @@
 package jbse.rules;
 
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 
 public final class ClassInitRulesRepo implements Cloneable {
-    private HashSet<String> notInitializedClasses = new HashSet<>();
+    private ArrayList<String> notInitializedClassPatterns = new ArrayList<>();
 
-    public void addNotInitializedClass(String... notInitializedClasses) {
-        Collections.addAll(this.notInitializedClasses, notInitializedClasses);
+    public void addNotInitializedClassPattern(String... notInitializedClassPatterns) {
+        Collections.addAll(this.notInitializedClassPatterns, notInitializedClassPatterns);
     }
 
     //TODO do it better!!!
     public boolean notInitializedClassesContains(String c) {
-        return this.notInitializedClasses.contains(c);
+    	for (String pattern : this.notInitializedClassPatterns) {
+    		if (c.matches(pattern)) {
+    			return true;
+    		}
+    	}
+		return false;
     }
 
     @SuppressWarnings("unchecked")
@@ -25,7 +30,7 @@ public final class ClassInitRulesRepo implements Cloneable {
             throw new AssertionError(e); //will not happen
         }
 
-        o.notInitializedClasses = (HashSet<String>) this.notInitializedClasses.clone();
+        o.notInitializedClassPatterns = (ArrayList<String>) this.notInitializedClassPatterns.clone();
 
         return o;
     }

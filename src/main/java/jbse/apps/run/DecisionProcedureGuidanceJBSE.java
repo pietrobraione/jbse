@@ -4,7 +4,6 @@ import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.NotYetImplementedException;
 import jbse.bc.Signature;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
-import jbse.bc.exc.MethodNotFoundException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
@@ -204,17 +203,6 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
             try {
                 this.engine.close();
             } catch (DecisionException e) {
-                throw new UnexpectedInternalException(e);
-            }
-        }
-        
-        @Override
-        public boolean isCurrentMethodNonStatic() throws GuidanceException {
-            try {
-                final Signature currentMethod = this.initialStateConcrete.getCurrentMethodSignature();
-                return !this.initialStateConcrete.getCurrentClass().isMethodStatic(currentMethod);
-            } catch (ThreadStackEmptyException | MethodNotFoundException | FrozenStateException e) {
-                //this should never happen
                 throw new UnexpectedInternalException(e);
             }
         }

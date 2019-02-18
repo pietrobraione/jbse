@@ -1443,19 +1443,26 @@ public final class ClassHierarchy implements Cloneable {
      *         {@code methodSignature}.
      * @throws MethodAbstractException if lookup fails and {@link java.lang.AbstractMethodError} should be thrown.
      * @throws IncompatibleClassFileException if lookup fails and {@link java.lang.IncompatibleClassChangeError} should be thrown.
-     * @throws InvalidInputException if {@code resolutionClass == null}
+     * @throws InvalidInputException if {@code resolutionClass == null}, or if a virtual ("super")
+     *         call semantics is required and {@code currentClass} has not a superclass.
      */
     public ClassFile lookupMethodImplSpecial(ClassFile currentClass, ClassFile resolutionClass, Signature methodSignature) 
     throws MethodAbstractException, IncompatibleClassFileException, InvalidInputException {
+    	if (resolutionClass == null) {
+    		throw new InvalidInputException("Invoked " + this.getClass().getName() + ".lookupMethodImplSpecial with a null resolutionClass.");
+    	}
         //determines whether should start looking for the implementation in 
         //the superclass of the current class (virtual semantics, for super 
         //calls) or in the class of the resolved method (nonvirtual semantics, 
         //for <init> and private methods)
         final boolean useVirtualSemantics = 
             (!"<init>".equals(methodSignature.getName()) &&
-             (resolutionClass.isInterface() || currentClass.getSuperclass().isSubclass(resolutionClass)) && 
+            (resolutionClass.isInterface() || (currentClass.getSuperclass() != null && currentClass.getSuperclass().isSubclass(resolutionClass))) && 
              currentClass.isSuperInvoke());
         final ClassFile c = (useVirtualSemantics ? currentClass.getSuperclass() : resolutionClass);
+        if (c == null) {
+        	throw new InvalidInputException("Invoked " + this.getClass().getName() + ".lookupMethodImplSpecial with a virtual invocation semantics (\"super\") but currentClass has not a superclass.");
+        }
         
         //applies lookup
         ClassFile retVal = null;
@@ -1471,7 +1478,7 @@ public final class ClassHierarchy implements Cloneable {
             } 
 
             //step 2
-            if (retVal == null && !c.isInterface() && c.getSuperclassName() != null) {
+            if (retVal == null && !c.isInterface() && c.getSuperclass() != null) {
                 for (ClassFile f : c.getSuperclass().superclasses()) {
                     if (f.hasMethodDeclaration(methodSignature)) {
                         retVal = f;
@@ -1695,8 +1702,8 @@ public final class ClassHierarchy implements Cloneable {
         }
         
         //second case: all of the following must be true
-        //1- subMethod's class is a subclass of supMethod's class 
-        if (!sub.getSuperclass().isSubclass(sup)) {
+        //1- subMethod's class is a (proper) subclass of supMethod's class 
+        if (sub.getSuperclass() == null || !sub.getSuperclass().isSubclass(sup)) {
             return false;
         }
         
@@ -1729,16 +1736,19 @@ public final class ClassHierarchy implements Cloneable {
         //4b- there is another method m such that subMethod overrides 
         //m and m overrides supMethod; we look for such m in subMethod's 
         //superclasses up to supMethods
-        for (ClassFile cf : sub.getSuperclass().superclasses()) {
-            if (sup.equals(cf)) {
-                break;
-            }
-            if (cf.hasMethodDeclaration(subMethodSignature)) {
-                if (overrides(sub, cf, subMethodSignature, supMethodSignature) && overrides (cf, sup, subMethodSignature, supMethodSignature)) {
-                    return true;
-                }
-            }
+        if (sub.getSuperclass() != null) {
+        	for (ClassFile cf : sub.getSuperclass().superclasses()) {
+        		if (sup.equals(cf)) {
+        			break;
+        		}
+        		if (cf.hasMethodDeclaration(subMethodSignature)) {
+        			if (overrides(sub, cf, subMethodSignature, supMethodSignature) && overrides (cf, sup, subMethodSignature, supMethodSignature)) {
+        				return true;
+        			}
+        		}
+        	}
         }
+        
         return false; //no such m was found
     }
     

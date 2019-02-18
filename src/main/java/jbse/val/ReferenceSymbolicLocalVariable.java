@@ -9,7 +9,7 @@ import jbse.val.exc.InvalidTypeException;
  */
 public final class ReferenceSymbolicLocalVariable extends ReferenceSymbolicAtomic implements SymbolicLocalVariable {
     private final String variableName;
-    private final String originString;
+    private final String asOriginString;
     private final int hashCode;
 
     /**
@@ -32,13 +32,36 @@ public final class ReferenceSymbolicLocalVariable extends ReferenceSymbolicAtomi
     		throw new InvalidInputException("Attempted the creation of a ReferenceSymbolicLocalVariable with null variableName.");
     	}
     	this.variableName = variableName;
-    	this.originString = "{ROOT}:" + this.variableName;
+    	this.asOriginString = "{ROOT}:" + this.variableName;
     	
     	//calculates hashCode
 		final int prime = 5227;
 		int result = 1;
 		result = prime * result + variableName.hashCode();
 		this.hashCode = result;
+    }
+
+	@Override
+    public final String getVariableName() {
+        return this.variableName;
+    }
+    
+    @Override
+    public String asOriginString() {
+        return this.asOriginString;
+    }
+    
+    @Override
+    public ReferenceSymbolic root() {
+    	return this;
+    }
+    
+    @Override
+    public boolean hasContainer(Symbolic s) {
+		if (s == null) {
+			throw new NullPointerException();
+		}
+		return equals(s);
     }
 
     @Override
@@ -63,27 +86,4 @@ public final class ReferenceSymbolicLocalVariable extends ReferenceSymbolicAtomi
 		}
 		return true;
 	}
-
-	@Override
-    public final String getVariableName() {
-        return this.variableName;
-    }
-    
-    @Override
-    public String asOriginString() {
-        return this.originString;
-    }
-    
-    @Override
-    public ReferenceSymbolic root() {
-    	return this;
-    }
-    
-    @Override
-    public boolean hasContainer(Symbolic s) {
-		if (s == null) {
-			throw new NullPointerException();
-		}
-		return equals(s);
-    }
 }

@@ -212,9 +212,6 @@ UP extends StrategyUpdate<R>> implements Action {
 
     protected ExecutionContext ctx; //just caches across a call of exec (note that this makes Algorithms nonreentrant!)
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public final void exec(State state, ExecutionContext ctx) 
     throws DecisionException, ContradictionException, 

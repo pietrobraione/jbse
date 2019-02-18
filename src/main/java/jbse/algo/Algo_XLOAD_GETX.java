@@ -21,7 +21,6 @@ import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
-import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_XLOAD_GETX;
 import jbse.tree.DecisionAlternative_XLOAD_GETX_Aliases;
 import jbse.tree.DecisionAlternative_XLOAD_GETX_Null;
@@ -110,13 +109,13 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
 
             @Override
             public void refineRefAliases(State s, DecisionAlternative_XLOAD_GETX_Aliases alt)
-            throws ContradictionException, FrozenStateException {
+            throws ContradictionException, InvalidInputException {
                 Algo_XLOAD_GETX.this.refineRefAliases(s, alt); //implemented in Algo_XYLOAD_GETX
             }
 
             @Override
             public void refineRefNull(State s, DecisionAlternative_XLOAD_GETX_Null alt)
-            throws ContradictionException, FrozenStateException {
+            throws ContradictionException, InvalidInputException {
                 Algo_XLOAD_GETX.this.refineRefNull(s, alt); //implemented in Algo_XYLOAD_GETX
             }
 
