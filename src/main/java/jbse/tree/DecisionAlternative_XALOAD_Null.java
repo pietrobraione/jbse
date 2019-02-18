@@ -37,7 +37,7 @@ public final class DecisionAlternative_XALOAD_Null extends DecisionAlternative_X
      * @param branchNumber an {@code int}, the branch number.
      */
     public DecisionAlternative_XALOAD_Null(Expression arrayAccessExpression, Term indexFormal, Primitive indexActual, Expression arrayAccessExpressionSimplified, ReferenceSymbolic referenceToResolve, boolean fresh, Reference arrayReference, int branchNumber) {
-        super(ALT_CODE + "_Null:" + arrayAccessExpressionSimplified, arrayAccessExpression, indexFormal, indexActual, arrayAccessExpressionSimplified, referenceToResolve, fresh, arrayReference, branchNumber);
+        super(ALT_CODE + "_Null:" + (arrayAccessExpressionSimplified == null ? "true" : arrayAccessExpressionSimplified), arrayAccessExpression, indexFormal, indexActual, arrayAccessExpressionSimplified, referenceToResolve, fresh, arrayReference, branchNumber);
         final int prime = 3331;
         int result = super.hashCode();
         result = prime * result;

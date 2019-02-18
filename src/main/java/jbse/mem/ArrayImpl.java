@@ -566,13 +566,13 @@ public final class ArrayImpl extends ObjektImpl implements Array {
             }
 
             //manages the out-of-bounds case
-            final Primitive outOfRange = inRange.not();
+            final Primitive outOfRange = outOfRange(index);
             if (outOfRange.surelyTrue()) {
                 retVal.add(new AccessOutcomeOutImpl());
             } else if (outOfRange.surelyFalse()) {
                 //do nothing
             } else { //outOfRange is possibly satisfiable
-                retVal.add(new AccessOutcomeOutImpl((Expression) outOfRange));
+                retVal.add(new AccessOutcomeOutImpl((Expression) this.indexInRange.not()));
             }
         }
 

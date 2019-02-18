@@ -45,7 +45,7 @@ extends DecisionAlternative_XALOAD_Unresolved implements DecisionAlternative_XYL
      */
     public DecisionAlternative_XALOAD_Aliases(Expression arrayAccessExpression, Term indexFormal, Primitive indexActual, Expression arrayAccessExpressionSimplified, ReferenceSymbolic referenceToResolve, boolean fresh,
                                               Reference arrayReference, long objectPosition, ReferenceSymbolic objectOrigin, int branchNumber) {
-        super(ALT_CODE + "_Aliases:" + arrayAccessExpressionSimplified + ":" + objectOrigin.asOriginString(), arrayAccessExpression, indexFormal, indexActual, arrayAccessExpressionSimplified, referenceToResolve, fresh, arrayReference, branchNumber);
+        super(ALT_CODE + "_Aliases:" + (arrayAccessExpressionSimplified == null ? "true" : arrayAccessExpressionSimplified) + ":" + objectOrigin.asOriginString(), arrayAccessExpression, indexFormal, indexActual, arrayAccessExpressionSimplified, referenceToResolve, fresh, arrayReference, branchNumber);
         this.objectPosition = objectPosition;
         final int prime = 1733;
         int result = super.hashCode();

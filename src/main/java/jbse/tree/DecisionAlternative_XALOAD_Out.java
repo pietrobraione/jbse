@@ -30,7 +30,7 @@ public final class DecisionAlternative_XALOAD_Out extends DecisionAlternative_XA
 	 * @param branchNumber an {@code int}, the branch number.
 	 */
 	public DecisionAlternative_XALOAD_Out(Expression arrayAccessExpression, Term indexFormal, Primitive indexActual, Expression arrayAccessExpressionSimplified, int branchNumber) {
-		super(ALT_CODE + "_Out", arrayAccessExpressionSimplified, indexFormal, indexActual, arrayAccessExpressionSimplified, branchNumber);
+		super(ALT_CODE + "_Out:" + (arrayAccessExpressionSimplified == null ? "true" : arrayAccessExpressionSimplified), arrayAccessExpression, indexFormal, indexActual, arrayAccessExpressionSimplified, branchNumber);
 		this.isTrivial = (arrayAccessExpression == null);
         final int prime = 1217;
         int result = super.hashCode();

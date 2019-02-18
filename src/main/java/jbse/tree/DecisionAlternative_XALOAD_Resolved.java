@@ -44,14 +44,14 @@ extends DecisionAlternative_XALOAD_In implements DecisionAlternative_XYLOAD_GETX
      * @param branchNumber an {@code int}, the branch number.
      */
     public DecisionAlternative_XALOAD_Resolved(Expression arrayAccessExpression, Term indexFormal, Primitive indexActual, Expression arrayAccessExpressionSimplified, Value valueToLoad, boolean fresh, Reference arrayReference, int branchNumber) {
-        super(ALT_CODE + "_Resolved:" + arrayAccessExpression, arrayAccessExpression, indexFormal, indexActual, arrayAccessExpressionSimplified, fresh, arrayReference, branchNumber);
+        super(ALT_CODE + "_Resolved:" + (arrayAccessExpressionSimplified == null ? "true" : arrayAccessExpressionSimplified), arrayAccessExpression, indexFormal, indexActual, arrayAccessExpressionSimplified, fresh, arrayReference, branchNumber);
         this.valueToLoad = valueToLoad;
         this.isTrivial = (arrayAccessExpression == null);
         this.isConcrete = this.isTrivial && !Util.isSymbolicReference(valueToLoad);
         final int prime = 131;
         int result = super.hashCode();
         result = prime * result +
-        ((this.valueToLoad == null) ? 0 : this.valueToLoad.hashCode());
+        		((this.valueToLoad == null) ? 0 : this.valueToLoad.hashCode());
         this.hashCode = result;
     }
 

@@ -42,7 +42,7 @@ public final class DecisionAlternative_XALOAD_Expands extends DecisionAlternativ
      * @param branchNumber an {@code int}, the branch number.
      */
     public DecisionAlternative_XALOAD_Expands(Expression arrayAccessExpression, Term indexFormal, Primitive indexActual, Expression arrayAccessExpressionSimplified, ReferenceSymbolic referenceToResolve, boolean fresh, Reference arrayReference, ClassFile classFileOfTargetObject, int branchNumber) {
-        super(ALT_CODE + "_Expands:" + arrayAccessExpressionSimplified + ":" + classFileOfTargetObject.getClassName(), arrayAccessExpression, indexFormal, indexActual, arrayAccessExpressionSimplified, referenceToResolve, fresh, arrayReference, branchNumber);
+        super(ALT_CODE + "_Expands:" + (arrayAccessExpressionSimplified == null ? "true" : arrayAccessExpressionSimplified) + ":" + classFileOfTargetObject.getClassName(), arrayAccessExpression, indexFormal, indexActual, arrayAccessExpressionSimplified, referenceToResolve, fresh, arrayReference, branchNumber);
         this.classFileOfTargetObject = classFileOfTargetObject;
         final int prime = 829;
         int result = super.hashCode();
