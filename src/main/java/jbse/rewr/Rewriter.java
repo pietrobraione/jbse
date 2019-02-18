@@ -1,5 +1,6 @@
 package jbse.rewr;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.rewr.exc.NoResultException;
 import jbse.val.Any;
@@ -108,7 +109,7 @@ public class Rewriter {
 		final PrimitiveSymbolicApply result;
 		try {
 			result = new PrimitiveSymbolicApply(x.getType(), x.historyPoint(), this.calc, x.getOperator(), args);
-		} catch (InvalidTypeException | InvalidOperandException e) {
+		} catch (InvalidTypeException | InvalidOperandException | InvalidInputException e) {
 			throw new NoResultException(e);
 		}
 		setResult(result);
@@ -130,7 +131,7 @@ public class Rewriter {
 		} catch (InvalidTypeException | InvalidOperandException e) {
 			//rewriting of operands yielded bad results: fails
 			throw new NoResultException(e);
-		} catch (InvalidOperatorException e) {
+		} catch (InvalidOperatorException | InvalidInputException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}
@@ -143,7 +144,7 @@ public class Rewriter {
 		final WideningConversion result;
 		try {
 			result = WideningConversion.make(x.getType(), this.calc, arg);
-		} catch (InvalidOperandException | InvalidTypeException e) {
+		} catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}
@@ -156,7 +157,7 @@ public class Rewriter {
 		final NarrowingConversion result;
 		try {
 			result = NarrowingConversion.make(x.getType(), this.calc, arg);
-		} catch (InvalidOperandException | InvalidTypeException e) {
+		} catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}

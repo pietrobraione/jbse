@@ -1,5 +1,6 @@
 package jbse.val;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -7,7 +8,9 @@ import jbse.val.exc.InvalidTypeException;
  * local variable in the root frame. 
  */
 public final class PrimitiveSymbolicLocalVariable extends PrimitiveSymbolicAtomic implements SymbolicLocalVariable {
-    final String variableName;
+    private final String variableName;
+    private final String originString;
+    private final int hashCode;
     
     /**
      * Constructor.
@@ -20,11 +23,19 @@ public final class PrimitiveSymbolicLocalVariable extends PrimitiveSymbolicAtomi
      * @param historyPoint the current {@link HistoryPoint}. It must not be {@code null}.
      * @param calc a {@link Calculator}. It must not be {@code null}.
      * @throws InvalidTypeException if {@code type} is not primitive.
-     * @throws NullPointerException if {@code calc == null || historyPoint == null}.
+     * @throws InvalidInputException if {@code calc == null || historyPoint == null}.
      */
-    PrimitiveSymbolicLocalVariable(String variableName, int id, char type, HistoryPoint historyPoint, Calculator calc) throws InvalidTypeException {
+    PrimitiveSymbolicLocalVariable(String variableName, int id, char type, HistoryPoint historyPoint, Calculator calc) 
+    throws InvalidTypeException, InvalidInputException {
     	super(id, type, historyPoint, calc);
     	this.variableName = variableName;
+    	this.originString = "{ROOT}:" + this.variableName;
+    	
+    	//calculates hashCode
+		final int prime = 2699;
+		int result = 1;
+		result = prime * result + variableName.hashCode();
+		this.hashCode = result;
     }
     
     @Override
@@ -34,6 +45,42 @@ public final class PrimitiveSymbolicLocalVariable extends PrimitiveSymbolicAtomi
     
     @Override
     public String asOriginString() {
-        return "{ROOT}:" + this.getVariableName();
+        return this.originString;
     }
+
+	@Override
+	public Symbolic root() {
+		return this;
+	}
+
+	@Override
+	public boolean hasContainer(Symbolic s) {
+		if (s == null) {
+			throw new NullPointerException();
+		}
+		return equals(s);
+	}
+
+	@Override
+	public int hashCode() {
+		return this.hashCode;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		final PrimitiveSymbolicLocalVariable other = (PrimitiveSymbolicLocalVariable) obj;
+		if (!this.variableName.equals(other.variableName)) {
+			return false;
+		}
+		return true;
+	}
 }

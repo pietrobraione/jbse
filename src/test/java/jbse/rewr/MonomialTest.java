@@ -3,6 +3,7 @@ package jbse.rewr;
 import static org.junit.Assert.assertTrue;
 
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.val.HistoryPoint;
 import jbse.val.Primitive;
 import jbse.val.Term;
@@ -26,7 +27,7 @@ public class MonomialTest {
 	}
 	
 	@Test
-	public void test1() throws InvalidTypeException, InvalidOperandException {
+	public void test1() throws InvalidTypeException, InvalidOperandException, InvalidInputException {
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		final Term B = this.calc.valTerm(Type.INT, "B");
 		final Term C = this.calc.valTerm(Type.INT, "C");

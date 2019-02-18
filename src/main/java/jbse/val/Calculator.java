@@ -14,6 +14,7 @@ import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.SHORT;
 import static jbse.common.Type.widens;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidOperatorException;
@@ -74,7 +75,7 @@ public abstract class Calculator {
             this.DEFAULT_DOUBLE    = Simplex.make(this, Double.valueOf(0.0d));
             this.DEFAULT_CHAR      = Simplex.make(this, Character.valueOf('\u0000'));
             this.DEFAULT_REFERENCE = Null.getInstance();
-        } catch (InvalidOperandException | InvalidTypeException e) {
+        } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
@@ -108,7 +109,7 @@ public abstract class Calculator {
     public Simplex valByte(byte value) {
         try {
             return Simplex.make(this, Byte.valueOf(value));
-        } catch (InvalidOperandException | InvalidTypeException e) {
+        } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
@@ -123,7 +124,7 @@ public abstract class Calculator {
     public Simplex valShort(short value) {
         try {
             return Simplex.make(this, Short.valueOf(value));
-        } catch (InvalidOperandException | InvalidTypeException e) {
+        } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
@@ -141,7 +142,7 @@ public abstract class Calculator {
         }
         try {
             return Simplex.make(this, Integer.valueOf(value));
-        } catch (InvalidOperandException | InvalidTypeException e) {
+        } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
@@ -156,7 +157,7 @@ public abstract class Calculator {
     public Simplex valLong(long value) {
         try {
             return Simplex.make(this, Long.valueOf(value));
-        } catch (InvalidOperandException | InvalidTypeException e) {
+        } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
@@ -171,7 +172,7 @@ public abstract class Calculator {
     public Simplex valFloat(float value) {
         try {
             return Simplex.make(this, Float.valueOf(value));
-        } catch (InvalidOperandException | InvalidTypeException e) {
+        } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
@@ -186,7 +187,7 @@ public abstract class Calculator {
     public Simplex valDouble(double value) {
         try {
             return Simplex.make(this, Double.valueOf(value));
-        } catch (InvalidOperandException | InvalidTypeException e) {
+        } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
@@ -201,7 +202,7 @@ public abstract class Calculator {
     public Simplex valChar(char value) {
         try {
             return Simplex.make(this, Character.valueOf(value));
-        } catch (InvalidOperandException | InvalidTypeException e) {
+        } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
@@ -219,7 +220,12 @@ public abstract class Calculator {
      * @throws InvalidTypeException if {@code type} is not primitive.
      */
     public Term valTerm(char type, String value) throws InvalidTypeException {
-        return new Term(type, this, value);
+        try {
+			return new Term(type, this, value);
+		} catch (InvalidInputException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
     }
 
     //same methods overloaded
@@ -322,11 +328,11 @@ public abstract class Calculator {
      * @param firstOperand a {@link Primitive}.
      * @param secondOperand a {@link Primitive}.
      * @return a {@link Primitive} representing {@code firstOperand + secondOperand}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException  
+     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
+     * @throws InvalidTypeException if the expression cannot be typed.
      */
-    public abstract Primitive add(Primitive firstOperand,
-                                  Primitive secondOperand) throws InvalidOperandException, InvalidTypeException;
+    public abstract Primitive add(Primitive firstOperand, Primitive secondOperand) 
+    throws InvalidOperandException, InvalidTypeException;
 
     /**
      * Calculates the arithmetic multiplication of two {@link Primitive}s.
@@ -334,11 +340,11 @@ public abstract class Calculator {
      * @param firstOperand a {@link Primitive}.
      * @param secondOperand a {@link Primitive}.
      * @return a {@link Primitive} representing {@code firstOperand * secondOperand}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException  
+     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
+     * @throws InvalidTypeException if the expression cannot be typed.
      */
-    public abstract Primitive mul(Primitive firstOperand,
-                                  Primitive secondOperand) throws InvalidOperandException, InvalidTypeException;
+    public abstract Primitive mul(Primitive firstOperand, Primitive secondOperand)
+    throws InvalidOperandException, InvalidTypeException;
 
     /**
      * Calculates the arithmetic subtraction between two {@link Primitive}s.
@@ -346,11 +352,11 @@ public abstract class Calculator {
      * @param firstOperand a {@link Primitive}.
      * @param secondOperand a {@link Primitive}.
      * @return a {@link Primitive} representing {@code firstOperand - secondOperand}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException  
+     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
+     * @throws InvalidTypeException if the expression cannot be typed.
      */
-    public abstract Primitive sub(Primitive firstOperand,
-                                  Primitive secondOperand) throws InvalidOperandException, InvalidTypeException;
+    public abstract Primitive sub(Primitive firstOperand, Primitive secondOperand)
+    throws InvalidOperandException, InvalidTypeException;
 
     /**
      * Calculates the arithmetic division of two {@link Primitive}s.
@@ -358,11 +364,11 @@ public abstract class Calculator {
      * @param firstOperand a {@link Primitive}.
      * @param secondOperand a {@link Primitive}.
      * @return a {@link Primitive} representing {@code firstOperand / secondOperand}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException  
+     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
+     * @throws InvalidTypeException if the expression cannot be typed.
      */
-    public abstract Primitive div(Primitive firstOperand,
-                                  Primitive secondOperand) throws InvalidOperandException, InvalidTypeException;
+    public abstract Primitive div(Primitive firstOperand, Primitive secondOperand) 
+    throws InvalidOperandException, InvalidTypeException;
 
     /**
      * Calculates the arithmetic remainder of two {@link Primitive}s.
@@ -370,19 +376,19 @@ public abstract class Calculator {
      * @param firstOperand a {@link Primitive}.
      * @param secondOperand a {@link Primitive}.
      * @return a {@link Primitive} representing {@code firstOperand % secondOperand}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException  
+     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
+     * @throws InvalidTypeException if the expression cannot be typed.
      */
-    public abstract Primitive rem(Primitive firstOperand,
-                                  Primitive secondOperand) throws InvalidOperandException, InvalidTypeException;
+    public abstract Primitive rem(Primitive firstOperand, Primitive secondOperand) 
+    throws InvalidOperandException, InvalidTypeException;
 
     /**
      * Calculates the arithmetic negation of a {@link Primitive}.
      * 
      * @param operand a {@link Primitive}.
      * @return a {@link Primitive} representing {@code -operand}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException 
+     * @throws InvalidOperandException if {@code operand == null}.
+     * @throws InvalidTypeException if the expression cannot be typed.
      */
     public abstract Primitive neg(Primitive operand) 
     throws InvalidOperandException, InvalidTypeException;
@@ -393,11 +399,11 @@ public abstract class Calculator {
      * @param firstOperand a {@link Primitive}.
      * @param secondOperand a {@link Primitive}.
      * @return a {@link Primitive} representing {@code firstOperand & secondOperand}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException 
+     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
+     * @throws InvalidTypeException if the expression cannot be typed.
      */
-    public abstract Primitive andBitwise(Primitive firstOperand,
-                                         Primitive secondOperand) throws InvalidOperandException, InvalidTypeException;
+    public abstract Primitive andBitwise(Primitive firstOperand, Primitive secondOperand) 
+    throws InvalidOperandException, InvalidTypeException;
 
     /**
      * Calculates the bitwise OR of two {@link Primitive}s.
@@ -405,11 +411,11 @@ public abstract class Calculator {
      * @param firstOperand a {@link Primitive}.
      * @param secondOperand a {@link Primitive}.
      * @return a {@link Primitive} representing {@code firstOperand | secondOperand}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException  
+     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
+     * @throws InvalidTypeException if the expression cannot be typed.
      */
-    public abstract Primitive orBitwise(Primitive firstOperand,
-                                        Primitive secondOperand) throws InvalidOperandException, InvalidTypeException;
+    public abstract Primitive orBitwise(Primitive firstOperand, Primitive secondOperand)
+    throws InvalidOperandException, InvalidTypeException;
 
     /**
      * Calculates the bitwise XOR of two {@link Primitive}s.
@@ -417,11 +423,11 @@ public abstract class Calculator {
      * @param firstOperand a {@link Primitive}.
      * @param secondOperand a {@link Primitive}.
      * @return a {@link Primitive} representing {@code firstOperand ^ secondOperand}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException 
+     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
+     * @throws InvalidTypeException if the expression cannot be typed.
      */
-    public abstract Primitive xorBitwise(Primitive firstOperand, 
-                                         Primitive secondOperand) throws InvalidOperandException, InvalidTypeException;
+    public abstract Primitive xorBitwise(Primitive firstOperand, Primitive secondOperand)
+    throws InvalidOperandException, InvalidTypeException;
 
     /**
      * Calculates the logical AND of two {@link Primitive}s.
@@ -429,11 +435,11 @@ public abstract class Calculator {
      * @param firstOperand a {@link Primitive}.
      * @param secondOperand a {@link Primitive}.
      * @return a {@link Primitive} representing {@code firstOperand && secondOperand}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException  
+     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
+     * @throws InvalidTypeException if the expression cannot be typed.
      */
-    public abstract Primitive and(Primitive firstOperand,
-                                  Primitive secondOperand) throws InvalidOperandException, InvalidTypeException;
+    public abstract Primitive and(Primitive firstOperand, Primitive secondOperand) 
+    throws InvalidOperandException, InvalidTypeException;
 
     /**
      * Calculates the logical OR of two {@link Primitive}s.
@@ -441,19 +447,19 @@ public abstract class Calculator {
      * @param firstOperand a {@link Primitive}.
      * @param secondOperand a {@link Primitive}.
      * @return a {@link Primitive} representing {@code firstOperand || secondOperand}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException  
+     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
+     * @throws InvalidTypeException if the expression cannot be typed.
      */
-    public abstract Primitive or(Primitive firstOperand, 
-                                 Primitive secondOperand) throws InvalidOperandException, InvalidTypeException;
+    public abstract Primitive or(Primitive firstOperand, Primitive secondOperand) 
+    throws InvalidOperandException, InvalidTypeException;
 
     /**
      * Calculates the logical NOT of a {@link Primitive}.
      * 
      * @param operand a {@link Primitive}.
      * @return a {@link Primitive} representing {@code !operand}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException  
+     * @throws InvalidOperandException if {@code operand == null}.
+     * @throws InvalidTypeException if the expression cannot be typed.
      */
     public abstract Primitive not(Primitive operand) 
     throws InvalidOperandException, InvalidTypeException;
@@ -464,11 +470,11 @@ public abstract class Calculator {
      * @param firstOperand a {@link Primitive}.
      * @param secondOperand a {@link Primitive}.
      * @return a {@link Primitive} representing {@code firstOperand << secondOperand}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException  
+     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
+     * @throws InvalidTypeException if the expression cannot be typed.
      */
-    public abstract Primitive shl(Primitive firstOperand, 
-                                  Primitive secondOperand) throws InvalidOperandException, InvalidTypeException;
+    public abstract Primitive shl(Primitive firstOperand, Primitive secondOperand) 
+    throws InvalidOperandException, InvalidTypeException;
 
     /**
      * Calculates the arithmetic right shift of a {@link Primitive}.
@@ -476,8 +482,8 @@ public abstract class Calculator {
      * @param firstOperand a {@link Primitive}.
      * @param secondOperand a {@link Primitive}.
      * @return a {@link Primitive} representing {@code firstOperand >> secondOperand}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException  
+     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
+     * @throws InvalidTypeException if the expression cannot be typed.
      */
     public abstract Primitive shr(Primitive firstOperand,
                                   Primitive secondOperand) throws InvalidOperandException, InvalidTypeException;
@@ -488,11 +494,11 @@ public abstract class Calculator {
      * @param firstOperand a {@link Primitive}.
      * @param secondOperand a {@link Primitive}.
      * @return a {@link Primitive} representing {@code firstOperand >>> secondOperand}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException  
+     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
+     * @throws InvalidTypeException if the expression cannot be typed.
      */
-    public abstract Primitive ushr(Primitive firstOperand,
-                                   Primitive secondOperand) throws InvalidOperandException, InvalidTypeException;
+    public abstract Primitive ushr(Primitive firstOperand, Primitive secondOperand) 
+    throws InvalidOperandException, InvalidTypeException;
 
     /**
      * Calculates the equality comparison of two {@link Primitive}s.
@@ -500,11 +506,11 @@ public abstract class Calculator {
      * @param firstOperand a {@link Primitive}.
      * @param secondOperand a {@link Primitive}.
      * @return a {@link Primitive} representing {@code firstOperand == secondOperand}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException  
+     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
+     * @throws InvalidTypeException if the expression cannot be typed.
      */
-    public abstract Primitive eq(Primitive firstOperand, 
-                                 Primitive secondOperand) throws InvalidOperandException, InvalidTypeException;
+    public abstract Primitive eq(Primitive firstOperand, Primitive secondOperand) 
+    throws InvalidOperandException, InvalidTypeException;
 
     /**
      * Calculates the inequality comparison of two {@link Primitive}s.
@@ -512,11 +518,11 @@ public abstract class Calculator {
      * @param firstOperand a {@link Primitive}.
      * @param secondOperand a {@link Primitive}.
      * @return a {@link Primitive} representing {@code firstOperand != secondOperand}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException  
+     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
+     * @throws InvalidTypeException if the expression cannot be typed.
      */
-    public abstract Primitive ne(Primitive firstOperand, 
-                                 Primitive secondOperand) throws InvalidOperandException, InvalidTypeException;
+    public abstract Primitive ne(Primitive firstOperand, Primitive secondOperand)
+    throws InvalidOperandException, InvalidTypeException;
 
     /**
      * Calculates the arithmetic less-or-equal-than comparison 
@@ -525,11 +531,11 @@ public abstract class Calculator {
      * @param firstOperand a {@link Primitive}.
      * @param secondOperand a {@link Primitive}.
      * @return a {@link Primitive} representing {@code firstOperand <= secondOperand}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException  
+     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
+     * @throws InvalidTypeException if the expression cannot be typed.
      */
-    public abstract Primitive le(Primitive firstOperand, 
-                                 Primitive secondOperand) throws InvalidOperandException, InvalidTypeException;
+    public abstract Primitive le(Primitive firstOperand, Primitive secondOperand)
+    throws InvalidOperandException, InvalidTypeException;
 
     /**
      * Calculates the arithmetic less-than comparison
@@ -538,11 +544,11 @@ public abstract class Calculator {
      * @param firstOperand a {@link Primitive}.
      * @param secondOperand a {@link Primitive}.
      * @return a {@link Primitive} representing {@code firstOperand < secondOperand}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException  
+     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
+     * @throws InvalidTypeException if the expression cannot be typed.
      */
-    public abstract Primitive lt(Primitive firstOperand, 
-                                 Primitive secondOperand) throws InvalidOperandException, InvalidTypeException;
+    public abstract Primitive lt(Primitive firstOperand, Primitive secondOperand)
+    throws InvalidOperandException, InvalidTypeException;
 
     /**
      * Calculates the arithmetic greater-or-equal-than comparison
@@ -551,11 +557,11 @@ public abstract class Calculator {
      * @param firstOperand a {@link Primitive}.
      * @param secondOperand a {@link Primitive}.
      * @return a {@link Primitive} representing {@code firstOperand >= secondOperand}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException  
+     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
+     * @throws InvalidTypeException if the expression cannot be typed.
      */
-    public abstract Primitive ge(Primitive firstOperand, 
-                                 Primitive secondOperand) throws InvalidOperandException, InvalidTypeException;
+    public abstract Primitive ge(Primitive firstOperand, Primitive secondOperand)
+    throws InvalidOperandException, InvalidTypeException;
 
     /**
      * Calculates the arithmetic greater-than comparison
@@ -564,11 +570,11 @@ public abstract class Calculator {
      * @param firstOperand a {@link Primitive}.
      * @param secondOperand a {@link Primitive}.
      * @return a {@link Primitive} representing {@code firstOperand > secondOperand}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException 
+     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
+     * @throws InvalidTypeException if the expression cannot be typed.
      */
-    public abstract Primitive gt(Primitive firstOperand, 
-                                 Primitive secondOperand) throws InvalidOperandException, InvalidTypeException;
+    public abstract Primitive gt(Primitive firstOperand, Primitive secondOperand)
+    throws InvalidOperandException, InvalidTypeException;
 
     /**
      * Converts a primitive value to another wider type.
@@ -578,9 +584,9 @@ public abstract class Calculator {
      * @param arg a {@link Primitive}.
      * @return a {@link Primitive} representing the result of converting 
      *         {@code arg} to {@code type}, by applying a widening conversion.
-     * @throws InvalidOperandException when {@code arg} is invalid.
+     * @throws InvalidOperandException when {@code arg == null}.
      * @throws InvalidTypeException when {@code arg} cannot be widened 
-     *         to {@code type}. 
+     *         to {@code type}, or {@code type} is not a valid primitive type. 
      */
     public abstract Primitive widen(char type, Primitive arg) 
     throws InvalidOperandException, InvalidTypeException;
@@ -592,9 +598,9 @@ public abstract class Calculator {
      * @param arg a {@link Primitive}.
      * @return a {@link Primitive} representing the result of converting 
      *         {@code arg} to {@code type}, by applying a narrowing conversion.
-     * @throws InvalidOperandException when {@code arg} is invalid.
+     * @throws InvalidOperandException when {@code arg == null}.
      * @throws InvalidTypeException when {@code arg} cannot be narrowed 
-     *         to {@code type}. 
+     *         to {@code type}, or {@code type} is not a valid primitive type. 
      */
     public abstract Primitive narrow(char type, Primitive arg) 
     throws InvalidOperandException, InvalidTypeException;
@@ -610,9 +616,10 @@ public abstract class Calculator {
      * @return a {@link Primitive} representing {@code operator(args)}.
      * @throws InvalidOperandException 
      * @throws InvalidTypeException  
+     * @throws InvalidInputException if {@code  operator == null || args == null || historyPoint == null}.
      */
-    public abstract Primitive applyFunctionPrimitive(char type, HistoryPoint historyPoint, String operator,
-                                            Value... args) throws InvalidOperandException, InvalidTypeException;
+    public abstract Primitive applyFunctionPrimitive(char type, HistoryPoint historyPoint, String operator, Value... args) 
+    throws InvalidOperandException, InvalidTypeException, InvalidInputException;
 
     /**
      * Applies a unary {@link Operator} to a {@link Primitive}.
@@ -651,9 +658,8 @@ public abstract class Calculator {
      * @param secondOperand a {@link Primitive}.
      * @return a {@link Primitive} representing the application of {@code operator} to {@code firstOperand}
      *          and {@code secondOperand}.
-     * @throws InvalidOperatorException  when {@code operator} is not binary.
-     * @throws InvalidOperandException when wither {@code firstOperand} or {@code secondOperand}  
-     *         is {@code null}. 
+     * @throws InvalidOperatorException  when {@code operator == null} or is not binary.
+     * @throws InvalidOperandException when {@code firstOperand == null ||  secondOperand == null}. 
      * @throws InvalidTypeException when {@code firstOperand} and {@code secondOperand} 
      *         are not type compatible with the application of {@code operator}. 
      */
@@ -734,14 +740,14 @@ public abstract class Calculator {
      * @return a {@link Primitive} representing the result of converting 
      *         {@code arg} to {@code type}, or {@code arg} if it already
      *         has type {@code type}.
-     * @throws InvalidOperandException when {@code arg} is {@code null}. 
+     * @throws InvalidOperandException when {@code arg == null}. 
      * @throws InvalidTypeException when {@code arg} cannot be converted 
      *         to {@code type}. 
      */
     public Primitive to(char type, Primitive arg) 
     throws InvalidOperandException, InvalidTypeException {
         if (arg == null) {
-            throw new InvalidOperandException("arg of type conversion is null");
+            throw new InvalidOperandException("Parameter arg of type conversion is null.");
         }
         final char argType = arg.getType();
         if (type == argType) {

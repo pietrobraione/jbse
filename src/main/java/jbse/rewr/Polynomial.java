@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.Any;
 import jbse.val.Calculator;
@@ -348,11 +349,12 @@ class Polynomial {
 				if (retVal.equals(zero)) {
 					retVal = mPrimitive;
 				} else {
-					retVal = Expression.makeExpressionBinary(calc, retVal, Operator.ADD, mPrimitive);
+					retVal = Expression.makeExpressionBinary(this.calc, retVal, Operator.ADD, mPrimitive);
 				}
 			}
 			return retVal;
-		} catch (InvalidTypeException | InvalidOperandException | InvalidOperatorException e) {
+		} catch (InvalidTypeException | InvalidOperandException | 
+				InvalidOperatorException | InvalidInputException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}

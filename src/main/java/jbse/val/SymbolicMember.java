@@ -18,4 +18,17 @@ public interface SymbolicMember extends SymbolicAtomic {
      *         this symbol was originally a member. 
      */
     ReferenceSymbolic getContainer();
+
+    @Override
+    default ReferenceSymbolic root() {
+    	return getContainer().root();
+    }
+    
+    @Override
+    default boolean hasContainer(Symbolic r) {
+		if (r == null) {
+			throw new NullPointerException();
+		}
+		return (r.equals(this) || getContainer().hasContainer(r));
+    }
 }

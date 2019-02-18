@@ -1,5 +1,6 @@
 package jbse.val;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -8,6 +9,8 @@ import jbse.val.exc.InvalidTypeException;
  */
 public final class PrimitiveSymbolicMemberArray extends PrimitiveSymbolicMember implements SymbolicMemberArray {
     private final Primitive index;
+    private final String originString;
+    private final int hashCode;
     
     /**
      * Constructor.
@@ -22,14 +25,23 @@ public final class PrimitiveSymbolicMemberArray extends PrimitiveSymbolicMember 
      * @param type the type of the represented value.
      * @param calc a {@link Calculator}. It must not be {@code null}.
      * @throws InvalidTypeException if {@code type} is not primitive.
-     * @throws NullPointerException if {@code calc == null || container == null || index == null}.
+     * @throws InvalidInputException if {@code calc == null || container == null || index == null}.
      */
-    PrimitiveSymbolicMemberArray(ReferenceSymbolic container, Primitive index, int id, char type, Calculator calc) throws InvalidTypeException {
+    PrimitiveSymbolicMemberArray(ReferenceSymbolic container, Primitive index, int id, char type, Calculator calc) throws InvalidTypeException, InvalidInputException {
     	super(container, id, type, calc);
     	if (index == null) {
-    		throw new NullPointerException("Tried to construct a symbolic array member with null array index.");
+    		throw new InvalidInputException("Attempted to construct a symbolic array member with null array index.");
     	}
+    	
     	this.index = index;
+    	this.originString = getContainer().asOriginString() + "[" + (this.index.isSymbolic() ? ((Symbolic) this.index).asOriginString() : this.index.toString()) + "]";
+
+    	//calculates hashCode
+		final int prime = 2003;
+		int result = 1;
+		result = prime * result + getContainer().hashCode();
+		result = prime * result + index.hashCode();
+		this.hashCode = result;
     }
 
     @Override
@@ -39,6 +51,32 @@ public final class PrimitiveSymbolicMemberArray extends PrimitiveSymbolicMember 
     
     @Override
     public String asOriginString() {
-        return this.getContainer().asOriginString() + "[" + (this.index.isSymbolic() ? ((Symbolic) this.index).asOriginString() : this.index.toString()) + "]";
+        return this.originString;
     }
+
+	@Override
+	public int hashCode() {
+		return this.hashCode;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		final PrimitiveSymbolicMemberArray other = (PrimitiveSymbolicMemberArray) obj;
+		if (!getContainer().equals(other.getContainer())) {
+			return false;
+		}
+		if (!this.index.equals(other.index)) {
+			return false;
+		}
+		return true;
+	}
 }

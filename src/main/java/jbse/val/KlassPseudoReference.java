@@ -1,6 +1,7 @@
 package jbse.val;
 
 import jbse.bc.ClassFile;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Klass;
 
 /**
@@ -15,16 +16,16 @@ public final class KlassPseudoReference extends ReferenceSymbolic {
      * Constructor.
      * 
      * @param classFile the {@link ClassFile} for the {@link Klass} to be referred.
-     * @param historyPoint a {@link HistoryPoint}.
+     *        It must not be {@code null}.
+     * @param historyPoint a {@link HistoryPoint}. It must not be {@code null}.
+     * @throws InvalidInputException if {@code historyPoint == null || classFile == null}.
      */
-    KlassPseudoReference(ClassFile classFile, HistoryPoint historyPoint) {
+    KlassPseudoReference(ClassFile classFile, HistoryPoint historyPoint) throws InvalidInputException {
     	super(null, historyPoint);
+    	if (classFile == null) {
+            throw new InvalidInputException("Attempted to build a KlassPseudoReference with null classFile.");
+    	}
     	this.classFile = classFile;
-    }
-    
-    @Override
-    public ReferenceSymbolic root() {
-    	return this;
     }
     
     public ClassFile getClassFile() {
@@ -36,6 +37,19 @@ public final class KlassPseudoReference extends ReferenceSymbolic {
         return "[" + this.classFile.getClassName() + "]";
     }
 
+    @Override
+    public ReferenceSymbolic root() {
+    	return this;
+    }
+    
+    @Override
+    public boolean hasContainer(Symbolic s) {
+		if (s == null) {
+			throw new NullPointerException();
+		}
+		return equals(s);
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

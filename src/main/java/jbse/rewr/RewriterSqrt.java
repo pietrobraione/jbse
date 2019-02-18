@@ -1,6 +1,7 @@
 package jbse.rewr;
 
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.rewr.exc.NoResultException;
 import jbse.val.PrimitiveSymbolicApply;
@@ -49,7 +50,7 @@ public class RewriterSqrt extends Rewriter {
 					setResult(this.calc.applyFunctionPrimitive(x.getType(), x.historyPoint(), PrimitiveSymbolicApply.ABS_DOUBLE, argSqrt[0].toPrimitive())
 							.mul(this.calc.applyFunctionPrimitive(x.getType(), x.historyPoint(), PrimitiveSymbolicApply.SQRT, argSqrt[1].toPrimitive())));
 				}
-			} catch (InvalidOperandException | InvalidTypeException e) {
+			} catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
 				//this should never happen
 				throw new UnexpectedInternalException(e);
 			}

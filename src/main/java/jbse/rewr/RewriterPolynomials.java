@@ -1,5 +1,6 @@
 package jbse.rewr;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.rewr.exc.NoResultException;
 import jbse.val.Expression;
@@ -106,7 +107,8 @@ public class RewriterPolynomials extends Rewriter {
 				final Primitive resultDenominator = resultDiv[1].toPrimitive();
 				setResult(Expression.makeExpressionBinary(this.calc, resultNumerator, Operator.DIV, resultDenominator));
 			}
-		} catch (InvalidOperatorException | InvalidOperandException | InvalidTypeException e) {
+		} catch (InvalidOperatorException | InvalidOperandException | 
+				 InvalidTypeException | InvalidInputException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}

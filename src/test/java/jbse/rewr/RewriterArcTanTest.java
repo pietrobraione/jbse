@@ -3,6 +3,7 @@ package jbse.rewr;
 import static org.junit.Assert.assertEquals;
 
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.HistoryPoint;
 import jbse.val.Primitive;
@@ -27,7 +28,7 @@ public class RewriterArcTanTest {
 	}
 	
 	@Test
-	public void testSimple1() throws InvalidOperandException, InvalidTypeException {
+	public void testSimple1() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
 		//tan(atan(A)) -> A
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
 		final Primitive p_post = this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.TAN, this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ATAN, A)); 
@@ -35,7 +36,7 @@ public class RewriterArcTanTest {
 	}
 	
 	@Test
-	public void testSimple2() throws InvalidOperandException, InvalidTypeException {
+	public void testSimple2() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
 		//tan(tan(atan(A))) -> tan(A)
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
 		final Primitive p_post = this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.TAN, this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.TAN, this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ATAN, A))); 
@@ -43,7 +44,7 @@ public class RewriterArcTanTest {
 	}
 	
 	@Test
-	public void testSimple3() throws InvalidOperandException, InvalidTypeException {
+	public void testSimple3() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
 		//atan(tan(atan(A))) -> atan(A)
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
 		final Primitive p_post = this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ATAN, this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.TAN, this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ATAN, A))); 

@@ -390,8 +390,8 @@ public final class State implements Cloneable {
      *        to be granted simple representation.
      * @param maxHeapSize the maximum size of the state's heap expressed as the
      *        maximum number of objects it can store.
-     * @param cp a {@link Classpath}.
-     * @param fClass the {@link Class} of some subclass of {@link ClassFileFactory}.
+     * @param classPath a {@link Classpath}.
+     * @param factoryClass the {@link Class} of some subclass of {@link ClassFileFactory}.
      *        The class must have an accessible constructor with two parameters, the first a 
      *        {@link ClassFileStore}, the second a {@link Classpath}.
      * @param expansionBackdoor a 
@@ -405,24 +405,29 @@ public final class State implements Cloneable {
      * @throws InvalidClassFileFactoryClassException in the case {@link fClass}
      *         has not the expected features (missing constructor, unaccessible 
      *         constructor...).
+     * @throws InvalidInputException if {@code historyPoint == null || classPath == null || 
+     *         factoryClass == null || expansionBackdoor == null || calc == null || symbolFactory == null}.
      */
     public State(boolean bypassStandardLoading,
     		     HistoryPoint historyPoint,
                  int maxSimpleArrayLength,
                  long maxHeapSize,
-                 Classpath cp, 
-                 Class<? extends ClassFileFactory> fClass, 
+                 Classpath classPath, 
+                 Class<? extends ClassFileFactory> factoryClass, 
                  Map<String, Set<String>> expansionBackdoor, 
                  Calculator calc,
                  SymbolFactory symbolFactory) 
-                 throws InvalidClassFileFactoryClassException {
+                 throws InvalidClassFileFactoryClassException, InvalidInputException {
+    	if (historyPoint == null || calc == null || symbolFactory == null) {
+    		throw new InvalidInputException("Attempted the creation of a state with null historyPoint, or calc, or symbolFactory.");
+    	}
         this.bypassStandardLoading = bypassStandardLoading;
     	this.frozen = false;
         this.historyPoint = historyPoint;
         this.classLoaders.add(Null.getInstance()); //classloader 0 is the bootstrap classloader
         setStandardFiles();
         this.heap = new Heap(maxHeapSize);
-        this.classHierarchy = new ClassHierarchy(cp, fClass, expansionBackdoor);
+        this.classHierarchy = new ClassHierarchy(classPath, factoryClass, expansionBackdoor);
         this.maxSimpleArrayLength = maxSimpleArrayLength;
         this.calc = calc;
         this.symbolFactory = symbolFactory;
@@ -899,41 +904,28 @@ public final class State implements Cloneable {
     }
 
     /**
-     * Gets a symbolic object as it was initially.
+     * Gets a symbolic object as it was initially in this state.
      * 
-     * @param ref a {@link Reference}.
-     * @return the symbolic {@link Objekt} referred to by {@code ref} 
+     * @param origin a {@link ReferenceSymbolic}.
+     * @return the symbolic {@link Objekt} whose origin is {@code origin} 
      *         in the state it was at its epoch (equivalently, at the
      *         moment of its assumption), or 
-     *         {@code null} if {@code ref} does not refer to 
+     *         {@code null} if {@code origin} does not refer to 
      *         anything (e.g., is {@link Null}, or is an unresolved 
-     *         symbolic reference, or is resolved to null), or the 
-     *         reference is concrete and refers to a concrete object.
+     *         symbolic reference, or is resolved to null).
      * @throws FrozenStateException if the state is frozen.
      */
     //TODO eliminate this method!!!
-    public Objekt getObjectInitial(Reference ref) throws FrozenStateException {
+    private Objekt getObjectInitial(ReferenceSymbolic origin) throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        final long pos;
-        if (ref.isSymbolic()) {
-            final ReferenceSymbolic refSymbolic = (ReferenceSymbolic) ref;
-            if (resolved(refSymbolic)) {
-                pos = getResolution(refSymbolic);
-            } else {
-                return null;
-            }
-        } else {
-            final ReferenceConcrete refConcrete = (ReferenceConcrete) ref;
-            pos = refConcrete.getHeapPosition();
-        }
 
         //TODO extract this code and share with DecisionProcedureAlgorithms.getPossibleAliases
         for (Clause c : this.pathCondition.getClauses()) {
             if (c instanceof ClauseAssumeExpands) {
                 final ClauseAssumeExpands cExpands = (ClauseAssumeExpands) c;
-                if (cExpands.getHeapPosition() == pos) {
+                if (cExpands.getObjekt().getOrigin().equals(origin)) {
                     return cExpands.getObjekt();
                 }
             }
@@ -1740,7 +1732,12 @@ public final class State implements Cloneable {
         final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
         final KlassImpl k = new KlassImpl(true, this.calc, createSymbolKlassPseudoReference(classFile), this.lastPreInitialHistoryPoint, numOfStaticFields, fieldsSignatures);
-        initWithSymbolicValues(k);
+        try {
+        	initWithSymbolicValues(k);
+        } catch (NullPointerException e) {
+        	//this should never happen
+        	throw new UnexpectedInternalException(e);
+        }
         k.setIdentityHashCode(this.calc.valInt(0)); //doesn't care because it is not used
         this.staticMethodArea.set(classFile, k);
     }
@@ -1775,11 +1772,11 @@ public final class State implements Cloneable {
                 final long posBackingArray = this.heap.addNew(backingArray);
                 final ReferenceConcrete refToBackingArray = new ReferenceConcrete(posBackingArray);
                 myObj = new ArrayImpl(refToBackingArray, backingArray);
-            } catch (InvalidOperandException | InvalidTypeException | NullPointerException e) {
+                initIdentityHashCodeSymbolic(myObj);
+            } catch (InvalidOperandException | InvalidTypeException | NullPointerException | InvalidInputException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
             }
-            initIdentityHashCodeSymbolic(myObj);
         } else if (classFile.isReference()) {
             try {
                 myObj = newInstanceSymbolic(classFile, origin);
@@ -1798,7 +1795,12 @@ public final class State implements Cloneable {
     throws InvalidTypeException, FrozenStateException {
         final Primitive length = (Primitive) createSymbolMemberArrayLength(origin);
         final ArrayImpl obj = new ArrayImpl(true, this.calc, true, null, length, arrayClass, origin, origin.historyPoint(), isInitial, this.maxSimpleArrayLength);
-        initIdentityHashCodeSymbolic(obj);
+        try {
+			initIdentityHashCodeSymbolic(obj);
+		} catch (InvalidInputException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
         return obj;
     }
     
@@ -1845,7 +1847,12 @@ public final class State implements Cloneable {
         final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
         final InstanceImpl obj = new InstanceImpl(true, this.calc, classFile, origin, origin.historyPoint(), numOfStaticFields, fieldsSignatures);
-        initWithSymbolicValues(obj);
+        try {
+        	initWithSymbolicValues(obj);
+        } catch (NullPointerException e) {
+        	//this should never happen
+        	throw new UnexpectedInternalException(e);
+        }
         initIdentityHashCodeSymbolic(obj);
         return obj;
     }
@@ -1855,9 +1862,10 @@ public final class State implements Cloneable {
      * 
      * @param myObj an {@link Objekt} which will be initialized with 
      *              symbolic values.
-     * @throws FrozenStateException if the state is frozen.
+	 * @throws NullPointerException if {@code myObj} is not a symbolic object (i.e., it has
+	 *         no origin).
      */
-    private void initWithSymbolicValues(Objekt myObj) throws FrozenStateException {
+    private void initWithSymbolicValues(Objekt myObj) {
         for (final Signature fieldSignature : myObj.getStoredFieldSignatures()) {
             //gets the field signature and name
             final String fieldType = fieldSignature.getDescriptor();
@@ -1865,8 +1873,13 @@ public final class State implements Cloneable {
 
             //builds a symbolic value from signature and name 
             //and assigns it to the field
-            myObj.setFieldValue(fieldSignature, 
-                                (Value) createSymbolMemberField(fieldType, myObj.getOrigin(), fieldName));
+            try {
+				myObj.setFieldValue(fieldSignature, 
+				                    (Value) createSymbolMemberField(fieldType, myObj.getOrigin(), fieldName));
+			} catch (InvalidTypeException | InvalidInputException e) {
+				//this should never happen
+				throw new UnexpectedInternalException(e);
+			}
         }
     }
 
@@ -1887,9 +1900,11 @@ public final class State implements Cloneable {
      * value.
      * 
      * @param myObj the symbolic {@link Objekt} whose identity hash code will be initialized.
-     * @throws FrozenStateException if the state is frozen.
+     * @throws InvalidInputException  if the state is frozen or {@code object == null}, or {@code object} has
+	 *         both its origin and its history point set to {@code null} (note that in 
+	 *         such case {@code object} is ill-formed).
      */
-    private void initIdentityHashCodeSymbolic(Objekt myObj) throws FrozenStateException {
+    private void initIdentityHashCodeSymbolic(Objekt myObj) throws InvalidInputException {
         myObj.setIdentityHashCode(createSymbolIdentityHashCode(myObj));
     }
 
@@ -2552,18 +2567,23 @@ public final class State implements Cloneable {
         for (int i = 0, slot = 0; i < numArgs; ++i) {
             //builds a symbolic value from signature and name
             final String variableName = f.getLocalVariableDeclaredName(slot);
-            if (slot == ROOT_THIS_SLOT && !isStatic) {
-                args[i] = (Value) createSymbolLocalVariable(Type.REFERENCE + currentClassName + Type.TYPEEND, variableName);
-                //must assume {ROOT}:this expands to nonnull object (were it null the frame would not exist!)
-                try {
-                    assumeExpands((ReferenceSymbolic) args[i], currentClass);
-                } catch (InvalidTypeException | ContradictionException e) {
-                    //this should never happen
-                    throw new UnexpectedInternalException(e);
-                }
-            } else {
-                args[i] = (Value) createSymbolLocalVariable(paramsDescriptors[(isStatic ? i : i - 1)], variableName);
-            }
+            try {
+            	if (slot == ROOT_THIS_SLOT && !isStatic) {
+            		args[i] = (Value) createSymbolLocalVariable(Type.REFERENCE + currentClassName + Type.TYPEEND, variableName);
+            		//must assume {ROOT}:this expands to nonnull object (were it null the frame would not exist!)
+            		try {
+            			assumeExpands((ReferenceSymbolic) args[i], currentClass);
+            		} catch (InvalidTypeException | ContradictionException e) {
+            			//this should never happen
+            			throw new UnexpectedInternalException(e);
+            		}
+            	} else {
+            		args[i] = (Value) createSymbolLocalVariable(paramsDescriptors[(isStatic ? i : i - 1)], variableName);
+            	}
+            } catch (InvalidTypeException | InvalidInputException e) {
+				//this should never happen
+				throw new UnexpectedInternalException(e);
+			}
 
             //next slot
             ++slot;
@@ -3021,30 +3041,30 @@ public final class State implements Cloneable {
      * @param r the {@link ReferenceSymbolic} which is resolved. It 
      *        must be {@code r != null} and {@code r} must not be
      *        already resolved.
-     * @param heapPosition the heap position of the {@link Objekt} to which 
-     *        {@code r} is resolved. It must correspond to a heap position
-     *        where an object is effectively present.
-     * @param o the {@link Objekt} to which {@code r} is resolved. It will not
-     *        be modified nor stored.
-     * @throws ContradictionException if {@code r} is already resolved.
+     * @param origin a {@link ReferenceSymbolic}, the origin of the 
+     *        {@link Objekt} to which {@code r} is resolved. It must
+     *        not be {@code null} and must be resolved.
+     * @throws ContradictionException if {@code r} is already resolved 
+     *         or {@code origin} is not resolved.
      * @throws FrozenStateException if the state is frozen.
-     * @throws NullPointerException if either {@code r} or {@code heapPosition} 
-     *         violates preconditions.
+     * @throws NullPointerException if {@code r == null || origin == null}. 
      */
-    public void assumeAliases(ReferenceSymbolic r, long heapPosition, Objekt o) 
+    public void assumeAliases(ReferenceSymbolic r, ReferenceSymbolic origin) 
     throws ContradictionException, FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (r == null || o == null) {
+        if (r == null || origin == null) {
             throw new NullPointerException(); //TODO find a better exception
         }
-        if (this.resolved(r)) {
+        if (resolved(r) || !resolved(origin)) {
             throw new ContradictionException();
         }
         
     	possiblyReset();
-        this.pathCondition.addClauseAssumeAliases(r, heapPosition, o.clone());
+        final Objekt object = getObjectInitial(origin);
+        final long heapPosition = getResolution(origin);
+        this.pathCondition.addClauseAssumeAliases(r, heapPosition, object.clone());
         ++this.nPushedClauses;
     }
 
@@ -3067,7 +3087,7 @@ public final class State implements Cloneable {
         if (r == null) {
             throw new NullPointerException(); //TODO find a better exception
         }
-        if (this.resolved(r)) {
+        if (resolved(r)) {
             throw new ContradictionException();
         }
         
@@ -3128,11 +3148,11 @@ public final class State implements Cloneable {
     /**
      * Returns the state's path condition clauses.
      * 
-     * @return a read-only {@link Collection}{@code <}{@link Clause}{@code >} 
+     * @return a read-only {@link List}{@code <}{@link Clause}{@code >} 
      * representing all the {@link Clause}s cumulated in {@code this}. 
      * It is valid until {@code this} is modified.
      */
-    public Collection<Clause> getPathCondition() {
+    public List<Clause> getPathCondition() {
         return this.pathCondition.getClauses();
     }
 
@@ -3530,10 +3550,11 @@ public final class State implements Cloneable {
      *        variable in the root frame the symbol originates from.
      * @return a {@link PrimitiveSymbolic} or a {@link ReferenceSymbolic}
      *         according to {@code staticType}.
-     * @throws FrozenStateException if the state is frozen.
+	 * @throws InvalidTypeException if {@code staticType} is not a valid type.
+	 * @throws InvalidInputException if the state is frozen or {@code variableName == null || staticType == null}.
      */
     public Symbolic createSymbolLocalVariable(String staticType, String variableName) 
-    throws FrozenStateException {
+    throws InvalidTypeException, InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
@@ -3546,10 +3567,10 @@ public final class State implements Cloneable {
      * 
      * @param classFile the {@link ClassFile} for the {@link Klass} to be referred.
      * @return a {@link KlassPseudoReference}.
-     * @throws FrozenStateException if the state is frozen.
+     * @throws InvalidInputException if the state is frozen or {@code classFile == null}.
      */
     public KlassPseudoReference createSymbolKlassPseudoReference(ClassFile classFile) 
-    throws FrozenStateException {
+    throws InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
@@ -3568,10 +3589,12 @@ public final class State implements Cloneable {
      *        container object the symbol originates from.
      * @return a {@link PrimitiveSymbolic} or a {@link ReferenceSymbolic}
      *         according to {@code staticType}.
-     * @throws FrozenStateException if the state is frozen.
+	 * @throws InvalidTypeException if {@code staticType} is not a valid type.
+	 * @throws InvalidInputException if the state is frozen or {@code fieldName == null || staticType == null}.
+	 * @throws NullPointerException if {@code container == null}.
      */
     public Symbolic createSymbolMemberField(String staticType, ReferenceSymbolic container, String fieldName) 
-    throws FrozenStateException {
+    throws InvalidTypeException, InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
@@ -3590,10 +3613,12 @@ public final class State implements Cloneable {
      *        container array this symbol originates from.
      * @return a {@link PrimitiveSymbolic} or a {@link ReferenceSymbolic}
      *         according to {@code staticType}.
-     * @throws FrozenStateException if the state is frozen.
+	 * @throws InvalidTypeException if {@code staticType} is not a valid type.
+	 * @throws InvalidInputException if the state is frozen or {@code index == null || staticType == null}.
+	 * @throws NullPointerException if {@code container == null}.
      */
     public Symbolic createSymbolMemberArray(String staticType, ReferenceSymbolic container, Primitive index) 
-    throws FrozenStateException {
+    throws InvalidTypeException, InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
@@ -3608,9 +3633,9 @@ public final class State implements Cloneable {
      *        the symbol originates from. It must refer an array.
      * @return a {@link PrimitiveSymbolic}.
      * @throws FrozenStateException if the state is frozen.
+	 * @throws NullPointerException if {@code container == null}.
      */
-    public PrimitiveSymbolic createSymbolMemberArrayLength(ReferenceSymbolic container) 
-    throws FrozenStateException {
+    public PrimitiveSymbolic createSymbolMemberArrayLength(ReferenceSymbolic container) throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
@@ -3624,10 +3649,12 @@ public final class State implements Cloneable {
      * @param object a symbolic {@link Objekt}, the object whose identity hash 
      *        code is this symbol. It must be an instance or an array.
      * @return a {@link PrimitiveSymbolic}.
-     * @throws FrozenStateException if the state is frozen.
+     * @throws InvalidInputException if the state is frozen or {@code object == null}, or {@code object} has
+	 *         both its origin and its history point set to {@code null} (note that in 
+	 *         such case {@code object} is ill-formed).
      */
     public PrimitiveSymbolic createSymbolIdentityHashCode(Objekt object) 
-    throws FrozenStateException {
+    throws InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}

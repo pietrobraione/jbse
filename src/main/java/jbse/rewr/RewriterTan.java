@@ -1,5 +1,6 @@
 package jbse.rewr;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.rewr.exc.NoResultException;
 import jbse.val.Expression;
@@ -35,7 +36,7 @@ public class RewriterTan extends Rewriter {
 					firstFA.getArgs()[0].equals(secondFA.getArgs()[0])) {
 					try {
 						setResult(this.calc.applyFunctionPrimitive(x.getType(), firstFA.historyPoint(), PrimitiveSymbolicApply.TAN, firstFA.getArgs()[0]));
-					} catch (InvalidOperandException | InvalidTypeException e) {
+					} catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
 						//this should never happen
 						throw new UnexpectedInternalException(e);
 					}

@@ -37,7 +37,7 @@ public class MethodFrameTest {
     private ClassHierarchy hier;
 
     @Before
-    public void setUp() throws InvalidClassFileFactoryClassException, IOException {
+    public void setUp() throws InvalidClassFileFactoryClassException, IOException, InvalidInputException {
         //environment
         final ArrayList<Path> userPath = new ArrayList<>();
         userPath.add(Paths.get("src/test/resources/jbse/bc/testdata"));

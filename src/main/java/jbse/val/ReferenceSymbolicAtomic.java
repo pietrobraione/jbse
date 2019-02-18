@@ -1,5 +1,11 @@
 package jbse.val;
 
+import static jbse.common.Type.isArray;
+import static jbse.common.Type.isReference;
+
+import jbse.common.exc.InvalidInputException;
+import jbse.val.exc.InvalidTypeException;
+
 /**
  * Class that represent a {@link ReferenceSymbolic} atomic 
  * (non computed) value.
@@ -7,12 +13,6 @@ package jbse.val;
  * @author Pietro Braione
  */
 public abstract class ReferenceSymbolicAtomic extends ReferenceSymbolic implements SymbolicAtomic {
-    /** An identifier for the value, in order to track lazy initialization. */
-    private final int id;
-
-    /** The hash code. */
-    private final int hashCode;
-
     /** The string representation of this object. */
     private final String toString;
 
@@ -23,44 +23,21 @@ public abstract class ReferenceSymbolicAtomic extends ReferenceSymbolic implemen
      * @param staticType a {@link String}, the static type of the
      *        reference (taken from bytecode).
      * @param historyPoint the current {@link HistoryPoint}.
+     * @throws InvalidTypeException  if {@code staticType} is not an array or instance
+	 *         reference type.
+	 * @throws InvalidInputException if {@code staticType == null || historyPoint == null}.
      */
-    ReferenceSymbolicAtomic(int id, String staticType, HistoryPoint historyPoint) {
+    ReferenceSymbolicAtomic(int id, String staticType, HistoryPoint historyPoint) throws InvalidInputException, InvalidTypeException {
         super(staticType, historyPoint);
-        this.id = id;
-
-        //calculates hashCode
-        final int prime = 22901;
-        int result = 1;
-        result = prime * result + id;
-        this.hashCode = result;
+    	if (staticType == null) {
+            throw new InvalidInputException("Attempted to build a ReferenceSymbolicAtomic with null static type.");
+    	}
+    	if (!isArray(staticType) && !isReference(staticType)) {
+    		throw new InvalidTypeException("Attempted to build a ReferenceSymbolicAtomic with static type " + staticType + " (neither array nor instance reference type).");
+    	}
 
         //calculates toString
-        this.toString = "{R" + this.id + "}";
-    }
-
-    @Override
-    public final int getId() {
-        return this.id;
-    }
-
-    @Override
-    public final boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final ReferenceSymbolicAtomic other = (ReferenceSymbolicAtomic) obj;
-        return (this.id == other.id);
-    }
-
-    @Override
-    public final int hashCode() {
-        return this.hashCode;
+        this.toString = "{R" + id + "}";
     }
 
     @Override

@@ -68,7 +68,7 @@ public final class DecisionProcedureConservativeRepOk extends DecisionProcedureC
     throws DecisionException {
         final State sIni = this.checker.makeInitialState();
         try {
-            sIni.assumeAliases(r, heapPosition, o);
+            sIni.assumeAliases(r, o.getOrigin());
         } catch (ContradictionException | FrozenStateException e) {
             //this should not happen
             throw new UnexpectedInternalException(e);

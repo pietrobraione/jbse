@@ -2,6 +2,7 @@ package jbse.val;
 
 import static jbse.common.Type.REFERENCE;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Klass;
 
 /**
@@ -23,9 +24,13 @@ public abstract class ReferenceSymbolic extends Reference implements Symbolic {
      *        variable from which this reference originates, 
      *        or {@code null} if this object refers to a {@link Klass}.
      * @param historyPoint the current {@link HistoryPoint}.
+     * @throws InvalidInputException if {@code historyPoint == null}.
      */
-    ReferenceSymbolic(String staticType, HistoryPoint historyPoint) {
+    ReferenceSymbolic(String staticType, HistoryPoint historyPoint) throws InvalidInputException {
     	super(REFERENCE);
+    	if (historyPoint == null) {
+            throw new InvalidInputException("Attempted to build a ReferenceSymbolicApply with null history point.");
+    	}
         this.staticType = staticType;
         this.historyPoint = historyPoint;
     }
@@ -39,13 +44,7 @@ public abstract class ReferenceSymbolic extends Reference implements Symbolic {
     	return this.staticType;
     }
     
-    /**
-     * Returns the root {@link ReferenceSymbolic} (i.e., the topmost
-     * contained) where this {@link ReferenceSymbolic} originates from.
-     * 
-     * @return a {@link KlassPseudoReference}, or a {@link ReferenceSymbolicApply}, 
-     *         or a {@link ReferenceSymbolicLocalVariable}.
-     */
+    @Override
     public abstract ReferenceSymbolic root();
 
     @Override

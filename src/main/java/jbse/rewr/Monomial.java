@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.rewr.exc.NoResultException;
 import jbse.val.Any;
@@ -384,7 +385,7 @@ class Monomial implements Comparable<Monomial> {
 				}
 			}
 		} catch (NoResultException | InvalidOperandException | 
-				 InvalidOperatorException | InvalidTypeException e) {
+				 InvalidOperatorException | InvalidTypeException | InvalidInputException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}

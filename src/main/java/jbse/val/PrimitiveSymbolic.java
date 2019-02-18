@@ -1,5 +1,6 @@
 package jbse.val;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.val.exc.InvalidTypeException;
 import jbse.val.exc.ValueDoesNotSupportNativeException;
 
@@ -17,12 +18,13 @@ public abstract class PrimitiveSymbolic extends Primitive implements Symbolic {
      * @param historyPoint the current {@link HistoryPoint}. It must not be {@code null}.
      * @param calc a {@link Calculator}. It must not be {@code null}.
      * @throws InvalidTypeException if {@code type} is not primitive.
-     * @throws NullPointerException if {@code calc == null || historyPoint == null}.
+     * @throws InvalidInputException if {@code calc == null || historyPoint == null}.
      */
-    PrimitiveSymbolic(char type, HistoryPoint historyPoint, Calculator calc) throws InvalidTypeException {
+    PrimitiveSymbolic(char type, HistoryPoint historyPoint, Calculator calc) 
+    throws InvalidTypeException, InvalidInputException {
     	super(type, calc);
     	if (historyPoint == null) {
-    		throw new NullPointerException("Attempted the creation of a PrimitiveSymbolic with null history point.");
+    		throw new InvalidInputException("Attempted the creation of a PrimitiveSymbolic with null history point.");
     	}
         this.historyPoint = historyPoint;
     }

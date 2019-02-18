@@ -1,8 +1,13 @@
 package jbse.val;
 
+import static jbse.common.Type.isArray;
+import static jbse.common.Type.isReference;
+
 import java.util.Arrays;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * Class of values representing the {@link ReferenceSymbolic} returned by the 
@@ -26,8 +31,11 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 	/** The hash code of this object. */
     private final int hashCode;
 
-    /** The string representation of this object. */
+    /** The String representation of this object. */
 	private final String toString;
+	
+	/** The origin String representation of this object. */
+	private final String originString;
 	
 	/**
 	 * Constructor. 
@@ -38,10 +46,19 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
      * @param operator the name of the function.
      * @param args the {@link Value} arguments to which the function is applied.
 	 * @throws InvalidOperandException if any of {@code args} is null. 
+	 * @throws InvalidTypeException if {@code staticType} is not an array or instance
+	 *         reference type.
+	 * @throws InvalidInputException if {@code staticType == null || operator == null || args == null || historyPoint == null}.
 	 */
 	public ReferenceSymbolicApply(String staticType, HistoryPoint historyPoint, String operator, Value... args) 
-	throws InvalidOperandException {
+	throws InvalidOperandException, InvalidTypeException, InvalidInputException {
 		super(staticType, historyPoint);
+    	if (staticType == null || operator == null || args == null) {
+            throw new InvalidInputException("Attempted to build a ReferenceSymbolicApply with null static type, operator or args.");
+    	}
+    	if (!isArray(staticType) && !isReference(staticType)) {
+    		throw new InvalidTypeException("Attempted to build a ReferenceSymbolicApply with static type " + staticType + " (neither array nor instance reference type).");
+    	}
 		this.operator = operator;
 		this.args = args.clone();
 		int i = 0;
@@ -57,25 +74,49 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 		int tmpHashCode = 1;
 		tmpHashCode = prime * tmpHashCode + Arrays.hashCode(args);
 		tmpHashCode = prime * tmpHashCode + ((operator == null) ? 0 : operator.hashCode());
-                tmpHashCode = prime * tmpHashCode + ((historyPoint == null) ? 0 : historyPoint.hashCode());
+		tmpHashCode = prime * tmpHashCode + ((historyPoint == null) ? 0 : historyPoint.hashCode());
 		this.hashCode = tmpHashCode;
 		
 		//calculates toString
-		final StringBuilder buf = new StringBuilder();
-		buf.append(this.operator + "(");
-		boolean first = true;
-		for (Value v : this.args) {
-			buf.append(first ? "" : ",");
-			buf.append(v.toString());
-			first = false;
+		{
+			final StringBuilder buf = new StringBuilder();
+			buf.append(this.operator + "(");
+			boolean first = true;
+			for (Value v : this.args) {
+				buf.append(first ? "" : ",");
+				buf.append(v.toString());
+				first = false;
+			}
+			if (historyPoint == null) {
+				buf.append(")");
+			} else {
+				buf.append(")@");
+				buf.append(historyPoint.toString());
+			}
+			this.toString = buf.toString();
 		}
-		if (historyPoint == null) {
-		    buf.append(")");
-		} else {
-		    buf.append(")@");
-		    buf.append(historyPoint.toString());
+		
+		//calculates originString
+		{
+			final StringBuilder buf = new StringBuilder();
+			buf.append('<');
+			buf.append(this.operator);
+			buf.append('(');
+			boolean first = true;
+			for (Value v : this.args) {
+				buf.append(first ? "" : ",");
+				buf.append(v.isSymbolic() ? ((Symbolic) v).asOriginString() : v.toString());
+				first = false;
+			}
+			if (historyPoint() == null) {
+				buf.append(")");
+			} else {
+				buf.append(")@");
+				buf.append(historyPoint().toString());
+			}
+			buf.append('>');
+			this.originString = buf.toString();
 		}
-		this.toString = buf.toString();
 	}
 
 	@Override
@@ -89,51 +130,33 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 	}
 	
 	@Override
+	public String asOriginString() {
+		return this.originString;
+	}
+	
+	@Override
 	public ReferenceSymbolic root() {
 		return this;
 	}
 	
 	@Override
-	public String asOriginString() {
-            final StringBuilder buf = new StringBuilder();
-            buf.append('<');
-            buf.append(this.operator);
-            buf.append('(');
-            boolean first = true;
-            for (Value v : this.args) {
-                    buf.append(first ? "" : ",");
-                    buf.append(v.isSymbolic() ? ((Symbolic) v).asOriginString() : v.toString());
-                    first = false;
-            }
-            if (historyPoint() == null) {
-                buf.append(")");
-            } else {
-                buf.append(")@");
-                buf.append(historyPoint().toString());
-            }
-            buf.append('>');
-            return buf.toString();
+	public boolean hasContainer(Symbolic s) {
+		if (s == null) {
+			throw new NullPointerException();
+		}
+		return equals(s);
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public String toString() {
 		return this.toString;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public int hashCode() {
 		return this.hashCode;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -146,8 +169,9 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 			return false;
 		}
 		final ReferenceSymbolicApply other = (ReferenceSymbolicApply) obj;
-		if (!Arrays.equals(this.args, other.args))
+		if (!Arrays.equals(this.args, other.args)) {
 			return false;
+		}
 		if (this.operator == null) {
 			if (other.operator != null) {
 				return false;
@@ -155,13 +179,13 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 		} else if (!this.operator.equals(other.operator)) {
 			return false;
 		}
-                if (historyPoint() == null) {
-                    if (other.historyPoint() != null) {
-                        return false;
-                    }
-                } else if (!historyPoint().equals(other.historyPoint())) {
-                    return false;
-                }
+		if (historyPoint() == null) {
+			if (other.historyPoint() != null) {
+				return false;
+			}
+		} else if (!historyPoint().equals(other.historyPoint())) {
+			return false;
+		}
 		return true;
 	}
 }

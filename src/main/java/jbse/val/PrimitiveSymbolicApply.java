@@ -24,6 +24,7 @@ import static jbse.bc.Signatures.JAVA_STRICTMATH_TAN;
 
 import java.util.Arrays;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
@@ -115,20 +116,26 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed impl
     /** The string representation of this object. */
 	private final String toString;
 	
+	private final String originString;
+	
 	/**
 	 * Constructor. 
 	 * 
      * @param type a {@code char}, the type of this {@link PrimitiveSymbolicApply}. 
-     * @param historyPoint the current {@link HistoryPoint}.
+     * @param historyPoint the current {@link HistoryPoint}. It must not be {@code null}.
      * @param calc a {@link Calculator}.
      * @param operator the name of the function.
      * @param args the {@link Value} arguments to which the function is applied.
 	 * @throws InvalidOperandException if any of {@code args} is null. 
 	 * @throws InvalidTypeException if {@code type} is not primitive.
+	 * @throws InvalidInputException if {@code operator == null || args == null || calc == null || historyPoint == null}.
 	 */
 	public PrimitiveSymbolicApply(char type, HistoryPoint historyPoint, Calculator calc, String operator, Value... args) 
-	throws InvalidTypeException, InvalidOperandException {
+	throws InvalidTypeException, InvalidOperandException, InvalidInputException {
 		super(type, historyPoint, calc);
+    	if (operator == null || args == null) {
+            throw new InvalidInputException("Attempted to build a PrimitiveSymbolicApply with null operator or args.");
+    	}
 		this.operator = operator;
 		this.args = args.clone();
 		int i = 0;
@@ -148,20 +155,44 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed impl
 		this.hashCode = tmpHashCode;
 		
 		//calculates toString
-		final StringBuilder buf = new StringBuilder();
-		buf.append(this.operator + "(");
-		boolean first = true;
-		for (Value v : this.args) {
-			buf.append(first ? "" : ",");
-			buf.append(v.toString());
-			first = false;
+		{
+			final StringBuilder buf = new StringBuilder();
+			buf.append(this.operator + "(");
+			boolean first = true;
+			for (Value v : this.args) {
+				buf.append(first ? "" : ",");
+				buf.append(v.toString());
+				first = false;
+			}
+			buf.append(")");
+			if (historyPoint != null) {
+				buf.append("@");
+				buf.append(historyPoint.toString());
+			}
+			this.toString = buf.toString();
 		}
-		buf.append(")");
-		if (historyPoint != null) {
-			buf.append("@");
-			buf.append(historyPoint.toString());
+		
+		//calculates originString
+		{
+            final StringBuilder buf = new StringBuilder();
+            buf.append('<');
+            buf.append(this.operator);
+            buf.append('(');
+            boolean first = true;
+            for (Value v : this.args) {
+                    buf.append(first ? "" : ",");
+                    buf.append(v.isSymbolic() ? ((Symbolic) v).asOriginString() : v.toString());
+                    first = false;
+            }
+            if (historyPoint() == null) {
+                buf.append(")");
+            } else {
+                buf.append(")@");
+                buf.append(historyPoint().toString());
+            }
+            buf.append('>');
+            this.originString = buf.toString();
 		}
-		this.toString = buf.toString();
 	}
 	
 	@Override
@@ -189,61 +220,45 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed impl
 	    
 	    try {
 	        return this.calc.applyFunctionPrimitive(this.getType(), historyPoint(), this.operator, argsNew); //TODO possible bug! Here rewriting is applied!
-	    } catch (InvalidOperandException | InvalidTypeException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
+	    } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
+	    	//this should never happen
+	    	throw new UnexpectedInternalException(e);
 	    } 
 	}
 	
 	@Override
 	public String asOriginString() {
-            final StringBuilder buf = new StringBuilder();
-            buf.append('<');
-            buf.append(this.operator);
-            buf.append('(');
-            boolean first = true;
-            for (Value v : this.args) {
-                    buf.append(first ? "" : ",");
-                    buf.append(v.isSymbolic() ? ((Symbolic) v).asOriginString() : v.toString());
-                    first = false;
-            }
-            if (historyPoint() == null) {
-                buf.append(")");
-            } else {
-                buf.append(")@");
-                buf.append(historyPoint().toString());
-            }
-            buf.append('>');
-            return buf.toString();
+		return this.originString;
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
+	public Symbolic root() {
+		return this;
+	}
+	
+	@Override
+	public boolean hasContainer(Symbolic s) {
+		if (s == null) {
+			throw new NullPointerException();
+		}
+		return equals(s);
+	}
+	
 	@Override
 	public void accept(PrimitiveVisitor v) throws Exception {
 		v.visitPrimitiveSymbolicApply(this);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public String toString() {
 		return this.toString;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public int hashCode() {
 		return this.hashCode;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -256,8 +271,9 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed impl
 			return false;
 		}
 		final PrimitiveSymbolicApply other = (PrimitiveSymbolicApply) obj;
-		if (!Arrays.equals(this.args, other.args))
+		if (!Arrays.equals(this.args, other.args)) {
 			return false;
+		}
 		if (this.operator == null) {
 			if (other.operator != null) {
 				return false;
@@ -265,11 +281,11 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed impl
 		} else if (!this.operator.equals(other.operator)) {
 			return false;
 		}
-		if (this.historyPoint() == null) {
+		if (historyPoint() == null) {
 		    if (other.historyPoint() != null) {
 		        return false;
 		    }
-		} else if (!this.historyPoint().equals(other.historyPoint())) {
+		} else if (!historyPoint().equals(other.historyPoint())) {
 		    return false;
 		}
 		return true;

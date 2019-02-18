@@ -1,6 +1,7 @@
 package jbse.rewr;
 
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.rewr.exc.NoResultException;
 import jbse.val.PrimitiveSymbolicApply;
@@ -89,7 +90,7 @@ public class RewriterTrigNormalize extends Rewriter {
 			} else {
 				super.rewritePrimitiveSymbolicApply(x);
 			}
-		} catch (InvalidOperandException | InvalidTypeException e) {
+		} catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}

@@ -1,5 +1,6 @@
 package jbse.val;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
@@ -15,9 +16,10 @@ public abstract class PrimitiveSymbolicComputed extends PrimitiveSymbolic {
      * @param historyPoint the current {@link HistoryPoint}. It must not be {@code null}.
      * @param calc a {@link Calculator}. It must not be {@code null}.
      * @throws InvalidTypeException if {@code type} is not primitive.
-     * @throws NullPointerException if {@code calc == null || historyPoint == null}.
+     * @throws InvalidInputException if {@code calc == null || historyPoint == null}.
      */
-    PrimitiveSymbolicComputed(char type, HistoryPoint historyPoint, Calculator calc) throws InvalidTypeException {
+    PrimitiveSymbolicComputed(char type, HistoryPoint historyPoint, Calculator calc) 
+    throws InvalidTypeException, InvalidInputException {
     	super(type, historyPoint, calc);
     }
     

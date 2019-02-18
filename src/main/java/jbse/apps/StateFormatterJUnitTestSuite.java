@@ -604,12 +604,13 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
         }
 
         private String getOriginOfObjectInHeap(State finalState, long heapPos){
+            //TODO extract this code and share with DecisionProcedureAlgorithms.getPossibleAliases
             final Collection<Clause> path = finalState.getPathCondition();
             for (Clause clause : path) {
                 if (clause instanceof ClauseAssumeExpands) { // == Obj fresh
                     final ClauseAssumeExpands clauseExpands = (ClauseAssumeExpands) clause;
                     final long heapPosCurrent = clauseExpands.getHeapPosition();
-                    if (heapPosCurrent == heapPos){
+                    if (heapPosCurrent == heapPos) {
                         return getVariableFor(clauseExpands.getReference());
                     }
                 }

@@ -3,6 +3,7 @@ package jbse.rewr;
 import static org.junit.Assert.assertEquals;
 
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.val.Expression;
 import jbse.val.HistoryPoint;
 import jbse.val.Operator;
@@ -48,7 +49,7 @@ public class RewriterPolynomialsTest {
 	}
 	
 	@Test
-	public void testDivision3() throws InvalidOperandException, InvalidOperatorException, InvalidTypeException {
+	public void testDivision3() throws InvalidOperandException, InvalidOperatorException, InvalidTypeException, InvalidInputException {
 		//(A - B) / (C - D) preserves division
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		final Term B = this.calc.valTerm(Type.INT, "B");
@@ -126,7 +127,7 @@ public class RewriterPolynomialsTest {
 	}
 	
 	@Test
-	public void testMultiplication3() throws InvalidOperandException, InvalidTypeException {
+	public void testMultiplication3() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
 		//(A + C) * D -> (A * D) + (C * D) with polynomial normalization
 		final Term A = this.calc.valTerm(Type.INT, "A");
 		final Term B = this.calc.valTerm(Type.INT, "B");

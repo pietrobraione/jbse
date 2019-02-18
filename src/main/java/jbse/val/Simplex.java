@@ -1,6 +1,7 @@
 package jbse.val;
 
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
@@ -30,10 +31,10 @@ public final class Simplex extends Primitive implements Cloneable {
      *         {@link Long}, or {@link Short}).
      * @throws InvalidTypeException if {@code type} is not primitive or is
      *         not the type of {@code value}.
-     * @throws NullPointerException if {@code calc == null}.
+     * @throws InvalidInputException if {@code calc == null}.
      */
     private Simplex(char type, Calculator calc, Object value) 
-    throws InvalidOperandException, InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException, InvalidInputException {
         super(type, calc);
         //checks on parameters
         if (value == null || !(
@@ -95,10 +96,10 @@ public final class Simplex extends Primitive implements Cloneable {
      *         {@link Character}, {@link Double}, {@link Float}, {@link Integer}, 
      *         {@link Long}, or {@link Short}).
      * @throws InvalidTypeException if {@code type} is not primitive.
-     * @throws NullPointerException if {@code calc == null}.
+     * @throws InvalidInputException if {@code calc == null}.
      */
     public static Simplex make(Calculator calc, Object n) 
-    throws InvalidTypeException, InvalidOperandException {
+    throws InvalidTypeException, InvalidOperandException, InvalidInputException {
         if (n instanceof Boolean) {
             return new Simplex(Type.BOOLEAN, calc, n);
         } else if (n instanceof Byte) {
@@ -219,9 +220,6 @@ public final class Simplex extends Primitive implements Cloneable {
         return (this.getType() == Type.BOOLEAN && !((Boolean) this.value).booleanValue());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void accept(PrimitiveVisitor v) throws Exception {
         v.visitSimplex(this);
@@ -236,9 +234,6 @@ public final class Simplex extends Primitive implements Cloneable {
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Object getValueForNative() {
         return this.value;

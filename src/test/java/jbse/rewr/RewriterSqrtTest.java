@@ -3,6 +3,7 @@ package jbse.rewr;
 import static org.junit.Assert.assertEquals;
 
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.HistoryPoint;
 import jbse.val.Primitive;
@@ -27,7 +28,7 @@ public class RewriterSqrtTest {
 	}
 	
 	@Test
-	public void testBasic() throws InvalidOperandException, InvalidTypeException {
+	public void testBasic() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
 		//sqrt(A * A) -> abs(A)
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
 		final Primitive p_post = this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.SQRT, A.mul(A)); 
@@ -35,7 +36,7 @@ public class RewriterSqrtTest {
 	}
 	
 	@Test
-	public void testDoubleMult() throws InvalidOperandException, InvalidTypeException {
+	public void testDoubleMult() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
 		//sqrt((A * B) * (B * A)) -> abs(A * B)
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
 		final Term B = this.calc.valTerm(Type.DOUBLE, "B");
@@ -45,7 +46,7 @@ public class RewriterSqrtTest {
 	}
 	
 	@Test
-	public void testNested() throws InvalidOperandException, InvalidTypeException {
+	public void testNested() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
 		//sqrt(A * sqrt(A * A)) -> sqrt(A * abs(A))
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
 		final Primitive p_post = this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.SQRT, A.mul(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.SQRT, A.mul(A)))); 
@@ -53,7 +54,7 @@ public class RewriterSqrtTest {
 	}	
 	
 	@Test
-	public void testMult() throws InvalidOperandException, InvalidTypeException {
+	public void testMult() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
 		//sqrt(A * 2 * A) -> abs(A) * sqrt(2)
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
 		final Primitive p_post = this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.SQRT, A.mul(this.calc.valDouble(2.0d).mul(A))); 
@@ -62,7 +63,7 @@ public class RewriterSqrtTest {
 	}	
 	
 	@Test
-	public void testBinomial1() throws InvalidOperandException, InvalidTypeException {
+	public void testBinomial1() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
 		//sqrt(A * A + 2 * A * B + B * B) -> abs(A + B)
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
 		final Term B = this.calc.valTerm(Type.DOUBLE, "B");
@@ -73,7 +74,7 @@ public class RewriterSqrtTest {
 	}	
 	
 	@Test
-	public void testBinomial2() throws InvalidOperandException, InvalidTypeException {
+	public void testBinomial2() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
 		//sqrt(- 2 * A * B + B * B + A * A) -> abs(A - B) (OR abs(B - A))
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
 		final Term B = this.calc.valTerm(Type.DOUBLE, "B");
@@ -84,7 +85,7 @@ public class RewriterSqrtTest {
 	}	
 	
 	@Test
-	public void testBinomial3() throws InvalidOperandException, InvalidTypeException {
+	public void testBinomial3() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
 		//sqrt(2 * f(A) * g(A) + f(A) * f(A) + g(A) * g(A)) -> abs(f(A) + g(A)) (OR abs(g(A) + f(A)))
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
 		final Primitive binomial = this.calc.valDouble(2.0d).mul(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, "f", A)).mul(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, "g", A)).add(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, "f", A).mul(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, "f", A))).add(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, "g", A).mul(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, "g", A)));

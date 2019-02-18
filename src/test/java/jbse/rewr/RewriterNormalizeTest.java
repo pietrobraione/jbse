@@ -3,6 +3,7 @@ package jbse.rewr;
 import static org.junit.Assert.assertEquals;
 
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.HistoryPoint;
 import jbse.val.Primitive;
@@ -39,7 +40,7 @@ public class RewriterNormalizeTest {
 	}
 
 	@Test
-	public void test2() throws InvalidOperandException, InvalidTypeException {
+	public void test2() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
 		final Term A = calc.valTerm(Type.INT, "A");
 		final Term B = calc.valTerm(Type.INT, "B");
 		final Primitive p_post = new PrimitiveSymbolicApply(Type.INT, this.hist, this.calc, "f", A.mul(B)).mul(A);
@@ -48,7 +49,7 @@ public class RewriterNormalizeTest {
 
 
 	@Test
-	public void test3() throws InvalidOperandException, InvalidTypeException {
+	public void test3() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
 		final Term A = calc.valTerm(Type.INT, "A");
 		final Term B = calc.valTerm(Type.INT, "B");
 		final Term C = calc.valTerm(Type.INT, "C");
@@ -59,7 +60,7 @@ public class RewriterNormalizeTest {
 
 
 	@Test
-	public void test4() throws InvalidOperandException, InvalidTypeException {
+	public void test4() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
 		final Term A = calc.valTerm(Type.INT, "A");
 		final Term B = calc.valTerm(Type.INT, "B");
 		final Term C = calc.valTerm(Type.INT, "C");

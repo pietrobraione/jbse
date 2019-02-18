@@ -1,5 +1,6 @@
 package jbse.val;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -19,9 +20,11 @@ public abstract class PrimitiveSymbolicMember extends PrimitiveSymbolicAtomic im
      * @param type the type of the represented value.
      * @param calc a {@link Calculator}. It must not be {@code null}.
      * @throws InvalidTypeException if {@code type} is not primitive.
-     * @throws NullPointerException if {@code calc == null || container == null}.
+     * @throws InvalidInputException if {@code calc == null}. 
+     * @throws NullPointerException if {@code container == null}.
      */
-    PrimitiveSymbolicMember(ReferenceSymbolic container, int id, char type, Calculator calc) throws InvalidTypeException {
+    PrimitiveSymbolicMember(ReferenceSymbolic container, int id, char type, Calculator calc) 
+    throws InvalidTypeException, InvalidInputException {
     	super(id, type, container.historyPoint(), calc);
     	this.container = container;
     }

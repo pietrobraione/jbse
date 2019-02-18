@@ -523,7 +523,12 @@ public final class ExecutionContext {
         this.comparators = comparators;
         this.rootMethodSignature = rootMethodSignature;
         this.decisionProcedure = decisionProcedure;
-        this.symbolFactory = new SymbolFactory(this.calc);
+        try {
+			this.symbolFactory = new SymbolFactory(this.initialState == null ? this.calc : this.initialState.getCalculator());
+		} catch (InvalidInputException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
         this.stateTree = new StateTree(stateIdentificationMode, breadthMode);
         this.triggerManager = new TriggerManager(rulesTrigger.clone()); //safety copy
 
@@ -745,7 +750,12 @@ public final class ExecutionContext {
      *         unaccessible constructor...).
      */
     public State createVirginPreInitialState() throws InvalidClassFileFactoryClassException {
-        return new State(this.bypassStandardLoading, this.stateTree.getPreInitialHistoryPoint(), this.maxSimpleArrayLength, this.maxHeapSize, this.classpath, this.classFileFactoryClass, this.expansionBackdoor, this.calc, this.symbolFactory);
+        try {
+			return new State(this.bypassStandardLoading, this.stateTree.getPreInitialHistoryPoint(), this.maxSimpleArrayLength, this.maxHeapSize, this.classpath, this.classFileFactoryClass, this.expansionBackdoor, this.calc, this.symbolFactory);
+		} catch (InvalidInputException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
     }
 
     /**

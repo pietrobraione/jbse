@@ -1,9 +1,11 @@
 package jbse.val;
 
+import static jbse.val.HistoryPoint.unknown;
+
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
-import jbse.val.exc.ValueDoesNotSupportNativeException;
 
 /**
  * Class representing the values resulting from a narrowing
@@ -12,22 +14,24 @@ import jbse.val.exc.ValueDoesNotSupportNativeException;
  * @author Pietro Braione
  *
  */
-public final class NarrowingConversion extends Primitive {
+public final class NarrowingConversion extends PrimitiveSymbolic {
     private final Primitive arg;
-    private final String toString;
     private final int hashCode;
+    private final String toString;
+    private final String originString;
 
     private NarrowingConversion(char type, Calculator calc, Primitive arg) 
-    throws InvalidOperandException, InvalidTypeException {
-        super(type, calc);
+    throws InvalidOperandException, InvalidTypeException, InvalidInputException {
+        super(type, unknown(), calc); //TODO put sensible history point?
 
         //checks on parameters
         if (arg == null) {
-            throw new InvalidOperandException("null operand in narrowing construction");
+            throw new InvalidOperandException("Null operand in narrowing construction.");
         }
         if (!Type.narrows(type, arg.getType())) {
-            throw new InvalidTypeException("cannot narrow type " + arg.getType() + " to type " + type);
+            throw new InvalidTypeException("Cannot narrow type " + arg.getType() + " to type " + type + ".");
         }
+        
         this.arg = arg;
 
         //calculates hashCode
@@ -38,11 +42,27 @@ public final class NarrowingConversion extends Primitive {
         this.hashCode = result;
 
         //calculates toString
-        this.toString = "NARROW-"+ this.getType() + "(" + arg.toString() + ")";
+        this.toString = "NARROW-"+ getType() + "(" + arg.toString() + ")";
+
+        //calculates originString
+        this.originString = "NARROW-"+ getType() + "(" + (arg.isSymbolic() ? ((Symbolic) arg).asOriginString() : arg.toString()) + ")";
     }
 
+    /**
+     * Constructs a {@link NarrowingConversion}.
+     * 
+     * @param type a {@code char}, the destination type of the conversion.
+     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * @param arg a {@link Primitive}, the value that is being narrowed. 
+     *        It must not be {@code null}.
+     * @return a {@link NarrowingConversion}.
+     * @throws InvalidOperandException if {@code arg == null}.
+     * @throws InvalidTypeException if {@code arg} cannot be narrowed to {@code type},
+     *         or {@code type} is not a valid primitive type.
+     * @throws InvalidInputException if {@code calc == null}.
+     */
     public static NarrowingConversion make(char type, Calculator calc, Primitive arg) 
-    throws InvalidOperandException, InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException, InvalidInputException {
         return new NarrowingConversion(type, calc, arg);
     }
 
@@ -50,29 +70,27 @@ public final class NarrowingConversion extends Primitive {
         return this.arg;
     }
 
+	@Override
+	public String asOriginString() {
+		return this.originString;
+	}
+
+	@Override
+	public Symbolic root() {
+		return this;
+	}
+
+	@Override
+	public boolean hasContainer(Symbolic s) {
+		if (s == null) {
+			throw new NullPointerException();
+		}
+		return equals(s);
+	}
+
     @Override
     public void accept(PrimitiveVisitor v) throws Exception {
         v.visitNarrowingConversion(this);
-    }
-
-    @Override
-    public boolean surelyTrue() {
-        return false;
-    }
-
-    @Override
-    public boolean surelyFalse() {
-        return false;
-    }
-
-    @Override
-    public boolean isSymbolic() {
-        return true;
-    }
-
-    @Override
-    public Object getValueForNative() throws ValueDoesNotSupportNativeException {
-        throw new ValueDoesNotSupportNativeException();
     }
 
     @Override
@@ -97,11 +115,7 @@ public final class NarrowingConversion extends Primitive {
             return false;
         }
         final NarrowingConversion other = (NarrowingConversion) obj;
-        if (this.arg == null) {
-            if (other.arg != null) {
-                return false;
-            }
-        } else if (!this.arg.equals(other.arg)) {
+        if (!this.arg.equals(other.arg)) {
             return false;
         }
         return true;

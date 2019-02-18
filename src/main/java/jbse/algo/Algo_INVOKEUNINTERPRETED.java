@@ -162,9 +162,9 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
     throws ContradictionException, InvalidTypeException, InvalidInputException, InterruptException, 
     SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
         final ReferenceSymbolic referenceToExpand = drc.getValueToLoad();
-        final ClassFile classNameOfTargetObject = drc.getClassFileOfTargetObject();
+        final ClassFile classFileOfTargetObject = drc.getClassFileOfTargetObject();
         try {
-            state.assumeExpands(referenceToExpand, classNameOfTargetObject);
+            state.assumeExpands(referenceToExpand, classFileOfTargetObject);
         } catch (HeapMemoryExhaustedException e) {
             throwNew(state, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
@@ -173,7 +173,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
         }
         //in the case the expansion object is an array, we assume it 
         //to have nonnegative length
-        if (classNameOfTargetObject.isArray()) {
+        if (classFileOfTargetObject.isArray()) {
             try {
                 final Array targetObject = (Array) state.getObject(referenceToExpand);
                 final Primitive lengthPositive = targetObject.getLength().ge(state.getCalculator().valInt(0));

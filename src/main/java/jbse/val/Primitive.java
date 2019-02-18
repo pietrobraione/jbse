@@ -2,6 +2,7 @@ package jbse.val;
 
 import static jbse.common.Type.isPrimitive;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidOperatorException;
@@ -20,15 +21,15 @@ public abstract class Primitive extends Value implements Cloneable {
      * @param type a {@code char}, the type of this value.
      * @param calc a {@link Calculator}. It must not be {@code null}.
      * @throws InvalidTypeException if {@code type} is not primitive.
-     * @throws NullPointerException if {@code calc == null}.
+     * @throws InvalidInputException if {@code calc == null}.
      */
-    Primitive(char type, Calculator calc) throws InvalidTypeException {
+    Primitive(char type, Calculator calc) throws InvalidTypeException, InvalidInputException {
         super(type);
         if (!isPrimitive(type)) {
             throw new InvalidTypeException(type + " is not a primitive type");
         }
         if (calc == null) {
-        	throw new NullPointerException("Cannot provide a null calculator when constructing a Primitive.");
+        	throw new InvalidInputException("Cannot provide a null calculator when constructing a Primitive.");
         }
         this.calc = calc;
     }

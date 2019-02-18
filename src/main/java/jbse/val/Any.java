@@ -3,6 +3,7 @@ package jbse.val;
 import static jbse.val.HistoryPoint.unknown;
 
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.PrimitiveSymbolic;
 import jbse.val.exc.InvalidTypeException;
@@ -16,11 +17,17 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  */
 public final class Any extends PrimitiveSymbolic {
-    private Any(Calculator calc) throws InvalidTypeException {
+    private Any(Calculator calc) throws InvalidTypeException, InvalidInputException {
         super(Type.BOOLEAN, unknown(), calc);
     }
 
-    public static Any make(Calculator calc) {
+    /**
+     * Makes an {@link Any} value.
+     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * @return an {@link Any} instance.
+     * @throws InvalidInputException if {@code calc == null}.
+     */
+    public static Any make(Calculator calc) throws InvalidInputException {
         try {
             return new Any(calc);
         } catch (InvalidTypeException e) {
@@ -32,6 +39,19 @@ public final class Any extends PrimitiveSymbolic {
     @Override
     public String asOriginString() {
         return "*";
+    }
+    
+    @Override
+    public Symbolic root() {
+    	return this;
+    }
+    
+    @Override
+    public boolean hasContainer(Symbolic s) {
+		if (s == null) {
+			throw new NullPointerException();
+		}
+		return equals(s);
     }
 
     @Override

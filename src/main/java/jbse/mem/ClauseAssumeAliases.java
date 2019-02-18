@@ -56,7 +56,7 @@ public class ClauseAssumeAliases extends ClauseAssumeReferenceSymbolic {
 	@Override
 	public String toString() {
 		final ReferenceSymbolic r = this.getReference();
-		return r.toString() + " == " + "Object[" + this.heapPosition + "] (aliases " + this.object.getOrigin() + ")";
+		return r.toString() + " == " + "Object[" + this.heapPosition + "] (aliases " + this.object.getOrigin().toString() + ")";
 	}
 
 	@Override

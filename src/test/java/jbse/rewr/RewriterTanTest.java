@@ -3,6 +3,7 @@ package jbse.rewr;
 import static org.junit.Assert.assertEquals;
 
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.HistoryPoint;
 import jbse.val.Primitive;
@@ -25,7 +26,7 @@ public class RewriterTanTest {
 	}
 	
 	@Test
-	public void testSimple1() throws InvalidOperandException, InvalidTypeException {
+	public void testSimple1() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
 		//sin(A) / cos(A) -> tan(A)
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
 		final Primitive p_post = this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.SIN, A).div(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.COS, A)); 

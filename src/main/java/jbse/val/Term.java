@@ -1,5 +1,6 @@
 package jbse.val;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.val.exc.InvalidTypeException;
 import jbse.val.exc.ValueDoesNotSupportNativeException;
 
@@ -37,9 +38,9 @@ public final class Term extends Primitive implements Symbolic {
      *        {@link Term}s with same name will be considered the
      *        same {@link Term}.
      * @throws InvalidTypeException if {@code type} is not primitive. 
-     * @throws NullPointerException if {@code calc == null}.
+     * @throws InvalidInputException if {@code calc == null}.
      */
-    Term(char type, Calculator calc, String value) throws InvalidTypeException {
+    Term(char type, Calculator calc, String value) throws InvalidTypeException, InvalidInputException {
         super(type, calc);
         this.value = value;
 
@@ -63,6 +64,19 @@ public final class Term extends Primitive implements Symbolic {
     @Override
     public HistoryPoint historyPoint() {
         return null;
+    }
+    
+    @Override
+    public Symbolic root() {
+    	return this;
+    }
+    
+    @Override
+    public boolean hasContainer(Symbolic s) {
+		if (s == null) {
+			throw new NullPointerException();
+		}
+		return s.equals(this);
     }
 
     /**

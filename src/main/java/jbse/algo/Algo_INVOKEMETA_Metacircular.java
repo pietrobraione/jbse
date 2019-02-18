@@ -21,6 +21,7 @@ import jbse.algo.exc.CannotInvokeNativeException;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.common.Type;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -89,7 +90,7 @@ public class Algo_INVOKEMETA_Metacircular extends Algo_INVOKEMETA_Nonbranching {
                 } else {
                     this.returnValue = new ReferenceSymbolicApply(returnType, state.getHistoryPoint(), this.data.signature().toString(), args);
                 }
-            } catch (InvalidOperandException | InvalidTypeException e) {
+            } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
                 //this should never happen
                 failExecution(e);
             }

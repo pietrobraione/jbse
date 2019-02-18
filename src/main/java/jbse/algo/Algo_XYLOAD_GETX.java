@@ -97,9 +97,8 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
     protected final void refineRefAliases(State state, DecisionAlternative_XYLOAD_GETX_Aliases altAliases)
     throws ContradictionException, FrozenStateException {
         final ReferenceSymbolic referenceToResolve = altAliases.getValueToLoad();
-        final long aliasPosition = altAliases.getObjectPosition();
-        final Objekt object = state.getObjectInitial(new ReferenceConcrete(aliasPosition));
-        state.assumeAliases(referenceToResolve, aliasPosition, object);
+        final Objekt aliasObject = state.getObject(new ReferenceConcrete(altAliases.getObjectPosition()));
+        state.assumeAliases(referenceToResolve, aliasObject.getOrigin());
     }
 
     protected final void refineRefNull(State state, DecisionAlternative_XYLOAD_GETX_Null altNull)

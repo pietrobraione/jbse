@@ -83,25 +83,29 @@ public final class ClassHierarchy implements Cloneable {
     /**
      * Constructor.
      * 
-     * @param cp a {@link Classpath}.
-     * @param fClass the {@link Class} of some subclass of {@link ClassFileFactory}.
-     *        The class must have an accessible parameterless constructor.
+     * @param classPath a {@link Classpath}. It must not be {@code null}.
+     * @param factoryClass a {@link Class}{@code <? extends }{@link ClassFileFactory}{@code >}.
+     *        It must not be {@code null} and have an accessible parameterless constructor.
      * @param expansionBackdoor a 
      *        {@link Map}{@code <}{@link String}{@code , }{@link Set}{@code <}{@link String}{@code >>}
      *        associating class names to sets of names of their subclasses. It 
-     *        is used in place of the class hierarchy to perform expansion.
+     *        is used in place of the class hierarchy to perform expansion. It must not be {@code null}.
      * @throws InvalidClassFileFactoryClassException in the case {@link fClass}
      *         has not the expected features (missing constructor, unaccessible 
      *         constructor...).
+     * @throws InvalidInputException if {@code classPath == null || factoryClass == null || expansionBackdoor == null}.
      */
-    public ClassHierarchy(Classpath cp, Class<? extends ClassFileFactory> fClass, Map<String, Set<String>> expansionBackdoor)
-    throws InvalidClassFileFactoryClassException {
-        this.cp = cp.clone(); //safety copy
+    public ClassHierarchy(Classpath classPath, Class<? extends ClassFileFactory> factoryClass, Map<String, Set<String>> expansionBackdoor)
+    throws InvalidClassFileFactoryClassException, InvalidInputException {
+    	if (classPath == null || factoryClass == null || expansionBackdoor == null) {
+    		throw new InvalidInputException("Attempted creation of a " + this.getClass().getName() + " with a null classPath, or factoryClass, or expansionBackdoor.");
+    	}
+        this.cp = classPath.clone(); //safety copy
         this.cfs = new ClassFileStore();
         this.expansionBackdoor = new HashMap<>(expansionBackdoor); //safety copy
         this.allFieldsOf = new HashMap<>();
         try {
-            this.f = fClass.newInstance();
+            this.f = factoryClass.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
             throw new InvalidClassFileFactoryClassException(e);
         }

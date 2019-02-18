@@ -3,6 +3,7 @@ package jbse.val;
 import static jbse.val.HistoryPoint.unknown;
 
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidOperatorException;
@@ -25,8 +26,11 @@ public final class Expression extends PrimitiveSymbolicComputed {
     /** The hash code of this object. */
     private final int hashCode;
 
-    /** The string representation of this object. */
+    /** The String representation of this object. */
     private final String toString;
+    
+    /** The origin String representation of this object. */
+    private final String originString;
 
     /**
      * Factory method for verbatim expressions (binary).
@@ -36,13 +40,13 @@ public final class Expression extends PrimitiveSymbolicComputed {
      * @param operator an {@link Operator}.
      * @param secondOperand a {@link Primitive}, the second operand.
      * @return an {@link Expression}.
-     * @throws InvalidOperandException if {@code firstOperand} or {@code secondOperand}
-     *         is {@code null}.
-     * @throws InvalidOperatorException if {@code operator} is not binary. 
+     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}.
+     * @throws InvalidOperatorException if {@code operator == null} or is not binary. 
      * @throws InvalidTypeException if the expression cannot be typed.
+     * @throws InvalidInputException if {@code calc == null}.
      */
     public static Expression makeExpressionBinary(Calculator calc, Primitive firstOperand, Operator operator, Primitive secondOperand) 
-    throws InvalidOperandException, InvalidOperatorException, InvalidTypeException {
+    throws InvalidOperandException, InvalidOperatorException, InvalidTypeException, InvalidInputException {
         //checks on parameters
         if (firstOperand == null) {
             throw new InvalidOperandException("no first operand in binary expression construction");
@@ -71,13 +75,13 @@ public final class Expression extends PrimitiveSymbolicComputed {
      * @param operator an {@link Operator}.
      * @param operand a {@link Primitive}, the operand.
      * @return an {@link Expression}.
-     * @throws InvalidOperandException if {@code operand} 
-     *         is {@code null}.
+     * @throws InvalidOperandException if {@code operand == null}.
      * @throws InvalidOperatorException if {@code operator} is not unary. 
      * @throws InvalidTypeException if the expression cannot be typed.
+     * @throws InvalidInputException if {@code calc == null}.
      */
     public static Expression makeExpressionUnary(Calculator calc, Operator operator, Primitive operand) 
-    throws InvalidOperatorException, InvalidOperandException, InvalidTypeException {
+    throws InvalidOperatorException, InvalidOperandException, InvalidTypeException, InvalidInputException {
         if (operator == null) {
             throw new InvalidOperatorException("no operator in unary expression construction");
         }
@@ -98,10 +102,16 @@ public final class Expression extends PrimitiveSymbolicComputed {
     /**
      * Constructor.
      * 
+     * @param type the type of the represented value.
+     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * @param firstOperand a {@link Primitive}, the first operand.
+     * @param operator an {@link Operator}.
+     * @param secondOperand a {@link Primitive}, the second operand.
      * @throws InvalidTypeException if {@code type} is not primitive.
+     * @throws InvalidInputException if {@code calc == null}.
      */
     private Expression(char type, Calculator calc, Primitive firstOperand, Operator operator, Primitive secondOperand) 
-    throws InvalidTypeException {
+    throws InvalidTypeException, InvalidInputException {
     	super(type, unknown(), calc); //TODO put sensible history point?
         this.firstOp = firstOperand;
         this.operator = operator;
@@ -117,6 +127,9 @@ public final class Expression extends PrimitiveSymbolicComputed {
 
     	//calculates toString
     	this.toString = stringify(true);
+    	
+    	//calculates originString
+    	this.originString = stringify(false);
     }
     
     private String stringify(boolean toString) {
@@ -248,36 +261,37 @@ public final class Expression extends PrimitiveSymbolicComputed {
     
     @Override
     public String asOriginString() {
-        return stringify(false);
+        return this.originString;
+    }
+    
+    @Override
+    public Symbolic root() {
+    	return this;
+    }
+    
+    @Override
+    public boolean hasContainer(Symbolic s) {
+		if (s == null) {
+			throw new NullPointerException();
+		}
+		return equals(s);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void accept(PrimitiveVisitor v) throws Exception {
         v.visitExpression(this);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return this.toString;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int hashCode() {
         return this.hashCode;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

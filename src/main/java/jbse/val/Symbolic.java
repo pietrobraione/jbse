@@ -33,4 +33,25 @@ public interface Symbolic {
      * @return a {@link HistoryPoint}.
      */
     HistoryPoint historyPoint();
+    
+    /**
+     * Returns the root {@link Symbolic} (i.e., the topmost
+     * container) where this {@link Symbolic} originates from.
+     * 
+     * @return a {@link Symbolic} (returns {@code this} if
+     *         this {@link Symbolic} is a topmost container).
+     */
+    Symbolic root();
+    
+    /**
+     * Checks whether another {@link Symbolic} is a 
+     * container for this {@link Symbolic}.
+     * 
+     * @param r a {@link Symbolic}. It must not be {@code null}.
+     * @return {@code true} iff {@code s} (recursively) is a container
+     *         for this {@link Symbolic}. Note that 
+     *         {@code s.isContainer(s) == true}.
+     * @throws NullPointerException if {@code r == null}. 
+     */
+    boolean hasContainer(Symbolic s);
 }
