@@ -127,7 +127,7 @@ public final class Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO extends Algo_INVOKEMETA_N
     		this.assumeNull = new ArrayList<>();
     		
     		//makes this.theKlass symbolic
-			final KlassPseudoReference origin = state.createSymbolKlassPseudoReference(this.classFile);
+			final KlassPseudoReference origin = state.createSymbolKlassPseudoReference(state.getHistoryPoint(), this.classFile);
     		this.theKlass.makeSymbolic(origin);
     		this.theKlass.setIdentityHashCode(state.createSymbolIdentityHashCode(this.theKlass)); //TODO is it useless??
     		

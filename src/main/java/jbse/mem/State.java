@@ -1731,7 +1731,7 @@ public final class State implements Cloneable {
         }
         final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
-        final KlassImpl k = new KlassImpl(true, this.calc, createSymbolKlassPseudoReference(classFile), this.lastPreInitialHistoryPoint, numOfStaticFields, fieldsSignatures);
+        final KlassImpl k = new KlassImpl(true, this.calc, createSymbolKlassPseudoReference(this.lastPreInitialHistoryPoint, classFile), this.lastPreInitialHistoryPoint, numOfStaticFields, fieldsSignatures);
         try {
         	initWithSymbolicValues(k);
         } catch (NullPointerException e) {
@@ -3606,16 +3606,19 @@ public final class State implements Cloneable {
      * A Factory Method for creating symbolic values. The symbol
      * is a (pseudo)reference to a {@link Klass}.
      * 
-     * @param classFile the {@link ClassFile} for the {@link Klass} to be referred.
+     * @param historyPoint the {@link HistoryPoint} of the symbol.
+     * @param classFile the {@link ClassFile} for the {@link Klass} 
+     *        to be referred.
      * @return a {@link KlassPseudoReference}.
-     * @throws InvalidInputException if the state is frozen or {@code classFile == null}.
+     * @throws InvalidInputException if the state is frozen or 
+     *         {@code historyPoint == null || classFile == null}.
      */
-    public KlassPseudoReference createSymbolKlassPseudoReference(ClassFile classFile) 
+    public KlassPseudoReference createSymbolKlassPseudoReference(HistoryPoint historyPoint, ClassFile classFile) 
     throws InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        return this.symbolFactory.createSymbolKlassPseudoReference(this.lastPreInitialHistoryPoint, classFile);
+        return this.symbolFactory.createSymbolKlassPseudoReference(historyPoint, classFile);
     }
 
     /**
