@@ -65,8 +65,9 @@ public abstract class ObjektImpl implements Objekt {
      * is by itself immutable but the stored Variables may be 
      * mutable). 
      */
-    protected HashMap<String, Variable> fields;
-
+    protected HashMap<Signature, Variable> fields;
+    //TODO once fields was a map from String (the signature toString()) to variables; in old comment it was said it was necessary because type erasure didn't play well. Investigate whether the issue still holds.
+    
     /**
      * Constructor.
      * 
@@ -92,10 +93,10 @@ public abstract class ObjektImpl implements Objekt {
         this.numOfStaticFields = numOfStaticFields;
         this.fieldSignatures = Arrays.asList(fieldSignatures.clone()); //safety copy
         int curSlot = 0;
-        for (Signature s : this.fieldSignatures) {
+        for (Signature fieldSignature : this.fieldSignatures) {
             if ((staticFields && curSlot < numOfStaticFields) ||
                 (!staticFields && curSlot >= numOfStaticFields)) {
-                this.fields.put(s.toString(), new Variable(calc, s.getDescriptor(), s.getName()));
+                this.fields.put(fieldSignature, new Variable(calc, fieldSignature.getDescriptor(), fieldSignature.getName()));
             }
             ++curSlot;
         }
@@ -169,19 +170,17 @@ public abstract class ObjektImpl implements Objekt {
 
     @Override
     public final Value getFieldValue(Signature sig) {
-        //TODO does it work with visibility modifiers???
         try {
-            return this.fields.get(sig.toString()).getValue();  //toString() is necessary, type erasure doesn't play well
+            return this.fields.get(sig).getValue();
         } catch (Exception e) {
             return null;
         }
     }
 
     @Override
-    public final Value getFieldValue(String fieldName) {
-        //TODO does it work with visibility modifiers???
+    public final Value getFieldValue(String fieldName, String fieldClass) {
         for (Signature sig: this.fieldSignatures) {
-            if (sig.getName().equals(fieldName)) {
+            if (sig.getName().equals(fieldName) && sig.getClassName().equals(fieldClass)) {
                 return getFieldValue(sig);
             }
         }
@@ -204,7 +203,7 @@ public abstract class ObjektImpl implements Objekt {
 
     @Override
     public final void setFieldValue(Signature field, Value item) {
-        this.fields.get(field.toString()).setValue(item); //toString() is necessary, type erasure doesn't play well
+        this.fields.get(field).setValue(item);
     }
 
     @Override
@@ -213,13 +212,13 @@ public abstract class ObjektImpl implements Objekt {
     }
 
     @Override
-    public final Map<String, Variable> fields() {
+    public final Map<Signature, Variable> fields() {
         return Collections.unmodifiableMap(this.fields);
     }
 
-    protected final HashMap<String, Variable> fieldsDeepCopy() {
-        final HashMap<String, Variable> retVal = new HashMap<>();
-        for (String key : this.fields.keySet()) {
+    protected final HashMap<Signature, Variable> fieldsDeepCopy() {
+        final HashMap<Signature, Variable> retVal = new HashMap<>();
+        for (Signature key : this.fields.keySet()) {
             final Variable variableClone = this.fields.get(key).clone();
             retVal.put(key, variableClone);
         }

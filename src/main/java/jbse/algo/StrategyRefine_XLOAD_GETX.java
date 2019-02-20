@@ -31,7 +31,7 @@ abstract class StrategyRefine_XLOAD_GETX implements StrategyRefine<DecisionAlter
     SymbolicValueNotAllowedException, ClasspathException, InvalidInputException;
 
     abstract public void refineRefAliases(State s, DecisionAlternative_XLOAD_GETX_Aliases dro) 
-    throws ContradictionException, InvalidInputException;
+    throws ContradictionException, InvalidInputException, ClasspathException, InterruptException;
 
     abstract public void refineRefNull(State s, DecisionAlternative_XLOAD_GETX_Null drn)
     throws ContradictionException, InvalidInputException;
@@ -54,7 +54,7 @@ abstract class StrategyRefine_XLOAD_GETX implements StrategyRefine<DecisionAlter
     
                 @Override
                 public void visitDecisionAlternative_XLOAD_GETX_Aliases(DecisionAlternative_XLOAD_GETX_Aliases dro) 
-                throws ContradictionException, InvalidInputException {
+                throws ContradictionException, InvalidInputException, ClasspathException, InterruptException {
                     StrategyRefine_XLOAD_GETX.this.refineRefAliases(s, dro);
                 }
     

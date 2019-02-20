@@ -26,6 +26,7 @@ public final class Signatures {
     public static final String JAVA_ACCESSIBLEOBJECT         = "java/lang/reflect/AccessibleObject";
     public static final String JAVA_ANNOTATEDELEMENT         = "java/lang/reflect/AnnotatedElement";
     public static final String JAVA_ARRAYDEQUE               = "java/util/ArrayDeque";
+    public static final String JAVA_ARRAYLIST                = "java/util/ArrayList";
     public static final String JAVA_ATOMICLONG               = "java/util/concurrent/atomic/AtomicLong";
     public static final String JAVA_ATTRIBUTES_NAME          = "java/util/jar/Attributes$Name";
     public static final String JAVA_BITS                     = "java/nio/Bits";

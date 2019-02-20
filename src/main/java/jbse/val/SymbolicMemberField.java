@@ -14,4 +14,12 @@ public interface SymbolicMemberField extends SymbolicMember {
      * @return a {@link String}. 
      */
     String getFieldName();
+    
+    /**
+     * Returns the name of the class 
+     * where the field is declared.
+     * 
+     * @return a {@link String}. 
+     */
+    String getFieldClass();
 }

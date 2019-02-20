@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static jbse.bc.Signature.SIGNATURE_SEPARATOR;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -228,7 +226,13 @@ public final class EngineParameters implements Cloneable {
     /** The maximum size of the heap (number of objects). */
     private long maxHeapSize = 1_000_000;
     
-    private boolean makePreInitClassesSymbolic = false;
+    /** 
+     * Whether the classes that are initialized during the
+     * pre-initialization phase should be made symbolic, so
+     * that the lazy initialization procedure can produce aliases
+     * to their members.
+     */
+    private boolean makePreInitClassesSymbolic = true;
 
     /**
      * Constructor.
@@ -830,38 +834,19 @@ public final class EngineParameters implements Cloneable {
 
     /**
      * Specifies that a method must be treated as an uninterpreted pure
-     * function, rather than executed. 
+     * function, rather than executed. In the case all the parameters are
+     * constant, the method is executed metacircularly.
      * 
-     * @param className the name of the class containing the method not to be
-     *        interpreted.
-     * @param descriptor the descriptor of the method. All the parameters types 
-     *        in the descriptor must be primitive.
+     * @param methodClassName the name of the class containing the method.
+     * @param methodDescriptor the descriptor of the method.
      * @param methodName the name of the method.
-     * @param functionName a {@link String}, the name that will be given to 
-     *        the uninterpreted function.
      * @throws NullPointerException if any of the above parameters is {@code null}.
      */
-    public void addUninterpreted(String className, String descriptor, String methodName, String functionName) {
-        if (className == null || descriptor == null || methodName == null || functionName == null) {
+    public void addUninterpreted(String methodClassName, String methodDescriptor, String methodName) {
+        if (methodClassName == null || methodDescriptor == null || methodName == null) {
             throw new NullPointerException();
         }
-        this.uninterpreted.add(new String[] { className, descriptor, methodName, functionName });
-    }
-
-    /**
-     * Specifies that a method must be treated as an uninterpreted pure
-     * function, rather than executed. This method is equivalent to
-     * {@link #addUninterpreted(String, String, String, String) addUninterpreted}{@code (className, descriptor, methodName, className + ":" + descriptor + ":" + methodName)}.
-     * 
-     * @param className the name of the class containing the method not to be
-     *        interpreted.
-     * @param descriptor the descriptor of the method. All the parameters types 
-     *        in the descriptor must be primitive.
-     * @param methodName the name of the method.
-     * @throws NullPointerException if any of the above parameters is {@code null}.
-     */
-    public void addUninterpreted(String className, String descriptor, String methodName) {
-        addUninterpreted(className, descriptor, methodName, className + SIGNATURE_SEPARATOR + descriptor + SIGNATURE_SEPARATOR + methodName);
+        this.uninterpreted.add(new String[] { methodClassName, methodDescriptor, methodName });
     }
 
     /**

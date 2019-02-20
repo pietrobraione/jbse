@@ -260,9 +260,9 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
         				throw new GuidanceException(ERROR_BAD_PATH);
         			}
         			if (o instanceof Reference) {
-        				return this.initialStateConcrete.getObject((Reference) o).getFieldValue(af.getFieldName());
+        				return this.initialStateConcrete.getObject((Reference) o).getFieldValue(af.getFieldName(), af.getFieldClass());
         			} else if (o instanceof Klass) {
-        				return ((Klass) o).getFieldValue(af.getFieldName());
+        				return ((Klass) o).getFieldValue(af.getFieldName(), af.getFieldClass());
         			} else { //(o is a primitive)
         				throw new GuidanceException(ERROR_BAD_PATH);
         			}

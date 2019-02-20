@@ -114,7 +114,7 @@ public class EngineBuilder {
             }
         }
         for (String[] rule : parameters.getUninterpreted()) {
-            ctx.addUninterpreted(new Signature(rule[0], rule[1], rule[2]), rule[3]);
+            ctx.addUninterpreted(new Signature(rule[0], rule[1], rule[2]));
         }
     }
 

@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
+import jbse.bc.Signature;
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Array;
@@ -339,6 +340,9 @@ public final class StateFormatterText implements Formatter {
     }
 
     private static void formatArray(State s, StringBuilder sb, Array a, boolean breakLines, String indentTxt, String indentCurrent) {
+        if (a.isInitial()) {
+            sb.append(" (initial)");
+        }
         final String lineSep = (breakLines ? LINE_SEP : "");
         sb.append(lineSep); sb.append(indentCurrent); sb.append("Type: "); sb.append(a.getType());
         sb.append(lineSep); sb.append(indentCurrent); sb.append("Length: "); sb.append(a.getLength()); 
@@ -419,7 +423,7 @@ public final class StateFormatterText implements Formatter {
         sb.append("Class: ");
         sb.append(i.getType());
         int z = 0;
-        for (Map.Entry<String, Variable> e : i.fields().entrySet()) {
+        for (Map.Entry<Signature, Variable> e : i.fields().entrySet()) {
             sb.append(lineSep);
             sb.append(indentCurrent);
             sb.append("Field[");
@@ -434,7 +438,7 @@ public final class StateFormatterText implements Formatter {
         final String lineSep = (breakLines ? LINE_SEP : "");
         sb.append(lineSep);
         int z = 0;
-        for (Map.Entry<String, Variable> e : k.fields().entrySet()) {
+        for (Map.Entry<Signature, Variable> e : k.fields().entrySet()) {
             if (z > 0) {
                 sb.append(lineSep);
             }

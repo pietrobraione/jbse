@@ -1,6 +1,7 @@
 package jbse.tree;
 
-import jbse.mem.Util;
+import static jbse.mem.Util.isSymbolicReference;
+
 import jbse.val.Value;
 
 /**
@@ -20,7 +21,7 @@ extends DecisionAlternative_XLOAD_GETX implements DecisionAlternative_XYLOAD_GET
     public DecisionAlternative_XLOAD_GETX_Resolved(Value valueToLoad) {
         super(ALT_CODE + "_Resolved", HASH_CODE);
         this.valueToLoad = valueToLoad;
-        this.isConcrete = !Util.isSymbolicReference(valueToLoad);
+        this.isConcrete = (valueToLoad == null ? true : !isSymbolicReference(valueToLoad)); //a null valueToLoad is only produced by Algo_INVOKEMETA_Metacircular
     }
 
     @Override

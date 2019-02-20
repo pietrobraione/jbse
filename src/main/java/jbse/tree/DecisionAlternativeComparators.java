@@ -117,7 +117,9 @@ public class DecisionAlternativeComparators {
                     if (o2 instanceof DecisionAlternative_XLOAD_GETX_Resolved) {
                         final DecisionAlternative_XLOAD_GETX_Resolved darr1 = (DecisionAlternative_XLOAD_GETX_Resolved) o1;
                         final DecisionAlternative_XLOAD_GETX_Resolved darr2 = (DecisionAlternative_XLOAD_GETX_Resolved) o2;
-                        return darr2.getValueToLoad().toString().compareTo(darr1.getValueToLoad().toString());
+                        final String darr1String = (darr1.getValueToLoad() == null ? "" : darr1.getValueToLoad().toString());
+                        final String darr2String = (darr2.getValueToLoad() == null ? "" : darr2.getValueToLoad().toString());
+                        return darr2String.compareTo(darr1String);
                     } else {
                         return -1;
                     }

@@ -73,7 +73,7 @@ public class InstanceTest {
         final Instance i = new InstanceImpl(false, this.calc, classFile, null, null, numOfStaticFields, fieldsSignatures);
         final Signature sigMinLat = new Signature(className, "D", "minLat");
         final Value valMinLat = i.getFieldValue(sigMinLat);
-        final Value valMinLat2 = i.getFieldValue("minLat");
+        final Value valMinLat2 = i.getFieldValue("minLat", className);
         assertEquals(valMinLat, valMinLat2);
     }
 
@@ -88,7 +88,7 @@ public class InstanceTest {
         final Instance i = new InstanceImpl(false, this.calc, classFile, null, null, numOfStaticFields, fieldsSignatures);
         final Signature sigMinLat = new Signature(className, "D", "minLat");
         i.setFieldValue(sigMinLat, this.calc.valDouble(1.0d));
-        final Value valMinLat = i.getFieldValue("minLat");
+        final Value valMinLat = i.getFieldValue("minLat", className);
         assertEquals(valMinLat, this.calc.valDouble(1.0d));
     }
 
@@ -104,7 +104,7 @@ public class InstanceTest {
         final Instance iClone = i.clone();
         final Signature sigMinLat = new Signature(className, "D", "minLat");
         i.setFieldValue(sigMinLat, this.calc.valDouble(1.0d));
-        final Value valMinLatClone = iClone.getFieldValue("minLat");
+        final Value valMinLatClone = iClone.getFieldValue("minLat", className);
         assertEquals(valMinLatClone, this.calc.valDouble(0));
     }
 }

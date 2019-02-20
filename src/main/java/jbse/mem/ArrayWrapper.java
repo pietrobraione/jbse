@@ -93,8 +93,8 @@ final class ArrayWrapper extends ObjektWrapper<ArrayImpl> implements Array {
 	}
 
 	@Override
-	public Value getFieldValue(String fieldName) {
-		return getDelegate().getFieldValue(fieldName);
+	public Value getFieldValue(String fieldName, String fieldClass) {
+		return getDelegate().getFieldValue(fieldName, fieldClass);
 	}
 
 	@Override
@@ -120,7 +120,7 @@ final class ArrayWrapper extends ObjektWrapper<ArrayImpl> implements Array {
 	}
 
 	@Override
-	public Map<String, Variable> fields() {
+	public Map<Signature, Variable> fields() {
 		return getDelegate().fields();
 	}
 

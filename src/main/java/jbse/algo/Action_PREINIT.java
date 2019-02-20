@@ -108,24 +108,24 @@ public final class Action_PREINIT {
      * Class load inhibit set for initial loading.
      */
     private HashSet<String> doNotInitialize = new HashSet<>();
-    
+
     /**
      * Constructor.
      */
     public Action_PREINIT() { }
-    
+
     public void exec(ExecutionContext ctx) 
     throws DecisionException, InitializationException, 
     InvalidClassFileFactoryClassException, ClasspathException, 
     ContradictionException, InvalidInputException {
         //TODO do checks and possibly raise exceptions
-        
+
         //gets or creates the initial state
         State state = ctx.getInitialState();
         if (state == null) {
             state = createPreInitialState(ctx);
         } else {
-    		state.setPhaseInitial();
+            state.setPhaseInitial();
         }
 
         //adds the state to the state tree
@@ -136,14 +136,14 @@ public final class Action_PREINIT {
     throws InvalidClassFileFactoryClassException, InitializationException, 
     DecisionException, ClasspathException, ContradictionException {
         final State state = ctx.createVirginPreInitialState();
-        
+
         //lists all the classes that shall be explicitly initialized
         setClassList();
-        
+
         //(loads and) creates the essential classes that
         //will be initialized afterwards
         loadCreateEssentialClasses(state, ctx);
-        
+
         //now starts pushing frames (in inverse order of execution)
 
         //this part of the initialization mirrors stuff in sun.launcher.LauncherHelper
@@ -158,15 +158,15 @@ public final class Action_PREINIT {
         //create_initial_thread_group, and create_initial_thread,
         //and jdk:src/share/bin/java.c function JavaMain and invoked function 
         //LoadMainClass
-        
+
         //pushes frames to initialize classes for handle invocation
         initializeClass(state, JAVA_METHODHANDLENATIVES, ctx);
         initializeClass(state, JAVA_MEMBERNAME, ctx);
         initializeClass(state, JAVA_METHODHANDLE, ctx);
-        
+
         //pushes a frame for java.lang.ClassLoader.getSystemClassLoader
         invokeGetSystemClassLoader(state);
-        
+
         //pushes frames to initialize some error/exception classes
         //(actually they do not have any static initializer, but
         //they might in the future)
@@ -182,10 +182,10 @@ public final class Action_PREINIT {
 
         //pushes a frame for java.lang.System.initializeSystemClass
         invokeInitializeSystemClass(state);
-        
+
         //pushes a frame to initialize jbse.base.Base
         initializeClass(state, JBSE_BASE, ctx);
-        
+
         //pushes frames to initialize more standard classes
         initializeClass(state, JAVA_FINALIZER, ctx);
         initializeClass(state, JAVA_METHOD, ctx);
@@ -195,17 +195,17 @@ public final class Action_PREINIT {
         //creates the initial thread and thread group
         //and pushes frames to initialize them 
         createInitialThreadAndThreadGroups(state);
-        
+
         //pushes frames to initialize more standard classes
         initializeClass(state, JAVA_THREAD, ctx);
         initializeClass(state, JAVA_THREADGROUP, ctx);
         initializeClass(state, JAVA_SYSTEM, ctx);
         initializeClass(state, JAVA_STRING, ctx);
-        
+
         //done
         return state;
     }
-    
+
     private void setClassList() {
         this.doNotInitialize.add(JAVA_PACKAGE);
         this.doNotInitialize.add(JAVA_STRINGCODING);
@@ -229,11 +229,11 @@ public final class Action_PREINIT {
         this.doNotInitialize.add(JAVA_SYSTEM);
         this.doNotInitialize.add(JAVA_STRING);
     }
-    
+
     private void loadCreateEssentialClasses(State state, ExecutionContext ctx) throws ClasspathException {
         try {
             final ClassHierarchy classHierarchy = state.getClassHierarchy();
-            
+
             //loads standard library classes
             classHierarchy.loadCreateClass(JAVA_OBJECT);
             classHierarchy.loadCreateClass(JAVA_CLONEABLE);
@@ -283,19 +283,18 @@ public final class Action_PREINIT {
             classHierarchy.loadCreateClass(SUN_EXTENSIONDEPENDENCY);
             classHierarchy.loadCreateClass(JAVA_STRINGCODING);
             classHierarchy.loadCreateClass(JAVA_PACKAGE);
-            
+
             //loads application classes
             classHierarchy.loadCreateClass(CLASSLOADER_APP, JBSE_BASE, true);
-            classHierarchy.loadCreateClass(CLASSLOADER_APP, ctx.rootMethodSignature.getClassName(), true);
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
-                 WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException e) {
+        WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException e) {
             throw new ClasspathException(e);
         } catch (InvalidInputException | PleaseLoadClassException e) {
             //this should never happen
             failExecution(e);
         }
     }
-    
+
     private void initializeClass(State state, String className, ExecutionContext ctx) 
     throws DecisionException, ClasspathException, InitializationException, ContradictionException {
         try {
@@ -308,42 +307,42 @@ public final class Action_PREINIT {
         } catch (HeapMemoryExhaustedException e) {
             throw new InitializationException(e);
         } catch (InvalidInputException | ClassFileNotFoundException | ClassFileIllFormedException | 
-                 BadClassFileVersionException | WrongClassNameException | IncompatibleClassFileException | 
-                 ClassFileNotAccessibleException e) {
+        BadClassFileVersionException | WrongClassNameException | IncompatibleClassFileException | 
+        ClassFileNotAccessibleException e) {
             //this should not happen at this point
             failExecution(e);
         }
     }
-    
+
     private void invokeGetSystemClassLoader(State state) {
         try {
             final Snippet snippet = state.snippetFactoryNoWrap()
-                .op_invokestatic(JAVA_CLASSLOADER_GETSYSTEMCLASSLOADER)
-                .op_pop() //discards the return value
-                .op_invokestatic(noclass_SETSTANDARDCLASSLOADERSREADY)
-                .op_return()
-                .mk();
+            .op_invokestatic(JAVA_CLASSLOADER_GETSYSTEMCLASSLOADER)
+            .op_pop() //discards the return value
+            .op_invokestatic(noclass_SETSTANDARDCLASSLOADERSREADY)
+            .op_return()
+            .mk();
             state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang");
         } catch (ThreadStackEmptyException | InvalidProgramCounterException | FrozenStateException e) {
             //this should not happen now
             failExecution(e);
         }
     }
-    
+
     private void invokeInitializeSystemClass(State state) {
         try {
             final ClassFile cf_JAVA_SYSTEM = state.getClassHierarchy().loadCreateClass(JAVA_SYSTEM); 
             state.pushFrame(cf_JAVA_SYSTEM, JAVA_SYSTEM_INITIALIZESYSTEMCLASS, false, 0);
         } catch (NullMethodReceiverException | MethodNotFoundException | MethodCodeNotFoundException | 
-                 InvalidSlotException | InvalidProgramCounterException | InvalidTypeException | 
-                 ThreadStackEmptyException | ClassFileNotFoundException | BadClassFileVersionException |
-                 WrongClassNameException | IncompatibleClassFileException | ClassFileIllFormedException | 
-                 ClassFileNotAccessibleException | InvalidInputException e) {
+        InvalidSlotException | InvalidProgramCounterException | InvalidTypeException | 
+        ThreadStackEmptyException | ClassFileNotFoundException | BadClassFileVersionException |
+        WrongClassNameException | IncompatibleClassFileException | ClassFileIllFormedException | 
+        ClassFileNotAccessibleException | InvalidInputException e) {
             //this should not happen now
             failExecution(e);
         }
     }
-    
+
     private void createInitialThreadAndThreadGroups(State state) 
     throws InitializationException, ClasspathException {
         try {
@@ -356,7 +355,7 @@ public final class Action_PREINIT {
             if (cf_JAVA_THREADGROUP == null) {
                 throw new UnexpectedInternalException("Could not get the classfile for java.lang.ThreadGroup.");
             }
-            
+
             final ReferenceConcrete systemThreadGroup = state.createInstance(cf_JAVA_THREADGROUP);
             final ReferenceConcrete mainThreadGroup = state.createInstance(cf_JAVA_THREADGROUP);
             final ReferenceConcrete mainThread = state.createInstance(cf_JAVA_THREAD);
@@ -375,9 +374,9 @@ public final class Action_PREINIT {
         } catch (MethodNotFoundException | MethodCodeNotFoundException e) {
             throw new ClasspathException(e);
         } catch (ClassFileNotFoundException | BadClassFileVersionException | WrongClassNameException | 
-                 IncompatibleClassFileException | ClassFileNotAccessibleException | ClassFileIllFormedException | 
-                 NullMethodReceiverException | InvalidSlotException | InvalidProgramCounterException | 
-                 InvalidInputException | InvalidTypeException | ThreadStackEmptyException e) {
+        IncompatibleClassFileException | ClassFileNotAccessibleException | ClassFileIllFormedException | 
+        NullMethodReceiverException | InvalidSlotException | InvalidProgramCounterException | 
+        InvalidInputException | InvalidTypeException | ThreadStackEmptyException e) {
             //this should never happen
             failExecution(e);
         }

@@ -3,11 +3,15 @@ package jbse.algo;
 import static jbse.common.Type.binaryClassName;
 import static jbse.common.Type.internalClassName;
 
+import java.util.ArrayList;
+import java.util.regex.Pattern;
+
 import jbse.algo.exc.MetaUnsupportedException;
 import jbse.bc.ClassFile;
 import jbse.bc.Dispatcher;
 import jbse.bc.Signature;
 import jbse.bc.exc.MethodNotFoundException;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.meta.annotations.MetaOverriddenBy;
 import jbse.meta.annotations.Uninterpreted;
@@ -21,6 +25,10 @@ import jbse.meta.annotations.Uninterpreted;
  * @author Pietro Braione
  */
 class DispatcherMeta extends Dispatcher<Signature, Algo_INVOKEMETA<?, ?, ?, ?>> {
+	private final ArrayList<Pattern> patternUninterpretedMethodClassNameList = new ArrayList<>();
+	private final ArrayList<Pattern> patternUninterpretedMethodDescriptorList = new ArrayList<>();
+	private final ArrayList<Pattern> patternUninterpretedMethodNameList = new ArrayList<>();
+	
     /**
      * Constructor.
      */
@@ -54,6 +62,24 @@ class DispatcherMeta extends Dispatcher<Signature, Algo_INVOKEMETA<?, ?, ?, ?>> 
             throw new UnexpectedInternalException(e);
         }
     }
+    
+    /**
+     * Adds a pattern of uninterpreted functions.
+     * 
+     * @param patternMethodClassName a {@code String}, a regular expression. 
+     * @param patternMethodDescriptor a {@code String}, a regular expression. 
+     * @param patternMethodName a {@code String}, a regular expression. 
+     * @throws InvalidInputException if {@code patternMethodClassName == null || patternMethodDescriptor == null || patternMethodName == null}.
+     */
+    void addUninterpretedPattern(String patternMethodClassName, String patternMethodDescriptor, String patternMethodName) 
+    throws InvalidInputException {
+    	if (patternMethodClassName == null || patternMethodDescriptor == null || patternMethodName == null) {
+    		throw new InvalidInputException("Attempted to invoke " + this.getClass().getName() + ".addUninterpretedPattern  with null patternMethodClassName, or patternMethodDescriptor, or patternMethodName.");
+    	}
+    	this.patternUninterpretedMethodClassNameList.add(Pattern.compile(patternMethodClassName));
+    	this.patternUninterpretedMethodDescriptorList.add(Pattern.compile(patternMethodDescriptor));
+    	this.patternUninterpretedMethodNameList.add(Pattern.compile(patternMethodName));
+    }
 
     /**
      * Checks whether a method has a {@link MetaOverriddenBy} or {@link Uninterpreted} 
@@ -71,7 +97,7 @@ class DispatcherMeta extends Dispatcher<Signature, Algo_INVOKEMETA<?, ?, ?, ?>> 
      *         to load it, or to instantiate it for any reason (misses from the meta-level classpath, 
      *         has insufficient visibility, does not implement {@link Algorithm}...).
      */
-    public boolean isMeta(ClassFile methodClass, Signature methodSignature) 
+    boolean isMeta(ClassFile methodClass, Signature methodSignature) 
     throws MethodNotFoundException, MetaUnsupportedException {
         //already loaded: returns true
         if (select(methodSignature) != null) {
@@ -79,12 +105,12 @@ class DispatcherMeta extends Dispatcher<Signature, Algo_INVOKEMETA<?, ?, ?, ?>> 
         }
         
         //method without class: returns false (otherwise the previous select
-        //would have returned it
+        //would have returned it)
         if (methodClass == null) {
             return false;
         }
 
-        //looks for annotations, and in case returns false
+        //looks for annotations
         final String metaOverriddenBy = internalClassName(MetaOverriddenBy.class.getName());
         final String uninterpreted = internalClassName(Uninterpreted.class.getName());
         final boolean overridAnnotationPresent = findMethodAnnotation(methodClass, methodSignature, metaOverriddenBy);
@@ -92,13 +118,24 @@ class DispatcherMeta extends Dispatcher<Signature, Algo_INVOKEMETA<?, ?, ?, ?>> 
         if (overridAnnotationPresent) { //MetaOverridden has highest priority
             final String value = methodClass.getMethodAnnotationParameterValueString(methodSignature, metaOverriddenBy, "value");
             loadAlgoMetaOverridden(methodSignature, value);
+            return true;
         } else if (unintAnnotationPresent) {
-            final String value = methodClass.getMethodAnnotationParameterValueString(methodSignature, uninterpreted, "value");
-            loadAlgoUninterpreted(methodSignature, value);
-        } else {
-            return false;
+            loadAlgoUninterpreted(methodSignature);
+            return true;
         }
-        return true;
+        
+        //looks if the method signature matches some pattern
+        for (int i = 0; i < this.patternUninterpretedMethodClassNameList.size(); ++i) {
+        	if (this.patternUninterpretedMethodClassNameList.get(i).matcher(methodSignature.getClassName()).matches() &&
+        		this.patternUninterpretedMethodDescriptorList.get(i).matcher(methodSignature.getDescriptor()).matches() &&
+        		this.patternUninterpretedMethodNameList.get(i).matcher(methodSignature.getName()).matches()) {
+                loadAlgoUninterpreted(methodSignature);
+                return true;
+        	}
+        }
+        
+        //nothing found
+        return false;
     }
     
     /**
@@ -138,7 +175,7 @@ class DispatcherMeta extends Dispatcher<Signature, Algo_INVOKEMETA<?, ?, ?, ?>> 
      *         does not exist in the classpath, or cannot be loaded or instantiated for any reason 
      *         (has insufficient visibility or has not a parameterless constructor).
      */
-    public void loadAlgoMetaOverridden(Signature methodSignatureResolved, String metaDelegateClassName) 
+    void loadAlgoMetaOverridden(Signature methodSignatureResolved, String metaDelegateClassName) 
     throws MetaUnsupportedException {
         try {
             @SuppressWarnings("unchecked")
@@ -163,11 +200,8 @@ class DispatcherMeta extends Dispatcher<Signature, Algo_INVOKEMETA<?, ?, ?, ?>> 
      * @param functionName the name chosen for the uninterpreted function. If {@code null}, 
      *        then the (unqualified, to uppercase) name of the method will be used.
      */
-    public void loadAlgoUninterpreted(Signature methodSignatureResolved, String functionName) {
-        final String functionNameDflt = 
-            (functionName == null ? methodSignatureResolved.getName().toUpperCase() : functionName);
-        final Algo_INVOKEUNINTERPRETED metaDelegate = 
-            new Algo_INVOKEUNINTERPRETED(methodSignatureResolved, functionNameDflt);
+    void loadAlgoUninterpreted(Signature methodSignatureResolved) {
+        final Algo_INVOKEMETA_Metacircular metaDelegate = new Algo_INVOKEMETA_Metacircular();
         loadMetaDelegate(methodSignatureResolved, metaDelegate);
     }
 

@@ -133,6 +133,7 @@ import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION_
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION_2;
 import static jbse.bc.Signatures.JAVA_ACCESSCONTROLLER_GETSTACKACCESSCONTROLCONTEXT;
 import static jbse.bc.Signatures.JAVA_ARRAYDEQUE;
+import static jbse.bc.Signatures.JAVA_ARRAYLIST;
 import static jbse.bc.Signatures.JAVA_ATOMICLONG_VMSUPPORTSCS8;
 import static jbse.bc.Signatures.JAVA_ATTRIBUTES_NAME;
 import static jbse.bc.Signatures.JAVA_BYTE_BYTECACHE;
@@ -868,18 +869,31 @@ public final class ExecutionContext {
     }
 
     /**
-     * Allows to customize the behavior of the invocations to a method 
-     * by treating all the invocations of a given method as returning 
+     * Allows to customize the behavior of the invocations of a method 
+     * by treating all its invocations as returning 
      * the application of an uninterpreted symbolic function
      * with no side effect.
      * 
      * @param methodSignature the {@link Signature} of a method. 
-     * @param functionName the name of the uninterpreted symbolic function
-     *        whose application to the invocation parameter is 
-     *        the result of all the invocations to {@code className.methodName}.
      */
-    public void addUninterpreted(Signature methodSignature, String functionName) { 
-        this.dispatcherMeta.loadAlgoUninterpreted(methodSignature, functionName);
+    public void addUninterpreted(Signature methodSignature) { 
+        this.dispatcherMeta.loadAlgoUninterpreted(methodSignature);
+    }
+
+    /**
+     * Allows to customize the behavior of the invocations of a 
+     * set of methods by treating all their invocations as returning 
+     * the application of a suitable uninterpreted symbolic function
+     * with no side effect. The function symbol will have as operator
+     * the signature of the method converted to {@code String}.
+     * 
+     * @param patternMethodClassName a {@code String}, a regular expression. 
+     * @param patternMethodDescriptor a {@code String}, a regular expression. 
+     * @param patternMethodName a {@code String}, a regular expression. 
+     * @throws InvalidInputException if {@code patternMethodClassName == null || patternMethodDescriptor == null || patternMethodName == null}.
+     */
+    public void addUninterpretedPattern(String patternMethodClassName, String patternMethodDescriptor, String patternMethodName) throws InvalidInputException { 
+        this.dispatcherMeta.addUninterpretedPattern(patternMethodClassName, patternMethodDescriptor, patternMethodName);
     }
 
     /**
@@ -899,6 +913,7 @@ public final class ExecutionContext {
         final String className = classFile.getClassName();
         return (
         className.equals(JAVA_ARRAYDEQUE) ||
+        className.equals(JAVA_ARRAYLIST) ||
         className.equals(JAVA_ATTRIBUTES_NAME) ||
         className.equals(JAVA_BYTE_BYTECACHE) ||
         className.equals(JAVA_CHARACTER_CHARACTERCACHE) ||

@@ -95,8 +95,8 @@ final class InstanceWrapper_JAVA_THREAD extends ObjektWrapper<InstanceImpl_JAVA_
 	}
 
 	@Override
-	public Value getFieldValue(String fieldName) {
-		return getDelegate().getFieldValue(fieldName);
+	public Value getFieldValue(String fieldName, String fieldClass) {
+		return getDelegate().getFieldValue(fieldName, fieldClass);
 	}
 
 	@Override
@@ -122,7 +122,7 @@ final class InstanceWrapper_JAVA_THREAD extends ObjektWrapper<InstanceImpl_JAVA_
 	}
 
 	@Override
-	public Map<String, Variable> fields() {
+	public Map<Signature, Variable> fields() {
 		return getDelegate().fields();
 	}
 

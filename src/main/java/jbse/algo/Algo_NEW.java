@@ -43,7 +43,7 @@ StrategyDecide<DecisionAlternative_NONE>,
 StrategyRefine<DecisionAlternative_NONE>, 
 StrategyUpdate<DecisionAlternative_NONE>> {
     
-    private ReferenceConcrete newObjectReference;
+    private ClassFile newObjectClass;
 
     @Override
     protected Supplier<Integer> numOperands() {
@@ -61,13 +61,10 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             try {
                 //performs resolution
                 final ClassFile currentClass = state.getCurrentClass();
-                final ClassFile newObjectClass = state.getClassHierarchy().resolveClass(currentClass, this.data.className(), state.bypassStandardLoading());
+                this.newObjectClass = state.getClassHierarchy().resolveClass(currentClass, this.data.className(), state.bypassStandardLoading());
                 
                 //possibly initializes the class
                 ensureClassInitialized(state, newObjectClass, this.ctx);
-                
-                //creates the new object in the heap
-                this.newObjectReference = state.createInstance(newObjectClass);
             } catch (PleaseLoadClassException e) {
                 invokeClassLoaderLoadClass(state, e);
                 exitFromAlgorithm();
@@ -121,7 +118,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            state.pushOperand(this.newObjectReference);
+            try {
+                final ReferenceConcrete newObjectReference = state.createInstance(this.newObjectClass);
+                state.pushOperand(newObjectReference);
+            } catch (HeapMemoryExhaustedException e) {
+                throwNew(state, OUT_OF_MEMORY_ERROR);
+            }
         };
     }
 

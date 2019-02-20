@@ -414,7 +414,7 @@ public final class ArrayImpl extends ObjektImpl implements Array {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-        this.fields.get(this.lengthSignature.toString()).setValue(otherArray.getLength());  //toString() is necessary, type erasure doesn't play well
+        this.fields.get(this.lengthSignature).setValue(otherArray.getLength());
         try {
             final Expression indexGreaterThanZero = (Expression) INDEX.ge(this.calc.valInt(0));
             final Expression indexLessThanLength = (Expression) INDEX.lt(getLength());

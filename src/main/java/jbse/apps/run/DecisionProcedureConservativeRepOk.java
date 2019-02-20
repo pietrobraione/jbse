@@ -52,11 +52,12 @@ public final class DecisionProcedureConservativeRepOk extends DecisionProcedureC
     throws DecisionException {
         final State sIni = this.checker.makeInitialState();
         try {
+            //TODO shall we also assume that classFile and r's static type are initialized? In such case, how do we inject the ExecutionContext?
             sIni.assumeExpands(r, classFile);
         } catch (CannotAssumeSymbolicObjectException e) {
             return false;
         } catch (InvalidInputException | InvalidTypeException | 
-        		 ContradictionException | HeapMemoryExhaustedException e) {
+                 ContradictionException | HeapMemoryExhaustedException e) {
             //this should not happen
             throw new UnexpectedInternalException(e);
         }
@@ -68,6 +69,7 @@ public final class DecisionProcedureConservativeRepOk extends DecisionProcedureC
     throws DecisionException {
         final State sIni = this.checker.makeInitialState();
         try {
+            //TODO shall we also assume that r's static type is initialized? In such case, how do we inject the ExecutionContext?
             sIni.assumeAliases(r, o.getOrigin());
         } catch (ContradictionException | InvalidInputException e) {
             //this should not happen

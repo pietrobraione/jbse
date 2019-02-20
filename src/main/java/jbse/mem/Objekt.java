@@ -108,12 +108,15 @@ public interface Objekt extends Cloneable {
      * Gets the value in a field of the {@link Instance}.
      * 
      * @param fieldName the name of the field.
-     * @return a {@link Value} object which is the value 
-     * stored in the field of this {@link Objekt}, or 
-     * {@code null} if this {@link Objekt} has no 
-     * field with that {@code name}. 
+     * @param fieldClass the name of the class 
+     * where the field is declared.
+     * @return the {@link Value} stored in the 
+     *         field of this {@link Objekt}, or 
+     *         {@code null} if this {@link Objekt} 
+     *         has no field with that {@code fieldName}
+     *         and {@code fieldClass}.
      */
-    Value getFieldValue(String fieldName);
+    Value getFieldValue(String fieldName, String fieldClass);
     
     /**
      * Gets the value in a field of this {@link Objekt}.
@@ -169,7 +172,7 @@ public interface Objekt extends Cloneable {
      *         {@link Map}{@code <}{@link String}{@code , }{@link Variable}{@code >}
      *         backed by this {@link Objekt}'s fields map.
      */
-    Map<String, Variable> fields();
+    Map<Signature, Variable> fields();
     
     Objekt clone();
 }

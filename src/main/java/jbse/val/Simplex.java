@@ -235,11 +235,6 @@ public final class Simplex extends Primitive implements Cloneable {
     }
 
     @Override
-    public Object getValueForNative() {
-        return this.value;
-    }
-
-    @Override
     public String toString() {
         return this.toString;
     }

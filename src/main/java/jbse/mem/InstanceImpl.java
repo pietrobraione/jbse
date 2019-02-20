@@ -50,7 +50,7 @@ public class InstanceImpl extends ObjektImpl implements Instance {
         buf.append(this.classFile);
         buf.append(", Fields:{");
         boolean isFirst = true;
-        for (Map.Entry<String, Variable> e : this.fields.entrySet()) {
+        for (Map.Entry<Signature, Variable> e : this.fields.entrySet()) {
             if (isFirst) {
                 isFirst = false;
             } else {

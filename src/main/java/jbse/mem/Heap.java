@@ -64,7 +64,7 @@ final class Heap implements Cloneable {
 		public Value getFieldValue(Signature sig) { throw new UnexpectedInternalException(ERROR_USE); }
 
 		@Override
-		public Value getFieldValue(String fieldName) { throw new UnexpectedInternalException(ERROR_USE); }
+		public Value getFieldValue(String fieldName, String fieldClass) { throw new UnexpectedInternalException(ERROR_USE); }
 
 		@Override
 		public Value getFieldValue(int slot) { throw new UnexpectedInternalException(ERROR_USE); }
@@ -79,7 +79,7 @@ final class Heap implements Cloneable {
 		public void setFieldValue(int slot, Value item) { throw new UnexpectedInternalException(ERROR_USE); }
 
 		@Override
-		public Map<String, Variable> fields() { throw new UnexpectedInternalException(ERROR_USE); }
+		public Map<Signature, Variable> fields() { throw new UnexpectedInternalException(ERROR_USE); }
 
 		@Override
 		public Objekt clone() { throw new UnexpectedInternalException(ERROR_USE); }

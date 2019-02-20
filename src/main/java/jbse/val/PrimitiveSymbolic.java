@@ -2,7 +2,6 @@ package jbse.val;
 
 import jbse.common.exc.InvalidInputException;
 import jbse.val.exc.InvalidTypeException;
-import jbse.val.exc.ValueDoesNotSupportNativeException;
 
 /**
  * Class that represent a symbolic value. 
@@ -46,15 +45,6 @@ public abstract class PrimitiveSymbolic extends Primitive implements Symbolic {
     @Override
     public final boolean isSymbolic() {
         return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     * For {@link PrimitiveSymbolic} values it will always throw {@link ValueDoesNotSupportNativeException}.
-     */
-    @Override
-    public final Object getValueForNative() throws ValueDoesNotSupportNativeException {
-        throw new ValueDoesNotSupportNativeException();
     }
 
     /**

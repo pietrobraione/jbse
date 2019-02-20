@@ -33,7 +33,8 @@ abstract class StrategyRefine_XALOAD implements StrategyRefine<DecisionAlternati
     InterruptException, SymbolicValueNotAllowedException, ClasspathException;
 
     abstract public void refineRefAliases(State s, DecisionAlternative_XALOAD_Aliases dai) 
-    throws DecisionException, ContradictionException, InvalidInputException;
+    throws DecisionException, ContradictionException, InvalidInputException, InterruptException, 
+    ClasspathException;
 
     abstract public void refineRefNull(State s, DecisionAlternative_XALOAD_Null dan) 
     throws DecisionException, ContradictionException, InvalidInputException;
@@ -60,7 +61,8 @@ abstract class StrategyRefine_XALOAD implements StrategyRefine<DecisionAlternati
     
                 @Override
                 public void visitDecisionAlternative_XALOAD_Aliases(DecisionAlternative_XALOAD_Aliases dai)
-                throws DecisionException, ContradictionException, InvalidInputException {
+                throws DecisionException, ContradictionException, InvalidInputException, InterruptException, 
+                ClasspathException {
                     StrategyRefine_XALOAD.this.refineRefAliases(s, dai);
                 }
     

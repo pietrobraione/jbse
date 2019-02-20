@@ -680,35 +680,17 @@ public final class RunParameters implements Cloneable {
 
     /**
      * Specifies that a method must be treated as an uninterpreted pure
-     * function, rather than executed.
+     * function, rather than executed. In the case all the parameters are
+     * constant, the method is executed metacircularly.
      * 
-     * @param className the name of the class containing the method not to be
-     *        interpreted.
-     * @param descriptor the descriptor of the method. All the parameters types 
-     *        in the descriptor must be primitive.
-     * @param methodName the name of the method.
-     * @param functionName a {@link String}, the name that will be given to 
-     *        the uninterpreted function.
-     * @throws NullPointerException if any of the above parameters is {@code null}.
-     */
-    public void addUninterpreted(String className, String descriptor, String methodName, String functionName) {
-        this.runnerParameters.addUninterpreted(className, descriptor, methodName, functionName);
-    }
-
-    /**
-     * Specifies that a method must be treated as an uninterpreted pure
-     * function, rather than executed. This method is equivalent to
-     * {@link #addUninterpreted(String, String, String, String) addUninterpreted}{@code (className, descriptor, methodName, className + ":" + descriptor + ":" + methodName)}.
-     * 
-     * @param className the name of the class containing the method not to be
-     *        interpreted.
-     * @param descriptor the descriptor of the method. All the parameters types 
+     * @param methodClassName the name of the class containing the method.
+     * @param methodDescriptor the descriptor of the method. All the parameters types 
      *        in the descriptor must be primitive.
      * @param methodName the name of the method.
      * @throws NullPointerException if any of the above parameters is {@code null}.
      */
-    public void addUninterpreted(String className, String descriptor, String methodName) {
-        this.runnerParameters.addUninterpreted(className, descriptor, methodName);
+    public void addUninterpreted(String methodClassName, String methodDescriptor, String methodName) {
+        this.runnerParameters.addUninterpreted(methodClassName, methodDescriptor, methodName);
     }
 
     /**

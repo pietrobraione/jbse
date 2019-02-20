@@ -1,7 +1,5 @@
 package jbse.val;
 
-import jbse.val.exc.ValueDoesNotSupportNativeException;
-
 /**
  * Class for representing all Java values.
  * 
@@ -29,17 +27,6 @@ public abstract class Value {
      */
     public abstract boolean isSymbolic();
 
-    /**
-     * Returns a Java object (if possible) denoting the same value as 
-     * this object, and that can be passed as parameter to metacircular 
-     * native method calls.
-     * 
-     * @return an {@link Object}.
-     * @throws ValueDoesNotSupportNativeException if this {@link Value} 
-     *         cannot suitably be represented at meta level.
-     */
-    public abstract Object getValueForNative() throws ValueDoesNotSupportNativeException;
-    
     /**
      * Returns the type of this {@link Value}.
      * 

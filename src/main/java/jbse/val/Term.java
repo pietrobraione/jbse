@@ -2,7 +2,6 @@ package jbse.val;
 
 import jbse.common.exc.InvalidInputException;
 import jbse.val.exc.InvalidTypeException;
-import jbse.val.exc.ValueDoesNotSupportNativeException;
 
 /**
  * An arbitrary {@link Primitive} value, on which 
@@ -65,71 +64,45 @@ public final class Term extends Primitive implements Symbolic {
     public HistoryPoint historyPoint() {
         return null;
     }
-    
+
     @Override
     public Symbolic root() {
-    	return this;
-    }
-    
-    @Override
-    public boolean hasContainer(Symbolic s) {
-		if (s == null) {
-			throw new NullPointerException();
-		}
-		return s.equals(this);
+        return this;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
+    public boolean hasContainer(Symbolic s) {
+        if (s == null) {
+            throw new NullPointerException();
+        }
+        return s.equals(this);
+    }
+
     @Override
     public void accept(PrimitiveVisitor v) throws Exception {
         v.visitTerm(this);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean surelyTrue() {
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean surelyFalse() {
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Object getValueForNative() throws ValueDoesNotSupportNativeException {
-        throw new ValueDoesNotSupportNativeException();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isSymbolic() {
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int hashCode() {
         return this.hashCode;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

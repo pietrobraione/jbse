@@ -1,7 +1,6 @@
 package jbse.val;
 
 import jbse.common.Type;
-import jbse.val.exc.ValueDoesNotSupportNativeException;
 
 /**
  * Class representing a default value with unknown type. 
@@ -34,11 +33,6 @@ public final class DefaultValue extends Value {
     @Override
     public String toString() {
         return "<DEFAULT>";
-    }
-
-    @Override
-    public Object getValueForNative() throws ValueDoesNotSupportNativeException {
-        throw new ValueDoesNotSupportNativeException();
     }
 
     @Override

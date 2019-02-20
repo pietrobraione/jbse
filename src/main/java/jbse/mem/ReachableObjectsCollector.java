@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.SortedMap;
 
 import jbse.bc.ClassFile;
+import jbse.bc.Signature;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
@@ -105,7 +106,7 @@ public final class ReachableObjectsCollector {
             reachable.add(rootObject);
             final ClassFile rootObjectClass = s.getObject(new ReferenceConcrete(rootObject)).getType();
             final Klass k = s.getKlass(rootObjectClass);
-            final Map<String, Variable> fields = k.fields();
+            final Map<Signature, Variable> fields = k.fields();
             for (Variable var : fields.values()) {
                 final Value v = var.getValue();
                 addIfReference(reachable, s, v);
@@ -115,7 +116,7 @@ public final class ReachableObjectsCollector {
         //possibly adds the root class' static fields
         if (rootClass != null) {
             final Klass k = s.getKlass(rootClass);
-            final Map<String, Variable> fields = k.fields();
+            final Map<Signature, Variable> fields = k.fields();
             for (Variable var : fields.values()) {
                 final Value v = var.getValue();
                 addIfReference(reachable, s, v);
@@ -124,10 +125,10 @@ public final class ReachableObjectsCollector {
         
         //visits the path condition
         for (Clause c : s.getPathCondition()) {
-        	if (c instanceof ClauseAssumeReferenceSymbolic) {
-        		final ReferenceSymbolic r = ((ClauseAssumeReferenceSymbolic) c).getReference();
+            if (c instanceof ClauseAssumeReferenceSymbolic) {
+                final ReferenceSymbolic r = ((ClauseAssumeReferenceSymbolic) c).getReference();
                 addIfReference(reachable, s, r);
-        	}
+            }
         }
         
         //visits the stack
@@ -149,7 +150,7 @@ public final class ReachableObjectsCollector {
         if (precise) {
             final Map<ClassFile, Klass> staticMethodArea = s.getStaticMethodArea();
             for (Klass k : staticMethodArea.values()) {
-                final Map<String, Variable> fields = k.fields();
+                final Map<Signature, Variable> fields = k.fields();
                 for (Variable var : fields.values()) {
                     final Value v = var.getValue();
                     addIfReference(reachable, s, v);
@@ -209,7 +210,7 @@ public final class ReachableObjectsCollector {
             final HashSet<Long> toVisitNext = new HashSet<>();
             for (long nextObject : toVisit) {
                 final Objekt o = s.getObject(new ReferenceConcrete(nextObject));
-                final Map<String, Variable> fields = o.fields();
+                final Map<Signature, Variable> fields = o.fields();
                 for (Variable var : fields.values()) {
                     final Value v = var.getValue();
                     addIfReferenceAndMarkNext(reachable, toVisitNext, s, v);

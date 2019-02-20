@@ -242,7 +242,7 @@ StrategyUpdate_XALOAD> {
 
             //also the size of the result matters to whether refine or not 
             shouldRefine = shouldRefine || (result.size() > 1);
-
+            
             //for branchingDecision nothing to do: it will be false only if
             //the access is concrete and the value obtained is resolved 
             //(if a symbolic reference): in this case, result.size() must
@@ -312,7 +312,8 @@ StrategyUpdate_XALOAD> {
 
             @Override
             public void refineRefAliases(State state, DecisionAlternative_XALOAD_Aliases altAliases)
-            throws DecisionException, ContradictionException, InvalidInputException {
+            throws DecisionException, ContradictionException, InvalidInputException, ClasspathException, 
+            InterruptException {
                 //handles all the assumptions for reference resolution by aliasing
                 Algo_XALOAD.this.refineRefAliases(state, altAliases); //implemented in Algo_XYLOAD_GETX
 

@@ -109,7 +109,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
 
             @Override
             public void refineRefAliases(State s, DecisionAlternative_XLOAD_GETX_Aliases alt)
-            throws ContradictionException, InvalidInputException {
+            throws ContradictionException, InvalidInputException, ClasspathException, InterruptException {
                 Algo_XLOAD_GETX.this.refineRefAliases(s, alt); //implemented in Algo_XYLOAD_GETX
             }
 

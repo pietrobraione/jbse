@@ -771,9 +771,6 @@ public final class Util {
             return false;
         }
         
-        private static enum Assumption { INITIALIZED, NOT_INITIALIZED, NONE }
-        
-
         /**
          * Returns an {@link Iterable} that scans a {@link List} in 
          * reverse order, from tail to head.
@@ -858,31 +855,26 @@ public final class Util {
             this.classesForPhase2.add(classFile);
             
             try {
-                //invokes the decision procedure, adds the returned 
-                //assumption to the state's path condition and creates 
-                //a Klass
+                //decides whether the class is pre-initialized and whether
+                //a symbolic or concrete Klass object should be created
+                //TODO here we assume mutual exclusion of the initialized/not initialized assumptions. Withdraw this assumption and branch.
                 final ClassHierarchy hier = this.s.getClassHierarchy();
                 final boolean pure = classFile.isPure() || this.ctx.hasClassAPureInitializer(hier, classFile);
-                final int definingLoader = classFile.getDefiningClassLoader();
                 final boolean createSymbolicKlass;
-                final Assumption assumeInitialized;
+                final boolean assumeInitialized;
                 if (this.s.phase() == Phase.PRE_INITIAL) {
-                	//every class in this phase must be assumed as initialized
-                	//before symbolic execution
-                	createSymbolicKlass = false;
-                	assumeInitialized = Assumption.INITIALIZED;
-                } else if (pure) {
+                    //all pre-initial class are assumed to be pre-initialized
                     createSymbolicKlass = false;
-                    assumeInitialized = Assumption.NONE;
-                //TODO here we assume mutual exclusion of the initialized/not initialized assumptions. Withdraw this assumption and branch.
-                } else if (CLASSLOADER_BOOT <= definingLoader && definingLoader <= CLASSLOADER_APP && 
-                           this.ctx.decisionProcedure.isSatInitialized(classFile)) { 
-                    createSymbolicKlass = true;
-                    assumeInitialized = Assumption.INITIALIZED;
+                    assumeInitialized = true;
+                } else if (this.ctx.decisionProcedure.isSatInitialized(classFile)) { 
+                    createSymbolicKlass = !pure; //if pure, the static initializer will be executed
+                    assumeInitialized = true;
                 } else {
                     createSymbolicKlass = false;
-                    assumeInitialized = Assumption.NOT_INITIALIZED;
+                    assumeInitialized = false;
                 }
+                
+                //creates the Klass object
                 if (createSymbolicKlass) {
                     //creates a symbolic Klass
                     this.s.ensureKlassSymbolic(classFile);
@@ -896,17 +888,21 @@ public final class Util {
                     }
                 }
                 
-                //pushes assumption
-                if (assumeInitialized == Assumption.INITIALIZED) {
+                //pushes the assumption
+                if (assumeInitialized) {
                     final Klass k = this.s.getKlass(classFile);
                     this.s.assumeClassInitialized(classFile, k);
-                    if (this.makePreInitClassesSymbolic
-                    		|| "java/util/ArrayList".equals(classFile.getClassName()) /* HACK */) {
-                    	this.preInitializedClasses.add(classFile); //TODO shall we do it also when assumeInitialized == Assumption.NONE?
-                    }
-                } else if (assumeInitialized == Assumption.NOT_INITIALIZED) {
+                } else {
                     this.s.assumeClassNotInitialized(classFile);
-                } //else, do nothing
+                }
+
+                //if the created Klass is concrete but 
+                //the class is assumed to be pre-initialized, 
+                //schedules the Klass to become symbolic (if
+                //the corresponding flag is active)
+                if (!createSymbolicKlass && assumeInitialized && this.makePreInitClassesSymbolic) {
+                    this.preInitializedClasses.add(classFile);
+                }
             } catch (InvalidIndexException e) {
                 this.failed = true;
                 this.failure = VERIFY_ERROR;
@@ -993,25 +989,33 @@ public final class Util {
          */
         private void phase3() throws FrozenStateException, HeapMemoryExhaustedException {
             try {
-                if (this.boxExceptionMethodSignature != null) {
-                    this.s.pushFrame(this.cf_JBSE_BASE, this.boxExceptionMethodSignature, root(), 0);                    
-                }
+                boolean exceptionBoxFrameYetToPush = true; 
                 for (ClassFile classFile : this.classesForPhase3) {
                     final Signature sigClinit = new Signature(classFile.getClassName(), "()" + Type.VOID, "<clinit>");
                     if (classFile.hasMethodImplementation(sigClinit)) {
                     	if (this.preInitializedClasses.contains(classFile)) {
                     		this.s.ensureStringLiteral(classFile.getClassName());
                     		this.s.pushFrame(this.cf_JBSE_BASE, JBSE_BASE_MAKEKLASSSYMBOLIC, root(), 0, this.s.getCalculator().valInt(classFile.getDefiningClassLoader()), this.s.referenceToStringLiteral(classFile.getClassName()));
+                                ++this.createdFrames;
                     	}
+                        if (this.boxExceptionMethodSignature != null && exceptionBoxFrameYetToPush) {
+                            this.s.pushFrame(this.cf_JBSE_BASE, this.boxExceptionMethodSignature, root(), 0);                    
+                            ++this.createdFrames;
+                        }
                         this.s.pushFrame(classFile, sigClinit, root(), 0);
                         ++this.createdFrames;
                     }
                 }
                 if (this.pushClinitFor_JAVA_OBJECT) {
                     try {
+                        if (this.boxExceptionMethodSignature != null && exceptionBoxFrameYetToPush) {
+                            this.s.pushFrame(this.cf_JBSE_BASE, this.boxExceptionMethodSignature, root(), 0);                    
+                            ++this.createdFrames;
+                        }
                         final Signature sigClinit_JAVA_OBJECT = new Signature(JAVA_OBJECT, "()" + Type.VOID, "<clinit>");
                         final ClassFile cf_JAVA_OBJECT = this.s.getClassHierarchy().loadCreateClass(JAVA_OBJECT);
                         this.s.pushFrame(cf_JAVA_OBJECT, sigClinit_JAVA_OBJECT, root(), 0);
+                        ++this.createdFrames;
                     } catch (ClassFileNotFoundException | IncompatibleClassFileException | 
                              ClassFileIllFormedException | BadClassFileVersionException | 
                              WrongClassNameException | InvalidInputException | 
@@ -1019,13 +1023,6 @@ public final class Util {
                         //this should never happen
                         failExecution("Could not find the classfile for java.lang.Object.");
                     }
-                    ++this.createdFrames;
-                }
-                
-                //if no frame was created, then we pop the frame that boxes exceptions 
-                //(if present)
-                if (this.boxExceptionMethodSignature != null && this.createdFrames == 0) {
-                    this.s.popCurrentFrame();
                 }
             } catch (MethodNotFoundException | MethodCodeNotFoundException e) {
                 /* TODO Here I am in doubt about how I should manage exceptional
@@ -1054,15 +1051,12 @@ public final class Util {
                 for (int i = 1; i <= this.createdFrames; ++i) {
                     this.s.popCurrentFrame();
                 }
-                if (this.boxExceptionMethodSignature != null) {
-                    this.s.popCurrentFrame();
-                }
             } catch (ThreadStackEmptyException e) {
                 //this should never happen
                 failExecution(e);
             }
             
-            //it is not necessary to delete the Klass object
+            //it is not necessary to delete the Klass objects
             //because they are not initialized and this fact
             //is registered in their state
             
@@ -1140,6 +1134,29 @@ public final class Util {
             //this should never happen
             failExecution(exc);
         }
+    }
+
+    /**
+     * Finds a classfile corresponding to a class name from the loaded
+     * classfiles with an initiating loader suitable to reference resolution.
+     * To be used to find the classfile of a resolved reference from its
+     * class name.
+     * 
+     * @param state a {@link State}.
+     * @param className a {@link String}.
+     * @return the {@link ClassFile} with name {@code className}, if one 
+     *         was loaded in {@code state} with either the boot, or the 
+     *         extension, or the app classloader as intiating loader. 
+     */
+    public static ClassFile findClassFile(State state, String className) {
+        ClassFile retVal = null;
+        for (int classLoader = CLASSLOADER_APP; classLoader >= CLASSLOADER_BOOT; --classLoader) {
+            retVal = state.getClassHierarchy().getClassFileClassArray(classLoader, className);
+            if (retVal != null) {
+                return retVal;
+            }
+        }
+        throw new UnexpectedInternalException("Unable to find the classfile for a reference resolution.");
     }
     
     /** 
