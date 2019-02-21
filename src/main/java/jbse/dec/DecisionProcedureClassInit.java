@@ -2,9 +2,11 @@ package jbse.dec;
 
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 
-import java.util.ArrayList;
+import java.util.LinkedHashSet;
 
 import jbse.bc.ClassFile;
+import jbse.dec.exc.DecisionException;
+import jbse.mem.ClauseAssumeClassInitialized;
 import jbse.mem.ClauseAssumeClassNotInitialized;
 import jbse.rules.ClassInitRulesRepo;
 import jbse.val.Calculator;
@@ -14,15 +16,23 @@ import jbse.val.Calculator;
  * 
  * @author Pietro Braione
  */
+//TODO really crappy, nonmonotonic implementation. Rewrite.
 public final class DecisionProcedureClassInit extends DecisionProcedureChainOfResponsibility {
     private final ClassInitRulesRepo rulesRepo;
+
+    /**
+     * Stores all the classes from the 
+     * {@link ClauseAssumeClassInitialized} 
+     * that are pushed. 
+     */
+    private final LinkedHashSet<ClassFile> init = new LinkedHashSet<>();
 
     /**
      * Stores all the classes from the 
      * {@link ClauseAssumeClassNotInitialized} 
      * that are pushed. 
      */
-    private final ArrayList<ClassFile> notInit = new ArrayList<>();
+    private final LinkedHashSet<ClassFile> notInit = new LinkedHashSet<>();
 
     public DecisionProcedureClassInit(DecisionProcedure next, Calculator calc, ClassInitRulesRepo rulesRepo) {
         super(next, calc);
@@ -31,7 +41,17 @@ public final class DecisionProcedureClassInit extends DecisionProcedureChainOfRe
 
     @Override
     protected void clearAssumptionsLocal() {
+        this.init.clear();
         this.notInit.clear();
+    }
+    
+    @Override
+    protected void pushAssumptionLocal(ClauseAssumeClassInitialized c) throws DecisionException {
+        //if a class is initialized, then its superclasses are
+        for (ClassFile cf : c.getClassFile().superclasses()) {
+            this.init.add(cf);
+        }
+        //TODO also superinterfaces?
     }
 
     @Override
@@ -50,6 +70,11 @@ public final class DecisionProcedureClassInit extends DecisionProcedureChainOfRe
 
     @Override
     protected boolean isSatNotInitializedLocal(ClassFile classFile) {
-        return (classFile.getDefiningClassLoader() > CLASSLOADER_APP || this.rulesRepo.notInitializedClassesContains(classFile.getClassName()) || this.notInit.contains(classFile));
+        if (this.init.contains(classFile)) {
+            return false;
+        }
+        return (classFile.getDefiningClassLoader() > CLASSLOADER_APP || 
+                this.rulesRepo.notInitializedClassesContains(classFile.getClassName()) || 
+                this.notInit.contains(classFile));
     }
 }

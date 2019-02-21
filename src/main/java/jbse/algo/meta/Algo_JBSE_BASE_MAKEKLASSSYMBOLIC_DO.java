@@ -202,7 +202,7 @@ public final class Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO extends Algo_INVOKEMETA_N
                         //records the resolution
                         this.assumeNull.add(newFieldValue);
                     } else {
-                        //it is an expansion, unless it is a non-symbolic class
+                        //it is an expansion/alias, unless it is a non-symbolic class
                         //(java.lang.Class, java.lang.ClassLoader, java.lang.Thread):
                         //In such case we leave the field's value concrete, as it is
                         //the best approximation we can do.
@@ -216,13 +216,19 @@ public final class Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO extends Algo_INVOKEMETA_N
                             //sets the field
                             var.setValue(newFieldValue);
 
-                            //records the expansion
-                            this.assumeExpands.add(newFieldValue);
-                            this.assumeExpandsTargets.add(ref.getHeapPosition());
+                            if (o.isSymbolic()) {
+                                //records the resolution by alias
+                                this.assumeAliases.add(newFieldValue);
+                                this.assumeAliasesTargets.add(o.getOrigin());
+                            } else {
+                                //records the resolution by expansion
+                                this.assumeExpands.add(newFieldValue);
+                                this.assumeExpandsTargets.add(ref.getHeapPosition());
+                            }
 
                             //determines if the referred object must also
                             //become symbolic
-                            if (!visited.contains(o) && o != null && !o.isSymbolic()) {
+                            if (!visited.contains(o) && !o.isSymbolic()) {
                                 //makes o symbolic
                                 o.makeSymbolic(newFieldValue);
                                 o.setIdentityHashCode(state.createSymbolIdentityHashCode(o));
@@ -247,13 +253,10 @@ public final class Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO extends Algo_INVOKEMETA_N
                     //calculates the assumption
                     final ReferenceSymbolic ref = (ReferenceSymbolic) fieldValue;
                     if (state.isNull(ref)) {
-                        //it is null
+                        //it is resolved by null
                         this.assumeNull.add(newFieldValue);
                     } else {
-                        //it is an alias: records it
-                        this.assumeAliases.add(newFieldValue);
-                        this.assumeAliasesTargets.add(ref);
-
+                        //it is resolved by alias
                         //we assert that ref must be resolved
                         //(I really can't figure out a situation where it
                         //can happen that a symbolic reference stored in
@@ -263,6 +266,9 @@ public final class Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO extends Algo_INVOKEMETA_N
                         if (o == null) {
                             failExecution("Unexpected unresolved symbolic reference contained in a statically initialized object (while trying to transform it into a symbolic object).");
                         }
+                        this.assumeAliases.add(newFieldValue);
+                        this.assumeAliasesTargets.add(o.getOrigin());
+
                         //the object is symbolic, thus it must not be made symbolic
                         //(it already is) nor recursively explored
                     }

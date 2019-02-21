@@ -24,17 +24,17 @@ public abstract class ReferenceSymbolicAtomic extends ReferenceSymbolic implemen
      *        reference (taken from bytecode).
      * @param historyPoint the current {@link HistoryPoint}.
      * @throws InvalidTypeException  if {@code staticType} is not an array or instance
-	 *         reference type.
-	 * @throws InvalidInputException if {@code staticType == null || historyPoint == null}.
+     *         reference type.
+     * @throws InvalidInputException if {@code staticType == null || historyPoint == null}.
      */
     ReferenceSymbolicAtomic(int id, String staticType, HistoryPoint historyPoint) throws InvalidInputException, InvalidTypeException {
         super(staticType, historyPoint);
-    	if (staticType == null) {
+        if (staticType == null) {
             throw new InvalidInputException("Attempted to build a ReferenceSymbolicAtomic with null static type.");
-    	}
-    	if (!isArray(staticType) && !isReference(staticType)) {
-    		throw new InvalidTypeException("Attempted to build a ReferenceSymbolicAtomic with static type " + staticType + " (neither array nor instance reference type).");
-    	}
+        }
+        if (!isArray(staticType) && !isReference(staticType)) {
+            throw new InvalidTypeException("Attempted to build a ReferenceSymbolicAtomic with static type " + staticType + " (neither array nor instance reference type).");
+        }
 
         //calculates toString
         this.toString = "{R" + id + "}";

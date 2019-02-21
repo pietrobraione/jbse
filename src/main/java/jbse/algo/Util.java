@@ -900,7 +900,8 @@ public final class Util {
                 //the class is assumed to be pre-initialized, 
                 //schedules the Klass to become symbolic (if
                 //the corresponding flag is active)
-                if (!createSymbolicKlass && assumeInitialized && this.makePreInitClassesSymbolic) {
+                if (!createSymbolicKlass && assumeInitialized && this.makePreInitClassesSymbolic
+                    && !JBSE_BASE.equals(classFile.getClassName()) /* HACK */) {
                     this.preInitializedClasses.add(classFile);
                 }
             } catch (InvalidIndexException e) {

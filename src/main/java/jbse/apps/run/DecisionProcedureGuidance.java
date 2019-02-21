@@ -40,6 +40,7 @@ import jbse.tree.DecisionAlternative_XSWITCH;
 import jbse.val.Any;
 import jbse.val.Calculator;
 import jbse.val.Expression;
+import jbse.val.KlassPseudoReference;
 import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.PrimitiveSymbolicAtomic;
 import jbse.val.NarrowingConversion;
@@ -49,8 +50,10 @@ import jbse.val.PrimitiveVisitor;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
+import jbse.val.ReferenceSymbolicMemberField;
 import jbse.val.Simplex;
 import jbse.val.Symbolic;
+import jbse.val.SymbolicMember;
 import jbse.val.Term;
 import jbse.val.Value;
 import jbse.val.WideningConversion;
@@ -68,7 +71,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     private final JVM jvm;
     private final HashSet<Object> seen = new HashSet<>();
     private boolean ended;    
-    
+
     /**
      * Builds the {@link DecisionProcedureGuidance}.
      *
@@ -95,30 +98,57 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         this.ended = true;
         stopFastAndImprecise();
     }
-    
+
     @Override
     public void pushAssumption(Clause c) 
     throws InvalidInputException, DecisionException {
-    	if (c instanceof ClauseAssumeExpands) {
-    		final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
-    		markAsSeen(cExp.getReference());
-    	}
-    	super.pushAssumption(c);
+        if (c instanceof ClauseAssumeExpands) {
+            final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
+            //HACK: skip clauses on hash map tables
+            if (toSkip(cExp.getReference())) {
+                //do nothing
+            } else {
+                markAsSeen(cExp.getReference());
+            }
+        }
+        super.pushAssumption(c);
     }
-    
+
+    //HACK
+    private boolean toSkip(ReferenceSymbolic origin) {
+        if (origin instanceof ReferenceSymbolicMemberField) {
+            final ReferenceSymbolicMemberField member = (ReferenceSymbolicMemberField) origin;
+            if ("table".equals(member.getFieldName()) &&
+                  ("java/util/WeakHashMap".equals(member.getFieldClass()) ||
+                   "java/util/HashMap".equals(member.getFieldClass()))) {
+                return true;
+            }
+            final ReferenceSymbolic container = ((ReferenceSymbolicMemberField) origin).getContainer();
+            if (container instanceof KlassPseudoReference) {
+                if ("java/lang/Long$LongCache".equals(((KlassPseudoReference) container).getClassFile().getClassName())) {
+                    return true;
+                }
+            }
+        }
+        if (origin instanceof SymbolicMember) {
+            return toSkip(((SymbolicMember) origin).getContainer());
+        }
+        return false;
+    }
+
     @Override
     protected final Outcome decide_IFX_Nonconcrete(Primitive condition, SortedSet<DecisionAlternative_IFX> result) 
     throws DecisionException {
-    	final Outcome retVal = super.decide_IFX_Nonconcrete(condition, result);
+        final Outcome retVal = super.decide_IFX_Nonconcrete(condition, result);
         if (!this.ended) {
-        	final Iterator<DecisionAlternative_IFX> it = result.iterator();
-        	while (it.hasNext()) {
-        		final DecisionAlternative_IFX da = it.next();
-        		final Primitive valueInConcreteState = this.jvm.eval_IFX(da, condition);
-        		if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-        			it.remove();
-        		}
-        	}
+            final Iterator<DecisionAlternative_IFX> it = result.iterator();
+            while (it.hasNext()) {
+                final DecisionAlternative_IFX da = it.next();
+                final Primitive valueInConcreteState = this.jvm.eval_IFX(da, condition);
+                if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+                    it.remove();
+                }
+            }
         }
         return retVal;
     }
@@ -128,14 +158,14 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     throws DecisionException {
         final Outcome retVal = super.decide_XCMPY_Nonconcrete(val1, val2, result);
         if (!this.ended) {
-        	final Iterator<DecisionAlternative_XCMPY> it = result.iterator();
-        	while (it.hasNext()) {
-        		final DecisionAlternative_XCMPY da = it.next();
-        		final Primitive valueInConcreteState = this.jvm.eval_XCMPY(da, val1, val2);
-        		if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-        			it.remove();
-        		}
-        	}
+            final Iterator<DecisionAlternative_XCMPY> it = result.iterator();
+            while (it.hasNext()) {
+                final DecisionAlternative_XCMPY da = it.next();
+                final Primitive valueInConcreteState = this.jvm.eval_XCMPY(da, val1, val2);
+                if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+                    it.remove();
+                }
+            }
         }
         return retVal;
     }
@@ -145,14 +175,14 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     throws DecisionException {
         final Outcome retVal = super.decide_XSWITCH_Nonconcrete(selector, tab, result);
         if (!this.ended) {
-        	final Iterator<DecisionAlternative_XSWITCH> it = result.iterator();
-        	while (it.hasNext()) {
-        		final DecisionAlternative_XSWITCH da = it.next();
-        		final Primitive valueInConcreteState = this.jvm.eval_XSWITCH(da, selector, tab);
-        		if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-        			it.remove();
-        		}
-        	}
+            final Iterator<DecisionAlternative_XSWITCH> it = result.iterator();
+            while (it.hasNext()) {
+                final DecisionAlternative_XSWITCH da = it.next();
+                final Primitive valueInConcreteState = this.jvm.eval_XSWITCH(da, selector, tab);
+                if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+                    it.remove();
+                }
+            }
         }
         return retVal;
     }
@@ -162,14 +192,14 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     throws DecisionException {
         final Outcome retVal = super.decide_XNEWARRAY_Nonconcrete(countsNonNegative, result);
         if (!this.ended) {
-        	final Iterator<DecisionAlternative_XNEWARRAY> it = result.iterator();
-        	while (it.hasNext()) {
-        		final DecisionAlternative_XNEWARRAY da = it.next();
-        		final Primitive valueInConcreteState = this.jvm.eval_XNEWARRAY(da, countsNonNegative);
-        		if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-        			it.remove();
-        		}
-        	}
+            final Iterator<DecisionAlternative_XNEWARRAY> it = result.iterator();
+            while (it.hasNext()) {
+                final DecisionAlternative_XNEWARRAY da = it.next();
+                final Primitive valueInConcreteState = this.jvm.eval_XNEWARRAY(da, countsNonNegative);
+                if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+                    it.remove();
+                }
+            }
         }
         return retVal;
     }
@@ -179,14 +209,14 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     throws DecisionException {
         final Outcome retVal = super.decide_XASTORE_Nonconcrete(inRange, result);
         if (!this.ended) {
-        	final Iterator<DecisionAlternative_XASTORE> it = result.iterator();
-        	while (it.hasNext()) {
-        		final DecisionAlternative_XASTORE da = it.next();
-        		final Primitive valueInConcreteState = this.jvm.eval_XASTORE(da, inRange);
-        		if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
-        			it.remove();
-        		}
-        	}
+            final Iterator<DecisionAlternative_XASTORE> it = result.iterator();
+            while (it.hasNext()) {
+                final DecisionAlternative_XASTORE da = it.next();
+                final Primitive valueInConcreteState = this.jvm.eval_XASTORE(da, inRange);
+                if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
+                    it.remove();
+                }
+            }
         }
         return retVal;
     }
@@ -257,43 +287,43 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
 
     private void filter(State state, ReferenceSymbolic refToLoad, DecisionAlternative_XYLOAD_GETX_Unresolved dar, Iterator<?> it) 
     throws GuidanceException {
-        if (dar instanceof DecisionAlternative_XYLOAD_GETX_Null && !this.jvm.isNull(refToLoad)) {
+        if (dar instanceof DecisionAlternative_XYLOAD_GETX_Null && (toSkip(refToLoad) /*HACK*/ || !this.jvm.isNull(refToLoad))) {
             it.remove();
         } else if (dar instanceof DecisionAlternative_XYLOAD_GETX_Aliases) {
             final DecisionAlternative_XYLOAD_GETX_Aliases dara = (DecisionAlternative_XYLOAD_GETX_Aliases) dar;
             final ReferenceSymbolic aliasOrigin;
-			try {
-				aliasOrigin = state.getObject(new ReferenceConcrete(dara.getObjectPosition())).getOrigin();
-			} catch (FrozenStateException e) {
-				//this should never happen
-				throw new UnexpectedInternalException(e);
-			}
-            if (!this.jvm.areAlias(refToLoad, aliasOrigin)) {
+            try {
+                aliasOrigin = state.getObject(new ReferenceConcrete(dara.getObjectPosition())).getOrigin();
+            } catch (FrozenStateException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            }
+            if (toSkip(refToLoad) /*HACK*/ || toSkip(aliasOrigin) /*HACK*/ || !this.jvm.areAlias(refToLoad, aliasOrigin)) {
                 it.remove();
             }
         } else if (dar instanceof DecisionAlternative_XYLOAD_GETX_Expands) {
             final DecisionAlternative_XYLOAD_GETX_Expands dare = (DecisionAlternative_XYLOAD_GETX_Expands) dar;
-            if (this.jvm.isNull(refToLoad) || alreadySeen(refToLoad) ||
-               !dare.getClassFileOfTargetObject().getClassName().equals(this.jvm.typeOfObject(refToLoad))) {
+            if (toSkip(refToLoad) /*HACK*/ || this.jvm.isNull(refToLoad) || alreadySeen(refToLoad) ||
+            !dare.getClassFileOfTargetObject().getClassName().equals(this.jvm.typeOfObject(refToLoad))) {
                 it.remove();
             }
         }
     }
-    
+
     private boolean alreadySeen(ReferenceSymbolic m) throws GuidanceException {
         return this.seen.contains(this.jvm.getValue(m));
     }
-    
+
     private void markAsSeen(ReferenceSymbolic m) throws GuidanceException {
         this.seen.add(this.jvm.getValue(m));
     }
-    
+
     @Override
     public void close() throws DecisionException {
-    	super.close();
-    	this.jvm.close();
+        super.close();
+        this.jvm.close();
     }
-    
+
     public static abstract class JVM {
         protected final Calculator calc;
 
@@ -319,7 +349,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             }
             this.calc = calc;
         }
-        
+
         /**
          * Returns the class of an object in the reached concrete state.
          * 
@@ -367,51 +397,51 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
          * @throws GuidanceException if {@code origin} does not refer to an object.
          */
         public abstract Object getValue(Symbolic origin) throws GuidanceException;
-        
+
 
         public Primitive eval_IFX(DecisionAlternative_IFX da, Primitive condition) throws GuidanceException {
-        	try {
-        		final Primitive conditionNot = condition.not();
-        		final Primitive conditionToCheck  = (da.value() ? condition : conditionNot);
-        		return eval(conditionToCheck);
-        	} catch (InvalidTypeException e) {
-        		//this should never happen as arguments have been checked by the caller
-        		throw new UnexpectedInternalException(e);
-        	}
+            try {
+                final Primitive conditionNot = condition.not();
+                final Primitive conditionToCheck  = (da.value() ? condition : conditionNot);
+                return eval(conditionToCheck);
+            } catch (InvalidTypeException e) {
+                //this should never happen as arguments have been checked by the caller
+                throw new UnexpectedInternalException(e);
+            }
         }
-        
+
         public Primitive eval_XCMPY(DecisionAlternative_XCMPY da, Primitive val1, Primitive val2) throws GuidanceException {
-        	try{
-        		final Primitive comparisonGT = val1.gt(val2);
-        		final Primitive comparisonEQ = val1.eq(val2);
-        		final Primitive comparisonLT = val1.lt(val2);
-        		final Primitive conditionToCheck  = 
-        				(da.operator() == Operator.GT ? comparisonGT :
-        				 da.operator() == Operator.EQ ? comparisonEQ :
-        				 comparisonLT);
-        		return eval(conditionToCheck);
-        	} catch (InvalidTypeException | InvalidOperandException e) {
-        		//this should never happen as arguments have been checked by the caller
-        		throw new UnexpectedInternalException(e);
-        	}
+            try{
+                final Primitive comparisonGT = val1.gt(val2);
+                final Primitive comparisonEQ = val1.eq(val2);
+                final Primitive comparisonLT = val1.lt(val2);
+                final Primitive conditionToCheck  = 
+                (da.operator() == Operator.GT ? comparisonGT :
+                    da.operator() == Operator.EQ ? comparisonEQ :
+                        comparisonLT);
+                return eval(conditionToCheck);
+            } catch (InvalidTypeException | InvalidOperandException e) {
+                //this should never happen as arguments have been checked by the caller
+                throw new UnexpectedInternalException(e);
+            }
         }
-        
+
         public Primitive eval_XSWITCH(DecisionAlternative_XSWITCH da, Primitive selector, SwitchTable tab) throws GuidanceException {
-        	try{
-        		final Primitive conditionToCheck = (da.isDefault() ?
-        											tab.getDefaultClause(selector) :
-        											selector.eq(this.calc.valInt(da.value())));
-        		return eval(conditionToCheck);
-        	} catch (InvalidOperandException | InvalidTypeException e) {
-        		//this should never happen as arguments have been checked by the caller
-        		throw new UnexpectedInternalException(e);
-        	}
+            try{
+                final Primitive conditionToCheck = (da.isDefault() ?
+                                                    tab.getDefaultClause(selector) :
+                                                    selector.eq(this.calc.valInt(da.value())));
+                return eval(conditionToCheck);
+            } catch (InvalidOperandException | InvalidTypeException e) {
+                //this should never happen as arguments have been checked by the caller
+                throw new UnexpectedInternalException(e);
+            }
         }
-        
+
         public Primitive eval_XNEWARRAY(DecisionAlternative_XNEWARRAY da, Primitive countsNonNegative) throws GuidanceException {
-			try {
-	            final Primitive conditionToCheck = (da.ok() ? countsNonNegative : countsNonNegative.not());
-	        	return eval(conditionToCheck);
+            try {
+                final Primitive conditionToCheck = (da.ok() ? countsNonNegative : countsNonNegative.not());
+                return eval(conditionToCheck);
             } catch (InvalidTypeException e) {
                 //this should never happen as arguments have been checked by the caller
                 throw new UnexpectedInternalException(e);
@@ -419,9 +449,9 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         }
 
         public Primitive eval_XASTORE(DecisionAlternative_XASTORE da, Primitive inRange) throws GuidanceException {
-			try {
-	            final Primitive conditionToCheck = (da.isInRange() ? inRange : inRange.not());
-	        	return eval(conditionToCheck);
+            try {
+                final Primitive conditionToCheck = (da.isInRange() ? inRange : inRange.not());
+                return eval(conditionToCheck);
             } catch (InvalidTypeException e) {
                 //this should never happen as arguments have been checked by the caller
                 throw new UnexpectedInternalException(e);
@@ -430,9 +460,9 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
 
         public Primitive eval_XALOAD(DecisionAlternative_XALOAD da) throws GuidanceException {
             final Expression conditionToCheck = da.getArrayAccessExpressionSimplified();
-        	return (conditionToCheck == null ? this.calc.valBoolean(true) : eval(conditionToCheck));
+            return (conditionToCheck == null ? this.calc.valBoolean(true) : eval(conditionToCheck));
         }
-        
+
         /**
          * Evaluates a {@link Primitive} in the reached concrete state.
          * 
@@ -544,15 +574,15 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                 //through operand stack, see JVM specification v8, section 2.11.1, table 2.11.1-B
             }
         }
-        
+
         protected abstract void step(State state) throws GuidanceException;
 
         protected void close() { }
     }
-    
+
     public final void step(State state) throws GuidanceException {
-    	if (state.phase() == Phase.POST_INITIAL && !this.ended) {
-    		this.jvm.step(state);
-    	}
+        if (state.phase() == Phase.POST_INITIAL && !this.ended) {
+            this.jvm.step(state);
+        }
     }
 }

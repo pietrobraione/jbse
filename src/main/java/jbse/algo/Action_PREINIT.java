@@ -145,6 +145,8 @@ public final class Action_PREINIT {
         loadCreateEssentialClasses(state, ctx);
 
         //now starts pushing frames (in inverse order of execution)
+        //first the root class
+        initializeRootClass(state, ctx);
 
         //this part of the initialization mirrors stuff in sun.launcher.LauncherHelper
         //pushes frames to initialize classes for dynamic classloading
@@ -286,11 +288,29 @@ public final class Action_PREINIT {
 
             //loads application classes
             classHierarchy.loadCreateClass(CLASSLOADER_APP, JBSE_BASE, true);
+            classHierarchy.loadCreateClass(CLASSLOADER_APP, ctx.rootMethodSignature.getClassName(), true);
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
         WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException e) {
             throw new ClasspathException(e);
         } catch (InvalidInputException | PleaseLoadClassException e) {
             //this should never happen
+            failExecution(e);
+        }
+    }
+    
+    private void initializeRootClass(State state, ExecutionContext ctx) 
+    throws DecisionException, ClasspathException, InitializationException, ContradictionException {
+        try {
+            final ClassFile classFile = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_APP, ctx.rootMethodSignature.getClassName()); 
+            ensureClassInitialized(state, classFile, ctx, this.doNotInitialize);
+        } catch (InterruptException e) {
+            //nothing to do: fall through
+        } catch (HeapMemoryExhaustedException e) {
+            throw new InitializationException(e);
+        } catch (InvalidInputException | ClassFileNotFoundException | ClassFileIllFormedException |
+                 BadClassFileVersionException | WrongClassNameException | IncompatibleClassFileException | 
+                 ClassFileNotAccessibleException e) {
+            //this should not happen at this point
             failExecution(e);
         }
     }
@@ -307,8 +327,8 @@ public final class Action_PREINIT {
         } catch (HeapMemoryExhaustedException e) {
             throw new InitializationException(e);
         } catch (InvalidInputException | ClassFileNotFoundException | ClassFileIllFormedException | 
-        BadClassFileVersionException | WrongClassNameException | IncompatibleClassFileException | 
-        ClassFileNotAccessibleException e) {
+                 BadClassFileVersionException | WrongClassNameException | IncompatibleClassFileException | 
+                 ClassFileNotAccessibleException e) {
             //this should not happen at this point
             failExecution(e);
         }

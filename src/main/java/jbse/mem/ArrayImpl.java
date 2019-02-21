@@ -774,6 +774,8 @@ public final class ArrayImpl extends ObjektImpl implements Array {
     		int srcPosInt = ((Integer) ((Simplex) srcPos).getActualValue()).intValue();
     		int destPosInt = ((Integer) ((Simplex) destPos).getActualValue()).intValue();
     		int lengthInt = ((Integer) ((Simplex) length).getActualValue()).intValue();
+    		final ArrayList<Integer> destPosEntries = new ArrayList<>(); //buffer to avoid concurrent modification when this == srcImpl
+                final ArrayList<AccessOutcomeInImpl> destEntries = new ArrayList<>(); //buffer to avoid concurrent modification when this == srcImpl
     		for (int ofst = 0; ofst < lengthInt; ++ofst) {
     			final AccessOutcomeIn srcEntry = srcImpl.entries.get(srcPosInt + ofst);
     			final AccessOutcomeInImpl destEntry;
@@ -789,7 +791,11 @@ public final class ArrayImpl extends ObjektImpl implements Array {
     				//TODO find a way to perform assignment compatibility check
     				destEntry = new AccessOutcomeInInitialArrayImpl(srcEntry.getAccessCondition(), initialArray, offset.sub(destPos).add(srcPos));
     			}
-    			this.entries.set(destPosInt + ofst, destEntry);
+    			destPosEntries.add(destPosInt + ofst);
+    			destEntries.add(destEntry);
+    		}
+    		for (int i = 0; i < destPosEntries.size(); ++i) {
+                    this.entries.set(destPosEntries.get(i), destEntries.get(i));
     		}
     		return EMPTY_ITERATOR;
     	} else {
@@ -804,6 +810,7 @@ public final class ArrayImpl extends ObjektImpl implements Array {
 
     		//adds new entries corresponding to the source array entries
     		final Primitive srcIndex = INDEX.sub(destPos).add(srcPos);
+    		final ArrayList<AccessOutcomeInImpl> destEntries = new ArrayList<>(); //buffer to avoid concurrent modification when this == srcImpl
     		for (AccessOutcomeIn srcEntry : srcImpl.entries) {
     			final Expression accessCondition = (Expression) this.indexInRange.and(srcEntry.inRange(srcIndex)).and(indexInDestRange);
     			final AccessOutcomeInImpl destEntry;
@@ -819,7 +826,10 @@ public final class ArrayImpl extends ObjektImpl implements Array {
     				//TODO find a way to perform assignment compatibility check
     				destEntry = new AccessOutcomeInInitialArrayImpl(accessCondition, initialArray, offset.sub(destPos).add(srcPos));
     			}
-    			this.entries.add(destEntry);
+    			destEntries.add(destEntry);
+    		}
+    		for (AccessOutcomeInImpl destEntry : destEntries) {
+                    this.entries.add(destEntry);
     		}
 
     		//returns the iterator

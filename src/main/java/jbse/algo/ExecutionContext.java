@@ -538,11 +538,11 @@ public final class ExecutionContext {
         this.rootMethodSignature = rootMethodSignature;
         this.decisionProcedure = decisionProcedure;
         try {
-			this.symbolFactory = new SymbolFactory(this.initialState == null ? this.calc : this.initialState.getCalculator());
-		} catch (InvalidInputException e) {
-			//this should never happen
-			throw new UnexpectedInternalException(e);
-		}
+            this.symbolFactory = new SymbolFactory(this.initialState == null ? this.calc : this.initialState.getCalculator());
+        } catch (InvalidInputException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
         this.stateTree = new StateTree(stateIdentificationMode, breadthMode);
         this.triggerManager = new TriggerManager(rulesTrigger.clone()); //safety copy
 

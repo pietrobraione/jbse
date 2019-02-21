@@ -546,7 +546,7 @@ public class Runner {
                 }
                 if (this.actions.atStepPre()) { return; }
                 try {
-                	final BranchPoint bp = this.engine.step();
+                    final BranchPoint bp = this.engine.step();
                     if (bp != null) {
                         if (!currentStateIsInRunSubregion()) { break; }
                         if (this.actions.atBranch(bp)) { return; }
