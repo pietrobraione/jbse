@@ -10,6 +10,7 @@ import jbse.bc.ClassFileFactoryJavassist;
 import jbse.bc.Signature;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.exc.CannotBuildEngineException;
 import jbse.jvm.exc.InitializationException;
@@ -115,6 +116,14 @@ public class EngineBuilder {
         }
         for (String[] rule : parameters.getUninterpreted()) {
             ctx.addUninterpreted(new Signature(rule[0], rule[1], rule[2]));
+        }
+        
+        for (String[] rule : parameters.getUninterpretedPattern()) {
+            try {
+				ctx.addUninterpretedPattern(rule[0], rule[1], rule[2]);
+			} catch (InvalidInputException e) {
+                // TODO manage the situation
+			}
         }
     }
 

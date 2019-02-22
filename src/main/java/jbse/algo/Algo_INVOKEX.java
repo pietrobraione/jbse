@@ -118,7 +118,7 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
             }
 
             //otherwise, concludes the execution of the bytecode algorithm
-            if (this.isSignaturePolymorphic) {
+            if (this.isMethodImplSignaturePolymorphic) {
                 state.getCurrentFrame().patchCode(OP_INVOKEHANDLE);
                 exitFromAlgorithm();
             } else {

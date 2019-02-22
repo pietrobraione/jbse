@@ -71,7 +71,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected ClassFile methodResolvedClass; //set by cooking methods (resolveMethod)
     protected ClassFile methodImplClass; //set by cooking methods (findImpl / findOverridingImpl)
     protected Signature methodImplSignature; //set by cooking methods (findImpl / findOverridingImpl)
-    protected boolean isSignaturePolymorphic; //set by cooking methods (findImpl / findOverridingImpl)
+    protected boolean isMethodImplSignaturePolymorphic; //set by cooking methods (findImpl / findOverridingImpl)
+    protected boolean isMethodImplNative; //set by cooking methods (findImpl / findOverridingImpl)
 
     @Override
     protected final Supplier<BytecodeData_1KME> bytecodeData() {
@@ -238,7 +239,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         if (this.methodResolvedClass == null) {
             this.methodImplClass = null;
             this.methodImplSignature = this.data.signature();
-            this.isSignaturePolymorphic = false;
+            this.isMethodImplSignaturePolymorphic = false;
             return;
         }
         
@@ -263,18 +264,20 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 new Signature(this.methodImplClass.getClassName(), 
                               this.data.signature().getDescriptor(), 
                               this.data.signature().getName());
-            this.isSignaturePolymorphic = this.methodImplClass.isMethodSignaturePolymorphic(this.methodImplSignature);
+            this.isMethodImplSignaturePolymorphic = this.methodImplClass.isMethodSignaturePolymorphic(this.methodImplSignature);
+            this.isMethodImplNative = this.methodImplClass.isMethodNative(this.methodImplSignature);
         } catch (MethodNotFoundException e) {
             this.methodImplClass = null;
             this.methodImplSignature = null;
-            this.isSignaturePolymorphic = false;
+            this.isMethodImplSignaturePolymorphic = false;
+            this.isMethodImplNative = false;
         }
     }
 
     protected final void findOverridingImpl(State state)
     throws BaseUnsupportedException, MetaUnsupportedException, NotYetImplementedException, InterruptException, 
     ClasspathException, ThreadStackEmptyException, InvalidInputException {
-        if (this.methodImplSignature == null || this.isSignaturePolymorphic) {
+        if (this.methodImplSignature == null || this.isMethodImplSignaturePolymorphic) {
             return; //no implementation to override, or method is signature polymorphic (cannot be overridden!)
         }
         if (this.ctx.isMethodBaseLevelOverridden(this.methodImplSignature)) {
@@ -286,7 +289,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 checkOverridingMethodFits(state, classFileMethodOverriding, methodSignatureOverriding);
                 this.methodImplClass = classFileMethodOverriding;
                 this.methodImplSignature = methodSignatureOverriding;
-                this.isSignaturePolymorphic = this.methodImplClass.isMethodSignaturePolymorphic(this.methodImplSignature);
+                this.isMethodImplSignaturePolymorphic = this.methodImplClass.isMethodSignaturePolymorphic(this.methodImplSignature);
                 return;
             } catch (PleaseLoadClassException e) {
                 invokeClassLoaderLoadClass(state, e);
@@ -300,7 +303,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             try {
                 if (this.ctx.dispatcherMeta.isMeta(this.methodImplClass, this.methodImplSignature)) {
                     final Algo_INVOKEMETA<?, ?, ?, ?> algo = this.ctx.dispatcherMeta.select(this.methodImplSignature);
-                    algo.setFeatures(this.isInterface, this.isSpecial, this.isStatic);
+                    algo.setFeatures(this.isInterface, this.isSpecial, this.isStatic, this.isMethodImplNative);
                     continueWith(algo);
                 }
             } catch (MethodNotFoundException e) {

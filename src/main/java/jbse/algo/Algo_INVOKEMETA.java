@@ -22,11 +22,13 @@ extends Algorithm<BytecodeData_1KME, R, DE, RE, UP> {
     protected boolean isInterface; //set by setter (called by Algo_INVOKEX_Abstract)
     protected boolean isSpecial; //set by setter (called by Algo_INVOKEX_Abstract)
     protected boolean isStatic; //set by setter (called by Algo_INVOKEX_Abstract)
+    protected boolean isOverriddenMethodNative; //set by setter (called by Algo_INVOKEX_Abstract)
 
-    public final void setFeatures(boolean isInterface, boolean isSpecial, boolean isStatic) {
+    public final void setFeatures(boolean isInterface, boolean isSpecial, boolean isStatic, boolean isOverriddenMethodNative) {
         this.isInterface = isInterface;
         this.isSpecial = isSpecial;
         this.isStatic = isStatic;
+        this.isOverriddenMethodNative = isOverriddenMethodNative;
     }
 
     @Override

@@ -214,6 +214,9 @@ public final class EngineParameters implements Cloneable {
     /** The methods to be handled as uninterpreted functions. */
     private ArrayList<String[]> uninterpreted = new ArrayList<>();
 
+    /** The methods to be handled as uninterpreted functions (patterns). */
+    private ArrayList<String[]> uninterpretedPattern = new ArrayList<>();
+
     /**  
      * The signature of the method to be executed; overridden by {@code initialState}'s 
      * current method when {@code initialState != null}.
@@ -849,6 +852,26 @@ public final class EngineParameters implements Cloneable {
         this.uninterpreted.add(new String[] { methodClassName, methodDescriptor, methodName });
     }
 
+
+    /**
+     * Specifies that a set of methods must be treated as an uninterpreted pure
+     * function, rather than executed. In the case all the parameters are
+     * constant, the methods are executed metacircularly.
+     * 
+     * @param patternMethodClassName a regular expression pattern for the names 
+     *        of the classes containing the methods.
+     * @param patternMethodDescriptor a regular expression pattern for the descriptors
+     *        of the methods.
+     * @param patternMethodName a regular expression pattern for the names of the methods.
+     * @throws NullPointerException if any of the above parameters is {@code null}.
+     */
+    public void addUninterpretedPattern(String patternMethodClassName, String patternMethodDescriptor, String patternMethodName) {
+        if (patternMethodClassName == null || patternMethodDescriptor == null || patternMethodName == null) {
+            throw new NullPointerException();
+        }
+        this.uninterpretedPattern.add(new String[] { patternMethodClassName, patternMethodDescriptor, patternMethodName });
+    }
+
     /**
      * Clears the methods that must be treated as
      * uninterpreted pure functions.
@@ -862,12 +885,15 @@ public final class EngineParameters implements Cloneable {
      * uninterpreted pure functions.
      * 
      * @return A {@link List}{@code <}{@link String}{@code []>}, 
-     *         where each array is a 4-ple (method class name, 
-     *         method parameters, method name, uninterpreted 
-     *         function name).
+     *         where each array is a triple (method class name, 
+     *         method parameters, method name).
      */
     public List<String[]> getUninterpreted() {
         return new ArrayList<>(this.uninterpreted);
+    }
+
+    public List<String[]> getUninterpretedPattern() {
+        return new ArrayList<>(this.uninterpretedPattern);
     }
 
     /**

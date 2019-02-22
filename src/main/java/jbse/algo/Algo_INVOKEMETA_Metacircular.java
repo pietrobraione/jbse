@@ -1,6 +1,7 @@
 package jbse.algo;
 
 import static java.lang.System.arraycopy;
+import static jbse.algo.Util.continueWithBaseLevelImpl;
 import static jbse.algo.Util.ensureClassInitialized;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
@@ -27,7 +28,6 @@ import static jbse.common.Type.splitReturnValueDescriptor;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.function.Supplier;
 
 import jbse.algo.exc.CannotAccessImplementationReflectively;
@@ -48,6 +48,7 @@ import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.State;
+import jbse.mem.State.Phase;
 import jbse.mem.exc.CannotAssumeSymbolicObjectException;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.FrozenStateException;
@@ -116,9 +117,12 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
-            final Value[] args = this.data.operands();
-
+        	if (state.phase() == Phase.PRE_INITIAL && !this.isOverriddenMethodNative) {
+        		continueWithBaseLevelImpl(state, this.isInterface, this.isSpecial, this.isStatic);
+        	}            
+        	
             //checks whether the parameters are all constant
+        	final Value[] args = this.data.operands();
             boolean allConstant = true;
             for (int i = 0; i < args.length; ++i) {
                 if ((args[i] instanceof Primitive) && !(args[i] instanceof Simplex)) {
@@ -169,6 +173,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
             //reflects the arguments
             final String[] argsType = splitParametersDescriptors(this.data.signature().getDescriptor());
             final Object[] argsRefl = new Object[args.length];
+            final Class<?> methodClass = Class.forName(binaryClassName(this.data.signature().getClassName()));
             final Class<?>[] argsClass = new Class[args.length];
             for (int i = 0; i < args.length; ++i) {
                 if (args[i] instanceof Simplex) {
@@ -180,16 +185,19 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
                         failExecution("Unexpected argument in metacircular invocation: " + args[i] + ".");
                     }
                 }
-                argsClass[i] = getJavaClass(argsType[i]);
+                if (!this.isStatic && i == 0) {
+                	argsClass[i] = methodClass;
+                } else {
+                	argsClass[i] = getJavaClass(argsType[i]);
+                }
             }
             
             //prepares the method and the args for the metacircular method invocation
-            final Class<?> c = Class.forName(binaryClassName(this.data.signature().getClassName()));
-            final Method m = c.getDeclaredMethod(this.data.signature().getName(), argsClass);
+            final Method m = methodClass.getDeclaredMethod(this.data.signature().getName(), argsClass);
             m.setAccessible(true);
             final Object argThis;
             final Object[] argsOther;
-            if (Modifier.isStatic(m.getModifiers())) {
+            if (this.isStatic) {
                 argThis = null;
                 argsOther = argsRefl;
             } else {

@@ -52,7 +52,7 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
         this.shouldFindImplementation = false;
         this.methodImplClass = methodImplClass;
         this.methodImplSignature = methodImplSignature;
-        this.isSignaturePolymorphic = false;
+        this.isMethodImplSignaturePolymorphic = false;
     }
 
     public void shouldFindImplementation() {
