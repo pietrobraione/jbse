@@ -55,6 +55,7 @@ import jbse.val.Reference;
 import jbse.val.ReferenceArrayImmaterial;
 import jbse.val.ReferenceConcrete;
 import jbse.val.Simplex;
+import jbse.val.Term;
 import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
@@ -120,14 +121,17 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             boolean branchingDecision = false;
             final LinkedList<Reference> refToArraysToProcess = new LinkedList<>();
             final LinkedList<Expression> accessConditions = new LinkedList<>();
+            final LinkedList<Term> indicesFormal = new LinkedList<>();
             final LinkedList<Primitive> offsets = new LinkedList<>();
             refToArraysToProcess.add(this.myObjectRef);
             accessConditions.add(null);
+            indicesFormal.add(null);
             offsets.add(state.getCalculator().valInt(0));
             while (!refToArraysToProcess.isEmpty()) {
                 final Reference refToArrayToProcess = refToArraysToProcess.remove();
-                final Primitive arrayAccessCondition = accessConditions.remove();
-                final Primitive arrayOffset = offsets.remove();
+                final Primitive referringArrayAccessCondition = accessConditions.remove();
+                final Term referringArrayIndexFormal = indicesFormal.remove();
+                final Primitive referringArrayOffset = offsets.remove();
                 Array arrayToProcess = null; //to keep the compiler happy
                 try {
                     arrayToProcess = (Array) state.getObject(refToArrayToProcess);
@@ -137,12 +141,11 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 }
                 if (arrayToProcess == null) {
                     //this should never happen
-                    failExecution("an initial array that backs another array is null");
+                    failExecution("An initial array that backs another array is null.");
                 }
-                Primitive indexPlusOffset = null;  //to keep the compiler happy
                 Collection<Array.AccessOutcome> entries = null; //to keep the compiler happy
                 try {
-                	indexPlusOffset = this.index.to(INT).add(arrayOffset); //TODO while here there is conversion to INT and in Algo_XALOAD and Algo_SUN_UNSAFE_GETINTVOLATILE_Array there is not???
+                	final Primitive indexPlusOffset = this.index.add(referringArrayOffset);
                     entries = arrayToProcess.get(indexPlusOffset);
                 } catch (InvalidOperandException | InvalidTypeException e) {
                     //this should never happen
@@ -153,6 +156,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                         final Array.AccessOutcomeInInitialArray eCast = (Array.AccessOutcomeInInitialArray) e;
                         refToArraysToProcess.add(eCast.getInitialArray());
                         accessConditions.add(e.getAccessCondition());
+                        indicesFormal.add(arrayToProcess.getIndex());
                         offsets.add(eCast.getOffset());
                     } else { 
                         //puts in val the value of the current entry, or a fresh symbol, 
@@ -163,8 +167,9 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                             val = ((Array.AccessOutcomeInValue) e).getValue();
                             if (val == null) {
                                 try {
-                                    val = (Value) state.createSymbolMemberArray(arrayToProcess.getType().getMemberClass().getClassName(), 
-                                                             arrayToProcess.getOrigin(), this.index.add(arrayOffset));
+                                    final ClassFile memberClass = arrayToProcess.getType().getMemberClass();
+                                    final String memberType = memberClass.getInternalTypeName(); 
+                                    val = (Value) state.createSymbolMemberArray(memberType, arrayToProcess.getOrigin(), this.index.add(referringArrayOffset));
                                 } catch (InvalidOperandException | InvalidTypeException exc) {
                                     //this should never happen
                                     failExecution(exc);
@@ -177,10 +182,17 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
 
                         Outcome o = null; //to keep the compiler happy
                         try {
-                            final Expression accessCondition = (arrayAccessCondition == null ? 
-                            		                            e.getAccessCondition() : 
-                            		                            (Expression) arrayAccessCondition.and(e.getAccessCondition()));
-                            o = this.ctx.decisionProcedure.resolve_XALOAD(state, accessCondition, arrayToProcess.getIndex(), indexPlusOffset, val, fresh, refToArrayToProcess, result);
+                        	final Expression accessCondition;
+                        	final Term indexFormal;
+                        	if (referringArrayAccessCondition == null) {
+                        		accessCondition = e.getAccessCondition();
+                        		indexFormal = arrayToProcess.getIndex();
+                        	} else {
+                        		final Primitive entryAccessConditionShifted = e.getAccessCondition().replace(arrayToProcess.getIndex(), referringArrayIndexFormal.add(referringArrayOffset));
+                        		accessCondition = (Expression) referringArrayAccessCondition.and(entryAccessConditionShifted);
+                        		indexFormal = referringArrayIndexFormal;
+                        	}
+                            o = this.ctx.decisionProcedure.resolve_XALOAD(state, accessCondition, indexFormal, this.index, val, fresh, refToArrayToProcess, result);
                         //TODO the next catch blocks should disappear, see comments on removing exceptions in jbse.dec.DecisionProcedureAlgorithms.doResolveReference
                         } catch (ClassFileNotFoundException exc) {
                             throwNew(state, CLASS_NOT_FOUND_EXCEPTION);

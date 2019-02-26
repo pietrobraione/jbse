@@ -154,7 +154,7 @@ StrategyUpdate_XALOAD> {
                 }
                 if (arrayToProcess == null) {
                     //this should never happen
-                    failExecution("an initial array that backs another array is null");
+                    failExecution("An initial array that backs another array is null.");
                 }
                 Collection<Array.AccessOutcome> entries = null; //to keep the compiler happy
                 try {
