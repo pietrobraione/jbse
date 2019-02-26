@@ -888,7 +888,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
     throws DecisionException {
         try {
             final boolean shouldRefine;
-            final Expression accessExpressionSpecialized = (Expression) accessExpression.doReplace(indexFormal, indexActual);
+	        final Expression accessExpressionSpecialized = (Expression) accessExpression.replace(indexFormal, indexActual);
             if (isSat(accessExpressionSpecialized)) {
                 shouldRefine = fresh; //a fresh value to load requires refinement of the source array
                 final Primitive accessExpressionSimplified = deleteRedundantConjuncts(accessExpressionSpecialized);
@@ -992,7 +992,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
     IncompatibleClassFileException, ClassFileNotAccessibleException {
         try {
             final boolean accessConcrete = (accessExpression == null);
-            final Expression accessExpressionSpecialized = (accessExpression == null ? null : (Expression) accessExpression.doReplace(indexFormal, indexActual));
+	        final Expression accessExpressionSpecialized = (accessExpression == null ? null : (Expression) accessExpression.replace(indexFormal, indexActual));
             final boolean shouldRefine;
             final boolean noReferenceExpansion;
             if (accessConcrete || isSat(accessExpressionSpecialized)) {

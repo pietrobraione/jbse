@@ -120,6 +120,8 @@ import jbse.val.Symbolic;
 import jbse.val.SymbolicLocalVariable;
 import jbse.val.SymbolicMemberArray;
 import jbse.val.SymbolicMemberField;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * {@link DecisionProcedureGuidance} that uses the installed JVM accessed via JDI to 
@@ -298,9 +300,9 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                 final String jdiMethDescr = jdiMeth.signature();
                 final String jdiMethName = jdiMeth.name();
                 if (this.startMethodClassName.equals(jdiMethClassName) &&
-                this.startMethodDescriptor.equals(jdiMethDescr) &&
-                this.startMethodName.equals(jdiMethName)) {
-                    this.intoMethodRunnPar = false;
+                	this.startMethodDescriptor.equals(jdiMethDescr) &&
+                	this.startMethodName.equals(jdiMethName)) {
+                	this.intoMethodRunnPar = false;
                 }
             }
             if (event instanceof MethodEntryEvent) {
@@ -315,9 +317,9 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                     this.intoMethodRunnPar = true;
                 }
                 if (this.stopMethodClassName.equals(jdiMethClassName) &&
-                this.stopMethodDescriptor.equals(jdiMethDescr) &&
-                this.stopMethodName.equals(jdiMethName) && 
-                this.intoMethodRunnPar) {
+                    this.stopMethodDescriptor.equals(jdiMethDescr) &&
+                    this.stopMethodName.equals(jdiMethName) && 
+                    this.intoMethodRunnPar) {
                     ++this.hitCounter;
                     if (this.hitCounter == this.numberOfHits) {
                         this.methodEntryEvent = (MethodEntryEvent) event;
@@ -383,7 +385,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             final ObjectReference objectFirst = (ObjectReference) getJDIValue(first);
             final ObjectReference objectSecond = (ObjectReference) getJDIValue(second);
             return ((objectFirst == null && objectSecond == null) || 
-            (objectFirst != null && objectSecond != null && objectFirst.equals(objectSecond)));
+                    (objectFirst != null && objectSecond != null && objectFirst.equals(objectSecond)));
         }
 
         @Override
@@ -594,7 +596,13 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                     //no index: falls back on accepting all the DecisionAlternative_XALOAD_In
                     return this.calc.valBoolean(da instanceof DecisionAlternative_XALOAD_In);
                 } else {
-                    final Primitive accessExpressionOnConcreteIndex = da.getArrayAccessExpression().doReplace(da.getIndexFormal(), this.xaloadIndex);
+                    final Primitive accessExpressionOnConcreteIndex;
+					try {
+						accessExpressionOnConcreteIndex = da.getArrayAccessExpression().replace(da.getIndexFormal(), this.xaloadIndex);
+					} catch (InvalidOperandException | InvalidTypeException e) {
+						//this should never happen
+						throw new UnexpectedInternalException(e);
+					}
                     if (accessExpressionOnConcreteIndex instanceof Simplex) {
                         return accessExpressionOnConcreteIndex;
                     } else {
