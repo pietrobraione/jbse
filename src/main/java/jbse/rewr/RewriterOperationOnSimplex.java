@@ -212,6 +212,7 @@ public class RewriterOperationOnSimplex extends Rewriter {
                 if (firstOpExpression.getOperator() == Operator.DIV && firstOpExpression.getSecondOperand() instanceof Simplex) {
                 	try {
 						setResult(firstOpExpression.getFirstOperand().div(firstOpExpression.getSecondOperand().mul(secondOp)));
+						return;
 					} catch (InvalidOperandException | InvalidTypeException e) {
 		                //this should never happen
 		                throw new UnexpectedInternalException(e);
