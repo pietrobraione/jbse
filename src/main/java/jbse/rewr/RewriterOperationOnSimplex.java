@@ -204,8 +204,23 @@ public class RewriterOperationOnSimplex extends Rewriter {
                 throw new UnexpectedInternalException(e);
             }
         }
+        
+        //5- (x / n1) / n2 -> x / (n1 * n2)
+        if (x.getOperator() == Operator.DIV && secondOp instanceof Simplex) {
+        	if (firstOp instanceof Expression) {
+        		final Expression firstOpExpression = (Expression) x.getFirstOperand();
+                if (firstOpExpression.getOperator() == Operator.DIV && firstOpExpression.getSecondOperand() instanceof Simplex) {
+                	try {
+						setResult(firstOpExpression.getFirstOperand().div(firstOpExpression.getSecondOperand().mul(secondOp)));
+					} catch (InvalidOperandException | InvalidTypeException e) {
+		                //this should never happen
+		                throw new UnexpectedInternalException(e);
+					}
+                }
+        	}
+        }
 
-        //5- none of the above cases
+        //6- none of the above cases
         //setResult(x);
         super.rewriteExpression(x);
     }
