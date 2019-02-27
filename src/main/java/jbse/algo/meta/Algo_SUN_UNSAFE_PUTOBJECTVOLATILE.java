@@ -49,10 +49,7 @@ public final class Algo_SUN_UNSAFE_PUTOBJECTVOLATILE extends Algo_INVOKEMETA_Non
         if (this.toModify == null) {
             throw new UnexpectedInternalException("Unexpected unresolved symbolic reference on the operand stack while invoking sun.misc.Unsafe.putObjectVolatile.");
         }
-        if (this.toModify instanceof Array) {
-            continueWith(this.algoArray);
-        }
-
+        
         //gets and checks the offset
         final Primitive ofstPrimitive = (Primitive) this.data.operand(2);
         if (ofstPrimitive instanceof Simplex) {
@@ -61,6 +58,10 @@ public final class Algo_SUN_UNSAFE_PUTOBJECTVOLATILE extends Algo_INVOKEMETA_Non
             throw new SymbolicValueNotAllowedException("The offset parameter to sun.misc.Unsafe.putObjectVolatile cannot be a symbolic value");
         }
         
+        if (this.toModify instanceof Array) {
+            continueWith(this.algoArray);
+        }
+
         //gets the reference to be copied
         this.val = (Reference) this.data.operand(3);
     }

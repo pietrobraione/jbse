@@ -76,7 +76,7 @@ StrategyRefine<DecisionAlternative_XALOAD>,
 StrategyUpdate<DecisionAlternative_XALOAD>> {
 
     private Reference myObjectRef; //set by cooker
-    private Primitive index; //set by cooker
+    private Simplex index; //set by cooker
 
     @Override
     protected Supplier<Integer> numOperands() {
@@ -88,8 +88,8 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
         return (state) -> {
             try {
                 this.myObjectRef = (Reference) this.data.operand(1);
-                this.index = (Simplex) this.data.operand(2);
-            } catch (ClassCastException e) {
+                this.index = (Simplex) ((Simplex) this.data.operand(2)).narrow(INT);
+            } catch (ClassCastException | InvalidTypeException e) {
                 //this should never happen now
                 failExecution(e);
             }

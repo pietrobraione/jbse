@@ -13,7 +13,6 @@ import jbse.algo.BytecodeCooker;
 import jbse.algo.StrategyDecide;
 import jbse.algo.StrategyRefine;
 import jbse.algo.StrategyUpdate;
-import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
@@ -63,9 +62,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
             }
             try {
                 this.index = (Simplex) ((Simplex) this.data.operand(2)).narrow(INT);
-            } catch (ClassCastException e) {
-                throw new SymbolicValueNotAllowedException("The offset parameter to sun.misc.Unsafe.putObjectVolatile cannot be a symbolic value");
-            } catch (InvalidTypeException e) {
+            } catch (ClassCastException | InvalidTypeException e) {
                 throwVerifyError(state);
                 exitFromAlgorithm();
             }

@@ -67,11 +67,11 @@ public final class Algo_SUN_UNSAFE_GETOBJECTVOLATILE extends Algo_INVOKEMETA_Non
             } else {
                 throw new SymbolicValueNotAllowedException("The offset parameter to sun.misc.Unsafe.getObjectVolatile cannot be a symbolic value.");
             }
-
+            
             if (obj instanceof Array) {
                 continueWith(this.algoArray);
             }
-            
+
             //reads the value
             if (obj.hasSlot(ofst)) {
                 this.read = obj.getFieldValue(ofst);

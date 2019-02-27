@@ -158,26 +158,26 @@ public enum Operator {
 
 	public static void typeCheck(Operator operator, char operandType) throws InvalidTypeException {
         if (operandType == Type.UNKNOWN || Type.isReference(operandType)) {
-        	throw new InvalidTypeException("operand has a nonprimitive type " + operandType);
+        	throw new InvalidTypeException("Operand has a nonprimitive type " + operandType + ".");
         } 
         //arithmetic negation must have a primitive operand
         //(see JVM spec 2nd ed. sec. 3.11.1 tab 3.2, and corresponding bytecodes specification)        	
         if (operator == Operator.NEG && !Type.isPrimitiveOpStack(operandType)) {
-        	throw new InvalidTypeException("ill-typed arithmetic negation; operand has type " + operandType);
+        	throw new InvalidTypeException("Ill-typed arithmetic negation; operand has type " + operandType + ".");
         }
         //for logical operations we liberally accept every integral type operand
         if (operator == Operator.NOT && !Type.isPrimitiveIntegral(operandType)) {
-        	throw new InvalidTypeException("ill-typed logical negation; operand has type " + operandType);
+        	throw new InvalidTypeException("Ill-typed logical negation; operand has type " + operandType + ".");
         }
 	}
 	
 	public static void typeCheck(Operator operation, char firstOperandType, char secondOperandType) 
 	throws InvalidTypeException {
         if (firstOperandType == Type.UNKNOWN || Type.isReference(firstOperandType)) {
-        	throw new InvalidTypeException("first operand has a nonprimitive type " + firstOperandType);
+        	throw new InvalidTypeException("First operand has a nonprimitive type " + firstOperandType + ".");
         }
         if (secondOperandType == Type.UNKNOWN || Type.isReference(secondOperandType)) {
-        	throw new InvalidTypeException("second operand has a nonprimitive type " + secondOperandType);
+        	throw new InvalidTypeException("Second operand has a nonprimitive type " + secondOperandType + ".");
         } 
         //add, sub, mul, div, rem operands must have same type and must be primitive 
         //(see JVM spec 2nd ed. sec. 3.11.1 tab 3.2, and corresponding bytecodes specification)
@@ -186,26 +186,26 @@ public enum Operator {
         		operation == Operator.MUL ||
         		operation == Operator.DIV ||
         		operation == Operator.REM) && (firstOperandType != secondOperandType || !Type.isPrimitiveOpStack(firstOperandType))) {
-        	throw new InvalidTypeException("ill-typed sum, subtraction, multiplication, division or remainder; first operand has type " + firstOperandType + ", second operand has type " + secondOperandType);
+        	throw new InvalidTypeException("Ill-typed sum, subtraction, multiplication, division or remainder; first operand has type " + firstOperandType + ", second operand has type " + secondOperandType + ".");
         }
         //shift operators must have integral first operand and int (not long) second operand
         //(see JVM spec 2nd ed. sec. 3.11.1 tab 3.2, and corresponding bytecodes specification)
         if ((operation == Operator.SHL ||
         		operation == Operator.SHR ||
         		operation == Operator.USHR) && (!Type.isPrimitiveIntegralOpStack(firstOperandType) || secondOperandType != Type.INT)) {
-        	throw new InvalidTypeException("ill-typed shift; first operand has type " + firstOperandType + ", second operand has type " + secondOperandType);
+        	throw new InvalidTypeException("Ill-typed shift; first operand has type " + firstOperandType + ", second operand has type " + secondOperandType + ".");
         }
         //bitwise operators operands must have same type and must be integral
         //(see JVM spec 2nd ed. sec. 3.11.1 tab 3.2, and corresponding bytecodes specification)
         if ((operation == Operator.ANDBW ||
         		operation == Operator.ORBW ||
         		operation == Operator.XORBW) && (firstOperandType != secondOperandType || !Type.isPrimitiveIntegralOpStack(firstOperandType))) {
-        	throw new InvalidTypeException("ill-typed bitwise operation; first operand has type " + firstOperandType + ", second operand has type " + secondOperandType);
+        	throw new InvalidTypeException("Ill-typed bitwise operation; first operand has type " + firstOperandType + ", second operand has type " + secondOperandType + ".");
         }
         //for logical operations we liberally accept every integral type operands
         if ((operation == Operator.AND ||
         		operation == Operator.OR) && (!Type.isPrimitiveIntegral(firstOperandType) || !Type.isPrimitiveIntegral(secondOperandType))) {
-        	throw new InvalidTypeException("ill-typed logical operation; first operand has type " + firstOperandType + ", second operand has type " + secondOperandType);
+        	throw new InvalidTypeException("Ill-typed logical operation; first operand has type " + firstOperandType + ", second operand has type " + secondOperandType + ".");
         }
         //for comparisons we liberally accept every comparison between primitive types, or between references
         if ((operation == Operator.EQ ||
@@ -214,7 +214,7 @@ public enum Operator {
         		operation == Operator.GE ||
         		operation == Operator.LT ||
         		operation == Operator.LE) && (Type.isPrimitive(firstOperandType) != Type.isPrimitive(secondOperandType))) {
-        	throw new InvalidTypeException("ill-typed comparison; first operand has type " + firstOperandType + ", second operand has type " + secondOperandType);
+        	throw new InvalidTypeException("Ill-typed comparison; first operand has type " + firstOperandType + ", second operand has type " + secondOperandType + ".");
         }
 	}
 	
