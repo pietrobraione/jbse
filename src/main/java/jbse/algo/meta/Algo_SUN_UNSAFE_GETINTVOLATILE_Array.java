@@ -190,7 +190,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                         		accessCondition = e.getAccessCondition();
                         		indexFormal = arrayToProcess.getIndex();
                         	} else {
-                        		final Primitive entryAccessConditionShifted = e.getAccessCondition().replace(arrayToProcess.getIndex(), calc.push(referringArrayIndexFormal).add(referringArrayOffset).pop());
+                        		final Primitive entryAccessConditionShifted = calc.simplify(e.getAccessCondition().replace(arrayToProcess.getIndex(), calc.push(referringArrayIndexFormal).add(referringArrayOffset).pop()));
                         		accessCondition = (Expression) calc.push(referringArrayAccessCondition).and(entryAccessConditionShifted).pop();
                         		indexFormal = referringArrayIndexFormal;
                         	}

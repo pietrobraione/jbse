@@ -143,8 +143,10 @@ public final class RunnerParameters implements Cloneable {
 
     /**
      * Sets the initial state of the symbolic execution, and cancels the 
-     * effect of any previous call to {@link #addUserClasspath(String...)},
-     * {@link #setMethodSignature(String)}.
+     * effect of any previous call to {@link #setJavaHome(String) setJavaHome}, 
+     * {@link #addExtClasspath(String...) addExtClasspath}, 
+     * {@link #addUserClasspath(String...) addUserClasspath}, 
+     * and {@link #setMethodSignature(String) setMethodSignature}.
      *  
      * @param s a {@link State}.
      */
@@ -188,8 +190,7 @@ public final class RunnerParameters implements Cloneable {
     }
 
     /**
-     * Sets the {@link Calculator}, and cancels the effect
-     * of any previous call to {@link #setInitialState(State)}.
+     * Sets the {@link Calculator}.
      * 
      * @param calc a {@link Calculator}.
      * @throws NullPointerException if {@code calc == null}.
@@ -287,7 +288,8 @@ public final class RunnerParameters implements Cloneable {
      * Brings the extensions classpath back to the default,
      * i.e., the same extensions path of the JVM that
      * executes JBSE, as returned by the system property
-     * {@code java.ext.dirs}.
+     * {@code java.ext.dirs}. Also cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
      */
     public void setDefaultExtClasspath() {
         this.engineParameters.setDefaultExtClasspath();

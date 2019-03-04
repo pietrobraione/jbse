@@ -362,9 +362,10 @@ public interface Array extends Objekt {
      * is used to implement {@link java.lang.Object#clone()}.
      * 
      * @param src the source {@link Array}.
+     * @throws InvalidInputException if {@code src == null || calc == null}.
      * @throws InvalidTypeException if {@code other} has different type from {@code this}.
      */
-    void cloneEntries(Array src) throws InvalidTypeException;
+    void cloneEntries(Array src) throws InvalidInputException, InvalidTypeException;
 
     /**
      * Implements {@code java.lang.System.arraycopy}, where this array is

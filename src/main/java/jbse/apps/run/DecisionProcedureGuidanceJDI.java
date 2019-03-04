@@ -601,7 +601,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                 } else {
                     final Primitive accessExpressionOnConcreteIndex;
 					try {
-						accessExpressionOnConcreteIndex = da.getArrayAccessExpression().replace(da.getIndexFormal(), this.xaloadIndex);
+						accessExpressionOnConcreteIndex = this.calc.simplify(da.getArrayAccessExpression().replace(da.getIndexFormal(), this.xaloadIndex));
 					} catch (InvalidOperandException | InvalidTypeException e) {
 						//this should never happen
 						throw new UnexpectedInternalException(e);

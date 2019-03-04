@@ -489,8 +489,7 @@ public final class RunParameters implements Cloneable {
      * This deviates a bit from the Java Virtual Machine Specification, 
      * but ensures in practice a faster loading of classes than by
      * the specification mechanism of invoking the {@link ClassLoader#loadClass(String) ClassLoader.loadClass}
-     * method. By default it is set to {@code true}. Also cancels the effect 
-     * of any previous call to {@link #setInitialState(State)}.
+     * method. By default it is set to {@code true}.
      * 
      * @param bypassStandardLoading a {@code boolean}.
      */

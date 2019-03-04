@@ -189,7 +189,7 @@ final class ArrayWrapper extends ObjektWrapper<ArrayImpl> implements Array {
     }
 
     @Override
-    public void cloneEntries(Array src) throws InvalidTypeException {
+    public void cloneEntries(Array src) throws InvalidInputException, InvalidTypeException {
         possiblyCloneDelegate();
         getDelegate().cloneEntries(src);
     }

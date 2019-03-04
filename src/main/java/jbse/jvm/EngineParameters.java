@@ -360,16 +360,19 @@ public final class EngineParameters implements Cloneable {
 
     /**
      * Sets the initial state of the symbolic execution, and cancels the 
-     * effect of any previous call to {@link #addUserClasspath(String...)},
-     * {@link #setMethodSignature(String)}.
+     * effect of any previous call to {@link #setJavaHome(String) setJavaHome}, 
+     * {@link #addExtClasspath(String...) addExtClasspath}, 
+     * {@link #addUserClasspath(String...) addUserClasspath}, 
+     * and {@link #setMethodSignature(String) setMethodSignature}.
      *  
      * @param s a {@link State}.
      */
     public void setInitialState(State s) { 
-        this.initialState = s; 
+        this.initialState = s;
+        this.javaHome = null;
+        this.extPaths.clear();
         this.userPaths.clear();
         this.methodSignature = null;
-        this.calc = null;
     }
 
     /**
@@ -398,8 +401,8 @@ public final class EngineParameters implements Cloneable {
      * @param bypassStandardLoading a {@code boolean}.
      */
     public void setBypassStandardLoading(boolean bypassStandardLoading) {
-        this.bypassStandardLoading = bypassStandardLoading;
         this.initialState = null;
+        this.bypassStandardLoading = bypassStandardLoading;
     }
     
     /**
@@ -417,8 +420,7 @@ public final class EngineParameters implements Cloneable {
     }
 
     /**
-     * Sets the {@link Calculator}, and cancels the effect
-     * of any previous call to {@link #setInitialState(State)}.
+     * Sets the {@link Calculator}.
      * 
      * @param calc a {@link Calculator}.
      * @throws NullPointerException if {@code calc == null}.
@@ -428,7 +430,6 @@ public final class EngineParameters implements Cloneable {
             throw new NullPointerException();
         }
         this.calc = calc;
-        this.initialState = null;
     }
 
     /**
@@ -541,9 +542,11 @@ public final class EngineParameters implements Cloneable {
      * Brings the extensions classpath back to the default,
      * i.e., the same extensions path of the JVM that
      * executes JBSE, as returned by the system property
-     * {@code java.ext.dirs}.
+     * {@code java.ext.dirs}. Also cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
      */
     public void setDefaultExtClasspath() {
+        this.initialState = null;
         this.extPaths = new ArrayList<>(Arrays.stream(System.getProperty("java.ext.dirs").split(File.pathSeparator))
                                         .map(s -> Paths.get(s)).collect(Collectors.toList()));
     }
