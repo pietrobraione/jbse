@@ -20,10 +20,11 @@ import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Null;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
@@ -45,7 +46,8 @@ public final class Algo_JAVA_XFILESYSTEM_CANONICALIZE0 extends Algo_INVOKEMETA_N
     @Override
     protected void cookMore(State state) 
     throws InterruptException, ClasspathException, 
-    SymbolicValueNotAllowedException, FrozenStateException {
+    SymbolicValueNotAllowedException, InvalidInputException {
+    	final Calculator calc = this.ctx.getCalculator();
         try {
             //gets the filesystem object and its class
             final Field fileSystemField = File.class.getDeclaredField("fs");
@@ -57,7 +59,7 @@ public final class Algo_JAVA_XFILESYSTEM_CANONICALIZE0 extends Algo_INVOKEMETA_N
             //gets the (String path) parameter
             final Reference pathReference = (Reference) this.data.operand(1);
             if (state.isNull(pathReference)) {
-                throwNew(state, NULL_POINTER_EXCEPTION);
+                throwNew(state, calc, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
             final String path = valueString(state, pathReference);
@@ -74,7 +76,7 @@ public final class Algo_JAVA_XFILESYSTEM_CANONICALIZE0 extends Algo_INVOKEMETA_N
                 pathCanonical = (String) method.invoke(fileSystem, path);
             } catch (InvocationTargetException e) {
                 final String cause = internalClassName(e.getCause().getClass().getName());
-                throwNew(state, cause);
+                throwNew(state, calc, cause);
                 exitFromAlgorithm();
             }
             
@@ -82,14 +84,14 @@ public final class Algo_JAVA_XFILESYSTEM_CANONICALIZE0 extends Algo_INVOKEMETA_N
             if (pathCanonical == null) {
                 this.toPush = Null.getInstance();
             } else {
-                state.ensureStringLiteral(pathCanonical);
+                state.ensureStringLiteral(calc, pathCanonical);
                 this.toPush = state.referenceToStringLiteral(pathCanonical);
             }
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, calc, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (NoSuchFieldException | SecurityException | IllegalAccessException | NoSuchMethodException e) {
             //this should not happen

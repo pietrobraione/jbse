@@ -81,10 +81,11 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
      * @param numberOfHits an {@code int} greater or equal to one.
      * @throws GuidanceException if something fails during creation (and the caller
      *         is to blame).
+     * @throws InvalidInputException if {@code component == null}.
      */
-    public DecisionProcedureGuidance(DecisionProcedure component, Calculator calc, JVM jvm) 
-    throws GuidanceException {
-        super(component, calc);
+    public DecisionProcedureGuidance(DecisionProcedure component, JVM jvm) 
+    throws GuidanceException, InvalidInputException {
+        super(component);
         goFastAndImprecise(); //disables theorem proving of component until guidance ends
         this.jvm = jvm;
         this.ended = false;
@@ -401,10 +402,10 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
 
         public Primitive eval_IFX(DecisionAlternative_IFX da, Primitive condition) throws GuidanceException {
             try {
-                final Primitive conditionNot = condition.not();
+                final Primitive conditionNot = this.calc.push(condition).not().pop();
                 final Primitive conditionToCheck  = (da.value() ? condition : conditionNot);
                 return eval(conditionToCheck);
-            } catch (InvalidTypeException e) {
+            } catch (InvalidOperandException | InvalidTypeException e) {
                 //this should never happen as arguments have been checked by the caller
                 throw new UnexpectedInternalException(e);
             }
@@ -412,13 +413,13 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
 
         public Primitive eval_XCMPY(DecisionAlternative_XCMPY da, Primitive val1, Primitive val2) throws GuidanceException {
             try{
-                final Primitive comparisonGT = val1.gt(val2);
-                final Primitive comparisonEQ = val1.eq(val2);
-                final Primitive comparisonLT = val1.lt(val2);
+                final Primitive comparisonGT = this.calc.push(val1).gt(val2).pop();
+                final Primitive comparisonEQ = this.calc.push(val1).eq(val2).pop();
+                final Primitive comparisonLT = this.calc.push(val1).lt(val2).pop();
                 final Primitive conditionToCheck  = 
-                (da.operator() == Operator.GT ? comparisonGT :
-                    da.operator() == Operator.EQ ? comparisonEQ :
-                        comparisonLT);
+                  (da.operator() == Operator.GT ? comparisonGT :
+                   da.operator() == Operator.EQ ? comparisonEQ :
+                   comparisonLT);
                 return eval(conditionToCheck);
             } catch (InvalidTypeException | InvalidOperandException e) {
                 //this should never happen as arguments have been checked by the caller
@@ -427,12 +428,12 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         }
 
         public Primitive eval_XSWITCH(DecisionAlternative_XSWITCH da, Primitive selector, SwitchTable tab) throws GuidanceException {
-            try{
+            try {
                 final Primitive conditionToCheck = (da.isDefault() ?
-                                                    tab.getDefaultClause(selector) :
-                                                    selector.eq(this.calc.valInt(da.value())));
+                                                    tab.getDefaultClause(this.calc, selector) :
+                                                    this.calc.push(selector).eq(this.calc.valInt(da.value())).pop());
                 return eval(conditionToCheck);
-            } catch (InvalidOperandException | InvalidTypeException e) {
+            } catch (InvalidOperandException | InvalidInputException | InvalidTypeException e) {
                 //this should never happen as arguments have been checked by the caller
                 throw new UnexpectedInternalException(e);
             }
@@ -440,9 +441,9 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
 
         public Primitive eval_XNEWARRAY(DecisionAlternative_XNEWARRAY da, Primitive countsNonNegative) throws GuidanceException {
             try {
-                final Primitive conditionToCheck = (da.ok() ? countsNonNegative : countsNonNegative.not());
+                final Primitive conditionToCheck = (da.ok() ? countsNonNegative : this.calc.push(countsNonNegative).not().pop());
                 return eval(conditionToCheck);
-            } catch (InvalidTypeException e) {
+            } catch (InvalidOperandException | InvalidTypeException e) {
                 //this should never happen as arguments have been checked by the caller
                 throw new UnexpectedInternalException(e);
             }
@@ -450,9 +451,9 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
 
         public Primitive eval_XASTORE(DecisionAlternative_XASTORE da, Primitive inRange) throws GuidanceException {
             try {
-                final Primitive conditionToCheck = (da.isInRange() ? inRange : inRange.not());
+                final Primitive conditionToCheck = (da.isInRange() ? inRange : this.calc.push(inRange).not().pop());
                 return eval(conditionToCheck);
-            } catch (InvalidTypeException e) {
+            } catch (InvalidOperandException | InvalidTypeException e) {
                 //this should never happen as arguments have been checked by the caller
                 throw new UnexpectedInternalException(e);
             }
@@ -511,7 +512,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                         this.value = null;
                         return;
                     }
-                    this.value = this.calc.applyUnary(e.getOperator(), operandValue);
+                    this.value = this.calc.push(operandValue).applyUnary(e.getOperator()).pop();
                 } else {
                     e.getFirstOperand().accept(this);
                     final Primitive firstOperandValue = this.value;
@@ -525,7 +526,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                         this.value = null;
                         return;
                     }
-                    this.value = this.calc.applyBinary(firstOperandValue, e.getOperator(), secondOperandValue);
+                    this.value = this.calc.push(firstOperandValue).applyBinary(e.getOperator(), secondOperandValue).pop();
                 }
             }
 
@@ -562,13 +563,13 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             @Override
             public void visitNarrowingConversion(NarrowingConversion x) throws Exception {
                 x.getArg().accept(this);
-                this.value = this.calc.narrow(x.getType(), this.value);
+                this.value = this.calc.push(this.value).narrow(x.getType()).pop();
             }
 
             @Override
             public void visitWideningConversion(WideningConversion x) throws Exception {
                 x.getArg().accept(this);
-                this.value = (x.getType() == this.value.getType() ? this.value : this.calc.widen(x.getType(), this.value));
+                this.value = (x.getType() == this.value.getType() ? this.value : this.calc.push(this.value).widen(x.getType()).pop());
                 //note that the concrete this.value could already be widened
                 //because of conversion of actual types to computational types
                 //through operand stack, see JVM specification v8, section 2.11.1, table 2.11.1-B

@@ -58,29 +58,29 @@ abstract class Algo_GETX extends Algo_XLOAD_GETX<BytecodeData_1FI> {
                 final ClassFile currentClass = state.getCurrentClass();    
                 this.fieldClassResolved = state.getClassHierarchy().resolveField(currentClass, this.data.signature(), state.bypassStandardLoading());
             } catch (PleaseLoadClassException e) {
-                invokeClassLoaderLoadClass(state, e);
+                invokeClassLoaderLoadClass(state, this.ctx.getCalculator(), e);
                 exitFromAlgorithm();
             } catch (ClassFileNotFoundException e) {
                 //TODO this exception should wrap a ClassNotFoundException
-                throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR);
                 exitFromAlgorithm();
             } catch (BadClassFileVersionException e) {
-                throwNew(state, UNSUPPORTED_CLASS_VERSION_ERROR);
+                throwNew(state, this.ctx.getCalculator(), UNSUPPORTED_CLASS_VERSION_ERROR);
                 exitFromAlgorithm();
             } catch (WrongClassNameException e) {
-                throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
+                throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
                 exitFromAlgorithm();
             } catch (IncompatibleClassFileException e) {
-                throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
                 exitFromAlgorithm();
             } catch (FieldNotFoundException e) {
-                throwNew(state, NO_SUCH_FIELD_ERROR);
+                throwNew(state, this.ctx.getCalculator(), NO_SUCH_FIELD_ERROR);
                 exitFromAlgorithm();
             } catch (ClassFileNotAccessibleException | FieldNotAccessibleException e) {
-                throwNew(state, ILLEGAL_ACCESS_ERROR);
+                throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
                 exitFromAlgorithm();
             } catch (ClassFileIllFormedException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             } catch (ThreadStackEmptyException e) {
                 //this should never happen

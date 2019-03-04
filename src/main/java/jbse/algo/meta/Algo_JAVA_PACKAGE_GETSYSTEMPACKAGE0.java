@@ -15,10 +15,11 @@ import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Null;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
@@ -38,8 +39,9 @@ public final class Algo_JAVA_PACKAGE_GETSYSTEMPACKAGE0 extends Algo_INVOKEMETA_N
 
     @Override
     protected void cookMore(State state) 
-    throws InterruptException, ClasspathException, 
-    SymbolicValueNotAllowedException, UndefinedResultException, FrozenStateException {
+    throws InterruptException, ClasspathException, SymbolicValueNotAllowedException, 
+    UndefinedResultException, InvalidInputException {
+    	final Calculator calc = this.ctx.getCalculator();
         try {
             //gets the first (String name) parameter
             final Reference nameReference = (Reference) this.data.operand(0);
@@ -55,14 +57,14 @@ public final class Algo_JAVA_PACKAGE_GETSYSTEMPACKAGE0 extends Algo_INVOKEMETA_N
                 this.refPathNameOfPackage = Null.getInstance();
             } else {
             	final String packagePathName = packagePath.toAbsolutePath().toString();
-                state.ensureStringLiteral(packagePathName);
+                state.ensureStringLiteral(calc, packagePathName);
                 this.refPathNameOfPackage = state.referenceToStringLiteral(packagePathName);
             }
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, calc, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         }
     }

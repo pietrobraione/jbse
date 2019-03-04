@@ -14,6 +14,9 @@ import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.SHORT;
 import static jbse.common.Type.widens;
 
+import java.util.ArrayDeque;
+import java.util.NoSuchElementException;
+
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.exc.InvalidOperandException;
@@ -22,72 +25,95 @@ import jbse.val.exc.InvalidTypeException;
 
 public abstract class Calculator {
     /** The (only) {@link Any} value. */
-    private final Any ANY;
+    private static final Any ANY;
 
     /** The boolean {@code true} value. */
-    private final Simplex TRUE; 
+    private static final Simplex TRUE; 
 
     /** The boolean {@code false} value. */
-    private final Simplex FALSE;
+    private static final Simplex FALSE;
+
+    /** The byte 0 value. */
+    private static final Simplex ZERO_BYTE;
 
     /** The int 0 value. */
-    private final Simplex INT_ZERO;
+    private static final Simplex ZERO_INT;
+
+    /** The long 0 value. */
+    private static final Simplex ZERO_LONG;
+
+    /** The short 0 value. */
+    private static final Simplex ZERO_SHORT;
+
+    /** The float 0 value. */
+    private static final Simplex ZERO_FLOAT;
+
+    /** The double 0 value. */
+    private static final Simplex ZERO_DOUBLE;
 
     /** Default value for primitive type {@code boolean}. */
-    private final Simplex DEFAULT_BOOL;
+    private static final Simplex DEFAULT_BOOL;
 
     /** Default value for primitive type {@code byte}. */
-    private final Simplex DEFAULT_BYTE;
-
-    /** Default value for primitive type {@code short}. */
-    private final Simplex DEFAULT_SHORT;
+    private static final Simplex DEFAULT_BYTE;
 
     /** Default value for primitive type {@code int}. */
-    private final Simplex DEFAULT_INT;
+    private static final Simplex DEFAULT_INT;
 
     /** Default value for primitive type {@code long}. */
-    private final Simplex DEFAULT_LONG;
+    private static final Simplex DEFAULT_LONG;
+
+    /** Default value for primitive type {@code short}. */
+    private static final Simplex DEFAULT_SHORT;
 
     /** Default value for primitive type {@code float}. */
-    private final Simplex DEFAULT_FLOAT;
+    private static final Simplex DEFAULT_FLOAT;
 
     /** Default value for primitive type {@code double}. */
-    private final Simplex DEFAULT_DOUBLE;
+    private static final Simplex DEFAULT_DOUBLE;
 
     /** Default value for primitive type {@code char}. */
-    private final Simplex DEFAULT_CHAR;
+    private static final Simplex DEFAULT_CHAR;
 
     /** Default value for reference types. */
-    private final ReferenceConcrete DEFAULT_REFERENCE;
+    private static final ReferenceConcrete DEFAULT_REFERENCE;
 
-    public Calculator() {
+    static {
         try {
-            this.ANY               = Any.make(this);
-            this.TRUE              = Simplex.make(this, Boolean.valueOf(true));
-            this.FALSE             = Simplex.make(this, Boolean.valueOf(false));
-            this.INT_ZERO          = Simplex.make(this, Integer.valueOf(0));
-            this.DEFAULT_BOOL      = this.FALSE;
-            this.DEFAULT_BYTE      = Simplex.make(this, Byte.valueOf((byte) 0));
-            this.DEFAULT_SHORT     = Simplex.make(this, Short.valueOf((short) 0));
-            this.DEFAULT_INT       = this.INT_ZERO;
-            this.DEFAULT_LONG      = Simplex.make(this, Long.valueOf(0L));
-            this.DEFAULT_FLOAT     = Simplex.make(this, Float.valueOf(0.0f));
-            this.DEFAULT_DOUBLE    = Simplex.make(this, Double.valueOf(0.0d));
-            this.DEFAULT_CHAR      = Simplex.make(this, Character.valueOf('\u0000'));
-            this.DEFAULT_REFERENCE = Null.getInstance();
-        } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
+            ANY               = Any.make();
+            TRUE              = Simplex.make(Boolean.valueOf(true));
+            FALSE             = Simplex.make(Boolean.valueOf(false));
+            ZERO_BYTE         = Simplex.make(Byte.valueOf((byte) 0));
+            ZERO_INT          = Simplex.make(Integer.valueOf(0));
+            ZERO_LONG         = Simplex.make(Long.valueOf(0L));
+            ZERO_SHORT        = Simplex.make(Short.valueOf((short) 0));
+            ZERO_FLOAT        = Simplex.make(Float.valueOf(0.0f));
+            ZERO_DOUBLE       = Simplex.make(Double.valueOf(0.0d));
+            DEFAULT_BOOL      = FALSE;
+            DEFAULT_BYTE      = ZERO_BYTE;
+            DEFAULT_INT       = ZERO_INT;
+            DEFAULT_LONG      = ZERO_LONG;
+            DEFAULT_SHORT     = ZERO_SHORT;
+            DEFAULT_FLOAT     = ZERO_FLOAT;
+            DEFAULT_DOUBLE    = ZERO_DOUBLE;
+            DEFAULT_CHAR      = Simplex.make(Character.valueOf('\u0000'));
+            DEFAULT_REFERENCE = Null.getInstance();
+        } catch (InvalidOperandException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
     }
+    
+	/** The stack. */
+    private final ArrayDeque<Primitive> stack = new ArrayDeque<>();
 
     /**
      * Factory method for values with type {@link Any}.
      * 
      * @return an {@link Any}.
      */
-    public Any valAny() {
-        return this.ANY;
+    public final Any valAny() {
+        return ANY;
     }
 
     /**
@@ -96,8 +122,8 @@ public abstract class Calculator {
      * @param value a {@code boolean}.
      * @return a {@link Simplex} representing {@code value}.
      */
-    public Simplex valBoolean(boolean value) {
-        return (value ? this.TRUE : this.FALSE);
+    public final Simplex valBoolean(boolean value) {
+        return (value ? TRUE : FALSE);
     }
 
     /**
@@ -106,10 +132,13 @@ public abstract class Calculator {
      * @param value a {@code boolean}.
      * @return a {@link Simplex} representing {@code value}. 
      */
-    public Simplex valByte(byte value) {
+    public final Simplex valByte(byte value) {
+        if (value == ((byte) 0)) {
+            return ZERO_BYTE;
+        }
         try {
-            return Simplex.make(this, Byte.valueOf(value));
-        } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
+            return Simplex.make(Byte.valueOf(value));
+        } catch (InvalidOperandException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
@@ -121,10 +150,13 @@ public abstract class Calculator {
      * @param value a {@code short}.
      * @return a {@link Simplex} representing {@code value}. 
      */
-    public Simplex valShort(short value) {
+    public final Simplex valShort(short value) {
+        if (value == ((short) 0)) {
+            return ZERO_SHORT;
+        }
         try {
-            return Simplex.make(this, Short.valueOf(value));
-        } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
+            return Simplex.make(Short.valueOf(value));
+        } catch (InvalidOperandException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
@@ -136,13 +168,13 @@ public abstract class Calculator {
      * @param value an {@code int}.
      * @return a {@link Simplex} representing {@code value}. 
      */
-    public Simplex valInt(int value) {
+    public final Simplex valInt(int value) {
         if (value == 0) {
-            return this.INT_ZERO;
+            return ZERO_INT;
         }
         try {
-            return Simplex.make(this, Integer.valueOf(value));
-        } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
+            return Simplex.make(Integer.valueOf(value));
+        } catch (InvalidOperandException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
@@ -154,10 +186,13 @@ public abstract class Calculator {
      * @param value a {@code long}.
      * @return a {@link Simplex} representing {@code value}. 
      */
-    public Simplex valLong(long value) {
+    public final Simplex valLong(long value) {
+        if (value == 0L) {
+            return ZERO_LONG;
+        }
         try {
-            return Simplex.make(this, Long.valueOf(value));
-        } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
+            return Simplex.make(Long.valueOf(value));
+        } catch (InvalidOperandException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
@@ -169,10 +204,13 @@ public abstract class Calculator {
      * @param value a {@code float}.
      * @return a {@link Simplex} representing {@code value}. 
      */
-    public Simplex valFloat(float value) {
+    public final Simplex valFloat(float value) {
+        if (value == 0.0f) {
+            return ZERO_FLOAT;
+        }
         try {
-            return Simplex.make(this, Float.valueOf(value));
-        } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
+            return Simplex.make(Float.valueOf(value));
+        } catch (InvalidOperandException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
@@ -184,10 +222,13 @@ public abstract class Calculator {
      * @param value a {@code double}.
      * @return a {@link Simplex} representing {@code value}. 
      */
-    public Simplex valDouble(double value) {
+    public final Simplex valDouble(double value) {
+        if (value == 0.0d) {
+            return ZERO_DOUBLE;
+        }
         try {
-            return Simplex.make(this, Double.valueOf(value));
-        } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
+            return Simplex.make(Double.valueOf(value));
+        } catch (InvalidOperandException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
@@ -199,10 +240,10 @@ public abstract class Calculator {
      * @param value a {@code char}.
      * @return a {@link Simplex} representing {@code value}. 
      */
-    public Simplex valChar(char value) {
+    public final Simplex valChar(char value) {
         try {
-            return Simplex.make(this, Character.valueOf(value));
-        } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
+            return Simplex.make(Character.valueOf(value));
+        } catch (InvalidOperandException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
@@ -211,7 +252,6 @@ public abstract class Calculator {
     /**
      * Factory method for {@link Term}s.
      * 
-     * @param id an {@code int}, the identifier of the symbol.
      * @param type a {@code char} representing the type of the symbol 
      *        (see {@link Type}).
      * @param value a {@link String} representing the conventional
@@ -219,50 +259,45 @@ public abstract class Calculator {
      * @return a {@link Term}.
      * @throws InvalidTypeException if {@code type} is not primitive.
      */
-    public Term valTerm(char type, String value) throws InvalidTypeException {
-        try {
-			return new Term(type, this, value);
-		} catch (InvalidInputException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-		}
+    public final Term valTerm(char type, String value) throws InvalidTypeException {
+    	return new Term(type, value);
     }
 
-    //same methods overloaded
+     //same methods overloaded
 
     public Simplex val_(double val) {
-        return this.valDouble(val);
+        return valDouble(val);
     }
 
     public Simplex val_(float val) {
-        return this.valFloat(val);
+        return valFloat(val);
     }
 
     public Simplex val_(long val) {
-        return this.valLong(val);
+        return valLong(val);
     }
 
     public Simplex val_(int val) {
-        return this.valInt(val);
+        return valInt(val);
     }
 
     public Simplex val_(short val) {
-        return this.valShort(val);
+        return valShort(val);
     }
 
     public Simplex val_(byte val) {
-        return this.valByte(val);
+        return valByte(val);
     }
 
     public Simplex val_(char val) {
-        return this.valChar(val);
+        return valChar(val);
     }
 
     public Simplex val_(boolean val) {
-        return this.valBoolean(val);
+        return valBoolean(val);
     }
 
-    public Simplex val_(Object v) {
+    public Simplex val_(Object v) throws InvalidInputException {
         if (v instanceof Byte) {
             return valByte(((Byte) v).byteValue());
         } else if (v instanceof Short) {
@@ -280,7 +315,7 @@ public abstract class Calculator {
         } else if (v instanceof Character) {
             return valChar(((Character) v).charValue());
         } else {
-            return null; //TODO raise InvalidTypeException?
+            throw new InvalidInputException("Tried to convert to a Value an object that does not box a primitive type; object's class: " + v.getClass().getName());
         }
     }
 
@@ -295,475 +330,903 @@ public abstract class Calculator {
      *         or {@code null} if {@code type} does not 
      *         indicate a primitive or reference type.
      */
-    public Value createDefault(char type) {
+    public Value valDefault(char type) {
         switch (type) {
         case BYTE:
-            return this.DEFAULT_BYTE;
+            return DEFAULT_BYTE;
         case SHORT:
-            return this.DEFAULT_SHORT;
+            return DEFAULT_SHORT;
         case INT:
-            return this.DEFAULT_INT;
+            return DEFAULT_INT;
         case LONG:
-            return this.DEFAULT_LONG;
+            return DEFAULT_LONG;
         case FLOAT:
-            return this.DEFAULT_FLOAT;
+            return DEFAULT_FLOAT;
         case DOUBLE:
-            return this.DEFAULT_DOUBLE;
+            return DEFAULT_DOUBLE;
         case CHAR:
-            return this.DEFAULT_CHAR;
+            return DEFAULT_CHAR;
         case BOOLEAN:
-            return this.DEFAULT_BOOL;
+            return DEFAULT_BOOL;
         case ARRAYOF:
         case NULLREF:
         case REFERENCE:
-            return this.DEFAULT_REFERENCE;
+            return DEFAULT_REFERENCE;
         default: //Type.VOID
             return null;
         }
     }
-
+    
     /**
-     * Calculates the arithmetic sum of two {@link Primitive}s.
-     * 
-     * @param firstOperand a {@link Primitive}.
-     * @param secondOperand a {@link Primitive}.
-     * @return a {@link Primitive} representing {@code firstOperand + secondOperand}.
-     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
-     * @throws InvalidTypeException if the expression cannot be typed.
-     */
-    public abstract Primitive add(Primitive firstOperand, Primitive secondOperand) 
-    throws InvalidOperandException, InvalidTypeException;
-
-    /**
-     * Calculates the arithmetic multiplication of two {@link Primitive}s.
-     * 
-     * @param firstOperand a {@link Primitive}.
-     * @param secondOperand a {@link Primitive}.
-     * @return a {@link Primitive} representing {@code firstOperand * secondOperand}.
-     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
-     * @throws InvalidTypeException if the expression cannot be typed.
-     */
-    public abstract Primitive mul(Primitive firstOperand, Primitive secondOperand)
-    throws InvalidOperandException, InvalidTypeException;
-
-    /**
-     * Calculates the arithmetic subtraction between two {@link Primitive}s.
-     * 
-     * @param firstOperand a {@link Primitive}.
-     * @param secondOperand a {@link Primitive}.
-     * @return a {@link Primitive} representing {@code firstOperand - secondOperand}.
-     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
-     * @throws InvalidTypeException if the expression cannot be typed.
-     */
-    public abstract Primitive sub(Primitive firstOperand, Primitive secondOperand)
-    throws InvalidOperandException, InvalidTypeException;
-
-    /**
-     * Calculates the arithmetic division of two {@link Primitive}s.
-     * 
-     * @param firstOperand a {@link Primitive}.
-     * @param secondOperand a {@link Primitive}.
-     * @return a {@link Primitive} representing {@code firstOperand / secondOperand}.
-     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
-     * @throws InvalidTypeException if the expression cannot be typed.
-     */
-    public abstract Primitive div(Primitive firstOperand, Primitive secondOperand) 
-    throws InvalidOperandException, InvalidTypeException;
-
-    /**
-     * Calculates the arithmetic remainder of two {@link Primitive}s.
-     * 
-     * @param firstOperand a {@link Primitive}.
-     * @param secondOperand a {@link Primitive}.
-     * @return a {@link Primitive} representing {@code firstOperand % secondOperand}.
-     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
-     * @throws InvalidTypeException if the expression cannot be typed.
-     */
-    public abstract Primitive rem(Primitive firstOperand, Primitive secondOperand) 
-    throws InvalidOperandException, InvalidTypeException;
-
-    /**
-     * Calculates the arithmetic negation of a {@link Primitive}.
+     * Pushes an operand on the calculator's stack.
      * 
      * @param operand a {@link Primitive}.
-     * @return a {@link Primitive} representing {@code -operand}.
-     * @throws InvalidOperandException if {@code operand == null}.
-     * @throws InvalidTypeException if the expression cannot be typed.
+     * @return this {@link Calculator}.
+     * @throws InvalidOperandException if {@code operand == null}. 
      */
-    public abstract Primitive neg(Primitive operand) 
-    throws InvalidOperandException, InvalidTypeException;
-
+    public final Calculator push(Primitive operand) throws InvalidOperandException {
+    	if (operand == null) {
+    		throw new InvalidOperandException("Tried to push a null operand.");
+    	}
+    	this.stack.push(operand);
+    	return this;
+    }
+    
     /**
-     * Calculates the bitwise AND of two {@link Primitive}s.
+     * Pops the topmost operand in this calculator's stack.
      * 
-     * @param firstOperand a {@link Primitive}.
-     * @param secondOperand a {@link Primitive}.
-     * @return a {@link Primitive} representing {@code firstOperand & secondOperand}.
-     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
-     * @throws InvalidTypeException if the expression cannot be typed.
+     * @return a {@link Primitive} if the stack is not empty.
+     * @throws NoSuchElementException if the stack is empty.
      */
-    public abstract Primitive andBitwise(Primitive firstOperand, Primitive secondOperand) 
-    throws InvalidOperandException, InvalidTypeException;
-
+    public final Primitive pop() throws NoSuchElementException {
+    	return this.stack.pop();
+    }
+    
     /**
-     * Calculates the bitwise OR of two {@link Primitive}s.
+     * Pushes on this calculator's stack the {@link Any} value.
      * 
-     * @param firstOperand a {@link Primitive}.
-     * @param secondOperand a {@link Primitive}.
-     * @return a {@link Primitive} representing {@code firstOperand | secondOperand}.
-     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
-     * @throws InvalidTypeException if the expression cannot be typed.
+     * @return this {@link Calculator}.
      */
-    public abstract Primitive orBitwise(Primitive firstOperand, Primitive secondOperand)
-    throws InvalidOperandException, InvalidTypeException;
-
+    public Calculator pushAny() {
+    	try {
+    		return push(valAny());
+		} catch (InvalidOperandException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+    
     /**
-     * Calculates the bitwise XOR of two {@link Primitive}s.
+     * Pushes on this calculator's stack a value with type
+     * boolean.
      * 
-     * @param firstOperand a {@link Primitive}.
-     * @param secondOperand a {@link Primitive}.
-     * @return a {@link Primitive} representing {@code firstOperand ^ secondOperand}.
-     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
-     * @throws InvalidTypeException if the expression cannot be typed.
+     * @param value a {@code boolean}.
+     * @return this {@link Calculator}.
      */
-    public abstract Primitive xorBitwise(Primitive firstOperand, Primitive secondOperand)
-    throws InvalidOperandException, InvalidTypeException;
-
+    public Calculator pushBoolean(boolean value) {
+    	try {
+    		return push(valBoolean(value));
+		} catch (InvalidOperandException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+    
     /**
-     * Calculates the logical AND of two {@link Primitive}s.
+     * Pushes on this calculator's stack a value with type
+     * byte.
      * 
-     * @param firstOperand a {@link Primitive}.
-     * @param secondOperand a {@link Primitive}.
-     * @return a {@link Primitive} representing {@code firstOperand && secondOperand}.
-     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
-     * @throws InvalidTypeException if the expression cannot be typed.
+     * @param value a {@code byte}.
+     * @return this {@link Calculator}.
      */
-    public abstract Primitive and(Primitive firstOperand, Primitive secondOperand) 
-    throws InvalidOperandException, InvalidTypeException;
+    public Calculator pushByte(byte value) {
+    	try {
+    		return push(valByte(value));
+		} catch (InvalidOperandException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
 
     /**
-     * Calculates the logical OR of two {@link Primitive}s.
+     * Pushes on this calculator's stack a value with type
+     * short.
      * 
-     * @param firstOperand a {@link Primitive}.
-     * @param secondOperand a {@link Primitive}.
-     * @return a {@link Primitive} representing {@code firstOperand || secondOperand}.
-     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
-     * @throws InvalidTypeException if the expression cannot be typed.
+     * @param value a {@code short}.
+     * @return this {@link Calculator}.
      */
-    public abstract Primitive or(Primitive firstOperand, Primitive secondOperand) 
-    throws InvalidOperandException, InvalidTypeException;
+    public Calculator pushShort(short value) {
+    	try {
+    		return push(valShort(value));
+		} catch (InvalidOperandException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
 
     /**
-     * Calculates the logical NOT of a {@link Primitive}.
+     * Pushes on this calculator's stack a value with type
+     * int.
      * 
-     * @param operand a {@link Primitive}.
-     * @return a {@link Primitive} representing {@code !operand}.
-     * @throws InvalidOperandException if {@code operand == null}.
-     * @throws InvalidTypeException if the expression cannot be typed.
+     * @param value an {@code int}.
+     * @return this {@link Calculator}.
      */
-    public abstract Primitive not(Primitive operand) 
-    throws InvalidOperandException, InvalidTypeException;
+    public Calculator pushInt(int value) {
+    	try {
+    		return push(valInt(value));
+		} catch (InvalidOperandException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
 
     /**
-     * Calculates the left shift of a {@link Primitive}.
+     * Pushes on this calculator's stack a value with type
+     * long.
      * 
-     * @param firstOperand a {@link Primitive}.
-     * @param secondOperand a {@link Primitive}.
-     * @return a {@link Primitive} representing {@code firstOperand << secondOperand}.
-     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
-     * @throws InvalidTypeException if the expression cannot be typed.
+     * @param value a {@code long}.
+     * @return this {@link Calculator}.
      */
-    public abstract Primitive shl(Primitive firstOperand, Primitive secondOperand) 
-    throws InvalidOperandException, InvalidTypeException;
+    public Calculator pushLong(long value) {
+    	try {
+    		return push(valLong(value));
+		} catch (InvalidOperandException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
 
     /**
-     * Calculates the arithmetic right shift of a {@link Primitive}.
+     * Pushes on this calculator's stack a value with type
+     * float.
      * 
-     * @param firstOperand a {@link Primitive}.
-     * @param secondOperand a {@link Primitive}.
-     * @return a {@link Primitive} representing {@code firstOperand >> secondOperand}.
-     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
-     * @throws InvalidTypeException if the expression cannot be typed.
+     * @param value a {@code float}.
+     * @return this {@link Calculator}.
      */
-    public abstract Primitive shr(Primitive firstOperand,
-                                  Primitive secondOperand) throws InvalidOperandException, InvalidTypeException;
+    public Calculator pushFloat(float value) {
+    	try {
+    		return push(valFloat(value));
+		} catch (InvalidOperandException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
 
     /**
-     * Calculates the logical right shift of a {@link Primitive}.
+     * Pushes on this calculator's stack a value with type
+     * double.
      * 
-     * @param firstOperand a {@link Primitive}.
-     * @param secondOperand a {@link Primitive}.
-     * @return a {@link Primitive} representing {@code firstOperand >>> secondOperand}.
-     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
-     * @throws InvalidTypeException if the expression cannot be typed.
+     * @param value a {@code double}.
+     * @return this {@link Calculator}.
      */
-    public abstract Primitive ushr(Primitive firstOperand, Primitive secondOperand) 
-    throws InvalidOperandException, InvalidTypeException;
+    public Calculator pushDouble(double value) {
+    	try {
+    		return push(valDouble(value));
+		} catch (InvalidOperandException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
 
     /**
-     * Calculates the equality comparison of two {@link Primitive}s.
+     * Pushes on this calculator's stack a value with type
+     * char.
      * 
-     * @param firstOperand a {@link Primitive}.
-     * @param secondOperand a {@link Primitive}.
-     * @return a {@link Primitive} representing {@code firstOperand == secondOperand}.
-     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
-     * @throws InvalidTypeException if the expression cannot be typed.
+     * @param value a {@code char}.
+     * @return this {@link Calculator}.
      */
-    public abstract Primitive eq(Primitive firstOperand, Primitive secondOperand) 
-    throws InvalidOperandException, InvalidTypeException;
+    public Calculator pushChar(char value) {
+    	try {
+    		return push(valChar(value));
+		} catch (InvalidOperandException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
 
     /**
-     * Calculates the inequality comparison of two {@link Primitive}s.
+     * Pushes on this calculator's stack a value with type
+     * {@link Term}.
      * 
-     * @param firstOperand a {@link Primitive}.
-     * @param secondOperand a {@link Primitive}.
-     * @return a {@link Primitive} representing {@code firstOperand != secondOperand}.
-     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
-     * @throws InvalidTypeException if the expression cannot be typed.
+     * @param type a {@code char} representing the type of the symbol 
+     *        (see {@link Type}).
+     * @param value a {@link String} representing the conventional
+     *        value of the term.
+     * @return this {@link Calculator}.
+     * @throws InvalidTypeException if {@code type} is not primitive.
      */
-    public abstract Primitive ne(Primitive firstOperand, Primitive secondOperand)
-    throws InvalidOperandException, InvalidTypeException;
+    public Calculator pushTerm(char type, String value) throws InvalidTypeException {
+    	try {
+    		return push(valTerm(type, value));
+		} catch (InvalidOperandException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+
+    //same methods overloaded
+
+    public Calculator pushVal(double value) {
+    	return pushDouble(value);
+    }
+
+    public Calculator pushVal(float value) {
+    	return pushFloat(value);
+    }
+
+    public Calculator pushVal(long value) {
+    	return pushLong(value);
+    }
+
+    public Calculator pushVal(int value) {
+    	return pushInt(value);
+    }
+
+    public Calculator pushVal(short value) {
+    	return pushShort(value);
+    }
+
+    public Calculator pushVal(byte value) {
+    	return pushByte(value);
+    }
+
+    public Calculator pushVal(char value) {
+    	return pushChar(value);
+    }
+
+    public Calculator pushVal(boolean value) {
+    	return pushBoolean(value);
+    }
+
+    public Calculator pushVal(Object v) throws InvalidInputException {
+        if (v instanceof Byte) {
+            return pushByte(((Byte) v).byteValue());
+        } else if (v instanceof Short) {
+            return pushShort(((Short) v).shortValue());
+        } else if (v instanceof Integer) {
+            return pushInt(((Integer) v).intValue());
+        } else if (v instanceof Long) {
+            return pushLong(((Long) v).longValue());
+        } else if (v instanceof Float) {
+            return pushFloat(((Float) v).floatValue());
+        } else if (v instanceof Double) {
+            return pushDouble(((Double) v).doubleValue());
+        } else if (v instanceof Boolean) {
+            return pushBoolean(((Boolean) v).booleanValue());
+        } else if (v instanceof Character) {
+            return pushChar(((Character) v).charValue());
+        } else {
+            throw new InvalidInputException("Tried to push an object that does not box a primitive type; object's class: " + v.getClass().getName());
+        }
+    }
 
     /**
-     * Calculates the arithmetic less-or-equal-than comparison 
-     * of two {@link Primitive}s.
-     * 
-     * @param firstOperand a {@link Primitive}.
-     * @param secondOperand a {@link Primitive}.
-     * @return a {@link Primitive} representing {@code firstOperand <= secondOperand}.
-     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
-     * @throws InvalidTypeException if the expression cannot be typed.
-     */
-    public abstract Primitive le(Primitive firstOperand, Primitive secondOperand)
-    throws InvalidOperandException, InvalidTypeException;
-
-    /**
-     * Calculates the arithmetic less-than comparison
-     * of two {@link Primitive}s.
-     * 
-     * @param firstOperand a {@link Primitive}.
-     * @param secondOperand a {@link Primitive}.
-     * @return a {@link Primitive} representing {@code firstOperand < secondOperand}.
-     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
-     * @throws InvalidTypeException if the expression cannot be typed.
-     */
-    public abstract Primitive lt(Primitive firstOperand, Primitive secondOperand)
-    throws InvalidOperandException, InvalidTypeException;
-
-    /**
-     * Calculates the arithmetic greater-or-equal-than comparison
-     * of two {@link Primitive}s.
-     * 
-     * @param firstOperand a {@link Primitive}.
-     * @param secondOperand a {@link Primitive}.
-     * @return a {@link Primitive} representing {@code firstOperand >= secondOperand}.
-     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
-     * @throws InvalidTypeException if the expression cannot be typed.
-     */
-    public abstract Primitive ge(Primitive firstOperand, Primitive secondOperand)
-    throws InvalidOperandException, InvalidTypeException;
-
-    /**
-     * Calculates the arithmetic greater-than comparison
-     * of two {@link Primitive}s.
-     * 
-     * @param firstOperand a {@link Primitive}.
-     * @param secondOperand a {@link Primitive}.
-     * @return a {@link Primitive} representing {@code firstOperand > secondOperand}.
-     * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}. 
-     * @throws InvalidTypeException if the expression cannot be typed.
-     */
-    public abstract Primitive gt(Primitive firstOperand, Primitive secondOperand)
-    throws InvalidOperandException, InvalidTypeException;
-
-    /**
-     * Converts a primitive value to another wider type.
-     * 
-     * @param type a {@code char} representing the type to which the
-     *        value must be converted.
-     * @param arg a {@link Primitive}.
-     * @return a {@link Primitive} representing the result of converting 
-     *         {@code arg} to {@code type}, by applying a widening conversion.
-     * @throws InvalidOperandException when {@code arg == null}.
-     * @throws InvalidTypeException when {@code arg} cannot be widened 
-     *         to {@code type}, or {@code type} is not a valid primitive type. 
-     */
-    public abstract Primitive widen(char type, Primitive arg) 
-    throws InvalidOperandException, InvalidTypeException;
-
-    /**
-     * Converts a primitive value to another narrower type.
-     * 
-     * @param type a {@code char} representing the type of the conversion.
-     * @param arg a {@link Primitive}.
-     * @return a {@link Primitive} representing the result of converting 
-     *         {@code arg} to {@code type}, by applying a narrowing conversion.
-     * @throws InvalidOperandException when {@code arg == null}.
-     * @throws InvalidTypeException when {@code arg} cannot be narrowed 
-     *         to {@code type}, or {@code type} is not a valid primitive type. 
-     */
-    public abstract Primitive narrow(char type, Primitive arg) 
-    throws InvalidOperandException, InvalidTypeException;
-
-    /**
-     * Applies a function to some arguments. The function returns a {@link Primitive} value.
+     * Applies a functional operator returning a {@link Primitive} to a list of arguments
+     * and immediately returns the result.
      *  
      * @param type a {@code char} representing the type of the return value of {@code operator}
      *        (see {@link Type}).
      * @param historyPoint the current {@link HistoryPoint}.
      * @param operator a {@code String} representing the function to be applied.
-     * @param args a {@link Value}{@code[]} representing the arguments to the function.
-     * @return a {@link Primitive} representing {@code operator(args)}.
-     * @throws InvalidOperandException 
-     * @throws InvalidTypeException  
-     * @throws InvalidInputException if {@code  operator == null || args == null || historyPoint == null}.
+     * @param args a varargs of {@link Value}s representing the arguments to the function.
+     * @return a {@link Primitive}.
+     * @throws InvalidTypeException if {@code type} is not primitive.  
+     * @throws InvalidInputException if {@code  historyPoint == null || operator == null || args == null}
+     *         or any of {@code args[i]} is {@code null}.
      */
-    public abstract Primitive applyFunctionPrimitive(char type, HistoryPoint historyPoint, String operator, Value... args) 
-    throws InvalidOperandException, InvalidTypeException, InvalidInputException;
+    public final Primitive applyFunctionPrimitiveAndPop(char type, HistoryPoint historyPoint, String operator, Value... args) 
+    throws InvalidTypeException, InvalidInputException {
+    	return simplify(new PrimitiveSymbolicApply(type, historyPoint, operator, args));
+    }
+    
+    /**
+     * Applies a function returning a {@link Primitive} to a list of arguments and
+     * pushes the result on the top of the stack.
+     *  
+     * @param type a {@code char} representing the type of the return value of {@code operator}
+     *        (see {@link Type}).
+     * @param historyPoint the current {@link HistoryPoint}.
+     * @param operator a {@code String} representing the function to be applied.
+     * @param args a varargs of {@link Value}s representing the arguments to the function.
+     * @return this {@link Calculator}.
+     * @throws InvalidTypeException if {@code type} is not primitive.  
+     * @throws InvalidInputException if {@code  historyPoint == null || operator == null || args == null}
+     *         or any of {@code args[i]} is {@code null}.
+     */
+    public final Calculator applyFunctionPrimitive(char type, HistoryPoint historyPoint, String operator, Value... args) 
+    throws InvalidTypeException, InvalidInputException {
+        try {
+			return push(applyFunctionPrimitiveAndPop(type, historyPoint, operator, args));
+		} catch (InvalidOperandException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+   
+    /**
+     * Calculates the arithmetic sum of a {@link Primitive}
+     * with the topmost {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
+     * 
+     * @param operand a {@link Primitive}, the addend.
+     * @return this {@link Calculator}.
+     * @throws InvalidOperandException if {@code operand == null}. 
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operands have incompatible types.
+     */
+    public final Calculator add(Primitive operand) 
+    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    	try {
+			return applyBinary(Operator.ADD, operand);
+		} catch (InvalidOperatorException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
 
     /**
-     * Applies a unary {@link Operator} to a {@link Primitive}.
+     * Calculates the arithmetic multiplication of a {@link Primitive}
+     * with the topmost {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
+     * 
+     * @param operand a {@link Primitive}, the multiplier.
+     * @return this {@link Calculator}.
+     * @throws InvalidOperandException if {@code operand == null}. 
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operands have incompatible types.
+     */
+    public final Calculator mul(Primitive operand)
+    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    	try {
+			return applyBinary(Operator.MUL, operand);
+		} catch (InvalidOperatorException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+
+    /**
+     * Calculates the arithmetic subtraction of a {@link Primitive}
+     * with the topmost {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
+     * 
+     * @param operand a {@link Primitive}, the subtrahend.
+     * @return this {@link Calculator}.
+     * @throws InvalidOperandException if {@code operand == null}. 
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operands have incompatible types.
+     */
+    public final Calculator sub(Primitive operand)
+    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    	try {
+			return applyBinary(Operator.SUB, operand);
+		} catch (InvalidOperatorException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+
+    /**
+     * Calculates the arithmetic division of a {@link Primitive}
+     * with the topmost {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
+     * 
+     * @param operand a {@link Primitive}, the divisor.
+     * @return this {@link Calculator}.
+     * @throws InvalidOperandException if {@code operand == null}. 
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operands have incompatible types.
+     */
+    public final Calculator div(Primitive operand) 
+    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    	try {
+			return applyBinary(Operator.DIV, operand);
+		} catch (InvalidOperatorException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+
+    /**
+     * Calculates the arithmetic remainder of a {@link Primitive}
+     * with the topmost {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
+     * 
+     * @param operand a {@link Primitive}, the divisor.
+     * @return this {@link Calculator}.
+     * @throws InvalidOperandException if {@code operand == null}. 
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operands have incompatible types.
+     */
+    public final Calculator rem(Primitive operand) 
+    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    	try {
+			return applyBinary(Operator.REM, operand);
+		} catch (InvalidOperatorException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+
+    /**
+     * Calculates the arithmetic negation of the topmost 
+     * {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
+     * 
+     * @return this {@link Calculator}.
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operand has incompatible type.
+     */
+    public final Calculator neg() 
+    throws NoSuchElementException, InvalidTypeException {
+    	try {
+			return applyUnary(Operator.NEG);
+		} catch (InvalidOperatorException e) {
+    		//this should never happen
+    		throw new UnexpectedInternalException(e);
+		}
+    }
+
+    /**
+     * Calculates the bitwise AND of a {@link Primitive}
+     * with the topmost {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
+     * 
+     * @param operand a {@link Primitive}.
+     * @return this {@link Calculator}.
+     * @throws InvalidOperandException if {@code operand == null}. 
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operands have incompatible types.
+     */
+    public final Calculator andBitwise(Primitive operand) 
+    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    	try {
+			return applyBinary(Operator.ANDBW, operand);
+		} catch (InvalidOperatorException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+
+    /**
+     * Calculates the bitwise OR of a {@link Primitive}
+     * with the topmost {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
+     * 
+     * @param operand a {@link Primitive}.
+     * @return this {@link Calculator}.
+     * @throws InvalidOperandException if {@code operand == null}. 
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operands have incompatible types.
+     */
+    public final Calculator orBitwise(Primitive operand)
+    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    	try {
+			return applyBinary(Operator.ORBW, operand);
+		} catch (InvalidOperatorException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+
+    /**
+     * Calculates the bitwise XOR of a {@link Primitive}
+     * with the topmost {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
+     * 
+     * @param operand a {@link Primitive}.
+     * @return this {@link Calculator}.
+     * @throws InvalidOperandException if {@code operand == null}. 
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operands have incompatible types.
+     */
+    public final Calculator xorBitwise(Primitive operand)
+    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    	try {
+			return applyBinary(Operator.XORBW, operand);
+		} catch (InvalidOperatorException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+
+    /**
+     * Calculates the logical AND of a {@link Primitive}
+     * with the topmost {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
+     * 
+     * @param operand a {@link Primitive}.
+     * @return this {@link Calculator}.
+     * @throws InvalidOperandException if {@code operand == null}. 
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operands have incompatible types.
+     */
+    public final Calculator and(Primitive operand) 
+    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    	try {
+			return applyBinary(Operator.AND, operand);
+		} catch (InvalidOperatorException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+
+    /**
+     * Calculates the logical OR of a {@link Primitive}
+     * with the topmost {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
+     * 
+     * @param operand a {@link Primitive}.
+     * @return this {@link Calculator}.
+     * @throws InvalidOperandException if {@code operand == null}. 
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operands have incompatible types.
+     */
+    public final Calculator or(Primitive operand) 
+    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    	try {
+			return applyBinary(Operator.OR, operand);
+		} catch (InvalidOperatorException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+
+    /**
+     * Calculates the logical NOT of the topmost 
+     * {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
+     * 
+     * @return this {@link Calculator}.
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operand has incompatible type.
+     */
+    public final Calculator not() 
+    throws NoSuchElementException, InvalidTypeException {
+    	try {
+			return applyUnary(Operator.NOT);
+		} catch (InvalidOperatorException e) {
+    		//this should never happen
+    		throw new UnexpectedInternalException(e);
+		}
+    }
+
+    /**
+     * Calculates the left shift of a {@link Primitive}
+     * with the topmost {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
+     * 
+     * @param operand a {@link Primitive}, the shift amount.
+     * @return this {@link Calculator}.
+     * @throws InvalidOperandException if {@code operand == null}. 
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operands have incompatible types.
+     */
+    public final Calculator shl(Primitive operand) 
+    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    	try {
+			return applyBinary(Operator.SHL, operand);
+		} catch (InvalidOperatorException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+
+    /**
+     * Calculates the arithmetic right shift of a {@link Primitive}
+     * with the topmost {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
+     * 
+     * @param operand a {@link Primitive}, the shift amount.
+     * @return this {@link Calculator}.
+     * @throws InvalidOperandException if {@code operand == null}. 
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operands have incompatible types.
+     */
+    public final Calculator shr(Primitive operand) 
+    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    	try {
+			return applyBinary(Operator.SHR, operand);
+		} catch (InvalidOperatorException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+
+    /**
+     * Calculates the logical right shift of a {@link Primitive}
+     * with the topmost {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
+     * 
+     * @param operand a {@link Primitive}, the shift amount.
+     * @return this {@link Calculator}.
+     * @throws InvalidOperandException if {@code operand == null}. 
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operands have incompatible types.
+     */
+    public final Calculator ushr(Primitive operand) 
+    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    	try {
+			return applyBinary(Operator.USHR, operand);
+		} catch (InvalidOperatorException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+
+    /**
+     * Calculates the equality comparison of a {@link Primitive}
+     * with the topmost {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
+     * 
+     * @param operand a {@link Primitive}.
+     * @return this {@link Calculator}.
+     * @throws InvalidOperandException if {@code operand == null}. 
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operands have incompatible types.
+     */
+    public final Calculator eq(Primitive operand) 
+    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    	try {
+			return applyBinary(Operator.EQ, operand);
+		} catch (InvalidOperatorException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+
+    /**
+     * Calculates the inequality comparison of a {@link Primitive}
+     * with the topmost {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
+     * 
+     * @param operand a {@link Primitive}.
+     * @return this {@link Calculator}.
+     * @throws InvalidOperandException if {@code operand == null}. 
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operands have incompatible types.
+     */
+    public final Calculator ne(Primitive operand)
+    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    	try {
+			return applyBinary(Operator.NE, operand);
+		} catch (InvalidOperatorException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+
+    /**
+     * Calculates the arithmetic less-or-equal-than comparison of a {@link Primitive}
+     * with the topmost {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
+     * 
+     * @param operand a {@link Primitive}.
+     * @return this {@link Calculator}.
+     * @throws InvalidOperandException if {@code operand == null}. 
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operands have incompatible types.
+     */
+    public final Calculator le(Primitive operand)
+    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    	try {
+			return applyBinary(Operator.LE, operand);
+		} catch (InvalidOperatorException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+
+    /**
+     * Calculates the arithmetic less-than comparison of a {@link Primitive}
+     * with the topmost {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
+     * 
+     * @param operand a {@link Primitive}.
+     * @return this {@link Calculator}.
+     * @throws InvalidOperandException if {@code operand == null}. 
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operands have incompatible types.
+     */
+    public final Calculator lt(Primitive operand)
+    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    	try {
+			return applyBinary(Operator.LT, operand);
+		} catch (InvalidOperatorException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+
+    /**
+     * Calculates the arithmetic greater-or-equal-than comparison of a {@link Primitive}
+     * with the topmost {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
+     * 
+     * @param operand a {@link Primitive}.
+     * @return this {@link Calculator}.
+     * @throws InvalidOperandException if {@code operand == null}. 
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operands have incompatible types.
+     */
+    public final Calculator ge(Primitive operand)
+    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    	try {
+			return applyBinary(Operator.GE, operand);
+		} catch (InvalidOperatorException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+
+    /**
+     * Calculates the arithmetic greater-than comparison of a {@link Primitive}
+     * with the topmost {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
+     * 
+     * @param operand a {@link Primitive}.
+     * @return this {@link Calculator}.
+     * @throws InvalidOperandException if {@code operand == null}. 
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operands have incompatible types.
+     */
+    public final Calculator gt(Primitive operand)
+    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    	try {
+			return applyBinary(Operator.GT, operand);
+		} catch (InvalidOperatorException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    }
+
+    /**
+     * Applies a unary {@link Operator} to the topmost 
+     * {@link Primitive} on the stack, and replaces
+     * the top of the stack with the result.
      * 
      * @param operator an {@link Operator}. It must be unary.
-     * @param operand a {@link Primitive}.
-     * @return a {@link Primitive} representing the application of {@code operator} 
-     *         to {@code operand}.
-     * @throws InvalidOperatorException when {@code operator} is not unary.
-     * @throws InvalidOperandException when {@code operand} is {@code null}.
-     * @throws InvalidTypeException when {@code operand} is not type compatible with
-     *         the application of {@code operator}.
+     * @return this {@link Calculator}.
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidOperatorException if {@code operator == null} or 
+     *         {@code operator} is not unary.
+     * @throws InvalidOperatorException  when {@code operator == null} or is not unary.
+     * @throws InvalidTypeException if the operand has incompatible type.
      */
-    public Primitive applyUnary(Operator operator, Primitive operand) 
-    throws InvalidOperatorException, InvalidOperandException, InvalidTypeException {
-        final Primitive retVal;
-
-        switch (operator) {
-        case NEG:
-            retVal = neg(operand);
-            break;
-        case NOT:
-            retVal = not(operand);
-            break;
-        default:
-            throw new InvalidOperatorException(operator.toString() + " is not unary");
-        }    	
-        return retVal;
+    public final Calculator applyUnary(Operator operator) 
+    throws NoSuchElementException, InvalidOperatorException, InvalidTypeException {
+    	if (operator == null || operator.isBinary()) {
+            throw new InvalidOperatorException("Tried to apply operator " + operator + " to build a unary expression.");
+    	} else {
+        	final Primitive operand = pop();
+            try {
+                push(simplify(Expression.makeExpressionUnary(operator, operand)));
+            } catch (InvalidOperatorException | InvalidOperandException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            }
+            return this;
+    	}
     }
 
     /**
      * Applies a binary {@link Operator} to a {@link Primitive}.
      * 
-     * @param firstOperand a {@link Primitive}.
      * @param operator an {@link Operator}. It must be binary.
-     * @param secondOperand a {@link Primitive}.
-     * @return a {@link Primitive} representing the application of {@code operator} to {@code firstOperand}
-     *          and {@code secondOperand}.
-     * @throws InvalidOperatorException  when {@code operator == null} or is not binary.
-     * @throws InvalidOperandException when {@code firstOperand == null ||  secondOperand == null}. 
-     * @throws InvalidTypeException when {@code firstOperand} and {@code secondOperand} 
-     *         are not type compatible with the application of {@code operator}. 
+     * @param operand a {@link Primitive}.
+     * @return this {@link Calculator}.
+     * @throws InvalidOperatorException if {@code operator == null} or 
+     *         {@code operator} is not binary.
+     * @throws InvalidOperandException if {@code operand == null}. 
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operands have incompatible types.
      */
-    public Primitive applyBinary(Primitive firstOperand, Operator operator, Primitive secondOperand) 
+    public final Calculator applyBinary(Operator operator, Primitive operand) 
     throws InvalidOperatorException, InvalidOperandException, InvalidTypeException {
-        final Primitive retVal;
-
-        switch (operator) {
-        case ADD:
-            retVal = add(firstOperand, secondOperand);
-            break;
-        case SUB:
-            retVal = sub(firstOperand, secondOperand);
-            break;
-        case MUL:
-            retVal = mul(firstOperand, secondOperand);
-            break;
-        case DIV:
-            retVal = div(firstOperand, secondOperand);
-            break;
-        case REM:
-            retVal = rem(firstOperand, secondOperand);
-            break;
-        case SHL:
-            retVal = shl(firstOperand, secondOperand);
-            break;
-        case SHR:
-            retVal = shr(firstOperand, secondOperand);
-            break;
-        case USHR:
-            retVal = ushr(firstOperand, secondOperand);
-            break;
-        case ORBW:
-            retVal = orBitwise(firstOperand, secondOperand);
-            break;
-        case ANDBW:
-            retVal = andBitwise(firstOperand, secondOperand);
-            break;
-        case XORBW:
-            retVal = xorBitwise(firstOperand, secondOperand);
-            break;
-        case GE:
-            retVal = ge(firstOperand, secondOperand);
-            break;
-        case AND:
-            retVal = and(firstOperand, secondOperand);
-            break;
-        case OR:
-            retVal = or(firstOperand, secondOperand);
-            break;
-        case NE:
-            retVal = ne(firstOperand, secondOperand);
-            break;
-        case EQ:
-            retVal = eq(firstOperand, secondOperand);
-            break;
-        case LE:
-            retVal = le(firstOperand, secondOperand);
-            break;
-        case GT:
-            retVal = gt(firstOperand, secondOperand);
-            break;
-        case LT:
-            retVal = lt(firstOperand, secondOperand);
-            break;
-        default:
-            throw new InvalidOperatorException(operator.toString() + " is not binary");
-        }
-
-        return retVal;
+    	if (operator == null || !operator.isBinary()) {
+            throw new InvalidOperatorException("Tried to apply operator " + operator + " to build a binary expression.");
+    	} else if (operand == null) {
+        	throw new InvalidOperandException("Tried to build a binary expression with a null operand.");
+    	} else {
+        	final Primitive firstOperand = pop();
+        	try {
+        		push(simplify(Expression.makeExpressionBinary(firstOperand, operator, operand)));
+        	} catch (InvalidOperatorException | InvalidOperandException e) {
+        		//this should never happen
+        		throw new UnexpectedInternalException(e);
+        	}
+        	return this;
+    	}
     }    
 
     /**
-     * Converts a primitive value to another type.
+     * Converts the topmost {@link Primitive} on the stack to a 
+     * wider type, and replaces the top of the stack with the result.
+     * 
+     * @param type a {@code char} representing the type of the conversion (see {@link Type}).
+     * @return this {@link Calculator}.
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operand cannot be widened to {@code type},
+     *         or {@code type} is not a valid primitive type.
+     */
+    public final Calculator widen(char type) 
+    throws NoSuchElementException, InvalidTypeException {
+    	final Primitive operand = pop();
+        try {
+            push(simplify(WideningConversion.make(type, operand)));
+        } catch (InvalidOperandException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
+        return this;
+    }
+
+    /**
+     * Converts the topmost {@link Primitive} on the stack to a 
+     * narrower type, and replaces the top of the stack with the result.
+     * 
+     * @param type a {@code char} representing the type of the conversion (see {@link Type}).
+     * @return this {@link Calculator}.
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operand cannot be narrowed to {@code type},
+     *         or {@code type} is not a valid primitive type.
+     */
+    public final Calculator narrow(char type) 
+    throws NoSuchElementException, InvalidTypeException {
+    	final Primitive operand = pop();
+        try {
+            push(simplify(NarrowingConversion.make(type, operand)));
+        } catch (InvalidOperandException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
+        return this;
+    }
+
+    /**
+     * Converts the topmost {@link Primitive} on the stack to another type, 
+     * and replaces the top of the stack with the result.
      * 
      * @param type a {@code char} representing the type of the conversion.
-     * @param arg a {@link Primitive}.
-     * @return a {@link Primitive} representing the result of converting 
-     *         {@code arg} to {@code type}, or {@code arg} if it already
-     *         has type {@code type}.
-     * @throws InvalidOperandException when {@code arg == null}. 
-     * @throws InvalidTypeException when {@code arg} cannot be converted 
-     *         to {@code type}. 
+     * @return this {@link Calculator}.
+     * @throws NoSuchElementException if the stack is empty.
+     * @throws InvalidTypeException if the operand cannot be coverted to {@code type},
+     *         or {@code type} is not a valid primitive type.
      */
-    public Primitive to(char type, Primitive arg) 
-    throws InvalidOperandException, InvalidTypeException {
-        if (arg == null) {
-            throw new InvalidOperandException("Parameter arg of type conversion is null.");
+    public final Calculator to(char type) 
+    throws NoSuchElementException, InvalidTypeException {
+    	final Primitive operand = pop();
+        final char operandType = operand.getType();
+        if (type == operandType) {
+            try {
+				push(operand);
+			} catch (InvalidOperandException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+			}
+        } else if (widens(type, operandType)) {
+            try {
+                push(simplify(WideningConversion.make(type, operand)));
+            } catch (InvalidOperandException | InvalidTypeException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            }
+        } else if (narrows(type, operandType)) {
+            try {
+                push(simplify(NarrowingConversion.make(type, operand)));
+            } catch (InvalidOperandException | InvalidTypeException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            }
+        } else {
+        	throw new InvalidTypeException("Cannot convert operand with type " + operandType + " to type " + type + ".");
         }
-        final char argType = arg.getType();
-        if (type == argType) {
-            return arg;
-        }
-        if (widens(type, argType)) {
-            return widen(type, arg);
-        }
-        if (narrows(type, argType)) {
-            return narrow(type, arg);
-        }
-        throw new InvalidTypeException("cannot convert type " + argType + " to type " + type);
+        return this;
     }
     
     /**
-     * Simplifies a {@link Primitive} to another equivalent {@link Primitive}.
+     * Simplifies a {@link Primitive} to another equivalent 
+     * {@link Primitive}.
      * 
      * @param arg a {@link Primitive}.
      * @return a {@link Primitive} equivalent to {@code arg}.

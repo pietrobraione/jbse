@@ -1,13 +1,13 @@
 package jbse.rewr;
 
 import jbse.common.exc.UnexpectedInternalException;
-import jbse.rewr.exc.NoResultException;
 import jbse.val.Expression;
 import jbse.val.Operator;
 import jbse.val.Primitive;
 import jbse.val.Simplex;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
+import jbse.val.exc.NoResultException;
 
 /**
  * Rewrites {@code A / B == 0} to {@code A == 0 && B != 0}, 
@@ -16,7 +16,7 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  *
  */
-public class RewriterDivisionEqualsZero extends Rewriter {
+public class RewriterDivisionEqualsZero extends RewriterCalculatorRewriting {
 	public RewriterDivisionEqualsZero() { }
 
 	@Override
@@ -35,9 +35,9 @@ public class RewriterDivisionEqualsZero extends Rewriter {
 					final Primitive B = left.getSecondOperand();
 					try {
 						if (op == Operator.EQ) { 
-							setResult(rewrite(A.eq(right).and(B.eq(right).not())));
+							setResult(rewrite(this.calc.push(A).eq(right).and(this.calc.push(B).eq(right).not().pop()).pop()));
 						} else {
-							setResult(rewrite(A.ne(right)));
+							setResult(rewrite(this.calc.push(A).ne(right).pop()));
 						}
 					} catch (InvalidOperandException | InvalidTypeException e) {
 						//this should never happen

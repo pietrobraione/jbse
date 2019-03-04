@@ -9,13 +9,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import jbse.apps.IO;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.DecisionProcedureAlwSat;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Clause;
 import jbse.mem.SwitchTable;
-import jbse.rewr.CalculatorRewriting;
 import jbse.tree.DecisionAlternative_XCMPY;
 import jbse.tree.DecisionAlternative_XCMPY.Values;
 import jbse.tree.DecisionAlternative_IFX;
@@ -37,8 +37,8 @@ public final class DecisionProcedureConsole extends DecisionProcedureAlgorithms 
     private static final String PROMPT = "? > ";
     private final PrintStream[] ps;
 
-    public DecisionProcedureConsole(CalculatorRewriting calc, PrintStream[] ps) {
-        super(new DecisionProcedureAlwSat(), calc); //component is used for storing assumptions, not for deciding
+    public DecisionProcedureConsole(PrintStream... ps) throws InvalidInputException {
+        super(new DecisionProcedureAlwSat(null)); //component is used for storing assumptions, not for deciding
         this.ps = ps.clone();
     }
 

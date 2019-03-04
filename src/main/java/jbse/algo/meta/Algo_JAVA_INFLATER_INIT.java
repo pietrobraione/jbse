@@ -54,10 +54,10 @@ public final class Algo_JAVA_INFLATER_INIT extends Algo_INVOKEMETA_Nonbranching 
             this.address = (long) method.invoke(null, this.nowrap);
         } catch (InvocationTargetException e) {
             final String cause = internalClassName(e.getCause().getClass().getName());
-            throwNew(state, cause);
+            throwNew(state, this.ctx.getCalculator(), cause);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         } catch (SecurityException | NoSuchMethodException | IllegalAccessException | IllegalArgumentException e) {
             //this should not happen
@@ -69,7 +69,7 @@ public final class Algo_JAVA_INFLATER_INIT extends Algo_INVOKEMETA_Nonbranching 
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
             state.addInflater(this.address, this.nowrap);
-            state.pushOperand(state.getCalculator().valLong(this.address));
+            state.pushOperand(this.ctx.getCalculator().valLong(this.address));
         };
     }
 }

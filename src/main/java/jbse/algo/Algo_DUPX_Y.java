@@ -61,21 +61,21 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             if (this.cat1) {
                 //dup_x*
                 if (!isCat_1(value1.getType())) {
-                    throwVerifyError(state);
+                    throwVerifyError(state, this.ctx.getCalculator());
                     exitFromAlgorithm();
                 }
                 if (this.x1 && !isCat_1(value2.getType())) { //dup_x1
-                    throwVerifyError(state);
+                    throwVerifyError(state, this.ctx.getCalculator());
                     exitFromAlgorithm();
                 }
             } else if (this.x1) {
                 //dup2_x1
                 if (!isCat_1(value2.getType())) {
-                    throwVerifyError(state);
+                    throwVerifyError(state, this.ctx.getCalculator());
                     exitFromAlgorithm();
                 }
             } else if (isCat_1(value1.getType()) && !isCat_1(value2.getType())) { //dup2_x2
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
         };
@@ -137,13 +137,13 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         state.pushOperand(value1);
     }
 
-    private static void dup_x2_form1(State state, Value value1, Value value2) 
+    private void dup_x2_form1(State state, Value value1, Value value2) 
     throws ThreadStackEmptyException, InterruptException, ClasspathException, FrozenStateException {
         //we need a third cat1 operand
         try {
             final Value value3 = state.popOperand();
             if (!isCat_1(value3.getType())) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
             state.pushOperand(value1);
@@ -151,7 +151,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             state.pushOperand(value2);
             state.pushOperand(value1);
         } catch (InvalidNumberOfOperandsException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
     }
@@ -163,13 +163,13 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         state.pushOperand(value1);
     }
 
-    private static void dup2_x1_form1(State state, Value value1, Value value2) 
+    private void dup2_x1_form1(State state, Value value1, Value value2) 
     throws ThreadStackEmptyException, InterruptException, ClasspathException, FrozenStateException {
         //we need a third cat1 operand
         try {
             final Value value3 = state.popOperand();
             if (!isCat_1(value3.getType())) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
             state.pushOperand(value2);
@@ -178,7 +178,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             state.pushOperand(value2);
             state.pushOperand(value1);
         } catch (InvalidNumberOfOperandsException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
     }
@@ -190,7 +190,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         state.pushOperand(value1);
     }
 
-    private static void dup2_x2_form1Or3(State state, Value value1, Value value2) 
+    private void dup2_x2_form1Or3(State state, Value value1, Value value2) 
     throws ThreadStackEmptyException, InterruptException, ClasspathException, FrozenStateException {
         //we need a third operand, that also allows us
         //to decide the form
@@ -202,18 +202,18 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 dup2_x2_form3(state, value1, value2, value3);
             }
         } catch (InvalidNumberOfOperandsException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
     }
 
-    private static void dup2_x2_form1(State state, Value value1, Value value2, Value value3) 
+    private void dup2_x2_form1(State state, Value value1, Value value2, Value value3) 
     throws ThreadStackEmptyException, InterruptException, ClasspathException, FrozenStateException {
         try {
             //we need a fourth cat1 operand
             final Value value4 = state.popOperand();
             if (!isCat_1(value3.getType())) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
             state.pushOperand(value2);
@@ -223,18 +223,18 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             state.pushOperand(value2);
             state.pushOperand(value1);
         } catch (InvalidNumberOfOperandsException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
     }
 
-    private static void dup2_x2_form2(State state, Value value1, Value value2) 
+    private void dup2_x2_form2(State state, Value value1, Value value2) 
     throws ThreadStackEmptyException, InterruptException, ClasspathException, FrozenStateException {
         //we need a third cat1 operand
         try {
             final Value value3 = state.popOperand();
             if (!isCat_1(value3.getType())) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
             state.pushOperand(value1);
@@ -242,7 +242,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             state.pushOperand(value2);
             state.pushOperand(value1);
         } catch (InvalidNumberOfOperandsException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
     }

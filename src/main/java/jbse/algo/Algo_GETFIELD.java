@@ -33,7 +33,7 @@ final class Algo_GETFIELD extends Algo_GETX {
     throws ClasspathException, FieldNotFoundException, InterruptException {
         //checks that the field is not static
         if (this.fieldClassResolved.isFieldStatic(this.data.signature())) {
-            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+            throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
             exitFromAlgorithm();
         }
     }
@@ -43,12 +43,12 @@ final class Algo_GETFIELD extends Algo_GETX {
         try {
             final Reference myObjectRef = (Reference) this.data.operand(0);
             if (state.isNull(myObjectRef)) {
-                throwNew(state, NULL_POINTER_EXCEPTION);
+                throwNew(state, this.ctx.getCalculator(), NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
             return state.getObject(myObjectRef); 
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
         return null; //to keep the compiler happy

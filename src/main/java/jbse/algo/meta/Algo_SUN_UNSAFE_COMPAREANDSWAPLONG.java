@@ -35,12 +35,12 @@ public final class Algo_SUN_UNSAFE_COMPAREANDSWAPLONG extends Algo_SUN_UNSAFE_CO
             final Primitive primToCompare = (Primitive) toCompare;
             if (primCurrent instanceof Simplex && primToCompare instanceof Simplex) {
                 //TODO check they are longs, or at least that they are of the same type?
-                return ((Simplex) primCurrent.eq(primToCompare)).surelyTrue();
+                return ((Simplex) this.ctx.getCalculator().push(primCurrent).eq(primToCompare).pop()).surelyTrue();
             } else {
                 throw new SymbolicValueNotAllowedException("The longs to be compared during an invocation to sun.misc.Unsafe.CompareAndSwapLong must be concrete (branching currently not implemented)");
             }
         } catch (ClassCastException | InvalidTypeException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         } catch (InvalidOperandException e) {
             //this should never happen

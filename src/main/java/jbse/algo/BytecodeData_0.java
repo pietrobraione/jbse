@@ -1,6 +1,7 @@
 package jbse.algo;
 
 import jbse.mem.State;
+import jbse.val.Calculator;
 
 /**
  * Zero implicits, zero immediates.
@@ -9,7 +10,7 @@ import jbse.mem.State;
  */
 public final class BytecodeData_0 extends BytecodeData {
     @Override
-    protected void readImmediates(State state) throws InterruptException {
+    protected void readImmediates(State state, Calculator calc) throws InterruptException {
         //nothing to do
     }
 

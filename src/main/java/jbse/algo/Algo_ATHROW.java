@@ -61,12 +61,12 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             try {
                 final Reference myExcRef = (Reference) this.data.operand(0);
                 if (state.isNull(myExcRef)) {
-                    throwNew(state, NULL_POINTER_EXCEPTION);
+                    throwNew(state, this.ctx.getCalculator(), NULL_POINTER_EXCEPTION);
                 } else {
-                    throwObject(state, myExcRef);
+                    throwObject(state, this.ctx.getCalculator(), myExcRef);
                 }
             } catch (ClassCastException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
             }
         };
     }

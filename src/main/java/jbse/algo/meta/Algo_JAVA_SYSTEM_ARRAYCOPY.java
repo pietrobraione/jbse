@@ -25,6 +25,7 @@ import jbse.mem.Array;
 import jbse.mem.Objekt;
 import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_XASTORE;
+import jbse.val.Calculator;
 import jbse.val.Null;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -52,6 +53,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
+        	final Calculator calc = this.ctx.getCalculator();
             try {
                 this.src = (Reference) this.data.operand(0);
                 this.srcPos = (Primitive) this.data.operand(1);
@@ -59,12 +61,12 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                 this.destPos = (Primitive) this.data.operand(3);
                 this.length = (Primitive) this.data.operand(4);
             } catch (ClassCastException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, calc);
                 exitFromAlgorithm();
             }
 
             if (state.isNull(this.src) || state.isNull(this.dest)) {
-                throwNew(state, NULL_POINTER_EXCEPTION);
+                throwNew(state, calc, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
 
@@ -73,7 +75,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                 srcArray = (Array) state.getObject(this.src);
                 destArray = (Array) state.getObject(this.dest);
             } catch (ClassCastException e) {
-                throwNew(state, ARRAY_STORE_EXCEPTION);
+                throwNew(state, calc, ARRAY_STORE_EXCEPTION);
                 exitFromAlgorithm();
             }
 
@@ -82,23 +84,24 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
             if (srcTypeComponent.isPrimitiveOrVoid() && 
                 destTypeComponent.isPrimitiveOrVoid()) {
                 if (!srcTypeComponent.equals(destTypeComponent)) {
-                    throwNew(state, ARRAY_STORE_EXCEPTION);
+                    throwNew(state, calc, ARRAY_STORE_EXCEPTION);
                     exitFromAlgorithm();
                 }
             } else if (srcTypeComponent.isPrimitiveOrVoid() != destTypeComponent.isPrimitiveOrVoid()) {
-                throwNew(state, ARRAY_STORE_EXCEPTION);
+                throwNew(state, calc, ARRAY_STORE_EXCEPTION);
                 exitFromAlgorithm();
             }
 
-            final Primitive zero = state.getCalculator().valInt(0);
+            final Primitive zero = calc.valInt(0);
             try {
-                this.inRange = this.srcPos.ge(zero)
-                .and(this.destPos.ge(zero))
-                .and(this.length.ge(zero))
-                .and(this.srcPos.add(this.length).le(srcArray.getLength()))
-                .and(this.destPos.add(this.length).le(destArray.getLength()));
+                this.inRange = calc.push(this.srcPos).ge(zero)
+                               .and(calc.push(this.destPos).ge(zero).pop())
+                               .and(calc.push(this.length).ge(zero).pop())
+                               .and(calc.push(this.srcPos).add(this.length).le(srcArray.getLength()).pop())
+                               .and(calc.push(this.destPos).add(this.length).le(destArray.getLength()).pop())
+                               .pop();
             } catch (InvalidOperandException | InvalidTypeException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, calc);
                 exitFromAlgorithm();
             }
         };
@@ -120,7 +123,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
     @Override
     protected StrategyRefine<DecisionAlternative_XASTORE> refiner() {
         return (state, alt) -> {
-            state.assume(this.ctx.decisionProcedure.simplify(alt.isInRange() ? this.inRange : this.inRange.not()));
+            state.assume(this.ctx.getCalculator().simplify(this.ctx.decisionProcedure.simplify(alt.isInRange() ? this.inRange : this.ctx.getCalculator().push(this.inRange).not().pop())));
         };
     }
 
@@ -131,6 +134,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
     @Override
     protected StrategyUpdate<DecisionAlternative_XASTORE> updater() {
         return (state, alt) -> {
+        	final Calculator calc = this.ctx.getCalculator();
             if (alt.isInRange()) {
                 Array srcArray = null, destArray = null;
                 try {
@@ -140,7 +144,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                     final ClasspathException[] _eCP = new ClasspathException[1]; //boxes so the next closure can store the exception
                     final FrozenStateException[] _eFS = new FrozenStateException[1]; //boxes so the next closure can store the exception
                     final Iterator<? extends Array.AccessOutcomeIn> entries = 
-                        destArray.arraycopy(srcArray, this.srcPos, this.destPos, this.length,  
+                        destArray.arraycopy(calc, srcArray, this.srcPos, this.destPos, this.length,  
                                         (Reference ref) -> {
                                             if (ref instanceof Null) {
                                                 return;
@@ -148,12 +152,12 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                                             try {
                                                 final Objekt srcElement = state.getObject(ref);
                                                 if (!state.getClassHierarchy().isAssignmentCompatible(srcElement.getType(), destTypeComponent)) {
-                                                    throwNew(state, ARRAY_STORE_EXCEPTION);
+                                                    throwNew(state, calc, ARRAY_STORE_EXCEPTION);
                                                     throw new ExitFromAlgorithmException();
                                                 }
                                             } catch (ClasspathException exc) {
                                                 try {
-                                                    throwVerifyError(state);
+                                                    throwVerifyError(state, calc);
                                                 } catch (ClasspathException e) {
                                                     _eCP[0] = e;
                                                     //then falls through
@@ -170,15 +174,14 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                         throw _eFS[0];
                     }
                     this.ctx.decisionProcedure.completeArraycopy(entries, this.srcPos, this.destPos, this.length);
-                } catch (InvalidOperandException | InvalidTypeException | 
-                         InvalidInputException | ClassCastException e) {
+                } catch (InvalidTypeException | InvalidInputException | ClassCastException e) {
                     //this should never happen
                     failExecution(e);
                 } catch (ExitFromAlgorithmException e) {
                     exitFromAlgorithm();
                 }
             } else {
-                throwNew(state, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
+                throwNew(state, calc, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
                 exitFromAlgorithm();
             }
         };

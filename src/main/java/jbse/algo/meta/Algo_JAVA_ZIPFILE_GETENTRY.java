@@ -28,7 +28,6 @@ import jbse.val.Calculator;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.Simplex;
-import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -50,6 +49,7 @@ public final class Algo_JAVA_ZIPFILE_GETENTRY extends Algo_INVOKEMETA_Nonbranchi
     protected void cookMore(State state) 
     throws InterruptException, ClasspathException, SymbolicValueNotAllowedException, 
     UndefinedResultException, InvalidInputException {
+        final Calculator calc = this.ctx.getCalculator();
         try {
             //gets the first (long jzfile) parameter
             final Primitive _jzfile = (Primitive) this.data.operand(0);
@@ -73,9 +73,8 @@ public final class Algo_JAVA_ZIPFILE_GETENTRY extends Algo_INVOKEMETA_Nonbranchi
             }
             final int nameLength = ((Integer) ((Simplex) _name.getLength()).getActualValue()).intValue();
             this.name = new byte[nameLength];
-            final Calculator calc = state.getCalculator();
             for (int i = 0; i < nameLength; ++i) {
-                final Simplex name_i = (Simplex) ((AccessOutcomeInValue) _name.getFast(calc.valInt(i))).getValue();
+                final Simplex name_i = (Simplex) ((AccessOutcomeInValue) _name.getFast(calc, calc.valInt(i))).getValue();
                 this.name[i] = ((Byte) name_i.getActualValue()).byteValue();
             }
             
@@ -92,14 +91,13 @@ public final class Algo_JAVA_ZIPFILE_GETENTRY extends Algo_INVOKEMETA_Nonbranchi
             this.jzentry = (long) method.invoke(null, state.getZipFileJz(this.jzfile), this.name, addSlash);
         } catch (InvocationTargetException e) {
             final String cause = internalClassName(e.getCause().getClass().getName());
-            throwNew(state, cause);
+            throwNew(state, calc, cause);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (SecurityException | NoSuchMethodException | IllegalAccessException | 
-                 FastArrayAccessNotAllowedException | InvalidTypeException | 
-                 InvalidOperandException e) {
+                 FastArrayAccessNotAllowedException | InvalidTypeException e) {
             //this should not happen
             failExecution(e);
         }
@@ -118,7 +116,7 @@ public final class Algo_JAVA_ZIPFILE_GETENTRY extends Algo_INVOKEMETA_Nonbranchi
                 state.addZipFileEntry(this.jzentry, this.jzfile, this.name);
                 _toPush = this.jzentry;
             }
-            final Simplex toPush = state.getCalculator().valLong(_toPush);
+            final Simplex toPush = this.ctx.getCalculator().valLong(_toPush);
             state.pushOperand(toPush);
         };
     }

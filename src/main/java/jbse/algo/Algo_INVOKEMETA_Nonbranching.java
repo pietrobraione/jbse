@@ -13,6 +13,8 @@ import jbse.mem.State;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * Abstract {@link Algorithm} implementing the effect of 
@@ -41,7 +43,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
 
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, DecisionException, ClasspathException, 
-    CannotManageStateException, InterruptException, InvalidInputException, ContradictionException {
+    CannotManageStateException, InterruptException, InvalidInputException, 
+    ContradictionException, InvalidTypeException, InvalidOperandException {
         //the default implementation does nothing
     }
 

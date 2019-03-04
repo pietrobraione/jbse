@@ -70,7 +70,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         return (state, alt) -> {
             final int programCounter = state.getPC();
             final int bytecodeOffset = (this.wide ? JSR_W_OFFSET : JSR_OFFSET);
-            state.pushOperand(state.getCalculator().valInt(programCounter + bytecodeOffset));
+            state.pushOperand(this.ctx.getCalculator().valInt(programCounter + bytecodeOffset));
         };
     }
 

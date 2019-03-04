@@ -71,10 +71,12 @@ public abstract class ObjektImpl implements Objekt {
     /**
      * Constructor.
      * 
+     * @param calc a {@link Calculator}. It must not be {@code null}. It will
+     *        only be used during object construction and will not be stored
+     *        in this {@link ObjektImpl}.
      * @param symbolic a {@code boolean}, whether this object is symbolic
      *        (i.e., not explicitly created during symbolic execution by
      *        a {@code new*} bytecode, but rather assumed).
-     * @param calc a {@link Calculator}.
      * @param type a {@link ClassFile}, the class of this object.
      * @param origin the {@link ReferenceSymbolic} providing origin of 
      *        the {@code Objekt}, if symbolic, or {@code null}, if concrete.
@@ -86,7 +88,8 @@ public abstract class ObjektImpl implements Objekt {
      * @param fieldSignatures varargs of field {@link Signature}s, all the
      *        fields this object knows.
      */
-    protected ObjektImpl(boolean symbolic, Calculator calc, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, boolean staticFields, int numOfStaticFields, Signature... fieldSignatures) {
+    protected ObjektImpl(Calculator calc, boolean symbolic, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, boolean staticFields, int numOfStaticFields, Signature... fieldSignatures) {
+    	//TODO (null-)check parameters, throw exceptions
         this.symbolic = symbolic;
         this.fields = new HashMap<>();
         this.staticFields = staticFields;

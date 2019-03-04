@@ -45,9 +45,9 @@ import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Reference;
 import jbse.val.Simplex;
-import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -69,12 +69,14 @@ public final class Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS extends Algo_INVOKEMETA_
     
     @Override
     protected void cookMore(State state) 
-    throws SymbolicValueNotAllowedException, InterruptException, ClasspathException {
+    throws SymbolicValueNotAllowedException, InterruptException, ClasspathException,
+    InvalidInputException, InvalidTypeException {
+    	final Calculator calc = this.ctx.getCalculator();
         try {
             //gets the name of the host class
             final Reference refClassHost = (Reference) this.data.operand(1);
             if (state.isNull(refClassHost)) {
-                throwNew(state, ILLEGAL_ARGUMENT_EXCEPTION); //this is the behaviour of Hotspot
+                throwNew(state, calc, ILLEGAL_ARGUMENT_EXCEPTION); //this is the behaviour of Hotspot
                 exitFromAlgorithm();
             }
             final Instance_JAVA_CLASS instanceClassHost = (Instance_JAVA_CLASS) state.getObject(refClassHost);
@@ -86,7 +88,7 @@ public final class Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS extends Algo_INVOKEMETA_
             //gets the bytecode
             final Reference refBytecode = (Reference) this.data.operand(2);
             if (state.isNull(refBytecode)) {
-                throwNew(state, NULL_POINTER_EXCEPTION); //this is the behaviour of Hotspot
+                throwNew(state, calc, NULL_POINTER_EXCEPTION); //this is the behaviour of Hotspot
                 exitFromAlgorithm();
             }
             final Array arrayBytecode = (Array) state.getObject(refBytecode);
@@ -95,8 +97,8 @@ public final class Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS extends Algo_INVOKEMETA_
             }
             this.bytecode = new byte[((Integer) ((Simplex) arrayBytecode.getLength()).getActualValue()).intValue()];
             for (int i = 0; i < this.bytecode.length; ++i) {
-                final Simplex _i = state.getCalculator().valInt(i);
-                final Simplex _b = (Simplex) ((AccessOutcomeInValue) arrayBytecode.getFast(_i)).getValue();
+                final Simplex _i = calc.valInt(i);
+                final Simplex _b = (Simplex) ((AccessOutcomeInValue) arrayBytecode.getFast(calc, _i)).getValue();
                 this.bytecode[i] = ((Byte) _b.getActualValue()).byteValue();
             }
             
@@ -110,21 +112,21 @@ public final class Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS extends Algo_INVOKEMETA_
             //let's push the right assumption
             state.assumeClassNotInitialized(this.cfAnonymousDummy);
         } catch (ClassFileIllFormedException e) {
-            throwNew(state, CLASS_FORMAT_ERROR); //this is the behaviour of Hotspot
+            throwNew(state, calc, CLASS_FORMAT_ERROR); //this is the behaviour of Hotspot
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
-        } catch (InvalidOperandException | InvalidTypeException | 
-                 FastArrayAccessNotAllowedException | InvalidInputException e) {
+        } catch (FastArrayAccessNotAllowedException e) {
             //this should never happen
             failExecution(e);
         }
     }
     
     private ConstantPoolValue[] patches(State state, Reference refCpPatches) 
-    throws SymbolicValueNotAllowedException, InvalidOperandException, InvalidTypeException, 
+    throws SymbolicValueNotAllowedException, InvalidInputException, InvalidTypeException, 
     FastArrayAccessNotAllowedException, ClassFileIllFormedException, FrozenStateException {
+    	final Calculator calc = this.ctx.getCalculator();
         if (state.isNull(refCpPatches)) {
             return null;
         }
@@ -135,8 +137,8 @@ public final class Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS extends Algo_INVOKEMETA_
         final ConstantPoolValue[] retVal = new ConstantPoolValue[((Integer) ((Simplex) arrayCpPatches.getLength()).getActualValue()).intValue()];
         try {
             for (int i = 0; i < retVal.length; ++i) {
-                final Simplex _i = state.getCalculator().valInt(i);
-                final Reference _r = (Reference) ((AccessOutcomeInValue) arrayCpPatches.getFast(_i)).getValue();
+                final Simplex _i = calc.valInt(i);
+                final Reference _r = (Reference) ((AccessOutcomeInValue) arrayCpPatches.getFast(calc, _i)).getValue();
                 if (state.isNull(_r)) {
                     retVal[i] = null;
                 } else {
@@ -183,10 +185,10 @@ public final class Algo_SUN_UNSAFE_DEFINEANONYMOUSCLASS extends Algo_INVOKEMETA_
         return (state, alt) -> {
             try {
                 final ClassFile cfAnonymous = state.getClassHierarchy().addClassFileAnonymous(this.cfAnonymousDummy, this.hostClass, this.cpPatches);
-                state.ensureInstance_JAVA_CLASS(cfAnonymous);
+                state.ensureInstance_JAVA_CLASS(this.ctx.getCalculator(), cfAnonymous);
                 state.pushOperand(state.referenceToInstance_JAVA_CLASS(cfAnonymous));
             } catch (HeapMemoryExhaustedException e) {
-                throwNew(state, OUT_OF_MEMORY_ERROR);
+                throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
             }
         };

@@ -109,10 +109,10 @@ public final class Algo_JAVA_ZIPFILE_READ extends Algo_INVOKEMETA_Nonbranching {
             this.nread = (int) method.invoke(null, jzfile, jzentry, pos, this.readBytes, 0, len);
         } catch (InvocationTargetException e) {
             final String cause = internalClassName(e.getCause().getClass().getName());
-            throwNew(state, cause);
+            throwNew(state, this.ctx.getCalculator(), cause);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         } catch (NoSuchMethodException | SecurityException | IllegalAccessException | 
                  IllegalArgumentException e) {
@@ -124,7 +124,7 @@ public final class Algo_JAVA_ZIPFILE_READ extends Algo_INVOKEMETA_Nonbranching {
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            final Calculator calc = state.getCalculator();
+            final Calculator calc = this.ctx.getCalculator();
             state.pushOperand(calc.valInt(this.nread));
             
             try {

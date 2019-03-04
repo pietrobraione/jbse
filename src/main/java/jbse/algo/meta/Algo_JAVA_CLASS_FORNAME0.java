@@ -68,7 +68,7 @@ public final class Algo_JAVA_CLASS_FORNAME0 extends Algo_INVOKEMETA_Nonbranching
             //gets the name of the class
             final Reference classNameRef = (Reference) this.data.operand(0);
             if (state.isNull(classNameRef)) {
-                throwNew(state, NULL_POINTER_EXCEPTION);
+                throwNew(state, this.ctx.getCalculator(), NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
             final String className = internalClassName(valueString(state, classNameRef));
@@ -78,7 +78,7 @@ public final class Algo_JAVA_CLASS_FORNAME0 extends Algo_INVOKEMETA_Nonbranching
             
             //gets whether the class must be initialized
             if (!(this.data.operand(1) instanceof Primitive)) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             } else if (!(this.data.operand(1) instanceof Simplex)) {
                 throw new SymbolicValueNotAllowedException("The toInit parameter to java.lang.Class.forName0 cannot be a symbolic boolean");
@@ -111,41 +111,41 @@ public final class Algo_JAVA_CLASS_FORNAME0 extends Algo_INVOKEMETA_Nonbranching
 
             //checks whether callerClass can access this.classFile 
             if (!hier.isClassAccessible(callerClass, classFile)) {
-                throwNew(state, ILLEGAL_ACCESS_ERROR);
+                throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
                 exitFromAlgorithm();
             }
             
             //makes the instance of java.lang.Class and possibly
             //initializes it
-            state.ensureInstance_JAVA_CLASS(classFile);
+            state.ensureInstance_JAVA_CLASS(this.ctx.getCalculator(), classFile);
             if (toInit) {
                 ensureClassInitialized(state, classFile, this.ctx, JBSE_BASE_BOXEXCEPTIONININITIALIZERERROR); 
             }
             
             this.classRef = state.referenceToInstance_JAVA_CLASS(classFile);
         } catch (PleaseLoadClassException e) {
-            invokeClassLoaderLoadClass(state, e);
+            invokeClassLoaderLoadClass(state, this.ctx.getCalculator(), e);
             exitFromAlgorithm();
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (ClassFileNotFoundException e) {
-            throwNew(state, CLASS_NOT_FOUND_EXCEPTION);
+            throwNew(state, this.ctx.getCalculator(), CLASS_NOT_FOUND_EXCEPTION);
             exitFromAlgorithm();
         } catch (BadClassFileVersionException e) {
-            throwNew(state, UNSUPPORTED_CLASS_VERSION_ERROR);
+            throwNew(state, this.ctx.getCalculator(), UNSUPPORTED_CLASS_VERSION_ERROR);
             exitFromAlgorithm();
         } catch (WrongClassNameException e) {
-            throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
+            throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
             exitFromAlgorithm();
         } catch (ClassFileNotAccessibleException e) {
-            throwNew(state, ILLEGAL_ACCESS_ERROR);
+            throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
             exitFromAlgorithm();
         } catch (IncompatibleClassFileException e) {
-            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+            throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
             exitFromAlgorithm();
         } catch (ClassFileIllFormedException | ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
     }

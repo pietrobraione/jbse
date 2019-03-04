@@ -1,7 +1,6 @@
 package jbse.val;
 
 import jbse.common.Type;
-import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
@@ -23,7 +22,6 @@ public final class Simplex extends Primitive implements Cloneable {
      * Constructor.
      * 
      * @param type a {@code char}, the type of this value.
-     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param value a (boxed) value with primitive type.
      * @throws InvalidOperandException if {@code value} is not a 
      *         primitive value (i.e., an instance of {@link Boolean}, {@link Byte}, 
@@ -31,11 +29,10 @@ public final class Simplex extends Primitive implements Cloneable {
      *         {@link Long}, or {@link Short}).
      * @throws InvalidTypeException if {@code type} is not primitive or is
      *         not the type of {@code value}.
-     * @throws InvalidInputException if {@code calc == null}.
      */
-    private Simplex(char type, Calculator calc, Object value) 
-    throws InvalidOperandException, InvalidTypeException, InvalidInputException {
-        super(type, calc);
+    private Simplex(char type, Object value) 
+    throws InvalidOperandException, InvalidTypeException {
+        super(type);
         //checks on parameters
         if (value == null || !(
             value instanceof Boolean || 
@@ -91,32 +88,34 @@ public final class Simplex extends Primitive implements Cloneable {
      * 
      * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param value a (boxed) value with primitive type. 
-     * @throws InvalidOperandException if {@code value} is not a 
+     * @throws InvalidOperandException if {@code value} is not a boxed
      *         primitive value (i.e., an instance of {@link Boolean}, {@link Byte}, 
      *         {@link Character}, {@link Double}, {@link Float}, {@link Integer}, 
      *         {@link Long}, or {@link Short}).
-     * @throws InvalidTypeException if {@code type} is not primitive.
-     * @throws InvalidInputException if {@code calc == null}.
      */
-    public static Simplex make(Calculator calc, Object n) 
-    throws InvalidTypeException, InvalidOperandException, InvalidInputException {
-        if (n instanceof Boolean) {
-            return new Simplex(Type.BOOLEAN, calc, n);
-        } else if (n instanceof Byte) {
-            return new Simplex(Type.BYTE, calc, n);
-        } else if (n instanceof Character) {
-            return new Simplex(Type.CHAR, calc, n);
-        } else if (n instanceof Double) {
-            return new Simplex(Type.DOUBLE, calc, n);
-        } else if (n instanceof Float) {
-            return new Simplex(Type.FLOAT, calc, n);
-        } else if (n instanceof Integer) {
-            return new Simplex(Type.INT, calc, n);
-        } else if (n instanceof Long) {
-            return new Simplex(Type.LONG, calc, n);
-        } else {
-            return new Simplex(Type.SHORT, calc, n);
-        }
+    public static Simplex make(Object n) throws InvalidOperandException {
+        try {
+        	if (n instanceof Boolean) {
+        		return new Simplex(Type.BOOLEAN, n);
+        	} else if (n instanceof Byte) {
+        		return new Simplex(Type.BYTE, n);
+        	} else if (n instanceof Character) {
+        		return new Simplex(Type.CHAR, n);
+        	} else if (n instanceof Double) {
+        		return new Simplex(Type.DOUBLE, n);
+        	} else if (n instanceof Float) {
+        		return new Simplex(Type.FLOAT, n);
+        	} else if (n instanceof Integer) {
+        		return new Simplex(Type.INT, n);
+        	} else if (n instanceof Long) {
+        		return new Simplex(Type.LONG, n);
+        	} else {
+        		return new Simplex(Type.SHORT, n);
+        	}
+		} catch (InvalidTypeException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
     }
 
     /**
@@ -126,7 +125,7 @@ public final class Simplex extends Primitive implements Cloneable {
      *         {@link Byte}, {@link Short}, {@link Integer}, {@link Long},
      *         {@link Float}, {@link Double}, or {@link Character}. 
      */
-    public Object getActualValue(){
+    public Object getActualValue() {
         return this.value;
     }
 

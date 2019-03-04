@@ -26,7 +26,7 @@ public final class Algo_JAVA_THREAD_CURRENTTHREAD extends Algo_INVOKEMETA_Nonbra
             try {
                 state.pushOperand(state.getMainThread()); //there's only one thread in JBSE!
             } catch (ClassCastException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
         };

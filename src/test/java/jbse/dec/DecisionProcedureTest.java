@@ -44,29 +44,26 @@ public class DecisionProcedureTest {
     	Z3_COMMAND_LINE.add(SWITCH_CHAR + "t:10");
     }
     
-    final CalculatorRewriting calc;
-    final DecisionAlternativeComparators cmp;
+    CalculatorRewriting calc;
+    DecisionAlternativeComparators cmp;
     DecisionProcedureAlgorithms dec;
 
-    public DecisionProcedureTest() {
+    @Before
+    public void setUp() throws DecisionException, InvalidInputException {
         this.calc = new CalculatorRewriting();
         this.calc.addRewriter(new RewriterOperationOnSimplex());
         this.cmp = new DecisionAlternativeComparators();
-    }
-
-    @Before
-    public void setUp() throws DecisionException {
         this.dec = 
         new DecisionProcedureAlgorithms(
-            new DecisionProcedureSMTLIB2_AUFNIRA(new DecisionProcedureAlwSat(), this.calc, Z3_COMMAND_LINE), 
-            this.calc);
+          new DecisionProcedureSMTLIB2_AUFNIRA(
+            new DecisionProcedureAlwSat(this.calc), Z3_COMMAND_LINE));
     }
 
     @Test
     public void testSimplifyDecision1() 
     throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
         // 2 > 4
-        Primitive p = this.calc.valInt(2).gt(this.calc.valInt(4));
+        Primitive p = this.calc.pushInt(2).gt(this.calc.valInt(4)).pop();
         TreeSet<DecisionAlternative_IFX> d = new TreeSet<>(this.cmp.get(DecisionAlternative_IFX.class));
         this.dec.decide_IFX(p, d);
 
@@ -82,8 +79,8 @@ public class DecisionProcedureTest {
     throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
         // true |- (A > 0) && (A <= 1)
         Term A = this.calc.valTerm(Type.INT, "A");
-        Expression e = (Expression) A.gt(this.calc.valInt(0));
-        e = (Expression) e.and(A.le(this.calc.valInt(1)));
+        Expression e = (Expression) this.calc.push(A).gt(this.calc.valInt(0)).pop();
+        e = (Expression) this.calc.push(e).and(this.calc.push(A).le(this.calc.valInt(1)).pop()).pop();
         TreeSet<DecisionAlternative_IFX> d = new TreeSet<>(this.cmp.get(DecisionAlternative_IFX.class));
         this.dec.decide_IFX(e, d);
 
@@ -119,8 +116,8 @@ public class DecisionProcedureTest {
     throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
         // A >= 0 |- 2 * A ? A
         Term A = this.calc.valTerm(Type.INT, "A");
-        Expression Agezero = (Expression) A.ge(this.calc.valInt(0));
-        Expression Atwice = (Expression) A.mul(this.calc.valInt(2));
+        Expression Agezero = (Expression) this.calc.push(A).ge(this.calc.valInt(0)).pop();
+        Expression Atwice = (Expression) this.calc.push(A).mul(this.calc.valInt(2)).pop();
         TreeSet<DecisionAlternative_XCMPY> d = new TreeSet<>(this.cmp.get(DecisionAlternative_XCMPY.class));
         this.dec.pushAssumption(new ClauseAssume(Agezero));
         this.dec.decide_XCMPY(Atwice, A, d);
@@ -141,11 +138,11 @@ public class DecisionProcedureTest {
     throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
         // true |- (A >= 0) && (A < 5) && !(A == 1) && !(A == 2) && !(A == 3)
         Term A = this.calc.valTerm(Type.INT, "A");
-        Expression e = (Expression) A.ge(this.calc.valInt(0));
-        e = (Expression) e.and(A.lt(this.calc.valInt(5)));
-        e = (Expression) e.and(A.eq(this.calc.valInt(1)).not());
-        e = (Expression) e.and(A.eq(this.calc.valInt(2)).not());
-        e = (Expression) e.and(A.eq(this.calc.valInt(3)).not());
+        Expression e = (Expression) this.calc.push(A).ge(this.calc.valInt(0)).pop();
+        e = (Expression) this.calc.push(e).and(this.calc.push(A).lt(this.calc.valInt(5)).pop()).pop();
+        e = (Expression) this.calc.push(e).and(this.calc.push(A).eq(this.calc.valInt(1)).not().pop()).pop();
+        e = (Expression) this.calc.push(e).and(this.calc.push(A).eq(this.calc.valInt(2)).not().pop()).pop();
+        e = (Expression) this.calc.push(e).and(this.calc.push(A).eq(this.calc.valInt(3)).not().pop()).pop();
 
         //expected satisfiable (by A == 4)
         assertTrue(this.dec.isSat(e));
@@ -157,9 +154,9 @@ public class DecisionProcedureTest {
         // true |- ((A >= 0) || (A < -3)) && (A == -1)  
         Term A = this.calc.valTerm(Type.INT, "A");
         Primitive e = this.calc.valBoolean(true);
-        e = e.and(A.ge(this.calc.valInt(0)));
-        e = (Expression) e.or(A.lt(this.calc.valInt(-3)));
-        e = (Expression) e.and(A.eq(this.calc.valInt(-1)));
+        e = this.calc.push(e).and(this.calc.push(A).ge(this.calc.valInt(0)).pop()).pop();
+        e = (Expression) this.calc.push(e).or(this.calc.push(A).lt(this.calc.valInt(-3)).pop()).pop();
+        e = (Expression) this.calc.push(e).and(this.calc.push(A).eq(this.calc.valInt(-1)).pop()).pop();
 
         //expected unsatisfiable
         assertFalse(this.dec.isSat((Expression) e));
@@ -173,15 +170,15 @@ public class DecisionProcedureTest {
         //boolean terms are emulated with satisfiable independent clauses
         Term A = this.calc.valTerm(Type.INT, "A");
         Term B = this.calc.valTerm(Type.INT, "B");
-        Primitive X = A.ge(this.calc.valInt(0));
-        Primitive Y = B.ge(this.calc.valInt(0));
+        Primitive X = this.calc.push(A).ge(this.calc.valInt(0)).pop();
+        Primitive Y = this.calc.push(B).ge(this.calc.valInt(0)).pop();
         Primitive e0 = this.calc.valBoolean(true);
-        e0 = e0.and(X);
-        e0 = e0.and(Y.not());
+        e0 = this.calc.push(e0).and(X).pop();
+        e0 = this.calc.push(e0).and(this.calc.push(Y).not().pop()).pop();
         Primitive e1 = this.calc.valBoolean(true);
-        e1 = e1.and(X.not());
-        e1 = e1.and(Y);
-        Primitive e = e0.or(e1);
+        e1 = this.calc.push(e1).and(this.calc.push(X).not().pop()).pop();
+        e1 = this.calc.push(e1).and(Y).pop();
+        Primitive e = this.calc.push(e0).or(e1).pop();
 
         //expected satisfiable
         assertTrue(this.dec.isSat((Expression) e));
@@ -213,16 +210,16 @@ public class DecisionProcedureTest {
         Simplex two = this.calc.valInt(2);
 
         Primitive e = this.calc.valBoolean(true);
-        e = e.and(zero.gt(V12));
+        e = this.calc.push(e).and(this.calc.push(zero).gt(V12).pop()).pop();
         //e = e.and(V14.ge(zero));
         //e = e.and(zero.lt(V14));
         //e = e.and(zero.le(V15));
         //e = e.and(V20.ge(zero));
         //e = e.and(zero.lt(V20));
         //e = e.and(V12.ne(bottom));
-        e = e.and(V12.neg().le(V15));
-        e = e.and(V12.neg().lt(top));
-        e = e.and(V12.neg().sub(X0.mul(eight).add(X0.mul(two))).eq(zero));
+        e = this.calc.push(e).and(this.calc.push(V12).neg().le(V15).pop()).pop();
+        e = this.calc.push(e).and(this.calc.push(V12).neg().lt(top).pop()).pop();
+        e = this.calc.push(e).and(this.calc.push(V12).neg().sub(this.calc.push(X0).mul(eight).add(this.calc.push(X0).mul(two).pop()).pop()).eq(zero).pop()).pop();
 
         //this.dec.pushClause(e);
 
@@ -245,9 +242,9 @@ public class DecisionProcedureTest {
         Simplex ten = this.calc.valInt(10);
 
         Primitive e = this.calc.valBoolean(true);
-        e = e.and(zero.gt(B));
-        e = e.and(B.neg().le(C));
-        e = e.and(B.add(A.mul(ten)).eq(zero));
+        e = this.calc.push(e).and(this.calc.push(zero).gt(B).pop()).pop();
+        e = this.calc.push(e).and(this.calc.push(B).neg().le(C).pop()).pop();
+        e = this.calc.push(e).and(this.calc.push(B).add(this.calc.push(A).mul(ten).pop()).eq(zero).pop()).pop();
 
         assertTrue(this.dec.isSat((Expression) e));
         //shows a past bug: the Sicstus server first simplifies the expression with the clpqr solver, 
@@ -260,7 +257,7 @@ public class DecisionProcedureTest {
     @Test
     public void testBoundary1() 
     throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
-        Expression e = (Expression) this.calc.valTerm(Type.INT, "A").eq(this.calc.valInt(Integer.MIN_VALUE));
+        Expression e = (Expression) this.calc.pushTerm(Type.INT, "A").eq(this.calc.valInt(Integer.MIN_VALUE)).pop();
         assertTrue(this.dec.isSat(e));
     }
 
@@ -268,7 +265,7 @@ public class DecisionProcedureTest {
     @Test
     public void testBoundary2() 
     throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
-        Expression e = (Expression) this.calc.valTerm(Type.INT, "A").eq(this.calc.valInt(Integer.MAX_VALUE));
+        Expression e = (Expression) this.calc.pushTerm(Type.INT, "A").eq(this.calc.valInt(Integer.MAX_VALUE)).pop();
         assertTrue(this.dec.isSat(e));
     }
 
@@ -276,7 +273,7 @@ public class DecisionProcedureTest {
     @Test
     public void testType1() 
     throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
-        Expression e = (Expression) this.calc.valTerm(Type.FLOAT, "A").gt(this.calc.valInt(0)).and(this.calc.valTerm(Type.FLOAT, "A").lt(this.calc.valInt(1)));
+        Expression e = (Expression) this.calc.pushTerm(Type.FLOAT, "A").gt(this.calc.valInt(0)).and(this.calc.pushTerm(Type.FLOAT, "A").lt(this.calc.valInt(1)).pop()).pop();
         assertTrue(this.dec.isSat(e));
     }
 
@@ -284,7 +281,7 @@ public class DecisionProcedureTest {
     @Test
     public void testType2() 
     throws InvalidInputException, DecisionException, InvalidOperandException, InvalidTypeException {
-        Expression e = (Expression) this.calc.valTerm(Type.INT, "A").gt(this.calc.valInt(0)).and(this.calc.valTerm(Type.FLOAT, "A").lt(this.calc.valInt(1)));
+        Expression e = (Expression) this.calc.pushTerm(Type.INT, "A").gt(this.calc.valInt(0)).and(this.calc.pushTerm(Type.FLOAT, "A").lt(this.calc.valInt(1)).pop()).pop();
         assertFalse(this.dec.isSat(e));
     }
 
@@ -295,7 +292,7 @@ public class DecisionProcedureTest {
         // 0 <= A < B && A >= B / 2 && B = 1 (for integer division A == 0 is a solution, no solution for real division).
         final Term A = this.calc.valTerm(Type.INT, "A");
         final Term B = this.calc.valTerm(Type.INT, "B");
-        final Expression e = (Expression) A.ge(this.calc.valInt(0)).and(A.lt(B)).and(A.ge(B.div(this.calc.valInt(2)))).and(B.eq(this.calc.valInt(1)));
+        final Expression e = (Expression) this.calc.push(A).ge(this.calc.valInt(0)).and(this.calc.push(A).lt(B).pop()).and(this.calc.push(A).ge(this.calc.push(B).div(this.calc.valInt(2)).pop()).pop()).and(this.calc.push(B).eq(this.calc.valInt(1)).pop()).pop();
         assertTrue(this.dec.isSat(e));
     }
 
@@ -311,7 +308,7 @@ public class DecisionProcedureTest {
         Term E = this.calc.valTerm(Type.INT, "E");
 
         Primitive e = this.calc.valBoolean(true);
-        e = e.and(A.div(B).add(C.sub(C).div(D)).lt(E));
+        e = this.calc.push(e).and(this.calc.push(A).div(B).add(this.calc.push(C).sub(C).div(D).pop()).lt(E).pop()).pop();
 
         //expected satisfiable
         assertTrue(this.dec.isSat((Expression) e));
@@ -326,7 +323,7 @@ public class DecisionProcedureTest {
         Term A = this.calc.valTerm(Type.INT, "A");
 
         Primitive e = this.calc.valBoolean(true);
-        e = e.and(two.sub(three.add(A)).le(A));
+        e = this.calc.push(e).and(this.calc.push(two).sub(this.calc.push(three).add(A).pop()).le(A).pop()).pop();
 
         //expected satisfiable
         assertTrue(this.dec.isSat((Expression) e));
@@ -339,7 +336,7 @@ public class DecisionProcedureTest {
         Term A = this.calc.valTerm(Type.INT, "A");
 
         Primitive e = this.calc.valBoolean(true);
-        e = e.and(A.div(two).lt(two));
+        e = this.calc.push(e).and(this.calc.push(A).div(two).lt(two).pop()).pop();
 
         //expected satisfiable
         assertTrue(this.dec.isSat((Expression) e));

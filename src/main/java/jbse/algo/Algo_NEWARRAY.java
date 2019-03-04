@@ -43,7 +43,7 @@ final class Algo_NEWARRAY extends Algo_XNEWARRAY<BytecodeData_1AT> {
         try {
             this.dimensionsCounts = new Primitive[] { (Primitive) this.data.operand(0) };
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
 

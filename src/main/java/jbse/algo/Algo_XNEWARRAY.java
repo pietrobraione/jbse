@@ -18,7 +18,6 @@ import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XNEWARRAY;
@@ -93,16 +92,16 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
             //boolean Primitives stating that all the dimension count 
             //values are nonnegative (respectively, negative)
             try {
-                final Calculator calc = state.getCalculator();
+                final Calculator calc = this.ctx.getCalculator();
                 Primitive tmp = calc.valBoolean(true);
                 for (Primitive l : this.dimensionsCounts) {
-                    tmp = tmp.and(l.ge(calc.valInt(0)));
+                    tmp = calc.push(tmp).and(calc.push(l).ge(calc.valInt(0)).pop()).pop();
                 }
                 this.countsNonNegative = tmp;
-                this.countsNegative = this.countsNonNegative.not();
+                this.countsNegative = calc.push(this.countsNonNegative).not().pop();
             } catch (InvalidTypeException | InvalidOperandException e) {
                 //TODO is it ok, or should we throw UnexpectedInternalException?
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
             
@@ -110,7 +109,7 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
             //and checks that the length parameter does not exceed this number
             final int dimDecl = Type.getDeclaredNumberOfDimensions(this.arrayType.getClassName());
             if (dimDecl < this.dimensionsCounts.length) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
         };
@@ -134,7 +133,7 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
     protected StrategyRefine<DecisionAlternative_XNEWARRAY> refiner() {
         return (state, alt) -> {
             final Primitive condTrue = (alt.ok() ? this.countsNonNegative : this.countsNegative);
-            state.assume(this.ctx.decisionProcedure.simplify(condTrue));
+            state.assume(this.ctx.getCalculator().simplify(this.ctx.decisionProcedure.simplify(condTrue)));
         };
     }
 
@@ -163,14 +162,14 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
                     toPush = createArrayMultilayer(state, initValue);
                     state.pushOperand(toPush);
                 } catch (HeapMemoryExhaustedException e) {
-                    throwNew(state, OUT_OF_MEMORY_ERROR);
+                    throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
                     exitFromAlgorithm();
                 } catch (InvalidTypeException e) {
-                    throwVerifyError(state);
+                    throwVerifyError(state, this.ctx.getCalculator());
                     exitFromAlgorithm();
                 }
             } else {
-                throwNew(state, NEGATIVE_ARRAY_SIZE_EXCEPTION);
+                throwNew(state, this.ctx.getCalculator(), NEGATIVE_ARRAY_SIZE_EXCEPTION);
                 exitFromAlgorithm();
             }
         };
@@ -178,7 +177,7 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
     }
 
     private ReferenceConcrete createArrayMultilayer(State state, Value initValue) 
-    throws DecisionException, InvalidTypeException, HeapMemoryExhaustedException, FrozenStateException {
+    throws DecisionException, InvalidTypeException, HeapMemoryExhaustedException, InvalidInputException {
         //the reference to be pushed on the operand stack at the end of the
         //creation; note that it is initialized to null, but this is just 
         //to make the compiler happy. It will be initialized during the loop, 
@@ -194,7 +193,7 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
         //creates all the layers of monodimensional arrays that it can create now, 
         //initializes them, puts them in the heap, and sets toPush with a reference
         //to the topmost array
-        final Calculator calc = state.getCalculator();
+        final Calculator calc = this.ctx.getCalculator();
         for (int currentLayer = 0; currentLayer < this.layersToCreateNow; ++currentLayer) {
             //caches the length of the arrays in the current layer 
             final Primitive currentLayerLength = this.dimensionsCounts[currentLayer];
@@ -209,8 +208,8 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
             } else {
                 currentLayerLengthInt = -1; //not meaningful, set to an arbitrary value
                 try {
-                    final Expression currentLayerLengthZero = (Expression) currentLayerLength.eq(calc.valInt(0));
-                    final Expression currentLayerLengthNonzero = (Expression) currentLayerLengthZero.not();
+                    final Expression currentLayerLengthZero = (Expression) calc.push(currentLayerLength).eq(calc.valInt(0)).pop();
+                    final Expression currentLayerLengthNonzero = (Expression) calc.push(currentLayerLengthZero).not().pop();
                     zeroBreak = this.ctx.decisionProcedure.isSat(currentLayerLengthZero); 
                     zeroBreak = zeroBreak && !this.ctx.decisionProcedure.isSat(currentLayerLengthNonzero);
                 } catch (ClassCastException | InvalidOperandException | 
@@ -225,7 +224,7 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
             for (int k = 0; k < toCreateInCurrentLayer; ++k) {
                 //creates the k-th array in the layer
                 final ClassFile subarrayType = this.arrayType.getMemberClass(currentLayer);
-                final ReferenceConcrete ref = state.createArray(initValue, currentLayerLength, subarrayType);
+                final ReferenceConcrete ref = state.createArray(this.ctx.getCalculator(), initValue, currentLayerLength, subarrayType);
 
                 //stores the reference to the created array
                 if (currentLayer == 0) { //topmost reference
@@ -239,7 +238,7 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
                     final Simplex index = calc.valInt(k % prevArraySize);
                     try {
                         ((Array) state.getObject(prev[k /prevArraySize])).setFast(index, ref);
-                    } catch (FastArrayAccessNotAllowedException | InvalidOperandException e) {
+                    } catch (FastArrayAccessNotAllowedException | InvalidInputException e) {
                         //this should never happen
                         failExecution(e);
                     }

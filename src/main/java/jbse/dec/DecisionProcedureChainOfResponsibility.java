@@ -1,5 +1,7 @@
 package jbse.dec;
 
+import static jbse.val.Rewriter.applyRewriters;
+
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -19,15 +21,14 @@ import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.ClauseAssumeNull;
 import jbse.mem.ClauseVisitor;
 import jbse.mem.Objekt;
-import jbse.rewr.CalculatorRewriting;
-import jbse.rewr.Rewriter;
-import jbse.rewr.exc.NoResultException;
 import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.Primitive;
 import jbse.val.PrimitiveSymbolic;
 import jbse.val.ReferenceSymbolic;
+import jbse.val.Rewriter;
 import jbse.val.Simplex;
+import jbse.val.exc.NoResultException;
 
 /**
  * A {@link DecisionProcedure} that delegates the decision of 
@@ -39,11 +40,11 @@ import jbse.val.Simplex;
  */
 //TODO possibly push up stuff that is not related with the chain of responsibility coordination scheme (rewriting, setting path condition)
 public abstract class DecisionProcedureChainOfResponsibility implements DecisionProcedure {
+	/** The {@link Calculator}. */
+	protected final Calculator calc;
+	
     /** The next {@link DecisionProcedure} in the Chain Of Responsibility */
     protected final DecisionProcedure next;
-
-    /** The {@link Calculator}; it is set by the constructor. */
-    protected final Calculator calc;
 
     /** 
      * The {@link Rewriter}s for the (possible) simplification of expressions. 
@@ -56,26 +57,37 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * Constructor.
      * 
      * @param next The next {@link DecisionProcedure} in the 
-     *        Chain Of Responsibility.
-     * @param calc a {@link Calculator}. It must not be {@code null}.
+     *        Chain Of Responsibility. It must not be {@code null}.
      * @param rewriters a vararg of {@link Rewriter}s for the 
      *        (possible) simplification of expressions.
+     * @throws InvalidInputException if {@code next == null || rewriters == null}. 
      */
-    protected DecisionProcedureChainOfResponsibility(DecisionProcedure next, Calculator calc, Rewriter... rewriters) {
+    protected DecisionProcedureChainOfResponsibility(DecisionProcedure next, Rewriter... rewriters) 
+    throws InvalidInputException {
+    	if (next == null || rewriters == null) {
+    		throw new InvalidInputException("Attempted to construct a " + getClass().getName() + " with null DecisionProcedure next or Rewriter... rewriters.");
+    	}
+    	this.calc = next.getCalculator();
         this.next = next;
-        this.calc = calc;
         this.rewriters = rewriters;
     }
 
     /**
      * Constructor (no next procedure in the Chain Of Responsibility).
      * 
-     * @param calc a {@link CalculatorRewriting}. It must not be {@code null}.
+     * @param a {@link Calculator}. It must not be {@code null}.
      * @param rewriters a vararg of {@link Rewriter}s for the 
      *        (possible) simplification of expressions.
+     * @throws InvalidInputException if {@code calc == null || rewriters == null}.
      */
-    protected DecisionProcedureChainOfResponsibility(CalculatorRewriting calc, Rewriter... rewriters) {
-        this(null, calc, rewriters);
+    protected DecisionProcedureChainOfResponsibility(Calculator calc, Rewriter... rewriters) 
+    throws InvalidInputException {
+    	if (calc == null || rewriters == null) {
+    		throw new InvalidInputException("Attempted to construct a " + getClass().getName() + " with null Calculator calc or Rewriter... rewriters.");
+    	}
+    	this.calc = calc;
+    	this.next = null;
+    	this.rewriters = rewriters;
     }
 
     /**
@@ -86,6 +98,11 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      */
     private final boolean hasNext() {
         return (this.next != null);
+    }
+    
+    @Override
+    public final Calculator getCalculator() {
+    	return this.calc;
     }
 
     @Override
@@ -877,9 +894,9 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      */
     protected final Primitive simplifyLocal(Primitive p) throws DecisionException {
     	try {
-    		final Primitive retVal = this.calc.simplify(Rewriter.applyRewriters(p, this.calc, this.rewriters));
+    		final Primitive retVal = applyRewriters(p, this.rewriters);
     		if (retVal == null || retVal.getType() != Type.BOOLEAN || 
-    				!(retVal instanceof Simplex || retVal instanceof Expression)) {
+    		    !(retVal instanceof Simplex || retVal instanceof Expression)) {
     			//TODO throw a better exception
     			throw new DecisionException("The simplification of " + p + " returned " + retVal + " that is neither a boolean Simplex nor a boolean Expression.");
     		}

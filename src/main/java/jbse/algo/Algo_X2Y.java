@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Primitive;
 import jbse.val.exc.InvalidTypeException;
 
@@ -53,18 +54,19 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             try {
                 final Primitive primitiveFrom  = (Primitive) this.data.operand(0);
                 if (primitiveFrom.getType() != this.fromType) {
-                    throwVerifyError(state);
+                    throwVerifyError(state, this.ctx.getCalculator());
                     exitFromAlgorithm();
                 }
+                final Calculator calc = this.ctx.getCalculator();
                 if (isPrimitiveOpStack(this.toType)) {
-                    this.primitiveTo = primitiveFrom.to(this.toType);
+                    this.primitiveTo = calc.push(primitiveFrom).to(this.toType).pop();
                 } else {
                     //i2b, i2s, i2c case:
                     //must widen to an operand stack type
-                    this.primitiveTo = primitiveFrom.to(this.toType).widen(INT);
+                    this.primitiveTo = calc.push(primitiveFrom).to(this.toType).widen(INT).pop();
                 }
             } catch (ClassCastException | InvalidTypeException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
         };

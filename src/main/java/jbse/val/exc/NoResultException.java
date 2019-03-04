@@ -1,4 +1,4 @@
-package jbse.rewr.exc;
+package jbse.val.exc;
 
 /**
  * Thrown when rewriting does not produce a result.

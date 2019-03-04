@@ -41,7 +41,7 @@ public final class Algo_JAVA_OBJECT_HASHCODE extends Algo_INVOKEMETA_Nonbranchin
             //gets the hash code stored in the objekt and returns it
             this.hashCode = thisObjekt.getIdentityHashCode();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
     }

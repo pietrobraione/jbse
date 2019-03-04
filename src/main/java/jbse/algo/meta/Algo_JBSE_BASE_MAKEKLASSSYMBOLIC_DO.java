@@ -99,7 +99,7 @@ public final class Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO extends Algo_INVOKEMETA_N
             this.cf_JAVA_THREAD = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_THREAD);
 
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
     }

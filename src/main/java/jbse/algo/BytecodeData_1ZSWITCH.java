@@ -1,7 +1,6 @@
 package jbse.algo;
 
 import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwVerifyError;
 
 import java.util.function.Supplier;
@@ -12,6 +11,7 @@ import jbse.mem.SwitchTable;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Calculator;
 
 /**
  * One implicit (boolean, is the switch a tableswitch?),
@@ -23,14 +23,13 @@ public final class BytecodeData_1ZSWITCH extends BytecodeData {
     final boolean isTableSwitch;
 
     @Override
-    public void readImmediates(State state) throws InterruptException, ClasspathException, FrozenStateException {
+    public void readImmediates(State state, Calculator calc) 
+    throws InterruptException, ClasspathException, FrozenStateException, ThreadStackEmptyException {
         try {
-            setSwitchTable(new SwitchTable(state.getCurrentFrame(), state.getCalculator(), this.isTableSwitch));
+            setSwitchTable(new SwitchTable(state.getCurrentFrame(), this.isTableSwitch));
         } catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
-        } catch (ThreadStackEmptyException e) {
-            failExecution(e);
         }
     }
 

@@ -13,15 +13,11 @@ import static jbse.bc.Opcodes.OP_IFNE;
 
 import java.util.function.Supplier;
 
-import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.mem.exc.InvalidProgramCounterException;
-import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XCMPY;
+import jbse.val.Calculator;
 import jbse.val.Primitive;
-import jbse.val.exc.InvalidOperandException;
-import jbse.val.exc.InvalidOperatorException;
-import jbse.val.exc.InvalidTypeException;
 
 /**
  * {@link Algorithm} managing all the *cmp* bytecodes ([d/f/l]cmp[g/l]). 
@@ -67,7 +63,7 @@ StrategyUpdate<DecisionAlternative_XCMPY>> {
                     this.val1 = (Primitive) this.data.operand(0);
                     this.val2 = (Primitive) this.data.operand(1);
                 } catch (ClassCastException e) {
-                    throwVerifyError(state);
+                    throwVerifyError(state, this.ctx.getCalculator());
                     exitFromAlgorithm();
                 }
 
@@ -84,11 +80,8 @@ StrategyUpdate<DecisionAlternative_XCMPY>> {
                     exitFromAlgorithm();
                 }
             } catch (InvalidProgramCounterException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
-            } catch (ThreadStackEmptyException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
             }
         };
     }
@@ -101,7 +94,7 @@ StrategyUpdate<DecisionAlternative_XCMPY>> {
     @Override
     protected StrategyDecide<DecisionAlternative_XCMPY> decider() {
         return (state, result) -> {
-            final Outcome o = ctx.decisionProcedure.decide_XCMPY(this.val1, this.val2, result);
+            final Outcome o = this.ctx.decisionProcedure.decide_XCMPY(this.val1, this.val2, result);
             return o;
         };
     }
@@ -109,24 +102,20 @@ StrategyUpdate<DecisionAlternative_XCMPY>> {
     @Override
     protected StrategyRefine<DecisionAlternative_XCMPY> refiner() {
         return (state, alt) -> {
-            try {
-                state.assume(ctx.decisionProcedure.simplify(state.getCalculator().applyBinary(this.val1, alt.operator(), this.val2)));
-            } catch (InvalidOperatorException | InvalidOperandException |
-                     InvalidTypeException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
-            }
+        	final Calculator calc = this.ctx.getCalculator();
+        	state.assume(calc.simplify(this.ctx.decisionProcedure.simplify(calc.push(this.val1).applyBinary(alt.operator(), this.val2).pop())));
         };
     }
 
     @Override
     protected StrategyUpdate<DecisionAlternative_XCMPY> updater() {
         return (state, alt) -> {
-            state.pushOperand(state.getCalculator().valInt(alt.value()));
+        	final Calculator calc = this.ctx.getCalculator();
+            state.pushOperand(calc.valInt(alt.value()));
             try {
                 state.incProgramCounter(XCMPY_OFFSET);
             } catch (InvalidProgramCounterException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
             }
         };
     }

@@ -8,6 +8,7 @@ import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Clause;
 import jbse.mem.Objekt;
+import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.Primitive;
 import jbse.val.PrimitiveSymbolic;
@@ -27,8 +28,17 @@ import jbse.val.Simplex;
 public class DecisionProcedureDecorator implements DecisionProcedure {
     private final DecisionProcedure component;
 
-    public DecisionProcedureDecorator(DecisionProcedure component) {
+    public DecisionProcedureDecorator(DecisionProcedure component)
+    throws InvalidInputException {
+    	if (component == null) {
+    		throw new InvalidInputException("Attempted to decorate a null DecisionProcedure component.");
+    	}
         this.component = component;
+    }
+    
+    @Override
+    public Calculator getCalculator() {
+    	return this.component.getCalculator();
     }
 
     @Override

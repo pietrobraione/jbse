@@ -66,7 +66,7 @@ public final class Algo_JAVA_FILEINPUTSTREAM_CLOSE0 extends Algo_INVOKEMETA_Nonb
                 exitFromAlgorithm();
             }            
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
     }
@@ -75,7 +75,7 @@ public final class Algo_JAVA_FILEINPUTSTREAM_CLOSE0 extends Algo_INVOKEMETA_Nonb
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
             //sets the descriptor's fd field to -1
-            this.fileDescriptor.setFieldValue(JAVA_FILEDESCRIPTOR_FD, state.getCalculator().valInt(-1));
+            this.fileDescriptor.setFieldValue(JAVA_FILEDESCRIPTOR_FD, this.ctx.getCalculator().valInt(-1));
             
             
             //removes the association fd/FileInputStream from the state
@@ -86,7 +86,7 @@ public final class Algo_JAVA_FILEINPUTSTREAM_CLOSE0 extends Algo_INVOKEMETA_Nonb
                 fis.close();
             } catch (IOException e) {
                 //exception while closing
-                throwNew(state, IO_EXCEPTION);
+                throwNew(state, this.ctx.getCalculator(), IO_EXCEPTION);
                 exitFromAlgorithm();
             }
         };

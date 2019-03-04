@@ -1,7 +1,6 @@
 package jbse.algo;
 
 import static jbse.algo.Util.exitFromAlgorithm;
-import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.Offsets.IFX_OFFSET;
 import static jbse.common.Type.INT;
@@ -9,13 +8,12 @@ import static jbse.common.Type.widens;
 
 import java.util.function.Supplier;
 
-import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.tree.DecisionAlternative_IFX;
+import jbse.val.Calculator;
 import jbse.val.Operator;
 import jbse.val.Primitive;
 import jbse.val.exc.InvalidOperandException;
-import jbse.val.exc.InvalidOperatorException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -57,38 +55,34 @@ StrategyUpdate<DecisionAlternative_IFX>> {
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> { 
             //gets the operands
+        	final Calculator calc = this.ctx.getCalculator();
             Primitive val1 = null, val2 = null; //to keep the compiler happy
             try {
                 val1 = (Primitive) this.data.operand(0);
                 if (this.compareWithZero) {
-                    val2 = state.getCalculator().valInt(0);
+                    val2 = calc.valInt(0);
                     //the next conversion is necessary because  
                     //Algo_XCMPY_FAST spills nonint values 
                     //to the operand stack.
                     if (widens(val1.getType(), INT)) {
-                        val2 = val2.to(val1.getType());
+                        val2 = calc.push(val2).to(val1.getType()).pop();
                     } else {
-                        val1 = val1.to(val2.getType());
+                        val1 = calc.push(val1).to(val2.getType()).pop();
                     }
                 } else {
                     val2 = (Primitive) this.data.operand(1);
                 }
             } catch (ClassCastException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
-            } catch (InvalidTypeException e) {
-                //this should never happen
-                failExecution(e);
             }
 
             //builds the comparison condition
             try {
-                this.comparison = state.getCalculator().applyBinary(val1, this.operator, val2);
+                this.comparison = calc.push(val1).applyBinary(this.operator, val2).pop();
             } catch (InvalidOperandException | InvalidTypeException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
-            } catch (InvalidOperatorException e) {
-                throw new UnexpectedInternalException(e);
             }
         };
     }
@@ -109,8 +103,9 @@ StrategyUpdate<DecisionAlternative_IFX>> {
     @Override
     protected StrategyRefine<DecisionAlternative_IFX> refiner() {
         return (state, alt) -> {
-            final Primitive assumption = (alt.value() ? this.comparison : this.comparison.not());
-            state.assume(this.ctx.decisionProcedure.simplify(assumption));
+        	final Calculator calc = this.ctx.getCalculator();
+            final Primitive assumption = (alt.value() ? this.comparison : calc.push(this.comparison).not().pop());
+            state.assume(calc.simplify(this.ctx.decisionProcedure.simplify(assumption)));
         };
     }
 

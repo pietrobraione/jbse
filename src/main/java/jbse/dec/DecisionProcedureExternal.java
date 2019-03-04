@@ -5,6 +5,7 @@ import java.util.ArrayDeque;
 import java.util.Map;
 
 import jbse.bc.ClassFile;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.ExternalProtocolInterfaceException;
 import jbse.mem.Clause;
@@ -15,11 +16,11 @@ import jbse.mem.ClauseAssumeClassNotInitialized;
 import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.ClauseAssumeNull;
 import jbse.mem.Objekt;
-import jbse.rewr.Rewriter;
 import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolic;
 import jbse.val.ReferenceSymbolic;
+import jbse.val.Rewriter;
 import jbse.val.Simplex;
 
 /**
@@ -55,8 +56,15 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
     /** true iff the external decision procedure has not yet received the current assumption. */
     private boolean notInSynch = false;
 
-    protected DecisionProcedureExternal(DecisionProcedure next, Calculator calc, Rewriter... rewriters) {
-        super(next, calc, rewriters);
+    protected DecisionProcedureExternal(DecisionProcedure next, Rewriter... rewriters) 
+    throws InvalidInputException {
+        super(next, rewriters);
+        this.clauses = new ArrayDeque<>();
+    }
+
+    protected DecisionProcedureExternal(Calculator calc, Rewriter... rewriters) 
+    throws InvalidInputException {
+        super(calc, rewriters);
         this.clauses = new ArrayDeque<>();
     }
 

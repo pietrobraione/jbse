@@ -25,7 +25,6 @@ import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.Simplex;
 import jbse.val.Value;
-import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 public final class Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT extends Algo_INVOKEMETA_Nonbranching {
@@ -51,7 +50,7 @@ public final class Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT extends Algo_INVOKEM
             this.backtrace = (Array) state.getObject((Reference) state.getObject(thisObject).getFieldValue(JAVA_THROWABLE_BACKTRACE));
             final int stackDepth = (int) ((Simplex) this.backtrace.getLength()).getActualValue();
             if (indexInt < 0 || indexInt >= stackDepth) {
-                throwNew(state, INDEX_OUT_OF_BOUNDS_EXCEPTION);
+                throwNew(state, this.ctx.getCalculator(), INDEX_OUT_OF_BOUNDS_EXCEPTION);
                 exitFromAlgorithm();
             }
         } catch (ClassCastException e) {
@@ -64,9 +63,9 @@ public final class Algo_JAVA_THROWABLE_GETSTACKTRACEELEMENT extends Algo_INVOKEM
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
             try {
-                final Value toPush = ((AccessOutcomeInValue) this.backtrace.get(this.index).iterator().next()).getValue();
+                final Value toPush = ((AccessOutcomeInValue) this.backtrace.get(this.ctx.getCalculator(), this.index).iterator().next()).getValue();
                 state.pushOperand(toPush);
-            } catch (InvalidOperandException | InvalidTypeException | ThreadStackEmptyException | ClassCastException e) {
+            } catch (InvalidTypeException | ThreadStackEmptyException | ClassCastException e) {
                 //this should never happen
                 failExecution(e);
             }

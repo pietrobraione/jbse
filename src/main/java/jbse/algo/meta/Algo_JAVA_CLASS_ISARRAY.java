@@ -48,9 +48,9 @@ public final class Algo_JAVA_CLASS_ISARRAY extends Algo_INVOKEMETA_Nonbranching 
                 //this should never happen
                 failExecution("The 'this' parameter to java.lang.Class.isArray method is symbolic and unresolved.");
             }
-            this.isArray = state.getCalculator().valInt(clazz.representedClass().isArray() ? 1 : 0);
+            this.isArray = this.ctx.getCalculator().valInt(clazz.representedClass().isArray() ? 1 : 0);
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
     }

@@ -21,6 +21,7 @@ import jbse.mem.exc.InvalidNumberOfOperandsException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Calculator;
 import jbse.val.Value;
 
 /**
@@ -60,6 +61,7 @@ public abstract class BytecodeData {
      * Reads all the data for a bytecode. 
      * 
      * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
      * @param numOperandsSupplier a {@link Supplier}{@code <}{@link Integer}{@code >}
      *        returning the number of operands to be read from {@code state}'s 
      *        operand stack.
@@ -70,30 +72,34 @@ public abstract class BytecodeData {
      *         or ill-formed, or not accessible.
      * @throws FrozenStateException if the state is empty.
      */
-    public final void read(State state, Supplier<Integer> numOperandsSupplier) 
+    public final void read(State state, Calculator calc, Supplier<Integer> numOperandsSupplier) 
     throws ThreadStackEmptyException, InterruptException, 
     ClasspathException, FrozenStateException {
         this.nextWide = state.nextWide();
-        readImmediates(state);
-        readOperands(state, numOperandsSupplier.get());
+        readImmediates(state, calc);
+        readOperands(state, calc, numOperandsSupplier.get());
     }
 
     /**
      * Reads the immediates from a {@link State}'s current method code.
      * 
      * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
      * @throws InterruptException if the execution of the container
      *         {@link Algorithm} must be interrupted.
      * @throws ClasspathException  when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
      * @throws FrozenStateException if the state is frozen.
+     * @throws ThreadStackEmptyException if the state's stack is empty.
      */
-    protected abstract void readImmediates(State state) throws InterruptException, ClasspathException, FrozenStateException;
+    protected abstract void readImmediates(State state, Calculator calc) 
+    throws InterruptException, ClasspathException, FrozenStateException, ThreadStackEmptyException;
 
     /**
      * Reads a signed byte immediate from a {@link State}'s current method code.
      * 
      * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
      * @param immediateDisplacement an {@code int}, the offset of the immediate 
      *        with respect to {@code state}'s current program counter.
      * @throws InterruptException if the execution of the container
@@ -102,12 +108,12 @@ public abstract class BytecodeData {
      *         or ill-formed, or not accessible.
      * @throws FrozenStateException if the state is frozen.
      */
-    protected final void readImmediateSignedByte(State state, int immediateDisplacement) 
+    protected final void readImmediateSignedByte(State state, Calculator calc, int immediateDisplacement) 
     throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.valByte = state.getInstruction(immediateDisplacement);
         } catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (ThreadStackEmptyException e) {
             failExecution(e);
@@ -118,6 +124,7 @@ public abstract class BytecodeData {
      * Reads an unsigned byte immediate from a {@link State}'s current method code.
      * 
      * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
      * @param immediateDisplacement an {@code int}, the offset of the immediate 
      *        with respect to {@code state}'s current program counter.
      * @throws InterruptException if the execution of the container
@@ -126,12 +133,12 @@ public abstract class BytecodeData {
      *         or ill-formed, or not accessible.
      * @throws FrozenStateException if the state is frozen.
      */
-    protected final void readImmediateUnsignedByte(State state, int immediateDisplacement) 
+    protected final void readImmediateUnsignedByte(State state, Calculator calc, int immediateDisplacement) 
     throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.valShort = asUnsignedByte(state.getInstruction(immediateDisplacement));
         } catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (ThreadStackEmptyException e) {
             failExecution(e);
@@ -143,6 +150,7 @@ public abstract class BytecodeData {
      * method code.
      * 
      * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
      * @param immediateDisplacement an {@code int}, the offset of the immediate 
      *        with respect to {@code state}'s current program counter.
      * @throws InterruptException if the execution of the container
@@ -151,12 +159,12 @@ public abstract class BytecodeData {
      *         or ill-formed, or not accessible.
      * @throws FrozenStateException if the state is frozen.
      */
-    protected final void readImmediateSignedWord(State state, int immediateDisplacement) 
+    protected final void readImmediateSignedWord(State state, Calculator calc, int immediateDisplacement) 
     throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.valShort = byteCatShort(state.getInstruction(immediateDisplacement), state.getInstruction(immediateDisplacement + 1));
         } catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (ThreadStackEmptyException e) {
             failExecution(e);
@@ -168,6 +176,7 @@ public abstract class BytecodeData {
      * method code.
      * 
      * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
      * @param immediateDisplacement an {@code int}, the offset of the immediate 
      *        with respect to {@code state}'s current program counter.
      * @throws InterruptException if the execution of the container
@@ -176,13 +185,13 @@ public abstract class BytecodeData {
      *         or ill-formed, or not accessible.
      * @throws FrozenStateException if the state is frozen.
      */
-    protected final void readImmediateUnsignedWord(State state, int immediateDisplacement) 
+    protected final void readImmediateUnsignedWord(State state, Calculator calc, int immediateDisplacement) 
     throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.valInt = 
                 byteCat(state.getInstruction(immediateDisplacement), state.getInstruction(immediateDisplacement + 1));
         } catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (ThreadStackEmptyException e) {
             failExecution(e);
@@ -194,6 +203,7 @@ public abstract class BytecodeData {
      * method code.
      * 
      * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
      * @param immediateDisplacement an {@code int}, the offset of the immediate 
      *        with respect to {@code state}'s current program counter.
      * @throws InterruptException if the execution of the container
@@ -202,14 +212,14 @@ public abstract class BytecodeData {
      *         or ill-formed, or not accessible.
      * @throws FrozenStateException if the state is frozen.
      */
-    protected final void readImmediateSignedDword(State state, int immediateDisplacement) 
+    protected final void readImmediateSignedDword(State state, Calculator calc, int immediateDisplacement) 
     throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.valInt = 
                 byteCat(state.getInstruction(immediateDisplacement), state.getInstruction(immediateDisplacement + 1), 
                         state.getInstruction(immediateDisplacement + 2), state.getInstruction(immediateDisplacement + 3));
         } catch (InvalidProgramCounterException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (ThreadStackEmptyException e) {
             failExecution(e);
@@ -220,6 +230,7 @@ public abstract class BytecodeData {
      * Reads a local variable's data (name and current value).  
      * 
      * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
      * @param varSlot an {@code int}, the number of slot of the
      *        local variable. Usually it is itself an immediate.
      * @throws InterruptException if the execution of the container
@@ -228,14 +239,14 @@ public abstract class BytecodeData {
      *         or ill-formed, or not accessible.
      * @throws FrozenStateException if the state is frozen.
      */
-    protected final void readLocalVariable(State state, int varSlot) 
+    protected final void readLocalVariable(State state, Calculator calc, int varSlot) 
     throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.varSlot = varSlot;
             this.varName = state.getLocalVariableDeclaredName(varSlot);
             this.varValue = state.getLocalVariableValue(varSlot);
         } catch (InvalidSlotException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (ThreadStackEmptyException e) {
             failExecution(e);
@@ -266,6 +277,7 @@ public abstract class BytecodeData {
      * Reads a class name.
      * 
      * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
      * @param classRefIndex an {@code int}, the index in the constant table
      *        of the current class' classfile where the class name is. 
      *        Usually it is itself an immediate.
@@ -275,12 +287,12 @@ public abstract class BytecodeData {
      *         or ill-formed, or not accessible.
      * @throws FrozenStateException if the state is frozen.
      */
-    protected final void readClassName(State state, int classRefIndex)
+    protected final void readClassName(State state, Calculator calc, int classRefIndex)
     throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.className = state.getCurrentClass().getClassSignature(classRefIndex);
         } catch (InvalidIndexException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (ThreadStackEmptyException e) {
             failExecution(e);
@@ -291,6 +303,7 @@ public abstract class BytecodeData {
      * Reads a field signature.
      * 
      * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
      * @param fieldRefIndex an {@code int}, the index in the constant table
      *        of the current class' classfile where the field signature is. 
      *        Usually it is itself an immediate.
@@ -300,12 +313,12 @@ public abstract class BytecodeData {
      *         or ill-formed, or not accessible.
      * @throws FrozenStateException if the state is frozen.
      */
-    protected final void readFieldSignature(State state, int fieldRefIndex)
+    protected final void readFieldSignature(State state, Calculator calc, int fieldRefIndex)
     throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.signature = state.getCurrentClass().getFieldSignature(fieldRefIndex);
         } catch (InvalidIndexException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (ThreadStackEmptyException e) {
             failExecution(e);
@@ -316,6 +329,7 @@ public abstract class BytecodeData {
      * Reads an interface method signature.
      * 
      * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
      * @param interfaceMethodRefIndex an {@code int}, the index in the constant table
      *        of the current class' classfile where the interface method signature is. 
      *        Usually it is itself an immediate.
@@ -325,12 +339,12 @@ public abstract class BytecodeData {
      *         or ill-formed, or not accessible.
      * @throws FrozenStateException if the state is frozen.
      */
-    protected final void readInterfaceMethodSignature(State state, int interfaceMethodRefIndex)
+    protected final void readInterfaceMethodSignature(State state, Calculator calc, int interfaceMethodRefIndex)
     throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.signature = state.getCurrentClass().getInterfaceMethodSignature(interfaceMethodRefIndex);
         } catch (InvalidIndexException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (ThreadStackEmptyException e) {
             failExecution(e);
@@ -341,6 +355,7 @@ public abstract class BytecodeData {
      * Reads a noninterface method signature.
      * 
      * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
      * @param noninterfaceMethodRefIndex an {@code int}, the index in the constant table
      *        of the current class' classfile where the noninterface method signature is. 
      *        Usually it is itself an immediate.
@@ -350,12 +365,12 @@ public abstract class BytecodeData {
      *         or ill-formed, or not accessible.
      * @throws FrozenStateException if the state is frozen.
      */
-    protected final void readNoninterfaceMethodSignature(State state, int noninterfaceMethodRefIndex)
+    protected final void readNoninterfaceMethodSignature(State state, Calculator calc, int noninterfaceMethodRefIndex)
     throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.signature = state.getCurrentClass().getMethodSignature(noninterfaceMethodRefIndex);
         } catch (InvalidIndexException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (ThreadStackEmptyException e) {
             failExecution(e);
@@ -366,6 +381,7 @@ public abstract class BytecodeData {
      * Reads a method signature that might be either interface or noninterface.
      * 
      * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
      * @param methodRefIndex an {@code int}, the index in the constant table
      *        of the current class' classfile where the method signature is. 
      *        Usually it is itself an immediate.
@@ -375,15 +391,15 @@ public abstract class BytecodeData {
      *         or ill-formed, or not accessible.
      * @throws FrozenStateException if the state is frozen.
      */
-    protected final void readMethodSignature(State state, int methodRefIndex)
+    protected final void readMethodSignature(State state, Calculator calc, int methodRefIndex)
     throws InterruptException, ClasspathException, FrozenStateException {
         try {
             this.signature = state.getCurrentClass().getMethodSignature(methodRefIndex);
         } catch (InvalidIndexException e1) {
             try {
                 this.signature = state.getCurrentClass().getInterfaceMethodSignature(methodRefIndex);
-            } catch (InvalidIndexException e2) {
-                throwVerifyError(state);
+            } catch (InvalidIndexException e) {
+                throwVerifyError(state, calc);
                 exitFromAlgorithm();
             } catch (ThreadStackEmptyException e) {
                 failExecution(e);
@@ -408,6 +424,7 @@ public abstract class BytecodeData {
      * Stores a primitive type.
      * 
      * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
      * @param primitiveType a {@code char}, the primitive type to store.
      *        Usually it is itself an immediate.
      * @throws InterruptException if the execution of the container
@@ -415,12 +432,12 @@ public abstract class BytecodeData {
      * @throws ClasspathException  when some standard classfile is not found, 
      *         or ill-formed, or not accessible.
      */
-    protected final void setPrimitiveType(State state, char primitiveType)
+    protected final void setPrimitiveType(State state, Calculator calc, char primitiveType)
     throws InterruptException, ClasspathException {
         if (isPrimitive(primitiveType)) {
             this.primitiveType = primitiveType;
         } else {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         }
     }
@@ -438,6 +455,7 @@ public abstract class BytecodeData {
      * Reads the operands from the operand stack.
      * 
      * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
      * @param numOperands an {@code int}, the number of 
      *        operands 
      * @throws ThreadStackEmptyException if {@code state}
@@ -448,13 +466,13 @@ public abstract class BytecodeData {
      *         or ill-formed, or not accessible.
      * @throws FrozenStateException if the state is frozen.
      */
-    private void readOperands(State state, int numOperands) 
+    private void readOperands(State state, Calculator calc, int numOperands) 
     throws ThreadStackEmptyException, InterruptException, ClasspathException, FrozenStateException {
         final Frame frame = state.getCurrentFrame();
         try {
             this.operands = frame.operands(numOperands);
         } catch (InvalidNumberOfOperandsException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         }
     }

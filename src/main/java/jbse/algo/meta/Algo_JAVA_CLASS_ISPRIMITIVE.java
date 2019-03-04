@@ -39,9 +39,9 @@ public final class Algo_JAVA_CLASS_ISPRIMITIVE extends Algo_INVOKEMETA_Nonbranch
                 //this should never happen
                 failExecution("violated invariant (unexpected heap access with symbolic unresolved reference)");
             }
-            this.isPrimitive = state.getCalculator().valInt(thisObject.representedClass().isPrimitiveOrVoid() ? 1 : 0);
+            this.isPrimitive = this.ctx.getCalculator().valInt(thisObject.representedClass().isPrimitiveOrVoid() ? 1 : 0);
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
     }

@@ -225,18 +225,21 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
             return this.branchingDecision;
         }
     }
-
+    
     protected final Calculator calc;
 
-    public DecisionProcedureAlgorithms(DecisionProcedure component, Calculator calc) {
+    public DecisionProcedureAlgorithms(DecisionProcedure component) 
+    throws InvalidInputException {
         super(component);
-        this.calc = calc;
+        this.calc = getCalculator();
     }
 
     /**
      * Decides a condition for "branch if integer comparison" bytecodes.
      * 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param condition a {@link Primitive} representing a logical value or clause.
+     *        It must not be {@code null}.
      * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_IFX}{@code >}, 
      *            where the method will put a {@link DecisionAlternative_IFX_True} object
      *            iff {@code condition} does not contradict the current assumptions, and 
@@ -273,7 +276,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 
     private boolean isAny(Primitive p) {
         return (p instanceof Any || 
-        (p instanceof WideningConversion && ((WideningConversion) p).getArg() instanceof Any));
+               (p instanceof WideningConversion && ((WideningConversion) p).getArg() instanceof Any));
     }
 
     protected Outcome decide_IFX_Nonconcrete(Primitive condition, SortedSet<DecisionAlternative_IFX> result) 
@@ -294,7 +297,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
                 shouldRefine = false; //"don't care" does not require refinement
             } else if (isSat(exp)) {
                 result.add(T);
-                final Expression expNot = (Expression) condition.not(); 
+                final Expression expNot = (Expression) this.calc.push(condition).not().pop(); 
                 if (isSat(expNot)) {
                     result.add(F);
                 }
@@ -304,7 +307,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
                 result.add(F);
                 shouldRefine = false;
             }
-        } catch (InvalidTypeException | InvalidInputException e) {
+        } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
             //this should never happen as arguments have been checked by the caller
             throw new UnexpectedInternalException(e);
         }
@@ -314,15 +317,15 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
     /**
      * Decides a comparison for comparison bytecodes.
      * 
-     * @param val1 a {@link Primitive}.
-     * @param val2 another {@link Primitive}.
+     * @param val1 a {@link Primitive}. It must not be {@code null}.
+     * @param val2 another {@link Primitive}. It must not be {@code null}.
      * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XCMPY}{@code >}, 
      *            which the method will update by adding to it a {@link DecisionAlternative_XCMPY_Gt} object 
      *            (respectively, {@link DecisionAlternative_XCMPY_Eq}, {@link DecisionAlternative_XCMPY_Lt})
-     *            iff {@code val1.gt(val2)} (respectively, {@code val1.eq(val2)}, 
-     *            {@code val1.lt(val2)}) does not contradict the current assumptions. 
-     *            Note that the three conditions are not mutually exclusive (they are when {@code val1} and 
-     *            {@code val2} are concrete).
+     *            iff {@code val1} greater than {@code val2} (respectively, {@code val1} equal to {@code val2}, 
+     *            {@code val1} less than {@code val2}) does not contradict the current assumptions. 
+     *            Note that the three conditions are not necessarily mutually exclusive (they are when 
+     *            {@code val1} and {@code val2} are concrete).
      * @return an {@link Outcome}.
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
@@ -349,12 +352,12 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 
     private void decide_XCMPY_Concrete(Simplex val1, Simplex val2, SortedSet<DecisionAlternative_XCMPY> result) {
         try {
-            final Simplex conditionGt = (Simplex) val1.gt(val2);
+            final Simplex conditionGt = (Simplex) this.calc.push(val1).gt(val2).pop();
             final boolean conditionGtValue = (Boolean) conditionGt.getActualValue();
             if (conditionGtValue) {
                 result.add(DecisionAlternative_XCMPY.toConcrete(Values.GT));
             } else {
-                final Simplex conditionEq = (Simplex) val1.eq(val2);
+                final Simplex conditionEq = (Simplex) this.calc.push(val1).eq(val2).pop();
                 final boolean conditionEqValue = (Boolean) conditionEq.getActualValue();
                 if (conditionEqValue) {
                     result.add(DecisionAlternative_XCMPY.toConcrete(Values.EQ));
@@ -383,9 +386,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
             shouldRefine = false;
         } else {
             try {
-                final Expression expGT = (Expression) val1.gt(val2);
-                final Expression expEQ = (Expression) val1.eq(val2);
-                final Expression expLT = (Expression) val1.lt(val2);
+                final Expression expGT = (Expression) this.calc.push(val1).gt(val2).pop();
+                final Expression expEQ = (Expression) this.calc.push(val1).eq(val2).pop();
+                final Expression expLT = (Expression) this.calc.push(val1).lt(val2).pop();
 
                 //this implementation saves one sat check in 33% cases
                 //(it exploits the fact that if both val1 > val2 and 
@@ -468,14 +471,14 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
             int branchCounter = 1;
             boolean noEntryIsSat = true; //allows to skip the last sat check
             for (int i : tab) {
-                final Expression exp = (isAny ? null : (Expression) selector.eq(this.calc.valInt(i)));
+                final Expression exp = (isAny ? null : (Expression) this.calc.push(selector).eq(this.calc.valInt(i)).pop());
                 if (isAny || isSat(exp)) { 
                     result.add(DecisionAlternative_XSWITCH.toNonconcrete(i, branchCounter));
                     noEntryIsSat = false;
                 }
                 ++branchCounter;
             }
-            if (isAny || noEntryIsSat || isSat(tab.getDefaultClause(selector))) { 
+            if (isAny || noEntryIsSat || isSat(tab.getDefaultClause(this.calc, selector))) { 
                 result.add(DecisionAlternative_XSWITCH.toNonconcreteDefault(branchCounter));
             }
             final boolean shouldRefine = (!isAny && (result.size() > 1));
@@ -541,7 +544,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
                 //this implementation saves one sat check in 50% cases
                 //(it exploits the fact that if exp is unsat 
                 //exp.not() is valid)
-                final Expression negative = (Expression) countsNonNegative.not(); 
+                final Expression negative = (Expression) this.calc.push(countsNonNegative).not().pop(); 
                 if (isSat(negative)) {
                     result.add(WRONG);
                     final Expression nonNegative = (Expression) countsNonNegative;
@@ -552,7 +555,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
                     result.add(OK);
                 }
                 shouldRefine = (result.size() > 1);
-            } catch (InvalidTypeException | InvalidInputException e) {
+            } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
                 //this should never happen as arguments have been checked by the caller
                 throw new UnexpectedInternalException(e);
             }
@@ -612,7 +615,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
                 //this implementation saves one sat check in 50% cases
                 //(it exploits the fact that if exp is unsat 
                 //exp.not() is valid)
-                final Expression outOfRangeExp = (Expression) inRange.not();
+                final Expression outOfRangeExp = (Expression) this.calc.push(inRange).not().pop();
                 if (isSat(outOfRangeExp)) {
                     result.add(OUT);
                     final Expression inRangeExp = (Expression) inRange;
@@ -623,7 +626,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
                     result.add(IN);			
                 }
                 shouldRefine = (result.size() > 1);
-            } catch (InvalidTypeException | InvalidInputException e) {
+            } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
                 //this should never happen as arguments have been checked by the caller
                 throw new UnexpectedInternalException(e);
             }
@@ -910,7 +913,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
         }
     }
 
-    private Primitive deleteRedundantConjuncts(Primitive p) throws DecisionException, InvalidInputException, InvalidTypeException, InvalidOperandException {
+    private Primitive deleteRedundantConjuncts(Primitive p) 
+    throws DecisionException, InvalidInputException, InvalidTypeException, InvalidOperandException {
         if (p == null) {
             return null;
         }
@@ -919,9 +923,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
             if (pExpr.getOperator() == Operator.AND) {
                 final Primitive firstConjunctSimplified = deleteRedundantConjuncts(pExpr.getFirstOperand());
                 final Primitive secondConjunctSimplified = deleteRedundantConjuncts(pExpr.getSecondOperand());
-                return firstConjunctSimplified.and(secondConjunctSimplified);
+                return this.calc.push(firstConjunctSimplified).and(secondConjunctSimplified).pop();
             } else {
-                final boolean subExpressionRedundant = !isSat((Expression) pExpr.not());
+                final boolean subExpressionRedundant = !isSat((Expression) this.calc.push(pExpr).not().pop());
                 if (subExpressionRedundant) {
                     return this.calc.valBoolean(true);
                 } else {
@@ -1282,7 +1286,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
         try {
             while (entries.hasNext()) {
                 final Array.AccessOutcomeIn e = entries.next();
-                final Primitive indexInRange = e.inRange(index);
+                final Primitive indexInRange = e.inRange(this.calc, index);
                 final boolean entryAffected;
                 if (indexInRange instanceof Simplex) {
                     entryAffected = indexInRange.surelyTrue();
@@ -1292,7 +1296,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 
                 //if the entry is affected, it is constrained and possibly removed
                 if (entryAffected) {
-                    e.excludeIndexFromAccessCondition(index); //TODO possibly move this back to Array?
+                    e.excludeIndexFromAccessCondition(this.calc, index);
                     final Expression accessCondition = e.getAccessCondition();
                     if (isSat(accessCondition)) {
                         //do nothing
@@ -1302,7 +1306,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
                 }
 
             }
-        } catch (InvalidOperandException | InvalidTypeException exc) {
+        } catch (InvalidTypeException exc) {
             //this should never happen after argument check
             throw new UnexpectedInternalException(exc);
         }

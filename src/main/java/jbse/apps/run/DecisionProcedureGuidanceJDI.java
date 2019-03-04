@@ -92,6 +92,7 @@ import com.sun.jdi.request.MethodExitRequest;
 import com.sun.jdi.request.StepRequest;
 
 import jbse.bc.Signature;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.jvm.Runner;
@@ -142,9 +143,10 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
      *        to answer queries.
      * @throws GuidanceException if something fails during creation (and the caller
      *         is to blame).
+     * @throws InvalidInputException if {@code component == null}.
      */
     public DecisionProcedureGuidanceJDI(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature) 
-    throws GuidanceException {
+    throws GuidanceException, InvalidInputException {
         this(component, calc, runnerParameters, stopSignature, 1);
     }
 
@@ -163,10 +165,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
      * @param numberOfHits an {@code int} greater or equal to one.
      * @throws GuidanceException if something fails during creation (and the caller
      *         is to blame).
+     * @throws InvalidInputException if {@code component == null}.
      */
     public DecisionProcedureGuidanceJDI(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits) 
-    throws GuidanceException {
-        super(component, calc, new JVMJDI(calc, runnerParameters, stopSignature, numberOfHits));
+    throws GuidanceException, InvalidInputException {
+        super(component, new JVMJDI(calc, runnerParameters, stopSignature, numberOfHits));
     }
 
     private static final class JVMJDI extends JVM {

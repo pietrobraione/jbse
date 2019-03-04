@@ -54,7 +54,7 @@ public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE extends Algo_INVOKEMETA_
             final ClassFile cf_JAVA_THROWABLE = state.getClassHierarchy().loadCreateClass(JAVA_THROWABLE);
             ensureClassInitialized(state, cf_JAVA_THROWABLE, this.ctx);
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
                  WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException e) {
@@ -68,10 +68,10 @@ public final class Algo_JAVA_THROWABLE_FILLINSTACKTRACE extends Algo_INVOKEMETA_
         return (state, alt) -> {
             try {
                 final Reference excReference = (Reference) this.data.operand(0);
-                fillExceptionBacktrace(state, excReference);
+                fillExceptionBacktrace(state, this.ctx.getCalculator(), excReference);
                 state.pushOperand(excReference); //returns "this"
             } catch (ClassCastException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
         };

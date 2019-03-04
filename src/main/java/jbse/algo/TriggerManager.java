@@ -26,6 +26,7 @@ import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
+import jbse.mem.State.Phase;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
@@ -41,6 +42,7 @@ import jbse.tree.DecisionAlternative_XLOAD_GETX_Expands;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Aliases;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Expands;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Null;
+import jbse.val.Calculator;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.exc.InvalidTypeException;
@@ -66,9 +68,12 @@ public class TriggerManager {
      * execution of triggers fired by the expansion 
      * of {ROOT}:this. 
      * 
-     * @param state a {@link State}. Must be initial.
+     * @param state a {@link State}. It must not be {@code null} and must be initial.
+     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param rootExpansion a {@link DecisionAlternative_XLOAD_GETX_Expands}
      *        for the initial expansion of the {ROOT}:this reference.
+     * @throws InvalidInputException if {@code state == null || calc == null || rootExpansion == null},
+     *         or if {@code state} is not in its initial phase.
      * @throws ThreadStackEmptyException if {@code state}'s thread stack is empty.
      * @throws MissingTriggerParameterException  if the parameter of a trigger cannot be find
      *         in {@code State}.
@@ -76,12 +81,20 @@ public class TriggerManager {
      *         is not loaded.
      * @throws FrozenStateException if {@code state} is frozen.
      */
-    public void loadTriggerFramesRoot(State state, DecisionAlternative_XLOAD_GETX_Expands rootExpansion) 
-    throws ThreadStackEmptyException, MissingTriggerParameterException, NotYetImplementedException, FrozenStateException {
+    public void loadTriggerFramesRoot(State state, Calculator calc, DecisionAlternative_XLOAD_GETX_Expands rootExpansion) 
+    throws InvalidInputException, ThreadStackEmptyException, MissingTriggerParameterException, 
+    NotYetImplementedException, FrozenStateException {
+    	if (state == null || calc == null || rootExpansion == null) {
+    		throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".loadTriggerFramesRoot with a null state, or calc, or rootExpansion parameter.");
+    	}
+    	if (state.phase() != Phase.INITIAL) {
+    		throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".loadTriggerFramesRoot with a state that is not in the initial phase.");
+    	}
         try {
-            loadTriggerFrames(state, rootExpansion, 0);
-        } catch (InvalidProgramCounterException e) {
-            throw new UnexpectedInternalException(e); //should never happen
+            loadTriggerFrames(state, calc, rootExpansion, 0);
+        } catch (InvalidInputException | InvalidProgramCounterException e) {
+        	//this should never happen
+            throw new UnexpectedInternalException(e);
         }
     }
 
@@ -89,14 +102,16 @@ public class TriggerManager {
     /**
      * Possibly loads frames on a state for triggers execution. 
      * 
-     * @param state a {@link State}.
-     * @param da a {@link DecisionAlternative_XYLOAD_GETX_Loads}. If it is a 
-     *        {@link DecisionAlternative_XYLOAD_GETX_Unresolved}
+     * @param state a {@link State}. It must not be {@code null}.
+     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * @param da a {@link DecisionAlternative_XYLOAD_GETX_Loads}.  It must not be {@code null}.
+     *        If it is a {@link DecisionAlternative_XYLOAD_GETX_Unresolved}
      *        and has a trigger method, a frame for it will be pushed on {@code state}. 
      *        Otherwise, {@code state} remains unchanged.
      * @param pcOffset an {@code int}, an offset for the program counter of {@code state}. Used
      *        as return offset after the execution of the trigger method.
      * @return {@code true} iff the method loads at least one trigger frame on {@code state}.
+     * @throws InvalidInputException if {@code state == null || calc == null || da == null}.
      * @throws InvalidProgramCounterException when {@code pcOffset} is not a valid
      *         return offset.
      * @throws ThreadStackEmptyException if {@code state}'s thread stack is empty.
@@ -106,9 +121,12 @@ public class TriggerManager {
      *         is not loaded.
      * @throws FrozenStateException if {@code state} is frozen.
      */
-    public boolean loadTriggerFrames(State state, DecisionAlternative_XYLOAD_GETX_Loads da, int pcOffset) 
-    throws InvalidProgramCounterException, ThreadStackEmptyException, 
+    public boolean loadTriggerFrames(State state, Calculator calc, DecisionAlternative_XYLOAD_GETX_Loads da, int pcOffset) 
+    throws InvalidInputException, InvalidProgramCounterException, ThreadStackEmptyException, 
     MissingTriggerParameterException, NotYetImplementedException, FrozenStateException {
+    	if (state == null || calc == null || da == null) {
+    		throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".loadTriggerFrames with a null state, or calc, or da parameter.");
+    	}
         if (!(da instanceof DecisionAlternative_XYLOAD_GETX_Unresolved)) {
             return false;
         }
@@ -130,7 +148,7 @@ public class TriggerManager {
                 }
                 try {
                     final ClassFile cf = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, triggerSig.getClassName(), true);
-                    state.pushFrame(cf, triggerSig, false, pcOffset, triggerArg);
+                    state.pushFrame(calc, cf, triggerSig, false, pcOffset, triggerArg);
                     retVal = true;
                     pcOffset = 0; //the offset of the second, third... frames
                 } catch (ClassFileNotFoundException | IncompatibleClassFileException | ClassFileIllFormedException | 

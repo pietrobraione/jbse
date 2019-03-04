@@ -5,6 +5,7 @@ import java.util.NoSuchElementException;
 
 import jbse.common.Type;
 import jbse.common.Util;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.val.Calculator;
@@ -25,9 +26,6 @@ import jbse.val.exc.InvalidTypeException;
 public class SwitchTable implements Iterable<Integer> {
     /** {@code true} if tableswitch, {@code false} if lookupswitch. */
     private final boolean ts;
-
-    /** The {@link Calculator}. */
-    private final Calculator calc;
 
     /** The method's bytecode. */
     private final byte[] code;
@@ -63,16 +61,14 @@ public class SwitchTable implements Iterable<Integer> {
      * 
      * @param f a {@link Frame}. Its current program counter must point
      *        to the switch bytecode.
-     * @param calc a {@link Calculator}.
      * @param isTableSwitch {@code true} if the bytecode is a tableswitch, 
      *        {@code false} if it is a lookupswitch.
      * @throws InvalidProgramCounterException upon failure to access to the
      *         table (wrong program counter or bytecode).
      */
-    public SwitchTable(Frame f, Calculator calc, boolean isTableSwitch) 
+    public SwitchTable(Frame f, boolean isTableSwitch) 
     throws InvalidProgramCounterException {
         this.ts = isTableSwitch;
-        this.calc = calc;
         this.code = f.getCode();
 
         //skips the alignment bytes
@@ -200,19 +196,20 @@ public class SwitchTable implements Iterable<Integer> {
      * Returns an {@link Expression} denoting the fact that a suitable
      * selector is not a key of the {@link SwitchTable}.
      * 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param selector a {@link Primitive} of int type.
      * @return an {@link Expression} denoting the fact that {@code selector} 
      *         is not a key of the {@link SwitchTable}.
-     * @throws InvalidOperandException if {@code selector} is {@code null}.
-     * @throws InvalidTypeException if {@code selector} is not an int. 
+     * @throws InvalidInputException if {@code calc == null || selector == null}.
+     * @throws InvalidTypeException if {@code selector} is not an {@code int}. 
      */
-    public Expression getDefaultClause(Primitive selector) 
-    throws InvalidOperandException, InvalidTypeException {
-        if (selector == null) {
-            throw new InvalidOperandException("attempted to get the default clause of a switch table with a null selector");
+    public Expression getDefaultClause(Calculator calc, Primitive selector) 
+    throws InvalidInputException, InvalidTypeException {
+        if (calc == null || selector == null) {
+            throw new InvalidInputException("Attempted to get the default clause of a switch table with a null calc or selector.");
         }
         if (selector.getType() != Type.INT) {
-            throw new InvalidTypeException("used a switch selector with type " + selector.getType());
+            throw new InvalidTypeException("Used a switch selector with type " + selector.getType());
         }
         try {
             Primitive e;
@@ -221,11 +218,11 @@ public class SwitchTable implements Iterable<Integer> {
                 //to produce a shorter expression, but all the then branch of this
                 //if statement could be deleted altogether, and the code would
                 //work nevertheless.
-                e = selector.lt(this.calc.valInt(this.low)).or(selector.gt(this.calc.valInt(this.high)));
+                e = calc.push(selector).lt(calc.pushInt(this.low).pop()).or(calc.push(selector).gt(calc.valInt(this.high)).pop()).pop();
             } else {
-                e = this.calc.valBoolean(true);
+                e = calc.valBoolean(true);
                 for (int match : this) {
-                    e = e.and(selector.ne(this.calc.valInt(match)));
+                    e = calc.push(e).and(calc.push(selector).ne(calc.valInt(match)).pop()).pop();
                 }
             }
             return (Expression) e;

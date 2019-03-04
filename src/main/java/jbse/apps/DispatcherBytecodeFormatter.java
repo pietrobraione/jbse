@@ -546,7 +546,7 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
                 String retVal = DispatchStrategyFormat1ZSWITCH.this.text + " ";
                 SwitchTable tab;
                 try {
-                    tab = new SwitchTable(f, null, DispatchStrategyFormat1ZSWITCH.this.isTableSwitch);
+                    tab = new SwitchTable(f, DispatchStrategyFormat1ZSWITCH.this.isTableSwitch);
                     final StringBuilder buf = new StringBuilder();
                     for (int val : tab) {
                         final int target = f.getProgramCounter() + tab.jumpOffset(val);

@@ -38,7 +38,6 @@ import jbse.val.Calculator;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.Simplex;
-import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 import sun.misc.Unsafe;
 
@@ -116,10 +115,10 @@ public final class Algo_JAVA_INFLATER_INFLATEBYTES extends Algo_INVOKEMETA_Nonbr
             this.nread = (int) method.invoke(this.inflater, addr, this.inflatedBytes, 0, len);
         } catch (InvocationTargetException e) {
             final String cause = internalClassName(e.getCause().getClass().getName());
-            throwNew(state, cause);
+            throwNew(state, this.ctx.getCalculator(), cause);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         } catch (NoSuchMethodException | SecurityException | IllegalAccessException | 
                  IllegalArgumentException e) {
@@ -130,7 +129,7 @@ public final class Algo_JAVA_INFLATER_INFLATEBYTES extends Algo_INVOKEMETA_Nonbr
     
     private void makeInflater(State state, long zsrefAddress) throws SymbolicValueNotAllowedException, UndefinedResultException, InvalidInputException {
         try {
-            final Calculator calc = state.getCalculator();
+            final Calculator calc = this.ctx.getCalculator();
             
             //builds a zsRef
             final Class<?> clZStreamRef = Class.forName("java.util.zip.ZStreamRef");
@@ -153,7 +152,7 @@ public final class Algo_JAVA_INFLATER_INFLATEBYTES extends Algo_INVOKEMETA_Nonbr
             final int inBufLength = ((Integer) ((Simplex) _inBuf.getLength()).getActualValue()).intValue();
             final byte[] inBuf = new byte[inBufLength];
             for (int i = 0; i < inBufLength; ++i) {
-                final Simplex inBuf_i = (Simplex) ((Array.AccessOutcomeInValue) _inBuf.get(calc.valInt(i)).iterator().next()).getValue(); 
+                final Simplex inBuf_i = (Simplex) ((Array.AccessOutcomeInValue) _inBuf.get(calc, calc.valInt(i)).iterator().next()).getValue(); 
                 inBuf[i] = ((Byte) inBuf_i.getActualValue()).byteValue();
             }
             
@@ -228,7 +227,7 @@ public final class Algo_JAVA_INFLATER_INFLATEBYTES extends Algo_INVOKEMETA_Nonbr
             bytesWrittenFld.set(this.inflater, bytesWritten);
         } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | 
                  InstantiationException | IllegalAccessException | IllegalArgumentException | 
-                 InvocationTargetException | InvalidOperandException | InvalidTypeException | 
+                 InvocationTargetException | InvalidTypeException | 
                  NoSuchFieldException | ClassCastException e) {
             //this should never happen
             failExecution(e);
@@ -238,7 +237,7 @@ public final class Algo_JAVA_INFLATER_INFLATEBYTES extends Algo_INVOKEMETA_Nonbr
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            final Calculator calc = state.getCalculator();
+            final Calculator calc = this.ctx.getCalculator();
             state.pushOperand(calc.valInt(this.nread));
             
             try {
@@ -270,7 +269,7 @@ public final class Algo_JAVA_INFLATER_INFLATEBYTES extends Algo_INVOKEMETA_Nonbr
             final boolean needDict = ((Boolean) needDictFld.get(this.inflater)).booleanValue();
             
             //updates this.inflaterBase
-            final Calculator calc = state.getCalculator();
+            final Calculator calc = this.ctx.getCalculator();
             this._inflater.setFieldValue(JAVA_INFLATER_OFF, calc.valInt(off));
             this._inflater.setFieldValue(JAVA_INFLATER_LEN, calc.valInt(len));
             this._inflater.setFieldValue(JAVA_INFLATER_FINISHED, calc.valBoolean(finished));

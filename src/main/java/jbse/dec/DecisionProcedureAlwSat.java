@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 import jbse.bc.ClassFile;
 import jbse.mem.Clause;
 import jbse.mem.Objekt;
+import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.ReferenceSymbolic;
 
@@ -22,10 +23,17 @@ import jbse.val.ReferenceSymbolic;
  *
  */
 public class DecisionProcedureAlwSat implements DecisionProcedure {
+	private Calculator calc; //unused, but gets useful in the Chain of Responsibility to inject it through the chain
     private ArrayDeque<Clause> cstack;
 
-    public DecisionProcedureAlwSat() {
+    public DecisionProcedureAlwSat(Calculator calc) {
+    	this.calc = calc;
         this.cstack = new ArrayDeque<Clause>();
+    }
+    
+    @Override
+    public Calculator getCalculator() {
+    	return this.calc;
     }
 
     @Override

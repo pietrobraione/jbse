@@ -13,6 +13,7 @@ import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.Array.AccessOutcomeInValue;
@@ -22,10 +23,10 @@ import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Reference;
 import jbse.val.Simplex;
 import jbse.val.Value;
-import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -55,7 +56,9 @@ public abstract class Algo_SUN_UNSAFE_COMPAREANDSWAPX extends Algo_INVOKEMETA_No
     @Override
     protected final void cookMore(State state)
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
-    CannotManageStateException, InterruptException, FrozenStateException {
+    CannotManageStateException, InterruptException, FrozenStateException,
+    InvalidInputException, InvalidTypeException {
+    	final Calculator calc = this.ctx.getCalculator();
         try {
             final Reference refObjectToSet = (Reference) this.data.operand(1);
             this.objectToSet = state.getObject(refObjectToSet);
@@ -76,7 +79,7 @@ public abstract class Algo_SUN_UNSAFE_COMPAREANDSWAPX extends Algo_INVOKEMETA_No
             if (this.objectToSet.hasSlot(this.fieldSlotToSet)) {
                 try {
                     final Value current = (this.objectToSet instanceof Array) ? 
-                                          ((AccessOutcomeInValue) ((Array) this.objectToSet).getFast(state.getCalculator().valInt(this.fieldSlotToSet))).getValue() :
+                                          ((AccessOutcomeInValue) ((Array) this.objectToSet).getFast(calc, calc.valInt(this.fieldSlotToSet))).getValue() :
                                           this.objectToSet.getFieldValue(this.fieldSlotToSet);
                     if (!checkCompare(state, current, toCompare)) {
                         this.objectToSet = null;
@@ -89,9 +92,9 @@ public abstract class Algo_SUN_UNSAFE_COMPAREANDSWAPX extends Algo_INVOKEMETA_No
                 throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.compareAndSwap" + this.what + " was not a slot number of the object parameter");
             }
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
-        } catch (InvalidOperandException | InvalidTypeException | FastArrayAccessNotAllowedException e) {
+        } catch (FastArrayAccessNotAllowedException e) {
             //this should never happen
             failExecution(e);
         }        
@@ -101,20 +104,21 @@ public abstract class Algo_SUN_UNSAFE_COMPAREANDSWAPX extends Algo_INVOKEMETA_No
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
+        	final Calculator calc = this.ctx.getCalculator();
             if (this.objectToSet == null) {
-                state.pushOperand(state.getCalculator().valInt(0)); //false
+                state.pushOperand(calc.valInt(0)); //false
             } else {
                 if (this.objectToSet instanceof Array) {
                     try {
-                        ((Array) this.objectToSet).setFast(state.getCalculator().valInt(this.fieldSlotToSet), this.toWrite);
-                    } catch (InvalidOperandException | InvalidTypeException | FastArrayAccessNotAllowedException e) {
+                        ((Array) this.objectToSet).setFast(calc.valInt(this.fieldSlotToSet), this.toWrite);
+                    } catch (InvalidTypeException | FastArrayAccessNotAllowedException e) {
                         //this should never happen
                         failExecution(e);
                     }
                 } else {
                     this.objectToSet.setFieldValue(this.fieldSlotToSet, this.toWrite);
                 }
-                state.pushOperand(state.getCalculator().valInt(1)); //true
+                state.pushOperand(calc.valInt(1)); //true
             }
         };
     }

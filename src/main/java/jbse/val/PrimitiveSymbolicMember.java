@@ -18,14 +18,13 @@ public abstract class PrimitiveSymbolicMember extends PrimitiveSymbolicAtomic im
      * @param id an {@link int}, the identifier of the symbol. Different
      *        object with same identifier will be treated as equal.
      * @param type the type of the represented value.
-     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @throws InvalidTypeException if {@code type} is not primitive.
-     * @throws InvalidInputException if {@code calc == null}. 
+     * @throws InvalidInputException never.
      * @throws NullPointerException if {@code container == null}.
      */
-    PrimitiveSymbolicMember(ReferenceSymbolic container, int id, char type, Calculator calc) 
+    PrimitiveSymbolicMember(ReferenceSymbolic container, int id, char type) 
     throws InvalidTypeException, InvalidInputException {
-    	super(id, type, container.historyPoint(), calc);
+    	super(id, type, container.historyPoint());
     	this.container = container;
     }
 

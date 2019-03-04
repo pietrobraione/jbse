@@ -63,7 +63,7 @@ StrategyUpdate<DecisionAlternative_XSWITCH>> {
             try {
                 this.selector = (Primitive) this.data.operand(0);
             } catch (ClassCastException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
         };
@@ -86,21 +86,21 @@ StrategyUpdate<DecisionAlternative_XSWITCH>> {
     protected StrategyRefine<DecisionAlternative_XSWITCH> refiner() {
         return (state, alt) -> {
             //augments the path condition
+            final Calculator calc = this.ctx.getCalculator();
             Expression branchCondition = null; //to keep the compiler happy
             try {
                 final Primitive selector = (Primitive) this.data.operand(0);
                 if (alt.isDefault()) {
-                    branchCondition = (Expression) this.data.switchTable().getDefaultClause(selector);
+                    branchCondition = (Expression) this.data.switchTable().getDefaultClause(calc, selector);
                 } else {  
                     final int index = alt.value();
-                    final Calculator calc = state.getCalculator();
-                    branchCondition = (Expression) selector.eq(calc.valInt(index));
+                    branchCondition = (Expression) calc.push(selector).eq(calc.valInt(index)).pop();
                 }
             } catch (InvalidOperandException | InvalidTypeException e) {
                 //this should never happen after call to decideSwitch
                 failExecution(e);
             }
-            state.assume(this.ctx.decisionProcedure.simplify(branchCondition));
+            state.assume(calc.simplify(this.ctx.decisionProcedure.simplify(branchCondition)));
         };
     }
 
@@ -130,6 +130,6 @@ StrategyUpdate<DecisionAlternative_XSWITCH>> {
     @Override
     protected void onInvalidInputException(State state, InvalidInputException e) throws ClasspathException {
         //bad selector
-        throwVerifyError(state);
+        throwVerifyError(state, this.ctx.getCalculator());
     }
 }

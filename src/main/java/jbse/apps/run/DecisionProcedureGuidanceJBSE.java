@@ -5,6 +5,7 @@ import jbse.algo.exc.NotYetImplementedException;
 import jbse.bc.Signature;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.dec.exc.DecisionException;
@@ -43,7 +44,6 @@ import jbse.val.SymbolicLocalVariable;
 import jbse.val.SymbolicMemberArray;
 import jbse.val.SymbolicMemberField;
 import jbse.val.Value;
-import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -64,9 +64,10 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
      *        to answer queries.
      * @throws GuidanceException if something fails during creation (and the caller
      *         is to blame).
+     * @throws InvalidInputException if {@code component == null}.
      */
     public DecisionProcedureGuidanceJBSE(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature) 
-    throws GuidanceException {
+    throws GuidanceException, InvalidInputException {
         this(component, calc, runnerParameters, stopSignature, 1);
     }
 
@@ -85,10 +86,11 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
      * @param numberOfHits an {@code int} greater or equal to one.
      * @throws GuidanceException if something fails during creation (and the caller
      *         is to blame).
+     * @throws InvalidInputException if {@code component == null}.
      */
     public DecisionProcedureGuidanceJBSE(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits) 
-    throws GuidanceException {
-        super(component, calc, new JVMJBSE(calc, runnerParameters, stopSignature, numberOfHits));
+    throws GuidanceException, InvalidInputException {
+        super(component, new JVMJBSE(calc, runnerParameters, stopSignature, numberOfHits));
     }
     
     private static class JVMJBSE extends JVM {
@@ -290,14 +292,14 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
         				throw new GuidanceException(ERROR_BAD_PATH);
         			}
         			try {
-        				for (AccessOutcome ao : a.get(eval(aa.getIndex()))) {
+        				for (AccessOutcome ao : a.get(this.calc, eval(aa.getIndex()))) {
         					if (ao instanceof AccessOutcomeInValue) {
         						final AccessOutcomeInValue aoi = (AccessOutcomeInValue) ao;
         						return aoi.getValue();
         					}
         				}
         				throw new GuidanceException(ERROR_BAD_PATH);
-        			} catch (InvalidOperandException | InvalidTypeException e) {
+        			} catch (InvalidInputException | InvalidTypeException e) {
         				throw new GuidanceException(e);
         			}
         		} else if (origin instanceof PrimitiveSymbolicHashCode) {

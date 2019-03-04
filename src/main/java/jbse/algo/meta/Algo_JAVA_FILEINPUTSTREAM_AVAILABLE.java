@@ -21,6 +21,7 @@ import jbse.mem.Instance;
 import jbse.mem.State;
 import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Reference;
 import jbse.val.Simplex;
 
@@ -41,6 +42,7 @@ public final class Algo_JAVA_FILEINPUTSTREAM_AVAILABLE extends Algo_INVOKEMETA_N
     protected void cookMore(State state) 
     throws InterruptException, ClasspathException, 
     SymbolicValueNotAllowedException, FrozenStateException {
+        final Calculator calc = this.ctx.getCalculator();
         try {
             //gets the FileInputStream 'this' parameter and its file descriptor
             final Reference thisReference = (Reference) this.data.operand(0);
@@ -61,7 +63,7 @@ public final class Algo_JAVA_FILEINPUTSTREAM_AVAILABLE extends Algo_INVOKEMETA_N
 
             //checks if the file is open
             if (fd == -1) {
-                throwNew(state, IO_EXCEPTION);
+                throwNew(state, calc, IO_EXCEPTION);
                 exitFromAlgorithm();
             }
             
@@ -74,12 +76,12 @@ public final class Algo_JAVA_FILEINPUTSTREAM_AVAILABLE extends Algo_INVOKEMETA_N
                 _retVal = fis.available();
             } catch (IOException e) {
                 //read error
-                throwNew(state, IO_EXCEPTION);
+                throwNew(state, calc, IO_EXCEPTION);
                 exitFromAlgorithm();
             }
-            this.retVal = state.getCalculator().valInt(_retVal);
+            this.retVal = calc.valInt(_retVal);
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         }
     }

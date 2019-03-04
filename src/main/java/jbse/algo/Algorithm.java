@@ -20,6 +20,7 @@ import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative;
 import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidOperatorException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -90,7 +91,7 @@ UP extends StrategyUpdate<R>> implements Action {
     /** 
      * The updater.
      * 
-     * @return The {@link BytecodeCooker}
+     * @return The {@link StrategyUpdate}
      *         object that this algorithm must use.
      */
     protected abstract UP updater();
@@ -129,7 +130,7 @@ UP extends StrategyUpdate<R>> implements Action {
     private final BytecodeCooker cooker;  //just caches
     private final DE decider; //just caches
     private final RE refiner; //just caches
-    private final UP updater; //just caches
+    private UP updater; //just caches
     protected final Supplier<Integer> programCounterUpdate; //just caches
     protected final Supplier<Boolean> isProgramCounterUpdateAnOffset; //just caches
 
@@ -139,7 +140,7 @@ UP extends StrategyUpdate<R>> implements Action {
         this.cooker = bytecodeCooker();
         this.decider = decider();
         this.refiner = refiner();
-        this.updater = updater();
+        this.updater = null; //to be initialized lazily (at construction time no ExecutionContext is available)
         this.programCounterUpdate = programCounterUpdate();
         this.isProgramCounterUpdateAnOffset = isProgramCounterUpdateAnOffset();
     }
@@ -232,11 +233,13 @@ UP extends StrategyUpdate<R>> implements Action {
     ClasspathException, InvalidInputException, 
     CannotManageStateException, FailureException, 
     ContinuationException {
+    	//initializes lazily this.data
         if (this.data == null) {
             this.data = bytecodeData().get();
         }
+        
         try {
-            this.data.read(state, this.numOperands);
+            this.data.read(state, this.ctx.getCalculator(), this.numOperands);
             this.cooker.cook(state);
         } catch (InterruptException e) {
             if (e.hasContinuation()) {
@@ -244,7 +247,8 @@ UP extends StrategyUpdate<R>> implements Action {
             } else {
                 return;
             }
-        } catch (ThreadStackEmptyException e) {
+        } catch (InvalidTypeException | InvalidOperatorException | 
+        		 InvalidOperandException | ThreadStackEmptyException e) {
             //this should never happen
             failExecution(e);
         }
@@ -289,13 +293,20 @@ UP extends StrategyUpdate<R>> implements Action {
                 if (shouldRefine) {
                     this.refiner.refine(stateCurrent, result);
                 }
+                
+            	//initializes lazily this.updated
+                if (this.updater == null) {
+                    this.updater = updater();
+                }
+                
 
                 //completes the bytecode semantics
                 this.updater.update(stateCurrent, result);
             } catch (InterruptException e) {
                 interrupt = e;
             } catch (InvalidInputException | InvalidTypeException | 
-                    InvalidOperandException | ThreadStackEmptyException e) {
+                     InvalidOperatorException | InvalidOperandException | 
+                     ThreadStackEmptyException e) {
                 //this should never happen
                 failExecution(e);
             }
@@ -314,7 +325,7 @@ UP extends StrategyUpdate<R>> implements Action {
                     throw new ContinuationException(interrupt.getContinuation());
                 } //else, nothing to do
             } catch (InvalidProgramCounterException e) {
-                throwVerifyError(stateCurrent);
+                throwVerifyError(stateCurrent, this.ctx.getCalculator());
             } catch (ThreadStackEmptyException e) {
                 //this should never happen
                 failExecution(e);

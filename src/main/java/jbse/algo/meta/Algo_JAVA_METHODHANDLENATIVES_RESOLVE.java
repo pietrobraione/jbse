@@ -92,11 +92,11 @@ import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.Simplex;
 import jbse.val.Value;
-import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -132,10 +132,12 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, InterruptException, UndefinedResultException, 
     SymbolicValueNotAllowedException, ClasspathException, InvalidInputException {
+    	final Calculator calc = this.ctx.getCalculator();
+    	
         final ErrorAction OK                                         = msg -> { };
         final ErrorAction FAIL_JBSE                                  = msg -> { throw new UnexpectedInternalException(msg); };
-        final ErrorAction THROW_JAVA_ILLEGAL_ARGUMENT_EXCEPTION      = msg -> { throwNew(state, ILLEGAL_ARGUMENT_EXCEPTION); exitFromAlgorithm(); };
-        final ErrorAction THROW_JAVA_INTERNAL_ERROR                  = msg -> { throwNew(state, INTERNAL_ERROR); exitFromAlgorithm(); };
+        final ErrorAction THROW_JAVA_ILLEGAL_ARGUMENT_EXCEPTION      = msg -> { throwNew(state, calc, ILLEGAL_ARGUMENT_EXCEPTION); exitFromAlgorithm(); };
+        final ErrorAction THROW_JAVA_INTERNAL_ERROR                  = msg -> { throwNew(state, calc, INTERNAL_ERROR); exitFromAlgorithm(); };
         final ErrorAction THROW_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION = msg -> { throw new SymbolicValueNotAllowedException(msg); };
  
         try {
@@ -204,7 +206,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                 }
                 if (memberNameDescriptor == null) {
                     //TODO who is to blame?
-                    throwVerifyError(state);
+                    throwVerifyError(state, calc);
                     exitFromAlgorithm();
                 }
 
@@ -221,13 +223,13 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                     this.polymorphicMethodSignature = new Signature(this.resolvedClass.getClassName(), SIGNATURE_POLYMORPHIC_DESCRIPTOR, methodToResolve.getName());
                     
                     //links it, if it is the case
-                    linkMethod(state, accessorClass, methodToResolve.getDescriptor());
+                    linkMethod(state, calc, accessorClass, methodToResolve.getDescriptor());
                 
                     //if the method has an appendix throws an error, 
                     //see hotspot:/src/share/vm/prims/methodHandles.cpp, 
                     //lines 687-692 
                     if (state.getAppendix(this.polymorphicMethodSignature) != null) {
-                        throwNew(state, INTERNAL_ERROR);
+                        throwNew(state, calc, INTERNAL_ERROR);
                         exitFromAlgorithm();
                     }
                     
@@ -271,7 +273,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                 }
                 if (memberNameType == null) {
                     //TODO who is to blame?
-                    throwVerifyError(state);
+                    throwVerifyError(state, calc);
                     exitFromAlgorithm();
                 }
 
@@ -283,11 +285,11 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                 this.resolvedSignature = new Signature(this.resolvedClass.getClassName(), fieldToResolve.getDescriptor(), fieldToResolve.getName());
             } else { //the member name is a type declaration, or the flags field is ill-formed
                 //see hotspot:/src/share/vm/prims/methodHandles.cpp lines 658-730
-                throwNew(state, INTERNAL_ERROR);
+                throwNew(state, calc, INTERNAL_ERROR);
                 exitFromAlgorithm();
             }
         } catch (PleaseLoadClassException e) {
-            invokeClassLoaderLoadClass(state, e);
+            invokeClassLoaderLoadClass(state, calc, e);
             exitFromAlgorithm();
         } catch (ClassFileNotFoundException e) {
             // TODO Auto-generated catch block
@@ -320,11 +322,11 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, calc, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
             //TODO is it ok?
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         }
     }
@@ -430,6 +432,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
      * descriptor.
      * 
      * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
      * @param accessor a {@link ClassFile}, the accessor class.
      * @param descriptor a {@link String}, the method descriptor.
      * @return a {@link ReferenceConcrete} to an {@link Instance} of 
@@ -453,7 +456,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
      * @throws InterruptException if the execution of this {@link Algorithm} must be interrupted.
      * @throws ThreadStackEmptyException if the thread stack is empty.
      */
-    private ReferenceConcrete findMethodType(State state, ClassFile accessor, String descriptor) 
+    private ReferenceConcrete findMethodType(State state, Calculator calc, ClassFile accessor, String descriptor) 
     throws PleaseLoadClassException, ClassFileNotFoundException, ClassFileIllFormedException, 
     BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, 
     ClassFileNotAccessibleException, HeapMemoryExhaustedException, InterruptException, ThreadStackEmptyException {
@@ -474,24 +477,24 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             //1-the return type
             final String returnTypeName = splitReturnValueDescriptor(descriptor);
             final ClassFile returnType = resolveTypeNameReturn(state, accessor, returnTypeName);
-            state.ensureInstance_JAVA_CLASS(returnType);
+            state.ensureInstance_JAVA_CLASS(calc, returnType);
             final ReferenceConcrete rtype = state.referenceToInstance_JAVA_CLASS(returnType);
             
             //2-the parameter types
             final String[] parameterTypeNames = splitParametersDescriptors(descriptor);
             final ClassFile cf_arrayOfJAVA_CLASS = state.getClassHierarchy().loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_CLASS + TYPEEND);
-            final ReferenceConcrete ptypes = state.createArray(null, state.getCalculator().valInt(parameterTypeNames.length), cf_arrayOfJAVA_CLASS);
+            final ReferenceConcrete ptypes = state.createArray(calc, null, calc.valInt(parameterTypeNames.length), cf_arrayOfJAVA_CLASS);
             final Array ptypesArray = (Array) state.getObject(ptypes);
             int i = 0;
             for (String parameterTypeName : parameterTypeNames) {
                 final ClassFile parameterType = resolveTypeNameParameter(state, accessor, parameterTypeName);
-                state.ensureInstance_JAVA_CLASS(parameterType);
-                ptypesArray.setFast(state.getCalculator().valInt(i), state.referenceToInstance_JAVA_CLASS(parameterType));
+                state.ensureInstance_JAVA_CLASS(calc, parameterType);
+                ptypesArray.setFast(calc.valInt(i), state.referenceToInstance_JAVA_CLASS(parameterType));
                 ++i;
             }
             
             //3-the descriptor itself
-            state.ensureStringLiteral(descriptor);
+            state.ensureStringLiteral(calc, descriptor);
             final ReferenceConcrete descr = state.referenceToStringLiteral(descriptor);
 
             //upcalls
@@ -512,8 +515,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                 .mk();
             state.pushSnippetFrameWrap(snippet, 0); //zero offset so that upon return from the snippet will repeat the invocation of java.lang.invoke.MethodHandleNatives.resolve and reexecute this bytecode 
             exitFromAlgorithm();
-        } catch (InvalidInputException | InvalidTypeException | FastArrayAccessNotAllowedException | 
-                 InvalidOperandException | InvalidProgramCounterException e) {
+        } catch (InvalidInputException | InvalidTypeException | 
+        		 FastArrayAccessNotAllowedException | InvalidProgramCounterException e) {
             //this should never happen
             failExecution(e);
         }
@@ -528,6 +531,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
      * stores the link to the accessor invoker and the appendix in the {@link State}.
      * 
      * @param state a {@link State}.
+     * @param calc a {@link Calculator}.
      * @param accessor a {@link ClassFile}, the accessor class invoking {@code this.resolved}.
      * @param polymorphicMethodDescriptor a {@link String}, the descriptor of the signature-polymorphic method as declared
      *        in the member name.
@@ -552,7 +556,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
      *         this {@link Algorithm} and perform the upcall.
      * @throws InvalidInputException if an invalid input is used by some method call. 
      */
-    private void linkMethod(State state, ClassFile accessor, String polymorphicMethodDescriptor) 
+    private void linkMethod(State state, Calculator calc, ClassFile accessor, String polymorphicMethodDescriptor) 
     throws PleaseLoadClassException, ClassFileNotFoundException, ClassFileIllFormedException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException, HeapMemoryExhaustedException, 
     ThreadStackEmptyException, InterruptException, InvalidInputException, BadClassFileVersionException, WrongClassNameException {
@@ -578,15 +582,15 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                 //this should never happen
                 failExecution(e);
             }
-            state.ensureInstance_JAVA_CLASS(cf_JAVA_METHODHANDLE);
+            state.ensureInstance_JAVA_CLASS(calc, cf_JAVA_METHODHANDLE);
             final ReferenceConcrete mhClassRef = state.referenceToInstance_JAVA_CLASS(cf_JAVA_METHODHANDLE);
 
             //2- the name of the resolved method 
-            state.ensureStringLiteral(polymorphicMethodName);
+            state.ensureStringLiteral(calc, polymorphicMethodName);
             final ReferenceConcrete mhNameRef = state.referenceToStringLiteral(polymorphicMethodName);
 
             //3- a java.lang.invoke.MethodType for its descriptor
-            final ReferenceConcrete mtRef = findMethodType(state, accessor, polymorphicMethodDescriptor);
+            final ReferenceConcrete mtRef = findMethodType(state, calc, accessor, polymorphicMethodDescriptor);
 
             //4- an array with length 1 to host the returned appendix (if any)
             ClassFile cf_arrayOfJAVA_OBJECT = null; //to keep the compiler happy
@@ -597,7 +601,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                 //this should never happen
                 failExecution(e);
             }
-            final ReferenceConcrete appendixBox = state.createArray(null, state.getCalculator().valInt(1), cf_arrayOfJAVA_OBJECT);
+            final ReferenceConcrete appendixBox = state.createArray(calc, null, calc.valInt(1), cf_arrayOfJAVA_OBJECT);
 
             //upcalls
             //parameters for the upcall to noclass_STORELINKEDMETHODANDAPPENDIX
@@ -606,7 +610,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             state.pushOperand(appendixBox); //appendix
             //parameters for the upcall to JAVA_METHODHANDLENATIVES_LINKMETHOD                    
             state.pushOperand(this.data.operand(1)); //accessor class
-            state.pushOperand(state.getCalculator().valInt(REF_invokeVirtual)); //kind (MUST be REF_invokeVirtual)
+            state.pushOperand(calc.valInt(REF_invokeVirtual)); //kind (MUST be REF_invokeVirtual)
             state.pushOperand(mhClassRef); //class where the method is defined (MUST be java.lang.invoke.MethodHandle)
             state.pushOperand(mhNameRef); //name of the method, either invoke or invokeExact
             state.pushOperand(mtRef); //java.lang.invoke.MethodType instance for the method's descriptor
@@ -624,7 +628,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                 .mk();
             state.pushSnippetFrameWrap(snippet, 0); //zero offset so that upon return from the snippet will repeat the invocation of java.lang.invoke.MethodHandleNatives.resolve, thus reexecute this bytecode 
             exitFromAlgorithm();
-        } catch (InvalidTypeException | InvalidProgramCounterException e) {
+        } catch (InvalidProgramCounterException e) {
             //this should never happen
             failExecution(e);
         }
@@ -633,9 +637,10 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
+        	final Calculator calc = this.ctx.getCalculator();
             try {
                 //updates the MemberName: first, sets the clazz field...
-                state.ensureInstance_JAVA_CLASS(this.resolvedClass);
+                state.ensureInstance_JAVA_CLASS(calc, this.resolvedClass);
                 this.memberNameObject.setFieldValue(JAVA_MEMBERNAME_CLAZZ, state.referenceToInstance_JAVA_CLASS(this.resolvedClass));
 
                 //...then sets the flags field
@@ -669,9 +674,9 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                         flags += ((REF_putField - REF_getField) << REFERENCE_KIND_SHIFT);
                     }
                 }
-                this.memberNameObject.setFieldValue(JAVA_MEMBERNAME_FLAGS, state.getCalculator().valInt(flags));
+                this.memberNameObject.setFieldValue(JAVA_MEMBERNAME_FLAGS, calc.valInt(flags));
             } catch (HeapMemoryExhaustedException e) {
-                throwNew(state, OUT_OF_MEMORY_ERROR);
+                throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
             } catch (MethodNotFoundException | FieldNotFoundException e) {
                 //this should never happen

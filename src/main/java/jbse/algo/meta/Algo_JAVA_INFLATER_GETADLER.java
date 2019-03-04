@@ -20,6 +20,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.mem.State;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Primitive;
 import jbse.val.Simplex;
 
@@ -40,6 +41,7 @@ public final class Algo_JAVA_INFLATER_GETADLER extends Algo_INVOKEMETA_Nonbranch
     protected void cookMore(State state) 
     throws InterruptException, ClasspathException, SymbolicValueNotAllowedException, 
     UndefinedResultException, InvalidInputException {
+    	final Calculator calc = this.ctx.getCalculator();
         try {
             //gets the (long addr) parameter
             final Primitive _addr = (Primitive) this.data.operand(0);
@@ -53,13 +55,13 @@ public final class Algo_JAVA_INFLATER_GETADLER extends Algo_INVOKEMETA_Nonbranch
             final Method method = Inflater.class.getDeclaredMethod("getAdler", long.class);
             method.setAccessible(true);
             final int _retVal = (int) method.invoke(null, state.getInflater(addr));
-            this.retVal = state.getCalculator().valInt(_retVal);
+            this.retVal = calc.valInt(_retVal);
         } catch (InvocationTargetException e) {
             final String cause = internalClassName(e.getCause().getClass().getName());
-            throwNew(state, cause);
+            throwNew(state, calc, cause);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (SecurityException | NoSuchMethodException | IllegalAccessException e) {
             //this should not happen

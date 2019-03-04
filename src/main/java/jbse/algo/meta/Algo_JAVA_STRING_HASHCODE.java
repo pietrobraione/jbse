@@ -56,7 +56,7 @@ public final class Algo_JAVA_STRING_HASHCODE extends Algo_INVOKEMETA_Nonbranchin
                 //TODO possibly store the hashcode in JAVA_STRING_HASH
             }
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
     }

@@ -64,7 +64,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 final Simplex localVariableValueAsSimplex = (Simplex) this.data.localVariableValue();
                 this.pcReturn = ((Integer) localVariableValueAsSimplex.getActualValue()).intValue();
             } catch (ClassCastException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
             }
         };
     }

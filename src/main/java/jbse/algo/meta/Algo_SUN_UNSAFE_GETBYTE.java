@@ -37,7 +37,7 @@ public final class Algo_SUN_UNSAFE_GETBYTE extends Algo_INVOKEMETA_Nonbranching 
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            state.pushOperand(state.getCalculator().valInt(this.value));
+            state.pushOperand(this.ctx.getCalculator().valInt(this.value));
         };
     }
 }

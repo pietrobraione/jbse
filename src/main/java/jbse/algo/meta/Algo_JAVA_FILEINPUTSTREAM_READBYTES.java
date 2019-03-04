@@ -50,6 +50,7 @@ public final class Algo_JAVA_FILEINPUTSTREAM_READBYTES extends Algo_INVOKEMETA_N
     protected void cookMore(State state) 
     throws InterruptException, ClasspathException, 
     SymbolicValueNotAllowedException, FrozenStateException {
+    	final Calculator calc = this.ctx.getCalculator();    	
         try {
             //gets the FileInputStream 'this' parameter and its file descriptor
             final Reference thisReference = (Reference) this.data.operand(0);
@@ -71,7 +72,7 @@ public final class Algo_JAVA_FILEINPUTSTREAM_READBYTES extends Algo_INVOKEMETA_N
             //gets the buffer
             final Reference bufReference = (Reference) this.data.operand(1);
             if (state.isNull(bufReference)) {
-                throwNew(state, NULL_POINTER_EXCEPTION);
+                throwNew(state, calc, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
             this.buf = (Array) state.getObject(bufReference);
@@ -96,13 +97,13 @@ public final class Algo_JAVA_FILEINPUTSTREAM_READBYTES extends Algo_INVOKEMETA_N
             //checks offset and length
             final int bufLength = ((Integer) ((Simplex) this.buf.getLength()).getActualValue()).intValue();
             if (this.ofst < 0 || len < 0 || bufLength - this.ofst < len) {
-                throwNew(state, INDEX_OUT_OF_BOUNDS_EXCEPTION);
+                throwNew(state, calc, INDEX_OUT_OF_BOUNDS_EXCEPTION);
                 exitFromAlgorithm();
             }
             
             //checks if the file is open
             if (fd == -1) {
-                throwNew(state, IO_EXCEPTION);
+                throwNew(state, calc, IO_EXCEPTION);
                 exitFromAlgorithm();
             }
 
@@ -117,11 +118,11 @@ public final class Algo_JAVA_FILEINPUTSTREAM_READBYTES extends Algo_INVOKEMETA_N
                 this.nread = fis.read(this.readBytes, 0, len);
             } catch (IOException e) {
                 //read error
-                throwNew(state, IO_EXCEPTION);
+                throwNew(state, calc, IO_EXCEPTION);
                 exitFromAlgorithm();
             }
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         }
     }
@@ -129,7 +130,7 @@ public final class Algo_JAVA_FILEINPUTSTREAM_READBYTES extends Algo_INVOKEMETA_N
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            final Calculator calc = state.getCalculator();
+            final Calculator calc = this.ctx.getCalculator();
             state.pushOperand(calc.valInt(this.nread));
             
             try {

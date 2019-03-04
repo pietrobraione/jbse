@@ -79,9 +79,9 @@ import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Klass;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.ReferenceConcrete;
@@ -153,7 +153,7 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
 
     @Override
     protected void cookMore(State state) 
-    throws InterruptException, ClasspathException, FrozenStateException {
+    throws InterruptException, ClasspathException, InvalidInputException {
         final Classpath cp = state.getClasspath();
         
         //initializes the paths
@@ -230,12 +230,12 @@ public final class Algo_JBSE_BASE_CLINIT extends Algo_INVOKEMETA_Nonbranching {
     
 
     private static void safeEnsureStringLiteral(State state, ExecutionContext ctx, String stringLit) 
-    throws InterruptException, ClasspathException, FrozenStateException {
+    throws InterruptException, ClasspathException, InvalidInputException {
         if (stringLit != null) {
             try {
-                state.ensureStringLiteral(stringLit);
+                state.ensureStringLiteral(ctx.getCalculator(), stringLit);
             } catch (HeapMemoryExhaustedException e) {
-                throwNew(state, OUT_OF_MEMORY_ERROR);
+                throwNew(state, ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
             }
         }

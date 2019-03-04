@@ -37,7 +37,7 @@ public final class Algo_JBSE_ANALYSIS_ISRESOLVEDBYALIAS extends Algo_INVOKEMETA_
         try {
             ref = (Reference) this.data.operand(0);
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
         
@@ -58,9 +58,9 @@ public final class Algo_JBSE_ANALYSIS_ISRESOLVEDBYALIAS extends Algo_INVOKEMETA_
         			}
         		}
         	}
-            this.retVal = state.getCalculator().valInt(retVal);
+            this.retVal = this.ctx.getCalculator().valInt(retVal);
         } else {
-            this.retVal = state.getCalculator().valInt(0);
+            this.retVal = this.ctx.getCalculator().valInt(0);
         }
     }
     

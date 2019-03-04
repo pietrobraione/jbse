@@ -46,6 +46,7 @@ import jbse.tree.DecisionAlternative_XALOAD_Aliases;
 import jbse.tree.DecisionAlternative_XALOAD_Null;
 import jbse.tree.DecisionAlternative_XALOAD_Expands;
 import jbse.tree.DecisionAlternative_XALOAD_Resolved;
+import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -96,25 +97,25 @@ StrategyUpdate_XALOAD> {
                 this.myObjectRef = (Reference) data.operand(0);
                 this.index = (Primitive) data.operand(1);
             } catch (ClassCastException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
 
             //null check
             if (state.isNull(this.myObjectRef)) {
-                throwNew(state, NULL_POINTER_EXCEPTION);
+                throwNew(state, this.ctx.getCalculator(), NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
 
             //index check
             if (this.index == null || this.index.getType() != Type.INT) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
 
             //object check
             if (!(state.getObject(this.myObjectRef) instanceof Array)) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
         };
@@ -129,6 +130,7 @@ StrategyUpdate_XALOAD> {
     protected StrategyDecide<DecisionAlternative_XALOAD> decider() {
         return (state, result) -> { 
             //TODO unify with Algo_SUN_UNSAFE_GETINTVOLATILE_Array and Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array
+            final Calculator calc = this.ctx.getCalculator();
             boolean shouldRefine = false;
             boolean branchingDecision = false;
             boolean first = true; //just for formatting
@@ -139,7 +141,7 @@ StrategyUpdate_XALOAD> {
             refToArraysToProcess.add(this.myObjectRef);
             accessConditions.add(null);
             indicesFormal.add(null);
-            offsets.add(state.getCalculator().valInt(0));
+            offsets.add(calc.valInt(0));
             while (!refToArraysToProcess.isEmpty()) {
                 final Reference refToArrayToProcess = refToArraysToProcess.remove();
                 final Primitive referringArrayAccessCondition = accessConditions.remove();
@@ -158,8 +160,8 @@ StrategyUpdate_XALOAD> {
                 }
                 Collection<Array.AccessOutcome> entries = null; //to keep the compiler happy
                 try {
-                	final Primitive indexPlusOffset = this.index.add(referringArrayOffset);
-                    entries = arrayToProcess.get(indexPlusOffset);
+                	final Primitive indexPlusOffset = calc.push(this.index).add(referringArrayOffset).pop();
+                    entries = arrayToProcess.get(calc, indexPlusOffset);
                 } catch (InvalidOperandException | InvalidTypeException e) {
                     //this should never happen
                     failExecution(e);
@@ -182,7 +184,7 @@ StrategyUpdate_XALOAD> {
                                 try {
                                     final ClassFile memberClass = arrayToProcess.getType().getMemberClass();
                                     final String memberType = memberClass.getInternalTypeName(); 
-                                    val = (Value) state.createSymbolMemberArray(memberType, arrayToProcess.getOrigin(), this.index.add(referringArrayOffset));
+                                    val = (Value) state.createSymbolMemberArray(memberType, arrayToProcess.getOrigin(), calc.push(this.index).add(referringArrayOffset).pop());
                                 } catch (InvalidOperandException | InvalidTypeException exc) {
                                     //this should never happen
                                     failExecution(exc);
@@ -201,30 +203,30 @@ StrategyUpdate_XALOAD> {
                         		accessCondition = e.getAccessCondition();
                         		indexFormal = arrayToProcess.getIndex();
                         	} else {
-                        		final Primitive entryAccessConditionShifted = e.getAccessCondition().replace(arrayToProcess.getIndex(), referringArrayIndexFormal.add(referringArrayOffset));
-                        		accessCondition = (Expression) referringArrayAccessCondition.and(entryAccessConditionShifted);
+                        		final Primitive entryAccessConditionShifted = e.getAccessCondition().replace(arrayToProcess.getIndex(), calc.push(referringArrayIndexFormal).add(referringArrayOffset).pop());
+                        		accessCondition = (Expression) calc.push(referringArrayAccessCondition).and(entryAccessConditionShifted).pop();
                         		indexFormal = referringArrayIndexFormal;
                         	}
                             o = this.ctx.decisionProcedure.resolve_XALOAD(state, accessCondition, indexFormal, this.index, val, fresh, refToArrayToProcess, result);
                         //TODO the next catch blocks should disappear, see comments on removing exceptions in jbse.dec.DecisionProcedureAlgorithms.doResolveReference
                         } catch (ClassFileNotFoundException exc) {
                             //TODO this exception should wrap a ClassNotFoundException
-                            throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                            throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR);
                             exitFromAlgorithm();
                         } catch (BadClassFileVersionException exc) {
-                            throwNew(state, UNSUPPORTED_CLASS_VERSION_ERROR);
+                            throwNew(state, this.ctx.getCalculator(), UNSUPPORTED_CLASS_VERSION_ERROR);
                             exitFromAlgorithm();
                         } catch (WrongClassNameException exc) {
-                            throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
+                            throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
                             exitFromAlgorithm();
                         } catch (IncompatibleClassFileException exc) {
-                            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                            throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
                             exitFromAlgorithm();
                         } catch (ClassFileNotAccessibleException exc) {
-                            throwNew(state, ILLEGAL_ACCESS_ERROR);
+                            throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
                             exitFromAlgorithm();
                         } catch (ClassFileIllFormedException exc) {
-                            throwVerifyError(state);
+                            throwVerifyError(state, this.ctx.getCalculator());
                             exitFromAlgorithm();
                         } catch (InvalidOperandException | InvalidTypeException exc) {
                             //this should never happen
@@ -278,16 +280,15 @@ StrategyUpdate_XALOAD> {
         if (val instanceof ReferenceArrayImmaterial) { //TODO eliminate manual dispatch
             try {
                 final ReferenceArrayImmaterial valRef = (ReferenceArrayImmaterial) val;
-                final ReferenceConcrete valMaterialized = state.createArray(valRef.getMember(), 
-                                                                            valRef.getLength(), 
-                                                                            valRef.getArrayType());
+                final ReferenceConcrete valMaterialized = 
+                    state.createArray(this.ctx.getCalculator(), valRef.getMember(), valRef.getLength(), valRef.getArrayType());
                 writeBackToSource(state, this.myObjectRef, valMaterialized); //TODO is the parameter this.myObjectRef correct?????
                 return valMaterialized;
             } catch (HeapMemoryExhaustedException e) {
-                throwNew(state, OUT_OF_MEMORY_ERROR);
+                throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
                 return null; //to keep the compiler happy
-            } catch (InvalidTypeException e) {
+            } catch (InvalidInputException e) {
                 //this should never happen
                 failExecution(e);
                 return null; //to keep the compiler happy
@@ -310,7 +311,7 @@ StrategyUpdate_XALOAD> {
                 //assumes the array access expression (index in range)
                 final Expression accessExpression = altExpands.getArrayAccessExpressionSimplified();
             	if (accessExpression != null) {
-            		state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
+            		state.assume(Algo_XALOAD.this.ctx.getCalculator().simplify(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression)));
             	}
 
                 //if the value is fresh, writes it back in the array
@@ -331,7 +332,7 @@ StrategyUpdate_XALOAD> {
                 //assumes the array access expression (index in range)
                 final Expression accessExpression = altAliases.getArrayAccessExpressionSimplified();
             	if (accessExpression != null) {
-            		state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
+            		state.assume(Algo_XALOAD.this.ctx.getCalculator().simplify(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression)));
             	}
 
                 //if the value is fresh, writes it back in the array
@@ -350,7 +351,7 @@ StrategyUpdate_XALOAD> {
                 //further augments the path condition 
                 final Expression accessExpression = altNull.getArrayAccessExpressionSimplified();
             	if (accessExpression != null) {
-            		state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
+            		state.assume(Algo_XALOAD.this.ctx.getCalculator().simplify(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression)));
             	}
 
                 //if the value is fresh, writes it back in the array
@@ -367,7 +368,7 @@ StrategyUpdate_XALOAD> {
                 //augments the path condition
             	final Expression accessExpression = altResolved.getArrayAccessExpressionSimplified();
             	if (accessExpression != null) {
-            		state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
+            		state.assume(Algo_XALOAD.this.ctx.getCalculator().simplify(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression)));
             	}
 
                 //if the value is fresh, writes it back in the array
@@ -385,7 +386,7 @@ StrategyUpdate_XALOAD> {
                 try {
                 	final Expression accessExpression = altOut.getArrayAccessExpressionSimplified();
                 	if (accessExpression != null) {
-                		state.assume(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression));
+                		state.assume(Algo_XALOAD.this.ctx.getCalculator().simplify(Algo_XALOAD.this.ctx.decisionProcedure.simplify(accessExpression)));
                 	}
 				} catch (DecisionException e) { //TODO propagate this exception (...and replace with a better exception)
 					//this should never happen
@@ -400,21 +401,23 @@ StrategyUpdate_XALOAD> {
             @Override
             public void updateResolved(State s, DecisionAlternative_XALOAD_Resolved dar) 
             throws DecisionException, InterruptException, MissingTriggerParameterException, 
-            ClasspathException, NotYetImplementedException, ThreadStackEmptyException, FrozenStateException {
+            ClasspathException, NotYetImplementedException, ThreadStackEmptyException, 
+            InvalidOperandException, InvalidInputException {
                 Algo_XALOAD.this.update(s, dar); //implemented in Algo_XYLOAD_GETX
             }
 
             @Override
             public void updateUnresolved(State s, DecisionAlternative_XALOAD_Unresolved dau) 
             throws DecisionException, InterruptException, MissingTriggerParameterException, 
-            ClasspathException, NotYetImplementedException, ThreadStackEmptyException, FrozenStateException {
+            ClasspathException, NotYetImplementedException, ThreadStackEmptyException, 
+            InvalidOperandException, InvalidInputException {
                 Algo_XALOAD.this.update(s, dau); //implemented in Algo_XYLOAD_GETX
             }
 
             @Override
             public void updateOut(State s, DecisionAlternative_XALOAD_Out dao) 
             throws InterruptException, ClasspathException {
-                throwNew(s, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
+                throwNew(s, Algo_XALOAD.this.ctx.getCalculator(), ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
                 exitFromAlgorithm();
             }
         };

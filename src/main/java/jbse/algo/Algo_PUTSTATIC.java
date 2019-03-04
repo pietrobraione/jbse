@@ -49,7 +49,7 @@ final class Algo_PUTSTATIC extends Algo_PUTX {
         //checks that the field is static or belongs to an interface
         if (!this.fieldClassResolved.isInterface() && 
             !this.fieldClassResolved.isFieldStatic(this.data.signature())) {
-            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+            throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
             exitFromAlgorithm();
         }
 
@@ -57,7 +57,7 @@ final class Algo_PUTSTATIC extends Algo_PUTX {
         try {
             ensureClassInitialized(state, this.fieldClassResolved, this.ctx);
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (InvalidInputException e) {
             //this should never happen

@@ -17,7 +17,7 @@ public final class InstanceImpl_JAVA_CLASSLOADER extends InstanceImpl implements
     
     protected InstanceImpl_JAVA_CLASSLOADER(Calculator calc, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, int classLoaderIdentifier, int numOfStaticFields, Signature... fieldSignatures) 
     throws InvalidTypeException {
-        super(false, calc, classFile, origin, epoch, numOfStaticFields, fieldSignatures);
+        super(calc, false, classFile, origin, epoch, numOfStaticFields, fieldSignatures);
         if (classFile == null) {
             throw new InvalidTypeException("Attempted creation of an instance of a subclass of java.lang.ClassLoader with type null.");
         }

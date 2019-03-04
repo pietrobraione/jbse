@@ -63,9 +63,9 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             try {
                 final Primitive val1 = (Primitive) this.data.operand(0);
                 final Primitive val2 = (Primitive) this.data.operand(1);
-                state.pushOperand(val1.shl(val2));
+                state.pushOperand(this.ctx.getCalculator().push(val1).shl(val2).pop());
             } catch (ClassCastException | InvalidTypeException | InvalidOperandException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
         };

@@ -25,7 +25,7 @@ final class Algo_CHECKCAST extends Algo_CASTINSTANCEOF {
                     failExecution(e);
                 }
             } else {
-                throwNew(state, CLASS_CAST_EXCEPTION);
+                throwNew(state, this.ctx.getCalculator(), CLASS_CAST_EXCEPTION);
                 exitFromAlgorithm();
             }
         };

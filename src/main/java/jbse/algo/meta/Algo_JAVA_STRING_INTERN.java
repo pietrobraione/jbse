@@ -13,11 +13,12 @@ import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Reference;
 
 /**
@@ -36,7 +37,8 @@ public final class Algo_JAVA_STRING_INTERN extends Algo_INVOKEMETA_Nonbranching 
     @Override
     protected void cookMore(State state) 
     throws DecisionException, ClasspathException, 
-    SymbolicValueNotAllowedException, InterruptException, FrozenStateException {
+    SymbolicValueNotAllowedException, InterruptException, InvalidInputException {
+    	final Calculator calc = this.ctx.getCalculator();
         try {
             this.valueString = valueString(state, (Reference) this.data.operand(0));
             if (this.valueString == null) {
@@ -46,13 +48,13 @@ public final class Algo_JAVA_STRING_INTERN extends Algo_INVOKEMETA_Nonbranching 
             if (state.hasStringLiteral(this.valueString)) {
                 //nothing to do
             } else {
-                state.ensureStringLiteral(this.valueString);
+                state.ensureStringLiteral(calc, this.valueString);
             }
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, calc, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         }
     }

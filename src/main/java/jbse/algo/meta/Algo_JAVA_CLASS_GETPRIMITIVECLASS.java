@@ -16,10 +16,11 @@ import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Reference;
 
 /**
@@ -37,7 +38,8 @@ public final class Algo_JAVA_CLASS_GETPRIMITIVECLASS extends Algo_INVOKEMETA_Non
     
     @Override
     protected void cookMore(State state) 
-    throws ClasspathException, CannotManageStateException, InterruptException, FrozenStateException {
+    throws ClasspathException, CannotManageStateException, InterruptException, InvalidInputException {
+    	final Calculator calc = this.ctx.getCalculator();
         try {           
             //gets the canonical name of the primitive type and converts it to a string
             final Reference typeNameRef = (Reference) this.data.operand(0);
@@ -47,16 +49,16 @@ public final class Algo_JAVA_CLASS_GETPRIMITIVECLASS extends Algo_INVOKEMETA_Non
             }
 
             //gets the instance of the class
-            state.ensureInstance_JAVA_CLASS_primitiveOrVoid(typeName);
+            state.ensureInstance_JAVA_CLASS_primitiveOrVoid(calc, typeName);
             this.classRef = state.referenceToInstance_JAVA_CLASS_primitiveOrVoid(typeName);
         } catch (ClassFileNotFoundException e) {
-            throwNew(state, CLASS_NOT_FOUND_EXCEPTION);  //this is how Hotspot behaves
+            throwNew(state, calc, CLASS_NOT_FOUND_EXCEPTION);  //this is how Hotspot behaves
             exitFromAlgorithm();
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, calc, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         }
     }

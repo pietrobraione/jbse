@@ -9,6 +9,7 @@ import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.NoModelException;
 import jbse.mem.Clause;
 import jbse.mem.Objekt;
+import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.Primitive;
 import jbse.val.PrimitiveSymbolic;
@@ -26,6 +27,10 @@ import jbse.val.Simplex;
  * on the current assumption.
  */
 public interface DecisionProcedure extends AutoCloseable {
+	
+	/** Returns the {@link Calculator} used by this {@link DecisionProcedure}. */
+	Calculator getCalculator();
+	
     /**
      * Possibly delays checking that the pushed clauses 
      * are inconsistent with the current cumulated 

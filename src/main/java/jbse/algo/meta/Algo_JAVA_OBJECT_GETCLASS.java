@@ -14,13 +14,14 @@ import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.ClassFile;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Objekt;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Reference;
 
 /**
@@ -40,7 +41,8 @@ public final class Algo_JAVA_OBJECT_GETCLASS extends Algo_INVOKEMETA_Nonbranchin
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, DecisionException, 
     ClasspathException, SymbolicValueNotAllowedException, 
-    InterruptException, FrozenStateException {
+    InterruptException, InvalidInputException {
+    	final Calculator calc = this.ctx.getCalculator();
         try {
             //gets the "this" object and the name of its class
             final Reference thisRef = (Reference) this.data.operand(0);
@@ -54,12 +56,12 @@ public final class Algo_JAVA_OBJECT_GETCLASS extends Algo_INVOKEMETA_Nonbranchin
                 failExecution("The 'this' parameter to java.lang.Object.getClass method is symbolic and unresolved.");
             }
             this.className = thisObj.getType();
-            state.ensureInstance_JAVA_CLASS(this.className);
+            state.ensureInstance_JAVA_CLASS(calc, this.className);
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, calc, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         }
     }

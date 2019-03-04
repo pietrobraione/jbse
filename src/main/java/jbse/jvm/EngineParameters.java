@@ -437,11 +437,7 @@ public final class EngineParameters implements Cloneable {
      * @return a {@link Calculator}
      */
     public Calculator getCalculator() {
-        if (this.initialState == null) {
-            return this.calc;
-        } else {
-            return this.initialState.getCalculator();
-        }
+    	return this.calc;
     }
 
     /**

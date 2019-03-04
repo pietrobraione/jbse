@@ -22,6 +22,7 @@ import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.Engine;
@@ -263,8 +264,8 @@ public final class InitialHeapChecker {
     ClasspathException, ContradictionException, EngineStuckException, FailureException, 
     ThreadStackEmptyException, FrozenStateException {
         try {
-            s.pushFrame(classFile, methodSignatureImpl, true, 0, r);
-        } catch (MethodNotFoundException | MethodCodeNotFoundException | InvalidTypeException e) {
+            s.pushFrame(p.getEngineParameters().getCalculator(), classFile, methodSignatureImpl, true, 0, r);
+        } catch (MethodNotFoundException | MethodCodeNotFoundException | InvalidTypeException | InvalidInputException e) {
             return true; //TODO ugly way to cope with nonexistent methods; possibly handle the situation in the constructor of CheckMethodTable
         }
         p.setInitialState(s);

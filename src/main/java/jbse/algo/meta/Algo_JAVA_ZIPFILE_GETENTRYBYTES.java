@@ -76,10 +76,10 @@ public final class Algo_JAVA_ZIPFILE_GETENTRYBYTES extends Algo_INVOKEMETA_Nonbr
             this.entryBytes = (byte[]) method.invoke(null, state.getZipFileEntryJz(jzentry), type);
         } catch (InvocationTargetException e) {
             final String cause = internalClassName(e.getCause().getClass().getName());
-            throwNew(state, cause);
+            throwNew(state, this.ctx.getCalculator(), cause);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         } catch (SecurityException | NoSuchMethodException | IllegalAccessException | IllegalArgumentException e) {
             //this should never happen
@@ -90,13 +90,13 @@ public final class Algo_JAVA_ZIPFILE_GETENTRYBYTES extends Algo_INVOKEMETA_Nonbr
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
+            final Calculator calc = this.ctx.getCalculator();
             try {
                 if (this.entryBytes == null) {
                     state.pushOperand(Null.getInstance());
                 } else {
                     final ClassFile cf_arrayOf_BYTE = state.getClassHierarchy().loadCreateClass("" + ARRAYOF + BYTE);
-                    final Calculator calc = state.getCalculator();
-                    final ReferenceConcrete retVal = state.createArray(null, calc.valInt(this.entryBytes.length), cf_arrayOf_BYTE);
+                    final ReferenceConcrete retVal = state.createArray(calc, null, calc.valInt(this.entryBytes.length), cf_arrayOf_BYTE);
                     final Array array = (Array) state.getObject(retVal);
                     for (int i = 0; i < this.entryBytes.length; ++i) {
                         array.setFast(calc.valInt(i), calc.valByte(this.entryBytes[i]));
@@ -104,7 +104,7 @@ public final class Algo_JAVA_ZIPFILE_GETENTRYBYTES extends Algo_INVOKEMETA_Nonbr
                     state.pushOperand(retVal);
                 }
             } catch (HeapMemoryExhaustedException e) {
-                throwNew(state, OUT_OF_MEMORY_ERROR);
+                throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
             } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
                      WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException | 

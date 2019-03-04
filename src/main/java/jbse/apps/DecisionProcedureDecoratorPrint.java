@@ -31,11 +31,13 @@ public class DecisionProcedureDecoratorPrint extends DecisionProcedureDecorator 
      * Constructor.
      * 
      * @param component the {@link DecisionProcedure} which must be decorated.
-     * @param out A {@link PrintStream}{@code []}; the incoming requests 
+     * @param out a varargs of {@link PrintStream}s; The incoming requests 
      *        will be prettyprinted on all the elements of {@code out} after 
      *        being successfully served by {@code component}. 
+     * @throws InvalidInputException if {@code component == null}.
+     * @throws NullPointerException if {@code out == null}.
      */
-    public DecisionProcedureDecoratorPrint(DecisionProcedure component, PrintStream[] out) {
+    public DecisionProcedureDecoratorPrint(DecisionProcedure component, PrintStream... out) throws InvalidInputException {
         super(component);
         this.out = out.clone();
     }

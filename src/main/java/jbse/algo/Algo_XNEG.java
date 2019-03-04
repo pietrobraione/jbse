@@ -60,9 +60,9 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         return (state, alt) -> { 
             try {
                 final Primitive value = (Primitive) this.data.operand(0);
-                state.pushOperand(value.neg());
+                state.pushOperand(this.ctx.getCalculator().push(value).neg().pop());
             } catch (ClassCastException | InvalidTypeException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 return;
             }
         };

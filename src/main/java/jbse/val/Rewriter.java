@@ -1,55 +1,54 @@
-package jbse.rewr;
+package jbse.val;
+
+import java.util.List;
 
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
-import jbse.rewr.exc.NoResultException;
-import jbse.val.Any;
-import jbse.val.Calculator;
-import jbse.val.Expression;
-import jbse.val.PrimitiveSymbolicApply;
-import jbse.val.PrimitiveSymbolicAtomic;
-import jbse.val.NarrowingConversion;
-import jbse.val.Operator;
-import jbse.val.Primitive;
-import jbse.val.PrimitiveSymbolic;
-import jbse.val.PrimitiveVisitor;
-import jbse.val.Simplex;
-import jbse.val.Term;
-import jbse.val.Value;
-import jbse.val.WideningConversion;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidOperatorException;
 import jbse.val.exc.InvalidTypeException;
+import jbse.val.exc.NoResultException;
 
 /**
  * An abstract term rewriter for {@link Primitive}s.
  * 
  * @author Pietro Braione
  */
-public class Rewriter {
+public class Rewriter implements Cloneable {
+	//TODO this implementation is not reentrant, i.e., a rewriter cannot recursively invoke itself. Because of this, the CalculatorRewriting.simplify method cannot invoke itself recursively. Fix this situation.
+	
 	private Primitive value;
 	private RewriteVisitor visitor;
 	
-	protected Calculator calc;
-	
 	public Rewriter() {
-		this.calc = null;
 		clear();
+		makeDispatcher();
+	}
+	
+	private void makeDispatcher() {
 		this.visitor = new RewriteVisitor();
 	}
 	
-    public static Primitive applyRewriters(Primitive p, Calculator calc, Rewriter...rewriters)
+    public static Primitive applyRewriters(Primitive p, Rewriter...rewriters)
     throws NoResultException {
         Primitive retVal = p;
         for (Rewriter r : rewriters) {
-        	r.calc = calc;
         	retVal = r.rewrite(retVal);
         }
         return retVal;
     }
-
+	
+    public static Primitive applyRewriters(Primitive p, List<? extends Rewriter> rewriters)
+    throws NoResultException {
+        Primitive retVal = p;
+        for (Rewriter r : rewriters) {
+        	retVal = r.rewrite(retVal);
+        }
+        return retVal;
+    }
+    
 	protected final Primitive rewrite(Primitive p) throws NoResultException {
-		if (p == null || this.calc == null) {
+		if (p == null) {
 			throw new NoResultException();
 		} else {
 			clear();
@@ -108,8 +107,8 @@ public class Rewriter {
 		}
 		final PrimitiveSymbolicApply result;
 		try {
-			result = new PrimitiveSymbolicApply(x.getType(), x.historyPoint(), this.calc, x.getOperator(), args);
-		} catch (InvalidTypeException | InvalidOperandException | InvalidInputException e) {
+			result = new PrimitiveSymbolicApply(x.getType(), x.historyPoint(), x.getOperator(), args);
+		} catch (InvalidTypeException | InvalidInputException e) {
 			throw new NoResultException(e);
 		}
 		setResult(result);
@@ -122,16 +121,16 @@ public class Rewriter {
 		try {
 			if (x.isUnary()) {
 				final Primitive operand = rewrite(x.getOperand());
-				result = Expression.makeExpressionUnary(this.calc, operator, operand);
+				result = Expression.makeExpressionUnary(operator, operand);
 			} else {
 				final Primitive firstOperand = rewrite(x.getFirstOperand());
 				final Primitive secondOperand = rewrite(x.getSecondOperand());
-				result = Expression.makeExpressionBinary(this.calc, firstOperand, operator, secondOperand);
+				result = Expression.makeExpressionBinary(firstOperand, operator, secondOperand);
 			}
 		} catch (InvalidTypeException | InvalidOperandException e) {
 			//rewriting of operands yielded bad results: fails
 			throw new NoResultException(e);
-		} catch (InvalidOperatorException | InvalidInputException e) {
+		} catch (InvalidOperatorException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}
@@ -143,8 +142,8 @@ public class Rewriter {
 		final Primitive arg = rewrite(x.getArg());
 		final WideningConversion result;
 		try {
-			result = WideningConversion.make(x.getType(), this.calc, arg);
-		} catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
+			result = WideningConversion.make(x.getType(), arg);
+		} catch (InvalidOperandException | InvalidTypeException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}
@@ -156,8 +155,8 @@ public class Rewriter {
 		final Primitive arg = rewrite(x.getArg());
 		final NarrowingConversion result;
 		try {
-			result = NarrowingConversion.make(x.getType(), this.calc, arg);
-		} catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
+			result = NarrowingConversion.make(x.getType(), arg);
+		} catch (InvalidOperandException | InvalidTypeException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
 		}
@@ -190,5 +189,18 @@ public class Rewriter {
 		@Override public void visitWideningConversion(WideningConversion x) throws NoResultException { Rewriter.this.rewriteWideningConversion(x); }
 
 		@Override public void visitNarrowingConversion(NarrowingConversion x) throws NoResultException { Rewriter.this.rewriteNarrowingConversion(x); }
+	}
+	
+	
+	@Override
+	public Rewriter clone() {
+		try {
+			final Rewriter other = (Rewriter) super.clone();
+			other.makeDispatcher(); //otherwise, it would redispatch to this object!
+			return other;
+		} catch (CloneNotSupportedException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
 	}
 }

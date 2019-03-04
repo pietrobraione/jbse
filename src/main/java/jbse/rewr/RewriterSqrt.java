@@ -3,11 +3,11 @@ package jbse.rewr;
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
-import jbse.rewr.exc.NoResultException;
 import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.Primitive;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
+import jbse.val.exc.NoResultException;
 
 /**
  * Rewrites {@code sqrt(X * X * Y)} to {@code abs(X) * sqrt(Y)}
@@ -16,7 +16,7 @@ import jbse.val.exc.InvalidTypeException;
  * 
  * @author Pietro Braione
  */
-public class RewriterSqrt extends Rewriter {
+public class RewriterSqrt extends RewriterCalculatorRewriting {
 	public RewriterSqrt() { }
 	
 	@Override
@@ -43,12 +43,12 @@ public class RewriterSqrt extends Rewriter {
 			}
 			final Polynomial[] argSqrt;
 			try {
-				argSqrt = Polynomial.of(this.calc, arg).sqrt();
+				argSqrt = Polynomial.of(this.calc, arg).sqrt(this.calc);
 				if (argSqrt[0].isZeroOne(false)) {
 					super.rewritePrimitiveSymbolicApply(x);
 				} else {
-					setResult(this.calc.applyFunctionPrimitive(x.getType(), x.historyPoint(), PrimitiveSymbolicApply.ABS_DOUBLE, argSqrt[0].toPrimitive())
-							.mul(this.calc.applyFunctionPrimitive(x.getType(), x.historyPoint(), PrimitiveSymbolicApply.SQRT, argSqrt[1].toPrimitive())));
+					setResult(this.calc.applyFunctionPrimitive(x.getType(), x.historyPoint(), PrimitiveSymbolicApply.ABS_DOUBLE, argSqrt[0].toPrimitive(this.calc))
+							.mul(this.calc.applyFunctionPrimitiveAndPop(x.getType(), x.historyPoint(), PrimitiveSymbolicApply.SQRT, argSqrt[1].toPrimitive(this.calc))).pop());
 				}
 			} catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
 				//this should never happen

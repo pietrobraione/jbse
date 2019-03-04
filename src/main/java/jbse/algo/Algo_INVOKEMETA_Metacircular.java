@@ -60,6 +60,7 @@ import jbse.tree.DecisionAlternative_XLOAD_GETX_Null;
 import jbse.tree.DecisionAlternative_XLOAD_GETX_Resolved;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Expands;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Null;
+import jbse.val.Calculator;
 import jbse.val.Null;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -146,7 +147,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
                 try {
                     this.valToLoad = invokeMetacircularly(state, this.data.operands());
                 } catch (HeapMemoryExhaustedException e) {
-                    throwNew(state, OUT_OF_MEMORY_ERROR);
+                    throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
                     exitFromAlgorithm();
                 }
             } else if (this.isVoid) {
@@ -155,7 +156,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
                 //builds a term
                 try {
                     if (isPrimitive(returnType)) {
-                        this.valToLoad = state.getCalculator().applyFunctionPrimitive(returnType.charAt(0), state.getHistoryPoint(), this.data.signature().toString(), args);
+                        this.valToLoad = this.ctx.getCalculator().applyFunctionPrimitive(returnType.charAt(0), state.getHistoryPoint(), this.data.signature().toString(), args).pop();
                     } else {
                         this.valToLoad = new ReferenceSymbolicApply(returnType, state.getHistoryPoint(), this.data.signature().toString(), args);
                     }
@@ -168,7 +169,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
     }
 
     private Value invokeMetacircularly(State state, Value[] args) 
-    throws CannotInvokeNativeException, FrozenStateException, HeapMemoryExhaustedException {
+    throws CannotInvokeNativeException, HeapMemoryExhaustedException, InvalidInputException {
         try {
             //reflects the arguments
             final String[] argsType = splitParametersDescriptors(this.data.signature().getDescriptor());
@@ -246,17 +247,18 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
         }
     }
 
-    private static Value toValue(State state, Object retValRefl, String type) 
-    throws FrozenStateException, HeapMemoryExhaustedException {
+    private Value toValue(State state, Object retValRefl, String type) 
+    throws HeapMemoryExhaustedException, InvalidInputException {
+    	final Calculator calc = this.ctx.getCalculator();
         if (isPrimitive(type)) {
-            return state.getCalculator().val_(retValRefl);
+            return calc.val_(retValRefl);
         } else if (JAVA_STRING.equals(className(type))) {
             if (retValRefl == null) {
                 return Null.getInstance();
             } else {
                 try {
                     final String retValString = (String) retValRefl;
-                    state.ensureStringLiteral(retValString);
+                    state.ensureStringLiteral(calc, retValString);
                     return state.referenceToStringLiteral(retValString);
                 } catch (ClassCastException e) {
                     failExecution("Expected a value of type String from a metacircular call, returned " + retValRefl + ".");
@@ -288,22 +290,22 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
                     //TODO the next catch blocks should disappear, see comments on removing exceptions in jbse.dec.DecisionProcedureAlgorithms.doResolveReference
                 } catch (ClassFileNotFoundException e) {
                     //TODO this exception should wrap a ClassNotFoundException
-                    throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                    throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR);
                     exitFromAlgorithm();
                 } catch (BadClassFileVersionException e) {
-                    throwNew(state, UNSUPPORTED_CLASS_VERSION_ERROR);
+                    throwNew(state, this.ctx.getCalculator(), UNSUPPORTED_CLASS_VERSION_ERROR);
                     exitFromAlgorithm();
                 } catch (WrongClassNameException e) {
-                    throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
+                    throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
                     exitFromAlgorithm();
                 } catch (IncompatibleClassFileException e) {
-                    throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                    throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
                     exitFromAlgorithm();
                 } catch (ClassFileNotAccessibleException e) {
-                    throwNew(state, ILLEGAL_ACCESS_ERROR);
+                    throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
                     exitFromAlgorithm();
                 } catch (ClassFileIllFormedException e) {
-                    throwVerifyError(state);
+                    throwVerifyError(state, this.ctx.getCalculator());
                     exitFromAlgorithm();
                 }
                 this.someRefNotExpanded = o.noReferenceExpansion();
@@ -324,6 +326,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
     protected final void refineRefExpands(State state, DecisionAlternative_XYLOAD_GETX_Expands drc) 
     throws ContradictionException, InvalidTypeException, InvalidInputException, InterruptException, 
     SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
+    	final Calculator calc = this.ctx.getCalculator();
         final ReferenceSymbolic referenceToExpand = drc.getValueToLoad();
         final String classNameOfReferenceToExpand = className(referenceToExpand.getStaticType());
         final ClassFile classFileOfReferenceToExpand = findClassFile(state, classNameOfReferenceToExpand);                        
@@ -331,9 +334,9 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
         try {
             ensureClassInitialized(state, classFileOfReferenceToExpand, this.ctx);
             ensureClassInitialized(state, classFileOfTargetObject, this.ctx);
-            state.assumeExpands(referenceToExpand, classFileOfTargetObject);
+            state.assumeExpands(calc, referenceToExpand, classFileOfTargetObject);
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (CannotAssumeSymbolicObjectException e) {
             throw new SymbolicValueNotAllowedException(e);
@@ -346,8 +349,8 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
         if (classFileOfTargetObject.isArray()) {
             try {
                 final Array targetObject = (Array) state.getObject(referenceToExpand);
-                final Primitive lengthPositive = targetObject.getLength().ge(state.getCalculator().valInt(0));
-                state.assume(this.ctx.decisionProcedure.simplify(lengthPositive));
+                final Primitive lengthPositive = calc.push(targetObject.getLength()).ge(calc.valInt(0)).pop();
+                state.assume(calc.simplify(this.ctx.decisionProcedure.simplify(lengthPositive)));
             } catch (InvalidOperandException | DecisionException e) { //TODO propagate these exception (...and replace DecisionException with something better)
                 //this should never happen
                 failExecution(e);
@@ -402,7 +405,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
             } else {
                 final Value valToPush;
                 if (isPrimitive(valFromAlt.getType()) && !isPrimitiveOpStack(valFromAlt.getType())) {
-                    valToPush = ((Primitive) valFromAlt).widen(INT);
+                    valToPush = this.ctx.getCalculator().push((Primitive) valFromAlt).widen(INT).pop();
                 } else {
                     valToPush = valFromAlt;
                 }

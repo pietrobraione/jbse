@@ -30,7 +30,7 @@ public class DecisionProcedureDecoratorTimer extends DecisionProcedureDecorator 
         this.time += System.currentTimeMillis() - start;
     }
 
-    public DecisionProcedureDecoratorTimer(DecisionProcedure component) {
+    public DecisionProcedureDecoratorTimer(DecisionProcedure component) throws InvalidInputException {
         super(component);
         this.time = 0L;
     }

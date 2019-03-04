@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
+import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -14,7 +16,6 @@ import jbse.val.ReferenceArrayImmaterial;
 import jbse.val.Simplex;
 import jbse.val.Term;
 import jbse.val.Value;
-import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -55,32 +56,34 @@ public interface Array extends Objekt {
          * Strengthens the access condition of this {@link AccessOutcome}
          * by imposing that the index is different from a value. 
          * 
-         * @param val a {@link Primitive} This {@link AccessOutcome}'s 
+         * @param calc a Calculator. It must not be {@code null}.
+         * @param val a {@link Primitive}. This {@link AccessOutcome}'s 
          *        access condition will be strengthened by conjoining it
          *        with an expression stating that the index is different
          *        from {@code val}.
-         * @throws InvalidOperandException if {@code val} is {@code null}. 
-         * @throws InvalidTypeException if {@code val} has not int type.
+         * @throws InvalidInputException if {@code calc == null || val == null}. 
+         * @throws InvalidTypeException if {@code val} has not {@code int} type.
          */
-        void excludeIndexFromAccessCondition(Primitive val)
-        throws InvalidOperandException, InvalidTypeException;
+        void excludeIndexFromAccessCondition(Calculator calc, Primitive val)
+        throws InvalidInputException, InvalidTypeException;
 
         /**
          * Returns a {@link Primitive} denoting the fact that an index 
          * is in the {@link AccessOutcome}'s range.
          * 
+         * @param calc a Calculator. It must not be {@code null}.
          * @param accessIndex a {@link Primitive} denoting an integer value, 
-         * the index by which the array is accessed.
+         *        the index by which the array is accessed.
          * @return a {@link Primitive} denoting the fact that 
-         * {@code index} is in range (if its truth can be 
-         * decided by normalization it is a {@link Simplex} 
-         * denoting a boolean, otherwise it is an
-         * {@link Expression}).
-         * @throws InvalidOperandException if {@code accessIndex} is {@code null}.
-         * @throws InvalidTypeException if {@code accessIndex} is not integer.
+         *         {@code index} is in range (if its truth can be 
+         *         decided by normalization it is a {@link Simplex} 
+         *         denoting a boolean, otherwise it is an
+         *         {@link Expression}).
+         * @throws InvalidInputException if {@code calc == null || accessIndex == null}.
+         * @throws InvalidTypeException if {@code accessIndex} has not {@code int} type.
          */
-        Primitive inRange(Primitive accessIndex) 
-        throws InvalidOperandException, InvalidTypeException;
+        Primitive inRange(Calculator calc, Primitive accessIndex) 
+        throws InvalidInputException, InvalidTypeException;
     }
 
     /**
@@ -157,7 +160,6 @@ public interface Array extends Objekt {
      * @author Pietro Braione
      */
     public interface AccessOutcomeOut extends AccessOutcome { }
-    
 
     /**
      * Converts the primitive type encoding for arrays into that of {@link Type}.
@@ -257,32 +259,34 @@ public interface Array extends Objekt {
      * Returns the outcome of an access to the array when the
      * index is a {@link Simplex} and the array has simple representation.
      * 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param index the index of the element in the array, a {@link Simplex}
      *        with type {@code int}.
      * @return an {@link AccessOutcome} whose {@link AccessOutcome#getExpression}s 
      *         is specialized on {@code index}.
-     * @throws InvalidOperandException if {@code index} is {@code null}.
+     * @throws InvalidInputException if {@code calc == null || index == null}.
      * @throws InvalidTypeException if {@code index} has not {@code int} type.
      * @throws FastArrayAccessNotAllowedException if the array has not
      *         a simple representation.
      */
-    AccessOutcome getFast(Simplex index)
-    throws InvalidOperandException, InvalidTypeException, FastArrayAccessNotAllowedException;
+    AccessOutcome getFast(Calculator calc, Simplex index)
+    throws InvalidInputException, InvalidTypeException, FastArrayAccessNotAllowedException;
 
     /**
      * Returns the outcomes of an access to the array.
      * 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param index the index of the element in the array, a {@code Primitive}
      *        with type {@code int}.
      * @return a {@link Collection}{@code <}{@link AccessOutcome}{@code >}, 
      *         whose {@link AccessOutcome#getAccessCondition}s might be
      *         set to {@code null} if they can be trivially decided to be
      *         satified.
-     * @throws InvalidOperandException if {@code index} is {@code null}.
+     * @throws InvalidInputException if {@code calc == null || index == null}.
      * @throws InvalidTypeException if {@code index} has not {@code int} type.
      */
-    Collection<AccessOutcome> get(Primitive index) 
-    throws InvalidOperandException, InvalidTypeException;
+    Collection<AccessOutcome> get(Calculator calc, Primitive index) 
+    throws InvalidInputException, InvalidTypeException;
     
     /**
      * Sets an element of the array when the array has a simple 
@@ -292,31 +296,34 @@ public interface Array extends Objekt {
      * @param index the position of the array element to set. It must
      *        denote an {@code int}.  
      * @param newValue the new {@link Value} to be set at {@code index}.
-     * @throws InvalidOperandException if {@code index} is {@code null}.
+     * @throws InvalidInputException if {@code index == null}.
      * @throws InvalidTypeException if {@code index} is not an {@code int}
      *         or {@code newValue} is incompatible with the array member type.
      * @throws FastArrayAccessNotAllowedException if the array has not
      * a simple representation.
      */
     void setFast(Simplex index, Value newValue) 
-    throws InvalidOperandException, InvalidTypeException, FastArrayAccessNotAllowedException;
+    throws InvalidInputException, InvalidTypeException, FastArrayAccessNotAllowedException;
 
     /**
      * Sets an element of the array. It <em>assumes</em> that the index 
      * by which the array is accessed may be in range (i.e., that 
-     * {@code this.}{@link #inRange(Primitive) inRange(index)} is 
+     * {@code this.}{@link #inRange(Calculator, Primitive) inRange(calc, index)} is 
      * satisfiable) and updates the theory accordingly by adding a 
      * new entry. All the entries already present are unaffected.
      * 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param index the position of the array element to set, a {@code Primitive}
      *        denoting an {@code int}.  
      * @param newValue the new {@link Value} to be set at {@code index}.
-     * @throws InvalidOperandException if {@code index} is {@code null}.
+     * @throws InvalidInputException if {@code calc == null || index == null}
+     *         ({@code newValue == null} in some cases means unknown value, 
+     *         so we accept it).
      * @throws InvalidTypeException if {@code index} is not an {@code int} 
      *         or {@code newValue} is incompatible with the array member type.
      */
-    void set(Primitive index, Value newValue)
-    throws InvalidOperandException, InvalidTypeException;
+    void set(Calculator calc, Primitive index, Value newValue)
+    throws InvalidInputException, InvalidTypeException;
 
     /**
      * Returns an iterator to the entries of this array.
@@ -330,9 +337,10 @@ public interface Array extends Objekt {
      * Returns an iterator to the entries that are possibly affected by 
      * a set operation on this array.
      * 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param index the position of the array element to set, a {@code Primitive}
-     *        denoting an int.  
-     * @param valToSet the {@link Value} to be set at {@code index}.
+     *        denoting an {@code int}.  
+     * @param newValue the {@link Value} to be set at {@code index}.
      * @return an {@link Iterator}{@code <? extends }{@link AccessOutcomeIn}{@code >}
      *         to the entries of this {@link Array} that are possibly 
      *         modified by the update; the caller must decide whether 
@@ -340,9 +348,13 @@ public interface Array extends Objekt {
      *         are those for which it is not a contradiction that {@code index}
      *         falls in their range, and either are {@link AccessOutcomeInInitialArray}s, 
      *         or are {@link AccessOutcomeInValue} with unknown value, or 
-     *         are {@link AccessOutcomeInValue} with value different from {@code valToSet}.
+     *         are {@link AccessOutcomeInValue} with value different from {@code newValue}.
+     * @throws InvalidInputException if {@code calc == null || index == null}
+     *         ({@code newValue == null} in some cases means unknown value, 
+     *         so we accept it). 
      */
-    Iterator<? extends AccessOutcomeIn> entriesPossiblyAffectedByAccess(Primitive index, Value valToSet);
+    Iterator<? extends AccessOutcomeIn> entriesPossiblyAffectedByAccess(Calculator calc, Primitive index, Value newValue) 
+    throws InvalidInputException;
 
     /**
      * Clones the entries of another array into this array,
@@ -361,51 +373,60 @@ public interface Array extends Objekt {
      * within the bounds of the respective arrays, the arrays are 
      * type-compatible for assignment) and updates the theory accordingly. 
      * 
-     * @param src The source {@link Array}.
-     * @param srcPos The source initial position.
-     * @param destPos The destination initial position.
-     * @param length How many elements should be copied.
+     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * @param src the source {@link Array}.
+     * @param srcPos a {@link Primitive}, the initial position in {@code src}
+     *        from where start to copy.
+     * @param destPos a {@link Primitive}, the initial position in this {@link Array}
+     *        from where start to copy.
+     * @param length how many elements should be copied.
+     * @param checkOk a {@link Consumer}{@code <}{@link Reference}{@code >} that
+     *        checks whether a source array element (in case it is a {@link Reference})
+     *        can be written in the destination array. It can be {@code null} and
+     *        in such case no check is applied.
      * @return an {@link Iterator}{@code <? extends }{@link AccessOutcomeIn}{@code >}
      *         to the entries of this {@link Array} that are possibly 
      *         modified by the update; the caller must decide whether 
      *         constrain and possibly delete them.
-     * @throws InvalidOperandException if {@code srcPos} or {@code destPos} 
-     *         or {@code length} is {@code null}.
+     * @throws InvalidInputException if {@code calc} or {@code src} or {@code srcPos} 
+     *         or {@code destPos} or {@code length} is {@code null}.
      * @throws InvalidTypeException if {@code srcPos} or {@code destPos} 
-     *         or {@code length} is not an int. 
+     *         or {@code length} is not an {@code int}. 
      */
-    Iterator<? extends AccessOutcomeIn> arraycopy(Array src, Primitive srcPos, Primitive destPos, Primitive length, Consumer<Reference> checkOk) 
-    throws InvalidOperandException, InvalidTypeException;
+    Iterator<? extends AccessOutcomeIn> arraycopy(Calculator calc, Array src, Primitive srcPos, Primitive destPos, Primitive length, Consumer<Reference> checkOk) 
+    throws InvalidInputException, InvalidTypeException;
 
     /**
      * Returns a {@link Primitive} denoting the fact that an index 
      * is in the {@link Array}'s definition range.
      * 
-     * @param index a {@link Primitive} denoting an int value.
-     * @return a {@link Value} denoting the fact that 
-     * {@code index} is in range. If the fact can be 
-     * proved or disproved by normalization, a {@link Simplex} 
-     * denoting a boolean value is returned, otherwise an
-     * {@link Expression} is returned. 
-     * @throws InvalidOperandException if {@code index} is {@code null}. 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * @param index a {@link Primitive} denoting an {@code int} value.
+     * @return a {@link Primitive} denoting the fact that 
+     *         {@code index} is in range. If the fact can be 
+     *         proved or disproved by normalization, a {@link Simplex} 
+     *         denoting a boolean value is returned, otherwise an
+     *         {@link Expression} is returned. 
+     * @throws InvalidInputException if {@code calc == null || index == null}. 
      * @throws InvalidTypeException if {@code index} is not an int. 
      */
-    Primitive inRange(Primitive index) throws InvalidOperandException, InvalidTypeException;
+    Primitive inRange(Calculator calc, Primitive index) throws InvalidInputException, InvalidTypeException;
 
     /**
      * Returns a {@link Primitive} denoting the fact that 
      * an index is out of range.
      * 
-     * @param index a {@link Primitive} denoting an int value.
-     * @return an {@link Expression} denoting the fact that 
-     * {@code index} is out of range. If the fact can be 
-     * proved or disproved by normalization, a {@link Simplex} 
-     * denoting {@code true} or {@code false} respectively 
-     * is returned. 
-     * @throws InvalidOperandException if {@code index} is {@code null}. 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * @param index a {@link Primitive} denoting an {@code int} value.
+     * @return a {@link Primitive} denoting the fact that 
+     *         {@code index} is out of range. If the fact can be 
+     *         proved or disproved by normalization, a {@link Simplex} 
+     *         denoting {@code true} or {@code false} respectively 
+     *         is returned, otherwise an {@link Expression} is returned. 
+     * @throws InvalidInputException if {@code calc == null || index == null}. 
      * @throws InvalidTypeException if {@code index} is not an int. 
      */
-    Primitive outOfRange(Primitive index) throws InvalidOperandException, InvalidTypeException ;
+    Primitive outOfRange(Calculator calc, Primitive index) throws InvalidInputException, InvalidTypeException;
 
     /**
      * Returns a list of {@link AccessOutcomeIn} representing the 

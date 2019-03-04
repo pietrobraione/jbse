@@ -11,9 +11,9 @@ final class Algo_INSTANCEOF extends Algo_CASTINSTANCEOF {
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
             if (!this.isNull && this.isSubclass) { //TODO does the this.isSubclass check conform to the specification of the instanceof bytecode in the JVMS v8?
-                state.pushOperand(state.getCalculator().valInt(1));
+                state.pushOperand(this.ctx.getCalculator().valInt(1));
             } else { 
-                state.pushOperand(state.getCalculator().valInt(0));
+                state.pushOperand(this.ctx.getCalculator().valInt(0));
             }
         };
     }

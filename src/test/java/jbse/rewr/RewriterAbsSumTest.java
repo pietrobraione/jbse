@@ -28,17 +28,17 @@ public class RewriterAbsSumTest {
 	public void testBasic1() throws Exception {
 		//abs(A) + A > 0 -> A > 0
 		final Term A = this.calc.valTerm(Type.FLOAT, "A");
-		final Primitive absA = this.calc.applyFunctionPrimitive(Type.FLOAT, this.hist, PrimitiveSymbolicApply.ABS_FLOAT, A); 
-		final Primitive p_post = absA.add(A).gt(this.calc.valFloat(0.0f)); 
-		assertEquals(A.gt(this.calc.valFloat(0.0f)), p_post);
+		final Primitive absA = this.calc.applyFunctionPrimitiveAndPop(Type.FLOAT, this.hist, PrimitiveSymbolicApply.ABS_FLOAT, A); 
+		final Primitive p_post = this.calc.push(absA).add(A).gt(this.calc.valFloat(0.0f)).pop(); 
+		assertEquals(this.calc.push(A).gt(this.calc.valFloat(0.0f)).pop(), p_post);
 	}
 	
 	@Test
 	public void testBasic2() throws Exception {
-		//-abs(A) + A > 0 -> false
+		//-1.0 * abs(A) + A > 0 -> false
 		final Term A = this.calc.valTerm(Type.FLOAT, "A");
-		final Primitive absA = this.calc.applyFunctionPrimitive(Type.FLOAT, this.hist, PrimitiveSymbolicApply.ABS_FLOAT, A); 
-		final Primitive p_post = absA.mul(this.calc.valFloat(-1.0f)).add(A).gt(this.calc.valFloat(0.0f)); 
+		final Primitive absA = this.calc.applyFunctionPrimitiveAndPop(Type.FLOAT, this.hist, PrimitiveSymbolicApply.ABS_FLOAT, A); 
+		final Primitive p_post = this.calc.push(absA).mul(this.calc.valFloat(-1.0f)).add(A).gt(this.calc.valFloat(0.0f)).pop(); 
 		assertEquals(this.calc.valBoolean(false), p_post);
 	}
 	
@@ -46,8 +46,8 @@ public class RewriterAbsSumTest {
 	public void testBasic3() throws Exception {
 		//A - abs(A) > 0 -> false
 		final Term A = this.calc.valTerm(Type.INT, "A");
-		final Primitive absA = this.calc.applyFunctionPrimitive(Type.INT, this.hist, PrimitiveSymbolicApply.ABS_INT, A); 
-		final Primitive p_post = A.sub(absA).gt(this.calc.valInt(0)); 
+		final Primitive absA = this.calc.applyFunctionPrimitiveAndPop(Type.INT, this.hist, PrimitiveSymbolicApply.ABS_INT, A); 
+		final Primitive p_post = this.calc.push(A).sub(absA).gt(this.calc.valInt(0)).pop(); 
 		assertEquals(this.calc.valBoolean(false), p_post);
 	}
 	
@@ -55,9 +55,9 @@ public class RewriterAbsSumTest {
 	public void testBasic4() throws Exception {
 		//A - abs(A) < 0 -> A < 0
 		final Term A = this.calc.valTerm(Type.LONG, "A");
-		final Primitive absA = this.calc.applyFunctionPrimitive(Type.LONG, this.hist, PrimitiveSymbolicApply.ABS_LONG, A); 
-		final Primitive p_post = A.sub(absA).lt(this.calc.valLong(0L)); 
-		assertEquals(A.lt(this.calc.valLong(0L)), p_post);
+		final Primitive absA = this.calc.applyFunctionPrimitiveAndPop(Type.LONG, this.hist, PrimitiveSymbolicApply.ABS_LONG, A); 
+		final Primitive p_post = this.calc.push(A).sub(absA).lt(this.calc.valLong(0L)).pop(); 
+		assertEquals(this.calc.push(A).lt(this.calc.valLong(0L)).pop(), p_post);
 	}
 	
 	@Test
@@ -65,9 +65,9 @@ public class RewriterAbsSumTest {
 		//A - abs(A + B) + B < 0 -> A + B < 0
 		final Term A = this.calc.valTerm(Type.FLOAT, "A");
 		final Term B = this.calc.valTerm(Type.FLOAT, "B");
-		final Primitive absAplusB = this.calc.applyFunctionPrimitive(Type.FLOAT, this.hist, PrimitiveSymbolicApply.ABS_FLOAT, A.add(B)); 
-		final Primitive p_post = A.sub(absAplusB).add(B).lt(this.calc.valFloat(0)); 
-		assertEquals(A.add(B).lt(this.calc.valFloat(0)), p_post);
+		final Primitive absAplusB = this.calc.applyFunctionPrimitiveAndPop(Type.FLOAT, this.hist, PrimitiveSymbolicApply.ABS_FLOAT, this.calc.push(A).add(B).pop()); 
+		final Primitive p_post = this.calc.push(A).sub(absAplusB).add(B).lt(this.calc.valFloat(0)).pop(); 
+		assertEquals(this.calc.push(A).add(B).lt(this.calc.valFloat(0)).pop(), p_post);
 	}
 	
 	@Test
@@ -75,8 +75,8 @@ public class RewriterAbsSumTest {
 		//A - abs(B - A) - B < 0 -> B - A > 0
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
 		final Term B = this.calc.valTerm(Type.DOUBLE, "B");
-		final Primitive absBminusA = this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ABS_DOUBLE, B.sub(A)); 
-		final Primitive p_post = A.sub(absBminusA).sub(B).lt(this.calc.valDouble(0.0d)); 
-		assertEquals(B.sub(A).gt(this.calc.valDouble(0.0d)), p_post);
+		final Primitive absBminusA = this.calc.applyFunctionPrimitiveAndPop(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ABS_DOUBLE, this.calc.push(B).sub(A).pop()); 
+		final Primitive p_post = this.calc.push(A).sub(absBminusA).sub(B).lt(this.calc.valDouble(0.0d)).pop(); 
+		assertEquals(this.calc.push(B).sub(A).gt(this.calc.valDouble(0.0d)).pop(), p_post);
 	}
 }

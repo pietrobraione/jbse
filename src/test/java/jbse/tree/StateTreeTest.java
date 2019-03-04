@@ -16,7 +16,6 @@ import jbse.bc.Classpath;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.InvalidInputException;
 import jbse.mem.State;
-import jbse.rewr.CalculatorRewriting;
 import jbse.tree.StateTree.BranchPoint;
 import jbse.tree.StateTree.BreadthMode;
 import jbse.tree.StateTree.StateIdentificationMode;
@@ -32,8 +31,7 @@ public class StateTreeTest {
 	@Test
 	public void testAddState1() throws InvalidClassFileFactoryClassException, IOException, InvalidInputException {
 		final StateTree tree = new StateTree(StateIdentificationMode.COMPACT, BreadthMode.MORE_THAN_ONE);
-		final CalculatorRewriting calc = new CalculatorRewriting();
-		final State _1_1 = new State(true, tree.getPreInitialHistoryPoint().startingInitial(), 100, 100, new Classpath(Paths.get("."), Collections.emptyList(), Collections.emptyList()), ClassFileFactoryJavassist.class, new HashMap<>(), calc, new SymbolFactory(calc));
+		final State _1_1 = new State(true, tree.getPreInitialHistoryPoint().startingInitial(), 100, 100, new Classpath(Paths.get("."), Collections.emptyList(), Collections.emptyList()), ClassFileFactoryJavassist.class, new HashMap<>(), new SymbolFactory());
 		_1_1.setPhasePostInitial();
 		final State _1_2 = _1_1.clone();
 		final State _1_3 = _1_1.clone();
@@ -56,8 +54,7 @@ public class StateTreeTest {
 	@Test
 	public void testAddState2() throws InvalidClassFileFactoryClassException, IOException, InvalidInputException {
 		final StateTree tree = new StateTree(StateIdentificationMode.COMPACT, BreadthMode.MORE_THAN_ONE);
-		final CalculatorRewriting calc = new CalculatorRewriting();
-		final State _1_1 = new State(true, tree.getPreInitialHistoryPoint().startingInitial(), 100, 100, new Classpath(Paths.get("."), Collections.emptyList(), Collections.emptyList()), ClassFileFactoryJavassist.class, new HashMap<>(), calc, new SymbolFactory(calc));
+		final State _1_1 = new State(true, tree.getPreInitialHistoryPoint().startingInitial(), 100, 100, new Classpath(Paths.get("."), Collections.emptyList(), Collections.emptyList()), ClassFileFactoryJavassist.class, new HashMap<>(), new SymbolFactory());
 		_1_1.setPhasePostInitial();
 		final State _1_2 = _1_1.clone();
 		final State _1_3 = _1_1.clone();
@@ -89,8 +86,7 @@ public class StateTreeTest {
 	@Test
 	public void testGetStateAtBranch() throws InvalidClassFileFactoryClassException, IOException, InvalidInputException {
 		final StateTree tree = new StateTree(StateIdentificationMode.COMPACT, BreadthMode.MORE_THAN_ONE);
-		final CalculatorRewriting calc = new CalculatorRewriting();
-		final State _1_1 = new State(true, tree.getPreInitialHistoryPoint().startingInitial(), 100, 100, new Classpath(Paths.get("."), Collections.emptyList(), Collections.emptyList()), ClassFileFactoryJavassist.class, new HashMap<>(), calc, new SymbolFactory(calc));
+		final State _1_1 = new State(true, tree.getPreInitialHistoryPoint().startingInitial(), 100, 100, new Classpath(Paths.get("."), Collections.emptyList(), Collections.emptyList()), ClassFileFactoryJavassist.class, new HashMap<>(), new SymbolFactory());
 		_1_1.setPhasePostInitial();
 		final State _1_2 = _1_1.clone();
 		final State _1_3 = _1_1.clone();

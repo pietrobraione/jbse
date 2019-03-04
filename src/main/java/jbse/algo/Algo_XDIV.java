@@ -73,14 +73,14 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     if (val2 instanceof Simplex) {
                         final Simplex op0_S = (Simplex) val2;
                         if (op0_S.isZeroOne(true)) {
-                            throwNew(state, ARITHMETIC_EXCEPTION);
+                            throwNew(state, this.ctx.getCalculator(), ARITHMETIC_EXCEPTION);
                             return;
                         }
                     }
                 }
-                state.pushOperand(val1.div(val2));
+                state.pushOperand(this.ctx.getCalculator().push(val1).div(val2).pop());
             } catch (ClassCastException | InvalidTypeException | InvalidOperandException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
         };

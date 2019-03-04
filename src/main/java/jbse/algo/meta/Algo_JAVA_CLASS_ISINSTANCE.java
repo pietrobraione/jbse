@@ -18,6 +18,7 @@ import jbse.mem.State;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Reference;
 import jbse.val.Simplex;
 
@@ -37,6 +38,7 @@ public final class Algo_JAVA_CLASS_ISINSTANCE extends Algo_INVOKEMETA_Nonbranchi
     @Override
     protected void cookMore(State state)
     throws ThreadStackEmptyException, InterruptException, ClasspathException, FrozenStateException {
+    	final Calculator calc = this.ctx.getCalculator();
         try {
             //gets the 'this' java.lang.Class instance from the heap 
             //and the name of the class it represents
@@ -58,16 +60,16 @@ public final class Algo_JAVA_CLASS_ISINSTANCE extends Algo_INVOKEMETA_Nonbranchi
             
             //determines which value to push on the operand stack
             if (clazz.representedClass().isPrimitiveOrVoid() || state.isNull(objRef)) {
-                this.valToPush = state.getCalculator().valInt(0);
+                this.valToPush = calc.valInt(0);
             } else {
                 //checks whether the object's class is a subclass 
                 //of the class name from the constant pool
                 final Objekt obj = state.getObject(objRef);
                 final ClassFile objClass = obj.getType();
-                this.valToPush = state.getCalculator().valInt(objClass.isSubclass(representedClass) ? 1 : 0);
+                this.valToPush = calc.valInt(objClass.isSubclass(representedClass) ? 1 : 0);
             }
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (InvalidInputException e) {
             //this should never happen

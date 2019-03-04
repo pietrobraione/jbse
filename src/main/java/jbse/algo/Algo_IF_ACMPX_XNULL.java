@@ -71,7 +71,7 @@ StrategyUpdate<DecisionAlternative_IFX>> {
                     val2 = (Reference) this.data.operand(1);
                 }
             } catch (ClassCastException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
 

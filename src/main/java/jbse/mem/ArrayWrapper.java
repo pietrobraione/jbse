@@ -11,6 +11,7 @@ import jbse.bc.Signature;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
+import jbse.val.Calculator;
 import jbse.val.HistoryPoint;
 import jbse.val.Primitive;
 import jbse.val.Reference;
@@ -18,7 +19,6 @@ import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
 import jbse.val.Term;
 import jbse.val.Value;
-import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -150,29 +150,29 @@ final class ArrayWrapper extends ObjektWrapper<ArrayImpl> implements Array {
     }
 
     @Override
-    public AccessOutcome getFast(Simplex index)
-    throws InvalidOperandException, InvalidTypeException, FastArrayAccessNotAllowedException {
-        return getDelegate().getFast(index);
+    public AccessOutcome getFast(Calculator calc, Simplex index)
+    throws InvalidInputException, InvalidTypeException, FastArrayAccessNotAllowedException {
+        return getDelegate().getFast(calc, index);
     }
 
     @Override
-    public Collection<AccessOutcome> get(Primitive index) 
-    throws InvalidOperandException, InvalidTypeException {
-        return getDelegate().get(index);
+    public Collection<AccessOutcome> get(Calculator calc, Primitive index) 
+    throws InvalidInputException, InvalidTypeException {
+        return getDelegate().get(calc, index);
     }
 
     @Override
     public void setFast(Simplex index, Value valToSet)
-    throws InvalidOperandException, InvalidTypeException, FastArrayAccessNotAllowedException {
+    throws InvalidInputException, InvalidTypeException, FastArrayAccessNotAllowedException {
         possiblyCloneDelegate();
         getDelegate().setFast(index, valToSet);
     }
 
     @Override
-    public void set(Primitive index, Value valToSet) 
-    throws InvalidOperandException, InvalidTypeException {
+    public void set(Calculator calc, Primitive index, Value valToSet) 
+    throws InvalidInputException, InvalidTypeException {
         possiblyCloneDelegate();
-        getDelegate().set(index, valToSet);
+        getDelegate().set(calc, index, valToSet);
     }
 
     @Override
@@ -182,9 +182,10 @@ final class ArrayWrapper extends ObjektWrapper<ArrayImpl> implements Array {
     }
 
     @Override
-    public Iterator<? extends AccessOutcomeIn> entriesPossiblyAffectedByAccess(Primitive index, Value valToSet) {
+    public Iterator<? extends AccessOutcomeIn> entriesPossiblyAffectedByAccess(Calculator calc, Primitive index, Value valToSet) 
+    throws InvalidInputException {
         possiblyCloneDelegate();
-        return getDelegate().entriesPossiblyAffectedByAccess(index, valToSet);
+        return getDelegate().entriesPossiblyAffectedByAccess(calc, index, valToSet);
     }
 
     @Override
@@ -194,22 +195,23 @@ final class ArrayWrapper extends ObjektWrapper<ArrayImpl> implements Array {
     }
 
     @Override
-    public Iterator<? extends AccessOutcomeIn> arraycopy(Array src, Primitive srcPos, Primitive destPos,
-                                                         Primitive length, Consumer<Reference> checkOk) throws InvalidOperandException, InvalidTypeException {
+    public Iterator<? extends AccessOutcomeIn> arraycopy(Calculator calc, Array src, Primitive srcPos, Primitive destPos,
+                                                         Primitive length, Consumer<Reference> checkOk) 
+    throws InvalidInputException, InvalidTypeException {
         possiblyCloneDelegate();
-        return getDelegate().arraycopy(src, srcPos, destPos, length, checkOk);
+        return getDelegate().arraycopy(calc, src, srcPos, destPos, length, checkOk);
     }
 
     @Override
-    public Primitive inRange(Primitive index) 
-    throws InvalidOperandException, InvalidTypeException {
-        return getDelegate().inRange(index);
+    public Primitive inRange(Calculator calc, Primitive index) 
+    throws InvalidInputException, InvalidTypeException {
+        return getDelegate().inRange(calc, index);
     }
 
     @Override
-    public Primitive outOfRange(Primitive index) 
-    throws InvalidOperandException, InvalidTypeException {
-        return getDelegate().outOfRange(index);
+    public Primitive outOfRange(Calculator calc, Primitive index) 
+    throws InvalidInputException, InvalidTypeException {
+        return getDelegate().outOfRange(calc, index);
     }
 
     @Override

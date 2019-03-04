@@ -26,7 +26,7 @@ public final class Algo_JAVA_THROWABLE_GETSTACKTRACEDEPTH extends Algo_INVOKEMET
                 final Array backtrace = (Array) state.getObject((Reference) state.getObject(thisRef).getFieldValue(JAVA_THROWABLE_BACKTRACE));
                 state.pushOperand(backtrace.getLength());
             } catch (ClassCastException | NullPointerException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
         };

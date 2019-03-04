@@ -41,7 +41,7 @@ public final class Algo_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD extends Algo_INVOKEM
             final Reference thisReference = (Reference) this.data.operand(0);
             this.thisInstance = (Instance) state.getObject(thisReference);
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
     }
@@ -53,7 +53,7 @@ public final class Algo_JAVA_CLASSLOADER_NATIVELIBRARY_LOAD extends Algo_INVOKEM
             final Value isBuiltin = this.data.operand(2);
             this.thisInstance.setFieldValue(JAVA_CLASSLOADER_NATIVELIBRARY_NAME, name);
             this.thisInstance.setFieldValue(JAVA_CLASSLOADER_NATIVELIBRARY_ISBUILTIN, isBuiltin);
-            this.thisInstance.setFieldValue(JAVA_CLASSLOADER_NATIVELIBRARY_LOADED, state.getCalculator().valBoolean(true));
+            this.thisInstance.setFieldValue(JAVA_CLASSLOADER_NATIVELIBRARY_LOADED, this.ctx.getCalculator().valBoolean(true));
         };
     }
 }

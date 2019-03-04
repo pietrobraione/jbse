@@ -18,6 +18,7 @@ import jbse.tree.DecisionAlternative_XALOAD_Null;
 import jbse.tree.DecisionAlternative_XALOAD_Expands;
 import jbse.tree.DecisionAlternative_XALOAD_Resolved;
 import jbse.tree.VisitorDecisionAlternative_XALOAD;
+import jbse.val.exc.InvalidOperandException;
 
 /**
  * Strategy for updating a state during the execution of 
@@ -30,7 +31,7 @@ import jbse.tree.VisitorDecisionAlternative_XALOAD;
 abstract class StrategyUpdate_SUN_UNSAFE_GETX_Array implements StrategyUpdate<DecisionAlternative_XALOAD> {
     abstract public void updateResolved(State state, DecisionAlternative_XALOAD_Resolved alt) 
     throws DecisionException, InterruptException, MissingTriggerParameterException,
-    ClasspathException, NotYetImplementedException, InvalidInputException;
+    ClasspathException, NotYetImplementedException, InvalidInputException, InvalidOperandException;
 
     abstract public void updateOut(State state, DecisionAlternative_XALOAD_Out alt) 
     throws CannotManageStateException;
@@ -38,7 +39,7 @@ abstract class StrategyUpdate_SUN_UNSAFE_GETX_Array implements StrategyUpdate<De
     @Override
     public final void update(final State state, DecisionAlternative_XALOAD alt)
     throws DecisionException, InterruptException, MissingTriggerParameterException, 
-    ClasspathException, NotYetImplementedException, InvalidInputException {
+    ClasspathException, NotYetImplementedException, InvalidInputException, InvalidOperandException {
         //a visitor redispatching to the methods which specialize this.update
         final VisitorDecisionAlternative_XALOAD visitorUpdate = 
             new VisitorDecisionAlternative_XALOAD() {
@@ -66,7 +67,7 @@ abstract class StrategyUpdate_SUN_UNSAFE_GETX_Array implements StrategyUpdate<De
                 @Override
                 public void visitDecisionAlternative_XALOAD_Resolved(DecisionAlternative_XALOAD_Resolved alt) 
                 throws DecisionException, InterruptException, MissingTriggerParameterException, ClasspathException, 
-                NotYetImplementedException, InvalidInputException {
+                NotYetImplementedException, InvalidInputException, InvalidOperandException {
                     StrategyUpdate_SUN_UNSAFE_GETX_Array.this.updateResolved(state, alt);
                 }
     
@@ -82,7 +83,7 @@ abstract class StrategyUpdate_SUN_UNSAFE_GETX_Array implements StrategyUpdate<De
         } catch (DecisionException | InterruptException | 
                  MissingTriggerParameterException | ClasspathException | 
                  NotYetImplementedException | InvalidInputException | 
-                 RuntimeException e) {
+                 InvalidOperandException | RuntimeException e) {
             throw e;
         } catch (Exception e) {
             failExecution(e);

@@ -16,12 +16,15 @@ public class InstanceImpl extends ObjektImpl implements Instance {
     /**
      * Constructor.
      * 
+     * @param calc a {@link Calculator}. It must not be {@code null}. It will
+     *        only be used during object construction and will not be stored
+     *        in this {@link InstanceImpl}.
      * @param symbolic a {@code boolean}, whether this object is symbolic
      *        (i.e., not explicitly created during symbolic execution by
      *        a {@code new*} bytecode, but rather assumed).
-     * @param calc a {@link Calculator}.
      * @param classFile a {@code classFile}, the class of 
-     *        this {@link InstanceImpl}; It must be {@code classFile.}{@link ClassFile#isReference() isReference}{@code () == true}.
+     *        this {@link InstanceImpl}; It must be 
+     *        {@code classFile.}{@link ClassFile#isReference() isReference}{@code () == true}.
      * @param origin the {@link ReferenceSymbolic} providing origin of 
      *        the {@code Instance}, if symbolic, or {@code null}, if concrete.
      * @param epoch the creation {@link HistoryPoint} of this {@link InstanceImpl}. 
@@ -30,11 +33,11 @@ public class InstanceImpl extends ObjektImpl implements Instance {
      *        fields this instance knows.
      * @throws InvalidTypeException iff {@code classFile} is invalid. 
      */
-    protected InstanceImpl(boolean symbolic, Calculator calc, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, int numOfStaticFields, Signature... fieldSignatures) 
+    protected InstanceImpl(Calculator calc, boolean symbolic, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, int numOfStaticFields, Signature... fieldSignatures) 
     throws InvalidTypeException {
-        super(symbolic, calc, classFile, origin, epoch, false, numOfStaticFields, fieldSignatures);
+        super(calc, symbolic, classFile, origin, epoch, false, numOfStaticFields, fieldSignatures);
         if (classFile == null || !classFile.isReference()) {
-            throw new InvalidTypeException("Attempted creation of an instance with type " + classFile.getClassName());
+            throw new InvalidTypeException("Attempted creation of an instance with type " + classFile.getClassName() + ".");
         }
     }
 

@@ -5,6 +5,7 @@ import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import java.util.LinkedHashSet;
 
 import jbse.bc.ClassFile;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.ClauseAssumeClassInitialized;
 import jbse.mem.ClauseAssumeClassNotInitialized;
@@ -34,9 +35,16 @@ public final class DecisionProcedureClassInit extends DecisionProcedureChainOfRe
      */
     private final LinkedHashSet<ClassFile> notInit = new LinkedHashSet<>();
 
-    public DecisionProcedureClassInit(DecisionProcedure next, Calculator calc, ClassInitRulesRepo rulesRepo) {
-        super(next, calc);
+    public DecisionProcedureClassInit(DecisionProcedure next, ClassInitRulesRepo rulesRepo) 
+    throws InvalidInputException {
+        super(next);
         this.rulesRepo = rulesRepo.clone(); //safety copy
+    }
+    
+    public DecisionProcedureClassInit(Calculator calc, ClassInitRulesRepo rulesRepo) 
+    throws InvalidInputException {
+    	super(calc);
+    	this.rulesRepo = rulesRepo.clone(); //safety copy
     }
 
     @Override

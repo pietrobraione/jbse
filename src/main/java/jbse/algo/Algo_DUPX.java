@@ -50,7 +50,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
             if (this.cat1 && !isCat_1(this.data.operand(0).getType())) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
         };
@@ -88,7 +88,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     //pops and checks the second operand
                     final Value secondPopped = state.popOperand();
                     if (!isCat_1(secondPopped.getType())) {
-                        throwVerifyError(state);
+                        throwVerifyError(state, this.ctx.getCalculator());
                         exitFromAlgorithm();
                     }
                     //pushes
@@ -97,7 +97,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     state.pushOperand(secondPopped);
                     state.pushOperand(this.data.operand(0));
                 } catch (InvalidNumberOfOperandsException e) {
-                    throwVerifyError(state);
+                    throwVerifyError(state, this.ctx.getCalculator());
                     exitFromAlgorithm();
                 }
             }

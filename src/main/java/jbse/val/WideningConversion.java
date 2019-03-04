@@ -21,9 +21,9 @@ public final class WideningConversion extends PrimitiveSymbolicComputed {
     private final String asOriginString;
     private final int hashCode;
 
-    private WideningConversion(char type, Calculator calc, Primitive arg) 
+    private WideningConversion(char type, Primitive arg) 
     throws InvalidOperandException, InvalidTypeException, InvalidInputException {
-        super(type, unknown(), calc); //TODO put sensible history point?
+        super(type, unknown()); //TODO put sensible history point?
 
         //checks on parameters
         if (arg == null) {
@@ -53,18 +53,21 @@ public final class WideningConversion extends PrimitiveSymbolicComputed {
      * Constructs a {@link WideningConversion}.
      * 
      * @param type a {@code char}, the destination type of the conversion.
-     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param arg a {@link Primitive}, the value that is being widened. 
      *        It must not be {@code null}.
      * @return a {@link WideningConversion}.
      * @throws InvalidOperandException if {@code arg == null}.
      * @throws InvalidTypeException if {@code arg} cannot be widened to {@code type},
      *         or {@code type} is not a valid primitive type.
-     * @throws InvalidInputException if {@code calc == null}.
      */
-    public static WideningConversion make(char type, Calculator calc, Primitive arg) 
-    throws InvalidOperandException, InvalidTypeException, InvalidInputException {
-        return new WideningConversion(type, calc, arg);
+    public static WideningConversion make(char type, Primitive arg) 
+    throws InvalidOperandException, InvalidTypeException {
+        try {
+			return new WideningConversion(type, arg);
+		} catch (InvalidInputException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
     }
 
     public Primitive getArg() {
@@ -83,7 +86,7 @@ public final class WideningConversion extends PrimitiveSymbolicComputed {
     	}
     	
     	try {
-			return this.calc.widen(getType(), newArg);
+			return make(getType(), newArg);
 		} catch (InvalidOperandException | InvalidTypeException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -135,6 +138,9 @@ public final class WideningConversion extends PrimitiveSymbolicComputed {
             return false;
         }
         final WideningConversion other = (WideningConversion) obj;
+        if (this.getType() != other.getType()) {
+        	return false;
+        }
         if (!this.arg.equals(other.arg)) {
             return false;
         }

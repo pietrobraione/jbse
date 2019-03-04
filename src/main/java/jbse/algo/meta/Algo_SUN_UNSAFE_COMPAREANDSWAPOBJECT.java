@@ -38,7 +38,7 @@ public final class Algo_SUN_UNSAFE_COMPAREANDSWAPOBJECT extends Algo_SUN_UNSAFE_
             }
             return true;
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
         return false; //to keep the compiler happy, but it is unreachable

@@ -1,7 +1,8 @@
 package jbse.rewr;
 
-import jbse.rewr.exc.NoResultException;
 import jbse.val.PrimitiveSymbolicApply;
+import jbse.val.Rewriter;
+import jbse.val.exc.NoResultException;
 import jbse.val.Primitive;
 
 /**
@@ -10,7 +11,7 @@ import jbse.val.Primitive;
  * @author Pietro Braione
  *
  */
-public class RewriterArcTan extends Rewriter {
+public class RewriterArcTan extends RewriterCalculatorRewriting {
 
 	public RewriterArcTan() { }
 	

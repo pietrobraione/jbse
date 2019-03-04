@@ -2,13 +2,13 @@ package jbse.rewr;
 
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
-import jbse.rewr.exc.NoResultException;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolicApply;
+import jbse.val.Rewriter;
 import jbse.val.Operator;
 import jbse.val.Primitive;
-import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
+import jbse.val.exc.NoResultException;
 
 /**
  * A {@link Rewriter} which rewrites {@code sin(X) / cos(X)} to {@code tan(X)}.
@@ -17,7 +17,7 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  *
  */
-public class RewriterTan extends Rewriter {
+public class RewriterTan extends RewriterCalculatorRewriting {
 
 	public RewriterTan() { }
 	
@@ -35,8 +35,8 @@ public class RewriterTan extends Rewriter {
 					secondFA.getOperator().equals(PrimitiveSymbolicApply.COS) &&
 					firstFA.getArgs()[0].equals(secondFA.getArgs()[0])) {
 					try {
-						setResult(this.calc.applyFunctionPrimitive(x.getType(), firstFA.historyPoint(), PrimitiveSymbolicApply.TAN, firstFA.getArgs()[0]));
-					} catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
+						setResult(this.calc.applyFunctionPrimitiveAndPop(x.getType(), firstFA.historyPoint(), PrimitiveSymbolicApply.TAN, firstFA.getArgs()[0]));
+					} catch (InvalidTypeException | InvalidInputException e) {
 						//this should never happen
 						throw new UnexpectedInternalException(e);
 					}

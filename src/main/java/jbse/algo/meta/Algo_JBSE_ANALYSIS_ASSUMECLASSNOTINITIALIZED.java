@@ -33,11 +33,11 @@ public final class Algo_JBSE_ANALYSIS_ASSUMECLASSNOTINITIALIZED extends Algo_INV
         try {
             javaClassRef = (Reference) this.data.operand(0);
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
         if (state.isNull(javaClassRef)) {
-            throwNew(state, NULL_POINTER_EXCEPTION);
+            throwNew(state, this.ctx.getCalculator(), NULL_POINTER_EXCEPTION);
             exitFromAlgorithm();
         }
 

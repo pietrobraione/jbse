@@ -21,13 +21,12 @@ public final class PrimitiveSymbolicLocalVariable extends PrimitiveSymbolicAtomi
      *        object with same identifier will be treated as equal.
      * @param type the type of the represented value.
      * @param historyPoint the current {@link HistoryPoint}. It must not be {@code null}.
-     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @throws InvalidTypeException if {@code type} is not primitive.
-     * @throws InvalidInputException if {@code calc == null || historyPoint == null}.
+     * @throws InvalidInputException if {@code historyPoint == null}.
      */
-    PrimitiveSymbolicLocalVariable(String variableName, int id, char type, HistoryPoint historyPoint, Calculator calc) 
+    PrimitiveSymbolicLocalVariable(String variableName, int id, char type, HistoryPoint historyPoint) 
     throws InvalidTypeException, InvalidInputException {
-    	super(id, type, historyPoint, calc);
+    	super(id, type, historyPoint);
     	this.variableName = variableName;
     	this.originString = "{ROOT}:" + this.variableName;
     	

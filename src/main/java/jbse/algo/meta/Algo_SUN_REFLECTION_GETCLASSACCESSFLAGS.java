@@ -37,7 +37,7 @@ public final class Algo_SUN_REFLECTION_GETCLASSACCESSFLAGS extends Algo_INVOKEME
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            state.pushOperand(state.getCalculator().valInt(this.flags));
+            state.pushOperand(this.ctx.getCalculator().valInt(this.flags));
         };
     }
 }

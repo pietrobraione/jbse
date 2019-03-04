@@ -84,7 +84,7 @@ public final class Algo_SUN_UNSAFE_GETOBJECTVOLATILE extends Algo_INVOKEMETA_Non
                 throw new UndefinedResultException("The value read by sun.misc.Unsafe.getObjectVolatile was not a reference or null");
             }
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
     }

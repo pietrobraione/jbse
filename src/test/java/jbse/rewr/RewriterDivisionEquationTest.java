@@ -11,9 +11,9 @@ import jbse.val.Term;
 import org.junit.Before;
 import org.junit.Test;
 
-public class RewriterDivisionEquationTest {
-	HistoryPoint hist;
-	CalculatorRewriting calcPoly, calcNoPoly;
+public final class RewriterDivisionEquationTest {
+	private HistoryPoint hist;
+	private CalculatorRewriting calcPoly, calcNoPoly;
 	
 	@Before
 	public void before() {
@@ -33,8 +33,8 @@ public class RewriterDivisionEquationTest {
 		final Simplex ZERO = this.calcPoly.valInt(0);
 		final Term A = this.calcPoly.valTerm(Type.INT, "A");
 		final Term B = this.calcPoly.valTerm(Type.INT, "B");
-		final Primitive p_post = A.div(B).eq(ZERO);
-		assertEquals(A.eq(ZERO).and(B.ne(ZERO)), p_post);
+		final Primitive p_post = this.calcPoly.push(A).div(B).eq(ZERO).pop();
+		assertEquals(this.calcPoly.push(A).eq(ZERO).and(this.calcPoly.push(B).ne(ZERO).pop()).pop(), p_post);
 	}
 	
 	@Test
@@ -44,8 +44,8 @@ public class RewriterDivisionEquationTest {
 		final Term A = this.calcPoly.valTerm(Type.INT, "A");
 		final Term B = this.calcPoly.valTerm(Type.INT, "B");
 		final Term C = this.calcPoly.valTerm(Type.INT, "C");
-		final Primitive p_post = A.div(B).div(C).eq(ZERO);
-		assertEquals(A.eq(ZERO).and(B.mul(C).ne(ZERO)), p_post);
+		final Primitive p_post = this.calcPoly.push(A).div(B).div(C).eq(ZERO).pop();
+		assertEquals(this.calcPoly.push(A).eq(ZERO).and(this.calcPoly.push(B).mul(C).ne(ZERO).pop()).pop(), p_post);
 	}
 	
 	@Test
@@ -55,8 +55,8 @@ public class RewriterDivisionEquationTest {
 		final Term A = this.calcNoPoly.valTerm(Type.INT, "A");
 		final Term B = this.calcNoPoly.valTerm(Type.INT, "B");
 		final Term C = this.calcNoPoly.valTerm(Type.INT, "C");
-		final Primitive p_post = A.div(B).div(C).eq(ZERO);
-		assertEquals(A.eq(ZERO).and(B.ne(ZERO)).and(C.ne(ZERO)), p_post);
+		final Primitive p_post = this.calcNoPoly.push(A).div(B).div(C).eq(ZERO).pop();
+		assertEquals(this.calcNoPoly.push(A).eq(ZERO).and(this.calcNoPoly.push(B).ne(ZERO).pop()).and(this.calcNoPoly.push(C).ne(ZERO).pop()).pop(), p_post);
 	}
 	
 	@Test
@@ -67,8 +67,8 @@ public class RewriterDivisionEquationTest {
 		final Term A = this.calcPoly.valTerm(Type.INT, "A");
 		final Term B = this.calcPoly.valTerm(Type.INT, "B");
 		final Term C = this.calcPoly.valTerm(Type.INT, "C");
-		final Primitive p_post = A.div(B.div(C)).eq(ZERO);
-		assertEquals(A.mul(C).eq(ZERO).and(B.ne(ZERO)), p_post);
+		final Primitive p_post = this.calcPoly.push(A).div(this.calcPoly.push(B).div(C).pop()).eq(ZERO).pop();
+		assertEquals(this.calcPoly.push(A).mul(C).eq(ZERO).and(this.calcPoly.push(B).ne(ZERO).pop()).pop(), p_post);
 	}
 	
 	@Test
@@ -79,8 +79,8 @@ public class RewriterDivisionEquationTest {
 		final Term A = this.calcNoPoly.valTerm(Type.INT, "A");
 		final Term B = this.calcNoPoly.valTerm(Type.INT, "B");
 		final Term C = this.calcNoPoly.valTerm(Type.INT, "C");
-		final Primitive p_post = A.div(B.div(C)).eq(ZERO);
-		assertEquals(A.eq(ZERO).and(B.eq(ZERO).and(C.ne(ZERO)).not()), p_post);
+		final Primitive p_post = this.calcNoPoly.push(A).div(this.calcNoPoly.push(B).div(C).pop()).eq(ZERO).pop();
+		assertEquals(this.calcNoPoly.push(A).eq(ZERO).and(this.calcNoPoly.push(B).eq(ZERO).and(this.calcNoPoly.push(C).ne(ZERO).pop()).not().pop()).pop(), p_post);
 	}
 	
 	@Test
@@ -91,7 +91,7 @@ public class RewriterDivisionEquationTest {
 		final Term B = this.calcPoly.valTerm(Type.INT, "B");
 		final Term C = this.calcPoly.valTerm(Type.INT, "C");
 		final Term D = this.calcPoly.valTerm(Type.INT, "D");
-		final Primitive p_post = this.calcPoly.applyFunctionPrimitive(Type.BOOLEAN, this.hist, "f", A.div(B).eq(ZERO), C.div(D).eq(ZERO));
-		assertEquals(this.calcPoly.applyFunctionPrimitive(Type.BOOLEAN, this.hist, "f", A.eq(ZERO).and(B.ne(ZERO)), C.eq(ZERO).and(D.ne(ZERO))), p_post);
+		final Primitive p_post = this.calcPoly.applyFunctionPrimitiveAndPop(Type.BOOLEAN, this.hist, "f", this.calcPoly.push(A).div(B).eq(ZERO).pop(), this.calcPoly.push(C).div(D).eq(ZERO).pop());
+		assertEquals(this.calcPoly.applyFunctionPrimitiveAndPop(Type.BOOLEAN, this.hist, "f", this.calcPoly.push(A).eq(ZERO).and(this.calcPoly.push(B).ne(ZERO).pop()).pop(), this.calcPoly.push(C).eq(ZERO).and(this.calcPoly.push(D).ne(ZERO).pop()).pop()), p_post);
 	}
 }

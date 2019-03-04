@@ -65,8 +65,6 @@ import jbse.val.Null;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.Simplex;
-import jbse.val.exc.InvalidOperandException;
-import jbse.val.exc.InvalidTypeException;
 
 /**
  * Meta-level implementation of {@link java.lang.Class#getDeclaredFields0(boolean)}.
@@ -96,7 +94,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
             final Instance_JAVA_CLASS thisClassObject = (Instance_JAVA_CLASS) state.getObject(thisClassRef); //TODO check that operand is concrete and not null
             this.thisClass = thisClassObject.representedClass();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
         
@@ -107,7 +105,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
             final ClassHierarchy hier = state.getClassHierarchy();
-            final Calculator calc = state.getCalculator();
+            final Calculator calc = this.ctx.getCalculator();
             
             //gets the signatures of the fields to emit; the position of the signature
             //in sigFields indicates its slot
@@ -160,13 +158,10 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
             //builds the array to return
             ReferenceConcrete result = null; //to keep the compiler happy
             try {
-                result = state.createArray(null, state.getCalculator().valInt(numFields), cf_arraOfJAVA_FIELD);
+                result = state.createArray(calc, null, calc.valInt(numFields), cf_arraOfJAVA_FIELD);
             } catch (HeapMemoryExhaustedException e) {
-                throwNew(state, OUT_OF_MEMORY_ERROR);
+                throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
-            } catch (InvalidTypeException e) {
-                //this should never happen
-                failExecution(e);
             }
 
             //constructs the java.lang.reflect.Field objects and fills the array
@@ -181,15 +176,15 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                     ReferenceConcrete fieldRef = null; //to keep the compiler happy
                     try {
                         final ClassFile cf_JAVA_FIELD = hier.loadCreateClass(JAVA_FIELD);
-                        fieldRef = state.createInstance(cf_JAVA_FIELD);
+                        fieldRef = state.createInstance(calc, cf_JAVA_FIELD);
                         resultArray.setFast(calc.valInt(index) , fieldRef);
                     } catch (HeapMemoryExhaustedException e) {
-                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                        throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                         exitFromAlgorithm();
                     } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
                              WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException e) {
                         throw new ClasspathException(e);
-                    } catch (InvalidOperandException | FastArrayAccessNotAllowedException e) {
+                    } catch (FastArrayAccessNotAllowedException e) {
                         //this should never happen
                         failExecution(e);
                     }
@@ -202,9 +197,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
 
                     //sets name
                     try {
-                        state.ensureStringLiteral(sigField.getName());
+                        state.ensureStringLiteral(calc, sigField.getName());
                     } catch (HeapMemoryExhaustedException e) {
-                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                        throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                         exitFromAlgorithm();
                     }
                     final ReferenceConcrete refSigName = state.referenceToStringLiteral(sigField.getName());
@@ -225,12 +220,12 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                         if (sigType == null) {
                             refSigType = Null.getInstance();
                         } else {
-                            state.ensureStringLiteral(sigType);
+                            state.ensureStringLiteral(calc, sigType);
                             refSigType = state.referenceToStringLiteral(sigType);
                         }
                         field.setFieldValue(JAVA_FIELD_SIGNATURE, refSigType);
                     } catch (HeapMemoryExhaustedException e) {
-                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                        throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                         exitFromAlgorithm();
                     } catch (FieldNotFoundException e) {
                         //this should never happen
@@ -247,7 +242,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                         if (isPrimitive(fieldType)) {
                             try {
                                 final String fieldTypeNameCanonical = toPrimitiveOrVoidCanonicalName(fieldType);
-                                state.ensureInstance_JAVA_CLASS_primitiveOrVoid(fieldTypeNameCanonical);
+                                state.ensureInstance_JAVA_CLASS_primitiveOrVoid(calc, fieldTypeNameCanonical);
                                 typeClassRef = state.referenceToInstance_JAVA_CLASS_primitiveOrVoid(fieldTypeNameCanonical);
                             } catch (ClassFileNotFoundException e) {
                                 //this should never happen
@@ -257,36 +252,36 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                             final String fieldTypeClassName = className(fieldType);
                             //TODO *absolutely* put resolution of field type OUTSIDE (in cookMore)
                             final ClassFile fieldTypeClass = hier.resolveClass(this.thisClass, fieldTypeClassName, state.bypassStandardLoading()); //note that the accessor is the owner of the field, i.e., the 'this' class
-                            state.ensureInstance_JAVA_CLASS(fieldTypeClass);
+                            state.ensureInstance_JAVA_CLASS(calc, fieldTypeClass);
                             typeClassRef = state.referenceToInstance_JAVA_CLASS(fieldTypeClass);
                         }
                         field.setFieldValue(JAVA_FIELD_TYPE, typeClassRef);
                     } catch (PleaseLoadClassException e) {
-                        invokeClassLoaderLoadClass(state, e);
+                        invokeClassLoaderLoadClass(state, calc, e);
                         exitFromAlgorithm();
                     } catch (HeapMemoryExhaustedException e) {
-                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                        throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                         exitFromAlgorithm();
                     } catch (ClassFileNotFoundException e) {
                         //TODO this exception should wrap a ClassNotFoundException
                         //TODO is it right?
-                        throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                        throwNew(state, calc, NO_CLASS_DEFINITION_FOUND_ERROR);
                         exitFromAlgorithm();
                     } catch (BadClassFileVersionException e) {
-                        throwNew(state, UNSUPPORTED_CLASS_VERSION_ERROR);
+                        throwNew(state, calc, UNSUPPORTED_CLASS_VERSION_ERROR);
                         exitFromAlgorithm();
                     } catch (WrongClassNameException e) {
-                        throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
+                        throwNew(state, calc, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
                         exitFromAlgorithm();
                     } catch (ClassFileNotAccessibleException e) {
-                        throwNew(state, ILLEGAL_ACCESS_ERROR);
+                        throwNew(state, calc, ILLEGAL_ACCESS_ERROR);
                         exitFromAlgorithm();
                     } catch (IncompatibleClassFileException e) {
-                        throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                        throwNew(state, calc, INCOMPATIBLE_CLASS_CHANGE_ERROR);
                         exitFromAlgorithm();
                     } catch (ClassFileIllFormedException e) {
                         //TODO should throw a subclass of LinkageError
-                        throwVerifyError(state);
+                        throwVerifyError(state, calc);
                         exitFromAlgorithm();
                     }
 
@@ -297,7 +292,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                     try {
                         final byte[] annotations = this.thisClass.getFieldAnnotationsRaw(sigField);
                         final ClassFile cf_arrayOfBYTE = hier.loadCreateClass("" + ARRAYOF + BYTE);
-                        final ReferenceConcrete annotationsRef = state.createArray(null, calc.valInt(annotations.length), cf_arrayOfBYTE);
+                        final ReferenceConcrete annotationsRef = state.createArray(calc, null, calc.valInt(annotations.length), cf_arrayOfBYTE);
                         field.setFieldValue(JAVA_FIELD_ANNOTATIONS, annotationsRef);
                         
                         //populates annotations
@@ -306,13 +301,12 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                             annotationsArray.setFast(calc.valInt(i), calc.valByte(annotations[i]));
                         }
                     } catch (HeapMemoryExhaustedException e) {
-                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                        throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                         exitFromAlgorithm();
                     } catch (FieldNotFoundException | ClassFileNotFoundException | 
                              ClassFileIllFormedException | BadClassFileVersionException | 
                              WrongClassNameException | IncompatibleClassFileException | 
-                             ClassFileNotAccessibleException | InvalidOperandException | 
-                             FastArrayAccessNotAllowedException e) {
+                             ClassFileNotAccessibleException | FastArrayAccessNotAllowedException e) {
                         //this should never happen
                         failExecution(e);
                     }
