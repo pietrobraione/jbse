@@ -46,8 +46,8 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
 
         final String function = x.getOperator();
         final Primitive result = tryFunctionApplication(function, args, argsType);
-        if (result == null) { //failed
-            super.rewritePrimitiveSymbolicApply(x);
+        if (result == null) { 
+        	setResult(x); //failed
         } else {
             setResult(result);
         }
@@ -225,8 +225,7 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
         }
 
         //6- none of the above cases
-        //setResult(x);
-        super.rewriteExpression(x);
+        setResult(x);
     }
 
     @Override
@@ -248,7 +247,7 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
         }
 
         //3- none of the above cases
-        super.rewriteWideningConversion(x);
+        setResult(x);
     }
 
     @Override
@@ -279,7 +278,7 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
         }
 
         //4- none of the above cases
-        super.rewriteNarrowingConversion(x);
+        setResult(x);
     }
 
     //////////////////////////////////////////////

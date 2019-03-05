@@ -25,7 +25,6 @@ import static jbse.bc.Signatures.JAVA_STRICTMATH_TAN;
 import java.util.Arrays;
 
 import jbse.common.exc.InvalidInputException;
-import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -202,27 +201,6 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed impl
 	@Override
 	public Value[] getArgs() {
 		return this.args.clone();
-	}
-	
-	@Override
-	protected Primitive doReplace(Primitive from, Primitive to) {
-	    final Value[] argsNew = new Value[this.args.length];
-	    for (int i = 0; i < this.args.length; ++i) {
-	        if (this.args[i].equals(from)) {
-	            argsNew[i] = to;
-	        } else if (this.args[i] instanceof PrimitiveSymbolicComputed) {
-	            argsNew[i] = ((PrimitiveSymbolicComputed) this.args[i]).doReplace(from, to);
-	        } else {
-	            argsNew[i] = this.args[i];
-	        }
-	    }
-	    
-	    try {
-	        return new PrimitiveSymbolicApply(this.getType(), historyPoint(), this.operator, argsNew);
-	    } catch (InvalidTypeException | InvalidInputException e) {
-	    	//this should never happen
-	    	throw new UnexpectedInternalException(e);
-	    } 
 	}
 	
 	@Override

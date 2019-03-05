@@ -20,7 +20,7 @@ public class RewriterNormalize extends RewriterCalculatorRewriting {
 		if (operator == Operator.MUL || operator == Operator.ADD) {
 			setResult(Polynomial.of(this.calc, x).toPrimitiveNormalized(this.calc));
 		} else {
-			super.rewriteExpression(x);
+			setResult(x);
 		}
 	}
 }

@@ -44,6 +44,6 @@ public class RewriterTan extends RewriterCalculatorRewriting {
 				}
 			}
 		}
-		super.rewriteExpression(x);
+		setResult(x);
 	}
 }

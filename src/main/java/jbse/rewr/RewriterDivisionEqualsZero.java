@@ -48,7 +48,7 @@ public class RewriterDivisionEqualsZero extends RewriterCalculatorRewriting {
 			}
 		}
 		//in all other cases, default
-		super.rewriteExpression(x);
+		setResult(x);
 		
 		/* TODO as implemented now does not work always, since 
 		 * 

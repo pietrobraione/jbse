@@ -29,6 +29,6 @@ public class RewriterArcTan extends RewriterCalculatorRewriting {
 				}
 			}
 		}
-		super.rewritePrimitiveSymbolicApply(x);
+		setResult(x);
 	}
 }

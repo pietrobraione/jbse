@@ -72,25 +72,6 @@ public final class NarrowingConversion extends PrimitiveSymbolicComputed {
     public Primitive getArg() {
         return this.arg;
     }
-    
-    @Override
-    protected Primitive doReplace(Primitive from, Primitive to) {
-    	final Primitive newArg;
-    	if (this.arg.equals(from)) {
-    		newArg = to;
-    	} else if (this.arg instanceof PrimitiveSymbolicComputed) {
-    		newArg = ((PrimitiveSymbolicComputed) this.arg).doReplace(from, to);
-    	} else {
-    		newArg = this.arg;
-    	}
-    	
-    	try {
-			return make(getType(), newArg);
-		} catch (InvalidOperandException | InvalidTypeException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-		}
-    }
 
 	@Override
 	public String asOriginString() {

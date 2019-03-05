@@ -31,9 +31,9 @@ public class RewriterAbsSum extends RewriterCalculatorRewriting {
 		//checks for a comparison expression
 		Operator operator = x.getOperator();
 		if (operator != Operator.EQ && operator != Operator.NE &&
-				operator != Operator.GT && operator != Operator.LE &&
-				operator != Operator.LT && operator != Operator.GE) {
-			super.rewriteExpression(x);
+			operator != Operator.GT && operator != Operator.LE &&
+			operator != Operator.LT && operator != Operator.GE) {
+			setResult(x);
 			return;
 		}
 
@@ -47,7 +47,7 @@ public class RewriterAbsSum extends RewriterCalculatorRewriting {
 			subExpr = (Expression) second;
 			operator = operator.twist();
 		} else {
-			super.rewriteExpression(x);
+			setResult(x);
 			return;
 		}
 
@@ -56,7 +56,7 @@ public class RewriterAbsSum extends RewriterCalculatorRewriting {
 		final Polynomial subExprPolynomial = Polynomial.of(this.calc, subExpr);
 		final PrimitiveSymbolicApply abs = findAbs(subExprPolynomial.toPrimitive(this.calc));
 		if (abs == null) {
-			super.rewriteExpression(x);
+			setResult(x);
 			return;
 		}
 
@@ -75,7 +75,7 @@ public class RewriterAbsSum extends RewriterCalculatorRewriting {
 				absNegated = true;
 				toRemove = abs;
 			} else {
-				super.rewriteExpression(x);
+				setResult(x);
 				return;
 			}
 
@@ -89,7 +89,7 @@ public class RewriterAbsSum extends RewriterCalculatorRewriting {
 			} else if (subOtherPolynomial.equals(Polynomial.of(this.calc, this.calc.push(absArg).mul(minusOne).pop()))) {
 				processAbs(absNegated, absArg, true, subOther, operator);
 			} else {
-				super.rewriteExpression(x);
+				setResult(x);
 				return;
 			}			
 		} catch (InvalidOperandException | InvalidTypeException e) {

@@ -156,7 +156,7 @@ public final class ArrayImpl extends ObjektImpl implements Array {
         		throw new InvalidInputException("Attempted array access with null calc or accessIndex.");
         	}
             try {
-				return calc.simplify(this.accessCondition.replace(ArrayImpl.this.indexFormal, accessIndex));
+				return calc.push(this.accessCondition).replace(ArrayImpl.this.indexFormal, accessIndex).pop();
 			} catch (InvalidOperandException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
@@ -747,9 +747,9 @@ public final class ArrayImpl extends ObjektImpl implements Array {
     }
     
     @Override
-    public void cloneEntries(Array src) throws InvalidInputException, InvalidTypeException {
-    	if (src == null) {
-    		throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".cloneEntries with null Array src parameter.");
+    public void cloneEntries(Array src, Calculator calc) throws InvalidInputException, InvalidTypeException {
+    	if (src == null || calc == null) {
+    		throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".cloneEntries with null Array src or Calculator calc parameter.");
     	}
     	final ArrayImpl otherImpl;
     	if (src instanceof ArrayImpl) {
@@ -765,7 +765,7 @@ public final class ArrayImpl extends ObjektImpl implements Array {
     	for (AccessOutcomeInImpl entry : otherImpl.entries) {
     		final AccessOutcomeInImpl entryClone = entry.clone();
     		try {
-    			entryClone.accessCondition = (Expression) entryClone.accessCondition.replace(this.indexFormal, otherImpl.indexFormal); //no need to simplify when replacing a formal index with another formal index
+    			entryClone.accessCondition = (Expression) calc.push(entryClone.accessCondition).replace(this.indexFormal, otherImpl.indexFormal).pop();
     		} catch (InvalidTypeException | InvalidOperandException e) {
     			//this should never happen
     			throw new UnexpectedInternalException(e);
@@ -878,7 +878,7 @@ public final class ArrayImpl extends ObjektImpl implements Array {
             throw new InvalidInputException("Attempted array inRange check with null calc or index.");
         }
     	try {
-			return calc.simplify(this.indexInRange.replace(this.indexFormal, index));
+			return calc.push(this.indexInRange).replace(this.indexFormal, index).pop();
 		} catch (InvalidOperandException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);

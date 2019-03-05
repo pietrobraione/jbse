@@ -25,20 +25,20 @@ public class RewriterSqrt extends RewriterCalculatorRewriting {
 		if (x.getOperator().equals(PrimitiveSymbolicApply.SQRT)) {
 			if (x.getType() != Type.DOUBLE) {
 				//sqrt function yielding nondouble value; in doubt we give up
-				super.rewritePrimitiveSymbolicApply(x);
+				setResult(x);
 				return;
 			}
 			if (x.getArgs().length != 1) {
 				//sqrt function with strange number of args;
 				//since complaining is not our business we just give up
-				super.rewritePrimitiveSymbolicApply(x);
+				setResult(x);
 				return;
 			}
 			final Primitive arg = (Primitive) x.getArgs()[0];
 			if (arg.getType() != Type.DOUBLE) {
 				//sqrt function yielding double value but with nondouble arg; 
 				//since complaining is not our business we just give up
-				super.rewritePrimitiveSymbolicApply(x);
+				setResult(x);
 				return;
 			}
 			final Polynomial[] argSqrt;
@@ -55,7 +55,7 @@ public class RewriterSqrt extends RewriterCalculatorRewriting {
 				throw new UnexpectedInternalException(e);
 			}
 		} else {
-			super.rewritePrimitiveSymbolicApply(x);
+			setResult(x);
 		}
 	}
 }

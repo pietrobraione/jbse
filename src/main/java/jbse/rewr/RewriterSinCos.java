@@ -150,6 +150,6 @@ public class RewriterSinCos extends RewriterCalculatorRewriting {
 		}
 
 		//all other cases
-		super.rewriteExpression(x);
+		setResult(x);
 	}
 }

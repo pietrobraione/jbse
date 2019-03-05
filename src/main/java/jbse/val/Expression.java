@@ -229,40 +229,6 @@ public final class Expression extends PrimitiveSymbolicComputed {
     public Operator getOperator() {
         return this.operator;
     }
-
-    @Override
-    protected Primitive doReplace(Primitive from, Primitive to) {
-        final Primitive first;
-        if (isUnary()) {
-            first = null;
-        } else if (this.firstOp.equals(from)) {
-            first = to;
-        } else if (this.firstOp instanceof PrimitiveSymbolicComputed) {
-            first = ((PrimitiveSymbolicComputed) this.firstOp).doReplace(from, to);
-        } else {
-            first = this.firstOp;
-        }
-
-        final Primitive second;
-        if (this.secondOp.equals(from)) {
-            second = to;
-        } else if (this.secondOp instanceof PrimitiveSymbolicComputed) {
-            second = ((PrimitiveSymbolicComputed) this.secondOp).doReplace(from, to);
-        } else {
-            second = this.secondOp;
-        }
-
-        try {
-            if (isUnary()) {
-                return makeExpressionUnary(this.operator, second);
-            } else {
-                return makeExpressionBinary(first, this.operator, second);//TODO possible bug! Here rewriting is applied!
-            }
-        } catch (InvalidOperatorException | InvalidTypeException | InvalidOperandException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
-    }
     
     @Override
     public String asOriginString() {

@@ -25,7 +25,7 @@ public class RewriterPolynomials extends RewriterCalculatorRewriting {
 			//detects trivial cases
 			final Operator operator = x.getOperator();
 			if (operator != Operator.ADD && operator != Operator.SUB && operator != Operator.MUL && operator != Operator.DIV && operator != Operator.NEG) {
-				super.rewriteExpression(x);
+				setResult(x);
 				return;
 			}
 

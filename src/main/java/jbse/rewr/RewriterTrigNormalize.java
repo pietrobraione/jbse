@@ -35,18 +35,18 @@ public class RewriterTrigNormalize extends RewriterCalculatorRewriting {
 				operator.equals(PrimitiveSymbolicApply.COS)) {
 			period = 2 * Math.PI;
 		} else {
-			super.rewritePrimitiveSymbolicApply(x);
+			setResult(x);
 			return;
 		}
 		if (x.getType() != Type.DOUBLE) {
 			//trigonometric function yields nondouble value; in doubt we give up
-			super.rewritePrimitiveSymbolicApply(x);
+			setResult(x);
 			return;
 		}
 		if (x.getArgs().length != 1) {
 			//trigonometric function with strange number of args;
 			//since it is not our business complaining we just give up
-			super.rewritePrimitiveSymbolicApply(x);
+			setResult(x);
 			return;
 		}
 		Polynomial arg = Polynomial.of(this.calc, (Primitive) x.getArgs()[0]);
@@ -89,7 +89,7 @@ public class RewriterTrigNormalize extends RewriterCalculatorRewriting {
 				}
 				setResult(result);
 			} else {
-				super.rewritePrimitiveSymbolicApply(x);
+				setResult(x);
 			}
 		} catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
 			//this should never happen

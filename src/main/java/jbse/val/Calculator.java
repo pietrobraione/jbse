@@ -1190,7 +1190,7 @@ public abstract class Calculator {
      * @param type a {@code char} representing the type of the conversion.
      * @return this {@link Calculator}.
      * @throws NoSuchElementException if the stack is empty.
-     * @throws InvalidTypeException if the operand cannot be coverted to {@code type},
+     * @throws InvalidTypeException if the operand cannot be converted to {@code type},
      *         or {@code type} is not a valid primitive type.
      */
     public final Calculator to(char type) 
@@ -1222,6 +1222,158 @@ public abstract class Calculator {
         	throw new InvalidTypeException("Cannot convert operand with type " + operandType + " to type " + type + ".");
         }
         return this;
+    }
+    
+    private class PrimitiveReplaceVisitor implements PrimitiveVisitor {
+    	final Primitive from, to;
+    	Primitive result;
+    	
+    	public PrimitiveReplaceVisitor(Primitive from, Primitive to) {
+			this.from = from;
+			this.to = to;
+		}
+
+		@Override
+		public void visitAny(Any x) {
+			this.result = x; //nothing to do
+		}
+
+		@Override
+		public void visitExpression(Expression expression) throws Exception {
+	        final Primitive first;
+	        if (expression.isUnary()) {
+	            first = null;
+	        } else if (expression.getFirstOperand().equals(this.from)) {
+	            first = this.to;
+	        } else {
+	            expression.getFirstOperand().accept(this);
+	            first = this.result;
+	        }
+
+	        final Primitive second;
+	        if (expression.getSecondOperand().equals(this.from)) {
+	            second = this.to;
+	        } else {
+	            expression.getSecondOperand().accept(this);
+	            second = this.result;
+	        }
+
+	        if (expression.isUnary()) {
+	        	this.result = simplify(Expression.makeExpressionUnary(expression.getOperator(), second));
+	        } else {
+	        	this.result = simplify(Expression.makeExpressionBinary(first, expression.getOperator(), second));
+	        }
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) throws Exception {
+		    final Value[] args = x.getArgs();
+		    final Value[] argsNew = new Value[args.length];
+		    for (int i = 0; i < args.length; ++i) {
+		        if (args[i].equals(this.from)) {
+		            argsNew[i] = this.to;
+		        } else if (args[i] instanceof Primitive) {
+		        	((Primitive) args[i]).accept(this);
+		        	argsNew[i] = this.result;
+		        } else {
+		            argsNew[i] = args[i];
+		        }
+		    }
+		    
+		    this.result = simplify(new PrimitiveSymbolicApply(x.getType(), x.historyPoint(), x.getOperator(), argsNew));
+		}
+
+		@Override
+		public void visitPrimitiveSymbolicAtomic(PrimitiveSymbolicAtomic s) {
+			this.result = s; //nothing to do
+		}
+
+		@Override
+		public void visitSimplex(Simplex x) throws Exception {
+			this.result = x; //nothing to do
+		}
+
+		@Override
+		public void visitTerm(Term x) throws Exception {
+			this.result = x; //nothing to do
+		}
+
+		@Override
+		public void visitNarrowingConversion(NarrowingConversion x) throws Exception {
+	        final Primitive arg;
+	        if (x.getArg().equals(this.from)) {
+	        	arg = this.to;
+	        } else {
+	        	x.getArg().accept(this);
+	        	arg = this.result;
+	        }
+	        this.result = simplify(NarrowingConversion.make(x.getType(), arg));
+		}
+
+		@Override
+		public void visitWideningConversion(WideningConversion x) throws Exception {
+	        final Primitive arg;
+	        if (x.getArg().equals(this.from)) {
+	        	arg = this.to;
+	        } else {
+	        	x.getArg().accept(this);
+	        	arg = this.result;
+	        }
+	        this.result = simplify(WideningConversion.make(x.getType(), arg));
+		}
+    }
+    
+    /**
+     * Replaces all the occurrences of a {@link Primitive} in the
+     * topmost {@link Primitive} of the stack with another {@link Primitive}, 
+     * and replaces the top of the stack with the result.
+     * 
+     * @param from the {@link Primitive} to be replaced. It must not be {@code null}.
+     * @param to the {@link Primitive} to replace with. It must not be {@code null}.
+     * @return this {@link Calculator}.
+     * @throws InvalidInputException if {@code from == null || to == null}.
+     * @throws InvalidTypeException if {@code from} and {@code to} have
+     *         different type.
+     * @throws NoSuchElementException if the stack is empty.
+     */
+    public Calculator replace(Primitive from, Primitive to) 
+    throws InvalidInputException, InvalidTypeException, NoSuchElementException {
+    	if (from == null || to == null) {
+    		throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".replace with null Primitive from or Primitive to parameter.");
+    	}
+    	if (from.getType() != to.getType()) {
+    		throw new InvalidTypeException("Attempted to invoke " + getClass().getName() + ".replace with Primitive from and Primitive to parameters having different type.");
+    	}
+    	
+    	//trivial case: nothing to replace
+        if (from.equals(to)) {
+            return this;
+        }
+        
+    	final Primitive operand = pop();
+    	
+    	//trivial case: the operand is from (the result is to)
+    	if (operand.equals(from)) {
+    		try {
+				push(to);
+				return this;
+			} catch (InvalidOperandException e) {
+				//this should never happen
+				throw new UnexpectedInternalException(e);
+			}
+    	}
+    	
+    	//nontrivial case: the operand is not from, and from and to differ 
+    	//(applies the visitor)
+    	try {
+    		final PrimitiveReplaceVisitor v = new PrimitiveReplaceVisitor(from, to);
+    		operand.accept(v);
+    		push(v.result);
+    		return this;
+		} catch (Exception e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
     }
     
     /**
