@@ -55,6 +55,7 @@ import jbse.val.Reference;
 import jbse.val.ReferenceArrayImmaterial;
 import jbse.val.ReferenceConcrete;
 import jbse.val.Simplex;
+import jbse.val.SymbolicMemberArray;
 import jbse.val.Term;
 import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
@@ -244,9 +245,9 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
         };
     }
 
-    private void writeBackToSource(State state, Value valueToStore) 
+    private void writeBackToSource(State state, Primitive index, Value valueToStore) 
     throws DecisionException {
-        storeInArray(state, this.ctx, this.myObjectRef, this.index, valueToStore);
+        storeInArray(state, this.ctx, this.myObjectRef, index, valueToStore);
     }
 
     protected Value possiblyMaterialize(State state, Value val) 
@@ -259,7 +260,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 final ReferenceArrayImmaterial valRef = (ReferenceArrayImmaterial) val;
                 final ReferenceConcrete valMaterialized = 
                     state.createArray(this.ctx.getCalculator(), valRef.getMember(), valRef.getLength(), valRef.getArrayType());
-                writeBackToSource(state, valMaterialized);
+                writeBackToSource(state, this.index, valMaterialized);
                 return valMaterialized;
             } catch (HeapMemoryExhaustedException e) {
                 throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
@@ -285,7 +286,9 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
 
                 //if the value is fresh, it writes it back in the array
                 if (altResolved.isValueFresh()) {
-                    writeBackToSource(state, altResolved.getValueToLoad());
+                    final Value valueToLoad = altResolved.getValueToLoad();
+                	final Primitive index = ((SymbolicMemberArray) valueToLoad).getIndex();
+                    writeBackToSource(state, index, valueToLoad);
                 }
             }
 

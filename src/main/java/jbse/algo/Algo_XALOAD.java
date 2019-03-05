@@ -53,6 +53,7 @@ import jbse.val.Reference;
 import jbse.val.ReferenceArrayImmaterial;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
+import jbse.val.SymbolicMemberArray;
 import jbse.val.Term;
 import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
@@ -94,8 +95,8 @@ StrategyUpdate_XALOAD> {
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> { 
             try {
-                this.myObjectRef = (Reference) data.operand(0);
-                this.index = (Primitive) data.operand(1);
+                this.myObjectRef = (Reference) this.data.operand(0);
+                this.index = (Primitive) this.data.operand(1);
             } catch (ClassCastException e) {
                 throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
@@ -266,9 +267,9 @@ StrategyUpdate_XALOAD> {
         };
     }
 
-    private void writeBackToSource(State state, Reference refToSource, Value valueToStore) 
+    private void writeBackToSource(State state, Reference refToSource, Primitive index, Value valueToStore) 
     throws DecisionException {
-        storeInArray(state, this.ctx, refToSource, this.index, valueToStore);
+        storeInArray(state, this.ctx, refToSource, index, valueToStore);
     }
 
     @Override   
@@ -282,7 +283,7 @@ StrategyUpdate_XALOAD> {
                 final ReferenceArrayImmaterial valRef = (ReferenceArrayImmaterial) val;
                 final ReferenceConcrete valMaterialized = 
                     state.createArray(this.ctx.getCalculator(), valRef.getMember(), valRef.getLength(), valRef.getArrayType());
-                writeBackToSource(state, this.myObjectRef, valMaterialized); //TODO is the parameter this.myObjectRef correct?????
+                writeBackToSource(state, this.myObjectRef, this.index, valMaterialized); //TODO is the parameter this.myObjectRef correct?????
                 return valMaterialized;
             } catch (HeapMemoryExhaustedException e) {
                 throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
@@ -316,9 +317,10 @@ StrategyUpdate_XALOAD> {
 
                 //if the value is fresh, writes it back in the array
                 if (altExpands.isValueFresh()) { //pleonastic: all unresolved symbolic references from an array are fresh
-                    final ReferenceSymbolic referenceToExpand = altExpands.getValueToLoad();
                     final Reference source = altExpands.getArrayReference();
-                    writeBackToSource(state, source, referenceToExpand);
+                    final ReferenceSymbolic referenceToExpand = altExpands.getValueToLoad();
+                	final Primitive index = ((SymbolicMemberArray) referenceToExpand).getIndex();
+                    writeBackToSource(state, source, index, referenceToExpand);
                 }
             }
 
@@ -337,9 +339,10 @@ StrategyUpdate_XALOAD> {
 
                 //if the value is fresh, writes it back in the array
                 if (altAliases.isValueFresh()) { //pleonastic: all unresolved symbolic references from an array are fresh
-                    final ReferenceSymbolic referenceToResolve = altAliases.getValueToLoad();
                     final Reference source = altAliases.getArrayReference();
-                    writeBackToSource(state, source, referenceToResolve);
+                    final ReferenceSymbolic referenceToResolve = altAliases.getValueToLoad();
+                	final Primitive index = ((SymbolicMemberArray) referenceToResolve).getIndex();
+                    writeBackToSource(state, source, index, referenceToResolve);
                 }
             }
 
@@ -356,9 +359,10 @@ StrategyUpdate_XALOAD> {
 
                 //if the value is fresh, writes it back in the array
                 if (altNull.isValueFresh()) { //pleonastic: all unresolved symbolic references from an array are fresh
-                    final ReferenceSymbolic referenceToResolve = altNull.getValueToLoad();
                     final Reference source = altNull.getArrayReference();
-                    writeBackToSource(state, source, referenceToResolve);
+                    final ReferenceSymbolic referenceToResolve = altNull.getValueToLoad();
+                	final Primitive index = ((SymbolicMemberArray) referenceToResolve).getIndex();
+                    writeBackToSource(state, source, index, referenceToResolve);
                 }
             }
 
@@ -373,9 +377,10 @@ StrategyUpdate_XALOAD> {
 
                 //if the value is fresh, writes it back in the array
                 if (altResolved.isValueFresh()) {
-                    final Value valueToLoad = altResolved.getValueToLoad();
                     final Reference source = altResolved.getArrayReference();
-                    writeBackToSource(state, source, valueToLoad);
+                    final Value valueToLoad = altResolved.getValueToLoad();
+                	final Primitive index = ((SymbolicMemberArray) valueToLoad).getIndex();
+                    writeBackToSource(state, source, index, valueToLoad);
                 }
             }
 
