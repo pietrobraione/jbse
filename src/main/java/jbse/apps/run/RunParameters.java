@@ -2109,10 +2109,10 @@ public final class RunParameters implements Cloneable {
 				                              new DecisionProcedureClassInit(
 				                                new DecisionProcedureAlwSat(calc), 
 				                              new ClassInitRulesRepo())));
-			} catch (InvalidInputException e) {
-				//this should never happen
-				throw new UnexpectedInternalException(e);
-			} 
+            } catch (InvalidInputException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            } 
             retVal.setStateIdentificationMode(StateIdentificationMode.COMPACT);
             retVal.setBreadthMode(BreadthMode.MORE_THAN_ONE);
             retVal.setIdentifierSubregionRoot();

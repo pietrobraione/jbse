@@ -39,7 +39,9 @@ import static jbse.common.Type.binaryClassName;
 import static jbse.common.Type.internalClassName;
 import static jbse.common.Type.isPrimitiveOrVoidCanonicalName;
 import static jbse.common.Type.toPrimitiveOrVoidInternalName;
+import static jbse.common.Util.asUnsignedByte;
 import static jbse.common.Util.byteCat;
+import static jbse.common.Util.byteCatShort;
 
 import java.io.File;
 import java.io.IOException;
@@ -672,7 +674,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                     } else if (currentOpcode == OP_ILOAD_3) {
                         localVariableIndex = 3;
                     } else {
-                        localVariableIndex = (wide ? bc[currentCodeIndex + 1] : byteCat(bc[currentCodeIndex + 1], bc[currentCodeIndex + 2]));
+                        localVariableIndex = (wide ? byteCat(bc[currentCodeIndex + 1], bc[currentCodeIndex + 2]) : asUnsignedByte(bc[currentCodeIndex + 1]));
                     }
                     this.xaloadIndex = readLocalVariable(localVariableIndex);
                 } else {
@@ -811,7 +813,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 
             //takes the decision
             final int newOffset = getCurrentCodeIndex();
-            final int jumpOffset = currentCodeIndex + byteCat(bc[currentCodeIndex + 1], bc[currentCodeIndex + 2]);
+            final int jumpOffset = currentCodeIndex + byteCatShort(bc[currentCodeIndex + 1], bc[currentCodeIndex + 2]);
             this.lookAheadDecisionBoolean = (newOffset == jumpOffset); 
         }
 
