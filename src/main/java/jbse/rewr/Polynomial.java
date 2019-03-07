@@ -250,13 +250,11 @@ class Polynomial {
 		
 		private boolean allMultipliersDivisibleBy(Map<Monomial, Simplex> rep, Simplex otherPrimitive) 
 		throws InvalidOperandException, InvalidTypeException {
-			Simplex previous = null;
 			final Simplex zero = (Simplex) this.calc.pushInt(0).to(otherPrimitive.getType()).pop(); 
 			for (Simplex s : rep.values()) {
-				if (previous != null && ((Boolean) ((Simplex) this.calc.push(previous).rem(otherPrimitive).ne(zero).pop()).getActualValue())) {
+				if (((Boolean) ((Simplex) this.calc.push(s).rem(otherPrimitive).ne(zero).pop()).getActualValue())) {
 					return false;
 				}
-				previous = s;
 			}
 			return true;
 		}
