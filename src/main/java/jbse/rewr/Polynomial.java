@@ -194,13 +194,16 @@ class Polynomial {
 			final boolean otherIsSimplexFloat = Type.isPrimitiveFloating(other.type) && otherPrimitive instanceof Simplex;
 			final boolean allMultipliersDivisibleByOther = Type.isPrimitiveIntegral(other.type) && otherPrimitive instanceof Simplex
 					&& allMultipliersDivisibleBy(first.rep, (Simplex) otherPrimitive);
+			final Simplex zero = (Simplex) this.calc.pushInt(0).to(otherPrimitive.getType()).pop();
+			final boolean otherIsSimplexNegativeIntegral = Type.isPrimitiveIntegral(other.type) && otherPrimitive instanceof Simplex && this.calc.push(otherPrimitive).lt(zero).pop().surelyTrue();
 			final Simplex one = (Simplex) this.calc.pushInt(1).to(this.type).pop();
 			for (Entry<Monomial, Simplex> e : first.rep.entrySet()) {
 				try {
 					this.rep.put(e.getKey().div(this.calc, gcd)[0], 
 							(allMultipliersEqual ? one :
-								(otherIsSimplexFloat || allMultipliersDivisibleByOther) ? (Simplex) this.calc.push(e.getValue()).div(otherPrimitive).pop() :
-									e.getValue()));
+							 (otherIsSimplexFloat || allMultipliersDivisibleByOther) ? (Simplex) this.calc.push(e.getValue()).div(otherPrimitive).pop() :
+					         otherIsSimplexNegativeIntegral ? (Simplex) this.calc.push(e.getValue()).neg().pop() :
+							 e.getValue()));
 				} catch (InvalidOperandException | InvalidTypeException exc) {
 					//this should never happen
 					throw new UnexpectedInternalException(exc);
@@ -220,12 +223,15 @@ class Polynomial {
 			final boolean allMultipliersEqual = allMultipliersEqual(first.rep, other.rep);
 			final Primitive otherPrimitive = other.toPrimitive(this.calc);
 			final boolean otherIsSimplexFloat = Type.isPrimitiveFloating(other.type) && otherPrimitive instanceof Simplex;
-			final boolean allMultipliersDivisibleByOther = Type.isPrimitiveIntegral(other.type) && otherPrimitive instanceof Simplex
+			final boolean allFirstMultipliersDivisibleByOther = Type.isPrimitiveIntegral(other.type) && otherPrimitive instanceof Simplex
 					&& allMultipliersDivisibleBy(first.rep, (Simplex) otherPrimitive);
+			final Simplex zero = (Simplex) this.calc.pushInt(0).to(otherPrimitive.getType()).pop();
+			final boolean otherIsSimplexNegativeIntegral = Type.isPrimitiveIntegral(other.type) && otherPrimitive instanceof Simplex && this.calc.push(otherPrimitive).lt(zero).pop().surelyTrue();
 			final Simplex one = (Simplex) this.calc.pushInt(1).to(this.type).pop();
 			for (Entry<Monomial, Simplex> e : other.rep.entrySet()) {
 				this.rep.put(e.getKey().div(this.calc, gcd)[0], 
-						((allMultipliersEqual || otherIsSimplexFloat || allMultipliersDivisibleByOther) ? one : 
+						((allMultipliersEqual || otherIsSimplexFloat || allFirstMultipliersDivisibleByOther) ? one :
+						otherIsSimplexNegativeIntegral ? (Simplex) this.calc.push(e.getValue()).neg().pop() :
 						e.getValue()));
 			}
 			return this;
