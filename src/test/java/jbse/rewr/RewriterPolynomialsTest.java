@@ -181,4 +181,29 @@ public class RewriterPolynomialsTest {
 		final Primitive p_post = this.calc.push(A).neg().div(this.calc.push(B).neg().pop()).pop();
 		assertEquals(this.calc.push(A).div(B).pop(), p_post);
 	}
+	
+	@Test
+	public void testSimplification1() throws InvalidOperandException, InvalidTypeException {
+		// 131072 * A / 2048 -> 64 * A
+		final Term A = this.calc.valTerm(Type.INT, "A");
+		final Primitive p_post = this.calc.pushInt(131072).mul(A).div(this.calc.valInt(2048)).pop();
+		assertEquals(this.calc.pushInt(64).mul(A).pop(), p_post);
+	}
+	
+	@Test
+	public void testSimplification2() throws InvalidOperandException, InvalidTypeException {
+		// 2048 * A / 131072  -> A / 64
+		final Term A = this.calc.valTerm(Type.INT, "A");
+		final Primitive p_post = this.calc.pushInt(2048).mul(A).div(this.calc.valInt(131072)).pop();
+		assertEquals(this.calc.push(A).div(this.calc.valInt(64)).pop(), p_post);
+	}
+	
+	@Test
+	public void testSimplification3() throws InvalidOperandException, InvalidTypeException {
+		// (2.5f * A + 3.5f B) / 0.2f  -> (2.5f / 0.2f) * A + (3.5f / 0.2f) * B
+		final Term A = this.calc.valTerm(Type.FLOAT, "A");
+		final Term B = this.calc.valTerm(Type.FLOAT, "B");
+		final Primitive p_post = this.calc.pushFloat(2.5f).mul(A).add(this.calc.pushFloat(3.5f).mul(B).pop()).div(this.calc.valFloat(0.2f)).pop();
+		assertEquals(this.calc.pushFloat(2.5f / 0.2f).mul(A).add(this.calc.pushFloat(3.5f / 0.2f).mul(B).pop()).pop(), p_post);
+	}
 }

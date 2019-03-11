@@ -181,58 +181,48 @@ class Polynomial {
 			return this;
 		}
 
-		public PolynomialBuilder divNumer(Polynomial first, Polynomial other)
+		public PolynomialBuilder divNumer(Polynomial numer, Polynomial denom)
 		throws InvalidOperandException, InvalidTypeException {
-			if (first == null || other == null) {
-				throw new InvalidOperandException("one operand of a polynomial division is null");
+			return div(numer, denom, numer.rep.entrySet());
+		}
+
+		public PolynomialBuilder divDenom(Polynomial numer, Polynomial denom)
+		throws InvalidOperandException, InvalidTypeException {
+			return div(numer, denom, denom.rep.entrySet());
+		}
+		
+		private PolynomialBuilder div(Polynomial numer, Polynomial denom, Set<Entry<Monomial, Simplex>> entrySet)
+		throws InvalidOperandException, InvalidTypeException {
+			if (numer == null || denom == null) {
+				throw new InvalidOperandException("One operand of a polynomial division is null.");
 			}
-			Operator.typeCheck(Operator.DIV, first.type, other.type);
-			this.type = first.type;
-			final Monomial gcd = first.gcdMonomials(this.calc).gcd(this.calc, other.gcdMonomials(this.calc));
-			final boolean allMultipliersEqual = allMultipliersEqual(first.rep, other.rep);
-			final Primitive otherPrimitive = other.toPrimitive(this.calc);
-			final boolean otherIsSimplexFloat = Type.isPrimitiveFloating(other.type) && otherPrimitive instanceof Simplex;
-			final boolean allMultipliersDivisibleByOther = Type.isPrimitiveIntegral(other.type) && otherPrimitive instanceof Simplex
-					&& allMultipliersDivisibleBy(first.rep, (Simplex) otherPrimitive);
-			final Simplex zero = (Simplex) this.calc.pushInt(0).to(otherPrimitive.getType()).pop();
-			final boolean otherIsSimplexNegativeIntegral = Type.isPrimitiveIntegral(other.type) && otherPrimitive instanceof Simplex && this.calc.push(otherPrimitive).lt(zero).pop().surelyTrue();
+			Operator.typeCheck(Operator.DIV, numer.type, denom.type);
+			this.type = numer.type;
+			final Monomial gcdMonomials = numer.gcdMonomials(this.calc).gcd(this.calc, denom.gcdMonomials(this.calc));
+			final boolean allMultipliersEqual = allMultipliersEqual(numer.rep, denom.rep);
+			final Simplex gcdMultipliersNumer = (Simplex) numer.gcdMultipliers(this.calc);
+			final Simplex gcdMultipliersDenom = (Simplex) denom.gcdMultipliers(this.calc);
+			final Simplex gcdMultipliers;
+			if (Type.isPrimitiveIntegral(this.type)) {
+				gcdMultipliers = gcdSimplex(gcdMultipliersNumer, gcdMultipliersDenom, this.calc);
+			} else {
+				gcdMultipliers = gcdMultipliersDenom;
+			}			 
+			final Primitive denomPrimitive = denom.toPrimitive(this.calc);
+			final Simplex zero = (Simplex) this.calc.pushInt(0).to(this.type).pop();
+			final boolean denomIsSimplexNegative = denomPrimitive instanceof Simplex && this.calc.push(denomPrimitive).lt(zero).pop().surelyTrue();
 			final Simplex one = (Simplex) this.calc.pushInt(1).to(this.type).pop();
-			for (Entry<Monomial, Simplex> e : first.rep.entrySet()) {
+			for (Entry<Monomial, Simplex> e : entrySet) {
 				try {
-					this.rep.put(e.getKey().div(this.calc, gcd)[0], 
+					final Simplex multiplierDivByGcd = (Simplex) this.calc.push(e.getValue()).div(this.calc.push(gcdMultipliers).to(e.getValue().getType()).pop()).pop();
+					this.rep.put(e.getKey().div(this.calc, gcdMonomials)[0], 
 							(allMultipliersEqual ? one :
-							 (otherIsSimplexFloat || allMultipliersDivisibleByOther) ? (Simplex) this.calc.push(e.getValue()).div(otherPrimitive).pop() :
-					         otherIsSimplexNegativeIntegral ? (Simplex) this.calc.push(e.getValue()).neg().pop() :
-							 e.getValue()));
+							 denomIsSimplexNegative ? (Simplex) this.calc.push(multiplierDivByGcd).neg().pop() :
+							 multiplierDivByGcd));
 				} catch (InvalidOperandException | InvalidTypeException exc) {
 					//this should never happen
 					throw new UnexpectedInternalException(exc);
 				}
-			}
-			return this;
-		}
-
-		public PolynomialBuilder divDenom(Polynomial first, Polynomial other)
-		throws InvalidOperandException, InvalidTypeException {
-			if (first == null || other == null) {
-				throw new InvalidOperandException("one operand of a polynomial division is null");
-			}
-			Operator.typeCheck(Operator.DIV, first.type, other.type);
-			this.type = first.type;
-			final Monomial gcd = first.gcdMonomials(this.calc).gcd(this.calc, other.gcdMonomials(this.calc));
-			final boolean allMultipliersEqual = allMultipliersEqual(first.rep, other.rep);
-			final Primitive otherPrimitive = other.toPrimitive(this.calc);
-			final boolean otherIsSimplexFloat = Type.isPrimitiveFloating(other.type) && otherPrimitive instanceof Simplex;
-			final boolean allFirstMultipliersDivisibleByOther = Type.isPrimitiveIntegral(other.type) && otherPrimitive instanceof Simplex
-					&& allMultipliersDivisibleBy(first.rep, (Simplex) otherPrimitive);
-			final Simplex zero = (Simplex) this.calc.pushInt(0).to(otherPrimitive.getType()).pop();
-			final boolean otherIsSimplexNegativeIntegral = Type.isPrimitiveIntegral(other.type) && otherPrimitive instanceof Simplex && this.calc.push(otherPrimitive).lt(zero).pop().surelyTrue();
-			final Simplex one = (Simplex) this.calc.pushInt(1).to(this.type).pop();
-			for (Entry<Monomial, Simplex> e : other.rep.entrySet()) {
-				this.rep.put(e.getKey().div(this.calc, gcd)[0], 
-						((allMultipliersEqual || otherIsSimplexFloat || allFirstMultipliersDivisibleByOther) ? one :
-						otherIsSimplexNegativeIntegral ? (Simplex) this.calc.push(e.getValue()).neg().pop() :
-						e.getValue()));
 			}
 			return this;
 		}
@@ -254,17 +244,6 @@ class Polynomial {
 			return true;
 		}
 		
-		private boolean allMultipliersDivisibleBy(Map<Monomial, Simplex> rep, Simplex otherPrimitive) 
-		throws InvalidOperandException, InvalidTypeException {
-			final Simplex zero = (Simplex) this.calc.pushInt(0).to(otherPrimitive.getType()).pop(); 
-			for (Simplex s : rep.values()) {
-				if (((Boolean) ((Simplex) this.calc.push(s).rem(otherPrimitive).ne(zero).pop()).getActualValue())) {
-					return false;
-				}
-			}
-			return true;
-		}
-
 		private class RepBuilder implements PrimitiveVisitor {			
 			public RepBuilder() { }
 
@@ -447,7 +426,7 @@ class Polynomial {
 		return new PolynomialBuilder(calc, makeRep()).add(this, other).make();
 	}
 
-	public Monomial gcdMonomials(CalculatorRewriting calc) throws InvalidTypeException {
+	private Monomial gcdMonomials(CalculatorRewriting calc) throws InvalidTypeException {
 		Monomial retVal = null;
 		for (Monomial m : this.rep.keySet()) {
 			if (retVal == null) {
@@ -457,6 +436,50 @@ class Polynomial {
 			}
 		}
 		return (retVal == null ? Monomial.of(calc, calc.pushInt(1).to(this.type).pop()) : retVal);
+	}
+
+	private Primitive gcdMultipliers(CalculatorRewriting calc) throws InvalidTypeException {
+		Simplex retVal = null;
+		for (Simplex m : this.rep.values()) {
+			if (retVal == null) {
+				retVal = abs(m, calc);
+			} else if (Type.isPrimitiveIntegral(m.getType())) {
+				retVal = gcdSimplex(retVal, m, calc);
+			} else {
+				retVal = null;
+				break;
+			}
+		}
+		return (retVal == null ? calc.pushInt(1).to(this.type).pop() : retVal);
+	}
+	
+	private static Simplex abs(Simplex s, CalculatorRewriting calc) {
+		try {
+			return (calc.push(s).lt(calc.pushInt(0).to(s.getType()).pop()).pop().surelyTrue() ?
+					(Simplex) calc.push(s).neg().pop() : s);
+		} catch (InvalidOperandException | InvalidTypeException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
+	}
+	
+	private static Simplex gcdSimplex(Simplex first, Simplex other, CalculatorRewriting calc) throws InvalidTypeException {
+		Operator.typeCheck(Operator.DIV, first.getType(), other.getType());
+		final char type = first.getType();
+		if (Type.isPrimitiveFloating(type)) {
+			//no gcd for floating point values, sorry
+			return (Simplex) calc.pushInt(1).to(type).pop();
+		}
+		long a = Math.abs(((type == Type.INT) ? Long.valueOf((Integer) first.getActualValue()) : Long.valueOf((Long) first.getActualValue())));
+		long b = Math.abs(((type == Type.INT) ? Long.valueOf((Integer) other.getActualValue()) : Long.valueOf((Long) other.getActualValue())));
+		while (a != b) {
+			if (a < b) {
+				b = b - a;
+			} else {
+				a = a - b;
+			}
+		}
+		return (Simplex) calc.pushLong(a).to(type).pop();
 	}
 
 	public Polynomial[] div(CalculatorRewriting calc, Polynomial other) 
