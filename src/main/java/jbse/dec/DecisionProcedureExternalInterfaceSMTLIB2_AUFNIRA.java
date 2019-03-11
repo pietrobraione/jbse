@@ -82,7 +82,7 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
     private ArrayList<Integer> nSymPushed; 
     private int nSymCurrent;
     private int nTotalSymbols;
-
+    
     /** 
      * Costructor.
      * 
@@ -100,7 +100,7 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
         this.solver = pb.start();
         this.solverIn = new BufferedReader(new InputStreamReader(this.solver.getInputStream()));
         this.solverOut = new BufferedWriter(new OutputStreamWriter(this.solver.getOutputStream()));
-
+        
         final String query = PROLOGUE + PUSH_1;
         sendAndCheckAnswer(query);
         clear();
@@ -420,7 +420,7 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
     
     private void send(String query) throws IOException {
         //System.err.print("--->SMTLIB2: " + query); //TODO log differently!
-
+    	
         try {
             this.solverOut.write(query);
             this.solverOut.flush();
@@ -471,7 +471,7 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
             this.working = false;
             throw new ExternalProtocolInterfaceException("unrecognized answer from solver when checking satisfiability. Message: " + answer);
         }
-        return !answer.equals(UNSAT); //conservatively returns true if answer is unknown
+        return answer.equals(SAT); //conservatively returns false if answer is unknown
     }
     
     private String sendAndCheckAnswerGetmodel() 
