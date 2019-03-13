@@ -120,6 +120,8 @@ import jbse.val.Symbolic;
 import jbse.val.SymbolicLocalVariable;
 import jbse.val.SymbolicMemberArray;
 import jbse.val.SymbolicMemberField;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidTypeException;
 
 /**
  * {@link DecisionProcedureGuidance} that uses the installed JVM accessed via JDI to 
@@ -594,7 +596,13 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                     //no index: falls back on accepting all the DecisionAlternative_XALOAD_In
                     return this.calc.valBoolean(da instanceof DecisionAlternative_XALOAD_In);
                 } else {
-                    final Primitive accessExpressionOnConcreteIndex = da.getArrayAccessExpression().doReplace(da.getIndexFormal(), this.xaloadIndex);
+                    final Primitive accessExpressionOnConcreteIndex;
+					try {
+						accessExpressionOnConcreteIndex = da.getArrayAccessExpression().replace(da.getIndexFormal(), this.xaloadIndex);
+					} catch (InvalidOperandException | InvalidTypeException e) {
+						//this should never happen
+						throw new UnexpectedInternalException(e);
+					}
                     if (accessExpressionOnConcreteIndex instanceof Simplex) {
                         return accessExpressionOnConcreteIndex;
                     } else {

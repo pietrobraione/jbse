@@ -888,20 +888,26 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
     throws DecisionException {
         try {
             final boolean shouldRefine;
-            final Expression accessExpressionSpecialized = (Expression) accessExpression.doReplace(indexFormal, indexActual);
-            if (isSat(accessExpressionSpecialized)) {
-                shouldRefine = fresh; //a fresh value to load requires refinement of the source array
-                final Primitive accessExpressionSimplified = deleteRedundantConjuncts(accessExpressionSpecialized);
-                final boolean accessOutOfBounds = (valToLoad == null);
-                final int branchNumber = result.size() + 1;
-                if (accessOutOfBounds) {
-                    result.add(new DecisionAlternative_XALOAD_Out(accessExpression, indexFormal, indexActual, ((accessExpressionSimplified == null || accessExpressionSimplified.surelyTrue()) ? null : (Expression) accessExpressionSimplified), branchNumber));
-                } else {
-                    result.add(new DecisionAlternative_XALOAD_Resolved(accessExpression, indexFormal, indexActual, ((accessExpressionSimplified == null || accessExpressionSimplified.surelyTrue()) ? null : (Expression) accessExpressionSimplified), valToLoad, fresh, arrayToWriteBack, branchNumber));
-                }
+            final Primitive accessExpressionSpecialized = accessExpression.replace(indexFormal, indexActual);
+            final boolean accessIsSat;
+            if (accessExpressionSpecialized instanceof Simplex) {
+            	accessIsSat = accessExpressionSpecialized.surelyTrue();
             } else {
-                //accessExpression is unsatisfiable: nothing to do
-                shouldRefine = false;
+            	accessIsSat = isSat((Expression) accessExpressionSpecialized);
+            }
+            if (accessIsSat) {
+            	shouldRefine = fresh; //a fresh value to load requires refinement of the source array
+            	final Primitive accessExpressionSimplified = deleteRedundantConjuncts(accessExpressionSpecialized);
+            	final boolean accessOutOfBounds = (valToLoad == null);
+            	final int branchNumber = result.size() + 1;
+            	if (accessOutOfBounds) {
+            		result.add(new DecisionAlternative_XALOAD_Out(accessExpression, indexFormal, indexActual, ((accessExpressionSimplified == null || accessExpressionSimplified.surelyTrue()) ? null : (Expression) accessExpressionSimplified), branchNumber));
+            	} else {
+            		result.add(new DecisionAlternative_XALOAD_Resolved(accessExpression, indexFormal, indexActual, ((accessExpressionSimplified == null || accessExpressionSimplified.surelyTrue()) ? null : (Expression) accessExpressionSimplified), valToLoad, fresh, arrayToWriteBack, branchNumber));
+            	}
+            } else {
+            	//accessExpression is unsatisfiable: nothing to do
+            	shouldRefine = false;
             }
             return Outcome.val(shouldRefine, false, true);
         } catch (InvalidInputException | InvalidTypeException | InvalidOperandException e) {
@@ -992,10 +998,16 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
     IncompatibleClassFileException, ClassFileNotAccessibleException {
         try {
             final boolean accessConcrete = (accessExpression == null);
-            final Expression accessExpressionSpecialized = (accessExpression == null ? null : (Expression) accessExpression.doReplace(indexFormal, indexActual));
+            final Primitive accessExpressionSpecialized = (accessConcrete ? null : accessExpression.replace(indexFormal, indexActual));
+            final boolean accessIsSat;
+            if (accessExpressionSpecialized instanceof Simplex) {
+            	accessIsSat = accessExpressionSpecialized.surelyTrue();
+            } else {
+            	accessIsSat = accessConcrete || isSat((Expression) accessExpressionSpecialized);
+            }
             final boolean shouldRefine;
             final boolean noReferenceExpansion;
-            if (accessConcrete || isSat(accessExpressionSpecialized)) {
+            if (accessIsSat) {
                 shouldRefine = true; //unresolved symbolic references always require a refinement action
                 final Primitive accessExpressionSimplified = deleteRedundantConjuncts(accessExpressionSpecialized);
                 noReferenceExpansion =

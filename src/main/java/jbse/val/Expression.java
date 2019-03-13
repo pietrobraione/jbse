@@ -222,11 +222,8 @@ public final class Expression extends PrimitiveSymbolicComputed {
         return this.operator;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public Primitive doReplace(Primitive from, Primitive to) {
+    protected Primitive doReplace(Primitive from, Primitive to) {
         final Primitive first;
         if (isUnary()) {
             first = null;

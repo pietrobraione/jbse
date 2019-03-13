@@ -72,7 +72,7 @@ public final class WideningConversion extends PrimitiveSymbolicComputed {
     }
     
     @Override
-    public Primitive doReplace(Primitive from, Primitive to) {
+    protected Primitive doReplace(Primitive from, Primitive to) {
     	final Primitive newArg;
     	if (this.arg.equals(from)) {
     		newArg = to;

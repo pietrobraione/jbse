@@ -64,5 +64,5 @@ public abstract class PrimitiveSymbolicComputed extends PrimitiveSymbolic {
      *         every occurrence of {@code from} in {@code this}
      *         with {@code to}.
      */
-    public abstract Primitive doReplace(Primitive from, Primitive to);
+    protected abstract Primitive doReplace(Primitive from, Primitive to);
 }

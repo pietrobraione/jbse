@@ -206,7 +206,7 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed impl
 	}
 	
 	@Override
-	public Primitive doReplace(Primitive from, Primitive to) {
+	protected Primitive doReplace(Primitive from, Primitive to) {
 	    final Value[] argsNew = new Value[this.args.length];
 	    for (int i = 0; i < this.args.length; ++i) {
 	        if (this.args[i].equals(from)) {
