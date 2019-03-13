@@ -48,7 +48,7 @@ public final class Action_INIT implements Action {
             //pushes a frame for the root method (and possibly triggers)
             invokeRootMethod(state, ctx);
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
         }
     }
     
@@ -61,10 +61,10 @@ public final class Action_INIT implements Action {
             final ReferenceSymbolic rootThis = state.pushFrameSymbolic(rootClass, ctx.rootMethodSignature);
             if (rootThis != null) {
                 //must assume {ROOT}:this expands to nonnull object (were it null the root frame would not exist!)
-                state.assumeExpands(rootThis, rootClass);
+                state.assumeExpands(ctx.getCalculator(), rootThis, rootClass);
                 final ClassFile rootThisClass = state.getObject(rootThis).getType();
                 final DecisionAlternative_XLOAD_GETX_Expands rootExpansion = ctx.decisionProcedure.getRootDecisionAlternative(rootThis, rootThisClass);
-                ctx.triggerManager.loadTriggerFramesRoot(state, rootExpansion);
+                ctx.triggerManager.loadTriggerFramesRoot(state, ctx.getCalculator(), rootExpansion);
             }
         } catch (MethodNotFoundException | MethodCodeNotFoundException e) {
             throw new ClasspathException(e);

@@ -25,7 +25,7 @@ public final class Algo_JBSE_ANALYSIS_ANY extends Algo_INVOKEMETA_Nonbranching {
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            state.pushOperand(state.getCalculator().valAny().widen(INT));
+            state.pushOperand(this.ctx.getCalculator().pushAny().widen(INT).pop());
         };
     }
 }

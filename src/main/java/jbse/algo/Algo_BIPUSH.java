@@ -56,7 +56,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> { 
-            state.pushOperand(state.getCalculator().valInt(this.data.immediateSignedByte()));
+            state.pushOperand(this.ctx.getCalculator().valInt(this.data.immediateSignedByte()));
         };
     }
 

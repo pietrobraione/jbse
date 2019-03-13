@@ -71,7 +71,6 @@ import jbse.val.Null;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.Simplex;
-import jbse.val.exc.InvalidOperandException;
 
 /**
  * Meta-level implementation of {@link java.lang.Class#getDeclaredMethods0(boolean)}.
@@ -101,7 +100,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
             final Instance_JAVA_CLASS thisClassObject = (Instance_JAVA_CLASS) state.getObject(thisClassRef);
             this.thisClass = thisClassObject.representedClass();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
         //TODO check that operands are concrete and kill trace if they are not
@@ -113,7 +112,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
     protected final StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
             final ClassHierarchy hier = state.getClassHierarchy();
-            final Calculator calc = state.getCalculator();
+            final Calculator calc = this.ctx.getCalculator();
             
             //gets the signatures of the methods to emit; the position of the signature
             //in sigMethods indicates its slot
@@ -150,9 +149,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
             ReferenceConcrete result = null; //to keep the compiler happy
             try {
                 final ClassFile cf_arraOfJAVA_METHOD = hier.loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_METHOD + TYPEEND);
-                result = state.createArray(null, state.getCalculator().valInt(numMethods), cf_arraOfJAVA_METHOD);
+                result = state.createArray(calc, null, calc.valInt(numMethods), cf_arraOfJAVA_METHOD);
             } catch (HeapMemoryExhaustedException e) {
-                throwNew(state, OUT_OF_MEMORY_ERROR);
+                throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
             } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
                      WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException e) {
@@ -171,15 +170,15 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
                     ReferenceConcrete methodRef = null; //to keep the compiler happy
                     try {
                         final ClassFile cf_JAVA_METHOD = hier.loadCreateClass(JAVA_METHOD);
-                        methodRef = state.createInstance(cf_JAVA_METHOD);
+                        methodRef = state.createInstance(calc, cf_JAVA_METHOD);
                         resultArray.setFast(calc.valInt(index), methodRef);
                     } catch (HeapMemoryExhaustedException e) {
-                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                        throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                         exitFromAlgorithm();
                     } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
                              WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException e) {
                         throw new ClasspathException(e);
-                    } catch (InvalidOperandException | FastArrayAccessNotAllowedException e) {
+                    } catch (FastArrayAccessNotAllowedException e) {
                         //this should never happen
                         failExecution(e);
                     }
@@ -204,10 +203,10 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
                     
                     //sets name
                     try {
-                        state.ensureStringLiteral(sigMethod.getName());
+                        state.ensureStringLiteral(calc, sigMethod.getName());
                         method.setFieldValue(JAVA_METHOD_NAME, state.referenceToStringLiteral(sigMethod.getName()));
                     } catch (HeapMemoryExhaustedException e) {
-                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                        throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                         exitFromAlgorithm();
                     }
 
@@ -219,7 +218,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
                         if (isPrimitive(returnType) || isVoid(returnType)) {
                             final String returnTypeNameCanonical = toPrimitiveOrVoidCanonicalName(returnType);
                             try {
-                                state.ensureInstance_JAVA_CLASS_primitiveOrVoid(returnTypeNameCanonical);
+                                state.ensureInstance_JAVA_CLASS_primitiveOrVoid(calc, returnTypeNameCanonical);
                             } catch (ClassFileNotFoundException e) {
                                 //this should never happen
                                 failExecution(e);
@@ -229,7 +228,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
                             final String returnTypeClassName = className(returnType);
                             //TODO *absolutely* put resolution of return type OUTSIDE (in cookMore)
                             final ClassFile returnTypeClass = hier.resolveClass(this.thisClass, returnTypeClassName, state.bypassStandardLoading()); //note that the accessor is the owner of the constructor, i.e., the 'this' class
-                            state.ensureInstance_JAVA_CLASS(returnTypeClass);
+                            state.ensureInstance_JAVA_CLASS(calc, returnTypeClass);
                             returnClassRef = state.referenceToInstance_JAVA_CLASS(returnTypeClass);
                         } else {
                             //this should never happen
@@ -240,7 +239,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
                         
                         //creates the array and puts it in parameterTypes
                         final String[] params = splitParametersDescriptors(sigMethod.getDescriptor());
-                        final ReferenceConcrete arrayParamClassesRef = state.createArray(null, calc.valInt(params.length), cf_arraOfJAVA_CLASS);
+                        final ReferenceConcrete arrayParamClassesRef = state.createArray(calc, null, calc.valInt(params.length), cf_arraOfJAVA_CLASS);
                         method.setFieldValue(JAVA_METHOD_PARAMETERTYPES, arrayParamClassesRef);
                         final Array arrayParamClasses = (Array) state.getObject(arrayParamClassesRef);
                         
@@ -251,7 +250,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
                             if (isPrimitive(paramType)) {
                                 final String paramTypeNameCanonical = toPrimitiveOrVoidCanonicalName(paramType);
                                 try {
-                                    state.ensureInstance_JAVA_CLASS_primitiveOrVoid(paramTypeNameCanonical);
+                                    state.ensureInstance_JAVA_CLASS_primitiveOrVoid(calc, paramTypeNameCanonical);
                                 } catch (ClassFileNotFoundException e) {
                                     //this should never happen
                                     failExecution(e);
@@ -261,7 +260,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
                                 final String paramTypeClassName = className(paramType);
                                 //TODO *absolutely* put resolution of parameter types OUTSIDE (in cookMore)
                                 final ClassFile paramTypeClass = hier.resolveClass(this.thisClass, paramTypeClassName, state.bypassStandardLoading()); //note that the accessor is the owner of the constructor, i.e., the 'this' class
-                                state.ensureInstance_JAVA_CLASS(paramTypeClass);
+                                state.ensureInstance_JAVA_CLASS(calc, paramTypeClass);
                                 paramClassRef = state.referenceToInstance_JAVA_CLASS(paramTypeClass);
                             } else {
                                 //this should never happen
@@ -272,32 +271,32 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
                             ++i;
                         }
                     } catch (PleaseLoadClassException e) {
-                        invokeClassLoaderLoadClass(state, e);
+                        invokeClassLoaderLoadClass(state, calc, e);
                         exitFromAlgorithm();
                     } catch (HeapMemoryExhaustedException e) {
-                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                        throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                         exitFromAlgorithm();
                     } catch (ClassFileNotFoundException e) {
                         //TODO this exception should wrap a ClassNotFoundException
-                        throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                        throwNew(state, calc, NO_CLASS_DEFINITION_FOUND_ERROR);
                         exitFromAlgorithm();
                     } catch (BadClassFileVersionException e) {
-                        throwNew(state, UNSUPPORTED_CLASS_VERSION_ERROR);
+                        throwNew(state, calc, UNSUPPORTED_CLASS_VERSION_ERROR);
                         exitFromAlgorithm();
                     } catch (WrongClassNameException e) {
-                        throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
+                        throwNew(state, calc, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
                         exitFromAlgorithm();
                     } catch (ClassFileNotAccessibleException e) {
-                        throwNew(state, ILLEGAL_ACCESS_ERROR);
+                        throwNew(state, calc, ILLEGAL_ACCESS_ERROR);
                         exitFromAlgorithm();
                     } catch (IncompatibleClassFileException e) {
-                        throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                        throwNew(state, calc, INCOMPATIBLE_CLASS_CHANGE_ERROR);
                         exitFromAlgorithm();
                     } catch (ClassFileIllFormedException e) {
                         //TODO should throw a subclass of LinkageError
-                        throwVerifyError(state);
+                        throwVerifyError(state, calc);
                         exitFromAlgorithm();
-                    } catch (InvalidOperandException | FastArrayAccessNotAllowedException e) {
+                    } catch (FastArrayAccessNotAllowedException e) {
                         //this should never happen
                         failExecution(e);
                     }
@@ -306,7 +305,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
                     try {
                         //creates the array and puts it in exceptionTypes
                         final String[] exceptions = this.thisClass.getMethodThrownExceptions(sigMethod);
-                        final ReferenceConcrete arrayExcClassesRef = state.createArray(null, calc.valInt(exceptions.length), cf_arraOfJAVA_CLASS);
+                        final ReferenceConcrete arrayExcClassesRef = state.createArray(calc, null, calc.valInt(exceptions.length), cf_arraOfJAVA_CLASS);
                         method.setFieldValue(JAVA_METHOD_EXCEPTIONTYPES, arrayExcClassesRef);
                         final Array arrayExcClasses = (Array) state.getObject(arrayExcClassesRef);
 
@@ -315,43 +314,43 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
                         for (String excClassName : exceptions) {
                             //TODO *absolutely* put resolution of exception types OUTSIDE (in cookMore)
                             final ClassFile excClass = hier.resolveClass(state.getCurrentClass(), excClassName, state.bypassStandardLoading());
-                            state.ensureInstance_JAVA_CLASS(excClass);
+                            state.ensureInstance_JAVA_CLASS(calc, excClass);
                             final ReferenceConcrete excClazz = state.referenceToInstance_JAVA_CLASS(excClass);
                             arrayExcClasses.setFast(calc.valInt(i), excClazz);
                             ++i;
                         }
                     } catch (PleaseLoadClassException e) {
-                        invokeClassLoaderLoadClass(state, e);
+                        invokeClassLoaderLoadClass(state, calc, e);
                         exitFromAlgorithm();
                     } catch (HeapMemoryExhaustedException e) {
-                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                        throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                         exitFromAlgorithm();
                     } catch (ClassFileNotFoundException e) {
                         //TODO this exception should wrap a ClassNotFoundException
                         //TODO is it right?
-                        throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                        throwNew(state, calc, NO_CLASS_DEFINITION_FOUND_ERROR);
                         exitFromAlgorithm();
                     } catch (BadClassFileVersionException e) {
-                        throwNew(state, UNSUPPORTED_CLASS_VERSION_ERROR);
+                        throwNew(state, calc, UNSUPPORTED_CLASS_VERSION_ERROR);
                         exitFromAlgorithm();
                     } catch (WrongClassNameException e) {
-                        throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
+                        throwNew(state, calc, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
                         exitFromAlgorithm();
                     } catch (ClassFileNotAccessibleException e) {
-                        throwNew(state, ILLEGAL_ACCESS_ERROR);
+                        throwNew(state, calc, ILLEGAL_ACCESS_ERROR);
                         exitFromAlgorithm();
                     } catch (IncompatibleClassFileException e) {
-                        throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                        throwNew(state, calc, INCOMPATIBLE_CLASS_CHANGE_ERROR);
                         exitFromAlgorithm();
                     } catch (ClassFileIllFormedException e) {
                         //TODO should throw a subclass of LinkageError
-                        throwVerifyError(state);
+                        throwVerifyError(state, calc);
                         exitFromAlgorithm();
                     } catch (MethodNotFoundException e) {
                         //TODO is it ok?
-                        throwVerifyError(state);
+                        throwVerifyError(state, calc);
                         exitFromAlgorithm();
-                    } catch (InvalidOperandException | FastArrayAccessNotAllowedException e) {
+                    } catch (FastArrayAccessNotAllowedException e) {
                         //this should never happen
                         failExecution(e);
                     }
@@ -374,12 +373,12 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
                         if (sigType == null) {
                             refSigType = Null.getInstance();
                         } else {
-                            state.ensureStringLiteral(sigType);
+                            state.ensureStringLiteral(calc, sigType);
                             refSigType = state.referenceToStringLiteral(sigType);
                         }
                         method.setFieldValue(JAVA_METHOD_SIGNATURE, refSigType);
                     } catch (HeapMemoryExhaustedException e) {
-                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                        throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                         exitFromAlgorithm();
                     } catch (MethodNotFoundException e) {
                         //this should never happen
@@ -390,7 +389,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
                     try {
                         final byte[] annotations = this.thisClass.getMethodAnnotationsRaw(sigMethod);
                         final ClassFile cf_arrayOfBYTE = hier.loadCreateClass("" + ARRAYOF + BYTE);
-                        final ReferenceConcrete annotationsRef = state.createArray(null, calc.valInt(annotations.length), cf_arrayOfBYTE);
+                        final ReferenceConcrete annotationsRef = state.createArray(calc, null, calc.valInt(annotations.length), cf_arrayOfBYTE);
                         method.setFieldValue(JAVA_METHOD_ANNOTATIONS, annotationsRef);
 
                         //populates annotations
@@ -399,13 +398,12 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
                             annotationsArray.setFast(calc.valInt(i), calc.valByte(annotations[i]));
                         }
                     } catch (HeapMemoryExhaustedException e) {
-                        throwNew(state, OUT_OF_MEMORY_ERROR);
+                        throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                         exitFromAlgorithm();
                     } catch (MethodNotFoundException | ClassFileNotFoundException | 
                              ClassFileIllFormedException | BadClassFileVersionException |
                              WrongClassNameException | ClassFileNotAccessibleException | 
-                             IncompatibleClassFileException | InvalidOperandException | 
-                             FastArrayAccessNotAllowedException e) {
+                             IncompatibleClassFileException | FastArrayAccessNotAllowedException e) {
                         //this should never happen
                         failExecution(e);
                     }

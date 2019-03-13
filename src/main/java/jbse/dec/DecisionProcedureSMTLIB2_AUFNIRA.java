@@ -1,5 +1,6 @@
 package jbse.dec;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.dec.exc.ExternalProtocolInterfaceException;
 import jbse.val.Calculator;
@@ -17,10 +18,21 @@ import java.util.List;
  *
  */
 public final class DecisionProcedureSMTLIB2_AUFNIRA extends DecisionProcedureExternal {
-	public DecisionProcedureSMTLIB2_AUFNIRA(DecisionProcedure next, Calculator calc, List<String> solverCommandLine) throws DecisionException {
-		super(next, calc);
+	public DecisionProcedureSMTLIB2_AUFNIRA(DecisionProcedure next, List<String> solverCommandLine) 
+	throws InvalidInputException, DecisionException {
+		super(next);
 		try {
-			this.extIf = new DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA(calc, solverCommandLine);
+			this.extIf = new DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA(getCalculator(), solverCommandLine);
+		} catch (ExternalProtocolInterfaceException | IOException e) {
+			throw new DecisionException(e);
+		}
+	}
+	
+	public DecisionProcedureSMTLIB2_AUFNIRA(Calculator calc, List<String> solverCommandLine) 
+	throws InvalidInputException, DecisionException {
+		super(calc);
+		try {
+			this.extIf = new DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA(getCalculator(), solverCommandLine);
 		} catch (ExternalProtocolInterfaceException | IOException e) {
 			throw new DecisionException(e);
 		}

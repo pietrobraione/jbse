@@ -14,9 +14,9 @@ import jbse.val.exc.InvalidTypeException;
 import org.junit.Before;
 import org.junit.Test;
 
-public class RewriterArcTanTest {
-	HistoryPoint hist;
-	CalculatorRewriting calc;
+public final class RewriterArcTanTest {
+	private HistoryPoint hist;
+	private CalculatorRewriting calc;
 	
 	@Before
 	public void before() {
@@ -31,7 +31,7 @@ public class RewriterArcTanTest {
 	public void testSimple1() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
 		//tan(atan(A)) -> A
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
-		final Primitive p_post = this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.TAN, this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ATAN, A)); 
+		final Primitive p_post = this.calc.applyFunctionPrimitiveAndPop(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.TAN, this.calc.applyFunctionPrimitiveAndPop(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ATAN, A)); 
 		assertEquals(A, p_post);
 	}
 	
@@ -39,15 +39,15 @@ public class RewriterArcTanTest {
 	public void testSimple2() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
 		//tan(tan(atan(A))) -> tan(A)
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
-		final Primitive p_post = this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.TAN, this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.TAN, this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ATAN, A))); 
-		assertEquals(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.TAN, A), p_post);
+		final Primitive p_post = this.calc.applyFunctionPrimitiveAndPop(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.TAN, this.calc.applyFunctionPrimitiveAndPop(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.TAN, this.calc.applyFunctionPrimitiveAndPop(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ATAN, A))); 
+		assertEquals(this.calc.applyFunctionPrimitiveAndPop(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.TAN, A), p_post);
 	}
 	
 	@Test
 	public void testSimple3() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
 		//atan(tan(atan(A))) -> atan(A)
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
-		final Primitive p_post = this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ATAN, this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.TAN, this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ATAN, A))); 
-		assertEquals(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ATAN, A), p_post);
+		final Primitive p_post = this.calc.applyFunctionPrimitiveAndPop(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ATAN, this.calc.applyFunctionPrimitiveAndPop(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.TAN, this.calc.applyFunctionPrimitiveAndPop(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ATAN, A))); 
+		assertEquals(this.calc.applyFunctionPrimitiveAndPop(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.ATAN, A), p_post);
 	}
 }

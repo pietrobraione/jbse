@@ -79,7 +79,6 @@ import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.Simplex;
 import jbse.val.Value;
-import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 public final class Util {
@@ -247,18 +246,19 @@ public final class Util {
      * 
      * @param state the {@link State} whose {@link Heap} will receive 
      *              the new object.
+     * @param calc a {@link Calculator}.
      * @throws ClasspathException if the class file for {@code java.lang.VerifyError}
      *         is not in the classpath, or is ill-formed, or cannot access one of its
      *         superclasses/superinterfaces.
      */
-    public static void throwVerifyError(State state) throws ClasspathException {
+    public static void throwVerifyError(State state, Calculator calc) throws ClasspathException {
         try {
             final ClassFile cf_VERIFY_ERROR = state.getClassHierarchy().loadCreateClass(VERIFY_ERROR);
             if (cf_VERIFY_ERROR == null) {
                 failExecution("Could not find class java.lang.VerifyError.");
             }
-            final ReferenceConcrete excReference = state.createInstanceSurely(cf_VERIFY_ERROR);
-            fillExceptionBacktrace(state, excReference);
+            final ReferenceConcrete excReference = state.createInstanceSurely(calc, cf_VERIFY_ERROR);
+            fillExceptionBacktrace(state, calc, excReference);
             state.unwindStack(excReference);
         } catch (ClassFileNotFoundException | IncompatibleClassFileException | 
                  ClassFileIllFormedException | BadClassFileVersionException | 
@@ -280,22 +280,23 @@ public final class Util {
      * 
      * @param state the {@link State} where the new object will be 
      *        created and whose stack will be unwound.
+     * @param calc a {@link Calculator}.
      * @param toThrowClassName the name of the class of the new instance
      *        to throw. It must be a {@link Throwable} defined in the standard
      *        library and available in the bootstrap classpath.
      * @throws ClasspathException  if the classfile for {@code toThrowClassName}
      *         is missing or is ill-formed.
      */
-    public static void throwNew(State state, String toThrowClassName) throws ClasspathException {
+    public static void throwNew(State state, Calculator calc, String toThrowClassName) throws ClasspathException {
         if (toThrowClassName.equals(VERIFY_ERROR)) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             return;
         }
         try {
             final ClassFile exceptionClass = state.getClassHierarchy().loadCreateClass(toThrowClassName);
-            final ReferenceConcrete excReference = state.createInstanceSurely(exceptionClass);
-            fillExceptionBacktrace(state, excReference);
-            throwObject(state, excReference);
+            final ReferenceConcrete excReference = state.createInstanceSurely(calc, exceptionClass);
+            fillExceptionBacktrace(state, calc, excReference);
+            throwObject(state, calc, excReference);
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
                  BadClassFileVersionException | WrongClassNameException e) {
             throw new ClasspathException(e);
@@ -313,6 +314,7 @@ public final class Util {
      * 
      * @param state the {@link State} where the new object will be 
      *        created and whose stack will be unwound.
+     * @param calc a {@link Calculator}.
      * @param toThrow see {@link State#unwindStack(Reference)}.
      * @throws InvalidInputException if {@code toThrow} is an unresolved symbolic reference, 
      *         or is a null reference, or is a reference to an object that does not extend {@code java.lang.Throwable}.
@@ -320,12 +322,12 @@ public final class Util {
      *         is not in the classpath, or is ill-formed, or cannot access one of its
      *         superclasses/superinterfaces.
      */
-    public static void throwObject(State state, Reference toThrow) 
+    public static void throwObject(State state, Calculator calc, Reference toThrow) 
     throws InvalidInputException, ClasspathException {
         try {
             state.unwindStack(toThrow);
         } catch (InvalidIndexException | InvalidProgramCounterException e) {
-            throwVerifyError(state); //TODO that's desperate
+            throwVerifyError(state, calc); //TODO that's desperate
         }
     }
 
@@ -341,11 +343,12 @@ public final class Util {
      * 
      * @param state a {@link State}. The backtrace will be created 
      *        in the heap of {@code state}.
+     * @param calc a {@link Calculator}.
      * @param exc a {@link Reference} to the exception {@link Instance} 
      *        whose {@code backtrace} and {@code stackTrace}
      *        fields must be set.
      */
-    public static void fillExceptionBacktrace(State state, Reference excReference) {
+    public static void fillExceptionBacktrace(State state, Calculator calc, Reference excReference) {
         try {
             final Instance exc = (Instance) state.getObject(excReference);
             exc.setFieldValue(JAVA_THROWABLE_STACKTRACE, Null.getInstance());
@@ -371,11 +374,10 @@ public final class Util {
                 failExecution("Could not find classfile for java.lang.StackTraceElement[].");
             }
             final ReferenceConcrete refToArray = 
-                state.createArray(null, state.getCalculator().valInt(stackDepth), cf_arrayJAVA_STACKTRACEELEMENT);
+                state.createArray(calc, null, calc.valInt(stackDepth), cf_arrayJAVA_STACKTRACEELEMENT);
             final Array theArray = (Array) state.getObject(refToArray);
             exc.setFieldValue(JAVA_THROWABLE_BACKTRACE, refToArray);
             int i = 0;
-            final Calculator calc = state.getCalculator();
             for (Frame f : state.getStack()) {
                 if (f instanceof SnippetFrameNoWrap) {
                     continue; //skips
@@ -395,12 +397,12 @@ public final class Util {
                 }
 
                 //creates the string literals
-                state.ensureStringLiteral(declaringClass);
-                state.ensureStringLiteral(fileName);
-                state.ensureStringLiteral(methodName);
+                state.ensureStringLiteral(calc, declaringClass);
+                state.ensureStringLiteral(calc, fileName);
+                state.ensureStringLiteral(calc, methodName);
 
                 //creates the java.lang.StackTraceElement object and fills it
-                final ReferenceConcrete steReference = state.createInstance(cf_JAVA_STACKTRACEELEMENT);
+                final ReferenceConcrete steReference = state.createInstance(calc, cf_JAVA_STACKTRACEELEMENT);
                 final Instance stackTraceElement = (Instance) state.getObject(steReference);
                 stackTraceElement.setFieldValue(JAVA_STACKTRACEELEMENT_DECLARINGCLASS, state.referenceToStringLiteral(declaringClass));
                 stackTraceElement.setFieldValue(JAVA_STACKTRACEELEMENT_FILENAME,       state.referenceToStringLiteral(fileName));
@@ -414,8 +416,7 @@ public final class Util {
             //just gives up
             return;
         } catch (ClassCastException | InvalidInputException |
-                 InvalidTypeException | InvalidOperandException | 
-                 FastArrayAccessNotAllowedException e) {
+                 InvalidTypeException |  FastArrayAccessNotAllowedException e) {
             //this should not happen (and if happens there is not much we can do)
             failExecution(e);
         }
@@ -877,10 +878,10 @@ public final class Util {
                 //creates the Klass object
                 if (createSymbolicKlass) {
                     //creates a symbolic Klass
-                    this.s.ensureKlassSymbolic(classFile);
+                    this.s.ensureKlassSymbolic(this.ctx.getCalculator(), classFile);
                 } else {
                     //creates a concrete Klass and schedules it for phase 3
-                    this.s.ensureKlass(classFile);
+                    this.s.ensureKlass(this.ctx.getCalculator(), classFile);
                     if (JAVA_OBJECT.equals(classFile.getClassName())) {
                         this.pushClinitFor_JAVA_OBJECT = true;
                     } else {
@@ -952,10 +953,10 @@ public final class Util {
                             Value v = null; //to keep the compiler happy
                             final ConstantPoolValue cpv = classFile.fieldConstantValue(sig);
                             if (cpv instanceof ConstantPoolPrimitive) {
-                                v = s.getCalculator().val_(cpv.getValue());
+                                v = this.ctx.getCalculator().val_(cpv.getValue());
                             } else if (cpv instanceof ConstantPoolString) {
                                 final String stringLit = ((ConstantPoolString) cpv).getValue();
-                                s.ensureStringLiteral(stringLit);
+                                s.ensureStringLiteral(this.ctx.getCalculator(), stringLit);
                                 v = s.referenceToStringLiteral(stringLit);
                             } else { //should never happen
                                 /* 
@@ -969,7 +970,8 @@ public final class Util {
                             }
                             k.setFieldValue(sig, v);
                         }
-                    } catch (FieldNotFoundException | AttributeNotFoundException | InvalidIndexException e) {
+                    } catch (FieldNotFoundException | AttributeNotFoundException | 
+                    		 InvalidIndexException | InvalidInputException e) {
                         //this should never happen
                         failExecution(e);
                     }
@@ -994,28 +996,33 @@ public final class Util {
                 for (ClassFile classFile : this.classesForPhase3) {
                     final Signature sigClinit = new Signature(classFile.getClassName(), "()" + Type.VOID, "<clinit>");
                     if (classFile.hasMethodImplementation(sigClinit)) {
+                    	try {
                     	if (this.preInitializedClasses.contains(classFile)) {
-                    		this.s.ensureStringLiteral(classFile.getClassName());
-                    		this.s.pushFrame(this.cf_JBSE_BASE, JBSE_BASE_MAKEKLASSSYMBOLIC, root(), 0, this.s.getCalculator().valInt(classFile.getDefiningClassLoader()), this.s.referenceToStringLiteral(classFile.getClassName()));
+                    		this.s.ensureStringLiteral(this.ctx.getCalculator(), classFile.getClassName());
+                    		this.s.pushFrame(this.ctx.getCalculator(), this.cf_JBSE_BASE, JBSE_BASE_MAKEKLASSSYMBOLIC, root(), 0, this.ctx.getCalculator().valInt(classFile.getDefiningClassLoader()), this.s.referenceToStringLiteral(classFile.getClassName()));
                                 ++this.createdFrames;
                     	}
                         if (this.boxExceptionMethodSignature != null && exceptionBoxFrameYetToPush) {
-                            this.s.pushFrame(this.cf_JBSE_BASE, this.boxExceptionMethodSignature, root(), 0);                    
+                            this.s.pushFrame(this.ctx.getCalculator(), this.cf_JBSE_BASE, this.boxExceptionMethodSignature, root(), 0);                    
                             ++this.createdFrames;
                         }
-                        this.s.pushFrame(classFile, sigClinit, root(), 0);
+                        this.s.pushFrame(this.ctx.getCalculator(), classFile, sigClinit, root(), 0);
                         ++this.createdFrames;
+                    	} catch (InvalidInputException e) {
+                            //this should never happen
+                            failExecution("Could not find the classfile for " + classFile.getClassName() + " or for jbse/base/Base.");
+                    	}
                     }
                 }
                 if (this.pushClinitFor_JAVA_OBJECT) {
                     try {
                         if (this.boxExceptionMethodSignature != null && exceptionBoxFrameYetToPush) {
-                            this.s.pushFrame(this.cf_JBSE_BASE, this.boxExceptionMethodSignature, root(), 0);                    
+                            this.s.pushFrame(this.ctx.getCalculator(), this.cf_JBSE_BASE, this.boxExceptionMethodSignature, root(), 0);                    
                             ++this.createdFrames;
                         }
                         final Signature sigClinit_JAVA_OBJECT = new Signature(JAVA_OBJECT, "()" + Type.VOID, "<clinit>");
                         final ClassFile cf_JAVA_OBJECT = this.s.getClassHierarchy().loadCreateClass(JAVA_OBJECT);
-                        this.s.pushFrame(cf_JAVA_OBJECT, sigClinit_JAVA_OBJECT, root(), 0);
+                        this.s.pushFrame(this.ctx.getCalculator(), cf_JAVA_OBJECT, sigClinit_JAVA_OBJECT, root(), 0);
                         ++this.createdFrames;
                     } catch (ClassFileNotFoundException | IncompatibleClassFileException | 
                              ClassFileIllFormedException | BadClassFileVersionException | 
@@ -1062,7 +1069,7 @@ public final class Util {
             //is registered in their state
             
             //throws and exits
-            throwNew(this.s, this.failure);
+            throwNew(this.s, this.ctx.getCalculator(), this.failure);
         }
     }
 
@@ -1083,23 +1090,23 @@ public final class Util {
     public static void storeInArray(State state, ExecutionContext ctx, Reference arrayReference, Primitive index, Value valueToStore) 
     throws DecisionException {
         try {
+        	final Calculator calc = ctx.getCalculator();
             final Array array = (Array) state.getObject(arrayReference);
             if (array.hasSimpleRep() && index instanceof Simplex) {
                 array.setFast((Simplex) index, valueToStore);
             } else {
-                final Iterator<? extends Array.AccessOutcomeIn> entries = array.entriesPossiblyAffectedByAccess(index, valueToStore);
+                final Iterator<? extends Array.AccessOutcomeIn> entries = array.entriesPossiblyAffectedByAccess(calc, index, valueToStore);
                 ctx.decisionProcedure.constrainArrayForSet(state.getClassHierarchy(), entries, index);
-                array.set(index, valueToStore);
+                array.set(calc, index, valueToStore);
             }
-        } catch (InvalidInputException | InvalidOperandException | 
-                 InvalidTypeException | ClassCastException | 
+        } catch (InvalidInputException | InvalidTypeException | ClassCastException | 
                  FastArrayAccessNotAllowedException e) {
             //this should never happen
             failExecution(e);
         }
     }
     
-    public static void invokeClassLoaderLoadClass(State state, PleaseLoadClassException e) 
+    public static void invokeClassLoaderLoadClass(State state, Calculator calc, PleaseLoadClassException e) 
     throws ClasspathException, ThreadStackEmptyException, InvalidInputException {
         try {
             //gets the initiating loader
@@ -1112,7 +1119,7 @@ public final class Util {
 
             //makes the string for the class name
             final String className = binaryClassName(e.className());
-            state.ensureStringLiteral(className);
+            state.ensureStringLiteral(calc, className);
             final ReferenceConcrete classNameReference = state.referenceToStringLiteral(className);
 
             //upcalls ClassLoader.loadClass
@@ -1125,12 +1132,12 @@ public final class Util {
             state.pushSnippetFrameNoWrap(snippet, 0, CLASSLOADER_BOOT, "java/lang");
             //TODO if ClassLoader.loadClass finds no class we should either propagate the thrown ClassNotFoundException or wrap it inside a NoClassDefFoundError.
             //then, pushes the parameters for noclass_REGISTERLOADEDCLASS
-            state.pushOperand(state.getCalculator().valInt(initiatingLoader));
+            state.pushOperand(calc.valInt(initiatingLoader));
             //finally, pushes the parameters for JAVA_CLASSLOADER_LOADCLASS
             state.pushOperand(classLoaderReference);
             state.pushOperand(classNameReference);
         } catch (HeapMemoryExhaustedException exc) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, calc, OUT_OF_MEMORY_ERROR);
         } catch (InvalidProgramCounterException exc) {
             //this should never happen
             failExecution(exc);

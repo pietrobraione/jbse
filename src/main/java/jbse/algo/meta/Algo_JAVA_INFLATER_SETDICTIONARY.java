@@ -26,7 +26,6 @@ import jbse.val.Calculator;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.Simplex;
-import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -49,6 +48,7 @@ public final class Algo_JAVA_INFLATER_SETDICTIONARY extends Algo_INVOKEMETA_Nonb
     protected void cookMore(State state) 
     throws InterruptException, ClasspathException, SymbolicValueNotAllowedException, 
     UndefinedResultException, InvalidInputException {
+        final Calculator calc = this.ctx.getCalculator();
         try {
             //gets the first (long addr) parameter
             final Primitive _addr = (Primitive) this.data.operand(0);
@@ -69,9 +69,8 @@ public final class Algo_JAVA_INFLATER_SETDICTIONARY extends Algo_INVOKEMETA_Nonb
             }
             final int bLength = ((Integer) ((Simplex) _b.getLength()).getActualValue()).intValue();
             this.b = new byte[bLength];
-            final Calculator calc = state.getCalculator();
             for (int i = 0; i < bLength; ++i) {
-                final Simplex _b_i = (Simplex) ((Array.AccessOutcomeInValue) _b.getFast(calc.valInt(i))).getValue();
+                final Simplex _b_i = (Simplex) ((Array.AccessOutcomeInValue) _b.getFast(calc, calc.valInt(i))).getValue();
                 this.b[i] = ((Byte) _b_i.getActualValue()).byteValue();
             }
             
@@ -97,13 +96,13 @@ public final class Algo_JAVA_INFLATER_SETDICTIONARY extends Algo_INVOKEMETA_Nonb
             method.invoke(null, state.getInflater(this.addr), this.b, this.ofst, this.len);
         } catch (InvocationTargetException e) {
             final String cause = internalClassName(e.getCause().getClass().getName());
-            throwNew(state, cause);
+            throwNew(state, calc, cause);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (SecurityException | NoSuchMethodException | IllegalAccessException | 
-                 FastArrayAccessNotAllowedException | InvalidTypeException | InvalidOperandException e) {
+                 FastArrayAccessNotAllowedException | InvalidTypeException e) {
             //this should not happen
             failExecution(e);
         }

@@ -9,6 +9,8 @@ import jbse.mem.exc.ContradictionException;
 import jbse.val.Expression;
 import jbse.val.Primitive;
 import jbse.val.Simplex;
+import jbse.val.exc.InvalidOperandException;
+import jbse.val.exc.InvalidOperatorException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -35,6 +37,11 @@ public interface StrategyRefine<R> {
      *         action leads to a contradiction in the path condition.
      * @throws InvalidTypeException possibly raised when using a value 
      *         with the wrong type in the refinement action.
+     * @throws InvalidOperatorException possibly raised if the 
+     *         wrong operator is used while calculating a result 
+     *         (should never happen).
+     * @throws InvalidOperandException possibly raised if {@code null}
+     *         is pushed on the stack of a calculator (should never happen).
      * @throws InterruptException  possibly raised if the execution 
      *         of the bytecode semantics must be interrupted, in this
      *         case only because of heap memory exhaustion.
@@ -53,6 +60,7 @@ public interface StrategyRefine<R> {
      *         nor {@link Expression}).
      */
     public void refine(State s, R r) 
-    throws DecisionException, ContradictionException, InvalidTypeException, InterruptException,
-    SymbolicValueNotAllowedException, ClasspathException, InvalidInputException;
+    throws DecisionException, ContradictionException, InvalidTypeException, InvalidOperatorException, 
+    InvalidOperandException, InterruptException, SymbolicValueNotAllowedException, ClasspathException, 
+    InvalidInputException;
 }

@@ -29,7 +29,7 @@ public class RewriterTanTest {
 	public void testSimple1() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
 		//sin(A) / cos(A) -> tan(A)
 		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
-		final Primitive p_post = this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.SIN, A).div(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.COS, A)); 
-		assertEquals(this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.TAN, A), p_post);
+		final Primitive p_post = this.calc.applyFunctionPrimitive(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.SIN, A).div(this.calc.applyFunctionPrimitiveAndPop(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.COS, A)).pop(); 
+		assertEquals(this.calc.applyFunctionPrimitiveAndPop(Type.DOUBLE, this.hist, PrimitiveSymbolicApply.TAN, A), p_post);
 	}
 }

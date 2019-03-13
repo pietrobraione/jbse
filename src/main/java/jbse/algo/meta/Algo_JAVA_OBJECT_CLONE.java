@@ -23,6 +23,7 @@ import jbse.mem.State;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Reference;
 import jbse.val.Value;
 import jbse.val.exc.InvalidTypeException;
@@ -64,11 +65,11 @@ public final class Algo_JAVA_OBJECT_CLONE extends Algo_INVOKEMETA_Nonbranching {
             	}
             }
             if (!isCloneable) {
-                throwNew(state, CLONE_NOT_SUPPORTED_EXCEPTION);
+                throwNew(state, this.ctx.getCalculator(), CLONE_NOT_SUPPORTED_EXCEPTION);
                 exitFromAlgorithm();
             }
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
     }
@@ -76,20 +77,21 @@ public final class Algo_JAVA_OBJECT_CLONE extends Algo_INVOKEMETA_Nonbranching {
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
+        	final Calculator calc = this.ctx.getCalculator();
             try {
                 final Reference thisRef = (Reference) this.data.operand(0);
                 final Objekt thisObj = state.getObject(thisRef);
                 final Reference cloneRef;
                 if (this.classFile.isArray()) {
                     //creates the clone
-                    cloneRef = state.createArray(null, ((Array) thisObj).getLength(), this.classFile);
+                    cloneRef = state.createArray(calc, null, ((Array) thisObj).getLength(), this.classFile);
                     final Array cloneObj = (Array) state.getObject(cloneRef);
 
                     //populates the clone
-                    cloneObj.cloneEntries((Array) thisObj);
+                    cloneObj.cloneEntries((Array) thisObj, calc);
                 } else {
                     //creates the clone
-                    cloneRef = state.createInstance(this.classFile);
+                    cloneRef = state.createInstance(calc, this.classFile);
                     final Instance cloneObj = (Instance) state.getObject(cloneRef);
 
                     //populates the clone
@@ -102,7 +104,7 @@ public final class Algo_JAVA_OBJECT_CLONE extends Algo_INVOKEMETA_Nonbranching {
                 //pushes the reference to the clone
                 state.pushOperand(cloneRef);
             } catch (HeapMemoryExhaustedException e) {
-                throwNew(state, OUT_OF_MEMORY_ERROR);
+                throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
             } catch (InvalidTypeException | ClassCastException e) {
                 //this should never happen

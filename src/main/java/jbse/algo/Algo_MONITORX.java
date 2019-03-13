@@ -40,11 +40,11 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         return (state) -> {
             try {
                 if (state.isNull((Reference) this.data.operand(0))) {
-                    throwNew(state, NULL_POINTER_EXCEPTION);
+                    throwNew(state, this.ctx.getCalculator(), NULL_POINTER_EXCEPTION);
                     exitFromAlgorithm();
                 }
             } catch (ClassCastException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
         };

@@ -32,6 +32,7 @@ import jbse.bc.exc.WrongClassNameException;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Value;
 
 /**
@@ -79,23 +80,24 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
             try {
+            	final Calculator calc = this.ctx.getCalculator();
                 final ClassFile currentClass = state.getCurrentClass();
                 final int index = (this.wide ? this.data.immediateUnsignedWord() : this.data.immediateUnsignedByte());
                 final ConstantPoolValue cpv = currentClass.getValueFromConstantPool(index);
                 if (cpv instanceof ConstantPoolPrimitive) {
-                    this.val = state.getCalculator().val_(cpv.getValue());
+                    this.val = calc.val_(cpv.getValue());
                     if (this.cat1 != isCat_1(val.getType())) {
-                        throwVerifyError(state);
+                        throwVerifyError(state, this.ctx.getCalculator());
                         exitFromAlgorithm();
                     }
                 } else if (cpv instanceof ConstantPoolString) {
                     final String stringLit = ((ConstantPoolString) cpv).getValue();
-                    state.ensureStringLiteral(stringLit);
+                    state.ensureStringLiteral(calc, stringLit);
                     this.val = state.referenceToStringLiteral(stringLit);
                 } else if (cpv instanceof ConstantPoolClass) {
                     final String classSignature = ((ConstantPoolClass) cpv).getValue();
                     final ClassFile resolvedClass = state.getClassHierarchy().resolveClass(currentClass, classSignature, state.bypassStandardLoading());
-                    state.ensureInstance_JAVA_CLASS(resolvedClass);
+                    state.ensureInstance_JAVA_CLASS(calc, resolvedClass);
                     this.val = state.referenceToInstance_JAVA_CLASS(resolvedClass);
                 } else if (cpv instanceof ConstantPoolObject) {
                     this.val = ((ConstantPoolObject) cpv).getValue();
@@ -104,33 +106,33 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     failExecution("Unexpected value from the constant pool.");
                 }
             } catch (PleaseLoadClassException e) {
-                invokeClassLoaderLoadClass(state, e);
+                invokeClassLoaderLoadClass(state, this.ctx.getCalculator(), e);
                 exitFromAlgorithm();
             } catch (ClassFileNotFoundException e) {
                 //TODO this exception should wrap a ClassNotFoundException
-                throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR);
                 exitFromAlgorithm();
             } catch (BadClassFileVersionException e) {
-                throwNew(state, UNSUPPORTED_CLASS_VERSION_ERROR);
+                throwNew(state, this.ctx.getCalculator(), UNSUPPORTED_CLASS_VERSION_ERROR);
                 exitFromAlgorithm();
             } catch (WrongClassNameException e) {
-                throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
+                throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
                 exitFromAlgorithm();
             } catch (IncompatibleClassFileException e) {
-                throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
                 exitFromAlgorithm();
             } catch (ClassFileNotAccessibleException e) {
-                throwNew(state, ILLEGAL_ACCESS_ERROR);
+                throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
                 exitFromAlgorithm();
             } catch (HeapMemoryExhaustedException e) {
-                throwNew(state, OUT_OF_MEMORY_ERROR);
+                throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
             } catch (ClassFileIllFormedException e) {
-                //TODO throw LinkageError insead
-                throwVerifyError(state);
+                //TODO throw LinkageError instead
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             } catch (InvalidIndexException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
         };

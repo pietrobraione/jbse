@@ -360,9 +360,6 @@ public final class State implements Cloneable {
     /** The maximum length an array may have to be granted simple representation. */
     private final int maxSimpleArrayLength;
 
-    /** The {@link Calculator}. */
-    private final Calculator calc;
-
     /** 
      * The generator for unambiguous symbol identifiers; mutable
      * because different states at different branches may have different
@@ -398,8 +395,6 @@ public final class State implements Cloneable {
      *        {@link Map}{@code <}{@link String}{@code , }{@link Set}{@code <}{@link String}{@code >>}
      *        associating class names to sets of names of their subclasses. It 
      *        is used in place of the class hierarchy to perform expansion.
-     * @param calc a {@link Calculator}. It will be used to do all kinds of calculations
-     *        on concrete and symbolic values.
      * @param symbolFactory a {@link SymbolFactory}. It will be used to generate
      *        symbolic values to be injected in this state.
      * @throws InvalidClassFileFactoryClassException in the case {@link fClass}
@@ -415,11 +410,10 @@ public final class State implements Cloneable {
                  Classpath classPath, 
                  Class<? extends ClassFileFactory> factoryClass, 
                  Map<String, Set<String>> expansionBackdoor, 
-                 Calculator calc,
                  SymbolFactory symbolFactory) 
                  throws InvalidClassFileFactoryClassException, InvalidInputException {
-    	if (historyPoint == null || calc == null || symbolFactory == null) {
-    		throw new InvalidInputException("Attempted the creation of a state with null historyPoint, or calc, or symbolFactory.");
+    	if (historyPoint == null || symbolFactory == null) {
+    		throw new InvalidInputException("Attempted the creation of a state with null historyPoint, or symbolFactory.");
     	}
         this.bypassStandardLoading = bypassStandardLoading;
     	this.frozen = false;
@@ -429,7 +423,6 @@ public final class State implements Cloneable {
         this.heap = new Heap(maxHeapSize);
         this.classHierarchy = new ClassHierarchy(classPath, factoryClass, expansionBackdoor);
         this.maxSimpleArrayLength = maxSimpleArrayLength;
-        this.calc = calc;
         this.symbolFactory = symbolFactory;
     }
     
@@ -496,15 +489,6 @@ public final class State implements Cloneable {
         return this.classHierarchy.getClasspath();
     }
 
-    /**
-     * Getter for this state's calculator.
-     * 
-     * @return a {@link Calculator}.
-     */
-    public Calculator getCalculator() {
-        return this.calc;
-    }
-    
     /**
      * Sets the main thread group.
      * 
@@ -1484,26 +1468,37 @@ public final class State implements Cloneable {
      * Creates a new {@link Array} of a given class in the heap of 
      * the state.
      * 
-     * @param initValue
-     *        a {@link Value} for initializing the array; if {@code initValue == null}
+     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * @param initValue a {@link Value} for initializing the array; if {@code initValue == null}
      *        the default value for the array member type is used for initialization.
-     * @param length
-     *        the number of elements in the array.
-     * @param arrayClass
-     *        a {@link ClassFile}, the class of the array object.
-     * @return a new  {@link ReferenceConcrete} to the newly created object.
-     * @throws InvalidTypeException if {@code arrayClass} is invalid.
+     * @param length a {@link Primitive}, the number of elements in the array.
+     * @param arrayClass a {@link ClassFile}, the class of the array object.
+     * @return a new {@link ReferenceConcrete} to the newly created object.
+     * @throws InvalidInputException if {@code calc == null || arrayClass == null || length == null}, or 
+     *         if {@code arrayClass} is invalid.
      * @throws HeapMemoryExhaustedException if the heap is full.
      * @throws FrozenStateException if the state is frozen.
      */
-    public ReferenceConcrete createArray(Value initValue, Primitive length, ClassFile arrayClass) 
-    throws InvalidTypeException, HeapMemoryExhaustedException, FrozenStateException {
+    public ReferenceConcrete createArray(Calculator calc, Value initValue, Primitive length, ClassFile arrayClass) 
+    throws InvalidInputException, HeapMemoryExhaustedException, FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        final ArrayImpl a = new ArrayImpl(false, this.calc, false, initValue, length, arrayClass, null, this.historyPoint, false, this.maxSimpleArrayLength);
+        if (calc == null || arrayClass == null || length == null) {
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".createArray with null Calculator calc or ClassFile arrayClass or Primitive length parameter.");
+        }
+        if (!arrayClass.isArray()) {
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".createArray with ClassFile arrayClass parameter that is not an array class type.");
+        }
+        final ArrayImpl a;
+		try {
+			a = new ArrayImpl(calc, false, false, initValue, length, arrayClass, null, this.historyPoint, false, this.maxSimpleArrayLength);
+		} catch (InvalidTypeException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
         final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(a));
-        initIdentityHashCodeConcrete(a, retVal);
+        initIdentityHashCodeConcrete(calc, a, retVal);
         return retVal;
     }
 
@@ -1513,6 +1508,7 @@ public final class State implements Cloneable {
      * with the default values for each field's type.
      * It cannot create instances of the {@code java.lang.Class} class.
      * 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param classFile the {@link ClassFile} for the class of the new object.
      * @return a {@link ReferenceConcrete} to the newly created object.
      * @throws FrozenStateException if the state is frozen.
@@ -1520,25 +1516,25 @@ public final class State implements Cloneable {
      *         invalid, i.e., is the classfile for {@code java.lang.Class}.
      * @throws HeapMemoryExhaustedException if the heap is full.
      */
-    public ReferenceConcrete createInstance(ClassFile classFile) 
+    public ReferenceConcrete createInstance(Calculator calc, ClassFile classFile) 
     throws FrozenStateException, InvalidInputException, HeapMemoryExhaustedException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (classFile == null) {
-            throw new InvalidInputException("Invoked method " + getClass().getName() + ".createInstance with null ClassFile classFile parameter.");
+        if (calc == null || classFile == null) {
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".createInstance with null Calculator calc or ClassFile classFile parameter.");
         }
         if (JAVA_CLASS.equals(classFile.getClassName())) {
             //use createInstance_JAVA_CLASS instead
             throw new InvalidInputException("Cannot use method " + getClass().getName() + ".createInstance to create an instance of java.lang.Class.");
         }
         
-        final InstanceImpl myObj = doCreateInstance(classFile);
+        final InstanceImpl myObj = doCreateInstance(calc, classFile);
         final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(myObj));
         if (myObj instanceof Instance_JAVA_CLASSLOADER) {
             this.classLoaders.add(retVal);
         }
-        initIdentityHashCodeConcrete(myObj, retVal);
+        initIdentityHashCodeConcrete(calc, myObj, retVal);
         return retVal;
     }
     
@@ -1548,21 +1544,23 @@ public final class State implements Cloneable {
      * because this method does not check whether the heap memory 
      * was exhausted. Use it only to throw critical errors.
      * 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param classFile the {@link ClassFile} for the class of the new object.
      * @return a {@link ReferenceConcrete} to the newly created object.
      * @throws FrozenStateException if the state is frozen.
-     * @throws InvalidInputException if {@code classFile == null} or is 
-     *         invalid, i.e., is the classfile for {@code java.lang.Class}, 
-     *         or for a subclass of {@code java.lang.ClassLoader}, or 
-     *         for a subclass of {@code java.lang.Thread}.
+     * @throws InvalidInputException if {@code calc == null || classFile == null} 
+     *         or if {@code classFile} is invalid, i.e., is the classfile for 
+     *         {@code java.lang.Class}, or for a subclass of 
+     *         {@code java.lang.ClassLoader}, or  for a subclass of 
+     *         {@code java.lang.Thread}.
      */
-    public ReferenceConcrete createInstanceSurely(ClassFile classFile) 
+    public ReferenceConcrete createInstanceSurely(Calculator calc, ClassFile classFile) 
     throws FrozenStateException, InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (classFile == null) {
-            throw new InvalidInputException("Invoked method " + getClass().getName() + ".createInstanceSurely with null ClassFile classFile parameter.");
+        if (calc == null || classFile == null) {
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".createInstanceSurely with null Calculator calc or ClassFile classFile parameter.");
         }
         if (JAVA_CLASS.equals(classFile.getClassName())) {
             //cannot be used for that
@@ -1584,13 +1582,13 @@ public final class State implements Cloneable {
             throw new InvalidInputException("Cannot use method " + getClass().getName() + ".createInstanceSurely to create an instance of (a subclass of) java.lang.Classloader or java.lang.Thread.");
         }
         
-        final InstanceImpl myObj = doCreateInstance(classFile);
+        final InstanceImpl myObj = doCreateInstance(calc, classFile);
         final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNewSurely(myObj));
-        initIdentityHashCodeConcrete(myObj, retVal);
+        initIdentityHashCodeConcrete(calc, myObj, retVal);
         return retVal;
     }
     
-    private InstanceImpl doCreateInstance(ClassFile classFile) {
+    private InstanceImpl doCreateInstance(Calculator calc, ClassFile classFile) {
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
         final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
         final ClassFile cf_JAVA_CLASSLOADER;
@@ -1606,11 +1604,11 @@ public final class State implements Cloneable {
         }
         try {
             if (classFile.isSubclass(cf_JAVA_CLASSLOADER)) {
-                return new InstanceImpl_JAVA_CLASSLOADER(this.calc, classFile, null, this.historyPoint, this.nextClassLoaderIdentifier++, numOfStaticFields, fieldsSignatures);
+                return new InstanceImpl_JAVA_CLASSLOADER(calc, classFile, null, this.historyPoint, this.nextClassLoaderIdentifier++, numOfStaticFields, fieldsSignatures);
             } else if (classFile.isSubclass(cf_JAVA_THREAD)) {
-                return new InstanceImpl_JAVA_THREAD(this.calc, classFile, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
+                return new InstanceImpl_JAVA_THREAD(calc, classFile, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
             } else {
-                return new InstanceImpl(false, this.calc, classFile, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
+                return new InstanceImpl(calc, false, classFile, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
             }
         } catch (InvalidTypeException | InvalidInputException e) {
             //this should never happen
@@ -1624,12 +1622,13 @@ public final class State implements Cloneable {
      * Its fields are initialized with the default values for each 
      * field's type (which should not be a problem since all the fields are transient).
      * 
+     * @param calc a {@link Calculator}.
      * @param representedClass the {@link ClassFile} of the class the new {@code Instance_JAVA_CLASS}
      *        must represent.
      * @return a {@link ReferenceConcrete} to the newly created object.
      * @throws HeapMemoryExhaustedException if the heap is full.
      */
-    private ReferenceConcrete createInstance_JAVA_CLASS(ClassFile representedClass) 
+    private ReferenceConcrete createInstance_JAVA_CLASS(Calculator calc, ClassFile representedClass) 
     throws HeapMemoryExhaustedException {
         try {
             final ClassFile cf_JAVA_CLASS = this.classHierarchy.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_CLASS);
@@ -1638,7 +1637,7 @@ public final class State implements Cloneable {
             }
             final int numOfStaticFields = this.classHierarchy.numOfStaticFields(cf_JAVA_CLASS);
             final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(cf_JAVA_CLASS);
-            final InstanceImpl_JAVA_CLASS myObj = new InstanceImpl_JAVA_CLASS(this.calc, cf_JAVA_CLASS, null, this.historyPoint, representedClass, numOfStaticFields, fieldsSignatures);
+            final InstanceImpl_JAVA_CLASS myObj = new InstanceImpl_JAVA_CLASS(calc, cf_JAVA_CLASS, null, this.historyPoint, representedClass, numOfStaticFields, fieldsSignatures);
             final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(myObj));
             
             //initializes the fields of the new instance: The only
@@ -1657,7 +1656,7 @@ public final class State implements Cloneable {
             //the same way.
             
             //hash code
-            initIdentityHashCodeConcrete(myObj, retVal);
+            initIdentityHashCodeConcrete(calc, myObj, retVal);
             
             //class loader
             final int classLoader = (representedClass.isAnonymousUnregistered() ? CLASSLOADER_BOOT : representedClass.getDefiningClassLoader()); //Instance_JAVA_CLASS for anonymous classfiles have the classloader field set to null
@@ -1677,28 +1676,29 @@ public final class State implements Cloneable {
      * {@code <clinit>} methods. It does not create {@link Klass} objects
      * for superclasses. If the {@link Klass} already exists it does nothing.
      * 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param classFile the {@link ClassFile} of the class for which
      *        the {@link Klass} object must be created. The method 
      *        creates a {@link Klass} object only for {@code classFile}, 
      *        not for its superclasses in the hierarchy.
      * @throws FrozenStateException if the state is frozen.
-     * @throws InvalidInputException if {@code classFile == null}.
+     * @throws InvalidInputException if {@code calc == null || classFile == null}.
      */
-    public void ensureKlass(ClassFile classFile) 
+    public void ensureKlass(Calculator calc, ClassFile classFile) 
     throws FrozenStateException, InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (classFile == null) {
-            throw new InvalidInputException("Invoked method " + getClass().getName() + ".ensureKlass with null ClassFile classFile parameter.");
+        if (calc == null || classFile == null) {
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".ensureKlass with null Calculator calc or ClassFile classFile parameter.");
         }
         if (existsKlass(classFile)) {
             return;
         }
         final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
-        final KlassImpl k = new KlassImpl(false, this.calc, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
-        k.setIdentityHashCode(this.calc.valInt(0)); //doesn't care because it is not used
+        final KlassImpl k = new KlassImpl(calc, false, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
+        k.setIdentityHashCode(calc.valInt(0)); //doesn't care because it is not used
         this.staticMethodArea.set(classFile, k);
     }
 
@@ -1709,36 +1709,37 @@ public final class State implements Cloneable {
      * for superclasses. If the {@link Klass} already exists it 
      * does nothing.
      * 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param classFile the {@link ClassFile} of the class for which
      *        the {@link Klass} object must be created. The method 
      *        creates a {@link Klass} object only for {@code classFile}, 
      *        not for its superclasses in the hierarchy.
      * @throws FrozenStateException if the state is frozen.
-     * @throws InvalidInputException if {@code classFile == null}.
+     * @throws InvalidInputException if {@code calc == null || classFile == null}.
      * @throws InvalidIndexException if the access to the class 
      *         constant pool fails.
      */
-    public void ensureKlassSymbolic(ClassFile classFile) 
+    public void ensureKlassSymbolic(Calculator calc, ClassFile classFile) 
     throws FrozenStateException, InvalidInputException, InvalidIndexException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (classFile == null) {
-            throw new InvalidInputException("Invoked method " + getClass().getName() + ".ensureKlassSymbolic with null ClassFile classFile parameter.");
+        if (calc == null || classFile == null) {
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".ensureKlassSymbolic with null Calculator calc or ClassFile classFile parameter.");
         }
         if (existsKlass(classFile)) {
             return;
         }
         final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
-        final KlassImpl k = new KlassImpl(true, this.calc, createSymbolKlassPseudoReference(this.lastPreInitialHistoryPoint, classFile), this.lastPreInitialHistoryPoint, numOfStaticFields, fieldsSignatures);
+        final KlassImpl k = new KlassImpl(calc, true, createSymbolKlassPseudoReference(this.lastPreInitialHistoryPoint, classFile), this.lastPreInitialHistoryPoint, numOfStaticFields, fieldsSignatures);
         try {
         	initWithSymbolicValues(k);
         } catch (NullPointerException e) {
         	//this should never happen
         	throw new UnexpectedInternalException(e);
         }
-        k.setIdentityHashCode(this.calc.valInt(0)); //doesn't care because it is not used
+        k.setIdentityHashCode(calc.valInt(0)); //doesn't care because it is not used
         this.staticMethodArea.set(classFile, k);
     }
 
@@ -1747,54 +1748,55 @@ public final class State implements Cloneable {
      * the state. The {@link Objekt}'s fields are initialized with symbolic 
      * values.
      *  
+     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param classFile a {@link ClassFile} for either an object or an array class.
      * @param origin a {@link ReferenceSymbolic}, the origin of the object.
      * @return a {@code long}, the position in the heap of the newly 
      *         created object.
-     * @throws NullPointerException if {@code origin} is {@code null}.
-     * @throws InvalidTypeException if {@code classFile} is invalid.
+     * @throws InvalidInputException if {@code calc == null || classFile == null || origin == null} 
+     *         or if {@code classFile} is invalid.
      * @throws HeapMemoryExhaustedException if the heap is full.
      * @throws CannotAssumeSymbolicObjectException if {@code type} is
      *         a class that cannot be assumed to be symbolic
      *         (currently {@code java.lang.Class} and {@code java.lang.ClassLoader}).
      * @throws FrozenStateException if the state is frozen.
      */
-    private long createObjectSymbolic(ClassFile classFile, ReferenceSymbolic origin) 
-    throws InvalidTypeException, HeapMemoryExhaustedException, 
+    private long createObjectSymbolic(Calculator calc, ClassFile classFile, ReferenceSymbolic origin) 
+    throws InvalidInputException, HeapMemoryExhaustedException, 
     CannotAssumeSymbolicObjectException, FrozenStateException {
-        if (origin == null) {
-            throw new NullPointerException(); //TODO improve?
+        if (calc == null || classFile == null || origin == null) {
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".createObjectSymbolic with null Calculator calc or ClassFile classFile or ReferenceSymbolic origin parameter.");
         }
         final ObjektImpl myObj;
         if (classFile.isArray()) {
             try {
-                final ArrayImpl backingArray = newArraySymbolic(classFile, origin, true);
+                final ArrayImpl backingArray = newArraySymbolic(calc, classFile, origin, true);
                 final long posBackingArray = this.heap.addNew(backingArray);
                 final ReferenceConcrete refToBackingArray = new ReferenceConcrete(posBackingArray);
-                myObj = new ArrayImpl(refToBackingArray, backingArray);
+                myObj = new ArrayImpl(calc, refToBackingArray, backingArray);
                 initIdentityHashCodeSymbolic(myObj);
-            } catch (InvalidOperandException | InvalidTypeException | NullPointerException | InvalidInputException e) {
+            } catch (InvalidTypeException | NullPointerException | InvalidInputException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
             }
         } else if (classFile.isReference()) {
             try {
-                myObj = newInstanceSymbolic(classFile, origin);
+                myObj = newInstanceSymbolic(calc, classFile, origin);
             } catch (InvalidTypeException | InvalidInputException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
             }
         } else {
-            throw new InvalidTypeException("Attempted to create a symbolic object with type " + classFile.getClassName() + ".");
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".createObjectSymbolic with invalid ClassFile classFile for class " + classFile.getClassName() + ".");
         }
         final long pos = this.heap.addNew(myObj);
         return pos;
     }
 
-    private ArrayImpl newArraySymbolic(ClassFile arrayClass, ReferenceSymbolic origin, boolean isInitial) 
+    private ArrayImpl newArraySymbolic(Calculator calc, ClassFile arrayClass, ReferenceSymbolic origin, boolean isInitial) 
     throws InvalidTypeException, FrozenStateException {
         final Primitive length = (Primitive) createSymbolMemberArrayLength(origin);
-        final ArrayImpl obj = new ArrayImpl(true, this.calc, true, null, length, arrayClass, origin, origin.historyPoint(), isInitial, this.maxSimpleArrayLength);
+        final ArrayImpl obj = new ArrayImpl(calc, true, true, null, length, arrayClass, origin, origin.historyPoint(), isInitial, this.maxSimpleArrayLength);
         try {
 			initIdentityHashCodeSymbolic(obj);
 		} catch (InvalidInputException e) {
@@ -1811,15 +1813,11 @@ public final class State implements Cloneable {
      * {@code java.lang.Class} and all the subclasses of 
      * {@code java.lang.ClassLoader}.
      * 
-     * @param className a {@link String}.
+     * @param classFile a {@link ClassFile}.
      * @return {@code true} iff the class cannot be executed
      *         symbolically. 
-     * @throws InvalidInputException if {@code classFile == null}.
      */
-    public boolean cannotExecuteSymbolically(ClassFile classFile) throws InvalidInputException {
-    	if (classFile == null) {
-    		throw new InvalidInputException("Invoked method " + getClass().getName() + ".cannotExecuteSymbolically with null ClassFile classFile parameter.");
-    	}
+    private boolean cannotExecuteSymbolically(ClassFile classFile) throws InvalidInputException {
     	if (JAVA_CLASS.equals(classFile.getClassName())) {
     		return true;
     	}
@@ -1839,14 +1837,14 @@ public final class State implements Cloneable {
     	return false;
     }
 
-    private InstanceImpl newInstanceSymbolic(ClassFile classFile, ReferenceSymbolic origin) 
+    private InstanceImpl newInstanceSymbolic(Calculator calc, ClassFile classFile, ReferenceSymbolic origin) 
     throws CannotAssumeSymbolicObjectException, InvalidTypeException, InvalidInputException {
         if (cannotExecuteSymbolically(classFile)) {
             throw new CannotAssumeSymbolicObjectException("JBSE does not allow to execute symbolically the methods of class " + classFile.getClassName() + ".");
         }
         final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
-        final InstanceImpl obj = new InstanceImpl(true, this.calc, classFile, origin, origin.historyPoint(), numOfStaticFields, fieldsSignatures);
+        final InstanceImpl obj = new InstanceImpl(calc, true, classFile, origin, origin.historyPoint(), numOfStaticFields, fieldsSignatures);
         try {
         	initWithSymbolicValues(obj);
         } catch (NullPointerException e) {
@@ -1888,12 +1886,13 @@ public final class State implements Cloneable {
      * Initializes the identity hash code of an {@link Objekt} with a concrete value, 
      * the heap position of the object.
      * 
+     * @param calc a {@link Calculator}.
      * @param myObj the {@link Objekt} whose identity hash code will be initialized.
      * @param myRef a {@link ReferenceConcrete} to {@code myObj}.
      */
     //TODO delete - all the objects should have a symbolic identity hash code for genericity (currently this does not play well with hash maps and thus with all the JVM bootstrap code).
-    private void initIdentityHashCodeConcrete(Objekt myObj, ReferenceConcrete myRef) {
-        myObj.setIdentityHashCode(this.calc.valInt((int) myRef.getHeapPosition()));
+    private void initIdentityHashCodeConcrete(Calculator calc, Objekt myObj, ReferenceConcrete myRef) {
+        myObj.setIdentityHashCode(calc.valInt((int) myRef.getHeapPosition()));
     }
     
     /**
@@ -1943,29 +1942,32 @@ public final class State implements Cloneable {
      * and for the classes of the members of the created object. 
      * If the literal already exists, does nothing.
      * 
+     * @param calc a Calculator. It must not be {@code null}.
      * @param stringLit a {@link String} representing a string literal.
+     * @throws InvalidInputException if {@code calc == null || stringLit == null}.
      * @throws HeapMemoryExhaustedException if the heap is full.
      * @throws FrozenStateException if the state is frozen.
      */
-    public void ensureStringLiteral(String stringLit) throws HeapMemoryExhaustedException, FrozenStateException {
+    public void ensureStringLiteral(Calculator calc, String stringLit) 
+    throws InvalidInputException, HeapMemoryExhaustedException, FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (stringLit == null) {
-            throw new NullPointerException("null parameter passed to " + State.class.getName() + ".ensureStringLiteral");
+        if (calc == null || stringLit == null) {
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".ensureStringLiteral with null Calculator calc or String stringLit parameter.");
         }
         if (hasStringLiteral(stringLit)) {
             return;
         }
 
         try {
-            final ReferenceConcrete value = createArrayOfChars(stringLit);
-            final Simplex hash = this.calc.valInt(stringLit.hashCode());
+            final ReferenceConcrete value = createArrayOfChars(calc, stringLit);
+            final Simplex hash = calc.valInt(stringLit.hashCode());
             final ClassFile cf_JAVA_STRING = this.classHierarchy.getClassFileClassArray(CLASSLOADER_BOOT, JAVA_STRING);
             if (cf_JAVA_STRING == null) {
                 throw new UnexpectedInternalException("Could not find classfile for type java.lang.String.");
             }
-            final ReferenceConcrete retVal = createInstance(cf_JAVA_STRING);
+            final ReferenceConcrete retVal = createInstance(calc, cf_JAVA_STRING);
             final Instance i = (Instance) getObject(retVal);
             i.setFieldValue(JAVA_STRING_VALUE,  value);
             i.setFieldValue(JAVA_STRING_HASH,   hash);
@@ -1980,25 +1982,26 @@ public final class State implements Cloneable {
      * Creates an array of characters in this state and initializes
      * it with some text.
      * 
+     * @param calc a {@link Calculator}.
      * @param value the text that will be put in the array.
      * @return a {@link ReferenceConcrete} to the created {@link Instance}.
      * @throws HeapMemoryExhaustedException if the heap is full.
      */
-    private ReferenceConcrete createArrayOfChars(String value) throws HeapMemoryExhaustedException {
-        final Simplex stringLength = this.calc.valInt(value.length());
+    private ReferenceConcrete createArrayOfChars(Calculator calc, String value) throws HeapMemoryExhaustedException {
+        final Simplex stringLength = calc.valInt(value.length());
         final ReferenceConcrete retVal;
         try {
             final ClassFile cf_arrayOfCHAR = this.classHierarchy.loadCreateClass("" + Type.ARRAYOF + Type.CHAR);
-            retVal = createArray(null, stringLength, cf_arrayOfCHAR);
+            retVal = createArray(calc, null, stringLength, cf_arrayOfCHAR);
             final Array a = (Array) this.getObject(retVal);
             for (int k = 0; k < value.length(); ++k) {
                 final char c = value.charAt(k);
-                a.setFast(this.calc.valInt(k), this.calc.valChar(c));
+                a.setFast(calc.valInt(k), calc.valChar(c));
             }
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException | 
                  WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException | 
-                 ClassCastException | InvalidOperandException | InvalidTypeException | 
-                 InvalidInputException | FastArrayAccessNotAllowedException e) {
+                 ClassCastException | InvalidTypeException | InvalidInputException | 
+                 FastArrayAccessNotAllowedException e) {
             //this should never happen 
             throw new UnexpectedInternalException(e);
         }
@@ -2060,20 +2063,26 @@ public final class State implements Cloneable {
     }
 
     /**
-     * Ensures an {@link Instance_JAVA_CLASS} 
-     * corresponding to a class exists in the {@link Heap}. If
+     * Ensures that an {@link Instance_JAVA_CLASS} 
+     * corresponding to a given class exists in the {@link Heap}. If
      * the instance does not exist, it creates 
      * it, otherwise it does nothing.
      * 
+     * @param calc a {@link Calculator}. It must not be {@code null}. 
      * @param representedClass a {@link ClassFile}, the class represented
-     *        by the created {@link Instance_JAVA_CLASS}.
+     *        by the {@link Instance_JAVA_CLASS} whose existence we 
+     *        want to ensure.
+     * @throws InvalidInputException if {@code calc == null || representedClass == null}.
      * @throws HeapMemoryExhaustedException if the heap is full.
      * @throws FrozenStateException if the state is frozen.
      */
-    public void ensureInstance_JAVA_CLASS(ClassFile representedClass) 
-    throws HeapMemoryExhaustedException, FrozenStateException {
+    public void ensureInstance_JAVA_CLASS(Calculator calc, ClassFile representedClass) 
+    throws InvalidInputException, HeapMemoryExhaustedException, FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
+    	}
+    	if (calc == null || representedClass == null) {
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".ensureInstance_JAVA_CLASS with null Calculator calc or ClassFile representedClass parameter.");
     	}
         if (hasInstance_JAVA_CLASS(representedClass)) {
             //nothing to do
@@ -2081,13 +2090,13 @@ public final class State implements Cloneable {
         }
         if (representedClass.isPrimitiveOrVoid()) {
             try {
-                ensureInstance_JAVA_CLASS_primitiveOrVoid(representedClass.getClassName());
+                ensureInstance_JAVA_CLASS_primitiveOrVoid(calc, representedClass.getClassName());
             } catch (ClassFileNotFoundException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
             }
         } else {
-            this.classes.put(representedClass, createInstance_JAVA_CLASS(representedClass));
+            this.classes.put(representedClass, createInstance_JAVA_CLASS(calc, representedClass));
         }
     }
 
@@ -2097,17 +2106,23 @@ public final class State implements Cloneable {
      * the instance does not exist, it creates it, otherwise it does 
      * nothing.
      * 
+     * @param calc a {@link Calculator}. It must not be {@code null}. 
      * @param typeName a {@link String} representing the canonical name 
      *        of a primitive type or void (see JLS v8, section 6.7).
+     * @throws InvalidInputException if {@code calc == null || typeName == null}.
      * @throws ClassFileNotFoundException if {@code typeName} is not
      *         the canonical name of a primitive type.
      * @throws HeapMemoryExhaustedException if the heap is full.
      * @throws FrozenStateException if the state is frozen.
      */
-    public void ensureInstance_JAVA_CLASS_primitiveOrVoid(String typeName) 
-    throws ClassFileNotFoundException, HeapMemoryExhaustedException, FrozenStateException {
+    public void ensureInstance_JAVA_CLASS_primitiveOrVoid(Calculator calc, String typeName) 
+    throws InvalidInputException, ClassFileNotFoundException, HeapMemoryExhaustedException, 
+    FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
+    	}
+    	if (calc == null || typeName == null) {
+            throw new InvalidInputException("Invoked method " + getClass().getName() + ".ensureInstance_JAVA_CLASS_primitiveOrVoid with null Calculator calc or String typeName parameter.");
     	}
         if (hasInstance_JAVA_CLASS_primitiveOrVoid(typeName)) {
             return;
@@ -2118,7 +2133,7 @@ public final class State implements Cloneable {
                 if (cf == null) {
                     throw new UnexpectedInternalException("Could not find the classfile for the primitive type " + typeName + ".");
                 }
-                final ReferenceConcrete retVal = createInstance_JAVA_CLASS(cf);
+                final ReferenceConcrete retVal = createInstance_JAVA_CLASS(calc, cf);
                 this.classesPrimitive.put(typeName, retVal);
             } catch (InvalidInputException e) {
                 throw new UnexpectedInternalException(e);
@@ -2336,26 +2351,25 @@ public final class State implements Cloneable {
      * Creates a new frame for a (nonnative) method and pushes it 
      * on this state's stack.
      * 
-     * @param classMethodImpl
-     *        the {@link ClassFile} containing the bytecode for the method.
-     * @param methodSignatureImpl
-     *        the {@link Signature} of the method for which the 
-     *        frame is built.
-     * @param isRoot
-     *        {@code true} iff the frame is the root frame of symbolic
-     *        execution (i.e., on the top of the thread stack).
-     * @param returnPCOffset 
-     *        the offset from the current program counter of 
-     *        the return program counter. It is ignored if 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * @param classMethodImpl the {@link ClassFile} containing the 
+     *        bytecode for the method.
+     * @param methodSignatureImpl the {@link Signature} of the method 
+     *        for which the frame is built.
+     * @param isRoot {@code true} iff the frame is the root frame of 
+     *        symbolic execution (i.e., on the top of the thread stack).
+     * @param returnPCOffset the offset from the current program counter 
+     *        of the return program counter. It is ignored if 
      *        {@code isRoot == true}.
-     * @param args
-     *        varargs of method call arguments.
+     * @param args varargs of method call arguments.
      * @throws NullMethodReceiverException when the method is not static
      *         and the first argument in {@code args} is the null reference.
      * @throws MethodNotFoundException when {@code classMethodImpl}
      *         does not contain a declaration for {@code methodSignatureImpl}.
      * @throws MethodCodeNotFoundException when {@code classMethodImpl}
      *         does not contain bytecode for {@code methodSignatureImpl}.
+     * @throws InvalidInputException when {@code classMethodImpl == null || 
+     *         methodSignatureImpl == null || args == null}.
      * @throws InvalidSlotException when there are 
      *         too many {@code arg}s or some of their types are 
      *         incompatible with their respective slots types.
@@ -2368,11 +2382,14 @@ public final class State implements Cloneable {
      *         state's thread stack is empty.
      * @throws FrozenStateException if the state is frozen.
      */
-    public void pushFrame(ClassFile classMethodImpl, Signature methodSignatureImpl, boolean isRoot, int returnPCOffset, Value... args) 
-    throws NullMethodReceiverException, MethodNotFoundException, MethodCodeNotFoundException, InvalidSlotException, 
+    public void pushFrame(Calculator calc, ClassFile classMethodImpl, Signature methodSignatureImpl, boolean isRoot, int returnPCOffset, Value... args) 
+    throws NullMethodReceiverException, MethodNotFoundException, MethodCodeNotFoundException, InvalidInputException, InvalidSlotException, 
     InvalidTypeException, InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
+    	}
+    	if (calc == null || classMethodImpl == null || methodSignatureImpl == null || args == null) {
+    		throw new InvalidInputException("Tried to invoke " + this.getClass().getName() + ".pushFrame with null calc or classMethodImpl or methodSignatureImpl or args.");
     	}
         final boolean isStatic = classMethodImpl.isMethodStatic(methodSignatureImpl);
         
@@ -2394,7 +2411,7 @@ public final class State implements Cloneable {
         }
 
         //narrows the int args if the method signature requires a narrower type
-        narrowArgs(args, methodSignatureImpl, isStatic);
+        narrowArgs(calc, args, methodSignatureImpl, isStatic);
 
         //creates the new frame and sets its args
         final MethodFrame f = new MethodFrame(methodSignatureImpl, classMethodImpl);
@@ -2529,12 +2546,25 @@ public final class State implements Cloneable {
     	pushSnippetFrameNoWrap(snippet, returnPCOffset, getCurrentClass().getDefiningClassLoader(), getCurrentClass().getPackageName());
     }
     
-    private void narrowArgs(Value[] args, Signature methodSignatureImpl, boolean isStatic) throws InvalidTypeException {
+    private void narrowArgs(Calculator calc, Value[] args, Signature methodSignatureImpl, boolean isStatic) 
+    throws InvalidTypeException, InvalidInputException {
         final String[] paramsDescriptor = Type.splitParametersDescriptors(methodSignatureImpl.getDescriptor());
+        final int expectedNumberOfArgs = paramsDescriptor.length + (isStatic ? 0 : 1);
+        if (args.length != expectedNumberOfArgs) {
+        	throw new InvalidInputException("Tried to create a method frame with a number of arguments " + args.length + " different from the expected number of arguments " + expectedNumberOfArgs + ".");
+        }
         for (int i = 0; i < paramsDescriptor.length; ++i) {
             if (Type.isPrimitive(paramsDescriptor[i]) && ! Type.isPrimitiveOpStack(paramsDescriptor[i].charAt(0))) {
-                final int indexArg = (isStatic ? i : i + 1);
-                args[indexArg] = ((Primitive) args[indexArg]).narrow(paramsDescriptor[i].charAt(0));
+                final int indexArg = i + (isStatic ? 0 : 1);
+                if (args[indexArg] == null) {
+                	throw new InvalidInputException("Tried to create a method frame with a null argument args[" + indexArg + "].");
+                }
+                try {
+					args[indexArg] = calc.push((Primitive) args[indexArg]).narrow(paramsDescriptor[i].charAt(0)).pop();
+				} catch (InvalidOperandException e) {
+					//this should never happen
+					throw new UnexpectedInternalException(e);
+				}
             }
         }
     }
@@ -2992,13 +3022,15 @@ public final class State implements Cloneable {
      * class. Its effects are adding the fresh object to the heap and refining
      * the path condition.
      * 
+     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param referenceSymbolic the {@link ReferenceSymbolic} which is resolved. It 
      *        must be {@code referenceSymbolic != null}.
      * @param classFile a {@code ClassFile}, the class of the fresh 
      *        object to which {@code referenceSymbolic} is expanded. 
-     *        It must be {@code classFile != null}.
-     * @throws InvalidInputException if either {@code referenceSymbolic} or 
-     *         {@code classFile} is {@code null}, or if the state is frozen.
+     *        It must not be {@code null}.
+     * @throws InvalidInputException if 
+     *         {@code calc == null || referenceSymbolic == null || classFile == null}.
+     * @throws FrozenStateException if the state is frozen.
      * @throws ContradictionException if {@code referenceSymbolic} is already 
      *         resolved.
      * @throws InvalidTypeException if {@code classFile} is invalid. 
@@ -3007,21 +3039,21 @@ public final class State implements Cloneable {
      *         a class that cannot be assumed to be symbolic
      *         (currently {@code java.lang.Class} and {@code java.lang.ClassLoader}).
      */
-    public void assumeExpands(ReferenceSymbolic referenceSymbolic, ClassFile classFile) 
-    throws InvalidTypeException, ContradictionException, HeapMemoryExhaustedException, 
-    CannotAssumeSymbolicObjectException, InvalidInputException {
+    public void assumeExpands(Calculator calc, ReferenceSymbolic referenceSymbolic, ClassFile classFile) 
+    throws InvalidInputException, InvalidTypeException, ContradictionException, HeapMemoryExhaustedException, 
+    CannotAssumeSymbolicObjectException, FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        if (referenceSymbolic == null || classFile == null) {
-            throw new InvalidInputException("Attempted to invoke State.assumeExpands with a null referenceSymbolic or classFile.");
+        if (calc == null || referenceSymbolic == null || classFile == null) {
+            throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".assumeExpands with a null calc or referenceSymbolic or classFile.");
         }
         if (resolved(referenceSymbolic)) {
-            throw new ContradictionException("Attempted to invoke State.assumeExpands with an already resolved referenceSymbolic.");
+            throw new ContradictionException("Attempted to invoke " + getClass().getName() + ".assumeExpands with an already resolved referenceSymbolic.");
         }
         
     	possiblyReset();
-        final long objectPosition = createObjectSymbolic(classFile, referenceSymbolic);
+        final long objectPosition = createObjectSymbolic(calc, classFile, referenceSymbolic);
         final Objekt object = this.heap.getObject(objectPosition);
         this.pathCondition.addClauseAssumeExpands(referenceSymbolic, objectPosition, object);
         ++this.nPushedClauses;

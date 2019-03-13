@@ -96,10 +96,10 @@ public final class Algo_JAVA_JARFILE_GETMETAINFENTRYNAMES extends Algo_INVOKEMET
             this.entryNames = (String[]) method.invoke(jarFile);
         } catch (InvocationTargetException e) {
             final String cause = internalClassName(e.getCause().getClass().getName());
-            throwNew(state, cause);
+            throwNew(state, this.ctx.getCalculator(), cause);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         } catch (InstantiationException | SecurityException | NoSuchFieldException | 
                  NoSuchMethodException | IllegalAccessException e) {
@@ -111,20 +111,20 @@ public final class Algo_JAVA_JARFILE_GETMETAINFENTRYNAMES extends Algo_INVOKEMET
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
+            final Calculator calc = this.ctx.getCalculator();
             try {
                 if (this.entryNames == null) {
                     state.pushOperand(Null.getInstance());
                 } else {
                     final ClassFile cf_arrayOf_JAVA_STRING = state.getClassHierarchy().loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_STRING + TYPEEND);
-                    final Calculator calc = state.getCalculator();
-                    final ReferenceConcrete retVal = state.createArray(null, calc.valInt(this.entryNames.length), cf_arrayOf_JAVA_STRING);
+                    final ReferenceConcrete retVal = state.createArray(calc, null, calc.valInt(this.entryNames.length), cf_arrayOf_JAVA_STRING);
                     final Array array = (Array) state.getObject(retVal);
                     for (int i = 0; i < this.entryNames.length; ++i) {
                         final String entryNames_i = this.entryNames[i];
                         if (entryNames_i == null) {
                             array.setFast(calc.valInt(i), Null.getInstance());
                         } else {
-                            state.ensureStringLiteral(entryNames_i);
+                            state.ensureStringLiteral(calc, entryNames_i);
                             final ReferenceConcrete _entryNames_i = state.referenceToStringLiteral(entryNames_i);
                             array.setFast(calc.valInt(i), _entryNames_i);
                         }
@@ -132,7 +132,7 @@ public final class Algo_JAVA_JARFILE_GETMETAINFENTRYNAMES extends Algo_INVOKEMET
                     state.pushOperand(retVal);
                 }
             } catch (HeapMemoryExhaustedException e) {
-                throwNew(state, OUT_OF_MEMORY_ERROR);
+                throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
             } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
                      BadClassFileVersionException | WrongClassNameException |

@@ -52,6 +52,7 @@ import jbse.bc.exc.NullMethodReceiverException;
 import jbse.bc.exc.PleaseLoadClassException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.mem.Array.AccessOutcomeInValue;
 import jbse.mem.Instance;
@@ -86,7 +87,9 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
     @Override
     protected void cookMore(State state) 
     throws InterruptException, UndefinedResultException, 
-    SymbolicValueNotAllowedException, ClasspathException, FrozenStateException {
+    SymbolicValueNotAllowedException, ClasspathException, 
+    FrozenStateException, InvalidInputException, InvalidTypeException {
+    	final Calculator calc = this.ctx.getCalculator();
         try {
             //gets and check the class of the object that must be created
             final Reference refConstructor = (Reference) this.data.operand(0);
@@ -98,7 +101,7 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
             final Instance_JAVA_CLASS constructorJavaClass = (Instance_JAVA_CLASS) state.getObject((Reference) constructor.getFieldValue(JAVA_CONSTRUCTOR_CLAZZ));
             this.constructorClassFile = constructorJavaClass.representedClass();
             if (this.constructorClassFile.isAbstract()) {
-                throwNew(state, INSTANTIATION_EXCEPTION);
+                throwNew(state, calc, INSTANTIATION_EXCEPTION);
                 exitFromAlgorithm();
             }
             if (this.constructorClassFile.isEnum()) {
@@ -115,12 +118,10 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
             }
             final int numOfConstructorParametersFormal = ((Integer) ((Simplex) constructorParameterTypes.getLength()).getActualValue()).intValue();
 
-            final Calculator calc = state.getCalculator();
-            
             //reconstructs the descriptor of the constructor
             final StringBuilder sbDescriptor = new StringBuilder("(");
             for (int i = 0; i < numOfConstructorParametersFormal; ++i) {
-                final Reference typeFormalJavaClassReference = (Reference) ((AccessOutcomeInValue) constructorParameterTypes.getFast(calc.valInt(i))).getValue();
+                final Reference typeFormalJavaClassReference = (Reference) ((AccessOutcomeInValue) constructorParameterTypes.getFast(calc, calc.valInt(i))).getValue();
                 final Instance_JAVA_CLASS typeFormalJavaClass = (Instance_JAVA_CLASS) state.getObject(typeFormalJavaClassReference);
                 final ClassFile typeFormal = typeFormalJavaClass.representedClass();
                 sbDescriptor.append(typeFormal.getInternalTypeName());
@@ -136,7 +137,7 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
                 if (numOfConstructorParametersFormal == 0) {
                     this.params = new Value[1]; //one for 'this' (the new object)
                 } else {
-                    throwNew(state, ILLEGAL_ARGUMENT_EXCEPTION);
+                    throwNew(state, calc, ILLEGAL_ARGUMENT_EXCEPTION);
                     exitFromAlgorithm();
                 }
             } else {
@@ -148,20 +149,20 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
                 if (numOfConstructorParametersFormal == numOfConstructorParametersActual) {
                     this.params = new Value[numOfConstructorParametersActual + 1]; //one more for 'this' (the new object)
                     for (int i = 0; i < numOfConstructorParametersActual; ++i) {
-                        final Reference refTypeFormal = (Reference) ((AccessOutcomeInValue) constructorParameterTypes.getFast(calc.valInt(i))).getValue();
-                        final Reference refValActual = (Reference) ((AccessOutcomeInValue) constructorParameters.getFast(calc.valInt(i))).getValue();
+                        final Reference refTypeFormal = (Reference) ((AccessOutcomeInValue) constructorParameterTypes.getFast(calc, calc.valInt(i))).getValue();
+                        final Reference refValActual = (Reference) ((AccessOutcomeInValue) constructorParameters.getFast(calc, calc.valInt(i))).getValue();
                         final Value actualConverted = checkAndConvert(state, refTypeFormal, refValActual);
                         this.params[i + 1] = actualConverted;
                     }
                 } else {
-                    throwNew(state, ILLEGAL_ARGUMENT_EXCEPTION);
+                    throwNew(state, calc, ILLEGAL_ARGUMENT_EXCEPTION);
                     exitFromAlgorithm();
                 }
             }
         } catch (ClassCastException e) {
-            throwVerifyError(state); //TODO is it right?
+            throwVerifyError(state, calc); //TODO is it right?
             exitFromAlgorithm();
-        } catch (InvalidOperandException | InvalidTypeException | FastArrayAccessNotAllowedException e) {
+        } catch (FastArrayAccessNotAllowedException e) {
             //this should never happen
             failExecution(e);
         }
@@ -169,6 +170,7 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
     
     private Value checkAndConvert(State state, Reference refTypeFormal, Reference refValActual) 
     throws InterruptException, ClasspathException, FrozenStateException {
+    	final Calculator calc = this.ctx.getCalculator();
         try {
             final Instance_JAVA_CLASS typeFormalJavaClass = (Instance_JAVA_CLASS) state.getObject(refTypeFormal);
             final ClassFile typeFormal = typeFormalJavaClass.representedClass();
@@ -203,7 +205,7 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
                     actualValue = (Primitive) actual.getFieldValue(JAVA_SHORT_VALUE);
                     break;
                 default:
-                    throwNew(state, ILLEGAL_ARGUMENT_EXCEPTION);
+                    throwNew(state, calc, ILLEGAL_ARGUMENT_EXCEPTION);
                     exitFromAlgorithm();
                     return null; //to keep the compiler happy
                 }
@@ -215,20 +217,20 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
                     return actualValue;
                 } else if (widens(typeFormalPrimitive, typeActualValue)) {
                     try {
-                        return actualValue.widen(typeFormalPrimitive);
-                    } catch (InvalidTypeException e) {
+                        return calc.push(actualValue).widen(typeFormalPrimitive).pop();
+                    } catch (InvalidTypeException | InvalidOperandException e) {
                         //this should never happen
                         failExecution(e);
                     }
                 } else {
-                    throwNew(state, ILLEGAL_ARGUMENT_EXCEPTION);
+                    throwNew(state, calc, ILLEGAL_ARGUMENT_EXCEPTION);
                     exitFromAlgorithm();
                 }
             } else { //the formal parameter has reference type
                 if (state.getClassHierarchy().isAssignmentCompatible(typeActual, typeFormal)) {
                     return refValActual;
                 } else {
-                    throwNew(state, ILLEGAL_ARGUMENT_EXCEPTION);
+                    throwNew(state, calc, ILLEGAL_ARGUMENT_EXCEPTION);
                     exitFromAlgorithm();
                 }
             }
@@ -241,21 +243,22 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
 
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+    	final Calculator calc = this.ctx.getCalculator();
         return (state, alt) -> {
             try {
                 //creates the new object in the heap
-                final ReferenceConcrete refNew = state.createInstance(this.constructorClassFile);
+                final ReferenceConcrete refNew = state.createInstance(calc, this.constructorClassFile);
                 state.pushOperand(refNew);
                 this.params[0] = refNew;
 
                 //pushes the frames for the constructor and for the 
                 //method that boxes the exceptions raised by the constructor
                 final ClassFile cf_JBSE_BASE = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, JBSE_BASE, state.bypassStandardLoading());
-                state.pushFrame(cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTION, false, this.pcOffset);
+                state.pushFrame(calc, cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTION, false, this.pcOffset);
                 final Signature constructorSignature = new Signature(this.constructorClassFile.getClassName(), this.descriptor, "<init>");
-                state.pushFrame(this.constructorClassFile, constructorSignature, false, 0, this.params);
+                state.pushFrame(calc, this.constructorClassFile, constructorSignature, false, 0, this.params);
             } catch (HeapMemoryExhaustedException e) {
-                throwNew(state, OUT_OF_MEMORY_ERROR);
+                throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
             } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException | 
                      WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException | 

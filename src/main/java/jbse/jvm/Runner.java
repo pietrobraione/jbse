@@ -545,12 +545,9 @@ public class Runner {
                     if (this.actions.atSourceRowPre()) { return; }
                 }
                 if (this.actions.atStepPre()) { return; }
+                BranchPoint bp = null;
                 try {
-                    final BranchPoint bp = this.engine.step();
-                    if (bp != null) {
-                        if (!currentStateIsInRunSubregion()) { break; }
-                        if (this.actions.atBranch(bp)) { return; }
-                    }
+                    bp = this.engine.step();
                 } catch (CannotManageStateException e) {
                     if (this.actions.atCannotManageStateException(e)) { return; }
                 } catch (ClasspathException e) {
@@ -567,8 +564,14 @@ public class Runner {
                     if (this.actions.atThreadStackEmptyException(e)) { return; }
                 } catch (NonexistingObservedVariablesException e) {
                     if (this.actions.atNonexistingObservedVariablesException(e)) { return; }
-				} finally {
+                } finally {
                     if (this.actions.atStepFinally()) { return; }
+                }
+                if (this.actions.atStepPost()) { return; }
+                
+                if (bp != null) {
+                    if (!currentStateIsInRunSubregion()) { break; }
+                    if (this.actions.atBranch(bp)) { return; }
                 }
 
                 if (outOfScope()) {
@@ -592,7 +595,6 @@ public class Runner {
                     }
                 }
 
-                if (this.actions.atStepPost()) { return; }
                 if (this.engine.sourceRowChanged() || this.engine.atFrameChanger()) {
                     if (this.actions.atSourceRowPost()) { return; }
                 }

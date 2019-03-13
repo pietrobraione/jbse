@@ -33,13 +33,12 @@ public final class PrimitiveSymbolicHashCode extends PrimitiveSymbolicAtomic {
      *        object with same identifier will be treated as equal.
      * @param historyPoint the current {@link HistoryPoint} if {@code container == null}.
      *        In such case it must not be {@code null}.
-     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @throws InvalidTypeException never.
-     * @throws InvalidInputException if {@code calc == null || (container == null && historyPoint == null)}.
+     * @throws InvalidInputException if {@code container == null && historyPoint == null}.
      */
-    PrimitiveSymbolicHashCode(ReferenceSymbolic container, int id, HistoryPoint historyPoint, Calculator calc) 
+    PrimitiveSymbolicHashCode(ReferenceSymbolic container, int id, HistoryPoint historyPoint) 
     throws InvalidTypeException, InvalidInputException {
-    	super(id, INT, (container == null ? historyPoint : container.historyPoint()), calc);
+    	super(id, INT, (container == null ? historyPoint : container.historyPoint()));
     	this.container = container;
     	
 		//calculates hashCode

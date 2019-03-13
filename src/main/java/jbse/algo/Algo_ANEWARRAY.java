@@ -52,7 +52,7 @@ final class Algo_ANEWARRAY extends Algo_XNEWARRAY<BytecodeData_1CL> {
         try {
             this.dimensionsCounts = new Primitive[] { (Primitive) this.data.operand(0) };
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
 
@@ -63,27 +63,27 @@ final class Algo_ANEWARRAY extends Algo_XNEWARRAY<BytecodeData_1CL> {
             final ClassFile currentClass = state.getCurrentClass();
             this.arrayType = state.getClassHierarchy().resolveClass(currentClass, "" + ARRAYOF + REFERENCE + this.data.className() + TYPEEND, state.bypassStandardLoading());
         } catch (PleaseLoadClassException e) {
-            invokeClassLoaderLoadClass(state, e);
+            invokeClassLoaderLoadClass(state, this.ctx.getCalculator(), e);
             exitFromAlgorithm();
         } catch (ClassFileNotFoundException e) {
             //TODO this exception should wrap a ClassNotFoundException
-            throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+            throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR);
             exitFromAlgorithm();
         } catch (BadClassFileVersionException e) {
-            throwNew(state, UNSUPPORTED_CLASS_VERSION_ERROR);
+            throwNew(state, this.ctx.getCalculator(), UNSUPPORTED_CLASS_VERSION_ERROR);
             exitFromAlgorithm();
         } catch (WrongClassNameException e) {
-            throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
+            throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
             exitFromAlgorithm();
         } catch (IncompatibleClassFileException e) {
-            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+            throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
             exitFromAlgorithm();
         } catch (ClassFileNotAccessibleException e) {
-            throwNew(state, ILLEGAL_ACCESS_ERROR);
+            throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
             exitFromAlgorithm();
         } catch (ClassFileIllFormedException e) {
             //TODO throw LinkageError instead
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
     }

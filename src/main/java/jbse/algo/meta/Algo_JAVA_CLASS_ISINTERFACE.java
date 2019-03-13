@@ -41,9 +41,9 @@ public final class Algo_JAVA_CLASS_ISINTERFACE extends Algo_INVOKEMETA_Nonbranch
                 failExecution("violated invariant (unexpected heap access with symbolic unresolved reference)");
             }
             final ClassFile cf = clazz.representedClass();
-            this.isInterface = state.getCalculator().valInt(cf.isInterface() ? 1 : 0);
+            this.isInterface = this.ctx.getCalculator().valInt(cf.isInterface() ? 1 : 0);
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
     }

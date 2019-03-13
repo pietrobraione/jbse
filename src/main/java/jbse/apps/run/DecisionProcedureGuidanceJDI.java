@@ -39,7 +39,9 @@ import static jbse.common.Type.binaryClassName;
 import static jbse.common.Type.internalClassName;
 import static jbse.common.Type.isPrimitiveOrVoidCanonicalName;
 import static jbse.common.Type.toPrimitiveOrVoidInternalName;
+import static jbse.common.Util.asUnsignedByte;
 import static jbse.common.Util.byteCat;
+import static jbse.common.Util.byteCatShort;
 
 import java.io.File;
 import java.io.IOException;
@@ -92,6 +94,7 @@ import com.sun.jdi.request.MethodExitRequest;
 import com.sun.jdi.request.StepRequest;
 
 import jbse.bc.Signature;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.DecisionProcedure;
 import jbse.jvm.Runner;
@@ -142,9 +145,10 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
      *        to answer queries.
      * @throws GuidanceException if something fails during creation (and the caller
      *         is to blame).
+     * @throws InvalidInputException if {@code component == null}.
      */
     public DecisionProcedureGuidanceJDI(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature) 
-    throws GuidanceException {
+    throws GuidanceException, InvalidInputException {
         this(component, calc, runnerParameters, stopSignature, 1);
     }
 
@@ -163,10 +167,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
      * @param numberOfHits an {@code int} greater or equal to one.
      * @throws GuidanceException if something fails during creation (and the caller
      *         is to blame).
+     * @throws InvalidInputException if {@code component == null}.
      */
     public DecisionProcedureGuidanceJDI(DecisionProcedure component, Calculator calc, RunnerParameters runnerParameters, Signature stopSignature, int numberOfHits) 
-    throws GuidanceException {
-        super(component, calc, new JVMJDI(calc, runnerParameters, stopSignature, numberOfHits));
+    throws GuidanceException, InvalidInputException {
+        super(component, new JVMJDI(calc, runnerParameters, stopSignature, numberOfHits));
     }
 
     private static final class JVMJDI extends JVM {
@@ -300,9 +305,9 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                 final String jdiMethDescr = jdiMeth.signature();
                 final String jdiMethName = jdiMeth.name();
                 if (this.startMethodClassName.equals(jdiMethClassName) &&
-                this.startMethodDescriptor.equals(jdiMethDescr) &&
-                this.startMethodName.equals(jdiMethName)) {
-                    this.intoMethodRunnPar = false;
+                	this.startMethodDescriptor.equals(jdiMethDescr) &&
+                	this.startMethodName.equals(jdiMethName)) {
+                	this.intoMethodRunnPar = false;
                 }
             }
             if (event instanceof MethodEntryEvent) {
@@ -317,9 +322,9 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                     this.intoMethodRunnPar = true;
                 }
                 if (this.stopMethodClassName.equals(jdiMethClassName) &&
-                this.stopMethodDescriptor.equals(jdiMethDescr) &&
-                this.stopMethodName.equals(jdiMethName) && 
-                this.intoMethodRunnPar) {
+                    this.stopMethodDescriptor.equals(jdiMethDescr) &&
+                    this.stopMethodName.equals(jdiMethName) && 
+                    this.intoMethodRunnPar) {
                     ++this.hitCounter;
                     if (this.hitCounter == this.numberOfHits) {
                         this.methodEntryEvent = (MethodEntryEvent) event;
@@ -385,7 +390,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             final ObjectReference objectFirst = (ObjectReference) getJDIValue(first);
             final ObjectReference objectSecond = (ObjectReference) getJDIValue(second);
             return ((objectFirst == null && objectSecond == null) || 
-            (objectFirst != null && objectSecond != null && objectFirst.equals(objectSecond)));
+                    (objectFirst != null && objectSecond != null && objectFirst.equals(objectSecond)));
         }
 
         @Override
@@ -598,8 +603,8 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                 } else {
                     final Primitive accessExpressionOnConcreteIndex;
 					try {
-						accessExpressionOnConcreteIndex = da.getArrayAccessExpression().replace(da.getIndexFormal(), this.xaloadIndex);
-					} catch (InvalidOperandException | InvalidTypeException e) {
+						accessExpressionOnConcreteIndex = this.calc.push(da.getArrayAccessExpression()).replace(da.getIndexFormal(), this.xaloadIndex).pop();
+					} catch (InvalidOperandException | InvalidInputException | InvalidTypeException e) {
 						//this should never happen
 						throw new UnexpectedInternalException(e);
 					}
@@ -669,7 +674,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                     } else if (currentOpcode == OP_ILOAD_3) {
                         localVariableIndex = 3;
                     } else {
-                        localVariableIndex = (wide ? bc[currentCodeIndex + 1] : byteCat(bc[currentCodeIndex + 1], bc[currentCodeIndex + 2]));
+                        localVariableIndex = (wide ? byteCat(bc[currentCodeIndex + 1], bc[currentCodeIndex + 2]) : asUnsignedByte(bc[currentCodeIndex + 1]));
                     }
                     this.xaloadIndex = readLocalVariable(localVariableIndex);
                 } else {
@@ -808,7 +813,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
 
             //takes the decision
             final int newOffset = getCurrentCodeIndex();
-            final int jumpOffset = currentCodeIndex + byteCat(bc[currentCodeIndex + 1], bc[currentCodeIndex + 2]);
+            final int jumpOffset = currentCodeIndex + byteCatShort(bc[currentCodeIndex + 1], bc[currentCodeIndex + 2]);
             this.lookAheadDecisionBoolean = (newOffset == jumpOffset); 
         }
 

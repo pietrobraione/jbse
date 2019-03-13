@@ -25,6 +25,7 @@ import jbse.mem.Instance;
 import jbse.mem.State;
 import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Reference;
 import jbse.val.Simplex;
 
@@ -47,6 +48,7 @@ public final class Algo_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX extends Algo_INVO
     protected void cookMore(State state) 
     throws InterruptException, ClasspathException, 
     SymbolicValueNotAllowedException, FrozenStateException {
+    	final Calculator calc = this.ctx.getCalculator();
         try {
             //gets the filesystem object and its class
             final Field fileSystemField = File.class.getDeclaredField("fs");
@@ -59,7 +61,7 @@ public final class Algo_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX extends Algo_INVO
             //gets the File parameter
             final Reference fileReference = (Reference) this.data.operand(1);
             if (state.isNull(fileReference)) {
-                throwNew(state, NULL_POINTER_EXCEPTION);
+                throwNew(state, calc, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
             final Instance fileObject = (Instance) state.getObject(fileReference);
@@ -71,11 +73,11 @@ public final class Algo_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX extends Algo_INVO
             //gets the path field as a String
             final Reference filePathReference = (Reference) fileObject.getFieldValue(JAVA_FILE_PATH);
             if (filePathReference == null) {
-                throwVerifyError(state);
+                throwVerifyError(state, calc);
                 exitFromAlgorithm();
             }
             if (state.isNull(filePathReference)) {
-                throwNew(state, NULL_POINTER_EXCEPTION);
+                throwNew(state, calc, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
             final String filePath = valueString(state, filePathReference);
@@ -91,14 +93,14 @@ public final class Algo_JAVA_XFILESYSTEM_GETBOOLEANATTRIBUTESX extends Algo_INVO
             final File f = new File(filePath);
             try {
                 final int attributes = ((Integer) getAttributesMethod.invoke(fileSystem, f)).intValue();
-                this.toPush = state.getCalculator().valInt(attributes);
+                this.toPush = calc.valInt(attributes);
             } catch (InvocationTargetException e) {
                 final String cause = internalClassName(e.getCause().getClass().getName());
-                throwNew(state, cause);
+                throwNew(state, calc, cause);
                 exitFromAlgorithm();
             }            
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (NoSuchFieldException | SecurityException | IllegalAccessException | NoSuchMethodException e) {
             //this should not happen

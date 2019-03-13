@@ -72,7 +72,7 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
             try {
                 resolveMethod(state);
             } catch (PleaseLoadClassException e) {
-                invokeClassLoaderLoadClass(state, e);
+                invokeClassLoaderLoadClass(state, this.ctx.getCalculator(), e);
                 exitFromAlgorithm();
             } catch (ClassFileNotFoundException |
                      ClassFileNotAccessibleException |
@@ -99,13 +99,13 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
                 try {
                     findImpl(state);
                 } catch (IncompatibleClassFileException e) {
-                    throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                    throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
                     exitFromAlgorithm();
                 } catch (MethodNotAccessibleException e) {
-                    throwNew(state, ILLEGAL_ACCESS_ERROR);
+                    throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
                     exitFromAlgorithm();
                 } catch (MethodAbstractException e) {
-                    throwNew(state, ABSTRACT_METHOD_ERROR);
+                    throwNew(state, this.ctx.getCalculator(), ABSTRACT_METHOD_ERROR);
                     exitFromAlgorithm();
                 }
             } else {
@@ -138,7 +138,7 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
                 try {
                     ensureClassInitialized(state, this.methodImplClass, this.ctx);
                 } catch (HeapMemoryExhaustedException e) {
-                    throwNew(state, OUT_OF_MEMORY_ERROR);
+                    throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
                     exitFromAlgorithm();
                 }
             }
@@ -178,10 +178,10 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
             try {
-                state.pushFrame(this.methodImplClass, this.methodImplSignature, false, this.pcOffsetReturn, this.data.operands());
+                state.pushFrame(this.ctx.getCalculator(), this.methodImplClass, this.methodImplSignature, false, this.pcOffsetReturn, this.data.operands());
             } catch (InvalidProgramCounterException | InvalidSlotException | InvalidTypeException e) {
                 //TODO is it ok?
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
             } catch (NullMethodReceiverException | MethodNotFoundException | MethodCodeNotFoundException e) {
                 //this should never happen
                 failExecution(e);

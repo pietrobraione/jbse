@@ -15,20 +15,13 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  */
 public final class SymbolFactory implements Cloneable {
-    /** The {@link Calculator}. */
-    private final Calculator calc;
-
     /** The next available identifier for a new reference-typed symbolic value. */
     private int nextIdRefSym;
 
     /** The next available identifier for a new primitive-typed symbolic value. */
     private int nextIdPrimSym;
 
-    public SymbolFactory(Calculator calc) throws InvalidInputException {
-        if (calc == null) {
-            throw new InvalidInputException("Attempted creation of a SymbolFactory with null calc.");
-        }
-        this.calc = calc;
+    public SymbolFactory() {
         this.nextIdRefSym = 0;
         this.nextIdPrimSym = 0;
     }
@@ -50,7 +43,7 @@ public final class SymbolFactory implements Cloneable {
     public Symbolic createSymbolLocalVariable(HistoryPoint historyPoint, String staticType, String variableName) throws InvalidTypeException, InvalidInputException {
         final Symbolic retVal;
         if (Type.isPrimitive(staticType)) {
-            retVal = new PrimitiveSymbolicLocalVariable(variableName, getNextIdPrimitiveSymbolic(), staticType.charAt(0), historyPoint, this.calc);
+            retVal = new PrimitiveSymbolicLocalVariable(variableName, getNextIdPrimitiveSymbolic(), staticType.charAt(0), historyPoint);
         } else {
             retVal = new ReferenceSymbolicLocalVariable(variableName, getNextIdReferenceSymbolic(), staticType, historyPoint);
         }
@@ -93,7 +86,7 @@ public final class SymbolFactory implements Cloneable {
     throws InvalidTypeException, InvalidInputException {
         final Symbolic retVal;
         if (Type.isPrimitive(staticType)) {
-            retVal = new PrimitiveSymbolicMemberField(container, fieldName, fieldClass, getNextIdPrimitiveSymbolic(), staticType.charAt(0), this.calc);
+            retVal = new PrimitiveSymbolicMemberField(container, fieldName, fieldClass, getNextIdPrimitiveSymbolic(), staticType.charAt(0));
         } else {
             retVal = new ReferenceSymbolicMemberField(container, fieldName, fieldClass, getNextIdReferenceSymbolic(), staticType);
         }
@@ -119,7 +112,7 @@ public final class SymbolFactory implements Cloneable {
     public Symbolic createSymbolMemberArray(String staticType, ReferenceSymbolic container, Primitive index) throws InvalidTypeException, InvalidInputException {
         final Symbolic retVal;
         if (Type.isPrimitive(staticType)) {
-            retVal = new PrimitiveSymbolicMemberArray(container, index, getNextIdPrimitiveSymbolic(), staticType.charAt(0), this.calc);
+            retVal = new PrimitiveSymbolicMemberArray(container, index, getNextIdPrimitiveSymbolic(), staticType.charAt(0));
         } else {
             retVal = new ReferenceSymbolicMemberArray(container, index, getNextIdReferenceSymbolic(), staticType);
         }
@@ -137,7 +130,7 @@ public final class SymbolFactory implements Cloneable {
      */
     public PrimitiveSymbolic createSymbolMemberArrayLength(ReferenceSymbolic container) {
         try {
-            final PrimitiveSymbolicMemberArrayLength retVal = new PrimitiveSymbolicMemberArrayLength(container, getNextIdPrimitiveSymbolic(), this.calc);
+            final PrimitiveSymbolicMemberArrayLength retVal = new PrimitiveSymbolicMemberArrayLength(container, getNextIdPrimitiveSymbolic());
             return retVal;
         } catch (InvalidInputException | InvalidTypeException e) {
             //this should never happen
@@ -161,7 +154,7 @@ public final class SymbolFactory implements Cloneable {
             throw new InvalidInputException("Attempted the creation of an identity hash code by invoking " + this.getClass().getName() + ".createSymbolIdentityHashCode with null object.");
         }
         try {
-            final PrimitiveSymbolicHashCode retVal = new PrimitiveSymbolicHashCode(object.getOrigin(), this.getNextIdPrimitiveSymbolic(), object.historyPoint(), this.calc);
+            final PrimitiveSymbolicHashCode retVal = new PrimitiveSymbolicHashCode(object.getOrigin(), this.getNextIdPrimitiveSymbolic(), object.historyPoint());
             return retVal;
         } catch (InvalidTypeException e) {
             //this should never happen

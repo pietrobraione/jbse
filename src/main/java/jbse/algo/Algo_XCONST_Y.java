@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 import jbse.common.Type;
 import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 
 /**
  * {@link Algorithm} for all the "push numeric constant" 
@@ -72,17 +73,18 @@ StrategyUpdate<DecisionAlternative_NONE>> {
 
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
+    	final Calculator calc = this.ctx.getCalculator();
         return (state, alt) -> {
             if (this.type == Type.INT) {
-                state.pushOperand(state.getCalculator().valInt(this.value));
+                state.pushOperand(calc.valInt(this.value));
             } else if (this.type == Type.DOUBLE) {
-                state.pushOperand(state.getCalculator().valDouble((double) this.value));
+                state.pushOperand(calc.valDouble((double) this.value));
             } else if (this.type == Type.FLOAT) {
-                state.pushOperand(state.getCalculator().valFloat((float) this.value));
+                state.pushOperand(calc.valFloat((float) this.value));
             } else if (this.type == Type.LONG) {
-                state.pushOperand(state.getCalculator().valLong((long) this.value));
+                state.pushOperand(calc.valLong((long) this.value));
             } else {
-                failExecution("const bytecode with type " + this.type + " does not exist.");
+                failExecution("Const bytecode with type " + this.type + " does not exist.");
             }
         };
     }

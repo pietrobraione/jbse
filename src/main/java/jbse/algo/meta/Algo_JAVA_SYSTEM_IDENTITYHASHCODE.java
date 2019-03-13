@@ -34,7 +34,7 @@ public final class Algo_JAVA_SYSTEM_IDENTITYHASHCODE extends Algo_INVOKEMETA_Non
                 final Primitive hashCode = thisObjekt.getIdentityHashCode();
                 state.pushOperand(hashCode);
             } catch (ClassCastException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
         };

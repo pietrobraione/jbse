@@ -3,13 +3,11 @@ package jbse.dec;
 import java.util.HashMap;
 
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.ClauseAssume;
-import jbse.rewr.Rewriter;
-import jbse.rewr.exc.NoResultException;
 import jbse.val.Any;
-import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.PrimitiveSymbolicAtomic;
@@ -18,12 +16,14 @@ import jbse.val.Operator;
 import jbse.val.Primitive;
 import jbse.val.PrimitiveSymbolic;
 import jbse.val.PrimitiveVisitor;
+import jbse.val.Rewriter;
 import jbse.val.Simplex;
 import jbse.val.Term;
 import jbse.val.WideningConversion;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidOperatorException;
 import jbse.val.exc.InvalidTypeException;
+import jbse.val.exc.NoResultException;
 
 /**
  * Decides expressions with shape {@code expr rel_op number} or
@@ -481,16 +481,9 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 	/** Caches the {@link SignPredicate}s of all the discovered path predicates. */
 	private HashMap<Primitive, SignPredicate> preds = new HashMap<Primitive, SignPredicate>();
 
-	/**
-	 * Constructor.
-	 * 
-	 * @param next The next {@link DecisionProcedure} in the 
-	 *        Chain Of Responsibility.
-	 * @param calc a {@link Calculator}.
-	 */
-	public DecisionProcedureSignAnalysis(DecisionProcedure next, Calculator calc) {
-		super(next, calc);
-		this.rewriters = new Rewriter[] { new RewriterSimplifyTrivialExpressions() }; //explicit assignment: no constructor call is allowed before super()
+	public DecisionProcedureSignAnalysis(DecisionProcedure next) throws InvalidInputException {
+		super(next);
+		this.rewriters = new Rewriter[] { new RewriterSimplifyTrivialExpressions() }; //explicit assignment because the super constructor must be invoked before the rewriter's constructor
 	}
 
 	@Override
@@ -619,8 +612,8 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 			if (x instanceof Expression) {
 				final Primitive xNeg;
 				try {
-					xNeg = x.neg();
-				} catch (InvalidTypeException e) {
+					xNeg = this.calc.push(x).neg().pop();
+				} catch (InvalidOperandException | InvalidTypeException e) {
 					//TODO blame the caller
 					throw new UnexpectedInternalException(e);
 				}
@@ -654,7 +647,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 		return v.result;
 	}
 	
-	private static SignPredicate bestApproxRange(Expression exp) {
+	private SignPredicate bestApproxRange(Expression exp) {
 		final Operator operator = getOperator(exp);
 		final Simplex num = getNumber(exp);
 		final char type = getOperand(exp).getType();
@@ -677,7 +670,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 			        } else {
 			            throw new UnexpectedInternalException("invalid operator " + operator.toString());
 			        }
-			    } else if (((Simplex) num.neg()).isZeroOne(false)) {
+			    } else if (((Simplex) this.calc.push(num).neg().pop()).isZeroOne(false)) {
 			        if (operator == Operator.EQ || operator == Operator.LE || operator == Operator.LT) {
 			            return SignPredicate.LT;
 			        } else if (operator == Operator.NE || operator == Operator.GE) {
@@ -688,7 +681,7 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 			            throw new UnexpectedInternalException("invalid operator " + operator.toString());
 			        }
 			    } //else fall through
-			} catch (InvalidTypeException e) {
+			} catch (InvalidOperandException | InvalidTypeException e) {
 				//TODO blame the caller
 				throw new UnexpectedInternalException(e);
 			}
@@ -1016,9 +1009,9 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 			final RewriterSimplifyTrivialExpressionsSubexpression r = 
 					new RewriterSimplifyTrivialExpressionsSubexpression();
 			if (isTrivial(x) && getNumber(x).isZeroOne(true)) {
-				final Primitive operandRewr = this.calc.simplify(Rewriter.applyRewriters(getOperand(x), this.calc, r));
+				final Primitive operandRewr = DecisionProcedureSignAnalysis.this.calc.simplify(Rewriter.applyRewriters(getOperand(x), r));
 				try {
-					setResult(this.calc.applyBinary(operandRewr, (r.twist ? getOperator(x).twist() : getOperator(x)), getNumber(x)));
+					setResult(DecisionProcedureSignAnalysis.this.calc.push(operandRewr).applyBinary((r.twist ? getOperator(x).twist() : getOperator(x)), getNumber(x)).pop());
 				} catch (InvalidOperatorException e) {
 					//this should never happen
 					throw new UnexpectedInternalException(e);
@@ -1053,15 +1046,15 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 				final SignPredicate signPredicate = deduceSignPredicate(x);
 				try {
 					if (signPredicate == SignPredicate.GT) {
-						setResult(this.calc.valInt(1).to(type));
+						setResult(DecisionProcedureSignAnalysis.this.calc.pushInt(1).to(type).pop());
 						return true;
 					}
 					if (signPredicate == SignPredicate.EQ) {
-						setResult(this.calc.valInt(0).to(type));
+						setResult(DecisionProcedureSignAnalysis.this.calc.pushInt(0).to(type).pop());
 						return true;
 					}
 					if (signPredicate == SignPredicate.LT) {
-						setResult(this.calc.valInt(-1).to(type));
+						setResult(DecisionProcedureSignAnalysis.this.calc.pushInt(-1).to(type).pop());
 						return true;
 					}
 				} catch (InvalidTypeException e) {
@@ -1096,14 +1089,14 @@ public final class DecisionProcedureSignAnalysis extends DecisionProcedureChainO
 							if (firstIsConstant) {
 								final char type = firstOperandSimpl.getType();
 								setResult(secondOperandSimpl);
-								if (((Simplex) firstOperandSimpl).lt(this.calc.valInt(0).to(type)).surelyTrue()) {
+								if (DecisionProcedureSignAnalysis.this.calc.push(firstOperandSimpl).lt(DecisionProcedureSignAnalysis.this.calc.pushInt(0).to(type).pop()).pop().surelyTrue()) {
 									this.twist = ! this.twist; //switches
 								}
 							}
 							if (secondIsConstant) {
 								final char type = secondOperandSimpl.getType();
 								setResult(firstOperandSimpl);
-								if (((Simplex) secondOperandSimpl).lt(this.calc.valInt(0).to(type)).surelyTrue()) {
+								if (DecisionProcedureSignAnalysis.this.calc.push(secondOperandSimpl).lt(DecisionProcedureSignAnalysis.this.calc.pushInt(0).to(type).pop()).pop().surelyTrue()) {
 									this.twist = ! this.twist; //switches
 								}
 							}

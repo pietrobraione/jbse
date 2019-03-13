@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
 import jbse.mem.exc.FrozenStateException;
+import jbse.val.Calculator;
 
 /**
  * One implicit (boolean, is offset far?), 
@@ -17,13 +18,13 @@ public final class BytecodeData_1ZOF extends BytecodeData {
     final boolean far;
 
     @Override
-    public void readImmediates(State state) 
+    public void readImmediates(State state, Calculator calc) 
     throws InterruptException, ClasspathException, FrozenStateException {
         if (this.far) {
-            readImmediateSignedDword(state, 1);
+            readImmediateSignedDword(state, calc, 1);
             readJump(state, immediateSignedDword());
         } else {
-            readImmediateSignedWord(state, 1);
+            readImmediateSignedWord(state, calc, 1);
             readJump(state, immediateSignedWord());
         }
     }

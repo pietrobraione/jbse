@@ -38,7 +38,7 @@ public final class Algo_SUN_UNSAFE_ALLOCATEMEMORY extends Algo_INVOKEMETA_Nonbra
         return (state, alt) -> {
             final long memoryAddress = unsafe().allocateMemory(this.bytes);
             state.addMemoryBlock(memoryAddress, this.bytes);
-            state.pushOperand(state.getCalculator().valLong(memoryAddress));
+            state.pushOperand(this.ctx.getCalculator().valLong(memoryAddress));
         };
     }
 }

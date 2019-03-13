@@ -49,7 +49,7 @@ public class Variable implements Cloneable {
      * @param value value of variable
      */
     private Variable(Calculator calc, String type, String name, Value value) {
-        this.value = (value == null ? calc.createDefault(type.charAt(0)) : value);
+        this.value = (value == null ? calc.valDefault(type.charAt(0)) : value);
         this.type = type;
         this.name = name;
     }

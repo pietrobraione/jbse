@@ -8,8 +8,6 @@ import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
 import static jbse.bc.Signatures.JAVA_CLASS;
 import static jbse.bc.Signatures.JAVA_CLASSLOADER;
 import static jbse.bc.Signatures.JAVA_THREAD;
-import static jbse.common.Type.REFERENCE;
-import static jbse.common.Type.TYPEEND;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -101,7 +99,7 @@ public final class Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO extends Algo_INVOKEMETA_N
             this.cf_JAVA_THREAD = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, JAVA_THREAD);
 
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
     }
@@ -278,7 +276,7 @@ public final class Algo_JBSE_BASE_MAKEKLASSSYMBOLIC_DO extends Algo_INVOKEMETA_N
             final Array currentArray = (Array) currentObjekt;
             final ClassFile currentArrayMemberClass = currentArray.getType().getMemberClass();
             if (!currentArrayMemberClass.isPrimitiveOrVoid()) {
-                final String currentArrayMemberType = REFERENCE + currentArrayMemberClass.getClassName() + TYPEEND;
+                final String currentArrayMemberType = currentArrayMemberClass.getInternalTypeName();
                 for (Iterator<? extends AccessOutcomeIn> it = currentArray.entries(); it.hasNext(); ) {
                     final AccessOutcomeIn entry = it.next();
                     if (entry instanceof AccessOutcomeInValue) {

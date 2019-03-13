@@ -62,6 +62,7 @@ public final class Algo_JAVA_XFILESYSTEM_LIST extends Algo_INVOKEMETA_Nonbranchi
     protected void cookMore(State state) 
     throws InterruptException, ClasspathException, 
     SymbolicValueNotAllowedException, FrozenStateException {
+    	final Calculator calc = this.ctx.getCalculator();
         try {
             //gets the filesystem object and its class
             final Field fileSystemField = File.class.getDeclaredField("fs");
@@ -73,7 +74,7 @@ public final class Algo_JAVA_XFILESYSTEM_LIST extends Algo_INVOKEMETA_Nonbranchi
             //gets the File parameter
             final Reference fileReference = (Reference) this.data.operand(1);
             if (state.isNull(fileReference)) {
-                throwNew(state, NULL_POINTER_EXCEPTION);
+                throwNew(state, calc, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
             final Instance fileObject = (Instance) state.getObject(fileReference);
@@ -85,11 +86,11 @@ public final class Algo_JAVA_XFILESYSTEM_LIST extends Algo_INVOKEMETA_Nonbranchi
             //gets the path field as a String
             final Reference filePathReference = (Reference) fileObject.getFieldValue(JAVA_FILE_PATH);
             if (filePathReference == null) {
-                throwVerifyError(state);
+                throwVerifyError(state, calc);
                 exitFromAlgorithm();
             }
             if (state.isNull(filePathReference)) {
-                throwNew(state, NULL_POINTER_EXCEPTION);
+                throwNew(state, calc, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
             final String filePath = valueString(state, filePathReference);
@@ -107,11 +108,11 @@ public final class Algo_JAVA_XFILESYSTEM_LIST extends Algo_INVOKEMETA_Nonbranchi
                 this.theList = (String[]) listMethod.invoke(fileSystem, f);
             } catch (InvocationTargetException e) {
                 final String cause = internalClassName(e.getCause().getClass().getName());
-                throwNew(state, cause);
+                throwNew(state, calc, cause);
                 exitFromAlgorithm();
             }
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (NoSuchFieldException | SecurityException | IllegalAccessException | NoSuchMethodException e) {
             //this should not happen
@@ -127,14 +128,14 @@ public final class Algo_JAVA_XFILESYSTEM_LIST extends Algo_INVOKEMETA_Nonbranchi
                 return;
             }
             
+        	final Calculator calc = this.ctx.getCalculator();
             try {
                 //creates an Array and fills it with the result
-                final Calculator calc = state.getCalculator();
                 final ClassFile cf_arrayOfJAVA_STRING = state.getClassHierarchy().loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_STRING + TYPEEND);
-                final ReferenceConcrete arrayRef = state.createArray(null, calc.valInt(this.theList.length), cf_arrayOfJAVA_STRING);
+                final ReferenceConcrete arrayRef = state.createArray(calc, null, calc.valInt(this.theList.length), cf_arrayOfJAVA_STRING);
                 final Array array = (Array) state.getObject(arrayRef);
                 for (int i = 0; i < this.theList.length; ++i) {
-                    state.ensureStringLiteral(this.theList[i]);
+                    state.ensureStringLiteral(calc, this.theList[i]);
                     final ReferenceConcrete stringRef = state.referenceToStringLiteral(this.theList[i]);
                     array.setFast(calc.valInt(i), stringRef);
                 }
@@ -142,7 +143,7 @@ public final class Algo_JAVA_XFILESYSTEM_LIST extends Algo_INVOKEMETA_Nonbranchi
                 //pushes the reference to the array
                 state.pushOperand(arrayRef);
             } catch (HeapMemoryExhaustedException e) {
-                throwNew(state, OUT_OF_MEMORY_ERROR);
+                throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
             } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
                      WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException | 

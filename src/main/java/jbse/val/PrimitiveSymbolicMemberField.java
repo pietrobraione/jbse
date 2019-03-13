@@ -27,13 +27,12 @@ public final class PrimitiveSymbolicMemberField extends PrimitiveSymbolicMember 
      * @param id an {@link int}, the identifier of the symbol. Different
      *        object with same identifier will be treated as equal.
      * @param type the type of the represented value.
-     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @throws InvalidTypeException if {@code type} is not primitive.
-     * @throws InvalidInputException if {@code calc == null || fieldName == null}.
+     * @throws InvalidInputException if {@code fieldName == null}.
      * @throws NullPointerException if {@code container == null}.
      */
-    PrimitiveSymbolicMemberField(ReferenceSymbolic container, String fieldName, String fieldClass, int id, char type, Calculator calc) throws InvalidTypeException, InvalidInputException {
-        super(container, id, type, calc);
+    PrimitiveSymbolicMemberField(ReferenceSymbolic container, String fieldName, String fieldClass, int id, char type) throws InvalidTypeException, InvalidInputException {
+        super(container, id, type);
         if (fieldName == null || fieldClass == null) {
             throw new InvalidInputException("Attempted to construct a symbolic object field member with null fieldName or fieldClass.");
         }

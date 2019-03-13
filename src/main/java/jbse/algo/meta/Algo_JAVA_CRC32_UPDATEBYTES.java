@@ -25,7 +25,6 @@ import jbse.val.Calculator;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.Simplex;
-import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -44,7 +43,8 @@ public final class Algo_JAVA_CRC32_UPDATEBYTES extends Algo_INVOKEMETA_Nonbranch
     @Override
     protected void cookMore(State state) 
     throws InterruptException, ClasspathException, SymbolicValueNotAllowedException, 
-    UndefinedResultException, InvalidInputException {
+    UndefinedResultException, InvalidInputException, InvalidTypeException {
+        final Calculator calc = this.ctx.getCalculator();
         try {
             //gets the first (int crc) parameter
             final Primitive _crc = (Primitive) this.data.operand(0);
@@ -64,9 +64,8 @@ public final class Algo_JAVA_CRC32_UPDATEBYTES extends Algo_INVOKEMETA_Nonbranch
             }
             final int bufLength = ((Integer) ((Simplex) _buf.getLength()).getActualValue()).intValue();
             final byte[] buf = new byte[bufLength];
-            final Calculator calc = state.getCalculator();
             for (int i = 0; i < bufLength; ++i) {
-                final Simplex _buf_i = (Simplex) ((Array.AccessOutcomeInValue) _buf.get(calc.valInt(i)).iterator().next()).getValue(); 
+                final Simplex _buf_i = (Simplex) ((Array.AccessOutcomeInValue) _buf.get(calc, calc.valInt(i)).iterator().next()).getValue(); 
                 buf[i] = ((Byte) _buf_i.getActualValue()).byteValue();
             }
             
@@ -93,13 +92,13 @@ public final class Algo_JAVA_CRC32_UPDATEBYTES extends Algo_INVOKEMETA_Nonbranch
             this.toPush = calc.valInt(crcNew);
         } catch (InvocationTargetException e) {
             final String cause = internalClassName(e.getCause().getClass().getName());
-            throwNew(state, cause);
+            throwNew(state, calc, cause);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (NoSuchMethodException | SecurityException | IllegalAccessException | 
-                 IllegalArgumentException | InvalidTypeException | InvalidOperandException e) {
+                 IllegalArgumentException e) {
             //this should never happen
             failExecution(e);
         }

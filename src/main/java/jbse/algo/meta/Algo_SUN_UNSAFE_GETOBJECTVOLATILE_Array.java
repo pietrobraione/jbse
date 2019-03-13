@@ -18,6 +18,7 @@ import static jbse.common.Type.isPrimitiveOpStack;
 
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.NoSuchElementException;
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA;
@@ -42,19 +43,21 @@ import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XALOAD;
 import jbse.tree.DecisionAlternative_XALOAD_Out;
 import jbse.tree.DecisionAlternative_XALOAD_Resolved;
+import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.ReferenceArrayImmaterial;
 import jbse.val.ReferenceConcrete;
 import jbse.val.Simplex;
+import jbse.val.SymbolicMemberArray;
+import jbse.val.Term;
 import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
@@ -75,7 +78,7 @@ StrategyRefine<DecisionAlternative_XALOAD>,
 StrategyUpdate<DecisionAlternative_XALOAD>> {
 
     private Reference myObjectRef; //set by cooker
-    private Primitive index; //set by cooker
+    private Simplex index; //set by cooker
 
     @Override
     protected Supplier<Integer> numOperands() {
@@ -87,8 +90,8 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
         return (state) -> {
             try {
                 this.myObjectRef = (Reference) this.data.operand(1);
-                this.index = (Simplex) this.data.operand(2);
-            } catch (ClassCastException e) {
+                this.index = (Simplex) this.ctx.getCalculator().push((Simplex) this.data.operand(2)).narrow(INT).pop();
+            } catch (ClassCastException | InvalidTypeException e) {
                 //this should never happen now
                 failExecution(e);
             }
@@ -116,18 +119,22 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
     protected StrategyDecide<DecisionAlternative_XALOAD> decider() {
         //TODO copied from Algo_XALOAD, unify with it and with Algo_SUN_UNSAFE_GETINTVOLATILE_Array
         return (state, result) -> { 
+            final Calculator calc = this.ctx.getCalculator();
             boolean shouldRefine = false;
             boolean branchingDecision = false;
             final LinkedList<Reference> refToArraysToProcess = new LinkedList<>();
             final LinkedList<Expression> accessConditions = new LinkedList<>();
+            final LinkedList<Term> indicesFormal = new LinkedList<>();
             final LinkedList<Primitive> offsets = new LinkedList<>();
             refToArraysToProcess.add(this.myObjectRef);
             accessConditions.add(null);
-            offsets.add(state.getCalculator().valInt(0));
+            indicesFormal.add(null);
+            offsets.add(calc.valInt(0));
             while (!refToArraysToProcess.isEmpty()) {
                 final Reference refToArrayToProcess = refToArraysToProcess.remove();
-                final Primitive arrayAccessCondition = accessConditions.remove();
-                final Primitive arrayOffset = offsets.remove();
+                final Primitive referringArrayAccessCondition = accessConditions.remove();
+                final Term referringArrayIndexFormal = indicesFormal.remove();
+                final Primitive referringArrayOffset = offsets.remove();
                 Array arrayToProcess = null; //to keep the compiler happy
                 try {
                     arrayToProcess = (Array) state.getObject(refToArrayToProcess);
@@ -137,13 +144,12 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 }
                 if (arrayToProcess == null) {
                     //this should never happen
-                    failExecution("an initial array that backs another array is null");
+                    failExecution("An initial array that backs another array is null.");
                 }
-                Primitive indexPlusOffset = null;  //to keep the compiler happy
                 Collection<Array.AccessOutcome> entries = null; //to keep the compiler happy
                 try {
-                	indexPlusOffset = this.index.to(INT).add(arrayOffset); //TODO while here there is conversion to INT and in Algo_XALOAD and Algo_SUN_UNSAFE_GETINTVOLATILE_Array there is not???
-                    entries = arrayToProcess.get(indexPlusOffset);
+                	final Primitive indexPlusOffset = calc.push(this.index).add(referringArrayOffset).pop();
+                    entries = arrayToProcess.get(calc, indexPlusOffset);
                 } catch (InvalidOperandException | InvalidTypeException e) {
                     //this should never happen
                     failExecution(e);
@@ -153,6 +159,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                         final Array.AccessOutcomeInInitialArray eCast = (Array.AccessOutcomeInInitialArray) e;
                         refToArraysToProcess.add(eCast.getInitialArray());
                         accessConditions.add(e.getAccessCondition());
+                        indicesFormal.add(arrayToProcess.getIndex());
                         offsets.add(eCast.getOffset());
                     } else { 
                         //puts in val the value of the current entry, or a fresh symbol, 
@@ -163,8 +170,9 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                             val = ((Array.AccessOutcomeInValue) e).getValue();
                             if (val == null) {
                                 try {
-                                    val = (Value) state.createSymbolMemberArray(arrayToProcess.getType().getMemberClass().getClassName(), 
-                                                             arrayToProcess.getOrigin(), this.index.add(arrayOffset));
+                                    final ClassFile memberClass = arrayToProcess.getType().getMemberClass();
+                                    final String memberType = memberClass.getInternalTypeName(); 
+                                    val = (Value) state.createSymbolMemberArray(memberType, arrayToProcess.getOrigin(), calc.push(this.index).add(referringArrayOffset).pop());
                                 } catch (InvalidOperandException | InvalidTypeException exc) {
                                     //this should never happen
                                     failExecution(exc);
@@ -177,28 +185,35 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
 
                         Outcome o = null; //to keep the compiler happy
                         try {
-                            final Expression accessCondition = (arrayAccessCondition == null ? 
-                            		                            e.getAccessCondition() : 
-                            		                            (Expression) arrayAccessCondition.and(e.getAccessCondition()));
-                            o = this.ctx.decisionProcedure.resolve_XALOAD(state, accessCondition, arrayToProcess.getIndex(), indexPlusOffset, val, fresh, refToArrayToProcess, result);
+                        	final Expression accessCondition;
+                        	final Term indexFormal;
+                        	if (referringArrayAccessCondition == null) {
+                        		accessCondition = e.getAccessCondition();
+                        		indexFormal = arrayToProcess.getIndex();
+                        	} else {
+                        		final Primitive entryAccessConditionShifted = calc.push(e.getAccessCondition()).replace(arrayToProcess.getIndex(), calc.push(referringArrayIndexFormal).add(referringArrayOffset).pop()).pop();
+                        		accessCondition = (Expression) calc.push(referringArrayAccessCondition).and(entryAccessConditionShifted).pop();
+                        		indexFormal = referringArrayIndexFormal;
+                        	}
+                            o = this.ctx.decisionProcedure.resolve_XALOAD(state, accessCondition, indexFormal, this.index, val, fresh, refToArrayToProcess, result);
                         //TODO the next catch blocks should disappear, see comments on removing exceptions in jbse.dec.DecisionProcedureAlgorithms.doResolveReference
                         } catch (ClassFileNotFoundException exc) {
-                            throwNew(state, CLASS_NOT_FOUND_EXCEPTION);
+                            throwNew(state, calc, CLASS_NOT_FOUND_EXCEPTION);
                             exitFromAlgorithm();
                         } catch (BadClassFileVersionException exc) {
-                            throwNew(state, UNSUPPORTED_CLASS_VERSION_ERROR);
+                            throwNew(state, calc, UNSUPPORTED_CLASS_VERSION_ERROR);
                             exitFromAlgorithm();
                         } catch (WrongClassNameException exc) {
-                            throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
+                            throwNew(state, calc, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
                             exitFromAlgorithm();
                         } catch (IncompatibleClassFileException exc) {
-                            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                            throwNew(state, calc, INCOMPATIBLE_CLASS_CHANGE_ERROR);
                             exitFromAlgorithm();
                         } catch (ClassFileNotAccessibleException exc) {
-                            throwNew(state, ILLEGAL_ACCESS_ERROR);
+                            throwNew(state, calc, ILLEGAL_ACCESS_ERROR);
                             exitFromAlgorithm();
                         } catch (ClassFileIllFormedException exc) {
-                            throwVerifyError(state);
+                            throwVerifyError(state, calc);
                             exitFromAlgorithm();
                         } catch (InvalidOperandException | InvalidTypeException exc) {
                             //this should never happen
@@ -230,13 +245,13 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
         };
     }
 
-    private void writeBackToSource(State state, Value valueToStore) 
+    private void writeBackToSource(State state, Primitive index, Value valueToStore) 
     throws DecisionException {
-        storeInArray(state, this.ctx, this.myObjectRef, this.index, valueToStore);
+        storeInArray(state, this.ctx, this.myObjectRef, index, valueToStore);
     }
 
     protected Value possiblyMaterialize(State state, Value val) 
-    throws DecisionException, InterruptException, ClasspathException, FrozenStateException {
+    throws DecisionException, InterruptException, ClasspathException, InvalidInputException {
         //calculates the actual value to push by materializing 
         //a member array, if it is the case, and then pushes it
         //on the operand stack
@@ -244,16 +259,12 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             try {
                 final ReferenceArrayImmaterial valRef = (ReferenceArrayImmaterial) val;
                 final ReferenceConcrete valMaterialized = 
-                    state.createArray(valRef.getMember(), valRef.getLength(), valRef.getArrayType());
-                writeBackToSource(state, valMaterialized);
+                    state.createArray(this.ctx.getCalculator(), valRef.getMember(), valRef.getLength(), valRef.getArrayType());
+                writeBackToSource(state, this.index, valMaterialized);
                 return valMaterialized;
             } catch (HeapMemoryExhaustedException e) {
-                throwNew(state, OUT_OF_MEMORY_ERROR);
+                throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
-                return null; //to keep the compiler happy
-            } catch (InvalidTypeException e) {
-                //this should never happen
-                failExecution(e);
                 return null; //to keep the compiler happy
             }
         } else {
@@ -270,12 +281,14 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 //augments the path condition
             	final Expression accessExpression = altResolved.getArrayAccessExpressionSimplified();
             	if (accessExpression != null) {
-            		state.assume(Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.ctx.decisionProcedure.simplify(accessExpression));
+            		state.assume(Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.ctx.getCalculator().simplify(Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.ctx.decisionProcedure.simplify(accessExpression)));
             	}
 
                 //if the value is fresh, it writes it back in the array
                 if (altResolved.isValueFresh()) {
-                    writeBackToSource(state, altResolved.getValueToLoad());
+                    final Value valueToLoad = altResolved.getValueToLoad();
+                	final Primitive index = ((SymbolicMemberArray) valueToLoad).getIndex();
+                    writeBackToSource(state, index, valueToLoad);
                 }
             }
 
@@ -286,7 +299,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 try {
                 	final Expression accessExpression = altOut.getArrayAccessExpressionSimplified();
                 	if (accessExpression != null) {
-                		state.assume(Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.ctx.decisionProcedure.simplify(accessExpression));
+                		state.assume(Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.ctx.getCalculator().simplify(Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.ctx.decisionProcedure.simplify(accessExpression)));
                 	}
 				} catch (DecisionException e) { //TODO propagate exception (...and replace with a better exception)
 					//this should never happen
@@ -301,7 +314,9 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             @Override
             public void updateResolved(State state, DecisionAlternative_XALOAD_Resolved altResolved) 
             throws DecisionException, InterruptException, MissingTriggerParameterException, 
-            ClasspathException, NotYetImplementedException, FrozenStateException {
+            ClasspathException, NotYetImplementedException, NoSuchElementException, InvalidOperandException, InvalidInputException {
+            	final Calculator calc = Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.ctx.getCalculator();
+            	
                 //possibly materializes the value
                 final Value val = altResolved.getValueToLoad();
                 final Value valMaterialized = possiblyMaterialize(state, val);
@@ -312,7 +327,7 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                     final Value valToPush;
                     //in the next if only the else branch is taken, but we keep it to highlight the fact that it can be refactored together with other Algo_SUN_UNSAFE_GETX_Array 
                     if (isPrimitive(valMaterializedType) && !isPrimitiveOpStack(valMaterializedType)) {
-                        valToPush = ((Primitive) valMaterialized).widen(INT);
+                        valToPush = calc.push((Primitive) valMaterialized).widen(INT).pop();
                     } else {
                         valToPush = valMaterialized;
                     }
@@ -326,12 +341,12 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
                 //manages triggers
                 try {
                     final boolean someTriggerFrameLoaded = 
-                        Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.ctx.triggerManager.loadTriggerFrames(state, altResolved, Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.programCounterUpdate.get());
+                        Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.ctx.triggerManager.loadTriggerFrames(state, calc, altResolved, Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array.this.programCounterUpdate.get());
                     if (someTriggerFrameLoaded) {
                         exitFromAlgorithm();
                     }
                 } catch (InvalidProgramCounterException e) { //TODO propagate exceptions?
-                    throwVerifyError(state);
+                    throwVerifyError(state, calc);
                     exitFromAlgorithm();
                 } catch (ThreadStackEmptyException e) {
                     //this should not happen

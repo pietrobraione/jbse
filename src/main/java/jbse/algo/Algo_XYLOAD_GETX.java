@@ -34,6 +34,7 @@ import jbse.tree.DecisionAlternative_XYLOAD_GETX_Aliases;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Null;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Expands;
 import jbse.tree.DecisionAlternative_XYLOAD_GETX_Loads;
+import jbse.val.Calculator;
 import jbse.val.Primitive;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
@@ -80,9 +81,9 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
         try {
             ensureClassInitialized(state, classFileOfReferenceToExpand, this.ctx);
             ensureClassInitialized(state, classFileOfTargetObject, this.ctx);
-            state.assumeExpands(referenceToExpand, classFileOfTargetObject);
+            state.assumeExpands(this.ctx.getCalculator(), referenceToExpand, classFileOfTargetObject);
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (CannotAssumeSymbolicObjectException e) {
             throw new SymbolicValueNotAllowedException(e);
@@ -96,8 +97,9 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
         if (classFileOfTargetObject.isArray()) {
             try {
                 final Array targetObject = (Array) state.getObject(referenceToExpand);
-                final Primitive lengthPositive = targetObject.getLength().ge(state.getCalculator().valInt(0));
-                state.assume(this.ctx.decisionProcedure.simplify(lengthPositive));
+                final Calculator calc = this.ctx.getCalculator();
+                final Primitive lengthPositive = calc.push(targetObject.getLength()).ge(calc.valInt(0)).pop();
+                state.assume(calc.simplify(this.ctx.decisionProcedure.simplify(lengthPositive)));
             } catch (InvalidOperandException | DecisionException e) { //TODO propagate exceptions (...and replace DecisionException with a better exception)
                 //this should never happen
                 failExecution(e);
@@ -114,7 +116,7 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
         try {
             ensureClassInitialized(state, classFileOfReferenceToResolve, this.ctx);
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (DecisionException e) {
             //this should never happen, the decision was already checked
@@ -131,7 +133,8 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
 
     protected final void update(State state, DecisionAlternative_XYLOAD_GETX_Loads altLoads) 
     throws DecisionException, InterruptException, MissingTriggerParameterException, 
-    ClasspathException, NotYetImplementedException, ThreadStackEmptyException, FrozenStateException {
+    ClasspathException, NotYetImplementedException, ThreadStackEmptyException, 
+    InvalidOperandException, InvalidInputException {
         //possibly materializes the value
         final Value val = altLoads.getValueToLoad();
         final Value valMaterialized = possiblyMaterialize(state, val);
@@ -141,7 +144,7 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
         try {
             final Value valToPush;
             if (isPrimitive(valMaterializedType) && !isPrimitiveOpStack(valMaterializedType)) {
-                valToPush = ((Primitive) valMaterialized).widen(INT);
+                valToPush = this.ctx.getCalculator().push((Primitive) valMaterialized).widen(INT).pop();
             } else {
                 valToPush = valMaterialized;
             }
@@ -154,14 +157,14 @@ UP extends StrategyUpdate<R>> extends Algorithm<D, R, DE, RE, UP> {
         //manages triggers
         try {
             final boolean someTriggerFrameLoaded = 
-                this.ctx.triggerManager.loadTriggerFrames(state, altLoads, this.programCounterUpdate.get());
+                this.ctx.triggerManager.loadTriggerFrames(state, this.ctx.getCalculator(), altLoads, this.programCounterUpdate.get());
             if (someTriggerFrameLoaded) {
                 exitFromAlgorithm();
             }
         } catch (InvalidProgramCounterException e) { //TODO propagate exception?
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
-        }
+		}
     }
 
     /** 

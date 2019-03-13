@@ -167,7 +167,7 @@ public final class Action_PREINIT {
         initializeClass(state, JAVA_METHODHANDLE, ctx);
 
         //pushes a frame for java.lang.ClassLoader.getSystemClassLoader
-        invokeGetSystemClassLoader(state);
+        invokeGetSystemClassLoader(state, ctx);
 
         //pushes frames to initialize some error/exception classes
         //(actually they do not have any static initializer, but
@@ -183,7 +183,7 @@ public final class Action_PREINIT {
         initializeClass(state, OUT_OF_MEMORY_ERROR, ctx);
 
         //pushes a frame for java.lang.System.initializeSystemClass
-        invokeInitializeSystemClass(state);
+        invokeInitializeSystemClass(state, ctx);
 
         //pushes a frame to initialize jbse.base.Base
         initializeClass(state, JBSE_BASE, ctx);
@@ -196,7 +196,7 @@ public final class Action_PREINIT {
 
         //creates the initial thread and thread group
         //and pushes frames to initialize them 
-        createInitialThreadAndThreadGroups(state);
+        createInitialThreadAndThreadGroups(state, ctx);
 
         //pushes frames to initialize more standard classes
         initializeClass(state, JAVA_THREAD, ctx);
@@ -334,7 +334,7 @@ public final class Action_PREINIT {
         }
     }
 
-    private void invokeGetSystemClassLoader(State state) {
+    private void invokeGetSystemClassLoader(State state, ExecutionContext ctx) {
         try {
             final Snippet snippet = state.snippetFactoryNoWrap()
             .op_invokestatic(JAVA_CLASSLOADER_GETSYSTEMCLASSLOADER)
@@ -349,21 +349,21 @@ public final class Action_PREINIT {
         }
     }
 
-    private void invokeInitializeSystemClass(State state) {
+    private void invokeInitializeSystemClass(State state, ExecutionContext ctx) {
         try {
             final ClassFile cf_JAVA_SYSTEM = state.getClassHierarchy().loadCreateClass(JAVA_SYSTEM); 
-            state.pushFrame(cf_JAVA_SYSTEM, JAVA_SYSTEM_INITIALIZESYSTEMCLASS, false, 0);
+            state.pushFrame(ctx.getCalculator(), cf_JAVA_SYSTEM, JAVA_SYSTEM_INITIALIZESYSTEMCLASS, false, 0);
         } catch (NullMethodReceiverException | MethodNotFoundException | MethodCodeNotFoundException | 
-        InvalidSlotException | InvalidProgramCounterException | InvalidTypeException | 
-        ThreadStackEmptyException | ClassFileNotFoundException | BadClassFileVersionException |
-        WrongClassNameException | IncompatibleClassFileException | ClassFileIllFormedException | 
-        ClassFileNotAccessibleException | InvalidInputException e) {
+                 InvalidSlotException | InvalidProgramCounterException | InvalidTypeException | 
+                 ThreadStackEmptyException | ClassFileNotFoundException | BadClassFileVersionException |
+                 WrongClassNameException | IncompatibleClassFileException | ClassFileIllFormedException | 
+                 ClassFileNotAccessibleException | InvalidInputException e) {
             //this should not happen now
             failExecution(e);
         }
     }
 
-    private void createInitialThreadAndThreadGroups(State state) 
+    private void createInitialThreadAndThreadGroups(State state, ExecutionContext ctx) 
     throws InitializationException, ClasspathException {
         try {
             //creates the initial thread and thread group
@@ -376,15 +376,15 @@ public final class Action_PREINIT {
                 throw new UnexpectedInternalException("Could not get the classfile for java.lang.ThreadGroup.");
             }
 
-            final ReferenceConcrete systemThreadGroup = state.createInstance(cf_JAVA_THREADGROUP);
-            final ReferenceConcrete mainThreadGroup = state.createInstance(cf_JAVA_THREADGROUP);
-            final ReferenceConcrete mainThread = state.createInstance(cf_JAVA_THREAD);
-            state.getObject(mainThread).setFieldValue(JAVA_THREAD_PRIORITY, state.getCalculator().valInt(NORM_PRIORITY)); //necessary to avoid circularity issues
-            state.ensureStringLiteral("main");
+            final ReferenceConcrete systemThreadGroup = state.createInstance(ctx.getCalculator(), cf_JAVA_THREADGROUP);
+            final ReferenceConcrete mainThreadGroup = state.createInstance(ctx.getCalculator(), cf_JAVA_THREADGROUP);
+            final ReferenceConcrete mainThread = state.createInstance(ctx.getCalculator(), cf_JAVA_THREAD);
+            state.getObject(mainThread).setFieldValue(JAVA_THREAD_PRIORITY, ctx.getCalculator().valInt(NORM_PRIORITY)); //necessary to avoid circularity issues
+            state.ensureStringLiteral(ctx.getCalculator(), "main");
             final ReferenceConcrete mainString = state.referenceToStringLiteral("main");
-            state.pushFrame(cf_JAVA_THREAD, JAVA_THREAD_INIT, false, 0, mainThread, mainThreadGroup, mainString);
-            state.pushFrame(cf_JAVA_THREADGROUP, JAVA_THREADGROUP_INIT_2, false, 0, mainThreadGroup, systemThreadGroup, mainString);
-            state.pushFrame(cf_JAVA_THREADGROUP, JAVA_THREADGROUP_INIT_1, false, 0, systemThreadGroup);
+            state.pushFrame(ctx.getCalculator(), cf_JAVA_THREAD, JAVA_THREAD_INIT, false, 0, mainThread, mainThreadGroup, mainString);
+            state.pushFrame(ctx.getCalculator(), cf_JAVA_THREADGROUP, JAVA_THREADGROUP_INIT_2, false, 0, mainThreadGroup, systemThreadGroup, mainString);
+            state.pushFrame(ctx.getCalculator(), cf_JAVA_THREADGROUP, JAVA_THREADGROUP_INIT_1, false, 0, systemThreadGroup);
 
             //saves the created thread and thread group in the state
             state.setMainThreadGroup(mainThreadGroup);
@@ -394,9 +394,9 @@ public final class Action_PREINIT {
         } catch (MethodNotFoundException | MethodCodeNotFoundException e) {
             throw new ClasspathException(e);
         } catch (ClassFileNotFoundException | BadClassFileVersionException | WrongClassNameException | 
-        IncompatibleClassFileException | ClassFileNotAccessibleException | ClassFileIllFormedException | 
-        NullMethodReceiverException | InvalidSlotException | InvalidProgramCounterException | 
-        InvalidInputException | InvalidTypeException | ThreadStackEmptyException e) {
+                 IncompatibleClassFileException | ClassFileNotAccessibleException | ClassFileIllFormedException | 
+                 NullMethodReceiverException | InvalidSlotException | InvalidProgramCounterException | 
+                 InvalidInputException | InvalidTypeException | ThreadStackEmptyException e) {
             //this should never happen
             failExecution(e);
         }

@@ -75,26 +75,26 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     this.isSubclass = classSub.isSubclass(classSuper);
                 }
             } catch (PleaseLoadClassException e) {
-                invokeClassLoaderLoadClass(state, e);
+                invokeClassLoaderLoadClass(state, this.ctx.getCalculator(), e);
                 exitFromAlgorithm();
             } catch (ClassFileNotFoundException e) {
                 //TODO this exception should wrap a ClassNotFoundException
-                throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR);
                 exitFromAlgorithm();
             } catch (BadClassFileVersionException e) {
-                throwNew(state, UNSUPPORTED_CLASS_VERSION_ERROR);
+                throwNew(state, this.ctx.getCalculator(), UNSUPPORTED_CLASS_VERSION_ERROR);
                 exitFromAlgorithm();
             } catch (WrongClassNameException e) {
-                throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
+                throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
                 exitFromAlgorithm();
             } catch (IncompatibleClassFileException e) {
-                throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
                 exitFromAlgorithm();
             } catch (ClassFileNotAccessibleException e) {
-                throwNew(state, ILLEGAL_ACCESS_ERROR);
+                throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
                 exitFromAlgorithm();
             } catch (ClassCastException | ClassFileIllFormedException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
         };

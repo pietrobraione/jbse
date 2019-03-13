@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import jbse.bc.ClassFile;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.Objekt;
 import jbse.rules.LICSRuleExpandsTo;
@@ -23,8 +24,15 @@ public final class DecisionProcedureLICS extends DecisionProcedureChainOfRespons
     /** Stores all the {@link ClauseAssumeExpands} that are pushed. */
     private final ArrayList<ClauseAssumeExpands> expansions = new ArrayList<>();
 
-    public DecisionProcedureLICS(DecisionProcedure next, Calculator calc, LICSRulesRepo rulesRepo) {
-        super(next, calc);
+    public DecisionProcedureLICS(DecisionProcedure next, LICSRulesRepo rulesRepo) 
+    throws InvalidInputException {
+        super(next);
+        this.rulesRepo = rulesRepo.clone(); //safety copy
+    }
+
+    public DecisionProcedureLICS(Calculator calc, LICSRulesRepo rulesRepo) 
+    throws InvalidInputException {
+        super(calc);
         this.rulesRepo = rulesRepo.clone(); //safety copy
     }
 

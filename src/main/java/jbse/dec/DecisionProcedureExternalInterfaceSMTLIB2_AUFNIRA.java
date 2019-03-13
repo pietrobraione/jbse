@@ -14,11 +14,11 @@ import java.util.Map;
 import java.util.Stack;
 
 import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.ExternalProtocolInterfaceException;
 import jbse.dec.exc.NoModelException;
 import jbse.mem.Objekt;
-import jbse.rewr.CalculatorRewriting;
 import jbse.val.Any;
 import jbse.val.Calculator;
 import jbse.val.Expression;
@@ -43,7 +43,7 @@ import jbse.val.WideningConversion;
  * @author Diego Piazza
  */
 //TODO simplify implementation
-class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedureExternalInterface {
+final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedureExternalInterface {
     //commands
     private static final String PROLOGUE = 
         "(set-option :print-success true)\n" +
@@ -82,25 +82,25 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
     private ArrayList<Integer> nSymPushed; 
     private int nSymCurrent;
     private int nTotalSymbols;
-
+    
     /** 
      * Costructor.
      * 
-     * @param calc a {@link CalculatorRewriting}.
+     * @param calc a {@link Calculator}.
      * @param solverCommandLine a {@link List}{@code <}{@link String}{@code >}, the
      *        command line to launch the external process for the decision procedure.
      */
     public DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA(Calculator calc, List<String> solverCommandLine) 
     throws ExternalProtocolInterfaceException, IOException {
         this.calc = calc;
-        this.m = new ExpressionMangler("X", "", this.calc);
+        this.m = new ExpressionMangler("X", "", calc);
         this.working = true;
         final ProcessBuilder pb = new ProcessBuilder(solverCommandLine);
         pb.redirectErrorStream(true);
         this.solver = pb.start();
         this.solverIn = new BufferedReader(new InputStreamReader(this.solver.getInputStream()));
         this.solverOut = new BufferedWriter(new OutputStreamWriter(this.solver.getOutputStream()));
-
+        
         final String query = PROLOGUE + PUSH_1;
         sendAndCheckAnswer(query);
         clear();
@@ -125,7 +125,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
         try {
             cond.accept(this.v);
             this.currentClausePositive = PUSH_1 + this.v.getQueryDeclarations() + "(assert " + this.v.getQueryAssertClause() + ")\n";
-            cond.not().accept(this.v);
+            this.calc.push(cond).not().pop().accept(this.v);
             this.currentClauseNegative = PUSH_1 + this.v.getQueryDeclarations() + "(assert " + this.v.getQueryAssertClause() + ")\n";
         } catch (ExternalProtocolInterfaceException | RuntimeException e) {
             throw e;
@@ -264,7 +264,12 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
                         //unable to interpret the SMTLIB2 expression
                         throw new NoModelException(); //TODO possibly throw a different exception
                     } else {
-                        model.put((PrimitiveSymbolic) jbseSymbol, (Simplex) calc.val_(value));
+                        try {
+							model.put((PrimitiveSymbolic) jbseSymbol, (Simplex) this.calc.val_(value));
+						} catch (InvalidInputException e) {
+							//this should never happen
+							throw new UnexpectedInternalException(e);
+						}
                     }
                 }   
                 smtlib2Symbol = null;
@@ -415,7 +420,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
     
     private void send(String query) throws IOException {
         //System.err.print("--->SMTLIB2: " + query); //TODO log differently!
-
+    	
         try {
             this.solverOut.write(query);
             this.solverOut.flush();
@@ -466,7 +471,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
             this.working = false;
             throw new ExternalProtocolInterfaceException("unrecognized answer from solver when checking satisfiability. Message: " + answer);
         }
-        return !answer.equals(UNSAT); //conservatively returns true if answer is unknown
+        return answer.equals(SAT); //conservatively returns false if answer is unknown
     }
     
     private String sendAndCheckAnswerGetmodel() 
@@ -674,7 +679,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
                     this.clauseStack.push("(not (= " + firstOperandSMT + " " + secondOperandSMT + "))");
                 } else if (op.equals(OTHER)) {
                     //2-Operator does not correspond to a SMTLIB2 operator
-                    m.mangle(e).accept(this);
+                	DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA.this.m.mangle(e).accept(this);
                 } else {
                     //3-The operator correspond to a SMTLIB2 operator
                     final String clause;
@@ -752,7 +757,7 @@ class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionProcedur
             		nTotalSymbols = nTotalSymbols + 1;
             	}
             } else {
-                m.mangle(x).accept(this);
+            	DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA.this.m.mangle(x).accept(this);
             }
         }
 

@@ -35,55 +35,56 @@ public final class Expression extends PrimitiveSymbolicComputed {
     /**
      * Factory method for verbatim expressions (binary).
      * 
-     * @param calc a {@link Calculator}.
      * @param firstOperand a {@link Primitive}, the first operand.
      * @param operator an {@link Operator}.
      * @param secondOperand a {@link Primitive}, the second operand.
      * @return an {@link Expression}.
      * @throws InvalidOperandException if {@code firstOperand == null || secondOperand == null}.
      * @throws InvalidOperatorException if {@code operator == null} or is not binary. 
-     * @throws InvalidTypeException if the expression cannot be typed.
-     * @throws InvalidInputException if {@code calc == null}.
+     * @throws InvalidTypeException if the operands have incompatible types.
      */
-    public static Expression makeExpressionBinary(Calculator calc, Primitive firstOperand, Operator operator, Primitive secondOperand) 
-    throws InvalidOperandException, InvalidOperatorException, InvalidTypeException, InvalidInputException {
+    public static Expression makeExpressionBinary(Primitive firstOperand, Operator operator, Primitive secondOperand) 
+    throws InvalidOperandException, InvalidOperatorException, InvalidTypeException {
         //checks on parameters
         if (firstOperand == null) {
-            throw new InvalidOperandException("no first operand in binary expression construction");
+            throw new InvalidOperandException("No first operand in binary expression construction.");
         }
         if (operator == null) {
-            throw new InvalidOperatorException("no operator in binary expression construction");
+            throw new InvalidOperatorException("No operator in binary expression construction.");
         }
         if (secondOperand == null) {
-            throw new InvalidOperandException("no second operand in binary expression construction");
+            throw new InvalidOperandException("No second operand in binary expression construction.");
         }
         if (!operator.isBinary()) {
-            throw new InvalidOperatorException("operator " + operator + " is not binary");
+            throw new InvalidOperatorException("Operator " + operator + " is not binary.");
         }
         Operator.typeCheck(operator, firstOperand.getType(), secondOperand.getType());
 
         //calculates the default type
         final char defaultType = operator.returnType(firstOperand.getType(), secondOperand.getType()); 
 
-        return new Expression(defaultType, calc, firstOperand, operator, secondOperand);
+        try {
+			return new Expression(defaultType, firstOperand, operator, secondOperand);
+		} catch (InvalidInputException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
     }
 
     /**
      * Factory method for verbatim expressions (unary).
      * 
-     * @param calc a {@link Calculator}.
      * @param operator an {@link Operator}.
      * @param operand a {@link Primitive}, the operand.
      * @return an {@link Expression}.
      * @throws InvalidOperandException if {@code operand == null}.
      * @throws InvalidOperatorException if {@code operator} is not unary. 
      * @throws InvalidTypeException if the expression cannot be typed.
-     * @throws InvalidInputException if {@code calc == null}.
      */
-    public static Expression makeExpressionUnary(Calculator calc, Operator operator, Primitive operand) 
-    throws InvalidOperatorException, InvalidOperandException, InvalidTypeException, InvalidInputException {
+    public static Expression makeExpressionUnary(Operator operator, Primitive operand) 
+    throws InvalidOperatorException, InvalidOperandException, InvalidTypeException {
         if (operator == null) {
-            throw new InvalidOperatorException("no operator in unary expression construction");
+            throw new InvalidOperatorException("No operator in unary expression construction.");
         }
         if (operand == null) {
             throw new InvalidOperandException("no operand in unary expression construction");
@@ -96,23 +97,27 @@ public final class Expression extends PrimitiveSymbolicComputed {
         //calculates the default type
         final char defaultType = (operator.returnsBoolean() ? Type.BOOLEAN : operand.getType());
 
-        return new Expression(defaultType, calc, null, operator, operand);
+        try {
+			return new Expression(defaultType, null, operator, operand);
+		} catch (InvalidInputException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
     }
 
     /**
      * Constructor.
      * 
      * @param type the type of the represented value.
-     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param firstOperand a {@link Primitive}, the first operand.
      * @param operator an {@link Operator}.
      * @param secondOperand a {@link Primitive}, the second operand.
      * @throws InvalidTypeException if {@code type} is not primitive.
-     * @throws InvalidInputException if {@code calc == null}.
+     * @throws InvalidInputException never.
      */
-    private Expression(char type, Calculator calc, Primitive firstOperand, Operator operator, Primitive secondOperand) 
+    private Expression(char type, Primitive firstOperand, Operator operator, Primitive secondOperand) 
     throws InvalidTypeException, InvalidInputException {
-    	super(type, unknown(), calc); //TODO put sensible history point?
+    	super(type, unknown()); //TODO put sensible history point?
         this.firstOp = firstOperand;
         this.operator = operator;
         this.secondOp = secondOperand;
@@ -199,7 +204,7 @@ public final class Expression extends PrimitiveSymbolicComputed {
     }
 
     /**
-     * Gets the first operand of the {@link Expression} if exists.
+     * Gets the first operand of this {@link Expression} if exists.
      * 
      * @return a {@link Primitive} if {@code !this.}{@link #isUnary()}, 
      *         {@code null} otherwise.
@@ -209,7 +214,10 @@ public final class Expression extends PrimitiveSymbolicComputed {
     }
 
     /**
-     * Returns the second operand of expression if exists.
+     * Returns the second operand of this {@link Expression}
+     * (the only operand if {@code this.}{@link #isUnary()}).
+     * 
+     * @return a {@link Primitive}.
      */
     public Primitive getSecondOperand() {
         return this.secondOp;
@@ -220,40 +228,6 @@ public final class Expression extends PrimitiveSymbolicComputed {
      */
     public Operator getOperator() {
         return this.operator;
-    }
-
-    @Override
-    protected Primitive doReplace(Primitive from, Primitive to) {
-        final Primitive first;
-        if (isUnary()) {
-            first = null;
-        } else if (this.firstOp.equals(from)) {
-            first = to;
-        } else if (this.firstOp instanceof PrimitiveSymbolicComputed) {
-            first = ((PrimitiveSymbolicComputed) this.firstOp).doReplace(from, to);
-        } else {
-            first = this.firstOp;
-        }
-
-        final Primitive second;
-        if (this.secondOp.equals(from)) {
-            second = to;
-        } else if (this.secondOp instanceof PrimitiveSymbolicComputed) {
-            second = ((PrimitiveSymbolicComputed) this.secondOp).doReplace(from, to);
-        } else {
-            second = this.secondOp;
-        }
-
-        try {
-            if (isUnary()) {
-                return this.calc.applyUnary(this.operator, second); //TODO possible bug! Here rewriting is applied!
-            } else {
-                return this.calc.applyBinary(first, this.operator, second);//TODO possible bug! Here rewriting is applied!
-            }
-        } catch (InvalidOperatorException | InvalidTypeException | InvalidOperandException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
     }
     
     @Override

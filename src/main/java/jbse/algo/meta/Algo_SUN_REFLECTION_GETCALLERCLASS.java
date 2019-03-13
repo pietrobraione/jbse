@@ -15,9 +15,9 @@ import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.CannotInvokeMethodInCurrentContext;
 import jbse.bc.ClassFile;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Frame;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Reference;
@@ -33,7 +33,7 @@ public final class Algo_SUN_REFLECTION_GETCALLERCLASS extends Algo_INVOKEMETA_No
     @Override
     protected void cookMore(State state)
     throws ClasspathException, CannotInvokeMethodInCurrentContext, 
-    InterruptException, FrozenStateException {
+    InterruptException, InvalidInputException {
         final List<Frame> stack = state.getStack();
         final ListIterator<Frame> it = stack.listIterator(stack.size());
         boolean firstSkipped = false;
@@ -59,9 +59,9 @@ public final class Algo_SUN_REFLECTION_GETCALLERCLASS extends Algo_INVOKEMETA_No
         }
 
         try {
-            state.ensureInstance_JAVA_CLASS(classFile);
+            state.ensureInstance_JAVA_CLASS(this.ctx.getCalculator(), classFile);
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         }
         

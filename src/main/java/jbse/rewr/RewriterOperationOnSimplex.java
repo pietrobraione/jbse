@@ -4,7 +4,6 @@ import static jbse.val.PrimitiveSymbolicApply.*;
 
 import jbse.common.Type;
 import jbse.common.exc.UnexpectedInternalException;
-import jbse.rewr.exc.NoResultException;
 import jbse.val.Any;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolicApply;
@@ -16,6 +15,7 @@ import jbse.val.Value;
 import jbse.val.WideningConversion;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
+import jbse.val.exc.NoResultException;
 
 /**
  * Rewrites all the {@link Expression}s or {@link PrimitiveSymbolicApply}s 
@@ -23,7 +23,7 @@ import jbse.val.exc.InvalidTypeException;
  * 
  * @author Pietro Braione
  */
-public class RewriterOperationOnSimplex extends Rewriter {
+public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
     public RewriterOperationOnSimplex() { }
 
     @Override
@@ -46,8 +46,8 @@ public class RewriterOperationOnSimplex extends Rewriter {
 
         final String function = x.getOperator();
         final Primitive result = tryFunctionApplication(function, args, argsType);
-        if (result == null) { //failed
-            super.rewritePrimitiveSymbolicApply(x);
+        if (result == null) { 
+        	setResult(x); //failed
         } else {
             setResult(result);
         }
@@ -121,10 +121,13 @@ public class RewriterOperationOnSimplex extends Rewriter {
             if (x.getOperator() == Operator.SUB && simplexOp.isZeroOne(true)) {
                 if (firstIsSimplex) {
                     try {
-                        setResult(otherOp.neg());
+                        setResult(this.calc.push(otherOp).neg().pop());
                         return;
                     } catch (InvalidTypeException e) {
                         //does nothing, falls through
+                    } catch (InvalidOperandException e) {
+                    	//this should never happen
+                    	throw new UnexpectedInternalException(e);
                     }
                 } else {
                     setResult(otherOp);
@@ -180,22 +183,22 @@ public class RewriterOperationOnSimplex extends Rewriter {
             final Operator secondOperator = secondExp.getOperator();
             try {
                 if (secondOperator == Operator.EQ) {
-                    setResult(secondExp.getFirstOperand().ne(secondExp.getSecondOperand()));
+                    setResult(this.calc.push(secondExp.getFirstOperand()).ne(secondExp.getSecondOperand()).pop());
                     return;
                 } else if (secondOperator == Operator.NE) {
-                    setResult(secondExp.getFirstOperand().eq(secondExp.getSecondOperand()));
+                    setResult(this.calc.push(secondExp.getFirstOperand()).eq(secondExp.getSecondOperand()).pop());
                     return;
                 } else if (secondOperator == Operator.GT) {
-                    setResult(secondExp.getFirstOperand().le(secondExp.getSecondOperand()));
+                    setResult(this.calc.push(secondExp.getFirstOperand()).le(secondExp.getSecondOperand()).pop());
                     return;
                 } else if (secondOperator == Operator.GE) {
-                    setResult(secondExp.getFirstOperand().lt(secondExp.getSecondOperand()));
+                    setResult(this.calc.push(secondExp.getFirstOperand()).lt(secondExp.getSecondOperand()).pop());
                     return;
                 } else if (secondOperator == Operator.LT) {
-                    setResult(secondExp.getFirstOperand().ge(secondExp.getSecondOperand()));
+                    setResult(this.calc.push(secondExp.getFirstOperand()).ge(secondExp.getSecondOperand()).pop());
                     return;
                 } else if (secondOperator == Operator.LE) {
-                    setResult(secondExp.getFirstOperand().gt(secondExp.getSecondOperand()));
+                    setResult(this.calc.push(secondExp.getFirstOperand()).gt(secondExp.getSecondOperand()).pop());
                     return;
                 }
                 //TODO could we propagate more?
@@ -204,10 +207,25 @@ public class RewriterOperationOnSimplex extends Rewriter {
                 throw new UnexpectedInternalException(e);
             }
         }
+        
+        //5- (x / n1) / n2 -> x / (n1 * n2)
+        if (x.getOperator() == Operator.DIV && secondOp instanceof Simplex) {
+        	if (firstOp instanceof Expression) {
+        		final Expression firstOpExpression = (Expression) x.getFirstOperand();
+                if (firstOpExpression.getOperator() == Operator.DIV && firstOpExpression.getSecondOperand() instanceof Simplex) {
+                	try {
+						setResult(this.calc.push(firstOpExpression.getFirstOperand()).div(this.calc.push(firstOpExpression.getSecondOperand()).mul(secondOp).pop()).pop());
+						return;
+					} catch (InvalidOperandException | InvalidTypeException e) {
+		                //this should never happen
+		                throw new UnexpectedInternalException(e);
+					}
+                }
+        	}
+        }
 
-        //5- none of the above cases
-        //setResult(x);
-        super.rewriteExpression(x);
+        //6- none of the above cases
+        setResult(x);
     }
 
     @Override
@@ -229,7 +247,7 @@ public class RewriterOperationOnSimplex extends Rewriter {
         }
 
         //3- none of the above cases
-        super.rewriteWideningConversion(x);
+        setResult(x);
     }
 
     @Override
@@ -260,7 +278,7 @@ public class RewriterOperationOnSimplex extends Rewriter {
         }
 
         //4- none of the above cases
-        super.rewriteNarrowingConversion(x);
+        setResult(x);
     }
 
     //////////////////////////////////////////////

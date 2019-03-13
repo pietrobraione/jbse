@@ -64,13 +64,13 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             try {
                 final Reference tmpRef = (Reference) this.data.operand(0);
                 if (state.isNull(tmpRef)) {
-                    throwNew(state, NULL_POINTER_EXCEPTION);
+                    throwNew(state, this.ctx.getCalculator(), NULL_POINTER_EXCEPTION);
                     exitFromAlgorithm();
                 }
                 final Array tmpArray = (Array) state.getObject(tmpRef);
                 state.pushOperand(tmpArray.getLength());
             } catch (ClassCastException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
         };

@@ -2,13 +2,11 @@ package jbse.dec;
 
 import java.util.LinkedHashMap;
 
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.ClauseAssume;
-import jbse.rewr.Rewriter;
-import jbse.rewr.exc.NoResultException;
 import jbse.val.Any;
-import jbse.val.Calculator;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.PrimitiveSymbolicAtomic;
@@ -17,9 +15,11 @@ import jbse.val.Operator;
 import jbse.val.Primitive;
 import jbse.val.PrimitiveSymbolic;
 import jbse.val.PrimitiveVisitor;
+import jbse.val.Rewriter;
 import jbse.val.Simplex;
 import jbse.val.Term;
 import jbse.val.WideningConversion;
+import jbse.val.exc.NoResultException;
 
 /**
  * A poor man decision procedure for equalities and inequalities 
@@ -31,8 +31,9 @@ import jbse.val.WideningConversion;
 public final class DecisionProcedureEquality extends DecisionProcedureChainOfResponsibility {
 	private final Partition equivalence = new Partition();
 
-	public DecisionProcedureEquality(DecisionProcedure component, Calculator calc) {
-		super(component, calc);
+	public DecisionProcedureEquality(DecisionProcedure component) 
+	throws InvalidInputException {
+		super(component);
 		this.rewriters = new Rewriter[] { new RewriterUnify() }; //explicit assignment: no constructor call is allowed before super()
 	}
 
@@ -83,7 +84,7 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 		}
 	}
 
-	private static class PrimitiveVisitorEquality implements PrimitiveVisitor {
+	private class PrimitiveVisitorEquality implements PrimitiveVisitor {
 		boolean isEquality, negated;
 		Primitive first, second;
 
@@ -150,12 +151,12 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 								final Primitive toCheckFirstFirst = toCheckFirstExp.getFirstOperand();
 								final Primitive toCheckFirstSecond = toCheckFirstExp.getSecondOperand();
 								if (toCheckFirstFirst instanceof Simplex &&
-										((Simplex) toCheckFirstFirst.neg()).isZeroOne(false)) {
+								    ((Simplex) DecisionProcedureEquality.this.calc.push(toCheckFirstFirst).neg().pop()).isZeroOne(false)) {
 									this.first = toCheckFirstSecond;
 									this.second = toCheckSecond;
 									return;
 								} else if (toCheckFirstSecond instanceof Simplex &&
-										((Simplex) toCheckFirstSecond.neg()).isZeroOne(false)) {
+								           ((Simplex) DecisionProcedureEquality.this.calc.push(toCheckFirstSecond).neg().pop()).isZeroOne(false)) {
 									this.first = toCheckFirstFirst;
 									this.second = toCheckSecond;
 									return;
@@ -173,12 +174,12 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 								final Primitive toCheckSecondFirst = toCheckSecondExp.getFirstOperand();
 								final Primitive toCheckSecondSecond = toCheckSecondExp.getSecondOperand();
 								if (toCheckSecondFirst instanceof Simplex &&
-										((Simplex) toCheckSecondFirst.neg()).isZeroOne(false)) {
+										((Simplex) DecisionProcedureEquality.this.calc.push(toCheckSecondFirst).neg().pop()).isZeroOne(false)) {
 									this.first = toCheckFirst;
 									this.second = toCheckSecondSecond;
 									return;
 								} else if (toCheckSecondSecond instanceof Simplex &&
-										((Simplex) toCheckSecondSecond.neg()).isZeroOne(false)) {
+										((Simplex) DecisionProcedureEquality.this.calc.push(toCheckSecondSecond).neg().pop()).isZeroOne(false)) {
 									this.first = toCheckFirst;
 									this.second = toCheckSecondFirst;
 									return;						
@@ -186,7 +187,7 @@ public final class DecisionProcedureEquality extends DecisionProcedureChainOfRes
 							}
 						}
 						//manages a + b == 0 (by default)
-						this.first = toCheckFirst.neg();
+						this.first = DecisionProcedureEquality.this.calc.push(toCheckFirst).neg().pop();
 						this.second = toCheckSecond;
 						return;
 					}

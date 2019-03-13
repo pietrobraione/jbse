@@ -32,6 +32,7 @@ import jbse.mem.State;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Null;
 import jbse.val.Reference;
 
@@ -51,6 +52,7 @@ public final class Algo_JAVA_CLASS_GETDECLARINGCLASS0 extends Algo_INVOKEMETA_No
     @Override
     protected void cookMore(State state)
     throws ThreadStackEmptyException, InterruptException, ClasspathException, InvalidInputException {
+    	final Calculator calc = this.ctx.getCalculator();
         //There are four kind of classes:
         //
         //1- Top-level: not nested (declared outside everything in packages, or so it seems)
@@ -87,36 +89,36 @@ public final class Algo_JAVA_CLASS_GETDECLARINGCLASS0 extends Algo_INVOKEMETA_No
                 this.declaringClass = Null.getInstance();
             } else {
                 final ClassFile declaringClassFile = state.getClassHierarchy().resolveClass(thisClass, declaringClassName, state.bypassStandardLoading()); //TODO is ok that accessor == thisClass?
-                state.ensureInstance_JAVA_CLASS(declaringClassFile);
+                state.ensureInstance_JAVA_CLASS(calc, declaringClassFile);
                 this.declaringClass = state.referenceToInstance_JAVA_CLASS(declaringClassFile);
             }            
         } catch (PleaseLoadClassException e) {
-            invokeClassLoaderLoadClass(state, e);
+            invokeClassLoaderLoadClass(state, calc, e);
             exitFromAlgorithm();
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, calc, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (ClassFileNotFoundException e) {
-            throwNew(state, CLASS_NOT_FOUND_EXCEPTION);
+            throwNew(state, calc, CLASS_NOT_FOUND_EXCEPTION);
             exitFromAlgorithm();
         } catch (BadClassFileVersionException e) {
-            throwNew(state, UNSUPPORTED_CLASS_VERSION_ERROR);
+            throwNew(state, calc, UNSUPPORTED_CLASS_VERSION_ERROR);
             exitFromAlgorithm();
         } catch (WrongClassNameException e) {
-            throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
+            throwNew(state, calc, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
             exitFromAlgorithm();
         } catch (ClassFileNotAccessibleException e) {
-            throwNew(state, ILLEGAL_ACCESS_ERROR);
+            throwNew(state, calc, ILLEGAL_ACCESS_ERROR);
             exitFromAlgorithm();
         } catch (IncompatibleClassFileException e) {
-            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+            throwNew(state, calc, INCOMPATIBLE_CLASS_CHANGE_ERROR);
             exitFromAlgorithm();
         } catch (ClassFileIllFormedException e) {
             //TODO throw a LinkageError?
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         }
     }

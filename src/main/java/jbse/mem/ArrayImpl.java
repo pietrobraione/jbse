@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 
 import jbse.bc.ClassFile;
 import jbse.bc.Signature;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Array.AccessOutcome;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
@@ -45,6 +46,9 @@ import jbse.val.exc.InvalidTypeException;
 public final class ArrayImpl extends ObjektImpl implements Array {
     /*Fields*/
 
+    /** The conventional term used for indicating the array's index. */
+    private final Term indexFormal;
+
     /** 
      * {@code true} iff this array is an initial array, i.e., 
      * if it is the (immutable) initial array with its origin
@@ -53,20 +57,10 @@ public final class ArrayImpl extends ObjektImpl implements Array {
      */
     private final boolean isInitial;
 
-    /** 
-     * The conventional term used for indicating the array's index.
-     * Note that it cannot be declared static because it depends on 
-     * the {@link Calculator} stored in the array.
-     */
-    private final Term INDEX;
-
-    /** The {@link Calculator}. */
-    private final Calculator calc;
-
     /** The signature of the length field. */
     private final Signature lengthSignature;
 
-    /** An {@link Expression} stating that {@code INDEX} is in range. */
+    /** An {@link Expression} stating that {@code indexFormal} is in range. */
     private final Expression indexInRange;
 
     /** Describes the values stored in the array. */
@@ -116,40 +110,57 @@ public final class ArrayImpl extends ObjektImpl implements Array {
         /**
          * Strengthens the access condition of this {@link AccessOutcome}. 
          * 
-         * @param condition an {@link Expression} This {@link AccessOutcome}'s 
+         * @param calc a Calculator. It must not be {@code null}.
+         * @param condition an {@link Expression}. This {@link AccessOutcome}'s 
          *        access condition will be strengthened by conjoining it
          *        with {@code condition}.
-         * @throws InvalidOperandException if {@code condition} is {@code null}. 
+         * @throws InvalidInputException if {@code calc == null || condition == null}. 
          * @throws InvalidTypeException if {@code condition} has not boolean type.
          */
-        void strengthenAccessCondition(Expression condition) 
-        throws InvalidOperandException, InvalidTypeException {
+        void strengthenAccessCondition(Calculator calc, Expression condition) 
+        throws InvalidInputException, InvalidTypeException {
+        	if (calc == null || condition == null) {
+        		throw new InvalidInputException("Attempted array access with null calc or condition.");
+        	}
             if (this.accessCondition == null) {
                 this.accessCondition = condition;
             } else {
-                this.accessCondition = (Expression) this.accessCondition.and(condition);
+                try {
+					this.accessCondition = (Expression) calc.push(this.accessCondition).and(condition).pop();
+				} catch (InvalidOperandException e) {
+					//this should never happen
+					throw new UnexpectedInternalException(e);
+				}
             }
         }
 
         @Override
-        public void excludeIndexFromAccessCondition(Primitive val)
-        throws InvalidOperandException, InvalidTypeException {
-            if (val.getType() != INT) {
-                throw new InvalidTypeException("attempted array access with index of type " + val.getType());
-            }
-            final Expression indexIsDifferentFromVal = (Expression) INDEX.eq(val).not();
+        public void excludeIndexFromAccessCondition(Calculator calc, Primitive val)
+        throws InvalidInputException, InvalidTypeException {
+        	if (calc == null || val == null) {
+        		throw new InvalidInputException("Attempted array access with null calc or val.");
+        	}
             try {
-                strengthenAccessCondition(indexIsDifferentFromVal);
-            } catch (InvalidTypeException e) {
+            	final Expression indexIsDifferentFromVal = (Expression) calc.push(ArrayImpl.this.indexFormal).eq(val).not().pop();
+                strengthenAccessCondition(calc, indexIsDifferentFromVal);
+            } catch (InvalidOperandException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
             }
         }
 
         @Override
-        public Primitive inRange(Primitive accessIndex) 
-        throws InvalidOperandException, InvalidTypeException { 
-            return this.accessCondition.replace(INDEX, accessIndex); 
+        public Primitive inRange(Calculator calc, Primitive accessIndex) 
+        throws InvalidInputException, InvalidTypeException { 
+        	if (calc == null || accessIndex == null) {
+        		throw new InvalidInputException("Attempted array access with null calc or accessIndex.");
+        	}
+            try {
+				return calc.push(this.accessCondition).replace(ArrayImpl.this.indexFormal, accessIndex).pop();
+			} catch (InvalidOperandException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+			} 
         }
     }
 
@@ -196,31 +207,26 @@ public final class ArrayImpl extends ObjektImpl implements Array {
          */
         private Primitive offset;
 
-        private AccessOutcomeInInitialArrayImpl(Reference initialArray) 
-        throws InvalidOperandException {
-            this(initialArray, ArrayImpl.this.calc.valInt(0));
-        }
-
-        private AccessOutcomeInInitialArrayImpl(Expression accessCondition, Reference initialArray) 
-        throws InvalidOperandException {
-            this(accessCondition, initialArray, ArrayImpl.this.calc.valInt(0));
+        private AccessOutcomeInInitialArrayImpl(Calculator calc, Expression accessCondition, Reference initialArray) 
+        throws InvalidInputException {
+            this(accessCondition, initialArray, calc.valInt(0));
         }
 
         private AccessOutcomeInInitialArrayImpl(Reference initialArray, Primitive offset) 
-        throws InvalidOperandException {
+        throws InvalidInputException {
             super();
             if (initialArray == null || offset == null) {
-                throw new InvalidOperandException("tried to create an AccessOutcomeInitialArray with null initial array origin or null offset");
+                throw new InvalidInputException("Tried to create an AccessOutcomeInitialArray with null initial array origin or null offset.");
             }
             this.initialArray = initialArray;
             this.offset = offset;
         }
 
         private AccessOutcomeInInitialArrayImpl(Expression accessCondition, Reference initialArray, Primitive offset) 
-        throws InvalidOperandException {
+        throws InvalidInputException {
             super(accessCondition);
             if (initialArray == null || offset == null) {
-                throw new InvalidOperandException("tried to create an AccessOutcomeInitialArray with null initial array origin or null offset");
+                throw new InvalidInputException("Tried to create an AccessOutcomeInitialArray with null initial array origin or null offset.");
             }
             this.initialArray = initialArray;
             this.offset = offset;
@@ -345,10 +351,12 @@ public final class ArrayImpl extends ObjektImpl implements Array {
     /**
      * Constructor.
      * 
+     * @param calc a {@link Calculator}. It must not be {@code null}. It will
+     *        only be used during object construction and will not be stored
+     *        in this {@link ObjektImpl}.
      * @param symbolic a {@code boolean}, whether this object is symbolic
      *        (i.e., not explicitly created during symbolic execution by
      *        a {@code new*} bytecode, but rather assumed).     
-     * @param calc a {@code Calculator}.
      * @param initSymbolic {@code true} iff the array must be initialized 
      *        with symbolic values.
      * @param initValue a {@link Value} for initializing the array (ignored
@@ -367,72 +375,73 @@ public final class ArrayImpl extends ObjektImpl implements Array {
      *        to be granted simple representation.
      * @throws InvalidTypeException iff {@code classFile} is invalid. 
      */
-    public ArrayImpl(boolean symbolic, Calculator calc, boolean initSymbolic, Value initValue, Primitive length, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, boolean isInitial, int maxSimpleArrayLength) 
+    public ArrayImpl(Calculator calc, boolean symbolic, boolean initSymbolic, Value initValue, Primitive length, ClassFile classFile, ReferenceSymbolic origin, HistoryPoint epoch, boolean isInitial, int maxSimpleArrayLength) 
     throws InvalidTypeException {
-        super(symbolic, calc, classFile, origin, epoch, false, 0, new Signature(classFile.getClassName(), "" + INT, "length"));
+        super(calc, symbolic, classFile, origin, epoch, false, 0, new Signature(classFile.getClassName(), "" + INT, "length"));
         if (classFile == null || !classFile.isArray()) {
             throw new InvalidTypeException("Attempted creation of an array with type " + classFile.getClassName());
         }
         this.isInitial = isInitial;
         this.lengthSignature = new Signature(classFile.getClassName(), "" + INT, "length");
-        this.calc = calc;
         try {
-            this.INDEX = this.calc.valTerm(INT, INDEX_ID);
+            this.indexFormal = calc.valTerm(INT, INDEX_ID);
         } catch (InvalidTypeException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
         setFieldValue(this.lengthSignature, length);
         try {
-            final Expression indexGreaterThanZero = (Expression) INDEX.ge(this.calc.valInt(0));
-            final Expression indexLessThanLength = (Expression) INDEX.lt(length);
-            this.indexInRange  = (Expression) indexGreaterThanZero.and(indexLessThanLength);		
+            final Expression indexGreaterEqualZero = (Expression) calc.push(indexFormal).ge(calc.valInt(0)).pop();
+            final Expression indexLessThanLength = (Expression) calc.push(indexFormal).lt(length).pop();
+            this.indexInRange  = (Expression) calc.push(indexGreaterEqualZero).and(indexLessThanLength).pop();		
         } catch (InvalidOperandException | InvalidTypeException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-        setEntriesInit(initSymbolic, initValue, maxSimpleArrayLength);
+        setEntriesInit(calc, initSymbolic, initValue, maxSimpleArrayLength);
     }
 
     /**
      * Constructor.
      * 
+     * @param calc a {@link Calculator}. It must not be {@code null}. It will
+     *        only be used during object construction and will not be stored
+     *        in this {@link ObjektImpl}.
      * @param referenceToOtherArray a {@link Reference} to an {@link ArrayImpl} that backs this array.
      * @param otherArray the {@link ArrayImpl} that backs this array.
-     * @throws InvalidOperandException if {@code referenceToOtherArray == null}.
+     * @throws InvalidInputException if {@code referenceToOtherArray == null}.
      * @throws NullPointerException if {@code otherArray == null}.
      */
-    public ArrayImpl(Reference referenceToOtherArray, ArrayImpl otherArray) throws InvalidOperandException {
-        super(otherArray.isSymbolic(), otherArray.calc, otherArray.classFile, otherArray.getOrigin(), otherArray.historyPoint(), false, 0, new Signature(otherArray.classFile.getClassName(), "" + INT, "length"));
+    public ArrayImpl(Calculator calc, Reference referenceToOtherArray, ArrayImpl otherArray) throws InvalidInputException {
+        super(calc, otherArray.isSymbolic(), otherArray.classFile, otherArray.getOrigin(), otherArray.historyPoint(), false, 0, new Signature(otherArray.classFile.getClassName(), "" + INT, "length"));
         //TODO assert other is an initial symbolic array
         this.isInitial = false;
         this.lengthSignature = new Signature(this.classFile.getClassName(), "" + INT, "length");
-        this.calc = otherArray.calc;
         try {
-            this.INDEX = this.calc.valTerm(INT, INDEX_ID);
+            this.indexFormal = calc.valTerm(INT, INDEX_ID);
         } catch (InvalidTypeException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
         this.fields.get(this.lengthSignature).setValue(otherArray.getLength());
         try {
-            final Expression indexGreaterThanZero = (Expression) INDEX.ge(this.calc.valInt(0));
-            final Expression indexLessThanLength = (Expression) INDEX.lt(getLength());
-            this.indexInRange  = (Expression) indexGreaterThanZero.and(indexLessThanLength);		
+            final Expression indexGreaterEqualZero = (Expression) calc.push(indexFormal).ge(calc.valInt(0)).pop();
+            final Expression indexLessThanLength = (Expression) calc.push(indexFormal).lt(getLength()).pop();
+            this.indexInRange  = (Expression) calc.push(indexGreaterEqualZero).and(indexLessThanLength).pop();		
         } catch (InvalidOperandException | InvalidTypeException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
         this.entries = new LinkedList<>();
-        this.entries.add(new AccessOutcomeInInitialArrayImpl(this.indexInRange, referenceToOtherArray));
+        this.entries.add(new AccessOutcomeInInitialArrayImpl(calc, this.indexInRange, referenceToOtherArray));
     }
 
-    private void setEntriesInit(boolean initSymbolic, Value initValue, int maxSimpleArrayLength) {
+    private void setEntriesInit(Calculator calc, boolean initSymbolic, Value initValue, int maxSimpleArrayLength) {
         final Value entryValue;
         if (initSymbolic) {
             entryValue = null;
         } else if (initValue == null) {
-            entryValue = this.calc.createDefault(getArrayMemberType(this.classFile.getClassName()).charAt(0)); 
+            entryValue = calc.valDefault(getArrayMemberType(this.classFile.getClassName()).charAt(0)); 
         } else {
             entryValue = initValue;
         }
@@ -449,9 +458,9 @@ public final class ArrayImpl extends ObjektImpl implements Array {
             final int ln = ((Integer) ((Simplex) getLength()).getActualValue()).intValue();
             if (ln <= maxSimpleArrayLength) {
                 this.simpleRep = true;
-                for (int i = 0; i < ln; i++) {
+                for (int i = 0; i < ln; ++i) {
                     try {
-                        this.entries.add(new AccessOutcomeInValueImpl((Expression) INDEX.eq(this.calc.valInt(i)),
+                        this.entries.add(new AccessOutcomeInValueImpl((Expression) calc.push(this.indexFormal).eq(calc.valInt(i)).pop(),
                                                                   entryValue));
                     } catch (InvalidOperandException | InvalidTypeException e) {
                         //this should never happen
@@ -478,7 +487,7 @@ public final class ArrayImpl extends ObjektImpl implements Array {
     
     @Override
     public Term getIndex() {
-    	return this.INDEX;
+    	return this.indexFormal;
     }
 
     @Override
@@ -505,25 +514,25 @@ public final class ArrayImpl extends ObjektImpl implements Array {
     }
     
     @Override
-    public AccessOutcome getFast(Simplex index)
-    throws InvalidOperandException, InvalidTypeException, FastArrayAccessNotAllowedException {
-        if (index == null) {
-            throw new InvalidOperandException("attempted array access with null index");
-        }
-        if (index.getType() != INT) {
-            throw new InvalidTypeException("attempted array access with an index with type " + index.getType());
-        }
+    public AccessOutcome getFast(Calculator calc, Simplex index)
+    throws InvalidInputException, InvalidTypeException, FastArrayAccessNotAllowedException {
         if (!this.simpleRep) {
             throw new FastArrayAccessNotAllowedException();
         }
-        return get(index).iterator().next();
+        return get(calc, index).iterator().next();
     }
 
     @Override
-    public Collection<AccessOutcome> get(Primitive index) 
-    throws InvalidOperandException, InvalidTypeException {
+    public Collection<AccessOutcome> get(Calculator calc, Primitive index) 
+    throws InvalidInputException, InvalidTypeException {
+        if (calc == null || index == null) {
+            throw new InvalidInputException("Attempted array fast access with null calc or index.");
+        }
+        if (index.getType() != INT) {
+            throw new InvalidTypeException("Attempted array fast access with an index with type " + index.getType() + ".");
+        }
         final ArrayList<AccessOutcome> retVal = new ArrayList<>();
-        final Primitive inRange = inRange(index);
+        final Primitive inRange = inRange(calc, index);
 
         //builds the answer
         if (hasSimpleRep() && index instanceof Simplex) { 
@@ -544,7 +553,7 @@ public final class ArrayImpl extends ObjektImpl implements Array {
             //scans the entries and adds all the (possibly) satisfiable 
             //inbound cases
             for (AccessOutcomeIn e : this.entries) {
-                final Primitive inRangeEntry = e.inRange(index);
+                final Primitive inRangeEntry = e.inRange(calc, index);
                 if (inRangeEntry.surelyTrue()) { //this may only happen when index is Simplex
                     if (e instanceof AccessOutcomeInValue) {
                         retVal.add(new AccessOutcomeInValueImpl(((AccessOutcomeInValue) e).getValue()));
@@ -566,13 +575,18 @@ public final class ArrayImpl extends ObjektImpl implements Array {
             }
 
             //manages the out-of-bounds case
-            final Primitive outOfRange = outOfRange(index);
+            final Primitive outOfRange = outOfRange(calc, index);
             if (outOfRange.surelyTrue()) {
                 retVal.add(new AccessOutcomeOutImpl());
             } else if (outOfRange.surelyFalse()) {
                 //do nothing
             } else { //outOfRange is possibly satisfiable
-                retVal.add(new AccessOutcomeOutImpl((Expression) this.indexInRange.not()));
+                try {
+					retVal.add(new AccessOutcomeOutImpl((Expression) calc.push(this.indexInRange).not().pop()));
+				} catch (InvalidOperandException e) {
+		            //this should never happen
+		            throw new UnexpectedInternalException(e);
+				}
             }
         }
 
@@ -601,12 +615,12 @@ public final class ArrayImpl extends ObjektImpl implements Array {
 
     @Override
     public void setFast(Simplex index, Value newValue) 
-    throws InvalidOperandException, InvalidTypeException, FastArrayAccessNotAllowedException {
+    throws InvalidInputException, InvalidTypeException, FastArrayAccessNotAllowedException {
         if (index == null) {
-            throw new InvalidOperandException("attempted array access with null index");
+            throw new InvalidInputException("Attempted array access with null index.");
         }
         if (index.getType() != INT) {
-            throw new InvalidTypeException("attempted array access with an index with type " + index.getType());
+            throw new InvalidTypeException("Attempted array access with an index with type " + index.getType() + ".");
         }
         if (!this.simpleRep) {
             throw new FastArrayAccessNotAllowedException();
@@ -626,19 +640,24 @@ public final class ArrayImpl extends ObjektImpl implements Array {
     }
 
     @Override
-    public void set(final Primitive index, final Value newValue)
-    throws InvalidOperandException, InvalidTypeException {
-        if (index == null) {
-            throw new InvalidOperandException("attempted array access with null index");
+    public void set(Calculator calc, Primitive index, Value newValue)
+    throws InvalidInputException, InvalidTypeException {
+        if (calc == null || index == null) {
+            throw new InvalidInputException("Attempted array access with null calc or index.");
         }
         if (index.getType() != INT) {
-            throw new InvalidTypeException("attempted array access with an index with type " + index.getType());
+            throw new InvalidTypeException("Attempted array access with an index with type " + index.getType() + ".");
         }
         checkSetValue(newValue);
         this.simpleRep = false;
-        final Expression formalIndexIsSetIndex = (Expression) INDEX.eq(index);
-        final Expression accessExpression = (Expression) this.indexInRange.and(formalIndexIsSetIndex); //if we assume that index may be in range, this is an Expression
-        this.entries.add(new AccessOutcomeInValueImpl(accessExpression, newValue));
+		try {
+	        final Expression formalIndexIsActualIndex = (Expression) calc.push(this.indexFormal).eq(index).pop();
+	        final Expression accessExpression = (Expression) calc.push(this.indexInRange).and(formalIndexIsActualIndex).pop();
+	        this.entries.add(new AccessOutcomeInValueImpl(accessExpression, newValue));
+		} catch (InvalidOperandException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		} 
     }
     
     @Override
@@ -647,7 +666,11 @@ public final class ArrayImpl extends ObjektImpl implements Array {
     }
     
     @Override
-    public Iterator<? extends AccessOutcomeIn> entriesPossiblyAffectedByAccess(final Primitive index, final Value valToSet) {
+    public Iterator<? extends AccessOutcomeIn> entriesPossiblyAffectedByAccess(Calculator calc, Primitive index, Value newValue) 
+    throws InvalidInputException {
+        if (calc == null || index == null) {
+            throw new InvalidInputException("Attempted array access with null calc or index.");
+        }
         return new Iterator<AccessOutcomeIn>() {
             //this iterator filters the relevant members in Array.this.values
             //by wrapping the default iterator to it
@@ -666,10 +689,10 @@ public final class ArrayImpl extends ObjektImpl implements Array {
                     //operation
                     boolean entryAffected;
                     try {
-                        entryAffected = !e.inRange(index).surelyFalse() && 
-                        (e instanceof AccessOutcomeInInitialArray || ((AccessOutcomeInValue) e).getValue() == null || !((AccessOutcomeInValue) e).getValue().equals(valToSet));
-                    } catch (InvalidOperandException | InvalidTypeException exc) {
-                        //this should never happen because index was already checked
+                        entryAffected = !e.inRange(calc, index).surelyFalse() && 
+                        (e instanceof AccessOutcomeInInitialArray || ((AccessOutcomeInValue) e).getValue() == null || !((AccessOutcomeInValue) e).getValue().equals(newValue));
+                    } catch (InvalidInputException | InvalidTypeException exc) {
+                        //this should never happen because calc and index were already checked
                         throw new UnexpectedInternalException(exc);
                     }
 
@@ -724,7 +747,10 @@ public final class ArrayImpl extends ObjektImpl implements Array {
     }
     
     @Override
-    public void cloneEntries(Array src) throws InvalidTypeException {
+    public void cloneEntries(Array src, Calculator calc) throws InvalidInputException, InvalidTypeException {
+    	if (src == null || calc == null) {
+    		throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".cloneEntries with null Array src or Calculator calc parameter.");
+    	}
     	final ArrayImpl otherImpl;
     	if (src instanceof ArrayImpl) {
     		otherImpl = (ArrayImpl) src;
@@ -739,7 +765,7 @@ public final class ArrayImpl extends ObjektImpl implements Array {
     	for (AccessOutcomeInImpl entry : otherImpl.entries) {
     		final AccessOutcomeInImpl entryClone = entry.clone();
     		try {
-    			entryClone.accessCondition = (Expression) entryClone.accessCondition.replace(this.INDEX, otherImpl.INDEX);
+    			entryClone.accessCondition = (Expression) calc.push(entryClone.accessCondition).replace(this.indexFormal, otherImpl.indexFormal).pop();
     		} catch (InvalidTypeException | InvalidOperandException e) {
     			//this should never happen
     			throw new UnexpectedInternalException(e);
@@ -757,8 +783,11 @@ public final class ArrayImpl extends ObjektImpl implements Array {
     };
 
     @Override
-    public Iterator<? extends AccessOutcomeIn> arraycopy(Array src, Primitive srcPos, Primitive destPos, Primitive length, Consumer<Reference> checkOk) 
-    throws InvalidOperandException, InvalidTypeException {
+    public Iterator<? extends AccessOutcomeIn> arraycopy(Calculator calc, Array src, Primitive srcPos, Primitive destPos, Primitive length, Consumer<Reference> checkOk) 
+    throws InvalidInputException, InvalidTypeException {
+    	if (calc == null || src == null || srcPos == null || destPos == null || length == null) {
+    		throw new InvalidInputException("Attempted arraycopy with null parameter.");
+    	}
     	final ArrayImpl srcImpl;
     	if (src instanceof ArrayImpl) {
     		srcImpl = (ArrayImpl) src;
@@ -767,87 +796,107 @@ public final class ArrayImpl extends ObjektImpl implements Array {
     	}
     	final String srcTypeComponent = getArrayMemberType(src.getType().getClassName());
     	final String destTypeComponent = getArrayMemberType(getType().getClassName());
-    	if (this.simpleRep && srcImpl.simpleRep && 
-    			srcPos instanceof Simplex && destPos instanceof Simplex && 
-    			length instanceof Simplex) {
-    		//fast operation
-    		int srcPosInt = ((Integer) ((Simplex) srcPos).getActualValue()).intValue();
-    		int destPosInt = ((Integer) ((Simplex) destPos).getActualValue()).intValue();
-    		int lengthInt = ((Integer) ((Simplex) length).getActualValue()).intValue();
-    		final ArrayList<Integer> destPosEntries = new ArrayList<>(); //buffer to avoid concurrent modification when this == srcImpl
-                final ArrayList<AccessOutcomeInImpl> destEntries = new ArrayList<>(); //buffer to avoid concurrent modification when this == srcImpl
-    		for (int ofst = 0; ofst < lengthInt; ++ofst) {
-    			final AccessOutcomeIn srcEntry = srcImpl.entries.get(srcPosInt + ofst);
-    			final AccessOutcomeInImpl destEntry;
-    			if (srcEntry instanceof AccessOutcomeInValue) {
-    				final Value srcValue = ((AccessOutcomeInValue) srcEntry).getValue();
-    				if (!isPrimitive(srcTypeComponent) && !isPrimitive(destTypeComponent)) { 
-    					checkOk.accept((Reference) srcValue);
+    	try {
+    		if (this.simpleRep && srcImpl.simpleRep && 
+    				srcPos instanceof Simplex && destPos instanceof Simplex && 
+    				length instanceof Simplex) {
+    			//fast operation
+    			int srcPosInt = ((Integer) ((Simplex) srcPos).getActualValue()).intValue();
+    			int destPosInt = ((Integer) ((Simplex) destPos).getActualValue()).intValue();
+    			int lengthInt = ((Integer) ((Simplex) length).getActualValue()).intValue();
+    			final ArrayList<Integer> destPosEntries = new ArrayList<>(); //buffer to avoid concurrent modification when this == srcImpl
+    			final ArrayList<AccessOutcomeInImpl> destEntries = new ArrayList<>(); //buffer to avoid concurrent modification when this == srcImpl
+    			for (int ofst = 0; ofst < lengthInt; ++ofst) {
+    				final AccessOutcomeIn srcEntry = srcImpl.entries.get(srcPosInt + ofst);
+    				final AccessOutcomeInImpl destEntry;
+    				if (srcEntry instanceof AccessOutcomeInValue) {
+    					final Value srcValue = ((AccessOutcomeInValue) srcEntry).getValue();
+    					if (!isPrimitive(srcTypeComponent) && !isPrimitive(destTypeComponent) && checkOk != null) { 
+    						checkOk.accept((Reference) srcValue);
+    					}
+    					destEntry = new AccessOutcomeInValueImpl(srcEntry.getAccessCondition(), srcValue);
+    				} else { //srcEntry instanceof AccessOutcomeInInitialArray
+    					final Reference initialArray = ((AccessOutcomeInInitialArray) srcEntry).getInitialArray();
+    					final Primitive offset = ((AccessOutcomeInInitialArray) srcEntry).getOffset();
+    					//TODO find a way to perform assignment compatibility check
+    					destEntry = new AccessOutcomeInInitialArrayImpl(srcEntry.getAccessCondition(), initialArray, calc.push(offset).sub(destPos).add(srcPos).pop());
     				}
-    				destEntry = new AccessOutcomeInValueImpl(srcEntry.getAccessCondition(), srcValue);
-    			} else { //srcEntry instanceof AccessOutcomeInInitialArray
-    				final Reference initialArray = ((AccessOutcomeInInitialArray) srcEntry).getInitialArray();
-    				final Primitive offset = ((AccessOutcomeInInitialArray) srcEntry).getOffset();
-    				//TODO find a way to perform assignment compatibility check
-    				destEntry = new AccessOutcomeInInitialArrayImpl(srcEntry.getAccessCondition(), initialArray, offset.sub(destPos).add(srcPos));
+    				destPosEntries.add(destPosInt + ofst);
+    				destEntries.add(destEntry);
     			}
-    			destPosEntries.add(destPosInt + ofst);
-    			destEntries.add(destEntry);
-    		}
-    		for (int i = 0; i < destPosEntries.size(); ++i) {
-                    this.entries.set(destPosEntries.get(i), destEntries.get(i));
-    		}
-    		return EMPTY_ITERATOR;
-    	} else {
-    		this.simpleRep = false;
-    		final Expression indexInDestRange = (Expression) INDEX.ge(destPos).and(INDEX.lt(destPos.add(length)));
-    		final Expression indexNotInDestRange = (Expression) indexInDestRange.not();
+    			for (int i = 0; i < destPosEntries.size(); ++i) {
+    				this.entries.set(destPosEntries.get(i), destEntries.get(i));
+    			}
+    			return EMPTY_ITERATOR;
+    		} else {
+    			this.simpleRep = false;
+    			final Expression indexInDestRange = (Expression) calc.push(this.indexFormal).ge(destPos).and(calc.push(this.indexFormal).lt(calc.push(destPos).add(length).pop()).pop()).pop();
+    			final Expression indexNotInDestRange = (Expression) calc.push(indexInDestRange).not().pop();
 
-    		//constrains the entries of the destination array
-    		for (AccessOutcomeInImpl destEntry : this.entries) {
-    			destEntry.strengthenAccessCondition(indexNotInDestRange);
-    		}
+    			//constrains the entries of the destination array
+    			for (AccessOutcomeInImpl destEntry : this.entries) {
+    				destEntry.strengthenAccessCondition(calc, indexNotInDestRange);
+    			}
 
-    		//adds new entries corresponding to the source array entries
-    		final Primitive srcIndex = INDEX.sub(destPos).add(srcPos);
-    		final ArrayList<AccessOutcomeInImpl> destEntries = new ArrayList<>(); //buffer to avoid concurrent modification when this == srcImpl
-    		for (AccessOutcomeIn srcEntry : srcImpl.entries) {
-    			final Expression accessCondition = (Expression) this.indexInRange.and(srcEntry.inRange(srcIndex)).and(indexInDestRange);
-    			final AccessOutcomeInImpl destEntry;
-    			if (srcEntry instanceof AccessOutcomeInValue) {
-    				final Value srcValue = ((AccessOutcomeInValue) srcEntry).getValue();
-    				if (!isPrimitive(srcTypeComponent) && !isPrimitive(destTypeComponent)) { 
-    					checkOk.accept((Reference) srcValue);
+    			//adds new entries corresponding to the source array entries
+    			final Primitive srcIndex = calc.push(this.indexFormal).sub(destPos).add(srcPos).pop();
+    			final ArrayList<AccessOutcomeInImpl> destEntries = new ArrayList<>(); //buffer to avoid concurrent modification when this == srcImpl
+    			for (AccessOutcomeIn srcEntry : srcImpl.entries) {
+    				final Expression accessCondition = (Expression) calc.push(this.indexInRange).and(srcEntry.inRange(calc, srcIndex)).and(indexInDestRange).pop();
+    				final AccessOutcomeInImpl destEntry;
+    				if (srcEntry instanceof AccessOutcomeInValue) {
+    					final Value srcValue = ((AccessOutcomeInValue) srcEntry).getValue();
+    					if (!isPrimitive(srcTypeComponent) && !isPrimitive(destTypeComponent) && checkOk != null) { 
+    						checkOk.accept((Reference) srcValue);
+    					}
+    					destEntry = new AccessOutcomeInValueImpl(accessCondition, srcValue);
+    				} else { //srcEntry instanceof AccessOutcomeInInitialArray
+    					final Reference initialArray = ((AccessOutcomeInInitialArray) srcEntry).getInitialArray();
+    					final Primitive offset = ((AccessOutcomeInInitialArray) srcEntry).getOffset();
+    					//TODO find a way to perform assignment compatibility check
+    					destEntry = new AccessOutcomeInInitialArrayImpl(accessCondition, initialArray, calc.push(offset).sub(destPos).add(srcPos).pop());
     				}
-    				destEntry = new AccessOutcomeInValueImpl(accessCondition, srcValue);
-    			} else { //srcEntry instanceof AccessOutcomeInInitialArray
-    				final Reference initialArray = ((AccessOutcomeInInitialArray) srcEntry).getInitialArray();
-    				final Primitive offset = ((AccessOutcomeInInitialArray) srcEntry).getOffset();
-    				//TODO find a way to perform assignment compatibility check
-    				destEntry = new AccessOutcomeInInitialArrayImpl(accessCondition, initialArray, offset.sub(destPos).add(srcPos));
+    				destEntries.add(destEntry);
     			}
-    			destEntries.add(destEntry);
-    		}
-    		for (AccessOutcomeInImpl destEntry : destEntries) {
-                    this.entries.add(destEntry);
-    		}
+    			for (AccessOutcomeInImpl destEntry : destEntries) {
+    				this.entries.add(destEntry);
+    			}
 
-    		//returns the iterator
-    		return ArrayImpl.this.entries.iterator(); //for sake of simplicity all the entries are considered potentially affected
+    			//returns the iterator
+    			return ArrayImpl.this.entries.iterator(); //for sake of simplicity all the entries are considered potentially affected
+    		}
+    	} catch (InvalidOperandException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
     	}
     }
 
     @Override
-    public Primitive inRange(Primitive index) 
-    throws InvalidOperandException, InvalidTypeException {
-    	return this.indexInRange.replace(this.INDEX, index);
+    public Primitive inRange(Calculator calc, Primitive index) 
+    throws InvalidInputException, InvalidTypeException {
+        if (calc == null || index == null) {
+            throw new InvalidInputException("Attempted array inRange check with null calc or index.");
+        }
+    	try {
+			return calc.push(this.indexInRange).replace(this.indexFormal, index).pop();
+		} catch (InvalidOperandException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
     }
 
     @Override
-    public Primitive outOfRange(Primitive index) 
-    throws InvalidOperandException, InvalidTypeException {
-    	final Primitive retVal = inRange(index).not();
-    	return retVal;
+    public Primitive outOfRange(Calculator calc, Primitive index) 
+    throws InvalidInputException, InvalidTypeException {
+        if (calc == null || index == null) {
+            throw new InvalidInputException("Attempted array outOfRange check with null calc or index.");
+        }
+    	try {
+			return calc.push(inRange(calc, index)).not().pop();
+		} catch (InvalidOperandException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
     }
 
     @Override

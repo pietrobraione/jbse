@@ -30,7 +30,7 @@ public class DecisionProcedureDecoratorStats extends DecisionProcedureDecorator 
         return elapsed;
     }
 
-    public DecisionProcedureDecoratorStats(DecisionProcedure component) {
+    public DecisionProcedureDecoratorStats(DecisionProcedure component) throws InvalidInputException {
         super(component);
     }
 

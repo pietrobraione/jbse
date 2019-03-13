@@ -42,7 +42,7 @@ final class Algo_PUTFIELD extends Algo_PUTX {
     throws FieldNotFoundException, InterruptException, ClasspathException, ThreadStackEmptyException, FrozenStateException {
         //checks that the field is not static
         if (this.fieldClassResolved.isFieldStatic(this.data.signature())) {
-            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+            throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
             exitFromAlgorithm();
         }
         
@@ -73,7 +73,7 @@ final class Algo_PUTFIELD extends Algo_PUTX {
             }
             if (!destinationClassIsCurrentClassOrSubclass) {
                 //TODO the JVMS v8, putfield instruction, does not say what to do in this case; we assume it is an invariant ensured by verification and so throw VerifyError
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
         }            
@@ -89,12 +89,12 @@ final class Algo_PUTFIELD extends Algo_PUTX {
         try {
             final Reference myObjectRef = (Reference) this.data.operand(0);
             if (state.isNull(myObjectRef)) {
-                throwNew(state, NULL_POINTER_EXCEPTION);
+                throwNew(state, this.ctx.getCalculator(), NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
             return state.getObject(myObjectRef);
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         } catch (ClasspathException e) {
             //this should never happen

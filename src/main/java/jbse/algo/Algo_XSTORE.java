@@ -68,7 +68,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
             try {
                 state.setLocalVariable(index, valTemp);
             } catch (InvalidSlotException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             } catch (ThreadStackEmptyException e) {
                 failExecution(e);

@@ -87,7 +87,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 final String initializationMethodName = (this.isStatic ? "<clinit>" : "<init>");
                 if (this.fieldClassResolved.isFieldFinal(this.data.signature()) && 
                    (this.fieldClassResolved != currentClass || !initializationMethodName.equals(state.getCurrentMethodSignature().getName()))) {
-                    throwNew(state, ILLEGAL_ACCESS_ERROR);
+                    throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
                     exitFromAlgorithm();
                 }
 
@@ -99,19 +99,19 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     final char fieldTypePrimitive = destinationType.charAt(0);
                     if (isPrimitiveOpStack(fieldTypePrimitive)) {
                         if (valueType != fieldTypePrimitive) {
-                            throwVerifyError(state);
+                            throwVerifyError(state, this.ctx.getCalculator());
                             exitFromAlgorithm();
                         }
                     } else if (valueType == INT) {
                     	//TODO the JVMS v8 does *not* say that in this case the value should be narrowed to the destination type: Rather, it should just be *reinterpreted*. Unfortunately JBSE cannot do that so it uses narrowing instead, and this is a bug. However in standard bytecode a value is narrowed before being reinterpreted, so it should not be an issue in the most typical case. 
                         try {
-                            this.valueToPut = ((Primitive) this.valueToPut).narrow(fieldTypePrimitive);
+                            this.valueToPut = this.ctx.getCalculator().push((Primitive) this.valueToPut).narrow(fieldTypePrimitive).pop();
                         } catch (InvalidTypeException e) {
                             //this should never happen
                             failExecution(e);
                         }
                     } else {
-                        throwVerifyError(state);
+                        throwVerifyError(state, this.ctx.getCalculator());
                         exitFromAlgorithm();
                     }
                 } else if (isReference(valueType)) {
@@ -121,40 +121,40 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                         final ClassFile destinationTypeClass = state.getClassHierarchy().resolveClass(currentClass, className(destinationType), state.bypassStandardLoading());
                         final ClassFile valueObjectType = state.getObject(refToPut).getType();
                         if (!state.getClassHierarchy().isAssignmentCompatible(valueObjectType, destinationTypeClass)) {
-                            throwVerifyError(state);
+                            throwVerifyError(state, this.ctx.getCalculator());
                             exitFromAlgorithm();
                         }
                     }
                 } else if (valueType == NULLREF) {
                     //nothing to do
                 } else { //field has reference type, value has primitive type
-                    throwVerifyError(state);
+                    throwVerifyError(state, this.ctx.getCalculator());
                     exitFromAlgorithm();
                 }
             } catch (PleaseLoadClassException e) {
-                invokeClassLoaderLoadClass(state, e);
+                invokeClassLoaderLoadClass(state, this.ctx.getCalculator(), e);
                 exitFromAlgorithm();
             } catch (ClassFileNotFoundException e) {
                 //TODO this exception should wrap a ClassNotFoundException
-                throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+                throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR);
                 exitFromAlgorithm();
             } catch (BadClassFileVersionException e) {
-                throwNew(state, UNSUPPORTED_CLASS_VERSION_ERROR);
+                throwNew(state, this.ctx.getCalculator(), UNSUPPORTED_CLASS_VERSION_ERROR);
                 exitFromAlgorithm();
             } catch (WrongClassNameException e) {
-                throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
+                throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
                 exitFromAlgorithm();
             } catch (IncompatibleClassFileException e) {
-                throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
                 exitFromAlgorithm();
             } catch (FieldNotFoundException e) {
-                throwNew(state, NO_SUCH_FIELD_ERROR);
+                throwNew(state, this.ctx.getCalculator(), NO_SUCH_FIELD_ERROR);
                 exitFromAlgorithm();
             } catch (ClassFileNotAccessibleException | FieldNotAccessibleException e) {
-                throwNew(state, ILLEGAL_ACCESS_ERROR);
+                throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
                 exitFromAlgorithm();
             } catch (ClassFileIllFormedException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
 

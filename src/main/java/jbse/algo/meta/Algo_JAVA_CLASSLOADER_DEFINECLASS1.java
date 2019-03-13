@@ -43,7 +43,6 @@ import jbse.val.Calculator;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.Simplex;
-import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -62,7 +61,8 @@ public final class Algo_JAVA_CLASSLOADER_DEFINECLASS1 extends Algo_INVOKEMETA_No
     @Override
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, ClasspathException, InterruptException, 
-    SymbolicValueNotAllowedException, InvalidInputException {
+    SymbolicValueNotAllowedException, InvalidInputException, InvalidTypeException {
+    	final Calculator calc = this.ctx.getCalculator();
         try {
             //gets the first ('this') parameter
             final Reference thisReference = (Reference) this.data.operand(0);
@@ -88,7 +88,7 @@ public final class Algo_JAVA_CLASSLOADER_DEFINECLASS1 extends Algo_INVOKEMETA_No
             //gets the third (byte[] b) parameter
             final Reference bufReference = (Reference) this.data.operand(2);
             if (state.isNull(bufReference)) {
-                throwNew(state, NULL_POINTER_EXCEPTION);
+                throwNew(state, calc, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
             final Array _buf = (Array) state.getObject(bufReference);
@@ -113,57 +113,53 @@ public final class Algo_JAVA_CLASSLOADER_DEFINECLASS1 extends Algo_INVOKEMETA_No
             //checks offset and length
             final int bufLength = ((Integer) ((Simplex) _buf.getLength()).getActualValue()).intValue();
             if (ofst < 0 || len < 0 || bufLength - ofst < len) {
-                throwNew(state, INDEX_OUT_OF_BOUNDS_EXCEPTION);
+                throwNew(state, calc, INDEX_OUT_OF_BOUNDS_EXCEPTION);
                 exitFromAlgorithm();
             }
             
             //sets the bytecode
             final byte[] buf = new byte[len];
-            final Calculator calc = state.getCalculator();
             for (int i = ofst; i < ofst + len; ++i) {
-                final Simplex _buf_i = (Simplex) ((Array.AccessOutcomeInValue) _buf.get(calc.valInt(i)).iterator().next()).getValue(); 
+                final Simplex _buf_i = (Simplex) ((Array.AccessOutcomeInValue) _buf.get(calc, calc.valInt(i)).iterator().next()).getValue(); 
                 buf[i - ofst] = ((Byte) _buf_i.getActualValue()).byteValue();
             }
             
             //defines the class
             this.classFile = state.getClassHierarchy().defineClass(classLoader, name, buf, state.bypassStandardLoading());
-            state.ensureInstance_JAVA_CLASS(this.classFile);
+            state.ensureInstance_JAVA_CLASS(calc, this.classFile);
         } catch (PleaseLoadClassException e) {
-            invokeClassLoaderLoadClass(state, e);
+            invokeClassLoaderLoadClass(state, calc, e);
             exitFromAlgorithm();
         } catch (ClassFileNotFoundException e) {
             //this is how Hotspot behaves
             //TODO this exception should wrap a ClassNotFoundException
-            throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+            throwNew(state, calc, NO_CLASS_DEFINITION_FOUND_ERROR);
             exitFromAlgorithm();
         } catch (AlreadyDefinedClassException e) {
-            throwNew(state, LINKAGE_ERROR);
+            throwNew(state, calc, LINKAGE_ERROR);
             exitFromAlgorithm();
         } catch (BadClassFileVersionException e) {
-            throwNew(state, UNSUPPORTED_CLASS_VERSION_ERROR);
+            throwNew(state, calc, UNSUPPORTED_CLASS_VERSION_ERROR);
             exitFromAlgorithm();
         } catch (WrongClassNameException e) {
-            throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
+            throwNew(state, calc, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
             exitFromAlgorithm();
         } catch (IncompatibleClassFileException e) {
-            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+            throwNew(state, calc, INCOMPATIBLE_CLASS_CHANGE_ERROR);
             exitFromAlgorithm();
         } catch (ClassFileNotAccessibleException e) {
-            throwNew(state, ILLEGAL_ACCESS_ERROR);
+            throwNew(state, calc, ILLEGAL_ACCESS_ERROR);
             exitFromAlgorithm();
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, calc, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (ClassFileIllFormedException e) {
             //TODO throw LinkageError instead
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
-        } catch (InvalidOperandException | InvalidTypeException e) {
-            //this should never happen
-            failExecution(e);
         }
     }
 

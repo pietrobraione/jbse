@@ -22,6 +22,7 @@ import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Primitive;
 import jbse.val.ReferenceConcrete;
 
@@ -41,20 +42,21 @@ public final class Algo_JAVA_STRINGBUILDER_APPEND extends Algo_INVOKEMETA_Nonbra
     @Override
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, InterruptException, InvalidInputException, ClasspathException {
+    	final Calculator calc = this.ctx.getCalculator();
         try {
             final Primitive toAppend = (Primitive) this.data.operand(1);
             if (toAppend.isSymbolic()) {
                 final String stringifiedSymbol = toAppend.toString();
-                state.ensureStringLiteral(stringifiedSymbol);
+                state.ensureStringLiteral(calc, stringifiedSymbol);
                 this.refStringifiedSymbol = state.referenceToStringLiteral(stringifiedSymbol);
             } else {
                 continueWithBaseLevelImpl(state, this.isInterface, this.isSpecial, this.isStatic); //executes the original StringBuilder.append implementation
             }
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, calc, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         }
     }

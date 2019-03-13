@@ -17,7 +17,6 @@ import jbse.mem.exc.CannotAssumeSymbolicObjectException;
 import jbse.mem.exc.ContradictionException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.meta.annotations.ConservativeRepOk;
-import jbse.val.Calculator;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.exc.InvalidTypeException;
 
@@ -33,9 +32,10 @@ import jbse.val.exc.InvalidTypeException;
 public final class DecisionProcedureConservativeRepOk extends DecisionProcedureChainOfResponsibility {
     private final InitialHeapChecker checker;
 
-    public DecisionProcedureConservativeRepOk(DecisionProcedure next, Calculator calc, 
-                                              RunnerParameters checkerParameters, Map<String, String> checkMethods) {
-        super(next, calc);
+    public DecisionProcedureConservativeRepOk(DecisionProcedure next, 
+                                              RunnerParameters checkerParameters, Map<String, String> checkMethods) 
+    throws InvalidInputException {
+        super(next);
         this.checker = new InitialHeapChecker(checkerParameters, ConservativeRepOk.class, checkMethods);
     }
 
@@ -53,7 +53,7 @@ public final class DecisionProcedureConservativeRepOk extends DecisionProcedureC
         final State sIni = this.checker.makeInitialState();
         try {
             //TODO shall we also assume that classFile and r's static type are initialized? In such case, how do we inject the ExecutionContext?
-            sIni.assumeExpands(r, classFile);
+            sIni.assumeExpands(this.calc, r, classFile);
         } catch (CannotAssumeSymbolicObjectException e) {
             return false;
         } catch (InvalidInputException | InvalidTypeException | 

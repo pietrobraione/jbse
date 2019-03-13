@@ -3,6 +3,7 @@ package jbse.algo;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
 import jbse.mem.exc.FrozenStateException;
+import jbse.val.Calculator;
 
 /**
  * Zero implicits, 
@@ -12,16 +13,16 @@ import jbse.mem.exc.FrozenStateException;
  */
 public final class BytecodeData_2LVSX extends BytecodeData {
     @Override
-    public void readImmediates(State state) 
+    public void readImmediates(State state, Calculator calc) 
     throws InterruptException, ClasspathException, FrozenStateException {
         if (nextWide()) {
-            readImmediateUnsignedWord(state, 1);
-            readLocalVariable(state, immediateUnsignedWord());
-            readImmediateSignedWord(state, 3);
+            readImmediateUnsignedWord(state, calc, 1);
+            readLocalVariable(state, calc, immediateUnsignedWord());
+            readImmediateSignedWord(state, calc, 3);
         } else {
-            readImmediateUnsignedByte(state, 1);
-            readLocalVariable(state, immediateUnsignedByte());
-            readImmediateSignedByte(state, 2);
+            readImmediateUnsignedByte(state, calc, 1);
+            readLocalVariable(state, calc, immediateUnsignedByte());
+            readImmediateSignedByte(state, calc, 2);
         }
     }
 

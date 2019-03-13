@@ -21,6 +21,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
 import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.Simplex;
@@ -46,11 +47,12 @@ public final class Algo_JAVA_ZIPFILE_OPEN extends Algo_INVOKEMETA_Nonbranching {
     protected void cookMore(State state) 
     throws InterruptException, ClasspathException, 
     SymbolicValueNotAllowedException, FrozenStateException {
+    	final Calculator calc = this.ctx.getCalculator();
         try {
             //gets the first (String name) parameter
             final Reference nameReference = (Reference) this.data.operand(0);
             if (state.isNull(nameReference)) {
-                throwNew(state, NULL_POINTER_EXCEPTION);
+                throwNew(state, calc, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
             this.name = valueString(state, nameReference);
@@ -85,10 +87,10 @@ public final class Algo_JAVA_ZIPFILE_OPEN extends Algo_INVOKEMETA_Nonbranching {
             this.jzfile = (long) method.invoke(null, this.name, this.mode, this.lastModified, this.usemmap);
         } catch (InvocationTargetException e) {
             final String cause = internalClassName(e.getCause().getClass().getName());
-            throwNew(state, cause);
+            throwNew(state, calc, cause);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (SecurityException | IllegalAccessException | NoSuchMethodException | IllegalArgumentException e) {
             //this should not happen
@@ -100,7 +102,7 @@ public final class Algo_JAVA_ZIPFILE_OPEN extends Algo_INVOKEMETA_Nonbranching {
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
             state.addZipFile(this.jzfile, this.name, this.mode, this.lastModified, this.usemmap);
-            final Simplex toPush = state.getCalculator().valLong(this.jzfile);
+            final Simplex toPush = this.ctx.getCalculator().valLong(this.jzfile);
             state.pushOperand(toPush);
         };
     }

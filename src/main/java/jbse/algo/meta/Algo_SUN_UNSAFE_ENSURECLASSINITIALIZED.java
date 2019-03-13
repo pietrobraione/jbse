@@ -43,7 +43,7 @@ public final class Algo_SUN_UNSAFE_ENSURECLASSINITIALIZED extends Algo_INVOKEMET
     ClasspathException, ContradictionException, FrozenStateException {
         final Reference ref = (Reference) this.data.operand(1);
         if (state.isNull(ref)) {
-            throwNew(state, NULL_POINTER_EXCEPTION); //this is what Hotspot does
+            throwNew(state, this.ctx.getCalculator(), NULL_POINTER_EXCEPTION); //this is what Hotspot does
             exitFromAlgorithm();
         }
         
@@ -57,7 +57,7 @@ public final class Algo_SUN_UNSAFE_ENSURECLASSINITIALIZED extends Algo_INVOKEMET
         try {
             ensureClassInitialized(state, classFile, this.ctx);
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (InvalidInputException e) {
             //this should never happen

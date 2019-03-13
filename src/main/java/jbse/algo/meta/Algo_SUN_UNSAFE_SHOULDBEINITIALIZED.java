@@ -47,7 +47,7 @@ public final class Algo_SUN_UNSAFE_SHOULDBEINITIALIZED extends Algo_INVOKEMETA_N
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            state.pushOperand(state.getCalculator().valInt(this.shouldBeInitialized ? 1 : 0));
+            state.pushOperand(this.ctx.getCalculator().valInt(this.shouldBeInitialized ? 1 : 0));
         };
     }
 }

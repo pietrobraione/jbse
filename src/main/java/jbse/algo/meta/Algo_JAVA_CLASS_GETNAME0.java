@@ -13,12 +13,13 @@ import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Reference;
 
 /**
@@ -36,7 +37,8 @@ public final class Algo_JAVA_CLASS_GETNAME0 extends Algo_INVOKEMETA_Nonbranching
 
     @Override
     protected void cookMore(State state)
-    throws ThreadStackEmptyException, InterruptException, ClasspathException, FrozenStateException {
+    throws ThreadStackEmptyException, InterruptException, ClasspathException, InvalidInputException {
+    	final Calculator calc = this.ctx.getCalculator();
         try {
             //gets the 'this' java.lang.Class instance from the heap 
             //and the classfile of the class it represents
@@ -52,13 +54,13 @@ public final class Algo_JAVA_CLASS_GETNAME0 extends Algo_INVOKEMETA_Nonbranching
                 failExecution("The 'this' parameter to java.lang.Class.getName0 method is symbolic and unresolved.");
             }
             final String className = binaryClassName(clazz.representedClass().getClassName()); //note that binaryClassName(x) == x if x is the canonical name of a primitive type
-            state.ensureStringLiteral(className);
+            state.ensureStringLiteral(calc, className);
             this.refClassName = state.referenceToStringLiteral(className);
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, calc, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         }
     }

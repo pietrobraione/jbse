@@ -15,13 +15,12 @@ public abstract class PrimitiveSymbolic extends Primitive implements Symbolic {
      * 
      * @param type the type of the represented value.
      * @param historyPoint the current {@link HistoryPoint}. It must not be {@code null}.
-     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @throws InvalidTypeException if {@code type} is not primitive.
-     * @throws InvalidInputException if {@code calc == null || historyPoint == null}.
+     * @throws InvalidInputException if {@code historyPoint == null}.
      */
-    PrimitiveSymbolic(char type, HistoryPoint historyPoint, Calculator calc) 
+    PrimitiveSymbolic(char type, HistoryPoint historyPoint) 
     throws InvalidTypeException, InvalidInputException {
-    	super(type, calc);
+    	super(type);
     	if (historyPoint == null) {
     		throw new InvalidInputException("Attempted the creation of a PrimitiveSymbolic with null history point.");
     	}

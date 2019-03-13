@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
 import jbse.mem.exc.FrozenStateException;
+import jbse.val.Calculator;
 
 /**
  * One implicit (boolean, is wide?),
@@ -16,12 +17,12 @@ public final class BytecodeData_1ZUX extends BytecodeData {
     final boolean wide;
 
     @Override
-    public void readImmediates(State state) 
+    public void readImmediates(State state, Calculator calc) 
     throws InterruptException, ClasspathException, FrozenStateException {
         if (this.wide) {
-            readImmediateUnsignedWord(state, 1);
+            readImmediateUnsignedWord(state, calc, 1);
         } else {
-            readImmediateUnsignedByte(state, 1);
+            readImmediateUnsignedByte(state, calc, 1);
         }
     }
 

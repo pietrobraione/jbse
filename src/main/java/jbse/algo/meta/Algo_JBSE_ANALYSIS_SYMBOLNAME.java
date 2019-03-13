@@ -11,8 +11,8 @@ import jbse.algo.Algorithm;
 import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Null;
@@ -42,13 +42,13 @@ public final class Algo_JBSE_ANALYSIS_SYMBOLNAME extends Algo_INVOKEMETA_Nonbran
     
     @Override
     protected void cookMore(State state) 
-    throws InterruptException, ClasspathException, FrozenStateException {
+    throws InterruptException, ClasspathException, InvalidInputException {
         final Value arg = this.data.operand(0);
         if (arg.isSymbolic()) {
             try {
-                state.ensureStringLiteral(arg.toString());
+                state.ensureStringLiteral(this.ctx.getCalculator(), arg.toString());
             } catch (HeapMemoryExhaustedException e) {
-                throwNew(state, OUT_OF_MEMORY_ERROR);
+                throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
             }
             this.toPush = state.referenceToStringLiteral(arg.toString());

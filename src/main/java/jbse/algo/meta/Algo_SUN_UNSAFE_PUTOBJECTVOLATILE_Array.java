@@ -13,19 +13,19 @@ import jbse.algo.BytecodeCooker;
 import jbse.algo.StrategyDecide;
 import jbse.algo.StrategyRefine;
 import jbse.algo.StrategyUpdate;
-import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
 import jbse.tree.DecisionAlternative_XASTORE;
+import jbse.val.Calculator;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.Simplex;
 import jbse.val.Value;
-import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -55,18 +55,17 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
     protected BytecodeCooker bytecodeCooker() {
         //copied from Algo_XASTORE
         return (state) -> { 
+        	final Calculator calc = this.ctx.getCalculator();
             try {
                 this.arrayReference = (Reference) this.data.operand(1);
             } catch (ClassCastException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, calc);
                 exitFromAlgorithm();
             }
             try {
-                this.index = (Simplex) ((Simplex) this.data.operand(2)).narrow(INT);
-            } catch (ClassCastException e) {
-                throw new SymbolicValueNotAllowedException("The offset parameter to sun.misc.Unsafe.putObjectVolatile cannot be a symbolic value");
-            } catch (InvalidTypeException e) {
-                throwVerifyError(state);
+                this.index = (Simplex) calc.push((Simplex) this.data.operand(2)).narrow(INT).pop();
+            } catch (ClassCastException | InvalidTypeException e) {
+                throwVerifyError(state, calc);
                 exitFromAlgorithm();
             }
             
@@ -79,12 +78,12 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
             //moreover, converts the value in case of [b/c/s]astore
             try {
                 final Array array = (Array) state.getObject(this.arrayReference);
-                this.inRange = array.inRange(this.index);
-                this.outOfRange = array.outOfRange(this.index);
+                this.inRange = array.inRange(calc, this.index);
+                this.outOfRange = array.outOfRange(calc, this.index);
                 final ClassFile arrayMemberType = array.getType().getMemberClass();
                 if (arrayMemberType.isReference() || arrayMemberType.isArray()) {
                     if (!(value instanceof Reference)) {
-                        throwVerifyError(state);
+                        throwVerifyError(state, calc);
                         exitFromAlgorithm();
                     }
                     final Reference valueToStoreRef = (Reference) value;
@@ -99,13 +98,13 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                 } else {
                     throw new UndefinedResultException("The Object o parameter to sun.misc.Unsafe.putObjectVolatile was an array whose member type is not a reference.");
                 }
-            } catch (InvalidOperandException | InvalidTypeException | 
+            } catch (InvalidInputException | InvalidTypeException | 
                      ClassCastException e) {
                 //index is bad, or the reference does not point to an array,
                 //or the class/superclasses of the array component, or of 
                 //the value to store, are not in the classpath or are incompatible
                 //with JBSE
-                throwVerifyError(state); //TODO is it ok?
+                throwVerifyError(state, calc); //TODO is it ok?
                 exitFromAlgorithm();
             }
         };
@@ -127,7 +126,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
     @Override
     protected StrategyRefine<DecisionAlternative_XASTORE> refiner() {
         return (state, alt) -> {
-            state.assume(this.ctx.decisionProcedure.simplify(alt.isInRange() ? this.inRange : this.outOfRange));
+            state.assume(this.ctx.getCalculator().simplify(this.ctx.decisionProcedure.simplify(alt.isInRange() ? this.inRange : this.outOfRange)));
         };
     }
 

@@ -23,12 +23,11 @@ public final class PrimitiveSymbolicMemberArray extends PrimitiveSymbolicMember 
      * @param id an {@link int}, the identifier of the symbol. Different
      *        object with same identifier will be treated as equal.
      * @param type the type of the represented value.
-     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @throws InvalidTypeException if {@code type} is not primitive.
-     * @throws InvalidInputException if {@code calc == null || container == null || index == null}.
+     * @throws InvalidInputException if {@code container == null || index == null}.
      */
-    PrimitiveSymbolicMemberArray(ReferenceSymbolic container, Primitive index, int id, char type, Calculator calc) throws InvalidTypeException, InvalidInputException {
-    	super(container, id, type, calc);
+    PrimitiveSymbolicMemberArray(ReferenceSymbolic container, Primitive index, int id, char type) throws InvalidTypeException, InvalidInputException {
+    	super(container, id, type);
     	if (index == null) {
     		throw new InvalidInputException("Attempted to construct a symbolic array member with null array index.");
     	}

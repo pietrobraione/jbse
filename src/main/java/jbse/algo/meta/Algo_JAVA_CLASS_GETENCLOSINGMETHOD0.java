@@ -36,11 +36,11 @@ import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Null;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.Value;
-import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -60,6 +60,7 @@ public final class Algo_JAVA_CLASS_GETENCLOSINGMETHOD0 extends Algo_INVOKEMETA_N
     protected void cookMore(State state)
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
     CannotManageStateException, InterruptException, InvalidInputException {
+    	final Calculator calc = this.ctx.getCalculator();
         try {           
             //gets the classfile represented by the 'this' parameter
             final Reference classRef = (Reference) this.data.operand(0);
@@ -73,42 +74,41 @@ public final class Algo_JAVA_CLASS_GETENCLOSINGMETHOD0 extends Algo_INVOKEMETA_N
                 final ClassFile enclosingClass = state.getClassHierarchy().resolveClass(cf, sigEnclosing.getClassName(), state.bypassStandardLoading());
                 
                 //ensures the java.lang.Class of the enclosing class
-                state.ensureInstance_JAVA_CLASS(enclosingClass);
+                state.ensureInstance_JAVA_CLASS(calc, enclosingClass);
                 
                 //gets the (possibly null) descriptor and name of the enclosing method
                 final Reference refDescriptor, refName;
                 if (sigEnclosing.getName() == null || sigEnclosing.getDescriptor() == null) {
                     refDescriptor = refName = Null.getInstance();
                 } else {
-                    state.ensureStringLiteral(sigEnclosing.getDescriptor());
+                    state.ensureStringLiteral(calc, sigEnclosing.getDescriptor());
                     refDescriptor = state.referenceToStringLiteral(sigEnclosing.getDescriptor());
-                    state.ensureStringLiteral(sigEnclosing.getName());
+                    state.ensureStringLiteral(calc, sigEnclosing.getName());
                     refName = state.referenceToStringLiteral(sigEnclosing.getName());
                 }
                 
                 //creates the array
                 final ClassFile cf_arrayOfJAVA_OBJECT = state.getClassHierarchy().loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND);
-                final ReferenceConcrete arrayRef = state.createArray(null, state.getCalculator().valInt(3), cf_arrayOfJAVA_OBJECT);
+                final ReferenceConcrete arrayRef = state.createArray(calc, null, calc.valInt(3), cf_arrayOfJAVA_OBJECT);
                 this.toPush = arrayRef;
                 final Array array = (Array) state.getObject(arrayRef);
-                array.setFast(state.getCalculator().valInt(0), state.referenceToInstance_JAVA_CLASS(enclosingClass));
-                array.setFast(state.getCalculator().valInt(1), refName);
-                array.setFast(state.getCalculator().valInt(2), refDescriptor);
+                array.setFast(calc.valInt(0), state.referenceToInstance_JAVA_CLASS(enclosingClass));
+                array.setFast(calc.valInt(1), refName);
+                array.setFast(calc.valInt(2), refDescriptor);
             }
         } catch (PleaseLoadClassException e) {
-            invokeClassLoaderLoadClass(state, e);
+            invokeClassLoaderLoadClass(state, calc, e);
             exitFromAlgorithm();
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, calc, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (InvalidTypeException | ClassFileNotFoundException | 
                  ClassFileNotAccessibleException | IncompatibleClassFileException | 
                  ClassFileIllFormedException | BadClassFileVersionException | 
-                 WrongClassNameException | FastArrayAccessNotAllowedException | 
-                 InvalidOperandException e) {
+                 WrongClassNameException | FastArrayAccessNotAllowedException e) {
             //this should never happen
             failExecution(e);
         }

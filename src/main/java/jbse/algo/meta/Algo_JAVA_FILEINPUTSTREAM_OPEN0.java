@@ -26,6 +26,7 @@ import jbse.mem.Instance;
 import jbse.mem.State;
 import jbse.mem.exc.FrozenStateException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Reference;
 
 /**
@@ -47,6 +48,7 @@ public final class Algo_JAVA_FILEINPUTSTREAM_OPEN0 extends Algo_INVOKEMETA_Nonbr
     protected void cookMore(State state) 
     throws InterruptException, ClasspathException, 
     SymbolicValueNotAllowedException, FrozenStateException {
+        final Calculator calc = this.ctx.getCalculator();
         try {
             //gets the FileInputStream 'this' parameter and its file descriptor
             final Reference thisReference = (Reference) this.data.operand(0);
@@ -65,7 +67,7 @@ public final class Algo_JAVA_FILEINPUTSTREAM_OPEN0 extends Algo_INVOKEMETA_Nonbr
             //gets the String parameter
             final Reference pathReference = (Reference) this.data.operand(1);
             if (state.isNull(pathReference)) {
-                throwNew(state, NULL_POINTER_EXCEPTION);
+                throwNew(state, calc, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
             final String path = valueString(state, pathReference);
@@ -78,7 +80,7 @@ public final class Algo_JAVA_FILEINPUTSTREAM_OPEN0 extends Algo_INVOKEMETA_Nonbr
             try {
                 this.fis = new FileInputStream(path);
             } catch (FileNotFoundException e) {
-                throwNew(state, FILE_NOT_FOUND_EXCEPTION);
+                throwNew(state, calc, FILE_NOT_FOUND_EXCEPTION);
                 exitFromAlgorithm();
             }
             
@@ -88,7 +90,7 @@ public final class Algo_JAVA_FILEINPUTSTREAM_OPEN0 extends Algo_INVOKEMETA_Nonbr
             fileDescriptorFD.setAccessible(true);
             this.fd = ((Integer) fileDescriptorFD.get(fileDescriptor)).intValue();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (NoSuchFieldException | SecurityException | IllegalAccessException | IOException e) {
             //this should not happen
@@ -100,7 +102,7 @@ public final class Algo_JAVA_FILEINPUTSTREAM_OPEN0 extends Algo_INVOKEMETA_Nonbr
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
             //implants this.fd in this.fileDescriptor
-            this.fileDescriptor.setFieldValue(JAVA_FILEDESCRIPTOR_FD, state.getCalculator().valInt(this.fd));
+            this.fileDescriptor.setFieldValue(JAVA_FILEDESCRIPTOR_FD, this.ctx.getCalculator().valInt(this.fd));
             
             //associates in state the file descriptor to the FileInputStream
             //created to access the file at the meta-level

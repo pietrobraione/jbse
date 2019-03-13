@@ -35,12 +35,12 @@ public final class Algo_SUN_UNSAFE_COMPAREANDSWAPINT extends Algo_SUN_UNSAFE_COM
             final Primitive primToCompare = (Primitive) toCompare;
             if (primCurrent instanceof Simplex && primToCompare instanceof Simplex) {
                 //TODO check they are ints, or at least that they are of the same type?
-                return ((Simplex) primCurrent.eq(primToCompare)).surelyTrue();
+                return ((Simplex) this.ctx.getCalculator().push(primCurrent).eq(primToCompare).pop()).surelyTrue();
             } else {
                 throw new SymbolicValueNotAllowedException("The ints to be compared during an invocation to sun.misc.Unsafe.CompareAndSwapInt must be concrete (branching currently not implemented)");
             }
         } catch (ClassCastException | InvalidTypeException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         } catch (InvalidOperandException e) {
             //this should never happen

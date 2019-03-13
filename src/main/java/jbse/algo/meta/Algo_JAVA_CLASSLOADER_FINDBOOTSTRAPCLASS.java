@@ -16,11 +16,12 @@ import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.bc.ClassFile;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Null;
 import jbse.val.Reference;
 
@@ -40,7 +41,8 @@ public final class Algo_JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS extends Algo_INVOKEM
     @Override
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, ClasspathException, 
-    SymbolicValueNotAllowedException, InterruptException, FrozenStateException {
+    SymbolicValueNotAllowedException, InterruptException, InvalidInputException {
+    	final Calculator calc = this.ctx.getCalculator();
         try {
             //gets the name of the class
             final Reference classNameRef = (Reference) this.data.operand(1);
@@ -59,14 +61,14 @@ public final class Algo_JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS extends Algo_INVOKEM
             if (classFile == null) {
                 this.classRef = Null.getInstance();
             } else {
-                state.ensureInstance_JAVA_CLASS(classFile);
+                state.ensureInstance_JAVA_CLASS(calc, classFile);
                 this.classRef = state.referenceToInstance_JAVA_CLASS(classFile);
             }
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, calc, OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         }
     }

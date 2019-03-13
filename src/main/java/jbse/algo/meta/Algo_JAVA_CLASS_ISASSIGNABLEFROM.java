@@ -19,6 +19,7 @@ import jbse.mem.State;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
+import jbse.val.Calculator;
 import jbse.val.Reference;
 import jbse.val.Simplex;
 
@@ -38,6 +39,7 @@ public final class Algo_JAVA_CLASS_ISASSIGNABLEFROM extends Algo_INVOKEMETA_Nonb
     @Override
     protected void cookMore(State state)
     throws ThreadStackEmptyException, InterruptException, ClasspathException, FrozenStateException {
+    	final Calculator calc = this.ctx.getCalculator();
         try {
             //gets the 'this' java.lang.Class instance from the heap 
             //and the name of the class it represents
@@ -56,7 +58,7 @@ public final class Algo_JAVA_CLASS_ISASSIGNABLEFROM extends Algo_INVOKEMETA_Nonb
             //gets the reference to the class to be checked
             final Reference javaClassRefOther = (Reference) this.data.operand(1);
             if (state.isNull(javaClassRefOther)) {
-                throwNew(state, NULL_POINTER_EXCEPTION);
+                throwNew(state, calc, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
             final Instance_JAVA_CLASS javaClassOther = (Instance_JAVA_CLASS) state.getObject(javaClassRefThis);
@@ -67,9 +69,9 @@ public final class Algo_JAVA_CLASS_ISASSIGNABLEFROM extends Algo_INVOKEMETA_Nonb
             final ClassFile classOther = javaClassOther.representedClass();
 
             //calculates the value to push
-            this.valToPush = state.getCalculator().valInt(classOther.isSubclass(classThis) ? 1 : 0);
+            this.valToPush = calc.valInt(classOther.isSubclass(classThis) ? 1 : 0);
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (InvalidInputException e) {
             //this should never happen

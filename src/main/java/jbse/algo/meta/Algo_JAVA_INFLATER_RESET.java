@@ -53,10 +53,10 @@ public final class Algo_JAVA_INFLATER_RESET extends Algo_INVOKEMETA_Nonbranching
             method.invoke(null, state.getInflater(addr));
         } catch (InvocationTargetException e) {
             final String cause = internalClassName(e.getCause().getClass().getName());
-            throwNew(state, cause);
+            throwNew(state, this.ctx.getCalculator(), cause);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         } catch (SecurityException | NoSuchMethodException | IllegalAccessException e) {
             //this should not happen

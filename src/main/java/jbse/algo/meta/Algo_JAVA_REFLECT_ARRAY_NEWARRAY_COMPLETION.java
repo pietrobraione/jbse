@@ -30,6 +30,7 @@ import jbse.common.exc.InvalidInputException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
 import jbse.mem.exc.ThreadStackEmptyException;
+import jbse.val.Calculator;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 
@@ -53,11 +54,13 @@ public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEW
     @Override
     protected void preCook(State state) 
     throws InterruptException, ClasspathException, InvalidInputException, ThreadStackEmptyException {
+    	final Calculator calc = this.ctx.getCalculator();
+    	
         //sets the array length
         try {
             this.dimensionsCounts = new Primitive[] { (Primitive) this.data.operand(1) };
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         }
 
@@ -65,7 +68,7 @@ public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEW
         try {
             final Reference refToClass = (Reference) this.data.operand(0);
             if (state.isNull(refToClass)) {
-                throwNew(state, NULL_POINTER_EXCEPTION);
+                throwNew(state, calc, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
             //TODO the next cast fails if javaClassRef is symbolic and expanded to a regular Instance. Handle the case.
@@ -78,7 +81,7 @@ public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEW
             if (refToVoidClass != null) {
                 final Instance_JAVA_CLASS voidClass = (Instance_JAVA_CLASS) state.getObject(refToVoidClass);
                 if (clazz == voidClass) {
-                    throwNew(state, ILLEGAL_ARGUMENT_EXCEPTION);
+                    throwNew(state, calc, ILLEGAL_ARGUMENT_EXCEPTION);
                     exitFromAlgorithm();
                 }
             }
@@ -86,10 +89,10 @@ public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEW
             final String arrayTypeName = "" + ARRAYOF + arrayMemberType.getInternalTypeName();
             this.arrayType = state.getClassHierarchy().loadCreateClass(arrayMemberType.getDefiningClassLoader(), arrayTypeName, state.bypassStandardLoading());
         } catch (PleaseLoadClassException e) {
-            invokeClassLoaderLoadClass(state, e);
+            invokeClassLoaderLoadClass(state, calc, e);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
                  WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException e) {

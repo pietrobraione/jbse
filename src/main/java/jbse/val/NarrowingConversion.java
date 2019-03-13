@@ -20,9 +20,9 @@ public final class NarrowingConversion extends PrimitiveSymbolicComputed {
     private final String asOriginString;
     private final int hashCode;
 
-    private NarrowingConversion(char type, Calculator calc, Primitive arg) 
+    private NarrowingConversion(char type, Primitive arg) 
     throws InvalidOperandException, InvalidTypeException, InvalidInputException {
-        super(type, unknown(), calc); //TODO put sensible history point?
+        super(type, unknown()); //TODO put sensible history point?
 
         //checks on parameters
         if (arg == null) {
@@ -52,41 +52,25 @@ public final class NarrowingConversion extends PrimitiveSymbolicComputed {
      * Constructs a {@link NarrowingConversion}.
      * 
      * @param type a {@code char}, the destination type of the conversion.
-     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param arg a {@link Primitive}, the value that is being narrowed. 
      *        It must not be {@code null}.
      * @return a {@link NarrowingConversion}.
      * @throws InvalidOperandException if {@code arg == null}.
      * @throws InvalidTypeException if {@code arg} cannot be narrowed to {@code type},
      *         or {@code type} is not a valid primitive type.
-     * @throws InvalidInputException if {@code calc == null}.
      */
-    public static NarrowingConversion make(char type, Calculator calc, Primitive arg) 
-    throws InvalidOperandException, InvalidTypeException, InvalidInputException {
-        return new NarrowingConversion(type, calc, arg);
+    public static NarrowingConversion make(char type, Primitive arg) 
+    throws InvalidOperandException, InvalidTypeException {
+        try {
+			return new NarrowingConversion(type, arg);
+		} catch (InvalidInputException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
     }
 
     public Primitive getArg() {
         return this.arg;
-    }
-    
-    @Override
-    protected Primitive doReplace(Primitive from, Primitive to) {
-    	final Primitive newArg;
-    	if (this.arg.equals(from)) {
-    		newArg = to;
-    	} else if (this.arg instanceof PrimitiveSymbolicComputed) {
-    		newArg = ((PrimitiveSymbolicComputed) this.arg).doReplace(from, to);
-    	} else {
-    		newArg = this.arg;
-    	}
-    	
-    	try {
-			return this.calc.narrow(getType(), newArg);
-		} catch (InvalidOperandException | InvalidTypeException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-		}
     }
 
 	@Override
@@ -134,6 +118,9 @@ public final class NarrowingConversion extends PrimitiveSymbolicComputed {
             return false;
         }
         final NarrowingConversion other = (NarrowingConversion) obj;
+        if (this.getType() != other.getType()) {
+        	return false;
+        }
         if (!this.arg.equals(other.arg)) {
             return false;
         }

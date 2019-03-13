@@ -537,12 +537,7 @@ public final class ExecutionContext {
         this.comparators = comparators;
         this.rootMethodSignature = rootMethodSignature;
         this.decisionProcedure = decisionProcedure;
-        try {
-            this.symbolFactory = new SymbolFactory(this.initialState == null ? this.calc : this.initialState.getCalculator());
-        } catch (InvalidInputException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
+        this.symbolFactory = new SymbolFactory();
         this.stateTree = new StateTree(stateIdentificationMode, breadthMode);
         this.triggerManager = new TriggerManager(rulesTrigger.clone()); //safety copy
 
@@ -758,6 +753,15 @@ public final class ExecutionContext {
     }
     
     /**
+     * Returns the {@link Calculator}.
+     * 
+     * @return a {@link Calculator}.
+     */
+    public Calculator getCalculator() {
+    	return this.calc;
+    }
+    
+    /**
      * Returns whether the classes created during
      * the pre-initialization phase shall be (pedantically)
      * considered symbolic.
@@ -780,7 +784,7 @@ public final class ExecutionContext {
      */
     public State createVirginPreInitialState() throws InvalidClassFileFactoryClassException {
         try {
-			return new State(this.bypassStandardLoading, this.stateTree.getPreInitialHistoryPoint(), this.maxSimpleArrayLength, this.maxHeapSize, this.classpath, this.classFileFactoryClass, this.expansionBackdoor, this.calc, this.symbolFactory);
+			return new State(this.bypassStandardLoading, this.stateTree.getPreInitialHistoryPoint(), this.maxSimpleArrayLength, this.maxHeapSize, this.classpath, this.classFileFactoryClass, this.expansionBackdoor, this.symbolFactory);
 		} catch (InvalidInputException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);

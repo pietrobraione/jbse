@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.State;
 import jbse.mem.exc.FrozenStateException;
+import jbse.val.Calculator;
 
 /**
  * One implicit (kind, where is the method declared?), 
@@ -21,18 +22,18 @@ public final class BytecodeData_1KME extends BytecodeData {
     private final Kind kind;
 
     @Override
-    protected void readImmediates(State state) 
+    protected void readImmediates(State state, Calculator calc) 
     throws InterruptException, ClasspathException, FrozenStateException {
-        readImmediateUnsignedWord(state, 1);
+        readImmediateUnsignedWord(state, calc, 1);
         switch (kind) {
         case NONINTERFACE:
-            readNoninterfaceMethodSignature(state, immediateUnsignedWord());
+            readNoninterfaceMethodSignature(state, calc, immediateUnsignedWord());
             break;
         case INTERFACE:
-            readInterfaceMethodSignature(state, immediateUnsignedWord());
+            readInterfaceMethodSignature(state, calc, immediateUnsignedWord());
             break;
         case BOTH:
-            readMethodSignature(state, immediateUnsignedWord());
+            readMethodSignature(state, calc, immediateUnsignedWord());
         }
     }
 

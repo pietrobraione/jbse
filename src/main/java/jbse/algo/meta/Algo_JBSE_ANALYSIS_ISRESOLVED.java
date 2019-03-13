@@ -41,7 +41,7 @@ public final class Algo_JBSE_ANALYSIS_ISRESOLVED extends Algo_INVOKEMETA_Nonbran
             objRef = (Reference) this.data.operand(0);
             fieldNameRef = (Reference) this.data.operand(1);
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
 
@@ -80,9 +80,9 @@ public final class Algo_JBSE_ANALYSIS_ISRESOLVED extends Algo_INVOKEMETA_Nonbran
         final Value fieldValue = objectInstance.getFieldValue(sig);
         if (fieldValue != null && Util.isSymbolicReference(fieldValue)) {
             final ReferenceSymbolic refToBeChecked = (ReferenceSymbolic) fieldValue;
-            this.retVal = state.getCalculator().valInt(Util.isResolved(state, refToBeChecked) ? 1 : 0);
+            this.retVal = this.ctx.getCalculator().valInt(Util.isResolved(state, refToBeChecked) ? 1 : 0);
         } else {
-            this.retVal = state.getCalculator().valInt(1);
+            this.retVal = this.ctx.getCalculator().valInt(1);
         }
     }
     

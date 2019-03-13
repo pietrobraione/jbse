@@ -32,8 +32,8 @@ public class MonomialTest {
 		final Term B = this.calc.valTerm(Type.INT, "B");
 		final Term C = this.calc.valTerm(Type.INT, "C");
 		final Term D = this.calc.valTerm(Type.INT, "D");
-		final Primitive p1 = this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", A.div(B).div(C.div(D)));
-		final Primitive p2 = this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", A.mul(D).div(B.mul(C)));
+		final Primitive p1 = this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", this.calc.push(A).div(B).div(this.calc.push(C).div(D).pop()).pop()).pop();
+		final Primitive p2 = this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", this.calc.push(A).mul(D).div(this.calc.push(B).mul(C).pop()).pop()).pop();
 		final Monomial m1 = Monomial.of(this.calc, p1);
 		final Monomial m2 = Monomial.of(this.calc, p2);
 		assertTrue(m1.equals(m2));

@@ -40,7 +40,7 @@ public final class Algo_JAVA_THREAD_ISINTERRUPTED extends Algo_INVOKEMETA_Nonbra
             //there's only one thread in JBSE, so skips the first parameter
             //and gets the current thread from the context
             this.currentThread = (Instance_JAVA_THREAD) state.getObject(state.getMainThread()); 
-            this.isInterrupted = state.getCalculator().valInt(currentThread.isInterrupted() ? 1 : 0);
+            this.isInterrupted = this.ctx.getCalculator().valInt(currentThread.isInterrupted() ? 1 : 0);
 
             //gets the second (boolean ClearInterrupted) parameter
             final Primitive _clearInterrupted = (Primitive) this.data.operand(1);
@@ -49,7 +49,7 @@ public final class Algo_JAVA_THREAD_ISINTERRUPTED extends Algo_INVOKEMETA_Nonbra
             }
             this.clearInterrupted = (((Integer) ((Simplex) _clearInterrupted).getActualValue()).intValue() > 0);
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }        
     }

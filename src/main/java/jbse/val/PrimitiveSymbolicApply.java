@@ -25,8 +25,6 @@ import static jbse.bc.Signatures.JAVA_STRICTMATH_TAN;
 import java.util.Arrays;
 
 import jbse.common.exc.InvalidInputException;
-import jbse.common.exc.UnexpectedInternalException;
-import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -126,13 +124,13 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed impl
      * @param calc a {@link Calculator}.
      * @param operator the name of the function.
      * @param args the {@link Value} arguments to which the function is applied.
-	 * @throws InvalidOperandException if any of {@code args} is null. 
 	 * @throws InvalidTypeException if {@code type} is not primitive.
-	 * @throws InvalidInputException if {@code operator == null || args == null || calc == null || historyPoint == null}.
+	 * @throws InvalidInputException if {@code operator == null || args == null || historyPoint == null} 
+	 *         or any of {@code args[i]} is {@code null}.
 	 */
-	public PrimitiveSymbolicApply(char type, HistoryPoint historyPoint, Calculator calc, String operator, Value... args) 
-	throws InvalidTypeException, InvalidOperandException, InvalidInputException {
-		super(type, historyPoint, calc);
+	public PrimitiveSymbolicApply(char type, HistoryPoint historyPoint, String operator, Value... args) 
+	throws InvalidTypeException, InvalidInputException {
+		super(type, historyPoint);
     	if (operator == null || args == null) {
             throw new InvalidInputException("Attempted to build a PrimitiveSymbolicApply with null operator or args.");
     	}
@@ -141,7 +139,7 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed impl
 		int i = 0;
 		for (Value v : this.args) {
 			if (v == null) {
-				throw new InvalidOperandException(i + (i == 1 ? "-st" : i == 2 ? "-nd" : i == 3 ? "-rd ": "-th") + " argument is null");
+				throw new InvalidInputException(i + (i == 1 ? "-st" : i == 2 ? "-nd" : i == 3 ? "-rd ": "-th") + " argument is null");
 			}
 			++i;
 		}
@@ -203,27 +201,6 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed impl
 	@Override
 	public Value[] getArgs() {
 		return this.args.clone();
-	}
-	
-	@Override
-	protected Primitive doReplace(Primitive from, Primitive to) {
-	    final Value[] argsNew = new Value[this.args.length];
-	    for (int i = 0; i < this.args.length; ++i) {
-	        if (this.args[i].equals(from)) {
-	            argsNew[i] = to;
-	        } else if (this.args[i] instanceof PrimitiveSymbolicComputed) {
-	            argsNew[i] = ((PrimitiveSymbolicComputed) this.args[i]).doReplace(from, to);
-	        } else {
-	            argsNew[i] = this.args[i];
-	        }
-	    }
-	    
-	    try {
-	        return this.calc.applyFunctionPrimitive(this.getType(), historyPoint(), this.operator, argsNew); //TODO possible bug! Here rewriting is applied!
-	    } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
-	    	//this should never happen
-	    	throw new UnexpectedInternalException(e);
-	    } 
 	}
 	
 	@Override

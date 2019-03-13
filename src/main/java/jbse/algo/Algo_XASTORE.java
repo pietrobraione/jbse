@@ -19,6 +19,7 @@ import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.mem.Array;
 import jbse.mem.Objekt;
 import jbse.tree.DecisionAlternative_XASTORE;
+import jbse.val.Calculator;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.Value;
@@ -64,13 +65,13 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                 index = (Primitive) this.data.operand(1);
                 value = this.data.operand(2);
             } catch (ClassCastException e) {
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
 
             //null check
             if (state.isNull(myObjectRef)) {
-                throwNew(state, NULL_POINTER_EXCEPTION);
+                throwNew(state, this.ctx.getCalculator(), NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
 
@@ -80,12 +81,13 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
             //and checks assignment compatibility in case of aastore
             try {
                 final Array array = (Array) state.getObject(myObjectRef);
-                this.inRange = array.inRange(index);
-                this.outOfRange = array.outOfRange(index);
+                final Calculator calc = this.ctx.getCalculator();
+                this.inRange = array.inRange(calc, index);
+                this.outOfRange = array.outOfRange(calc, index);
                 final ClassFile arrayMemberType = array.getType().getMemberClass();
                 if (arrayMemberType.isReference() || arrayMemberType.isArray()) {
                     if (!(value instanceof Reference)) {
-                        throwVerifyError(state);
+                        throwVerifyError(state, this.ctx.getCalculator());
                         exitFromAlgorithm();
                     }
                     final Reference valueToStoreRef = (Reference) value;
@@ -95,20 +97,20 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                         hier.isAssignmentCompatible(o.getType(), arrayMemberType)) {
                         this.valueToStore = value;
                     } else {
-                        throwNew(state, ARRAY_STORE_EXCEPTION);
+                        throwNew(state, this.ctx.getCalculator(), ARRAY_STORE_EXCEPTION);
                         exitFromAlgorithm();
                     }
                 } else { //arrayMemberType.isPrimitive()
                     if (!(value instanceof Primitive)) {
-                        throwVerifyError(state);
+                        throwVerifyError(state, this.ctx.getCalculator());
                         exitFromAlgorithm();
                     }
                     try {
                         final char arrayMemberTypeInternal = toPrimitiveOrVoidInternalName(arrayMemberType.getClassName());
                         this.valueToStore = (isPrimitiveOpStack(arrayMemberTypeInternal) ? value : 
-                            ((Primitive) value).to(arrayMemberTypeInternal));
+                            this.ctx.getCalculator().push((Primitive) value).to(arrayMemberTypeInternal).pop());
                     } catch (InvalidTypeException e) {
-                        throwVerifyError(state);
+                        throwVerifyError(state, this.ctx.getCalculator());
                         exitFromAlgorithm();
                     }
                 }
@@ -118,7 +120,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                 //or the class/superclasses of the array component, or of 
                 //the value to store, is not in the classpath or are incompatible
                 //with JBSE
-                throwVerifyError(state);
+                throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
             }
         };
@@ -140,7 +142,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
     @Override
     protected StrategyRefine<DecisionAlternative_XASTORE> refiner() {
         return (state, alt) -> {
-            state.assume(this.ctx.decisionProcedure.simplify(alt.isInRange() ? this.inRange : this.outOfRange));
+            state.assume(this.ctx.getCalculator().simplify(this.ctx.decisionProcedure.simplify(alt.isInRange() ? this.inRange : this.outOfRange)));
         };
     }
 
@@ -152,7 +154,7 @@ StrategyUpdate<DecisionAlternative_XASTORE>> {
                 final Primitive index = (Primitive) this.data.operand(1);
                 storeInArray(state, this.ctx, arrayReference, index, this.valueToStore);
             } else {
-                throwNew(state, ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
+                throwNew(state, this.ctx.getCalculator(), ARRAY_INDEX_OUT_OF_BOUNDS_EXCEPTION);
                 exitFromAlgorithm();
             }
         };

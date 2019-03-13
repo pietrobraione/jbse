@@ -7,14 +7,13 @@ import java.util.ListIterator;
 import java.util.Set;
 
 import jbse.common.exc.UnexpectedInternalException;
-import jbse.rewr.exc.NoResultException;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.Operator;
 import jbse.val.Primitive;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
-
+import jbse.val.exc.NoResultException;
 
 /**
  * Rewrites {@code A * sin(X) * sin(X) + A * cos(X) * cos(X)} to {@code A}
@@ -23,7 +22,7 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  *
  */
-public class RewriterSinCos extends Rewriter {
+public class RewriterSinCos extends RewriterCalculatorRewriting {
 	public RewriterSinCos() { }
 
 	private List<Monomial> getMonomialsWithSinCos(Polynomial poly) {
@@ -35,7 +34,7 @@ public class RewriterSinCos extends Rewriter {
 					if (pF.getOperator().equals(PrimitiveSymbolicApply.SIN) ||
 						pF.getOperator().equals(PrimitiveSymbolicApply.COS)) {
 						try {
-							retVal.add(m.mul(Monomial.of(this.calc, poly.representation().get(m))));
+							retVal.add(m.mul(this.calc, Monomial.of(this.calc, poly.representation().get(m))));
 						} catch (InvalidTypeException e) {
 							//this should never happen
 							throw new UnexpectedInternalException(e);
@@ -48,14 +47,14 @@ public class RewriterSinCos extends Rewriter {
 		return retVal;
 	}
 
-	private static Monomial checkSinCos(Monomial first, Monomial second) 
+	private Monomial checkSinCos(Monomial first, Monomial second) 
 	throws InvalidTypeException {
 		try {
-			if (first.getMultiplier().eq(second.getMultiplier()).surelyTrue()) {
+			if (this.calc.push(first.getMultiplier()).eq(second.getMultiplier()).pop().surelyTrue()) {
 				//divides the monomials
-				final Monomial[] div = first.div(second);
-				final Primitive firstDiv = div[0].createBase().toPrimitive();
-				final Primitive secondDiv = div[1].createBase().toPrimitive();
+				final Monomial[] div = first.div(this.calc, second);
+				final Primitive firstDiv = div[0].createBase(this.calc).toPrimitive();
+				final Primitive secondDiv = div[1].createBase(this.calc).toPrimitive();
 
 				//checks that the result is sin(X) * sin(X) / (cos(X) * cos(X)) or the inverse
 				if (firstDiv instanceof Expression && secondDiv instanceof Expression) {
@@ -77,7 +76,7 @@ public class RewriterSinCos extends Rewriter {
 							if ((f0.getOperator().equals(PrimitiveSymbolicApply.SIN) && f1.getOperator().equals(PrimitiveSymbolicApply.COS)) ||
 									(f0.getOperator().equals(PrimitiveSymbolicApply.COS) && f1.getOperator().equals(PrimitiveSymbolicApply.SIN))) {
 								if (f0.getArgs()[0].equals(f1.getArgs()[0])) {
-									return div[0].createBase();
+									return div[0].createBase(this.calc);
 								}
 							}
 						}
@@ -137,11 +136,11 @@ public class RewriterSinCos extends Rewriter {
 				Primitive result = x;
 				try {
 					for (SinCosPair p : pairs) {
-						result = result.add(p.mFirst.toPrimitive().neg());
-						result = result.add(p.mSecond.toPrimitive().neg());
-						result = result.add(p.mFirst.toPrimitive().div(p.mFirstDiv.toPrimitive()));
+						result = this.calc.push(result).add(this.calc.push(p.mFirst.toPrimitive()).neg().pop()).pop();
+						result = this.calc.push(result).add(this.calc.push(p.mSecond.toPrimitive()).neg().pop()).pop();
+						result = this.calc.push(result).add(this.calc.push(p.mFirst.toPrimitive()).div(p.mFirstDiv.toPrimitive()).pop()).pop();
 					}
-					setResult(result.to(x.getType()));
+					setResult(this.calc.push(result).to(x.getType()).pop());
 				} catch (InvalidTypeException | InvalidOperandException e) {
 					//this should never happen
 					throw new UnexpectedInternalException(e);
@@ -151,6 +150,6 @@ public class RewriterSinCos extends Rewriter {
 		}
 
 		//all other cases
-		super.rewriteExpression(x);
+		setResult(x);
 	}
 }

@@ -14,9 +14,9 @@ import jbse.val.exc.InvalidTypeException;
 import org.junit.Before;
 import org.junit.Test;
 
-public class RewriterNormalizeTest {
-	HistoryPoint hist;
-	CalculatorRewriting calc;
+public final class RewriterNormalizeTest {
+	private HistoryPoint hist;
+	private CalculatorRewriting calc;
 	
 	@Before
 	public void before() {
@@ -29,43 +29,58 @@ public class RewriterNormalizeTest {
 	
 	@Test
 	public void test1() throws InvalidOperandException, InvalidTypeException {
-		final Term A = calc.valTerm(Type.INT, "A");
-		final Term B = calc.valTerm(Type.INT, "B");
-		final Term C = calc.valTerm(Type.INT, "C");
-		final Term D = calc.valTerm(Type.INT, "D");
-		final Term E = calc.valTerm(Type.INT, "E");
-		final Term F = calc.valTerm(Type.INT, "F");
-		final Primitive p_post = D.mul(F.mul(A)).mul(B.mul(E.mul(C)));
-		assertEquals(F.mul(E).mul(D).mul(C).mul(B).mul(A), p_post);
+		final Term A = this.calc.valTerm(Type.INT, "A");
+		final Term B = this.calc.valTerm(Type.INT, "B");
+		final Term C = this.calc.valTerm(Type.INT, "C");
+		final Term D = this.calc.valTerm(Type.INT, "D");
+		final Term E = this.calc.valTerm(Type.INT, "E");
+		final Term F = this.calc.valTerm(Type.INT, "F");
+		final Primitive p_post = this.calc.push(D).mul(this.calc.push(F).mul(A).pop()).mul(this.calc.push(B).mul(this.calc.push(E).mul(C).pop()).pop()).pop();
+		assertEquals(this.calc.push(F).mul(E).mul(D).mul(C).mul(B).mul(A).pop(), p_post);
 	}
 
 	@Test
 	public void test2() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
-		final Term A = calc.valTerm(Type.INT, "A");
-		final Term B = calc.valTerm(Type.INT, "B");
-		final Primitive p_post = new PrimitiveSymbolicApply(Type.INT, this.hist, this.calc, "f", A.mul(B)).mul(A);
-		assertEquals(A.mul(new PrimitiveSymbolicApply(Type.INT, this.hist, this.calc, "f", B.mul(A))), p_post);
+		final Term A = this.calc.valTerm(Type.INT, "A");
+		final Term B = this.calc.valTerm(Type.INT, "B");
+		final Primitive p_post = this.calc.push(new PrimitiveSymbolicApply(Type.INT, this.hist, "f", this.calc.push(A).mul(B).pop())).mul(A).pop();
+		assertEquals(this.calc.push(A).mul(new PrimitiveSymbolicApply(Type.INT, this.hist, "f", this.calc.push(B).mul(A).pop())).pop(), p_post);
 	}
 
 
 	@Test
 	public void test3() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
-		final Term A = calc.valTerm(Type.INT, "A");
-		final Term B = calc.valTerm(Type.INT, "B");
-		final Term C = calc.valTerm(Type.INT, "C");
-		final Term D = calc.valTerm(Type.INT, "D");
-		final Primitive p_post = new PrimitiveSymbolicApply(Type.INT, this.hist, this.calc, "f", A.mul(B), C.mul(D)).mul(A);
-		assertEquals(A.mul(new PrimitiveSymbolicApply(Type.INT, this.hist, this.calc, "f", B.mul(A), D.mul(C))), p_post);
+		final Term A = this.calc.valTerm(Type.INT, "A");
+		final Term B = this.calc.valTerm(Type.INT, "B");
+		final Term C = this.calc.valTerm(Type.INT, "C");
+		final Term D = this.calc.valTerm(Type.INT, "D");
+		final Primitive p_post = this.calc.push(new PrimitiveSymbolicApply(Type.INT, this.hist, "f", this.calc.push(A).mul(B).pop(), this.calc.push(C).mul(D).pop())).mul(A).pop();
+		assertEquals(this.calc.push(A).mul(new PrimitiveSymbolicApply(Type.INT, this.hist, "f", this.calc.push(B).mul(A).pop(), this.calc.push(D).mul(C).pop())).pop(), p_post);
 	}
 
 
 	@Test
 	public void test4() throws InvalidOperandException, InvalidTypeException, InvalidInputException {
-		final Term A = calc.valTerm(Type.INT, "A");
-		final Term B = calc.valTerm(Type.INT, "B");
-		final Term C = calc.valTerm(Type.INT, "C");
-		final Term D = calc.valTerm(Type.INT, "D");
-		final Primitive p_post = A.mul(new PrimitiveSymbolicApply(Type.INT, this.hist, this.calc, "f", A.add(this.calc.valInt(-1).mul(B))).div(new PrimitiveSymbolicApply(Type.INT, this.hist, this.calc, "g", C.add(this.calc.valInt(-1).mul(D)))));
-		assertEquals(new PrimitiveSymbolicApply(Type.INT, this.hist, this.calc, "f", this.calc.valInt(-1).mul(B).add(A)).div(new PrimitiveSymbolicApply(Type.INT, this.hist, this.calc, "g", this.calc.valInt(-1).mul(D).add(C))).mul(A), p_post);
+		final Term A = this.calc.valTerm(Type.INT, "A");
+		final Term B = this.calc.valTerm(Type.INT, "B");
+		final Term C = this.calc.valTerm(Type.INT, "C");
+		final Term D = this.calc.valTerm(Type.INT, "D");
+		final Primitive p_post = 
+				this.calc.push(A).mul(
+						this.calc.push(
+								new PrimitiveSymbolicApply(Type.INT, this.hist, "f", 
+										this.calc.push(A).add(
+												this.calc.pushInt(-1).mul(B).pop()
+										).pop()
+								)
+						).div(
+							new PrimitiveSymbolicApply(Type.INT, this.hist, "g", 
+									this.calc.push(C).add(
+											this.calc.pushInt(-1).mul(D).pop()
+									).pop()
+							)
+						).pop()
+				).pop();
+		assertEquals(this.calc.push(new PrimitiveSymbolicApply(Type.INT, this.hist, "f", this.calc.pushInt(-1).mul(B).add(A).pop())).div(new PrimitiveSymbolicApply(Type.INT, this.hist, "g", this.calc.pushInt(-1).mul(D).add(C).pop())).mul(A).pop(), p_post);
 	}
 }

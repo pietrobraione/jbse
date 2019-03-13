@@ -23,14 +23,13 @@ public final class PrimitiveSymbolicMemberArrayLength extends PrimitiveSymbolicM
      *        container array this symbol originates from.
      * @param id an {@link int}, the identifier of the symbol. Different
      *        object with same identifier will be treated as equal.
-     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @throws InvalidTypeException never.
-     * @throws InvalidInputException if {@code calc == null}. 
+     * @throws InvalidInputException never.. 
      * @throws NullPointerException if {@code container == null}.
      */
-    PrimitiveSymbolicMemberArrayLength(ReferenceSymbolic container, int id, Calculator calc) 
+    PrimitiveSymbolicMemberArrayLength(ReferenceSymbolic container, int id) 
     throws InvalidTypeException, InvalidInputException {
-    	super(container, id, INT, calc);
+    	super(container, id, INT);
     	this.originString = getContainer().asOriginString() + ".length";
 
     	//calculates hashCode

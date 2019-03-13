@@ -116,20 +116,20 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 
                 //second linking exception
                 if (this.methodResolvedClass.isMethodStatic(this.data.signature()) || this.methodResolvedClass.isMethodPrivate(this.data.signature())) {
-                    throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                    throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
                     exitFromAlgorithm();
                 }
                 
                 //first run-time exception
                 final Reference receiver = state.peekReceiverArg(this.data.signature());
                 if (state.isNull(receiver)) {
-                    throwNew(state, NULL_POINTER_EXCEPTION);
+                    throwNew(state, this.ctx.getCalculator(), NULL_POINTER_EXCEPTION);
                     exitFromAlgorithm();
                 }
                 
                 //second run-time exception
                 if (!state.getObject(receiver).getType().isSubclass(this.methodResolvedClass)) {
-                    throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                    throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
                     exitFromAlgorithm();
                 }
                 
@@ -142,20 +142,20 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 //second linking exception
                 if ("<init>".equals(this.data.signature().getName()) &&
                     !this.methodResolvedClass.getClassName().equals(this.data.signature().getClassName())) {
-                    throwNew(state, NO_SUCH_METHOD_ERROR);
+                    throwNew(state, this.ctx.getCalculator(), NO_SUCH_METHOD_ERROR);
                     exitFromAlgorithm();
                 }
                 
                 //third linking exception
                 if (this.methodResolvedClass.isMethodStatic(this.data.signature())) {
-                    throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                    throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
                     exitFromAlgorithm();
                 }
                 
                 //first run-time exception
                 final Reference receiver = state.peekReceiverArg(this.data.signature());
                 if (state.isNull(receiver)) {
-                    throwNew(state, NULL_POINTER_EXCEPTION);
+                    throwNew(state, this.ctx.getCalculator(), NULL_POINTER_EXCEPTION);
                     exitFromAlgorithm();
                 }
                 
@@ -166,7 +166,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     final boolean sameRuntimePackage = (currentClass.getDefiningClassLoader() == this.methodResolvedClass.getDefiningClassLoader() && currentClass.getPackageName().equals(this.methodResolvedClass.getPackageName()));
                     final ClassFile receiverClass = state.getObject(receiver).getType();                    
                     if (!sameRuntimePackage && !receiverClass.isSubclass(currentClass)) {
-                        throwNew(state, ILLEGAL_ACCESS_ERROR);
+                        throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
                         exitFromAlgorithm();
                     }
                 }
@@ -182,7 +182,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 
                 //second linking exception
                 if (!this.methodResolvedClass.isMethodStatic(this.data.signature())) {
-                    throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                    throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
                     exitFromAlgorithm();
                 }
                 
@@ -197,7 +197,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 
                 //second linking exception
                 if (this.methodResolvedClass.isMethodStatic(this.data.signature())) {
-                    throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                    throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
                     exitFromAlgorithm();
                 }
                 
@@ -206,7 +206,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 //first run-time exception
                 final Reference receiver = state.peekReceiverArg(this.data.signature());
                 if (state.isNull(receiver)) {
-                    throwNew(state, NULL_POINTER_EXCEPTION);
+                    throwNew(state, this.ctx.getCalculator(), NULL_POINTER_EXCEPTION);
                     exitFromAlgorithm();
                 }
                 
@@ -217,7 +217,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                     final boolean sameRuntimePackage = (currentClass.getDefiningClassLoader() == this.methodResolvedClass.getDefiningClassLoader() && currentClass.getPackageName().equals(this.methodResolvedClass.getPackageName()));
                     final ClassFile receiverClass = state.getObject(receiver).getType();                    
                     if (!sameRuntimePackage && !receiverClass.isSubclass(currentClass)) {
-                        throwNew(state, ILLEGAL_ACCESS_ERROR);
+                        throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
                         exitFromAlgorithm();
                     }
                 }
@@ -292,7 +292,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 this.isMethodImplSignaturePolymorphic = this.methodImplClass.isMethodSignaturePolymorphic(this.methodImplSignature);
                 return;
             } catch (PleaseLoadClassException e) {
-                invokeClassLoaderLoadClass(state, e);
+                invokeClassLoaderLoadClass(state, this.ctx.getCalculator(), e);
                 exitFromAlgorithm();
             } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException | 
                      WrongClassNameException | ClassFileNotAccessibleException | IncompatibleClassFileException | 

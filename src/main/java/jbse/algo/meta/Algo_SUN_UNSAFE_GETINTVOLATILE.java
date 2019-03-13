@@ -83,7 +83,7 @@ public final class Algo_SUN_UNSAFE_GETINTVOLATILE extends Algo_INVOKEMETA_Nonbra
                 throw new UndefinedResultException("The value read by sun.misc.Unsafe.getIntVolatile was not an int");
             }
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
     }

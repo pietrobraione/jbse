@@ -33,7 +33,7 @@ public final class Algo_JBSE_ANALYSIS_ISSYMBOLIC extends Algo_INVOKEMETA_Nonbran
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
             final Value arg = this.data.operand(0);
-            state.pushOperand(state.getCalculator().valInt(arg.isSymbolic() ? 1 : 0));
+            state.pushOperand(this.ctx.getCalculator().valInt(arg.isSymbolic() ? 1 : 0));
         };
     }
 }

@@ -17,23 +17,27 @@ import jbse.val.exc.InvalidTypeException;
  * @author Pietro Braione
  */
 public final class Any extends PrimitiveSymbolic {
-    private Any(Calculator calc) throws InvalidTypeException, InvalidInputException {
-        super(Type.BOOLEAN, unknown(), calc);
+	private static final Any THE_ANY;
+	static {
+        try {
+        	THE_ANY = new Any();
+        } catch (InvalidTypeException | InvalidInputException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+        }
+	}
+	
+    private Any() throws InvalidTypeException, InvalidInputException {
+        super(Type.BOOLEAN, unknown());
     }
 
     /**
      * Makes an {@link Any} value.
-     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * 
      * @return an {@link Any} instance.
-     * @throws InvalidInputException if {@code calc == null}.
      */
-    public static Any make(Calculator calc) throws InvalidInputException {
-        try {
-            return new Any(calc);
-        } catch (InvalidTypeException e) {
-            //this should never happen
-            throw new UnexpectedInternalException(e);
-        }
+    public static Any make() {
+    	return THE_ANY;
     }
     
     @Override

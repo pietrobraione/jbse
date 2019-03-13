@@ -1,8 +1,8 @@
 package jbse.rewr;
 
-import jbse.rewr.exc.NoResultException;
 import jbse.val.Expression;
 import jbse.val.Operator;
+import jbse.val.exc.NoResultException;
 
 /**
  * A rewriter which normalizes an expression. It assumes that its input
@@ -10,7 +10,7 @@ import jbse.val.Operator;
  * 
  * @author Pietro Braione
  */
-public class RewriterNormalize extends Rewriter {
+public class RewriterNormalize extends RewriterCalculatorRewriting {
 	public RewriterNormalize() { }
 
 	@Override
@@ -18,9 +18,9 @@ public class RewriterNormalize extends Rewriter {
 	throws NoResultException {
 		final Operator operator = x.getOperator();
 		if (operator == Operator.MUL || operator == Operator.ADD) {
-			setResult(Polynomial.of(this.calc, x).toPrimitiveNormalized());
+			setResult(Polynomial.of(this.calc, x).toPrimitiveNormalized(this.calc));
 		} else {
-			super.rewriteExpression(x);
+			setResult(x);
 		}
 	}
 }

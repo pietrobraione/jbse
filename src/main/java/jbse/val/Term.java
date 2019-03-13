@@ -1,6 +1,5 @@
 package jbse.val;
 
-import jbse.common.exc.InvalidInputException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
@@ -32,15 +31,13 @@ public final class Term extends Primitive implements Symbolic {
      * Constructor.
      * 
      * @param type a {@code char}, the type of this value.
-     * @param calc a {@link Calculator}. It must not be {@code null}.
      * @param value a {@code String}, the name of the term. Two 
      *        {@link Term}s with same name will be considered the
      *        same {@link Term}.
      * @throws InvalidTypeException if {@code type} is not primitive. 
-     * @throws InvalidInputException if {@code calc == null}.
      */
-    Term(char type, Calculator calc, String value) throws InvalidTypeException, InvalidInputException {
-        super(type, calc);
+    Term(char type, String value) throws InvalidTypeException {
+        super(type);
         this.value = value;
 
         //calculates the hash code

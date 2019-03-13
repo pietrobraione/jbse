@@ -1,7 +1,6 @@
 package jbse.rewr;
 
 import jbse.common.exc.UnexpectedInternalException;
-import jbse.rewr.exc.NoResultException;
 import jbse.val.Any;
 import jbse.val.Expression;
 import jbse.val.PrimitiveSymbolicApply;
@@ -15,6 +14,7 @@ import jbse.val.Term;
 import jbse.val.WideningConversion;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
+import jbse.val.exc.NoResultException;
 
 /**
  * Rewrites comparisons of {@code A +/- abs(A)} with {@code 0}.
@@ -22,7 +22,7 @@ import jbse.val.exc.InvalidTypeException;
  * 
  * @author Pietro Braione
  */
-public class RewriterAbsSum extends Rewriter {
+public class RewriterAbsSum extends RewriterCalculatorRewriting {
 	public RewriterAbsSum() { }
 
 	@Override
@@ -31,9 +31,9 @@ public class RewriterAbsSum extends Rewriter {
 		//checks for a comparison expression
 		Operator operator = x.getOperator();
 		if (operator != Operator.EQ && operator != Operator.NE &&
-				operator != Operator.GT && operator != Operator.LE &&
-				operator != Operator.LT && operator != Operator.GE) {
-			super.rewriteExpression(x);
+			operator != Operator.GT && operator != Operator.LE &&
+			operator != Operator.LT && operator != Operator.GE) {
+			setResult(x);
 			return;
 		}
 
@@ -47,49 +47,49 @@ public class RewriterAbsSum extends Rewriter {
 			subExpr = (Expression) second;
 			operator = operator.twist();
 		} else {
-			super.rewriteExpression(x);
+			setResult(x);
 			return;
 		}
 
 		//reduces the term of comparison to a polynomial and 
 		//searches an abs(X) monomial in it
 		final Polynomial subExprPolynomial = Polynomial.of(this.calc, subExpr);
-		final PrimitiveSymbolicApply abs = findAbs(subExprPolynomial.toPrimitive());
+		final PrimitiveSymbolicApply abs = findAbs(subExprPolynomial.toPrimitive(this.calc));
 		if (abs == null) {
-			super.rewriteExpression(x);
+			setResult(x);
 			return;
 		}
 
 		//checks that the multiplier of abs(X) is 1 or -1
 		try {
 			final char absType = abs.getType();
-			final Primitive minusOne = this.calc.valInt(-1).to(absType);
+			final Primitive minusOne = this.calc.pushInt(-1).to(absType).pop();
 			final Primitive absArg = (Primitive) abs.getArgs()[0];
-			final Simplex absMultiplier = subExprPolynomial.getMultiplier(Monomial.of(this.calc, abs));
+			final Simplex absMultiplier = subExprPolynomial.getMultiplier(this.calc, Monomial.of(this.calc, abs));
 			final boolean absNegated;
 			final Primitive toRemove;
 			if (absMultiplier.isZeroOne(false)) {
 				absNegated = false;
-				toRemove = abs.mul(minusOne);
-			} else if (((Simplex) absMultiplier.mul(minusOne)).isZeroOne(false)) {
+				toRemove = this.calc.push(abs).mul(minusOne).pop();
+			} else if (((Simplex) this.calc.push(absMultiplier).mul(minusOne).pop()).isZeroOne(false)) {
 				absNegated = true;
 				toRemove = abs;
 			} else {
-				super.rewriteExpression(x);
+				setResult(x);
 				return;
 			}
 
 			//checks that what remains by taking out abs(X) is X or -X
 			//and in the case elaborates the result
 			final Polynomial subOtherPolynomial;
-			subOtherPolynomial = subExprPolynomial.add(Polynomial.of(this.calc, toRemove));
-			final Primitive subOther = subOtherPolynomial.toPrimitive();
+			subOtherPolynomial = subExprPolynomial.add(this.calc, Polynomial.of(this.calc, toRemove));
+			final Primitive subOther = subOtherPolynomial.toPrimitive(this.calc);
 			if (subOtherPolynomial.equals(Polynomial.of(this.calc, absArg))) {
 				processAbs(absNegated, absArg, false, subOther, operator);
-			} else if (subOtherPolynomial.equals(Polynomial.of(this.calc, absArg.mul(minusOne)))) {
+			} else if (subOtherPolynomial.equals(Polynomial.of(this.calc, this.calc.push(absArg).mul(minusOne).pop()))) {
 				processAbs(absNegated, absArg, true, subOther, operator);
 			} else {
-				super.rewriteExpression(x);
+				setResult(x);
 				return;
 			}			
 		} catch (InvalidOperandException | InvalidTypeException e) {
@@ -153,72 +153,72 @@ public class RewriterAbsSum extends Rewriter {
 	private void processAbs(boolean absNegated, Primitive absArg, boolean otherNegated, Primitive subOther, Operator operator) 
 	throws NoResultException {
 		try {
-			final Primitive zero = calc.valInt(0).to(absArg.getType());
+			final Primitive zero = this.calc.pushInt(0).to(absArg.getType()).pop();
 			switch (operator) {
 			case EQ:
 				if (absNegated == otherNegated) {
 					//|A| + A == 0 iff -|A| - A == 0 iff A <= 0
-					setResult(absArg.le(zero));
+					setResult(this.calc.push(absArg).le(zero).pop());
 				} else {
 					//|A| - A == 0 iff -|A| + A == 0 iff A >= 0
-					setResult(absArg.ge(zero));
+					setResult(this.calc.push(absArg).ge(zero).pop());
 				}
 				break;
 			case NE:
 				if (absNegated == otherNegated) {
 					//|A| + A != 0 iff -|A| - A == 0 iff A > 0
-					setResult(absArg.gt(zero));
+					setResult(this.calc.push(absArg).gt(zero).pop());
 				} else {
 					//|A| - A != 0 iff -|A| + |A| != 0 iff A < 0
-					setResult(absArg.lt(zero));
+					setResult(this.calc.push(absArg).lt(zero).pop());
 				}
 				break;
 			case GT:
 				if (!absNegated && !otherNegated) {
 					//|A| + A > 0 iff A > 0
-					setResult(absArg.gt(zero));
+					setResult(this.calc.push(absArg).gt(zero).pop());
 				} else if (!absNegated && otherNegated) {
 					//|A| - A > 0 iff A < 0
-					setResult(absArg.lt(zero));
+					setResult(this.calc.push(absArg).lt(zero).pop());
 				} else {
 					//-|A| + A > 0 never, -|A| - A > 0 never
-					setResult(calc.valBoolean(false));
+					setResult(this.calc.valBoolean(false));
 				}
 				break;
 			case LE:
 				if (!absNegated && !otherNegated) {
 					//|A| + A <= 0 iff A <= 0
-					setResult(absArg.le(zero));
+					setResult(this.calc.push(absArg).le(zero).pop());
 				} else if (!absNegated && otherNegated) {
 					//|A| - A <= 0 iff A >= 0
-					setResult(absArg.ge(zero));
+					setResult(this.calc.push(absArg).ge(zero).pop());
 				} else {
 					//-|A| + A <= 0 always, -|A| - A <= 0 always
-					setResult(calc.valBoolean(true));
+					setResult(this.calc.valBoolean(true));
 				}
 				break;
 			case LT:
 				if (absNegated && !otherNegated) {
 					//-|A| + A < 0 iff A < 0
-					setResult(absArg.lt(zero));
+					setResult(this.calc.push(absArg).lt(zero).pop());
 				} else if (absNegated && otherNegated) {
 					//-|A| - A < 0 iff A > 0
-					setResult(absArg.gt(zero));
+					setResult(this.calc.push(absArg).gt(zero).pop());
 				} else {
 					//|A| + A < 0 never, |A| - A < 0 never
-					setResult(calc.valBoolean(false));
+					setResult(this.calc.valBoolean(false));
 				} 
 				break;
 			case GE:
 				if (absNegated && !otherNegated) {
 					//-|A| + A >= 0 iff A >= 0
-					setResult(absArg.ge(zero));
+					setResult(this.calc.push(absArg).ge(zero).pop());
 				} else if (absNegated && otherNegated) {
 					//-|A| - A >= 0 iff A <= 0
-					setResult(absArg.le(zero));
+					setResult(this.calc.push(absArg).le(zero).pop());
 				} else {
 					//|A| + A >= 0 always, |A| - A >= 0 always
-					setResult(calc.valBoolean(true));
+					setResult(this.calc.valBoolean(true));
 				}
 				break;
 			default:

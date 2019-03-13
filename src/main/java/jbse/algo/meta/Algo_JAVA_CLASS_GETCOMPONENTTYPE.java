@@ -14,10 +14,10 @@ import jbse.algo.StrategyUpdate;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.bc.ClassFile;
 import jbse.common.exc.ClasspathException;
+import jbse.common.exc.InvalidInputException;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.State;
-import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
@@ -41,7 +41,7 @@ public final class Algo_JAVA_CLASS_GETCOMPONENTTYPE extends Algo_INVOKEMETA_Nonb
     @Override
     protected void cookMore(State state)
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
-    CannotManageStateException, InterruptException, FrozenStateException {
+    CannotManageStateException, InterruptException, InvalidInputException {
         try {           
             //gets the canonical name of the primitive type and converts it to a string
             final Reference classRef = (Reference) this.data.operand(0);
@@ -53,17 +53,17 @@ public final class Algo_JAVA_CLASS_GETCOMPONENTTYPE extends Algo_INVOKEMETA_Nonb
             final ClassFile classFile = clazz.representedClass();
             if (classFile.isArray()) {
                 final ClassFile componentType = classFile.getMemberClass();
-                state.ensureInstance_JAVA_CLASS(componentType);
+                state.ensureInstance_JAVA_CLASS(this.ctx.getCalculator(), componentType);
                 this.componentClassRef = state.referenceToInstance_JAVA_CLASS(componentType);
             } else {
                 //not an array
                 this.componentClassRef = Null.getInstance();
             }
         } catch (HeapMemoryExhaustedException e) {
-            throwNew(state, OUT_OF_MEMORY_ERROR);
+            throwNew(state, this.ctx.getCalculator(), OUT_OF_MEMORY_ERROR);
             exitFromAlgorithm();
         } catch (ClassCastException e) {
-            throwVerifyError(state);
+            throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
     }

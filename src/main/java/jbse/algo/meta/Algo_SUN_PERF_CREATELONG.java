@@ -74,10 +74,11 @@ public final class Algo_SUN_PERF_CREATELONG extends Algo_INVOKEMETA_Nonbranching
     protected void cookMore(State state) 
     throws InterruptException, UndefinedResultException, SymbolicValueNotAllowedException, 
     ClasspathException, ThreadStackEmptyException, InvalidInputException {
+    	final Calculator calc = this.ctx.getCalculator();
         //gets the first (String name) parameter
         final Reference nameReference = (Reference) this.data.operand(1);
         if (state.isNull(nameReference)) {
-            throwNew(state, NULL_POINTER_EXCEPTION);
+            throwNew(state, calc, NULL_POINTER_EXCEPTION);
             exitFromAlgorithm();
         }
         this.name = valueString(state, nameReference);
@@ -94,7 +95,7 @@ public final class Algo_SUN_PERF_CREATELONG extends Algo_INVOKEMETA_Nonbranching
         
         //checks variability
         if (variability <= VU_INVALID || variability > V_LAST) {
-            throwNew(state, ILLEGAL_ARGUMENT_EXCEPTION);
+            throwNew(state, calc, ILLEGAL_ARGUMENT_EXCEPTION);
             exitFromAlgorithm();
         }
         
@@ -107,7 +108,7 @@ public final class Algo_SUN_PERF_CREATELONG extends Algo_INVOKEMETA_Nonbranching
         
         //checks units
         if (units <= VU_INVALID || units > U_LAST) {
-            throwNew(state, ILLEGAL_ARGUMENT_EXCEPTION);
+            throwNew(state, calc, ILLEGAL_ARGUMENT_EXCEPTION);
             exitFromAlgorithm();
         }
 
@@ -122,28 +123,28 @@ public final class Algo_SUN_PERF_CREATELONG extends Algo_INVOKEMETA_Nonbranching
         try {
             this.cf_JAVA_DIRECTBYTEBUFFER = state.getClassHierarchy().loadCreateClass(state.getCurrentClass().getDefiningClassLoader(), JAVA_DIRECTBYTEBUFFER, state.bypassStandardLoading());
         } catch (PleaseLoadClassException e) {
-            invokeClassLoaderLoadClass(state, e);
+            invokeClassLoaderLoadClass(state, calc, e);
             exitFromAlgorithm();
         //TODO are the following behaviors ok?
         } catch (ClassFileNotFoundException e) {
             //TODO this exception should wrap a ClassNotFoundException
-            throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR);
+            throwNew(state, calc, NO_CLASS_DEFINITION_FOUND_ERROR);
             exitFromAlgorithm();
         } catch (BadClassFileVersionException e) {
-            throwNew(state, UNSUPPORTED_CLASS_VERSION_ERROR);
+            throwNew(state, calc, UNSUPPORTED_CLASS_VERSION_ERROR);
             exitFromAlgorithm();
         } catch (WrongClassNameException e) {
-            throwNew(state, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
+            throwNew(state, calc, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
             exitFromAlgorithm();
         } catch (IncompatibleClassFileException e) {
-            throwNew(state, INCOMPATIBLE_CLASS_CHANGE_ERROR);
+            throwNew(state, calc, INCOMPATIBLE_CLASS_CHANGE_ERROR);
             exitFromAlgorithm();
         } catch (ClassFileNotAccessibleException e) {
-            throwNew(state, ILLEGAL_ACCESS_ERROR);
+            throwNew(state, calc, ILLEGAL_ACCESS_ERROR);
             exitFromAlgorithm();
         } catch (ClassFileIllFormedException e) {
             //TODO throw LinkageError instead
-            throwVerifyError(state);
+            throwVerifyError(state, calc);
             exitFromAlgorithm();
         }
     }
@@ -151,12 +152,13 @@ public final class Algo_SUN_PERF_CREATELONG extends Algo_INVOKEMETA_Nonbranching
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
+        	final Calculator calc = this.ctx.getCalculator();
             try {
                 //checks if name is already registers, and if it is not it registers it
                 try {
                     state.registerPerfCounter(this.name);
                 } catch (InvalidInputException e) {
-                    throwNew(state, ILLEGAL_ARGUMENT_EXCEPTION);
+                    throwNew(state, calc, ILLEGAL_ARGUMENT_EXCEPTION);
                     exitFromAlgorithm();
                 }
 
@@ -169,14 +171,13 @@ public final class Algo_SUN_PERF_CREATELONG extends Algo_INVOKEMETA_Nonbranching
                 unsafe.putLong(address, this.value);
                 
                 //creates the new java.nio.DirectByteBuffer and returns it
-                final ReferenceConcrete refDirectByteBuffer = state.createInstance(this.cf_JAVA_DIRECTBYTEBUFFER);
+                final ReferenceConcrete refDirectByteBuffer = state.createInstance(calc, this.cf_JAVA_DIRECTBYTEBUFFER);
                 state.pushOperand(refDirectByteBuffer);
                 
                 //pushes a frame for the constructor of the new object
-                final Calculator calc = state.getCalculator();
-                state.pushFrame(this.cf_JAVA_DIRECTBYTEBUFFER, JAVA_DIRECTBYTEBUFFER_INIT, false, this.pcOffset, refDirectByteBuffer, calc.valLong(address), calc.valInt(Long.BYTES));
+                state.pushFrame(calc, this.cf_JAVA_DIRECTBYTEBUFFER, JAVA_DIRECTBYTEBUFFER_INIT, false, this.pcOffset, refDirectByteBuffer, calc.valLong(address), calc.valInt(Long.BYTES));
             } catch (HeapMemoryExhaustedException e) {
-                throwNew(state, OUT_OF_MEMORY_ERROR);
+                throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
             } catch (NullMethodReceiverException | MethodNotFoundException | MethodCodeNotFoundException | 
                      InvalidSlotException | InvalidProgramCounterException e) {
