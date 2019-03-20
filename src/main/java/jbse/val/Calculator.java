@@ -15,6 +15,7 @@ import static jbse.common.Type.SHORT;
 import static jbse.common.Type.widens;
 
 import java.util.ArrayDeque;
+import java.util.HashMap;
 import java.util.NoSuchElementException;
 
 import jbse.common.exc.InvalidInputException;
@@ -1224,6 +1225,70 @@ public abstract class Calculator {
         return this;
     }
     
+    private static final class ReplacementTriple {
+    	private final Primitive operand;
+    	private final Primitive from;
+    	private final Primitive to;
+    	private final int hashCode;
+    	
+    	public ReplacementTriple(Primitive operand, Primitive from, Primitive to) {
+    		this.operand = operand;
+    		this.from = from;
+    		this.to = to;
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((from == null) ? 0 : from.hashCode());
+			result = prime * result + ((operand == null) ? 0 : operand.hashCode());
+			result = prime * result + ((to == null) ? 0 : to.hashCode());
+			this.hashCode = result;
+    	}
+
+		@Override
+		public int hashCode() {
+			return this.hashCode;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (getClass() != obj.getClass()) {
+				return false;
+			}
+			final ReplacementTriple other = (ReplacementTriple) obj;
+			if (this.from == null) {
+				if (other.from != null) {
+					return false;
+				}
+			} else if (!this.from.equals(other.from)) {
+				return false;
+			}
+			if (this.operand == null) {
+				if (other.operand != null) {
+					return false;
+				}
+			} else if (!this.operand.equals(other.operand)) {
+				return false;
+			}
+			if (this.to == null) {
+				if (other.to != null) {
+					return false;
+				}
+			} else if (!this.to.equals(other.to)) {
+				return false;
+			}
+			return true;
+		}
+    	
+    	
+    }
+    
+    private final HashMap<ReplacementTriple, Primitive> replaceCache = new HashMap<>();
+    
     private class PrimitiveReplaceVisitor implements PrimitiveVisitor {
     	final Primitive from, to;
     	Primitive result;
@@ -1240,6 +1305,13 @@ public abstract class Calculator {
 
 		@Override
 		public void visitExpression(Expression expression) throws Exception {
+	    	//trivial case: the result is in the cache
+	    	final ReplacementTriple key = new ReplacementTriple(expression, this.from, this.to);
+	    	if (Calculator.this.replaceCache.containsKey(key)) {
+	    		this.result = Calculator.this.replaceCache.get(key);
+	    		return;
+	    	}
+	    	
 	        final Primitive first;
 	        if (expression.isUnary()) {
 	            first = null;
@@ -1263,10 +1335,18 @@ public abstract class Calculator {
 	        } else {
 	        	this.result = simplify(Expression.makeExpressionBinary(first, expression.getOperator(), second));
 	        }
+	        Calculator.this.replaceCache.put(key, this.result);
 		}
 
 		@Override
 		public void visitPrimitiveSymbolicApply(PrimitiveSymbolicApply x) throws Exception {
+	    	//trivial case: the result is in the cache
+	    	final ReplacementTriple key = new ReplacementTriple(x, this.from, this.to);
+	    	if (Calculator.this.replaceCache.containsKey(key)) {
+	    		this.result = Calculator.this.replaceCache.get(key);
+	    		return;
+	    	}
+	    	
 		    final Value[] args = x.getArgs();
 		    final Value[] argsNew = new Value[args.length];
 		    for (int i = 0; i < args.length; ++i) {
@@ -1281,6 +1361,7 @@ public abstract class Calculator {
 		    }
 		    
 		    this.result = simplify(new PrimitiveSymbolicApply(x.getType(), x.historyPoint(), x.getOperator(), argsNew));
+	        Calculator.this.replaceCache.put(key, this.result);
 		}
 
 		@Override
@@ -1300,6 +1381,13 @@ public abstract class Calculator {
 
 		@Override
 		public void visitNarrowingConversion(NarrowingConversion x) throws Exception {
+	    	//trivial case: the result is in the cache
+	    	final ReplacementTriple key = new ReplacementTriple(x, this.from, this.to);
+	    	if (Calculator.this.replaceCache.containsKey(key)) {
+	    		this.result = Calculator.this.replaceCache.get(key);
+	    		return;
+	    	}
+	    	
 	        final Primitive arg;
 	        if (x.getArg().equals(this.from)) {
 	        	arg = this.to;
@@ -1308,10 +1396,18 @@ public abstract class Calculator {
 	        	arg = this.result;
 	        }
 	        this.result = simplify(NarrowingConversion.make(x.getType(), arg));
+	        Calculator.this.replaceCache.put(key, this.result);
 		}
 
 		@Override
 		public void visitWideningConversion(WideningConversion x) throws Exception {
+	    	//trivial case: the result is in the cache
+	    	final ReplacementTriple key = new ReplacementTriple(x, this.from, this.to);
+	    	if (Calculator.this.replaceCache.containsKey(key)) {
+	    		this.result = Calculator.this.replaceCache.get(key);
+	    		return;
+	    	}
+	    	
 	        final Primitive arg;
 	        if (x.getArg().equals(this.from)) {
 	        	arg = this.to;
@@ -1320,6 +1416,7 @@ public abstract class Calculator {
 	        	arg = this.result;
 	        }
 	        this.result = simplify(WideningConversion.make(x.getType(), arg));
+	        Calculator.this.replaceCache.put(key, this.result);
 		}
     }
     
@@ -1345,7 +1442,7 @@ public abstract class Calculator {
     		throw new InvalidTypeException("Attempted to invoke " + getClass().getName() + ".replace with Primitive from and Primitive to parameters having different type.");
     	}
     	
-    	//trivial case: nothing to replace
+    	//trivial case: from and to do not differ
         if (from.equals(to)) {
             return this;
         }
