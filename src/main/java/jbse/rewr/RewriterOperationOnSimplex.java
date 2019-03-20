@@ -158,6 +158,27 @@ public class RewriterOperationOnSimplex extends RewriterCalculatorRewriting {
                     return;
                 }
             }
+
+            //0 % x -> 0, x % 1 -> 0, x % (-1) -> 0
+            if (x.getOperator() == Operator.REM) {
+                if (firstIsSimplex && simplexOp.isZeroOne(true)) {
+                    setResult(simplexOp);
+                    return;
+                }
+                try {
+                	if (!firstIsSimplex && simplexOp.isZeroOne(false)) {
+                		setResult(this.calc.pushInt(0).to(x.getType()).pop());
+                		return;
+                	}
+                	if (!firstIsSimplex && ((Simplex) this.calc.push(simplexOp).neg().pop()).isZeroOne(false)) {
+                		setResult(this.calc.pushInt(0).to(x.getType()).pop());
+                		return;
+                	}
+				} catch (InvalidOperandException | InvalidTypeException e) {
+					//this should never happen
+					throw new UnexpectedInternalException(e);
+				}
+            }
         }
 
         //TODO should we rewrite the result before setting it with setResult????

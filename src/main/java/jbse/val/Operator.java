@@ -234,7 +234,7 @@ public enum Operator {
      *         operator to arguments of the prescribed type.
      */
 	public char returnType(char typeFirstOperand, char typeSecondOperand) {
-		if (this.returnsBoolean()) { 
+		if (returnsBoolean()) { 
 			return Type.BOOLEAN;
 		}
 		//TODO that's wrong!!! well, at least with some operators like shifts

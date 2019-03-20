@@ -1,6 +1,6 @@
 package jbse.rewr;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
@@ -28,14 +28,15 @@ public class MonomialTest {
 	
 	@Test
 	public void test1() throws InvalidTypeException, InvalidOperandException, InvalidInputException {
-		final Term A = this.calc.valTerm(Type.INT, "A");
-		final Term B = this.calc.valTerm(Type.INT, "B");
-		final Term C = this.calc.valTerm(Type.INT, "C");
-		final Term D = this.calc.valTerm(Type.INT, "D");
-		final Primitive p1 = this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", this.calc.push(A).div(B).div(this.calc.push(C).div(D).pop()).pop()).pop();
-		final Primitive p2 = this.calc.applyFunctionPrimitive(Type.INT, this.hist, "f", this.calc.push(A).mul(D).div(this.calc.push(B).mul(C).pop()).pop()).pop();
+		//f((A / B) / (C / D)) == f ((A * D) / (B * C))
+		final Term A = this.calc.valTerm(Type.FLOAT, "A");
+		final Term B = this.calc.valTerm(Type.FLOAT, "B");
+		final Term C = this.calc.valTerm(Type.FLOAT, "C");
+		final Term D = this.calc.valTerm(Type.FLOAT, "D");
+		final Primitive p1 = this.calc.applyFunctionPrimitive(Type.FLOAT, this.hist, "f", this.calc.push(A).div(B).div(this.calc.push(C).div(D).pop()).pop()).pop();
+		final Primitive p2 = this.calc.applyFunctionPrimitive(Type.FLOAT, this.hist, "f", this.calc.push(A).mul(D).div(this.calc.push(B).mul(C).pop()).pop()).pop();
 		final Monomial m1 = Monomial.of(this.calc, p1);
 		final Monomial m2 = Monomial.of(this.calc, p2);
-		assertTrue(m1.equals(m2));
+		assertEquals(m2, m1);
 	}
 }

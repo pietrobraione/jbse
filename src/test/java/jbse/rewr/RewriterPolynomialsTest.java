@@ -93,28 +93,28 @@ public class RewriterPolynomialsTest {
 	@Test
 	public void testSum2() throws InvalidOperandException, InvalidTypeException {
 		//A / (A + B) + B / (A + B) -> 1
-		final Term A = this.calc.valTerm(Type.INT, "A");
-		final Term B = this.calc.valTerm(Type.INT, "B");
+		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
+		final Term B = this.calc.valTerm(Type.DOUBLE, "B");
 		final Primitive p_post = this.calc.push(A).div(this.calc.push(A).add(B).pop()).add(this.calc.push(B).div(this.calc.push(A).add(B).pop()).pop()).pop();
-		assertEquals(this.calc.valInt(1), p_post);
+		assertEquals(this.calc.valDouble(1.0d), p_post);
 	}
 	
 	@Test
 	public void testSum3() throws InvalidOperandException, InvalidTypeException {
 		//A / (A + B) - B / (A + B) -> (A * A - B * B) / (A * A + 2 * A * B + B * B)
-		final Term A = this.calc.valTerm(Type.INT, "A");
-		final Term B = this.calc.valTerm(Type.INT, "B");
+		final Term A = this.calc.valTerm(Type.FLOAT, "A");
+		final Term B = this.calc.valTerm(Type.FLOAT, "B");
 		final Primitive p_post = this.calc.push(A).div(this.calc.push(A).add(B).pop()).sub(this.calc.push(B).div(this.calc.push(A).add(B).pop()).pop()).pop();
-		assertEquals(this.calc.push(A).mul(A).sub(this.calc.push(B).mul(B).pop()).div(this.calc.push(A).mul(A).add(this.calc.pushInt(2).mul(B).mul(A).pop()).add(this.calc.push(B).mul(B).pop()).pop()).pop(), p_post);
+		assertEquals(this.calc.push(A).mul(A).sub(this.calc.push(B).mul(B).pop()).div(this.calc.push(A).mul(A).add(this.calc.pushFloat(2.0f).mul(B).mul(A).pop()).add(this.calc.push(B).mul(B).pop()).pop()).pop(), p_post);
 	}
 	
 	@Test
 	public void testMultiplication1() throws InvalidOperandException, InvalidTypeException {
 		//-1 * (A / B) -> (-1 * A) / B
-		final Term A = this.calc.valTerm(Type.INT, "A");
-		final Term B = this.calc.valTerm(Type.INT, "B");
-		final Primitive p_post = this.calc.pushInt(-1).mul(this.calc.push(A).div(B).pop()).pop();
-		assertEquals(this.calc.pushInt(-1).mul(A).div(B).pop(), p_post);
+		final Term A = this.calc.valTerm(Type.DOUBLE, "A");
+		final Term B = this.calc.valTerm(Type.DOUBLE, "B");
+		final Primitive p_post = this.calc.pushDouble(-1.0d).mul(this.calc.push(A).div(B).pop()).pop();
+		assertEquals(this.calc.pushDouble(-1.0d).mul(A).div(B).pop(), p_post);
 	}
 	
 	@Test

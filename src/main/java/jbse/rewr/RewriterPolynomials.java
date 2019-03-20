@@ -1,5 +1,7 @@
 package jbse.rewr;
 
+import static jbse.common.Type.isPrimitiveIntegral;
+
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.Expression;
 import jbse.val.Operator;
@@ -29,82 +31,145 @@ public class RewriterPolynomials extends RewriterCalculatorRewriting {
 				return;
 			}
 
-			//builds the two fractions, handling the case operator == NEG
-			final Primitive firstFraction, secondFraction;
+			//gets the two operands, considering the case operator == NEG 
+			//as it were a binary multiplication
+			final Primitive firstOperand, secondOperand;
 			if (operator == Operator.NEG) {
-				firstFraction = this.calc.pushInt(-1).to(x.getOperand().getType()).pop();
-				secondFraction = x.getOperand();
+				firstOperand = this.calc.pushInt(-1).to(x.getOperand().getType()).pop();
+				secondOperand = x.getOperand();
 			} else {
-				firstFraction = x.getFirstOperand();
-				secondFraction = x.getSecondOperand();
+				firstOperand = x.getFirstOperand();
+				secondOperand = x.getSecondOperand();
 			}
 
 			//splits the first fraction into its numerator/denominator
-			final Polynomial firstNumer;
-			final Polynomial firstDenom;
-			if (firstFraction instanceof Expression) {
-				final Expression firstOperandExpression = (Expression) firstFraction;
+			final boolean firstOperandIsAFraction;
+			final Primitive firstNumer;
+			final Primitive firstDenom;
+			if (firstOperand instanceof Expression) {
+				final Expression firstOperandExpression = (Expression) firstOperand;
 				final Operator firstOperandOperator = firstOperandExpression.getOperator();
 				if (firstOperandOperator == Operator.DIV) {
-					firstNumer = Polynomial.of(this.calc, firstOperandExpression.getFirstOperand());
-					firstDenom = Polynomial.of(this.calc, firstOperandExpression.getSecondOperand());
+					firstOperandIsAFraction = true;
+					firstNumer = firstOperandExpression.getFirstOperand();
+					firstDenom = firstOperandExpression.getSecondOperand();
 				} else {
-					firstNumer = Polynomial.of(this.calc, firstFraction);
-					firstDenom = Polynomial.of(this.calc, this.calc.pushInt(1).to(firstFraction.getType()).pop());
+					firstOperandIsAFraction = false;
+					firstNumer = firstOperand;
+					firstDenom = this.calc.pushInt(1).to(firstOperand.getType()).pop();
 				}
 			} else {
-				firstNumer = Polynomial.of(this.calc, firstFraction);
-				firstDenom = Polynomial.of(this.calc, this.calc.pushInt(1).to(firstFraction.getType()).pop());
+				firstOperandIsAFraction = false;
+				firstNumer = firstOperand;
+				firstDenom = this.calc.pushInt(1).to(firstOperand.getType()).pop();
 			}
 
 			//splits the second fraction into its numerator/denominator, reducing
 			//the cases operator == SUB and (operator == DIV or operator == NEG) 
 			//to the cases operator == ADD and operator == MUL respectively
-			final Polynomial secondNumer;
-			final Polynomial secondDenom;
-			if (secondFraction instanceof Expression) {
-				final Expression secondOperandExpression = (Expression) secondFraction;
+			final boolean secondOperandIsAFraction;
+			final Primitive secondNumer;
+			final Primitive secondDenom;
+			if (secondOperand instanceof Expression) {
+				final Expression secondOperandExpression = (Expression) secondOperand;
 				final Operator secondOperandOperator = secondOperandExpression.getOperator();
 				if (secondOperandOperator == Operator.DIV && operator == Operator.DIV) {
-					secondNumer = Polynomial.of(this.calc, secondOperandExpression.getSecondOperand());
-					secondDenom = Polynomial.of(this.calc, secondOperandExpression.getFirstOperand());
+					secondOperandIsAFraction = true;
+					secondNumer = secondOperandExpression.getSecondOperand();
+					secondDenom = secondOperandExpression.getFirstOperand();
 				} else if (secondOperandOperator == Operator.DIV) {
+					secondOperandIsAFraction = true;
 					secondNumer = (operator == Operator.SUB ? 
-							Polynomial.of(this.calc, secondOperandExpression.getFirstOperand()).neg(this.calc) : 
-								Polynomial.of(this.calc, secondOperandExpression.getFirstOperand()));
-					secondDenom = Polynomial.of(this.calc, secondOperandExpression.getSecondOperand());
+								   this.calc.push(secondOperandExpression.getFirstOperand()).neg().pop() : 
+								   secondOperandExpression.getFirstOperand());
+					secondDenom = secondOperandExpression.getSecondOperand();
 				} else if (operator == Operator.DIV) {
-					secondNumer = Polynomial.of(this.calc, this.calc.pushInt(1).to(secondFraction.getType()).pop());
-					secondDenom = Polynomial.of(this.calc, secondFraction);
+					secondOperandIsAFraction = false;
+					secondNumer = this.calc.pushInt(1).to(secondOperand.getType()).pop();
+					secondDenom = secondOperand;
 				} else {
-					secondNumer = Polynomial.of(this.calc, secondFraction);
-					secondDenom = Polynomial.of(this.calc, this.calc.pushInt(operator == Operator.SUB ? -1 : 1).to(secondFraction.getType()).pop());
+					secondOperandIsAFraction = false;
+					secondNumer = secondOperand;
+					secondDenom = this.calc.pushInt(operator == Operator.SUB ? -1 : 1).to(secondOperand.getType()).pop();
 				}
 			} else if (operator == Operator.DIV) {
-				secondNumer = Polynomial.of(this.calc, this.calc.pushInt(1).to(secondFraction.getType()).pop());
-				secondDenom = Polynomial.of(this.calc, secondFraction);
+				secondOperandIsAFraction = false;
+				secondNumer = this.calc.pushInt(1).to(secondOperand.getType()).pop();
+				secondDenom = secondOperand;
 			} else {
-				secondNumer = Polynomial.of(this.calc, secondFraction);
-				secondDenom = Polynomial.of(this.calc, this.calc.pushInt(operator == Operator.SUB ? -1 : 1).to(secondFraction.getType()).pop());
+				secondOperandIsAFraction = false;
+				secondNumer = secondOperand;
+				secondDenom = this.calc.pushInt(operator == Operator.SUB ? -1 : 1).to(secondOperand.getType()).pop();
 			}
-
+			
+			//in the case the expression has integral type all divisions are
+			//integer divisions, for which the distributive property does not hold
+			//unless the dividend is a multiple of the divisor. To make the 
+			//distributive property hold, subtracts the remainder from the 
+			//numerators to make them multiples of the
+			//denominator, exploiting the fact that a / b == (a - a % b) / b.
+			//Note that this must *not* be done in the cases where the two operands
+			//are not fractions and in the case (a / b) / c, for which the
+			//equality (a / b) / c == a / (b * c) holds.
+			final Primitive firstNumerDistrib, secondNumerDistrib, firstDenomDistrib, secondDenomDistrib;
+			if (isPrimitiveIntegral(x.getType())) {
+				if (operator == Operator.NEG) {
+					//nothing to do
+					firstNumerDistrib = firstNumer;
+					firstDenomDistrib = firstDenom;
+					secondNumerDistrib = secondNumer;
+					secondDenomDistrib = secondDenom;
+				} else if (firstOperandIsAFraction && !secondOperandIsAFraction && operator == Operator.DIV) {
+					//nothing to do
+					firstNumerDistrib = firstNumer;
+					firstDenomDistrib = firstDenom;
+					secondNumerDistrib = secondNumer;
+					secondDenomDistrib = secondDenom;
+				} else if ((firstOperandIsAFraction || secondOperandIsAFraction) && operator == Operator.DIV) {
+					firstNumerDistrib = this.calc.push(firstNumer).sub(this.calc.push(firstNumer).rem(firstDenom).pop()).pop();
+					firstDenomDistrib = firstDenom;
+					secondNumerDistrib = secondNumer; 
+					secondDenomDistrib = this.calc.push(secondDenom).sub(this.calc.push(secondDenom).rem(secondNumer).pop()).pop();
+				} else if (firstOperandIsAFraction || secondOperandIsAFraction) {
+					firstNumerDistrib = this.calc.push(firstNumer).sub(this.calc.push(firstNumer).rem(firstDenom).pop()).pop();
+					firstDenomDistrib = firstDenom;
+					secondNumerDistrib = this.calc.push(secondNumer).sub(this.calc.push(secondNumer).rem(secondDenom).pop()).pop();
+					secondDenomDistrib = secondDenom;
+				} else {
+					//nothing to do
+					firstNumerDistrib = firstNumer;
+					firstDenomDistrib = firstDenom;
+					secondNumerDistrib = secondNumer;
+					secondDenomDistrib = secondDenom;
+				}
+			} else {
+				firstNumerDistrib = firstNumer;
+				firstDenomDistrib = firstDenom;
+				secondNumerDistrib = secondNumer;
+				secondDenomDistrib = secondDenom;
+			}
+			
 			//builds the result numerator and denominator as polynomials
-			final Polynomial[] resultDiv;
+			final Polynomial firstNumerPoly = Polynomial.of(this.calc, firstNumerDistrib);
+			final Polynomial firstDenomPoly = Polynomial.of(this.calc, firstDenomDistrib);
+			final Polynomial secondNumerPoly = Polynomial.of(this.calc, secondNumerDistrib);
+			final Polynomial secondDenomPoly = Polynomial.of(this.calc, secondDenomDistrib);
+			final Polynomial[] resultDivPoly;
 			if (operator == Operator.MUL || operator == Operator.DIV || operator == Operator.NEG) {
 				//product
-				resultDiv = firstNumer.mul(this.calc, secondNumer).div(this.calc, firstDenom.mul(this.calc, secondDenom));
+				resultDivPoly = firstNumerPoly.mul(this.calc, secondNumerPoly).div(this.calc, firstDenomPoly.mul(this.calc, secondDenomPoly));
 			} else {
 				//sum
-				resultDiv = firstNumer.mul(this.calc, secondDenom).add(this.calc, secondNumer.mul(this.calc, firstDenom)).div(this.calc, firstDenom.mul(this.calc, secondDenom));
+				resultDivPoly = firstNumerPoly.mul(this.calc, secondDenomPoly).add(this.calc, secondNumerPoly.mul(this.calc, firstDenomPoly)).div(this.calc, firstDenomPoly.mul(this.calc, secondDenomPoly));
 			}
 
 			//converts the result to Primitive and sets it
-			final Primitive resultNumerator = resultDiv[0].toPrimitive(this.calc);
-			if (resultDiv[1] == null) {
-				setResult(resultNumerator);
+			final Primitive resultNumer = resultDivPoly[0].toPrimitive(this.calc);
+			if (resultDivPoly[1] == null) {
+				setResult(resultNumer);
 			} else {
-				final Primitive resultDenominator = resultDiv[1].toPrimitive(this.calc);
-				setResult(Expression.makeExpressionBinary(resultNumerator, Operator.DIV, resultDenominator));
+				final Primitive resultDenom = resultDivPoly[1].toPrimitive(this.calc);
+				setResult(Expression.makeExpressionBinary(resultNumer, Operator.DIV, resultDenom));
 			}
 		} catch (InvalidOperatorException | InvalidOperandException | 
 				 InvalidTypeException e) {

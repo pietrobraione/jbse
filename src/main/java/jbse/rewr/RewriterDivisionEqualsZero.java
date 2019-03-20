@@ -1,9 +1,12 @@
 package jbse.rewr;
 
+import jbse.common.Type;
+import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.val.Expression;
 import jbse.val.Operator;
 import jbse.val.Primitive;
+import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.Simplex;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
@@ -11,7 +14,11 @@ import jbse.val.exc.NoResultException;
 
 /**
  * Rewrites {@code A / B == 0} to {@code A == 0 && B != 0}, 
- * and {@code A / B != 0} to {@code A != 0}.
+ * and {@code A / B != 0} to {@code A != 0}, if {@code A} and
+ * {@code B} have floating type. If {@code A} and {@code B}
+ * have integral type rewrites {@code A / B == 0} to 
+ * {@code abs(A) < abs(B) && B != 0}, 
+ * and {@code A / B != 0} to {@code abs(A) >= abs(B)}
  * 
  * @author Pietro Braione
  *
@@ -34,12 +41,22 @@ public class RewriterDivisionEqualsZero extends RewriterCalculatorRewriting {
 					final Primitive A = left.getFirstOperand();
 					final Primitive B = left.getSecondOperand();
 					try {
-						if (op == Operator.EQ) { 
-							setResult(rewrite(this.calc.push(A).eq(right).and(this.calc.push(B).eq(right).not().pop()).pop()));
+						if (Type.isPrimitiveIntegral(first.getType())) {
+							if (op == Operator.EQ) { 
+								setResult(rewrite(this.calc.applyFunctionPrimitive(x.getType(), x.historyPoint(), (x.getType() == Type.LONG ? PrimitiveSymbolicApply.ABS_LONG : PrimitiveSymbolicApply.ABS_INT), A)
+												 .lt(this.calc.applyFunctionPrimitive(x.getType(), x.historyPoint(), (x.getType() == Type.LONG ? PrimitiveSymbolicApply.ABS_LONG : PrimitiveSymbolicApply.ABS_INT), B).pop()).and(this.calc.push(B).eq(right).not().pop()).pop()));
+							} else {
+								setResult(rewrite(this.calc.applyFunctionPrimitive(x.getType(), x.historyPoint(), (x.getType() == Type.LONG ? PrimitiveSymbolicApply.ABS_LONG : PrimitiveSymbolicApply.ABS_INT), A)
+										 .lt(this.calc.applyFunctionPrimitive(x.getType(), x.historyPoint(), (x.getType() == Type.LONG ? PrimitiveSymbolicApply.ABS_LONG : PrimitiveSymbolicApply.ABS_INT), B).pop()).pop()));
+							}
 						} else {
-							setResult(rewrite(this.calc.push(A).ne(right).pop()));
+							if (op == Operator.EQ) { 
+								setResult(rewrite(this.calc.push(A).eq(right).and(this.calc.push(B).eq(right).not().pop()).pop()));
+							} else {
+								setResult(rewrite(this.calc.push(A).ne(right).pop()));
+							}
 						}
-					} catch (InvalidOperandException | InvalidTypeException e) {
+					} catch (InvalidInputException | InvalidOperandException | InvalidTypeException e) {
 						//this should never happen
 						throw new UnexpectedInternalException(e);
 					}

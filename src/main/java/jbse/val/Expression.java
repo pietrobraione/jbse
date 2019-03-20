@@ -60,11 +60,11 @@ public final class Expression extends PrimitiveSymbolicComputed {
         }
         Operator.typeCheck(operator, firstOperand.getType(), secondOperand.getType());
 
-        //calculates the default type
-        final char defaultType = operator.returnType(firstOperand.getType(), secondOperand.getType()); 
+        //calculates the expression type
+        final char type = operator.returnType(firstOperand.getType(), secondOperand.getType()); 
 
         try {
-			return new Expression(defaultType, firstOperand, operator, secondOperand);
+			return new Expression(type, firstOperand, operator, secondOperand);
 		} catch (InvalidInputException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
@@ -87,18 +87,18 @@ public final class Expression extends PrimitiveSymbolicComputed {
             throw new InvalidOperatorException("No operator in unary expression construction.");
         }
         if (operand == null) {
-            throw new InvalidOperandException("no operand in unary expression construction");
+            throw new InvalidOperandException("No operand in unary expression construction.");
         }
         if (operator.isBinary()) {
-            throw new InvalidOperatorException("operator " + operator + " is not unary");
+            throw new InvalidOperatorException("Operator " + operator + " is not unary.");
         }
         Operator.typeCheck(operator, operand.getType());
 
-        //calculates the default type
-        final char defaultType = (operator.returnsBoolean() ? Type.BOOLEAN : operand.getType());
+        //calculates the expression type
+        final char type = (operator.returnsBoolean() ? Type.BOOLEAN : operand.getType());
 
         try {
-			return new Expression(defaultType, null, operator, operand);
+			return new Expression(type, null, operator, operand);
 		} catch (InvalidInputException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);
