@@ -322,7 +322,8 @@ public class ClassFileJavassist extends ClassFile {
     
     @Override
     public String getSourceFile() {
-        return this.cf.getSourceFile();
+        final String javassistSourceFile = this.cf.getSourceFile();
+        return (javassistSourceFile == null ? "" : javassistSourceFile);
     }
     
     @Override
