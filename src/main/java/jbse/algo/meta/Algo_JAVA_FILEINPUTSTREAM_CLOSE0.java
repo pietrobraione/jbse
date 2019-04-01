@@ -4,10 +4,13 @@ import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.algo.meta.Util.INVALID_FILE_ID;
 import static jbse.bc.Signatures.IO_EXCEPTION;
 import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR_FD;
+import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR_HANDLE;
 import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM_FD;
 
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.function.Supplier;
@@ -31,7 +34,8 @@ import jbse.val.Simplex;
  */
 public final class Algo_JAVA_FILEINPUTSTREAM_CLOSE0 extends Algo_INVOKEMETA_Nonbranching {
     private Instance fileDescriptor; //set by cookMore
-    private int fd; //set by cookMore
+    private boolean onWindows; //set by cookMore
+    private long fileId; //set by cookMore
     
     @Override
     protected Supplier<Integer> numOperands() {
@@ -56,12 +60,29 @@ public final class Algo_JAVA_FILEINPUTSTREAM_CLOSE0 extends Algo_INVOKEMETA_Nonb
                 failExecution("The 'this' parameter to java.io.FileInputStream.close0 method apparently has not a FileDescriptor fd field.");
             }
             this.fileDescriptor = (Instance) state.getObject(fileDescriptorReference);
-            final Simplex _fd = (Simplex) this.fileDescriptor.getFieldValue(JAVA_FILEDESCRIPTOR_FD);
-            this.fd = ((Integer) _fd.getActualValue()).intValue();
+            
+            //determines if we are on Windows
+            try {
+            	FileDescriptor.class.getDeclaredField("handle");
+            	//no exception: we are on windows
+            	this.onWindows = true;
+            } catch (NoSuchFieldException e) {
+            	//we are not on Windows
+            	this.onWindows = false;
+            }
+            
+            //gets the file descriptor/handle
+            if (this.onWindows) {
+            	final Simplex _handle = (Simplex) this.fileDescriptor.getFieldValue(JAVA_FILEDESCRIPTOR_HANDLE);
+            	this.fileId = ((Long) _handle.getActualValue()).longValue();
+            } else {
+            	final Simplex _fd = (Simplex) this.fileDescriptor.getFieldValue(JAVA_FILEDESCRIPTOR_FD);
+            	this.fileId = ((Integer) _fd.getActualValue()).longValue();
+            }
             //TODO more checks
 
             //checks if the file is open
-            if (this.fd == -1) {
+            if (this.fileId == INVALID_FILE_ID) {
                 //nothing to do
                 exitFromAlgorithm();
             }            
@@ -75,13 +96,17 @@ public final class Algo_JAVA_FILEINPUTSTREAM_CLOSE0 extends Algo_INVOKEMETA_Nonb
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
             //sets the descriptor's fd field to -1
-            this.fileDescriptor.setFieldValue(JAVA_FILEDESCRIPTOR_FD, this.ctx.getCalculator().valInt(-1));
+            this.fileDescriptor.setFieldValue(JAVA_FILEDESCRIPTOR_FD, this.ctx.getCalculator().valInt((int) INVALID_FILE_ID));
             
+            //if we are on Windows, also sets the descriptor's handle field to -1
+            if (this.onWindows) {
+            	this.fileDescriptor.setFieldValue(JAVA_FILEDESCRIPTOR_HANDLE, this.ctx.getCalculator().valLong(INVALID_FILE_ID));
+            }
             
             //removes the association fd/FileInputStream from the state
             //and closes the FileInputStream
-            final FileInputStream fis = (FileInputStream) state.getFile(this.fd);
-            state.removeFile(this.fd);
+            final FileInputStream fis = (FileInputStream) state.getFile(this.fileId);
+            state.removeFile(this.fileId);
             try {
                 fis.close();
             } catch (IOException e) {

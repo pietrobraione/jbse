@@ -5,8 +5,10 @@ import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.algo.Util.valueString;
+import static jbse.algo.meta.Util.INVALID_FILE_ID;
 import static jbse.bc.Signatures.FILE_NOT_FOUND_EXCEPTION;
 import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR_FD;
+import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR_HANDLE;
 import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM_FD;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 
@@ -37,6 +39,8 @@ import jbse.val.Reference;
 public final class Algo_JAVA_FILEINPUTSTREAM_OPEN0 extends Algo_INVOKEMETA_Nonbranching {
     private Instance fileDescriptor; //set by cookMore
     private int fd; //set by cookMore
+    private boolean onWindows; //set by cookMore
+    private long handle; //set by cookMore
     private FileInputStream fis; //set by cookMore
     
     @Override
@@ -89,6 +93,17 @@ public final class Algo_JAVA_FILEINPUTSTREAM_OPEN0 extends Algo_INVOKEMETA_Nonbr
             final Field fileDescriptorFD = FileDescriptor.class.getDeclaredField("fd");
             fileDescriptorFD.setAccessible(true);
             this.fd = ((Integer) fileDescriptorFD.get(fileDescriptor)).intValue();
+            try {
+            	final Field fileDescriptorHandle = FileDescriptor.class.getDeclaredField("handle");
+            	//no exception: we are on windows
+            	this.onWindows = true;
+            	fileDescriptorHandle.setAccessible(true);
+                this.handle = ((Long) fileDescriptorHandle.get(fileDescriptor)).longValue();
+            } catch (NoSuchFieldException e) {
+            	//we are not on Windows
+            	this.onWindows = false;
+            	this.handle = INVALID_FILE_ID;
+            }
         } catch (ClassCastException e) {
             throwVerifyError(state, calc);
             exitFromAlgorithm();
@@ -104,9 +119,18 @@ public final class Algo_JAVA_FILEINPUTSTREAM_OPEN0 extends Algo_INVOKEMETA_Nonbr
             //implants this.fd in this.fileDescriptor
             this.fileDescriptor.setFieldValue(JAVA_FILEDESCRIPTOR_FD, this.ctx.getCalculator().valInt(this.fd));
             
+            //implants this.handle in this.fileDescriptor, if it has such a field
+            if (this.onWindows) {
+            	this.fileDescriptor.setFieldValue(JAVA_FILEDESCRIPTOR_HANDLE, this.ctx.getCalculator().valLong(this.handle));
+            }
+            
             //associates in state the file descriptor to the FileInputStream
             //created to access the file at the meta-level
-            state.setFile(this.fd, this.fis);
+            if (this.onWindows) {
+            	state.setFile(this.handle, this.fis);
+            } else {
+            	state.setFile(this.fd, this.fis);
+            }
         };
     }
 }
