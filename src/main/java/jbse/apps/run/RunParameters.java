@@ -11,6 +11,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -34,6 +35,7 @@ import jbse.rewr.CalculatorRewriting;
 import jbse.rewr.RewriterCalculatorRewriting;
 import jbse.rules.ClassInitRulesRepo;
 import jbse.rules.LICSRulesRepo;
+import jbse.rules.TriggerRulesRepo;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -452,14 +454,16 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
-     * Gets the embedded {@link RunnerParameters} object.
+     * Returns the wrapped {@link RunnerParameters} object.
      * 
-     * @return the {@link RunnerParameters} that backs this 
-     *         {@link RunParameters} object.
+     * @return the {@link RunnerParameters} object that backs 
+     *         this {@link RunParameters}.
      */
     public RunnerParameters getRunnerParameters() {
         return this.runnerParameters;
     }
+    
+    //no setDecisionProcedure(DecisionProcedureAlgorithms), getDecisionProcedure()
 
     /**
      * Sets the state identification mode, i.e., how a state will be
@@ -473,6 +477,16 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
+     * Gets the state identification mode.
+     * 
+     * @return the {@link StateIdentificationMode} set by the
+     *         last call to {@link #setStateIdentificationMode(StateIdentificationMode)}.
+     */
+    public StateIdentificationMode getStateIdentificationMode() {
+        return this.runnerParameters.getStateIdentificationMode();
+    }
+
+    /**
      * Sets the breadth mode, i.e., how many branches 
      * will be created during execution.
      * 
@@ -483,6 +497,86 @@ public final class RunParameters implements Cloneable {
         this.runnerParameters.setBreadthMode(breadthMode);
     }
     
+    /**
+     * Gets the breadth mode.
+     * 
+     * @return the {@link BreadthMode} set by the
+     *         last call to {@link #setBreadthMode(BreadthMode)}.
+     */
+    public BreadthMode getBreadthMode() {
+        return this.runnerParameters.getBreadthMode();
+    }
+
+    /** 
+     * Adds an {@link ExecutionObserver} performing additional
+     * actions when a field changes its value.
+     * 
+     * @param fldClassName the name of the class where the field
+     *        resides.
+     * @param fldType the type of the field.
+     * @param fldName the name of the field.
+     * @param observer an {@link ExecutionObserver}. It will be 
+     *        notified whenever the field {@code fldName} of 
+     *        any instance of {@code fldClassName} is modified.
+     */ 
+    public void addExecutionObserver(String fldClassName, String fldType, String fldName, ExecutionObserver observer) {
+        this.runnerParameters.addExecutionObserver(fldClassName, fldType, fldName, observer);
+    }
+
+    /**
+     * Clears the {@link ExecutionObserver}s.
+     */
+    public void clearExecutionObservers() {
+    	this.runnerParameters.clearExecutionObservers();
+    }
+
+    /**
+     * Returns the {@link Signature}s of the fields
+     * observed by some {@link ExecutionObserver}.
+     * 
+     * @return a {@link List}{@code <}{@link Signature}{@code >},
+     *         in the order matching that of the return value 
+     *         of {@link #getObservers()}.
+     */
+    public List<Signature> getObservedFields() {
+        return this.runnerParameters.getObservedFields();
+    }
+
+    /**
+     * Returns the {@link Signature}s of the fields
+     * observed by some {@link ExecutionObserver}.
+     * 
+     * @return a {@link List}{@code <}{@link Signature}{@code >},
+     *         in the order matching that of the return value 
+     *         of {@link #getObservedFields()}.
+     */
+    public List<ExecutionObserver> getObservers() {
+        return this.runnerParameters.getObservers();
+    }
+
+    /**
+     * Sets the initial state of the symbolic execution, and cancels the 
+     * effect of any previous call to {@link #setJavaHome(String) setJavaHome}, 
+     * {@link #addExtClasspath(String...) addExtClasspath}, 
+     * {@link #addUserClasspath(String...) addUserClasspath}, 
+     * and {@link #setMethodSignature(String) setMethodSignature}.
+     *  
+     * @param s a {@link State}.
+     */
+    public void setInitialState(State s) { 
+        this.runnerParameters.setInitialState(s);
+    }
+
+    /**
+     * Gets the initial state of the symbolic execution (a safety copy).
+     * 
+     * @return the {@link State} set by the last call to 
+     *         {@link #setInitialState(State)} (possibly {@code null}).
+     */
+    public State getInitialState() {
+        return this.runnerParameters.getInitialState();
+    }
+
     /**
      * Sets whether the bootstrap classloader should also be used to 
      * load the classes defined by the extensions and application classloaders.
@@ -506,9 +600,12 @@ public final class RunParameters implements Cloneable {
     public boolean getBypassStandardLoading() {
         return this.runnerParameters.getBypassStandardLoading();
     }
+    
+    //no setCalculator(Calculator), getCalculator()
 
     /**
-     * Sets the Java home.
+     * Sets the Java home, and cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
      * 
      * @param javaHome a {@link String}.
      * @throws NullPointerException if {@code javaHome == null}.
@@ -518,7 +615,8 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
-     * Sets the Java home.
+     * Sets the Java home, and cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
      * 
      * @param javaHome a {@link Path}.
      * @throws NullPointerException if {@code javaHome == null}.
@@ -531,7 +629,8 @@ public final class RunParameters implements Cloneable {
      * Brings the Java home classpath back to the default,
      * i.e., the same bootstrap path of the JVM that
      * executes JBSE, as returned by the system property
-     * {@code java.home}.
+     * {@code java.home}. Also cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
      */
     public void setDefaultJavaHome() {
         this.runnerParameters.setDefaultJavaHome();
@@ -547,22 +646,26 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
-     * Adds paths to the extensions classpath.
+     * Adds paths to the extensions classpath, and cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
      * 
      * @param paths a varargs of {@link String}s, 
      *        the paths to be added to the extensions 
      *        classpath.
+     * @throws NullPointerException if {@code paths == null}.
      */
     public void addExtClasspath(String... paths) {
         this.runnerParameters.addExtClasspath(paths);
     }
     
     /**
-     * Adds paths to the extensions classpath.
+     * Adds paths to the extensions classpath, and cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
      * 
      * @param paths a varargs of {@link Path}s, 
      *        the paths to be added to the extensions 
      *        classpath.
+     * @throws NullPointerException if {@code paths == null}.
      */
     public void addExtClasspath(Path... paths) {
         this.runnerParameters.addExtClasspath(paths);
@@ -580,29 +683,34 @@ public final class RunParameters implements Cloneable {
      * Brings the extensions classpath back to the default,
      * i.e., the same extensions path of the JVM that
      * executes JBSE, as returned by the system property
-     * {@code java.ext.dirs}.
+     * {@code java.ext.dirs}. Also cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
      */
     public void setDefaultExtClasspath() {
         this.runnerParameters.setDefaultExtClasspath();
     }
     
     /**
-     * Adds paths to the user classpath.
+     * Adds paths to the user classpath, and cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
      * 
      * @param paths a varargs of {@link String}s, 
      *        the paths to be added to the user 
      *        classpath.
+     * @throws NullPointerException if {@code paths == null}.
      */
     public void addUserClasspath(String... paths) { 
         this.runnerParameters.addUserClasspath(paths);
     }
 
     /**
-     * Adds paths to the user classpath.
+     * Adds paths to the user classpath, and cancels the effect 
+     * of any previous call to {@link #setInitialState(State)}.
      * 
      * @param paths a varargs of {@link Path}s, 
      *        the paths to be added to the user 
      *        classpath.
+     * @throws NullPointerException if {@code paths == null}.
      */
     public void addUserClasspath(Path... paths) { 
         this.runnerParameters.addUserClasspath(paths);
@@ -627,41 +735,201 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
-     * Sets the signature of the method which must be symbolically executed.
+     * Returns the {@link TriggerRulesRepo} 
+     * containing all the trigger rules that
+     * must be used.
      * 
-     * @param className the name of the class containing the method.
-     * @param descriptor the descriptor of the method.
-     * @param methodName the name of the method. 
-     * @throws NullPointerException if any of the above parameters is {@code null}.
+     * @return a {@link TriggerRulesRepo}. It
+     *         is the one that backs this
+     *         {@link EngineParameters}, not a
+     *         safety copy.
      */
-    public void setMethodSignature(String className, String descriptor, String methodName) { 
-        this.runnerParameters.setMethodSignature(className, descriptor, methodName); 
+    public TriggerRulesRepo getTriggerRulesRepo() {
+        return this.runnerParameters.getTriggerRulesRepo();
     }
 
     /**
-     * Gets the signature of the method which must be symbolically executed.
+     * Returns the expansion backdoor.
      * 
-     * @return a {@link Signature}, or {@code null} if no method signature
-     *         has been provided.
+     * @return a {@link Map}{@code <}{@link String}{@code , }{@link Set}{@code <}{@link String}{@code >>},
+     *         associating class names with set of
+     *         other class names. 
+     *         It is the one that backs this
+     *         {@link EngineParameters}, not a
+     *         safety copy.
      */
-    public Signature getMethodSignature() {
-        return this.runnerParameters.getMethodSignature();
+    public Map<String, Set<String>> getExpansionBackdoor() {
+        return this.runnerParameters.getExpansionBackdoor();
     }
 
-    /** 
-     * Adds an {@link ExecutionObserver} performing additional
-     * actions when a field changes its value.
+    /**
+     * Adds a trigger method that fires when some references are resolved by
+     * expansion.
      * 
-     * @param className the name of the class where the field
-     *        resides.
-     * @param type the type of the field.
-     * @param observedVar the name of the field.
-     * @param observer an {@link ExecutionObserver}. It will be 
-     *        notified whenever the field {@code observedVar} of 
-     *        any instance of {@code className} is modified.
+     * @param toExpand     the static type of the reference to be expanded. 
+     *                     It must be {@code toExpand != null}.
+     * @param originExp    a path expression describing the origin of the 
+     *                     symbolic references that match this rule.
+     *                     If {@code originExp == null}, all the symbolic 
+     *                     references with static type {@code toExpand} 
+     *                     will match. 
+     * @param classAllowed the name of the class whose instances are possible 
+     *                     expansions for {@code toExpand}. During  
+     *                     symbolic execution, every symbolic reference with 
+     *                     static type {@code toExpand} and origin matching 
+     *                     {@code originExp}, will be expanded 
+     *                     when necessary to a symbolic object with class 
+     *                     {@code classAllowed}. If {@code classAllowed == null}, 
+     *                     the matching {@link ReferenceSymbolic}s will not be expanded.
+     * @param triggerClassName 
+     *                     the class of the instrumentation method to be triggered 
+     *                     when this rule fires.
+     * @param triggerParametersSignature 
+     *                     the types of the parameters of the instrumentation method 
+     *                     to be triggered when this rule fires.
+     * @param triggerMethodName 
+     *                     the name of the instrumentation method to be triggered 
+     *                     when this rule fires.
+     * @param triggerParameter
+     *                     the parameter to be passed to the trigger when the rule fires. 
+     */
+    public void addExpandToTrigger(String toExpand, String originExp, String classAllowed, 
+                                   String triggerClassName, String triggerParametersSignature, String triggerMethodName,
+                                   String triggerParameter) {
+        this.runnerParameters.addExpandToTrigger(toExpand, originExp, classAllowed, 
+                                                 triggerClassName, triggerParametersSignature, triggerMethodName, triggerParameter);
+    }
+
+    /**
+     * Adds a trigger method that fires when some references are resolved by
+     * alias.
+     * 
+     * @param toResolve      the static type of the reference to be resolved. 
+     *                       It must be {@code toResolve != null}.
+     * @param originExp      a path expression describing the origin of the 
+     *                       symbolic references that match this rule.
+     *                       The path expression is a slash-separated list of field
+     *                       names that starts from {ROOT}:x, indicating the 
+     *                       parameter with name {@code x} of the root method 
+     *                       invocation (including {@code this}).
+     *                       If {@code originExp == null}, all the symbolic 
+     *                       references with static type {@code toResolve} 
+     *                       will match. 
+     * @param pathAllowedExp a path expression describing the objects that are 
+     *                       acceptable as alias for {@code toResolve}. 
+     *                       The path expression is a slash-separated list of field
+     *                       names that starts from {ROOT}:x, indicating the 
+     *                       parameter with name {@code x} of the root method 
+     *                       invocation (including {@code this}), or from 
+     *                       {REF}, indicating a path starting from the origin 
+     *                       of the reference matched by the left part of the rule. 
+     *                       You can also use the special {UP} to move back in the 
+     *                       path; for instance, if the reference matching 
+     *                       {@code originExp} has origin 
+     *                       {ROOT}:this/list/head/next/next, then you can use both 
+     *                       {REF}/{UP}/{UP}/{UP} and {ROOT}:this/list to denote 
+     *                       the field with name {@code list} of the object that is
+     *                       referred by the {@code this} parameter of the root method
+     *                       invocation.
+     *                       During symbolic execution, every symbolic reference 
+     *                       with class {@code toResolve} and origin matching 
+     *                       {@code originExp} will be resolved when necessary 
+     *                       to all the type- and epoch-compatible 
+     *                       symbolic objects whose origins match
+     *                       {@code pathAllowedExp}. If {@code pathAllowedExp == null}
+     *                       the matching {@link ReferenceSymbolic} will not be
+     *                       resolved by alias.
+     * @param triggerClassName 
+     *                       the class of the instrumentation method to be triggered 
+     *                       when this rule fires.
+     * @param triggerParametersSignature 
+     *                       the types of the parameters of the instrumentation method 
+     *                       to be triggered when this rule fires.
+     * @param triggerMethodName 
+     *                       the name of the instrumentation method to be triggered 
+     *                       when this rule fires.
+     * @param triggerParameter
+     *                       the parameter to be passed to the trigger when the rule fires. 
+     */
+    public void addResolveAliasOriginTrigger(String toResolve, String originExp, String pathAllowedExp, 
+                                             String triggerClassName, String triggerParametersSignature, String triggerMethodName,
+                                             String triggerParameter) {
+        this.runnerParameters.addResolveAliasOriginTrigger(toResolve, originExp, pathAllowedExp, 
+                                                           triggerClassName, triggerParametersSignature, triggerMethodName, triggerParameter);
+    }
+
+    /**
+     * Adds a trigger method that fires when some references are resolved by
+     * alias.
+     * 
+     * @param toResolve    the static type of the reference to be resolved. 
+     *                     It must be {@code toResolve != null}.
+     * @param originExp    a path expression describing the origin of the 
+     *                     symbolic references that match this rule.
+     *                     The path expression is a slash-separated list of field
+     *                     names that starts from {ROOT}:x, indicating the 
+     *                     parameter with name {@code x} of the root method 
+     *                     invocation (including {@code this}).
+     *                     If {@code originExp == null}, all the symbolic 
+     *                     references with static type {@code toResolve} 
+     *                     will match. 
+     * @param classAllowed the name of the class whose instances are possible 
+     *                     aliases for {@code toResolve}. During  
+     *                     symbolic execution, every symbolic reference with 
+     *                     static type {@code toResolve} and origin matching 
+     *                     {@code originExp}, will be resolved 
+     *                     when necessary to all the epoch-compatible symbolic 
+     *                     objects with class {@code classAllowed}. If 
+     *                     {@code classAllowed == null} the matching 
+     *                     {@link ReferenceSymbolic} will not be resolved by alias.
+     * @param triggerClassName 
+     *                     the class of the instrumentation method to be triggered 
+     *                     when this rule fires.
+     * @param triggerParametersSignature 
+     *                     the types of the parameters of the instrumentation method 
+     *                     to be triggered when this rule fires.
+     * @param triggerMethodName 
+     *                     the name of the instrumentation method to be triggered 
+     *                     when this rule fires.
+     * @param triggerParameter
+     *                     the parameter to be passed to the trigger when the rule fires. 
+     */
+    public void addResolveAliasInstanceofTrigger(String toResolve, String originExp, String classAllowed, 
+                                                 String triggerClassName, String triggerParametersSignature, String triggerMethodName,
+                                                 String triggerParameter) {
+        this.runnerParameters.addResolveAliasInstanceofTrigger(toResolve, originExp, classAllowed, 
+                                                               triggerClassName, triggerParametersSignature, triggerMethodName, triggerParameter);
+    }
+
+    /**
+     * Adds a trigger method that fires when some references are resolved by
+     * null.
+     * 
+     * @param toResolve the static type of the reference to be resolved. 
+     *                  It must be {@code toResolve != null}.
+     * @param originExp a path expression describing the origin of the 
+     *                  symbolic references that match this rule.
+     *                  The path expression is a slash-separated list of field
+     *                  names that starts from {ROOT}:x, indicating the 
+     *                  parameter with name {@code x} of the root method 
+     *                  invocation (including {@code this}).
+     *                  If {@code originExp == null}, all the symbolic 
+     *                  references with static type {@code toResolve} 
+     *                  will match.
+     * @param triggerClassName 
+     *                  the class of the trigger method.
+     * @param triggerParametersSignature 
+     *                  the types of the parameters of the trigger method.
+     * @param triggerMethodName 
+     *                  the name of the trigger method.
+     * @param triggerParameter
+     *                  the parameter to be passed to the trigger method. 
      */ 
-    public void addExecutionObserver(String className, String type, String observedVar, ExecutionObserver observer) {
-        this.runnerParameters.addExecutionObserver(className, type, observedVar, observer);
+    public void addResolveNullTrigger(String toResolve, String originExp, 
+                                      String triggerClassName, String triggerParametersSignature, String triggerMethodName,
+                                      String triggerParameter) {
+        this.runnerParameters.addResolveNullTrigger(toResolve, originExp, triggerClassName, 
+                                                    triggerParametersSignature, triggerMethodName, triggerParameter);
     }
 
     /**
@@ -680,18 +948,186 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
+     * Clears the specifications of the meta-level implementations 
+     * of methods.
+     */
+    public void clearMetaOverridden() {
+        this.runnerParameters.clearMetaOverridden();
+    }
+
+    /**
+     * Returns the specifications of the meta-level implementations 
+     * of methods.
+     * 
+     * @return A {@link List}{@code <}{@link String}{@code []>}, 
+     *         where each array is a 4-ple (method class name, 
+     *         method parameters, method name, meta delegate
+     *         class name).
+     */
+    public ArrayList<String[]> getMetaOverridden() {
+        return this.runnerParameters.getMetaOverridden();
+    }
+
+    /**
      * Specifies that a method must be treated as an uninterpreted pure
      * function, rather than executed. In the case all the parameters are
      * constant, the method is executed metacircularly.
      * 
      * @param methodClassName the name of the class containing the method.
-     * @param methodDescriptor the descriptor of the method. All the parameters types 
-     *        in the descriptor must be primitive.
+     * @param methodDescriptor the descriptor of the method.
      * @param methodName the name of the method.
      * @throws NullPointerException if any of the above parameters is {@code null}.
      */
     public void addUninterpreted(String methodClassName, String methodDescriptor, String methodName) {
         this.runnerParameters.addUninterpreted(methodClassName, methodDescriptor, methodName);
+    }
+
+    /**
+     * Specifies that a set of methods must be treated as an uninterpreted pure
+     * function, rather than executed. In the case all the parameters are
+     * constant, the methods are executed metacircularly.
+     * 
+     * @param patternMethodClassName a regular expression pattern for the names 
+     *        of the classes containing the methods.
+     * @param patternMethodDescriptor a regular expression pattern for the descriptors
+     *        of the methods.
+     * @param patternMethodName a regular expression pattern for the names of the methods.
+     * @throws NullPointerException if any of the above parameters is {@code null}.
+     */
+    public void addUninterpretedPattern(String patternMethodClassName, String patternMethodDescriptor, String patternMethodName) {
+    	this.runnerParameters.addUninterpretedPattern(patternMethodClassName, patternMethodDescriptor, patternMethodName);
+    }
+
+    /**
+     * Clears the methods set with {@link #addUninterpreted(String, String, String) addUninterpreted} 
+     * that must be treated as uninterpreted pure functions.
+     */
+    public void clearUninterpreted() {
+        this.runnerParameters.clearUninterpreted();
+    }
+
+    /**
+     * Clears the methods set with {@link #addUninterpretedPattern(String, String, String) addUninterpretedPattern} 
+     * that must be treated as uninterpreted pure functions.
+     */
+    public void clearUninterpretedPattern() {
+    	this.runnerParameters.clearUninterpretedPattern();
+    }
+
+    /**
+     * Returns the methods that must be treated as
+     * uninterpreted pure functions.
+     * 
+     * @return A {@link List}{@code <}{@link String}{@code []>}, 
+     *         where each array is a triple (method class name, 
+     *         method parameters, method name).
+     */
+    public List<String[]> getUninterpreted() {
+    	return this.runnerParameters.getUninterpreted();
+    }
+
+    /**
+     * Returns the method patterns that must be treated as
+     * uninterpreted pure functions.
+     * 
+     * @return A {@link List}{@code <}{@link String}{@code []>}, 
+     *         where each array is a triple (pattern of method 
+     *         class name, pattern of method parameters, pattern 
+     *         of method names).
+     */
+    public List<String[]> getUninterpretedPattern() {
+    	return this.runnerParameters.getUninterpretedPattern();
+    }
+
+    /**
+     * Sets the signature of the method which must be symbolically executed, 
+     * and cancels the effect of any previous call to {@link #setInitialState(State)}.
+     * 
+     * @param className the name of the class containing the method.
+     * @param descriptor the descriptor of the method.
+     * @param name the name of the method. 
+     * @throws NullPointerException if any of the above parameters is {@code null}.
+     */
+    public void setMethodSignature(String className, String descriptor, String name) { 
+        this.runnerParameters.setMethodSignature(className, descriptor, name); 
+    }
+
+    /**
+     * Gets the signature of the method which must be symbolically executed.
+     * 
+     * @return a {@link Signature}, or {@code null} if no method signature
+     *         has been provided.
+     */
+    public Signature getMethodSignature() {
+        return this.runnerParameters.getMethodSignature();
+    }
+
+    /**
+     * Sets the maximum length an array must have to be 
+     * granted simple representation.
+     * 
+     * @param maxSimpleArrayLength an {@code int}.
+     */
+    public void setMaxSimpleArrayLength(int maxSimpleArrayLength) {
+        this.runnerParameters.setMaxSimpleArrayLength(maxSimpleArrayLength);
+    }
+
+    /**
+     * Returns the maximum length an array must have to be 
+     * granted simple representation.
+     * 
+     * @param maxSimpleArrayLength an {@code int}.
+     */
+    public int getMaxSimpleArrayLength() {
+        return this.runnerParameters.getMaxSimpleArrayLength();
+    }
+    
+    /**
+     * Sets the maximum heap size, expressed as the 
+     * maximum number of objects in the heap. If 
+     * during symbolic execution the heap becomes
+     * bigger than this treshold, JBSE raises 
+     * an {@link OutOfMemoryError}.
+     * 
+     * @param maxHeapSize a {@code long}.
+     */
+    public void setMaxHeapSize(long maxHeapSize) {
+        this.runnerParameters.setMaxHeapSize(maxHeapSize);
+    }
+    
+    /**
+     * Returns the maximum heap size, expressed
+     * as the maximum number of objects in the heap.
+     * 
+     * @return a {@code long}.
+     */
+    public long getMaxHeapSize() {
+        return this.runnerParameters.getMaxHeapSize();
+    }
+    
+    /**
+     * Sets whether the classes created during
+     * the pre-initialization phase shall be (pedantically)
+     * considered symbolic.
+     * 
+     * @param makePreInitClassesSymbolic a {@code boolean}.
+     *        If {@code true} all the classes created during
+     *        the pre-inizialization phase will be made 
+     *        symbolic.
+     */
+    public void setMakePreInitClassesSymbolic(boolean makePreInitClassesSymbolic) {
+    	this.runnerParameters.setMakePreInitClassesSymbolic(makePreInitClassesSymbolic);
+    }
+    
+    /**
+     * Returns whether the classes created during
+     * the pre-initialization phase shall be (pedantically)
+     * considered symbolic.
+     * 
+     * @return a {@code boolean}.
+     */
+    public boolean getMakePreInitClassesSymbolic() {
+    	return this.runnerParameters.getMakePreInitClassesSymbolic();
     }
 
     /**
@@ -713,6 +1149,15 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
+     * Gets the timeout for execution.
+     * 
+     * @return a {@code long}, the timeout in milliseconds.
+     */
+    public long getTimeout() {
+        return this.runnerParameters.getTimeout();
+    }
+
+    /**
      * Sets a limited heap scope for the objects of a given class. 
      * The heap scope is the maximum number of objects of a given class 
      * in the initial state's heap. If during the symbolic execution 
@@ -727,11 +1172,46 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
+     * Sets a limited heap scope for the objects of a given class. 
+     * The scope is computed from the initial state: If there is no initial
+     * state this method has no effect, otherwise the heap scope specified
+     * with this method will override the scope for the same class
+     * that was previously (and that will be in the future) specified with 
+     * {@link #setHeapScope(String, int)}
+     * or {@link #setHeapScope(Map<String, Integer>)}
+     * 
+     * @param className a {@link String}, the name of a class.
+     * @param heapScope a {@link Function}{@code <}{@link State}{@code , }{@link Integer}{@code >}, 
+     *        the function that calculates the heap scope associated to {@link className} from 
+     *        the initial state.
+     * @see {@link #setHeapScope(String, int)} for a precise definition of heap scope.
+     */
+    public void setHeapScopeComputed(String className, Function<State, Integer> heapScopeCalculator) { 
+        this.runnerParameters.setHeapScopeComputed(className, heapScopeCalculator); 
+    }
+
+    /**
+     * Sets a limited heap scope for the objects of a given list of classes. 
+     * It behaves as a reset of the effects of all the previous calls to 
+     * {@link #setHeapScopeComputed(String, Function<State, Integer>)}, followed by a sequence of calls to 
+     * {@link #setHeapScopeComputed(String, Function<State, Integer>)} for all the entries in the map.
+     * 
+     * @param className a {@link String}, the name of a class.
+     * @param heapScope a {@link Map}{@code <}{@link String}{@code , }{@link Function}{@code <}{@link State}{@code , }{@link Integer}{@code >>}, 
+     *        associating class names with a function that calculates the 
+     *        heap scope for the class from the initial state. All the
+     *        mappings in {@code heapScope} are copied for safety.
+     * @see {@link #setHeapScope(String, int)} for a precise definition of heap scope.
+     */
+    public void setHeapScopeComputed(Map<String, Function<State, Integer>> heapScope) {
+        this.runnerParameters.setHeapScopeComputed(heapScope);
+    }
+
+    /**
      * Sets an unlimited heap scope for the objects of a given class. 
-     * The heap scope is the maximum number of objects of a given class 
-     * in the initial state's heap. If during the symbolic execution 
-     * the number of assumed objects of a given class is above the associated 
-     * heap scope, the exploration of the branch is interrupted.
+     * 
+     * @param className a {@link String}, the name of the class.
+     * @see {@link #setHeapScope(String, int)} for a precise definition of heap scope.
      */
     public void setHeapScopeUnlimited(String className) { 
         this.runnerParameters.setHeapScopeUnlimited(className); 
@@ -752,7 +1232,11 @@ public final class RunParameters implements Cloneable {
      * 
      * @return heapScope a {@link Map}{@code <}{@link String}{@code , }{@link Integer}{@code >}, 
      *        associating class names with their respective heap scopes.
+     *        The scopes are possibly computed by applying the functions set
+     *        with the calls to  {@link #setHeapScopeComputed(String, Function)}
+     *        or {@link #setHeapScopeComputed(Map)}.
      *        If a class is not present in the map, its scope is unlimited.
+     *        Each time this method is invoked it creates and returns a new {@link Map}.
      */
     public Map<String, Integer> getHeapScope() {
         return this.runnerParameters.getHeapScope();
@@ -780,6 +1264,16 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
+     * Gets the depth scope.
+     * 
+     * @return an {@code int}, the depth scope or {@code 0}
+     *         for unlimited depth scope.
+     */
+    public int getDepthScope() {
+        return this.runnerParameters.getDepthScope();
+    }
+
+    /**
      * Sets a limited count scope. 
      * If a state has a number of predecessor states greater than the 
      * count scope the exploration of the branch it belongs is interrupted.
@@ -798,11 +1292,23 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
+     * Gets the count scope.
+     * 
+     * @return an {@code int}, the count scope or {@code 0}
+     *         for unlimited count scope.
+     */
+    public int getCountScope() {
+        return this.runnerParameters.getCountScope();
+    }
+
+    //no setActions(Actions), setActionsNothing(), getActions()
+
+    /**
      * Sets the identifier of the initial state in the state space subregion 
      * to be explored.
      * 
      * @param identifierSubregion a {@link String}, the subregion identifier.
-     *        For example, if {@code identifierSubregion == ".1.2.1"} the 
+     *        For example, if {@code identifierSubregion.equals(".1.2.1")} the 
      *        execution will explore only the traces whose identifier starts
      *        with .1.2.1 (i.e., 1.2.1.1.2, 1.2.1.3.2.1.4, and not 1.2.2.1.2).
      * @throws NullPointerException if {@code identifierSubregion == null}.
@@ -818,6 +1324,17 @@ public final class RunParameters implements Cloneable {
     public void setIdentifierSubregionRoot() {
         this.runnerParameters.setIdentifierSubregionRoot();
     }	
+
+    /**
+     * Gets the identifier of the initial state in the state space subregion 
+     * to be explored.
+     * 
+     * @return a {@code String}, or {@code null} if the state space
+     *         must be explored starting from root.
+     */
+    public String getIdentifierSubregion() {
+        return this.runnerParameters.getIdentifierSubregion();
+    }
 
     /**
      * Sets the classes of the rewriters to be applied to
@@ -1368,176 +1885,6 @@ public final class RunParameters implements Cloneable {
      */
     public void addNotInitializedClasses(String... notInitializedClasses) {
         this.repoInit.addNotInitializedClassPattern(notInitializedClasses);
-    }
-
-    /**
-     * Adds a trigger method that fires when some references are resolved by
-     * expansion.
-     * 
-     * @param toExpand     the static type of the reference to be expanded. 
-     *                     It must be {@code toExpand != null}.
-     * @param originExp    a path expression describing the origin of the 
-     *                     symbolic references that match this rule.
-     *                     If {@code originExp == null}, all the symbolic 
-     *                     references with static type {@code toExpand} 
-     *                     will match. 
-     * @param classAllowed the name of the class whose instances are possible 
-     *                     expansions for {@code toExpand}. During  
-     *                     symbolic execution, every symbolic reference with 
-     *                     static type {@code toExpand} and origin matching 
-     *                     {@code originExp}, will be expanded 
-     *                     when necessary to a symbolic object with class 
-     *                     {@code classAllowed}. If {@code classAllowed == null}, 
-     *                     the matching {@link ReferenceSymbolic}s will not be expanded.
-     * @param triggerClassName 
-     *                     the class of the instrumentation method to be triggered 
-     *                     when this rule fires.
-     * @param triggerParametersSignature 
-     *                     the types of the parameters of the instrumentation method 
-     *                     to be triggered when this rule fires.
-     * @param triggerMethodName 
-     *                     the name of the instrumentation method to be triggered 
-     *                     when this rule fires.
-     * @param triggerParameter
-     *                     the parameter to be passed to the trigger when the rule fires. 
-     */
-    public void addExpandToTrigger(String toExpand, String originExp, String classAllowed, 
-                                   String triggerClassName, String triggerParametersSignature, String triggerMethodName,
-                                   String triggerParameter) {
-        this.runnerParameters.addExpandToTrigger(toExpand, originExp, classAllowed, 
-                                                 triggerClassName, triggerParametersSignature, triggerMethodName, triggerParameter);
-    }
-
-    /**
-     * Adds a trigger method that fires when some references are resolved by
-     * alias.
-     * 
-     * @param toResolve      the static type of the reference to be resolved. 
-     *                       It must be {@code toResolve != null}.
-     * @param originExp      a path expression describing the origin of the 
-     *                       symbolic references that match this rule.
-     *                       The path expression is a slash-separated list of field
-     *                       names that starts from {ROOT}:x, indicating the 
-     *                       parameter with name {@code x} of the root method 
-     *                       invocation (including {@code this}).
-     *                       If {@code originExp == null}, all the symbolic 
-     *                       references with static type {@code toResolve} 
-     *                       will match. 
-     * @param pathAllowedExp a path expression describing the objects that are 
-     *                       acceptable as alias for {@code toResolve}. 
-     *                       The path expression is a slash-separated list of field
-     *                       names that starts from {ROOT}:x, indicating the 
-     *                       parameter with name {@code x} of the root method 
-     *                       invocation (including {@code this}), or from 
-     *                       {REF}, indicating a path starting from the origin 
-     *                       of the reference matched by the left part of the rule. 
-     *                       You can also use the special {UP} to move back in the 
-     *                       path; for instance, if the reference matching 
-     *                       {@code originExp} has origin 
-     *                       {ROOT}:this/list/head/next/next, then you can use both 
-     *                       {REF}/{UP}/{UP}/{UP} and {ROOT}:this/list to denote 
-     *                       the field with name {@code list} of the object that is
-     *                       referred by the {@code this} parameter of the root method
-     *                       invocation.
-     *                       During symbolic execution, every symbolic reference 
-     *                       with class {@code toResolve} and origin matching 
-     *                       {@code originExp} will be resolved when necessary 
-     *                       to all the type- and epoch-compatible 
-     *                       symbolic objects whose origins match
-     *                       {@code pathAllowedExp}. If {@code pathAllowedExp == null}
-     *                       the matching {@link ReferenceSymbolic} will not be
-     *                       resolved by alias.
-     * @param triggerClassName 
-     *                       the class of the instrumentation method to be triggered 
-     *                       when this rule fires.
-     * @param triggerParametersSignature 
-     *                       the types of the parameters of the instrumentation method 
-     *                       to be triggered when this rule fires.
-     * @param triggerMethodName 
-     *                       the name of the instrumentation method to be triggered 
-     *                       when this rule fires.
-     * @param triggerParameter
-     *                       the parameter to be passed to the trigger when the rule fires. 
-     */
-    public void addResolveAliasOriginTrigger(String toResolve, String originExp, String pathAllowedExp, 
-                                             String triggerClassName, String triggerParametersSignature, String triggerMethodName,
-                                             String triggerParameter) {
-        this.runnerParameters.addResolveAliasOriginTrigger(toResolve, originExp, pathAllowedExp, 
-                                                           triggerClassName, triggerParametersSignature, triggerMethodName, triggerParameter);
-    }
-
-    /**
-     * Adds a trigger method that fires when some references are resolved by
-     * alias.
-     * 
-     * @param toResolve    the static type of the reference to be resolved. 
-     *                     It must be {@code toResolve != null}.
-     * @param originExp    a path expression describing the origin of the 
-     *                     symbolic references that match this rule.
-     *                     The path expression is a slash-separated list of field
-     *                     names that starts from {ROOT}:x, indicating the 
-     *                     parameter with name {@code x} of the root method 
-     *                     invocation (including {@code this}).
-     *                     If {@code originExp == null}, all the symbolic 
-     *                     references with static type {@code toResolve} 
-     *                     will match. 
-     * @param classAllowed the name of the class whose instances are possible 
-     *                     aliases for {@code toResolve}. During  
-     *                     symbolic execution, every symbolic reference with 
-     *                     static type {@code toResolve} and origin matching 
-     *                     {@code originExp}, will be resolved 
-     *                     when necessary to all the epoch-compatible symbolic 
-     *                     objects with class {@code classAllowed}. If 
-     *                     {@code classAllowed == null} the matching 
-     *                     {@link ReferenceSymbolic} will not be resolved by alias.
-     * @param triggerClassName 
-     *                     the class of the instrumentation method to be triggered 
-     *                     when this rule fires.
-     * @param triggerParametersSignature 
-     *                     the types of the parameters of the instrumentation method 
-     *                     to be triggered when this rule fires.
-     * @param triggerMethodName 
-     *                     the name of the instrumentation method to be triggered 
-     *                     when this rule fires.
-     * @param triggerParameter
-     *                     the parameter to be passed to the trigger when the rule fires. 
-     */
-    public void addResolveAliasInstanceofTrigger(String toResolve, String originExp, String classAllowed, 
-                                                 String triggerClassName, String triggerParametersSignature, String triggerMethodName,
-                                                 String triggerParameter) {
-        this.runnerParameters.addResolveAliasInstanceofTrigger(toResolve, originExp, classAllowed, 
-                                                               triggerClassName, triggerParametersSignature, triggerMethodName, triggerParameter);
-    }
-
-    /**
-     * Adds a trigger method that fires when some references are resolved by
-     * null.
-     * 
-     * @param toResolve the static type of the reference to be resolved. 
-     *                  It must be {@code toResolve != null}.
-     * @param originExp a path expression describing the origin of the 
-     *                  symbolic references that match this rule.
-     *                  The path expression is a slash-separated list of field
-     *                  names that starts from {ROOT}:x, indicating the 
-     *                  parameter with name {@code x} of the root method 
-     *                  invocation (including {@code this}).
-     *                  If {@code originExp == null}, all the symbolic 
-     *                  references with static type {@code toResolve} 
-     *                  will match.
-     * @param triggerClassName 
-     *                  the class of the trigger method.
-     * @param triggerParametersSignature 
-     *                  the types of the parameters of the trigger method.
-     * @param triggerMethodName 
-     *                  the name of the trigger method.
-     * @param triggerParameter
-     *                  the parameter to be passed to the trigger method. 
-     */ 
-    public void addResolveNullTrigger(String toResolve, String originExp, 
-                                      String triggerClassName, String triggerParametersSignature, String triggerMethodName,
-                                      String triggerParameter) {
-        this.runnerParameters.addResolveNullTrigger(toResolve, originExp, triggerClassName, 
-                                                    triggerParametersSignature, triggerMethodName, triggerParameter);
     }
 
     /**

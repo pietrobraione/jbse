@@ -235,7 +235,7 @@ public final class EngineParameters implements Cloneable {
      * that the lazy initialization procedure can produce aliases
      * to their members.
      */
-    private boolean makePreInitClassesSymbolic = true;
+    private boolean makePreInitClassesSymbolic = false;
 
     /**
      * Constructor.
@@ -851,7 +851,6 @@ public final class EngineParameters implements Cloneable {
         this.uninterpreted.add(new String[] { methodClassName, methodDescriptor, methodName });
     }
 
-
     /**
      * Specifies that a set of methods must be treated as an uninterpreted pure
      * function, rather than executed. In the case all the parameters are
@@ -872,11 +871,19 @@ public final class EngineParameters implements Cloneable {
     }
 
     /**
-     * Clears the methods that must be treated as
-     * uninterpreted pure functions.
+     * Clears the methods set with {@link #addUninterpreted(String, String, String) addUninterpreted} 
+     * that must be treated as uninterpreted pure functions.
      */
     public void clearUninterpreted() {
         this.uninterpreted.clear();
+    }
+
+    /**
+     * Clears the methods set with {@link #addUninterpretedPattern(String, String, String) addUninterpretedPattern} 
+     * that must be treated as uninterpreted pure functions.
+     */
+    public void clearUninterpretedPattern() {
+        this.uninterpretedPattern.clear();
     }
 
     /**
@@ -891,6 +898,15 @@ public final class EngineParameters implements Cloneable {
         return new ArrayList<>(this.uninterpreted);
     }
 
+    /**
+     * Returns the method patterns that must be treated as
+     * uninterpreted pure functions.
+     * 
+     * @return A {@link List}{@code <}{@link String}{@code []>}, 
+     *         where each array is a triple (pattern of method 
+     *         class name, pattern of method parameters, pattern 
+     *         of method names).
+     */
     public List<String[]> getUninterpretedPattern() {
         return new ArrayList<>(this.uninterpretedPattern);
     }
@@ -901,15 +917,15 @@ public final class EngineParameters implements Cloneable {
      * 
      * @param className the name of the class containing the method.
      * @param descriptor the descriptor of the method.
-     * @param methodName the name of the method. 
+     * @param name the name of the method. 
      * @throws NullPointerException if any of the above parameters is {@code null}.
      */
-    public void setMethodSignature(String className, String descriptor, String methodName) { 
-        if (className == null || descriptor == null || methodName == null) {
+    public void setMethodSignature(String className, String descriptor, String name) { 
+        if (className == null || descriptor == null || name == null) {
             throw new NullPointerException();
         }
         this.initialState = null; 
-        this.methodSignature = new Signature(className, descriptor, methodName); 
+        this.methodSignature = new Signature(className, descriptor, name); 
     }
 
     /**
