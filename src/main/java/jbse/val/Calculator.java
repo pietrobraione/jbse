@@ -1237,9 +1237,9 @@ public abstract class Calculator {
     		this.to = to;
 			final int prime = 31;
 			int result = 1;
-			result = prime * result + ((from == null) ? 0 : from.hashCode());
-			result = prime * result + ((operand == null) ? 0 : operand.hashCode());
-			result = prime * result + ((to == null) ? 0 : to.hashCode());
+			result = prime * result + ((from == null) ? 0 : System.identityHashCode(from));
+			result = prime * result + ((operand == null) ? 0 : System.identityHashCode(operand));
+			result = prime * result + ((to == null) ? 0 : System.identityHashCode(to));
 			this.hashCode = result;
     	}
 
@@ -1264,21 +1264,21 @@ public abstract class Calculator {
 				if (other.from != null) {
 					return false;
 				}
-			} else if (!this.from.equals(other.from)) {
+			} else if (this.from != other.from) {
 				return false;
 			}
 			if (this.operand == null) {
 				if (other.operand != null) {
 					return false;
 				}
-			} else if (!this.operand.equals(other.operand)) {
+			} else if (this.operand != other.operand) {
 				return false;
 			}
 			if (this.to == null) {
 				if (other.to != null) {
 					return false;
 				}
-			} else if (!this.to.equals(other.to)) {
+			} else if (this.to != other.to) {
 				return false;
 			}
 			return true;
