@@ -15,6 +15,7 @@ import static jbse.common.Type.parametersNumber;
 import static jbse.common.Type.isPrimitiveOrVoidCanonicalName;
 import static jbse.common.Util.unsafe;
 
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FilterInputStream;
@@ -255,8 +256,17 @@ public final class State implements Cloneable {
     /** The {@link ReferenceConcrete}s to {@link Instance}s of {@code java.lang.invoke.MethodType}s. */
     private HashMap<String, ReferenceConcrete> methodTypes = new HashMap<>();
     
-    /** Maps file descriptors to (meta-level) open files. */
-    private HashMap<Integer, Object> files = new HashMap<>();
+    /** Maps file descriptors/handles to (meta-level) open files. */
+    private HashMap<Long, Object> files = new HashMap<>();
+    
+    /** The file descriptor/handle of the (standard) input. */
+    private long inFileId; //nonfinal only because initialized outside the constructor, but it is effectively final
+    
+    /** The file descriptor/handle of the (standard) output. */
+    private long outFileId; //nonfinal only because initialized outside the constructor, but it is effectively final
+    
+    /** The file descriptor/handle of the (standard) error. */
+    private long errFileId; //nonfinal only because initialized outside the constructor, but it is effectively final
     
     /** Maps memory addresses to (meta-level) allocated memory blocks. */
     private HashMap<Long, MemoryBlock> allocatedMemory = new HashMap<>();
@@ -434,40 +444,78 @@ public final class State implements Cloneable {
             final Field fosOutField = FilterOutputStream.class.getDeclaredField("out");
             fosOutField.setAccessible(true);
             
-            //gets the stdin and registers it
+            //gets reflectively more fields from FileDescriptor, and determines 
+            //if we are on Windows or not
+            final Field fileDescriptorFD = FileDescriptor.class.getDeclaredField("fd");
+            fileDescriptorFD.setAccessible(true);
+            Field fileDescriptorHandle;
+            try {
+            	fileDescriptorHandle = FileDescriptor.class.getDeclaredField("handle");
+            	//no exception: we are on windows
+            	fileDescriptorHandle.setAccessible(true);
+            } catch (NoSuchFieldException e) {
+            	//we are not on Windows
+            	fileDescriptorHandle = null;
+            }
+            
+            //gets the stdin
             FileInputStream in = null;
             for (InputStream is = System.in; (is instanceof FilterInputStream) || (is instanceof FileInputStream); is = (InputStream) fisInField.get(is)) {
                 if (is instanceof FileInputStream) {
                     in = (FileInputStream) is;
                     break;
                 }
-            }
-            //TODO do something if in == null
-            setFile(0, in);
+            }//TODO do something if in == null
             
-            //gets the stdout and registers it
+            //gets the stdin identifier
+            if (fileDescriptorHandle == null) {
+            	this.inFileId = ((Integer) fileDescriptorFD.get(in.getFD())).longValue();
+            } else {
+            	this.inFileId = ((Long) fileDescriptorHandle.get(in.getFD())).longValue();
+            }
+            
+            //registers the stdin
+            setFile(this.inFileId, in);
+            
+            //gets the stdout
             FileOutputStream out = null;
             for (OutputStream os = System.out; (os instanceof FilterOutputStream) || (os instanceof FileOutputStream); os = (OutputStream) fosOutField.get(os)) {
                 if (os instanceof FileOutputStream) {
                     out = (FileOutputStream) os;
                     break;
                 }
-            }
-            //TODO if out == null, set to some backup output file
-            setFile(1, out);
+            }//TODO if out == null, set to some backup output file
             
-            //gets the stderr and registers it
+            //gets the stdout identifier
+            if (fileDescriptorHandle == null) {
+            	this.outFileId = ((Integer) fileDescriptorFD.get(out.getFD())).longValue();
+            } else {
+            	this.outFileId = ((Long) fileDescriptorHandle.get(out.getFD())).longValue();
+            }
+            
+            //registers the stdout
+            setFile(this.outFileId, out);
+            
+            //gets the stderr
             FileOutputStream err = null;
             for (OutputStream os = System.err; (os instanceof FilterOutputStream) || (os instanceof FileOutputStream); os = (OutputStream) fosOutField.get(os)) {
                 if (os instanceof FileOutputStream) {
                     err = (FileOutputStream) os;
                     break;
                 }
+            }//TODO if err == null, set to some backup output file
+            
+            //gets the stderr identifier
+            if (fileDescriptorHandle == null) {
+            	this.errFileId = ((Integer) fileDescriptorFD.get(err.getFD())).longValue();
+            } else {
+            	this.errFileId = ((Long) fileDescriptorHandle.get(err.getFD())).longValue();
             }
-            //TODO if err == null, set to some backup output file
-            setFile(2, err);
+            
+            //registers the stderr
+            setFile(this.errFileId, err);
         } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | 
-        		 IllegalAccessException | FrozenStateException e) {
+        		 IllegalAccessException | FrozenStateException | IOException e) {
             throw new UnexpectedInternalException(e);
         }
     }
@@ -1047,52 +1095,54 @@ public final class State implements Cloneable {
     }
     
     /**
-     * Returns the file stream associated to a open file descriptor.
+     * Returns the file stream associated to a open file.
      * 
-     * @param descriptor an {@code int}.
+     * @param id a {@code long}, either a file descriptor cast to {@code long} 
+     *        (if we are on a Unix-like platform) or a file handle (if we are on Windows).
      * @return a {@link FileInputStream} of a {@link FileOutputStream}, or
-     *         {@code null} if {@code descriptor} is not the descriptor
-     *         of an open file previously associated with a call to {@link #setFile(int, Object)}.
+     *         {@code null} if {@code id} is not the descriptor/handle
+     *         of an open file previously associated with a call to {@link #setFile(long, Object)}.
      * @throws FrozenStateException if the state is frozen.
      */
-    public Object getFile(int descriptor) throws FrozenStateException {
+    public Object getFile(long id) throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        return this.files.get(Integer.valueOf(descriptor));
+        return this.files.get(Long.valueOf(id));
     }
     
     /**
-     * Associates a file stream to an open file descriptor.
+     * Associates a file stream to an open file.
      * 
-     * @param descriptor an {@code int}, the descriptor of an open file.
+     * @param id a {@code long}, either a file descriptor cast to {@code long} 
+     *        (if we are on a Unix-like platform) or a file handle (if we are on Windows).
      * @param fileStream a {@link FileInputStream} or a {@link FileOutputStream} 
      *        (if it is not an instance of one of these types the method does
      *        nothing).
      * @throws FrozenStateException if the state is frozen.
      */
-    public void setFile(int descriptor, Object fileStream) throws FrozenStateException {
+    public void setFile(long id, Object fileStream) throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
         if (fileStream instanceof FileInputStream || fileStream instanceof FileOutputStream) {
-            this.files.put(Integer.valueOf(descriptor), fileStream);
+            this.files.put(Long.valueOf(id), fileStream);
         }
     }
     
     /**
      * Removes an open file descriptor and its associated file stream.
      * 
-     * @param descriptor an {@code int}, the open file descriptor to remove
+     * @param id a {@code long}, the identifier of the open file to remove
      *        (if it is not a previously associated open file descriptor
      *        the method does nothing).
      * @throws FrozenStateException if the state is frozen.
      */
-    public void removeFile(int descriptor) throws FrozenStateException {
+    public void removeFile(long id) throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        this.files.remove(Integer.valueOf(descriptor));
+        this.files.remove(Long.valueOf(id));
     }
     
     /**
@@ -3857,10 +3907,10 @@ public final class State implements Cloneable {
             fisPath.setAccessible(true);
             final Field fosPath = FileOutputStream.class.getDeclaredField("path");
             fosPath.setAccessible(true);
-            for (Map.Entry<Integer, Object> entry : this.files.entrySet()) {
+            for (Map.Entry<Long, Object> entry : this.files.entrySet()) {
                 if (entry.getValue() instanceof FileInputStream) {
                     final FileInputStream fisClone;
-                    if (entry.getKey() == 0) {
+                    if (entry.getKey() == this.inFileId) {
                         fisClone = (FileInputStream) entry.getValue();
                     } else {
                         final FileInputStream fisThis = (FileInputStream) entry.getValue();
@@ -3871,7 +3921,7 @@ public final class State implements Cloneable {
                     o.files.put(entry.getKey(), fisClone);
                 } else { //entry.getValue() instanceof FileOutputStream
                     final FileOutputStream fosClone;
-                    if (entry.getKey() == 1 ||  entry.getKey() == 2) {
+                    if (entry.getKey() == this.outFileId ||  entry.getKey() == this.errFileId) {
                         fosClone = (FileOutputStream) entry.getValue();
                     } else {
                         final FileOutputStream fosThis = (FileOutputStream) entry.getValue();
@@ -4008,9 +4058,9 @@ public final class State implements Cloneable {
 	@Override
     protected void finalize() {
         //closes all files except stdin/out/err
-        for (Map.Entry<Integer, Object> fileEntry : this.files.entrySet()) {
-            final int fileId = fileEntry.getKey();
-            if (fileId == 0 || fileId == 1 || fileId == 2) {
+        for (Map.Entry<Long, Object> fileEntry : this.files.entrySet()) {
+            final long fileId = fileEntry.getKey();
+            if (fileId == this.inFileId || fileId == this.outFileId || fileId == this.errFileId) {
                 continue;
             }
             final Object file = fileEntry.getValue();

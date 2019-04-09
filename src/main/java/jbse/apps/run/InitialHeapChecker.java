@@ -264,7 +264,7 @@ public final class InitialHeapChecker {
     ClasspathException, ContradictionException, EngineStuckException, FailureException, 
     ThreadStackEmptyException, FrozenStateException {
         try {
-            s.pushFrame(p.getEngineParameters().getCalculator(), classFile, methodSignatureImpl, true, 0, r);
+            s.pushFrame(p.getCalculator(), classFile, methodSignatureImpl, true, 0, r);
         } catch (MethodNotFoundException | MethodCodeNotFoundException | InvalidTypeException | InvalidInputException e) {
             return true; //TODO ugly way to cope with nonexistent methods; possibly handle the situation in the constructor of CheckMethodTable
         }

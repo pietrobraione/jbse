@@ -2,8 +2,11 @@ package jbse.jvm;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -14,6 +17,7 @@ import jbse.jvm.EngineParameters.BreadthMode;
 import jbse.jvm.EngineParameters.StateIdentificationMode;
 import jbse.jvm.Runner.Actions;
 import jbse.mem.State;
+import jbse.rules.TriggerRulesRepo;
 import jbse.val.Calculator;
 
 /**
@@ -77,6 +81,12 @@ public final class RunnerParameters implements Cloneable {
         this.engineParameters = engineParameters;
     }
 
+    /**
+     * Returns the wrapped {@link EngineParameters} object.
+     * 
+     * @return the {@link EngineParameters} object that backs
+     *         this {@link RunnerParameters}.
+     */
     public EngineParameters getEngineParameters() {
         return this.engineParameters;
     }
@@ -139,6 +149,53 @@ public final class RunnerParameters implements Cloneable {
      */
     public BreadthMode getBreadthMode() {
         return this.engineParameters.getBreadthMode();
+    }
+
+    /** 
+     * Adds an {@link ExecutionObserver} performing additional
+     * actions when a field changes its value.
+     * 
+     * @param fldClassName the name of the class where the field
+     *        resides.
+     * @param fldType the type of the field.
+     * @param fldName the name of the field.
+     * @param observer an {@link ExecutionObserver}. It will be 
+     *        notified whenever the field {@code fldName} of 
+     *        any instance of {@code fldClassName} is modified.
+     */ 
+    public void addExecutionObserver(String fldClassName, String fldType, String fldName, ExecutionObserver observer) {
+        this.engineParameters.addExecutionObserver(fldClassName, fldType, fldName, observer);
+    }
+
+    /**
+     * Clears the {@link ExecutionObserver}s.
+     */
+    public void clearExecutionObservers() {
+    	this.engineParameters.clearExecutionObservers();
+    }
+
+    /**
+     * Returns the {@link Signature}s of the fields
+     * observed by some {@link ExecutionObserver}.
+     * 
+     * @return a {@link List}{@code <}{@link Signature}{@code >},
+     *         in the order matching that of the return value 
+     *         of {@link #getObservers()}.
+     */
+    public List<Signature> getObservedFields() {
+        return this.engineParameters.getObservedFields();
+    }
+
+    /**
+     * Returns the {@link Signature}s of the fields
+     * observed by some {@link ExecutionObserver}.
+     * 
+     * @return a {@link List}{@code <}{@link Signature}{@code >},
+     *         in the order matching that of the return value 
+     *         of {@link #getObservedFields()}.
+     */
+    public List<ExecutionObserver> getObservers() {
+        return this.engineParameters.getObservers();
     }
 
     /**
@@ -340,71 +397,31 @@ public final class RunnerParameters implements Cloneable {
     }
 
     /**
-     * Sets the signature of the method which must be symbolically executed.
+     * Returns the {@link TriggerRulesRepo} 
+     * containing all the trigger rules that
+     * must be used.
      * 
-     * @param className the name of the class containing the method.
-     * @param descriptor the descriptor of the method.
-     * @param methodName the name of the method. 
-     * @throws NullPointerException if any of the above parameters is {@code null}.
+     * @return a {@link TriggerRulesRepo}. It
+     *         is the one that backs this
+     *         {@link EngineParameters}, not a
+     *         safety copy.
      */
-    public void setMethodSignature(String className, String descriptor, String methodName) { 
-        this.engineParameters.setMethodSignature(className, descriptor, methodName); 
+    public TriggerRulesRepo getTriggerRulesRepo() {
+        return this.engineParameters.getTriggerRulesRepo();
     }
 
     /**
-     * Gets the signature of the method which must be symbolically executed.
+     * Returns the expansion backdoor.
      * 
-     * @return a {@link Signature}, or {@code null} if no method signature
-     *         has been provided.
+     * @return a {@link Map}{@code <}{@link String}{@code , }{@link Set}{@code <}{@link String}{@code >>},
+     *         associating class names with set of
+     *         other class names. 
+     *         It is the one that backs this
+     *         {@link EngineParameters}, not a
+     *         safety copy.
      */
-    public Signature getMethodSignature() {
-        return this.engineParameters.getMethodSignature();
-    }
-
-    /** 
-     * Adds an {@link ExecutionObserver} performing additional
-     * actions when a field changes its value.
-     * 
-     * @param className the name of the class where the field
-     *        resides.
-     * @param type the type of the field.
-     * @param observedVar the name of the field.
-     * @param observer an {@link ExecutionObserver}. It will be 
-     *        notified whenever the field {@code observedVar} of 
-     *        any instance of {@code className} is modified.
-     */ 
-    public void addExecutionObserver(String className, String type, String observedVar, ExecutionObserver observer) {
-        this.engineParameters.addExecutionObserver(className, type, observedVar, observer);
-    }
-
-    /**
-     * Specifies an alternative, meta-level implementation of a method 
-     * that must override the standard one. 
-     * 
-     * @param className the name of the class containing the overridden method.
-     * @param descriptor the descriptor of the method.
-     * @param methodName the name of the method.
-     * @param metaDelegateClassName the name of a {@link Class} that implements
-     *        the semantics of calls to the {@code methodName} method.
-     * @throws NullPointerException if any of the above parameters is {@code null}.
-     */
-    public void addMetaOverridden(String className, String descriptor, String methodName, String metaDelegateClassName) {
-        this.engineParameters.addMetaOverridden(className, descriptor, methodName, metaDelegateClassName);
-    }
-
-    /**
-     * Specifies that a method must be treated as an uninterpreted pure
-     * function, rather than executed. In the case all the parameters are
-     * constant, the method is executed metacircularly.
-     * 
-     * @param methodClassName the name of the class containing the method.
-     * @param methodDescriptor the descriptor of the method. All the parameters types 
-     *        in the descriptor must be primitive.
-     * @param methodName the name of the method.
-     * @throws NullPointerException if any of the above parameters is {@code null}.
-     */
-    public void addUninterpreted(String methodClassName, String methodDescriptor, String methodName) {
-        this.engineParameters.addUninterpreted(methodClassName, methodDescriptor, methodName);
+    public Map<String, Set<String>> getExpansionBackdoor() {
+        return this.engineParameters.getExpansionBackdoor();
     }
 
     /**
@@ -439,7 +456,6 @@ public final class RunnerParameters implements Cloneable {
         this.engineParameters.addExpandToTrigger(toExpand, originExp, classAllowed,
                                                  triggerClassName, triggerParametersSignature, triggerMethodName, triggerParameter);
     }
-
 
     /**
      * Adds a trigger method that fires when some references are resolved by
@@ -487,7 +503,7 @@ public final class RunnerParameters implements Cloneable {
         this.engineParameters.addResolveAliasOriginTrigger(toResolve, originExp, pathAllowedExp, 
                                                            triggerClassName, triggerParametersSignature, triggerMethodName, triggerParameter);
     }
-
+    
     /**
      * Adds a trigger method that fires when some references are resolved by
      * alias.
@@ -550,6 +566,204 @@ public final class RunnerParameters implements Cloneable {
                                       String triggerParameter) {
         this.engineParameters.addResolveNullTrigger(toResolve,  originExp, triggerClassName, 
                                                     triggerParametersSignature, triggerMethodName, triggerParameter);
+    }
+    
+    /**
+     * Specifies an alternative, meta-level implementation of a method 
+     * that must override the standard one. 
+     * 
+     * @param className the name of the class containing the overridden method.
+     * @param descriptor the descriptor of the method.
+     * @param methodName the name of the method.
+     * @param metaDelegateClassName the name of a {@link Class} that implements
+     *        the semantics of calls to the {@code methodName} method.
+     * @throws NullPointerException if any of the above parameters is {@code null}.
+     */
+    public void addMetaOverridden(String className, String descriptor, String methodName, String metaDelegateClassName) {
+        this.engineParameters.addMetaOverridden(className, descriptor, methodName, metaDelegateClassName);
+    }
+
+    /**
+     * Clears the specifications of the meta-level implementations 
+     * of methods.
+     */
+    public void clearMetaOverridden() {
+        this.engineParameters.clearMetaOverridden();
+    }
+
+    /**
+     * Returns the specifications of the meta-level implementations 
+     * of methods.
+     * 
+     * @return A {@link List}{@code <}{@link String}{@code []>}, 
+     *         where each array is a 4-ple (method class name, 
+     *         method parameters, method name, meta delegate
+     *         class name).
+     */
+    public ArrayList<String[]> getMetaOverridden() {
+        return this.engineParameters.getMetaOverridden();
+    }
+
+    /**
+     * Specifies that a method must be treated as an uninterpreted pure
+     * function, rather than executed. In the case all the parameters are
+     * constant, the method is executed metacircularly.
+     * 
+     * @param methodClassName the name of the class containing the method.
+     * @param methodDescriptor the descriptor of the method.
+     * @param methodName the name of the method.
+     * @throws NullPointerException if any of the above parameters is {@code null}.
+     */
+    public void addUninterpreted(String methodClassName, String methodDescriptor, String methodName) {
+        this.engineParameters.addUninterpreted(methodClassName, methodDescriptor, methodName);
+    }
+
+    /**
+     * Specifies that a set of methods must be treated as an uninterpreted pure
+     * function, rather than executed. In the case all the parameters are
+     * constant, the methods are executed metacircularly.
+     * 
+     * @param patternMethodClassName a regular expression pattern for the names 
+     *        of the classes containing the methods.
+     * @param patternMethodDescriptor a regular expression pattern for the descriptors
+     *        of the methods.
+     * @param patternMethodName a regular expression pattern for the names of the methods.
+     * @throws NullPointerException if any of the above parameters is {@code null}.
+     */
+    public void addUninterpretedPattern(String patternMethodClassName, String patternMethodDescriptor, String patternMethodName) {
+    	this.engineParameters.addUninterpretedPattern(patternMethodClassName, patternMethodDescriptor, patternMethodName);
+    }
+
+    /**
+     * Clears the methods set with {@link #addUninterpreted(String, String, String) addUninterpreted} 
+     * that must be treated as uninterpreted pure functions.
+     */
+    public void clearUninterpreted() {
+        this.engineParameters.clearUninterpreted();
+    }
+
+    /**
+     * Clears the methods set with {@link #addUninterpretedPattern(String, String, String) addUninterpretedPattern} 
+     * that must be treated as uninterpreted pure functions.
+     */
+    public void clearUninterpretedPattern() {
+    	this.engineParameters.clearUninterpretedPattern();
+    }
+
+    /**
+     * Returns the methods that must be treated as
+     * uninterpreted pure functions.
+     * 
+     * @return A {@link List}{@code <}{@link String}{@code []>}, 
+     *         where each array is a triple (method class name, 
+     *         method parameters, method name).
+     */
+    public List<String[]> getUninterpreted() {
+    	return this.engineParameters.getUninterpreted();
+    }
+
+    /**
+     * Returns the method patterns that must be treated as
+     * uninterpreted pure functions.
+     * 
+     * @return A {@link List}{@code <}{@link String}{@code []>}, 
+     *         where each array is a triple (pattern of method 
+     *         class name, pattern of method parameters, pattern 
+     *         of method names).
+     */
+    public List<String[]> getUninterpretedPattern() {
+    	return this.engineParameters.getUninterpretedPattern();
+    }
+
+    /**
+     * Sets the signature of the method which must be symbolically executed, 
+     * and cancels the effect of any previous call to {@link #setInitialState(State)}.
+     * 
+     * @param className the name of the class containing the method.
+     * @param descriptor the descriptor of the method.
+     * @param name the name of the method. 
+     * @throws NullPointerException if any of the above parameters is {@code null}.
+     */
+    public void setMethodSignature(String className, String descriptor, String name) { 
+        this.engineParameters.setMethodSignature(className, descriptor, name); 
+    }
+
+    /**
+     * Gets the signature of the method which must be symbolically executed.
+     * 
+     * @return a {@link Signature}, or {@code null} if no method signature
+     *         has been provided.
+     */
+    public Signature getMethodSignature() {
+        return this.engineParameters.getMethodSignature();
+    }
+
+    /**
+     * Sets the maximum length an array must have to be 
+     * granted simple representation.
+     * 
+     * @param maxSimpleArrayLength an {@code int}.
+     */
+    public void setMaxSimpleArrayLength(int maxSimpleArrayLength) {
+        this.engineParameters.setMaxSimpleArrayLength(maxSimpleArrayLength);
+    }
+
+    /**
+     * Returns the maximum length an array must have to be 
+     * granted simple representation.
+     * 
+     * @param maxSimpleArrayLength an {@code int}.
+     */
+    public int getMaxSimpleArrayLength() {
+        return this.engineParameters.getMaxSimpleArrayLength();
+    }
+    
+    /**
+     * Sets the maximum heap size, expressed as the 
+     * maximum number of objects in the heap. If 
+     * during symbolic execution the heap becomes
+     * bigger than this treshold, JBSE raises 
+     * an {@link OutOfMemoryError}.
+     * 
+     * @param maxHeapSize a {@code long}.
+     */
+    public void setMaxHeapSize(long maxHeapSize) {
+        this.engineParameters.setMaxHeapSize(maxHeapSize);
+    }
+    
+    /**
+     * Returns the maximum heap size, expressed
+     * as the maximum number of objects in the heap.
+     * 
+     * @return a {@code long}.
+     */
+    public long getMaxHeapSize() {
+        return this.engineParameters.getMaxHeapSize();
+    }
+    
+    /**
+     * Sets whether the classes created during
+     * the pre-initialization phase shall be (pedantically)
+     * considered symbolic.
+     * 
+     * @param makePreInitClassesSymbolic a {@code boolean}.
+     *        If {@code true} all the classes created during
+     *        the pre-inizialization phase will be made 
+     *        symbolic.
+     */
+    public void setMakePreInitClassesSymbolic(boolean makePreInitClassesSymbolic) {
+    	this.engineParameters.setMakePreInitClassesSymbolic(makePreInitClassesSymbolic);
+    }
+    
+    /**
+     * Returns whether the classes created during
+     * the pre-initialization phase shall be (pedantically)
+     * considered symbolic.
+     * 
+     * @return a {@code boolean}.
+     */
+    public boolean getMakePreInitClassesSymbolic() {
+    	return this.engineParameters.getMakePreInitClassesSymbolic();
     }
 
     /**

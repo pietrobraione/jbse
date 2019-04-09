@@ -722,6 +722,8 @@ public final class Signatures {
         new Signature(JAVA_FILE, "" + REFERENCE + JAVA_STRING + TYPEEND, "path");
     public static final Signature JAVA_FILEDESCRIPTOR_FD = 
         new Signature(JAVA_FILEDESCRIPTOR, "" + INT, "fd");
+    public static final Signature JAVA_FILEDESCRIPTOR_HANDLE = 
+            new Signature(JAVA_FILEDESCRIPTOR, "" + LONG, "handle");
     public static final Signature JAVA_FILEINPUTSTREAM_FD = 
         new Signature(JAVA_FILEINPUTSTREAM, "" + REFERENCE + JAVA_FILEDESCRIPTOR + TYPEEND, "fd");
     public static final Signature JAVA_FLOAT_VALUE = 

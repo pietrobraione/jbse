@@ -9,6 +9,7 @@ import static jbse.bc.Signatures.JAVA_METHODHANDLE_LINKTOVIRTUAL;
 import java.lang.reflect.Modifier;
 
 class Util {
+	static final long INVALID_FILE_ID = -1L; //luckily, both an invalid file descriptor and an invalid file handle are -1
     /**
      * Checks if a method name is the name of an intrinsic signature polymorphic
      * method.

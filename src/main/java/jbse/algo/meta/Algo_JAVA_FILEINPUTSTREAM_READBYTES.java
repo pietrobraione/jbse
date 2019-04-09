@@ -4,12 +4,15 @@ import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
+import static jbse.algo.meta.Util.INVALID_FILE_ID;
 import static jbse.bc.Signatures.INDEX_OUT_OF_BOUNDS_EXCEPTION;
 import static jbse.bc.Signatures.IO_EXCEPTION;
 import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR_FD;
+import static jbse.bc.Signatures.JAVA_FILEDESCRIPTOR_HANDLE;
 import static jbse.bc.Signatures.JAVA_FILEINPUTSTREAM_FD;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
 
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.function.Supplier;
@@ -65,9 +68,27 @@ public final class Algo_JAVA_FILEINPUTSTREAM_READBYTES extends Algo_INVOKEMETA_N
                 failExecution("The 'this' parameter to invocation of method java.io.FileInputStream.readBytes method apparently has not a FileDescriptor fd field.");
             }
             final Instance fileDescriptor = (Instance) state.getObject(fileDescriptorReference);
-            final Simplex _fd = (Simplex) fileDescriptor.getFieldValue(JAVA_FILEDESCRIPTOR_FD);
-            final int fd = ((Integer) _fd.getActualValue()).intValue();
-            //TODO more checks
+            
+            //determines if we are on Windows
+            boolean onWindows;
+            try {
+            	FileDescriptor.class.getDeclaredField("handle");
+            	//no exception: we are on windows
+            	onWindows = true;
+            } catch (NoSuchFieldException e) {
+            	//we are not on Windows
+            	onWindows = false;
+            }
+            
+            //gets the file descriptor/handle
+            final long fileId;
+            if (onWindows) {
+            	final Simplex _handle = (Simplex) fileDescriptor.getFieldValue(JAVA_FILEDESCRIPTOR_HANDLE);
+            	fileId = ((Long) _handle.getActualValue()).longValue();
+            } else {
+            	final Simplex _fd = (Simplex) fileDescriptor.getFieldValue(JAVA_FILEDESCRIPTOR_FD);
+            	fileId = ((Integer) _fd.getActualValue()).longValue();
+            }
 
             //gets the buffer
             final Reference bufReference = (Reference) this.data.operand(1);
@@ -102,7 +123,7 @@ public final class Algo_JAVA_FILEINPUTSTREAM_READBYTES extends Algo_INVOKEMETA_N
             }
             
             //checks if the file is open
-            if (fd == -1) {
+            if (fileId == INVALID_FILE_ID) {
                 throwNew(state, calc, IO_EXCEPTION);
                 exitFromAlgorithm();
             }
@@ -111,7 +132,7 @@ public final class Algo_JAVA_FILEINPUTSTREAM_READBYTES extends Algo_INVOKEMETA_N
 
             //gets the (meta-level) FileInputStream associated to fd
             //and reads from it
-            final FileInputStream fis = (FileInputStream) state.getFile(fd);
+            final FileInputStream fis = (FileInputStream) state.getFile(fileId);
             //TODO more checks
             this.readBytes = new byte[len];
             try {
