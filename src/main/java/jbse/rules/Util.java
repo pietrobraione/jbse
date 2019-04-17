@@ -18,7 +18,7 @@ public final class Util {
 	static final String REF = "{$REF}";
 	static final String REFANY = "{$R_ANY}";
 	static final String UP = "{UP}";
-	static final String REGEX_ALLCHARS = "{.}";
+	static final String REGEX_ALLCHARS = "{°}";
 
 	/**
 	 * Makes a regular expression pattern from an origin expression
