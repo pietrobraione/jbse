@@ -139,7 +139,7 @@ public class TriggerManager {
         //then, pushes all the frames
         boolean retVal = false;
         for (TriggerRule rule : rules) {
-            final Signature triggerSig = rule.getTriggerSignature();
+            final Signature triggerSig = rule.getTriggerMethodSignature();
             if (splitReturnValueDescriptor(triggerSig.getDescriptor()).equals("" + VOID) &&
                 splitParametersDescriptors(triggerSig.getDescriptor()).length <= 1) {
                 final ReferenceConcrete triggerArg = getTriggerMethodParameterObject(rule, ref, state);

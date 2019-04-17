@@ -19,30 +19,38 @@ import jbse.val.ReferenceSymbolic;
  */
 public abstract class TriggerRule extends Rule {
 	/** Should not be {@code null}. */
-	private final Signature triggerMethod;
+	private final Signature triggerMethodSignature;
 	
-	/** Should not be {@code null}. */
-	private final String triggerParameter;
+	/** When {@code null} means no parameter. */
+	private final String triggerMethodParameter;
 
-	public TriggerRule(String originExp, Signature triggerMethod, String triggerParameter) { 
+	public TriggerRule(String originExp, Signature triggerMethodSignature, String triggerMethodParameter) { 
 		super(originExp);
-		this.triggerMethod = triggerMethod;
-		this.triggerParameter = triggerParameter;
+		this.triggerMethodSignature = triggerMethodSignature;
+		this.triggerMethodParameter = triggerMethodParameter;
 	}
 	
-	public Signature getTriggerSignature() {
-		return this.triggerMethod;
+	public Signature getTriggerMethodSignature() {
+		return this.triggerMethodSignature;
 	}
 	
 	public String getTriggerMethodParameter() {
-		return this.triggerParameter;
+		return this.triggerMethodParameter;
 	}
 
-	final boolean isTargetOfTrigger(ReferenceSymbolic ref, Objekt o) {
-		if (this.getTriggerMethodParameter() == null) {
-			return false;
-		}
-		if (o.getOrigin() == null) {
+	/**
+	 * Checks whether an {@link Objekt} is the parameter 
+	 * of this trigger rule.
+	 * 
+	 * @param ref the {@link ReferenceSymbolic} that made fire 
+	 *        this rule.
+	 * @param o an {@link Objekt}. It must be symbolic.
+	 * @return {@code true} iff {@code o} is the parameter for
+	 *         this rule.
+	 * @throws NullPointerException if {@code o.}{@link Objekt#getOrigin() getOrigin}{@code () == null}.
+	 */
+	final boolean isTriggerMethodParameterObject(ReferenceSymbolic ref, Objekt o) {
+		if (this.triggerMethodParameter == null) {
 			return false;
 		}
 		
@@ -56,8 +64,9 @@ public abstract class TriggerRule extends Rule {
 		}
 		final Pattern p = makePatternRelative(specializedTriggerExp, ref);
 
-		// checks o's origin matches the resulting pattern
-		final Matcher m = p.matcher(o.getOrigin().asOriginString());
+		//checks o's origin matches the resulting pattern
+		final ReferenceSymbolic origin = o.getOrigin();
+		final Matcher m = p.matcher(origin.asOriginString());
 		final boolean retVal = m.matches();
 		return retVal;
 	}

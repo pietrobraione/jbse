@@ -26,7 +26,8 @@ public interface Objekt extends Cloneable {
     /**
      * Returns this {@link Objekt}'s origin.
      * 
-     * @return a {@link ReferenceSymbolic}.
+     * @return a {@link ReferenceSymbolic} or {@code null}
+     *         if {@code !}{@link #isSymbolic()}.
      */
     ReferenceSymbolic getOrigin();
 

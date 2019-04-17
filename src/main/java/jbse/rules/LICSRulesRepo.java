@@ -86,7 +86,7 @@ public final class LICSRulesRepo implements Cloneable {
 			c = new HashSet<>();
 			this.rulesAliases.put(toResolve, c);
 		}
-		c.add(new LICSRuleAliasesOrigin(originExp, pathAllowedExp));
+		c.add(new LICSRuleAliasesTarget(originExp, pathAllowedExp));
 	}
 
     /**
@@ -155,7 +155,7 @@ public final class LICSRulesRepo implements Cloneable {
             c = new HashSet<>();
             this.rulesNeverAliases.put(toResolve, c);
         }
-        c.add(new LICSRuleAliasesOrigin(originExp, pathDisallowedExp));
+        c.add(new LICSRuleAliasesTarget(originExp, pathDisallowedExp));
     }
 
     /**

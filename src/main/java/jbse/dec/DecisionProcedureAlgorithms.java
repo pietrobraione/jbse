@@ -1161,7 +1161,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 
         final TreeMap<Long, Objekt> retVal = new TreeMap<>();
 
-        //TODO extract this code and share with State.getObjectInitial
+        //TODO extract this code and share with State.getObjectInitial and jbse.rule.Util.getTriggerMethodParameterObject
         //scans the path condition for compatible objects
         final Iterable<Clause> pathCondition = state.getPathCondition(); //TODO the decision procedure already stores the path condition: eliminate dependence on state
         for (Clause c : pathCondition) {

@@ -38,6 +38,6 @@ public class TriggerRuleAliasesInstanceof extends TriggerRuleAliases {
 	@Override
 	public String toString() {
 		return this.originExp + " ALIASES_INSTANCEOF " + this.classAllowed + " TRIGGERS " + 
-				this.getTriggerSignature() + "(" + this.getTriggerMethodParameter() + ")";
+				this.getTriggerMethodSignature() + "(" + this.getTriggerMethodParameter() + ")";
 	}
 }

@@ -18,13 +18,12 @@ public class LICSRuleAliasesInstanceof extends LICSRuleAliases {
 
 	public LICSRuleAliasesInstanceof(String originExp, String classAllowed) {
 		super(originExp);
-		this.classAllowed = (classAllowed == null ? Util.NOTHING: classAllowed);
+		this.classAllowed = classAllowed;
 	}
 
 	@Override
 	public boolean satisfies(ReferenceSymbolic ref, Objekt o) {
-		//ref is not used
-		if (this.isNothingRule()) {
+		if (isNothingRule()) {
 			return false;
 		}
 		return this.classAllowed.equals(o.getType().getClassName());
@@ -42,11 +41,11 @@ public class LICSRuleAliasesInstanceof extends LICSRuleAliases {
 	 *         "aliases nothing" rule.
 	 */
 	private boolean isNothingRule() {
-		return this.classAllowed.equals(Util.NOTHING);
+		return this.classAllowed == null;
 	}
 
 	@Override
 	public String toString() {
-		return this.originExp + " ALIASES_INSTANCEOF " + this.classAllowed;
+		return this.originExp + " aliases " + (this.classAllowed == null ? "nothing" : ("instanceof " + this.classAllowed));
 	}
 }

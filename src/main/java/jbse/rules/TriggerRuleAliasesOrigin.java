@@ -57,6 +57,6 @@ public class TriggerRuleAliasesOrigin extends TriggerRuleAliases {
 	@Override
 	public String toString() {
 		return this.originExp + " ALIASES " + (this.hasMax ? Util.MAX : "") + this.pathAllowedExp + " TRIGGERS " + 
-				this.getTriggerSignature() + "(" + this.getTriggerMethodParameter() + ")";
+				this.getTriggerMethodSignature() + "(" + this.getTriggerMethodParameter() + ")";
 	}
 }

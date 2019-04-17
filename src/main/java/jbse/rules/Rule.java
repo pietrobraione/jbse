@@ -21,8 +21,10 @@ public abstract class Rule {
 	/**
 	 * Constructor.
 	 * 
-	 * @param originExp a regular expression; {@code null} 
-	 *        is equivalent to "match all".
+	 * @param originExp a regular expression over origin
+	 *        {@link String}s: If an origin {@link String} 
+	 *        matches it, then this rule fires. A {@code null} 
+	 *        value is equivalent to "match all".
 	 */
 	public Rule(String originExp) { 
 		this.originExp = (originExp == null ? Util.ANY : originExp);

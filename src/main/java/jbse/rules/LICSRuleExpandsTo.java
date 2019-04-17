@@ -17,14 +17,16 @@ public class LICSRuleExpandsTo extends LICSRule {
 	/**
 	 * Constructor.
 	 * 
-	 * @param originExp a regular expression; {@code null} 
-	 *        is equivalent to "match all".
+	 * @param originExp a regular expression over origin
+	 *        {@link String}s: If an origin {@link String} 
+	 *        matches it, then this rule fires. A {@code null} 
+	 *        value is equivalent to "match all".
 	 * @param className the name of a class; {@code null}
 	 *        means "expands to nothing".
 	 */
 	public LICSRuleExpandsTo(String originExp, String className) {
 		super(originExp);
-		this.className = (className == null ? Util.NOTHING : className);
+		this.className = className;
 	}
 	
 	public boolean satisfies(String className) {
@@ -41,11 +43,11 @@ public class LICSRuleExpandsTo extends LICSRule {
 	 *         "expands to nothing" rule.
 	 */
 	private boolean isNothingRule() {
-		return this.className.equals(Util.NOTHING);
+		return this.className == null;
 	}
 	
 	@Override
 	public String toString() {
-		return this.originExp + " EXPANDS TO " + this.className;
+		return this.originExp + " expands to " + (this.className == null ? "nothing" : ("instanceof " + this.className));
 	}
 }
