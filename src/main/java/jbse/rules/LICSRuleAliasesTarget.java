@@ -67,7 +67,6 @@ public class LICSRuleAliasesTarget extends LICSRuleAliases {
 	
 	@Override
 	public String toString() {
-		return this.originExp + " aliases target " + 
-		    (this.hasMax ? (Util.MAX + " ") : "") + this.targetExp;
+		return this.originExp + " aliases target " + (this.hasMax ? Util.MAX : "") + this.targetExp;
 	}
 }

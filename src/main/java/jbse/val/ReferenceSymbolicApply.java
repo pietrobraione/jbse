@@ -35,7 +35,7 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 	private final String toString;
 	
     /** The origin String representation of this object. */
-	private final String asOriginString;
+	private final String originString;
 	
 	/**
 	 * Constructor. 
@@ -80,17 +80,17 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 		//calculates toString
 		{
 			final StringBuilder buf = new StringBuilder();
-			buf.append(this.operator + "(");
+			buf.append(this.operator);
+			buf.append('(');
 			boolean first = true;
 			for (Value v : this.args) {
 				buf.append(first ? "" : ",");
 				buf.append(v.toString());
 				first = false;
 			}
-			if (historyPoint == null) {
-				buf.append(")");
-			} else {
-				buf.append(")@");
+			buf.append(')');
+			if (historyPoint != null) {
+				buf.append('@');
 				buf.append(historyPoint.toString());
 			}
 			this.toString = buf.toString();
@@ -99,9 +99,9 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 		//calculates asOriginString
 		{
 			final StringBuilder buf = new StringBuilder();
-			buf.append('<');
-			buf.append(this.operator);
-			buf.append('(');
+            buf.append('<');
+            buf.append(this.operator);
+            buf.append('@');
 			boolean first = true;
 			for (Value v : this.args) {
 				buf.append(first ? "" : ",");
@@ -109,13 +109,13 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 				first = false;
 			}
 			if (historyPoint() == null) {
-				buf.append(")");
+				buf.append('>');
 			} else {
-				buf.append(")@");
+				buf.append('@');
 				buf.append(historyPoint().toString());
+				buf.append('>');
 			}
-			buf.append('>');
-			this.asOriginString = buf.toString();
+			this.originString = buf.toString();
 		}
 	}
 
@@ -131,7 +131,7 @@ public final class ReferenceSymbolicApply extends ReferenceSymbolic implements S
 	
 	@Override
 	public String asOriginString() {
-		return this.asOriginString;
+		return this.originString;
 	}
 	
 	@Override

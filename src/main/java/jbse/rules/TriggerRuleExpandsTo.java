@@ -34,7 +34,7 @@ public class TriggerRuleExpandsTo extends TriggerRule {
 	
 	@Override
 	public String toString() {
-		return this.originExp + " EXPANDS TO " + this.className + " TRIGGERS " + 
-				this.getTriggerMethodSignature() + "(" + this.getTriggerMethodParameter() + ")";
+		return this.originExp + " expands to instanceof " + this.className + " triggers " + 
+				this.getTriggerMethodSignature() + ":" + this.getTriggerMethodParameter();
 	}
 }

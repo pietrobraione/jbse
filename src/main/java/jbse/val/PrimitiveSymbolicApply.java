@@ -155,16 +155,17 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed impl
 		//calculates toString
 		{
 			final StringBuilder buf = new StringBuilder();
-			buf.append(this.operator + "(");
+			buf.append(this.operator);
+			buf.append('(');
 			boolean first = true;
 			for (Value v : this.args) {
 				buf.append(first ? "" : ",");
 				buf.append(v.toString());
 				first = false;
 			}
-			buf.append(")");
+			buf.append(')');
 			if (historyPoint != null) {
-				buf.append("@");
+				buf.append('@');
 				buf.append(historyPoint.toString());
 			}
 			this.toString = buf.toString();
@@ -175,7 +176,7 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed impl
             final StringBuilder buf = new StringBuilder();
             buf.append('<');
             buf.append(this.operator);
-            buf.append('(');
+            buf.append('@');
             boolean first = true;
             for (Value v : this.args) {
                     buf.append(first ? "" : ",");
@@ -183,12 +184,12 @@ public final class PrimitiveSymbolicApply extends PrimitiveSymbolicComputed impl
                     first = false;
             }
             if (historyPoint() == null) {
-                buf.append(")");
+                buf.append('>');
             } else {
-                buf.append(")@");
+                buf.append('@');
                 buf.append(historyPoint().toString());
+                buf.append('>');
             }
-            buf.append('>');
             this.originString = buf.toString();
 		}
 	}

@@ -19,6 +19,7 @@ public final class Util {
 	static final String REFANY = "{$R_ANY}";
 	static final String UP = "{UP}";
 	static final String REGEX_ALLCHARS = "{°}";
+	static final String REGEX_ENDLINE = "{EOL}";
 
 	/**
 	 * Makes a regular expression pattern from an origin expression
@@ -59,6 +60,8 @@ public final class Util {
 		retVal = retVal.replace("}", "\\}"); //this also is for {ROOT}
 		retVal = retVal.replace("[", "\\["); //this is for [<className>]
 		retVal = retVal.replace("]", "\\]"); //this also is for [<className>]
+		retVal = retVal.replace("$", "\\$"); //this is for names of inner classes
+		retVal = retVal.replace(REGEX_ENDLINE, "$"); 
 		return retVal;
 	}
 

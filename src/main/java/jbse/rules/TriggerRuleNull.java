@@ -14,6 +14,6 @@ public class TriggerRuleNull extends TriggerRule {
 
 	@Override
 	public String toString() {
-		return this.originExp + " NULL TRIGGERS " + this.getTriggerMethodSignature() + "(" + this.getTriggerMethodParameter() + ")";
+		return this.originExp + " null triggers " + this.getTriggerMethodSignature() + ":" + this.getTriggerMethodParameter();
 	}
 }

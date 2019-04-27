@@ -18,14 +18,14 @@ import jbse.val.ReferenceSymbolic;
  * 
  * @author Pietro Braione
  */
-public class TriggerRuleAliasesOrigin extends TriggerRuleAliases {
+public class TriggerRuleAliasesTarget extends TriggerRuleAliases {
 	/** Should not be {@code null}. */
 	private final String pathAllowedExp;
 	
 	/** When {@code true} only the maximal path matches. */
 	private final boolean hasMax;
 	
-	public TriggerRuleAliasesOrigin(String originExp, String pathAllowedExp, Signature triggerMethod, String triggerParameter) {
+	public TriggerRuleAliasesTarget(String originExp, String pathAllowedExp, Signature triggerMethod, String triggerParameter) {
 		super(originExp, triggerMethod, triggerParameter);
 		if (pathAllowedExp != null && pathAllowedExp.startsWith(Util.MAX)) {
 			this.pathAllowedExp = pathAllowedExp.substring(Util.MAX.length());
@@ -56,7 +56,7 @@ public class TriggerRuleAliasesOrigin extends TriggerRuleAliases {
 	
 	@Override
 	public String toString() {
-		return this.originExp + " ALIASES " + (this.hasMax ? Util.MAX : "") + this.pathAllowedExp + " TRIGGERS " + 
-				this.getTriggerMethodSignature() + "(" + this.getTriggerMethodParameter() + ")";
+		return this.originExp + " aliases target " + (this.hasMax ? Util.MAX : "") + this.pathAllowedExp + " triggers " + 
+				this.getTriggerMethodSignature() + ":" + this.getTriggerMethodParameter();
 	}
 }

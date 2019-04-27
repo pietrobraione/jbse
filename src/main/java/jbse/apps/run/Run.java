@@ -177,7 +177,6 @@ public final class Run {
     private class ActionsRun extends Runner.Actions {
         private String endOfTraceMessage;
         private TraceTypes traceKind;
-        private boolean isBranch;
         private boolean mayPrint;
 
         /**
@@ -214,7 +213,6 @@ public final class Run {
                     return true;
                 }
             }
-            this.isBranch = false; //safe to do here if you do print last because a state is printed at most once
 
             // prompts the user for next step in case of interactive mode
             boolean stop = false;
@@ -251,13 +249,10 @@ public final class Run {
             //trace initially assumed to be safe
             this.traceKind = TraceTypes.SAFE;
 
-            //at the start of a trace we are on a branch
-            this.isBranch = true;
-
             //exits if user wants
             boolean stop = false;
             if (Run.this.parameters.getStepShowMode() == StepShowMode.ALL ||
-            Run.this.parameters.getStepShowMode() == StepShowMode.ROOT_BRANCHES_LEAVES) {
+                Run.this.parameters.getStepShowMode() == StepShowMode.ROOT_BRANCHES_LEAVES) {
                 stop = printAndAsk();
             }
 
@@ -266,8 +261,11 @@ public final class Run {
 
         @Override
         public boolean atBranch(BranchPoint bp) {
-            this.isBranch = true;
-            return super.atBranch(bp);
+            boolean stop = false;
+            if (Run.this.parameters.getStepShowMode() == StepShowMode.ROOT_BRANCHES_LEAVES) {
+                stop = printAndAsk();
+            } 
+            return stop;
         }
 
         @Override
@@ -371,14 +369,11 @@ public final class Run {
 
             //prints/asks (all+bytecode and branches)
             boolean stop = false;
-            if (Run.this.parameters.getStepShowMode() == StepShowMode.ALL || 
-                (Run.this.parameters.getStepShowMode() == StepShowMode.ROOT_BRANCHES_LEAVES &&
-                this.isBranch)) {
+            if (Run.this.parameters.getStepShowMode() == StepShowMode.ALL) {
                 stop = printAndAsk();
             } 
             return stop;
         }
-
 
         @Override
         public boolean atSourceRowPost() {

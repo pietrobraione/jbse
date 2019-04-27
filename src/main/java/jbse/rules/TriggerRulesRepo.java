@@ -100,7 +100,7 @@ public final class TriggerRulesRepo implements Cloneable {
 			c = new HashSet<>();
 			rulesAliases.put(toResolve, c);
 		}
-		c.add(new TriggerRuleAliasesOrigin(originExp, pathAllowedExp, triggerMethod, triggerParameter));
+		c.add(new TriggerRuleAliasesTarget(originExp, pathAllowedExp, triggerMethod, triggerParameter));
 	}
 
     /**
