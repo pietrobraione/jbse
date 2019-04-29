@@ -34,12 +34,10 @@ public class SettingsReader {
      * Constructor.
      * 
      * @param filePath a {@link String}, the path of the file containing the settings.
-     * @throws FileNotFoundException if the file does not exist.
+     * @throws IOException if some error occurs while trying to access the file.
      * @throws ParseException if the content of the file is not correct.
-     * @throws IOException (other than {@link FileNotFoundException}) 
-     *         if some error occurs while closing the file.
      */
-    public SettingsReader(String filePath) throws IOException, FileNotFoundException, ParseException {
+    public SettingsReader(String filePath) throws IOException, ParseException {
         this(Paths.get(filePath));
     }
 
@@ -47,12 +45,10 @@ public class SettingsReader {
      * Constructor.
      * 
      * @param filePath the {@link Path} of the file containing the settings.
-     * @throws FileNotFoundException if the file does not exist.
+     * @throws IOException if some error occurs while trying to access the file.
      * @throws ParseException if the content of the file is not correct.
-     * @throws IOException (other than {@link FileNotFoundException}) 
-     *         if some error occurs while closing the file.
      */
-    public SettingsReader(Path filePath) throws IOException, FileNotFoundException, ParseException {
+    public SettingsReader(Path filePath) throws IOException, ParseException {
         try (final BufferedReader reader = Files.newBufferedReader(filePath)) {
             this.parser = new SettingsParser(reader);
             this.parser.start();
