@@ -487,12 +487,12 @@ public class Runner {
     }
 
     private boolean outOfScopeDepth() {
-        final boolean retVal = (this.depthScope > 0 && this.engine.getCurrentState().getDepth() > depthScope);
+        final boolean retVal = (this.depthScope > 0 && this.engine.getCurrentState().getDepth() > this.depthScope);
         return retVal;
     }
 
     private boolean outOfScopeCount() {
-        final boolean retVal = (this.countScope > 0 && this.engine.getCurrentState().phase() == Phase.POST_INITIAL && this.engine.getCurrentState().getCount() > countScope);
+        final boolean retVal = (this.countScope > 0 && this.engine.getCurrentState().phase() == Phase.POST_INITIAL && this.engine.getCurrentState().getCount() > this.countScope);
         return retVal;
     }
 

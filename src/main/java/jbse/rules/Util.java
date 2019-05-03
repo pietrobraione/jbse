@@ -85,7 +85,7 @@ public final class Util {
 		final Pattern p = makeOriginPattern(pattern);
 		final Matcher m = p.matcher(origin.asOriginString());
 		if (m.matches() && m.pattern().pattern().startsWith("(.*)") && m.groupCount() >= 1) {
-			final String valueForAny = m.group(1).replace(".","/");
+			final String valueForAny = m.group(1);
 			return valueForAny;
 		} else {
 			return null;
