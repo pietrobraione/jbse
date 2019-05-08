@@ -1,6 +1,5 @@
 package jbse.bc;
 
-import static jbse.bc.ClassFile.JAVA_6;
 import static jbse.bc.ClassFile.JAVA_8;
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
@@ -737,7 +736,7 @@ public final class ClassHierarchy implements Cloneable {
         }
         
         //checks the version
-        if (classDummy.getMajorVersion() < JAVA_6 || classDummy.getMajorVersion() > JAVA_8) {
+        if (classDummy.getMajorVersion() > JAVA_8) {
             throw new BadClassFileVersionException("The classfile for " + classDummy.getClassName() + " has unsupported version " + classDummy.getMajorVersion() + "." + classDummy.getMinorVersion() +".");
         }
         
