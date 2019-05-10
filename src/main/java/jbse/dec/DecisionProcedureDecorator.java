@@ -62,12 +62,23 @@ public class DecisionProcedureDecorator implements DecisionProcedure {
         this.component.clearAssumptions();
     }
 
-    //we do not override addAssumptions and setAssumptions
-    //because by default they perform a pushAssumption;
-    //If a decision procedure overrides one of them, 
-    //it cannot be decorated by this decorator, because
-    //the decorator, in that case, must override these
-    //methods and delegate to the component.
+    @Override
+    public void addAssumptions(Iterable<Clause> assumptionsToAdd) 
+    throws InvalidInputException, DecisionException {
+    	this.component.addAssumptions(assumptionsToAdd);
+    }
+
+    @Override
+    public void addAssumptions(Clause... assumptionsToAdd) 
+    throws InvalidInputException, DecisionException {
+    	this.component.addAssumptions(assumptionsToAdd);
+    }
+    
+    @Override
+    public void setAssumptions(Collection<Clause> newAssumptions) 
+    throws InvalidInputException, DecisionException {
+    	this.component.setAssumptions(newAssumptions);
+    }
 
     @Override
     public Collection<Clause> getAssumptions() 

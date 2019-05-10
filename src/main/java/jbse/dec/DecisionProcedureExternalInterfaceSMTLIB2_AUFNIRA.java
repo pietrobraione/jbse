@@ -75,10 +75,11 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
     private Process solver;
     private BufferedReader solverIn;
     private BufferedWriter solverOut;
-    private String currentClausePositive;
-    private String currentClauseNegative;
+    private String currentQueryPositive;
+    private String currentQueryNegative;
     private boolean hasCurrentClause;
     private SMTLIB2ExpressionVisitor v;
+    private ArrayList<Boolean> pushedClauseIsOutsideTheory;
     private ArrayList<Integer> nSymPushed; 
     private int nSymCurrent;
     private int nTotalSymbols;
@@ -114,19 +115,19 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
     @Override
     public void sendClauseAssume(Primitive cond) 
     throws ExternalProtocolInterfaceException {
+        if (cond == null || cond.getType() != Type.BOOLEAN) {
+            throw new ExternalProtocolInterfaceException("Attempted to send an invalid clause (numeric predicate).");
+        }       
         if (this.hasCurrentClause) {
             throw new ExternalProtocolInterfaceException("Attempted to send a clause when a current clause already exists.");
         }
-        if (cond == null || cond.getType() != Type.BOOLEAN) {
-            throw new ExternalProtocolInterfaceException("Attempted to send an invalid clause.");
-        }       
         this.hasCurrentClause = true;
 
         try {
             cond.accept(this.v);
-            this.currentClausePositive = PUSH_1 + this.v.getQueryDeclarations() + "(assert " + this.v.getQueryAssertClause() + ")\n";
+            this.currentQueryPositive = PUSH_1 + this.v.getQueryDeclarations() + "(assert " + this.v.getQueryAssertClause() + ")\n";
             this.calc.push(cond).not().pop().accept(this.v);
-            this.currentClauseNegative = PUSH_1 + this.v.getQueryDeclarations() + "(assert " + this.v.getQueryAssertClause() + ")\n";
+            this.currentQueryNegative = PUSH_1 + this.v.getQueryDeclarations() + "(assert " + this.v.getQueryAssertClause() + ")\n";
         } catch (ExternalProtocolInterfaceException | RuntimeException e) {
             throw e;
         } catch (Exception e) {
@@ -139,57 +140,72 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
     @Override
     public void sendClauseAssumeAliases(ReferenceSymbolic r, long heapPos, Objekt o) 
     throws ExternalProtocolInterfaceException {
+        if (r == null || heapPos < 0 || o == null) {
+            throw new ExternalProtocolInterfaceException("Attempted to send an invalid clause (assume aliases).");
+        }       
         if (this.hasCurrentClause) {
             this.working = false;
             throw new ExternalProtocolInterfaceException("Attempted to send a clause when a current clause already exists.");
         }
         this.hasCurrentClause = true;
-        //does nothing, this decision procedure works only for numbers
-        this.currentClausePositive = this.currentClauseNegative = null;
+        
+        this.currentQueryPositive = this.currentQueryNegative = null; //clause outside the theory
     }
 
     @Override
     public void sendClauseAssumeExpands(ReferenceSymbolic r, String className) 
     throws ExternalProtocolInterfaceException {
+        if (r == null || className == null) {
+            throw new ExternalProtocolInterfaceException("Attempted to send an invalid clause (assume expands).");
+        }       
         if (this.hasCurrentClause) {
             throw new ExternalProtocolInterfaceException("Attempted to send a clause when a current clause already exists.");
         }
         this.hasCurrentClause = true;
-        //does nothing, this decision procedure works only for numbers
-        this.currentClausePositive = this.currentClauseNegative = null;
+        
+        this.currentQueryPositive = this.currentQueryNegative = null; //clause outside the theory
     }
 
     @Override
     public void sendClauseAssumeNull(ReferenceSymbolic r) 
     throws ExternalProtocolInterfaceException {
+        if (r == null) {
+            throw new ExternalProtocolInterfaceException("Attempted to send an invalid clause (assume null).");
+        }       
         if (this.hasCurrentClause) {
             throw new ExternalProtocolInterfaceException("Attempted to send a clause when a current clause already exists.");
         }
         this.hasCurrentClause = true;
-        //does nothing, this decision procedure works only for numbers      
-        this.currentClausePositive = this.currentClauseNegative = null;
+
+        this.currentQueryPositive = this.currentQueryNegative = null; //clause outside the theory
     }
 
     @Override
     public void sendClauseAssumeClassInitialized(String className) 
     throws ExternalProtocolInterfaceException {
+        if (className == null) {
+            throw new ExternalProtocolInterfaceException("Attempted to send an invalid clause (assume class initialized).");
+        }       
         if (this.hasCurrentClause) {
             throw new ExternalProtocolInterfaceException("Attempted to send a clause when a current clause already exists.");
         }
         this.hasCurrentClause = true;
-        //does nothing, this decision procedure works only for numbers
-        this.currentClausePositive = this.currentClauseNegative = null;
+        
+        this.currentQueryPositive = this.currentQueryNegative = null; //clause outside the theory
     }
 
     @Override
     public void sendClauseAssumeClassNotInitialized(String className) 
     throws ExternalProtocolInterfaceException {
+        if (className == null) {
+            throw new ExternalProtocolInterfaceException("Attempted to send an invalid clause (assume class not initialized).");
+        }       
         if (this.hasCurrentClause) {
             throw new ExternalProtocolInterfaceException("Attempted to send a clause when a current clause already exists.");
         }
         this.hasCurrentClause = true;
-        //does nothing, this decision procedure works only for numbers
-        this.currentClausePositive = this.currentClauseNegative = null;
+
+        this.currentQueryPositive = this.currentQueryNegative = null; //clause outside the theory
     }
 
     @Override
@@ -198,7 +214,7 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
             throw new ExternalProtocolInterfaceException("Attempted to retract a clause with no current clause.");
         }
         this.hasCurrentClause = false;
-        this.currentClausePositive = this.currentClauseNegative = null;
+        this.currentQueryPositive = this.currentQueryNegative = null;
         forgetPushedDeclarations();
     }
 
@@ -209,11 +225,11 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
             throw new ExternalProtocolInterfaceException("Attempted to check satisfiability with no current clause.");
         }
         
-        final String queryPush = (value ? this.currentClausePositive : this.currentClauseNegative);
-        if (queryPush == null) {
+        final String smtlib2Query = (value ? this.currentQueryPositive : this.currentQueryNegative);
+        if (smtlib2Query == null) {
             return true;
         }
-        sendAndCheckAnswer(queryPush);
+        sendAndCheckAnswer(smtlib2Query);
         final boolean isSat = sendAndCheckAnswerChecksat();
         sendAndCheckAnswer(POP_1);
         return isSat;
@@ -391,19 +407,28 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
             throw new ExternalProtocolInterfaceException("attempted to push assumption with no current clause");
         }
         this.hasCurrentClause = false;
-        rememberPushedDeclarations();
         
-        String queryPush = (value ? this.currentClausePositive : this.currentClauseNegative);
-        if (queryPush == null) {
-            queryPush = PUSH_1; //TODO avoid empty pushes
+        final String smtlib2Query = (value ? this.currentQueryPositive : this.currentQueryNegative);
+        if (smtlib2Query == null) {
+        	this.pushedClauseIsOutsideTheory.add(true);
+        } else {
+        	this.pushedClauseIsOutsideTheory.add(false);
+            rememberPushedDeclarations();
+            sendAndCheckAnswer(smtlib2Query);
         }
-        sendAndCheckAnswer(queryPush);
     }
 
     @Override
     public void popAssumption() throws ExternalProtocolInterfaceException, IOException {
-        forgetPoppedDeclarations();
-        sendAndCheckAnswer(POP_1);
+        final int last = this.pushedClauseIsOutsideTheory.size() - 1;
+        final boolean outsideTheory = this.pushedClauseIsOutsideTheory.get(last);
+        this.pushedClauseIsOutsideTheory.remove(last);
+        if (outsideTheory) {
+        	//do nothing
+        } else {
+            forgetPoppedDeclarations();
+        	sendAndCheckAnswer(POP_1);
+        }
     }
 
     @Override
@@ -413,7 +438,7 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
         if (nToPop > 0) {
             sendAndCheckAnswer(POP_BEGIN + nToPop + POP_END);
         }
-        this.currentClausePositive = this.currentClauseNegative = null;
+        this.currentQueryPositive = this.currentQueryNegative = null;
         this.hasCurrentClause = false;
         forgetAllDeclarations();
     }
@@ -521,6 +546,7 @@ final class DecisionProcedureExternalInterfaceSMTLIB2_AUFNIRA extends DecisionPr
 
     private void forgetAllDeclarations() {
         this.v = new SMTLIB2ExpressionVisitor();
+        this.pushedClauseIsOutsideTheory = new ArrayList<>();
         this.nSymPushed = new ArrayList<>();
         this.nSymCurrent = 0;
         this.nTotalSymbols = 0;

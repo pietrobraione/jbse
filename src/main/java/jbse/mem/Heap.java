@@ -22,7 +22,7 @@ import jbse.val.Value;
 final class Heap implements Cloneable {
     private final long maxHeapSize;
 	private Heap delegate; //TODO nonfinal to allow cloning
-    private SortedMap<Long, Objekt> objects; //TODO nonfinal to allow cloning
+    private TreeMap<Long, Objekt> objects; //TODO nonfinal to allow cloning
     private long nextIndex;
     
     private static final class PleaseLookInDelegateHeap implements Objekt {
@@ -246,9 +246,12 @@ final class Heap implements Cloneable {
         }
 
         h.delegate = this;
-        final SortedMap<Long, Objekt> objectsClone = new TreeMap<>();
+        @SuppressWarnings("unchecked")
+		final TreeMap<Long, Objekt> objectsClone = (TreeMap<Long, Objekt>) h.objects.clone();
         for (Map.Entry<Long, Objekt> e : this.objects.entrySet()) {
-            objectsClone.put(e.getKey(), PleaseLookInDelegateHeap.instance());
+        	if (e.getValue() != PleaseLookInDelegateHeap.instance()) {
+        		objectsClone.put(e.getKey(), PleaseLookInDelegateHeap.instance());
+        	}
         }
         h.objects = objectsClone;
         
@@ -284,7 +287,7 @@ final class Heap implements Cloneable {
         }
 
         h.delegate = null;
-        final SortedMap<Long, Objekt> objectsClone = new TreeMap<>();
+        final TreeMap<Long, Objekt> objectsClone = new TreeMap<>();
         for (Map.Entry<Long, Objekt> e : this.objects.entrySet()) {
             objectsClone.put(e.getKey(), getTheRealThing(e.getKey()).clone());
         }

@@ -103,20 +103,13 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
         this.clauses.push(cSimpl);
         if (this.fast) {
             this.notInSynch = true;
+        } else if (this.extIf.isWorking()) {
+        	if (this.notInSynch) {
+        		resynch();
+        	}
+        	super.pushAssumptionLocal(cSimpl); //redispatches
         } else {
-            try {
-                if (this.extIf.isWorking()) {
-                    if (this.notInSynch) {
-                        resynch();
-                    }
-                    super.pushAssumptionLocal(cSimpl); //redispatches
-                    this.extIf.pushAssumption(true);
-                } else {
-                    throw new DecisionException(NOT_WORKING);
-                }
-            } catch (ExternalProtocolInterfaceException | IOException e) {
-                throw new DecisionException(e);
-            }
+        	throw new DecisionException(NOT_WORKING);
         }
     }
 
@@ -125,6 +118,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
     throws DecisionException { 
         try {
             this.extIf.sendClauseAssume(cSimpl.getCondition());
+            this.extIf.pushAssumption(true);
         } catch (ExternalProtocolInterfaceException | IOException e) {
             throw new DecisionException(e);
         }
@@ -135,6 +129,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
     throws DecisionException { 
         try {
             this.extIf.sendClauseAssumeAliases(cSimpl.getReference(), cSimpl.getHeapPosition(), cSimpl.getObjekt());
+            this.extIf.pushAssumption(true);
         } catch (ExternalProtocolInterfaceException | IOException e) {
             throw new DecisionException(e);
         }
@@ -145,6 +140,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
     throws DecisionException { 
         try {
             this.extIf.sendClauseAssumeExpands(cSimpl.getReference(), cSimpl.getObjekt().getType().getClassName());
+            this.extIf.pushAssumption(true);
         } catch (ExternalProtocolInterfaceException | IOException e) {
             throw new DecisionException(e);
         }
@@ -155,6 +151,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
     throws DecisionException { 
         try {
             this.extIf.sendClauseAssumeNull(cSimpl.getReference());
+            this.extIf.pushAssumption(true);
         } catch (ExternalProtocolInterfaceException | IOException e) {
             throw new DecisionException(e);
         }
@@ -165,6 +162,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
     throws DecisionException { 
         try {
             this.extIf.sendClauseAssumeClassInitialized(cSimpl.getClassFile().getClassName());
+            this.extIf.pushAssumption(true);
         } catch (ExternalProtocolInterfaceException | IOException e) {
             throw new DecisionException(e);
         }
@@ -175,6 +173,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
     throws DecisionException { 
         try {
             this.extIf.sendClauseAssumeClassNotInitialized(cSimpl.getClassFile().getClassName());
+            this.extIf.pushAssumption(true);
         } catch (ExternalProtocolInterfaceException | IOException e) {
             throw new DecisionException(e);
         }

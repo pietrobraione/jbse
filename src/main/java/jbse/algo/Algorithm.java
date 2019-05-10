@@ -172,7 +172,7 @@ UP extends StrategyUpdate<R>> implements Action {
     throws DecisionException, ContradictionException, 
     ThreadStackEmptyException, ClasspathException, 
     CannotManageStateException, FailureException, 
-    ContinuationException {
+    InterruptException {
         failExecution(e);
     }
 
@@ -218,7 +218,7 @@ UP extends StrategyUpdate<R>> implements Action {
     throws DecisionException, ContradictionException, 
     ThreadStackEmptyException, ClasspathException, 
     CannotManageStateException, FailureException, 
-    ContinuationException {
+    InterruptException {
         cleanup();
         this.ctx = ctx;
         try {
@@ -232,7 +232,7 @@ UP extends StrategyUpdate<R>> implements Action {
     throws DecisionException, ContradictionException, 
     ClasspathException, InvalidInputException, 
     CannotManageStateException, FailureException, 
-    ContinuationException {
+    InterruptException {
     	//initializes lazily this.data
         if (this.data == null) {
             this.data = bytecodeData().get();
@@ -241,12 +241,6 @@ UP extends StrategyUpdate<R>> implements Action {
         try {
             this.data.read(state, this.ctx.getCalculator(), this.numOperands);
             this.cooker.cook(state);
-        } catch (InterruptException e) {
-            if (e.hasContinuation()) {
-                throw new ContinuationException(e.getContinuation());
-            } else {
-                return;
-            }
         } catch (InvalidTypeException | InvalidOperatorException | 
         		 InvalidOperandException | ThreadStackEmptyException e) {
             //this should never happen
@@ -255,16 +249,7 @@ UP extends StrategyUpdate<R>> implements Action {
 
         //decides the satisfiability of the different alternatives
         final SortedSet<R> decisionResults = this.ctx.mkDecisionResultSet(classDecisionAlternative());     
-        final Outcome outcome;
-        try {
-            outcome = this.decider.decide(state, decisionResults);
-        } catch (InterruptException e) {
-            if (e.hasContinuation()) {
-                throw new ContinuationException(e.getContinuation());
-            } else {
-                return;
-            }
-        }
+        final Outcome outcome = this.decider.decide(state, decisionResults);
 
         //checks if at least one alternative is satisfiable
         final int tot = decisionResults.size();
@@ -322,7 +307,7 @@ UP extends StrategyUpdate<R>> implements Action {
                         stateCurrent.setProgramCounter(this.programCounterUpdate.get());
                     }
                 } else if (interrupt.hasContinuation()) {
-                    throw new ContinuationException(interrupt.getContinuation());
+                    throw interrupt;
                 } //else, nothing to do
             } catch (InvalidProgramCounterException e) {
                 throwVerifyError(stateCurrent, this.ctx.getCalculator());

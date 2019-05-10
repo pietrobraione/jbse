@@ -65,6 +65,7 @@ public class ClassFileJavassist extends ClassFile {
     private final boolean isAnonymousUnregistered;
     private final int definingClassLoader;
     private final javassist.bytecode.ClassFile cf;
+    private final String className;
     private final ConstPool cp;
     private final byte[] bytecode; //only for dummy classes
     private final ClassFile superClass;
@@ -130,6 +131,7 @@ public class ClassFileJavassist extends ClassFile {
             //inits
             this.isAnonymousUnregistered = false;
             this.definingClassLoader = definingClassLoader;
+            this.className = internalClassName(this.cf.getName());
             this.cp = this.cf.getConstPool();
             this.bytecode = (superInterfaces == null ? bytecode : null); //only dummy classfiles (without a superInterfaces array) cache their bytecode
             this.superClass = superClass;
@@ -182,6 +184,7 @@ public class ClassFileJavassist extends ClassFile {
             //inits
             this.isAnonymousUnregistered = true;
             this.definingClassLoader = CLASSLOADER_NONE;  //the classloader context is taken from the host class
+            this.className = internalClassName(this.cf.getName());
             this.cp = this.cf.getConstPool();
             this.bytecode = (hostClass == null ? bytecode : null); //only dummy anonymous classfiles (without a host class) cache their bytecode
             this.superClass = null;      //TODO is it ok to impose that anonymous classfiles have no superclass?
@@ -343,7 +346,7 @@ public class ClassFileJavassist extends ClassFile {
 
     @Override
     public String getClassName() {
-        return internalClassName(this.cf.getName());
+        return this.className;
     }
     
     @Override

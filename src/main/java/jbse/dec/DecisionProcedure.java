@@ -73,7 +73,6 @@ public interface DecisionProcedure extends AutoCloseable {
      */
     void clearAssumptions() throws DecisionException;
 
-
     /**
      * Adds to the current assumptions more assumptions.  
      * 
@@ -87,7 +86,7 @@ public interface DecisionProcedure extends AutoCloseable {
     default void addAssumptions(Iterable<Clause> assumptionsToAdd) 
     throws InvalidInputException, DecisionException {
         if (assumptionsToAdd == null) {
-            throw new InvalidInputException("addAssumptions invoked with a null parameter.");
+            throw new InvalidInputException("Method " + getClass().getName() + ".addAssumptions invoked with a null assumptionsToAdd parameter.");
         }
         for (Clause c : assumptionsToAdd) {
             pushAssumption(c);

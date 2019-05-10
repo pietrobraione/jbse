@@ -31,13 +31,13 @@ public interface Action {
      * @throws CannotManageStateException possibly raised if the 
      *         action cannot be executed due to limitations of JBSE.
      * @throws FailureException
-     * @throws ContinuationException if the execution of this action must
+     * @throws InterruptException if the execution of this action must
      *         be interrupted, and possibly followed by the execution of another
-     *         action.
+     *         action. 
      */
     public void exec(State state, ExecutionContext ctx) 
     throws DecisionException, ContradictionException, 
     ThreadStackEmptyException, ClasspathException, 
     CannotManageStateException, FailureException, 
-    ContinuationException;
+    InterruptException;
 }

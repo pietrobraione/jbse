@@ -95,6 +95,48 @@ import jbse.val.exc.InvalidTypeException;
 public final class State implements Cloneable {
     /** The slot number of the "this" (method receiver) object. */
     private static final int ROOT_THIS_SLOT = 0;
+    
+    //gets reflectively some fields for later access
+    private static final Field FIS_PATH;
+    private static final Field FOS_PATH;
+    private static final Field FIS_IN;
+    private static final Field FOS_OUT;
+    private static final Field FILEDESCRIPTOR_FD;
+    private static final Field FILEDESCRIPTOR_HANDLE;
+    static {
+    	//these are always present
+    	try {
+			FIS_PATH = FileInputStream.class.getDeclaredField("path");
+	    	FOS_PATH = FileOutputStream.class.getDeclaredField("path");
+            FIS_IN = FilterInputStream.class.getDeclaredField("in");
+            FOS_OUT = FilterOutputStream.class.getDeclaredField("out");
+            FILEDESCRIPTOR_FD = FileDescriptor.class.getDeclaredField("fd");
+		} catch (NoSuchFieldException | SecurityException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
+		}
+    	
+    	//this is present only on Windows
+    	Field fileDescriptorHandle;
+        try {
+        	fileDescriptorHandle = FileDescriptor.class.getDeclaredField("handle");
+        } catch (NoSuchFieldException e) {
+        	//we are not on Windows
+        	fileDescriptorHandle = null;
+        }
+        FILEDESCRIPTOR_HANDLE = fileDescriptorHandle;
+        
+        //sets all Fields accessible
+    	FIS_PATH.setAccessible(true);
+    	FOS_PATH.setAccessible(true);
+        FIS_IN.setAccessible(true);
+        FOS_OUT.setAccessible(true);
+        FILEDESCRIPTOR_FD.setAccessible(true);
+    	if (FILEDESCRIPTOR_HANDLE != null) {
+    		FILEDESCRIPTOR_HANDLE.setAccessible(true);
+    	}
+    }
+
 
     /**
      * Class that stores the information about a raw memory
@@ -437,30 +479,11 @@ public final class State implements Cloneable {
     }
     
     private void setStandardFiles() {
-        try {
-            //gets reflectively some fields from FilterInputStream and FilterOutputStream
-            final Field fisInField = FilterInputStream.class.getDeclaredField("in");
-            fisInField.setAccessible(true);
-            final Field fosOutField = FilterOutputStream.class.getDeclaredField("out");
-            fosOutField.setAccessible(true);
-            
-            //gets reflectively more fields from FileDescriptor, and determines 
-            //if we are on Windows or not
-            final Field fileDescriptorFD = FileDescriptor.class.getDeclaredField("fd");
-            fileDescriptorFD.setAccessible(true);
-            Field fileDescriptorHandle;
-            try {
-            	fileDescriptorHandle = FileDescriptor.class.getDeclaredField("handle");
-            	//no exception: we are on windows
-            	fileDescriptorHandle.setAccessible(true);
-            } catch (NoSuchFieldException e) {
-            	//we are not on Windows
-            	fileDescriptorHandle = null;
-            }
+        try {            
             
             //gets the stdin
             FileInputStream in = null;
-            for (InputStream is = System.in; (is instanceof FilterInputStream) || (is instanceof FileInputStream); is = (InputStream) fisInField.get(is)) {
+            for (InputStream is = System.in; (is instanceof FilterInputStream) || (is instanceof FileInputStream); is = (InputStream) FIS_IN.get(is)) {
                 if (is instanceof FileInputStream) {
                     in = (FileInputStream) is;
                     break;
@@ -468,10 +491,10 @@ public final class State implements Cloneable {
             }//TODO do something if in == null
             
             //gets the stdin identifier
-            if (fileDescriptorHandle == null) {
-            	this.inFileId = ((Integer) fileDescriptorFD.get(in.getFD())).longValue();
+            if (FILEDESCRIPTOR_HANDLE == null) {
+            	this.inFileId = ((Integer) FILEDESCRIPTOR_FD.get(in.getFD())).longValue();
             } else {
-            	this.inFileId = ((Long) fileDescriptorHandle.get(in.getFD())).longValue();
+            	this.inFileId = ((Long) FILEDESCRIPTOR_HANDLE.get(in.getFD())).longValue();
             }
             
             //registers the stdin
@@ -479,7 +502,7 @@ public final class State implements Cloneable {
             
             //gets the stdout
             FileOutputStream out = null;
-            for (OutputStream os = System.out; (os instanceof FilterOutputStream) || (os instanceof FileOutputStream); os = (OutputStream) fosOutField.get(os)) {
+            for (OutputStream os = System.out; (os instanceof FilterOutputStream) || (os instanceof FileOutputStream); os = (OutputStream) FOS_OUT.get(os)) {
                 if (os instanceof FileOutputStream) {
                     out = (FileOutputStream) os;
                     break;
@@ -487,10 +510,10 @@ public final class State implements Cloneable {
             }//TODO if out == null, set to some backup output file
             
             //gets the stdout identifier
-            if (fileDescriptorHandle == null) {
-            	this.outFileId = ((Integer) fileDescriptorFD.get(out.getFD())).longValue();
+            if (FILEDESCRIPTOR_HANDLE == null) {
+            	this.outFileId = ((Integer) FILEDESCRIPTOR_FD.get(out.getFD())).longValue();
             } else {
-            	this.outFileId = ((Long) fileDescriptorHandle.get(out.getFD())).longValue();
+            	this.outFileId = ((Long) FILEDESCRIPTOR_HANDLE.get(out.getFD())).longValue();
             }
             
             //registers the stdout
@@ -498,7 +521,7 @@ public final class State implements Cloneable {
             
             //gets the stderr
             FileOutputStream err = null;
-            for (OutputStream os = System.err; (os instanceof FilterOutputStream) || (os instanceof FileOutputStream); os = (OutputStream) fosOutField.get(os)) {
+            for (OutputStream os = System.err; (os instanceof FilterOutputStream) || (os instanceof FileOutputStream); os = (OutputStream) FOS_OUT.get(os)) {
                 if (os instanceof FileOutputStream) {
                     err = (FileOutputStream) os;
                     break;
@@ -506,16 +529,16 @@ public final class State implements Cloneable {
             }//TODO if err == null, set to some backup output file
             
             //gets the stderr identifier
-            if (fileDescriptorHandle == null) {
-            	this.errFileId = ((Integer) fileDescriptorFD.get(err.getFD())).longValue();
+            if (FILEDESCRIPTOR_HANDLE == null) {
+            	this.errFileId = ((Integer) FILEDESCRIPTOR_FD.get(err.getFD())).longValue();
             } else {
-            	this.errFileId = ((Long) fileDescriptorHandle.get(err.getFD())).longValue();
+            	this.errFileId = ((Long) FILEDESCRIPTOR_HANDLE.get(err.getFD())).longValue();
             }
             
             //registers the stderr
             setFile(this.errFileId, err);
-        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | 
-        		 IllegalAccessException | FrozenStateException | IOException e) {
+        } catch (IllegalArgumentException | IllegalAccessException | 
+        		 FrozenStateException | IOException e) {
             throw new UnexpectedInternalException(e);
         }
     }
@@ -3903,10 +3926,6 @@ public final class State implements Cloneable {
         //files
         try {
             o.files = new HashMap<>();
-            final Field fisPath = FileInputStream.class.getDeclaredField("path");
-            fisPath.setAccessible(true);
-            final Field fosPath = FileOutputStream.class.getDeclaredField("path");
-            fosPath.setAccessible(true);
             for (Map.Entry<Long, Object> entry : this.files.entrySet()) {
                 if (entry.getValue() instanceof FileInputStream) {
                     final FileInputStream fisClone;
@@ -3914,7 +3933,7 @@ public final class State implements Cloneable {
                         fisClone = (FileInputStream) entry.getValue();
                     } else {
                         final FileInputStream fisThis = (FileInputStream) entry.getValue();
-                        final String path = (String) fisPath.get(fisThis);
+                        final String path = (String) FIS_PATH.get(fisThis);
                         fisClone = new FileInputStream(path);
                         fisClone.skip(fisThis.getChannel().position());
                     }
@@ -3925,14 +3944,13 @@ public final class State implements Cloneable {
                         fosClone = (FileOutputStream) entry.getValue();
                     } else {
                         final FileOutputStream fosThis = (FileOutputStream) entry.getValue();
-                        final String path = (String) fosPath.get(fosThis);
+                        final String path = (String) FOS_PATH.get(fosThis);
                         fosClone = new FileOutputStream(path);
                     }
                     o.files.put(entry.getKey(), fosClone);
                 }
             }
-        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | 
-                 IllegalAccessException | IOException e) {
+        } catch (IllegalArgumentException | IllegalAccessException | IOException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }

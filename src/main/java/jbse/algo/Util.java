@@ -112,12 +112,12 @@ public final class Util {
     }
 
     /**
-     * Cleanly interrupts the execution of an {@link Algorithm}, 
+     * Cleanly interrupts the execution of an {@link Action}, 
      * and schedules another one as the next to be executed.
      * 
-     * @param algo the next {@link Algorithm} to be executed.
+     * @param algo the next {@link Action} to be executed.
      */
-    public static void continueWith(Action... act)
+    public static void continueWith(Action act)
     throws InterruptException {
         throw InterruptException.mk(act);
     }

@@ -43,7 +43,7 @@ public final class Action_INIT implements Action {
     @Override
     public void exec(State state, ExecutionContext ctx)
     throws DecisionException, ContradictionException, ThreadStackEmptyException, ClasspathException,
-    CannotManageStateException, FailureException, ContinuationException {
+    CannotManageStateException, FailureException, InterruptException {
         try {
             //pushes a frame for the root method (and possibly triggers)
             invokeRootMethod(state, ctx);

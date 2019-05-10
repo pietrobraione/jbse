@@ -11,12 +11,11 @@ import static jbse.bc.Opcodes.OP_INVOKEVIRTUAL;
 import static jbse.bc.Opcodes.OP_IRETURN;
 import static jbse.bc.Opcodes.OP_RETURN;
 
-import java.util.ArrayDeque;
 import java.util.Collection;
 
 import jbse.algo.Algorithm;
-import jbse.algo.ContinuationException;
 import jbse.algo.ExecutionContext;
+import jbse.algo.InterruptException;
 import jbse.algo.Action;
 import jbse.algo.Action_PREINIT;
 import jbse.algo.exc.CannotManageStateException;
@@ -286,26 +285,19 @@ public class Engine implements AutoCloseable {
         	this.preStepSourceRow = (this.preStepStackSize == 0 ? -1 : this.currentState.getSourceRow());
 
         	//steps
-        	Action action;
-        	int continuationCounter = 0;
-        	final ArrayDeque<Action[]> continuations = new ArrayDeque<>();
-        	final ArrayDeque<Integer> continuationCounters = new ArrayDeque<>();
+        	Action action = (atLastPreInitialState ? 
+  				             this.ctx.dispatcher.selectInit() :
+  				             this.ctx.dispatcher.select(this.currentState.getInstruction()));
+        	boolean hasContinuation;
         	do {
-        		action = (atLastPreInitialState ? 
-        				  this.ctx.dispatcher.selectInit() :
-        				  continuations.isEmpty() ? 
-        				  this.ctx.dispatcher.select(this.currentState.getInstruction()) : 
-        				  continuations.peek()[continuationCounter++]);
-        		if (!continuations.isEmpty() && continuationCounter == continuations.peek().length) {
-        			continuations.pop();
-        			continuationCounter = continuationCounters.pop();
-        		}
         		try {
         			action.exec(this.currentState, this.ctx);
-        		} catch (ContinuationException e) {
-        			continuations.push(e.getContinuation());
-        			continuationCounters.push(continuationCounter);
-        			continuationCounter = 0;
+        			hasContinuation = false;
+        		} catch (InterruptException e) {
+        			hasContinuation = e.hasContinuation();
+        			if (hasContinuation) {
+        				action = e.getContinuation();
+        			}
         		} catch (ClasspathException | CannotManageStateException | 
         				ThreadStackEmptyException | ContradictionException | 
         				DecisionException | FailureException | 
@@ -313,7 +305,7 @@ public class Engine implements AutoCloseable {
         			stopCurrentTrace();
         			throw e;
         		} 
-        	} while (!continuations.isEmpty() && continuationCounter < continuations.peek().length);
+        	} while (hasContinuation);
 
         	//possibly gets information about symbolic references that were not expanded
         	if (action instanceof Algorithm<?, ?, ?, ?, ?>) {

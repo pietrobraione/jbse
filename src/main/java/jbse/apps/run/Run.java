@@ -151,6 +151,12 @@ public final class Run {
     /** The time spent during the concretization checks. */
     private long elapsedTimeConcretization = 0;
 
+    /** The timestamp of the end of the pre-initial phase. */
+    private long timestampPreInitialPhaseEnd = 0;
+
+    /** The number of states traversed during the pre-initial phase. */
+    private long preInitialStateCount = 0;
+
     /**
      * Constructor.
      */
@@ -239,6 +245,13 @@ public final class Run {
                 stop = printAndAsk();
             } 
             return stop;
+        }
+        
+        @Override
+        public boolean atInitial() {
+        	Run.this.timestampPreInitialPhaseEnd = System.currentTimeMillis();
+        	Run.this.preInitialStateCount = getEngine().getAnalyzedStates();
+        	return super.atInitial();
         }
         
         @Override
@@ -1050,6 +1063,10 @@ public final class Run {
      */
     private void printFinalStats() {
         final long elapsedTime = this.runner.getStopTime() - this.runner.getStartTime();
+        final long elapsedTimePreInitialPhase = (this.timestampPreInitialPhaseEnd - this.runner.getStartTime());
+        final long elapsedTimeDecisionProcedure = (this.timer == null ? 0 : this.timer.getTime());
+        final long speed = this.engine.getAnalyzedStates() * 1000 / elapsedTime;
+        final long speedPostInitialPhase = (this.engine.getAnalyzedStates() - this.preInitialStateCount) * 1000 / (elapsedTime - elapsedTimePreInitialPhase);
         final long tracesContradictory = 
             this.runner.getTracesTotal() -
             this.tracesSafe - 
@@ -1057,6 +1074,7 @@ public final class Run {
             this.runner.getTracesOutOfScope() -
             this.tracesUnmanageable;
         log(MSG_END_STATES + this.engine.getAnalyzedStates() + ", " +
+        	MSG_END_STATES_PREINITIAL + this.preInitialStateCount + ", " +
             MSG_END_TRACES_TOT + this.runner.getTracesTotal() + ", " +
             MSG_END_TRACES_SAFE + this.tracesSafe + 
             (Run.this.parameters.getDoConcretization() ? 
@@ -1076,11 +1094,12 @@ public final class Run {
             MSG_END_TRACES_VIOLATING_ASSUMPTION + tracesContradictory +
             ", " +
             MSG_END_TRACES_UNMANAGEABLE + this.tracesUnmanageable + ".");
-        final long elapsedTimeDecisionProcedure = (this.timer == null ? 0 : this.timer.getTime());
         log(MSG_END_ELAPSED + Util.formatTime(elapsedTime) + ", " +
-            MSG_END_SPEED + this.engine.getAnalyzedStates() * 1000 / elapsedTime + " states/sec" +
+        	MSG_END_ELAPSED_PREINITIAL + Util.formatTime(elapsedTimePreInitialPhase) + ", " +
+            MSG_END_SPEED + speed + " states/sec, " +
+            MSG_END_SPEED_POSTINITIAL + speedPostInitialPhase + " states/sec" +
             (Run.this.parameters.getDoConcretization() ? 
-             ", " + MSG_END_ELAPSED_CONCRETIZATION + Util.formatTime(elapsedTimeConcretization) + " (" + Util.formatTimePercent(elapsedTimeConcretization, elapsedTime) + " of total)" :
+             ", " + MSG_END_ELAPSED_CONCRETIZATION + Util.formatTime(this.elapsedTimeConcretization) + " (" + Util.formatTimePercent(this.elapsedTimeConcretization, elapsedTime) + " of total)" :
              "") +
             (this.timer == null ? 
              "." :
@@ -1175,17 +1194,26 @@ public final class Run {
     /** Message: elapsed time. */
     private static final String MSG_END_ELAPSED = "Elapsed time: ";
 
-    /** Message: elapsed time. */
+    /** Message: elapsed time during the pre-initial phase. */
+    private static final String MSG_END_ELAPSED_PREINITIAL = "Elapsed pre-initial phase time: ";
+
+    /** Message: elapsed time in the concretization. */
     private static final String MSG_END_ELAPSED_CONCRETIZATION = "Elapsed concretization time: ";
 
-    /** Message: elapsed time. */
+    /** Message: elapsed time in the decision procedure. */
     private static final String MSG_END_DECISION = "Elapsed time in decision procedure: ";
 
     /** Message: average speed. */
     private static final String MSG_END_SPEED = "Average speed: ";
 
+    /** Message: average speed. */
+    private static final String MSG_END_SPEED_POSTINITIAL = "Average post-initial phase speed: ";
+
     /** Message: analyzed states. */
     private static final String MSG_END_STATES = "Analyzed states: ";
+
+    /** Message: analyzed pre-initial states. */
+    private static final String MSG_END_STATES_PREINITIAL = "Analyzed pre-initial states: ";
 
     /** Message: total traces. */
     private static final String MSG_END_TRACES_TOT = "Analyzed traces: ";
