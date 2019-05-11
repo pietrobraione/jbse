@@ -11,8 +11,11 @@ import jbse.val.ReferenceSymbolic;
  * @author Pietro Braione
  * 
  */
-public class LICSRuleExpandsTo extends LICSRule {
+public final class LICSRuleExpandsTo extends LICSRule {
 	private final String className;
+
+	/** The toString version of this rule. */
+	private final String toString;
 
 	/**
 	 * Constructor.
@@ -27,6 +30,7 @@ public class LICSRuleExpandsTo extends LICSRule {
 	public LICSRuleExpandsTo(String originExp, String className) {
 		super(originExp);
 		this.className = className;
+		this.toString = originExp + " expands to " + (this.className == null ? "nothing" : ("instanceof " + this.className));
 	}
 	
 	public boolean satisfies(String className) {
@@ -48,6 +52,6 @@ public class LICSRuleExpandsTo extends LICSRule {
 	
 	@Override
 	public String toString() {
-		return this.originExp + " expands to " + (this.className == null ? "nothing" : ("instanceof " + this.className));
+		return this.toString;
 	}
 }

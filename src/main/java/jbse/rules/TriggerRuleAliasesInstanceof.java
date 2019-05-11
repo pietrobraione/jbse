@@ -14,10 +14,15 @@ import jbse.val.ReferenceSymbolic;
 public class TriggerRuleAliasesInstanceof extends TriggerRuleAliases {
 	/** If {@code null} means aliases nothing. */
 	private final String classAllowed;
+	
+	/** The toString version of this rule. */
+	private final String toString;
 
-	public TriggerRuleAliasesInstanceof(String originExp, String classAllowed, Signature triggerMethod, String triggerParameter) {
-		super(originExp, triggerMethod, triggerParameter);
+	public TriggerRuleAliasesInstanceof(String originExp, String classAllowed, Signature triggerMethodSignature, String triggerMethodParameter) {
+		super(originExp, triggerMethodSignature, triggerMethodParameter);
 		this.classAllowed = classAllowed;
+		this.toString = originExp + " aliases instanceof " + this.classAllowed + " triggers " + 
+		                triggerMethodSignature.toString() + (triggerMethodParameter == null ? "" : (":" + triggerMethodParameter));
 	}
 
 	@Override
@@ -37,7 +42,6 @@ public class TriggerRuleAliasesInstanceof extends TriggerRuleAliases {
 	
 	@Override
 	public String toString() {
-		return this.originExp + " aliases instanceof " + this.classAllowed + " triggers " + 
-				this.getTriggerMethodSignature() + ":" + this.getTriggerMethodParameter();
+		return this.toString;
 	}
 }

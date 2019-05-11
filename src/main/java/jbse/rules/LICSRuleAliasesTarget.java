@@ -1,8 +1,6 @@
 package jbse.rules;
 
-import static jbse.rules.Util.makePatternRelative;
-import static jbse.rules.Util.findAny;
-import static jbse.rules.Util.specializeAny;
+import static jbse.rules.Util.makeOriginPatternRelative;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,13 +16,16 @@ import jbse.val.ReferenceSymbolic;
  * 
  * @author Pietro Braione
  */
-public class LICSRuleAliasesTarget extends LICSRuleAliases {
+public final class LICSRuleAliasesTarget extends LICSRuleAliases {
 	/** Should not be {@code null}. */
 	private final String targetExp;
 	
 	/** When {@code true} only the maximal path matches. */
 	private final boolean hasMax;
 	
+	/** The toString version of this rule. */
+	private final String toString;
+
 	/**
 	 * Constructor.
 	 * 
@@ -38,6 +39,7 @@ public class LICSRuleAliasesTarget extends LICSRuleAliases {
 	 */
 	public LICSRuleAliasesTarget(String originExp, String targetExp) {
 		super(originExp);
+		//TODO check targetExp != null
 		if (targetExp.startsWith(Util.MAX)) {
 			this.targetExp = targetExp.substring(Util.MAX.length()).trim();
 			this.hasMax = true;
@@ -45,18 +47,18 @@ public class LICSRuleAliasesTarget extends LICSRuleAliases {
 			this.targetExp = targetExp;
 			this.hasMax = false;
 		}
+		this.toString = originExp + " aliases target " + (this.hasMax ? Util.MAX : "") + this.targetExp;
 	}
 
 	@Override
 	public boolean satisfies(ReferenceSymbolic ref, Objekt o) {
-		//builds the pattern
-		final String valueForAny = findAny(this.originExp, ref);
-		final String specializedPathAllowedExp = specializeAny(this.targetExp, valueForAny);
-		final Pattern p = makePatternRelative(specializedPathAllowedExp, ref);
-		//checks if the origin of o matches the pattern
-		final Matcher m = p.matcher(o.getOrigin().asOriginString());
-		final boolean retVal = m.matches();
+		//makes the pattern
+		final Pattern p = makeOriginPatternRelative(this.targetExp, ref, this.originPattern);
 		
+		//checks if the origin of o matches the pattern
+		final String originString = o.getOrigin().asOriginString();
+		final Matcher m = p.matcher(originString);
+		final boolean retVal = m.matches();
 		return retVal;
 	}
 	
@@ -67,6 +69,6 @@ public class LICSRuleAliasesTarget extends LICSRuleAliases {
 	
 	@Override
 	public String toString() {
-		return this.originExp + " aliases target " + (this.hasMax ? Util.MAX : "") + this.targetExp;
+		return this.toString;
 	}
 }

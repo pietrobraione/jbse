@@ -10,8 +10,8 @@ import jbse.val.ReferenceSymbolic;
  * @author Pietro Braione
  */
 public abstract class TriggerRuleAliases extends TriggerRule { 
-	TriggerRuleAliases(String originExp, Signature triggerMethod, String triggerParameter) {
-		super(originExp, triggerMethod, triggerParameter);
+	TriggerRuleAliases(String originExp, Signature triggerMethodSignature, String triggerMethodParameter) {
+		super(originExp, triggerMethodSignature, triggerMethodParameter);
 	}
 	
 	/**

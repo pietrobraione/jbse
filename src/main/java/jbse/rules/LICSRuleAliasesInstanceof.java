@@ -12,13 +12,17 @@ import jbse.val.ReferenceSymbolic;
  * 
  * @author Pietro Braione
  */
-public class LICSRuleAliasesInstanceof extends LICSRuleAliases {
+public final class LICSRuleAliasesInstanceof extends LICSRuleAliases {
 	/** {@code null} means "aliases nothing". */
 	private final String classAllowed;
+
+	/** The toString version of this rule. */
+	private final String toString;
 
 	public LICSRuleAliasesInstanceof(String originExp, String classAllowed) {
 		super(originExp);
 		this.classAllowed = classAllowed;
+		this.toString = originExp + " aliases " + (this.classAllowed == null ? "nothing" : ("instanceof " + this.classAllowed));
 	}
 
 	@Override
@@ -46,6 +50,6 @@ public class LICSRuleAliasesInstanceof extends LICSRuleAliases {
 
 	@Override
 	public String toString() {
-		return this.originExp + " aliases " + (this.classAllowed == null ? "nothing" : ("instanceof " + this.classAllowed));
+		return this.toString;
 	}
 }

@@ -22,38 +22,43 @@ public final class Util {
 	static final String REGEX_ENDLINE = "{EOL}";
 
 	/**
-	 * Makes a regular expression pattern from an origin expression
+	 * Makes a regular expression pattern from an absolute origin expression
 	 * in a rule.
 	 * 
-	 * @param s a {@link String}, the origin expression of a rule.
-	 * @return a {@link Pattern} for {@code s} against which the 
-	 *         origin strings contained in the objects can match.
+	 * @param originExpAbsolute a {@link String}, the absolute origin expression.
+	 * @return a {@link Pattern} for {@code originExpAbsolute}.
 	 */
-	public static Pattern makeOriginPattern(String s) {
-		return Pattern.compile(translateToOriginPattern(s));
+	static Pattern makeOriginPatternAbsolute(String originExpAbsolute) {
+		return Pattern.compile(translateToOriginPatternString(originExpAbsolute));
 	}
 	
 	/**
 	 * Makes a {@link Pattern} for a relative origin expression in 
 	 * a rule.
 	 * 
-	 * @param relativeExp a {@link String}, the relative origin expression 
-	 *        in the rule.
-	 * @param origin a {@link ReferenceSymbolic}, the origin w.r.t. 
-	 *        we want to make {@code s} absolute.
-	 * @return a {@link Pattern} for {@code s} where all the occurrences 
-	 *         of {REF} and {UP} are resolved using {@code origin}.
+	 * @param originExpRelative a {@link String}, the relative origin 
+	 *        expression.
+	 * @param origin a {@link ReferenceSymbolic}, the origin that 
+	 *        all the occurrences of {$R_ANY} and {$REF} in 
+	 *        {@code originExpRelative} refer to.
+	 * @param originPattern a {@link Pattern} that is used to detect 
+	 *        the {$R_ANY} in {@code originExpRelative}; {@code originExpRelative}
+	 *        must match it, and the first capture group will be used as
+	 *        {$R_ANY}.
+	 * @return a {@link Pattern} for {@code originExpRelative}.
 	 */
-	static Pattern makePatternRelative(String relativeExp, ReferenceSymbolic origin) {
-		return Pattern.compile(translateToOriginPattern(translateRelativeToAbsolute(relativeExp, origin.asOriginString())));
+	static Pattern makeOriginPatternRelative(String originExpRelative, ReferenceSymbolic origin, Pattern originPattern) {
+		final String valueForAny = findAny(originPattern, origin);
+		final String specializedOriginExpRelative = specializeAny(originExpRelative, valueForAny);
+		return makeOriginPatternAbsolute(translateOriginExpressionRelativeToAbsolute(specializedOriginExpRelative, origin));
 	}
 	
 	/* TODO this is really ugly, but it works with the current 
 	 * implementation of origins as strings. Improve it later to a 
 	 * separate language. 
 	 */
-	private static String translateToOriginPattern(String absoluteExp) {
-		String retVal = absoluteExp.replace(".", "\\."); 
+	private static String translateToOriginPatternString(String originExpAbsolute) {
+		String retVal = originExpAbsolute.replace(".", "\\."); 
 		retVal = retVal.replace(ANY, "(.*)");
 		retVal = retVal.replace(REGEX_ALLCHARS, "."); 
 		retVal = retVal.replace("{", "\\{"); //this is for {ROOT}
@@ -68,11 +73,13 @@ public final class Util {
 	/* TODO this also is really ugly, and it does not work with 
 	 * multiple candidate origins for the same object.
 	 */
-	private static String translateRelativeToAbsolute(String relativeExp, String originString) {
-		// replaces REF with ref.origin
-		String retVal = relativeExp.replace(REF, originString);
+	private static String translateOriginExpressionRelativeToAbsolute(String originExpRelative, ReferenceSymbolic origin) {
+		final String originString = origin.asOriginString();
 		
-		// eats all /whatever/UP pairs 
+		//replaces {$REF} with ref.origin
+		String retVal = originExpRelative.replace(REF, originString);
+		
+		//eats all /whatever/UP pairs 
 		String retValOld;
 		do {
 			retValOld = retVal;
@@ -81,9 +88,8 @@ public final class Util {
 		return retVal;
 	}
 	
-	static String findAny(String pattern, ReferenceSymbolic origin) {
-		final Pattern p = makeOriginPattern(pattern);
-		final Matcher m = p.matcher(origin.asOriginString());
+	static String findAny(Pattern originPattern, ReferenceSymbolic origin) {
+		final Matcher m = originPattern.matcher(origin.asOriginString());
 		if (m.matches() && m.pattern().pattern().startsWith("(.*)") && m.groupCount() >= 1) {
 			final String valueForAny = m.group(1);
 			return valueForAny;

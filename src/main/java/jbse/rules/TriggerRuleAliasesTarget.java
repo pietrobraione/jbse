@@ -1,8 +1,6 @@
 package jbse.rules;
 
-import static jbse.rules.Util.makePatternRelative;
-import static jbse.rules.Util.findAny;
-import static jbse.rules.Util.specializeAny;
+import static jbse.rules.Util.makeOriginPatternRelative;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,34 +16,39 @@ import jbse.val.ReferenceSymbolic;
  * 
  * @author Pietro Braione
  */
-public class TriggerRuleAliasesTarget extends TriggerRuleAliases {
+public final class TriggerRuleAliasesTarget extends TriggerRuleAliases {
 	/** Should not be {@code null}. */
-	private final String pathAllowedExp;
+	private final String targetExp;
 	
 	/** When {@code true} only the maximal path matches. */
 	private final boolean hasMax;
 	
-	public TriggerRuleAliasesTarget(String originExp, String pathAllowedExp, Signature triggerMethod, String triggerParameter) {
-		super(originExp, triggerMethod, triggerParameter);
-		if (pathAllowedExp != null && pathAllowedExp.startsWith(Util.MAX)) {
-			this.pathAllowedExp = pathAllowedExp.substring(Util.MAX.length());
+	/** The toString version of this rule. */
+	private final String toString;
+
+	public TriggerRuleAliasesTarget(String originExp, String targetExp, Signature triggerMethodSignature, String triggerMethodParameter) {
+		super(originExp, triggerMethodSignature, triggerMethodParameter);
+		//TODO check targetExp != null
+		if (targetExp.startsWith(Util.MAX)) {
+			this.targetExp = targetExp.substring(Util.MAX.length()).trim();
 			this.hasMax = true;
 		} else {
-			this.pathAllowedExp = pathAllowedExp;
+			this.targetExp = targetExp;
 			this.hasMax = false;
 		}
+		this.toString = originExp + " aliases target " + (this.hasMax ? Util.MAX : "") + this.targetExp + " triggers " + 
+		                triggerMethodSignature.toString() + (triggerMethodParameter == null ? "" : (":" + triggerMethodParameter));
 	}
 
 	@Override
 	public boolean satisfies(ReferenceSymbolic ref, Objekt o) {
-		//builds the pattern
-		final String valueForAny = findAny(this.originExp, ref);
-		final String specializedPathAllowedExp = specializeAny(this.pathAllowedExp, valueForAny);
-		final Pattern p = makePatternRelative(specializedPathAllowedExp, ref);
-		//checks if the origin of o matches the pattern
-		final Matcher m = p.matcher(o.getOrigin().asOriginString());
-		final boolean retVal = m.matches();
+		//makes the pattern
+		final Pattern p = makeOriginPatternRelative(this.targetExp, ref, this.originPattern);
 		
+		//checks if the origin of o matches the pattern
+		final String originString = o.getOrigin().asOriginString();
+		final Matcher m = p.matcher(originString);
+		final boolean retVal = m.matches();
 		return retVal;
 	}
 	
@@ -56,7 +59,6 @@ public class TriggerRuleAliasesTarget extends TriggerRuleAliases {
 	
 	@Override
 	public String toString() {
-		return this.originExp + " aliases target " + (this.hasMax ? Util.MAX : "") + this.pathAllowedExp + " triggers " + 
-				this.getTriggerMethodSignature() + ":" + this.getTriggerMethodParameter();
+		return this.toString;
 	}
 }

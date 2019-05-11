@@ -9,13 +9,19 @@ import jbse.val.ReferenceSymbolic;
  * @author Pietro Braione
  * 
  */
-public class TriggerRuleExpandsTo extends TriggerRule {
+public final class TriggerRuleExpandsTo extends TriggerRule {
 	/** Should not be {@code null}. */
 	private final String className;
 
-	public TriggerRuleExpandsTo(String originExp, String className, Signature triggerMethod, String triggerParameter) {
-		super(originExp, triggerMethod, triggerParameter);
+	/** The toString version of this rule. */
+	private final String toString;
+
+	public TriggerRuleExpandsTo(String originExp, String className, Signature triggerMethodSignature, String triggerMethodParameter) {
+		super(originExp, triggerMethodSignature, triggerMethodParameter);
+		//TODO check className != null
 		this.className = className;
+		this.toString = originExp + " expands to instanceof " + this.className + " triggers " + 
+		                triggerMethodSignature.toString() + (triggerMethodParameter == null ? "" : (":" + triggerMethodParameter));
 	}
 	
 	public boolean satisfies(String className) {
@@ -34,7 +40,6 @@ public class TriggerRuleExpandsTo extends TriggerRule {
 	
 	@Override
 	public String toString() {
-		return this.originExp + " expands to instanceof " + this.className + " triggers " + 
-				this.getTriggerMethodSignature() + ":" + this.getTriggerMethodParameter();
+		return this.toString;
 	}
 }

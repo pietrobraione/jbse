@@ -1,8 +1,6 @@
 package jbse.rules;
 
-import static jbse.rules.Util.findAny;
-import static jbse.rules.Util.makePatternRelative;
-import static jbse.rules.Util.specializeAny;
+import static jbse.rules.Util.makeOriginPatternRelative;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -55,18 +53,11 @@ public abstract class TriggerRule extends Rule {
 		}
 		
 		//makes the pattern
-		final String specializedTriggerExp;
-		if (this.originExp == null) {
-			specializedTriggerExp = this.getTriggerMethodParameter();
-		} else {
-			final String valueForAny = findAny(this.originExp, ref);
-			specializedTriggerExp = specializeAny(this.getTriggerMethodParameter(), valueForAny);
-		}
-		final Pattern p = makePatternRelative(specializedTriggerExp, ref);
+		final Pattern p = makeOriginPatternRelative(this.triggerMethodParameter, ref, this.originPattern);
 
-		//checks o's origin matches the resulting pattern
-		final ReferenceSymbolic origin = o.getOrigin();
-		final Matcher m = p.matcher(origin.asOriginString());
+		//checks if the origin of o matches the pattern
+		final String originString = o.getOrigin().asOriginString();
+		final Matcher m = p.matcher(originString);
 		final boolean retVal = m.matches();
 		return retVal;
 	}

@@ -9,7 +9,10 @@ import jbse.val.ReferenceSymbolic;
  * 
  * @author Pietro Braione
  */
-public class LICSRuleNull extends LICSRule {
+public final class LICSRuleNull extends LICSRule {
+	/** The toString version of this rule. */
+	private final String toString;
+
 	/**
 	 * Constructor.
 	 * 
@@ -20,10 +23,11 @@ public class LICSRuleNull extends LICSRule {
 	 */
 	public LICSRuleNull(String originExp) {
 		super(originExp);
+		this.toString = originExp + " null";
 	}
 
 	@Override
 	public String toString() {
-		return this.originExp + " null";
+		return this.toString;
 	}
 }
