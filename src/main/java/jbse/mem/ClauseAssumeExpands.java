@@ -12,7 +12,7 @@ import jbse.val.ReferenceSymbolic;
  */
 public class ClauseAssumeExpands extends ClauseAssumeReferenceSymbolic {
 	private final long heapPosition;
-	private final Objekt object;
+	private final HeapObjekt object;
 	
 	/**
 	 * Constructor.
@@ -20,9 +20,9 @@ public class ClauseAssumeExpands extends ClauseAssumeReferenceSymbolic {
 	 * @param r a {@link ReferenceSymbolic}. It must be resolved to a fresh object.
 	 * @param heapPosition an {@code int}, the heap position. It must be 
 	 *        the position of a fresh (not yet aliased) expansion object. 
-	 * @param object the expansion {@link Objekt}.
+	 * @param object the expansion {@link HeapObjekt}.
 	 */
-	public ClauseAssumeExpands(ReferenceSymbolic r, long heapPosition, Objekt object) { 
+	public ClauseAssumeExpands(ReferenceSymbolic r, long heapPosition, HeapObjekt object) { 
 		super(r);
 		this.heapPosition = heapPosition;
 		this.object = object.clone(); //safety copy
@@ -37,7 +37,7 @@ public class ClauseAssumeExpands extends ClauseAssumeReferenceSymbolic {
 		return this.heapPosition;
 	}
 
-	public Objekt getObjekt() { 
+	public HeapObjekt getObjekt() { 
 		return this.object.clone(); //preserves the safety copy 
 	}
 	

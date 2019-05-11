@@ -43,7 +43,7 @@ import jbse.val.exc.InvalidTypeException;
  *  
  * @author Pietro Braione
  */
-public final class ArrayImpl extends ObjektImpl implements Array {
+public final class ArrayImpl extends HeapObjektImpl implements Array {
     /*Fields*/
 
     /** The conventional term used for indicating the array's index. */
@@ -476,7 +476,7 @@ public final class ArrayImpl extends ObjektImpl implements Array {
     }
     
     @Override
-    ObjektWrapper<? extends ObjektImpl> makeWrapper(Heap destinationHeap, long destinationPosition) {
+    ArrayWrapper makeWrapper(Heap destinationHeap, long destinationPosition) {
     	return new ArrayWrapper(destinationHeap, destinationPosition, this);
     }
 

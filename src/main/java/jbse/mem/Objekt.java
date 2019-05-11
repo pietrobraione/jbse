@@ -19,7 +19,9 @@ public interface Objekt extends Cloneable {
     /**
      * Returns the class of this {@link Objekt}.
      * 
-     * @return a {@link ClassFile}.
+     * @return a {@link ClassFile} or {@code null}
+     *         if this object has no class (i.e., it is
+     *         in the static store).
      */
     ClassFile getType();
 

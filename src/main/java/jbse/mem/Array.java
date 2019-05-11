@@ -19,14 +19,14 @@ import jbse.val.Value;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Class implementing an array. Upon access it returns a 
+ * Interface for arrays. Upon access it returns a 
  * collection of {@link AccessOutcome}s, 
  * associating {@link Expression}s on the array index to 
  * the outcome of an array access when the access index satisfies it.
  *  
  * @author Pietro Braione
  */
-public interface Array extends Objekt {
+public interface Array extends HeapObjekt {
     /** 
      * The {@link String} identifier of the {@link Term} used to
      * represent an {@link Array}'s index.

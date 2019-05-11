@@ -1,5 +1,16 @@
 package jbse.mem;
 
+import java.util.Collection;
+import java.util.Map;
+
+import jbse.bc.ClassFile;
+import jbse.bc.Signature;
+import jbse.common.exc.InvalidInputException;
+import jbse.val.HistoryPoint;
+import jbse.val.Primitive;
+import jbse.val.ReferenceSymbolic;
+import jbse.val.Value;
+
 /**
  * Class that wraps an {@link ObjektImpl}, implementing 
  * copy-on-write.
@@ -9,8 +20,6 @@ package jbse.mem;
  * @param <T> the type of the wrapped {@link ObjektImpl}.
  */
 abstract class ObjektWrapper<T extends ObjektImpl> implements Objekt {
-	private final Heap destinationHeap;
-	private final long destinationPosition;
 	private T delegate;
 	private boolean isDelegateAClone;
 
@@ -24,33 +33,110 @@ abstract class ObjektWrapper<T extends ObjektImpl> implements Objekt {
 	 * @param delegate the initial delegate, the {@link ObjektImpl} that must be 
 	 *        cloned upon writing.
 	 */
-    protected ObjektWrapper(Heap destinationHeap, long destinationPosition, T delegate) {
+    protected ObjektWrapper(T delegate) {
     	this.delegate = delegate;
-    	this.destinationHeap = destinationHeap;
-    	this.destinationPosition = destinationPosition;
     	this.isDelegateAClone = false;
     }
     
-    @SuppressWarnings("unchecked")
-	protected final void possiblyCloneDelegate() {
-    	//does nothing if the delegate is already a clone
-    	if (this.isDelegateAClone) {
-    		return;
-    	}
-    	//otherwise, clones the delegate and puts it in the heap
-    	this.delegate = (T) this.delegate.clone();
-    	this.destinationHeap.set(this.destinationPosition, this.delegate);
-    	this.isDelegateAClone = true;
-    }
-    
-    protected final long getDestinationPosition() {
-    	return this.destinationPosition;
+    protected final void setDelegate(T delegate) {
+    	this.delegate = delegate;
     }
     
     protected final T getDelegate() {
     	return this.delegate;
     }
     
+    protected final boolean isDelegateAClone() {
+    	return this.isDelegateAClone;
+    }
+    
+    protected final void setDelegateIsAClone() {
+    	this.isDelegateAClone = true;
+    }
+    
+    protected abstract void possiblyCloneDelegate();
+    
+	@Override
+	public final ClassFile getType() {
+		return getDelegate().getType();
+	}
+
+	@Override
+	public final ReferenceSymbolic getOrigin() {
+		return getDelegate().getOrigin();
+	}
+
+	@Override
+	public final HistoryPoint historyPoint() {
+		return getDelegate().historyPoint();
+	}
+
+	@Override
+	public final boolean isSymbolic() {
+		return getDelegate().isSymbolic();
+	}
+
+	public abstract void makeSymbolic(ReferenceSymbolic origin) throws InvalidInputException;
+
+	@Override
+	public final void setIdentityHashCode(Primitive identityHashCode) {
+		possiblyCloneDelegate();
+		getDelegate().setIdentityHashCode(identityHashCode);
+	}
+
+	@Override
+	public final Primitive getIdentityHashCode() {
+		return getDelegate().getIdentityHashCode();
+	}
+
+	@Override
+	public final Collection<Signature> getStoredFieldSignatures() {
+		return getDelegate().getStoredFieldSignatures();
+	}
+
+	@Override
+	public final boolean hasSlot(int slot) {
+		return getDelegate().hasSlot(slot);
+	}
+
+	@Override
+	public final Value getFieldValue(Signature sig) {
+		return getDelegate().getFieldValue(sig);
+	}
+
+	@Override
+	public final Value getFieldValue(String fieldName, String fieldClass) {
+		return getDelegate().getFieldValue(fieldName, fieldClass);
+	}
+
+	@Override
+	public final Value getFieldValue(int slot) {
+		return getDelegate().getFieldValue(slot);
+	}
+
+	@Override
+	public final int getFieldSlot(Signature field) {
+		return getDelegate().getFieldSlot(field);
+	}
+
+	@Override
+	public final void setFieldValue(Signature field, Value item) {
+		possiblyCloneDelegate();
+		getDelegate().setFieldValue(field, item);
+	}
+
+	@Override
+	public final void setFieldValue(int slot, Value item) {
+		possiblyCloneDelegate();
+		getDelegate().setFieldValue(slot, item);
+	}
+
+	@Override
+	public final Map<Signature, Variable> fields() {
+		possiblyCloneDelegate(); //the returned Variables are mutable
+		return getDelegate().fields();
+	}
+	
     @Override
     public abstract Objekt clone();
 }

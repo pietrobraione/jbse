@@ -3,16 +3,12 @@ package jbse.mem;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
-import jbse.bc.ClassFile;
-import jbse.bc.Signature;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.val.Calculator;
-import jbse.val.HistoryPoint;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.ReferenceSymbolic;
@@ -25,7 +21,7 @@ import jbse.val.exc.InvalidTypeException;
  * Class that wraps an array in the heap, implementing 
  * copy-on-write.
  */
-final class ArrayWrapper extends ObjektWrapper<ArrayImpl> implements Array {
+final class ArrayWrapper extends HeapObjektWrapper<ArrayImpl> implements Array {
     /**
      * Constructor.
      * 
@@ -41,87 +37,9 @@ final class ArrayWrapper extends ObjektWrapper<ArrayImpl> implements Array {
     }
 
     @Override
-    public ClassFile getType() {
-        return getDelegate().getType();
-    }
-
-    @Override
-    public ReferenceSymbolic getOrigin() {
-        return getDelegate().getOrigin();
-    }
-
-    @Override
-    public HistoryPoint historyPoint() {
-        return getDelegate().historyPoint();
-    }
-
-    @Override
-    public boolean isSymbolic() {
-        return getDelegate().isSymbolic();
-    }
-
-    @Override
     public void makeSymbolic(ReferenceSymbolic origin) throws InvalidInputException {
         possiblyCloneDelegate();
         getDelegate().makeSymbolic(origin);
-    }
-
-    @Override
-    public void setIdentityHashCode(Primitive identityHashCode) {
-        possiblyCloneDelegate();
-        getDelegate().setIdentityHashCode(identityHashCode);
-    }
-
-    @Override
-    public Primitive getIdentityHashCode() {
-        return getDelegate().getIdentityHashCode();
-    }
-
-    @Override
-    public Collection<Signature> getStoredFieldSignatures() {
-        return getDelegate().getStoredFieldSignatures();
-    }
-
-    @Override
-    public boolean hasSlot(int slot) {
-        return getDelegate().hasSlot(slot);
-    }
-
-    @Override
-    public Value getFieldValue(Signature sig) {
-        return getDelegate().getFieldValue(sig);
-    }
-
-    @Override
-    public Value getFieldValue(String fieldName, String fieldClass) {
-        return getDelegate().getFieldValue(fieldName, fieldClass);
-    }
-
-    @Override
-    public Value getFieldValue(int slot) {
-        return getDelegate().getFieldValue(slot);
-    }
-
-    @Override
-    public int getFieldSlot(Signature field) {
-        return getDelegate().getFieldSlot(field);
-    }
-
-    @Override
-    public void setFieldValue(Signature field, Value item) {
-        possiblyCloneDelegate();
-        getDelegate().setFieldValue(field, item);
-    }
-
-    @Override
-    public void setFieldValue(int slot, Value item) {
-        possiblyCloneDelegate();
-        getDelegate().setFieldValue(slot, item);
-    }
-
-    @Override
-    public Map<Signature, Variable> fields() {
-        return getDelegate().fields();
     }
 
     @Override

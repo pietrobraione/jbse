@@ -71,10 +71,10 @@ final class PathCondition implements Cloneable {
      *          must be {@code r != null} or the method has no effect.
      * @param heapPosition the position in the heap of the object to 
      *        which {@code reference} is expanded.
-     * @param object the {@link Objekt} to which {@code reference} 
+     * @param object the {@link HeapObjekt} to which {@code reference} 
      *        is expanded.
      */
-    void addClauseAssumeExpands(ReferenceSymbolic reference, long heapPosition, Objekt object) {
+    void addClauseAssumeExpands(ReferenceSymbolic reference, long heapPosition, HeapObjekt object) {
         this.clauses.add(new ClauseAssumeExpands(reference, heapPosition, object));
         this.referenceResolutionMap.put(reference, heapPosition);
 

@@ -109,8 +109,6 @@ public abstract class ObjektImpl implements Objekt {
         //this.hashCode must be initialized by means of setters
     }
     
-    abstract ObjektWrapper<? extends ObjektImpl> makeWrapper(Heap destinationHeap, long destinationPosition);
-
     @Override
     public final ClassFile getType() {
         return this.classFile;
@@ -148,7 +146,6 @@ public abstract class ObjektImpl implements Objekt {
 
     @Override
     public final Primitive getIdentityHashCode() {
-        //TODO check that this.identityHashCode is not null.
         return this.identityHashCode;
     }
 

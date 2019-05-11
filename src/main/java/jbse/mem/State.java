@@ -1681,7 +1681,7 @@ public final class State implements Cloneable {
             } else if (classFile.isSubclass(cf_JAVA_THREAD)) {
                 return new InstanceImpl_JAVA_THREAD(calc, classFile, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
             } else {
-                return new InstanceImpl(calc, false, classFile, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
+                return new InstanceImpl_DEFAULT(calc, false, classFile, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
             }
         } catch (InvalidTypeException | InvalidInputException e) {
             //this should never happen
@@ -1840,7 +1840,7 @@ public final class State implements Cloneable {
         if (calc == null || classFile == null || origin == null) {
             throw new InvalidInputException("Invoked method " + getClass().getName() + ".createObjectSymbolic with null Calculator calc or ClassFile classFile or ReferenceSymbolic origin parameter.");
         }
-        final ObjektImpl myObj;
+        final HeapObjektImpl myObj;
         if (classFile.isArray()) {
             try {
                 final ArrayImpl backingArray = newArraySymbolic(calc, classFile, origin, true);
@@ -1910,14 +1910,14 @@ public final class State implements Cloneable {
     	return false;
     }
 
-    private InstanceImpl newInstanceSymbolic(Calculator calc, ClassFile classFile, ReferenceSymbolic origin) 
+    private InstanceImpl_DEFAULT newInstanceSymbolic(Calculator calc, ClassFile classFile, ReferenceSymbolic origin) 
     throws CannotAssumeSymbolicObjectException, InvalidTypeException, InvalidInputException {
         if (cannotExecuteSymbolically(classFile)) {
             throw new CannotAssumeSymbolicObjectException("JBSE does not allow to execute symbolically the methods of class " + classFile.getClassName() + ".");
         }
         final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
-        final InstanceImpl obj = new InstanceImpl(calc, true, classFile, origin, origin.historyPoint(), numOfStaticFields, fieldsSignatures);
+        final InstanceImpl_DEFAULT obj = new InstanceImpl_DEFAULT(calc, true, classFile, origin, origin.historyPoint(), numOfStaticFields, fieldsSignatures);
         try {
         	initWithSymbolicValues(obj);
         } catch (NullPointerException e) {
@@ -3127,7 +3127,7 @@ public final class State implements Cloneable {
         
     	possiblyReset();
         final long objectPosition = createObjectSymbolic(calc, classFile, referenceSymbolic);
-        final Objekt object = this.heap.getObject(objectPosition);
+        final HeapObjekt object = this.heap.getObject(objectPosition);
         this.pathCondition.addClauseAssumeExpands(referenceSymbolic, objectPosition, object);
         ++this.nPushedClauses;
     }
@@ -3161,7 +3161,7 @@ public final class State implements Cloneable {
         if (resolved(referenceSymbolic)) {
             throw new ContradictionException("Attempted to invoke State.assumeExpandsAlreadyPresent with an already resolved referenceSymbolic.");
         }
-        final Objekt freshObject = this.heap.getObject(freshObjectPosition);
+        final HeapObjekt freshObject = this.heap.getObject(freshObjectPosition);
         if (freshObject == null) {
             throw new InvalidInputException("Attempted to invoke State.assumeExpandsAlreadyPresent with a freshObjectPosition where no object is stored.");
         }
@@ -3666,7 +3666,7 @@ public final class State implements Cloneable {
             if (c instanceof ClauseAssumeExpands) {
                 final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
                 final long oPos = cExp.getHeapPosition();
-                final Objekt o = cExp.getObjekt(); //note that the getter produces a safety copy
+                final HeapObjekt o = cExp.getObjekt(); //note that the getter produces a safety copy
                 this.heap.set(oPos, o);
             } else if (c instanceof ClauseAssumeClassInitialized) {
                 final ClauseAssumeClassInitialized cCl = (ClauseAssumeClassInitialized) c;
@@ -3903,7 +3903,7 @@ public final class State implements Cloneable {
     }
     
     @SuppressWarnings("restriction")
-	private State deepCopyHeapExcluded() {
+	private State deepCopyHeapAndStaticAreaExcluded() {
         final State o;
         try {
             o = (State) super.clone();
@@ -4041,9 +4041,6 @@ public final class State implements Cloneable {
         //classHierarchy
         o.classHierarchy = o.classHierarchy.clone();
 
-        //staticStore
-        o.staticMethodArea = o.staticMethodArea.clone();
-
         //pathCondition
         o.pathCondition = o.pathCondition.clone();
 
@@ -4064,11 +4061,14 @@ public final class State implements Cloneable {
     }
     
     public State lazyClone() {
-    	final State o = deepCopyHeapExcluded();
+    	final State o = deepCopyHeapAndStaticAreaExcluded();
     	
         //heap
         o.heap = o.heap.lazyClone();
         
+        //staticMethodArea
+        o.staticMethodArea = o.staticMethodArea.lazyClone();
+
         return o;
     }
     
@@ -4125,11 +4125,14 @@ public final class State implements Cloneable {
 
     @Override
     public State clone() {
-        final State o = deepCopyHeapExcluded();
+        final State o = deepCopyHeapAndStaticAreaExcluded();
 
         //heap
         o.heap = o.heap.clone();
-                
+
+        //staticMethodArea
+        o.staticMethodArea = o.staticMethodArea.clone();
+
         return o;
     }
 }

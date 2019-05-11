@@ -27,7 +27,7 @@ public final class InstanceImpl_JAVA_THREAD extends InstanceImpl implements Inst
     }
     
     @Override
-    ObjektWrapper<? extends ObjektImpl> makeWrapper(Heap destinationHeap, long destinationPosition) {
+    InstanceWrapper_JAVA_THREAD makeWrapper(Heap destinationHeap, long destinationPosition) {
     	return new InstanceWrapper_JAVA_THREAD(destinationHeap, destinationPosition, this);
     }
     

@@ -1,5 +1,6 @@
 package jbse.mem;
 
+import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.val.Calculator;
 import jbse.val.HistoryPoint;
@@ -31,9 +32,8 @@ public final class KlassImpl extends ObjektImpl implements Klass {
         this.initialized = false;
     }
 
-	@Override
-	ObjektWrapper<? extends ObjektImpl> makeWrapper(Heap destinationHeap, long destinationPosition) {
-		return null;
+	KlassWrapper makeWrapper(StaticMethodArea destinationStaticArea, ClassFile classFile) {
+		return new KlassWrapper(destinationStaticArea, classFile, this);
 	}
 
     @Override

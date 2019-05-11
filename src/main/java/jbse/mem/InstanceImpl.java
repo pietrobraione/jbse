@@ -10,9 +10,9 @@ import jbse.val.ReferenceSymbolic;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Class that implements {@link Instance}.
+ * Abstract superclass for the implementation of all kind of {@link Instance}s.
  */
-public class InstanceImpl extends ObjektImpl implements Instance {
+public abstract class InstanceImpl extends HeapObjektImpl implements Instance {
     /**
      * Constructor.
      * 
@@ -42,12 +42,10 @@ public class InstanceImpl extends ObjektImpl implements Instance {
     }
 
 	@Override
-	ObjektWrapper<? extends ObjektImpl> makeWrapper(Heap destinationHeap, long destinationPosition) {
-		return new InstanceWrapper(destinationHeap, destinationPosition, this);
-	}
+	abstract InstanceWrapper<? extends InstanceImpl> makeWrapper(Heap destinationHeap, long destinationPosition);
     
     @Override
-    public String toString() {
+    public final String toString() {
         final StringBuilder buf = new StringBuilder();
         buf.append("[Class:");
         buf.append(this.classFile);

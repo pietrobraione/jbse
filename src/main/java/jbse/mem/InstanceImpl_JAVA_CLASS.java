@@ -27,7 +27,7 @@ public final class InstanceImpl_JAVA_CLASS extends InstanceImpl implements Insta
     }
     
     @Override
-    ObjektWrapper<? extends ObjektImpl> makeWrapper(Heap destinationHeap, long destinationPosition) {
+    InstanceWrapper_JAVA_CLASS makeWrapper(Heap destinationHeap, long destinationPosition) {
     	return new InstanceWrapper_JAVA_CLASS(destinationHeap, destinationPosition, this);
     }
 

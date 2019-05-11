@@ -26,7 +26,7 @@ public final class InstanceImpl_JAVA_CLASSLOADER extends InstanceImpl implements
     }
     
     @Override
-    ObjektWrapper<? extends ObjektImpl> makeWrapper(Heap destinationHeap, long destinationPosition) {
+    InstanceWrapper_JAVA_CLASSLOADER makeWrapper(Heap destinationHeap, long destinationPosition) {
     	return new InstanceWrapper_JAVA_CLASSLOADER(destinationHeap, destinationPosition, this);
     }
 
