@@ -11,15 +11,12 @@ package jbse.algo;
  *
  */
 public class InterruptException extends Exception {
-	private static final InterruptException INSTANCE = new InterruptException();
     public static InterruptException mk() { 
-    	INSTANCE.continuation = null;
-        return INSTANCE; 
+        return new InterruptException(); 
     }
 
     public static InterruptException mk(Action continuation) {
-    	INSTANCE.continuation = continuation;
-        return INSTANCE; 
+        return new InterruptException(continuation); 
     }
 
     private Action continuation = null;
@@ -37,6 +34,13 @@ public class InterruptException extends Exception {
      */
     private InterruptException() { 
         this.continuation = null;
+    }
+
+    /**
+     * Do not instantiate directly!
+     */
+    private InterruptException(Action continuation) { 
+        this.continuation = continuation;
     }
 
     /**
