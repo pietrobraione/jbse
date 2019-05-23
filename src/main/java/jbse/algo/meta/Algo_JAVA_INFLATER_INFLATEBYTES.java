@@ -141,11 +141,11 @@ public final class Algo_JAVA_INFLATER_INFLATEBYTES extends Algo_INVOKEMETA_Nonbr
             final Reference bufReference = (Reference) this._inflater.getFieldValue(JAVA_INFLATER_BUF);
             if (state.isNull(bufReference)) {
                 //method invoked on a closed inflater
-                throw new UndefinedResultException("The byte[] this.buf field of 'this' parameter to invocation of method java.io.FileInputStream.readBytes is null.");
+                throw new UndefinedResultException("The byte[] this.buf field of 'this' parameter to invocation of method java.util.zip.Inflater.inflateBytes is null.");
             }
             final Array _inBuf = (Array) state.getObject(bufReference);
             if (!_inBuf.isSimple()) {
-                throw new SymbolicValueNotAllowedException("The byte[] this.buf field of 'this' parameter to invocation of method java.io.FileInputStream.readBytes is not simple.");
+                throw new SymbolicValueNotAllowedException("The byte[] this.buf field of 'this' parameter to invocation of method java.util.zip.Inflater.inflateBytes is not simple.");
             }
             
             //builds a buffer

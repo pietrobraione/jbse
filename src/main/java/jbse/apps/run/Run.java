@@ -150,6 +150,9 @@ public final class Run {
 
     /** The time spent during the concretization checks. */
     private long elapsedTimeConcretization = 0;
+    
+    /** Whether we are still in the pre-initial phase. */
+    private boolean atPreInitialPhase = true;
 
     /** The timestamp of the end of the pre-initial phase. */
     private long timestampPreInitialPhaseEnd = 0;
@@ -249,6 +252,7 @@ public final class Run {
         
         @Override
         public boolean atInitial() {
+        	Run.this.atPreInitialPhase = false;
         	Run.this.timestampPreInitialPhaseEnd = System.currentTimeMillis();
         	Run.this.preInitialStateCount = getEngine().getAnalyzedStates();
         	return super.atInitial();
@@ -284,6 +288,12 @@ public final class Run {
         @Override
         public void atEnd() {
             Run.this.emitEpilogue();
+            if (Run.this.atPreInitialPhase) {
+            	//this means that an exception was raised during the
+            	//pre-initial phase: fix the stats
+            	Run.this.timestampPreInitialPhaseEnd = System.currentTimeMillis();
+            	Run.this.preInitialStateCount = getEngine().getAnalyzedStates();
+            }
             super.atEnd();
         }
 
@@ -370,7 +380,7 @@ public final class Run {
             //if a resolved reference has not been expanded, prints a warning
             if (Run.this.parameters.getShowWarnings() && 
                 getEngine().someReferenceNotExpanded()) {
-                Run.this.log(currentState.getIdentifier() + " " +
+                Run.this.log(currentState.getIdentifier() + "[" + currentState.getSequenceNumber() + "]" + " " +
                              getEngine().getNonExpandedReferencesOrigins() +
                              WARNING_PARTIAL_REFERENCE_RESOLUTION);
             }
@@ -463,7 +473,7 @@ public final class Run {
                     throw new AssertionError();
                 }
                 if (Run.this.parameters.getShowWarnings()) {
-                    Run.this.log(currentState.getIdentifier() + this.endOfTraceMessage);
+                    Run.this.log(currentState.getIdentifier() + "[" + currentState.getSequenceNumber() + "]" + this.endOfTraceMessage);
                 }
                 if (Run.this.parameters.getDoConcretization()) {
                     checkFinalStateIsConcretizable(counterKind);
@@ -1066,7 +1076,7 @@ public final class Run {
         final long elapsedTimePreInitialPhase = (this.timestampPreInitialPhaseEnd - this.runner.getStartTime());
         final long elapsedTimeDecisionProcedure = (this.timer == null ? 0 : this.timer.getTime());
         final long speed = this.engine.getAnalyzedStates() * 1000 / elapsedTime;
-        final long speedPostInitialPhase = (this.engine.getAnalyzedStates() - this.preInitialStateCount) * 1000 / (elapsedTime - elapsedTimePreInitialPhase);
+        final long speedPostInitialPhase = (elapsedTime == elapsedTimePreInitialPhase) ? 0 : (this.engine.getAnalyzedStates() - this.preInitialStateCount) * 1000 / (elapsedTime - elapsedTimePreInitialPhase);
         final long tracesContradictory = 
             this.runner.getTracesTotal() -
             this.tracesSafe - 
@@ -1179,13 +1189,13 @@ public final class Run {
     /** Message: the trace is unsafe (violated an assertion). */
     private static final String MSG_UNSAFE_TRACE = " trace violates an assertion.";
 
-    /** Message: the trace violated an assumption. */
+    /** Message: the trace is contradictory/irrelevant (violated an assumption). */
     private static final String MSG_CONTRADICTORY_TRACE = " trace violates an assumption.";
 
-    /** Message: the trace violated an assumption. */
+    /** Message: the trace is concretizable. */
     private static final String MSG_CONCRETIZABLE_TRACE = " trace has a concretizable final state.";
 
-    /** Message: the trace violated an assumption. */
+    /** Message: the trace is not concretizable. */
     private static final String MSG_NOT_CONCRETIZABLE_TRACE = " trace has not a concretizable final state.";
 
     /** Message: end of symbolic execution. */
@@ -1259,7 +1269,7 @@ public final class Run {
     private static final String WARNING_SCOPE_EXHAUSTED_COUNT = " trace exhausted count scope.";
 
     /** Warning: cannot manage a native method invocation. */
-    private static final String WARNING_CANNOT_INVOKE_NATIVE = " met an unmanageable native method invocation: ";
+    private static final String WARNING_CANNOT_INVOKE_NATIVE = " performed an unmanageable native method invocation: ";
 
     /** Warning: cannot handle something. */
     private static final String WARNING_NOT_IMPLEMENTED_FEATURE = " met an unimplemented feature: ";
