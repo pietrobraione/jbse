@@ -27,7 +27,7 @@ import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 public class DecisionProcedureEqualityTest {
-	HistoryPoint hist;
+    HistoryPoint hist;
     CalculatorRewriting calc;
     DecisionProcedureEquality dec;
 
@@ -39,8 +39,8 @@ public class DecisionProcedureEqualityTest {
         private final CalculatorRewriting calc;
         protected DecisionProcedureNoDecision(CalculatorRewriting calc) { this.calc = calc; }
 
-		@Override
-		public Calculator getCalculator() { return this.calc; }
+        @Override
+        public Calculator getCalculator() { return this.calc; }
 
         @Override
         public void pushAssumption(Clause c) { }
@@ -79,7 +79,7 @@ public class DecisionProcedureEqualityTest {
 
     @Before
     public void setUp() throws InvalidClassFileFactoryClassException, IOException, InvalidInputException {
-		this.hist = HistoryPoint.unknown();
+        this.hist = HistoryPoint.unknown();
         this.calc = new CalculatorRewriting();
         this.calc.addRewriter(new RewriterOperationOnSimplex());
         this.dec = new DecisionProcedureEquality(new DecisionProcedureNoDecision(this.calc));

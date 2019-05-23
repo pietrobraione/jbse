@@ -67,7 +67,7 @@ public class ClauseAssume implements Clause {
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
-		ClauseAssume other = (ClauseAssume) obj;
+		final ClauseAssume other = (ClauseAssume) obj;
 		if (this.p == null) {
 			if (other.p != null) {
 				return false;

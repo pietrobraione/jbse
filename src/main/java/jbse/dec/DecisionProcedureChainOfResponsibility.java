@@ -56,7 +56,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
     /**
      * Constructor.
      * 
-     * @param next The next {@link DecisionProcedure} in the 
+     * @param next the next {@link DecisionProcedure} in the 
      *        Chain Of Responsibility. It must not be {@code null}.
      * @param rewriters a vararg of {@link Rewriter}s for the 
      *        (possible) simplification of expressions.
@@ -446,11 +446,7 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
         throw new DecisionException(NO_ASSUMPTION_ERROR); //TODO throw a better exception
     }
 
-    private final String NO_ASSUMPTION_ERROR, NO_DELEGATE_ERROR; 
-    {
-        NO_ASSUMPTION_ERROR = "Class " + getClass().getName() + " does not store assumptions and is the last in the Chain of Responsibility.";
-        NO_DELEGATE_ERROR = "Class " + getClass().getName() + " cannot delegate to successor in Chain Of Responsibility because it is the last one.";
-    }
+    private final String NO_ASSUMPTION_ERROR = "Class " + getClass().getName() + " does not store assumptions and is the last in the Chain of Responsibility.";
 
     @Override
     public final boolean isSat(Expression expression) 
@@ -466,10 +462,11 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
             return ((Simplex) expSimpl).surelyTrue();
         } else { // (expSimpl instanceof Expression)
             final boolean localDecidesSat = isSatLocal(expression, (Expression) expSimpl);
-            if (localDecidesSat) {
+            if (localDecidesSat && hasNext()) {
+                //tries the delegate, that could have a more restrictive answer
                 return delegateIsSat(expression);  //TODO shouldn't we pass expSimpl instead? do we really need to pass the original exp to the next in chain?
             }
-            return false; //surely unsat
+            return localDecidesSat;
         }
     }
 
@@ -500,21 +497,17 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @return the result of invoking 
      *         {@link DecisionProcedure#isSat(Expression) isSat}{@code (exp)}
      *         on the next decision procedure in the chain.
-     * @throws DecisionException if this decision procedure has
-     *         not a successor in the chain, or if the successor
-     *         fails.
+     * @throws DecisionException if the successor
+     *         throws it.
      */
-    private final boolean delegateIsSat(Expression exp) 
+    private boolean delegateIsSat(Expression exp) 
     throws DecisionException {
-        if (hasNext()) {
-            try {
-                return this.next.isSat(exp);
-            } catch (InvalidInputException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
-            }
+        try {
+            return this.next.isSat(exp);
+        } catch (InvalidInputException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
         }
-        throw new DecisionException(NO_DELEGATE_ERROR);
     }
 
     @Override
@@ -524,10 +517,10 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
             throw new InvalidInputException("isSatNull invoked with a null parameter.");
         }
         final boolean localDecidesSat = isSatNullLocal(r);
-        if (localDecidesSat) {
+        if (localDecidesSat && hasNext()) {
             return delegateIsSatNull(r);
         }
-        return false; //surely unsat
+        return localDecidesSat;
     }
 
     /**
@@ -554,21 +547,17 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @return the result of invoking 
      *         {@link DecisionProcedure#isSatNull(ReferenceSymbolic) isSatNull}{@code (r)}
      *         on the next decision procedure in the chain.
-     * @throws DecisionException if this decision procedure has
-     *         not a successor in the chain, or if the successor
-     *         fails.
+     * @throws DecisionException if the successor
+     *         throws it.
      */
-    private final boolean delegateIsSatNull(ReferenceSymbolic r) 
+    private boolean delegateIsSatNull(ReferenceSymbolic r) 
     throws DecisionException {
-        if (hasNext()) {
-            try {
-                return this.next.isSatNull(r);
-            } catch (InvalidInputException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
-            }
+        try {
+            return this.next.isSatNull(r);
+        } catch (InvalidInputException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
         }
-        throw new DecisionException(NO_DELEGATE_ERROR);
     }
 
     @Override
@@ -578,10 +567,10 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
             throw new InvalidInputException("isSatAliases invoked with a null parameter.");
         }
         final boolean localDecidesSat = isSatAliasesLocal(r, heapPos, o);
-        if (localDecidesSat) {
+        if (localDecidesSat && hasNext()) {
             return delegateIsSatAliases(r, heapPos, o);
         }
-        return false; //surely unsat
+        return localDecidesSat;
     }
 
     /**
@@ -613,21 +602,17 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @return the result of invoking 
      *         {@link DecisionProcedure#isSatAliases(ReferenceSymbolic, long, Objekt) isSatAliases}{@code (r, heapPos, o)}
      *         on the next decision procedure in the chain.
-     * @throws DecisionException if this decision procedure has
-     *         not a successor in the chain, or if the successor
-     *         fails.
+     * @throws DecisionException if the successor
+     *         throws it.
      */
-    private final boolean delegateIsSatAliases(ReferenceSymbolic r, long heapPos, Objekt o) 
+    private boolean delegateIsSatAliases(ReferenceSymbolic r, long heapPos, Objekt o) 
     throws DecisionException {
-        if (hasNext()) {
-            try {
-                return this.next.isSatAliases(r, heapPos, o);
-            } catch (InvalidInputException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
-            }
+        try {
+            return this.next.isSatAliases(r, heapPos, o);
+        } catch (InvalidInputException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
         }
-        throw new DecisionException(NO_DELEGATE_ERROR);
     }
 
     @Override
@@ -637,10 +622,10 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
             throw new InvalidInputException("isSatExpands invoked with a null parameter.");
         }
         final boolean localDecidesSat = isSatExpandsLocal(r, classFile);
-        if (localDecidesSat) {
+        if (localDecidesSat && hasNext()) {
             return delegateIsSatExpands(r, classFile);
         }
-        return false; //surely unsat
+        return localDecidesSat;
     }
 
     /**
@@ -670,21 +655,17 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @return the result of invoking 
      *         {@link DecisionProcedure#isSatExpands(ReferenceSymbolic, String) isSatExpands}{@code (r, classFile)}
      *         on the next decision procedure in the chain.
-     * @throws DecisionException if this decision procedure has
-     *         not a successor in the chain, or if the successor
-     *         fails.
+     * @throws DecisionException if the successor
+     *         throws it.
      */
     private final boolean delegateIsSatExpands(ReferenceSymbolic r, ClassFile classFile) 
     throws DecisionException {
-        if (hasNext()) {
-            try {
-                return this.next.isSatExpands(r, classFile);
-            } catch (InvalidInputException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
-            }
+        try {
+            return this.next.isSatExpands(r, classFile);
+        } catch (InvalidInputException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
         }
-        throw new DecisionException(NO_DELEGATE_ERROR);
     }
 
     @Override
@@ -694,10 +675,10 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
             throw new InvalidInputException("isSatInitialized invoked with a null parameter.");
         }
         final boolean localDecidesSat = isSatInitializedLocal(classFile);
-        if (localDecidesSat) {
+        if (localDecidesSat && hasNext()) {
             return delegateIsSatInitialized(classFile);
         }
-        return false; //surely unsat
+        return localDecidesSat;
     }
 
     /**
@@ -729,21 +710,17 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @return the result of invoking 
      *         {@link DecisionProcedure#isSatInitialized(ClassFile) isSatInitialized}{@code (classFile)}
      *         on the next decision procedure in the chain.
-     * @throws DecisionException if this decision procedure has
-     *         not a successor in the chain, or if the successor
-     *         fails.
+     * @throws DecisionException if the successor
+     *         throws it.
      */
     private final boolean delegateIsSatInitialized(ClassFile classFile) 
     throws DecisionException {
-        if (hasNext()) {
-            try {
-                return this.next.isSatInitialized(classFile);
-            } catch (InvalidInputException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
-            }
+        try {
+            return this.next.isSatInitialized(classFile);
+        } catch (InvalidInputException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
         }
-        throw new DecisionException(NO_DELEGATE_ERROR);
     }
 
     @Override
@@ -753,10 +730,10 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
             throw new InvalidInputException("isSatNotInitialized invoked with a null parameter.");
         }
         final boolean localDecidesSat = isSatNotInitializedLocal(classFile);
-        if (localDecidesSat) {
+        if (localDecidesSat && hasNext()) {
             return delegateIsSatNotInitialized(classFile);
         }
-        return false; //surely unsat
+        return localDecidesSat;
     }
 
     /**
@@ -786,21 +763,17 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @return the result of invoking 
      *         {@link DecisionProcedure#isSatNotInitialized(ClassFile) isSatNotInitialized}{@code (classFile)}
      *         on the next decision procedure in the chain.
-     * @throws DecisionException if this decision procedure has
-     *         not a successor in the chain, or if the successor
-     *         fails.
+     * @throws DecisionException if the successor
+     *         throws it.
      */
     private final boolean delegateIsSatNotInitialized(ClassFile classFile) 
     throws DecisionException {
-        if (hasNext()) {
-            try {
-                return this.next.isSatNotInitialized(classFile);
-            } catch (InvalidInputException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
-            }
+        try {
+            return this.next.isSatNotInitialized(classFile);
+        } catch (InvalidInputException e) {
+            //this should never happen
+            throw new UnexpectedInternalException(e);
         }
-        throw new DecisionException(NO_DELEGATE_ERROR);
     }
 
     @Override
@@ -809,7 +782,11 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
         try {
             return getModelLocal();
         } catch (NoModelException e) {
-            return delegateGetModel();
+            if (hasNext()) {
+                return delegateGetModel();
+            } else {
+                throw e;
+            }
         }
     }
 
@@ -835,26 +812,21 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      * @return the result of invoking 
      *         {@link DecisionProcedure#getModel()}
      *         on the next decision procedure in the chain.
-     * @throws DecisionException if this decision procedure has
-     *         not a successor in the chain, or if the successor
-     *         fails.
+     * @throws DecisionException if the successor
+     *         throws it.
      */
     private final Map<PrimitiveSymbolic, Simplex> delegateGetModel() 
     throws DecisionException {
-        if (hasNext()) {
-            return this.next.getModel();
-        }
-        throw new DecisionException(NO_DELEGATE_ERROR);
+        return this.next.getModel();
     }
 
     @Override
     public final Primitive simplify(Primitive p) throws DecisionException {
         final Primitive pSimpl = simplifyLocal(p);
-        if (this.next == null) {
-            return pSimpl;
-        } else {
+        if (hasNext()) {
             return this.next.simplify(pSimpl);
         }
+        return pSimpl;
     }
 
     /**
@@ -872,10 +844,10 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
             final Primitive p = ((ClauseAssume) c).getCondition();
             final Primitive pSimpl = simplifyLocal(p);
             try {
-				return new ClauseAssume(pSimpl);
-			} catch (InvalidInputException e) {
-				throw new UnexpectedInternalException(e);
-			}
+                return new ClauseAssume(pSimpl);
+            } catch (InvalidInputException e) {
+                throw new UnexpectedInternalException(e);
+            }
         } else {
             return c;
         }
@@ -893,17 +865,17 @@ public abstract class DecisionProcedureChainOfResponsibility implements Decision
      *         nor an {@link Expression}.
      */
     protected final Primitive simplifyLocal(Primitive p) throws DecisionException {
-    	try {
-    		final Primitive retVal = applyRewriters(p, this.rewriters);
-    		if (retVal == null || retVal.getType() != Type.BOOLEAN || 
-    		    !(retVal instanceof Simplex || retVal instanceof Expression)) {
-    			//TODO throw a better exception
-    			throw new DecisionException("The simplification of " + p + " returned " + retVal + " that is neither a boolean Simplex nor a boolean Expression.");
-    		}
-    		return retVal;
-    	} catch (NoResultException e) {
-    		throw new DecisionException(e);
-    	}
+        try {
+            final Primitive retVal = applyRewriters(p, this.rewriters);
+            if (retVal == null || retVal.getType() != Type.BOOLEAN || 
+            !(retVal instanceof Simplex || retVal instanceof Expression)) {
+                //TODO throw a better exception
+                throw new DecisionException("The simplification of " + p + " returned " + retVal + " that is neither a boolean Simplex nor a boolean Expression.");
+            }
+            return retVal;
+        } catch (NoResultException e) {
+            throw new DecisionException(e);
+        }
     }
 
     @Override

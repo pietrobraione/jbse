@@ -78,7 +78,7 @@ public abstract class DecisionProcedureExternal extends DecisionProcedureChainOf
             this.extIf.clear();
             final Iterable<Clause> i = () -> this.clauses.descendingIterator();
             for (Clause c : i) {
-                super.pushAssumptionLocal(c);
+                super.pushAssumptionLocal(c); //redispatches
             }
             this.notInSynch = false;
         } catch (ExternalProtocolInterfaceException | IOException e) {
