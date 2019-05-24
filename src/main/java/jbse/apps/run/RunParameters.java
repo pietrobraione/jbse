@@ -1698,7 +1698,7 @@ public final class RunParameters implements Cloneable {
      * 
      * @return a {@link ClassInitRulesRepo}. It
      *         is the one that backs this
-     *         {@link EngineParameters}, not a
+     *         {@link RunParameters}, not a
      *         safety copy.
      */
     public ClassInitRulesRepo getClassInitRulesRepo() {

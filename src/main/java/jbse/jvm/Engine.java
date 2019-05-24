@@ -250,15 +250,15 @@ public class Engine implements AutoCloseable {
      *         or is ill-formed.
      * @throws ContradictionException iff the step causes a violation of some assumption; 
      *         in this case after the step it is 
-     *         {@link #canStep()}{@code  == false}.
+     *         {@link #canStep() canStep}{@code () == false}.
      * @throws DecisionException iff the decision procedure fails for any reason.
      * @throws EngineStuckException when the method is invoked from a state where 
-     *         {@link #canStep()}{@code  == false}.
+     *         {@link #canStep() canStep}{@code () == false}.
      * @throws ThreadStackEmptyException when the execution of a step is attempted
      *         on a current state with an empty thread stack.
      * @throws FailureException iff the step causes a violation of some assertion; 
      *         in this case after the step it is 
-     *         {@link #canStep()}{@code  == false}.
+     *         {@link #canStep() canStep}{@code () == false}.
      */
     public BranchPoint step() 
     throws EngineStuckException, CannotManageStateException, NonexistingObservedVariablesException, 
