@@ -205,6 +205,7 @@ import static jbse.bc.Signatures.JAVA_OBJECT_GETCLASS;
 import static jbse.bc.Signatures.JAVA_OBJECT_HASHCODE;
 import static jbse.bc.Signatures.JAVA_OBJECT_NOTIFYALL;
 import static jbse.bc.Signatures.JAVA_OBJECT_REGISTERNATIVES;
+import static jbse.bc.Signatures.JAVA_OPTIONAL;
 import static jbse.bc.Signatures.JAVA_PACKAGE_GETSYSTEMPACKAGE0;
 import static jbse.bc.Signatures.JAVA_REFLECT_ARRAY_NEWARRAY;
 import static jbse.bc.Signatures.JAVA_RUNTIME_AVAILABLEPROCESSORS;
@@ -935,6 +936,7 @@ public final class ExecutionContext {
         className.equals(JAVA_LINKEDLIST_ENTRY) ||
         className.equals(JAVA_MAPPEDBYTEBUFFER) || 
         className.equals(JAVA_METHODTYPEFORM) || 
+        className.equals(JAVA_OPTIONAL) || 
         className.equals(JAVA_SHORT_SHORTCACHE) || 
         className.equals(JAVA_STANDARDCHARSETS) || 
         className.equals(JAVA_TREESET) ||

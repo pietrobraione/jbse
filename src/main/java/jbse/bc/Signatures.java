@@ -88,6 +88,7 @@ public final class Signatures {
     public static final String JAVA_METHODTYPE               = "java/lang/invoke/MethodType";
     public static final String JAVA_METHODTYPEFORM           = "java/lang/invoke/MethodTypeForm";
     public static final String JAVA_OBJECT                   = "java/lang/Object";
+    public static final String JAVA_OPTIONAL                 = "java/util/Optional";
     public static final String JAVA_PACKAGE                  = "java/lang/Package";
     public static final String JAVA_PRINTSTREAM              = "java/io/PrintStream";
     public static final String JAVA_PRIVILEGEDACTION         = "java/security/PrivilegedAction";
