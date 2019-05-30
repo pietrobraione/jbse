@@ -64,7 +64,7 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     private final Expression indexInRange;
 
     /** Describes the values stored in the array. */
-    private LinkedList<AccessOutcomeInImpl> entries; //TODO do not use AccessOutcome..., but define a suitable private Entry class
+    private ArrayList<AccessOutcomeInImpl> entries; //TODO do not use AccessOutcome..., but define a suitable private Entry class
 
     /** 
      * Indicates whether the array has a simple representation, i.e., 
@@ -432,7 +432,7 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
-        this.entries = new LinkedList<>();
+        this.entries = new ArrayList<>();
         this.entries.add(new AccessOutcomeInInitialArrayImpl(calc, this.indexInRange, referenceToOtherArray));
     }
 
@@ -453,7 +453,7 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
         //we may hope that normalization will succeed upon array access, thus reducing 
         //the calls to the prover. Of course there is a complementary risk, i.e., that
         //having many entries results in the creation of many branches. 
-        this.entries = new LinkedList<>();
+        this.entries = new ArrayList<>();
         if (getLength() instanceof Simplex) {
             final int ln = ((Integer) ((Simplex) getLength()).getActualValue()).intValue();
             if (ln <= maxSimpleArrayLength) {
@@ -947,7 +947,7 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     public ArrayImpl clone() {
     	final ArrayImpl o = (ArrayImpl) super.clone();
 
-    	o.entries = new LinkedList<>();
+    	o.entries = new ArrayList<>();
     	for (AccessOutcomeInImpl e : this.entries) {
     		o.entries.add(e.clone());
     	}
