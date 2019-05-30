@@ -32,12 +32,14 @@ import static jbse.bc.Offsets.XALOADSTORE_OFFSET;
 import static jbse.bc.Offsets.XLOADSTORE_IMMEDIATE_WIDE_OFFSET;
 import static jbse.bc.Offsets.XLOADSTORE_IMMEDIATE_OFFSET;
 import static jbse.bc.Offsets.XLOADSTORE_IMPLICIT_OFFSET;
+import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.INT;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.binaryClassName;
 import static jbse.common.Type.internalClassName;
 import static jbse.common.Type.isPrimitiveOrVoidCanonicalName;
+import static jbse.common.Type.toPrimitiveOrVoidCanonicalName;
 import static jbse.common.Type.toPrimitiveOrVoidInternalName;
 import static jbse.common.Util.asUnsignedByte;
 import static jbse.common.Util.byteCat;
@@ -93,6 +95,7 @@ import com.sun.jdi.request.MethodEntryRequest;
 import com.sun.jdi.request.MethodExitRequest;
 import com.sun.jdi.request.StepRequest;
 
+import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
@@ -510,14 +513,38 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
         private com.sun.jdi.Value getJDIValueField(SymbolicMemberField origin, Object o) 
         throws GuidanceException {
             final String fieldName = origin.getFieldName();
-            final Field fld = (o instanceof com.sun.jdi.ObjectReference ? ((com.sun.jdi.ObjectReference) o).referenceType().fieldByName(fieldName) : ((com.sun.jdi.ReferenceType) o).fieldByName(fieldName));
-            if (fld == null) {
-                throw new GuidanceException(ERROR_BAD_PATH + origin.asOriginString() + " (missing field " + fieldName + ").");
-            }
-            try {
-                return (o instanceof com.sun.jdi.ObjectReference ? ((com.sun.jdi.ObjectReference) o).getValue(fld) : ((com.sun.jdi.ReferenceType) o).getValue(fld));
-            } catch (IllegalArgumentException e) {
-                throw new GuidanceException(e);
+            if (o instanceof com.sun.jdi.ReferenceType) {
+                //the field is static
+                final com.sun.jdi.ReferenceType oReferenceType = ((com.sun.jdi.ReferenceType) o);
+                final Field fld = oReferenceType.fieldByName(fieldName);
+                if (fld == null) {
+                    throw new GuidanceException(ERROR_BAD_PATH + origin.asOriginString() + " (missing field " + fieldName + ").");
+                }
+                try {
+                    return oReferenceType.getValue(fld);
+                } catch (IllegalArgumentException e) {
+                    throw new GuidanceException(e);
+                }
+            } else {
+                //the field is not static (note that it can be declared in the superclass)
+                final com.sun.jdi.ObjectReference oReference = ((com.sun.jdi.ObjectReference) o);
+                final String fieldDeclaringClass = binaryClassName(origin.getFieldClass());
+                final List<Field> fields = oReference.referenceType().allFields();
+                Field fld = null;
+                for (Field _fld : fields) {
+                    if (_fld.declaringType().name().equals(fieldDeclaringClass) && _fld.name().equals(fieldName)) {
+                        fld = _fld;
+                        break;
+                    }
+                }
+                if (fld == null) {
+                    throw new GuidanceException(ERROR_BAD_PATH + origin.asOriginString() + " (missing field " + fieldName + ").");
+                }
+                try {
+                    return oReference.getValue(fld);
+                } catch (IllegalArgumentException e) {
+                    throw new GuidanceException(e);
+                }
             }
         }
 
@@ -1158,7 +1185,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                 this.lookAheadDone = true;
                 return;
             //HACK: if JBSE is in a <clinit> method and JDI is not, then wait for JBSE: This compensates
-            //the fact that, in some situations, JBSE runs a class initializer that was JDI did run before 
+            //the fact that, in some situations, JBSE runs a class initializer that JDI did run before 
             //(note howewer that, if the stack size is the same, JDI is inside a method invocation)  
             } else if (jdiStackSize == jbseStackSize && "<clinit>".equals(jbseMethName)) {
                 this.jbseIsDoingClinit = true;
@@ -1166,6 +1193,59 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             } else {
                 throw new GuidanceException("JDI alignment with JBSE failed unexpectedly: JBSE is at " + jbseState.getCurrentMethodSignature() + ":" + jbseProgramCounter + ", while JDI is at " + jdiMethClassName + ":" + jdiMethDescr + ":" + jdiMethName + ":" + jdiProgramCounter);
             }	
+        }
+        
+        private static String jdiClassName(String internalClassName) {
+            //VirtualMachine.classesByName accepts as parameter a strange mix
+            //of binary name, internal name and fully qualified name; for instance:
+            //this.vm.classesByName("java.util.Hashtable$Entry") is found, as 
+            //this.vm.classesByName("java/util/Hashtable$Entry"), but 
+            //this.vm.classesByName("[Ljava.util.Hashtable$Entry;") and 
+            //this.vm.classesByName("[Ljava/util/Hashtable$Entry;") are not, while
+            //this.vm.classesByName("java.util.Hashtable$Entry[]") and
+            //this.vm.classesByName("java/util/Hashtable$Entry[]") are;
+            //also, primitive array classes are accepted in the form
+            //this.vm.classesByName("int[]").
+            
+            //count the number of array dimensions;
+            int arrayDims = 0;
+            while (internalClassName.charAt(arrayDims) == ARRAYOF) {
+                ++arrayDims;
+            }
+            
+            final StringBuilder sb = new StringBuilder();
+            if (arrayDims > 0 && internalClassName.charAt(arrayDims) == REFERENCE) {
+                //it is an array of objects
+                sb.append(internalClassName.substring(arrayDims + 1, internalClassName.length() - 1));
+            } else if (arrayDims > 0) {
+                //it is an array of primitives
+                sb.append(toPrimitiveOrVoidCanonicalName(internalClassName.substring(arrayDims, arrayDims + 1)));
+            } else {
+                //it is the name of a class type, either primitive or not
+                sb.append(internalClassName);
+            }
+            for (int i = 1; i <= arrayDims; ++i) {
+                sb.append("[]");
+            }
+            return sb.toString();
+        }
+        
+        @Override
+        public boolean eval_initialized(ClassFile classFile) {
+            //VirtualMachine.classesByName does not accepts as parameter
+            //the name of a primitive type (class)
+            if (classFile.isPrimitiveOrVoid()) {
+                //this should never happen
+                return true;
+            }
+            final String className = jdiClassName(classFile.getClassName());
+            final List<ReferenceType> allClasses = this.vm.classesByName(className);
+            for (ReferenceType referenceType : allClasses) {
+                if (referenceType.isInitialized()) {
+                    return true;
+                }
+            }
+            return false;
         }
         
         @Override

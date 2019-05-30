@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.SortedSet;
 
+import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
@@ -318,6 +319,16 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     private void markAsSeen(ReferenceSymbolic m) throws GuidanceException {
         this.seen.add(this.jvm.getValue(m));
     }
+    
+    @Override
+    public boolean isSatInitialized(ClassFile classFile) throws InvalidInputException, DecisionException {
+        return this.jvm.eval_initialized(classFile);
+    }
+    
+    @Override
+    public boolean isSatNotInitialized(ClassFile classFile) throws InvalidInputException, DecisionException {
+        return !this.jvm.eval_initialized(classFile);
+    }
 
     @Override
     public void close() throws DecisionException {
@@ -463,6 +474,8 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             final Expression conditionToCheck = da.getArrayAccessExpressionSimplified();
             return (conditionToCheck == null ? this.calc.valBoolean(true) : eval(conditionToCheck));
         }
+        
+        public abstract boolean eval_initialized(ClassFile classFile);
 
         /**
          * Evaluates a {@link Primitive} in the reached concrete state.
@@ -474,7 +487,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
          *         the method will return {@code toEval}).
          * @throws GuidanceException
          */
-        public final Primitive eval(Primitive toEval) throws GuidanceException {
+        protected final Primitive eval(Primitive toEval) throws GuidanceException {
             final Evaluator evaluator = new Evaluator(this.calc, this);
             try {
                 toEval.accept(evaluator);

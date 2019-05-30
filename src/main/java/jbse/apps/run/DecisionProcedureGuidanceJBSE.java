@@ -2,6 +2,7 @@ package jbse.apps.run;
 
 import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.NotYetImplementedException;
+import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.ClasspathException;
@@ -324,6 +325,16 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
         		//this should never happen
         		throw new UnexpectedInternalException(e);
         	}
+        }
+        
+        @Override
+        public boolean eval_initialized(ClassFile classFile) {
+            try {
+                return (this.initialStateConcrete.getKlass(classFile) != null);
+            } catch (FrozenStateException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            }
         }
         
         @Override
