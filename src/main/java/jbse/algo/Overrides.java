@@ -59,6 +59,7 @@ public final class Overrides {
     public static final String ALGO_JAVA_FILEINPUTSTREAM_CLOSE0                    = internalClassName(jbse.algo.meta.Algo_JAVA_FILEINPUTSTREAM_CLOSE0.class.getName());
     public static final String ALGO_JAVA_FILEINPUTSTREAM_OPEN0                     = internalClassName(jbse.algo.meta.Algo_JAVA_FILEINPUTSTREAM_OPEN0.class.getName());
     public static final String ALGO_JAVA_FILEINPUTSTREAM_READBYTES                 = internalClassName(jbse.algo.meta.Algo_JAVA_FILEINPUTSTREAM_READBYTES.class.getName());
+    public static final String ALGO_JAVA_FILEOUTPUTSTREAM_WRITEBYTES               = internalClassName(jbse.algo.meta.Algo_JAVA_FILEOUTPUTSTREAM_WRITEBYTES.class.getName());
     public static final String ALGO_JAVA_INFLATER_END                              = internalClassName(jbse.algo.meta.Algo_JAVA_INFLATER_END.class.getName());
     public static final String ALGO_JAVA_INFLATER_GETADLER                         = internalClassName(jbse.algo.meta.Algo_JAVA_INFLATER_GETADLER.class.getName());
     public static final String ALGO_JAVA_INFLATER_INFLATEBYTES                     = internalClassName(jbse.algo.meta.Algo_JAVA_INFLATER_INFLATEBYTES.class.getName());

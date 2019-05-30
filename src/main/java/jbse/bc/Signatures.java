@@ -283,6 +283,8 @@ public final class Signatures {
         new Signature(JAVA_FILEINPUTSTREAM, "(" + ARRAYOF + BYTE + INT + INT + ")" + INT, "readBytes");
     public static final Signature JAVA_FILEOUTPUTSTREAM_INITIDS =
         new Signature(JAVA_FILEOUTPUTSTREAM, "()" + VOID, "initIDs");
+    public static final Signature JAVA_FILEOUTPUTSTREAM_WRITEBYTES =
+        new Signature(JAVA_FILEOUTPUTSTREAM, "(" + ARRAYOF + BYTE + INT + INT + BOOLEAN + ")" + VOID, "writeBytes");
     public static final Signature JAVA_FLOAT_FLOATTORAWINTBITS =
         new Signature(JAVA_FLOAT, "(" + FLOAT + ")" + INT, "floatToRawIntBits");
     public static final Signature JAVA_INFLATER_END =
@@ -727,6 +729,8 @@ public final class Signatures {
             new Signature(JAVA_FILEDESCRIPTOR, "" + LONG, "handle");
     public static final Signature JAVA_FILEINPUTSTREAM_FD = 
         new Signature(JAVA_FILEINPUTSTREAM, "" + REFERENCE + JAVA_FILEDESCRIPTOR + TYPEEND, "fd");
+    public static final Signature JAVA_FILEOUTPUTSTREAM_FD = 
+        new Signature(JAVA_FILEOUTPUTSTREAM, "" + REFERENCE + JAVA_FILEDESCRIPTOR + TYPEEND, "fd");
     public static final Signature JAVA_FLOAT_VALUE = 
         new Signature(JAVA_FLOAT, "" + FLOAT, "value");
     public static final Signature JAVA_INFLATER_BUF = 
