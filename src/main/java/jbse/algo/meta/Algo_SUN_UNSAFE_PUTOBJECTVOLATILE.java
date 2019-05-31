@@ -55,7 +55,7 @@ public final class Algo_SUN_UNSAFE_PUTOBJECTVOLATILE extends Algo_INVOKEMETA_Non
         if (ofstPrimitive instanceof Simplex) {
             this.slot = ((Long) ((Simplex) ofstPrimitive).getActualValue()).intValue();
         } else {
-            throw new SymbolicValueNotAllowedException("The offset parameter to sun.misc.Unsafe.putObjectVolatile cannot be a symbolic value");
+            throw new SymbolicValueNotAllowedException("The long offset parameter to sun.misc.Unsafe.putObjectVolatile must be concrete.");
         }
         
         if (this.toModify instanceof Array) {

@@ -434,7 +434,7 @@ public final class ClassHierarchy implements Cloneable {
      *         {@link Signature}s of the class' static fields, followed
      *         by all the {@link Signature}s of the class' object (nonstatic) 
      *         fields, followed by all the {@link Signature}s of the object 
-     *         fields of all the superclasses of the class.
+     *         fields of the superclass, the superclass' superclass, etc.
      */	
     public Signature[] getAllFields(ClassFile classFile) {
         ArrayList<Signature> signatures = this.allFieldsOf.get(classFile);

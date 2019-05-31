@@ -136,7 +136,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                 throw e;
             }
 
-            final int numConstructors = sigConstructors.stream()
+            final int numDeclaredConstructors = sigConstructors.stream()
             .map(s -> (s == null ? 0 : 1))
             .reduce(0, (a, b) -> a + b);
 
@@ -145,7 +145,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
             ReferenceConcrete result = null; //to keep the compiler happy
             try {
                 final ClassFile cf_arraOfJAVA_CONSTRUCTOR = hier.loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_CONSTRUCTOR + TYPEEND);
-                result = state.createArray(calc, null, calc.valInt(numConstructors), cf_arraOfJAVA_CONSTRUCTOR);
+                result = state.createArray(calc, null, calc.valInt(numDeclaredConstructors), cf_arraOfJAVA_CONSTRUCTOR);
             } catch (HeapMemoryExhaustedException e) {
                 throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();

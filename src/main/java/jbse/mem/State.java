@@ -104,17 +104,17 @@ public final class State implements Cloneable {
     private static final Field FILEDESCRIPTOR_FD;
     private static final Field FILEDESCRIPTOR_HANDLE;
     static {
-    	//these are always present
-    	try {
-			FIS_PATH = FileInputStream.class.getDeclaredField("path");
-	    	FOS_PATH = FileOutputStream.class.getDeclaredField("path");
+        //these are always present
+        try {
+            FIS_PATH = FileInputStream.class.getDeclaredField("path");
+            FOS_PATH = FileOutputStream.class.getDeclaredField("path");
             FIS_IN = FilterInputStream.class.getDeclaredField("in");
             FOS_OUT = FilterOutputStream.class.getDeclaredField("out");
             FILEDESCRIPTOR_FD = FileDescriptor.class.getDeclaredField("fd");
-		} catch (NoSuchFieldException | SecurityException e) {
+        } catch (NoSuchFieldException | SecurityException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
-		}
+        }
     	
     	//this is present only on Windows
     	Field fileDescriptorHandle;

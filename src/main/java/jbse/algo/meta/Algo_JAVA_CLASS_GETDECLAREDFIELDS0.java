@@ -140,11 +140,10 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
                 throw e;
             }
 
-            final int numFields = sigFields.stream()
+            final int numDeclaredFields = sigFields.stream()
             .map(s -> (s == null ? 0 : 1))
             .reduce(0, (a, b) -> a + b);
             
-
             //gets class for Field[]
             ClassFile cf_arraOfJAVA_FIELD = null; //to keep the compiler happy
             try {
@@ -158,7 +157,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDFIELDS0 extends Algo_INVOKEMETA_No
             //builds the array to return
             ReferenceConcrete result = null; //to keep the compiler happy
             try {
-                result = state.createArray(calc, null, calc.valInt(numFields), cf_arraOfJAVA_FIELD);
+                result = state.createArray(calc, null, calc.valInt(numDeclaredFields), cf_arraOfJAVA_FIELD);
             } catch (HeapMemoryExhaustedException e) {
                 throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();

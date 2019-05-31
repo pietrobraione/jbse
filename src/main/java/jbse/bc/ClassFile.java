@@ -848,7 +848,9 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      *         field declared in the class. The order
      *         of the {@link Signature}s in the returned array
      *         does not change across multiple invocations of 
-     *         this method. 
+     *         this method. The returned array is equal to 
+     *         {@link #getDeclaredFieldsStatic()} concatenated
+     *         to {@link #getDeclaredFieldsNonStatic()}.
      */
     public abstract Signature[] getDeclaredFields();
 

@@ -140,7 +140,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
                 throw e;
             }
 
-            final int numMethods = sigMethods.stream()
+            final int numDeclaredMethods = sigMethods.stream()
             .map(s -> (s == null ? 0 : 1))
             .reduce(0, (a, b) -> a + b);
 
@@ -149,7 +149,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDMETHODS0 extends Algo_INVOKEMETA_N
             ReferenceConcrete result = null; //to keep the compiler happy
             try {
                 final ClassFile cf_arraOfJAVA_METHOD = hier.loadCreateClass("" + ARRAYOF + REFERENCE + JAVA_METHOD + TYPEEND);
-                result = state.createArray(calc, null, calc.valInt(numMethods), cf_arraOfJAVA_METHOD);
+                result = state.createArray(calc, null, calc.valInt(numDeclaredMethods), cf_arraOfJAVA_METHOD);
             } catch (HeapMemoryExhaustedException e) {
                 throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
