@@ -7,7 +7,6 @@ import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
 import static jbse.bc.Signatures.ILLEGAL_ARGUMENT_EXCEPTION;
-import static jbse.bc.Signatures.INSTANTIATION_EXCEPTION;
 import static jbse.bc.Signatures.INTERNAL_ERROR;
 import static jbse.bc.Signatures.JAVA_BOOLEAN;
 import static jbse.bc.Signatures.JAVA_BOOLEAN_VALUE;
@@ -15,9 +14,6 @@ import static jbse.bc.Signatures.JAVA_BYTE;
 import static jbse.bc.Signatures.JAVA_BYTE_VALUE;
 import static jbse.bc.Signatures.JAVA_CHARACTER;
 import static jbse.bc.Signatures.JAVA_CHARACTER_VALUE;
-import static jbse.bc.Signatures.JAVA_CONSTRUCTOR_CLAZZ;
-import static jbse.bc.Signatures.JAVA_CONSTRUCTOR_PARAMETERTYPES;
-import static jbse.bc.Signatures.JAVA_CONSTRUCTOR_SLOT;
 import static jbse.bc.Signatures.JAVA_DOUBLE;
 import static jbse.bc.Signatures.JAVA_DOUBLE_VALUE;
 import static jbse.bc.Signatures.JAVA_FLOAT;
@@ -26,14 +22,37 @@ import static jbse.bc.Signatures.JAVA_INTEGER;
 import static jbse.bc.Signatures.JAVA_INTEGER_VALUE;
 import static jbse.bc.Signatures.JAVA_LONG;
 import static jbse.bc.Signatures.JAVA_LONG_VALUE;
+import static jbse.bc.Signatures.JAVA_METHOD_CLAZZ;
+import static jbse.bc.Signatures.JAVA_METHOD_PARAMETERTYPES;
+import static jbse.bc.Signatures.JAVA_METHOD_SLOT;
 import static jbse.bc.Signatures.JAVA_SHORT;
 import static jbse.bc.Signatures.JAVA_SHORT_VALUE;
 import static jbse.bc.Signatures.JBSE_BASE;
+import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_B;
+import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_C;
+import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_D;
+import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_F;
+import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_I;
+import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_J;
+import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_L;
+import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_S;
 import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_V;
-import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
+import static jbse.bc.Signatures.JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_Z;
+import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
+import static jbse.common.Type.ARRAYOF;
+import static jbse.common.Type.BOOLEAN;
+import static jbse.common.Type.BYTE;
+import static jbse.common.Type.CHAR;
+import static jbse.common.Type.DOUBLE;
+import static jbse.common.Type.FLOAT;
 import static jbse.common.Type.INT;
+import static jbse.common.Type.LONG;
+import static jbse.common.Type.REFERENCE;
+import static jbse.common.Type.SHORT;
+import static jbse.common.Type.VOID;
 import static jbse.common.Type.isPrimitiveOpStack;
 import static jbse.common.Type.splitParametersDescriptors;
+import static jbse.common.Type.splitReturnValueDescriptor;
 import static jbse.common.Type.toPrimitiveOrVoidInternalName;
 import static jbse.common.Type.widens;
 
@@ -66,33 +85,31 @@ import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.FrozenStateException;
-import jbse.mem.exc.HeapMemoryExhaustedException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Calculator;
 import jbse.val.Primitive;
 import jbse.val.Reference;
-import jbse.val.ReferenceConcrete;
 import jbse.val.Simplex;
 import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * Meta-level implementation of {@link sun.reflect.NativeConstructorAccessorImpl#newInstance0(Constructor, Object[])}.
+ * Meta-level implementation of {@link sun.reflect.NativeMethodAccessorImpl#invoke0(Method, Object, Object[])}.
  * 
  * @author Pietro Braione
  */
-//TODO merge with Algo_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0
-public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends Algo_INVOKEMETA_Nonbranching {
-    private ClassFile constructorClassFile; //set by cookMore
-    private Signature constructorSignature; //set by cookMore
+//TODO merge with Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0
+public final class Algo_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0 extends Algo_INVOKEMETA_Nonbranching {
+    private ClassFile methodClassFile; //set by cookMore
+    private Signature methodSignature; //set by cookMore
     private Value[] params; //set by cookMore except for params[0] that is set by updater
     
     @Override
     protected Supplier<Integer> numOperands() {
-        return () -> 2;
+        return () -> 3;
     }
 
     @Override
@@ -102,85 +119,88 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
     FrozenStateException, InvalidInputException, InvalidTypeException {
     	final Calculator calc = this.ctx.getCalculator();
         try {
-            //gets and check the class of the object that must be created
-            final Reference refConstructor = (Reference) this.data.operand(0);
-            if (state.isNull(refConstructor)) {
+            //gets and check the class where the method belongs to
+            final Reference refMethod = (Reference) this.data.operand(0);
+            if (state.isNull(refMethod)) {
                 //Hotspot crashes with SIGSEGV if the first parameter is null
-                throw new UndefinedResultException("The Constructor<?> c argument to sun.reflect.NativeConstructorAccessorImpl.newInstance0 was null.");
+                throw new UndefinedResultException("The Method m argument to sun.reflect.NativeMethodAccessorImpl.invoke0 was null.");
             }
-            final Instance constructor = (Instance) state.getObject(refConstructor);
-            final Instance_JAVA_CLASS constructorJavaClass = (Instance_JAVA_CLASS) state.getObject((Reference) constructor.getFieldValue(JAVA_CONSTRUCTOR_CLAZZ));
-            this.constructorClassFile = constructorJavaClass.representedClass();
-            if (this.constructorClassFile.isAbstract()) {
-                throwNew(state, calc, INSTANTIATION_EXCEPTION);
-                exitFromAlgorithm();
-            }
-            if (this.constructorClassFile.isEnum()) {
-                //don't know what Hotspot does if the constructor is that of an enum,
-                //but we will suppose it crashes
-                throw new UndefinedResultException("The first argument to sun.reflect.NativeConstructorAccessorImpl.newInstance0 was the constructor of an enum class.");
-            }
+            final Instance method = (Instance) state.getObject(refMethod);
+            final Instance_JAVA_CLASS methodJavaClass = (Instance_JAVA_CLASS) state.getObject((Reference) method.getFieldValue(JAVA_METHOD_CLAZZ));
+            this.methodClassFile = methodJavaClass.representedClass();
             
-            //gets the parameters types
-            final Array constructorParameterTypes = (Array) state.getObject((Reference) constructor.getFieldValue(JAVA_CONSTRUCTOR_PARAMETERTYPES));
-            if (constructorParameterTypes == null || !constructorParameterTypes.hasSimpleRep()) {
+            //gets the parameters types and counts them
+            final Array methodParameterTypes = (Array) state.getObject((Reference) method.getFieldValue(JAVA_METHOD_PARAMETERTYPES));
+            if (methodParameterTypes == null || !methodParameterTypes.hasSimpleRep()) {
                 //this should never happen
-                failExecution("The parameterTypes field in a java.lang.reflect.Constructor object is null or has not simple representation.");
+                failExecution("The parameterTypes field in a java.lang.reflect.Method object is null or has not simple representation.");
             }
-            final int numOfConstructorParametersTypes = ((Integer) ((Simplex) constructorParameterTypes.getLength()).getActualValue()).intValue();
+            final int numOfMethodParameterTypes = ((Integer) ((Simplex) methodParameterTypes.getLength()).getActualValue()).intValue();
 
             //gets the slot
-            final Primitive _slot = (Primitive) constructor.getFieldValue(JAVA_CONSTRUCTOR_SLOT);
+            final Primitive _slot = (Primitive) method.getFieldValue(JAVA_METHOD_SLOT);
             if (_slot.isSymbolic()) {
-                throw new SymbolicValueNotAllowedException("The slot field in a java.lang.reflect.Constructor object is symbolic.");
+                throw new SymbolicValueNotAllowedException("The slot field in a java.lang.reflect.Method object is symbolic.");
             }
             final int slot = ((Integer) ((Simplex) _slot).getActualValue()).intValue();
             
-            //gets the constructor signature
-            final Signature[] declaredConstructors = this.constructorClassFile.getDeclaredConstructors();
-            if (slot < 0 || slot >= declaredConstructors.length) {
+            //gets the method signature
+            final Signature[] declaredMethods = this.methodClassFile.getDeclaredMethods();
+            if (slot < 0 || slot >= declaredMethods.length) {
                 //invalid slot number
                 throwNew(state, calc, INTERNAL_ERROR);
                 exitFromAlgorithm();
             }            
-            this.constructorSignature = declaredConstructors[slot];
-
-            //determines the number of parameters
-            final int numOfConstructorParametersFormal =
-                splitParametersDescriptors(this.constructorSignature.getDescriptor()).length + 1; //one more for "this"
-            if (numOfConstructorParametersFormal != numOfConstructorParametersTypes + 1) {
+            //TODO resolve/lookup the method ???????
+            this.methodSignature = declaredMethods[slot];
+            
+            //determines if the method is static and the number of parameters
+            final boolean isMethodStatic = this.methodClassFile.isMethodStatic(this.methodSignature);
+            final int numAdditional = (isMethodStatic ? 0 : 1);
+            final int numOfMethodParametersFormal = 
+                splitParametersDescriptors(this.methodSignature.getDescriptor()).length + numAdditional;
+            if (numOfMethodParametersFormal != numOfMethodParameterTypes + numAdditional) {
                 throwNew(state, calc, INTERNAL_ERROR);
                 exitFromAlgorithm();
             }
-
+            
             //gets and checks the parameters
-            final Reference refParameters = (Reference) this.data.operand(1);
-            if (state.isNull(refParameters) && numOfConstructorParametersFormal != 1) {
-                throwNew(state, calc, ILLEGAL_ARGUMENT_EXCEPTION);
+            final Reference refThis = (Reference) this.data.operand(1);
+            final Reference refParameters = (Reference) this.data.operand(2);
+            if (state.isNull(refThis) && !isMethodStatic) {
+                throwNew(state, calc, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
-            final Array constructorParameters = (Array) state.getObject(refParameters);
-            if (constructorParameters != null && !constructorParameters.hasSimpleRep()) {
-                throw new SymbolicValueNotAllowedException("The Object[] args argument to sun.reflect.NativeConstructorAccessorImpl.newInstance0 was a symbolic object, or an array without simple representation.");
+            if (state.isNull(refParameters) && numOfMethodParametersFormal - numAdditional != 0) {
+                throwNew(state, calc, ILLEGAL_ARGUMENT_EXCEPTION);
+                exitFromAlgorithm();
+            }            
+            final Array methodParameters = (Array) state.getObject(refParameters);
+            if (methodParameters != null && !methodParameters.hasSimpleRep()) {
+                throw new SymbolicValueNotAllowedException("The Object[] args parameter to sun.reflect.NativeMethodAccessorImpl.invoke0 was a symbolic object, or an array without simple representation.");
             }
-            final int numOfConstructorParametersActual = (constructorParameters == null ? 0 : ((Integer) ((Simplex) constructorParameters.getLength()).getActualValue()).intValue()) + 1; //one more for "this"
-            if (numOfConstructorParametersFormal != numOfConstructorParametersActual) {
+            final int numOfMethodParametersActual = (methodParameters == null ? 0 : ((Integer) ((Simplex) methodParameters.getLength()).getActualValue()).intValue()) + numAdditional;
+            if (numOfMethodParametersFormal != numOfMethodParametersActual) {
                 throwNew(state, calc, ILLEGAL_ARGUMENT_EXCEPTION);
                 exitFromAlgorithm();
             }
             
             //scans the parameters and checks/unboxes/widens them
-            this.params = new Value[numOfConstructorParametersActual];
-            for (int i = 0; i < numOfConstructorParametersActual - 1; ++i) {
-                final Reference refTypeFormal = (Reference) ((AccessOutcomeInValue) constructorParameterTypes.getFast(calc, calc.valInt(i))).getValue();
-                final Reference refValActual = (Reference) ((AccessOutcomeInValue) constructorParameters.getFast(calc, calc.valInt(i))).getValue();
+            this.params = new Value[numOfMethodParametersActual];
+            if (!isMethodStatic) {
+                final Value actualConverted = checkAndConvert(state, (Reference) method.getFieldValue(JAVA_METHOD_CLAZZ), refThis);
+                this.params[0] = actualConverted;
+            }
+            for (int i = 0; i < numOfMethodParametersActual - numAdditional; ++i) {
+                final Reference refTypeFormal = (Reference) ((AccessOutcomeInValue) methodParameterTypes.getFast(calc, calc.valInt(i))).getValue();
+                final Reference refValActual = (Reference) ((AccessOutcomeInValue) methodParameters.getFast(calc, calc.valInt(i))).getValue();
                 final Value actualConverted = checkAndConvert(state, refTypeFormal, refValActual);
-                this.params[i + 1] = actualConverted;
+                this.params[i + numAdditional] = actualConverted;
             }
         } catch (ClassCastException e) {
             throwVerifyError(state, calc); //TODO is it right?
             exitFromAlgorithm();
-        } catch (FastArrayAccessNotAllowedException e) {
+        } catch (FastArrayAccessNotAllowedException | MethodNotFoundException e) {
             //this should never happen
             failExecution(e);
         }
@@ -188,7 +208,7 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
     
     private Value checkAndConvert(State state, Reference refTypeFormal, Reference refValActual) 
     throws InterruptException, ClasspathException, FrozenStateException {
-        final Calculator calc = this.ctx.getCalculator();
+    	final Calculator calc = this.ctx.getCalculator();
         try {
             final Instance_JAVA_CLASS typeFormalJavaClass = (Instance_JAVA_CLASS) state.getObject(refTypeFormal);
             final ClassFile typeFormal = typeFormalJavaClass.representedClass();
@@ -265,19 +285,44 @@ public final class Algo_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 extends A
     	final Calculator calc = this.ctx.getCalculator();
         return (state, alt) -> {
             try {
-                //creates the new object in the heap
-                final ReferenceConcrete refNew = state.createInstance(calc, this.constructorClassFile);
-                state.pushOperand(refNew);
-                this.params[0] = refNew;
-
-                //pushes the frames for the constructor and for the 
-                //method that boxes the exceptions raised by the constructor
+                //pushes the frames for the method and for the 
+                //method that boxes the exceptions raised by the method
                 final ClassFile cf_JBSE_BASE = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, JBSE_BASE, state.bypassStandardLoading());
-                state.pushFrame(calc, cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_V, false, this.pcOffset);
-                state.pushFrame(calc, this.constructorClassFile, this.constructorSignature, false, INVOKESPECIALSTATICVIRTUAL_OFFSET, this.params);
-            } catch (HeapMemoryExhaustedException e) {
-                throwNew(state, calc, OUT_OF_MEMORY_ERROR);
-                exitFromAlgorithm();
+                final char returnType = splitReturnValueDescriptor(this.methodSignature.getDescriptor()).charAt(0);
+                switch (returnType) {
+                case ARRAYOF:
+                case REFERENCE:
+                    state.pushFrame(calc, cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_L, false, this.pcOffset);
+                    break;
+                case BOOLEAN:
+                    state.pushFrame(calc, cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_Z, false, this.pcOffset);
+                    break;
+                case BYTE:
+                    state.pushFrame(calc, cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_B, false, this.pcOffset);
+                    break;
+                case CHAR:
+                    state.pushFrame(calc, cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_C, false, this.pcOffset);
+                    break;
+                case DOUBLE:
+                    state.pushFrame(calc, cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_D, false, this.pcOffset);
+                    break;
+                case FLOAT:
+                    state.pushFrame(calc, cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_F, false, this.pcOffset);
+                    break;
+                case INT:
+                    state.pushFrame(calc, cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_I, false, this.pcOffset);
+                    break;
+                case LONG:
+                    state.pushFrame(calc, cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_J, false, this.pcOffset);
+                    break;
+                case SHORT:
+                    state.pushFrame(calc, cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_S, false, this.pcOffset);
+                    break;
+                case VOID:
+                    state.pushFrame(calc, cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_V, false, this.pcOffset);
+                    break;
+                }
+                state.pushFrame(calc, this.methodClassFile, this.methodSignature, false, INVOKESPECIALSTATICVIRTUAL_OFFSET, this.params);
             } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException | 
                      WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException | 
                      PleaseLoadClassException | NullMethodReceiverException | MethodNotFoundException | 

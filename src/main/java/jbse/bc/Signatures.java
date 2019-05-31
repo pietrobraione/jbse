@@ -130,6 +130,7 @@ public final class Signatures {
     public static final String SUN_EXTENSIONDEPENDENCY       = "sun/misc/ExtensionDependency";
     public static final String SUN_JARINDEX                  = "sun/misc/JarIndex";
     public static final String SUN_NATIVECONSTRUCTORACCESSORIMPL = "sun/reflect/NativeConstructorAccessorImpl";
+    public static final String SUN_NATIVEMETHODACCESSORIMPL  = "sun/reflect/NativeMethodAccessorImpl";
     public static final String SUN_PERF                      = "sun/misc/Perf";
     public static final String SUN_PERFCOUNTER               = "sun/misc/PerfCounter";
     public static final String SUN_PERFCOUNTER_CORECOUNTERS  = "sun/misc/PerfCounter$CoreCounters";
@@ -198,7 +199,7 @@ public final class Signatures {
     public static final Signature JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_1 =
         new Signature(JAVA_ACCESSCONTROLLER, "(" + REFERENCE + JAVA_PRIVILEGEDEXCEPTIONACTION + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "doPrivileged");
     public static final Signature JAVA_ACCESSCONTROLLER_DOPRIVILEGED_EXCEPTION_2 =
-    new Signature(JAVA_ACCESSCONTROLLER, "(" + REFERENCE + JAVA_PRIVILEGEDEXCEPTIONACTION + TYPEEND + REFERENCE + JAVA_ACCESSCONTROLCONTEXT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "doPrivileged");
+        new Signature(JAVA_ACCESSCONTROLLER, "(" + REFERENCE + JAVA_PRIVILEGEDEXCEPTIONACTION + TYPEEND + REFERENCE + JAVA_ACCESSCONTROLCONTEXT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "doPrivileged");
     public static final Signature JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION_1 =
         new Signature(JAVA_ACCESSCONTROLLER, "(" + REFERENCE + JAVA_PRIVILEGEDACTION + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, "doPrivileged");
     public static final Signature JAVA_ACCESSCONTROLLER_DOPRIVILEGED_NOEXCEPTION_2 =
@@ -383,21 +384,21 @@ public final class Signatures {
     public static final Signature JAVA_STRICTMATH_LOG1P = 
         new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "log1p");
     public static final Signature JAVA_STRICTMATH_MAX_DOUBLE = 
-            new Signature(JAVA_STRICTMATH, "(" + DOUBLE + DOUBLE + ")" + DOUBLE, "max");
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + DOUBLE + ")" + DOUBLE, "max");
     public static final Signature JAVA_STRICTMATH_MAX_FLOAT = 
-            new Signature(JAVA_STRICTMATH, "(" + FLOAT + FLOAT + ")" + FLOAT, "max");
+        new Signature(JAVA_STRICTMATH, "(" + FLOAT + FLOAT + ")" + FLOAT, "max");
     public static final Signature JAVA_STRICTMATH_MAX_INT = 
-            new Signature(JAVA_STRICTMATH, "(" + INT + INT + ")" + INT, "max");
+        new Signature(JAVA_STRICTMATH, "(" + INT + INT + ")" + INT, "max");
     public static final Signature JAVA_STRICTMATH_MAX_LONG = 
-            new Signature(JAVA_STRICTMATH, "(" + LONG + LONG + ")" + LONG, "max");
+        new Signature(JAVA_STRICTMATH, "(" + LONG + LONG + ")" + LONG, "max");
     public static final Signature JAVA_STRICTMATH_MIN_DOUBLE = 
-            new Signature(JAVA_STRICTMATH, "(" + DOUBLE + DOUBLE + ")" + DOUBLE, "min");
+        new Signature(JAVA_STRICTMATH, "(" + DOUBLE + DOUBLE + ")" + DOUBLE, "min");
     public static final Signature JAVA_STRICTMATH_MIN_FLOAT = 
-            new Signature(JAVA_STRICTMATH, "(" + FLOAT + FLOAT + ")" + FLOAT, "min");
+        new Signature(JAVA_STRICTMATH, "(" + FLOAT + FLOAT + ")" + FLOAT, "min");
     public static final Signature JAVA_STRICTMATH_MIN_INT = 
-            new Signature(JAVA_STRICTMATH, "(" + INT + INT + ")" + INT, "min");
+        new Signature(JAVA_STRICTMATH, "(" + INT + INT + ")" + INT, "min");
     public static final Signature JAVA_STRICTMATH_MIN_LONG = 
-            new Signature(JAVA_STRICTMATH, "(" + LONG + LONG + ")" + LONG, "min");
+        new Signature(JAVA_STRICTMATH, "(" + LONG + LONG + ")" + LONG, "min");
     public static final Signature JAVA_STRICTMATH_POW = 
         new Signature(JAVA_STRICTMATH, "(" + DOUBLE + DOUBLE + ")" + DOUBLE, "pow");
     public static final Signature JAVA_STRICTMATH_SIN = 
@@ -590,8 +591,26 @@ public final class Signatures {
         new Signature(JBSE_ANALYSIS, "(" + SHORT + ")" + REFERENCE + JAVA_STRING + TYPEEND, "symbolName");
     public static final Signature JBSE_BASE_BOXEXCEPTIONININITIALIZERERROR = 
         new Signature(JBSE_BASE, "()" + VOID, "boxExceptionInInitializerError");
-    public static final Signature JBSE_BASE_BOXINVOCATIONTARGETEXCEPTION = 
-        new Signature(JBSE_BASE, "()" + VOID, "boxInvocationTargetException");
+    public static final Signature JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_B = 
+        new Signature(JBSE_BASE, "()" + REFERENCE + JAVA_OBJECT + TYPEEND, "boxInvocationTargetExceptionAndReturn_B");
+    public static final Signature JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_C = 
+        new Signature(JBSE_BASE, "()" + REFERENCE + JAVA_OBJECT + TYPEEND, "boxInvocationTargetExceptionAndReturn_C");
+    public static final Signature JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_D = 
+        new Signature(JBSE_BASE, "()" + REFERENCE + JAVA_OBJECT + TYPEEND, "boxInvocationTargetExceptionAndReturn_D");
+    public static final Signature JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_F = 
+        new Signature(JBSE_BASE, "()" + REFERENCE + JAVA_OBJECT + TYPEEND, "boxInvocationTargetExceptionAndReturn_F");
+    public static final Signature JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_I = 
+        new Signature(JBSE_BASE, "()" + REFERENCE + JAVA_OBJECT + TYPEEND, "boxInvocationTargetExceptionAndReturn_I");
+    public static final Signature JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_J = 
+        new Signature(JBSE_BASE, "()" + REFERENCE + JAVA_OBJECT + TYPEEND, "boxInvocationTargetExceptionAndReturn_J");
+    public static final Signature JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_L = 
+        new Signature(JBSE_BASE, "()" + REFERENCE + JAVA_OBJECT + TYPEEND, "boxInvocationTargetExceptionAndReturn_L");
+    public static final Signature JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_S = 
+        new Signature(JBSE_BASE, "()" + REFERENCE + JAVA_OBJECT + TYPEEND, "boxInvocationTargetExceptionAndReturn_S");
+    public static final Signature JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_V = 
+        new Signature(JBSE_BASE, "()" + VOID, "boxInvocationTargetExceptionAndReturn_V");
+    public static final Signature JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_Z = 
+        new Signature(JBSE_BASE, "()" + REFERENCE + JAVA_OBJECT + TYPEEND, "boxInvocationTargetExceptionAndReturn_Z");
     public static final Signature JBSE_BASE_MAKEKLASSSYMBOLIC = 
         new Signature(JBSE_BASE, "(" + INT + REFERENCE + JAVA_STRING + TYPEEND +")" + VOID, "makeKlassSymbolic");
     public static final Signature JBSE_BASE_MAKEKLASSSYMBOLIC_DO = 
@@ -600,6 +619,10 @@ public final class Signatures {
         new Signature(SUN_NATIVECONSTRUCTORACCESSORIMPL, 
                       "(" + REFERENCE + JAVA_CONSTRUCTOR + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, 
                       "newInstance0");
+    public static final Signature SUN_NATIVEMETHODACCESSORIMPL_INVOKE0 = 
+        new Signature(SUN_NATIVEMETHODACCESSORIMPL, 
+                      "(" + REFERENCE + JAVA_METHOD + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, 
+                      "invoke0");
     public static final Signature SUN_PERF_CREATELONG =
         new Signature(SUN_PERF, "(" + REFERENCE + JAVA_STRING + TYPEEND + INT + INT + LONG + ")" + REFERENCE + JAVA_BYTEBUFFER + TYPEEND, "createLong");
     public static final Signature SUN_PERF_REGISTERNATIVES =

@@ -379,17 +379,190 @@ public final class Base {
         return null;
     }
     
-    private static void foo() throws Exception { }
+    private static byte foo_B() throws Exception { return (byte) 0; }
+    
+    private static char foo_C() throws Exception { return '\u0000'; }
+    
+    private static double foo_D() throws Exception { return 0.0d; }
+    
+    private static float foo_F() throws Exception { return 0.0f; }
+    
+    private static int foo_I() throws Exception { return 0; }
+    
+    private static long foo_J() throws Exception { return 0L; }
+    
+    private static Object foo_L() throws Exception { return null; }
+    
+    private static short foo_S() throws Exception { return (short) 0; }
+    
+    private static void foo_V() throws Exception { }
+    
+    private static boolean foo_Z() throws Exception { return false; }
     
     /**
-     * Helper method for {@link sun.reflect.NativeConstructorAccessorImpl#newInstanceFromConstructor(Constructor, Object[])}.
-     * Just boxes the exceptions that are raised by the execution of a constructor 
-     * into an {@link InvocationTargetException} and rethrows them.
+     * Helper method for {@link sun.reflect.NativeMethodAccessorImpl#invoke0(Method, Object, Object[])}.
+     * Boxes the exceptions that are raised by the execution of a method 
+     * into an {@link InvocationTargetException} and rethrows them. Also, 
+     * boxes the return value (of primitive type byte) from the execution of 
+     * the method and returns it.
      */
-    private static void boxInvocationTargetException() 
+    private static Object boxInvocationTargetExceptionAndReturn_B() 
     throws InvocationTargetException {
         try {
-            foo(); //does nothing, it's just to force the compiler to generate the catch block
+            final byte b = foo_B(); //skip this
+            return Byte.valueOf(b);
+        } catch (Exception e) {
+            throw new InvocationTargetException(e);
+        }
+    }
+    
+    /**
+     * Helper method for {@link sun.reflect.NativeMethodAccessorImpl#invoke0(Method, Object, Object[])}.
+     * Boxes the exceptions that are raised by the execution of a method 
+     * into an {@link InvocationTargetException} and rethrows them. Also, 
+     * boxes the return value (of primitive type char) from the execution of 
+     * the method and returns it.
+     */
+    private static Object boxInvocationTargetExceptionAndReturn_C() 
+    throws InvocationTargetException {
+        try {
+            final char c = foo_C(); //skip this
+            return Character.valueOf(c);
+        } catch (Exception e) {
+            throw new InvocationTargetException(e);
+        }
+    }
+    
+    /**
+     * Helper method for {@link sun.reflect.NativeMethodAccessorImpl#invoke0(Method, Object, Object[])}.
+     * Boxes the exceptions that are raised by the execution of a method 
+     * into an {@link InvocationTargetException} and rethrows them. Also, 
+     * boxes the return value (of primitive type double) from the execution of 
+     * the method and returns it.
+     */
+    private static Object boxInvocationTargetExceptionAndReturn_D() 
+    throws InvocationTargetException {
+        try {
+            final double d = foo_D(); //skip this
+            return Double.valueOf(d);
+        } catch (Exception e) {
+            throw new InvocationTargetException(e);
+        }
+    }
+    
+    /**
+     * Helper method for {@link sun.reflect.NativeMethodAccessorImpl#invoke0(Method, Object, Object[])}.
+     * Boxes the exceptions that are raised by the execution of a method 
+     * into an {@link InvocationTargetException} and rethrows them. Also, 
+     * boxes the return value (of primitive type float) from the execution of 
+     * the method and returns it.
+     */
+    private static Object boxInvocationTargetExceptionAndReturn_F() 
+    throws InvocationTargetException {
+        try {
+            final float f = foo_F(); //skip this
+            return Float.valueOf(f);
+        } catch (Exception e) {
+            throw new InvocationTargetException(e);
+        }
+    }
+    
+    /**
+     * Helper method for {@link sun.reflect.NativeMethodAccessorImpl#invoke0(Method, Object, Object[])}.
+     * Boxes the exceptions that are raised by the execution of a method 
+     * into an {@link InvocationTargetException} and rethrows them. Also, 
+     * boxes the return value (of primitive type int) from the execution of 
+     * the method and returns it.
+     */
+    private static Object boxInvocationTargetExceptionAndReturn_I() 
+    throws InvocationTargetException {
+        try {
+            final int i = foo_I(); //skip this
+            return Integer.valueOf(i);
+        } catch (Exception e) {
+            throw new InvocationTargetException(e);
+        }
+    }
+    
+    /**
+     * Helper method for {@link sun.reflect.NativeMethodAccessorImpl#invoke0(Method, Object, Object[])}.
+     * Boxes the exceptions that are raised by the execution of a method 
+     * into an {@link InvocationTargetException} and rethrows them. Also, 
+     * boxes the return value (of primitive type long) from the execution of 
+     * the method and returns it.
+     */
+    private static Object boxInvocationTargetExceptionAndReturn_J() 
+    throws InvocationTargetException {
+        try {
+            final long j = foo_J(); //skip this
+            return Long.valueOf(j);
+        } catch (Exception e) {
+            throw new InvocationTargetException(e);
+        }
+    }
+    
+    /**
+     * Helper method for {@link sun.reflect.NativeMethodAccessorImpl#invoke0(Method, Object, Object[])}.
+     * Boxes the exceptions that are raised by the execution of a method 
+     * into an {@link InvocationTargetException} and rethrows them. Also, 
+     * takes the return value (object or array) from the execution of 
+     * the method and returns it.
+     */
+    private static Object boxInvocationTargetExceptionAndReturn_L() 
+    throws InvocationTargetException {
+        try {
+            final Object l = foo_L(); //skip this
+            return l;
+        } catch (Exception e) {
+            throw new InvocationTargetException(e);
+        }
+    }
+    
+    /**
+     * Helper method for {@link sun.reflect.NativeMethodAccessorImpl#invoke0(Method, Object, Object[])}.
+     * Boxes the exceptions that are raised by the execution of a method 
+     * into an {@link InvocationTargetException} and rethrows them. Also, 
+     * boxes the return value (of primitive type short) from the execution of 
+     * the method and returns it.
+     */
+    private static Object boxInvocationTargetExceptionAndReturn_S() 
+    throws InvocationTargetException {
+        try {
+            final short s = foo_S(); //skip this
+            return Short.valueOf(s);
+        } catch (Exception e) {
+            throw new InvocationTargetException(e);
+        }
+    }
+    
+    /**
+     * Helper method for {@link sun.reflect.NativeConstructorAccessorImpl#newInstance0(Constructor, Object[])}
+     * and {@link sun.reflect.NativeMethodAccessorImpl#invoke0(Method, Object, Object[])}.
+     * Boxes the exceptions that are raised by the execution of a constructor 
+     * into an {@link InvocationTargetException} and rethrows them.
+     */
+    private static void boxInvocationTargetExceptionAndReturn_V() 
+    throws InvocationTargetException {
+        try {
+            foo_V(); //skip this
+            return;
+        } catch (Exception e) {
+            throw new InvocationTargetException(e);
+        }
+    }
+    
+    /**
+     * Helper method for {@link sun.reflect.NativeMethodAccessorImpl#invoke0(Method, Object, Object[])}.
+     * Boxes the exceptions that are raised by the execution of a method 
+     * into an {@link InvocationTargetException} and rethrows them. Also, 
+     * boxes the return value (of primitive type boolean) from the execution of 
+     * the method and returns it.
+     */
+    private static Object boxInvocationTargetExceptionAndReturn_Z() 
+    throws InvocationTargetException {
+        try {
+            final boolean z = foo_Z(); //skip this
+            return Boolean.valueOf(z);
         } catch (Exception e) {
             throw new InvocationTargetException(e);
         }
@@ -403,7 +576,7 @@ public final class Base {
     private static void boxExceptionInInitializerError()
     throws ExceptionInInitializerError {
         try {
-            foo(); //does nothing, it's just to force the compiler to generate the catch block
+            foo_V(); //does nothing, it's just to force the compiler to generate the catch block
         } catch (Exception e) {
             throw new ExceptionInInitializerError(e);
         }
