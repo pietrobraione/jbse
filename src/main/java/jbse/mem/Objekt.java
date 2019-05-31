@@ -86,15 +86,15 @@ public interface Objekt extends Cloneable {
     Collection<Signature> getStoredFieldSignatures();
 
     /**
-     * Checks whether an object has a slot with a given number.
+     * Checks whether an object has an offset.
      * 
-     * @param slot an {@code int}.
-     * @return {@code true} iff the object has a field with slot
-     *         number {@code slot}. For arrays it is {@code true}
-     *         iff the array's length is concrete and {@code slot}
-     *         is in range.
+     * @param ofst an {@code int}.
+     * @return {@code true} iff {@code ofst} is a valid offset
+     *         number for the object. For arrays it is {@code true}
+     *         iff the array's length is concrete and {@code ofst}
+     *         is a possible array index.
      */
-    boolean hasSlot(int slot);
+    boolean hasOffset(int ofst);
 
     /**
      * Gets the value in a field of this {@link Objekt}.
@@ -124,25 +124,14 @@ public interface Objekt extends Cloneable {
     /**
      * Gets the value in a field of this {@link Objekt}.
      * 
-     * @param slot an {@code int} signifying a slot number
-     * of a field.
+     * @param ofst an {@code int} signifying an offset number
+     *        of a field (as returned by {@code sun.misc.Unsafe} methods).
      * @return a {@link Value} object which is the value 
-     * stored in the field of this {@link Objekt}, or 
-     * {@code null} if {@code slot} is not the slot number
-     * of a field. 
+     *         stored in the field of this {@link Objekt}, or 
+     *         {@code null} if {@code slot} is not the slot number
+     *         of a field. 
      */
-    Value getFieldValue(int slot);
-
-    /**
-     * Returns the slot number of a field.
-     * 
-     * @param field the {@link Signature} of the field.
-     * @return an {@code int} greater or equal to zero, 
-     *         signifying the slot number of the field
-     *         with signature {@code field}, or {@code -1}
-     *         if such field does not exist.
-     */
-    int getFieldSlot(Signature field);
+    Value getFieldValue(int ofst);
 
     /**
      * Sets the value of a field. Throws a runtime exception 
@@ -159,13 +148,13 @@ public interface Objekt extends Cloneable {
      * Sets the value of a field. Throws a runtime exception 
      * in the case the field does not exist or is immutable.
      * 
-     * @param slot an {@code int} signifying a slot number
-     *        of a field.
+     * @param ofst an {@code int} signifying an offset number
+     *        of a field (as returned by {@code sun.misc.Unsafe} methods).
      * @param item the new {@link Value} that must be assigned to
      *        the field.
      */
     //TODO throw exception in the case a field does not exist or is immutable
-    void setFieldValue(int slot, Value item);
+    void setFieldValue(int ofst, Value item);
 
     /**
      * Returns an immutable view of this 

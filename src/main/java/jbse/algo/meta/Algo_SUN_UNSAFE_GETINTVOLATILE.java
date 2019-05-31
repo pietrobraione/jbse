@@ -72,7 +72,7 @@ public final class Algo_SUN_UNSAFE_GETINTVOLATILE extends Algo_INVOKEMETA_Nonbra
             }
             
             //reads the value
-            if (obj.hasSlot(ofst)) {
+            if (obj.hasOffset(ofst)) {
                 this.read = obj.getFieldValue(ofst);
             } else {
                 throw new UndefinedResultException("The offset parameter to sun.misc.Unsafe.getIntVolatile was not a slot number of the object parameter");

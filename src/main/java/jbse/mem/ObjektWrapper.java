@@ -95,8 +95,8 @@ abstract class ObjektWrapper<T extends ObjektImpl> implements Objekt {
 	}
 
 	@Override
-	public final boolean hasSlot(int slot) {
-		return getDelegate().hasSlot(slot);
+	public final boolean hasOffset(int slot) {
+		return getDelegate().hasOffset(slot);
 	}
 
 	@Override
@@ -112,11 +112,6 @@ abstract class ObjektWrapper<T extends ObjektImpl> implements Objekt {
 	@Override
 	public final Value getFieldValue(int slot) {
 		return getDelegate().getFieldValue(slot);
-	}
-
-	@Override
-	public final int getFieldSlot(Signature field) {
-		return getDelegate().getFieldSlot(field);
 	}
 
 	@Override

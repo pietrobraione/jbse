@@ -38,7 +38,7 @@ import jbse.val.exc.InvalidTypeException;
 public abstract class Algo_SUN_UNSAFE_COMPAREANDSWAPX extends Algo_INVOKEMETA_Nonbranching {
     private final String what;  //set by constructor
     private Objekt objectToSet; //set by cookMore
-    private int fieldSlotToSet; //set by cookMore
+    private int fieldOffset; //set by cookMore
     private Value toWrite; //set by cookMore
 
     protected Algo_SUN_UNSAFE_COMPAREANDSWAPX(String what) {
@@ -64,23 +64,23 @@ public abstract class Algo_SUN_UNSAFE_COMPAREANDSWAPX extends Algo_INVOKEMETA_No
             this.objectToSet = state.getObject(refObjectToSet);
             if (this.objectToSet == null) {
                 //this should never happen
-                failExecution("Unexpected unresolved symbolic references as object to be set parameter of sun.misc.Unsafe.compareAndSwap" + this.what + " invocation");
+                failExecution("Unexpected unresolved symbolic reference as Object o parameter of sun.misc.Unsafe.compareAndSwap" + this.what + " invocation.");
             }
             if (this.objectToSet instanceof Array && !((Array) this.objectToSet).hasSimpleRep()) {
-                throw new SymbolicValueNotAllowedException("The object to be set parameter to sun.misc.Unsafe.compareAndSwap" + this.what + " is an array that has not simple representation");
+                throw new SymbolicValueNotAllowedException("The Object o parameter to sun.misc.Unsafe.compareAndSwap" + this.what + " is an array that has not simple representation.");
             }
             if (this.data.operand(2) instanceof Simplex) {
-                this.fieldSlotToSet = ((Long) ((Simplex) this.data.operand(2)).getActualValue()).intValue();
+                this.fieldOffset = ((Long) ((Simplex) this.data.operand(2)).getActualValue()).intValue();
             } else {
-                throw new SymbolicValueNotAllowedException("The slot parameter to sun.misc.Unsafe.compareAndSwap" + this.what + " must be concrete or resolved symbolic");
+                throw new SymbolicValueNotAllowedException("The long offset parameter to sun.misc.Unsafe.compareAndSwap" + this.what + " must be concrete.");
             }
             final Value toCompare = this.data.operand(3);
             this.toWrite = this.data.operand(4);
-            if (this.objectToSet.hasSlot(this.fieldSlotToSet)) {
+            if (this.objectToSet.hasOffset(this.fieldOffset)) {
                 try {
                     final Value current = (this.objectToSet instanceof Array) ? 
-                                          ((AccessOutcomeInValue) ((Array) this.objectToSet).getFast(calc, calc.valInt(this.fieldSlotToSet))).getValue() :
-                                          this.objectToSet.getFieldValue(this.fieldSlotToSet);
+                                          ((AccessOutcomeInValue) ((Array) this.objectToSet).getFast(calc, calc.valInt(this.fieldOffset))).getValue() :
+                                          this.objectToSet.getFieldValue(this.fieldOffset);
                     if (!checkCompare(state, current, toCompare)) {
                         this.objectToSet = null;
                     }
@@ -110,13 +110,13 @@ public abstract class Algo_SUN_UNSAFE_COMPAREANDSWAPX extends Algo_INVOKEMETA_No
             } else {
                 if (this.objectToSet instanceof Array) {
                     try {
-                        ((Array) this.objectToSet).setFast(calc.valInt(this.fieldSlotToSet), this.toWrite);
+                        ((Array) this.objectToSet).setFast(calc.valInt(this.fieldOffset), this.toWrite);
                     } catch (InvalidTypeException | FastArrayAccessNotAllowedException e) {
                         //this should never happen
                         failExecution(e);
                     }
                 } else {
-                    this.objectToSet.setFieldValue(this.fieldSlotToSet, this.toWrite);
+                    this.objectToSet.setFieldValue(this.fieldOffset, this.toWrite);
                 }
                 state.pushOperand(calc.valInt(1)); //true
             }

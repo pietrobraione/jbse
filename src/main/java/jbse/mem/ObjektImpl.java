@@ -37,7 +37,7 @@ public abstract class ObjektImpl implements Objekt {
 
     /** 
      * {@code true} if the object must store the static fields,
-     * {@code false} if it must store the object (nonstatic) fields.
+     * {@code false} if it must store the nonstatic fields.
      */
     private final boolean staticFields;
 
@@ -48,8 +48,9 @@ public abstract class ObjektImpl implements Objekt {
      * All the signatures of all the fields declared by 
      * this {@link ObjektImpl}'s class (static and nonstatic)
      * or superclasses (nonstatic). The position of a field
-     * signature in this list is its slot number,
-     * used to support sun.misc.Unsafe. Immutable. */
+     * signature in this list (starting from the end) is 
+     * the field's offset number, as used by sun.misc.Unsafe 
+     * methods. Immutable. */
     private final List<Signature> fieldSignatures;
 
     /** 
@@ -157,14 +158,19 @@ public abstract class ObjektImpl implements Objekt {
             return Collections.unmodifiableCollection(this.fieldSignatures.subList(this.numOfStaticFields, this.fieldSignatures.size()));
         }
     }
+    
+    private int ofstToPos(int ofst) {
+        return this.fieldSignatures.size() - 1 - ofst;
+    }
 
     //TODO overridden by array, refactor to avoid this
     @Override
-    public boolean hasSlot(int slot) {
+    public boolean hasOffset(int ofst) {
+        final int pos = ofstToPos(ofst);
         if (this.staticFields) {
-            return (0 <= slot && slot < this.numOfStaticFields);
+            return (0 <= pos && pos < this.numOfStaticFields);
         } else {
-            return (this.numOfStaticFields <= slot && slot < this.fieldSignatures.size());
+            return (this.numOfStaticFields <= pos && pos < this.fieldSignatures.size());
         }
     }
 
@@ -179,7 +185,7 @@ public abstract class ObjektImpl implements Objekt {
 
     @Override
     public final Value getFieldValue(String fieldName, String fieldClass) {
-        for (Signature sig: this.fieldSignatures) {
+        for (Signature sig: this.fieldSignatures) { //not very efficient but we don't care
             if (sig.getName().equals(fieldName) && sig.getClassName().equals(fieldClass)) {
                 return getFieldValue(sig);
             }
@@ -188,17 +194,12 @@ public abstract class ObjektImpl implements Objekt {
     }
 
     @Override
-    public final Value getFieldValue(int slot) {
+    public final Value getFieldValue(int ofst) {
         try {
-            return getFieldValue(this.fieldSignatures.get(slot));
+            return getFieldValue(this.fieldSignatures.get(ofstToPos(ofst)));
         } catch (IndexOutOfBoundsException e) {
             return null;
         }
-    }
-
-    @Override
-    public final int getFieldSlot(Signature field) {
-        return this.fieldSignatures.indexOf(field); //not very efficient but we don't care
     }
 
     @Override
@@ -207,8 +208,8 @@ public abstract class ObjektImpl implements Objekt {
     }
 
     @Override
-    public final void setFieldValue(int slot, Value item) {
-        setFieldValue(this.fieldSignatures.get(slot), item);
+    public final void setFieldValue(int ofst, Value item) {
+        setFieldValue(this.fieldSignatures.get(ofstToPos(ofst)), item);
     }
 
     @Override

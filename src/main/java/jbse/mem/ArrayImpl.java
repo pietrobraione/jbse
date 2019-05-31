@@ -921,7 +921,7 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     }
 
     @Override
-    public boolean hasSlot(int slot) {
+    public boolean hasOffset(int slot) {
     	return (hasSimpleRep() ? 0 <= slot && slot <= ((Integer) ((Simplex) getLength()).getActualValue()).intValue() : false);
     }
 
