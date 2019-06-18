@@ -17,6 +17,7 @@ import static jbse.common.Util.unsafe;
 
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilterInputStream;
 import java.io.FilterOutputStream;
@@ -103,6 +104,9 @@ public final class State implements Cloneable {
     private static final Field FOS_OUT;
     private static final Field FILEDESCRIPTOR_FD;
     private static final Field FILEDESCRIPTOR_HANDLE;
+    private static final FileInputStream INPUT_NULL;
+    private static final FileOutputStream OUTPUT_NULL;
+    private static final FileOutputStream ERROR_NULL;
     static {
         //these are always present
         try {
@@ -135,6 +139,23 @@ public final class State implements Cloneable {
     	if (FILEDESCRIPTOR_HANDLE != null) {
     		FILEDESCRIPTOR_HANDLE.setAccessible(true);
     	}
+    	
+    	//opens the null file
+		try {
+			if (FILEDESCRIPTOR_HANDLE == null) {
+				//macOS and Linux
+				INPUT_NULL = new FileInputStream("/dev/null");
+				OUTPUT_NULL = new FileOutputStream("/dev/null");
+				ERROR_NULL = new FileOutputStream("/dev/null");
+			} else {
+				//Windows
+				INPUT_NULL = new FileInputStream("NUL");
+				OUTPUT_NULL = new FileOutputStream("NUL");
+				ERROR_NULL = new FileOutputStream("NUL");
+			}
+		} catch (FileNotFoundException e) {
+			throw new UnexpectedInternalException(e);
+		}
     }
 
 
@@ -480,7 +501,6 @@ public final class State implements Cloneable {
     
     private void setStandardFiles() {
         try {            
-            
             //gets the stdin
             FileInputStream in = null;
             for (InputStream is = System.in; (is instanceof FilterInputStream) || (is instanceof FileInputStream); is = (InputStream) FIS_IN.get(is)) {
@@ -488,9 +508,15 @@ public final class State implements Cloneable {
                     in = (FileInputStream) is;
                     break;
                 }
-            }//TODO do something if in == null
+            }
             
-            //gets the stdin identifier
+            //if in == null, considers the null file
+            //as the stdin
+            if (in == null) {
+            	in = INPUT_NULL;
+            }
+            
+        	//gets the stdin identifier 
             if (FILEDESCRIPTOR_HANDLE == null) {
             	this.inFileId = ((Integer) FILEDESCRIPTOR_FD.get(in.getFD())).longValue();
             } else {
@@ -502,12 +528,18 @@ public final class State implements Cloneable {
             
             //gets the stdout
             FileOutputStream out = null;
-            for (OutputStream os = System.out; (os instanceof FilterOutputStream) || (os instanceof FileOutputStream); os = (OutputStream) FOS_OUT.get(os)) {
+            for (OutputStream os = System.out; (os instanceof FilterOutputStream) || (os instanceof FileOutputStream); os = (OutputStream) FOS_OUT.get(os)) {                
                 if (os instanceof FileOutputStream) {
                     out = (FileOutputStream) os;
                     break;
                 }
-            }//TODO if out == null, set to some backup output file
+            }
+            
+            //if out == null, considers the null file
+            //as the stdout
+            if (out == null) {
+            	out = OUTPUT_NULL;
+            }
             
             //gets the stdout identifier
             if (FILEDESCRIPTOR_HANDLE == null) {
@@ -526,7 +558,13 @@ public final class State implements Cloneable {
                     err = (FileOutputStream) os;
                     break;
                 }
-            }//TODO if err == null, set to some backup output file
+            }
+            
+            //if err == null, considers the null file
+            //as the stderr
+            if (err == null) {
+            	err = ERROR_NULL;
+            }
             
             //gets the stderr identifier
             if (FILEDESCRIPTOR_HANDLE == null) {
