@@ -172,13 +172,13 @@ public final class EngineParameters implements Cloneable {
      * {@code initialState}'s bootstrap path when 
      * {@code initialState != null}. 
      */
-    private Path javaHome = Paths.get(System.getProperty("java.home"));
+    private Path javaHome = Paths.get(System.getProperty("java.home", ""));
     
     /** 
      * The extensions directories; overridden by {@code initialState}'s 
      * extension directories when {@code initialState != null}. 
      */
-    private ArrayList<Path> extPaths = new ArrayList<>(Arrays.stream(System.getProperty("java.ext.dirs").split(File.pathSeparator))
+    private ArrayList<Path> extPaths = new ArrayList<>(Arrays.stream(System.getProperty("java.ext.dirs", "").split(File.pathSeparator))
                                                        .map(s -> Paths.get(s)).collect(Collectors.toList()));
 
     /**  

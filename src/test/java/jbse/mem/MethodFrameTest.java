@@ -41,7 +41,7 @@ public class MethodFrameTest {
         //environment
         final ArrayList<Path> userPath = new ArrayList<>();
         userPath.add(Paths.get("src/test/resources/jbse/bc/testdata"));
-        final Classpath env = new Classpath(Paths.get(System.getProperty("java.home")), new ArrayList<>(), userPath);
+        final Classpath env = new Classpath(Paths.get(System.getProperty("java.home", "")), new ArrayList<>(), userPath);
 
         //class hierarchy
         this.hier = new ClassHierarchy(env, ClassFileFactoryJavassist.class, new HashMap<>());

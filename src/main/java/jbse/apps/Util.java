@@ -34,10 +34,10 @@ import jbse.val.WideningConversion;
 
 public class Util {
     /** Constant for line separator. */
-    public static final String LINE_SEP = System.getProperty("line.separator");
+    public static final String LINE_SEP = System.getProperty("line.separator", "\n");
 
-    /** Constant for path separator. */
-    public static final String PATH_SEP = System.getProperty("file.separator");
+    /** Constant for file separator. */
+    public static final String FILE_SEP = System.getProperty("file.separator");
 
     /** Constant for signature separator. */
     public static final String SIGNATURE_SEP = ":";

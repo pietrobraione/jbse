@@ -1,7 +1,7 @@
 package jbse.apps;
 
 import static jbse.apps.Util.LINE_SEP;
-import static jbse.apps.Util.PATH_SEP;
+import static jbse.apps.Util.FILE_SEP;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -589,7 +589,7 @@ public final class StateFormatterText implements Formatter {
             if (srcPath == null) {
                 row = null;
             } else {
-                row = Util.getSrcFileRow(f.getCurrentMethodSignature().getClassName(), srcPath, PATH_SEP, sourceRow);
+                row = Util.getSrcFileRow(f.getCurrentMethodSignature().getClassName(), srcPath, FILE_SEP, sourceRow);
             }
             sb.append(row == null ? "<UNKNOWN>" : row);
         }
