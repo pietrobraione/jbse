@@ -64,7 +64,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
                 this.newObjectClass = state.getClassHierarchy().resolveClass(currentClass, this.data.className(), state.bypassStandardLoading());
                 
                 //possibly initializes the class
-                ensureClassInitialized(state, newObjectClass, this.ctx);
+                ensureClassInitialized(state, this.newObjectClass, this.ctx);
             } catch (PleaseLoadClassException e) {
                 invokeClassLoaderLoadClass(state, this.ctx.getCalculator(), e);
                 exitFromAlgorithm();

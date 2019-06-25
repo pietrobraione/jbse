@@ -123,7 +123,7 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
             try {
                 if (this.methodImplClass == null || this.methodImplClass.isMethodAbstract(this.methodImplSignature)) {
                     //Algo_INVOKEX found a standard implementation, so this should never happen
-                    failExecution("Unexpected missing method implementation");
+                    failExecution("Unexpected missing method implementation.");
                 }
             } catch (MethodNotFoundException e) {
                 //this should never happen after resolution 
@@ -147,7 +147,7 @@ final class Algo_INVOKEX_Completion extends Algo_INVOKEX_Abstract {
             //overriding implementation)
             try {
                 if (this.methodImplClass.isMethodNative(this.methodImplSignature)) {
-                    throw new NotYetImplementedException("method " + this.methodImplSignature + " is native and has no overriding implementation");
+                    throw new NotYetImplementedException("Method " + this.methodImplSignature + " is native and has no overriding implementation.");
                 }
             } catch (MethodNotFoundException e) {
                 //this should never happen
