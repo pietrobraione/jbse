@@ -154,6 +154,11 @@ public class ClassFileSnippetNoWrap extends ClassFile {
     }
     
     @Override
+    public byte[] getClassAnnotationsRaw() {
+        return new byte[0];
+    }
+
+    @Override
     public ClassFile getMemberClass() {
         return null;
     }

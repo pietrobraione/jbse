@@ -246,6 +246,14 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * @return {@code true} iff the class is anonymous.
      */
     public abstract boolean isAnonymous();
+    
+    /**
+     * Returns all the annotations of the class (raw classfile format).
+     * 
+     * @return a {@link byte}{@code []} containing all the annotations 
+     *         of the class.
+     */
+    public abstract byte[] getClassAnnotationsRaw();
 
     /**
      * Returns the class for the member type

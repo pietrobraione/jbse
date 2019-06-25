@@ -155,6 +155,11 @@ public class ClassFileSnippetWrap extends ClassFile {
     }
     
     @Override
+    public byte[] getClassAnnotationsRaw() {
+        return new byte[0];
+    }
+
+    @Override
     public ClassFile getMemberClass() {
         return this.component.getMemberClass();
     }

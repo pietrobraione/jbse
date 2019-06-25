@@ -127,6 +127,7 @@ public final class Signatures {
     public static final String JBSE_BASE                     = "jbse/base/Base";
     public static final String SUN_ASCIICASEINSENSITIVECOMPARATOR = "sun/misc/ASCIICaseInsensitiveComparator";
     public static final String SUN_CALLERSENSITIVE           = "sun/reflect/CallerSensitive";
+    public static final String SUN_CONSTANTPOOL              = "sun/reflect/ConstantPool";
     public static final String SUN_EXTENSIONDEPENDENCY       = "sun/misc/ExtensionDependency";
     public static final String SUN_JARINDEX                  = "sun/misc/JarIndex";
     public static final String SUN_NATIVECONSTRUCTORACCESSORIMPL = "sun/reflect/NativeConstructorAccessorImpl";
@@ -214,6 +215,8 @@ public final class Signatures {
         new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_STRING + TYPEEND + BOOLEAN + REFERENCE + JAVA_CLASSLOADER + TYPEEND + REFERENCE + JAVA_CLASS + TYPEEND + ")" + REFERENCE + JAVA_CLASS + TYPEEND, "forName0");
     public static final Signature JAVA_CLASS_GETCOMPONENTTYPE =
         new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getComponentType");
+    public static final Signature JAVA_CLASS_GETCONSTANTPOOL =
+        new Signature(JAVA_CLASS, "()" + REFERENCE + SUN_CONSTANTPOOL + TYPEEND, "getConstantPool");
     public static final Signature JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 =
         new Signature(JAVA_CLASS, "(" + BOOLEAN + ")" + ARRAYOF + REFERENCE + JAVA_CONSTRUCTOR + TYPEEND, "getDeclaredConstructors0");
     public static final Signature JAVA_CLASS_GETDECLAREDFIELDS0 =
@@ -230,6 +233,8 @@ public final class Signatures {
         new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_STRING + TYPEEND, "getName0");
     public static final Signature JAVA_CLASS_GETPRIMITIVECLASS =
         new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_CLASS + TYPEEND, "getPrimitiveClass");
+    public static final Signature JAVA_CLASS_GETRAWANNOTATIONS =
+        new Signature(JAVA_CLASS, "()" + ARRAYOF + BYTE, "getRawAnnotations");
     public static final Signature JAVA_CLASS_GETSUPERCLASS =
         new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getSuperclass");
     public static final Signature JAVA_CLASS_ISARRAY =
@@ -936,6 +941,8 @@ public final class Signatures {
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "USER_TIMEZONE");
     public static final Signature JBSE_BASE_USER_VARIANT = 
         new Signature(JBSE_BASE, "" + REFERENCE + JAVA_STRING + TYPEEND, "USER_VARIANT");
+    public static final Signature SUN_CONSTANTPOOL_CONSTANTPOOLOOP =
+        new Signature(SUN_CONSTANTPOOL, "" + REFERENCE + JAVA_OBJECT + TYPEEND, "constantPoolOop");
 
     /**
      * Do not instantiate it! 

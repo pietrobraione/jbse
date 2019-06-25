@@ -477,6 +477,13 @@ public class ClassFileJavassist extends ClassFile {
     }
     
     @Override
+    public byte[] getClassAnnotationsRaw() {
+        final AttributeInfo attrVisible = this.cf.getAttribute(AnnotationsAttribute.visibleTag);
+        final AttributeInfo attrInvisible = this.cf.getAttribute(AnnotationsAttribute.invisibleTag);
+        return mergeVisibleAndInvisibleAttributes(attrVisible, attrInvisible);
+    }
+
+    @Override
     public ClassFile getMemberClass() {
         return null;
     }
