@@ -25,8 +25,10 @@ import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.binaryClassName;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
@@ -57,6 +59,8 @@ import jbse.common.Type;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
+import jbse.dec.DecisionProcedureAlgorithms;
+import jbse.dec.DecisionProcedureAlgorithms.ArrayAccessInfo;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
 import jbse.mem.Frame;
@@ -73,12 +77,15 @@ import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
 import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.val.Calculator;
+import jbse.val.Expression;
 import jbse.val.Null;
 import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.Simplex;
+import jbse.val.Term;
 import jbse.val.Value;
+import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
 
 public final class Util {
@@ -1165,6 +1172,112 @@ public final class Util {
             }
         }
         throw new UnexpectedInternalException("Unable to find the classfile for a reference resolution.");
+    }
+    
+    /**
+     * Returns the outcomes of an access to an array, performing transitive
+     * access to backing arrays, creating fresh symbols if necessary, and
+     * producing a result that can be passed to {@link DecisionProcedureAlgorithms}
+     * methods.
+     * 
+     * @param state a {@link State}. It must not be {@code null}.
+     * @param calc a {@link Calculator}. It must not be {@code null}.
+     * @param arrayRef a {@link Reference} to the array that is being accessed.
+     *         It must not be {@code null}.
+     * @param index a {@link Primitive}, the index of the array access.
+     *         It must not be {@code null}.
+     * @return a {@link List}{@code <}{@link ArrayAccessInfo}{@code >}.
+     * @throws InvalidInputException if any parameter is {@code null}, or
+     *         {@code state} is frozen.
+     */
+    public static List<ArrayAccessInfo> getFromArray(State state, Calculator calc, Reference arrayRef, Primitive index) 
+    throws InvalidInputException {
+        if (state == null || calc == null || arrayRef == null || index == null) {
+            throw new InvalidInputException("Invoked getFromArray with a null parameter.");
+        }
+        final ArrayList<ArrayAccessInfo> retVal = new ArrayList<>();
+        final LinkedList<Reference> refToArraysToProcess = new LinkedList<>();
+        final LinkedList<Expression> accessConditions = new LinkedList<>();
+        final LinkedList<Term> indicesFormal = new LinkedList<>();
+        final LinkedList<Primitive> offsets = new LinkedList<>();
+        refToArraysToProcess.add(arrayRef);
+        accessConditions.add(null);
+        indicesFormal.add(null);
+        offsets.add(calc.valInt(0));
+        while (!refToArraysToProcess.isEmpty()) {
+            final Reference refToArrayToProcess = refToArraysToProcess.remove();
+            final Primitive referringArrayAccessCondition = accessConditions.remove();
+            final Term referringArrayIndexFormal = indicesFormal.remove();
+            final Primitive referringArrayOffset = offsets.remove();
+            Array arrayToProcess = null; //to keep the compiler happy
+            try {
+                arrayToProcess = (Array) state.getObject(refToArrayToProcess);
+            } catch (ClassCastException exc) {
+                //this should never happen
+                failExecution(exc);
+            }
+            if (arrayToProcess == null) {
+                //this should never happen
+                failExecution("An initial array that backs another array is null.");
+            }
+            Collection<Array.AccessOutcome> entries = null; //to keep the compiler happy
+            try {
+                final Primitive indexPlusOffset = calc.push(index).add(referringArrayOffset).pop();
+                entries = arrayToProcess.get(calc, indexPlusOffset);
+            } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
+                //this should never happen
+                failExecution(e);
+            }
+            for (Array.AccessOutcome e : entries) {
+                if (e instanceof Array.AccessOutcomeInInitialArray) {
+                    final Array.AccessOutcomeInInitialArray eCast = (Array.AccessOutcomeInInitialArray) e;
+                    refToArraysToProcess.add(eCast.getInitialArray());
+                    accessConditions.add(e.getAccessCondition());
+                    indicesFormal.add(arrayToProcess.getIndex());
+                    offsets.add(eCast.getOffset());
+                } else { 
+                    //puts in val the value of the current entry, or a fresh symbol, 
+                    //or null if the index is out of bounds
+                    Value val;
+                    boolean fresh = false;  //true iff val is a fresh symbol
+                    if (e instanceof Array.AccessOutcomeInValue) {
+                        val = ((Array.AccessOutcomeInValue) e).getValue();
+                        if (val == null) {
+                            try {
+                                final ClassFile memberClass = arrayToProcess.getType().getMemberClass();
+                                final String memberType = memberClass.getInternalTypeName(); 
+                                val = (Value) state.createSymbolMemberArray(memberType, arrayToProcess.getOrigin(), calc.push(index).add(referringArrayOffset).pop());
+                            } catch (InvalidOperandException | InvalidTypeException exc) {
+                                //this should never happen
+                                failExecution(exc);
+                            }
+                            fresh = true;
+                        }
+                    } else { //e instanceof Array.AccessOutcomeOut
+                        val = null;
+                    }
+
+                    try {
+                        final Expression accessCondition;
+                        final Term indexFormal;
+                        if (referringArrayAccessCondition == null) {
+                            accessCondition = e.getAccessCondition();
+                            indexFormal = arrayToProcess.getIndex();
+                        } else {
+                            final Primitive entryAccessConditionShifted = calc.push(e.getAccessCondition()).replace(arrayToProcess.getIndex(), calc.push(referringArrayIndexFormal).add(referringArrayOffset).pop()).pop();
+                            accessCondition = (Expression) calc.push(referringArrayAccessCondition).and(entryAccessConditionShifted).pop();
+                            indexFormal = referringArrayIndexFormal;
+                        }
+                        retVal.add(new ArrayAccessInfo(refToArrayToProcess, accessCondition, indexFormal, index, val, fresh));
+                    } catch (InvalidOperandException | InvalidTypeException exc) {
+                        //this should never happen
+                        failExecution(exc);
+                    }
+                }
+            }
+        }
+
+        return retVal;
     }
     
     /** 

@@ -652,11 +652,10 @@ public abstract class Calculator {
      * @param operand a {@link Primitive}, the addend.
      * @return this {@link Calculator}.
      * @throws InvalidOperandException if {@code operand == null}. 
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operands have incompatible types.
      */
     public final Calculator add(Primitive operand) 
-    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException {
     	try {
 			return applyBinary(Operator.ADD, operand);
 		} catch (InvalidOperatorException e) {
@@ -673,11 +672,10 @@ public abstract class Calculator {
      * @param operand a {@link Primitive}, the multiplier.
      * @return this {@link Calculator}.
      * @throws InvalidOperandException if {@code operand == null}. 
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operands have incompatible types.
      */
     public final Calculator mul(Primitive operand)
-    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException {
     	try {
 			return applyBinary(Operator.MUL, operand);
 		} catch (InvalidOperatorException e) {
@@ -694,11 +692,10 @@ public abstract class Calculator {
      * @param operand a {@link Primitive}, the subtrahend.
      * @return this {@link Calculator}.
      * @throws InvalidOperandException if {@code operand == null}. 
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operands have incompatible types.
      */
     public final Calculator sub(Primitive operand)
-    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException {
     	try {
 			return applyBinary(Operator.SUB, operand);
 		} catch (InvalidOperatorException e) {
@@ -715,11 +712,10 @@ public abstract class Calculator {
      * @param operand a {@link Primitive}, the divisor.
      * @return this {@link Calculator}.
      * @throws InvalidOperandException if {@code operand == null}. 
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operands have incompatible types.
      */
     public final Calculator div(Primitive operand) 
-    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException {
     	try {
 			return applyBinary(Operator.DIV, operand);
 		} catch (InvalidOperatorException e) {
@@ -736,11 +732,10 @@ public abstract class Calculator {
      * @param operand a {@link Primitive}, the divisor.
      * @return this {@link Calculator}.
      * @throws InvalidOperandException if {@code operand == null}. 
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operands have incompatible types.
      */
     public final Calculator rem(Primitive operand) 
-    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException {
     	try {
 			return applyBinary(Operator.REM, operand);
 		} catch (InvalidOperatorException e) {
@@ -755,11 +750,10 @@ public abstract class Calculator {
      * the top of the stack with the result.
      * 
      * @return this {@link Calculator}.
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operand has incompatible type.
      */
     public final Calculator neg() 
-    throws NoSuchElementException, InvalidTypeException {
+    throws InvalidTypeException {
     	try {
 			return applyUnary(Operator.NEG);
 		} catch (InvalidOperatorException e) {
@@ -776,11 +770,10 @@ public abstract class Calculator {
      * @param operand a {@link Primitive}.
      * @return this {@link Calculator}.
      * @throws InvalidOperandException if {@code operand == null}. 
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operands have incompatible types.
      */
     public final Calculator andBitwise(Primitive operand) 
-    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException {
     	try {
 			return applyBinary(Operator.ANDBW, operand);
 		} catch (InvalidOperatorException e) {
@@ -797,11 +790,10 @@ public abstract class Calculator {
      * @param operand a {@link Primitive}.
      * @return this {@link Calculator}.
      * @throws InvalidOperandException if {@code operand == null}. 
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operands have incompatible types.
      */
     public final Calculator orBitwise(Primitive operand)
-    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException {
     	try {
 			return applyBinary(Operator.ORBW, operand);
 		} catch (InvalidOperatorException e) {
@@ -818,11 +810,10 @@ public abstract class Calculator {
      * @param operand a {@link Primitive}.
      * @return this {@link Calculator}.
      * @throws InvalidOperandException if {@code operand == null}. 
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operands have incompatible types.
      */
     public final Calculator xorBitwise(Primitive operand)
-    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException {
     	try {
 			return applyBinary(Operator.XORBW, operand);
 		} catch (InvalidOperatorException e) {
@@ -839,11 +830,10 @@ public abstract class Calculator {
      * @param operand a {@link Primitive}.
      * @return this {@link Calculator}.
      * @throws InvalidOperandException if {@code operand == null}. 
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operands have incompatible types.
      */
     public final Calculator and(Primitive operand) 
-    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException {
     	try {
 			return applyBinary(Operator.AND, operand);
 		} catch (InvalidOperatorException e) {
@@ -860,11 +850,10 @@ public abstract class Calculator {
      * @param operand a {@link Primitive}.
      * @return this {@link Calculator}.
      * @throws InvalidOperandException if {@code operand == null}. 
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operands have incompatible types.
      */
     public final Calculator or(Primitive operand) 
-    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException {
     	try {
 			return applyBinary(Operator.OR, operand);
 		} catch (InvalidOperatorException e) {
@@ -879,11 +868,9 @@ public abstract class Calculator {
      * the top of the stack with the result.
      * 
      * @return this {@link Calculator}.
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operand has incompatible type.
      */
-    public final Calculator not() 
-    throws NoSuchElementException, InvalidTypeException {
+    public final Calculator not() throws InvalidTypeException {
     	try {
 			return applyUnary(Operator.NOT);
 		} catch (InvalidOperatorException e) {
@@ -900,11 +887,10 @@ public abstract class Calculator {
      * @param operand a {@link Primitive}, the shift amount.
      * @return this {@link Calculator}.
      * @throws InvalidOperandException if {@code operand == null}. 
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operands have incompatible types.
      */
     public final Calculator shl(Primitive operand) 
-    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException {
     	try {
 			return applyBinary(Operator.SHL, operand);
 		} catch (InvalidOperatorException e) {
@@ -921,11 +907,10 @@ public abstract class Calculator {
      * @param operand a {@link Primitive}, the shift amount.
      * @return this {@link Calculator}.
      * @throws InvalidOperandException if {@code operand == null}. 
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operands have incompatible types.
      */
     public final Calculator shr(Primitive operand) 
-    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException {
     	try {
 			return applyBinary(Operator.SHR, operand);
 		} catch (InvalidOperatorException e) {
@@ -942,11 +927,10 @@ public abstract class Calculator {
      * @param operand a {@link Primitive}, the shift amount.
      * @return this {@link Calculator}.
      * @throws InvalidOperandException if {@code operand == null}. 
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operands have incompatible types.
      */
     public final Calculator ushr(Primitive operand) 
-    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException {
     	try {
 			return applyBinary(Operator.USHR, operand);
 		} catch (InvalidOperatorException e) {
@@ -963,11 +947,10 @@ public abstract class Calculator {
      * @param operand a {@link Primitive}.
      * @return this {@link Calculator}.
      * @throws InvalidOperandException if {@code operand == null}. 
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operands have incompatible types.
      */
     public final Calculator eq(Primitive operand) 
-    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException {
     	try {
 			return applyBinary(Operator.EQ, operand);
 		} catch (InvalidOperatorException e) {
@@ -984,11 +967,10 @@ public abstract class Calculator {
      * @param operand a {@link Primitive}.
      * @return this {@link Calculator}.
      * @throws InvalidOperandException if {@code operand == null}. 
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operands have incompatible types.
      */
     public final Calculator ne(Primitive operand)
-    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException {
     	try {
 			return applyBinary(Operator.NE, operand);
 		} catch (InvalidOperatorException e) {
@@ -1005,11 +987,10 @@ public abstract class Calculator {
      * @param operand a {@link Primitive}.
      * @return this {@link Calculator}.
      * @throws InvalidOperandException if {@code operand == null}. 
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operands have incompatible types.
      */
     public final Calculator le(Primitive operand)
-    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException {
     	try {
 			return applyBinary(Operator.LE, operand);
 		} catch (InvalidOperatorException e) {
@@ -1026,11 +1007,10 @@ public abstract class Calculator {
      * @param operand a {@link Primitive}.
      * @return this {@link Calculator}.
      * @throws InvalidOperandException if {@code operand == null}. 
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operands have incompatible types.
      */
     public final Calculator lt(Primitive operand)
-    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException {
     	try {
 			return applyBinary(Operator.LT, operand);
 		} catch (InvalidOperatorException e) {
@@ -1047,11 +1027,10 @@ public abstract class Calculator {
      * @param operand a {@link Primitive}.
      * @return this {@link Calculator}.
      * @throws InvalidOperandException if {@code operand == null}. 
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operands have incompatible types.
      */
     public final Calculator ge(Primitive operand)
-    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException {
     	try {
 			return applyBinary(Operator.GE, operand);
 		} catch (InvalidOperatorException e) {
@@ -1068,11 +1047,10 @@ public abstract class Calculator {
      * @param operand a {@link Primitive}.
      * @return this {@link Calculator}.
      * @throws InvalidOperandException if {@code operand == null}. 
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operands have incompatible types.
      */
     public final Calculator gt(Primitive operand)
-    throws InvalidOperandException, NoSuchElementException, InvalidTypeException {
+    throws InvalidOperandException, InvalidTypeException {
     	try {
 			return applyBinary(Operator.GT, operand);
 		} catch (InvalidOperatorException e) {
@@ -1088,14 +1066,12 @@ public abstract class Calculator {
      * 
      * @param operator an {@link Operator}. It must be unary.
      * @return this {@link Calculator}.
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidOperatorException if {@code operator == null} or 
      *         {@code operator} is not unary.
-     * @throws InvalidOperatorException  when {@code operator == null} or is not unary.
      * @throws InvalidTypeException if the operand has incompatible type.
      */
     public final Calculator applyUnary(Operator operator) 
-    throws NoSuchElementException, InvalidOperatorException, InvalidTypeException {
+    throws InvalidOperatorException, InvalidTypeException {
     	if (operator == null || operator.isBinary()) {
             throw new InvalidOperatorException("Tried to apply operator " + operator + " to build a unary expression.");
     	} else {
@@ -1119,7 +1095,6 @@ public abstract class Calculator {
      * @throws InvalidOperatorException if {@code operator == null} or 
      *         {@code operator} is not binary.
      * @throws InvalidOperandException if {@code operand == null}. 
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operands have incompatible types.
      */
     public final Calculator applyBinary(Operator operator, Primitive operand) 
@@ -1146,12 +1121,10 @@ public abstract class Calculator {
      * 
      * @param type a {@code char} representing the type of the conversion (see {@link Type}).
      * @return this {@link Calculator}.
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operand cannot be widened to {@code type},
      *         or {@code type} is not a valid primitive type.
      */
-    public final Calculator widen(char type) 
-    throws NoSuchElementException, InvalidTypeException {
+    public final Calculator widen(char type) throws InvalidTypeException {
     	final Primitive operand = pop();
         try {
             push(simplify(WideningConversion.make(type, operand)));
@@ -1168,12 +1141,10 @@ public abstract class Calculator {
      * 
      * @param type a {@code char} representing the type of the conversion (see {@link Type}).
      * @return this {@link Calculator}.
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operand cannot be narrowed to {@code type},
      *         or {@code type} is not a valid primitive type.
      */
-    public final Calculator narrow(char type) 
-    throws NoSuchElementException, InvalidTypeException {
+    public final Calculator narrow(char type) throws InvalidTypeException {
     	final Primitive operand = pop();
         try {
             push(simplify(NarrowingConversion.make(type, operand)));
@@ -1190,12 +1161,10 @@ public abstract class Calculator {
      * 
      * @param type a {@code char} representing the type of the conversion.
      * @return this {@link Calculator}.
-     * @throws NoSuchElementException if the stack is empty.
      * @throws InvalidTypeException if the operand cannot be converted to {@code type},
      *         or {@code type} is not a valid primitive type.
      */
-    public final Calculator to(char type) 
-    throws NoSuchElementException, InvalidTypeException {
+    public final Calculator to(char type) throws InvalidTypeException {
     	final Primitive operand = pop();
         final char operandType = operand.getType();
         if (type == operandType) {
@@ -1431,10 +1400,9 @@ public abstract class Calculator {
      * @throws InvalidInputException if {@code from == null || to == null}.
      * @throws InvalidTypeException if {@code from} and {@code to} have
      *         different type.
-     * @throws NoSuchElementException if the stack is empty.
      */
     public Calculator replace(Primitive from, Primitive to) 
-    throws InvalidInputException, InvalidTypeException, NoSuchElementException {
+    throws InvalidInputException, InvalidTypeException {
     	if (from == null || to == null) {
     		throw new InvalidInputException("Attempted to invoke " + getClass().getName() + ".replace with null Primitive from or Primitive to parameter.");
     	}

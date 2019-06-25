@@ -15,14 +15,14 @@ import jbse.common.exc.UnexpectedInternalException;
  * 
  * @author Pietro Braione
  */
-public class DecisionAlternativeComparators {
+public final class DecisionAlternativeComparators {
     /**
      * Default comparator for {@link DecisionAlternative_NONE}s.
      * 
      * @return A {@link Comparator}{@code <}{@link DecisionAlternative_NONE}{@code >}. Being 
      *         {@link DecisionAlternative_NONE} singleton the comparator always returns 0.
      */
-    private static Comparator<DecisionAlternative_NONE> defaultComparatorDecisionAlternative_NONE() {
+    public static Comparator<DecisionAlternative_NONE> defaultComparatorDecisionAlternative_NONE() {
         return new Comparator<DecisionAlternative_NONE>() {
             @Override
             public int compare(DecisionAlternative_NONE o1, DecisionAlternative_NONE o2) {
@@ -37,7 +37,7 @@ public class DecisionAlternativeComparators {
      * @return A {@link Comparator}{@code <}{@link DecisionAlternative_IFX}{@code >} yielding
      *         {@link DecisionAlternative_IFX_True} {@code <} {@link DecisionAlternative_IFX_False}.
      */
-    private static Comparator<DecisionAlternative_IFX> defaultComparatorDecisionAlternative_IFX() {
+    public static Comparator<DecisionAlternative_IFX> defaultComparatorDecisionAlternative_IFX() {
         return new Comparator<DecisionAlternative_IFX>() {
             @Override
             public int compare(DecisionAlternative_IFX o1, DecisionAlternative_IFX o2) {
@@ -57,7 +57,7 @@ public class DecisionAlternativeComparators {
      *         {@link DecisionAlternative_XCMPY_Gt} {@code <} {@link DecisionAlternative_XCMPY_Eq} 
      *         {@code <} {@link DecisionAlternative_XCMPY_Lt}.
      */
-    private static Comparator<DecisionAlternative_XCMPY> defaultComparatorDecisionAlternative_XCMPY() {
+    public static Comparator<DecisionAlternative_XCMPY> defaultComparatorDecisionAlternative_XCMPY() {
         return new Comparator<DecisionAlternative_XCMPY>() {
             @Override
             public int compare(DecisionAlternative_XCMPY o1, DecisionAlternative_XCMPY o2) {
@@ -77,7 +77,7 @@ public class DecisionAlternativeComparators {
      * 
      * @return A {@link Comparator}{@code <}{@link DecisionAlternative_XSWITCH}{@code >}.
      */
-    private static Comparator<DecisionAlternative_XSWITCH> defaultComparatorDecisionAlternative_XSWITCH() {
+    public static Comparator<DecisionAlternative_XSWITCH> defaultComparatorDecisionAlternative_XSWITCH() {
         return new Comparator<DecisionAlternative_XSWITCH>() {
             public int compare(DecisionAlternative_XSWITCH o1, DecisionAlternative_XSWITCH o2) {
                 boolean o1def = (o1.isDefault());
@@ -110,7 +110,7 @@ public class DecisionAlternativeComparators {
      *         {@code <} {@link DecisionAlternative_XLOAD_GETX_Aliases}
      *         {@code <} {@link DecisionAlternative_XLOAD_GETX_Expands}.
      */
-    private static Comparator<DecisionAlternative_XLOAD_GETX> defaultComparatorDecisionAlternative_XLOAD_GETX() { 	
+    public static Comparator<DecisionAlternative_XLOAD_GETX> defaultComparatorDecisionAlternative_XLOAD_GETX() { 	
         return new Comparator<DecisionAlternative_XLOAD_GETX>() {
             public int compare(DecisionAlternative_XLOAD_GETX o1, DecisionAlternative_XLOAD_GETX o2) {
                 if (o1 instanceof DecisionAlternative_XLOAD_GETX_Resolved) {
@@ -164,7 +164,7 @@ public class DecisionAlternativeComparators {
      * @return A {@link Comparator}{@code <}{@link DecisionAlternative_XNEWARRAY}{@code >} yielding
      *         {@link DecisionAlternative_XNEWARRAY_Wrong} {@code <} {@link DecisionAlternative_XNEWARRAY_Ok}.
      */
-    private static Comparator<DecisionAlternative_XNEWARRAY> defaultComparatorDecisionAlternative_XNEWARRAY() {
+    public static Comparator<DecisionAlternative_XNEWARRAY> defaultComparatorDecisionAlternative_XNEWARRAY() {
         return new Comparator<DecisionAlternative_XNEWARRAY>() {
             public int compare(DecisionAlternative_XNEWARRAY o1, DecisionAlternative_XNEWARRAY o2) {
                 final boolean o1Wrong = (o1 instanceof DecisionAlternative_XNEWARRAY_Wrong);
@@ -182,7 +182,7 @@ public class DecisionAlternativeComparators {
      * @return A {@link Comparator}{@code <}{@link DecisionAlternative_XASTORE}{@code >} yielding
      *         {@link DecisionAlternative_XASTORE_Out} {@code <} {@link DecisionAlternative_XASTORE_In}.
      */
-    private static Comparator<DecisionAlternative_XASTORE> defaultComparatorDecisionAlternative_XASTORE() {
+    public static Comparator<DecisionAlternative_XASTORE> defaultComparatorDecisionAlternative_XASTORE() {
         return new Comparator<DecisionAlternative_XASTORE>() {
             @Override
             public int compare(DecisionAlternative_XASTORE o1, DecisionAlternative_XASTORE o2) {
@@ -205,7 +205,7 @@ public class DecisionAlternativeComparators {
      *         {@code <} {@link DecisionAlternative_XALOAD_Aliases} 
      *         {@code <} {@link DecisionAlternative_XALOAD_Expands}.
      */
-    private static Comparator<DecisionAlternative_XALOAD> defaultComparatorDecisionAlternative_XALOAD() {
+    public static Comparator<DecisionAlternative_XALOAD> defaultComparatorDecisionAlternative_XALOAD() {
         return new Comparator<DecisionAlternative_XALOAD>() {
             public int compare(DecisionAlternative_XALOAD o1, DecisionAlternative_XALOAD o2) {
                 if (o1 instanceof DecisionAlternative_XALOAD_Out) {

@@ -62,40 +62,21 @@ public class DecisionProcedureDecorator implements DecisionProcedure {
         this.component.clearAssumptions();
     }
     
-    //The default implementations of addAssumptions and setAssumptions, 
-    //inherited from DecisionProcedure, invoke repeatedly the pushAssumption 
-    //method. Since we want to retain the semantics
-    //pushAssumptions == many pushAssumption (and similarly for
-    //setAssumptions), we make the default implementations from DecisionProcedure 
-    //final. Note that giving addAssumptions and setAssumptions implementations 
-    //that plainly delegate to this.component, as done with all
-    //the other methods of this class, would yield a counterintuitive behavior
-    //whenever a subclass of this class (say X) overrides pushAssumption. 
-    //In such case an invocation of X.addAssumptions would have a different 
-    //effect than a sequence of invocations of X.pushAssumption. To retain
-    //the invariant, class X would be forced to override also
-    //addAssumptions and setAssumptions. By making the implementations inherited
-    //from DecisionProcedure final, instead, X can override just X.pushAssumption
-    //and the invariant is automatically kept.
-    
     @Override
-    public final void addAssumptions(Iterable<Clause> assumptionsToAdd) 
-    throws InvalidInputException, DecisionException {
-        DecisionProcedure.super.addAssumptions(assumptionsToAdd);
+    public void addAssumptions(Iterable<Clause> assumptionsToAdd) throws InvalidInputException, DecisionException {
+        this.component.addAssumptions(assumptionsToAdd);
     }
     
     @Override
-    public final void addAssumptions(Clause... assumptionsToAdd) 
-    throws InvalidInputException, DecisionException {
-        DecisionProcedure.super.addAssumptions(assumptionsToAdd);
+    public void addAssumptions(Clause... assumptionsToAdd) throws InvalidInputException, DecisionException {
+        this.component.addAssumptions(assumptionsToAdd);
     }
     
     @Override
-    public final void setAssumptions(Collection<Clause> newAssumptions) 
-    throws InvalidInputException, DecisionException {
-        DecisionProcedure.super.setAssumptions(newAssumptions);
+    public void setAssumptions(Collection<Clause> newAssumptions) throws InvalidInputException, DecisionException {
+        this.component.setAssumptions(newAssumptions);
     }
-
+    
     @Override
     public Collection<Clause> getAssumptions() 
     throws DecisionException {

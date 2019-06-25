@@ -5,6 +5,7 @@ import static jbse.common.Type.className;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -744,33 +745,66 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
             throw new UnexpectedInternalException(e);
         }
     }
+    
+    /**
+     * Class whose instances represent information about an
+     * array reading access.
+     * 
+     * @author Pietro Braione
+     *
+     */
+    public static final class ArrayAccessInfo {
+        public final Reference sourceArrayReference;
+        public final Expression accessExpression;
+        public final Term indexFormal;
+        public final Primitive indexActual;
+        public final Value readValue;
+        public final boolean fresh;
+
+        /**
+         * Constructor.
+         * 
+         * @param sourceArrayReference when {@code fresh == true} is a {@link Reference} to the {@link Array} 
+         *        that is being read. When {@code fresh == false} it can be {@code null}.
+         * @param accessExpression an {@link Expression} containing {@code indexFormal}, 
+         *        signifying the condition under which the array access yields {@code readValue} 
+         *        as result. It can be {@code null}, in which case it is equivalent to {@code true} but 
+         *        additionally denotes the fact that the array was accessed by a concrete index.
+         * @param indexFormal the {@link Term} used in {@code accessExpression} to indicate
+         *        the array index. It must not be {@code null}.
+         * @param indexActual a {@link Primitive}, the actual index used to access the array.
+         *        It must not be {@code null}.
+         * @param readValue the {@link Value} returned by the array access when 
+         *        {@code accessExpression} is true, or {@code null} to denote an 
+         *        access out of the array bounds.
+         * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
+         *        it was assumed during the array access and thus it 
+         *        is not yet stored in the {@link Array} it originates from.
+         */
+        public ArrayAccessInfo(Reference sourceArrayReference, Expression accessExpression, Term indexFormal, Primitive indexActual, Value readValue, boolean fresh) {
+            this.sourceArrayReference = sourceArrayReference;
+            this.accessExpression = accessExpression;
+            this.indexFormal = indexFormal;
+            this.indexActual = indexActual;
+            this.readValue = readValue;
+            this.fresh = fresh;
+        }
+    }
 
     /**
      * Resolves loading a value to the operand stack, when the value
      * comes from an array.
      * 
      * @param state a {@link State}. It must not be {@code null}.
-     * @param accessExpression an {@link Expression} containing {@code indexFormal}, 
-     *        signifying the condition under which the array access yields {@code valToLoad} 
-     *        as result. It can be {@code null}, in which case it is equivalent to {@code true} but 
-     *        additionally denotes the fact that the array was accessed by a concrete index.
-     * @param indexFormal the {@link Term} used in {@code accessExpression} to indicate
-     *        the array index. It must not be {@code null}.
-     * @param indexActual a {@link Primitive}, the actual index used to access the array.
+     * @param arrayAccessInfos a {@link List}{@code <}{@link ArrayAccessInfo}{@code >}.  
      *        It must not be {@code null}.
-     * @param valToLoad the {@link Value} returned by the array access 
-     *        when {@code accessExpression} is true,
-     *        or {@code null} to denote an access out of the 
-     *        array bounds.
-     * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
-     *        its existence was assumed during the array access and thus it 
-     *        is not yet stored in the {@link Array} it originates from.
-     * @param arrayToWriteBack when {@code fresh == true} is a {@link Reference} to the array 
-     *        where {@code valToLoad} originates from.
      * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
      *        where the method will put all the 
      *        {@link DecisionAlternative_XALOAD}s representing all the 
      *        satisfiable outcomes of the operation. It must not be {@code null}.
+     * @param nonExpandedRefs a {@link List}{@code <}{@link ReferenceSymbolic}{@code >} 
+     *        that this method will populate with the {@link ReferenceSymbolic}s that 
+     *        were not expanded. It must not be {@code null}.
      * @return an {@link Outcome}.
      * @throws InvalidInputException when one of the parameters is incorrect.
      * @throws DecisionException upon failure.
@@ -806,23 +840,52 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *         one of its superclass/superinterfaces.
      */
     //TODO should be final?
-    public Outcome resolve_XALOAD(State state, Expression accessExpression, Term indexFormal, Primitive indexActual, Value valToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result)
+    public Outcome resolve_XALOAD(State state, List<ArrayAccessInfo> arrayAccessInfos, SortedSet<DecisionAlternative_XALOAD> result, List<ReferenceSymbolic> nonExpandedRefs)
     throws InvalidInputException, DecisionException, ClassFileNotFoundException, 
     ClassFileIllFormedException, BadClassFileVersionException, WrongClassNameException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException {
-        if (state == null || result == null) {
+        if (state == null || arrayAccessInfos == null || result == null || nonExpandedRefs == null) {
             throw new InvalidInputException("resolve_XALOAD invoked with a null parameter.");
         }
-        final boolean accessConcrete = (accessExpression == null);
-        final boolean accessOutOfBounds = (valToLoad == null);
-        final boolean valToLoadResolved = accessOutOfBounds || Util.isResolved(state, valToLoad);
-        if (valToLoadResolved && accessConcrete) {
-            return resolve_XALOAD_ResolvedConcrete(valToLoad, fresh, arrayToWriteBack, result);
-        } else if (valToLoadResolved && !accessConcrete) {
-            return resolve_XALOAD_ResolvedNonconcrete(accessExpression, indexFormal, indexActual, valToLoad, fresh, arrayToWriteBack, result);
-        } else { //(!valToLoadResolved)
-            return resolve_XALOAD_Unresolved(state, accessExpression, indexFormal, indexActual, (ReferenceSymbolic) valToLoad, fresh, arrayToWriteBack, result);
+        boolean someReferenceNotExpanded = false;
+        boolean shouldRefine = false;
+        boolean branchingDecision = false;
+        for (ArrayAccessInfo arrayAccessInfo : arrayAccessInfos) {
+            final boolean accessConcrete = (arrayAccessInfo.accessExpression == null);
+            final boolean accessOutOfBounds = (arrayAccessInfo.readValue == null);
+            final boolean valToLoadResolved = accessOutOfBounds || Util.isResolved(state, arrayAccessInfo.readValue);
+            final Outcome o;
+            if (valToLoadResolved && accessConcrete) {
+                o = resolve_XALOAD_ResolvedConcrete(arrayAccessInfo, result);
+            } else if (valToLoadResolved && !accessConcrete) {
+                o = resolve_XALOAD_ResolvedNonconcrete(arrayAccessInfo, result);
+            } else { //(!valToLoadResolved)
+                o = resolve_XALOAD_Unresolved(state, arrayAccessInfo, result);
+            }
+            
+            //if the current resolution did not expand a reference, then records it
+            someReferenceNotExpanded = someReferenceNotExpanded || o.noReferenceExpansion();
+            if (o.noReferenceExpansion()) {
+                nonExpandedRefs.add((ReferenceSymbolic) arrayAccessInfo.readValue);
+            }
+
+            //if at least one read requires refinement, then it should be refined
+            shouldRefine = shouldRefine || o.shouldRefine();
+
+            //if at least one decision is branching, then it is branching
+            branchingDecision = branchingDecision || o.branchingDecision();
         }
+
+        //also the size of the result matters to whether refine or not 
+        shouldRefine = shouldRefine || (result.size() > 1);
+        
+        //for branchingDecision nothing to do: it will be false only if
+        //the access is concrete and the value obtained is resolved 
+        //(if a symbolic reference): in this case, result.size() must
+        //be 1. Note that branchingDecision must be invariant
+        //on the used decision procedure, so we cannot make it dependent
+        //on result.size().
+        return Outcome.val(shouldRefine, someReferenceNotExpanded, branchingDecision);
     }
 
     /**
@@ -831,31 +894,23 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      * concrete, or a symbolic primitive, or a resolved symbolic
      * reference) and the index used for the access is concrete.
      * 
-     * @param valToLoad the {@link Value} returned by the array access 
-     *        when {@code accessCondition} is true,
-     *        or {@code null} to denote an access out of the 
-     *        array bounds.
-     * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
-     *        its existence was assumed during the array access and thus it 
-     *        is not yet stored in the {@link Array} it originates from.
-     * @param arrayToWriteBack when {@code fresh == true} is a {@link Reference} to the array 
-     *        where {@code valToLoad} originates from.
+     * @param arrayAccessInfo an {@link ArrayAccessInfo}.  
      * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
      *        where the method will put all the 
      *        {@link DecisionAlternative_XALOAD}s representing all the 
      *        satisfiable outcomes of the operation.
      * @return an {@link Outcome}.
-     * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, Reference, SortedSet) resolve_XALOAD}.
+     * @see {@link #resolve_XALOAD(State, List, SortedSet) resolve_XALOAD}.
      */
-    private Outcome resolve_XALOAD_ResolvedConcrete(Value valToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result) {
-        final boolean accessOutOfBounds = (valToLoad == null);
+    private Outcome resolve_XALOAD_ResolvedConcrete(ArrayAccessInfo arrayAccessInfo, SortedSet<DecisionAlternative_XALOAD> result) {
+        final boolean accessOutOfBounds = (arrayAccessInfo.readValue == null);
         final int branchNumber = result.size() + 1;
         if (accessOutOfBounds) {
             result.add(new DecisionAlternative_XALOAD_Out(branchNumber));
         } else {
-            result.add(new DecisionAlternative_XALOAD_Resolved(valToLoad, fresh, arrayToWriteBack, branchNumber));
+            result.add(new DecisionAlternative_XALOAD_Resolved(arrayAccessInfo.readValue, arrayAccessInfo.fresh, arrayAccessInfo.sourceArrayReference, branchNumber));
         }
-        return Outcome.val(fresh, false, false); //a fresh value to load requires refinement of the source array
+        return Outcome.val(arrayAccessInfo.fresh, false, false); //a fresh value to load requires refinement of the source array
     }
 
     /**
@@ -864,34 +919,19 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      * concrete, or a symbolic primitive, or a resolved symbolic
      * reference) and the index used for the access is symbolic.
      * 
-     * @param accessExpression an {@link Expression} containing {@code indexFormal}, 
-     *        signifying the condition under which the array access yields {@code valToLoad} 
-     *        as result. It must not be {@code null}.
-     * @param indexFormal the {@link Term} used in {@code accessExpression} to indicate
-     *        the array index. It must not be {@code null}.
-     * @param indexActual a {@link Primitive}, the actual index used to access the array.
-     *        It must not be {@code null}.
-     * @param valToLoad the {@link Value} returned by the array access 
-     *        when {@code accessExpression} is true,
-     *        or {@code null} to denote an access out of the 
-     *        array bounds.
-     * @param fresh {@code true} iff {@code valToLoad} is fresh, i.e., 
-     *        its existence was assumed during the array access and thus it 
-     *        is not yet stored in the {@link Array} it originates from.
-     * @param arrayToWriteBack when {@code fresh == true} is a {@link Reference} to the array 
-     *        where {@code valToLoad} originates from.
+     * @param arrayAccessInfo an {@link ArrayAccessInfo}.
      * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
      *        where the method will put all the 
      *        {@link DecisionAlternative_XALOAD}s representing all the 
      *        satisfiable outcomes of the operation.
      * @return an {@link Outcome}.
-     * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, Reference, SortedSet) resolve_XALOAD}.
+     * @see {@link #resolve_XALOAD(State, List, SortedSet) resolve_XALOAD}.
      */
-    protected Outcome resolve_XALOAD_ResolvedNonconcrete(Expression accessExpression, Term indexFormal, Primitive indexActual, Value valToLoad, boolean fresh, Reference arrayToWriteBack, SortedSet<DecisionAlternative_XALOAD> result)
+    protected Outcome resolve_XALOAD_ResolvedNonconcrete(ArrayAccessInfo arrayAccessInfo, SortedSet<DecisionAlternative_XALOAD> result)
     throws DecisionException {
         try {
             final boolean shouldRefine;
-            final Primitive accessExpressionSpecialized = this.calc.push(accessExpression).replace(indexFormal, indexActual).pop();
+            final Primitive accessExpressionSpecialized = this.calc.push(arrayAccessInfo.accessExpression).replace(arrayAccessInfo.indexFormal, arrayAccessInfo.indexActual).pop();
             final boolean accessIsSat;
             if (accessExpressionSpecialized instanceof Simplex) {
             	accessIsSat = accessExpressionSpecialized.surelyTrue();
@@ -899,14 +939,14 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
             	accessIsSat = isSat((Expression) accessExpressionSpecialized);
             }
             if (accessIsSat) {
-            	shouldRefine = fresh; //a fresh value to load requires refinement of the source array
+            	shouldRefine = arrayAccessInfo.fresh; //a fresh value to load requires refinement of the source array
             	final Primitive accessExpressionSimplified = deleteRedundantConjuncts(accessExpressionSpecialized);
-            	final boolean accessOutOfBounds = (valToLoad == null);
+            	final boolean accessOutOfBounds = (arrayAccessInfo.readValue == null);
             	final int branchNumber = result.size() + 1;
             	if (accessOutOfBounds) {
-            		result.add(new DecisionAlternative_XALOAD_Out(accessExpression, indexFormal, indexActual, ((accessExpressionSimplified == null || accessExpressionSimplified.surelyTrue()) ? null : (Expression) accessExpressionSimplified), branchNumber));
+            		result.add(new DecisionAlternative_XALOAD_Out(arrayAccessInfo.accessExpression, arrayAccessInfo.indexFormal, arrayAccessInfo.indexActual, ((accessExpressionSimplified == null || accessExpressionSimplified.surelyTrue()) ? null : (Expression) accessExpressionSimplified), branchNumber));
             	} else {
-            		result.add(new DecisionAlternative_XALOAD_Resolved(accessExpression, indexFormal, indexActual, ((accessExpressionSimplified == null || accessExpressionSimplified.surelyTrue()) ? null : (Expression) accessExpressionSimplified), valToLoad, fresh, arrayToWriteBack, branchNumber));
+            		result.add(new DecisionAlternative_XALOAD_Resolved(arrayAccessInfo.accessExpression, arrayAccessInfo.indexFormal, arrayAccessInfo.indexActual, ((accessExpressionSimplified == null || accessExpressionSimplified.surelyTrue()) ? null : (Expression) accessExpressionSimplified), arrayAccessInfo.readValue, arrayAccessInfo.fresh, arrayAccessInfo.sourceArrayReference, branchNumber));
             	}
             } else {
                 //accessExpression is unsatisfiable: nothing to do
@@ -949,22 +989,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      * reference.
      * 
      * @param state a {@link State}. 
-     * @param accessExpression an {@link Expression} containing {@code indexFormal}, 
-     *        signifying the condition under which the array access yields {@code valToLoad} 
-     *        as result. It can be {@code null}, in which case it is equivalent to {@code true} but 
-     *        additionally denotes the fact that the array was accessed by a concrete index.
-     * @param indexFormal the {@link Term} used in {@code accessExpression} to indicate
-     *        the array index. It must not be {@code null}.
-     * @param indexActual a {@link Primitive}, the actual index used to access the array.
-     *        It must not be {@code null}.
-     * @param refToLoad the {@link ReferenceSymbolic} returned by the array access 
-     *        when {@code accessExpression} is true, 
-     *        that must be loaded on {@code state}'s operand stack. It must not be {@code null}.
-     * @param fresh {@code true} iff {@code refToLoad} is fresh, i.e., 
-     *        its existence was assumed during the array access and thus it 
-     *        is not yet stored in the {@link Array} it originates from.
-     * @param arrayReference when {@code fresh == true} it is a {@link Reference} 
-     *        to the array where {@code refToLoad} originates from.
+     * @param arrayAccessInfo an {@link ArrayAccessInfo}.
      * @param result a {@link SortedSet}{@code <}{@link DecisionAlternative_XALOAD}{@code >}, 
      *        where the method will put all the 
      *        {@link DecisionAlternative_XALOAD}s representing all the 
@@ -994,15 +1019,15 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
      *         or for the class name of one of its possibile expansions cannot access
      *         one of its superclass/superinterfaces.
-     * @see {@link #resolve_XALOAD(State, Expression, Value, boolean, SortedSet) resolve_XALOAD}.
+     * @see {@link #resolve_XALOAD(State, List, SortedSet) resolve_XALOAD}.
      */
-    protected Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, Term indexFormal, Primitive indexActual, ReferenceSymbolic refToLoad, boolean fresh, Reference arrayReference, SortedSet<DecisionAlternative_XALOAD> result)
+    protected Outcome resolve_XALOAD_Unresolved(State state, ArrayAccessInfo arrayAccessInfo, SortedSet<DecisionAlternative_XALOAD> result)
     throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
     BadClassFileVersionException, WrongClassNameException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException {
         try {
-            final boolean accessConcrete = (accessExpression == null);
-            final Primitive accessExpressionSpecialized = (accessConcrete ? null : this.calc.push(accessExpression).replace(indexFormal, indexActual).pop());
+            final boolean accessConcrete = (arrayAccessInfo.accessExpression == null);
+            final Primitive accessExpressionSpecialized = (accessConcrete ? null : this.calc.push(arrayAccessInfo.accessExpression).replace(arrayAccessInfo.indexFormal, arrayAccessInfo.indexActual).pop());
             final boolean accessIsSat;
             if (accessExpressionSpecialized instanceof Simplex) {
             	accessIsSat = accessExpressionSpecialized.surelyTrue();
@@ -1015,7 +1040,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
                 shouldRefine = true; //unresolved symbolic references always require a refinement action
                 final Primitive accessExpressionSimplified = deleteRedundantConjuncts(accessExpressionSpecialized);
                 noReferenceExpansion =
-                    doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFactory_XALOAD(accessExpression, indexFormal, indexActual, ((accessExpressionSimplified == null || accessExpressionSimplified.surelyTrue()) ? null : (Expression) accessExpressionSimplified), fresh, arrayReference), result);
+                    doResolveReference(state, (ReferenceSymbolic) arrayAccessInfo.readValue, new DecisionAlternativeReferenceFactory_XALOAD(arrayAccessInfo.accessExpression, arrayAccessInfo.indexFormal, arrayAccessInfo.indexActual, ((accessExpressionSimplified == null || accessExpressionSimplified.surelyTrue()) ? null : (Expression) accessExpressionSimplified), arrayAccessInfo.fresh, arrayAccessInfo.sourceArrayReference), result);
             } else {
                 //accessExpression is unsatisfiable: nothing to do
                 shouldRefine = false;

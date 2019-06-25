@@ -1,5 +1,6 @@
 package jbse.algo.meta;
 
+import static jbse.algo.Util.getFromArray;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
 import static jbse.algo.Util.storeInArray;
@@ -16,8 +17,8 @@ import static jbse.common.Type.INT;
 import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isPrimitiveOpStack;
 
-import java.util.Collection;
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 
 import jbse.algo.Algo_INVOKEMETA;
@@ -38,6 +39,7 @@ import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
+import jbse.dec.DecisionProcedureAlgorithms.ArrayAccessInfo;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
 import jbse.dec.exc.DecisionException;
 import jbse.mem.Array;
@@ -54,9 +56,9 @@ import jbse.val.Primitive;
 import jbse.val.Reference;
 import jbse.val.ReferenceArrayImmaterial;
 import jbse.val.ReferenceConcrete;
+import jbse.val.ReferenceSymbolic;
 import jbse.val.Simplex;
 import jbse.val.SymbolicMemberArray;
-import jbse.val.Term;
 import jbse.val.Value;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
@@ -117,131 +119,41 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
 
     @Override
     protected StrategyDecide<DecisionAlternative_XALOAD> decider() {
-        //TODO copied from Algo_XALOAD, unify with it and with Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array
+        //TODO unify with Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array
         return (state, result) -> { 
-        	final Calculator calc = this.ctx.getCalculator();
-            boolean shouldRefine = false;
-            boolean branchingDecision = false;
-            final LinkedList<Reference> refToArraysToProcess = new LinkedList<>();
-            final LinkedList<Expression> accessConditions = new LinkedList<>();
-            final LinkedList<Term> indicesFormal = new LinkedList<>();
-            final LinkedList<Primitive> offsets = new LinkedList<>();
-            refToArraysToProcess.add(this.myObjectRef);
-            accessConditions.add(null);
-            indicesFormal.add(null);
-            offsets.add(calc.valInt(0));
-            while (!refToArraysToProcess.isEmpty()) {
-                final Reference refToArrayToProcess = refToArraysToProcess.remove();
-                final Primitive referringArrayAccessCondition = accessConditions.remove();
-                final Term referringArrayIndexFormal = indicesFormal.remove();
-                final Primitive referringArrayOffset = offsets.remove();
-                Array arrayToProcess = null; //to keep the compiler happy
-                try {
-                    arrayToProcess = (Array) state.getObject(refToArrayToProcess);
-                } catch (ClassCastException exc) {
-                    //this should never happen
-                    failExecution(exc);
-                }
-                if (arrayToProcess == null) {
-                    //this should never happen
-                    failExecution("An initial array that backs another array is null.");
-                }
-                Collection<Array.AccessOutcome> entries = null; //to keep the compiler happy
-                try {
-                	final Primitive indexPlusOffset = calc.push(this.index).add(referringArrayOffset).pop();
-                    entries = arrayToProcess.get(calc, indexPlusOffset);
-                } catch (InvalidOperandException | InvalidTypeException e) {
-                    //this should never happen
-                    failExecution(e);
-                }
-                for (Array.AccessOutcome e : entries) {
-                    if (e instanceof Array.AccessOutcomeInInitialArray) {
-                        final Array.AccessOutcomeInInitialArray eCast = (Array.AccessOutcomeInInitialArray) e;
-                        refToArraysToProcess.add(eCast.getInitialArray());
-                        accessConditions.add(e.getAccessCondition());
-                        indicesFormal.add(arrayToProcess.getIndex());
-                        offsets.add(eCast.getOffset());
-                    } else { 
-                        //puts in val the value of the current entry, or a fresh symbol, 
-                        //or null if the index is out of bounds
-                        Value val;
-                        boolean fresh = false;  //true iff val is a fresh symbol
-                        if (e instanceof Array.AccessOutcomeInValue) {
-                            val = ((Array.AccessOutcomeInValue) e).getValue();
-                            if (val == null) {
-                                try {
-                                    final ClassFile memberClass = arrayToProcess.getType().getMemberClass();
-                                    final String memberType = memberClass.getInternalTypeName(); 
-                                    val = (Value) state.createSymbolMemberArray(memberType, arrayToProcess.getOrigin(), calc.push(this.index).add(referringArrayOffset).pop());
-                                } catch (InvalidOperandException | InvalidTypeException exc) {
-                                    //this should never happen
-                                    failExecution(exc);
-                                }
-                                fresh = true;
-                            }
-                        } else { //e instanceof Array.AccessOutcomeOut
-                            val = null;
-                        }
-
-                        Outcome o = null; //to keep the compiler happy
-                        try {
-                        	final Expression accessCondition;
-                        	final Term indexFormal;
-                        	if (referringArrayAccessCondition == null) {
-                        		accessCondition = e.getAccessCondition();
-                        		indexFormal = arrayToProcess.getIndex();
-                        	} else {
-                        		final Primitive entryAccessConditionShifted = calc.push(e.getAccessCondition()).replace(arrayToProcess.getIndex(), calc.push(referringArrayIndexFormal).add(referringArrayOffset).pop()).pop();
-                        		accessCondition = (Expression) calc.push(referringArrayAccessCondition).and(entryAccessConditionShifted).pop();
-                        		indexFormal = referringArrayIndexFormal;
-                        	}
-                            o = this.ctx.decisionProcedure.resolve_XALOAD(state, accessCondition, indexFormal, this.index, val, fresh, refToArrayToProcess, result);
-                        //TODO the next catch blocks should disappear, see comments on removing exceptions in jbse.dec.DecisionProcedureAlgorithms.doResolveReference
-                        } catch (ClassFileNotFoundException exc) {
-                            throwNew(state, calc, CLASS_NOT_FOUND_EXCEPTION);
-                            exitFromAlgorithm();
-                        } catch (BadClassFileVersionException exc) {
-                            throwNew(state, calc, UNSUPPORTED_CLASS_VERSION_ERROR);
-                            exitFromAlgorithm();
-                        } catch (WrongClassNameException exc) {
-                            throwNew(state, calc, NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
-                            exitFromAlgorithm();
-                        } catch (IncompatibleClassFileException exc) {
-                            throwNew(state, calc, INCOMPATIBLE_CLASS_CHANGE_ERROR);
-                            exitFromAlgorithm();
-                        } catch (ClassFileNotAccessibleException exc) {
-                            throwNew(state, calc, ILLEGAL_ACCESS_ERROR);
-                            exitFromAlgorithm();
-                        } catch (ClassFileIllFormedException exc) {
-                            throwVerifyError(state, calc);
-                            exitFromAlgorithm();
-                        } catch (InvalidOperandException | InvalidTypeException exc) {
-                            //this should never happen
-                            failExecution(exc);
-                        }
-
-                        //here reference expansion check was omitted because
-                        //we are getting integers, not references
-
-                        //if at least one read requires refinement, then it should be refined
-                        shouldRefine = shouldRefine || o.shouldRefine();
-
-                        //if at least one decision is branching, then it is branching
-                        branchingDecision = branchingDecision || o.branchingDecision();
-                    }
-                }
+            //builds the ArrayAccessInfos by reading the array
+            final List<ArrayAccessInfo> arrayAccessInfos = getFromArray(state, this.ctx.getCalculator(), this.myObjectRef, this.index);
+                        
+            //invokes the decision procedure
+            Outcome o = null; //to keep the compiler happy
+            final ArrayList<ReferenceSymbolic> nonExpandedRefs = new ArrayList<>(); //dummy
+            try {
+                o = this.ctx.decisionProcedure.resolve_XALOAD(state, arrayAccessInfos, result, nonExpandedRefs);
+            //TODO the next catch blocks should disappear, see comments on removing exceptions in jbse.dec.DecisionProcedureAlgorithms.doResolveReference
+            } catch (ClassFileNotFoundException exc) {
+                throwNew(state, this.ctx.getCalculator(), CLASS_NOT_FOUND_EXCEPTION);
+                exitFromAlgorithm();
+            } catch (BadClassFileVersionException exc) {
+                throwNew(state, this.ctx.getCalculator(), UNSUPPORTED_CLASS_VERSION_ERROR);
+                exitFromAlgorithm();
+            } catch (WrongClassNameException exc) {
+                throwNew(state, this.ctx.getCalculator(), NO_CLASS_DEFINITION_FOUND_ERROR); //without wrapping a ClassNotFoundException
+                exitFromAlgorithm();
+            } catch (IncompatibleClassFileException exc) {
+                throwNew(state, this.ctx.getCalculator(), INCOMPATIBLE_CLASS_CHANGE_ERROR);
+                exitFromAlgorithm();
+            } catch (ClassFileNotAccessibleException exc) {
+                throwNew(state, this.ctx.getCalculator(), ILLEGAL_ACCESS_ERROR);
+                exitFromAlgorithm();
+            } catch (ClassFileIllFormedException exc) {
+                throwVerifyError(state, this.ctx.getCalculator());
+                exitFromAlgorithm();
             }
-
-            //also the size of the result matters to whether refine or not 
-            shouldRefine = shouldRefine || (result.size() > 1);
-
-            //for branchingDecision nothing to do: it will be false only if
-            //the access is concrete and the value obtained is resolved 
-            //(if a symbolic reference): in this case, result.size() must
-            //be 1. Note that branchingDecision must be invariant
-            //on the used decision procedure, so we cannot make it dependent
-            //on result.size().
-            return Outcome.val(shouldRefine, /*omitted this.someRefNotExpanded,*/ branchingDecision);
+            
+            //no-reference-expansion code omitted because
+            //we are getting integers, not references
+            
+            return o;
         };
     }
 

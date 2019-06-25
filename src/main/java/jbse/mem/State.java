@@ -3350,12 +3350,14 @@ public final class State implements Cloneable {
      * is invoked.
      */
     public Iterable<Clause> getLastPathConditionPushedClauses() {
-        final ListIterator<Clause> it = this.pathCondition.getClauses().listIterator();
-        final int fwdEnd = this.pathCondition.getClauses().size() - this.nPushedClauses;
-        for (int i = 1; i <= fwdEnd; ++i) {
-            it.next();
-        }
-        return () -> it;
+        return () -> {
+            final ListIterator<Clause> it = this.pathCondition.getClauses().listIterator();
+            final int fwdEnd = this.pathCondition.getClauses().size() - this.nPushedClauses;
+            for (int i = 1; i <= fwdEnd; ++i) {
+                it.next();
+            }
+            return it;
+        };
     }
     
     /**

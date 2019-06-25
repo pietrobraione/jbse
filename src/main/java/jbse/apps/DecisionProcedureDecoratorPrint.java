@@ -5,6 +5,7 @@ import static jbse.apps.Util.formatClauses;
 import static jbse.apps.Util.formatExpression;
 
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.Collection;
 
 import jbse.bc.ClassFile;
@@ -23,7 +24,7 @@ import jbse.val.ReferenceSymbolic;
  *  
  * @author Pietro Braione
  */
-public class DecisionProcedureDecoratorPrint extends DecisionProcedureDecorator {
+public final class DecisionProcedureDecoratorPrint extends DecisionProcedureDecorator {
     private static final String TURNSTILE = " |-SAT- ";
     private PrintStream[] out;
 
@@ -55,6 +56,24 @@ public class DecisionProcedureDecoratorPrint extends DecisionProcedureDecorator 
         super.clearAssumptions();
         IO.println(this.out, ":: Cleared.");
     }
+    
+    @Override
+    public void addAssumptions(Iterable<Clause> assumptionsToAdd) 
+    throws InvalidInputException, DecisionException {
+        super.addAssumptions(assumptionsToAdd);
+        IO.print(this.out, ":: Add: ");
+        IO.println(this.out, formatClauses(assumptionsToAdd));
+        IO.println(this.out, ".");
+    }
+    
+    @Override
+    public void addAssumptions(Clause... assumptionsToAdd) 
+    throws InvalidInputException, DecisionException {
+        super.addAssumptions(assumptionsToAdd);
+        IO.print(this.out, ":: Add: ");
+        IO.println(this.out, formatClauses(Arrays.asList(assumptionsToAdd)));
+        IO.println(this.out, ".");
+    }
 
     @Override
     public void setAssumptions(Collection<Clause> newAssumptions) 
@@ -76,6 +95,16 @@ public class DecisionProcedureDecoratorPrint extends DecisionProcedureDecorator 
     }
 
     @Override
+    public boolean isSatNull(ReferenceSymbolic r) 
+    throws InvalidInputException, DecisionException {
+        final boolean retVal = super.isSatNull(r);
+        IO.print(this.out, ":: Decided: ");
+        IO.print(this.out, formatClauses(this.getAssumptions())); 
+        IO.println(this.out, TURNSTILE + r.asOriginString() + " == null. Result: " + Boolean.toString(retVal));
+        return retVal;
+    }
+
+    @Override
     public boolean isSatAliases(ReferenceSymbolic r, long heapPos, Objekt o)
     throws InvalidInputException, DecisionException {
         final boolean retVal = super.isSatAliases(r, heapPos, o);
@@ -92,16 +121,6 @@ public class DecisionProcedureDecoratorPrint extends DecisionProcedureDecorator 
         IO.print(this.out, ":: Decided: ");
         IO.print(this.out, formatClauses(this.getAssumptions())); 
         IO.println(this.out, TURNSTILE + r.asOriginString() + " == fresh " + classFile.getClassName() + ". Result: " + Boolean.toString(retVal));
-        return retVal;
-    }
-
-    @Override
-    public boolean isSatNull(ReferenceSymbolic r) 
-    throws InvalidInputException, DecisionException {
-        final boolean retVal = super.isSatNull(r);
-        IO.print(this.out, ":: Decided: ");
-        IO.print(this.out, formatClauses(this.getAssumptions())); 
-        IO.println(this.out, TURNSTILE + r.asOriginString() + " == null. Result: " + Boolean.toString(retVal));
         return retVal;
     }
 

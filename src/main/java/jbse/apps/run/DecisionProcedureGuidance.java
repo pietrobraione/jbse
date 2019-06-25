@@ -2,6 +2,7 @@ package jbse.apps.run;
 
 import static jbse.common.Type.className;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.SortedSet;
@@ -48,7 +49,6 @@ import jbse.val.NarrowingConversion;
 import jbse.val.Operator;
 import jbse.val.Primitive;
 import jbse.val.PrimitiveVisitor;
-import jbse.val.Reference;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.ReferenceSymbolicMemberField;
@@ -56,7 +56,6 @@ import jbse.val.Simplex;
 import jbse.val.Symbolic;
 import jbse.val.SymbolicMember;
 import jbse.val.Term;
-import jbse.val.Value;
 import jbse.val.WideningConversion;
 import jbse.val.exc.InvalidOperandException;
 import jbse.val.exc.InvalidTypeException;
@@ -71,7 +70,7 @@ import jbse.val.exc.InvalidTypeException;
 public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorithms {
     private final JVM jvm;
     private final HashSet<Object> seen = new HashSet<>();
-    private boolean ended;    
+    private boolean guiding;    
 
     /**
      * Builds the {@link DecisionProcedureGuidance}.
@@ -89,7 +88,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         super(component);
         goFastAndImprecise(); //disables theorem proving of component until guidance ends
         this.jvm = jvm;
-        this.ended = false;
+        this.guiding = true;
     }
     
     /**
@@ -97,23 +96,91 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
      * component decision procedure.
      */
     public final void endGuidance() {
-        this.ended = true;
+        this.guiding = false;
         stopFastAndImprecise();
     }
 
     @Override
-    public void pushAssumption(Clause c) 
+    public final void pushAssumption(Clause c) 
     throws InvalidInputException, DecisionException {
-        if (c instanceof ClauseAssumeExpands) {
-            final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
-            //HACK: skip clauses on hash map tables
-            if (toSkip(cExp.getReference())) {
-                //do nothing
-            } else {
-                markAsSeen(cExp.getReference());
+        super.pushAssumption(c);
+        if (this.guiding) {
+            if (c instanceof ClauseAssumeExpands) {
+                final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
+                //HACK: skip clauses on hash map tables
+                if (toSkip(cExp.getReference())) {
+                    //do nothing
+                } else {
+                    markAsSeen(cExp.getReference());
+                }
             }
         }
-        super.pushAssumption(c);
+    }
+    
+    @Override
+    public void clearAssumptions() throws DecisionException {
+        super.clearAssumptions();
+        if (this.guiding) {
+            clearSeen();
+        }
+    }
+    
+    @Override
+    public final void addAssumptions(Iterable<Clause> assumptionsToAdd) 
+    throws InvalidInputException, DecisionException {
+        super.addAssumptions(assumptionsToAdd);
+        if (this.guiding) {
+            for (Clause c : assumptionsToAdd) {
+                if (c instanceof ClauseAssumeExpands) {
+                    final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
+                    //HACK: skip clauses on hash map tables
+                    if (toSkip(cExp.getReference())) {
+                        //do nothing
+                    } else {
+                        markAsSeen(cExp.getReference());
+                    }
+                }
+            }
+        }
+    }
+    
+    @Override
+    public final void addAssumptions(Clause... assumptionsToAdd) 
+    throws InvalidInputException, DecisionException {
+        super.addAssumptions(assumptionsToAdd);
+        if (this.guiding) {
+            for (Clause c : assumptionsToAdd) {
+                if (c instanceof ClauseAssumeExpands) {
+                    final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
+                    //HACK: skip clauses on hash map tables
+                    if (toSkip(cExp.getReference())) {
+                        //do nothing
+                    } else {
+                        markAsSeen(cExp.getReference());
+                    }
+                }
+            }
+        }
+    }
+    
+    @Override
+    public final void setAssumptions(Collection<Clause> newAssumptions) 
+    throws InvalidInputException, DecisionException {
+        super.setAssumptions(newAssumptions);
+        if (this.guiding) {
+            clearSeen();
+            for (Clause c : newAssumptions) {
+                if (c instanceof ClauseAssumeExpands) {
+                    final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
+                    //HACK: skip clauses on hash map tables
+                    if (toSkip(cExp.getReference())) {
+                        //do nothing
+                    } else {
+                        markAsSeen(cExp.getReference());
+                    }
+                }
+            }
+        }
     }
 
     //HACK
@@ -142,7 +209,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     protected final Outcome decide_IFX_Nonconcrete(Primitive condition, SortedSet<DecisionAlternative_IFX> result) 
     throws DecisionException {
         final Outcome retVal = super.decide_IFX_Nonconcrete(condition, result);
-        if (!this.ended) {
+        if (this.guiding) {
             final Iterator<DecisionAlternative_IFX> it = result.iterator();
             while (it.hasNext()) {
                 final DecisionAlternative_IFX da = it.next();
@@ -159,7 +226,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     protected final Outcome decide_XCMPY_Nonconcrete(Primitive val1, Primitive val2, SortedSet<DecisionAlternative_XCMPY> result)
     throws DecisionException {
         final Outcome retVal = super.decide_XCMPY_Nonconcrete(val1, val2, result);
-        if (!this.ended) {
+        if (this.guiding) {
             final Iterator<DecisionAlternative_XCMPY> it = result.iterator();
             while (it.hasNext()) {
                 final DecisionAlternative_XCMPY da = it.next();
@@ -176,7 +243,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     protected final Outcome decide_XSWITCH_Nonconcrete(Primitive selector, SwitchTable tab, SortedSet<DecisionAlternative_XSWITCH> result)
     throws DecisionException {
         final Outcome retVal = super.decide_XSWITCH_Nonconcrete(selector, tab, result);
-        if (!this.ended) {
+        if (this.guiding) {
             final Iterator<DecisionAlternative_XSWITCH> it = result.iterator();
             while (it.hasNext()) {
                 final DecisionAlternative_XSWITCH da = it.next();
@@ -193,7 +260,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     protected final Outcome decide_XNEWARRAY_Nonconcrete(Primitive countsNonNegative, SortedSet<DecisionAlternative_XNEWARRAY> result)
     throws DecisionException {
         final Outcome retVal = super.decide_XNEWARRAY_Nonconcrete(countsNonNegative, result);
-        if (!this.ended) {
+        if (this.guiding) {
             final Iterator<DecisionAlternative_XNEWARRAY> it = result.iterator();
             while (it.hasNext()) {
                 final DecisionAlternative_XNEWARRAY da = it.next();
@@ -210,7 +277,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     protected final Outcome decide_XASTORE_Nonconcrete(Primitive inRange, SortedSet<DecisionAlternative_XASTORE> result)
     throws DecisionException {
         final Outcome retVal = super.decide_XASTORE_Nonconcrete(inRange, result);
-        if (!this.ended) {
+        if (this.guiding) {
             final Iterator<DecisionAlternative_XASTORE> it = result.iterator();
             while (it.hasNext()) {
                 final DecisionAlternative_XASTORE da = it.next();
@@ -230,7 +297,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     IncompatibleClassFileException, ClassFileNotAccessibleException {
         updateExpansionBackdoor(state, refToLoad);
         final Outcome retVal = super.resolve_XLOAD_GETX_Unresolved(state, refToLoad, result);
-        if (!this.ended) {
+        if (this.guiding) {
             final Iterator<DecisionAlternative_XLOAD_GETX> it = result.iterator();
             while (it.hasNext()) {
                 final DecisionAlternative_XYLOAD_GETX_Unresolved dar = (DecisionAlternative_XYLOAD_GETX_Unresolved) it.next();
@@ -241,10 +308,10 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     @Override
-    protected final Outcome resolve_XALOAD_ResolvedNonconcrete(Expression accessExpression, Term indexFormal, Primitive indexActual, Value valueToLoad, boolean fresh, Reference arrayToWriteBack,SortedSet<DecisionAlternative_XALOAD> result)
+    protected final Outcome resolve_XALOAD_ResolvedNonconcrete(ArrayAccessInfo arrayAccessInfo, SortedSet<DecisionAlternative_XALOAD> result)
     throws DecisionException {
-        final Outcome retVal = super.resolve_XALOAD_ResolvedNonconcrete(accessExpression, indexFormal, indexActual, valueToLoad, fresh, arrayToWriteBack, result);
-        if (!this.ended) {
+        final Outcome retVal = super.resolve_XALOAD_ResolvedNonconcrete(arrayAccessInfo, result);
+        if (this.guiding) {
             final Iterator<DecisionAlternative_XALOAD> it = result.iterator();
             while (it.hasNext()) {
                 final DecisionAlternative_XALOAD da = it.next();
@@ -258,13 +325,14 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     @Override
-    protected final Outcome resolve_XALOAD_Unresolved(State state, Expression accessExpression, Term indexFormal, Primitive indexActual, ReferenceSymbolic refToLoad, boolean fresh, Reference arrayReference, SortedSet<DecisionAlternative_XALOAD> result)
+    protected final Outcome resolve_XALOAD_Unresolved(State state, ArrayAccessInfo arrayAccessInfo, SortedSet<DecisionAlternative_XALOAD> result)
     throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
     BadClassFileVersionException, WrongClassNameException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException {
-        updateExpansionBackdoor(state, refToLoad);
-        final Outcome retVal = super.resolve_XALOAD_Unresolved(state, accessExpression, indexFormal, indexActual, refToLoad, fresh, arrayReference, result);
-        if (!this.ended) {
+        final ReferenceSymbolic readReference = (ReferenceSymbolic) arrayAccessInfo.readValue;
+        updateExpansionBackdoor(state, readReference);
+        final Outcome retVal = super.resolve_XALOAD_Unresolved(state, arrayAccessInfo, result);
+        if (this.guiding) {
             final Iterator<DecisionAlternative_XALOAD> it = result.iterator();
             while (it.hasNext()) {
                 final DecisionAlternative_XALOAD_Unresolved dar = (DecisionAlternative_XALOAD_Unresolved) it.next();
@@ -272,7 +340,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                 if (valueInConcreteState != null && valueInConcreteState.surelyFalse()) {
                     it.remove();
                 } else {
-                    filter(state, refToLoad, dar, it);
+                    filter(state, readReference, dar, it);
                 }
             }
         }
@@ -287,9 +355,9 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         }
     }
 
-    private void filter(State state, ReferenceSymbolic refToLoad, DecisionAlternative_XYLOAD_GETX_Unresolved dar, Iterator<?> it) 
+    private void filter(State state, ReferenceSymbolic readReference, DecisionAlternative_XYLOAD_GETX_Unresolved dar, Iterator<?> it) 
     throws GuidanceException {
-        if (dar instanceof DecisionAlternative_XYLOAD_GETX_Null && (toSkip(refToLoad) /*HACK*/ || !this.jvm.isNull(refToLoad))) {
+        if (dar instanceof DecisionAlternative_XYLOAD_GETX_Null && (toSkip(readReference) /*HACK*/ || !this.jvm.isNull(readReference))) {
             it.remove();
         } else if (dar instanceof DecisionAlternative_XYLOAD_GETX_Aliases) {
             final DecisionAlternative_XYLOAD_GETX_Aliases dara = (DecisionAlternative_XYLOAD_GETX_Aliases) dar;
@@ -300,13 +368,13 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                 //this should never happen
                 throw new UnexpectedInternalException(e);
             }
-            if (toSkip(refToLoad) /*HACK*/ || toSkip(aliasOrigin) /*HACK*/ || !this.jvm.areAlias(refToLoad, aliasOrigin)) {
+            if (toSkip(readReference) /*HACK*/ || toSkip(aliasOrigin) /*HACK*/ || !this.jvm.areAlias(readReference, aliasOrigin)) {
                 it.remove();
             }
         } else if (dar instanceof DecisionAlternative_XYLOAD_GETX_Expands) {
             final DecisionAlternative_XYLOAD_GETX_Expands dare = (DecisionAlternative_XYLOAD_GETX_Expands) dar;
-            if (toSkip(refToLoad) /*HACK*/ || this.jvm.isNull(refToLoad) || alreadySeen(refToLoad) ||
-            !dare.getClassFileOfTargetObject().getClassName().equals(this.jvm.typeOfObject(refToLoad))) {
+            if (toSkip(readReference) /*HACK*/ || this.jvm.isNull(readReference) || alreadySeen(readReference) ||
+            !dare.getClassFileOfTargetObject().getClassName().equals(this.jvm.typeOfObject(readReference))) {
                 it.remove();
             }
         }
@@ -318,6 +386,10 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
 
     private void markAsSeen(ReferenceSymbolic m) throws GuidanceException {
         this.seen.add(this.jvm.getValue(m));
+    }
+    
+    private void clearSeen() {
+        this.seen.clear();;
     }
     
     @Override
@@ -595,7 +667,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
     }
 
     public final void step(State state) throws GuidanceException {
-        if (state.phase() == Phase.POST_INITIAL && !this.ended) {
+        if (state.phase() == Phase.POST_INITIAL && this.guiding) {
             this.jvm.step(state);
         }
     }
