@@ -201,7 +201,7 @@ class DispatcherMeta extends Dispatcher<Signature, Algo_INVOKEMETA<?, ?, ?, ?>> 
      *        then the (unqualified, to uppercase) name of the method will be used.
      */
     void loadAlgoUninterpreted(Signature methodSignatureResolved) {
-        final Algo_INVOKEMETA_Metacircular metaDelegate = new Algo_INVOKEMETA_Metacircular();
+        final Algo_INVOKEMETA_Uninterpreted metaDelegate = new Algo_INVOKEMETA_Uninterpreted();
         loadMetaDelegate(methodSignatureResolved, metaDelegate);
     }
 

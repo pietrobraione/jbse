@@ -201,7 +201,8 @@ public final class Util {
      *         or {@code null} if {@code ref} does not refer an {@link Instance} 
      *         in {@code s}, or if it refers an {@link Instance} but its 
      *         {@link Instance#getType() type} is not the 
-     *         {@code java.lang.String} class, or its value
+     *         {@code java.lang.String} class, or if its type is the 
+     *         {@code java.lang.String} but its value field
      *         is not a concrete array of {@code char}s.
      * @throws FrozenStateException if {@code s} is frozen.
      */

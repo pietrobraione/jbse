@@ -90,14 +90,14 @@ import jbse.val.exc.InvalidTypeException;
  *     method's signature, whose parameters are the method invocation's parameters, 
  *     and whose history point is the current state's history point.</li>
  * </ul>
+ * </ul>
  * This algorithm is branching since, when a fresh {@link ReferenceSymbolicApply} is pushed
  * on top of the operand stack, this is also resolved.
- * </ul>
  * 
  * @author Pietro Braione
  */
 //TODO merge with Algo_INVOKEX_Abstract and subclasses and with Algo_XYLOAD_GETX and subclasses
-public class Algo_INVOKEMETA_Metacircular extends Algo_INVOKEMETA<
+public final class Algo_INVOKEMETA_Metacircular extends Algo_INVOKEMETA<
 DecisionAlternative_XLOAD_GETX,
 StrategyDecide<DecisionAlternative_XLOAD_GETX>,
 StrategyRefine<DecisionAlternative_XLOAD_GETX>,
@@ -118,6 +118,8 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
     @Override
     protected BytecodeCooker bytecodeCooker() {
         return (state) -> {
+        	//during the pre-initial phase only native methods
+        	//are invoked metacircularly
         	if (state.phase() == Phase.PRE_INITIAL && !this.isOverriddenMethodNative) {
         		continueWithBaseLevelImpl(state, this.isInterface, this.isSpecial, this.isStatic);
         	}            
