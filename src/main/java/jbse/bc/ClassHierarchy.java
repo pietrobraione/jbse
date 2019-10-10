@@ -267,7 +267,6 @@ public final class ClassHierarchy implements Cloneable {
      * @throws ClassFileIllFormedException if {@code bytecode} is ill-formed.
      * @throws InvalidInputException if {@code bytecode == null}.
      */
-    @SuppressWarnings("restriction")
     public ClassFile createClassFileAnonymousDummy(byte[] bytecode) 
     throws ClassFileIllFormedException, InvalidInputException {
         final ClassFile retval =
