@@ -1,19 +1,17 @@
 package jbse.algo;
 
 import static jbse.algo.BytecodeData_1KME.Kind.kind;
-import static jbse.algo.Util.continueWith;
+import static jbse.algo.Util.checkOverridingMethodFits;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
-import static jbse.algo.Util.invokeClassLoaderLoadClass;
 import static jbse.algo.Util.lookupMethodImpl;
+import static jbse.algo.Util.lookupMethodImplOverriding;
 import static jbse.algo.Util.throwNew;
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.Signatures.ILLEGAL_ACCESS_ERROR;
 import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.NO_SUCH_METHOD_ERROR;
 import static jbse.bc.Signatures.NULL_POINTER_EXCEPTION;
-import static jbse.common.Type.REFERENCE;
-import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.parametersNumber;
 
 import java.util.function.Supplier;
@@ -280,69 +278,21 @@ StrategyUpdate<DecisionAlternative_NONE>> {
         if (this.methodImplSignature == null || this.isMethodImplSignaturePolymorphic) {
             return; //no implementation to override, or method is signature polymorphic (cannot be overridden!)
         }
-        if (this.ctx.isMethodBaseLevelOverridden(this.methodImplSignature)) {
-            try {
-                final ClassHierarchy hier = state.getClassHierarchy();
-                final Signature methodSignatureOverriding = this.ctx.getBaseOverride(this.methodImplSignature);
-                final ClassFile classFileMethodResolved = hier.loadCreateClass(CLASSLOADER_APP, methodSignatureOverriding.getClassName(), state.bypassStandardLoading());
-                final ClassFile classFileMethodOverriding = hier.resolveMethod(classFileMethodResolved, methodSignatureOverriding, false, state.bypassStandardLoading()); //TODO is false ok? And the accessor?
-                checkOverridingMethodFits(state, classFileMethodOverriding, methodSignatureOverriding);
-                this.methodImplClass = classFileMethodOverriding;
-                this.methodImplSignature = methodSignatureOverriding;
-                this.isMethodImplSignaturePolymorphic = this.methodImplClass.isMethodSignaturePolymorphic(this.methodImplSignature);
-                return;
-            } catch (PleaseLoadClassException e) {
-                invokeClassLoaderLoadClass(state, this.ctx.getCalculator(), e);
-                exitFromAlgorithm();
-            } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException | 
-                     WrongClassNameException | ClassFileNotAccessibleException | IncompatibleClassFileException | 
-                     MethodNotFoundException | MethodNotAccessibleException e) {
-                throw new BaseUnsupportedException(e);
-            }
-        } else {
-            try {
-                if (this.ctx.dispatcherMeta.isMeta(this.methodImplClass, this.methodImplSignature)) {
-                    final Algo_INVOKEMETA<?, ?, ?, ?> algo = this.ctx.dispatcherMeta.select(this.methodImplSignature);
-                    algo.setFeatures(this.isInterface, this.isSpecial, this.isStatic, this.isMethodImplNative);
-                    continueWith(algo);
-                }
-            } catch (MethodNotFoundException e) {
-                //this should never happen after resolution 
-                failExecution(e);
-            }
-        }
         
-        //if we are here no overriding implementation exists:
-        //if the method is classless throw an exception
-        if (this.methodImplClass == null) {
-            throw new NotYetImplementedException("The classless method " + this.methodImplSignature.toString() + " has no implementation.");
+        final Signature methodSignatureOverriding = lookupMethodImplOverriding(state, this.ctx, this.methodImplClass, this.methodImplSignature, this.isInterface, this.isSpecial, this.isStatic, this.isMethodImplNative);
+        if (methodSignatureOverriding == null) {
+            return;
         }
-    }
 
-    private void checkOverridingMethodFits(State state, ClassFile classFileMethodOverriding, Signature methodSignatureOverriding) 
-    throws BaseUnsupportedException, MethodNotFoundException {
-        if (!classFileMethodOverriding.hasMethodImplementation(methodSignatureOverriding)) {
-            throw new BaseUnsupportedException("The overriding method " + methodSignatureOverriding + " is abstract.");
+        try {
+            final ClassHierarchy hier = state.getClassHierarchy();
+            final ClassFile classFileMethodOverriding = hier.getClassFileClassArray(CLASSLOADER_APP, methodSignatureOverriding.getClassName());
+            checkOverridingMethodFits(state, this.methodImplClass, this.methodImplSignature, classFileMethodOverriding, methodSignatureOverriding);
+            this.methodImplClass = classFileMethodOverriding;
+            this.methodImplSignature = methodSignatureOverriding;
+            this.isMethodImplSignaturePolymorphic = this.methodImplClass.isMethodSignaturePolymorphic(this.methodImplSignature);
+        } catch (MethodNotFoundException e) {
+            throw new BaseUnsupportedException(e);
         }
-        final boolean overriddenStatic = this.methodImplClass.isMethodStatic(this.methodImplSignature);
-        final boolean overridingStatic = classFileMethodOverriding.isMethodStatic(methodSignatureOverriding);
-        if (overriddenStatic == overridingStatic) {
-            if (this.methodImplSignature.getDescriptor().equals(methodSignatureOverriding.getDescriptor())) {
-                return;
-            }
-        } else if (!overriddenStatic && overridingStatic) {
-            if (descriptorAsStatic(this.methodImplSignature).equals(methodSignatureOverriding.getDescriptor())) {
-                return;
-            }
-        } else { //(overriddenStatic && !overridingStatic)
-            if (this.methodImplSignature.getDescriptor().equals(descriptorAsStatic(methodSignatureOverriding))) {
-                return;
-            }
-        }
-        throw new BaseUnsupportedException("The overriding method " + methodSignatureOverriding + " has signature incompatible with overridden " + this.methodImplSignature);
-    }
-
-    private static String descriptorAsStatic(Signature sig) {
-        return "(" + REFERENCE + sig.getClassName() + TYPEEND + sig.getDescriptor().substring(1);
     }
 }

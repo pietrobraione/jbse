@@ -1,7 +1,9 @@
 package jbse.algo.meta;
 
+import static jbse.algo.Util.checkOverridingMethodFits;
 import static jbse.algo.Util.exitFromAlgorithm;
 import static jbse.algo.Util.failExecution;
+import static jbse.algo.Util.lookupMethodImplOverriding;
 import static jbse.algo.Util.throwNew;
 import static jbse.algo.Util.throwVerifyError;
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
@@ -61,9 +63,12 @@ import java.util.function.Supplier;
 import jbse.algo.Algo_INVOKEMETA_Nonbranching;
 import jbse.algo.InterruptException;
 import jbse.algo.StrategyUpdate;
+import jbse.algo.exc.BaseUnsupportedException;
+import jbse.algo.exc.MetaUnsupportedException;
 import jbse.algo.exc.SymbolicValueNotAllowedException;
 import jbse.algo.meta.exc.UndefinedResultException;
 import jbse.bc.ClassFile;
+import jbse.bc.ClassHierarchy;
 import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
@@ -79,6 +84,7 @@ import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.mem.Array;
 import jbse.mem.Array.AccessOutcomeInValue;
+import jbse.mem.Frame;
 import jbse.mem.Instance;
 import jbse.mem.Instance_JAVA_CLASS;
 import jbse.mem.Objekt;
@@ -87,6 +93,7 @@ import jbse.mem.exc.FastArrayAccessNotAllowedException;
 import jbse.mem.exc.FrozenStateException;
 import jbse.mem.exc.InvalidProgramCounterException;
 import jbse.mem.exc.InvalidSlotException;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_NONE;
 import jbse.val.Calculator;
 import jbse.val.Primitive;
@@ -105,6 +112,7 @@ import jbse.val.exc.InvalidTypeException;
 public final class Algo_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0 extends Algo_INVOKEMETA_Nonbranching {
     private ClassFile methodClassFile; //set by cookMore
     private Signature methodSignature; //set by cookMore
+    private boolean isNative; //set by cookMore
     private Value[] params; //set by cookMore except for params[0] that is set by updater
     
     @Override
@@ -116,7 +124,8 @@ public final class Algo_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0 extends Algo_INVOKE
     protected void cookMore(State state) 
     throws InterruptException, UndefinedResultException, 
     SymbolicValueNotAllowedException, ClasspathException, 
-    FrozenStateException, InvalidInputException, InvalidTypeException {
+    FrozenStateException, InvalidInputException, InvalidTypeException, 
+    BaseUnsupportedException, MetaUnsupportedException, ThreadStackEmptyException {
     	final Calculator calc = this.ctx.getCalculator();
         try {
             //gets and check the class where the method belongs to
@@ -150,13 +159,18 @@ public final class Algo_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0 extends Algo_INVOKE
                 //invalid slot number
                 throwNew(state, calc, INTERNAL_ERROR);
                 exitFromAlgorithm();
-            }            
+            }
+            
+            //determines the features of the method
             //TODO resolve/lookup the method ???????
             this.methodSignature = declaredMethods[slot];
-            
-            //determines if the method is static and the number of parameters
-            final boolean isMethodStatic = this.methodClassFile.isMethodStatic(this.methodSignature);
-            final int numAdditional = (isMethodStatic ? 0 : 1);
+            this.isInterface = false; //TODO is it ok?
+            this.isSpecial = false;   //TODO is it ok?
+            this.isStatic = this.methodClassFile.isMethodStatic(this.methodSignature);
+            this.isNative = this.methodClassFile.isMethodNative(this.methodSignature);
+
+            //determines the number of parameters
+            final int numAdditional = (this.isStatic ? 0 : 1);
             final int numOfMethodParametersFormal = 
                 splitParametersDescriptors(this.methodSignature.getDescriptor()).length + numAdditional;
             if (numOfMethodParametersFormal != numOfMethodParameterTypes + numAdditional) {
@@ -167,7 +181,7 @@ public final class Algo_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0 extends Algo_INVOKE
             //gets and checks the parameters
             final Reference refThis = (Reference) this.data.operand(1);
             final Reference refParameters = (Reference) this.data.operand(2);
-            if (state.isNull(refThis) && !isMethodStatic) {
+            if (state.isNull(refThis) && !this.isStatic) {
                 throwNew(state, calc, NULL_POINTER_EXCEPTION);
                 exitFromAlgorithm();
             }
@@ -187,7 +201,7 @@ public final class Algo_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0 extends Algo_INVOKE
             
             //scans the parameters and checks/unboxes/widens them
             this.params = new Value[numOfMethodParametersActual];
-            if (!isMethodStatic) {
+            if (!this.isStatic) {
                 final Value actualConverted = checkAndConvert(state, (Reference) method.getFieldValue(JAVA_METHOD_CLAZZ), refThis);
                 this.params[0] = actualConverted;
             }
@@ -285,8 +299,9 @@ public final class Algo_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0 extends Algo_INVOKE
     	final Calculator calc = this.ctx.getCalculator();
         return (state, alt) -> {
             try {
-                //pushes the frames for the method and for the 
-                //method that boxes the exceptions raised by the method
+                //pushes the frame for the method that boxes 
+                //the exceptions raised by the method to be
+                //invoked
                 final ClassFile cf_JBSE_BASE = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, JBSE_BASE, state.bypassStandardLoading());
                 final char returnType = splitReturnValueDescriptor(this.methodSignature.getDescriptor()).charAt(0);
                 switch (returnType) {
@@ -322,11 +337,44 @@ public final class Algo_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0 extends Algo_INVOKE
                     state.pushFrame(calc, cf_JBSE_BASE, JBSE_BASE_BOXINVOCATIONTARGETEXCEPTIONANDRETURN_V, false, this.pcOffset);
                     break;
                 }
-                state.pushFrame(calc, this.methodClassFile, this.methodSignature, false, INVOKESPECIALSTATICVIRTUAL_OFFSET, this.params);
             } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException | 
                      WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException | 
                      PleaseLoadClassException | NullMethodReceiverException | MethodNotFoundException | 
                      MethodCodeNotFoundException | InvalidSlotException | InvalidProgramCounterException e) {
+                //this should never happen
+                //TODO really?
+                failExecution(e);
+            }
+            
+            //determines whether the method is overridden; we do that now because
+            //we need to push on the operand stack the converted parameters in case
+            //the method is meta-overridden
+            try {
+                final Signature methodSignatureOverriding = lookupMethodImplOverriding(state, this.ctx, this.methodClassFile, this.methodSignature, this.isInterface, this.isSpecial, this.isStatic, this.isNative);
+                if (methodSignatureOverriding != null) {
+                    final ClassHierarchy hier = state.getClassHierarchy();
+                    final ClassFile classFileMethodOverriding = hier.getClassFileClassArray(CLASSLOADER_APP, methodSignatureOverriding.getClassName());
+                    checkOverridingMethodFits(state, this.methodClassFile, this.methodSignature, classFileMethodOverriding, methodSignatureOverriding);
+                    this.methodClassFile = classFileMethodOverriding;
+                    this.methodSignature = methodSignatureOverriding;
+                }
+            } catch (InterruptException e) {
+                //the method is meta-overridden: push back the parameters on the operand stack
+                final Frame currentFrame = state.getCurrentFrame();
+                for (Value param : this.params) {
+                    currentFrame.push(param);
+                }
+                throw e;
+            } catch (MethodNotFoundException e) {
+                throw new BaseUnsupportedException(e);
+            }
+            
+            try {
+                state.pushFrame(calc, this.methodClassFile, this.methodSignature, false, INVOKESPECIALSTATICVIRTUAL_OFFSET, this.params);
+            } catch (MethodCodeNotFoundException e) {
+                throw new BaseUnsupportedException(e);
+            } catch (NullMethodReceiverException | MethodNotFoundException |
+                     InvalidSlotException | InvalidProgramCounterException e) {
                 //this should never happen
                 //TODO really?
                 failExecution(e);

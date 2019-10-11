@@ -18,6 +18,7 @@ import static jbse.bc.Signatures.UNSUPPORTED_CLASS_VERSION_ERROR;
 
 import java.util.function.Supplier;
 
+import jbse.algo.exc.NotYetImplementedException;
 import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
@@ -111,12 +112,18 @@ final class Algo_INVOKEX extends Algo_INVOKEX_Abstract {
             //and in case considers it instead
             findOverridingImpl(state);
 
-            //if the method has no implementation, raises NoSuchMethodError
+            //if no implementation exists, reacts accordingly
             if (this.methodImplClass == null) {
-                throwNew(state, this.ctx.getCalculator(), NO_SUCH_METHOD_ERROR);
-                exitFromAlgorithm();
+                if (this.methodImplSignature == null) {
+                    //standard lookup failed
+                    throwNew(state, this.ctx.getCalculator(), NO_SUCH_METHOD_ERROR);
+                    exitFromAlgorithm();
+                } else {
+                    //a classless method has not an implementation
+                    throw new NotYetImplementedException("The classless method " + this.methodImplSignature.toString() + " has no implementation.");
+                }
             }
-
+            
             //otherwise, concludes the execution of the bytecode algorithm
             if (this.isMethodImplSignaturePolymorphic) {
                 state.getCurrentFrame().patchCode(OP_INVOKEHANDLE);

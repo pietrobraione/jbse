@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
 
+import jbse.algo.exc.BaseUnsupportedException;
+import jbse.algo.exc.MetaUnsupportedException;
 import jbse.bc.ClassFile;
 import jbse.bc.ClassHierarchy;
 import jbse.bc.ConstantPoolPrimitive;
@@ -148,16 +150,18 @@ public final class Util {
      * See JVMS v8, invokeinterface, invokespecial, invokestatic and invokevirtual
      * bytecodes specification.
      * 
-     * @param state a {@link State}
-     * @param resolutionClass the {@link ClassFile} of the resolved method.
+     * @param state a {@link State}. It must not be {@code null}.
+     * @param resolutionClass the {@link ClassFile} of the resolved method. It must not be {@code null}.
      * @param methodSignature the {@link Signature} of the method
-     *        whose implementation must be looked up.
+     *        whose implementation must be looked up. The class name encapsulated 
+     *        in it will be ignored and {@code resolutionClass} will be considered
+     *        instead. It must not be {@code null}.
      * @param isInterface {@code true} iff the method is declared interface.
      * @param isSpecial {@code true} iff the method is declared special.
      * @param isStatic {@code true} iff the method is declared static.
      * @param receiverClass a {@link ClassFile}, the class of the receiver
      *        of the method invocation. It can be {@code null} when 
-     *        {@code isStatic == true}.
+     *        {@code isStatic == true || isSpecial == true}.
      * @return the {@link ClassFile} of the class which contains the method implementation.
      * @throws InvalidInputException if {@code state == null || resolutionClass == null || 
      *         methodSignature == null || (!isStatic && !isSpecial && receiverClass == null)}.
@@ -172,7 +176,7 @@ public final class Util {
     public static ClassFile lookupMethodImpl(State state, ClassFile resolutionClass, Signature methodSignature, boolean isInterface, boolean isSpecial, boolean isStatic, ClassFile receiverClass) 
     throws InvalidInputException, FrozenStateException, MethodNotFoundException, MethodNotAccessibleException, MethodAbstractException, IncompatibleClassFileException, ThreadStackEmptyException {
     	if (state == null || resolutionClass == null || methodSignature == null || (!isStatic && !isSpecial && receiverClass == null)) {
-    		throw new InvalidInputException("Invoked " + Util.class.getName() + ".lookupMethodImpl with a null parameter.");
+    	    throw new InvalidInputException("Invoked " + Util.class.getName() + ".lookupMethodImpl with a null parameter.");
     	}
         final ClassFile retVal;
         final ClassHierarchy hier = state.getClassHierarchy();
@@ -188,6 +192,123 @@ public final class Util {
         }
         //TODO invokedynamic
         return retVal;
+    }
+
+    /**
+     * Determines whether a base-level or a meta-level overriding implementation 
+     * for a method exists. In the base-level case returns the signature of the
+     * overriding method. In the meta-level case interrupts the execution of the
+     * current algorithm and triggers continuation with the one implementing
+     * the method.
+     * 
+     * @param state a {@link State}. It must not be {@code null}.
+     * @param ctx an {@link ExecutionContext}. It must not be {@code null}.
+     * @param implementationClass the {@link ClassFile} where the method implementation is, 
+     *        or {@code null} if the method is classless.
+     * @param methodSignatureImplementation the {@link Signature} of the implementation.
+     *        It must not be {@code null}.
+     * @param isInterface {@code true} iff the method is declared interface.
+     * @param isSpecial {@code true} iff the method is declared special.
+     * @param isStatic {@code true} iff the method is declared static.
+     * @param isNative {@code true} iff the method is declared native.
+     * @return {@code null} if no overriding implementation exists, otherwise the
+     *         {@link Signature} of a base-level overriding method.
+     * @throws InvalidInputException if {@code state == null || ctx == null || 
+     *         methodImplSignature == null}.
+     * @throws MetaUnsupportedException if it is unable to find the specified {@link Algorithm}, 
+     *         to load it, or to instantiate it for any reason (misses from the meta-level classpath, 
+     *         has insufficient visibility, does not implement {@link Algorithm}...).
+     * @throws ThreadStackEmptyException if {@code state}'s stack is empty.
+     * @throws ClasspathException if a standard class is missing from the classpath.
+     * @throws BaseUnsupportedException if the base-level overriding fails for some reason 
+     *         (missing class, wrong classfile...).
+     * @throws InterruptException if the execution fails or a meta-level implementation is found, 
+     *         in which case the current {@link Algorithm} is interrupted with the 
+     *         {@link Algorithm} for the overriding implementation as continuation. 
+     */
+    public static Signature lookupMethodImplOverriding(State state, ExecutionContext ctx, ClassFile implementationClass, Signature methodSignatureImplementation, boolean isInterface, boolean isSpecial, boolean isStatic, boolean isNative) 
+    throws InvalidInputException, MetaUnsupportedException, InterruptException, ClasspathException, ThreadStackEmptyException, BaseUnsupportedException {
+        if (state == null || ctx == null || methodSignatureImplementation == null) {
+            throw new InvalidInputException("Invoked " + Util.class.getName() + ".lookupMethodImplOverriding with a null parameter.");
+        }
+        if (ctx.isMethodBaseLevelOverridden(methodSignatureImplementation)) {
+            try {
+                final ClassHierarchy hier = state.getClassHierarchy();
+                final Signature methodSignatureOverridingFromCtx = ctx.getBaseOverride(methodSignatureImplementation);
+                final ClassFile classFileMethodOverridingFromCtx = hier.loadCreateClass(CLASSLOADER_APP, methodSignatureOverridingFromCtx.getClassName(), state.bypassStandardLoading());
+                final ClassFile classFileMethodOverridingResolved = hier.resolveMethod(classFileMethodOverridingFromCtx, methodSignatureOverridingFromCtx, classFileMethodOverridingFromCtx.isInterface(), state.bypassStandardLoading()); //TODO is the isInterface parameter ok? And the accessor parameter?
+                return new Signature(classFileMethodOverridingResolved.getClassName(), methodSignatureOverridingFromCtx.getDescriptor(), methodSignatureOverridingFromCtx.getName());
+            } catch (PleaseLoadClassException e) {
+                invokeClassLoaderLoadClass(state, ctx.getCalculator(), e);
+                exitFromAlgorithm();
+            } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException | 
+                     WrongClassNameException | ClassFileNotAccessibleException | IncompatibleClassFileException | 
+                     MethodNotFoundException | MethodNotAccessibleException e) {
+                throw new BaseUnsupportedException(e);
+            }        
+        } else {
+            try {
+                if (ctx.dispatcherMeta.isMeta(implementationClass, methodSignatureImplementation)) {
+                    final Algo_INVOKEMETA<?, ?, ?, ?> algo = ctx.dispatcherMeta.select(methodSignatureImplementation);
+                    algo.setFeatures(isInterface, isSpecial, isStatic, isNative);
+                    continueWith(algo);
+                }
+            } catch (MethodNotFoundException e) {
+                //this should never happen after resolution 
+                failExecution(e);
+            }
+        }
+        return null; //no overriding implementation
+    }
+
+    /**
+     * Checks that the base-level overriding method returned by 
+     * an invocation to {@link #lookupMethodImplOverriding}
+     * can indeed override a method implementation.
+     * 
+     * @param state a {@link State}. It must not be {@code null}.
+     * @param classFileMethodOverridden the {@link ClassFile} where the overridden method 
+     *        implementation is, or {@code null} if the method is classless.
+     * @param methodSignatureOverridden the {@link Signature} of the overridden 
+     *        method implementation. It must not be {@code null}.
+     * @param classFileMethodOverridingResolved the {@link ClassFile} where the overriding method implementation is, 
+     *        or {@code null} if the method is classless.. It must not be {@code null}.
+     * @param methodSignatureOverriding. It must not be {@code null}.
+     * @throws BaseUnsupportedExceptionBaseUnsupportedException if the base-level overriding fails 
+     *         because the overriding method is abstract or has a signature that is incompatible 
+     *         with the one of the overridden method.
+     */
+    public static void checkOverridingMethodFits(State state, ClassFile classFileMethodOverridden, Signature methodSignatureOverridden, ClassFile classFileMethodOverriding, Signature methodSignatureOverriding) 
+    throws BaseUnsupportedException, MethodNotFoundException {
+        if (!classFileMethodOverriding.hasMethodImplementation(methodSignatureOverriding)) {
+            throw new BaseUnsupportedException("The overriding method " + methodSignatureOverriding + " is abstract.");
+        }
+        final boolean overridingStatic;
+        final boolean overriddenStatic;
+        try {
+            overridingStatic = classFileMethodOverriding.isMethodStatic(methodSignatureOverriding);
+            overriddenStatic = (classFileMethodOverridden == null ? true : classFileMethodOverridden.isMethodStatic(methodSignatureOverridden));
+        } catch (MethodNotFoundException e) {
+            throw new BaseUnsupportedException(e);
+        }
+        if (overriddenStatic == overridingStatic) {
+            if (methodSignatureOverridden.getDescriptor().equals(methodSignatureOverriding.getDescriptor())) {
+                return;
+            }
+        } else if (!overriddenStatic && overridingStatic) {
+            if (descriptorAsStatic(methodSignatureOverridden).equals(methodSignatureOverriding.getDescriptor())) {
+                return;
+            }
+        } else { //(overriddenStatic && !overridingStatic)
+            if (descriptorAsStatic(methodSignatureOverriding).equals(methodSignatureOverridden.getDescriptor())) {
+                return;
+            }
+        }
+        throw new BaseUnsupportedException("The overriding method " + methodSignatureOverriding + " has signature incompatible with overridden " + methodSignatureOverridden);
+    }
+
+    private static String descriptorAsStatic(Signature sig) {
+        return "(" + REFERENCE + sig.getClassName() + TYPEEND + sig.getDescriptor().substring(1);
     }
 
     /**
