@@ -19,7 +19,6 @@ import sun.misc.Unsafe;
  * @author Pietro Braione
  *
  */
-@SuppressWarnings("restriction")
 public final class Base {
     //Properties to be set at the meta level
     private static final String JBSE_VERSION            = null;

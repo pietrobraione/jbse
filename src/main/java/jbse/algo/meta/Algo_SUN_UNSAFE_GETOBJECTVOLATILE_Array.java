@@ -72,7 +72,6 @@ import jbse.val.exc.InvalidTypeException;
  */
 //TODO heavily copied from Algo_XALOAD and Algo_XYLOAD_GETX: Refactor and merge 
 //TODO refactor together with Algo_SUN_UNSAFE_GETINTVOLATILE_Array
-@SuppressWarnings("restriction")
 public final class Algo_SUN_UNSAFE_GETOBJECTVOLATILE_Array extends Algo_INVOKEMETA<
 DecisionAlternative_XALOAD,
 StrategyDecide<DecisionAlternative_XALOAD>, 

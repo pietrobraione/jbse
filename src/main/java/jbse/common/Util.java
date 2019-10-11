@@ -12,7 +12,6 @@ import sun.misc.Unsafe;
 /**
  * Class that provides some utility constants and static methods.
  */
-@SuppressWarnings("restriction")
 public final class Util {
     // symbols
     public static final String ROOT_FRAME_MONIKER = "{ROOT}:";

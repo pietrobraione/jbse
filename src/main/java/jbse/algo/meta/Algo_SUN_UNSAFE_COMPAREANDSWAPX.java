@@ -34,7 +34,6 @@ import jbse.val.exc.InvalidTypeException;
  * 
  * @author Pietro Braione
  */
-@SuppressWarnings("restriction")
 public abstract class Algo_SUN_UNSAFE_COMPAREANDSWAPX extends Algo_INVOKEMETA_Nonbranching {
     private final String what;  //set by constructor
     private Objekt objectToSet; //set by cookMore

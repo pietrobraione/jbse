@@ -20,7 +20,6 @@ import jbse.val.Reference;
  * 
  * @author Pietro Braione
  */
-@SuppressWarnings("restriction")
 public final class Algo_SUN_UNSAFE_SHOULDBEINITIALIZED extends Algo_INVOKEMETA_Nonbranching {
     private boolean shouldBeInitialized; //set by cookMore
     

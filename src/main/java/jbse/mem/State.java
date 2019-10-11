@@ -166,7 +166,6 @@ public final class State implements Cloneable {
      * 
      * @author Pietro Braione
      */
-    @SuppressWarnings("restriction")
 	private static final class MemoryBlock {
         /** The base address of the memory block. */
         final long address;
@@ -3942,8 +3941,7 @@ public final class State implements Cloneable {
         return this.methodTypes.values();
     }
     
-    @SuppressWarnings("restriction")
-	private State deepCopyHeapAndStaticAreaExcluded() {
+    private State deepCopyHeapAndStaticAreaExcluded() {
         final State o;
         try {
             o = (State) super.clone();
@@ -4112,8 +4110,7 @@ public final class State implements Cloneable {
         return o;
     }
     
-    @SuppressWarnings("restriction")
-	@Override
+    @Override
     protected void finalize() {
         //closes all files except stdin/out/err
         for (Map.Entry<Long, Object> fileEntry : this.files.entrySet()) {

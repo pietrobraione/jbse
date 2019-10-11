@@ -16,7 +16,6 @@ import jbse.val.Simplex;
  * 
  * @author Pietro Braione
  */
-@SuppressWarnings("restriction")
 public final class Algo_SUN_UNSAFE_GETBYTE extends Algo_INVOKEMETA_Nonbranching {
     private byte value; //set by cookMore
     

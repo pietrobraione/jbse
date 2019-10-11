@@ -55,7 +55,6 @@ import sun.misc.Unsafe;
  * 
  * @author Pietro Braione
  */
-@SuppressWarnings("restriction")
 public final class Algo_SUN_PERF_CREATELONG extends Algo_INVOKEMETA_Nonbranching {
     private static final int VU_INVALID = 0;
     private static final int V_LAST = 3;

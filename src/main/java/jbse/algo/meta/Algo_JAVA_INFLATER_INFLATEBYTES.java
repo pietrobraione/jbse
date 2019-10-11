@@ -46,7 +46,6 @@ import sun.misc.Unsafe;
  * 
  * @author Pietro Braione
  */
-@SuppressWarnings("restriction")
 public final class Algo_JAVA_INFLATER_INFLATEBYTES extends Algo_INVOKEMETA_Nonbranching {
     private Instance _inflater; //set by cookMore
     private Array outBuf; //set by cookMore

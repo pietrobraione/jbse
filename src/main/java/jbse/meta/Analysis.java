@@ -12,7 +12,6 @@ import sun.misc.Unsafe;
  * 
  * @author Pietro Braione
  */
-@SuppressWarnings("restriction")
 final public class Analysis {
     private Analysis() { } //no instances of this class, thanks
 

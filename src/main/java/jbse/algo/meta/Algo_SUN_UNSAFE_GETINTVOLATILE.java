@@ -33,7 +33,6 @@ import jbse.val.Value;
  * @author Pietro Braione
  */
 //TODO refactor together with Algo_SUN_UNSAFE_GETOBJECTVOLATILE
-@SuppressWarnings("restriction")
 public final class Algo_SUN_UNSAFE_GETINTVOLATILE extends Algo_INVOKEMETA_Nonbranching {
     private final Algo_SUN_UNSAFE_GETINTVOLATILE_Array algoArray = new Algo_SUN_UNSAFE_GETINTVOLATILE_Array();
     private Value read; //set by cookMore
