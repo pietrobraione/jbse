@@ -486,6 +486,8 @@ public final class Signatures {
         new Signature(JAVA_THROWABLE, "(" + INT + ")" + REFERENCE + JAVA_STACKTRACEELEMENT + TYPEEND, "getStackTraceElement");
     public static final Signature JAVA_UNIXFILESYSTEM_CANONICALIZE0 = 
         new Signature(JAVA_UNIXFILESYSTEM, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_STRING + TYPEEND, "canonicalize0");
+    public static final Signature JAVA_UNIXFILESYSTEM_CHECKACCESS = 
+        new Signature(JAVA_UNIXFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + INT + ")" + BOOLEAN, "checkAccess");
     public static final Signature JAVA_UNIXFILESYSTEM_GETBOOLEANATTRIBUTES0 = 
         new Signature(JAVA_UNIXFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + INT, "getBooleanAttributes0");
     public static final Signature JAVA_UNIXFILESYSTEM_GETLASTMODIFIEDTIME = 
@@ -500,6 +502,8 @@ public final class Signatures {
         new Signature(JAVA_WINNTFILESYSTEM, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_STRING + TYPEEND, "canonicalize0");
     public static final Signature JAVA_WINNTFILESYSTEM_CANONICALIZEWITHPREFIX0 = 
             new Signature(JAVA_WINNTFILESYSTEM, "(" + REFERENCE + JAVA_STRING + TYPEEND + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_STRING + TYPEEND, "canonicalizeWithPrefix0");
+    public static final Signature JAVA_WINNTFILESYSTEM_CHECKACCESS = 
+        new Signature(JAVA_WINNTFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + INT + ")" + BOOLEAN, "checkAccess");
     public static final Signature JAVA_WINNTFILESYSTEM_GETBOOLEANATTRIBUTES = 
         new Signature(JAVA_WINNTFILESYSTEM, "(" + REFERENCE + JAVA_FILE + TYPEEND + ")" + INT, "getBooleanAttributes");
     public static final Signature JAVA_WINNTFILESYSTEM_GETLASTMODIFIEDTIME = 
