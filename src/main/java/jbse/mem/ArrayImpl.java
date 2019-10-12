@@ -813,12 +813,12 @@ public final class ArrayImpl extends HeapObjektImpl implements Array {
     					if (!isPrimitive(srcTypeComponent) && !isPrimitive(destTypeComponent) && checkOk != null) { 
     						checkOk.accept((Reference) srcValue);
     					}
-    					destEntry = new AccessOutcomeInValueImpl(srcEntry.getAccessCondition(), srcValue);
+    					destEntry = new AccessOutcomeInValueImpl((Expression) calc.push(this.indexFormal).eq(calc.valInt(destPosInt + ofst)).pop(), srcValue);
     				} else { //srcEntry instanceof AccessOutcomeInInitialArray
     					final Reference initialArray = ((AccessOutcomeInInitialArray) srcEntry).getInitialArray();
     					final Primitive offset = ((AccessOutcomeInInitialArray) srcEntry).getOffset();
     					//TODO find a way to perform assignment compatibility check
-    					destEntry = new AccessOutcomeInInitialArrayImpl(srcEntry.getAccessCondition(), initialArray, calc.push(offset).sub(destPos).add(srcPos).pop());
+    					destEntry = new AccessOutcomeInInitialArrayImpl((Expression) calc.push(this.indexFormal).eq(calc.valInt(destPosInt + ofst)).pop(), initialArray, calc.push(offset).sub(destPos).add(srcPos).pop());
     				}
     				destPosEntries.add(destPosInt + ofst);
     				destEntries.add(destEntry);
