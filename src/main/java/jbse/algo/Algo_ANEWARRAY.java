@@ -10,6 +10,7 @@ import static jbse.bc.Signatures.INCOMPATIBLE_CLASS_CHANGE_ERROR;
 import static jbse.bc.Signatures.NO_CLASS_DEFINITION_FOUND_ERROR;
 import static jbse.bc.Signatures.UNSUPPORTED_CLASS_VERSION_ERROR;
 import static jbse.common.Type.ARRAYOF;
+import static jbse.common.Type.isArray;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
 
@@ -61,7 +62,8 @@ final class Algo_ANEWARRAY extends Algo_XNEWARRAY<BytecodeData_1CL> {
             //resolves the class
             //TODO the JVMS v8, anewarray bytecode, prescribes to resolve the member class; It is not clear what initiating loader should be assumed for the array class. We assume the defining loader of the current class, so we can directly resolve the name of the array class.
             final ClassFile currentClass = state.getCurrentClass();
-            this.arrayType = state.getClassHierarchy().resolveClass(currentClass, "" + ARRAYOF + REFERENCE + this.data.className() + TYPEEND, state.bypassStandardLoading());
+            final boolean memberIsArray = isArray(this.data.className());
+            this.arrayType = state.getClassHierarchy().resolveClass(currentClass, "" + ARRAYOF + (memberIsArray ? "" : REFERENCE) + this.data.className() + (memberIsArray ? "" : TYPEEND), state.bypassStandardLoading());
         } catch (PleaseLoadClassException e) {
             invokeClassLoaderLoadClass(state, this.ctx.getCalculator(), e);
             exitFromAlgorithm();
