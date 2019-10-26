@@ -77,7 +77,6 @@ StrategyUpdate<DecisionAlternative_XCMPY>> {
                                       nextBytecode == OP_IFNE);
                 if (fast) {
                     continueWith(this.algo_XCMPY_FAST);
-                    exitFromAlgorithm();
                 }
             } catch (InvalidProgramCounterException e) {
                 throwVerifyError(state, this.ctx.getCalculator());
