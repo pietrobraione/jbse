@@ -46,12 +46,14 @@ public final class Overrides {
     public static final String ALGO_JAVA_CLASS_GETNAME0                            = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETNAME0.class.getName());
     public static final String ALGO_JAVA_CLASS_GETPRIMITIVECLASS                   = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETPRIMITIVECLASS.class.getName());
     public static final String ALGO_JAVA_CLASS_GETRAWANNOTATIONS                   = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETRAWANNOTATIONS.class.getName());
+    public static final String ALGO_JAVA_CLASS_GETSIGNERS                          = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETSIGNERS.class.getName());
     public static final String ALGO_JAVA_CLASS_GETSUPERCLASS                       = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_GETSUPERCLASS.class.getName());
     public static final String ALGO_JAVA_CLASS_ISARRAY                             = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISARRAY.class.getName());
     public static final String ALGO_JAVA_CLASS_ISASSIGNABLEFROM                    = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISASSIGNABLEFROM.class.getName());
     public static final String ALGO_JAVA_CLASS_ISINSTANCE                          = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISINSTANCE.class.getName());
     public static final String ALGO_JAVA_CLASS_ISINTERFACE                         = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISINTERFACE.class.getName());
     public static final String ALGO_JAVA_CLASS_ISPRIMITIVE                         = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_ISPRIMITIVE.class.getName());
+    public static final String ALGO_JAVA_CLASS_SETSIGNERS                          = internalClassName(jbse.algo.meta.Algo_JAVA_CLASS_SETSIGNERS.class.getName());
     public static final String ALGO_JAVA_CLASSLOADER_DEFINECLASS1                  = internalClassName(jbse.algo.meta.Algo_JAVA_CLASSLOADER_DEFINECLASS1.class.getName());
     public static final String ALGO_JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS            = internalClassName(jbse.algo.meta.Algo_JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS.class.getName());
     public static final String ALGO_JAVA_CLASSLOADER_FINDLOADEDCLASS0              = internalClassName(jbse.algo.meta.Algo_JAVA_CLASSLOADER_FINDLOADEDCLASS0.class.getName());

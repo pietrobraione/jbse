@@ -7,6 +7,7 @@ import jbse.bc.Signature;
 import jbse.common.exc.InvalidInputException;
 import jbse.val.Calculator;
 import jbse.val.HistoryPoint;
+import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 import jbse.val.exc.InvalidTypeException;
 
@@ -17,6 +18,9 @@ public final class InstanceImpl_JAVA_CLASS extends InstanceImpl implements Insta
     /** The java class it represents. Immutable. */
     private final ClassFile representedClass;
     
+    /** The signers of this class. Mutable. */
+    private ReferenceConcrete signers;
+    
     protected InstanceImpl_JAVA_CLASS(Calculator calc, ClassFile cf_JAVA_CLASS, ReferenceSymbolic origin, HistoryPoint epoch, ClassFile representedClass, int numOfStaticFields, Signature... fieldSignatures) 
     throws InvalidTypeException {
         super(calc, false, cf_JAVA_CLASS, origin, epoch, numOfStaticFields, fieldSignatures);
@@ -24,6 +28,7 @@ public final class InstanceImpl_JAVA_CLASS extends InstanceImpl implements Insta
             throw new InvalidTypeException("Attempted creation of an instance of java.lang.Class with type " + classFile.getClassName());
         }
         this.representedClass = representedClass;
+        this.signers = null;
     }
     
     @Override
@@ -34,6 +39,20 @@ public final class InstanceImpl_JAVA_CLASS extends InstanceImpl implements Insta
     @Override
     public ClassFile representedClass() {
         return this.representedClass;
+    }
+    
+    @Override
+    public void setSigners(ReferenceConcrete signers) throws InvalidInputException {
+        if (signers == null) {
+            throw new InvalidInputException("It is not possible to set the signers of a class to null.");
+        }
+        //TODO check that signers points to an array of objects
+        this.signers = signers;
+    }
+    
+    @Override
+    public ReferenceConcrete getSigners() {
+        return this.signers;
     }
     
     @Override

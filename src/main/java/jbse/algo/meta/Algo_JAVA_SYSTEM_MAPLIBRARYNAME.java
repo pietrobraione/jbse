@@ -46,7 +46,7 @@ public final class Algo_JAVA_SYSTEM_MAPLIBRARYNAME extends Algo_INVOKEMETA_Nonbr
             }
             final String theString = valueString(state, refString);
             if (theString == null) {
-                throw new SymbolicValueNotAllowedException("the parameter to java.lang.System.mapLibraryName was not a concrete string of characters");
+                throw new SymbolicValueNotAllowedException("The parameter to java.lang.System.mapLibraryName was not a concrete string of characters.");
             }
             final String theResult = System.mapLibraryName(theString);
             try {

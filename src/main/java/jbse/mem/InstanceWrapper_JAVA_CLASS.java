@@ -3,6 +3,7 @@ package jbse.mem;
 import jbse.bc.ClassFile;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
+import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 
 /**
@@ -27,6 +28,17 @@ final class InstanceWrapper_JAVA_CLASS extends InstanceWrapper<InstanceImpl_JAVA
 	@Override
 	public ClassFile representedClass() {
 		return getDelegate().representedClass();
+	}
+	
+	@Override
+	public void setSigners(ReferenceConcrete signers) throws InvalidInputException {
+            possiblyCloneDelegate();
+	    getDelegate().setSigners(signers); 
+	}
+	
+	@Override
+	public ReferenceConcrete getSigners() {
+	    return getDelegate().getSigners();
 	}
 
 	@Override

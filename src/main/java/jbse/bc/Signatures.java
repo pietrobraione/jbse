@@ -235,6 +235,8 @@ public final class Signatures {
         new Signature(JAVA_CLASS, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_CLASS + TYPEEND, "getPrimitiveClass");
     public static final Signature JAVA_CLASS_GETRAWANNOTATIONS =
         new Signature(JAVA_CLASS, "()" + ARRAYOF + BYTE, "getRawAnnotations");
+    public static final Signature JAVA_CLASS_GETSIGNERS =
+        new Signature(JAVA_CLASS, "()" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND, "getSigners");
     public static final Signature JAVA_CLASS_GETSUPERCLASS =
         new Signature(JAVA_CLASS, "()" + REFERENCE + JAVA_CLASS + TYPEEND, "getSuperclass");
     public static final Signature JAVA_CLASS_ISARRAY =
@@ -249,6 +251,8 @@ public final class Signatures {
         new Signature(JAVA_CLASS, "()" + BOOLEAN, "isPrimitive");
     public static final Signature JAVA_CLASS_REGISTERNATIVES =
         new Signature(JAVA_CLASS, "()" + VOID, "registerNatives");
+    public static final Signature JAVA_CLASS_SETSIGNERS =
+        new Signature(JAVA_CLASS, "(" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "setSigners");
     public static final Signature JAVA_CLASSLOADER_DEFINECLASS1 =
         new Signature(JAVA_CLASSLOADER, "(" + REFERENCE + JAVA_STRING + TYPEEND + ARRAYOF + BYTE + INT + INT + REFERENCE + JAVA_PROTECTIONDOMAIN + TYPEEND + REFERENCE + JAVA_STRING + TYPEEND + ")" + REFERENCE + JAVA_CLASS + TYPEEND, "defineClass1");
     public static final Signature JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS =
