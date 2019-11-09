@@ -137,6 +137,7 @@ public final class Signatures {
     public static final String SUN_PERFCOUNTER_CORECOUNTERS  = "sun/misc/PerfCounter$CoreCounters";
     public static final String SUN_REFLECTION                = "sun/reflect/Reflection";
     public static final String SUN_SIGNAL                    = "sun/misc/Signal";
+    public static final String SUN_UNIXNATIVEDISPATCHER      = "sun/nio/fs/UnixNativeDispatcher";
     public static final String SUN_UNSAFE                    = "sun/misc/Unsafe";
     public static final String SUN_URLCLASSPATH              = "sun/misc/URLClassPath";
     public static final String SUN_URLCLASSPATH_JARLOADER    = "sun/misc/URLClassPath$JarLoader";
@@ -648,6 +649,10 @@ public final class Signatures {
         new Signature(SUN_SIGNAL, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + INT, "findSignal");
     public static final Signature SUN_SIGNAL_HANDLE0 = 
         new Signature(SUN_SIGNAL, "(" + INT + LONG + ")" + LONG, "handle0");
+    public static final Signature SUN_UNIXNATIVEDISPATCHER_GETCWD = 
+        new Signature(SUN_UNIXNATIVEDISPATCHER, "()" + ARRAYOF + BYTE, "getcwd");
+    public static final Signature SUN_UNIXNATIVEDISPATCHER_INIT = 
+        new Signature(SUN_UNIXNATIVEDISPATCHER, "()" + INT, "init");
     public static final Signature SUN_UNSAFE_ADDRESSSIZE = 
         new Signature(SUN_UNSAFE, "()" + INT, "addressSize");
     public static final Signature SUN_UNSAFE_ALLOCATEMEMORY = 
