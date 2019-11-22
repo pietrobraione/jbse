@@ -54,7 +54,7 @@ public class ClauseAssumeClassNotInitialized implements Clause {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        ClauseAssumeClassNotInitialized other = (ClauseAssumeClassNotInitialized) obj;
+        final ClauseAssumeClassNotInitialized other = (ClauseAssumeClassNotInitialized) obj;
         if (this.classFile == null) {
             if (other.classFile != null) {
                 return false;

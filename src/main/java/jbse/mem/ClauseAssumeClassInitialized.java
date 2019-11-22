@@ -72,13 +72,6 @@ public class ClauseAssumeClassInitialized implements Clause {
         } else if (!this.classFile.equals(other.classFile)) {
             return false;
         }
-        if (this.k == null) {
-            if (other.k != null) {
-                return false;
-            }
-        } else if (!this.k.equals(other.k)) {
-            return false;
-        }
         return true;
     }
 
