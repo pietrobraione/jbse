@@ -195,14 +195,9 @@ public final class Run {
          * @return {@code true} iff it is below the threshold.
          */
         private boolean stackSizeAcceptable() {
-            try {
-                final State currentState = Run.this.engine.getCurrentState();
-				return (Run.this.parameters.getStackDepthShow() == 0 || 
-				        Run.this.parameters.getStackDepthShow() > currentState.getStackSize());
-			} catch (FrozenStateException e) {
-				//this should never happen
-				throw new UnexpectedInternalException(e);
-			}
+            final State currentState = Run.this.engine.getCurrentState();
+            return (Run.this.parameters.getStackDepthShow() == 0 || 
+                    Run.this.parameters.getStackDepthShow() > currentState.getStackSize());
         }
 
         /**

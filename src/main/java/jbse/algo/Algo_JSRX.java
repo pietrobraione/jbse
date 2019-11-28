@@ -68,7 +68,7 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     @Override
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> {
-            final int programCounter = state.getPC();
+            final int programCounter = state.getCurrentProgramCounter();
             final int bytecodeOffset = (this.wide ? JSR_W_OFFSET : JSR_OFFSET);
             state.pushOperand(this.ctx.getCalculator().valInt(programCounter + bytecodeOffset));
         };

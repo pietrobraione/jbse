@@ -2,7 +2,6 @@ package jbse.apps.run;
 
 import jbse.algo.exc.CannotManageStateException;
 import jbse.algo.exc.NotYetImplementedException;
-import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.ClasspathException;
@@ -119,11 +118,11 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
                 public boolean atMethodPre() {
                     try {
                         final State currentState = getEngine().getCurrentState();
-                        if (currentState.phase() != Phase.PRE_INITIAL && currentState.getCurrentMethodSignature().equals(stopSignature) && currentState.getPC() == 0) {
+                        if (currentState.phase() != Phase.PRE_INITIAL && currentState.getCurrentMethodSignature().equals(stopSignature) && currentState.getCurrentProgramCounter() == 0) {
                             ++this.hitCounter;
                         }
                         return (this.hitCounter == numberOfHits);
-                    } catch (ThreadStackEmptyException | FrozenStateException e) {
+                    } catch (ThreadStackEmptyException e) {
                         //this should never happen
                         JVMJBSE.this.catastrophicFailure = e;
                         return true;
@@ -328,19 +327,19 @@ public final class DecisionProcedureGuidanceJBSE extends DecisionProcedureGuidan
         }
         
         @Override
-        public boolean eval_initialized(ClassFile classFile) {
-            try {
-                return (this.initialStateConcrete.getKlass(classFile) != null);
-            } catch (FrozenStateException e) {
-                //this should never happen
-                throw new UnexpectedInternalException(e);
-            }
-        }
-        
-        @Override
         protected void step(State state) throws GuidanceException {
         	//do nothing - sorry, not yet supported
         	//TODO update
+        }
+
+        @Override
+        protected Signature getCurrentMethodSignature() throws ThreadStackEmptyException {
+            return this.initialStateConcrete.getCurrentMethodSignature(); //TODO update
+        }
+
+        @Override
+        protected int getCurrentProgramCounter() throws ThreadStackEmptyException {
+            return this.initialStateConcrete.getCurrentProgramCounter(); //TODO update
         }
     }
 }

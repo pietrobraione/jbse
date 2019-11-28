@@ -81,6 +81,12 @@ public final class DecisionProcedureClassInit extends DecisionProcedureChainOfRe
         if (this.init.contains(classFile)) {
             return false;
         }
+        if (classFile.isPrimitiveOrVoid()) {
+            return false;
+        }
+        if (classFile.isArray()) {
+            return isSatNotInitializedLocal(classFile.getMemberClass());
+        }
         return (classFile.getDefiningClassLoader() > CLASSLOADER_APP || 
                 this.rulesRepo.notInitializedClassesContains(classFile.getClassName()) || 
                 this.notInit.contains(classFile));

@@ -99,7 +99,7 @@ public final class StateFormatterText implements Formatter {
         } else {
             try {
                 sb.append("Method signature: "); sb.append(state.getCurrentMethodSignature()); sb.append(lineSep);
-                sb.append("Program counter: "); sb.append(state.getPC()); sb.append(lineSep);
+                sb.append("Program counter: "); sb.append(state.getCurrentProgramCounter()); sb.append(lineSep);
                 final BytecodeFormatter bfmt = new BytecodeFormatter();
                 sb.append("Next bytecode: "); sb.append(bfmt.format(state)); sb.append(lineSep); 
                 sb.append("Source line: "); sourceLine(state.getCurrentFrame(), sb, srcPath); sb.append(lineSep);

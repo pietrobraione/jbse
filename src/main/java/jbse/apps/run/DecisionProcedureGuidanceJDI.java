@@ -1,6 +1,14 @@
 package jbse.apps.run;
 
 import static jbse.bc.Offsets.offset;
+import static jbse.bc.Offsets.ANEWARRAY_OFFSET;
+import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
+import static jbse.bc.Offsets.MULTIANEWARRAY_OFFSET;
+import static jbse.bc.Offsets.NEWARRAY_OFFSET;
+import static jbse.bc.Offsets.XALOADSTORE_OFFSET;
+import static jbse.bc.Offsets.XLOADSTORE_IMMEDIATE_WIDE_OFFSET;
+import static jbse.bc.Offsets.XLOADSTORE_IMMEDIATE_OFFSET;
+import static jbse.bc.Offsets.XLOADSTORE_IMPLICIT_OFFSET;
 import static jbse.bc.Opcodes.OP_ANEWARRAY;
 import static jbse.bc.Opcodes.OP_IALOAD;
 import static jbse.bc.Opcodes.OP_IASTORE;
@@ -24,22 +32,13 @@ import static jbse.bc.Opcodes.OP_RETURN;
 import static jbse.bc.Opcodes.OP_SALOAD;
 import static jbse.bc.Opcodes.OP_SASTORE;
 import static jbse.bc.Opcodes.OP_WIDE;
-import static jbse.bc.Offsets.ANEWARRAY_OFFSET;
-import static jbse.bc.Offsets.INVOKESPECIALSTATICVIRTUAL_OFFSET;
-import static jbse.bc.Offsets.MULTIANEWARRAY_OFFSET;
-import static jbse.bc.Offsets.NEWARRAY_OFFSET;
-import static jbse.bc.Offsets.XALOADSTORE_OFFSET;
-import static jbse.bc.Offsets.XLOADSTORE_IMMEDIATE_WIDE_OFFSET;
-import static jbse.bc.Offsets.XLOADSTORE_IMMEDIATE_OFFSET;
-import static jbse.bc.Offsets.XLOADSTORE_IMPLICIT_OFFSET;
-import static jbse.common.Type.ARRAYOF;
+import static jbse.bc.Opcodes.opcodeName;
 import static jbse.common.Type.INT;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.binaryClassName;
 import static jbse.common.Type.internalClassName;
 import static jbse.common.Type.isPrimitiveOrVoidCanonicalName;
-import static jbse.common.Type.toPrimitiveOrVoidCanonicalName;
 import static jbse.common.Type.toPrimitiveOrVoidInternalName;
 import static jbse.common.Util.asUnsignedByte;
 import static jbse.common.Util.byteCat;
@@ -95,7 +94,6 @@ import com.sun.jdi.request.MethodEntryRequest;
 import com.sun.jdi.request.MethodExitRequest;
 import com.sun.jdi.request.StepRequest;
 
-import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
@@ -754,7 +752,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             final int currentCodeIndex = getCurrentCodeIndex();
             final byte[] bc = getCurrentBytecode();
             if (bc[currentCodeIndex] < OP_INVOKEVIRTUAL || bc[currentCodeIndex] > OP_INVOKEDYNAMIC) {
-                throw new GuidanceException("Wrong step alignment: JBSE is at INVOKE statement, while JDI's OPCODE is " + bc[currentCodeIndex]);
+                final Method jdiMeth = this.currentStepEvent.location().method();
+                final String jdiMethClassName = jdiMethodClassName(jdiMeth);
+                final String jdiMethDescr = jdiMeth.signature();
+                final String jdiMethName = jdiMeth.name();
+                throw new GuidanceException("Wrong step alignment during INVOKEX lookahead (JDI at " + jdiMethClassName + ":" + jdiMethDescr + ":" + jdiMethName + ":" + currentCodeIndex + ", bytecode = " + opcodeName(bc[currentCodeIndex]) + ")");
             }
 
             //steps and decides
@@ -763,7 +765,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                 doStep(true); //true -> StepInto  
                 final int currFramesStepPre = this.currentStepEvent.thread().frameCount();
                 if (currFramesStepPre <= intialFrames) {
-                    throw new GuidanceException("Problem with INVOKE: I expected to step into a new frame");
+                    throw new GuidanceException("Error during INVOKEX lookahead: I expected to step into a new frame");
                 }
 
                 this.lookAheadUnintFuncNonPrimitiveRetValue = (ObjectReference) stepUpToMethodExit();
@@ -771,7 +773,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                 doStep(false); //false -> StepOver  
                 final int currFramesStepPost = this.currentStepEvent.thread().frameCount();
                 if (currFramesStepPost != intialFrames) {
-                    throw new GuidanceException("Problem with INVOKE: I expected to step into a new frame");
+                    throw new GuidanceException("Error during INVOKEX lookahead: I expected to step into a new frame");
                 }
 
             } catch (IncompatibleThreadStateException e) {
@@ -832,7 +834,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             final int currentCodeIndex = getCurrentCodeIndex();
             final byte[] bc = getCurrentBytecode();
             if (bc[currentCodeIndex] < OP_IFEQ || bc[currentCodeIndex] > OP_IF_ACMPNE) {
-                throw new GuidanceException("Wrong step alignment: JBSE is at IF statement, while JDI's OPCODE is " + bc[currentCodeIndex]);
+                final Method jdiMeth = this.currentStepEvent.location().method();
+                final String jdiMethClassName = jdiMethodClassName(jdiMeth);
+                final String jdiMethDescr = jdiMeth.signature();
+                final String jdiMethName = jdiMeth.name();
+                throw new GuidanceException("Wrong step alignment during IFX lookahead (JDI at " + jdiMethClassName + ":" + jdiMethDescr + ":" + jdiMethName + ":" + currentCodeIndex + ", bytecode = " + opcodeName(bc[currentCodeIndex]) + ")");
             }
 
             //steps
@@ -853,7 +859,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             final int currentCodeIndex = getCurrentCodeIndex();
             final byte[] bc = getCurrentBytecode();
             if (bc[currentCodeIndex] != OP_LOOKUPSWITCH && bc[currentCodeIndex] != OP_TABLESWITCH) {
-                throw new GuidanceException("Wrong step alignment: JBSE is at SWITCH statament, while JDI's OPCODE is " + bc[currentCodeIndex]);
+                final Method jdiMeth = this.currentStepEvent.location().method();
+                final String jdiMethClassName = jdiMethodClassName(jdiMeth);
+                final String jdiMethDescr = jdiMeth.signature();
+                final String jdiMethName = jdiMeth.name();
+                throw new GuidanceException("Wrong step alignment during XSWITCH lookahead (JDI at " + jdiMethClassName + ":" + jdiMethDescr + ":" + jdiMethName + ":" + currentCodeIndex + ", bytecode = " + opcodeName(bc[currentCodeIndex]) + ")");
             }
 
             //steps
@@ -916,7 +926,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             } else if (bc[currentCodeIndex] == OP_INVOKEVIRTUAL) { //invokevirtual sun.misc.Unsafe.getIntVolatile or invokevirtual sun.misc.Unsafe.getObjectVolatile
                 nextCodeIndex = currentCodeIndex + INVOKESPECIALSTATICVIRTUAL_OFFSET;
             } else {
-                throw new GuidanceException("Wrong step alignment: JBSE is at XALOAD statement or INVOKEVIRTUAL sun/misc/Unsafe:getIntVolatile or INVOKEVIRTUAL sun/misc/Unsafe:getObjectVolatile, while JDI's OPCODE is " + bc[currentCodeIndex]);
+                final Method jdiMeth = this.currentStepEvent.location().method();
+                final String jdiMethClassName = jdiMethodClassName(jdiMeth);
+                final String jdiMethDescr = jdiMeth.signature();
+                final String jdiMethName = jdiMeth.name();
+                throw new GuidanceException("Wrong step alignment during XALOAD (or INVOKEVIRTUAL sun/misc/Unsafe:getIntVolatile, or INVOKEVIRTUAL sun/misc/Unsafe:getObjectVolatile) lookahead (JDI at " + jdiMethClassName + ":" + jdiMethDescr + ":" + jdiMethName + ":" + currentCodeIndex + ", bytecode = " + opcodeName(bc[currentCodeIndex]) + ")");
             }
 
             //steps
@@ -1026,7 +1040,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             } else if (bc[currentCodeIndex] == OP_MULTIANEWARRAY) {
                 nextCodeIndex = currentCodeIndex + MULTIANEWARRAY_OFFSET;
             } else {
-                throw new GuidanceException("Wrong step alignment: JBSE is at XNEWARRAY statement, while JDI's OPCODE is " + bc[currentCodeIndex]);
+                final Method jdiMeth = this.currentStepEvent.location().method();
+                final String jdiMethClassName = jdiMethodClassName(jdiMeth);
+                final String jdiMethDescr = jdiMeth.signature();
+                final String jdiMethName = jdiMeth.name();
+                throw new GuidanceException("Wrong step alignment during XNEWARRAY lookahead (JDI at " + jdiMethClassName + ":" + jdiMethDescr + ":" + jdiMethName + ":" + currentCodeIndex + ", bytecode = " + opcodeName(bc[currentCodeIndex]) + ")");
             }
 
             //steps
@@ -1050,7 +1068,11 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             } else if (bc[currentCodeIndex] == OP_INVOKESTATIC || bc[currentCodeIndex] == OP_INVOKEVIRTUAL) { //invokestatic java.lang.System.arrayCopy or invokevirtual sun.misc.Unsafe.putObjectVolatile
                 nextCodeIndex = currentCodeIndex + INVOKESPECIALSTATICVIRTUAL_OFFSET;
             } else {
-                throw new GuidanceException("Wrong step alignment: JBSE is at XASTORE or INVOKESTATIC java/lang/System:arrayCopy statement or INVOKEVIRTUAL sun/misc/Unsafe:putObjectVolatile, while JDI's OPCODE is " + bc[currentCodeIndex]);
+                final Method jdiMeth = this.currentStepEvent.location().method();
+                final String jdiMethClassName = jdiMethodClassName(jdiMeth);
+                final String jdiMethDescr = jdiMeth.signature();
+                final String jdiMethName = jdiMeth.name();
+                throw new GuidanceException("Wrong step alignment during XASTORE (or INVOKESTATIC java/lang/System:arrayCopy, or INVOKEVIRTUAL sun/misc/Unsafe:putObjectVolatile) lookahead (JDI at " + jdiMethClassName + ":" + jdiMethDescr + ":" + jdiMethName + ":" + currentCodeIndex + ", bytecode = " + opcodeName(bc[currentCodeIndex]) + ")");
             }
 
             //steps
@@ -1170,7 +1192,7 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             final String jbseMethClassname = jbseMeth.getClassName() == null ? null : jbseMeth.getClassName();
             final String jbseMethDescr = jbseMeth.getDescriptor() == null ? null : jbseMeth.getDescriptor();
             final String jbseMethName = jbseMeth.getName() == null ? null : jbseMeth.getName();
-            final int jbseProgramCounter = jbseState.getPC();
+            final int jbseProgramCounter = jbseState.getCurrentProgramCounter();
 
             if (jdiStackSize == jbseStackSize && jdiMethName.equals(jbseMethName) && 
                 jdiMethDescr.equals(jbseMethDescr) && jdiMethClassName.equals(jbseMethClassname) &&
@@ -1195,57 +1217,24 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             }	
         }
         
-        private static String jdiClassName(String internalClassName) {
-            //VirtualMachine.classesByName accepts as parameter a strange mix
-            //of binary name, internal name and fully qualified name; for instance:
-            //this.vm.classesByName("java.util.Hashtable$Entry") is found, as 
-            //this.vm.classesByName("java/util/Hashtable$Entry"), but 
-            //this.vm.classesByName("[Ljava.util.Hashtable$Entry;") and 
-            //this.vm.classesByName("[Ljava/util/Hashtable$Entry;") are not, while
-            //this.vm.classesByName("java.util.Hashtable$Entry[]") and
-            //this.vm.classesByName("java/util/Hashtable$Entry[]") are;
-            //also, primitive array classes are accepted in the form
-            //this.vm.classesByName("int[]").
-            
-            //count the number of array dimensions;
-            int arrayDims = 0;
-            while (internalClassName.charAt(arrayDims) == ARRAYOF) {
-                ++arrayDims;
-            }
-            
-            final StringBuilder sb = new StringBuilder();
-            if (arrayDims > 0 && internalClassName.charAt(arrayDims) == REFERENCE) {
-                //it is an array of objects
-                sb.append(internalClassName.substring(arrayDims + 1, internalClassName.length() - 1));
-            } else if (arrayDims > 0) {
-                //it is an array of primitives
-                sb.append(toPrimitiveOrVoidCanonicalName(internalClassName.substring(arrayDims, arrayDims + 1)));
-            } else {
-                //it is the name of a class type, either primitive or not
-                sb.append(internalClassName);
-            }
-            for (int i = 1; i <= arrayDims; ++i) {
-                sb.append("[]");
-            }
-            return sb.toString();
-        }
-        
         @Override
-        public boolean eval_initialized(ClassFile classFile) {
-            //VirtualMachine.classesByName does not accepts as parameter
-            //the name of a primitive type (class)
-            if (classFile.isPrimitiveOrVoid()) {
-                //this should never happen
-                return true;
+        protected Signature getCurrentMethodSignature() throws ThreadStackEmptyException {
+            if (this.currentStepEvent == null && this.methodEntryEvent == null) {
+                throw new ThreadStackEmptyException();
             }
-            final String className = jdiClassName(classFile.getClassName());
-            final List<ReferenceType> allClasses = this.vm.classesByName(className);
-            for (ReferenceType referenceType : allClasses) {
-                if (referenceType.isInitialized()) {
-                    return true;
-                }
+            final Method jdiMeth = (this.currentStepEvent == null ? this.methodEntryEvent.location().method() : this.currentStepEvent.location().method());
+            final String jdiMethClassName = jdiMethodClassName(jdiMeth);
+            final String jdiMethDescr = jdiMeth.signature();
+            final String jdiMethName = jdiMeth.name();
+            return new Signature(jdiMethClassName, jdiMethDescr, jdiMethName);
+        }
+
+        @Override
+        protected int getCurrentProgramCounter() throws ThreadStackEmptyException {
+            if (this.currentStepEvent == null && this.methodEntryEvent == null) {
+                throw new ThreadStackEmptyException();
             }
-            return false;
+            return getCurrentCodeIndex();
         }
         
         @Override

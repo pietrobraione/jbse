@@ -267,7 +267,7 @@ public abstract class BytecodeData {
     throws FrozenStateException {
         try {
             this.jumpOffset = jumpOffset;
-            this.jumpTarget = state.getPC() + jumpOffset;
+            this.jumpTarget = state.getCurrentProgramCounter() + jumpOffset;
         } catch (ThreadStackEmptyException e) {
             failExecution(e);
         }

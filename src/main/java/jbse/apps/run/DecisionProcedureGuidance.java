@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.SortedSet;
 
-import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
@@ -27,6 +26,7 @@ import jbse.mem.State;
 import jbse.mem.SwitchTable;
 import jbse.mem.State.Phase;
 import jbse.mem.exc.FrozenStateException;
+import jbse.mem.exc.ThreadStackEmptyException;
 import jbse.tree.DecisionAlternative_XALOAD;
 import jbse.tree.DecisionAlternative_XALOAD_Unresolved;
 import jbse.tree.DecisionAlternative_XASTORE;
@@ -42,7 +42,6 @@ import jbse.tree.DecisionAlternative_XSWITCH;
 import jbse.val.Any;
 import jbse.val.Calculator;
 import jbse.val.Expression;
-import jbse.val.KlassPseudoReference;
 import jbse.val.PrimitiveSymbolicApply;
 import jbse.val.PrimitiveSymbolicAtomic;
 import jbse.val.NarrowingConversion;
@@ -51,10 +50,8 @@ import jbse.val.Primitive;
 import jbse.val.PrimitiveVisitor;
 import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
-import jbse.val.ReferenceSymbolicMemberField;
 import jbse.val.Simplex;
 import jbse.val.Symbolic;
-import jbse.val.SymbolicMember;
 import jbse.val.Term;
 import jbse.val.WideningConversion;
 import jbse.val.exc.InvalidOperandException;
@@ -107,12 +104,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         if (this.guiding) {
             if (c instanceof ClauseAssumeExpands) {
                 final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
-                //HACK: skip clauses on hash map tables
-                if (toSkip(cExp.getReference())) {
-                    //do nothing
-                } else {
-                    markAsSeen(cExp.getReference());
-                }
+                markAsSeen(cExp.getReference());
             }
         }
     }
@@ -133,12 +125,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             for (Clause c : assumptionsToAdd) {
                 if (c instanceof ClauseAssumeExpands) {
                     final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
-                    //HACK: skip clauses on hash map tables
-                    if (toSkip(cExp.getReference())) {
-                        //do nothing
-                    } else {
-                        markAsSeen(cExp.getReference());
-                    }
+                    markAsSeen(cExp.getReference());
                 }
             }
         }
@@ -152,12 +139,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             for (Clause c : assumptionsToAdd) {
                 if (c instanceof ClauseAssumeExpands) {
                     final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
-                    //HACK: skip clauses on hash map tables
-                    if (toSkip(cExp.getReference())) {
-                        //do nothing
-                    } else {
-                        markAsSeen(cExp.getReference());
-                    }
+                    markAsSeen(cExp.getReference());
                 }
             }
         }
@@ -172,37 +154,10 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             for (Clause c : newAssumptions) {
                 if (c instanceof ClauseAssumeExpands) {
                     final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
-                    //HACK: skip clauses on hash map tables
-                    if (toSkip(cExp.getReference())) {
-                        //do nothing
-                    } else {
-                        markAsSeen(cExp.getReference());
-                    }
+                    markAsSeen(cExp.getReference());
                 }
             }
         }
-    }
-
-    //HACK
-    private boolean toSkip(ReferenceSymbolic origin) {
-        if (origin instanceof ReferenceSymbolicMemberField) {
-            final ReferenceSymbolicMemberField member = (ReferenceSymbolicMemberField) origin;
-            if ("table".equals(member.getFieldName()) &&
-                  ("java/util/WeakHashMap".equals(member.getFieldClass()) ||
-                   "java/util/HashMap".equals(member.getFieldClass()))) {
-                return true;
-            }
-            final ReferenceSymbolic container = ((ReferenceSymbolicMemberField) origin).getContainer();
-            if (container instanceof KlassPseudoReference) {
-                if ("java/lang/Long$LongCache".equals(((KlassPseudoReference) container).getClassFile().getClassName())) {
-                    return true;
-                }
-            }
-        }
-        if (origin instanceof SymbolicMember) {
-            return toSkip(((SymbolicMember) origin).getContainer());
-        }
-        return false;
     }
 
     @Override
@@ -357,7 +312,7 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
 
     private void filter(State state, ReferenceSymbolic readReference, DecisionAlternative_XYLOAD_GETX_Unresolved dar, Iterator<?> it) 
     throws GuidanceException {
-        if (dar instanceof DecisionAlternative_XYLOAD_GETX_Null && (toSkip(readReference) /*HACK*/ || !this.jvm.isNull(readReference))) {
+        if (dar instanceof DecisionAlternative_XYLOAD_GETX_Null && !this.jvm.isNull(readReference)) {
             it.remove();
         } else if (dar instanceof DecisionAlternative_XYLOAD_GETX_Aliases) {
             final DecisionAlternative_XYLOAD_GETX_Aliases dara = (DecisionAlternative_XYLOAD_GETX_Aliases) dar;
@@ -368,13 +323,13 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
                 //this should never happen
                 throw new UnexpectedInternalException(e);
             }
-            if (toSkip(readReference) /*HACK*/ || toSkip(aliasOrigin) /*HACK*/ || !this.jvm.areAlias(readReference, aliasOrigin)) {
+            if (!this.jvm.areAlias(readReference, aliasOrigin)) {
                 it.remove();
             }
         } else if (dar instanceof DecisionAlternative_XYLOAD_GETX_Expands) {
             final DecisionAlternative_XYLOAD_GETX_Expands dare = (DecisionAlternative_XYLOAD_GETX_Expands) dar;
-            if (toSkip(readReference) /*HACK*/ || this.jvm.isNull(readReference) || alreadySeen(readReference) ||
-            !dare.getClassFileOfTargetObject().getClassName().equals(this.jvm.typeOfObject(readReference))) {
+            if (this.jvm.isNull(readReference) || alreadySeen(readReference) ||
+                !dare.getClassFileOfTargetObject().getClassName().equals(this.jvm.typeOfObject(readReference))) {
                 it.remove();
             }
         }
@@ -392,16 +347,6 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         this.seen.clear();;
     }
     
-    @Override
-    public boolean isSatInitialized(ClassFile classFile) throws InvalidInputException, DecisionException {
-        return this.jvm.eval_initialized(classFile);
-    }
-    
-    @Override
-    public boolean isSatNotInitialized(ClassFile classFile) throws InvalidInputException, DecisionException {
-        return !this.jvm.eval_initialized(classFile);
-    }
-
     @Override
     public void close() throws DecisionException {
         super.close();
@@ -547,8 +492,6 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
             return (conditionToCheck == null ? this.calc.valBoolean(true) : eval(conditionToCheck));
         }
         
-        public abstract boolean eval_initialized(ClassFile classFile);
-
         /**
          * Evaluates a {@link Primitive} in the reached concrete state.
          * 
@@ -663,6 +606,10 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
 
         protected abstract void step(State state) throws GuidanceException;
 
+        protected abstract Signature getCurrentMethodSignature() throws ThreadStackEmptyException;
+
+        protected abstract int getCurrentProgramCounter() throws ThreadStackEmptyException;
+
         protected void close() { }
     }
 
@@ -670,5 +617,13 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         if (state.phase() == Phase.POST_INITIAL && this.guiding) {
             this.jvm.step(state);
         }
+    }
+
+    public Signature getCurrentMethodSignature() throws ThreadStackEmptyException {
+        return this.jvm.getCurrentMethodSignature();
+    }
+
+    public int getCurrentProgramCounter() throws ThreadStackEmptyException {
+        return this.jvm.getCurrentProgramCounter();
     }
 }

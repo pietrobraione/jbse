@@ -549,13 +549,8 @@ public class Engine implements AutoCloseable {
      *         or the current state is stuck.
      */
     public boolean currentMethodChanged() {
-        try {
 			return (this.currentState.isStuck() || 
 			        this.currentState.getStackSize() != this.preStepStackSize);
-		} catch (FrozenStateException e) {
-			//this should never happen
-			throw new UnexpectedInternalException(e);
-		}
     }
 
     /**

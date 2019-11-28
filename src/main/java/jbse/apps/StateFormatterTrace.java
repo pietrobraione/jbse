@@ -56,7 +56,7 @@ public final class StateFormatterTrace implements Formatter {
         			final boolean snippet = (s.getCurrentFrame() instanceof SnippetFrameNoWrap);
         			this.output += (snippet ? "(snippet)" : s.getCurrentMethodSignature()) + FIELD_SEP + 
         					(s.getSourceRow() == UNKNOWN_SOURCE_ROW ? "*" : s.getSourceRow()) + FIELD_SEP +
-        					(s.getPC() == UNKNOWN_PC ? "*" : s.getPC()) + FIELD_SEP +
+        					(s.getCurrentProgramCounter() == UNKNOWN_PC ? "*" : s.getCurrentProgramCounter()) + FIELD_SEP +
         					this.bcf.format(s);
         		} catch (ThreadStackEmptyException e) {
         			//this should never happen

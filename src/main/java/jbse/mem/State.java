@@ -777,10 +777,9 @@ public final class State implements Cloneable {
      * 
      * @return a {@link ClassFile}.
      * @throws ThreadStackEmptyException if the stack is empty.
-     * @throws FrozenStateException if the state is frozen.
      */
-    public ClassFile getCurrentClass() throws ThreadStackEmptyException, FrozenStateException {
-        return getCurrentFrame().getCurrentClass();
+    public ClassFile getCurrentClass() throws ThreadStackEmptyException {
+        return this.stack.currentFrame().getCurrentClass();
     }
 
     /**
@@ -789,10 +788,9 @@ public final class State implements Cloneable {
      * 
      * @return a {@link Signature}.
      * @throws ThreadStackEmptyException if the stack is empty.
-     * @throws FrozenStateException if the state is frozen.
      */
-    public Signature getCurrentMethodSignature() throws ThreadStackEmptyException, FrozenStateException {
-        return getCurrentFrame().getCurrentMethodSignature();
+    public Signature getCurrentMethodSignature() throws ThreadStackEmptyException {
+        return this.stack.currentFrame().getCurrentMethodSignature();
     }
     
     /**
@@ -801,11 +799,9 @@ public final class State implements Cloneable {
      * 
      * @return a {@link ClassFile}.
      * @throws ThreadStackEmptyException if the stack is empty.
-     * @throws FrozenStateException if the state is frozen.
      */
-    public ClassFile getRootClass() 
-    throws ThreadStackEmptyException, FrozenStateException {
-        return getRootFrame().getCurrentClass();
+    public ClassFile getRootClass() throws ThreadStackEmptyException {
+        return this.stack.rootFrame().getCurrentClass();
     }
 
     /**
@@ -814,11 +810,9 @@ public final class State implements Cloneable {
      * 
      * @return a {@link Signature}.
      * @throws ThreadStackEmptyException if the stack is empty.
-     * @throws FrozenStateException if the state is frozen.
      */
-    public Signature getRootMethodSignature() 
-    throws ThreadStackEmptyException, FrozenStateException {
-        return getRootFrame().getCurrentMethodSignature();
+    public Signature getRootMethodSignature() throws ThreadStackEmptyException {
+        return this.stack.rootFrame().getCurrentMethodSignature();
     }
 
     /**
@@ -2440,7 +2434,7 @@ public final class State implements Cloneable {
                 }
                 final Signature currentMethodSignature = getCurrentMethodSignature();
                 final ExceptionTable myExTable = getCurrentClass().getExceptionTable(currentMethodSignature);
-                final ExceptionTableEntry tmpEntry = myExTable.getEntry(excTypes, getPC());
+                final ExceptionTableEntry tmpEntry = myExTable.getEntry(excTypes, getCurrentProgramCounter());
                 if (tmpEntry == null) {
                     popCurrentFrame();
                 } else {
@@ -2899,8 +2893,8 @@ public final class State implements Cloneable {
      * @return an {@code int}, the size.
      * @throws FrozenStateException if the state is frozen.
      */
-    public int getStackSize() throws FrozenStateException {
-        return getStack().size();
+    public int getStackSize() {
+        return this.stack.frames().size();
     }
 
     /**
@@ -3050,10 +3044,9 @@ public final class State implements Cloneable {
      * @return an {@code int} representing the state's 
      *         current program counter.
      * @throws ThreadStackEmptyException if the thread stack is empty.
-     * @throws FrozenStateException if the state is frozen.
      */
-    public int getPC() throws ThreadStackEmptyException, FrozenStateException {
-        return getCurrentFrame().getProgramCounter();
+    public int getCurrentProgramCounter() throws ThreadStackEmptyException {
+        return this.stack.currentFrame().getProgramCounter();
     }
 
     /**
@@ -3062,10 +3055,9 @@ public final class State implements Cloneable {
      * 
      * @return an {@code int}, the return program counter.
      * @throws ThreadStackEmptyException  if the thread stack is empty.
-     * @throws FrozenStateException if the state is frozen.
      */
-    public int getReturnPC() throws ThreadStackEmptyException, FrozenStateException {
-        return getCurrentFrame().getReturnProgramCounter();
+    public int getReturnPC() throws ThreadStackEmptyException {
+        return this.stack.currentFrame().getReturnProgramCounter();
     }
 
     /**
@@ -3081,7 +3073,7 @@ public final class State implements Cloneable {
      */
     public void incProgramCounter(int n) 
     throws InvalidProgramCounterException, ThreadStackEmptyException, FrozenStateException {
-        setProgramCounter(getPC() + n);
+        setProgramCounter(getCurrentProgramCounter() + n);
     }
 
     /**
