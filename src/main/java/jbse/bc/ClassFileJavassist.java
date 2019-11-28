@@ -71,11 +71,11 @@ public class ClassFileJavassist extends ClassFile {
     private final ClassFile superClass;
     private final ClassFile[] superInterfaces;
     private final ConstantPoolValue[] cpPatches;
-    private ClassFile hostClass;
-    private ArrayList<Signature> fieldsStatic; //lazily initialized
-    private ArrayList<Signature> fieldsObject; //lazily initialized
-    private ArrayList<Signature> methods; //lazily initialized
-    private ArrayList<Signature> constructors; //lazily initialized
+    private final ClassFile hostClass;
+    private ArrayList<Signature> fieldsStatic; //lazily initialized, but actually final
+    private ArrayList<Signature> fieldsObject; //lazily initialized, but actually final
+    private ArrayList<Signature> methods; //lazily initialized, but actually final
+    private ArrayList<Signature> constructors; //lazily initialized, but actually final
 
     /**
      * Constructor for nonanonymous classes.

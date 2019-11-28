@@ -1,7 +1,7 @@
 package jbse.bc;
 
 /**
- * Constants for opcodes.
+ * Auxiliary opcodes stuff.
  * 
  * @author Pietro Braione
  * @author unknown
@@ -214,11 +214,229 @@ public final class Opcodes {
     public static final byte OP_BREAKPOINT = -54;
 
     //internally used by JBSE
-    public static final byte OP_INVOKEHANDLE = -53;
+    public static final byte OP_INCORRECT = -53;
+    public static final byte OP_INVOKEHANDLE = -52;
 
     //implementation-dependent
     public static final byte OP_IMPDEP1 = -2;
     public static final byte OP_IMPDEP2 = -1;
+    
+    public static String opcodeName(byte opcode) {
+        switch (opcode) {
+        case OP_NOP: return "NOP";
+        case OP_ACONST_NULL: return "ACONST_NULL";
+        case OP_ICONST_M1: return "ICONST_M1";
+        case OP_ICONST_0: return "ICONST_0";
+        case OP_ICONST_1: return "ICONST_1";
+        case OP_ICONST_2: return "ICONST_2";
+        case OP_ICONST_3: return "ICONST_3";
+        case OP_ICONST_4: return "ICONST_4";
+        case OP_ICONST_5: return "ICONST_5";
+        case OP_LCONST_0: return "LCONST_0";
+        case OP_LCONST_1: return "LCONST_1";
+        case OP_FCONST_0: return "FCONST_0";
+        case OP_FCONST_1: return "FCONST_1";
+        case OP_FCONST_2: return "FCONST_2";
+        case OP_DCONST_0: return "DCONST_0";
+        case OP_DCONST_1: return "DCONST_1";
+        case OP_BIPUSH: return "BIPUSH";
+        case OP_SIPUSH: return "SIPUSH";
+        case OP_LDC: return "LDC";
+        case OP_LDC_W: return "LDC_W";
+        case OP_LDC2_W: return "LDC2_W";
+        case OP_ILOAD: return "ILOAD";
+        case OP_LLOAD: return "LLOAD";
+        case OP_FLOAD: return "FLOAD";
+        case OP_DLOAD: return "DLOAD";
+        case OP_ALOAD: return "ALOAD";
+        case OP_ILOAD_0: return "ILOAD_0";
+        case OP_ILOAD_1: return "ILOAD_1";
+        case OP_ILOAD_2: return "ILOAD_2";
+        case OP_ILOAD_3: return "ILOAD_3";
+        case OP_LLOAD_0: return "LLOAD_0";
+        case OP_LLOAD_1: return "LLOAD_1";
+        case OP_LLOAD_2: return "LLOAD_2";
+        case OP_LLOAD_3: return "LLOAD_3";
+        case OP_FLOAD_0: return "FLOAD_0";
+        case OP_FLOAD_1: return "FLOAD_1";
+        case OP_FLOAD_2: return "FLOAD_2";
+        case OP_FLOAD_3: return "FLOAD_3";
+        case OP_DLOAD_0: return "DLOAD_0";
+        case OP_DLOAD_1: return "DLOAD_1";
+        case OP_DLOAD_2: return "DLOAD_2";
+        case OP_DLOAD_3: return "DLOAD_3";
+        case OP_ALOAD_0: return "ALOAD_0";
+        case OP_ALOAD_1: return "ALOAD_1";
+        case OP_ALOAD_2: return "ALOAD_2";
+        case OP_ALOAD_3: return "ALOAD_3";
+        case OP_IALOAD: return "IALOAD";
+        case OP_LALOAD: return "LALOAD";
+        case OP_FALOAD: return "FALOAD";
+        case OP_DALOAD: return "DALOAD";
+        case OP_AALOAD: return "AALOAD";
+        case OP_BALOAD: return "BALOAD";
+        case OP_CALOAD: return "CALOAD";
+        case OP_SALOAD: return "SALOAD";
+        case OP_ISTORE: return "ISTORE";
+        case OP_LSTORE: return "ISTORE";
+        case OP_FSTORE: return "ISTORE";
+        case OP_DSTORE: return "ISTORE";
+        case OP_ASTORE: return "ISTORE";
+        case OP_ISTORE_0: return "ISTORE_0";
+        case OP_ISTORE_1: return "ISTORE_1";
+        case OP_ISTORE_2: return "ISTORE_2";
+        case OP_ISTORE_3: return "ISTORE_3";
+        case OP_LSTORE_0: return "LSTORE_0";
+        case OP_LSTORE_1: return "LSTORE_1";
+        case OP_LSTORE_2: return "LSTORE_2";
+        case OP_LSTORE_3: return "LSTORE_3";
+        case OP_FSTORE_0: return "FSTORE_0";
+        case OP_FSTORE_1: return "FSTORE_1";
+        case OP_FSTORE_2: return "FSTORE_2";
+        case OP_FSTORE_3: return "FSTORE_3";
+        case OP_DSTORE_0: return "DSTORE_0";
+        case OP_DSTORE_1: return "DSTORE_1";
+        case OP_DSTORE_2: return "DSTORE_2";
+        case OP_DSTORE_3: return "DSTORE_3";
+        case OP_ASTORE_0: return "ASTORE_0";
+        case OP_ASTORE_1: return "ASTORE_1";
+        case OP_ASTORE_2: return "ASTORE_2";
+        case OP_ASTORE_3: return "ASTORE_3";
+        case OP_IASTORE: return "IASTORE";
+        case OP_LASTORE: return "LASTORE";
+        case OP_FASTORE: return "FASTORE";
+        case OP_DASTORE: return "DASTORE";
+        case OP_AASTORE: return "AASTORE";
+        case OP_BASTORE: return "BASTORE";
+        case OP_CASTORE: return "CASTORE";
+        case OP_SASTORE: return "SASTORE";
+        case OP_POP: return "POP";
+        case OP_POP2: return "POP2";
+        case OP_DUP: return "DUP";
+        case OP_DUP_X1: return "DUP_X1";
+        case OP_DUP_X2: return "DUP_X2";
+        case OP_DUP2: return "DUP2";
+        case OP_DUP2_X1: return "DUP2_X1";
+        case OP_DUP2_X2: return "DUP2_X2";
+        case OP_SWAP: return "SWAP";
+        case OP_IADD: return "IADD";
+        case OP_LADD: return "LADD";
+        case OP_FADD: return "FADD";
+        case OP_DADD: return "DADD";
+        case OP_ISUB: return "ISUB";
+        case OP_LSUB: return "LSUB";
+        case OP_FSUB: return "FSUB";
+        case OP_DSUB: return "DSUB";
+        case OP_IMUL: return "IMUL";
+        case OP_LMUL: return "LMUL";
+        case OP_FMUL: return "FMUL";
+        case OP_DMUL: return "DMUL";
+        case OP_IDIV: return "IDIV";
+        case OP_LDIV: return "LDIV";
+        case OP_FDIV: return "FDIV";
+        case OP_DDIV: return "DDIV";
+        case OP_IREM: return "IREM";
+        case OP_LREM: return "LREM";
+        case OP_FREM: return "FREM";
+        case OP_DREM: return "DREM";
+        case OP_INEG: return "INEG";
+        case OP_LNEG: return "LNEG";
+        case OP_FNEG: return "FNEG";
+        case OP_DNEG: return "DNEG";
+        case OP_ISHL: return "ISHL";
+        case OP_LSHL: return "LSHL";
+        case OP_ISHR: return "ISHR";
+        case OP_LSHR: return "LSHR";
+        case OP_IUSHR: return "IUSHR";
+        case OP_LUSHR: return "LUSHR";
+        case OP_IAND: return "IAND";
+        case OP_LAND: return "LAND";
+        case OP_IOR: return "IOR";
+        case OP_LOR: return "LOR";
+        case OP_IXOR: return "IXOR";
+        case OP_LXOR: return "LXOR";
+        case OP_IINC: return "IINC";
+        case OP_I2L: return "I2L";
+        case OP_I2F: return "I2F";
+        case OP_I2D: return "I2D";
+        case OP_L2I: return "L2I";
+        case OP_L2F: return "L2F";
+        case OP_L2D: return "L2D";
+        case OP_F2I: return "F2I";
+        case OP_F2L: return "F2L";
+        case OP_F2D: return "F2D";
+        case OP_D2I: return "D2I";
+        case OP_D2L: return "D2L";
+        case OP_D2F: return "D2F";
+        case OP_I2B: return "I2B";
+        case OP_I2C: return "I2C";
+        case OP_I2S: return "I2S";
+        case OP_LCMP: return "LCMP";
+        case OP_FCMPL: return "FCMPL";
+        case OP_FCMPG: return "FCMPG";
+        case OP_DCMPL: return "DCMPL";
+        case OP_DCMPG: return "DCMPG";
+        case OP_IFEQ: return "IFEQ";
+        case OP_IFNE: return "IFNE";
+        case OP_IFLT: return "IFLT";
+        case OP_IFGE: return "IFGE";
+        case OP_IFGT: return "IFGT";
+        case OP_IFLE: return "IFLE";
+        case OP_IF_ICMPEQ: return "IF_ICMPEQ";
+        case OP_IF_ICMPNE: return "IF_ICMPNE";
+        case OP_IF_ICMPLT: return "IF_ICMPLT";
+        case OP_IF_ICMPGE: return "IF_ICMPGE";
+        case OP_IF_ICMPGT: return "IF_ICMPGT";
+        case OP_IF_ICMPLE: return "IF_ICMPLE";
+        case OP_IF_ACMPEQ: return "IF_ACMPEQ";
+        case OP_IF_ACMPNE: return "IF_ACMPNE";
+        case OP_GOTO: return "GOTO";
+        case OP_JSR: return "JSR";
+        case OP_RET: return "RET";
+        case OP_TABLESWITCH: return "TABLESWITCH";
+        case OP_LOOKUPSWITCH: return "LOOKUPSWITCH";
+        case OP_IRETURN: return "IRETURN";
+        case OP_LRETURN: return "LRETURN";
+        case OP_FRETURN: return "FRETURN";
+        case OP_DRETURN: return "DRETURN";
+        case OP_ARETURN: return "ARETURN";
+        case OP_RETURN: return "RETURN";
+        case OP_GETSTATIC: return "GETSTATIC";
+        case OP_PUTSTATIC: return "PUTSTATIC";
+        case OP_GETFIELD: return "GETFIELD";
+        case OP_PUTFIELD: return "PUTFIELD";
+        case OP_INVOKEVIRTUAL: return "INVOKEVIRTUAL";
+        case OP_INVOKESPECIAL: return "INVOKESPECIAL";
+        case OP_INVOKESTATIC: return "INVOKESTATIC";
+        case OP_INVOKEINTERFACE: return "INVOKEINTERFACE";
+        case OP_INVOKEDYNAMIC: return "INVOKEDYNAMIC";
+        case OP_NEW: return "NEW";
+        case OP_NEWARRAY: return "NEWARRAY";
+        case OP_ANEWARRAY: return "ANEWARRAY";
+        case OP_ARRAYLENGTH: return "ARRAYLENGTH";
+        case OP_ATHROW: return "ATHROW";
+        case OP_CHECKCAST: return "CHECKCAST";
+        case OP_INSTANCEOF: return "INSTANCEOF";
+        case OP_MONITORENTER: return "MONITORENTER";
+        case OP_MONITOREXIT: return "MONITOREXIT";
+        case OP_WIDE: return "WIDE";
+        case OP_MULTIANEWARRAY: return "MULTIANEWARRAY";
+        case OP_IFNULL: return "IFNULL";
+        case OP_IFNONNULL: return "IFNONNULL";
+        case OP_GOTO_W: return "GOTO_W";
+        case OP_JSR_W: return "JSR_W";
+        case OP_BREAKPOINT: return "BREAKPOINT";
+
+        //internally used by JBSE
+        case OP_INVOKEHANDLE: return "INVOKEHANDLE";
+
+        //implementation-dependent
+        case OP_IMPDEP1: return "IMPDEP1";
+        case OP_IMPDEP2: return "IMPDEP2";
+        
+        default: return "<INCORRECT>";
+        }
+    }
 
     /**
      * Do not instantiate it!
