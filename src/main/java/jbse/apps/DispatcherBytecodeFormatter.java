@@ -567,8 +567,8 @@ class DispatcherBytecodeFormatter extends Dispatcher<Byte, TextGenerator> {
     DispatcherBytecodeFormatter() {
         setDefault(new DispatchStrategyFormat0(opcodeName(OP_INCORRECT)));
         setCase(OP_NOP,             new DispatchStrategyFormat0(opcodeName(OP_NOP)));
-        setCase(OP_ALOAD,           new DispatchStrategyFormat1LV(opcodeName(OP_NOP)));
-        setCase(OP_DLOAD,           new DispatchStrategyFormat1LV(opcodeName(OP_NOP)));
+        setCase(OP_ALOAD,           new DispatchStrategyFormat1LV(opcodeName(OP_ALOAD)));
+        setCase(OP_DLOAD,           new DispatchStrategyFormat1LV(opcodeName(OP_DLOAD)));
         setCase(OP_FLOAD,           new DispatchStrategyFormat1LV(opcodeName(OP_FLOAD)));
         setCase(OP_ILOAD,           new DispatchStrategyFormat1LV(opcodeName(OP_ILOAD)));
         setCase(OP_LLOAD,           new DispatchStrategyFormat1LV(opcodeName(OP_LLOAD)));
