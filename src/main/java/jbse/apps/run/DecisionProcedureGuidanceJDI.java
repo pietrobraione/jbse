@@ -33,6 +33,8 @@ import static jbse.bc.Opcodes.OP_SALOAD;
 import static jbse.bc.Opcodes.OP_SASTORE;
 import static jbse.bc.Opcodes.OP_WIDE;
 import static jbse.bc.Opcodes.opcodeName;
+import static jbse.bc.Signatures.JAVA_STRING_EQUALS;
+import static jbse.bc.Signatures.JAVA_STRING_HASHCODE;
 import static jbse.common.Type.INT;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
@@ -1138,8 +1140,10 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
                         return; //avoid stepping JDI since JBSE terminated
                     }
 
-                    //do step into or step over according to JBSE stack size
-                    final boolean doStepInto = jbseStackSize > jdiStackSizeBeforeStep;
+                    //do step into or step over according to JBSE stack size;
+                    //if the method is String.hashCode() JDI steps over and 
+                    //waits for JBSE
+                    final boolean doStepInto = jbseStackSize > jdiStackSizeBeforeStep && notSkip(jbseState);
                     doStep(doStepInto);
 
                     final int jdiStackSizeAfterStep = numFramesFromRootFrameConcrete();
@@ -1163,6 +1167,20 @@ public final class DecisionProcedureGuidanceJDI extends DecisionProcedureGuidanc
             } catch (ThreadStackEmptyException | IncompatibleThreadStateException | FrozenStateException e) {
                 throw new GuidanceException(e); //TODO better exception!
             }
+        }
+        
+        private boolean notSkip(State jbseState) throws ThreadStackEmptyException {
+            //some java.lang.String method should be skipped because
+            //concrete and symbolic execution might differ on interning;
+            //in this case alignment must be checked at the exit of the method
+            final Signature jbseMeth = jbseState.getCurrentMethodSignature();
+            if (jbseMeth.equals(JAVA_STRING_EQUALS)) {
+                return false;
+            }
+            if (jbseMeth.equals(JAVA_STRING_HASHCODE)) {
+                return false;
+            }
+            return true;
         }
 
         private static String jdiMethodClassName(Method jdiMeth) {

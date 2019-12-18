@@ -421,6 +421,8 @@ public final class Signatures {
         new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "tan");
     public static final Signature JAVA_STRICTMATH_TANH = 
         new Signature(JAVA_STRICTMATH, "(" + DOUBLE + ")" + DOUBLE, "tanh");
+    public static final Signature JAVA_STRING_EQUALS = 
+        new Signature(JAVA_STRING, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + BOOLEAN, "equals");
     public static final Signature JAVA_STRING_HASHCODE = 
         new Signature(JAVA_STRING, "()" + INT, "hashCode");
     public static final Signature JAVA_STRING_INTERN =

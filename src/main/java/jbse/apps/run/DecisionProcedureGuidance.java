@@ -1,5 +1,6 @@
 package jbse.apps.run;
 
+import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.common.Type.className;
 
 import java.util.Collection;
@@ -7,12 +8,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.SortedSet;
 
+import jbse.bc.ClassFile;
 import jbse.bc.Signature;
 import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
+import jbse.bc.exc.PleaseLoadClassException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
@@ -21,6 +24,7 @@ import jbse.dec.DecisionProcedureAlgorithms;
 import jbse.dec.exc.DecisionException;
 import jbse.jvm.RunnerParameters;
 import jbse.mem.Clause;
+import jbse.mem.ClauseAssumeClassInitialized;
 import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.State;
 import jbse.mem.SwitchTable;
@@ -307,6 +311,17 @@ public abstract class DecisionProcedureGuidance extends DecisionProcedureAlgorit
         final String objType = this.jvm.typeOfObject(refToLoad);
         if (objType != null && !refType.equals(objType)) {
             state.getClassHierarchy().addToExpansionBackdoor(refType, objType);
+            try {
+                final ClassFile cf = state.getClassHierarchy().loadCreateClass(CLASSLOADER_APP, objType, true);
+                super.pushAssumption(new ClauseAssumeClassInitialized(cf, null));
+            } catch (DecisionException | ClassFileNotFoundException | ClassFileIllFormedException | 
+                     ClassFileNotAccessibleException | IncompatibleClassFileException | 
+                     BadClassFileVersionException | WrongClassNameException e) {
+                throw new GuidanceException(e);
+            } catch (InvalidInputException | PleaseLoadClassException e) {
+                //this should never happen
+                throw new UnexpectedInternalException(e);
+            }
         }
     }
 
