@@ -17,23 +17,21 @@ import jbse.val.Calculator;
  * 
  * @author Pietro Braione
  */
-//TODO really crappy, nonmonotonic implementation. Rewrite.
+//TODO really crappy, nonmonotonic (ugh!) implementation. Rewrite.
 public final class DecisionProcedureClassInit extends DecisionProcedureChainOfResponsibility {
     private final ClassInitRulesRepo rulesRepo;
 
     /**
-     * Stores all the classes from the 
-     * {@link ClauseAssumeClassInitialized} 
+     * Stores all the classes from the {@link ClauseAssumeClassInitialized} 
      * that are pushed. 
      */
-    private final LinkedHashSet<ClassFile> init = new LinkedHashSet<>();
+    private final LinkedHashSet<ClassFile> assumedPreInitialized = new LinkedHashSet<>();
 
     /**
-     * Stores all the classes from the 
-     * {@link ClauseAssumeClassNotInitialized} 
+     * Stores all the classes from the {@link ClauseAssumeClassNotInitialized} 
      * that are pushed. 
      */
-    private final LinkedHashSet<ClassFile> notInit = new LinkedHashSet<>();
+    private final LinkedHashSet<ClassFile> assumedNotPreInitialized = new LinkedHashSet<>();
 
     public DecisionProcedureClassInit(DecisionProcedure next, ClassInitRulesRepo rulesRepo) 
     throws InvalidInputException {
@@ -49,46 +47,94 @@ public final class DecisionProcedureClassInit extends DecisionProcedureChainOfRe
 
     @Override
     protected void clearAssumptionsLocal() {
-        this.init.clear();
-        this.notInit.clear();
+        this.assumedPreInitialized.clear();
+        this.assumedNotPreInitialized.clear();
     }
     
     @Override
     protected void pushAssumptionLocal(ClauseAssumeClassInitialized c) throws DecisionException {
-        //if a class is initialized, then its superclasses are
+        //if a class is initialized, then its superclasses are,
+        //thus upwards-closes the assumption        
         for (ClassFile cf : c.getClassFile().superclasses()) {
-            this.init.add(cf);
+            this.assumedPreInitialized.add(cf);
         }
         //TODO also superinterfaces?
     }
 
     @Override
     protected void pushAssumptionLocal(ClauseAssumeClassNotInitialized c) {
-        this.notInit.add(c.getClassFile());
+        this.assumedNotPreInitialized.add(c.getClassFile());
     }
 
     //TODO support pop of assumptions
 
     @Override
     protected boolean isSatInitializedLocal(ClassFile classFile) {
-        //we only support mutually exclusive initialized/not-initialized cases
-        //TODO drop mutual exclusion of class initialized/not-initialized cases and branch bytecodes during initialization based on assumptions
-        return !isSatNotInitializedLocal(classFile);
+        //looks into contradictory assumptions
+        if (this.assumedNotPreInitialized.contains(classFile)) {
+            return false;
+        }
+        
+        //looks into supporting assumptions
+        if (this.assumedPreInitialized.contains(classFile)) {
+            return true;
+        }
+        
+        //then, defaults:
+        
+        //primitive classes are always assumed to be preinitialized
+        if (classFile.isPrimitiveOrVoid()) {
+            return true;
+        }
+        
+        //array classes follow the same destiny of their
+        //respective member's class
+        if (classFile.isArray()) {
+            return isSatNotInitializedLocal(classFile.getMemberClass());
+        }
+        
+        //a class that is loaded with a custom classloader is never
+        //assumed to be preinitialized
+        if (classFile.getDefiningClassLoader() > CLASSLOADER_APP) {
+            return false;
+        }
+        
+        //as last resort, applies rules
+        return !this.rulesRepo.notInitializedClassesContains(classFile.getClassName());
     }
 
     @Override
     protected boolean isSatNotInitializedLocal(ClassFile classFile) {
-        if (this.init.contains(classFile)) {
+        //looks into contradictory assumptions
+        if (this.assumedPreInitialized.contains(classFile)) {
             return false;
         }
+        
+        //looks into supporting assumptions
+        if (this.assumedNotPreInitialized.contains(classFile)) {
+            return true;
+        }
+        
+        //then, defaults:
+        
+        //primitive classes are always assumed to be preinitialized
         if (classFile.isPrimitiveOrVoid()) {
             return false;
         }
+        
+        //array classes follow the same destiny of their
+        //respective member's class
         if (classFile.isArray()) {
             return isSatNotInitializedLocal(classFile.getMemberClass());
         }
-        return (classFile.getDefiningClassLoader() > CLASSLOADER_APP || 
-                this.rulesRepo.notInitializedClassesContains(classFile.getClassName()) || 
-                this.notInit.contains(classFile));
+        
+        //a class that is loaded with a custom classloader is never
+        //assumed to be preinitialized
+        if (classFile.getDefiningClassLoader() > CLASSLOADER_APP) {
+            return true;
+        }
+        
+        //finally, rules
+        return this.rulesRepo.notInitializedClassesContains(classFile.getClassName());
     }
 }
