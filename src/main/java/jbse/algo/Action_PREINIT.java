@@ -4,6 +4,7 @@ import static jbse.algo.Util.ensureClassInitialized;
 import static jbse.algo.Util.failExecution;
 import static jbse.bc.ClassLoaders.CLASSLOADER_APP;
 import static jbse.bc.ClassLoaders.CLASSLOADER_BOOT;
+import static jbse.bc.ClassLoaders.CLASSLOADER_EXT;
 import static jbse.bc.Signatures.ARITHMETIC_EXCEPTION;
 import static jbse.bc.Signatures.ARRAY_STORE_EXCEPTION;
 import static jbse.bc.Signatures.CLASS_CAST_EXCEPTION;
@@ -60,9 +61,14 @@ import static jbse.bc.Signatures.VIRTUAL_MACHINE_ERROR;
 import static jbse.bc.Signatures.noclass_SETSTANDARDCLASSLOADERSREADY;
 import static jbse.common.Type.ARRAYOF;
 import static jbse.common.Type.CHAR;
+import static jbse.common.Type.className;
+import static jbse.common.Type.isArray;
+import static jbse.common.Type.isReference;
 import static jbse.common.Type.REFERENCE;
+import static jbse.common.Type.splitParametersDescriptors;
 import static jbse.common.Type.TYPEEND;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 
 import static java.lang.Thread.NORM_PRIORITY;
@@ -105,9 +111,14 @@ import jbse.val.exc.InvalidTypeException;
  */
 public final class Action_PREINIT {
     /**
-     * Class load inhibit set for initial loading.
+     * Inhibit set for class initialization.
      */
-    private HashSet<String> doNotInitialize = new HashSet<>();
+    private final HashSet<String> doNotInitialize = new HashSet<>();
+    
+    /**
+     * List of the classes in the root method signature.
+     */
+    private final ArrayList<String> rootMethodClasses = new ArrayList<>();
 
     /**
      * Constructor.
@@ -136,17 +147,18 @@ public final class Action_PREINIT {
     throws InvalidClassFileFactoryClassException, InitializationException, 
     DecisionException, ClasspathException, ContradictionException {
         final State state = ctx.createVirginPreInitialState();
-
-        //lists all the classes that shall be explicitly initialized
-        setClassList();
+        
+        //some initial bookkeeping
+        enumerateExplicitlyInitializedClasses();
+        enumerateRootMethodClasses(ctx);
 
         //(loads and) creates the essential classes that
         //will be initialized afterwards
         loadCreateEssentialClasses(state, ctx);
 
         //now starts pushing frames (in inverse order of execution)
-        //first the root class
-        initializeRootClass(state, ctx);
+        //first the root method classes
+        initializeRootMethodClasses(state, ctx);
 
         //this part of the initialization mirrors stuff in sun.launcher.LauncherHelper
         //pushes frames to initialize classes for dynamic classloading
@@ -172,7 +184,7 @@ public final class Action_PREINIT {
         //pushes frames to initialize some error/exception classes
         //(actually they do not have any static initializer, but
         //they might in the future)
-        //TODO these currently statically initializes java.lang.Throwable, but not in Hotspot! This contradicts the fact that to statically initialize a class its superclass must be statically initialized first 
+        //TODO these currently statically initialize java.lang.Throwable, but not in Hotspot! This contradicts the fact that to statically initialize a class its superclass must be statically initialized first 
         initializeClass(state, ILLEGAL_ARGUMENT_EXCEPTION, ctx);
         initializeClass(state, ILLEGAL_MONITOR_STATE_EXCEPTION, ctx);
         initializeClass(state, STACK_OVERFLOW_ERROR, ctx);
@@ -208,7 +220,14 @@ public final class Action_PREINIT {
         return state;
     }
 
-    private void setClassList() {
+    /**
+     * Sets this.doNotInitialize with all the system classes
+     * that will be initialized by explicitly pushing the frame
+     * of their static initialized on the stack, and that therefore
+     * must not be initialized by cascading invocations of superclass
+     * initializers.
+     */
+    private void enumerateExplicitlyInitializedClasses() {
         this.doNotInitialize.add(JAVA_PACKAGE);
         this.doNotInitialize.add(JAVA_STRINGCODING);
         this.doNotInitialize.add(SUN_EXTENSIONDEPENDENCY);
@@ -230,6 +249,21 @@ public final class Action_PREINIT {
         this.doNotInitialize.add(JAVA_THREADGROUP);
         this.doNotInitialize.add(JAVA_SYSTEM);
         this.doNotInitialize.add(JAVA_STRING);
+    }
+    
+    /**
+     * Sets this.rootMethodClasses with all the classes in the 
+     * signature of the root method, excluded the one in the 
+     * return value type.
+     */
+    private void enumerateRootMethodClasses(ExecutionContext ctx) {
+        this.rootMethodClasses.add(ctx.rootMethodSignature.getClassName());
+        final String[] parametersTypes = splitParametersDescriptors(ctx.rootMethodSignature.getDescriptor());
+        for (String parameterType : parametersTypes) {
+            if (isArray(parameterType) || isReference(parameterType)) {
+                this.rootMethodClasses.add(className(parameterType));
+            }
+        }
     }
 
     private void loadCreateEssentialClasses(State state, ExecutionContext ctx) throws ClasspathException {
@@ -288,9 +322,11 @@ public final class Action_PREINIT {
 
             //loads application classes
             classHierarchy.loadCreateClass(CLASSLOADER_APP, JBSE_BASE, true);
-            classHierarchy.loadCreateClass(CLASSLOADER_APP, ctx.rootMethodSignature.getClassName(), true);
+            for (String className : this.rootMethodClasses) {
+                classHierarchy.loadCreateClass(CLASSLOADER_APP, className, true);
+            }
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
-        WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException e) {
+                 WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException e) {
             throw new ClasspathException(e);
         } catch (InvalidInputException | PleaseLoadClassException e) {
             //this should never happen
@@ -298,13 +334,26 @@ public final class Action_PREINIT {
         }
     }
     
-    private void initializeRootClass(State state, ExecutionContext ctx) 
+    private void initializeRootMethodClasses(State state, ExecutionContext ctx) 
     throws DecisionException, ClasspathException, InitializationException, ContradictionException {
         try {
-            final ClassFile classFile = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_APP, ctx.rootMethodSignature.getClassName()); 
-            ensureClassInitialized(state, classFile, ctx, this.doNotInitialize);
-        } catch (InterruptException e) {
-            //nothing to do: fall through
+            for (String className : this.rootMethodClasses) {
+                try {
+                    ClassFile classFile = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_APP, className);
+                    if (classFile == null) {
+                        classFile = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_EXT, className);
+                    }
+                    if (classFile == null) {
+                        classFile = state.getClassHierarchy().getClassFileClassArray(CLASSLOADER_BOOT, className);
+                    }
+                    if (classFile == null) {
+                        throw new ClasspathException("Root method invocation class " + className + " not found in the classpath.");
+                    }
+                    ensureClassInitialized(state, classFile, ctx, this.doNotInitialize);
+                } catch (InterruptException e) {
+                    //nothing to do: fall through
+                }
+            }
         } catch (HeapMemoryExhaustedException e) {
             throw new InitializationException(e);
         } catch (InvalidInputException | ClassFileNotFoundException | ClassFileIllFormedException |
