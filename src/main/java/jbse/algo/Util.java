@@ -990,15 +990,15 @@ public final class Util {
                 //TODO here we assume mutual exclusion of the initialized/not initialized assumptions. Withdraw this assumption and branch.
                 final ClassHierarchy hier = this.s.getClassHierarchy();
                 final boolean pure = classFile.isPure() || this.ctx.hasClassAPureInitializer(hier, classFile);
-                final boolean createSymbolicKlass;
                 final boolean assumeInitialized;
+                final boolean createSymbolicKlass;
+                //invariant: if assumeInitialized == false, then also createSymbolicKlass == false
                 if (this.s.phase() == Phase.PRE_INITIAL) {
-                    //all pre-initial class are assumed to be pre-initialized
-                    createSymbolicKlass = false;
-                    assumeInitialized = true;
+                    assumeInitialized = true; //all pre-initial class are assumed to be pre-initialized...
+                    createSymbolicKlass = false; //...and they are also assumed to be pure (or unmodified since their initialization)
                 } else if (this.ctx.decisionProcedure.isSatInitialized(classFile)) { 
-                    createSymbolicKlass = !pure; //if pure, the static initializer will be executed
                     assumeInitialized = true;
+                    createSymbolicKlass = !pure; //if pure, the static initializer will be executed; if unpure, the klass will be filled by symbols
                 } else {
                     createSymbolicKlass = false;
                     assumeInitialized = false;

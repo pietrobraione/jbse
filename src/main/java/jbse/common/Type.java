@@ -367,7 +367,7 @@ public final class Type {
      *         parameter.
      */
     public static String[] splitParametersDescriptors(String methodDescriptor){
-        ArrayList<String> myVector = new ArrayList<String>();
+        final ArrayList<String> myVector = new ArrayList<>();
         for (int j = 1; j < methodDescriptor.lastIndexOf(')'); j++) {
             if (methodDescriptor.charAt(j) == REFERENCE) {
                 final int z = j;
