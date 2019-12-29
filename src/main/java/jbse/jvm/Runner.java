@@ -48,7 +48,7 @@ public class Runner {
          * @return {@code true} iff the {@link Runner} must stop
          *         {@link Runner#run run}ning.
          */
-        public boolean atRoot() { return false; }
+        public boolean atStart() { return false; }
 
         /**
          * Invoked by a {@link Runner}'s {@link Runner#run run} method 
@@ -528,7 +528,7 @@ public class Runner {
     ClasspathException, ThreadStackEmptyException, 
     ContradictionException, DecisionException, EngineStuckException, 
     FailureException, NonexistingObservedVariablesException  {
-        if (this.actions.atRoot()) { return; }
+        if (this.actions.atStart()) { return; }
         //performs the symbolic execution loop
         while (true) {
             if (this.actions.atTraceStart()) { return; }

@@ -179,11 +179,9 @@ public class Engine implements AutoCloseable {
     			throw new UnexpectedInternalException("The first state is missing from the state tree.");
     		}
 
-    		//determines then next phase of the state and
     		//in the case the state is initial does some operations
     		if (atInitialState()) {
     			this.ctx.setInitialState(this.currentState);
-    			this.currentState.setPhasePostInitial();
         		this.vom.init(this);
     		}
 
@@ -198,6 +196,18 @@ public class Engine implements AutoCloseable {
     }
 
     //public methods (operations)
+    
+    /** 
+     * Checks whether the current state is the last
+     * pre-initial state, i.e., the last state before 
+     * the start of the symbolic execution of the 
+     * target method.
+     * 
+     * @return a {@code boolean}.
+     */
+    public boolean atLastPreInitialState() {
+        return (this.currentState.phase() == Phase.PRE_INITIAL && this.currentState.getStackSize() == 0);
+    }
     
     /** 
      * Checks whether the current state is the initial
@@ -265,15 +275,13 @@ public class Engine implements AutoCloseable {
     ClasspathException, ThreadStackEmptyException, ContradictionException, DecisionException, 
     FailureException {
         try {
-        	//sanity check
+        	//checks the precondition
         	if (!canStep()) {
         		throw new EngineStuckException();
         	}
 
-        	//detects whether we ended the pre-initialization phase
-        	final boolean atLastPreInitialState = (this.currentState.phase() == Phase.PRE_INITIAL && this.currentState.getStackSize() == 0);
-
-        	//determines the next phase of the state
+        	//sets the next phase of the state
+        	final boolean atLastPreInitialState = atLastPreInitialState(); //safety copy
         	if (atLastPreInitialState) {
         		this.currentState.setPhaseInitial();
         	} else if (atInitialState()) {

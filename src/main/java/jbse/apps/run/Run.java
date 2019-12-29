@@ -230,7 +230,7 @@ public final class Run {
         }
 
         @Override
-        public boolean atRoot() {
+        public boolean atStart() {
             Run.this.emitPrologue();
             
             //enables or disables printing
