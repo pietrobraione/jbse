@@ -90,7 +90,7 @@ public final class DecisionProcedureClassInit extends DecisionProcedureChainOfRe
         //array classes follow the same destiny of their
         //respective member's class
         if (classFile.isArray()) {
-            return isSatNotInitializedLocal(classFile.getMemberClass());
+            return isSatInitializedLocal(classFile.getMemberClass());
         }
         
         //a class that is loaded with a custom classloader is never
