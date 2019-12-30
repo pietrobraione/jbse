@@ -39,7 +39,7 @@ public class StateFormatterGraphviz implements Formatter {
     @Override
     public void formatState(State s) {
         this.output = "";
-        this.output += "digraph \"" + s.getIdentifier() + "[" + s.getSequenceNumber() + "]\"" + " { ";
+        this.output += "digraph \"" + s.getBranchIdentifier() + "[" + s.getSequenceNumber() + "]\"" + " { ";
         try {
 			this.output += this.formatHeap(s);
 		} catch (FrozenStateException e) {

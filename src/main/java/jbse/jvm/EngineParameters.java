@@ -157,7 +157,7 @@ public final class EngineParameters implements Cloneable {
      * {@code null} iff an initial state for a method invocation 
      * must be created by the runner; by default it is {@code null}.
      */
-    private State initialState = null;
+    private State startingState = null;
     
     /** 
      * {@code true} iff the bootstrap classloader should also load the classes defined by the
@@ -358,7 +358,7 @@ public final class EngineParameters implements Cloneable {
     }
 
     /**
-     * Sets the initial state of the symbolic execution, and cancels the 
+     * Sets the starting state of the symbolic execution, and cancels the 
      * effect of any previous call to {@link #setJavaHome(String) setJavaHome}, 
      * {@link #addExtClasspath(String...) addExtClasspath}, 
      * {@link #addUserClasspath(String...) addUserClasspath}, 
@@ -366,8 +366,8 @@ public final class EngineParameters implements Cloneable {
      *  
      * @param s a {@link State}.
      */
-    public void setInitialState(State s) { 
-        this.initialState = s;
+    public void setStartingState(State s) { 
+        this.startingState = s;
         this.javaHome = null;
         this.extPaths.clear();
         this.userPaths.clear();
@@ -378,13 +378,13 @@ public final class EngineParameters implements Cloneable {
      * Gets the initial state of the symbolic execution (a safety copy).
      * 
      * @return the {@link State} set by the last call to 
-     *         {@link #setInitialState(State)} (possibly {@code null}).
+     *         {@link #setStartingState(State)} (possibly {@code null}).
      */
-    public State getInitialState() {
-        if (this.initialState == null) {
+    public State getStartingState() {
+        if (this.startingState == null) {
             return null;
         } else {
-            return this.initialState.clone();
+            return this.startingState.clone();
         }
     }
     
@@ -395,12 +395,12 @@ public final class EngineParameters implements Cloneable {
      * but ensures in practice a faster loading of classes than by
      * the specification mechanism of invoking the {@link ClassLoader#loadClass(String) ClassLoader.loadClass}
      * method. By default it is set to {@code true}. Also cancels the effect 
-     * of any previous call to {@link #setInitialState(State)}.
+     * of any previous call to {@link #setStartingState(State)}.
      * 
      * @param bypassStandardLoading a {@code boolean}.
      */
     public void setBypassStandardLoading(boolean bypassStandardLoading) {
-        this.initialState = null;
+        this.startingState = null;
         this.bypassStandardLoading = bypassStandardLoading;
     }
     
@@ -411,10 +411,10 @@ public final class EngineParameters implements Cloneable {
      * @return a {@code boolean}.
      */
     public boolean getBypassStandardLoading() {
-        if (this.initialState == null) {
+        if (this.startingState == null) {
             return this.bypassStandardLoading;
         } else {
-            return this.initialState.shouldAlwaysBypassStandardLoading();
+            return this.startingState.shouldAlwaysBypassStandardLoading();
         }
     }
 
@@ -442,7 +442,7 @@ public final class EngineParameters implements Cloneable {
 
     /**
      * Sets the Java home, and cancels the effect 
-     * of any previous call to {@link #setInitialState(State)}.
+     * of any previous call to {@link #setStartingState(State)}.
      * 
      * @param javaHome a {@link String}.
      * @throws NullPointerException if {@code javaHome == null}.
@@ -451,13 +451,13 @@ public final class EngineParameters implements Cloneable {
         if (javaHome == null) {
             throw new NullPointerException();
         }
-        this.initialState = null; 
+        this.startingState = null; 
         this.javaHome = Paths.get(javaHome);
     }
     
     /**
      * Sets the Java home, and cancels the effect 
-     * of any previous call to {@link #setInitialState(State)}.
+     * of any previous call to {@link #setStartingState(State)}.
      * 
      * @param javaHome a {@link Path}.
      * @throws NullPointerException if {@code javaHome == null}.
@@ -466,7 +466,7 @@ public final class EngineParameters implements Cloneable {
         if (javaHome == null) {
             throw new NullPointerException();
         }
-        this.initialState = null; 
+        this.startingState = null; 
         this.javaHome = javaHome;
     }
     
@@ -475,11 +475,11 @@ public final class EngineParameters implements Cloneable {
      * i.e., the Java home of the JVM that
      * executes JBSE, as returned by the system property
      * {@code java.home}. Also cancels the effect 
-     * of any previous call to {@link #setInitialState(State)}.
+     * of any previous call to {@link #setStartingState(State)}.
      */
     public void setDefaultJavaHome() {
         this.javaHome = Paths.get(System.getProperty("java.home"));
-        this.initialState = null;
+        this.startingState = null;
     }
 
     /**
@@ -488,16 +488,16 @@ public final class EngineParameters implements Cloneable {
      * @return a {@link Path}, the Java home.
      */
     public Path getJavaHome() {
-        if (this.initialState == null) {
+        if (this.startingState == null) {
             return this.javaHome;
         } else {
-            return this.initialState.getClasspath().javaHome();
+            return this.startingState.getClasspath().javaHome();
         }
     }
 
     /**
      * Adds paths to the extensions classpath, and cancels the effect 
-     * of any previous call to {@link #setInitialState(State)}.
+     * of any previous call to {@link #setStartingState(State)}.
      * 
      * @param paths a varargs of {@link String}s, 
      *        the paths to be added to the extensions 
@@ -508,13 +508,13 @@ public final class EngineParameters implements Cloneable {
         if (paths == null) {
             throw new NullPointerException();
         }
-        this.initialState = null; 
+        this.startingState = null; 
         this.extPaths.addAll(Arrays.stream(paths).map(s -> Paths.get(s)).collect(Collectors.toList())); 
     }
 
     /**
      * Adds paths to the extensions classpath, and cancels the effect 
-     * of any previous call to {@link #setInitialState(State)}.
+     * of any previous call to {@link #setStartingState(State)}.
      * 
      * @param paths a varargs of {@link Path}s, 
      *        the paths to be added to the extensions 
@@ -525,7 +525,7 @@ public final class EngineParameters implements Cloneable {
         if (paths == null) {
             throw new NullPointerException();
         }
-        this.initialState = null; 
+        this.startingState = null; 
         Collections.addAll(this.extPaths, paths); 
     }
 
@@ -542,17 +542,17 @@ public final class EngineParameters implements Cloneable {
      * i.e., the same extensions path of the JVM that
      * executes JBSE, as returned by the system property
      * {@code java.ext.dirs}. Also cancels the effect 
-     * of any previous call to {@link #setInitialState(State)}.
+     * of any previous call to {@link #setStartingState(State)}.
      */
     public void setDefaultExtClasspath() {
-        this.initialState = null;
+        this.startingState = null;
         this.extPaths = new ArrayList<>(Arrays.stream(System.getProperty("java.ext.dirs").split(File.pathSeparator))
                                         .map(s -> Paths.get(s)).collect(Collectors.toList()));
     }
 
     /**
      * Adds paths to the user classpath, and cancels the effect 
-     * of any previous call to {@link #setInitialState(State)}.
+     * of any previous call to {@link #setStartingState(State)}.
      * 
      * @param paths a varargs of {@link String}s, 
      *        the paths to be added to the user 
@@ -563,13 +563,13 @@ public final class EngineParameters implements Cloneable {
         if (paths == null) {
             throw new NullPointerException();
         }
-        this.initialState = null; 
+        this.startingState = null; 
         this.userPaths.addAll(Arrays.stream(paths).map(s -> Paths.get(s)).collect(Collectors.toList())); 
     }
 
     /**
      * Adds paths to the user classpath, and cancels the effect 
-     * of any previous call to {@link #setInitialState(State)}.
+     * of any previous call to {@link #setStartingState(State)}.
      * 
      * @param paths a varargs of {@link Path}s, 
      *        the paths to be added to the user 
@@ -580,7 +580,7 @@ public final class EngineParameters implements Cloneable {
         if (paths == null) {
             throw new NullPointerException();
         }
-        this.initialState = null; 
+        this.startingState = null; 
         Collections.addAll(this.userPaths, paths); 
     }
 
@@ -599,10 +599,10 @@ public final class EngineParameters implements Cloneable {
      * @throws IOException if an I/O error occurs while scanning the classpath.
      */
     public Classpath getClasspath() throws IOException {
-        if (this.initialState == null) {
+        if (this.startingState == null) {
             return new Classpath(this.javaHome, this.extPaths, this.userPaths);
         } else {
-            return this.initialState.getClasspath();
+            return this.startingState.getClasspath();
         }
     }
 
@@ -912,7 +912,7 @@ public final class EngineParameters implements Cloneable {
 
     /**
      * Sets the signature of the method which must be symbolically executed, 
-     * and cancels the effect of any previous call to {@link #setInitialState(State)}.
+     * and cancels the effect of any previous call to {@link #setStartingState(State)}.
      * 
      * @param className the name of the class containing the method.
      * @param descriptor the descriptor of the method.
@@ -923,7 +923,7 @@ public final class EngineParameters implements Cloneable {
         if (className == null || descriptor == null || name == null) {
             throw new NullPointerException();
         }
-        this.initialState = null; 
+        this.startingState = null; 
         this.methodSignature = new Signature(className, descriptor, name); 
     }
 
@@ -934,12 +934,12 @@ public final class EngineParameters implements Cloneable {
      *         has been provided.
      */
     public Signature getMethodSignature() {
-        if (this.methodSignature == null && this.initialState == null) {
+        if (this.methodSignature == null && this.startingState == null) {
             return null;
         }
         if (this.methodSignature == null) {
             try {
-                return this.initialState.getCurrentMethodSignature();
+                return this.startingState.getCurrentMethodSignature();
             } catch (ThreadStackEmptyException e) {
                 return null;
             }
@@ -1024,8 +1024,8 @@ public final class EngineParameters implements Cloneable {
         } catch (CloneNotSupportedException e) {
             throw new InternalError(e);
         }
-        if (this.initialState != null) {
-            o.initialState = this.initialState.clone();
+        if (this.startingState != null) {
+            o.startingState = this.startingState.clone();
         }
         o.userPaths = (ArrayList<Path>) this.userPaths.clone();
         //calc and decisionProcedure are *not* cloned

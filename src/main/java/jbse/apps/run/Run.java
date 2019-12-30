@@ -375,7 +375,7 @@ public final class Run {
             //if a resolved reference has not been expanded, prints a warning
             if (Run.this.parameters.getShowWarnings() && 
                 getEngine().someReferenceNotExpanded()) {
-                Run.this.log(currentState.getIdentifier() + "[" + currentState.getSequenceNumber() + "]" + " " +
+                Run.this.log(currentState.getBranchIdentifier() + "[" + currentState.getSequenceNumber() + "]" + " " +
                              getEngine().getNonExpandedReferencesOrigins() +
                              WARNING_PARTIAL_REFERENCE_RESOLUTION);
             }
@@ -468,7 +468,7 @@ public final class Run {
                     throw new AssertionError();
                 }
                 if (Run.this.parameters.getShowWarnings()) {
-                    Run.this.log(currentState.getIdentifier() + "[" + currentState.getSequenceNumber() + "]" + this.endOfTraceMessage);
+                    Run.this.log(currentState.getBranchIdentifier() + "[" + currentState.getSequenceNumber() + "]" + this.endOfTraceMessage);
                 }
                 if (Run.this.parameters.getDoConcretization()) {
                     checkFinalStateIsConcretizable(counterKind);
@@ -565,7 +565,7 @@ public final class Run {
             }
             if (Run.this.parameters.getShowWarnings()) {
                 final State currentState = Run.this.engine.getCurrentState();
-                Run.this.log(currentState.getIdentifier() +
+                Run.this.log(currentState.getBranchIdentifier() +
                              (concretizable ? MSG_CONCRETIZABLE_TRACE : MSG_NOT_CONCRETIZABLE_TRACE));
             }
         }

@@ -104,12 +104,12 @@ import jbse.val.exc.InvalidTypeException;
 
 /**
  * Action (does not implement {@link Action}) for the preparation 
- * of the pre-initial execution phase.
+ * of the starting state.
  * 
  * @author Pietro Braione
  *
  */
-public final class Action_PREINIT {
+public final class Action_START {
     /**
      * Inhibit set for class initialization.
      */
@@ -123,7 +123,7 @@ public final class Action_PREINIT {
     /**
      * Constructor.
      */
-    public Action_PREINIT() { }
+    public Action_START() { }
 
     public void exec(ExecutionContext ctx) 
     throws DecisionException, InitializationException, 
@@ -131,22 +131,20 @@ public final class Action_PREINIT {
     ContradictionException, InvalidInputException {
         //TODO do checks and possibly raise exceptions
 
-        //gets or creates the initial state
-        State state = ctx.getInitialState();
+        //gets or creates the starting state
+        State state = ctx.getStateStart();
         if (state == null) {
-            state = createPreInitialState(ctx);
-        } else {
-            state.setPhaseInitial();
+            state = createStateStart(ctx);
         }
 
         //adds the state to the state tree
-        ctx.stateTree.addState(state);
+        ctx.stateTree.addStateStart(state);
     }
 
-    private State createPreInitialState(ExecutionContext ctx) 
+    private State createStateStart(ExecutionContext ctx) 
     throws InvalidClassFileFactoryClassException, InitializationException, 
     DecisionException, ClasspathException, ContradictionException {
-        final State state = ctx.createVirginPreInitialState();
+        final State state = ctx.createStateVirginPreInitial();
         
         //some initial bookkeeping
         enumerateExplicitlyInitializedClasses();

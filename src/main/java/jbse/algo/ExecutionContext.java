@@ -415,10 +415,10 @@ import jbse.val.SymbolFactory;
  */
 public final class ExecutionContext {
     /** 
-     * The initial {@link State} of symbolic execution. It is a prototype 
+     * The starting {@link State} of symbolic execution. It is a prototype 
      * that will be cloned by its getter. 
      */
-    private State initialState;
+    private final State stateStart;
     
     /** 
      * {@code true} iff the bootstrap classloader should also load the classes defined by the
@@ -489,14 +489,15 @@ public final class ExecutionContext {
 
     /** Maps method signatures to their base-level overrides. */
     public final HashMap<Signature, Signature> baseOverrides = new HashMap<>();
+    
+    /** The initial state. */
+    public State stateInitial = null;
 
     /**
      * Constructor.
      * 
-     * @param initialState the initial {@code State}, or {@code null} if no
-     *        initial state. Note that no safety copy is performed, thus the 
-     *        invoker of this constructor must transfer ownership of 
-     *        {@code initialState}.
+     * @param startingState the starting {@code State} of symbolic execution, 
+     *        or {@code null} if no starting state is provided externally. 
      * @param bypassStandardLoading a {@code boolean}, {@code true} iff the bootstrap 
      *        classloader should also load the classed defined by the extensions 
      *        and application classloaders. Ignored when {@code initialState != null}.
@@ -507,7 +508,7 @@ public final class ExecutionContext {
      *        Ignored when {@code initialState != null}.
      * @param classpath a {@link Classpath} object, containing 
      *        information about the classpath of the symbolic execution.
-     *        Ignored when {@code initialState != null}.
+     *        Ignored when {@code startingState != null}.
      * @param classFileFactoryClass a {@link Class}{@code <? extends }{@link ClassFileFactory}{@code >}
      *        that will be instantiated by the engine to retrieve classfiles. It must 
      *        provide a parameterless public constructor. Ignored when 
@@ -530,7 +531,7 @@ public final class ExecutionContext {
      * @param nativeInvoker a {@link NativeInvoker} which will be used
      *        to execute native methods.
      */
-    public ExecutionContext(State initialState,
+    public ExecutionContext(State startingState,
                             boolean bypassStandardLoading,
                             int maxSimpleArrayLength,
                             long maxHeapSize,
@@ -545,7 +546,7 @@ public final class ExecutionContext {
                             StateIdentificationMode stateIdentificationMode,
                             BreadthMode breadthMode,
                             TriggerRulesRepo rulesTrigger) {
-        this.initialState = initialState;
+        this.stateStart = startingState;
         this.bypassStandardLoading = bypassStandardLoading;
         this.maxSimpleArrayLength = maxSimpleArrayLength;
         this.maxHeapSize = maxHeapSize;
@@ -783,6 +784,17 @@ public final class ExecutionContext {
     }
     
     /**
+     * Returns the starting state.
+     * 
+     * @return a {@link State}, a clone of the starting state
+     *         of the symbolic execution, or {@code null} 
+     *         if no starting state was provided.
+     */
+    public State getStateStart() {
+        return (this.stateStart == null ? null : this.stateStart.clone());
+    }
+
+    /**
      * Returns the {@link Calculator}.
      * 
      * @return a {@link Calculator}.
@@ -803,7 +815,7 @@ public final class ExecutionContext {
     }
     
     /**
-     * Factory method. It creates a virgin pre-initial 
+     * Factory method. It creates a virgin, pre-initial 
      * state, with incomplete initialization.
      * 
      * @return a {@link State}.
@@ -812,7 +824,7 @@ public final class ExecutionContext {
      *         of this object has not the expected features (missing constructor, 
      *         unaccessible constructor...).
      */
-    public State createVirginPreInitialState() throws InvalidClassFileFactoryClassException {
+    public State createStateVirginPreInitial() throws InvalidClassFileFactoryClassException {
         try {
 			return new State(this.bypassStandardLoading, this.stateTree.getPreInitialHistoryPoint(), this.maxSimpleArrayLength, this.maxHeapSize, this.classpath, this.classFileFactoryClass, this.expansionBackdoor, this.symbolFactory);
 		} catch (InvalidInputException e) {
@@ -823,25 +835,28 @@ public final class ExecutionContext {
 
     /**
      * Sets the initial state. To be invoked whenever 
-     * the engine parameters object provided through the 
-     * constructor does not have an initial state.
+     * the engine passes through the initial state to 
+     * store it for future use.
      * 
-     * @param initialState a {@link State}. The method
+     * @param stateInitial a {@link State}. The method
      *        stores in this execution contest a safety 
      *        copy of it.
      */
-    public void setInitialState(State initialState) {
-        this.initialState = initialState.clone();
+    public void setStateInitial(State stateInitial) {
+        this.stateInitial = stateInitial.clone();
     }
 
     /**
      * Returns the initial state.
      * 
      * @return a {@link State}, a clone of the initial state
-     *         of the symbolic execution.
+     *         of the symbolic execution, or {@code null} 
+     *         if the initial state is missing (i.e., we are
+     *         in the pre-initial phase, or the starting state
+     *         is post-initial).
      */
-    public State getInitialState() {
-        return (this.initialState == null ? null : this.initialState.clone());
+    public State getStateInitial() {
+        return (this.stateInitial == null ? null : this.stateInitial.clone());
     }
 
     /**

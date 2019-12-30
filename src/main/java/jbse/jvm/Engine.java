@@ -17,7 +17,7 @@ import jbse.algo.Algorithm;
 import jbse.algo.ExecutionContext;
 import jbse.algo.InterruptException;
 import jbse.algo.Action;
-import jbse.algo.Action_PREINIT;
+import jbse.algo.Action_START;
 import jbse.algo.exc.CannotManageStateException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.common.exc.ClasspathException;
@@ -124,7 +124,7 @@ public class Engine implements AutoCloseable {
     }
 
     /**
-     * Steps the engine in a suitable state from which execution can be continued
+     * Steps the engine in a suitable start state from which execution can be continued
      * by invoking {@link #step()}. Such a state is either the one stored in 
      * {@code this.ctx} or a <em>pre-initial</em> state that bootstraps the standard
      * java classes before the symbolic execution of the target method. In the
@@ -168,11 +168,11 @@ public class Engine implements AutoCloseable {
     		}
 
     		//steps
-    		final Action_PREINIT algo = this.ctx.dispatcher.selectPreInit();
+    		final Action_START algo = this.ctx.dispatcher.selectStart();
     		algo.exec(this.ctx);
     		
     		//updates the current state
-    		if (this.ctx.stateTree.createdBranch()) { //Algo_PREINIT always creates a branch, but we need the side effect of invoking createBranch
+    		if (this.ctx.stateTree.createdBranch()) { //Algo_START always creates a branch, but we need the side effect of invoking createBranch
     			this.currentState = this.ctx.stateTree.nextState();
     		} else {
     			//this should never happen
@@ -181,7 +181,7 @@ public class Engine implements AutoCloseable {
 
     		//in the case the state is initial does some operations
     		if (atInitialState()) {
-    			this.ctx.setInitialState(this.currentState);
+    			this.ctx.setStateInitial(this.currentState);
         		this.vom.init(this);
     		}
 
@@ -211,7 +211,7 @@ public class Engine implements AutoCloseable {
     
     /** 
      * Checks whether the current state is the initial
-     * state, i.e., the first state of the post-init phase.
+     * state, i.e., the first state of the post-initial phase.
      * 
      * @return a {@code boolean}.
      */
@@ -227,7 +227,7 @@ public class Engine implements AutoCloseable {
      *         pre-initial phase.
      */
     public State getInitialState() {
-        return this.ctx.getInitialState();
+        return this.ctx.getStateInitial();
     }
 
     /**
@@ -326,9 +326,9 @@ public class Engine implements AutoCloseable {
         	//cleans, stores and creates a branch for the initial state
     	    if (atInitialState()) {
     			this.currentState.gc();
-    			this.ctx.setInitialState(this.currentState);
+    			this.ctx.setStateInitial(this.currentState);
         		this.vom.init(this);
-    	    	this.ctx.stateTree.addState(this.currentState);
+    	    	this.ctx.stateTree.addStateInitial(this.currentState);
     	    }
 
         	//updates the current state and calculates the return value

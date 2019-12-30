@@ -555,7 +555,7 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
-     * Sets the initial state of the symbolic execution, and cancels the 
+     * Sets the starting state of the symbolic execution, and cancels the 
      * effect of any previous call to {@link #setJavaHome(String) setJavaHome}, 
      * {@link #addExtClasspath(String...) addExtClasspath}, 
      * {@link #addUserClasspath(String...) addUserClasspath}, 
@@ -563,18 +563,18 @@ public final class RunParameters implements Cloneable {
      *  
      * @param s a {@link State}.
      */
-    public void setInitialState(State s) { 
-        this.runnerParameters.setInitialState(s);
+    public void setStartingState(State s) { 
+        this.runnerParameters.setStartingState(s);
     }
 
     /**
-     * Gets the initial state of the symbolic execution (a safety copy).
+     * Gets the starting state of the symbolic execution (a safety copy).
      * 
      * @return the {@link State} set by the last call to 
-     *         {@link #setInitialState(State)} (possibly {@code null}).
+     *         {@link #setStartingState(State)} (possibly {@code null}).
      */
-    public State getInitialState() {
-        return this.runnerParameters.getInitialState();
+    public State getStartingState() {
+        return this.runnerParameters.getStartingState();
     }
 
     /**
@@ -605,7 +605,7 @@ public final class RunParameters implements Cloneable {
 
     /**
      * Sets the Java home, and cancels the effect 
-     * of any previous call to {@link #setInitialState(State)}.
+     * of any previous call to {@link #setStartingState(State)}.
      * 
      * @param javaHome a {@link String}.
      * @throws NullPointerException if {@code javaHome == null}.
@@ -616,7 +616,7 @@ public final class RunParameters implements Cloneable {
 
     /**
      * Sets the Java home, and cancels the effect 
-     * of any previous call to {@link #setInitialState(State)}.
+     * of any previous call to {@link #setStartingState(State)}.
      * 
      * @param javaHome a {@link Path}.
      * @throws NullPointerException if {@code javaHome == null}.
@@ -630,7 +630,7 @@ public final class RunParameters implements Cloneable {
      * i.e., the same bootstrap path of the JVM that
      * executes JBSE, as returned by the system property
      * {@code java.home}. Also cancels the effect 
-     * of any previous call to {@link #setInitialState(State)}.
+     * of any previous call to {@link #setStartingState(State)}.
      */
     public void setDefaultJavaHome() {
         this.runnerParameters.setDefaultJavaHome();
@@ -647,7 +647,7 @@ public final class RunParameters implements Cloneable {
 
     /**
      * Adds paths to the extensions classpath, and cancels the effect 
-     * of any previous call to {@link #setInitialState(State)}.
+     * of any previous call to {@link #setStartingState(State)}.
      * 
      * @param paths a varargs of {@link String}s, 
      *        the paths to be added to the extensions 
@@ -660,7 +660,7 @@ public final class RunParameters implements Cloneable {
     
     /**
      * Adds paths to the extensions classpath, and cancels the effect 
-     * of any previous call to {@link #setInitialState(State)}.
+     * of any previous call to {@link #setStartingState(State)}.
      * 
      * @param paths a varargs of {@link Path}s, 
      *        the paths to be added to the extensions 
@@ -684,7 +684,7 @@ public final class RunParameters implements Cloneable {
      * i.e., the same extensions path of the JVM that
      * executes JBSE, as returned by the system property
      * {@code java.ext.dirs}. Also cancels the effect 
-     * of any previous call to {@link #setInitialState(State)}.
+     * of any previous call to {@link #setStartingState(State)}.
      */
     public void setDefaultExtClasspath() {
         this.runnerParameters.setDefaultExtClasspath();
@@ -692,7 +692,7 @@ public final class RunParameters implements Cloneable {
     
     /**
      * Adds paths to the user classpath, and cancels the effect 
-     * of any previous call to {@link #setInitialState(State)}.
+     * of any previous call to {@link #setStartingState(State)}.
      * 
      * @param paths a varargs of {@link String}s, 
      *        the paths to be added to the user 
@@ -705,7 +705,7 @@ public final class RunParameters implements Cloneable {
 
     /**
      * Adds paths to the user classpath, and cancels the effect 
-     * of any previous call to {@link #setInitialState(State)}.
+     * of any previous call to {@link #setStartingState(State)}.
      * 
      * @param paths a varargs of {@link Path}s, 
      *        the paths to be added to the user 
@@ -1041,7 +1041,7 @@ public final class RunParameters implements Cloneable {
 
     /**
      * Sets the signature of the method which must be symbolically executed, 
-     * and cancels the effect of any previous call to {@link #setInitialState(State)}.
+     * and cancels the effect of any previous call to {@link #setStartingState(State)}.
      * 
      * @param className the name of the class containing the method.
      * @param descriptor the descriptor of the method.

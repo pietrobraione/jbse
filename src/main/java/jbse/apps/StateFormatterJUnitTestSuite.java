@@ -257,7 +257,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
             this.s.append(testCounter);
             this.s.append("() {\n");
             this.s.append("        //test case for state ");
-            this.s.append(finalState.getIdentifier());
+            this.s.append(finalState.getBranchIdentifier());
             this.s.append('[');
             this.s.append(finalState.getSequenceNumber());
             this.s.append("]\n");
@@ -440,7 +440,7 @@ public final class StateFormatterJUnitTestSuite implements Formatter {
                 this.s.append("    //Unable to generate test case ");
                 this.s.append(testCounter);
                 this.s.append(" for state ");
-                this.s.append(finalState.getIdentifier());
+                this.s.append(finalState.getBranchIdentifier());
                 this.s.append('[');
                 this.s.append(finalState.getSequenceNumber());
                 this.s.append("] (no numeric solution from the solver)\n");

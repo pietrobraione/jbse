@@ -62,7 +62,7 @@ public class EngineBuilder {
     InvalidClassFileFactoryClassException, NonexistingObservedVariablesException, 
     ClasspathException, NotYetImplementedException, ContradictionException {
         //checks whether parameters is complete
-        if (parameters.getMethodSignature() == null && parameters.getInitialState() == null) {
+        if (parameters.getMethodSignature() == null && parameters.getStartingState() == null) {
             throw new CannotBuildEngineException(new NullPointerException());
         }
 
@@ -76,7 +76,7 @@ public class EngineBuilder {
     throws CannotBuildEngineException {
     	try {
 	        final ExecutionContext ctx = 
-	          new ExecutionContext(parameters.getInitialState(),
+	          new ExecutionContext(parameters.getStartingState(),
 	                               parameters.getBypassStandardLoading(),
 	                               parameters.getMaxSimpleArrayLength(),
 	                               parameters.getMaxHeapSize(),

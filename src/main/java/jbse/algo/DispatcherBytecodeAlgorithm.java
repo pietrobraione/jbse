@@ -18,7 +18,6 @@ import static jbse.val.Operator.NE;
 
 import jbse.bc.Dispatcher;
 import jbse.common.exc.UnexpectedInternalException;
-import jbse.tree.DecisionAlternative_XALOAD;
 
 /**
  * A {@link Dispatcher} returning the {@link Algorithm}s to process 
@@ -28,7 +27,7 @@ import jbse.tree.DecisionAlternative_XALOAD;
  *
  */
 public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm<?, ?, ?, ?, ?>> {
-    private final Action_PREINIT      action_PREINIT       = new Action_PREINIT();
+    private final Action_START        action_START       = new Action_START();
     private final Action_INIT         action_INIT          = new Action_INIT();
     private final Algo_NOTALLOWED     algo_NOTALLOWED      = new Algo_NOTALLOWED();
     private final Algo_ACONST_NULL    algo_ACONST_NULL     = new Algo_ACONST_NULL();
@@ -122,7 +121,7 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm<?, ?
     private final Algo_XSWITCH        algo_TABLESWITCH     = new Algo_XSWITCH(true);
     private final Algo_WIDE           algo_WIDE            = new Algo_WIDE();
     private final Algo_XADD           algo_XADD            = new Algo_XADD();
-    private final Algo_XYLOAD_GETX<BytecodeData_0, DecisionAlternative_XALOAD, StrategyDecide<DecisionAlternative_XALOAD>, StrategyRefine_XALOAD, StrategyUpdate_XALOAD>         algo_XALOAD          = new Algo_XALOAD();
+    private final Algo_XALOAD         algo_XALOAD          = new Algo_XALOAD();
     private final Algo_XAND           algo_XAND            = new Algo_XAND();
     private final Algo_XASTORE        algo_XASTORE         = new Algo_XASTORE();
     private final Algo_XCMPY          algo_XCMPY           = new Algo_XCMPY();
@@ -365,8 +364,8 @@ public class DispatcherBytecodeAlgorithm extends Dispatcher<Byte, Algorithm<?, ?
         setDefault(() -> this.algo_NOTALLOWED);
     }
 
-    public Action_PREINIT selectPreInit() {
-        return this.action_PREINIT;
+    public Action_START selectStart() {
+        return this.action_START;
     }
 
     public Action_INIT selectInit() {

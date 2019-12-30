@@ -85,7 +85,7 @@ public final class StateFormatterText implements Formatter {
     private static void formatState(State state, StringBuilder sb, List<Path> srcPath, boolean fullPrint, boolean breakLines, String indentTxt, String indentCurrent) 
     throws FrozenStateException {
         final String lineSep = (breakLines ? LINE_SEP : "");
-        sb.append(state.getIdentifier()); sb.append("["); sb.append(state.getSequenceNumber()); sb.append("] "); sb.append(lineSep);
+        sb.append(state.getBranchIdentifier()); sb.append("["); sb.append(state.getSequenceNumber()); sb.append("] "); sb.append(lineSep);
         if (state.isStuck()) {
             sb.append("Leaf state");
             if (state.getStuckException() != null) {

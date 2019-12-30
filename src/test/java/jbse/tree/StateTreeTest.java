@@ -37,18 +37,18 @@ public class StateTreeTest {
 		final State _1_3 = _1_1.clone();
 		final State _1_4 = _1_1.clone();
 		tree.possiblyAddBranchPoint(true, false, false, false);
-		tree.addState(_1_4);
-		tree.addState(_1_3);
-		tree.addState(_1_2);
-		tree.addState(_1_1);
+		tree.addStateInitial(_1_4);
+		tree.addStateInitial(_1_3);
+		tree.addStateInitial(_1_2);
+		tree.addStateInitial(_1_1);
 		assertSame(_1_1, tree.nextState());
 		assertSame(_1_2, tree.nextState());
 		assertSame(_1_3, tree.nextState());
 		assertSame(_1_4, tree.nextState());
-		assertEquals(".1.1", _1_1.getIdentifier().toString());
-		assertEquals(".1.2", _1_2.getIdentifier().toString());
-		assertEquals(".1.3", _1_3.getIdentifier().toString());
-		assertEquals(".1.4", _1_4.getIdentifier().toString());
+		assertEquals(".1.1", _1_1.getBranchIdentifier().toString());
+		assertEquals(".1.2", _1_2.getBranchIdentifier().toString());
+		assertEquals(".1.3", _1_3.getBranchIdentifier().toString());
+		assertEquals(".1.4", _1_4.getBranchIdentifier().toString());
 	}
 	
 	@Test
@@ -60,27 +60,27 @@ public class StateTreeTest {
 		final State _1_3 = _1_1.clone();
 		final State _1_4 = _1_1.clone();
 		tree.possiblyAddBranchPoint(true, false, false, false);
-		tree.addState(_1_4);
-		tree.addState(_1_3);
-		tree.addState(_1_2);
-		tree.addState(_1_1);
+		tree.addStateInitial(_1_4);
+		tree.addStateInitial(_1_3);
+		tree.addStateInitial(_1_2);
+		tree.addStateInitial(_1_1);
 		assertSame(_1_1, tree.nextState());
 		assertSame(_1_2, tree.nextState());
 		assertSame(_1_3, tree.nextState());
-		assertEquals(".1.1", _1_1.getIdentifier().toString());
-		assertEquals(".1.2", _1_2.getIdentifier().toString());
-		assertEquals(".1.3", _1_3.getIdentifier().toString());
+		assertEquals(".1.1", _1_1.getBranchIdentifier().toString());
+		assertEquals(".1.2", _1_2.getBranchIdentifier().toString());
+		assertEquals(".1.3", _1_3.getBranchIdentifier().toString());
 		final State _1_3_1 = _1_3.clone();
 		final State _1_3_2 = _1_3.clone();
 		tree.possiblyAddBranchPoint(true, false, false, false);
-		tree.addState(_1_3_2);
-		tree.addState(_1_3_1);
+		tree.addStateInitial(_1_3_2);
+		tree.addStateInitial(_1_3_1);
 		assertSame(_1_3_1, tree.nextState());
 		assertSame(_1_3_2, tree.nextState());
 		assertSame(_1_4, tree.nextState());
-		assertEquals(".1.3.1", _1_3_1.getIdentifier().toString());
-		assertEquals(".1.3.2", _1_3_2.getIdentifier().toString());
-		assertEquals(".1.4", _1_4.getIdentifier().toString());
+		assertEquals(".1.3.1", _1_3_1.getBranchIdentifier().toString());
+		assertEquals(".1.3.2", _1_3_2.getBranchIdentifier().toString());
+		assertEquals(".1.4", _1_4.getBranchIdentifier().toString());
 	}
 	
 	@Test
@@ -92,10 +92,10 @@ public class StateTreeTest {
 		final State _1_3 = _1_1.clone();
 		final State _1_4 = _1_1.clone();
 		tree.possiblyAddBranchPoint(true, false, false, false);
-		tree.addState(_1_4);
-		tree.addState(_1_3);
-		tree.addState(_1_2);
-		tree.addState(_1_1);
+		tree.addStateInitial(_1_4);
+		tree.addStateInitial(_1_3);
+		tree.addStateInitial(_1_2);
+		tree.addStateInitial(_1_1);
 		tree.nextState(); //emits _1_1
 		tree.nextState(); //emits _1_2
 		final State _1_2_1 = _1_2.clone();
@@ -106,12 +106,12 @@ public class StateTreeTest {
 		final State _1_2_6 = _1_2.clone();
 		tree.possiblyAddBranchPoint(true, false, false, false);
 		final BranchPoint bp_1_2 = tree.nextBranch();
-		tree.addState(_1_2_6);
-		tree.addState(_1_2_5);
-		tree.addState(_1_2_4);
-		tree.addState(_1_2_3);
-		tree.addState(_1_2_2);
-		tree.addState(_1_2_1);
+		tree.addStateInitial(_1_2_6);
+		tree.addStateInitial(_1_2_5);
+		tree.addStateInitial(_1_2_4);
+		tree.addStateInitial(_1_2_3);
+		tree.addStateInitial(_1_2_2);
+		tree.addStateInitial(_1_2_1);
 		tree.nextState(); //emits _1_2_1
 		tree.nextState(); //emits _1_2_2
 		tree.nextState(); //emits _1_2_3
@@ -119,8 +119,8 @@ public class StateTreeTest {
 		final State _1_2_4_1 = _1_2_4.clone();
 		final State _1_2_4_2 = _1_2_4.clone();
 		tree.possiblyAddBranchPoint(true, false, false, false);
-		tree.addState(_1_2_4_2);
-		tree.addState(_1_2_4_1);
+		tree.addStateInitial(_1_2_4_2);
+		tree.addStateInitial(_1_2_4_1);
 		
 		final State statePicked = tree.getStateAtBranch(bp_1_2, 1);
 		assertSame(_1_2_6, statePicked);

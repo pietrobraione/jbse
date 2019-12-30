@@ -25,12 +25,11 @@ import jbse.val.ReferenceSymbolic;
 import jbse.val.exc.InvalidTypeException;
 
 /**
- * {@link Action} for the first execution step. It loads
- * the frames for the root method, and possibly for the
- * trigger frames that the assumption of the root object
- * may cause to fire, and of the  root class static 
- * initializer if present, and jumps at the first
- * bytecode.
+ * {@link Action} that creates an initial state by 
+ * loading on a suitable pre-initial state the frames 
+ * for the root method, and possibly for the trigger 
+ * methods that the assumption of the existence of 
+ * the root object in the initial heap may cause to fire.
  * 
  * @author Pietro Braione
  */

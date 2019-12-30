@@ -38,7 +38,7 @@ public final class StateFormatterTrace implements Formatter {
     private BytecodeFormatter bcf = new BytecodeFormatter();
 
     public void formatState(State s) {
-        this.output = s.getIdentifier() + "[" + s.getSequenceNumber() + "]" + FIELD_SEP + 
+        this.output = s.getBranchIdentifier() + "[" + s.getSequenceNumber() + "]" + FIELD_SEP + 
                       s.getDepth() + "," + s.getCount() + FIELD_SEP;
         try {
         	if (s.isStuck()) {

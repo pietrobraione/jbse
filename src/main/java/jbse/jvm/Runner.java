@@ -462,7 +462,7 @@ public class Runner {
         if (this.identifierSubregion == null) {
             return true;
         }
-        final String currentRegion = this.engine.getCurrentState().getIdentifier();
+        final String currentRegion = this.engine.getCurrentState().getBranchIdentifier();
         final boolean retVal = (this.identifierSubregion.equals(currentRegion) ||
                                 currentRegion.startsWith(this.identifierSubregion + BRANCH_IDENTIFIER_SEPARATOR_COMPACT) || 
                                 currentRegion.startsWith(this.identifierSubregion + BRANCH_IDENTIFIER_SEPARATOR_LONG) || 

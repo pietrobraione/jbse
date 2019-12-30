@@ -289,7 +289,7 @@ public final class State implements Cloneable {
     private boolean branchingDecision = false;
 
     /** The depth of the state, i.e., the number of branch points over it. */
-    private int depth = 0;
+    private int depth = 0; //zero for pre-initial virgin state
 
     /** The count of the state, i.e., the number of states from the previous branch point. */
     private int count = 0;
@@ -3485,22 +3485,6 @@ public final class State implements Cloneable {
         this.lastPreInitialHistoryPoint = this.historyPoint;
         this.historyPoint = this.historyPoint.startingInitial();
     }
-
-    /**
-     * Adds a branch to the state's {@link HistoryPoint}.
-     * 
-     * @param additionalBranch 
-     *        a {@link String} representing the identifier
-     *        of the subbranch to be added to the state's
-     *        {@link HistoryPoint}.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public void addBranchToHistoryPoint(String additionalBranch) throws FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        this.historyPoint = this.historyPoint.nextBranch(additionalBranch);
-    }
     
     /**
      * Gets the state's {@link HistoryPoint}.
@@ -3512,13 +3496,66 @@ public final class State implements Cloneable {
     }
 
     /**
-     * Gets the state's branch identifier.
+     * Gets the state's branch identifier. Equivalent to 
+     * {@link #getHistoryPoint()}{@link HistoryPoint#getBranchIdentifier() .getBranchIdentifier()}.
      * 
      * @return a {@link String} representing the 
      *         state's branch identifier.
      */
-    public String getIdentifier() {
+    public String getBranchIdentifier() {
         return this.historyPoint.getBranchIdentifier();
+    }
+
+    /**
+     * Gets the state's sequence number. Equivalent to
+     * {@link #getHistoryPoint()}{@link HistoryPoint#getSequenceNumber() .getSequenceNumber()}.
+     * 
+     * @return a nonnegative {@code int} representing the 
+     *         state's sequence number.  
+     */
+    public int getSequenceNumber() {
+        return this.historyPoint.getSequenceNumber();
+    }
+
+    /**
+     * Increments the state's sequence number by {@code 1}. Equivalent to
+     * {@link #getHistoryPoint()}{@link HistoryPoint#next() .next()}.
+     * 
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public void incSequenceNumber() throws FrozenStateException {
+        if (this.frozen) {
+                throw new FrozenStateException();
+        }
+        this.historyPoint = this.historyPoint.next();
+    }
+
+    /**
+     * Adds a branch to the state's {@link HistoryPoint}. Equivalent to 
+     * {@link #getHistoryPoint()}{@link HistoryPoint#nextBranch(String) .nextBranch(additionalBranch)}.
+     * 
+     * @param additionalBranch 
+     *        a {@link String} that identifies the
+     *        subbranch to be added to the state's
+     *        {@link HistoryPoint}.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public void addBranchToHistoryPoint(String additionalBranch) throws FrozenStateException {
+        if (this.frozen) {
+                throw new FrozenStateException();
+        }
+        this.historyPoint = this.historyPoint.nextBranch(additionalBranch);
+    }
+
+    /**
+     * Gets the state's depth in the symbolic execution tree; the depth 
+     * is the number of branches above the state.
+     * 
+     * @return the depth of the state as an {@code int} value
+     *         ({@code 0} for the topmost state).
+     */
+    public int getDepth() {
+        return this.depth;
     }
 
     /**
@@ -3546,14 +3583,13 @@ public final class State implements Cloneable {
     }
 
     /**
-     * Gets the state's depth in the symbolic execution tree; the depth 
-     * is the number of branches above the state.
+     * Gets the state's count.
      * 
-     * @return the depth of the state as an {@code int} value
-     *         ({@code 0} for the topmost state).
+     * @return a nonnegative {@code int} representing the 
+     *         state's count.  
      */
-    public int getDepth() {
-        return this.depth;
+    public int getCount() {
+        return this.count;
     }
 
     /**
@@ -3578,16 +3614,6 @@ public final class State implements Cloneable {
     		throw new FrozenStateException();
     	}
         ++this.count;
-    }
-
-    /**
-     * Gets the state's count.
-     * 
-     * @return a nonnegative {@code int} representing the 
-     *         state's count.  
-     */
-    public int getCount() {
-        return this.count;
     }
 
     /**
@@ -3624,28 +3650,6 @@ public final class State implements Cloneable {
 
         this.branchingDecision = false;
         return retval;
-    }
-
-    /**
-     * Increments the state's sequence number by {@code 1}.
-     * 
-     * @throws FrozenStateException if the state is empty.
-     */
-    public void incSequenceNumber() throws FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-        this.historyPoint = this.historyPoint.next();
-    }
-
-    /**
-     * Gets the state's sequence number.
-     * 
-     * @return a nonnegative {@code int} representing the 
-     *         state's sequence number.  
-     */
-    public int getSequenceNumber() {
-        return this.historyPoint.getSequenceNumber();
     }
 		
     /**

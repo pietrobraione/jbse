@@ -268,7 +268,7 @@ public final class InitialHeapChecker {
         } catch (MethodNotFoundException | MethodCodeNotFoundException | InvalidTypeException | InvalidInputException e) {
             return true; //TODO ugly way to cope with nonexistent methods; possibly handle the situation in the constructor of CheckMethodTable
         }
-        p.setInitialState(s);
+        p.setStartingState(s);
         final RepOkRunnerActions actions = new RepOkRunnerActions(scopeExhaustionMeansSuccess);
         p.setActions(actions);
 
