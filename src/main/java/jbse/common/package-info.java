@@ -1,7 +1,7 @@
 /**
+ * Package for the classes containing common definition
+ * used across JBSE.
  * 
- */
-/**
- * @author pietro
+ * @author Pietro Braione
  */
 package jbse.common;

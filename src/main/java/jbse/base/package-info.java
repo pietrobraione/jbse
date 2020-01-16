@@ -1,8 +1,6 @@
 /**
+ * Package for base-level definitions.
  * 
- */
-/**
- * @author pietro
- *
+ * @author Pietro Braione
  */
 package jbse.base;

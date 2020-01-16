@@ -1,7 +1,6 @@
 /**
+ * Package for the exception thrown by {@code jbse.common} classes.
  * 
- */
-/**
- * @author pietro
+ * @author Pietro Braione
  */
 package jbse.common.exc;

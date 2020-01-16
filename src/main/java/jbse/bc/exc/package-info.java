@@ -1,7 +1,6 @@
 /**
+ * Package for the exception thrown by {@code jbse.bc} classes.
  * 
- */
-/**
- * @author pietro
+ * @author Pietro Braione
  */
 package jbse.bc.exc;
