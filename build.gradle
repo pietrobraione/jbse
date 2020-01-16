@@ -20,7 +20,7 @@ dependencies {
 }
 
 group = 'jbse'
-version = '0.9.0-SNAPSHOT'
+version = '0.10.0-SNAPSHOT'
 description = 'JBSE'
 sourceCompatibility = '1.8'
 
@@ -47,3 +47,14 @@ shadowJar {
 }
 
 build.dependsOn 'shadowJar'
+
+jar {
+    manifest {
+        attributes 'Specification-Title': 'Java Virtual Machine Specification',
+                   'Specification-Vendor': 'Oracle Corporation',
+                   'Specification-Version': '1.8',
+                   'Implementation-Title': description,
+                   'Implementation-Vendor': 'University of Milano-Bicocca',
+                   'Implementation-Version': version
+    }
+}
