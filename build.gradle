@@ -9,12 +9,12 @@ plugins {
 repositories {
     mavenLocal()
     maven {
-        url = 'http://repo.maven.apache.org/maven2'
+        url = 'https://repo.maven.apache.org/maven2'
     }
 }
 
 dependencies {
-    implementation 'org.javassist:javassist:3.22.0-GA'
+    implementation 'org.javassist:javassist:3.26.0-GA'
     implementation files("${System.getProperty('java.home')}/../lib/tools.jar")
     testImplementation 'junit:junit:4.11'
 }
