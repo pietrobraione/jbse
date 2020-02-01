@@ -1,16 +1,19 @@
 package jbse.common;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Class that contain public constants and static functions concerning 
  * JVM types.
  */
 public final class Type {
-    /** Not a type. */
-    public static final char ERROR          = '\0'; //not recognized as a type
+    /** Not recognized as a value of any type. */
+    public static final char ERROR          = '\0';
 
-    /** The top type, which fits any datum. */
+    /** The (almost) top type, which fits a default datum. */
     public static final char UNKNOWN        = '?';
 
     /** The type {@code void}. */
@@ -55,17 +58,27 @@ public final class Type {
     /** The type for all the references to arrays. */
     public static final char ARRAYOF        = '[';
 
+    /** A generic type variable. */
+    public static final char TYPEVAR        = 'T';
+
     /** 
      * This is not a type, but rather marks the end of
-     * reference-to-instances types. 
+     * reference-to-instances types and of type variables. 
      */
     public static final char TYPEEND        = ';';
 
-    public static boolean isVoid(String s) {
-        if (s == null || s.length() != 1) {
+    /**
+     * Checks whether a type is void.
+     * 
+     * @param type a {@link String}.
+     * @return {@code true} iff {@code type.}{@link String#charAt(int) charAt}{@code (0) == }{@link #VOID}{@code  && 
+     *         type.}{@link String#length() length}{@code () == 1}.
+     */
+    public static boolean isVoid(String type) {
+        if (type == null || type.length() != 1) {
             return false;
         }
-        final char c = s.charAt(0);
+        final char c = type.charAt(0);
         return (c == Type.VOID);
     }
 
@@ -139,9 +152,9 @@ public final class Type {
     /**
      * Checks whether a type is a primitive type.
      * 
-     * @param type a {@code char}.
+     * @param type a {@link String}.
      * @return same as {@link #isPrimitive(char) isPrimitive}{@code (type.charAt(0))}
-     *         when {@code type.}{@link String#length() length()}{@code  == 1},
+     *         when {@code type.}{@link String#length() length}{@code () == 1},
      *         otherwise {@code false}.
      */
     public static boolean isPrimitive(String type) {
@@ -153,23 +166,40 @@ public final class Type {
         }
     }
 
-    public static boolean isArray(char type) {
-        return (type == Type.ARRAYOF);
-    }
-
+    /**
+     * Checks whether a type is an array type.
+     * 
+     * @param type a {@link String}.
+     * @return {@code true} iff {@code type.}{@link String#charAt(int) charAt}{@code (0) == }{@link #ARRAYOF}{@code  && 
+     *         type.}{@link String#length() length}{@code () >= 2}.
+     */
     public static boolean isArray(String type) {
         if (type == null || type.length() < 2) { //at least [ + single char
             return false;
         } else {
             final char c = type.charAt(0);
-            return isArray(c);
+            return (c == Type.ARRAYOF);
         }
     }
 
-    public static boolean isReference(char c) {
-        return (c == Type.REFERENCE);
+    /**
+     * Checks whether a type is a reference (non array) type.
+     * 
+     * @param type a {@code char}.
+     * @return {@code true} iff {@code type == }{@link #REFERENCE}.
+     */
+    public static boolean isReference(char type) {
+        return (type == Type.REFERENCE);
     }
 
+    /**
+     * Checks whether a type is a reference (non array) type.
+     * 
+     * @param type a {@link String}.
+     * @return same as {@link #isReference(char) isReference}{@code (type.}{@link String#charAt(int) charAt}{@code (0)) && 
+     *         type.}{@link String#charAt(int) charAt}{@code (type.}{@link String#length() length}{@code () - 1) == }{@link #TYPEEND}{@code  && 
+     *         type.}{@link String#length() length}{@code () >= 3}.
+     */
     public static boolean isReference(String type) {
         if (type == null || type.length() < 3) { //at least L + single char + ;
             return false;
@@ -179,18 +209,22 @@ public final class Type {
         return (isReference(c) && cc == Type.TYPEEND);
     }
 
-    private static String getReferenceClassName(String type) {
-        if (isReference(type)) {
-            return type.substring(1, type.length() - 1);
-        } else {
-            return null;
-        }
-    }
-
+    /**
+     * Given a reference type, returns the
+     * name of the corresponding class.
+     * 
+     * @param type a {@link String} representing 
+     *        a reference type (it must be either
+     *        {@link #isReference(String) isReference}{@code (type)} or 
+     *        {@link #isArray(String) isArray}{@code (type)}).
+     * @return if {@link #isReference(String) isReference}{@code (type)}, 
+     *         then returns {@code type} without the leading {@code 'L'} 
+     *         and the trailing {@code ';'}; If 
+     *         {@link #isArray(String) isArray}{@code (type)}, then 
+     *         returns {@code type}; Otherwise, returns {@code null}.
+     */
     public static String className(String type) {
-        //if reference, remove REFERENCE and TYPEEND; 
-        //if array, just return it
-        return (isReference(type) ? getReferenceClassName(type) : 
+        return (isReference(type) ? type.substring(1, type.length() - 1) : 
             isArray(type) ? type : null);
     }
 
@@ -222,17 +256,29 @@ public final class Type {
                 "void".equals(type));
     }
 
+    /**
+     * Converts an internal class name to a binary class name.
+     * 
+     * @param className a {@link String}, a class name in internal format.
+     * @return {@code className} in binary format.
+     */
     public static String binaryClassName(String className) {
         return (className == null ? null : className.replace('/', '.'));
     }
 
+    /**
+     * Converts a binary class name to an internal class name.
+     * 
+     * @param className a {@link String}, a class name in binary format.
+     * @return {@code className} in internal format.
+     */
     public static String internalClassName(String className) {
         return (className == null ? null : className.replace('.', '/'));
     }
 
     /**
      * Converts the internal name of a primitive type  
-     * or void to its corresponding canonical name.
+     * (or of the void type) to its corresponding canonical name.
      * 
      * @param primitiveTypeInternal a {@code char}.
      * @return a {@link String}, the canonical name for
@@ -266,7 +312,7 @@ public final class Type {
 
     /**
      * Converts the internal name of a primitive type  
-     * or void to its corresponding canonical name.
+     * (or of the void type) to its corresponding canonical name.
      * 
      * @param primitiveTypeInternal a {@link String}.
      * @return same as 
@@ -284,8 +330,8 @@ public final class Type {
     }
 
     /**
-     * Converts the internal name of a primitive type  
-     * (or of the void type) to its corresponding canonical name.
+     * Converts the canonical name of a primitive type  
+     * (or of the void type) to its corresponding internal name.
      * 
      * @param primitiveTypeCanonical a {@link String}, the canonical
      *        name of a primitive type or void.
@@ -318,10 +364,17 @@ public final class Type {
         }
     }
 
+    /**
+     * Checks whether a primitive type is a category 1
+     * primitive type.
+     * 
+     * @param c a {@code char}. It must be {@link #isPrimitive(char) isPrimitive}{@code (c) || 
+     *        c == }{@link #UNKNOWN} (note that {@link #UNKNOWN} is assumed to be category 1 because 
+     *        DefaultValues must be able to fill single slots).
+     * @return a {@code boolean}.
+     */
     public static boolean isCat_1(char c) {
         return (c != Type.LONG && c != Type.DOUBLE);
-        //note that UNKNOWN ha category 1 because DefaultValues 
-        //must be able to fill single slots
     }
 
     /**
@@ -356,6 +409,35 @@ public final class Type {
                 (from == CHAR && to == INT) ||
                 (from == SHORT && to == INT);
     }
+    
+    /**
+     * Checks whether a type is a type parameter signature type.
+     * 
+     * @param type a {@link String}.
+     * @return {@code true} iff {@code type.}{@link String#charAt(int) charAt}{@code (0) == }{@link #TYPEVAR}{@code  && 
+     *         type.}{@link String#charAt(int) charAt}{@code (type.}{@link String#length() length}{@code () - 1) == }{@link #TYPEEND}{@code  && 
+     *         type.}{@link String#length() length}{@code () >= 3}.
+     */
+    public static boolean isTypeParameter(String type) {
+    	return (type.length() >= 3 && type.charAt(0) == TYPEVAR && type.charAt(type.length() - 1) == TYPEEND);
+    }
+    
+    /**
+     * Given a type parameter signature type, returns the
+     * name of the corresponding type parameter identifier.
+     * 
+     * @param type a {@link String} representing 
+     *        a type parameter signature type (it must be
+     *        {@link #isTypeParameter(String) isTypeParameter}{@code (type)}).
+     * @return if {@link #isTypeParameter(String) isTypeParameter}{@code (type)}, 
+     *         then returns {@code type} without the leading {@code 'T'} and the
+     *         trailing {@code ';'}; Otherwise, returns {@code null}.
+     */
+    public static String typeParameterIdentifier(String type) {
+    	return (isTypeParameter(type) ? type.substring(1, type.length() - 1) : null);
+    }
+    
+    private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
     /**
      * Given a descriptor of a method returns an array of 
@@ -366,23 +448,23 @@ public final class Type {
      *         element is the descriptor of the method's i-th
      *         parameter.
      */
-    public static String[] splitParametersDescriptors(String methodDescriptor){
+    public static String[] splitParametersDescriptors(String methodDescriptor) {
         final ArrayList<String> myVector = new ArrayList<>();
-        for (int j = 1; j < methodDescriptor.lastIndexOf(')'); j++) {
+        for (int j = 1; j < methodDescriptor.lastIndexOf(')'); ++j) {
             if (methodDescriptor.charAt(j) == REFERENCE) {
                 final int z = j;
                 while (methodDescriptor.charAt(j) != TYPEEND) {
-                    j++;
+                    ++j;
                 }
                 myVector.add(methodDescriptor.substring(z, j + 1));
             } else if (methodDescriptor.charAt(j) == ARRAYOF) {
                 final int z = j;
                 while (methodDescriptor.charAt(j) == ARRAYOF) {
-                    j++;
+                    ++j;
                 }
                 if (methodDescriptor.charAt(j) == REFERENCE) {
                     while (methodDescriptor.charAt(j) != TYPEEND) {
-                        j++;
+                        ++j;
                     }
                 }
                 myVector.add(methodDescriptor.substring(z, j + 1));
@@ -390,11 +472,239 @@ public final class Type {
                 myVector.add("" + methodDescriptor.charAt(j));
             }
         }
-        final String[] retString = new String[myVector.size()];
-        for (int b = 0; b < myVector.size(); b++) {
-            retString[b] = myVector.get(b);
+        return myVector.toArray(EMPTY_STRING_ARRAY);
+    }
+    
+    /**
+     * Given a list of type parameters returns a {@link Map} 
+     * of all the type parameters in it.
+     * 
+     * @param methodGenericSignatureType a {@link String} with
+     *        shape {@code "<" + s + ">"}, where {@code s} is a 
+     *        list of type parameters. 
+     * @return a {@link Map}{@code <}{@link String}{@code , }{@link String}{@code >} 
+     *         associating the name of a type parameter with the class bound 
+     *         for that parameter. If {@code methodGenericSignatureType} has not
+     *         shape {@code "<" + s + ">"} returns the empty map.
+     */
+    public static Map<String, String> splitTypeParameters(String methodGenericSignatureType) {
+    	if (methodGenericSignatureType.length() < 3 || methodGenericSignatureType.charAt(0) != '<' || methodGenericSignatureType.charAt(methodGenericSignatureType.length() - 1) != '>') {
+    		return Collections.emptyMap();
+    	} else {
+    		final HashMap<String, String> retVal = new HashMap<>();
+    		int i = 1;
+            while (i < methodGenericSignatureType.length() - 1) {
+            	//looks for the type parameter's name
+            	final String paramName;
+            	{
+            		final int z = i;
+            		while (methodGenericSignatureType.charAt(i) != ':') {
+            			++i;
+            		}
+            		paramName = methodGenericSignatureType.substring(z, i);
+                	++i;
+            	}
+            	
+            	//looks for the class bound and skips all the interface bounds
+            	boolean readingTheClassBound = true;
+            	boolean onASemicolon = false;
+            	do {
+                	final String classBound;
+            		if (methodGenericSignatureType.charAt(i) == REFERENCE) {
+            			final int z = i;
+            			int level = 0;
+            			while (methodGenericSignatureType.charAt(i) != TYPEEND || level != 0) {
+            				if (methodGenericSignatureType.charAt(i) == '<') {
+            					++level;
+            				} else if (methodGenericSignatureType.charAt(i) == '>') {
+            					--level;
+            				}
+            				++i;
+            			}
+            			++i;
+            			classBound = methodGenericSignatureType.substring(z, i);
+            		} else if (methodGenericSignatureType.charAt(i) == TYPEVAR) {
+            			final int z = i;
+            			while (methodGenericSignatureType.charAt(i) != TYPEEND) {
+            				++i;
+            			}
+            			++i;
+            			classBound = methodGenericSignatureType.substring(z, i);
+            		} else if (methodGenericSignatureType.charAt(i) == ARRAYOF) {
+            			final int z = i;
+            			while (methodGenericSignatureType.charAt(i) == ARRAYOF) {
+            				++i;
+            			}
+            			if (methodGenericSignatureType.charAt(i) == REFERENCE) {
+            				int level = 0;
+            				while (methodGenericSignatureType.charAt(i) != TYPEEND || level != 0) {
+            					if (methodGenericSignatureType.charAt(i) == '<') {
+            						++level;
+            					} else if (methodGenericSignatureType.charAt(i) == '>') {
+            						--level;
+            					}
+            					++i;
+            				}
+            			} else if (methodGenericSignatureType.charAt(i) == TYPEVAR) {
+            				while (methodGenericSignatureType.charAt(i) != TYPEEND) {
+            					++i;
+            				}
+            			} //else, it is on a BaseType (primitive): nothing to do
+            			++i;
+            			classBound = methodGenericSignatureType.substring(z, i);
+            		} else {
+            			//only alternative: no class bound, we are on a semicolon
+            			//of a subsequent interface bound
+            			classBound = "";
+            		}
+
+            		//stores the pair in the map
+            		if (readingTheClassBound && !"".equals(classBound)) {
+            			retVal.put(paramName, classBound);
+            		}
+
+            		readingTheClassBound = false;
+            		onASemicolon = (methodGenericSignatureType.charAt(i) == ':');
+            		if (onASemicolon) {
+            			++i;
+            		}
+            	} while (onASemicolon);
+            }
+    		return retVal;
+    	}
+    }
+    
+    /**
+     * Given the generic signature of a class returns a 
+     * {@link String} with the type parameters.
+     * 
+     * @param classGenericSignatureType a {@link String}, the generic 
+     *        signature of a class.
+     * @return a substring  with shape {@code "<" + s + ">"}, where 
+     *        {@code s} is a list of type parameters, or the empty
+     *        string if {@code classGenericSignatureType} is not
+     *        the generic signature of a generic class.
+     */
+    public static String splitClassGenericSignatureTypeParameters(String classGenericSignatureType) {
+    	int i = 0;
+    	int level = 0;
+    	do {
+    		final char c = classGenericSignatureType.charAt(i);
+    		if (i == 0 && c != '<') {
+    			return "";
+    		}
+    		if (c == '<') {
+    			++level;
+    		} else if (c == '>') {
+    			--level;
+    		}
+    		++i;
+    		if (c == '>' && level == 0) {
+    			break;
+    		}
+    	} while (i < classGenericSignatureType.length());
+    	return classGenericSignatureType.substring(0, i);
+    }
+    
+    /**
+     * Given the generic signature of a method returns a 
+     * {@link String} with the type parameters.
+     * 
+     * @param methodGenericSignatureType a {@link String}, the generic 
+     *        signature of a method.
+     * @return a substring  with shape {@code "<" + s + ">"}, where 
+     *        {@code s} is a list of type parameters, or the empty
+     *        string if {@code methodGenericSignatureType} is not
+     *        the generic signature of a generic method.
+     */
+    public static String splitMethodGenericSignatureTypeParameters(String methodGenericSignatureType) {
+    	return methodGenericSignatureType.substring(0, methodGenericSignatureType.indexOf('('));
+    }
+    
+    /**
+     * Given the generic signature of a method returns an array of 
+     * {@link String}s containing the generic signatures of its 
+     * parameters.
+     * 
+     * @param methodGenericSignatureType a {@link String}, the generic 
+     *        signature of a method.
+     * @return a {@link String}{@code []}, whose i-th
+     *         element is the generic signature of the method's i-th
+     *         parameter.
+     */
+    public static String[] splitParametersGenericSignatures(String methodGenericSignatureType) {
+        final ArrayList<String> myVector = new ArrayList<>();
+        final int k = methodGenericSignatureType.indexOf('(') + 1;
+        for (int j = k; j < methodGenericSignatureType.lastIndexOf(')'); ++j) {
+            if (methodGenericSignatureType.charAt(j) == REFERENCE) {
+                final int z = j;
+                int level = 0;
+                while (methodGenericSignatureType.charAt(j) != TYPEEND || level != 0) {
+                	if (methodGenericSignatureType.charAt(j) == '<') {
+                		++level;
+                	} else if (methodGenericSignatureType.charAt(j) == '>') {
+                		--level;
+                	}
+                    ++j;
+                }
+                myVector.add(methodGenericSignatureType.substring(z, j + 1));
+            } else if (methodGenericSignatureType.charAt(j) == TYPEVAR) {
+                final int z = j;
+                while (methodGenericSignatureType.charAt(j) != TYPEEND) {
+                    ++j;
+                }
+                myVector.add(methodGenericSignatureType.substring(z, j + 1));
+            } else if (methodGenericSignatureType.charAt(j) == ARRAYOF) {
+                final int z = j;
+                while (methodGenericSignatureType.charAt(j) == ARRAYOF) {
+                    ++j;
+                }
+                if (methodGenericSignatureType.charAt(j) == REFERENCE) {
+                    int level = 0;
+                    while (methodGenericSignatureType.charAt(j) != TYPEEND || level != 0) {
+                    	if (methodGenericSignatureType.charAt(j) == '<') {
+                    		++level;
+                    	} else if (methodGenericSignatureType.charAt(j) == '>') {
+                    		--level;
+                    	}
+                        ++j;
+                    }
+                } else if (methodGenericSignatureType.charAt(j) == TYPEVAR) {
+                    while (methodGenericSignatureType.charAt(j) != TYPEEND) {
+                        ++j;
+                    }
+                } //else, it is on a BaseType (primitive): nothing to do
+                myVector.add(methodGenericSignatureType.substring(z, j + 1));
+            } else {
+                myVector.add("" + methodGenericSignatureType.charAt(j));
+            }
         }
-        return (retString);
+        return myVector.toArray(EMPTY_STRING_ARRAY);
+    }
+    
+    /**
+     * Erase the generic type parameters from a generic signature type.
+     * 
+     * @param genericSignatureType a {@link String}, a generic signature type.
+     * @return a nongeneric descriptor obtained by erasing the generic 
+     *         type parameters from it.
+     */
+    public static String eraseGenericParameters(String genericSignatureType) {
+    	final StringBuilder retVal = new StringBuilder();
+        int level = 0;
+    	for (int i = 0; i < genericSignatureType.length(); ++i) {
+    		final char c = genericSignatureType.charAt(i);
+        	if (c == '<') {
+        		++level;
+        	}
+    		if (level == 0) {
+    			retVal.append(c == '.' ? '$' : c);
+    		}
+        	if (c == '>') {
+        		--level;
+        	}
+    	}
+    	return retVal.toString();
     }
     
     /**
@@ -431,7 +741,7 @@ public final class Type {
      * 
      * @param type A {@code String}, an array type.
      * @return The substring from the character 1 
-     *         henceforth (i.e., skipping the initial '['), 
+     *         henceforth (i.e., skipping the initial {@code '['}), 
      *         or {@code null} if {@code type} is not
      *         an array type.
      */

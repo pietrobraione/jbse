@@ -487,8 +487,8 @@ public final class Util {
                 if (f instanceof SnippetFrameNoWrap) {
                     continue; //skips
                 }
-                final ClassFile fClass = f.getCurrentClass();
-                final String methodName = f.getCurrentMethodSignature().getName();
+                final ClassFile fClass = f.getMethodClass();
+                final String methodName = f.getMethodSignature().getName();
                 if (excClass.equals(fClass) && "<init>".equals(methodName)) {
                     break;
                 }
@@ -512,13 +512,13 @@ public final class Util {
                     continue; //skips
                 }
                 
-                final ClassFile currentClass = f.getCurrentClass();
+                final ClassFile currentClass = f.getMethodClass();
 
                 //gets the data
                 final String declaringClass = currentClass.getClassName().replace('/', '.').replace('$', '.'); //TODO is it ok?
                 final String fileName       = currentClass.getSourceFile();
                 final int    lineNumber     = f.getSourceRow(); 
-                final String methodName     = f.getCurrentMethodSignature().getName();
+                final String methodName     = f.getMethodSignature().getName();
 
                 //break if we reach the first frame for the exception <init>
                 if (excClass.equals(currentClass) && "<init>".equals(methodName)) {

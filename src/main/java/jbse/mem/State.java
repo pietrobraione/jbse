@@ -12,6 +12,7 @@ import static jbse.bc.Signatures.JAVA_THREAD;
 import static jbse.bc.Signatures.JAVA_THREADGROUP;
 import static jbse.bc.Signatures.JAVA_THROWABLE;
 import static jbse.common.Type.parametersNumber;
+import static jbse.common.Type.isPrimitive;
 import static jbse.common.Type.isPrimitiveOrVoidCanonicalName;
 import static jbse.common.Util.unsafe;
 
@@ -53,6 +54,7 @@ import jbse.bc.exc.BadClassFileVersionException;
 import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
+import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.InvalidIndexException;
@@ -779,7 +781,7 @@ public final class State implements Cloneable {
      * @throws ThreadStackEmptyException if the stack is empty.
      */
     public ClassFile getCurrentClass() throws ThreadStackEmptyException {
-        return this.stack.currentFrame().getCurrentClass();
+        return this.stack.currentFrame().getMethodClass();
     }
 
     /**
@@ -790,7 +792,7 @@ public final class State implements Cloneable {
      * @throws ThreadStackEmptyException if the stack is empty.
      */
     public Signature getCurrentMethodSignature() throws ThreadStackEmptyException {
-        return this.stack.currentFrame().getCurrentMethodSignature();
+        return this.stack.currentFrame().getMethodSignature();
     }
     
     /**
@@ -801,7 +803,7 @@ public final class State implements Cloneable {
      * @throws ThreadStackEmptyException if the stack is empty.
      */
     public ClassFile getRootClass() throws ThreadStackEmptyException {
-        return this.stack.rootFrame().getCurrentClass();
+        return this.stack.rootFrame().getMethodClass();
     }
 
     /**
@@ -812,7 +814,7 @@ public final class State implements Cloneable {
      * @throws ThreadStackEmptyException if the stack is empty.
      */
     public Signature getRootMethodSignature() throws ThreadStackEmptyException {
-        return this.stack.rootFrame().getCurrentMethodSignature();
+        return this.stack.rootFrame().getMethodSignature();
     }
 
     /**
@@ -829,7 +831,7 @@ public final class State implements Cloneable {
         final Frame rootFrame = getRootFrame();
         final Signature rootMethodSignature = getRootMethodSignature();
         try {
-            if (rootFrame.getCurrentClass().isMethodStatic(rootMethodSignature)) {
+            if (rootFrame.getMethodClass().isMethodStatic(rootMethodSignature)) {
                 return null;
             } else {
                 try {
@@ -956,7 +958,7 @@ public final class State implements Cloneable {
      * Gets an object from the heap.
      * 
      * @param ref a {@link Reference}.
-     * @return the {@link Objekt} referred to by {@code ref}, or 
+     * @return the {@link HeapObjekt} referred to by {@code ref}, or 
      *         {@code null} if {@code ref} does not refer to 
      *         an object in the heap, i.e.
      *         <ul>
@@ -968,11 +970,11 @@ public final class State implements Cloneable {
      * @throws FrozenStateException if the state is frozen.
      * @throws NullPointerException if {@code ref == null}.
      */
-    public Objekt getObject(Reference ref) throws FrozenStateException {
+    public HeapObjekt getObject(Reference ref) throws FrozenStateException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        final Objekt retVal;
+        final HeapObjekt retVal;
         if (ref.isSymbolic()) {
             final ReferenceSymbolic refSymbolic = (ReferenceSymbolic) ref;
             if (resolved(refSymbolic)) {
@@ -1838,7 +1840,7 @@ public final class State implements Cloneable {
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
         final KlassImpl k = new KlassImpl(calc, true, createSymbolKlassPseudoReference(this.lastPreInitialHistoryPoint, classFile), this.lastPreInitialHistoryPoint, numOfStaticFields, fieldsSignatures);
         try {
-        	initWithSymbolicValues(k);
+        	initWithSymbolicValues(k, classFile);
         } catch (NullPointerException e) {
         	//this should never happen
         	throw new UnexpectedInternalException(e);
@@ -1899,15 +1901,15 @@ public final class State implements Cloneable {
 
     private ArrayImpl newArraySymbolic(Calculator calc, ClassFile arrayClass, ReferenceSymbolic origin, boolean isInitial) 
     throws InvalidTypeException, FrozenStateException {
-        final Primitive length = (Primitive) createSymbolMemberArrayLength(origin);
-        final ArrayImpl obj = new ArrayImpl(calc, true, true, null, length, arrayClass, origin, origin.historyPoint(), isInitial, this.maxSimpleArrayLength);
         try {
+            final Primitive length = (Primitive) createSymbolMemberArrayLength(origin);
+            final ArrayImpl obj = new ArrayImpl(calc, true, true, null, length, arrayClass, origin, origin.historyPoint(), isInitial, this.maxSimpleArrayLength);
 			initIdentityHashCodeSymbolic(obj);
+	        return obj;
 		} catch (InvalidInputException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
 		}
-        return obj;
     }
     
     /**
@@ -1950,7 +1952,7 @@ public final class State implements Cloneable {
         final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
         final InstanceImpl_DEFAULT obj = new InstanceImpl_DEFAULT(calc, true, classFile, origin, origin.historyPoint(), numOfStaticFields, fieldsSignatures);
         try {
-        	initWithSymbolicValues(obj);
+        	initWithSymbolicValues(obj, classFile);
         } catch (NullPointerException e) {
         	//this should never happen
         	throw new UnexpectedInternalException(e);
@@ -1963,11 +1965,12 @@ public final class State implements Cloneable {
      * Initializes an {@link Objekt} with symbolic values.
      * 
      * @param myObj an {@link Objekt} which will be initialized with 
-     *              symbolic values.
-	 * @throws NullPointerException if {@code myObj} is not a symbolic object (i.e., it has
-	 *         no origin).
+     *        symbolic values.
+     * @param classFile the {@link ClassFile} of {@code myObj}. 
+	 * @throws NullPointerException if {@code myObj} is not a symbolic object 
+	 *         (i.e., it has no origin).
      */
-    private void initWithSymbolicValues(Objekt myObj) {
+    private void initWithSymbolicValues(Objekt myObj, ClassFile classFile) {
         for (final Signature fieldSignature : myObj.getStoredFieldSignatures()) {
             //gets the field signature and name
             final String fieldClass = fieldSignature.getClassName();
@@ -1977,9 +1980,17 @@ public final class State implements Cloneable {
             //builds a symbolic value from signature and name 
             //and assigns it to the field
             try {
+            	ClassFile cf = classFile;
+            	while (!cf.hasFieldDeclaration(fieldSignature)) {
+            		cf = cf.getSuperclass();
+            		if (cf == null) {
+            			throw new FieldNotFoundException(fieldSignature.toString());
+            		}
+            	}
+            	final String fieldGenericSignatureType = cf.getFieldGenericSignatureType(fieldSignature);
                 myObj.setFieldValue(fieldSignature, 
-                                    (Value) createSymbolMemberField(fieldType, myObj.getOrigin(), fieldName, fieldClass));
-            } catch (InvalidTypeException | InvalidInputException e) {
+                                    (Value) createSymbolMemberField(fieldType, (fieldGenericSignatureType == null ? fieldType : fieldGenericSignatureType), myObj.getOrigin(), fieldName, fieldClass));
+            } catch (InvalidTypeException | InvalidInputException | FieldNotFoundException e) {
                 //this should never happen
                 throw new UnexpectedInternalException(e);
             }
@@ -2690,22 +2701,31 @@ public final class State implements Cloneable {
      */
     private Value[] makeArgsSymbolic(MethodFrame f, boolean isStatic) 
     throws HeapMemoryExhaustedException, CannotAssumeSymbolicObjectException, FrozenStateException {
-        final Signature methodSignature = f.getCurrentMethodSignature();
+        final Signature methodSignature = f.getMethodSignature();
         final String[] paramsDescriptors = Type.splitParametersDescriptors(methodSignature.getDescriptor());
         final int numArgs = parametersNumber(methodSignature.getDescriptor(), isStatic);
+        final String methodGenericSignatureType;
+		try {
+			methodGenericSignatureType = f.getMethodClass().getMethodGenericSignatureType(methodSignature);
+		} catch (MethodNotFoundException e) {
+			//this should not happen
+			throw new UnexpectedInternalException(e);
+		}
+        final String[] paramsGenericSignatureTypes = (methodGenericSignatureType == null ? paramsDescriptors : Type.splitParametersGenericSignatures(methodGenericSignatureType));
 
         //produces the args as symbolic values from the method's signature
-        final ClassFile currentClass = f.getCurrentClass();
-        final String currentClassName = currentClass.getClassName();
+        final ClassFile methodClass = f.getMethodClass();
+        final String methodClassName = methodClass.getClassName();
         final Value[] args = new Value[numArgs];
         for (int i = 0, slot = 0; i < numArgs; ++i) {
             //builds a symbolic value from signature and name
             final String variableName = f.getLocalVariableDeclaredName(slot);
             try {
                 if (slot == ROOT_THIS_SLOT && !isStatic) {
-                    args[i] = (Value) createSymbolLocalVariable(Type.REFERENCE + currentClassName + Type.TYPEEND, variableName);
+                	final String thisType = Type.REFERENCE + methodClassName + Type.TYPEEND;
+                    args[i] = (Value) createSymbolLocalVariable(thisType, thisType, variableName);
                 } else {
-                    args[i] = (Value) createSymbolLocalVariable(paramsDescriptors[(isStatic ? i : i - 1)], variableName);
+                    args[i] = (Value) createSymbolLocalVariable(paramsDescriptors[(isStatic ? i : i - 1)], paramsGenericSignatureTypes[(isStatic ? i : i - 1)], variableName);
                 }
             } catch (InvalidTypeException | InvalidInputException e) {
                 //this should never happen
@@ -3726,19 +3746,29 @@ public final class State implements Cloneable {
      * 
      * @param staticType a {@link String}, the static type of the
      *        local variable from which the symbol originates.
+     * @param genericSignatureType a {@link String}, the generic signature 
+     *        type of the local variable from which the symbol originates.
+     *        Used only for local variables of reference types, in
+     *        case {@code staticType} is primitive it is ignored.
      * @param variableName a {@link String}, the name of the local 
      *        variable in the root frame the symbol originates from.
      * @return a {@link PrimitiveSymbolic} or a {@link ReferenceSymbolic}
      *         according to {@code staticType}.
 	 * @throws InvalidTypeException if {@code staticType} is not a valid type.
-	 * @throws InvalidInputException if the state is frozen or {@code variableName == null || staticType == null}.
+	 * @throws InvalidInputException if the state is frozen or 
+	 *         {@code variableName == null || staticType == null || genericSignatureType == null}.
      */
-    public Symbolic createSymbolLocalVariable(String staticType, String variableName) 
+    public Symbolic createSymbolLocalVariable(String staticType, String genericSignatureType, String variableName) 
     throws InvalidTypeException, InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        return this.symbolFactory.createSymbolLocalVariable(this.historyPoint, staticType, variableName); //TODO should the history point be the *initial* one (this.lastPreInitialHistoryPoint)???
+    	//TODO should the history point used to create the symbol be the *initial* one (this.lastPreInitialHistoryPoint)???
+    	if (isPrimitive(staticType)) {
+            return this.symbolFactory.createSymbolLocalVariablePrimitive(this.historyPoint, staticType, variableName);
+    	} else {
+    		return this.symbolFactory.createSymbolLocalVariableReference(this.historyPoint, staticType, genericSignatureType, variableName);
+    	}
     }
 	
     /**
@@ -3762,10 +3792,14 @@ public final class State implements Cloneable {
 
     /**
      * A Factory Method for creating symbolic values. The symbol
-     * has as origin a field in an object (non array). 
+     * has as origin a field in an object (not an array). 
      * 
      * @param staticType a {@link String}, the static type of the
      *        local variable from which the symbol originates.
+     * @param genericSignatureType a {@link String}, the generic signature 
+     *        type of the local variable from which the symbol originates.
+     *        Used only for fields of reference types, in
+     *        case {@code staticType} is primitive it is ignored.
      * @param container a {@link ReferenceSymbolic}, the container object
      *        the symbol originates from. It must not refer an array.
      * @param fieldName a {@link String}, the name of the field in the 
@@ -3779,12 +3813,16 @@ public final class State implements Cloneable {
      *         {@code staticType == null || fieldName == null || fieldClass == null}.
      * @throws NullPointerException if {@code container == null}.
      */
-    public Symbolic createSymbolMemberField(String staticType, ReferenceSymbolic container, String fieldName, String fieldClass) 
+    public Symbolic createSymbolMemberField(String staticType, String genericSignatureType, ReferenceSymbolic container, String fieldName, String fieldClass) 
     throws InvalidTypeException, InvalidInputException {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        return this.symbolFactory.createSymbolMemberField(staticType, container, fieldName, fieldClass);
+    	if (isPrimitive(staticType)) {
+    		return this.symbolFactory.createSymbolMemberFieldPrimitive(staticType, container, fieldName, fieldClass);
+    	} else {
+    		return this.symbolFactory.createSymbolMemberFieldReference(staticType, genericSignatureType, container, fieldName, fieldClass);
+    	}
     }
 
     /**
@@ -3808,7 +3846,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-        return this.symbolFactory.createSymbolMemberArray(staticType, container, index);
+        return null; //this.symbolFactory.createSymbolMemberArray(staticType, container, index);
     }
 
     /**
@@ -3827,6 +3865,42 @@ public final class State implements Cloneable {
     		throw new FrozenStateException();
     	}
         return this.symbolFactory.createSymbolMemberArrayLength(container);
+    }
+
+    /**
+     * A Factory Method for creating symbolic values. The symbol
+     * has as origin the key slot of an entry in a map.  
+     * 
+     * @param container a {@link ReferenceSymbolic}, the container object
+     *        the symbol originates from. It must refer a map.
+     * @return a {@link ReferenceSymbolic}.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public ReferenceSymbolic createSymbolMemberMapKey(ReferenceSymbolic container) 
+    		throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+    	return this.symbolFactory.createSymbolMemberMapKey(container);
+    }
+
+    /**
+     * A Factory Method for creating symbolic values. The symbol
+     * has as origin the value slot of an entry in a map.  
+     * 
+     * @param container a {@link ReferenceSymbolic}, the container object
+     *        the symbol originates from. It must refer a map.
+     * @param key a {@link Reference}, the key of the entry in the 
+     *        container this symbol originates from.
+     * @return a {@link ReferenceSymbolic}.
+     * @throws FrozenStateException if the state is frozen.
+     */
+    public ReferenceSymbolic createSymbolMemberMapValue(ReferenceSymbolic container, Reference key) 
+    		throws FrozenStateException {
+    	if (this.frozen) {
+    		throw new FrozenStateException();
+    	}
+    	return this.symbolFactory.createSymbolMemberMapValue(container, key);
     }
 
     /**
@@ -4143,7 +4217,7 @@ public final class State implements Cloneable {
                 tmp += "Return:" + this.val.toString() + ", ";
         } else {
             try {
-                tmp += "CurrentMethod:" + this.stack.currentFrame().getCurrentMethodSignature() + ", ";
+                tmp += "CurrentMethod:" + this.stack.currentFrame().getMethodSignature() + ", ";
                 tmp += "ProgramCounter:" + this.stack.currentFrame().getProgramCounter() + ", ";
             } catch (ThreadStackEmptyException e) {
                 //does nothing

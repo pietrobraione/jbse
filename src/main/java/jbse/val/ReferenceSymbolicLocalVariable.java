@@ -8,8 +8,16 @@ import jbse.val.exc.InvalidTypeException;
  * local variable in the root frame. 
  */
 public final class ReferenceSymbolicLocalVariable extends ReferenceSymbolicAtomic implements SymbolicLocalVariable {
+	/**
+	 * The name of the local variable in the root 
+	 * frame this symbol originates from.	 
+	 */
     private final String variableName;
+    
+    /** The origin String representation of this object. */
     private final String asOriginString;
+    
+    /** The hash code of this object. */
     private final int hashCode;
 
     /**
@@ -21,13 +29,16 @@ public final class ReferenceSymbolicLocalVariable extends ReferenceSymbolicAtomi
      *        object with same identifier will be treated as equal.
      * @param staticType a {@link String}, the static type of the
      *        reference (taken from bytecode).
+     * @param genericSignatureType a {@link String}, the generic signature 
+     *        type of the reference (taken from bytecode, its type erasure
+     *        must be {@code staticType}).
      * @param historyPoint the current {@link HistoryPoint}.
      * @throws InvalidTypeException  if {@code staticType} is not an array or instance
 	 *         reference type.
-	 * @throws InvalidInputException if {@code staticType == null || historyPoint == null || variableName == null}.
+	 * @throws InvalidInputException if {@code staticType == null || genericSignatureType == null || historyPoint == null || variableName == null}.
      */
-    ReferenceSymbolicLocalVariable(String variableName, int id, String staticType, HistoryPoint historyPoint) throws InvalidInputException, InvalidTypeException {
-    	super(id, staticType, historyPoint);
+    ReferenceSymbolicLocalVariable(String variableName, int id, String staticType, String genericSignatureType, HistoryPoint historyPoint) throws InvalidInputException, InvalidTypeException {
+    	super(id, staticType, genericSignatureType, historyPoint);
     	if (variableName == null) {
     		throw new InvalidInputException("Attempted the creation of a ReferenceSymbolicLocalVariable with null variableName.");
     	}

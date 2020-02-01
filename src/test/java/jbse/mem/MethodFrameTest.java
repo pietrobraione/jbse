@@ -55,7 +55,7 @@ public class MethodFrameTest {
         final ClassFile cf = this.hier.loadCreateClass(CLASSLOADER_APP, className, true);
         final Signature sigMethod = new Signature(className, "()V", "start");
         final MethodFrame f = new MethodFrame(sigMethod, cf);
-        assertEquals(f.getCurrentMethodSignature(), sigMethod);
+        assertEquals(f.getMethodSignature(), sigMethod);
     }
 
     @Test

@@ -40,6 +40,7 @@ import javassist.bytecode.FieldInfo;
 import javassist.bytecode.InnerClassesAttribute;
 import javassist.bytecode.LineNumberAttribute;
 import javassist.bytecode.LocalVariableAttribute;
+import javassist.bytecode.LocalVariableTypeAttribute;
 import javassist.bytecode.MethodInfo;
 import javassist.bytecode.SignatureAttribute;
 import javassist.bytecode.annotation.Annotation;
@@ -366,6 +367,12 @@ public class ClassFileJavassist extends ClassFile {
     }
     
     @Override
+    public String getGenericSignatureType() {
+    	final SignatureAttribute sa = (SignatureAttribute) this.cf.getAttribute(SignatureAttribute.tag);
+    	return sa == null ? null : sa.getSignature();    
+    }
+    
+    @Override
     public int getModifiers() {
         //this code reimplements CtClassType.getModifiers() to circumvent a bug
         int acc = this.cf.getAccessFlags();
@@ -520,7 +527,6 @@ public class ClassFileJavassist extends ClassFile {
     private ArrayList<Signature> getDeclaredFields(boolean areStatic) {
         if ((areStatic ? this.fieldsStatic : this.fieldsObject) == null) {
             final ArrayList<Signature> fields = new ArrayList<Signature>();
-            @SuppressWarnings("unchecked")
             final List<FieldInfo> fieldsJA = this.cf.getFields();
             for (FieldInfo fld : fieldsJA) {
                 if (Modifier.isStatic(AccessFlag.toModifier(fld.getAccessFlags())) == areStatic) {
@@ -588,7 +594,6 @@ public class ClassFileJavassist extends ClassFile {
             return this.cf.getStaticInitializer();
         }
 
-        @SuppressWarnings("unchecked")
         final List<MethodInfo> ms = this.cf.getMethods();
         for (MethodInfo m : ms) {
             final String internalName = m.getName();
@@ -643,18 +648,38 @@ public class ClassFileJavassist extends ClassFile {
     public LocalVariableTable getLocalVariableTable(Signature methodSignature) 
     throws MethodNotFoundException, MethodCodeNotFoundException  {
         final CodeAttribute ca = getMethodCodeAttribute(methodSignature);
-        final LocalVariableAttribute lvtJA = (LocalVariableAttribute) ca.getAttribute("LocalVariableTable");
+        final LocalVariableAttribute lvtJA = (LocalVariableAttribute) ca.getAttribute(LocalVariableAttribute.tag);
 
         if (lvtJA == null) {
-            return this.defaultLocalVariableTable(methodSignature);
+            return defaultLocalVariableTable(methodSignature);
         }
 
         //builds the local variable table from the LocalVariableTable attribute 
         //information; this has always success
         final LocalVariableTable lvt = new LocalVariableTable(ca.getMaxLocals());
         for (int i = 0; i < lvtJA.tableLength(); ++i) {
-            lvt.setEntry(lvtJA.index(i), lvtJA.descriptor(i), 
+            lvt.addRow(lvtJA.index(i), lvtJA.descriptor(i), 
                          lvtJA.variableName(i), lvtJA.startPc(i),  lvtJA.codeLength(i));
+        }
+        return lvt;
+    }
+    
+    @Override
+    public LocalVariableTable getLocalVariableTypeTable(Signature methodSignature)
+    throws MethodNotFoundException, MethodCodeNotFoundException {
+        final CodeAttribute ca = getMethodCodeAttribute(methodSignature);
+        final LocalVariableTypeAttribute lvttJA = (LocalVariableTypeAttribute) ca.getAttribute(LocalVariableTypeAttribute.tag);
+
+        if (lvttJA == null) {
+            return new LocalVariableTable(0);
+        }
+
+        //builds the local variable type table from the LocalVariableTypeTable attribute 
+        //information; this has always success
+        final LocalVariableTable lvt = new LocalVariableTable(ca.getMaxLocals());
+        for (int i = 0; i < lvttJA.tableLength(); ++i) {
+            lvt.addRow(lvttJA.index(i), lvttJA.signature(i), 
+                         lvttJA.variableName(i), lvttJA.startPc(i),  lvttJA.codeLength(i));
         }
         return lvt;
     }
@@ -748,7 +773,6 @@ public class ClassFileJavassist extends ClassFile {
     }
     
     private MethodInfo findUniqueMethodDeclarationWithName(String methodName) {
-        @SuppressWarnings("unchecked")
         final List<MethodInfo> ms = this.cf.getMethods();
         MethodInfo retVal = null;
         for (MethodInfo m : ms) {
@@ -1174,7 +1198,6 @@ public class ClassFileJavassist extends ClassFile {
     }
 
     private FieldInfo findField(Signature fieldSignature) {
-        @SuppressWarnings("unchecked")
         final List<FieldInfo> fieldsJA = this.cf.getFields();
         for (FieldInfo fld : fieldsJA) {
             if (fld.getDescriptor().equals(fieldSignature.getDescriptor()) && 
@@ -1188,7 +1211,6 @@ public class ClassFileJavassist extends ClassFile {
     private void fillMethodsAndConstructors() {
         this.methods = new ArrayList<>();
         this.constructors = new ArrayList<>();
-        @SuppressWarnings("unchecked")
         final List<MethodInfo> ms = this.cf.getMethods();
         for (MethodInfo m : ms) {
             final Signature sig = new Signature(getClassName(), m.getDescriptor(), m.getName());
@@ -1221,16 +1243,16 @@ public class ClassFileJavassist extends ClassFile {
         final String name = getClassName();
         final int n = ica.tableLength();
         for (int i = 0; i < n; ++i)
-            if (name.equals(ica.innerClass(i))) {
+            if (name.equals(internalClassName(ica.innerClass(i)))) {
                 final String outName = ica.outerClass(i);
                 if (outName != null) {
-                    return outName;                    
+                    return internalClassName(outName);                    
                 } else {
                     // maybe anonymous or local class.
                     final EnclosingMethodAttribute ema =
-                        (EnclosingMethodAttribute)cf.getAttribute(EnclosingMethodAttribute.tag);
+                        (EnclosingMethodAttribute) this.cf.getAttribute(EnclosingMethodAttribute.tag);
                     if (ema != null) {
-                        return ema.className();
+                        return internalClassName(ema.className()); //filtering through internalClassName is for safety (it is unclear what Javassist returns)
                     }
                 }
             }

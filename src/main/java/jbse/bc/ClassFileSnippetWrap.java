@@ -80,6 +80,11 @@ public class ClassFileSnippetWrap extends ClassFile {
     }
 
     @Override
+    public String getGenericSignatureType() {
+    	return null;
+    }
+    
+    @Override
     public int getModifiers() {
         return this.component.getModifiers();
     }
@@ -305,6 +310,12 @@ public class ClassFileSnippetWrap extends ClassFile {
     public LocalVariableTable getLocalVariableTable(Signature methodSignature)
     throws MethodNotFoundException, MethodCodeNotFoundException {
     	return this.component.getLocalVariableTable(methodSignature);
+    }
+
+    @Override
+    public LocalVariableTable getLocalVariableTypeTable(Signature methodSignature)
+    throws MethodNotFoundException, MethodCodeNotFoundException {
+    	return this.component.getLocalVariableTypeTable(methodSignature);
     }
 
     @Override

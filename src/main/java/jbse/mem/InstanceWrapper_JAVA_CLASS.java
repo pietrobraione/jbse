@@ -32,7 +32,7 @@ final class InstanceWrapper_JAVA_CLASS extends InstanceWrapper<InstanceImpl_JAVA
 	
 	@Override
 	public void setSigners(ReferenceConcrete signers) throws InvalidInputException {
-            possiblyCloneDelegate();
+		possiblyCloneDelegate();
 	    getDelegate().setSigners(signers); 
 	}
 	
@@ -44,6 +44,11 @@ final class InstanceWrapper_JAVA_CLASS extends InstanceWrapper<InstanceImpl_JAVA
 	@Override
 	public void makeSymbolic(ReferenceSymbolic origin) throws InvalidInputException {
 		throw new InvalidInputException("Attempted to makeSymbolic an instance of java.lang.Class.");
+	}
+	
+	@Override
+	public void makeInitial() throws InvalidInputException {
+		throw new InvalidInputException("Attempted to makeInitial an instance of java.lang.Class.");
 	}
 
 	@Override

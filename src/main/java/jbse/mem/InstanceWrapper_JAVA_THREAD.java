@@ -41,6 +41,11 @@ final class InstanceWrapper_JAVA_THREAD extends InstanceWrapper<InstanceImpl_JAV
     }
 
 	@Override
+	public void makeInitial() throws InvalidInputException {
+		throw new InvalidInputException("Attempted to makeInitial an instance of java.lang.Thread (or subclass).");
+	}
+
+	@Override
 	public final Instance_JAVA_THREAD clone() {
 		//a wrapper shall never be cloned
 		throw new UnexpectedInternalException("Attempted to clone an InstanceWrapper_JAVA_THREAD.");

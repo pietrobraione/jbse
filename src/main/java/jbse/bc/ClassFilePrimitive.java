@@ -103,6 +103,11 @@ abstract class ClassFilePrimitive extends ClassFile {
     }
     
     @Override
+    public String getGenericSignatureType() {
+    	return null;
+    }
+    
+    @Override
     public int getModifiers() {
         return getAccessFlags();
     }
@@ -340,6 +345,12 @@ abstract class ClassFilePrimitive extends ClassFile {
 
     @Override
     public LocalVariableTable getLocalVariableTable(Signature methodSignature)
+    throws MethodNotFoundException {
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
+    
+    @Override
+    public LocalVariableTable getLocalVariableTypeTable(Signature methodSignature)
     throws MethodNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
     }

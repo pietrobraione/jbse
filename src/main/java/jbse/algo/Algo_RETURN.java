@@ -63,8 +63,8 @@ StrategyUpdate<DecisionAlternative_NONE>> {
     protected StrategyUpdate<DecisionAlternative_NONE> updater() {
         return (state, alt) -> { 
             final Frame poppedFrame = state.popCurrentFrame();
-            final Signature returnedMethod = poppedFrame.getCurrentMethodSignature();
-            final ClassFile returnedCurrentClass = poppedFrame.getCurrentClass();
+            final Signature returnedMethod = poppedFrame.getMethodSignature();
+            final ClassFile returnedCurrentClass = poppedFrame.getMethodClass();
             if (state.getStackSize() == 0) {
             	if (state.phase() == Phase.POST_INITIAL) {
             		state.setStuckReturn();

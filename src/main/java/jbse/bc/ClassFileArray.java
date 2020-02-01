@@ -136,6 +136,11 @@ public final class ClassFileArray extends ClassFile {
     }
 
     @Override
+    public String getGenericSignatureType() {
+    	return null;
+    }
+    
+    @Override
     public int getModifiers() {
         return Modifier.FINAL | this.accessibility.modifier;
     }
@@ -252,6 +257,15 @@ public final class ClassFileArray extends ClassFile {
     throws MethodNotFoundException, MethodCodeNotFoundException {
         if (isMethodClone(methodSignature)) {
             return defaultLocalVariableTable(this.signatureCloneMethod);
+        }
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
+    
+    @Override
+    public LocalVariableTable getLocalVariableTypeTable(Signature methodSignature)
+    throws MethodNotFoundException {
+        if (isMethodClone(methodSignature)) {
+            return new LocalVariableTable(0);
         }
         throw new MethodNotFoundException(methodSignature.toString());
     }

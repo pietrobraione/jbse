@@ -13,8 +13,8 @@ import jbse.mem.exc.InvalidNumberOfOperandsException;
 import jbse.val.Value;
 
 /**
- * Class representing the activation {@link Frame} of a bytecode snippet.
- * This frame has its own operand stack and possibly a number of read-only 
+ * The activation {@link Frame} of a bytecode snippet that has 
+ * its own operand stack and possibly a number of read-only 
  * local variables initialized with the snippet's args.
  */
 public final class SnippetFrameNoWrap extends Frame implements Cloneable {
@@ -53,7 +53,7 @@ public final class SnippetFrameNoWrap extends Frame implements Cloneable {
     }
     
     @Override
-    public Signature getCurrentMethodSignature() {
+    public Signature getMethodSignature() {
         return new Signature(null, null, null);
     }
 
