@@ -139,7 +139,8 @@ final class SolverEquationGenericTypes {
 	boolean solved = false;
 	boolean hasSolution = false;
 	final HashMap<Var, String> solution = new HashMap<>();
-
+	final Partition<Var> partition = new Partition<>();
+	
 	private final ArrayList<Equation> equations = new ArrayList<>();
 
 	void addEquation(TypeTerm lhs, TypeTerm rhs) throws InvalidInputException {
@@ -162,12 +163,11 @@ final class SolverEquationGenericTypes {
 	}
 
 	void solve() {
-		final Partition<Var> p = new Partition<>();
 		while (!this.equations.isEmpty()) {
 			final Equation e = this.equations.remove(0);
 			if (e.left instanceof Var) {
 				if (e.right instanceof Var) {
-					p.union((Var) e.left, (Var) e.right);
+					this.partition.union((Var) e.left, (Var) e.right);
 				} else {
 					this.solution.put((Var) e.left, eraseGenericParameters(e.right.toString()));
 				}
@@ -200,7 +200,7 @@ final class SolverEquationGenericTypes {
 
 		for (Var v : this.solution.keySet()) {
 			final String res = this.solution.get(v);
-			final Var v2 = p.find(v);
+			final Var v2 = this.partition.find(v);
 			final String res2 = this.solution.get(v2);
 			if (!res.equals(res2)) {
 				this.hasSolution = false;
@@ -219,6 +219,7 @@ final class SolverEquationGenericTypes {
 		if (!this.hasSolution) {
 			throw new InvalidInputException("The equations have no solution.");
 		}
-		return this.solution.get(var);
+		final Var part = this.partition.find(var);
+		return this.solution.get(part);
 	}
 }

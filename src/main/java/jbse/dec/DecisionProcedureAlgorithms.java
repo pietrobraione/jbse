@@ -1291,7 +1291,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
 		final ArrayList<Var> vars = new ArrayList<>();
 		final String[] preVars = text.substring(text.indexOf('<') + 1).split(":");
 		for (int k = 0; k < preVars.length - 1; ++k) {
-			vars.add(new Var(prefix + "?" + (k == 0 ? preVars[k] : preVars[k].substring(preVars[k].indexOf(';')))));
+			vars.add(new Var(prefix + "?" + (k == 0 ? preVars[k] : preVars[k].substring(preVars[k].indexOf(';') + 1))));
 		}
 		
 		return new Apply(functor, vars.toArray(EMPTY_VAR_ARRAY));
