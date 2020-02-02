@@ -173,21 +173,21 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
-     * The trace (leaf) types.
+     * The path (leaf) types.
      * 
      * @author Pietro Braione
      */
-    public enum TraceTypes {
+    public enum PathTypes {
         /** 
          * A safe leaf, i.e., the final state of a 
-         * trace that does not violate any assertion
+         * path that does not violate any assertion
          * or assumption. 
          */
         SAFE,
 
         /** 
          * An unsafe leaf, i.e., the final state of a 
-         * trace that violates an assertion. 
+         * path that violates an assertion. 
          */
         UNSAFE,
 
@@ -198,7 +198,7 @@ public final class RunParameters implements Cloneable {
 
         /**
          * An unmanageable leaf, i.e., the final 
-         * state of a trace that cannot be executed
+         * state of a path that cannot be executed
          * because the symbolic executor is unable
          * to do that.
          */
@@ -206,7 +206,7 @@ public final class RunParameters implements Cloneable {
 
         /**
          * A contradictory leaf, i.e, the final 
-         * state of a trace that violates an 
+         * state of a path that violates an 
          * assumption.
          */
         CONTRADICTORY
@@ -285,11 +285,11 @@ public final class RunParameters implements Cloneable {
         GRAPHVIZ,
 
         /** 
-         * Displays just a trace of the traversed states in the 
+         * Displays the traversed states in the 
          * format state id / state sequence number / 
          * method signature / source row / program counter. 
          */
-        TRACE,
+        PATH,
 
         /**
          * Displays a JUnit class containing a suite that 
@@ -381,8 +381,8 @@ public final class RunParameters implements Cloneable {
     /** Whether it should show the steps for initialization of system classes. */
     private boolean showSystemClassesInitialization;
     
-    /** The traces to show. */
-    private EnumSet<TraceTypes> tracesToShow = EnumSet.allOf(TraceTypes.class);
+    /** The paths to show. */
+    private EnumSet<PathTypes> pathsToShow = EnumSet.allOf(PathTypes.class);
 
     /** The format mode. */
     private StateFormatMode stateFormatMode = StateFormatMode.FULLTEXT;
@@ -394,8 +394,8 @@ public final class RunParameters implements Cloneable {
     private int stackDepthShow = 0;
 
     /** 
-     * {@code true} iff at the end of traces the engine 
-     * must check if the trace can be concretized.
+     * {@code true} iff at the end of a path the engine 
+     * must check if the path can be concretized.
      */
     private boolean doConcretization = false;
 
@@ -1309,7 +1309,7 @@ public final class RunParameters implements Cloneable {
      * 
      * @param identifierSubregion a {@link String}, the subregion identifier.
      *        For example, if {@code identifierSubregion.equals(".1.2.1")} the 
-     *        execution will explore only the traces whose identifier starts
+     *        execution will explore only the paths whose identifier starts
      *        with .1.2.1 (i.e., 1.2.1.1.2, 1.2.1.3.2.1.4, and not 1.2.2.1.2).
      * @throws NullPointerException if {@code identifierSubregion == null}.
      */
@@ -2045,13 +2045,13 @@ public final class RunParameters implements Cloneable {
      * which leaves/summaries must be shown.
      * 
      * @param show {@code true} iff the leaves/summaries 
-     *        of safe traces must be shown.
+     *        of safe paths must be shown.
      */
     public void setShowSafe(boolean show) {
         if (show) {
-            this.tracesToShow.add(TraceTypes.SAFE);
+            this.pathsToShow.add(PathTypes.SAFE);
         } else {
-            this.tracesToShow.remove(TraceTypes.SAFE);
+            this.pathsToShow.remove(PathTypes.SAFE);
         }
     }
 
@@ -2062,13 +2062,13 @@ public final class RunParameters implements Cloneable {
      * which leaves/summaries must be shown.
      * 
      * @param show {@code true} iff the leaves/summaries 
-     *        of unsafe traces must be shown.
+     *        of unsafe paths must be shown.
      */
     public void setShowUnsafe(boolean show) {
         if (show) {
-            this.tracesToShow.add(TraceTypes.UNSAFE);
+            this.pathsToShow.add(PathTypes.UNSAFE);
         } else {
-            this.tracesToShow.remove(TraceTypes.UNSAFE);
+            this.pathsToShow.remove(PathTypes.UNSAFE);
         }
     }
 
@@ -2079,13 +2079,13 @@ public final class RunParameters implements Cloneable {
      * which leaves/summaries must be shown.
      * 
      * @param show {@code true} iff the leaves/summaries 
-     *        of contradictory traces must be shown.
+     *        of contradictory paths must be shown.
      */
     public void setShowContradictory(boolean show) {
         if (show) {
-            this.tracesToShow.add(TraceTypes.CONTRADICTORY);
+            this.pathsToShow.add(PathTypes.CONTRADICTORY);
         } else {
-            this.tracesToShow.remove(TraceTypes.CONTRADICTORY);
+            this.pathsToShow.remove(PathTypes.CONTRADICTORY);
         }
     }
 
@@ -2096,24 +2096,24 @@ public final class RunParameters implements Cloneable {
      * which leaves/summaries must be shown.
      * 
      * @param show {@code true} iff the leaves/summaries 
-     *        of out of scope traces must be shown.
+     *        of out of scope paths must be shown.
      */
     public void setShowOutOfScope(boolean show) {
         if (show) {
-            this.tracesToShow.add(TraceTypes.OUT_OF_SCOPE);
+            this.pathsToShow.add(PathTypes.OUT_OF_SCOPE);
         } else {
-            this.tracesToShow.remove(TraceTypes.OUT_OF_SCOPE);
+            this.pathsToShow.remove(PathTypes.OUT_OF_SCOPE);
         }
     }
 
     /**
-     * Returns the traces types to be shown.
+     * Returns the paths types to be shown.
      * 
-     * @return an {@link EnumSet}{@code <}{@link TraceTypes}{@code >}
-     *         containing the trace types to be shown.
+     * @return an {@link EnumSet}{@code <}{@link PathTypes}{@code >}
+     *         containing the path types to be shown.
      */
-    public EnumSet<TraceTypes> getTracesToShow() {
-        return this.tracesToShow.clone();
+    public EnumSet<PathTypes> getPathsToShow() {
+        return this.pathsToShow.clone();
     }
 
     /**
@@ -2148,7 +2148,7 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
-     * Sets whether, at the end of each trace, it should be
+     * Sets whether, at the end of each path, it should be
      * checked if the final state can be concretized. By 
      * default concretization check is not performed.
      * 
@@ -2160,7 +2160,7 @@ public final class RunParameters implements Cloneable {
     }
 
     /**
-     * Gets whether, at the end of each trace, it should be
+     * Gets whether, at the end of each path, it should be
      * checked if the final state can be concretized.
      * 
      * @return a {@code boolean}.
@@ -2485,7 +2485,7 @@ public final class RunParameters implements Cloneable {
         o.conservativeRepOks = (HashMap<String, String>) this.conservativeRepOks.clone();
         o.concretizationHeapScope = (HashMap<String, Function<State, Integer>>) this.concretizationHeapScope.clone();
         o.creationStrategies = (ArrayList<DecisionProcedureCreationStrategy>) this.creationStrategies.clone();
-        o.tracesToShow = this.tracesToShow.clone();
+        o.pathsToShow = this.pathsToShow.clone();
         o.concretizationMethods = (HashMap<String, String>) this.concretizationMethods.clone();
         o.srcPaths = (ArrayList<Path>) this.srcPaths.clone();
         return o;

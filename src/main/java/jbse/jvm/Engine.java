@@ -235,7 +235,7 @@ public class Engine implements AutoCloseable {
      * 
      * @return {@code true} iff the engine can step. The engine can step unless 
      *         the current {@link State} is stuck, or no backtrack has 
-     *         been performed since the last invocation of the {@link #stopCurrentTrace}
+     *         been performed since the last invocation of the {@link #stopCurrentPath}
      *         method.
      */
     public boolean canStep() {
@@ -310,7 +310,7 @@ public class Engine implements AutoCloseable {
         				ThreadStackEmptyException | ContradictionException | 
         				DecisionException | FailureException | 
         				UnexpectedInternalException e) {
-        			stopCurrentTrace();
+        			stopCurrentPath();
         			throw e;
         		} 
         	} while (hasContinuation);
@@ -430,9 +430,9 @@ public class Engine implements AutoCloseable {
     }
 
     /**
-     * Stops the execution along the current trace.
+     * Stops the execution along the current path.
      */
-    public void stopCurrentTrace() {
+    public void stopCurrentPath() {
     	try {
     		this.currentState.setStuckStop();
 		} catch (FrozenStateException e) {

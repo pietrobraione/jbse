@@ -62,13 +62,13 @@ public class Runner {
 
         /**
          * Invoked by a {@link Runner}'s {@link Runner#run run} method whenever it is at 
-         * the start of a trace, i.e., at root or after a successful backtrack. 
+         * the start of a path, i.e., at root or after a successful backtrack. 
          * By default returns {@code false}.
          * 
          * @return {@code true} iff the {@link Runner} must stop
          *         {@link Runner#run run}ning.
          */
-        public boolean atTraceStart() { return false; }
+        public boolean atPathStart() { return false; }
 
         /**
          * Invoked by a {@link Runner}'s {@link Runner#run run} method before 
@@ -193,13 +193,13 @@ public class Runner {
 
         /**
          * Invoked by a {@link Runner}'s {@link Runner#run run} method when at the end
-         * of a trace (i.e., when the current {@link State} is stuck).
+         * of a path (i.e., when the current {@link State} is stuck).
          * By default returns {@code false}.
          * 
          * @return {@code true} iff the {@link Runner} must stop
          *         {@link Runner#run run}ning.
          */
-        public boolean atTraceEnd() { return false; }
+        public boolean atPathEnd() { return false; }
 
         /**
          * Invoked by a {@link Runner}'s {@link Runner#run run} method immediately before
@@ -405,11 +405,11 @@ public class Runner {
     /** The timeout. */
     private long timeout;
 
-    /** Counter for the total number of analyzed traces. */
-    private long tracesTot;
+    /** Counter for the total number of analyzed paths. */
+    private long pathsTot;
 
-    /** Counter for the number of analyzed traces stopped because of scope exhaustion. */
-    private long tracesOutOfScope;
+    /** Counter for the number of analyzed paths stopped because of scope exhaustion. */
+    private long pathsOutOfScope;
 
     /** Stores the start time. */
     private long startTime;
@@ -450,8 +450,8 @@ public class Runner {
         this.heapScope = heapScope;
         this.depthScope = depthScope;
         this.countScope = countScope;
-        this.tracesOutOfScope = 0;
-        this.tracesTot = 0;
+        this.pathsOutOfScope = 0;
+        this.pathsTot = 0;
     }
     
     public Engine getEngine() {
@@ -531,9 +531,9 @@ public class Runner {
         if (this.actions.atStart()) { return; }
         //performs the symbolic execution loop
         while (true) {
-            if (this.actions.atTraceStart()) { return; }
+            if (this.actions.atPathStart()) { return; }
 
-            //explores the trace
+            //explores the path
             while (this.engine.canStep() && currentStateIsInRunSubregion()) {
                 if (this.engine.atInitialState()) {
                     if (this.actions.atInitial()) { return; }
@@ -575,8 +575,8 @@ public class Runner {
                 }
 
                 if (outOfScope()) {
-                    ++this.tracesOutOfScope; 
-                    this.engine.stopCurrentTrace();
+                    ++this.pathsOutOfScope; 
+                    this.engine.stopCurrentPath();
                     if (outOfScopeHeap()) { 
                         if (this.actions.atScopeExhaustionHeap()) { return; }
                     }
@@ -608,8 +608,8 @@ public class Runner {
             if (currentStateIsInRunSubregion()) {
                 //in this case, the state must be stuck (it should be impossible that a state
                 //is both stuck and out of the run subregion)
-                ++this.tracesTot;
-                if (this.actions.atTraceEnd()) { return; }
+                ++this.pathsTot;
+                if (this.actions.atPathEnd()) { return; }
             }
 
             //backtracks
@@ -666,23 +666,23 @@ public class Runner {
     }
 
     /**
-     * Returns the total number of traces explored until 
+     * Returns the total number of paths explored until 
      * its invocation.
      * 
      * @return a {@code long}.
      */
-    public long getTracesTotal() {
-        return this.tracesTot;
+    public long getPathsTotal() {
+        return this.pathsTot;
     }
 
     /**
-     * Returns the total number of out-of-scope traces explored 
+     * Returns the total number of out-of-scope paths explored 
      * until its invocation.
      * 
      * @return a {@code long}.
      */
-    public long getTracesOutOfScope() {
-        return this.tracesOutOfScope;
+    public long getPathsOutOfScope() {
+        return this.pathsOutOfScope;
     }
 }
 

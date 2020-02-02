@@ -232,7 +232,7 @@ public final class InitialHeapChecker {
      * @param p the {@link RunnerParameters} object that will be used to build 
      *        the runner; It must be coherent with the parameters of the engine
      *        that created {@code s}. It will be modified.
-     * @param scopeExhaustionMeansSuccess {@code true} iff a trace that exhausts
+     * @param scopeExhaustionMeansSuccess {@code true} iff a path that exhausts
      *        the execution scope must be interpreted as a successful 
      *        execution of the method that returns {@code true}. 
      * @return {@code true} iff there is at least one successful execution
@@ -291,7 +291,7 @@ public final class InitialHeapChecker {
         /*
         @Override
         public boolean atStepPost() {
-            final StateFormatterTrace f = new StateFormatterTrace();
+            final StateFormatterPath f = new StateFormatterPath();
             f.formatState(getEngine().getCurrentState());
             System.out.println("==> " + f.emit());
             return super.atStepPost();
@@ -299,26 +299,26 @@ public final class InitialHeapChecker {
 
         @Override
         public boolean atBacktrackPost(BranchPoint bp) {
-            final StateFormatterTrace f = new StateFormatterTrace();
+            final StateFormatterPath f = new StateFormatterPath();
             f.formatState(getEngine().getCurrentState());
             System.out.println("==> " + f.emit());
             return super.atBacktrackPost(bp);
         }
          */
         @Override
-        public boolean atTraceEnd() {
+        public boolean atPathEnd() {
             final Value retVal = this.getEngine().getCurrentState().getStuckReturn();
             if (retVal != null) {
                 final Simplex retValSimplex = (Simplex) retVal;
                 this.repOk = (((Integer) retValSimplex.getActualValue()) == 1);
             }
-            return this.repOk; //interrupts symbolic execution if exists a successful trace that returns true
+            return this.repOk; //interrupts symbolic execution if exists a successful path that returns true
         }
 
         @Override
         public boolean atContradictionException(ContradictionException e)
         throws ContradictionException {
-            return false; //assumption violated: move to next trace
+            return false; //assumption violated: move to next path
         }
 
         @Override

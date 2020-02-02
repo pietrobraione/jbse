@@ -99,7 +99,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
             throwVerifyError(state, this.ctx.getCalculator());
             exitFromAlgorithm();
         }
-        //TODO check that operands are concrete and kill trace if they are not
+        //TODO check that operands are concrete and kill path if they are not
         
         //TODO resolve all parameter/exception types of all constructors!!!
     }

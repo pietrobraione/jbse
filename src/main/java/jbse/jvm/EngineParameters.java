@@ -83,7 +83,7 @@ public final class EngineParameters implements Cloneable {
          * identifier reflecting the decision which generated it.
          * This identification may be complex and not exec-faithful, 
          * but gives an unique identifier to symbolic execution
-         * traces up to target code recompilation.
+         * paths up to target code recompilation.
          */
         LONG(StateTree.StateIdentificationMode.LONG);
 
