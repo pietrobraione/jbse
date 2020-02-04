@@ -3869,23 +3869,6 @@ public final class State implements Cloneable {
 
     /**
      * A Factory Method for creating symbolic values. The symbol
-     * has as origin the key slot of an entry in a map.  
-     * 
-     * @param container a {@link ReferenceSymbolic}, the container object
-     *        the symbol originates from. It must refer a map.
-     * @return a {@link ReferenceSymbolic}.
-     * @throws FrozenStateException if the state is frozen.
-     */
-    public ReferenceSymbolic createSymbolMemberMapKey(ReferenceSymbolic container) 
-    		throws FrozenStateException {
-    	if (this.frozen) {
-    		throw new FrozenStateException();
-    	}
-    	return this.symbolFactory.createSymbolMemberMapKey(container);
-    }
-
-    /**
-     * A Factory Method for creating symbolic values. The symbol
      * has as origin the value slot of an entry in a map.  
      * 
      * @param container a {@link ReferenceSymbolic}, the container object
@@ -3900,7 +3883,7 @@ public final class State implements Cloneable {
     	if (this.frozen) {
     		throw new FrozenStateException();
     	}
-    	return this.symbolFactory.createSymbolMemberMapValue(container, key);
+    	return this.symbolFactory.createSymbolMemberMapValue(container, key, getHistoryPoint());
     }
 
     /**

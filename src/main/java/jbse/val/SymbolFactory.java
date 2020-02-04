@@ -184,35 +184,18 @@ public final class SymbolFactory implements Cloneable {
 
     /**
      * A Factory Method for creating symbolic values. The symbol
-     * has as origin the key slot of an entry in a map.  
-     * 
-     * @param container a {@link ReferenceSymbolic}, the container object
-     *        the symbol originates from. It must refer a map.
-     * @return a {@link ReferenceSymbolic}.
-     */
-    public ReferenceSymbolic createSymbolMemberMapKey(ReferenceSymbolic container) {
-    	try {
-    		final ReferenceSymbolic retVal = new ReferenceSymbolicMemberMapKey(container, getNextIdReferenceSymbolic());
-    		return retVal;
-    	} catch (InvalidInputException | InvalidTypeException e) {
-    		//this should never happen
-    		throw new UnexpectedInternalException(e);
-    	}
-    }
-
-    /**
-     * A Factory Method for creating symbolic values. The symbol
      * has as origin the value slot of an entry in a map.  
      * 
      * @param container a {@link ReferenceSymbolic}, the container object
      *        the symbol originates from. It must refer a map.
      * @param key a {@link Reference}, the key of the entry in the 
      *        container this symbol originates from.
+     * @param historyPoint the current {@link HistoryPoint}.
      * @return a {@link ReferenceSymbolic}.
      */
-    public ReferenceSymbolic createSymbolMemberMapValue(ReferenceSymbolic container, Reference key) {
+    public ReferenceSymbolic createSymbolMemberMapValue(ReferenceSymbolic container, Reference key, HistoryPoint historyPoint) {
     	try {
-    		final ReferenceSymbolic retVal = new ReferenceSymbolicMemberMapValue(container, key, getNextIdReferenceSymbolic());
+    		final ReferenceSymbolic retVal = new ReferenceSymbolicMemberMapValue(container, key, historyPoint, getNextIdReferenceSymbolic());
     		return retVal;
     	} catch (InvalidInputException | InvalidTypeException e) {
     		//this should never happen

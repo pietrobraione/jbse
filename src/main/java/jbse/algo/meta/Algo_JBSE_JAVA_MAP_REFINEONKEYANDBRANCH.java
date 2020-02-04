@@ -66,7 +66,7 @@ StrategyUpdate<DecisionAlternative_IFX>> {
                     failExecution("The 'this' parameter to jbse.base.JAVA_MAP.refineOnKeyAndBranch method is symbolic and unresolved.");
                 }
                 this.keyReference = (Reference) this.data.operand(1);
-                final Primitive javaMapContainsKey = calc.applyFunctionPrimitive(BOOLEAN, this.map.historyPoint(), JAVA_MAP_CONTAINSKEY.toString(), this.thisReference, this.keyReference).widen(INT).pop();
+                final Primitive javaMapContainsKey = calc.applyFunctionPrimitive(BOOLEAN, state.getHistoryPoint(), JAVA_MAP_CONTAINSKEY.toString(), this.thisReference, this.keyReference).widen(INT).pop();
                 this.keyIn = calc.push(javaMapContainsKey).ne(calc.valInt(0)).pop();
                 this.keyOut = calc.push(javaMapContainsKey).eq(calc.valInt(0)).pop();
             } catch (ClassCastException e) {

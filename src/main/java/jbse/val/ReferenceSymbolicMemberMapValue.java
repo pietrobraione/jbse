@@ -13,8 +13,16 @@ import jbse.val.exc.InvalidTypeException;
  * in a map (value slot). 
  */
 public final class ReferenceSymbolicMemberMapValue extends ReferenceSymbolicMember {
+	/** The {@link Reference} to the key object associated to the value. */
     private final Reference key;
+    
+    /** The current {@link HistoryPoint} (to disambiguate the state of {@link #key}). */
+    private final HistoryPoint historyPoint;
+    
+    /** The origin String representation of this object. */
     private final String asOriginString;
+    
+	/** The hash code of this object. */
     private final int hashCode;
     
     /**
@@ -23,21 +31,23 @@ public final class ReferenceSymbolicMemberMapValue extends ReferenceSymbolicMemb
      * @param container a {@link ReferenceSymbolic}, the container object
      *        this symbol originates from. It must refer a map.
      * @param key a {@link Reference}, the key of the entry in the 
-     *        container map this symbol originates from.
+     *        container map this symbol originates from. It must not be {@code null}.
+     * @param historyPoint the current {@link HistoryPoint}.
      * @param id an {@link int}, the identifier of the symbol. Different
      *        objects with same identifiers will be treated as equal.
      * @throws InvalidTypeException never.
-     * @throws InvalidInputException if {@code key == null}.
+     * @throws InvalidInputException if {@code key == null || historyPoint == null}.
      * @throws NullPointerException if {@code container == null}.
      */
-    ReferenceSymbolicMemberMapValue(ReferenceSymbolic container, Reference key, int id) throws InvalidInputException, InvalidTypeException {
+    ReferenceSymbolicMemberMapValue(ReferenceSymbolic container, Reference key, HistoryPoint historyPoint, int id) throws InvalidInputException, InvalidTypeException {
     	super(container, id, REFERENCE + JAVA_OBJECT + TYPEEND, TYPEVAR + "V" + TYPEEND);
-    	if (key == null) {
+    	if (key == null || historyPoint == null) {
     		throw new InvalidInputException("Attempted the creation of a ReferenceSymbolicMemberMapValue with null key.");
     	}
     	
     	this.key = key;
-    	this.asOriginString = getContainer().asOriginString() + ".get(" + (this.key.isSymbolic() ? ((Symbolic) this.key).asOriginString() : this.key.toString()) + ")";
+    	this.historyPoint = historyPoint;
+    	this.asOriginString = getContainer().asOriginString() + "::GET(" + (this.key.isSymbolic() ? ((Symbolic) this.key).asOriginString() : this.key.toString()) + "@" + historyPoint.toString() + ")";
 
     	//calculates hashCode
 		final int prime = 131071;
@@ -47,9 +57,24 @@ public final class ReferenceSymbolicMemberMapValue extends ReferenceSymbolicMemb
 		this.hashCode = result;
     }
 
+    /**
+     * Returns the {@link Reference} to the key object associated 
+     * to this value slot {@link Reference}.
+     * 
+     * @return a {@link Reference}.
+     */
     public Reference getKey() {
         return this.key;
     }
+    
+    /**
+     * Returns the {@link HistoryPoint}.
+     * 
+     * @return a {@link HistoryPoint}.
+     */
+    public HistoryPoint getHistoryPoint() {
+		return this.historyPoint;
+	}
     
     @Override
     public String asOriginString() {

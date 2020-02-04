@@ -91,7 +91,9 @@ import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_SUCCEED;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_SYMBOLNAME;
 import static jbse.algo.Overrides.ALGO_JBSE_BASE_MAKEKLASSSYMBOLIC_DO;
 import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_MAKEINITIAL;
+import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION;
 import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_REFINEONKEYANDBRANCH;
+import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH;
 import static jbse.algo.Overrides.ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
 import static jbse.algo.Overrides.ALGO_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0;
 import static jbse.algo.Overrides.ALGO_SUN_PERF_CREATELONG;
@@ -337,7 +339,9 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_OBJECT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_SHORT;
 import static jbse.bc.Signatures.JBSE_BASE_MAKEKLASSSYMBOLIC_DO;
 import static jbse.bc.Signatures.JBSE_JAVA_MAP_MAKEINITIAL;
+import static jbse.bc.Signatures.JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION;
 import static jbse.bc.Signatures.JBSE_JAVA_MAP_REFINEONKEYANDBRANCH;
+import static jbse.bc.Signatures.JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH;
 import static jbse.bc.Signatures.SUN_ASCIICASEINSENSITIVECOMPARATOR;
 import static jbse.bc.Signatures.SUN_JARINDEX;
 import static jbse.bc.Signatures.SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
@@ -778,14 +782,16 @@ public final class ExecutionContext {
             addMetaOverridden(JBSE_BASE_MAKEKLASSSYMBOLIC_DO,          ALGO_JBSE_BASE_MAKEKLASSSYMBOLIC_DO);
             
             //jbse.base.JAVA_MAP methods
-            addMetaOverridden(JBSE_JAVA_MAP_MAKEINITIAL,               ALGO_JBSE_JAVA_MAP_MAKEINITIAL);
-            addMetaOverridden(JBSE_JAVA_MAP_REFINEONKEYANDBRANCH,      ALGO_JBSE_JAVA_MAP_REFINEONKEYANDBRANCH);
+            addMetaOverridden(JBSE_JAVA_MAP_MAKEINITIAL,                          ALGO_JBSE_JAVA_MAP_MAKEINITIAL);
+            addMetaOverridden(JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION, ALGO_JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION);
+            addMetaOverridden(JBSE_JAVA_MAP_REFINEONKEYANDBRANCH,                 ALGO_JBSE_JAVA_MAP_REFINEONKEYANDBRANCH);
+            addMetaOverridden(JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH,     ALGO_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH);
             
             //jbse classless (pseudo)methods
-            addMetaOverridden(noclass_REGISTERLOADEDCLASS,             ALGO_noclass_REGISTERLOADEDCLASS);
-            addMetaOverridden(noclass_REGISTERMETHODTYPE,              ALGO_noclass_REGISTERMETHODTYPE);
-            addMetaOverridden(noclass_SETSTANDARDCLASSLOADERSREADY,    ALGO_noclass_SETSTANDARDCLASSLOADERSREADY);
-            addMetaOverridden(noclass_STORELINKEDMETHODANDAPPENDIX,    ALGO_noclass_STORELINKEDMETHODANDAPPENDIX);
+            addMetaOverridden(noclass_REGISTERLOADEDCLASS,          ALGO_noclass_REGISTERLOADEDCLASS);
+            addMetaOverridden(noclass_REGISTERMETHODTYPE,           ALGO_noclass_REGISTERMETHODTYPE);
+            addMetaOverridden(noclass_SETSTANDARDCLASSLOADERSREADY, ALGO_noclass_SETSTANDARDCLASSLOADERSREADY);
+            addMetaOverridden(noclass_STORELINKEDMETHODANDAPPENDIX, ALGO_noclass_STORELINKEDMETHODANDAPPENDIX);
         } catch (MetaUnsupportedException e) {
             throw new UnexpectedInternalException(e);
         }

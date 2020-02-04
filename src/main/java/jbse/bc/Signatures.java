@@ -637,13 +637,17 @@ public final class Signatures {
     public static final Signature JBSE_BASE_MAKEKLASSSYMBOLIC_DO = 
         new Signature(JBSE_BASE, "(" + INT + REFERENCE + JAVA_STRING + TYPEEND +")" + VOID, "makeKlassSymbolic_do");
     public static final Signature JBSE_JAVA_MAP_MAKEINITIAL = 
-    		new Signature(JBSE_JAVA_MAP, "()" + VOID, "makeInitial");
+    	new Signature(JBSE_JAVA_MAP, "()" + VOID, "makeInitial");
+    public static final Signature JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION = 
+    	new Signature(JBSE_JAVA_MAP, "(" + REFERENCE + JAVA_STRING + TYPEEND + ")" + VOID, "metaThrowUnexpectedInternalException");
     public static final Signature JBSE_JAVA_MAP_REFINEIN = 
-    		new Signature(JBSE_JAVA_MAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineIn");
+    	new Signature(JBSE_JAVA_MAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineIn");
     public static final Signature JBSE_JAVA_MAP_REFINEONKEYANDBRANCH = 
-    		new Signature(JBSE_JAVA_MAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOnKeyAndBranch");
+    	new Signature(JBSE_JAVA_MAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOnKeyAndBranch");
+    public static final Signature JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH = 
+    	new Signature(JBSE_JAVA_MAP, "(" + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOnKeyCombinationsAndBranch");
     public static final Signature JBSE_JAVA_MAP_REFINEOUTKEY = 
-    		new Signature(JBSE_JAVA_MAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOutKey");
+    	new Signature(JBSE_JAVA_MAP, "(" + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, "refineOutKey");
     public static final Signature SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0 = 
         new Signature(SUN_NATIVECONSTRUCTORACCESSORIMPL, 
                       "(" + REFERENCE + JAVA_CONSTRUCTOR + TYPEEND + ARRAYOF + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + REFERENCE + JAVA_OBJECT + TYPEEND, 

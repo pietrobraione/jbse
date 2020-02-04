@@ -7,8 +7,10 @@ public final class DecisionAlternative_XSWITCH implements DecisionAlternative {
 	/** Is this the default case? */
 	private final boolean isDefault;
 	
+	/** Does this alternative result from a decision on concrete values?*/
 	private final boolean isConcrete;
 	
+    /** The {@link String} representation of this object. */
 	private final String toString;
 	
 	private DecisionAlternative_XSWITCH(int value, boolean isDefault, boolean isConcrete, int branchNumber) {
@@ -59,10 +61,25 @@ public final class DecisionAlternative_XSWITCH implements DecisionAlternative {
 		return new DecisionAlternative_XSWITCH(0, true, false, branchNumber);
 	}
 	
+	/**
+	 * Checks whether this decision alternative
+	 * is for the default case.
+	 * 
+	 * @return a {@code boolean}, {@code true} iff
+	 *         this decision alternative is for the
+	 *         default case.
+	 */
 	public boolean isDefault() {
 		return this.isDefault;
 	}
-	
+
+	/**
+	 * Returns the value for the switch case this decision
+	 * alternative represents (if it is a nondefault one).
+	 * 
+	 * @return an {@code int}; The returned value is meaningful
+	 *         only if {@link #isDefault}{@code () == false}.
+	 */
 	public int value() {
 		return this.value;
 	}

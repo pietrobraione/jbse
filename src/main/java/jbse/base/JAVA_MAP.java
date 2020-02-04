@@ -257,7 +257,7 @@ implements Map<K,V>, Cloneable, Serializable {
 
 	private void addNode(K key, V value) {
 		this.absentKeys.remove(key);
-		final NodePair<K, V> np = new NodePair<K, V>();
+		final NodePair<K, V> np = new NodePair<>();
 		np.key = key;
 		np.value = value;
 		np.next = this.root;
@@ -1043,8 +1043,8 @@ implements Map<K,V>, Cloneable, Serializable {
 		//in the initial map that have been replaced after
 		//the start of symbolic execution (this is the hard part).
 		//The idea is to specialize the backing initial map so 
-		//we can say, for all the keys in the node list, if they
-		//are or not in the initial map: then, subtract the hash
+		//we can determine, for all the keys in the node list, whether 
+		//they are or not in the initial map: then, subtract the hash
 		//values for the entries that are present.
 
 		//first, statically determine if there are any
@@ -1077,6 +1077,7 @@ implements Map<K,V>, Cloneable, Serializable {
 
 		//if there are any, then refine (for n keys generates 2^n branches!!!)
 		if (notRefined.size() > 0) {
+			//TODO does this ever happen??? Apparently either a map is concrete (no initial map) or is symbolic, and in this case every operation (get, put) that introduces a key also introduces a refinement on it in the initial map
 			refineOnKeyCombinationsAndBranch(notRefined.toArray());
 		}
 
@@ -1097,6 +1098,13 @@ implements Map<K,V>, Cloneable, Serializable {
 	// Private methods
 
 	private static final Object[] OBJECT_ARRAY = new Object[0];
+
+	/**
+	 * Causes JBSE to internally throw an unexpected internal exception.
+	 * 
+	 * @param message a {@link String}, the message of the exception.
+	 */
+	private native static void metaThrowUnexpectedInternalException(String message);
 
 	/**
 	 * Initializes this map, if it is symbolic. 
@@ -1145,13 +1153,6 @@ implements Map<K,V>, Cloneable, Serializable {
 	private native void makeInitial();
 
 	/**
-	 * Causes JBSE to internally throw an unexpected internal exception.
-	 * 
-	 * @param message a {@link String}, the message of the exception.
-	 */
-	private native void metaThrowUnexpectedInternalException(String message);
-
-	/**
 	 * Causes symbolic execution to branch on the two cases:
 	 * A key is present/absent in an initial map. Can be invoked
 	 * only if this map is initial.
@@ -1179,7 +1180,6 @@ implements Map<K,V>, Cloneable, Serializable {
 	 *        possible subsets of keys.
 	 */
 	private native void refineOnKeyCombinationsAndBranch(Object... keys);
-
 
 	/**
 	 * Upcalled by {@link #refineOnKeyAndBranch(Object)},
