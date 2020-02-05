@@ -30,7 +30,7 @@ public class StateTreeTest {
 	@Test
 	public void testAddState1() throws InvalidClassFileFactoryClassException, IOException, InvalidInputException {
 		final StateTree tree = new StateTree(StateIdentificationMode.COMPACT, BreadthMode.MORE_THAN_ONE);
-		final State _1_1 = new State(true, tree.getPreInitialHistoryPoint().startingInitial(), 100, 100, new Classpath(Paths.get("."), Collections.emptyList(), Collections.emptyList()), ClassFileFactoryJavassist.class, Collections.emptyMap(), Collections.emptyMap(), new SymbolFactory());
+		final State _1_1 = new State(true, tree.getPreInitialHistoryPoint().startingInitial(), 100, 100, new Classpath(Paths.get("."), Paths.get("."), Collections.emptyList(), Collections.emptyList()), ClassFileFactoryJavassist.class, Collections.emptyMap(), Collections.emptyMap(), new SymbolFactory());
 		_1_1.setPhasePostInitial();
 		final State _1_2 = _1_1.clone();
 		final State _1_3 = _1_1.clone();
@@ -53,7 +53,7 @@ public class StateTreeTest {
 	@Test
 	public void testAddState2() throws InvalidClassFileFactoryClassException, IOException, InvalidInputException {
 		final StateTree tree = new StateTree(StateIdentificationMode.COMPACT, BreadthMode.MORE_THAN_ONE);
-		final State _1_1 = new State(true, tree.getPreInitialHistoryPoint().startingInitial(), 100, 100, new Classpath(Paths.get("."), Collections.emptyList(), Collections.emptyList()), ClassFileFactoryJavassist.class, Collections.emptyMap(), Collections.emptyMap(), new SymbolFactory());
+		final State _1_1 = new State(true, tree.getPreInitialHistoryPoint().startingInitial(), 100, 100, new Classpath(Paths.get("."), Paths.get("."), Collections.emptyList(), Collections.emptyList()), ClassFileFactoryJavassist.class, Collections.emptyMap(), Collections.emptyMap(), new SymbolFactory());
 		_1_1.setPhasePostInitial();
 		final State _1_2 = _1_1.clone();
 		final State _1_3 = _1_1.clone();
@@ -85,7 +85,7 @@ public class StateTreeTest {
 	@Test
 	public void testGetStateAtBranch() throws InvalidClassFileFactoryClassException, IOException, InvalidInputException {
 		final StateTree tree = new StateTree(StateIdentificationMode.COMPACT, BreadthMode.MORE_THAN_ONE);
-		final State _1_1 = new State(true, tree.getPreInitialHistoryPoint().startingInitial(), 100, 100, new Classpath(Paths.get("."), Collections.emptyList(), Collections.emptyList()), ClassFileFactoryJavassist.class, Collections.emptyMap(), Collections.emptyMap(), new SymbolFactory());
+		final State _1_1 = new State(true, tree.getPreInitialHistoryPoint().startingInitial(), 100, 100, new Classpath(Paths.get("."), Paths.get("."), Collections.emptyList(), Collections.emptyList()), ClassFileFactoryJavassist.class, Collections.emptyMap(), Collections.emptyMap(), new SymbolFactory());
 		_1_1.setPhasePostInitial();
 		final State _1_2 = _1_1.clone();
 		final State _1_3 = _1_1.clone();

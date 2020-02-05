@@ -59,8 +59,7 @@ public class ClassInitTest {
     public void setUp() throws InvalidClassFileFactoryClassException, InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, IncompatibleClassFileException, PleaseLoadClassException, BadClassFileVersionException, WrongClassNameException, IOException, RenameUnsupportedException {
         final ArrayList<Path> userPaths = new ArrayList<>();
         userPaths.add(Paths.get("src/test/resources/jbse/bc/testdata"));
-        userPaths.add(Paths.get("build/classes/java/main"));
-        final Classpath cp = new Classpath(Paths.get(System.getProperty("java.home", "")), Collections.emptyList(), userPaths);
+        final Classpath cp = new Classpath(Paths.get("build/classes/java/main"), Paths.get(System.getProperty("java.home", "")), Collections.emptyList(), userPaths);
         final CalculatorRewriting calc = new CalculatorRewriting();
         calc.addRewriter(new RewriterOperationOnSimplex());
         final DecisionProcedureAlgorithms dec = new DecisionProcedureAlgorithms(new DecisionProcedureClassInit(new DecisionProcedureAlwSat(calc), new ClassInitRulesRepo()));

@@ -266,6 +266,37 @@ public final class RunnerParameters implements Cloneable {
     }
 
     /**
+     * Sets the path of the JBSE library, and cancels the effect 
+     * of any previous call to {@link #setStartingState(State)}.
+     * 
+     * @param jbseLibPath a {@link String}.
+     * @throws NullPointerException if {@code jbseLibPath == null}.
+     */
+    public void setJBSELibPath(String jbseLibPath) {
+    	this.engineParameters.setJBSELibPath(jbseLibPath);
+    }
+    
+    /**
+     * Sets the path of the JBSE library, and cancels the effect 
+     * of any previous call to {@link #setStartingState(State)}.
+     * 
+     * @param jbseLibPath a {@link Path}.
+     * @throws NullPointerException if {@code jbseLibPath == null}.
+     */
+    public void setJBSELibPath(Path jbseLibPath) {
+    	this.engineParameters.setJBSELibPath(jbseLibPath);
+    }
+
+    /**
+     * Gets the path of the JBSE library.
+     * 
+     * @return a {@link Path}, the path of the JBSE library.
+     */
+    public Path getJBSELibPath() {
+    	return this.engineParameters.getJBSELibPath();
+    }
+
+    /**
      * Sets the Java home, and cancels the effect 
      * of any previous call to {@link #setStartingState(State)}.
      * 

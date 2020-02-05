@@ -1107,44 +1107,46 @@ implements Map<K,V>, Cloneable, Serializable {
 	private native static void metaThrowUnexpectedInternalException(String message);
 
 	/**
-	 * Initializes this map, if it is symbolic. 
+	 * Initializes a map, if it is symbolic. 
 	 * The method will also initialize the (symbolic <em>initial</em>) 
-	 * map {@code this.initialMap} that backs {@code this}, and that 
-	 * represents the map as it was in the initial state. While {@code this}
-	 * is mutable, {@code this.initialMap} will be immutable, will be 
-	 * shared by all the clones of {@code this}, and will be progressively 
-	 * refined upon access to {@code this} introduces assumptions on the 
-	 * initial content of {@code this}.
+	 * map {@code this.initialMap} that backs the map, and that 
+	 * represents the map as it was in the initial state. 
+	 * 
+	 * @param tthis the {@link JAVA_MAP} to initialize. While {@code tthis}
+	 * is mutable, {@code tthis.initialMap} will be immutable, will be 
+	 * shared by all the clones of {@code tthis}, and will be progressively 
+	 * refined upon access to {@code tthis} introduces assumptions on the 
+	 * initial content of {@code tthis}.
 	 * 
 	 * @throws IllegalArgumentException if this map is not symbolic.
 	 */
-	public void initSymbolic() {
-		if (!isSymbolic(this)) {
+	private static <KK, VV> void initSymbolic(JAVA_MAP<KK, VV> tthis) {
+		if (!isSymbolic(tthis)) {
 			throw new IllegalArgumentException("Attempted to invoke " + JAVA_MAP.class.getCanonicalName() + ".initSymbolic on a concrete map.");
 		}
-		assume(isResolvedByExpansion(this));
-		assume(isResolvedByExpansion(this.initialMap));
+		assume(isResolvedByExpansion(tthis));
+		assume(isResolvedByExpansion(tthis.initialMap));
 
 		//initializes this
-		this.isInitial = false;
+		tthis.isInitial = false;
 		//origin.initialHashCode: doesn't care
-		this.absentKeys = new ArrayList<>();
+		tthis.absentKeys = new ArrayList<>();
 		//this.absentValues: doesn't care
 		//this.initialMap: OK the symbolic value it already has
-		this.size = this.initialMap.size;
-		this.root = new NodeEmpty();
-		this.numNodes = 0;
+		tthis.size = tthis.initialMap.size;
+		tthis.root = new NodeEmpty();
+		tthis.numNodes = 0;
 
-		this.initialMap.makeInitial();
-		this.initialMap.isInitial = true;
+		tthis.initialMap.makeInitial();
+		tthis.initialMap.isInitial = true;
 		//this.initialMap.initialHashCode: OK the symbolic value it already has
-		this.initialMap.absentKeys = new ArrayList<>();
-		this.initialMap.absentValues = new ArrayList<>();
-		this.initialMap.initialMap = null;
+		tthis.initialMap.absentKeys = new ArrayList<>();
+		tthis.initialMap.absentValues = new ArrayList<>();
+		tthis.initialMap.initialMap = null;
 		//this.initialMap.size: OK the symbolic value it already has
-		assume(this.initialMap.size >= 0);
-		this.initialMap.root = new NodeEmpty();
-		this.initialMap.numNodes = 0;
+		assume(tthis.initialMap.size >= 0);
+		tthis.initialMap.root = new NodeEmpty();
+		tthis.initialMap.numNodes = 0;
 	}
 
 	/**

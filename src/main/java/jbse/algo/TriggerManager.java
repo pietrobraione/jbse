@@ -143,7 +143,7 @@ public class TriggerManager {
             final Signature triggerSig = rule.getTriggerMethodSignature();
             if (splitReturnValueDescriptor(triggerSig.getDescriptor()).equals("" + VOID) &&
                 splitParametersDescriptors(triggerSig.getDescriptor()).length <= 1) {
-                final ReferenceConcrete triggerArg = getTriggerMethodParameterObject(rule, ref, state);
+                final ReferenceSymbolic triggerArg = getTriggerMethodParameterObject(rule, ref, state);
                 if (triggerArg == null) {
                     throw new MissingTriggerParameterException("No heap object matches the parameter part in the trigger rule " + rule);
                 }
