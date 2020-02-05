@@ -12,6 +12,7 @@ import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
+import jbse.bc.exc.RenameUnsupportedException;
 
 /**
  * A {@link ClassFile} that can be created on-the-fly for code
@@ -66,6 +67,11 @@ public class ClassFileSnippetNoWrap extends ClassFile {
     @Override
     public String getClassName() {
         return this.packageName + "/" + this.className;
+    }
+    
+    @Override
+    public void rename(String classNameNew) throws RenameUnsupportedException {
+    	throw new RenameUnsupportedException();
     }
     
     @Override

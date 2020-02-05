@@ -24,6 +24,7 @@ import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -53,7 +54,8 @@ public final class Algo_JAVA_REFLECT_ARRAY_NEWARRAY_COMPLETION extends Algo_XNEW
 
     @Override
     protected void preCook(State state) 
-    throws InterruptException, ClasspathException, InvalidInputException, ThreadStackEmptyException {
+    throws InterruptException, ClasspathException, InvalidInputException, 
+    ThreadStackEmptyException, RenameUnsupportedException {
     	final Calculator calc = this.ctx.getCalculator();
     	
         //sets the array length

@@ -30,6 +30,7 @@ import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
@@ -678,6 +679,11 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
      *         or for the class name of one of its possibile expansions has a version
      *         number that is unsupported by this version of JBSE.
+     * @throws RenameUnsupportedException if {@code valToLoad} is a symbolic 
+     *         reference and the class for 
+     *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+     *         or the class of one of its possibile expansions derives from a 
+     *         model class but the classfile does not support renaming.
      * @throws WrongClassNameException when {@code valToLoad} is a symbolic 
      *         reference and the bytecode for
      *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
@@ -697,7 +703,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      */
     public Outcome resolve_XLOAD_GETX(State state, Value valToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result) 
     throws InvalidInputException, DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException {
+    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
+    IncompatibleClassFileException, ClassFileNotAccessibleException {
         if (state == null || valToLoad == null || result == null) {
             throw new InvalidInputException("resolve_XLOAD_GETX invoked with a null parameter.");
         }
@@ -733,6 +740,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
      *         or for the class name of one of its possibile expansions has a version
      *         number that is unsupported by this version of JBSE.
+     * @throws RenameUnsupportedException when {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+     *         or the class of one of its possibile expansions derives from a 
+     *         model class but the classfile does not support renaming.
      * @throws WrongClassNameException when the bytecode for
      *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
      *         or for the class name of one of its possibile expansions has a 
@@ -750,8 +760,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      */
     protected Outcome resolve_XLOAD_GETX_Unresolved(State state, ReferenceSymbolic refToLoad, SortedSet<DecisionAlternative_XLOAD_GETX> result)
     throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, 
-    ClassFileNotAccessibleException {
+    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
+    IncompatibleClassFileException, ClassFileNotAccessibleException {
         try {
             final boolean partialReferenceResolution = 
             doResolveReference(state, refToLoad, new DecisionAlternativeReferenceFactory_XLOAD_GETX(), result);
@@ -838,6 +848,11 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
      *         or for the class name of one of its possibile expansions has a version
      *         number that is unsupported by this version of JBSE.
+     * @throws RenameUnsupportedException when {@code valToLoad} is a symbolic 
+     *         reference and the class
+     *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
+     *         or the class of one of its possibile expansions derives from a 
+     *         model class but the classfile does not support renaming.
      * @throws WrongClassNameException when {@code valToLoad} is a symbolic 
      *         reference and the bytecode for
      *         {@code valToLoad.}{@link Signature#getClassName() getClassName()}
@@ -858,8 +873,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
     //TODO should be final?
     public Outcome resolve_XALOAD(State state, List<ArrayAccessInfo> arrayAccessInfos, SortedSet<DecisionAlternative_XALOAD> result, List<ReferenceSymbolic> nonExpandedRefs)
     throws InvalidInputException, DecisionException, ClassFileNotFoundException, 
-    ClassFileIllFormedException, BadClassFileVersionException, WrongClassNameException, 
-    IncompatibleClassFileException, ClassFileNotAccessibleException {
+    ClassFileIllFormedException, BadClassFileVersionException, RenameUnsupportedException, 
+    WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException {
         if (state == null || arrayAccessInfos == null || result == null || nonExpandedRefs == null) {
             throw new InvalidInputException("resolve_XALOAD invoked with a null parameter.");
         }
@@ -1022,6 +1037,10 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
      *         or for the class name of one of its possibile expansions has a version
      *         number that is unsupported by this version of JBSE.
+     * @throws RenameUnsupportedException if the classfile for 
+     *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
+     *         or for the class name of one of its possibile expansions derives from a 
+     *         model class but the classfile does not support renaming.
      * @throws WrongClassNameException when the bytecode for
      *         {@code refToLoad.}{@link Signature#getClassName() getClassName()}
      *         or for the class name of one of its possibile expansions has a 
@@ -1039,7 +1058,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      */
     protected Outcome resolve_XALOAD_Unresolved(State state, ArrayAccessInfo arrayAccessInfo, SortedSet<DecisionAlternative_XALOAD> result)
     throws DecisionException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    BadClassFileVersionException, WrongClassNameException, 
+    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException {
         try {
             final boolean accessConcrete = (arrayAccessInfo.accessExpression == null);
@@ -1100,6 +1119,9 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *         {@code refToResolve.}{@link Signature#getClassName() getClassName()}
      *         or for the class name of one of its possibile expansions has a version
      *         number that is unsupported by this version of JBSE.
+     * @throws RenameUnsupportedException if {@code refToResolve.}{@link Signature#getClassName() getClassName()}
+     *         or the class of one of its possibile expansions derives from a 
+     *         model class but the classfile does not support renaming.
      * @throws WrongClassNameException when the bytecode for
      *         {@code refToResolve.}{@link Signature#getClassName() getClassName()}
      *         or for the class name of one of its possibile expansions has a 
@@ -1117,8 +1139,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
     boolean doResolveReference(State state, ReferenceSymbolic refToResolve, 
     DecisionAlternativeReferenceFactory<DA, DE, DN> factory, SortedSet<D> result) 
     throws InvalidInputException, DecisionException, ClassFileNotFoundException, 
-    ClassFileIllFormedException, BadClassFileVersionException, WrongClassNameException, 
-    IncompatibleClassFileException, ClassFileNotAccessibleException {
+    ClassFileIllFormedException, BadClassFileVersionException, RenameUnsupportedException, 
+    WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException {
         int branchCounter = result.size() + 1;
 
         //loads the most precise subclass of the reference's static type 
@@ -1183,7 +1205,8 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
     
     private ClassFile mostPreciseResolutionClass(State state, ReferenceSymbolic refToResolve) 
     throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, ClassFileNotAccessibleException, 
-    IncompatibleClassFileException, PleaseLoadClassException, BadClassFileVersionException, WrongClassNameException {
+    IncompatibleClassFileException, PleaseLoadClassException, BadClassFileVersionException, RenameUnsupportedException, 
+    WrongClassNameException {
     	final String staticClassName = className(refToResolve.getStaticType());
     	final String mostPreciseResolutionClassName;
     	if (refToResolve instanceof ReferenceSymbolicAtomic) {
@@ -1210,7 +1233,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
     
     private String solveTypeInformation(State state, ReferenceSymbolic refToResolve, String staticClassName, String typeParameter) 
     throws ClassFileIllFormedException, InvalidInputException, ClassFileNotFoundException, ClassFileNotAccessibleException, IncompatibleClassFileException, 
-    PleaseLoadClassException, BadClassFileVersionException, WrongClassNameException {
+    PleaseLoadClassException, BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException {
     	final ClassHierarchy hier = state.getClassHierarchy();
     	final SolverEquationGenericTypes solver = new SolverEquationGenericTypes();
     	ReferenceSymbolic ref = refToResolve;
@@ -1474,6 +1497,11 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      *         candidate subclass names for {@code refClass} in 
      *         {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
      *         expansion backdoor has a version number that is unsupported by this version of JBSE.
+     * @throws RenameUnsupportedException when any of the 
+     *         candidate subclass names for {@code refClass} in 
+     *         {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
+     *         expansion backdoor derives from a 
+     *         model class but the classfile does not support renaming.
      * @throws WrongClassNameException when the bytecode for any of the 
      *         candidate subclass names for {@code refClass} in 
      *         {@code state.}{@link State#getClassHierarchy() getClassHierarchy()}'s
@@ -1489,7 +1517,7 @@ public class DecisionProcedureAlgorithms extends DecisionProcedureDecorator {
      */
     private static Set<ClassFile> getPossibleExpansions(State state, ClassFile refClass) 
     throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    BadClassFileVersionException, WrongClassNameException, 
+    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException {
         if (!refClass.isReference() && !refClass.isArray()) {
             return null;

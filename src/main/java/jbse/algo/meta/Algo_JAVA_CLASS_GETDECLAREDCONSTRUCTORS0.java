@@ -50,6 +50,7 @@ import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.dec.exc.DecisionException;
@@ -85,7 +86,8 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
     @Override
     protected void cookMore(State state)
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
-    CannotManageStateException, InterruptException, FrozenStateException {
+    CannotManageStateException, InterruptException, FrozenStateException, 
+    RenameUnsupportedException {
         try {           
             //gets the classfile for the class represented by 'this'
             final Reference thisClassRef = (Reference) this.data.operand(0);
@@ -152,6 +154,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
             } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
                      WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException e) {
                 throw new ClasspathException(e);
+            } catch (RenameUnsupportedException e) {
+            	//this should never happen
+            	failExecution(e);
             }
 
             //constructs the java.lang.reflect.Constructor objects and fills the array
@@ -174,7 +179,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                     } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
                              WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException e) {
                         throw new ClasspathException(e);
-                    } catch (FastArrayAccessNotAllowedException e) {
+                    } catch (RenameUnsupportedException | FastArrayAccessNotAllowedException e) {
                         //this should never happen
                         failExecution(e);
                     }
@@ -195,6 +200,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                     } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
                              WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException e) {
                         throw new ClasspathException(e);
+                    } catch (RenameUnsupportedException e) {
+                    	//this should never happen
+                    	failExecution(e);
                     }
 
                     //sets parameterTypes
@@ -258,7 +266,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                         //TODO should throw a subclass of LinkageError
                         throwVerifyError(state, calc);
                         exitFromAlgorithm();
-                    } catch (FastArrayAccessNotAllowedException e) {
+                    } catch (RenameUnsupportedException | FastArrayAccessNotAllowedException e) {
                         //this should never happen
                         failExecution(e);
                     }
@@ -311,7 +319,7 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                         //TODO is it ok?
                         throwVerifyError(state, calc);
                         exitFromAlgorithm();
-                    } catch (FastArrayAccessNotAllowedException e) {
+                    } catch (RenameUnsupportedException | FastArrayAccessNotAllowedException e) {
                         //this should never happen
                         failExecution(e);
                     }
@@ -363,8 +371,9 @@ public final class Algo_JAVA_CLASS_GETDECLAREDCONSTRUCTORS0 extends Algo_INVOKEM
                         exitFromAlgorithm();
                     } catch (MethodNotFoundException | ClassFileNotFoundException | 
                              ClassFileIllFormedException | BadClassFileVersionException |
-                             WrongClassNameException | ClassFileNotAccessibleException | 
-                             IncompatibleClassFileException | FastArrayAccessNotAllowedException e) {
+                             RenameUnsupportedException | WrongClassNameException | 
+                             ClassFileNotAccessibleException | IncompatibleClassFileException | 
+                             FastArrayAccessNotAllowedException e) {
                         //this should never happen
                         failExecution(e);
                     }

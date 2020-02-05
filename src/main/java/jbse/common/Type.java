@@ -227,6 +227,48 @@ public final class Type {
         return (isReference(type) ? type.substring(1, type.length() - 1) : 
             isArray(type) ? type : null);
     }
+    
+    /**
+     * Given a class name in internal format, returns
+     * the topmost container class in the case it is 
+     * a nested class.
+     * 
+     * @param className a {@link String}, a class name.
+     * @return the container class, e.g., if {@code className == "a/b/C$D$E"}
+     *         returns {@code "a/b/C"}, and if {@code className == "x/y/Z"}
+     *         returns {@code "x/y/Z"}. It is always the case
+     *         that {@code (}{@link #classNameContainer}{@code (s) + }
+     *         {@link #classNameContained}{@code (s)).equals(s)}.
+     */
+    public static String classNameContainer(String className) {
+    	final int firstDollarPosition = className.indexOf('$');
+    	if (firstDollarPosition == -1) {
+    		return className;
+    	} else {
+    		return className.substring(0, firstDollarPosition);
+    	}
+    }
+
+    /**
+     * Given a class name in internal format, returns
+     * the suffix of the topmost container class name 
+     * in the case it is a nested class.
+     * 
+     * @param className a {@link String}, a class name.
+     * @return the contained class, e.g., if {@code className == "a/b/C$D$E"}
+     *         returns {@code "$D$E"}, and if {@code className == "x/y/Z"}
+     *         returns {@code ""}. It is always the case
+     *         that {@code (}{@link #classNameContainer}{@code (s) + }
+     *         {@link #classNameContained}{@code (s)).equals(s)}.
+     */
+    public static String classNameContained(String className) {
+    	final int firstDollarPosition = className.indexOf('$');
+    	if (firstDollarPosition == -1) {
+    		return "";
+    	} else {
+    		return className.substring(firstDollarPosition);
+    	}
+    }
 
     /**
      * Checks whether its parameter is the canonical name

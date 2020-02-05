@@ -235,6 +235,12 @@ public final class EngineParameters implements Cloneable {
      * to their members.
      */
     private boolean makePreInitClassesSymbolic = false;
+    
+    /**
+     * Whether a model class must be used instead of the
+     * default JDK implementation of {@code java.util.HashMap}.
+     */
+    private boolean useHashMapModel = false;
 
     /**
      * Constructor.
@@ -1013,6 +1019,45 @@ public final class EngineParameters implements Cloneable {
      */
     public boolean getMakePreInitClassesSymbolic() {
     	return this.makePreInitClassesSymbolic;
+    }
+    
+    /**
+     * Sets whether, instead of the JDK implementation of 
+     * {@code java.util.HashMap}, a model class must be used
+     * during symbolic execution.
+     * 
+     * @param useHashMapModel a {@code boolean}. If {@code true} all
+     *        the hash maps will be replaced by a model class that
+     *        is more symbolic-execution-friendly than {@code java.util.HashMap}.
+     */
+    public void setUseHashMapModel(boolean useHashMapModel) {
+    	this.useHashMapModel = useHashMapModel;
+    }
+    
+    /**
+     * Returns whether, instead of the JDK implementation of 
+     * {@code java.util.HashMap}, a model class must be used
+     * during symbolic execution.
+     * 
+     * @return a {@code boolean}.
+     */
+    public boolean getUseHashMapModel() {
+    	return this.useHashMapModel;
+    }
+    
+    /**
+     * Returns a map of the model class substitutions.
+     * 
+     * @return a {@link Map}{@code <}{@link String}{@code , }{@link String}{@code >}
+     *         associating class names to the class names of the corresponding 
+     *         model classes that replace them.
+     */
+    public Map<String, String> getModelClassSubstitutions() {
+    	final HashMap<String, String> retVal = new HashMap<>();
+    	if (this.useHashMapModel) {
+    		retVal.put("java/util/HashMap", "jbse/base/JAVA_MAP");
+    	}
+    	return retVal;
     }
 
     @SuppressWarnings("unchecked")

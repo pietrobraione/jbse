@@ -14,9 +14,13 @@ import static jbse.bc.Signatures.SUN_CALLERSENSITIVE;
 import static jbse.common.Type.REFERENCE;
 import static jbse.common.Type.TYPEEND;
 import static jbse.common.Type.internalClassName;
+import static jbse.common.Type.classNameContained;
+import static jbse.common.Type.classNameContainer;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -24,6 +28,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -53,6 +58,7 @@ import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
@@ -66,13 +72,13 @@ public class ClassFileJavassist extends ClassFile {
     private final boolean isAnonymousUnregistered;
     private final int definingClassLoader;
     private final javassist.bytecode.ClassFile cf;
-    private final String className;
     private final ConstPool cp;
-    private final byte[] bytecode; //only for dummy classes
     private final ClassFile superClass;
     private final ClassFile[] superInterfaces;
     private final ConstantPoolValue[] cpPatches;
     private final ClassFile hostClass;
+    private String className; //nonfinal because of classfile renaming
+    private byte[] bytecode; //only for dummy classes, nonfinal because of classfile renaming
     private ArrayList<Signature> fieldsStatic; //lazily initialized, but actually final
     private ArrayList<Signature> fieldsObject; //lazily initialized, but actually final
     private ArrayList<Signature> methods; //lazily initialized, but actually final
@@ -348,6 +354,42 @@ public class ClassFileJavassist extends ClassFile {
     @Override
     public String getClassName() {
         return this.className;
+    }
+    
+    @Override
+    public void rename(String classNameNew) throws RenameUnsupportedException {
+    	final HashMap<String, String> renames = new HashMap<>();
+    	renames.put(this.className, classNameNew);
+        final InnerClassesAttribute ica = 
+                (InnerClassesAttribute) this.cf.getAttribute(InnerClassesAttribute.tag);
+        if (ica != null) {
+        	final String fromContainer = classNameContainer(this.className);
+        	final String toContainer = classNameContainer(classNameNew);
+            final int n = ica.tableLength();
+            for (int i = 0; i < n; ++i) {
+            	final String innerClassName = internalClassName(ica.innerClass(i));
+            	if (fromContainer.equals(classNameContainer(innerClassName)) &&
+            		!renames.containsKey(innerClassName)) {
+            		renames.put(innerClassName, toContainer + classNameContained(innerClassName));
+            	}
+                final String outerClassName = internalClassName(ica.outerClass(i));
+                if (outerClassName != null && fromContainer.equals(classNameContainer(outerClassName)) &&
+                	!renames.containsKey(outerClassName)) {
+                	renames.put(outerClassName, toContainer + classNameContained(outerClassName));
+                }
+            }
+        }
+        this.cf.renameClass(renames);
+        this.cf.compact();
+        this.className = internalClassName(this.cf.getName());
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+			this.cf.write(new DataOutputStream(baos));
+		} catch (IOException e) {
+			//this should never happen
+			throw new UnexpectedInternalException(e);
+		}
+        this.bytecode = baos.toByteArray();
     }
     
     @Override

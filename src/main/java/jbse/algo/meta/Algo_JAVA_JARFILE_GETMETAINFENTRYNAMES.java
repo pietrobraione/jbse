@@ -30,6 +30,7 @@ import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.mem.Array;
@@ -134,9 +135,10 @@ public final class Algo_JAVA_JARFILE_GETMETAINFENTRYNAMES extends Algo_INVOKEMET
                 throwNew(state, calc, OUT_OF_MEMORY_ERROR);
                 exitFromAlgorithm();
             } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
-                     BadClassFileVersionException | WrongClassNameException |
-                     IncompatibleClassFileException | ClassFileNotAccessibleException | 
-                     ClassCastException | FastArrayAccessNotAllowedException e) {
+                     BadClassFileVersionException | RenameUnsupportedException | 
+                     WrongClassNameException | IncompatibleClassFileException | 
+                     ClassFileNotAccessibleException | ClassCastException | 
+                     FastArrayAccessNotAllowedException e) {
                 //this should never happen
                 failExecution(e);
             }

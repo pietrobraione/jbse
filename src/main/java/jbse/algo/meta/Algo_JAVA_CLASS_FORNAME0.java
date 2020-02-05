@@ -31,6 +31,7 @@ import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -63,7 +64,8 @@ public final class Algo_JAVA_CLASS_FORNAME0 extends Algo_INVOKEMETA_Nonbranching
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, DecisionException, 
     ClasspathException, SymbolicValueNotAllowedException, 
-    InvalidInputException, InterruptException, ContradictionException {
+    InvalidInputException, InterruptException, 
+    ContradictionException, RenameUnsupportedException {
         try {
             //gets the name of the class
             final Reference classNameRef = (Reference) this.data.operand(0);

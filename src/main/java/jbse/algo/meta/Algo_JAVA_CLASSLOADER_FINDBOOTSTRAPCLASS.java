@@ -23,6 +23,7 @@ import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -49,8 +50,8 @@ public final class Algo_JAVA_CLASSLOADER_FINDBOOTSTRAPCLASS extends Algo_INVOKEM
 
     @Override
     protected void cookMore(State state) 
-    throws ThreadStackEmptyException, ClasspathException, 
-    SymbolicValueNotAllowedException, InterruptException, InvalidInputException {
+    throws ThreadStackEmptyException, ClasspathException, SymbolicValueNotAllowedException, 
+    InterruptException, InvalidInputException, RenameUnsupportedException {
     	final Calculator calc = this.ctx.getCalculator();
         try {
             //gets the name of the class

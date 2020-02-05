@@ -10,6 +10,7 @@ import static jbse.bc.Signatures.OUT_OF_MEMORY_ERROR;
 import java.util.function.Supplier;
 
 import jbse.bc.ClassFile;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.common.Type;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -68,8 +69,12 @@ StrategyUpdate<DecisionAlternative_XNEWARRAY>> {
      * @throws ClasspathException if some standard class is missing from the classpath.
      * @throws ThreadStackEmptyException if the stack is empty.
      * @throws InvalidInputException if some input is ill-formed.
+     * @throws RenameUnsupportedException possibly raised if the wrong
+     *         model class is selected (should never happen).
      */
-    protected abstract void preCook(State state) throws InterruptException, ClasspathException, ThreadStackEmptyException, InvalidInputException;
+    protected abstract void preCook(State state) 
+    throws InterruptException, ClasspathException, ThreadStackEmptyException, 
+    InvalidInputException, RenameUnsupportedException;
 
     @Override
     protected BytecodeCooker bytecodeCooker() {

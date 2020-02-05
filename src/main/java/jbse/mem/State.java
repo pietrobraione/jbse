@@ -61,6 +61,7 @@ import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
@@ -469,6 +470,10 @@ public final class State implements Cloneable {
      *        {@link Map}{@code <}{@link String}{@code , }{@link Set}{@code <}{@link String}{@code >>}
      *        associating class names to sets of names of their subclasses. It 
      *        is used in place of the class hierarchy to perform expansion.
+     * @param modelClassSubstitutions a 
+     *        {@link Map}{@code <}{@link String}{@code , }{@link String}{@code >}
+     *        associating class names to the class names of the corresponding 
+     *        model classes that replace them. 
      * @param symbolFactory a {@link SymbolFactory}. It will be used to generate
      *        symbolic values to be injected in this state.
      * @throws InvalidClassFileFactoryClassException in the case {@link fClass}
@@ -483,7 +488,8 @@ public final class State implements Cloneable {
                  long maxHeapSize,
                  Classpath classPath, 
                  Class<? extends ClassFileFactory> factoryClass, 
-                 Map<String, Set<String>> expansionBackdoor, 
+                 Map<String, Set<String>> expansionBackdoor,
+                 Map<String, String> modelClassSubstitutions,
                  SymbolFactory symbolFactory) 
                  throws InvalidClassFileFactoryClassException, InvalidInputException {
     	if (historyPoint == null || symbolFactory == null) {
@@ -495,7 +501,7 @@ public final class State implements Cloneable {
         this.classLoaders.add(Null.getInstance()); //classloader 0 is the bootstrap classloader
         setStandardFiles();
         this.heap = new Heap(maxHeapSize);
-        this.classHierarchy = new ClassHierarchy(classPath, factoryClass, expansionBackdoor);
+        this.classHierarchy = new ClassHierarchy(classPath, factoryClass, expansionBackdoor, modelClassSubstitutions);
         this.maxSimpleArrayLength = maxSimpleArrayLength;
         this.symbolFactory = symbolFactory;
     }
@@ -1678,7 +1684,7 @@ public final class State implements Cloneable {
             cf_JAVA_CLASSLOADER = this.classHierarchy.loadCreateClass(JAVA_CLASSLOADER);
             cf_JAVA_THREAD = this.classHierarchy.loadCreateClass(JAVA_THREAD);
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException | 
-                 WrongClassNameException | IncompatibleClassFileException |
+                 RenameUnsupportedException | WrongClassNameException | IncompatibleClassFileException |
                  InvalidInputException | ClassFileNotAccessibleException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -1703,7 +1709,7 @@ public final class State implements Cloneable {
             cf_JAVA_CLASSLOADER = this.classHierarchy.loadCreateClass(JAVA_CLASSLOADER);
             cf_JAVA_THREAD = this.classHierarchy.loadCreateClass(JAVA_THREAD);
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException | 
-                 WrongClassNameException | IncompatibleClassFileException |
+                 RenameUnsupportedException | WrongClassNameException | IncompatibleClassFileException |
                  InvalidInputException | ClassFileNotAccessibleException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -1931,7 +1937,7 @@ public final class State implements Cloneable {
         try {
             cf_JAVA_CLASSLOADER = this.classHierarchy.loadCreateClass(JAVA_CLASSLOADER);
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException | 
-                 WrongClassNameException | IncompatibleClassFileException |
+                 RenameUnsupportedException | WrongClassNameException | IncompatibleClassFileException |
                  InvalidInputException | ClassFileNotAccessibleException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
@@ -2114,9 +2120,9 @@ public final class State implements Cloneable {
                 a.setFast(calc.valInt(k), calc.valChar(c));
             }
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException | 
-                 WrongClassNameException | IncompatibleClassFileException | ClassFileNotAccessibleException | 
-                 ClassCastException | InvalidTypeException | InvalidInputException | 
-                 FastArrayAccessNotAllowedException e) {
+                 RenameUnsupportedException | WrongClassNameException | IncompatibleClassFileException |
+                 ClassFileNotAccessibleException | ClassCastException | InvalidTypeException | 
+                 InvalidInputException | FastArrayAccessNotAllowedException e) {
             //this should never happen 
             throw new UnexpectedInternalException(e);
         }
@@ -2414,7 +2420,7 @@ public final class State implements Cloneable {
         try {
             cf_JAVA_THROWABLE = this.classHierarchy.loadCreateClass(JAVA_THROWABLE);
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException |
-                 WrongClassNameException | IncompatibleClassFileException |
+                 RenameUnsupportedException | WrongClassNameException | IncompatibleClassFileException |
                  InvalidInputException | ClassFileNotAccessibleException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);

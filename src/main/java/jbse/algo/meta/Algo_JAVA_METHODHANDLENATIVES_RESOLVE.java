@@ -78,6 +78,7 @@ import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -131,7 +132,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
     @Override
     protected void cookMore(State state) 
     throws ThreadStackEmptyException, InterruptException, UndefinedResultException, 
-    SymbolicValueNotAllowedException, ClasspathException, InvalidInputException {
+    SymbolicValueNotAllowedException, ClasspathException, InvalidInputException, 
+    RenameUnsupportedException {
     	final Calculator calc = this.ctx.getCalculator();
     	
         final ErrorAction OK                                         = msg -> { };
@@ -399,8 +401,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
     
     private ClassFile resolveTypeNameReturn(State state, ClassFile accessor, String returnTypeName) 
     throws InvalidInputException, ClassFileNotFoundException, IncompatibleClassFileException, 
-    ClassFileIllFormedException, BadClassFileVersionException, WrongClassNameException, 
-    ClassFileNotAccessibleException, PleaseLoadClassException {
+    ClassFileIllFormedException, BadClassFileVersionException, RenameUnsupportedException, 
+    WrongClassNameException, ClassFileNotAccessibleException, PleaseLoadClassException {
         final ClassFile retVal;
         if (isPrimitive(returnTypeName) || isVoid(returnTypeName)) {
             retVal = state.getClassHierarchy().getClassFilePrimitiveOrVoid(toPrimitiveOrVoidCanonicalName(returnTypeName));
@@ -414,8 +416,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
     
     private ClassFile resolveTypeNameParameter(State state, ClassFile accessor, String parameterTypeName) 
     throws InvalidInputException, ClassFileNotFoundException, IncompatibleClassFileException, 
-    ClassFileIllFormedException, BadClassFileVersionException, WrongClassNameException, 
-    ClassFileNotAccessibleException, PleaseLoadClassException {
+    ClassFileIllFormedException, BadClassFileVersionException, RenameUnsupportedException, 
+    WrongClassNameException, ClassFileNotAccessibleException, PleaseLoadClassException {
         final ClassFile retVal;
         if (isPrimitive(parameterTypeName)) {
             retVal = state.getClassHierarchy().getClassFilePrimitiveOrVoid(toPrimitiveOrVoidCanonicalName(parameterTypeName));
@@ -458,7 +460,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
      */
     private ReferenceConcrete findMethodType(State state, Calculator calc, ClassFile accessor, String descriptor) 
     throws PleaseLoadClassException, ClassFileNotFoundException, ClassFileIllFormedException, 
-    BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, 
+    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, IncompatibleClassFileException, 
     ClassFileNotAccessibleException, HeapMemoryExhaustedException, InterruptException, ThreadStackEmptyException {
         //fast track: the MethodType already exists in the state's cache
         if (state.hasInstance_JAVA_METHODTYPE(descriptor)) {
@@ -559,7 +561,8 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
     private void linkMethod(State state, Calculator calc, ClassFile accessor, String polymorphicMethodDescriptor) 
     throws PleaseLoadClassException, ClassFileNotFoundException, ClassFileIllFormedException, 
     IncompatibleClassFileException, ClassFileNotAccessibleException, HeapMemoryExhaustedException, 
-    ThreadStackEmptyException, InterruptException, InvalidInputException, BadClassFileVersionException, WrongClassNameException {
+    ThreadStackEmptyException, InterruptException, InvalidInputException, BadClassFileVersionException, 
+    RenameUnsupportedException, WrongClassNameException {
         if (state.isMethodLinked(this.polymorphicMethodSignature)) {
             //already linked
             return;

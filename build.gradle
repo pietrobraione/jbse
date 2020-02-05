@@ -11,11 +11,14 @@ repositories {
     maven {
         url = 'https://repo.maven.apache.org/maven2'
     }
+    flatDir {
+    	dirs "${System.getProperty('java.home')}/../lib", 'libs'
+    }
 }
 
 dependencies {
-    implementation 'org.javassist:javassist:3.26.0-GA'
-    implementation files("${System.getProperty('java.home')}/../lib/tools.jar")
+    implementation name: 'javassist' //'org.javassist:javassist:3.26.0-GA'
+    implementation name: 'tools'
     testImplementation 'junit:junit:4.11'
 }
 

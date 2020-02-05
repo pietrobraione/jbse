@@ -20,6 +20,7 @@ import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
@@ -79,6 +80,16 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * @return the name of the class.
      */
     public abstract String getClassName();
+    
+    /**
+     * Renames this class.
+     * 
+     * @param classNameNew a {@link String}, the new name
+     *        for this class.
+     * @throws RenameUnsupportedException if the class cannot
+     *         be renamed.
+     */
+    public abstract void rename(String classNameNew) throws RenameUnsupportedException;
     
     /**
      * Returns the internal type name for 

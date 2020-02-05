@@ -21,6 +21,7 @@ import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
+import jbse.bc.exc.RenameUnsupportedException;
 
 /**
  * {@link ClassFile} for array classes.
@@ -178,6 +179,11 @@ public final class ClassFileArray extends ClassFile {
     @Override
     public String getClassName() {
         return this.className;
+    }
+    
+    @Override
+    public void rename(String classNameNew) throws RenameUnsupportedException {
+    	throw new RenameUnsupportedException();
     }
     
     @Override

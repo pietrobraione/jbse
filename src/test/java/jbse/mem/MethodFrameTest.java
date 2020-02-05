@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -26,6 +26,7 @@ import jbse.bc.exc.InvalidClassFileFactoryClassException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.InvalidInputException;
 import jbse.mem.exc.InvalidSlotException;
@@ -44,13 +45,14 @@ public class MethodFrameTest {
         final Classpath env = new Classpath(Paths.get(System.getProperty("java.home", "")), new ArrayList<>(), userPath);
 
         //class hierarchy
-        this.hier = new ClassHierarchy(env, ClassFileFactoryJavassist.class, new HashMap<>());
+        this.hier = new ClassHierarchy(env, ClassFileFactoryJavassist.class, Collections.emptyMap(), Collections.emptyMap());
     }
 
     @Test
     public void testFrameCurrentMethodSignature() throws ClassFileNotFoundException, ClassFileIllFormedException, 
     InvalidInputException, BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, 
-    ClassFileNotAccessibleException, PleaseLoadClassException, MethodNotFoundException, MethodCodeNotFoundException {
+    ClassFileNotAccessibleException, PleaseLoadClassException, MethodNotFoundException, MethodCodeNotFoundException, 
+    RenameUnsupportedException {
         final String className = "tsafe/engine/TsafeEngine";
         final ClassFile cf = this.hier.loadCreateClass(CLASSLOADER_APP, className, true);
         final Signature sigMethod = new Signature(className, "()V", "start");
@@ -62,7 +64,7 @@ public class MethodFrameTest {
     public void testFrameLocalVariables1() throws ClassFileNotFoundException, ClassFileIllFormedException, 
     InvalidInputException, BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, 
     ClassFileNotAccessibleException, PleaseLoadClassException, MethodNotFoundException, MethodCodeNotFoundException, 
-    InvalidSlotException {
+    InvalidSlotException, RenameUnsupportedException {
         final String className = "tsafe/engine/TsafeEngine";
         final ClassFile cf = this.hier.loadCreateClass(CLASSLOADER_APP, className, true);
         final Signature sigMethod = new Signature(className, "()V", "start");
@@ -76,7 +78,7 @@ public class MethodFrameTest {
     public void testFrameLocalVariables2() throws ClassFileNotFoundException, ClassFileIllFormedException, 
     InvalidInputException, BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, 
     ClassFileNotAccessibleException, PleaseLoadClassException, MethodNotFoundException, MethodCodeNotFoundException, 
-    InvalidSlotException {
+    InvalidSlotException, RenameUnsupportedException {
         final String className = "tsafe/engine/TsafeEngine";
         final ClassFile cf = this.hier.loadCreateClass(CLASSLOADER_APP, className, true);
         final Signature sigMethod = new Signature(className, "()V", "start");
@@ -90,7 +92,7 @@ public class MethodFrameTest {
     public void testFrameClone() throws ClassFileNotFoundException, ClassFileIllFormedException, 
     InvalidInputException, BadClassFileVersionException, WrongClassNameException, IncompatibleClassFileException, 
     ClassFileNotAccessibleException, PleaseLoadClassException, MethodNotFoundException, MethodCodeNotFoundException, 
-    InvalidSlotException {
+    InvalidSlotException, RenameUnsupportedException {
         final String className = "tsafe/engine/TsafeEngine";
         final ClassFile cf = this.hier.loadCreateClass(CLASSLOADER_APP, className, true);
         final Signature sigMethod = new Signature(className, "()V", "start");

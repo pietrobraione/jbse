@@ -7,6 +7,7 @@ import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 
@@ -67,6 +68,11 @@ public class ClassFileSnippetWrap extends ClassFile {
     @Override
     public String getClassName() {
         return this.component.getClassName();
+    }
+    
+    @Override
+    public void rename(String classNameNew) throws RenameUnsupportedException {
+    	this.component.rename(classNameNew);
     }
     
     @Override

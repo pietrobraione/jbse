@@ -461,6 +461,12 @@ public final class ExecutionContext {
      * used to expand references. Used during initialization.
      */
     private final Map<String, Set<String>> expansionBackdoor;
+    
+    /**
+     * Associates class names to the class names of the corresponding 
+     * model classes that replace them. It is not mutated.
+     */
+    private final HashMap<String, String> modelClassSubstitutions;
 
     /** The {@link Calculator}. Used during initialization. */
     private final Calculator calc;
@@ -526,6 +532,10 @@ public final class ExecutionContext {
      *        associating class names to sets of names of their subclasses. It 
      *        is used in place of the class hierarchy to perform reference expansion.
      *        Ignored when {@code initialState != null}.
+     * @param modelClassSubstitutions a 
+     *        {@link Map}{@code <}{@link String}{@code , }{@link String}{@code >}
+     *        associating class names to the class names of the corresponding 
+     *        model classes that replace them. 
      * @param calc a {@link Calculator}. Ignored when {@code initialState != null}.
      * @param comparators a {@link DecisionAlternativeComparators} which
      *        will be used to establish the order of exploration
@@ -547,6 +557,7 @@ public final class ExecutionContext {
                             Classpath classpath,
                             Class<? extends ClassFileFactory> classFileFactoryClass,
                             Map<String, Set<String>> expansionBackdoor, 
+                            Map<String, String> modelClassSubstitutions,
                             Calculator calc,
                             DecisionAlternativeComparators comparators,
                             Signature rootMethodSignature,
@@ -562,6 +573,7 @@ public final class ExecutionContext {
         this.classpath = classpath;
         this.classFileFactoryClass = classFileFactoryClass;
         this.expansionBackdoor = new HashMap<>(expansionBackdoor);      //safety copy
+        this.modelClassSubstitutions = new HashMap<>(modelClassSubstitutions); //safety copy
         this.calc = calc;
         this.comparators = comparators;
         this.rootMethodSignature = rootMethodSignature;
@@ -840,7 +852,7 @@ public final class ExecutionContext {
      */
     public State createStateVirginPreInitial() throws InvalidClassFileFactoryClassException {
         try {
-			return new State(this.bypassStandardLoading, this.stateTree.getPreInitialHistoryPoint(), this.maxSimpleArrayLength, this.maxHeapSize, this.classpath, this.classFileFactoryClass, this.expansionBackdoor, this.symbolFactory);
+			return new State(this.bypassStandardLoading, this.stateTree.getPreInitialHistoryPoint(), this.maxSimpleArrayLength, this.maxHeapSize, this.classpath, this.classFileFactoryClass, this.expansionBackdoor, this.modelClassSubstitutions, this.symbolFactory);
 		} catch (InvalidInputException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);

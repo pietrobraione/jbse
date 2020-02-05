@@ -765,6 +765,30 @@ public final class RunnerParameters implements Cloneable {
     public boolean getMakePreInitClassesSymbolic() {
     	return this.engineParameters.getMakePreInitClassesSymbolic();
     }
+    
+    /**
+     * Sets whether, instead of the JDK implementation of 
+     * {@code java.util.HashMap}, a model class must be used
+     * during symbolic execution.
+     * 
+     * @param useHashMapModel a {@code boolean}. If {@code true} all
+     *        the hash maps will be replaced by a model class that
+     *        is more symbolic-execution-friendly than {@code java.util.HashMap}.
+     */
+    public void setUseHashMapModel(boolean useHashMapModel) {
+    	this.engineParameters.setUseHashMapModel(useHashMapModel);
+    }
+    
+    /**
+     * Returns whether, instead of the JDK implementation of 
+     * {@code java.util.HashMap}, a model class must be used
+     * during symbolic execution.
+     * 
+     * @return a {@code boolean}.
+     */
+    public boolean getUseHashMapModel() {
+    	return this.engineParameters.getUseHashMapModel();
+    }
 
     /**
      * Sets a timeout for execution.
