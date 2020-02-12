@@ -111,7 +111,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
     @Override
     protected final Supplier<Integer> numOperands() {
         return () -> {
-            return parametersNumber(this.data.signature().getDescriptor(), this.isStatic);
+            return parametersNumber(this.methodSignatureImplementation.getDescriptor(), this.isStatic);
         };
     }
 
@@ -142,7 +142,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
 
             //determines the return value or whether it must perform
             //a metacircular method invocation
-            final String returnType = splitReturnValueDescriptor(this.data.signature().getDescriptor());
+            final String returnType = splitReturnValueDescriptor(this.methodSignatureImplementation.getDescriptor());
             this.isVoid = isVoid(returnType);
             if (allConstant && (this.isVoid || isPrimitive(returnType) || JAVA_STRING.equals(className(returnType)))) {
                 //delegates to metacircular invocation
@@ -158,9 +158,9 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
                 //builds a term
                 try {
                     if (isPrimitive(returnType)) {
-                        this.valToLoad = this.ctx.getCalculator().applyFunctionPrimitive(returnType.charAt(0), state.getHistoryPoint(), this.data.signature().toString(), args).pop();
+                        this.valToLoad = this.ctx.getCalculator().applyFunctionPrimitive(returnType.charAt(0), state.getHistoryPoint(), this.methodSignatureImplementation.toString(), args).pop();
                     } else {
-                        this.valToLoad = new ReferenceSymbolicApply(returnType, state.getHistoryPoint(), this.data.signature().toString(), args);
+                        this.valToLoad = new ReferenceSymbolicApply(returnType, state.getHistoryPoint(), this.methodSignatureImplementation.toString(), args);
                     }
                 } catch (InvalidOperandException | InvalidTypeException | InvalidInputException e) {
                     //this should never happen
@@ -174,9 +174,9 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
     throws CannotInvokeNativeException, HeapMemoryExhaustedException, InvalidInputException {
         try {
             //reflects the arguments
-            final String[] argsType = splitParametersDescriptors(this.data.signature().getDescriptor());
+            final String[] argsType = splitParametersDescriptors(this.methodSignatureImplementation.getDescriptor());
             final Object[] argsRefl = new Object[args.length];
-            final Class<?> methodClass = Class.forName(binaryClassName(this.data.signature().getClassName()));
+            final Class<?> methodClass = Class.forName(binaryClassName(this.methodSignatureImplementation.getClassName()));
             final Class<?>[] argsClass = new Class[args.length];
             for (int i = 0; i < args.length; ++i) {
                 if (args[i] instanceof Simplex) {
@@ -196,7 +196,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
             }
             
             //prepares the method and the args for the metacircular method invocation
-            final Method m = methodClass.getDeclaredMethod(this.data.signature().getName(), argsClass);
+            final Method m = methodClass.getDeclaredMethod(this.methodSignatureImplementation.getName(), argsClass);
             m.setAccessible(true);
             final Object argThis;
             final Object[] argsOther;
@@ -214,7 +214,7 @@ StrategyUpdate<DecisionAlternative_XLOAD_GETX>> {
             final Object retValRefl = m.invoke(argThis, argsOther);
 
             //reifies the return value
-            final String returnType = splitReturnValueDescriptor(this.data.signature().getDescriptor());
+            final String returnType = splitReturnValueDescriptor(this.methodSignatureImplementation.getDescriptor());
             if (this.isVoid) {
                 return null;
             } else {

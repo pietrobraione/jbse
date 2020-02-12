@@ -250,7 +250,7 @@ public final class Util {
             try {
                 if (ctx.dispatcherMeta.isMeta(implementationClass, methodSignatureImplementation)) {
                     final Algo_INVOKEMETA<?, ?, ?, ?> algo = ctx.dispatcherMeta.select(methodSignatureImplementation);
-                    algo.setFeatures(isInterface, isSpecial, isStatic, isNative);
+                    algo.setFeatures(isInterface, isSpecial, isStatic, isNative, methodSignatureImplementation);
                     continueWith(algo);
                 }
             } catch (MethodNotFoundException e) {
