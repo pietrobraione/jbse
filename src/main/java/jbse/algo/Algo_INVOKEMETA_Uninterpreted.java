@@ -39,7 +39,7 @@ public final class Algo_INVOKEMETA_Uninterpreted extends Algo_INVOKEMETA_Nonbran
     	//if this algorithm is overriding a native method, the only
     	//possible alternative is trying to execute it metacircularly
     	if (this.isOverriddenMethodNative) {
-    		this.algo_INVOKEMETA_Metacircular.setFeatures(this.isInterface, this.isSpecial, this.isStatic, this.isOverriddenMethodNative);
+    		this.algo_INVOKEMETA_Metacircular.setFeatures(this.isInterface, this.isSpecial, this.isStatic, this.isOverriddenMethodNative, this.methodSignatureImplementation);
     		continueWith(this.algo_INVOKEMETA_Metacircular);
     	}            
 
@@ -58,7 +58,7 @@ public final class Algo_INVOKEMETA_Uninterpreted extends Algo_INVOKEMETA_Nonbran
     	if (allConcrete) {
     		continueWithBaseLevelImpl(state, this.isInterface, this.isSpecial, this.isStatic);
     	} else {
-    		this.algo_INVOKEMETA_Metacircular.setFeatures(this.isInterface, this.isSpecial, this.isStatic, this.isOverriddenMethodNative);
+    		this.algo_INVOKEMETA_Metacircular.setFeatures(this.isInterface, this.isSpecial, this.isStatic, this.isOverriddenMethodNative, this.methodSignatureImplementation);
     		continueWith(this.algo_INVOKEMETA_Metacircular);
     	}
     }
