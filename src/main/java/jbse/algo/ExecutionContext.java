@@ -496,7 +496,7 @@ public final class ExecutionContext {
     /**
      * Constructor.
      * 
-     * @param startingState the starting {@code State} of symbolic execution, 
+     * @param stateStart the starting {@code State} of symbolic execution, 
      *        or {@code null} if no starting state is provided externally. 
      * @param bypassStandardLoading a {@code boolean}, {@code true} iff the bootstrap 
      *        classloader should also load the classed defined by the extensions 
@@ -531,7 +531,7 @@ public final class ExecutionContext {
      * @param nativeInvoker a {@link NativeInvoker} which will be used
      *        to execute native methods.
      */
-    public ExecutionContext(State startingState,
+    public ExecutionContext(State stateStart,
                             boolean bypassStandardLoading,
                             int maxSimpleArrayLength,
                             long maxHeapSize,
@@ -546,7 +546,7 @@ public final class ExecutionContext {
                             StateIdentificationMode stateIdentificationMode,
                             BreadthMode breadthMode,
                             TriggerRulesRepo rulesTrigger) {
-        this.stateStart = startingState;
+        this.stateStart = stateStart;
         this.bypassStandardLoading = bypassStandardLoading;
         this.maxSimpleArrayLength = maxSimpleArrayLength;
         this.maxHeapSize = maxHeapSize;
