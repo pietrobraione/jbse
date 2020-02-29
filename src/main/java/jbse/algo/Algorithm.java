@@ -8,6 +8,7 @@ import java.util.SortedSet;
 import java.util.function.Supplier;
 
 import jbse.algo.exc.CannotManageStateException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
 import jbse.dec.DecisionProcedureAlgorithms.Outcome;
@@ -242,7 +243,8 @@ UP extends StrategyUpdate<R>> implements Action {
             this.data.read(state, this.ctx.getCalculator(), this.numOperands);
             this.cooker.cook(state);
         } catch (InvalidTypeException | InvalidOperatorException | 
-        		 InvalidOperandException | ThreadStackEmptyException e) {
+        		 InvalidOperandException | ThreadStackEmptyException | 
+        		 RenameUnsupportedException e) {
             //this should never happen
             failExecution(e);
         }

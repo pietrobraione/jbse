@@ -21,6 +21,7 @@ import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
+import jbse.bc.exc.RenameUnsupportedException;
 
 /**
  * {@link ClassFile} for array classes.
@@ -136,6 +137,11 @@ public final class ClassFileArray extends ClassFile {
     }
 
     @Override
+    public String getGenericSignatureType() {
+    	return null;
+    }
+    
+    @Override
     public int getModifiers() {
         return Modifier.FINAL | this.accessibility.modifier;
     }
@@ -173,6 +179,11 @@ public final class ClassFileArray extends ClassFile {
     @Override
     public String getClassName() {
         return this.className;
+    }
+    
+    @Override
+    public void rename(String classNameNew) throws RenameUnsupportedException {
+    	throw new RenameUnsupportedException();
     }
     
     @Override
@@ -252,6 +263,15 @@ public final class ClassFileArray extends ClassFile {
     throws MethodNotFoundException, MethodCodeNotFoundException {
         if (isMethodClone(methodSignature)) {
             return defaultLocalVariableTable(this.signatureCloneMethod);
+        }
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
+    
+    @Override
+    public LocalVariableTable getLocalVariableTypeTable(Signature methodSignature)
+    throws MethodNotFoundException {
+        if (isMethodClone(methodSignature)) {
+            return new LocalVariableTable(0);
         }
         throw new MethodNotFoundException(methodSignature.toString());
     }

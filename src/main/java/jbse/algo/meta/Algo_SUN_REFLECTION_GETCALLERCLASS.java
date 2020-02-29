@@ -43,11 +43,11 @@ public final class Algo_SUN_REFLECTION_GETCALLERCLASS extends Algo_INVOKEMETA_No
             if (firstSkipped) {
                 //skip frames associated with java.lang.reflect.Method.invoke() and its implementation
                 //(seemingly just java.lang.reflect.Method.invoke())
-                if (f.getCurrentMethodSignature().equals(JAVA_METHOD_INVOKE)) {
+                if (f.getMethodSignature().equals(JAVA_METHOD_INVOKE)) {
                     continue;
                 }
 
-                classFile = f.getCurrentClass();
+                classFile = f.getMethodClass();
                 break;
             } else {
                 firstSkipped = true;

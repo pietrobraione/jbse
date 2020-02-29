@@ -16,30 +16,49 @@ public abstract class ReferenceSymbolicAtomic extends ReferenceSymbolic implemen
     /** The string representation of this object. */
     private final String toString;
 
+    /** 
+     * The generic signature type of the reference. 
+     */
+    private final String genericSignatureType;
+
     /**
      * Constructor returning an uninitialized symbolic reference.
      * 
      * @param id an {@code int} identifying the reference univocally.
      * @param staticType a {@link String}, the static type of the
      *        reference (taken from bytecode).
+     * @param genericSignatureType a {@link String}, the generic signature 
+     *        type of the reference (taken from bytecode, its type erasure
+     *        must be {@code staticType}).
      * @param historyPoint the current {@link HistoryPoint}.
-     * @throws InvalidTypeException  if {@code staticType} is not an array or instance
+     * @throws InvalidTypeException if {@code staticType} is not an array or instance
      *         reference type.
-     * @throws InvalidInputException if {@code staticType == null || historyPoint == null}.
+     * @throws InvalidInputException if {@code staticType == null || genericSignatureType == null || historyPoint == null}.
      */
-    ReferenceSymbolicAtomic(int id, String staticType, HistoryPoint historyPoint) throws InvalidInputException, InvalidTypeException {
+    ReferenceSymbolicAtomic(int id, String staticType, String genericSignatureType, HistoryPoint historyPoint) throws InvalidInputException, InvalidTypeException {
         super(staticType, historyPoint);
-        if (staticType == null) {
-            throw new InvalidInputException("Attempted to build a ReferenceSymbolicAtomic with null static type.");
+        if (staticType == null || genericSignatureType == null) {
+            throw new InvalidInputException("Attempted to build a ReferenceSymbolicAtomic with null static type or generic signature type.");
         }
         if (!isArray(staticType) && !isReference(staticType)) {
             throw new InvalidTypeException("Attempted to build a ReferenceSymbolicAtomic with static type " + staticType + " (neither array nor instance reference type).");
         }
+        this.genericSignatureType = genericSignatureType;
 
         //calculates toString
         this.toString = "{R" + id + "}";
     }
 
+    /**
+     * Gets the generic signature type of the reference.
+     * 
+     * @return a {@link String} (its type erasure must be 
+     * equal to {@link #getStaticType()}).
+     */
+    public final String getGenericSignatureType() {
+    	return this.genericSignatureType;
+    }
+    
     @Override
     public final String toString() {
         return this.toString;

@@ -8,8 +8,13 @@ import jbse.val.exc.InvalidTypeException;
  * in an array. 
  */
 public final class ReferenceSymbolicMemberArray extends ReferenceSymbolicMember implements SymbolicMemberArray {
+	/** The index of the slot in the container array this symbol originates from. */
     private final Primitive index;
+    
+    /** The origin String representation of this object. */
     private final String asOriginString;
+    
+    /** The hash code of this object. */
     private final int hashCode;
     
     /**
@@ -23,14 +28,17 @@ public final class ReferenceSymbolicMemberArray extends ReferenceSymbolicMember 
      *        object with same identifier will be treated as equal.
      * @param staticType a {@link String}, the static type of the
      *        reference (taken from bytecode).
-     * @throws InvalidTypeException  if {@code staticType} is not an array or instance
+     * @param genericSignatureType a {@link String}, the generic signature 
+     *        type of the reference (taken from bytecode, its type erasure
+     *        must be {@code staticType}).
+     * @throws InvalidTypeException if {@code staticType} is not an array or instance
 	 *         reference type.
-     * @throws InvalidInputException if {@code staticType == null || index == null}.
+     * @throws InvalidInputException if {@code staticType == null || genericSignatureType == null || index == null}.
      * @throws NullPointerException if {@code container == null}.
      */
-    ReferenceSymbolicMemberArray(ReferenceSymbolic container, Primitive index, int id, String staticType) 
+    ReferenceSymbolicMemberArray(ReferenceSymbolic container, Primitive index, int id, String staticType, String genericSignatureType) 
     throws InvalidInputException, InvalidTypeException {
-    	super(container, id, staticType);
+    	super(container, id, staticType, genericSignatureType);
     	if (index == null) {
     		throw new InvalidInputException("Attempted the creation of a ReferenceSymbolicMemberArray with null index.");
     	}

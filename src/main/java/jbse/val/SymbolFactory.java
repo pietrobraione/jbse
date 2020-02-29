@@ -1,7 +1,6 @@
 package jbse.val;
 
 import jbse.bc.ClassFile;
-import jbse.common.Type;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
 import jbse.mem.Klass;
@@ -27,27 +26,40 @@ public final class SymbolFactory implements Cloneable {
     }
 
     /**
-     * A Factory Method for creating symbolic values. The symbol
-     * has as origin a local variable in the current frame.
+     * A Factory Method for creating primitive symbolic values. 
+     * The symbol has as origin a local variable in the current frame.
      * 
      * @param historyPoint the {@link HistoryPoint} of the symbol.
      * @param staticType a {@link String}, the static type of the
      *        local variable from which the symbol originates.
      * @param variableName a {@link String}, the name of the local 
      *        variable in the root frame the symbol originates from.
-     * @return a {@link PrimitiveSymbolic} or a {@link ReferenceSymbolic}
-     *         according to {@code staticType}.
-     * @throws InvalidTypeException if {@code staticType} is not a valid type.
+     * @return a {@link PrimitiveSymbolicLocalVariable}.
+     * @throws InvalidTypeException if {@code staticType} is not a primitive type.
      * @throws InvalidInputException if {@code variableName == null || staticType == null || historyPoint == null}.
      */
-    public Symbolic createSymbolLocalVariable(HistoryPoint historyPoint, String staticType, String variableName) throws InvalidTypeException, InvalidInputException {
-        final Symbolic retVal;
-        if (Type.isPrimitive(staticType)) {
-            retVal = new PrimitiveSymbolicLocalVariable(variableName, getNextIdPrimitiveSymbolic(), staticType.charAt(0), historyPoint);
-        } else {
-            retVal = new ReferenceSymbolicLocalVariable(variableName, getNextIdReferenceSymbolic(), staticType, historyPoint);
-        }
-        return retVal;
+    public PrimitiveSymbolicLocalVariable createSymbolLocalVariablePrimitive(HistoryPoint historyPoint, String staticType, String variableName) throws InvalidTypeException, InvalidInputException {
+        return new PrimitiveSymbolicLocalVariable(variableName, getNextIdPrimitiveSymbolic(), staticType.charAt(0), historyPoint);
+    }
+
+    /**
+     * A Factory Method for creating reference symbolic values. 
+     * The symbol has as origin a local variable in the current frame.
+     * 
+     * @param historyPoint the {@link HistoryPoint} of the symbol.
+     * @param staticType a {@link String}, the static type of the
+     *        local variable from which the symbol originates.
+     * @param genericSignatureType a {@link String}, the generic signature 
+     *        type of the local variable from which the symbol originates.
+     * @param variableName a {@link String}, the name of the local 
+     *        variable in the root frame the symbol originates from.
+     * @return a {@link PrimitiveSymbolic} or a {@link ReferenceSymbolic}
+     *         according to {@code staticType}.
+     * @throws InvalidTypeException if {@code staticType} is not a reference type.
+     * @throws InvalidInputException if {@code variableName == null || staticType == null || historyPoint == null}.
+     */
+    public ReferenceSymbolicLocalVariable createSymbolLocalVariableReference(HistoryPoint historyPoint, String staticType, String genericSignatureType, String variableName) throws InvalidTypeException, InvalidInputException {
+    	return new ReferenceSymbolicLocalVariable(variableName, getNextIdReferenceSymbolic(), staticType, genericSignatureType, historyPoint);
     }
 
     /**
@@ -65,8 +77,8 @@ public final class SymbolFactory implements Cloneable {
     }
 
     /**
-     * A Factory Method for creating symbolic values. The symbol
-     * has as origin a field in an object (non array). 
+     * A Factory Method for creating primitive symbolic values. 
+     * The symbol has as origin a field in an object (not an array). 
      * 
      * @param staticType a {@link String}, the static type of the
      *        local variable from which the symbol originates.
@@ -76,26 +88,44 @@ public final class SymbolFactory implements Cloneable {
      *        container object the symbol originates from. It must not be {@code null}.
      * @param fieldClass a {@link String}, the name of the class where the 
      *        field is declared. It must not be {@code null}.
-     * @return a {@link PrimitiveSymbolic} or a {@link ReferenceSymbolic}
-     *         according to {@code staticType}.
-     * @throws InvalidTypeException if {@code staticType} is not a valid type.
+     * @return a {@link PrimitiveSymbolicMemberField}.
+     * @throws InvalidTypeException if {@code staticType} is not a primitive type.
      * @throws InvalidInputException if {@code fieldName == null || staticType == null}.
      * @throws NullPointerException if {@code container == null}.
      */
-    public Symbolic createSymbolMemberField(String staticType, ReferenceSymbolic container, String fieldName, String fieldClass)
+    public PrimitiveSymbolicMemberField createSymbolMemberFieldPrimitive(String staticType, ReferenceSymbolic container, String fieldName, String fieldClass)
     throws InvalidTypeException, InvalidInputException {
-        final Symbolic retVal;
-        if (Type.isPrimitive(staticType)) {
-            retVal = new PrimitiveSymbolicMemberField(container, fieldName, fieldClass, getNextIdPrimitiveSymbolic(), staticType.charAt(0));
-        } else {
-            retVal = new ReferenceSymbolicMemberField(container, fieldName, fieldClass, getNextIdReferenceSymbolic(), staticType);
-        }
-        return retVal;
+    	return new PrimitiveSymbolicMemberField(container, fieldName, fieldClass, getNextIdPrimitiveSymbolic(), staticType.charAt(0));
     }
 
     /**
-     * A Factory Method for creating symbolic values. The symbol
-     * has as origin a slot in an array.  
+     * A Factory Method for creating reference symbolic values. 
+     * The symbol has as origin a field in an object (not an array). 
+     * 
+     * @param staticType a {@link String}, the static type of the
+     *        local variable from which the symbol originates.
+     * @param genericSignatureType a {@link String}, the generic signature 
+     *        type of the local variable from which the symbol originates.
+     * @param container a {@link ReferenceSymbolic}, the container object
+     *        the symbol originates from. It must not refer an array.
+     * @param fieldName a {@link String}, the name of the field in the 
+     *        container object the symbol originates from. It must not be {@code null}.
+     * @param fieldClass a {@link String}, the name of the class where the 
+     *        field is declared. It must not be {@code null}.
+     * @return a {@link PrimitiveSymbolic} or a {@link ReferenceSymbolic}
+     *         according to {@code staticType}.
+     * @throws InvalidTypeException if {@code staticType} is not a reference type.
+     * @throws InvalidInputException if {@code fieldName == null || staticType == null || genericSignatureType == null}.
+     * @throws NullPointerException if {@code container == null}.
+     */
+    public ReferenceSymbolicMemberField createSymbolMemberFieldReference(String staticType, String genericSignatureType, ReferenceSymbolic container, String fieldName, String fieldClass)
+    throws InvalidTypeException, InvalidInputException {
+    	return new ReferenceSymbolicMemberField(container, fieldName, fieldClass, getNextIdReferenceSymbolic(), staticType, genericSignatureType);
+    }
+
+    /**
+     * A Factory Method for creating primitive symbolic values. 
+     * The symbol has as origin a slot in an array.  
      * 
      * @param staticType a {@link String}, the static type of the
      *        local variable from which the symbol originates.
@@ -103,20 +133,34 @@ public final class SymbolFactory implements Cloneable {
      *        the symbol originates from. It must refer an array.
      * @param index a {@link Primitive}, the index of the slot in the 
      *        container array this symbol originates from.
-     * @return a {@link PrimitiveSymbolic} or a {@link ReferenceSymbolic}
-     *         according to {@code staticType}.
+     * @return a {@link PrimitiveSymbolicMemberArray}.
      * @throws InvalidTypeException if {@code staticType} is not a valid type.
      * @throws InvalidInputException if {@code index == null || staticType == null}.
      * @throws NullPointerException if {@code container == null}.
      */
-    public Symbolic createSymbolMemberArray(String staticType, ReferenceSymbolic container, Primitive index) throws InvalidTypeException, InvalidInputException {
-        final Symbolic retVal;
-        if (Type.isPrimitive(staticType)) {
-            retVal = new PrimitiveSymbolicMemberArray(container, index, getNextIdPrimitiveSymbolic(), staticType.charAt(0));
-        } else {
-            retVal = new ReferenceSymbolicMemberArray(container, index, getNextIdReferenceSymbolic(), staticType);
-        }
-        return retVal;
+    public PrimitiveSymbolicMemberArray createSymbolMemberArrayPrimitive(String staticType, ReferenceSymbolic container, Primitive index) throws InvalidTypeException, InvalidInputException {
+        return new PrimitiveSymbolicMemberArray(container, index, getNextIdPrimitiveSymbolic(), staticType.charAt(0));
+    }
+
+    /**
+     * A Factory Method for creating reference symbolic values. 
+     * The symbol has as origin a slot in an array.  
+     * 
+     * @param staticType a {@link String}, the static type of the
+     *        local variable from which the symbol originates.
+     * @param genericSignatureType a {@link String}, the generic signature 
+     *        type of the local variable from which the symbol originates.
+     * @param container a {@link ReferenceSymbolic}, the container object
+     *        the symbol originates from. It must refer an array.
+     * @param index a {@link Primitive}, the index of the slot in the 
+     *        container array this symbol originates from.
+     * @return a {@link ReferenceSymbolicMemberArray}.
+     * @throws InvalidTypeException if {@code staticType} is not a valid type.
+     * @throws InvalidInputException if {@code index == null || staticType == null || genericSignatureType == null}.
+     * @throws NullPointerException if {@code container == null}.
+     */
+    public ReferenceSymbolicMemberArray createSymbolMemberArrayReference(String staticType, String genericSignatureType, ReferenceSymbolic container, Primitive index) throws InvalidTypeException, InvalidInputException {
+        return new ReferenceSymbolicMemberArray(container, index, getNextIdReferenceSymbolic(), staticType, genericSignatureType);
     }
 
     /**
@@ -136,6 +180,27 @@ public final class SymbolFactory implements Cloneable {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }
+    }
+
+    /**
+     * A Factory Method for creating symbolic values. The symbol
+     * has as origin the value slot of an entry in a map.  
+     * 
+     * @param container a {@link ReferenceSymbolic}, the container object
+     *        the symbol originates from. It must refer a map.
+     * @param key a {@link Reference}, the key of the entry in the 
+     *        container this symbol originates from.
+     * @param historyPoint the current {@link HistoryPoint}.
+     * @return a {@link ReferenceSymbolic}.
+     */
+    public ReferenceSymbolic createSymbolMemberMapValue(ReferenceSymbolic container, Reference key, HistoryPoint historyPoint) {
+    	try {
+    		final ReferenceSymbolic retVal = new ReferenceSymbolicMemberMapValue(container, key, historyPoint, getNextIdReferenceSymbolic());
+    		return retVal;
+    	} catch (InvalidInputException | InvalidTypeException e) {
+    		//this should never happen
+    		throw new UnexpectedInternalException(e);
+    	}
     }
 
     /**

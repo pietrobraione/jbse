@@ -10,6 +10,7 @@ import java.util.List;
 import jbse.bc.exc.FieldNotFoundException;
 import jbse.bc.exc.InvalidIndexException;
 import jbse.bc.exc.MethodNotFoundException;
+import jbse.bc.exc.RenameUnsupportedException;
 
 class ClassFileBoolean extends ClassFilePrimitive {	
     ClassFileBoolean() { super("boolean"); }	
@@ -88,6 +89,11 @@ abstract class ClassFilePrimitive extends ClassFile {
     }
     
     @Override
+    public void rename(String classNameNew) throws RenameUnsupportedException {
+    	throw new RenameUnsupportedException();
+    }
+    
+    @Override
     public String getInternalTypeName() {
         return "" + toPrimitiveOrVoidInternalName(getClassName());
     }
@@ -100,6 +106,11 @@ abstract class ClassFilePrimitive extends ClassFile {
     @Override
     public String getPackageName() {
         return ""; //TODO is it ok?
+    }
+    
+    @Override
+    public String getGenericSignatureType() {
+    	return null;
     }
     
     @Override
@@ -340,6 +351,12 @@ abstract class ClassFilePrimitive extends ClassFile {
 
     @Override
     public LocalVariableTable getLocalVariableTable(Signature methodSignature)
+    throws MethodNotFoundException {
+        throw new MethodNotFoundException(methodSignature.toString());
+    }
+    
+    @Override
+    public LocalVariableTable getLocalVariableTypeTable(Signature methodSignature)
     throws MethodNotFoundException {
         throw new MethodNotFoundException(methodSignature.toString());
     }

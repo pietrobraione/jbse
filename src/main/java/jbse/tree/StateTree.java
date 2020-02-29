@@ -49,7 +49,7 @@ public class StateTree {
          * identifier reflecting the decision which generated it.
          * This identification may be complex and not exec-faithful, 
          * but univocally identifies symbolic execution
-         * traces up to target code recompilation.
+         * paths up to target code recompilation.
          */
         LONG;
     };

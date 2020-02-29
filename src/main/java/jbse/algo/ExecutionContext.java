@@ -90,6 +90,10 @@ import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_ISSYMBOLIC;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_SUCCEED;
 import static jbse.algo.Overrides.ALGO_JBSE_ANALYSIS_SYMBOLNAME;
 import static jbse.algo.Overrides.ALGO_JBSE_BASE_MAKEKLASSSYMBOLIC_DO;
+import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_MAKEINITIAL;
+import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION;
+import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_REFINEONKEYANDBRANCH;
+import static jbse.algo.Overrides.ALGO_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH;
 import static jbse.algo.Overrides.ALGO_SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
 import static jbse.algo.Overrides.ALGO_SUN_NATIVEMETHODACCESSORIMPL_INVOKE0;
 import static jbse.algo.Overrides.ALGO_SUN_PERF_CREATELONG;
@@ -334,6 +338,10 @@ import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_LONG;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_OBJECT;
 import static jbse.bc.Signatures.JBSE_ANALYSIS_SYMBOLNAME_SHORT;
 import static jbse.bc.Signatures.JBSE_BASE_MAKEKLASSSYMBOLIC_DO;
+import static jbse.bc.Signatures.JBSE_JAVA_MAP_MAKEINITIAL;
+import static jbse.bc.Signatures.JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION;
+import static jbse.bc.Signatures.JBSE_JAVA_MAP_REFINEONKEYANDBRANCH;
+import static jbse.bc.Signatures.JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH;
 import static jbse.bc.Signatures.SUN_ASCIICASEINSENSITIVECOMPARATOR;
 import static jbse.bc.Signatures.SUN_JARINDEX;
 import static jbse.bc.Signatures.SUN_NATIVECONSTRUCTORACCESSORIMPL_NEWINSTANCE0;
@@ -453,6 +461,12 @@ public final class ExecutionContext {
      * used to expand references. Used during initialization.
      */
     private final Map<String, Set<String>> expansionBackdoor;
+    
+    /**
+     * Associates class names to the class names of the corresponding 
+     * model classes that replace them. It is not mutated.
+     */
+    private final HashMap<String, String> modelClassSubstitutions;
 
     /** The {@link Calculator}. Used during initialization. */
     private final Calculator calc;
@@ -518,6 +532,10 @@ public final class ExecutionContext {
      *        associating class names to sets of names of their subclasses. It 
      *        is used in place of the class hierarchy to perform reference expansion.
      *        Ignored when {@code initialState != null}.
+     * @param modelClassSubstitutions a 
+     *        {@link Map}{@code <}{@link String}{@code , }{@link String}{@code >}
+     *        associating class names to the class names of the corresponding 
+     *        model classes that replace them. 
      * @param calc a {@link Calculator}. Ignored when {@code initialState != null}.
      * @param comparators a {@link DecisionAlternativeComparators} which
      *        will be used to establish the order of exploration
@@ -539,6 +557,7 @@ public final class ExecutionContext {
                             Classpath classpath,
                             Class<? extends ClassFileFactory> classFileFactoryClass,
                             Map<String, Set<String>> expansionBackdoor, 
+                            Map<String, String> modelClassSubstitutions,
                             Calculator calc,
                             DecisionAlternativeComparators comparators,
                             Signature rootMethodSignature,
@@ -554,6 +573,7 @@ public final class ExecutionContext {
         this.classpath = classpath;
         this.classFileFactoryClass = classFileFactoryClass;
         this.expansionBackdoor = new HashMap<>(expansionBackdoor);      //safety copy
+        this.modelClassSubstitutions = new HashMap<>(modelClassSubstitutions); //safety copy
         this.calc = calc;
         this.comparators = comparators;
         this.rootMethodSignature = rootMethodSignature;
@@ -773,6 +793,12 @@ public final class ExecutionContext {
             //jbse.base.Base methods
             addMetaOverridden(JBSE_BASE_MAKEKLASSSYMBOLIC_DO,          ALGO_JBSE_BASE_MAKEKLASSSYMBOLIC_DO);
             
+            //jbse.base.JAVA_MAP methods (actually remapped to java.util.HashMap)
+            addMetaOverridden(JBSE_JAVA_MAP_MAKEINITIAL,                          ALGO_JBSE_JAVA_MAP_MAKEINITIAL);
+            addMetaOverridden(JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION, ALGO_JBSE_JAVA_MAP_METATHROWUNEXPECTEDINTERNALEXCEPTION);
+            addMetaOverridden(JBSE_JAVA_MAP_REFINEONKEYANDBRANCH,                 ALGO_JBSE_JAVA_MAP_REFINEONKEYANDBRANCH);
+            addMetaOverridden(JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH,     ALGO_JBSE_JAVA_MAP_REFINEONKEYCOMBINATIONSANDBRANCH);
+            
             //jbse classless (pseudo)methods
             addMetaOverridden(noclass_REGISTERLOADEDCLASS,          ALGO_noclass_REGISTERLOADEDCLASS);
             addMetaOverridden(noclass_REGISTERMETHODTYPE,           ALGO_noclass_REGISTERMETHODTYPE);
@@ -826,7 +852,7 @@ public final class ExecutionContext {
      */
     public State createStateVirginPreInitial() throws InvalidClassFileFactoryClassException {
         try {
-			return new State(this.bypassStandardLoading, this.stateTree.getPreInitialHistoryPoint(), this.maxSimpleArrayLength, this.maxHeapSize, this.classpath, this.classFileFactoryClass, this.expansionBackdoor, this.symbolFactory);
+			return new State(this.bypassStandardLoading, this.stateTree.getPreInitialHistoryPoint(), this.maxSimpleArrayLength, this.maxHeapSize, this.classpath, this.classFileFactoryClass, this.expansionBackdoor, this.modelClassSubstitutions, this.symbolFactory);
 		} catch (InvalidInputException e) {
 			//this should never happen
 			throw new UnexpectedInternalException(e);

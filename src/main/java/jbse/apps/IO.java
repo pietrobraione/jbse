@@ -114,10 +114,10 @@ public class IO {
     /**
      * Prints a {@link Throwable}'s stack trace to a number of 
      * {@link PrintStream}s.
-     * @param ps a {@link PrintStream}<code>[]</code>; the line of 
+     * @param ps a {@link PrintStream}{@code []}; the line of 
      *           text will be printed on all the streams in it 
-     *           (behaves correctly even if <code>ps</code> or 
-     *           one of its member is <code>null</code>).
+     *           (behaves correctly even if {@code ps} or 
+     *           one of its member is {@code null}).
      * @param e a {@link Throwable} whose stack trace will be printed.
      */
     public static void printException(PrintStream[] ps, Throwable e) {

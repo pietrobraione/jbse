@@ -12,9 +12,9 @@ import jbse.mem.exc.InvalidNumberOfOperandsException;
 import jbse.val.Value;
 
 /**
- * Class representing the activation {@link Frame} of a bytecode snippet
- * that is a subcontext of another activation {@link Frame}, of which takes
- * the local variables and the operand stack.
+ * The activation {@link Frame} of a bytecode snippet that is a subcontext 
+ * of another activation {@link Frame}, of which uses the local variables 
+ * and the operand stack.
  */
 public final class SnippetFrameWrap extends Frame implements Cloneable {
     /** The {@link Frame} context this {@link SnippetFrame} must execute. */ 
@@ -26,11 +26,11 @@ public final class SnippetFrameWrap extends Frame implements Cloneable {
      * @param snippet a {@link Snippet}.
      * @param contextFrame a {@link MethodFrame}, the activation context 
      *        this {@link SnippetFrameWrap} is a subcontext of. 
-     * @throws InvalidInputException if {@code contextFrame.}{@link MethodFrame#getCurrentClass() getCurrentClass()} 
+     * @throws InvalidInputException if {@code contextFrame.}{@link MethodFrame#getMethodClass() getCurrentClass()} 
      *         is a snippet classfile.
      */
     public SnippetFrameWrap(Snippet snippet, MethodFrame contextFrame) throws InvalidInputException {
-        super(new ClassFileSnippetWrap(snippet, contextFrame.getCurrentClass()), snippet.getBytecode());
+        super(new ClassFileSnippetWrap(snippet, contextFrame.getMethodClass()), snippet.getBytecode());
         this.contextFrame = contextFrame;
     }
     
@@ -55,8 +55,8 @@ public final class SnippetFrameWrap extends Frame implements Cloneable {
     }
 
     @Override
-    public Signature getCurrentMethodSignature() {
-        return this.contextFrame.getCurrentMethodSignature();
+    public Signature getMethodSignature() {
+        return this.contextFrame.getMethodSignature();
     }
 
     @Override
@@ -130,7 +130,7 @@ public final class SnippetFrameWrap extends Frame implements Cloneable {
     @Override
     public String toString(){
         String tmp = "[";
-        tmp += "Method:" + getCurrentMethodSignature().toString() + ", ";
+        tmp += "Method:" + getMethodSignature().toString() + ", ";
         tmp += "Snippet:" + getCode().toString() + ", ";
         tmp += "ProgramCounter:" + getProgramCounter() + ", ";
         tmp += "ReturnProgramCounter:" + (getReturnProgramCounter() == UNKNOWN_PC ? "UNKNOWN" : getReturnProgramCounter()) + ", ";

@@ -15,6 +15,7 @@ import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.InvalidInputException;
 import jbse.mem.Klass;
@@ -36,7 +37,7 @@ public final class Algo_JAVA_SYSTEM_SETIN0 extends Algo_INVOKEMETA_Nonbranching 
     
     
     @Override
-    protected void cookMore(State state) throws UndefinedResultException, InvalidInputException {
+    protected void cookMore(State state) throws UndefinedResultException, InvalidInputException, RenameUnsupportedException {
         try {
             final ClassFile cf_JAVA_SYSTEM = state.getClassHierarchy().loadCreateClass(JAVA_SYSTEM);
             this.k = state.getKlass(cf_JAVA_SYSTEM);

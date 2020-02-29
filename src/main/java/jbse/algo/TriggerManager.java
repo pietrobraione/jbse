@@ -21,6 +21,7 @@ import jbse.bc.exc.MethodCodeNotFoundException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.InvalidInputException;
 import jbse.common.exc.UnexpectedInternalException;
@@ -142,7 +143,7 @@ public class TriggerManager {
             final Signature triggerSig = rule.getTriggerMethodSignature();
             if (splitReturnValueDescriptor(triggerSig.getDescriptor()).equals("" + VOID) &&
                 splitParametersDescriptors(triggerSig.getDescriptor()).length <= 1) {
-                final ReferenceConcrete triggerArg = getTriggerMethodParameterObject(rule, ref, state);
+                final ReferenceSymbolic triggerArg = getTriggerMethodParameterObject(rule, ref, state);
                 if (triggerArg == null) {
                     throw new MissingTriggerParameterException("No heap object matches the parameter part in the trigger rule " + rule);
                 }
@@ -152,9 +153,9 @@ public class TriggerManager {
                     retVal = true;
                     pcOffset = 0; //the offset of the second, third... frames
                 } catch (ClassFileNotFoundException | IncompatibleClassFileException | ClassFileIllFormedException | 
-                         BadClassFileVersionException | WrongClassNameException | ClassFileNotAccessibleException | 
-                         MethodNotFoundException | MethodCodeNotFoundException | InvalidSlotException | 
-                         InvalidTypeException | InvalidInputException e) {
+                         BadClassFileVersionException | RenameUnsupportedException | WrongClassNameException | 
+                         ClassFileNotAccessibleException | MethodNotFoundException | MethodCodeNotFoundException | 
+                         InvalidSlotException | InvalidTypeException | InvalidInputException e) {
                     //does nothing, falls through to skip 
                     //the unfriendly method
                     //TODO very ugly! should we throw an exception? are we sure that they are all not internal exceptions?

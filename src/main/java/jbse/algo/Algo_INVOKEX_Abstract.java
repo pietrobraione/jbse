@@ -32,6 +32,7 @@ import jbse.bc.exc.MethodAbstractException;
 import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -86,9 +87,9 @@ StrategyUpdate<DecisionAlternative_NONE>> {
 
     protected final void resolveMethod(State state) 
     throws ClassFileNotFoundException, ClassFileIllFormedException, BadClassFileVersionException, 
-    WrongClassNameException, ClassFileNotAccessibleException, PleaseLoadClassException, 
-    IncompatibleClassFileException, MethodNotFoundException, MethodNotAccessibleException,
-    ThreadStackEmptyException, InvalidInputException {
+    RenameUnsupportedException, WrongClassNameException, ClassFileNotAccessibleException, 
+    PleaseLoadClassException, IncompatibleClassFileException, MethodNotFoundException, 
+    MethodNotAccessibleException, ThreadStackEmptyException, InvalidInputException {
         final ClassFile currentClass = state.getCurrentClass();
         if (this.data.signature().getClassName() == null) {
             //signature with no class: skips resolution

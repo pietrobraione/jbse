@@ -56,6 +56,7 @@ import jbse.bc.exc.MethodNotAccessibleException;
 import jbse.bc.exc.MethodNotFoundException;
 import jbse.bc.exc.NullMethodReceiverException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.Type;
 import jbse.common.exc.ClasspathException;
@@ -242,8 +243,8 @@ public final class Util {
                 invokeClassLoaderLoadClass(state, ctx.getCalculator(), e);
                 exitFromAlgorithm();
             } catch (ClassFileNotFoundException | ClassFileIllFormedException | BadClassFileVersionException | 
-                     WrongClassNameException | ClassFileNotAccessibleException | IncompatibleClassFileException | 
-                     MethodNotFoundException | MethodNotAccessibleException e) {
+                     RenameUnsupportedException | WrongClassNameException | ClassFileNotAccessibleException | 
+                     IncompatibleClassFileException | MethodNotFoundException | MethodNotAccessibleException e) {
                 throw new BaseUnsupportedException(e);
             }        
         } else {
@@ -393,7 +394,8 @@ public final class Util {
                  ClassFileIllFormedException | BadClassFileVersionException | 
                  WrongClassNameException | ClassFileNotAccessibleException e) {
             throw new ClasspathException(e);
-        } catch (InvalidInputException | InvalidIndexException | InvalidProgramCounterException e) {
+        } catch (RenameUnsupportedException | InvalidInputException | InvalidIndexException | 
+        		 InvalidProgramCounterException e) {
             //there is not much we can do if this happens
             failExecution(e);
         }
@@ -429,7 +431,8 @@ public final class Util {
         } catch (ClassFileNotFoundException | ClassFileIllFormedException | 
                  BadClassFileVersionException | WrongClassNameException e) {
             throw new ClasspathException(e);
-        } catch (IncompatibleClassFileException | ClassFileNotAccessibleException | InvalidInputException e) {
+        } catch (RenameUnsupportedException | IncompatibleClassFileException | ClassFileNotAccessibleException | 
+        		 InvalidInputException e) {
             //there is not much we can do if this happens
             failExecution(e);
         }
@@ -487,8 +490,8 @@ public final class Util {
                 if (f instanceof SnippetFrameNoWrap) {
                     continue; //skips
                 }
-                final ClassFile fClass = f.getCurrentClass();
-                final String methodName = f.getCurrentMethodSignature().getName();
+                final ClassFile fClass = f.getMethodClass();
+                final String methodName = f.getMethodSignature().getName();
                 if (excClass.equals(fClass) && "<init>".equals(methodName)) {
                     break;
                 }
@@ -512,13 +515,13 @@ public final class Util {
                     continue; //skips
                 }
                 
-                final ClassFile currentClass = f.getCurrentClass();
+                final ClassFile currentClass = f.getMethodClass();
 
                 //gets the data
                 final String declaringClass = currentClass.getClassName().replace('/', '.').replace('$', '.'); //TODO is it ok?
                 final String fileName       = currentClass.getSourceFile();
                 final int    lineNumber     = f.getSourceRow(); 
-                final String methodName     = f.getCurrentMethodSignature().getName();
+                final String methodName     = f.getMethodSignature().getName();
 
                 //break if we reach the first frame for the exception <init>
                 if (excClass.equals(currentClass) && "<init>".equals(methodName)) {
@@ -587,7 +590,8 @@ public final class Util {
             ensureClassInitialized(state, classFile, ctx, null, null);
         } catch (ClassFileNotFoundException | IncompatibleClassFileException | 
                  ClassFileIllFormedException | BadClassFileVersionException | 
-                 WrongClassNameException | ClassFileNotAccessibleException e) {
+                 RenameUnsupportedException | WrongClassNameException | 
+                 ClassFileNotAccessibleException e) {
             //this should never happen
             failExecution(e);
         }
@@ -633,7 +637,8 @@ public final class Util {
             ensureClassInitialized(state, classFile, ctx, null, boxExceptionMethodSignature);
         } catch (ClassFileNotFoundException | IncompatibleClassFileException | 
                  ClassFileIllFormedException | BadClassFileVersionException | 
-                 WrongClassNameException | ClassFileNotAccessibleException e) {
+                 RenameUnsupportedException | WrongClassNameException | 
+                 ClassFileNotAccessibleException e) {
             //this should never happen
             failExecution(e);
         }
@@ -677,6 +682,8 @@ public final class Util {
      * @throws ClassFileIllFormedException if some class in {@code skip} is ill-formed.
      * @throws BadClassFileVersionException if some class in {@code skip} has a version number
      *         that is unsupported by this version of JBSE.
+     * @throws RenameUnsupportedException if some class in {@code skip} derives from a 
+     *         model class but the classfile does not support renaming.
      * @throws WrongClassNameException if the bytecode of some class in {@code skip} has a name
      *         that is different from what expected (the corresponding name in {@code skip}).
      * @throws ClassFileNotAccessibleException if some class in {@code skip} has
@@ -687,7 +694,7 @@ public final class Util {
     public static void ensureClassInitialized(State state, ClassFile classFile, ExecutionContext ctx, Set<String> skip)
     throws InvalidInputException, DecisionException, ClasspathException, HeapMemoryExhaustedException, 
     InterruptException, ClassFileNotFoundException, IncompatibleClassFileException, ClassFileIllFormedException, 
-    BadClassFileVersionException, WrongClassNameException, ClassFileNotAccessibleException, ContradictionException {
+    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, ClassFileNotAccessibleException, ContradictionException {
         ensureClassInitialized(state, classFile, ctx, skip, null);
     }
     
@@ -731,6 +738,8 @@ public final class Util {
      * @throws ClassFileIllFormedException if some class in {@code skip} is ill-formed.
      * @throws BadClassFileVersionException if some class in {@code skip} has a version number
      *         that is unsupported by this version of JBSE.
+     * @throws RenameUnsupportedException if some class in {@code skip} derives from a 
+     *         model class but the classfile does not support renaming.
      * @throws WrongClassNameException if the bytecode of some class in {@code skip} has a name
      *         that is different from what expected (the corresponding name in {@code skip}).
      * @throws ClassFileNotAccessibleException if some class in {@code skip} has
@@ -741,7 +750,7 @@ public final class Util {
     public static void ensureClassInitialized(State state, ClassFile classFile, ExecutionContext ctx, Set<String> skip, Signature boxExceptionMethodSignature) 
     throws InvalidInputException, DecisionException, ClasspathException, HeapMemoryExhaustedException, InterruptException, 
     ClassFileNotFoundException, IncompatibleClassFileException, ClassFileIllFormedException, 
-    BadClassFileVersionException, WrongClassNameException, ClassFileNotAccessibleException, 
+    BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, ClassFileNotAccessibleException, 
     ContradictionException {
         final Set<String> _skip = (skip == null) ? new HashSet<>() : skip; //null safety
         final ClassInitializer ci = new ClassInitializer(state, ctx, _skip, boxExceptionMethodSignature, ctx.getMakePreInitClassesSymbolic());
@@ -830,7 +839,7 @@ public final class Util {
 
         private ClassInitializer(State s, ExecutionContext ctx, Set<String> skip, Signature boxExceptionMethodSignature, boolean makePreInitClassesSymbolic) 
         throws InvalidInputException, ClassFileNotFoundException, IncompatibleClassFileException, 
-        ClassFileIllFormedException, BadClassFileVersionException, WrongClassNameException, ClassFileNotAccessibleException {
+        ClassFileIllFormedException, BadClassFileVersionException, RenameUnsupportedException, WrongClassNameException, ClassFileNotAccessibleException {
             this.s = s;
             this.ctx = ctx;
             this.boxExceptionMethodSignature = boxExceptionMethodSignature;
@@ -1155,8 +1164,8 @@ public final class Util {
                         ++this.createdFrames;
                     } catch (ClassFileNotFoundException | IncompatibleClassFileException | 
                              ClassFileIllFormedException | BadClassFileVersionException | 
-                             WrongClassNameException | InvalidInputException | 
-                             ClassFileNotAccessibleException e) {
+                             RenameUnsupportedException | WrongClassNameException | 
+                             InvalidInputException | ClassFileNotAccessibleException e) {
                         //this should never happen
                         failExecution("Could not find the classfile for java.lang.Object.");
                     }

@@ -8,7 +8,6 @@ import jbse.mem.ClauseAssumeExpands;
 import jbse.mem.Objekt;
 import jbse.mem.State;
 import jbse.mem.exc.FrozenStateException;
-import jbse.val.ReferenceConcrete;
 import jbse.val.ReferenceSymbolic;
 
 public final class Util {
@@ -19,7 +18,7 @@ public final class Util {
 	static final String REFANY = "{$R_ANY}";
 	static final String UP = "{UP}";
 	static final String REGEX_ALLCHARS = "{°}";
-	static final String REGEX_ENDLINE = "{EOL}";
+	static final String REGEX_ENDLINE = "\\{EOL\\}"; //braces must be escaped because REGEX_ENDLINE substitution comes after brace substitution
 
 	/**
 	 * Makes a regular expression pattern from an absolute origin expression
@@ -109,22 +108,22 @@ public final class Util {
 	 * @param ref the {@link ReferenceSymbolic} that made fire 
 	 *        {@code r}.
 	 * @param state a {@link State}.
-	 * @return the first {@link Objekt} in the heap of {@code state} 
-	 *         whose origin matches the trigger parameter part 
+	 * @return a {@link ReferenceSymbolic} to (i.e., the origin of) 
+	 *         the first {@link Objekt} in the heap of {@code state} 
+	 *         that matches the trigger parameter part 
 	 *         of {@code r}, or {@code null} if none exists.
 	 * @throws FrozenStateException if {@code state} is frozen.
 	 */
-	public static ReferenceConcrete getTriggerMethodParameterObject(TriggerRule r, ReferenceSymbolic ref, State state) throws FrozenStateException {
+	public static ReferenceSymbolic getTriggerMethodParameterObject(TriggerRule r, ReferenceSymbolic ref, State state) throws FrozenStateException {
         final Iterable<Clause> pathCondition = state.getPathCondition(); //TODO the decision procedure already stores the path condition: eliminate dependence on state
         for (Clause c : pathCondition) {
             if (c instanceof ClauseAssumeExpands) {
                 //gets the object and its position in the heap
                 final ClauseAssumeExpands cExp = (ClauseAssumeExpands) c;
-                final Long i = cExp.getHeapPosition();
                 final Objekt o = cExp.getObjekt();
                 
     			if (r.isTriggerMethodParameterObject(ref, o)){
-    				return new ReferenceConcrete(i);
+    				return o.getOrigin();
     			}
             }
         }

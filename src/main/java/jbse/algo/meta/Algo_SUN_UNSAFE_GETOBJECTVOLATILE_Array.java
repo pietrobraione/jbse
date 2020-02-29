@@ -37,6 +37,7 @@ import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -147,6 +148,9 @@ StrategyUpdate<DecisionAlternative_XALOAD>> {
             } catch (ClassFileIllFormedException exc) {
                 throwVerifyError(state, this.ctx.getCalculator());
                 exitFromAlgorithm();
+            } catch (RenameUnsupportedException e) {
+            	//this should never happen
+            	failExecution(e);
             }
             
             //no-reference-expansion code omitted because

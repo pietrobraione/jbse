@@ -21,6 +21,7 @@ import jbse.bc.exc.ClassFileIllFormedException;
 import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -54,7 +55,8 @@ public final class Algo_JAVA_CLASS_GETRAWANNOTATIONS extends Algo_INVOKEMETA_Non
     @Override
     protected void cookMore(State state)
     throws ThreadStackEmptyException, DecisionException, ClasspathException,
-    CannotManageStateException, InterruptException, InvalidInputException {
+    CannotManageStateException, InterruptException, InvalidInputException, 
+    RenameUnsupportedException {
         try {
             //gets the classfile
             final Reference classRef = (Reference) this.data.operand(0);

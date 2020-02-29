@@ -100,7 +100,7 @@ public final class Algo_SUN_UNSAFE_OBJECTFIELDOFFSET extends Algo_INVOKEMETA_Non
             throwVerifyError(state, calc);
             exitFromAlgorithm();
         }
-        //TODO check that operands are concrete and kill trace if they are not
+        //TODO check that operands are concrete and kill path if they are not
     }
 
     @Override

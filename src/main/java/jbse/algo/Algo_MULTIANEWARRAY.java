@@ -19,6 +19,7 @@ import jbse.bc.exc.ClassFileNotAccessibleException;
 import jbse.bc.exc.ClassFileNotFoundException;
 import jbse.bc.exc.IncompatibleClassFileException;
 import jbse.bc.exc.PleaseLoadClassException;
+import jbse.bc.exc.RenameUnsupportedException;
 import jbse.bc.exc.WrongClassNameException;
 import jbse.common.exc.ClasspathException;
 import jbse.common.exc.InvalidInputException;
@@ -45,7 +46,8 @@ final class Algo_MULTIANEWARRAY extends Algo_XNEWARRAY<BytecodeData_2CLUB> {
 
     @Override
     protected void preCook(State state) 
-    throws InterruptException, ThreadStackEmptyException, InvalidInputException, ClasspathException {
+    throws InterruptException, ThreadStackEmptyException, InvalidInputException, 
+    ClasspathException, RenameUnsupportedException {
         //checks the number of dimensions
         final int ndims = this.data.immediateUnsignedByte();
         if (ndims <= 0) {

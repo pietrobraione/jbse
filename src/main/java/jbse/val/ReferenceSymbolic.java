@@ -16,7 +16,7 @@ public abstract class ReferenceSymbolic extends Reference implements Symbolic {
 
     /** The static type of the reference (or null). */
     private final String staticType;
-
+    
     /**
      * Constructor.
      * 

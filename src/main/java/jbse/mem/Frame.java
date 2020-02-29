@@ -27,8 +27,8 @@ public abstract class Frame implements Cloneable {
      */
     public final static int UNKNOWN_SOURCE_ROW = -1;
 
-    /** the {@link ClassFile} for the current class. */
-    private ClassFile currentClass;
+    /** The {@link ClassFile} for the method class. */
+    private ClassFile methodClass;
     
     /** The bytecode of the frame's method. */
     private byte[] bytecode; //not final to implement clone method (bytecode may be patched)
@@ -42,10 +42,11 @@ public abstract class Frame implements Cloneable {
     /**
      * Constructor.
      * 
+     * @param methodClass the {@link ClassFile} for the method class.
      * @param bytecode a {@code byte[]}, the bytecode to be executed.
      */
-    public Frame(ClassFile currentClass, byte[] bytecode) {
-        this.currentClass = currentClass;
+    public Frame(ClassFile methodClass, byte[] bytecode) {
+        this.methodClass = methodClass;
         this.bytecode = bytecode.clone();
         this.programCounter = 0;
         this.returnProgramCounter = UNKNOWN_PC;
@@ -174,12 +175,12 @@ public abstract class Frame implements Cloneable {
     }
     
     /**
-     * Returns the current class.
+     * Returns the method class.
      * 
-     * @return the {@link ClassFile} for the current class.
+     * @return the {@link ClassFile} for the method class.
      */
-    public final ClassFile getCurrentClass() {
-        return this.currentClass;
+    public final ClassFile getMethodClass() {
+        return this.methodClass;
     }
 
     /**
@@ -188,7 +189,7 @@ public abstract class Frame implements Cloneable {
      * 
      * @return a {@link Signature}.
      */
-    public abstract Signature getCurrentMethodSignature();
+    public abstract Signature getMethodSignature();
 
     /**
      * Returns a read-only version of the local variable area.
