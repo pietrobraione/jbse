@@ -71,11 +71,13 @@ public final class Signatures {
     public static final String JAVA_INPUTSTREAM              = "java/io/InputStream";
     public static final String JAVA_INFLATER                 = "java/util/zip/Inflater";
     public static final String JAVA_INTEGER                  = "java/lang/Integer";
+    public static final String JAVA_INVOKERBYTECODEGENERATOR = "java/lang/invoke/InvokerBytecodeGenerator";
     public static final String JAVA_INVOKERBYTECODEGENERATOR_2 = "java/lang/invoke/InvokerBytecodeGenerator$2";
     public static final String JAVA_JARFILE                  = "java/util/jar/JarFile";
     public static final String JAVA_JARVERIFIER              = "java/util/jar/JarVerifier";
     public static final String JAVA_LAMBDAFORM               = "java/lang/invoke/LambdaForm";
     public static final String JAVA_LAMBDAFORM_NAME          = "java/lang/invoke/LambdaForm$Name";
+    public static final String JAVA_LAMBDAFORM_NAMEDFUNCTION = "java/lang/invoke/LambdaForm$NamedFunction";
     public static final String JAVA_LINKEDLIST               = "java/util/LinkedList";
     public static final String JAVA_LINKEDLIST_ENTRY         = "java/util/LinkedList$Entry";
     public static final String JAVA_LONG                     = "java/lang/Long";
@@ -332,6 +334,10 @@ public final class Signatures {
                       "findMethodHandleType");
     public static final Signature JAVA_METHODHANDLENATIVES_GETCONSTANT =
         new Signature(JAVA_METHODHANDLENATIVES, "(" + INT + ")" + INT, "getConstant");
+    public static final Signature JAVA_METHODHANDLENATIVES_INIT =
+        new Signature(JAVA_METHODHANDLENATIVES, 
+                      "(" + REFERENCE + JAVA_MEMBERNAME + TYPEEND + REFERENCE + JAVA_OBJECT + TYPEEND + ")" + VOID, 
+                      "init");
     public static final Signature JAVA_METHODHANDLENATIVES_LINKMETHOD =
         new Signature(JAVA_METHODHANDLENATIVES, 
                       "(" + REFERENCE + JAVA_CLASS + TYPEEND + INT + REFERENCE + JAVA_CLASS + TYPEEND + REFERENCE + JAVA_STRING + TYPEEND + 

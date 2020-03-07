@@ -205,6 +205,13 @@ public abstract class ClassFile implements Comparable<ClassFile> {
     public abstract boolean isAbstract();
 
     /**
+     * Tests whether the class is final.
+     * 
+     * @return {@code true} iff the class is final.
+     */
+    public abstract boolean isFinal();
+
+    /**
      * Tests whether the class has public visibility.
      * 
      * @return {@code true} iff the class is public.

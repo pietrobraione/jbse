@@ -9,6 +9,7 @@ import static javassist.bytecode.AccessFlag.STATIC;
 import static javassist.bytecode.AccessFlag.SUPER;
 import static jbse.bc.ClassLoaders.CLASSLOADER_NONE;
 import static jbse.bc.Signatures.JAVA_METHODHANDLE;
+import static jbse.bc.Signatures.JAVA_OBJECT;
 import static jbse.bc.Signatures.SIGNATURE_POLYMORPHIC_DESCRIPTOR;
 import static jbse.bc.Signatures.SUN_CALLERSENSITIVE;
 import static jbse.common.Type.REFERENCE;
@@ -155,28 +156,38 @@ public class ClassFileJavassist extends ClassFile {
      * Constructor for anonymous (unregistered) classes.
      * 
      * @param bytecode a {@code byte[]}, the bytecode of the class.
+     * @param cf_JAVA_OBJECT a {@link ClassFile} for {@code java.lang.Object}.
+     *        It can be {@code null} for <em>dummy</em>, i.e., incomplete 
+     *        classfiles that are created to access the bytecode conveniently.
      * @param cpPatches a {@link ConstantPoolValue}{@code []}; The i-th element of this
      *        array patches the i-th element in the constant pool defined
      *        by the {@code bytecode}. Note that {@code cpPatches[0]} and all the
      *        {@code cpPatches[i]} with {@code i} equal or greater than the size
-     *        of the constant pool in {@code classFile} are ignored. It can be {@code null} for
-     *        <em>dummy</em>, i.e., incomplete classfiles that are created to access
-     *        the bytecode conveniently.
+     *        of the constant pool in {@code classFile} are ignored. It can be 
+     *        {@code null} for <em>dummy</em>, i.e., incomplete classfiles 
+     *        that are created to access the bytecode conveniently.
      * @param hostClass a {@link ClassFile}, the host class for the anonymous class. 
      *        It must be {@code null} for <em>dummy</em>, i.e., incomplete classfiles 
      *        that are created to access the bytecode conveniently.
      * @throws ClassFileIllFormedException if the {@code bytecode} 
      *         is ill-formed.
      * @throws InvalidInputException if {@code cpPatches} does not agree with {@code bytecode},
-     *         or {@code bytecode == null}.
+     *         or {@code bytecode == null} or {@code cf_JAVA_OBJECT != null} and {@code cf_JAVA_OBJECT}
+     *         is not a classfile for {@code java.lang.Object}.
      */
-    ClassFileJavassist(byte[] bytecode, ConstantPoolValue[] cpPatches, ClassFile hostClass) 
+    ClassFileJavassist(byte[] bytecode, ClassFile cf_JAVA_OBJECT, ConstantPoolValue[] cpPatches, ClassFile hostClass) 
     throws ClassFileIllFormedException, InvalidInputException {
         try {
             //checks
             if (bytecode == null) {
-                throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with bytecode parameters whose value is null.");
+                throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with bytecode parameter whose value is null.");
             }
+            if (cf_JAVA_OBJECT != null && !JAVA_OBJECT.equals(cf_JAVA_OBJECT.getClassName())) {
+                throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with cf_JAVA_OBJECT parameter whose value is a classfile for class " + cf_JAVA_OBJECT.getClassName() + ".");
+            }
+            
+            //determines if it is dummy
+            final boolean isDummy = (hostClass == null);
             
             //reads and patches the bytecode
             this.cf = new javassist.bytecode.ClassFile(new DataInputStream(new ByteArrayInputStream(bytecode)));
@@ -193,9 +204,9 @@ public class ClassFileJavassist extends ClassFile {
             this.definingClassLoader = CLASSLOADER_NONE;  //the classloader context is taken from the host class
             this.className = internalClassName(this.cf.getName());
             this.cp = this.cf.getConstPool();
-            this.bytecode = (hostClass == null ? bytecode : null); //only dummy anonymous classfiles (without a host class) cache their bytecode
-            this.superClass = null;      //TODO is it ok to impose that anonymous classfiles have no superclass?
-            this.superInterfaces = null; //TODO is it ok to impose that anonymous classfiles have no superinterfaces?
+            this.bytecode = (isDummy ? bytecode : null); //only dummy anonymous classfiles (without a host class) cache their bytecode
+            this.superClass = cf_JAVA_OBJECT;
+            this.superInterfaces = new ClassFile[0];
             this.cpPatches = (cpPatches == null ? null : cpPatches.clone());
             this.hostClass = hostClass;
             this.fieldsStatic = this.fieldsObject = this.constructors = null;
@@ -517,12 +528,14 @@ public class ClassFileJavassist extends ClassFile {
         if (lastDollarSignIndex == -1) {
             return false; //not a nested class
         }
-        for (int i = lastDollarSignIndex + 1; i < className.length(); ++i) {
-            if (!isAsciiDigit(className.charAt(i))) {
-                return false;
-            }
+        boolean hasNumericCode; 
+        try {
+        	Integer.parseInt(className.substring(lastDollarSignIndex + 1));
+        	hasNumericCode = true;
+        } catch (NumberFormatException e) {
+        	hasNumericCode = false;
         }
-        return true;
+        return hasNumericCode;
     }
     
     @Override
@@ -867,6 +880,11 @@ public class ClassFileJavassist extends ClassFile {
     @Override
     public boolean isAbstract() {
         return Modifier.isAbstract(AccessFlag.toModifier(this.cf.getAccessFlags()));
+    }
+    
+    @Override
+    public boolean isFinal() {
+        return Modifier.isFinal(AccessFlag.toModifier(this.cf.getAccessFlags()));
     }
 
     @Override

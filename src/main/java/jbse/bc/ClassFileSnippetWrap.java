@@ -129,6 +129,11 @@ public class ClassFileSnippetWrap extends ClassFile {
     public boolean isAbstract() {
         return this.component.isAbstract();
     }
+    
+    @Override
+    public boolean isFinal() {
+    	return this.component.isFinal();
+    }
 
     @Override
     public boolean isPublic() {

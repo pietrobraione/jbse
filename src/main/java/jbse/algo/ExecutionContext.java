@@ -38,6 +38,7 @@ import static jbse.algo.Overrides.ALGO_JAVA_FILEINPUTSTREAM_OPEN0;
 import static jbse.algo.Overrides.ALGO_JAVA_FILEINPUTSTREAM_READBYTES;
 import static jbse.algo.Overrides.ALGO_JAVA_FILEOUTPUTSTREAM_WRITEBYTES;
 import static jbse.algo.Overrides.ALGO_JAVA_JARFILE_GETMETAINFENTRYNAMES;
+import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_INIT;
 import static jbse.algo.Overrides.ALGO_JAVA_METHODHANDLENATIVES_RESOLVE;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_CLONE;
 import static jbse.algo.Overrides.ALGO_JAVA_OBJECT_GETCLASS;
@@ -215,6 +216,7 @@ import static jbse.bc.Signatures.JAVA_LINKEDLIST;
 import static jbse.bc.Signatures.JAVA_LINKEDLIST_ENTRY;
 import static jbse.bc.Signatures.JAVA_MAPPEDBYTEBUFFER;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_GETCONSTANT;
+import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_INIT;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_REGISTERNATIVES;
 import static jbse.bc.Signatures.JAVA_METHODHANDLENATIVES_RESOLVE;
 import static jbse.bc.Signatures.JAVA_METHODTYPEFORM;
@@ -227,6 +229,7 @@ import static jbse.bc.Signatures.JAVA_OPTIONAL;
 import static jbse.bc.Signatures.JAVA_PACKAGE_GETSYSTEMPACKAGE0;
 import static jbse.bc.Signatures.JAVA_REFLECT_ARRAY_NEWARRAY;
 import static jbse.bc.Signatures.JAVA_RUNTIME_AVAILABLEPROCESSORS;
+import static jbse.bc.Signatures.JAVA_SHORT;
 import static jbse.bc.Signatures.JAVA_SHORT_SHORTCACHE;
 import static jbse.bc.Signatures.JAVA_STANDARDCHARSETS;
 import static jbse.bc.Signatures.JAVA_STRICTMATH_ACOS;
@@ -641,6 +644,7 @@ public final class ExecutionContext {
             addMetaOverridden(JAVA_INFLATER_SETDICTIONARY,                        ALGO_JAVA_INFLATER_SETDICTIONARY);
             addMetaOverridden(JAVA_JARFILE_GETMETAINFENTRYNAMES,                  ALGO_JAVA_JARFILE_GETMETAINFENTRYNAMES);
             addBaseOverridden(JAVA_METHODHANDLENATIVES_GETCONSTANT,               BASE_JAVA_METHODHANDLENATIVES_GETCONSTANT);
+            addMetaOverridden(JAVA_METHODHANDLENATIVES_INIT,                      ALGO_JAVA_METHODHANDLENATIVES_INIT);
             addMetaOverridden(JAVA_METHODHANDLENATIVES_REGISTERNATIVES,           ALGO_INVOKEMETA_METACIRCULAR);
             addMetaOverridden(JAVA_METHODHANDLENATIVES_RESOLVE,                   ALGO_JAVA_METHODHANDLENATIVES_RESOLVE);
             addMetaOverridden(JAVA_OBJECT_CLONE,                                  ALGO_JAVA_OBJECT_CLONE);
@@ -1007,6 +1011,7 @@ public final class ExecutionContext {
         className.equals(JAVA_MAPPEDBYTEBUFFER) || 
         className.equals(JAVA_METHODTYPEFORM) || 
         className.equals(JAVA_OPTIONAL) || 
+        className.equals(JAVA_SHORT) || 
         className.equals(JAVA_SHORT_SHORTCACHE) || 
         className.equals(JAVA_STANDARDCHARSETS) || 
         className.equals(JAVA_TREESET) ||
@@ -1027,7 +1032,8 @@ public final class ExecutionContext {
         className.equals(jbse.bc.Signatures.JAVA_BOUNDMETHODHANDLE_SPECIES_L) || //necessary for method handles
         className.equals(jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE) || //wouldn't manage method handles otherwise
         className.equals(jbse.bc.Signatures.JAVA_DIRECTMETHODHANDLE_LAZY) || //wouldn't manage method handles otherwise
-        //className.equals(jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR) || //the only nonfinal static field STATICALLY_INVOCABLE_PACKAGES is never modified
+        className.equals(jbse.bc.Signatures.JAVA_INVOKERBYTECODEGENERATOR) || //the only nonfinal static field STATICALLY_INVOCABLE_PACKAGES is never modified
+        className.equals(jbse.bc.Signatures.JAVA_LAMBDAFORM_NAMEDFUNCTION) || //not really, but necessary to bootstrap lambda forms (apparently most static fields are caches, but it is too complex to analyze) 
         className.equals(jbse.bc.Signatures.JAVA_METHODHANDLES) || //not really, but can be considered as it were (all final except ZERO_MHS and IDENTITY_MHS that are caches) 
         className.equals(jbse.bc.Signatures.JAVA_METHODHANDLES_LOOKUP) || //not really, but can be considered as it were (all final including PUBLIC_LOOKUP and IMPL_LOOKUP that are instances of Lookup - that is immutable - and except LOOKASIDE_TABLE, that seems to be a sort of cache) 
         className.equals(jbse.bc.Signatures.JAVA_METHODTYPE) || //not really, but can be considered as it were (all final except internTable and objectOnlyTypes that are caches) 

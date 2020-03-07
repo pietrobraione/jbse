@@ -332,7 +332,7 @@ public final class ClassHierarchy implements Cloneable {
     public ClassFile createClassFileAnonymousDummy(byte[] bytecode) 
     throws ClassFileIllFormedException, InvalidInputException {
         final ClassFile retval =
-            this.f.newClassFileAnonymous(bytecode, null, null);
+            this.f.newClassFileAnonymous(bytecode, null, null, null);
         return retval;
     }
 
@@ -360,7 +360,7 @@ public final class ClassHierarchy implements Cloneable {
         if (classFile == null) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".addClassFileAnonymous() with a classFile parameter that has value null.");
         }
-        if (!classFile.isAnonymous()) {
+        if (!classFile.isAnonymousUnregistered()) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".addClassFileAnonymous() with a classFile parameter that is not anonymous.");
         }
         if (hostClass == null) {
@@ -368,8 +368,10 @@ public final class ClassHierarchy implements Cloneable {
         }
         final ClassFile retVal;
         try {
-            retVal = this.f.newClassFileAnonymous(classFile.getBinaryFileContent(), cpPatches, hostClass);
-        } catch (ClassFileIllFormedException e) {
+            retVal = this.f.newClassFileAnonymous(classFile.getBinaryFileContent(), loadCreateClass(JAVA_OBJECT), cpPatches, hostClass);
+        } catch (ClassFileIllFormedException | WrongClassNameException | ClassFileNotFoundException | 
+        		ClassFileNotAccessibleException | IncompatibleClassFileException | BadClassFileVersionException | 
+        		RenameUnsupportedException e) {
             //this should never happen
             throw new UnexpectedInternalException(e);
         }

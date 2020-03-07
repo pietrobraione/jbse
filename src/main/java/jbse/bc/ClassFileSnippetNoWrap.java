@@ -130,6 +130,11 @@ public class ClassFileSnippetNoWrap extends ClassFile {
     }
 
     @Override
+    public boolean isFinal() {
+        return true;
+    }
+
+    @Override
     public boolean isPublic() {
         return true;
     }

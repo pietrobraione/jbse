@@ -143,7 +143,7 @@ public final class ClassFileArray extends ClassFile {
     
     @Override
     public int getModifiers() {
-        return Modifier.FINAL | this.accessibility.modifier;
+        return Modifier.ABSTRACT | Modifier.FINAL | this.accessibility.modifier;
     }
 
     @Override
@@ -344,6 +344,11 @@ public final class ClassFileArray extends ClassFile {
     @Override
     public boolean isAbstract() {
         return true;
+    }
+    
+    @Override
+    public boolean isFinal() {
+    	return true;
     }
 
     @Override

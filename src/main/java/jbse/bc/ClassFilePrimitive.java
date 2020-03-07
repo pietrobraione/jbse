@@ -147,6 +147,11 @@ abstract class ClassFilePrimitive extends ClassFile {
     public boolean isAbstract() {
         return true;
     }
+    
+    @Override
+    public boolean isFinal() {
+    	return true;
+    }
 
     @Override
     public boolean isPublic() {
