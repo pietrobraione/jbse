@@ -27,8 +27,8 @@ public class ClassFileFactoryJavassist extends ClassFileFactory {
     }
     
     @Override
-    protected ClassFile newClassFileAnonymous(byte[] bytecode, ClassFile cf_JAVA_OBJECT, ConstantPoolValue[] cpPatches, ClassFile hostClass) 
+    protected ClassFile newClassFileAnonymous(byte[] bytecode, ClassFile cfJAVA_OBJECT, ConstantPoolValue[] cpPatches, ClassFile hostClass) 
     throws InvalidInputException, ClassFileIllFormedException {
-        return new ClassFileJavassist(bytecode, cf_JAVA_OBJECT, cpPatches, hostClass);
+        return new ClassFileJavassist(bytecode, cfJAVA_OBJECT, cpPatches, hostClass);
     }
 }

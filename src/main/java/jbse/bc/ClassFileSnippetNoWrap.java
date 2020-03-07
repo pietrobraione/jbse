@@ -65,6 +65,11 @@ public class ClassFileSnippetNoWrap extends ClassFile {
     }
     
     @Override
+    public String getPackageName() {
+    	return this.packageName;
+    }
+    
+    @Override
     public String getClassName() {
         return this.packageName + "/" + this.className;
     }

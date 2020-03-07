@@ -156,7 +156,7 @@ public class ClassFileJavassist extends ClassFile {
      * Constructor for anonymous (unregistered) classes.
      * 
      * @param bytecode a {@code byte[]}, the bytecode of the class.
-     * @param cf_JAVA_OBJECT a {@link ClassFile} for {@code java.lang.Object}.
+     * @param cfJAVA_OBJECT a {@link ClassFile} for {@code java.lang.Object}.
      *        It can be {@code null} for <em>dummy</em>, i.e., incomplete 
      *        classfiles that are created to access the bytecode conveniently.
      * @param cpPatches a {@link ConstantPoolValue}{@code []}; The i-th element of this
@@ -175,15 +175,15 @@ public class ClassFileJavassist extends ClassFile {
      *         or {@code bytecode == null} or {@code cf_JAVA_OBJECT != null} and {@code cf_JAVA_OBJECT}
      *         is not a classfile for {@code java.lang.Object}.
      */
-    ClassFileJavassist(byte[] bytecode, ClassFile cf_JAVA_OBJECT, ConstantPoolValue[] cpPatches, ClassFile hostClass) 
+    ClassFileJavassist(byte[] bytecode, ClassFile cfJAVA_OBJECT, ConstantPoolValue[] cpPatches, ClassFile hostClass) 
     throws ClassFileIllFormedException, InvalidInputException {
         try {
             //checks
             if (bytecode == null) {
                 throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with bytecode parameter whose value is null.");
             }
-            if (cf_JAVA_OBJECT != null && !JAVA_OBJECT.equals(cf_JAVA_OBJECT.getClassName())) {
-                throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with cf_JAVA_OBJECT parameter whose value is a classfile for class " + cf_JAVA_OBJECT.getClassName() + ".");
+            if (cfJAVA_OBJECT != null && !JAVA_OBJECT.equals(cfJAVA_OBJECT.getClassName())) {
+                throw new InvalidInputException("ClassFile constructor for anonymous classes invoked with cf_JAVA_OBJECT parameter whose value is a classfile for class " + cfJAVA_OBJECT.getClassName() + ".");
             }
             
             //determines if it is dummy
@@ -201,11 +201,11 @@ public class ClassFileJavassist extends ClassFile {
             
             //inits
             this.isAnonymousUnregistered = true;
-            this.definingClassLoader = CLASSLOADER_NONE;  //the classloader context is taken from the host class
+            this.definingClassLoader = (isDummy ? CLASSLOADER_NONE : hostClass.getDefiningClassLoader());
             this.className = internalClassName(this.cf.getName());
             this.cp = this.cf.getConstPool();
             this.bytecode = (isDummy ? bytecode : null); //only dummy anonymous classfiles (without a host class) cache their bytecode
-            this.superClass = cf_JAVA_OBJECT;
+            this.superClass = cfJAVA_OBJECT;
             this.superInterfaces = new ClassFile[0];
             this.cpPatches = (cpPatches == null ? null : cpPatches.clone());
             this.hostClass = hostClass;
@@ -362,6 +362,19 @@ public class ClassFileJavassist extends ClassFile {
         return this.definingClassLoader;
     }
 
+    @Override
+    public String getPackageName() {
+        final String className = getClassName();
+        final int lastDollar = className.lastIndexOf('$');
+        final String prefix = (lastDollar == -1 ? className : className.substring(0, lastDollar));
+        final int lastSlash = prefix.lastIndexOf('/');
+        if (lastSlash == -1) {
+            return "";
+        } else {
+            return prefix.substring(0, lastSlash);
+        }
+    }
+    
     @Override
     public String getClassName() {
         return this.className;

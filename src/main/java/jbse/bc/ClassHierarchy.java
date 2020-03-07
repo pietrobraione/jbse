@@ -969,7 +969,8 @@ public final class ClassHierarchy implements Cloneable {
     }
 
     /**
-     * Performs field resolution (see JVMS v8. section 5.4.3.2).
+     * Performs field resolution (see JVMS v8. section 5.4.3.2). Equivalent to
+     * {@link #resolveField(ClassFile, Signature, boolean, ClassFile) resolveField}{@code (accessor, fieldSignature, bypassStandardLoading, null)}.
      * 
      * @param accessor a {@link ClassFile}, the accessor's class.
      * @param fieldSignature the {@link Signature} of the field to be resolved.
@@ -1011,13 +1012,63 @@ public final class ClassHierarchy implements Cloneable {
     throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, BadClassFileVersionException, 
     RenameUnsupportedException, WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, 
     FieldNotAccessibleException, FieldNotFoundException, PleaseLoadClassException {
+    	return resolveField(accessor, fieldSignature, bypassStandardLoading, null);
+    }
+    
+    /**
+     * Performs field resolution (see JVMS v8. section 5.4.3.2).
+     * 
+     * @param accessor a {@link ClassFile}, the accessor's class.
+     * @param fieldSignature the {@link Signature} of the field to be resolved.
+     * @param bypassStandardLoading a {@code boolean}; if it is {@code true} and the defining classloader
+     *        of {@code accessor}
+     *        is either {@link ClassLoaders#CLASSLOADER_EXT CLASSLOADER_EXT} or {@link ClassLoaders#CLASSLOADER_APP CLASSLOADER_APP}, 
+     *        bypasses the standard loading procedure and loads itself the classes, instead of raising 
+     *        {@link PleaseLoadClassException}.
+     * @param classStart a {@link ClassFile}, the class from which
+     *        the resolution will start. It can be {@code null}, 
+     *        in which case the resolution will start from
+     *        {@code fieldSignature.}{@link Signature#getClassName() getClassName()}.
+     * @return the {@link ClassFile} of the class of the resolved field.
+     * @throws InvalidInputException if {@code fieldSignature} is invalid ({@code null} name or class name), or if 
+     *         {@code accessor.}{@link ClassFile#getDefiningClassLoader() getDefiningClassLoader}{@code () < }{@link ClassLoaders#CLASSLOADER_BOOT CLASSLOADER_BOOT}, 
+     *         or if {@code bypassStandardLoading == true} and
+     *         {@code accessor.}{@link ClassFile#getDefiningClassLoader() getDefiningClassLoader}{@code () > }{@link ClassLoaders#CLASSLOADER_APP CLASSLOADER_APP}.
+     * @throws ClassFileNotFoundException if there is no class file for {@code fieldSignature.}{@link Signature#getClassName() getClassName()}
+     *         and its superclasses/superinterfaces in the classpath.
+     * @throws ClassFileIllFormedException if the class file for {@code fieldSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces is ill-formed.
+     * @throws BadClassFileVersionException if the bytecode for {@code fieldSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces has a version number that is unsupported
+     *         by this version of JBSE.
+     * @throws RenameUnsupportedException if the classfile for {@code fieldSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces derives from a model class but the classfile does not support renaming.
+     * @throws WrongClassNameException if the bytecode for {@code fieldSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces contains a class name that is different
+     *         from the expected one ({@code fieldSignature.}{@link Signature#getClassName() getClassName()} or the corresponding 
+     *         superclass/superinterface name).
+     * @throws IncompatibleClassFileException if the superclass for {@code fieldSignature.}{@link Signature#getClassName() getClassName()} 
+     *         is resolved to an interface type, or any superinterface is resolved to an object type.
+     * @throws ClassFileNotAccessibleException if the resolved class 
+     *         {@code fieldSignature.}{@link Signature#getClassName() getClassName}{@code ()}
+     *         is not accessible from {@code accessor}.
+     * @throws FieldNotAccessibleException if the resolved field is not 
+     *         accessible from {@code accessor}.
+     * @throws FieldNotFoundException if resolution of the field fails.
+     * @throws PleaseLoadClassException if creation cannot be performed because
+     *         a class must be loaded via a user-defined classloader before.
+     */
+    public ClassFile resolveField(ClassFile accessor, Signature fieldSignature, boolean bypassStandardLoading, ClassFile classStart) 
+    throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, BadClassFileVersionException, 
+    RenameUnsupportedException, WrongClassNameException, IncompatibleClassFileException, ClassFileNotAccessibleException, 
+    FieldNotAccessibleException, FieldNotFoundException, PleaseLoadClassException {
         //checks the parameters
         if (fieldSignature.getName() == null) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".resolveField with an invalid signature (null name field).");
         }
 
         //resolves the class of the field signature
-        final ClassFile fieldSignatureClass = resolveClass(accessor, fieldSignature.getClassName(), bypassStandardLoading);
+        final ClassFile fieldSignatureClass = (classStart == null ? resolveClass(accessor, fieldSignature.getClassName(), bypassStandardLoading) : classStart);
 
         //performs field lookup starting from it
         final ClassFile accessed = resolveFieldLookup(fieldSignatureClass, fieldSignature);
@@ -1046,7 +1097,7 @@ public final class ClassHierarchy implements Cloneable {
      * of the field signature. The lookup procedure is the recursive procedure
      * described in the JVMS v8, section 5.4.3.2.
      * 
-     * @param startClass a {@link ClassFile} for the class where lookup starts.
+     * @param classStart a {@link ClassFile} for the class where lookup starts.
      * @param fieldSignature a field {@link Signature}. Only the name and the descriptor
      *        will be considered.
      * @return the {@link ClassFile} for the class where a field with the type 
@@ -1054,15 +1105,15 @@ public final class ClassHierarchy implements Cloneable {
      *         or {@code null} if such declaration does not exist in the 
      *         hierarchy. 
      */
-    private ClassFile resolveFieldLookup(ClassFile startClass, Signature fieldSignature) {
+    private ClassFile resolveFieldLookup(ClassFile classStart, Signature fieldSignature) {
         //if the field is declared in startClass,
         //lookup finishes
-        if (startClass.hasFieldDeclaration(fieldSignature)) {
-            return startClass;
+        if (classStart.hasFieldDeclaration(fieldSignature)) {
+            return classStart;
         }
 
         //otherwise, lookup recursively in all the immediate superinterfaces
-        for (ClassFile classFileSuperinterface : startClass.getSuperInterfaces()) {
+        for (ClassFile classFileSuperinterface : classStart.getSuperInterfaces()) {
             final ClassFile classFileLookup = resolveFieldLookup(classFileSuperinterface, fieldSignature);
             if (classFileLookup != null) {
                 return classFileLookup;
@@ -1070,7 +1121,7 @@ public final class ClassHierarchy implements Cloneable {
         }
 
         //otherwise, lookup recursively in the superclass (if any)
-        final ClassFile classFileSuperclass = startClass.getSuperclass();
+        final ClassFile classFileSuperclass = classStart.getSuperclass();
         if (classFileSuperclass == null) {
             //no superclass: lookup failed
             return null;
@@ -1082,7 +1133,8 @@ public final class ClassHierarchy implements Cloneable {
     
     /**
      * Performs both method and interface method resolution 
-     * (see JVMS v8, section 5.4.3.3 and 5.4.3.4).
+     * (see JVMS v8, section 5.4.3.3 and 5.4.3.4). Equivalent 
+     * to {@link #resolveMethod(ClassFile, Signature, boolean, boolean, ClassFile) resolveMethod}{@code (accessor, methodSignature, isInterface, bypassStandardLoading, null)}.
      * 
      * @param accessor a {@link ClassFile}, the accessor's class.
      * @param methodSignature the {@link Signature} of the method to be resolved.  
@@ -1128,13 +1180,68 @@ public final class ClassHierarchy implements Cloneable {
     throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, BadClassFileVersionException, 
     RenameUnsupportedException, WrongClassNameException, ClassFileNotAccessibleException, IncompatibleClassFileException, 
     MethodNotFoundException, MethodNotAccessibleException, PleaseLoadClassException {
+    	return resolveMethod(accessor, methodSignature, isInterface, bypassStandardLoading, null);
+    }
+    
+    /**
+     * Performs both method and interface method resolution 
+     * (see JVMS v8, section 5.4.3.3 and 5.4.3.4).
+     * 
+     * @param accessor a {@link ClassFile}, the accessor's class.
+     * @param methodSignature the {@link Signature} of the method to be resolved.  
+     * @param isInterface {@code true} iff the method to be resolved is required to be 
+     *        an interface method (i.e., if the bytecode which triggered the resolution
+     *        is invokeinterface).
+     * @param bypassStandardLoading a {@code boolean}; if it is {@code true} and the defining classloader
+     *        of {@code accessor}
+     *        is either {@link ClassLoaders#CLASSLOADER_EXT CLASSLOADER_EXT} or {@link ClassLoaders#CLASSLOADER_APP CLASSLOADER_APP}, 
+     *        bypasses the standard loading procedure and loads itself the classes, instead of raising 
+     *        {@link PleaseLoadClassException}.
+     * @param classStart a {@link ClassFile}, the class from which
+     *        the resolution will start. It can be {@code null}, 
+     *        in which case the resolution will start from
+     *        {@code methodSignature.}{@link Signature#getClassName() getClassName()}.
+     * @return the {@link ClassFile} for the resolved method.
+     * @throws InvalidInputException if {@code methodSignature} is invalid ({@code null} name or class name), or if 
+     *         {@code accessor.}{@link ClassFile#getDefiningClassLoader() getDefiningClassLoader}{@code () < }{@link ClassLoaders#CLASSLOADER_BOOT CLASSLOADER_BOOT}, 
+     *         or if {@code bypassStandardLoading == true} and
+     *         {@code accessor.}{@link ClassFile#getDefiningClassLoader() getDefiningClassLoader}{@code () > }{@link ClassLoaders#CLASSLOADER_APP CLASSLOADER_APP}, 
+     *         or if the class for {@code java.lang.Object} was not yet loaded by the bootstrap classloading mechanism.
+     * @throws ClassFileNotFoundException if there is no class for {@code methodSignature.}{@link Signature#getClassName() getClassName()}
+     *         and its superclasses/superinterfaces in the classpath.
+     * @throws ClassFileIllFormedException if the class file for {@code methodSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces is ill-formed.
+     * @throws BadClassFileVersionException if the bytecode for {@code methodSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces has a version number that is unsupported
+     *         by this version of JBSE.
+     * @throws RenameUnsupportedException if the classfile for {@code methodSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces derives from a model class but the classfile does not support renaming.
+     * @throws WrongClassNameException if the bytecode for {@code methodSignature.}{@link Signature#getClassName() getClassName()}
+     *         or its superclasses/superinterfaces contains a class name that is different
+     *         from the expected one ({@code methodSignature.}{@link Signature#getClassName() getClassName()} or the corresponding 
+     *         superclass/superinterface name).
+     * @throws ClassFileNotAccessibleException if the resolved class for {@code methodSignature.}{@link Signature#getClassName() getClassName()}
+     *         is not accessible from {@code accessor}.
+     * @throws IncompatibleClassFileException if the symbolic reference in 
+     *         {@code methodSignature.}{@link Signature#getClassName() getClassName()}
+     *         to the method disagrees with {@code isInterface}.
+     * @throws MethodNotFoundException if resolution fails.
+     * @throws MethodNotAccessibleException if the resolved method is not accessible 
+     *         by {@code accessor}.
+     * @throws PleaseLoadClassException if resolution cannot be performed because
+     *         a class must be loaded via a user-defined classloader before. 
+     */
+    public ClassFile resolveMethod(ClassFile accessor, Signature methodSignature, boolean isInterface, boolean bypassStandardLoading, ClassFile classStart) 
+    throws InvalidInputException, ClassFileNotFoundException, ClassFileIllFormedException, BadClassFileVersionException, 
+    RenameUnsupportedException, WrongClassNameException, ClassFileNotAccessibleException, IncompatibleClassFileException, 
+    MethodNotFoundException, MethodNotAccessibleException, PleaseLoadClassException {
         //checks the parameters
         if (methodSignature.getName() == null) {
             throw new InvalidInputException("Invoked " + this.getClass().getName() + ".resolveMethod with an invalid signature (null name field).");
         }
 
         //resolves the class of the method's signature
-        final ClassFile methodSignatureClass = resolveClass(accessor, methodSignature.getClassName(), bypassStandardLoading);
+        final ClassFile methodSignatureClass = (classStart == null ? resolveClass(accessor, methodSignature.getClassName(), bypassStandardLoading) : classStart);
 
         //checks if the symbolic reference to the method class 
         //is an interface (JVMS v8, section 5.4.3.3 step 1 and section 5.4.3.4 step 1)

@@ -113,15 +113,7 @@ public abstract class ClassFile implements Comparable<ClassFile> {
      * 
      * @return the package name of this class as a {@link String}.
      */
-    public String getPackageName() {
-        final String className = getClassName();
-        int lastSlash = className.lastIndexOf('/');
-        if (lastSlash == -1) {
-            return "";
-        } else {
-            return className.substring(0, lastSlash);
-        }
-    }
+    public abstract String getPackageName();
     
     /**
      * Returns the generic signature (type) of this class.

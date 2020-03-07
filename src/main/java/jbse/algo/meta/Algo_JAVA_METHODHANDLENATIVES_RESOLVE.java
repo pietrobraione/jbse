@@ -206,7 +206,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
 
                 //performs resolution
                 final boolean isInterface = isInvokeInterface(memberNameFlags);
-                this.resolvedClass = state.getClassHierarchy().resolveMethod(accessorClass, methodToResolve, isInterface, state.bypassStandardLoading());
+                this.resolvedClass = state.getClassHierarchy().resolveMethod(accessorClass, methodToResolve, isInterface, state.bypassStandardLoading(), memberNameContainerClass);
                 
                 final boolean methodIsSignaturePolymorphic = !isInterface && this.resolvedClass.hasOneSignaturePolymorphicMethodDeclaration(methodToResolve.getName());
                 final boolean methodIsSignaturePolymorphicNonIntrinsic = methodIsSignaturePolymorphic && !isSignaturePolymorphicMethodIntrinsic(methodToResolve.getName());
@@ -252,27 +252,22 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                 if (JAVA_CLASS.equals(memberNameDescriptorObject.getType().getClassName())) {
                     //memberNameDescriptorObject is an Instance of java.lang.Class:
                     //gets the name of the represented class and puts it in memberNameType
-                    memberNameType = ((Instance_JAVA_CLASS) memberNameDescriptorObject).representedClass().getClassName();
+                    memberNameType = "" + REFERENCE + ((Instance_JAVA_CLASS) memberNameDescriptorObject).representedClass().getClassName() + TYPEEND;
                 } else if (JAVA_STRING.equals(memberNameDescriptorObject.getType().getClassName())) {
                     //memberNameDescriptorObject is an Instance of java.lang.String:
                     //gets its String value and puts it in memberNameDescriptor
-                    memberNameType = valueString(state, memberNameDescriptorObject);
+                    memberNameType = "" + REFERENCE + valueString(state, memberNameDescriptorObject) + TYPEEND;
                 } else {
                     //memberNameDescriptorObject is neither a Class nor a String:
                     //just fails
                     throw new UndefinedResultException("The MemberName self parameter to java.lang.invoke.MethodHandleNatives.resolve represents a field access, but self.type is neither a Class nor a String.");
-                }
-                if (memberNameType == null) {
-                    //TODO who is to blame?
-                    throwVerifyError(state, calc);
-                    exitFromAlgorithm();
                 }
 
                 //builds the signature of the field to resolve
                 final Signature fieldToResolve = new Signature(memberNameContainerClass.getClassName(), memberNameType, memberNameName);
 
                 //performs resolution
-                this.resolvedClass = state.getClassHierarchy().resolveField(accessorClass, fieldToResolve, state.bypassStandardLoading());
+                this.resolvedClass = state.getClassHierarchy().resolveField(accessorClass, fieldToResolve, state.bypassStandardLoading(), memberNameContainerClass);
                 this.resolvedSignature = new Signature(this.resolvedClass.getClassName(), fieldToResolve.getDescriptor(), fieldToResolve.getName());
             } else { //the member name is a type declaration, or the flags field is ill-formed
                 //see hotspot:/src/share/vm/prims/methodHandles.cpp lines 658-730

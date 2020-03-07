@@ -66,6 +66,11 @@ public class ClassFileSnippetWrap extends ClassFile {
     }
     
     @Override
+    public String getPackageName() {
+    	return this.component.getPackageName();
+    }
+    
+    @Override
     public String getClassName() {
         return this.component.getClassName();
     }
