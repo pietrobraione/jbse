@@ -134,12 +134,14 @@ public final class Action_START {
 
         //gets or creates the starting state
         State state = ctx.getStateStart();
+        boolean userProvidedStartState = true;
         if (state == null) {
             state = createStateStart(ctx);
+            userProvidedStartState = false;
         }
 
         //adds the state to the state tree
-        ctx.stateTree.addStateStart(state);
+        ctx.stateTree.addStateStart(state, userProvidedStartState);
     }
 
     private State createStateStart(ExecutionContext ctx) 

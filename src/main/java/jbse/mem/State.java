@@ -483,7 +483,7 @@ public final class State implements Cloneable {
      *         factoryClass == null || expansionBackdoor == null || calc == null || symbolFactory == null}.
      */
     public State(boolean bypassStandardLoading,
-    		     HistoryPoint historyPoint,
+                 HistoryPoint historyPoint,
                  int maxSimpleArrayLength,
                  long maxHeapSize,
                  Classpath classPath, 
