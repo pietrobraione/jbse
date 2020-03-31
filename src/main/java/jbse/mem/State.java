@@ -1701,8 +1701,8 @@ public final class State implements Cloneable {
     }
     
     private InstanceImpl doCreateInstance(Calculator calc, ClassFile classFile) {
-        final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
-        final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
+        final int numOfStaticFields = classFile.numOfStaticFields();
+        final Signature[] fieldsSignatures = classFile.getAllFields();
         final ClassFile cf_JAVA_CLASSLOADER;
         final ClassFile cf_JAVA_THREAD;
         try {
@@ -1747,8 +1747,8 @@ public final class State implements Cloneable {
             if (cf_JAVA_CLASS == null) {
                 throw new UnexpectedInternalException("Could not find the classfile for java.lang.Class.");
             }
-            final int numOfStaticFields = this.classHierarchy.numOfStaticFields(cf_JAVA_CLASS);
-            final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(cf_JAVA_CLASS);
+            final int numOfStaticFields = cf_JAVA_CLASS.numOfStaticFields();
+            final Signature[] fieldsSignatures = cf_JAVA_CLASS.getAllFields();
             final InstanceImpl_JAVA_CLASS myObj = new InstanceImpl_JAVA_CLASS(calc, cf_JAVA_CLASS, null, this.historyPoint, representedClass, numOfStaticFields, fieldsSignatures);
             final ReferenceConcrete retVal = new ReferenceConcrete(this.heap.addNew(myObj));
             
@@ -1807,8 +1807,8 @@ public final class State implements Cloneable {
         if (existsKlass(classFile)) {
             return;
         }
-        final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
-        final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
+        final int numOfStaticFields = classFile.numOfStaticFields();
+        final Signature[] fieldsSignatures = classFile.getAllFields();
         final KlassImpl k = new KlassImpl(calc, false, null, this.historyPoint, numOfStaticFields, fieldsSignatures);
         k.setIdentityHashCode(calc.valInt(0)); //doesn't care because it is not used
         this.staticMethodArea.set(classFile, k);
@@ -1842,8 +1842,8 @@ public final class State implements Cloneable {
         if (existsKlass(classFile)) {
             return;
         }
-        final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
-        final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
+        final int numOfStaticFields = classFile.numOfStaticFields();
+        final Signature[] fieldsSignatures = classFile.getAllFields();
         final KlassImpl k = new KlassImpl(calc, true, createSymbolKlassPseudoReference(this.lastPreInitialHistoryPoint, classFile), this.lastPreInitialHistoryPoint, numOfStaticFields, fieldsSignatures);
         try {
         	initWithSymbolicValues(k, classFile);
@@ -1954,8 +1954,8 @@ public final class State implements Cloneable {
         if (cannotExecuteSymbolically(classFile)) {
             throw new CannotAssumeSymbolicObjectException("JBSE does not allow to execute symbolically the methods of class " + classFile.getClassName() + ".");
         }
-        final int numOfStaticFields = this.classHierarchy.numOfStaticFields(classFile);
-        final Signature[] fieldsSignatures = this.classHierarchy.getAllFields(classFile);
+        final int numOfStaticFields = classFile.numOfStaticFields();
+        final Signature[] fieldsSignatures = classFile.getAllFields();
         final InstanceImpl_DEFAULT obj = new InstanceImpl_DEFAULT(calc, true, classFile, origin, origin.historyPoint(), numOfStaticFields, fieldsSignatures);
         try {
         	initWithSymbolicValues(obj, classFile);

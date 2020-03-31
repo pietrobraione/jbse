@@ -160,7 +160,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
             //hotspot:/src/share/vm/prims/methodHandles.cpp line 654 and the invoked MethodHandles::lookup_signature, 
             //line 392.
 
-            //gets the field name of the MemberName
+            //gets the name of the MemberName (field name)
             final Instance memberNameNameObject = getInstance(state, memberNameObject.getFieldValue(JAVA_MEMBERNAME_NAME), "String self.name", FAIL_JBSE /* TODO is it ok? */, THROW_JAVA_ILLEGAL_ARGUMENT_EXCEPTION, INTERRUPT_SYMBOLIC_VALUE_NOT_ALLOWED_EXCEPTION);
             final String memberNameName = valueString(state, memberNameNameObject);
             if (memberNameName == null) {
@@ -168,7 +168,7 @@ public final class Algo_JAVA_METHODHANDLENATIVES_RESOLVE extends Algo_INVOKEMETA
                 failExecution("Unexpected null value while accessing to String self.name parameter to java.lang.invoke.MethodHandleNatives.resolve (nonconcrete string or missing field).");
             }
 
-            //gets the field flags of the MemberName
+            //gets the flags of the MemberName (field flags)
             final int memberNameFlags = ((Integer) ((Simplex) memberNameObject.getFieldValue(JAVA_MEMBERNAME_FLAGS)).getActualValue()).intValue();
 
             //gets the second parameter (the Class of the member accessor)

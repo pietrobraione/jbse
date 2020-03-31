@@ -31,7 +31,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -94,8 +93,6 @@ public final class ClassHierarchy implements Cloneable {
      * JBSE execution. It is not mutated. 
      */
     private final ArrayList<Path> implementationClassPath;
-    
-    private final HashMap<ClassFile, ArrayList<Signature>> allFieldsOf;
     
     /** The {@link ClassFileFactory} used to create {@link ClassFile}s. */
     private final ClassFileFactory f;
@@ -164,7 +161,6 @@ public final class ClassHierarchy implements Cloneable {
 				throw new UnexpectedInternalException(e);
 			}
         }
-        this.allFieldsOf = new HashMap<>();
         try {
             this.f = factoryClass.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
@@ -488,48 +484,6 @@ public final class ClassHierarchy implements Cloneable {
             }
         }
         return retVal;
-    }
-    
-    private static final Signature[] SIGNATURE_ARRAY = new Signature[0];
-
-    /**
-     * Returns all the fields known to an object of a given class.
-     * 
-     * @param classFile a {@link ClassFile}.
-     * @return a {@link Signature}{@code []}. It will contain all the 
-     *         {@link Signature}s of the class' static fields, followed
-     *         by all the {@link Signature}s of the class' object (nonstatic) 
-     *         fields, followed by all the {@link Signature}s of the object 
-     *         fields of the superclass, the superclass' superclass, etc.
-     */	
-    public Signature[] getAllFields(ClassFile classFile) {
-        ArrayList<Signature> signatures = this.allFieldsOf.get(classFile);
-        if (signatures == null) {
-            signatures = new ArrayList<Signature>(0);
-            this.allFieldsOf.put(classFile, signatures);
-            boolean isStartClass = true;
-            for (ClassFile c : classFile.superclasses()) {
-                if (isStartClass) {
-                    signatures.addAll(Arrays.asList(c.getDeclaredFieldsStatic()));
-                    isStartClass = false;
-                }
-                final Signature[] fields = c.getDeclaredFieldsNonStatic();
-                signatures.addAll(Arrays.asList(fields));
-            }
-        }
-        final Signature[] retVal = signatures.toArray(SIGNATURE_ARRAY);
-        return retVal;
-    }
-
-    /**
-     * Returns the number of static fields of a given class.
-     * 
-     * @param classFile a {@link ClassFile}.
-     * @return an {@code int}, the number of static fields
-     *         declared by {@code classFile}.
-     */
-    public int numOfStaticFields(ClassFile classFile) {
-        return classFile.getDeclaredFieldsStatic().length;
     }
     
     /**
